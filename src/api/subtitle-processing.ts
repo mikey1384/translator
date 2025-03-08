@@ -10,7 +10,7 @@ import {
   GenerateSubtitlesResult,
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
-} from "../preload";
+} from "../types";
 
 export class SubtitleProcessingError extends Error {
   constructor(message: string) {

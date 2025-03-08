@@ -17,7 +17,7 @@ import {
   SaveFileResult,
   OpenFileOptions,
   OpenFileResult,
-} from "../preload";
+} from "../types";
 
 // Create service instances
 const ffmpegService = new FFmpegService();

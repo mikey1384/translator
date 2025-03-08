@@ -6,7 +6,8 @@
   "scripts": {
     "start": "bun run build && electron .",
     "dev": "tsc && concurrently \"tsc -w\" \"electron .\"",
-    "build": "tsc",
+    "build": "tsc && bun run bundle-renderer",
+    "bundle-renderer": "bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser",
     "package": "bun run build && electron-builder build --mac --win --linux",
     "package:mac": "bun run build && electron-builder build --mac",
     "package:win": "bun run build && electron-builder build --win",

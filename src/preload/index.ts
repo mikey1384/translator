@@ -1,120 +1,31 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-// Define the types for our API
-export interface IpcApi {
-  // Subtitle generation
-  generateSubtitles: (
-    options: GenerateSubtitlesOptions
-  ) => Promise<GenerateSubtitlesResult>;
-  onGenerateSubtitlesProgress: (callback: ProgressCallback) => void;
+// Log when preload script is executed
+console.log("Preload script executing...");
 
-  // Subtitle translation
-  translateSubtitles: (
-    options: TranslateSubtitlesOptions
-  ) => Promise<TranslateSubtitlesResult>;
-  onTranslateSubtitlesProgress: (callback: ProgressCallback) => void;
+// Define a simplified API for testing
+const electronAPI = {
+  // Simple ping function to test IPC
+  ping: () => ipcRenderer.invoke("ping"),
 
-  // Video merging
-  mergeSubtitles: (
-    options: MergeSubtitlesOptions
-  ) => Promise<MergeSubtitlesResult>;
-  onMergeSubtitlesProgress: (callback: ProgressCallback) => void;
+  // Show a message from main process
+  showMessage: (message: string) => ipcRenderer.invoke("show-message", message),
 
-  // File operations
-  saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
-  openFile: (options: OpenFileOptions) => Promise<OpenFileResult>;
-}
+  // Simple test function that returns a value immediately
+  test: () => "Electron API is working",
 
-// Type definitions for our API parameters and responses
-export type ProgressCallback = (progress: {
-  percent: number;
-  stage: string;
-}) => void;
-
-export interface GenerateSubtitlesOptions {
-  videoPath?: string;
-  videoFile?: File;
-  language: string;
-}
-
-export interface GenerateSubtitlesResult {
-  subtitles: string;
-  error?: string;
-}
-
-export interface TranslateSubtitlesOptions {
-  subtitles: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-}
-
-export interface TranslateSubtitlesResult {
-  translatedSubtitles: string;
-  error?: string;
-}
-
-export interface MergeSubtitlesOptions {
-  videoPath: string;
-  subtitlesPath: string;
-  outputPath?: string;
-}
-
-export interface MergeSubtitlesResult {
-  outputPath: string;
-  error?: string;
-}
-
-export interface SaveFileOptions {
-  content: string;
-  defaultPath?: string;
-  filters?: { name: string; extensions: string[] }[];
-}
-
-export interface SaveFileResult {
-  filePath: string;
-  error?: string;
-}
-
-export interface OpenFileOptions {
-  filters?: { name: string; extensions: string[] }[];
-  multiple?: boolean;
-}
-
-export interface OpenFileResult {
-  filePaths: string[];
-  fileContents?: string[];
-  error?: string;
-}
-
-// Expose our API to the renderer process
-contextBridge.exposeInMainWorld("electron", {
-  // Subtitle generation
-  generateSubtitles: (options: GenerateSubtitlesOptions) =>
+  // The actual API functions will be implemented later
+  generateSubtitles: (options: any) =>
     ipcRenderer.invoke("generate-subtitles", options),
-  onGenerateSubtitlesProgress: (callback: ProgressCallback) =>
+
+  onGenerateSubtitlesProgress: (callback: (progress: any) => void) =>
     ipcRenderer.on("generate-subtitles-progress", (_event, progress) =>
       callback(progress)
     ),
+};
 
-  // Subtitle translation
-  translateSubtitles: (options: TranslateSubtitlesOptions) =>
-    ipcRenderer.invoke("translate-subtitles", options),
-  onTranslateSubtitlesProgress: (callback: ProgressCallback) =>
-    ipcRenderer.on("translate-subtitles-progress", (_event, progress) =>
-      callback(progress)
-    ),
+// Expose the API to the renderer process
+contextBridge.exposeInMainWorld("electron", electronAPI);
 
-  // Video merging
-  mergeSubtitles: (options: MergeSubtitlesOptions) =>
-    ipcRenderer.invoke("merge-subtitles", options),
-  onMergeSubtitlesProgress: (callback: ProgressCallback) =>
-    ipcRenderer.on("merge-subtitles-progress", (_event, progress) =>
-      callback(progress)
-    ),
-
-  // File operations
-  saveFile: (options: SaveFileOptions) =>
-    ipcRenderer.invoke("save-file", options),
-  openFile: (options: OpenFileOptions) =>
-    ipcRenderer.invoke("open-file", options),
-} as IpcApi);
+// Log when preload script has completed
+console.log("Preload script completed, exposed API:", Object.keys(electronAPI));

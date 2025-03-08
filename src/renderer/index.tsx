@@ -2,13 +2,27 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
-// Wait for the DOM to be ready
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("app");
-  if (!container) {
-    throw new Error("Root element not found");
+console.log("Renderer entry point loaded");
+
+const container = document.getElementById("root");
+if (container) {
+  // Clear any existing content in the root element
+  const loadingElement = container.querySelector(".loading");
+  if (loadingElement) {
+    console.log("Removing loading element");
+    container.removeChild(loadingElement);
   }
 
+  // Create a root for React
   const root = createRoot(container);
-  root.render(<App />);
-});
+
+  // Render the App component
+  console.log("Rendering React App");
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+} else {
+  console.error("Root element not found");
+}

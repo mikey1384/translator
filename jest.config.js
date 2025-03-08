@@ -1,14 +1,16 @@
+/** @type {import('jest').Config} */
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
   roots: ["<rootDir>/src"],
   transform: {
-    "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.tsx?$": ["ts-jest"],
   },
   testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   moduleNameMapper: {
-    "^electron$": "<rootDir>/src/tests/mocks/electron.ts",
+    "^electron$": "<rootDir>/src/__mocks__/electron.ts",
+    "^electron-log$": "<rootDir>/src/__mocks__/electron-log.ts",
   },
-  setupFiles: ["<rootDir>/src/tests/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/src/tests/setupJest.ts"],
 };

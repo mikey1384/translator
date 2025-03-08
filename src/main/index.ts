@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
 import fs from "fs";
 import isDev from "electron-is-dev";
@@ -13,35 +13,84 @@ log.info("Application starting...");
 let mainWindow: BrowserWindow | null = null;
 const fileManager = new FileManager();
 
-function createWindow() {
+// Add these handlers right before creating the window
+// Simple ping-pong handler for testing IPC
+ipcMain.handle("ping", () => {
+  console.log("Received ping from renderer");
+  return "pong";
+});
+
+// Show message handler
+ipcMain.handle("show-message", (_event, message) => {
+  console.log("Show message requested:", message);
+  dialog.showMessageBox({
+    type: "info",
+    title: "Message from Renderer",
+    message: message,
+  });
+  return true;
+});
+
+// Create browser window
+const createWindow = async () => {
+  console.log("Creating window...");
+
+  // Register the ffmpeg module paths
+  // ... existing code ...
+
+  // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    minWidth: 900,
+    minHeight: 600,
     webPreferences: {
-      preload: path.join(__dirname, "../preload/index.js"),
-      contextIsolation: true,
       nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, "../preload/index.js"),
+      devTools: true, // Always enable DevTools
     },
   });
 
-  // Load the index.html file or the dev server URL
-  const indexPath = isDev
-    ? "http://localhost:3000"
-    : `file://${path.join(__dirname, "../../index.html")}`;
+  console.log(
+    "Window created, preload path:",
+    path.join(__dirname, "../preload/index.js")
+  );
 
-  mainWindow.loadURL(indexPath);
+  // Determine the path to load in the window
+  const indexPath = `file://${path.join(__dirname, "../../index.html")}`;
+  console.log("Loading index file:", indexPath);
 
-  // Open DevTools automatically in development mode
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
+  // Load the index.html
+  await mainWindow.loadURL(indexPath);
+  console.log("Index file loaded");
 
-  mainWindow.on("closed", () => {
-    mainWindow = null;
+  // Open the DevTools automatically
+  mainWindow.webContents.openDevTools();
+  console.log("DevTools opened");
+
+  // Add event listeners for debugging
+  mainWindow.webContents.on("did-finish-load", () => {
+    console.log("Page finished loading");
   });
 
-  log.info("Main window created");
-}
+  mainWindow.webContents.on(
+    "did-fail-load",
+    (event, errorCode, errorDescription) => {
+      console.error("Failed to load page:", errorCode, errorDescription);
+    }
+  );
+
+  mainWindow.webContents.on(
+    "console-message",
+    (event, level, message, line, sourceId) => {
+      const levels = ["verbose", "info", "warning", "error"];
+      console.log(`[${levels[level]}] ${message} (${sourceId}:${line})`);
+    }
+  );
+
+  // ... existing code ...
+};
 
 // Create window when Electron is ready
 app.whenReady().then(async () => {
@@ -53,7 +102,7 @@ app.whenReady().then(async () => {
     initIpcHandlers();
 
     // Create the main window
-    createWindow();
+    await createWindow();
 
     // On macOS, re-create window when dock icon is clicked
     app.on("activate", () => {

@@ -2,8 +2,8 @@
 import * as path from "path";
 import { jest } from "@jest/globals";
 
-// Define mock functions with proper types
-type MockFn = jest.Mock<any, any>;
+// Define mock functions with proper types - use just jest.Mock without generic arguments
+type MockFn = jest.Mock;
 
 const app = {
   getPath: jest.fn((name: string) => {
@@ -12,7 +12,7 @@ const app = {
     }
     return `/mock/path/${name}`;
   }) as MockFn,
-  whenReady: jest.fn().mockResolvedValue(undefined) as MockFn,
+  whenReady: jest.fn().mockResolvedValue(undefined as any) as MockFn,
   on: jest.fn() as MockFn,
   quit: jest.fn() as MockFn,
 };
@@ -34,7 +34,7 @@ const BrowserWindow = Object.assign(BrowserWindowMock, {
     webContents: {
       send: jest.fn(),
     },
-  }) as MockFn,
+  } as any) as MockFn,
 });
 
 const ipcMain = {
@@ -49,18 +49,14 @@ const ipcRenderer = {
 };
 
 const dialog = {
-  showOpenDialog: jest
-    .fn()
-    .mockResolvedValue({
-      canceled: false,
-      filePaths: ["/mock/path/file.mp4"],
-    }) as MockFn,
-  showSaveDialog: jest
-    .fn()
-    .mockResolvedValue({
-      canceled: false,
-      filePath: "/mock/path/output.srt",
-    }) as MockFn,
+  showOpenDialog: jest.fn().mockResolvedValue({
+    canceled: false,
+    filePaths: ["/mock/path/file.mp4"],
+  } as any) as MockFn,
+  showSaveDialog: jest.fn().mockResolvedValue({
+    canceled: false,
+    filePath: "/mock/path/output.srt",
+  } as any) as MockFn,
 };
 
 const contextBridge = {
