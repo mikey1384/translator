@@ -2,6 +2,7 @@ import { app, dialog, BrowserWindow } from "electron";
 import fs from "fs/promises";
 import path from "path";
 import log from "electron-log";
+import os from "os";
 
 export class FileManagerError extends Error {
   constructor(message: string) {
@@ -14,7 +15,18 @@ export class FileManager {
   private tempDir: string;
 
   constructor() {
-    this.tempDir = path.join(app.getPath("userData"), "temp");
+    // Safely get a temp directory - use app.getPath if available, otherwise use OS temp dir
+    try {
+      this.tempDir = path.join(app.getPath("userData"), "temp");
+    } catch (error) {
+      // Fallback to OS temp directory if app is not ready yet
+      log.warn(
+        "Electron app not ready, using OS temp directory as fallback for FileManager"
+      );
+      this.tempDir = path.join(os.tmpdir(), "translator-electron-temp");
+    }
+
+    log.info(`FileManager temp directory: ${this.tempDir}`);
   }
 
   /**

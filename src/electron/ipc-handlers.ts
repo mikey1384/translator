@@ -1,10 +1,13 @@
-import { ipcMain, IpcMainInvokeEvent } from "electron";
+import { ipcMain as electronIpcMain, IpcMainInvokeEvent } from "electron";
 import path from "path";
 import log from "electron-log";
 import { FFmpegService } from "./ffmpeg-service";
 import { FileManager } from "./file-manager";
 import { SubtitleProcessing } from "../api/subtitle-processing";
 import { AIService } from "../api/ai-service";
+
+// Ensure ipcMain is properly defined
+const ipcMain = electronIpcMain;
 
 // Import types from preload script
 import {
@@ -20,20 +23,33 @@ import {
   OpenFileResult,
 } from "../types";
 
-// Create service instances
-const ffmpegService = new FFmpegService();
-const fileManager = new FileManager();
-const aiService = new AIService();
-const subtitleProcessing = new SubtitleProcessing(
-  ffmpegService,
-  fileManager,
-  aiService
-);
+// Service instances - these will be initialized when setupIpcHandlers is called
+let ffmpegService: FFmpegService;
+let fileManager: FileManager;
+let aiService: AIService;
+let subtitleProcessing: SubtitleProcessing;
 
 /**
  * Set up all IPC handlers
  */
 export function setupIpcHandlers(): void {
+  // Verify ipcMain exists and has the handle method
+  if (!ipcMain || typeof ipcMain.handle !== "function") {
+    log.error("IPC main is not properly initialized", { ipcMain });
+    throw new Error("IPC main is missing or not properly initialized");
+  }
+
+  // Initialize services
+  log.info("Initializing services for IPC handlers");
+  ffmpegService = new FFmpegService();
+  fileManager = new FileManager();
+  aiService = new AIService(ffmpegService);
+  subtitleProcessing = new SubtitleProcessing(
+    ffmpegService,
+    fileManager,
+    aiService
+  );
+
   // Subtitle generation
   ipcMain.handle(
     "generate-subtitles",
@@ -56,7 +72,7 @@ export function setupIpcHandlers(): void {
         log.error("Error generating subtitles:", error);
         return {
           subtitles: "",
-          error: `Error generating subtitles: ${error}`,
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     }

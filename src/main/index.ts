@@ -1,4 +1,9 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain as electronIpcMain,
+  dialog,
+} from "electron";
 import path from "path";
 import fs from "fs";
 import isDev from "electron-is-dev";
@@ -6,6 +11,9 @@ import log from "electron-log";
 import { setupIpcHandlers as initIpcHandlers } from "../electron/ipc-handlers";
 import { FileManager } from "../electron/file-manager";
 import dotenv from "dotenv";
+
+// Ensure ipcMain is properly defined
+const ipcMain = electronIpcMain;
 
 // Load environment variables from .env file
 dotenv.config();
@@ -21,7 +29,7 @@ log.initialize({ preload: true });
 log.info("Application starting...");
 
 let mainWindow: BrowserWindow | null = null;
-const fileManager = new FileManager();
+let fileManager: FileManager;
 
 // Add these handlers right before creating the window
 // Simple ping-pong handler for testing IPC
@@ -105,6 +113,9 @@ const createWindow = async () => {
 // Create window when Electron is ready
 app.whenReady().then(async () => {
   try {
+    // Initialize file manager after app is ready
+    fileManager = new FileManager();
+
     // Set up temp directory
     await fileManager.ensureTempDir();
 
@@ -137,8 +148,10 @@ app.on("window-all-closed", () => {
 // Clean up resources before quitting
 app.on("will-quit", async () => {
   try {
-    await fileManager.cleanup();
-    log.info("Temp directory cleaned up");
+    if (fileManager) {
+      await fileManager.cleanup();
+      log.info("Temp directory cleaned up");
+    }
   } catch (error) {
     log.error("Error cleaning up temp directory:", error);
   }

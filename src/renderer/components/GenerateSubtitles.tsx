@@ -56,7 +56,9 @@ export default function GenerateSubtitles({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError("");
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      console.log("File selected:", file.name, file.size);
+      setSelectedFile(file);
       setVideoPath(""); // Clear path if we have a file object
     }
   };
@@ -107,9 +109,16 @@ export default function GenerateSubtitles({
         });
       }
 
+      // Log what we're sending to main process
+      console.log("Sending to main process:", {
+        videoPath: videoPath || undefined,
+        videoFile: selectedFile || {},
+        language: sourceLanguage,
+      });
+
       const result = await window.electron.generateSubtitles({
         videoPath: videoPath || undefined,
-        videoFile: selectedFile || undefined,
+        videoFile: selectedFile || {},
         language: sourceLanguage,
       });
 

@@ -7,7 +7,7 @@
       content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Translator App</title>
+    <title>Subtitle Translator</title>
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -15,116 +15,105 @@
         margin: 0;
         padding: 0;
         background-color: #f5f5f5;
+      }
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f5f5f5;
+        z-index: 1000;
+        transition: opacity 0.5s ease;
+      }
+      .loading-text {
+        margin-top: 20px;
+        font-size: 18px;
         color: #333;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-      #root {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-      .loading {
-        text-align: center;
-        padding: 20px;
-        border-radius: 8px;
-        background-color: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-      h1 {
-        margin-bottom: 20px;
-        color: #444;
-      }
-      .message {
-        margin: 10px 0;
-        font-size: 16px;
-      }
-      .error {
-        color: #e53935;
       }
       .spinner {
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        width: 36px;
-        height: 36px;
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(0, 0, 0, 0.1);
         border-radius: 50%;
-        border-left-color: #09f;
-        animation: spin 1s linear infinite;
-        margin: 20px auto;
+        border-top-color: #4361ee;
+        animation: spin 1s ease-in-out infinite;
       }
       @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
+        to {
           transform: rotate(360deg);
         }
+      }
+      .loaded .loading-container {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #root {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+      .loaded #root {
+        opacity: 1;
+      }
+      .debug-info {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
       }
     </style>
   </head>
   <body>
-    <div id="root">
-      <div class="loading">
-        <h1>Translator App</h1>
-        <div class="spinner"></div>
-        <p class="message">Loading application...</p>
-        <p class="message">
-          If this screen persists, check DevTools for errors.
-        </p>
-      </div>
+    <div class="loading-container" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading application...</div>
+    </div>
+    <div id="root"></div>
+    <div class="debug-info" id="debug-info">
+      Electron API: <span id="electron-status">Checking...</span>
     </div>
 
-    <!-- Initial test script to check Electron API -->
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOM loaded");
+      // Check if the Electron API is available and update debug info
+      document.addEventListener("DOMContentLoaded", () => {
+        const debugInfo = document.getElementById("debug-info");
+        const electronStatus = document.getElementById("electron-status");
 
-        // Check if Electron API is available
         if (window.electron) {
-          console.log("Electron API is available");
+          electronStatus.textContent = "Available";
+          electronStatus.style.color = "green";
 
-          // Test the ping function
+          // Test ping to verify IPC
           window.electron
             .ping()
             .then((response) => {
-              console.log("Ping response:", response);
-              document.querySelector(".message").textContent =
-                "Electron API connected successfully: " + response;
-
-              // Load the React application after confirming Electron API works
-              const script = document.createElement("script");
-              script.src = "./dist/renderer/index.js";
-              script.type = "module";
-              script.onload = () => console.log("React bundle loaded");
-              script.onerror = (err) =>
-                console.error("Error loading React bundle:", err);
-              document.body.appendChild(script);
+              debugInfo.innerHTML += `<br>Ping test: ${response}`;
             })
             .catch((error) => {
-              console.error("Ping error:", error);
-              document.querySelector(".message").textContent =
-                "Error connecting to Electron API";
-              document.querySelector(".message").classList.add("error");
+              debugInfo.innerHTML += `<br>Ping error: ${error.message}`;
             });
-
-          // Test the test function (synchronous)
-          try {
-            const testResult = window.electron.test();
-            console.log("Test result:", testResult);
-          } catch (error) {
-            console.error("Test error:", error);
-          }
         } else {
-          console.error("Electron API is not available");
-          document.querySelector(".message").textContent =
-            "Electron API is not available";
-          document.querySelector(".message").classList.add("error");
+          electronStatus.textContent = "Not Available";
+          electronStatus.style.color = "red";
         }
+      });
+    </script>
+    <script src="dist/renderer/index.js"></script>
+    <script>
+      // Hide loading after everything is loaded
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.body.classList.add("loaded");
+        }, 1000);
       });
     </script>
   </body>

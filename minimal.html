@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Minimal Electron Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 10px 0;
+        background-color: #4361ee;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #result {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Minimal Electron IPC Test</h1>
+    <button id="ping-btn">Test Ping</button>
+    <div id="result">Results will appear here...</div>
+
+    <script>
+      // Check if the electron API is available
+      document.getElementById("result").innerText = `electronAPI available: ${
+        typeof window.electronAPI !== "undefined"
+      }`;
+
+      // Add click handler for the ping button
+      document
+        .getElementById("ping-btn")
+        .addEventListener("click", async () => {
+          try {
+            if (window.electronAPI) {
+              const result = await window.electronAPI.ping();
+              document.getElementById(
+                "result"
+              ).innerText = `Ping result: ${result}`;
+            } else {
+              document.getElementById("result").innerText =
+                "Error: electronAPI is not available";
+            }
+          } catch (error) {
+            document.getElementById(
+              "result"
+            ).innerText = `Error: ${error.message}`;
+            console.error("Ping error:", error);
+          }
+        });
+
+      // Log to console for debugging
+      console.log("Renderer script loaded");
+      console.log(
+        "electronAPI available:",
+        typeof window.electronAPI !== "undefined"
+      );
+    </script>
+  </body>
+</html>

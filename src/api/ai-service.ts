@@ -17,9 +17,9 @@ export class AIService {
   private openai: OpenAI | null = null;
   private ffmpegService: FFmpegService;
 
-  constructor() {
-    // Initialize FFmpeg service
-    this.ffmpegService = new FFmpegService();
+  constructor(ffmpegService?: FFmpegService) {
+    // Use the provided FFmpegService or create a new one
+    this.ffmpegService = ffmpegService || new FFmpegService();
 
     // Initialize Anthropic client if API key is available
     if (process.env.ANTHROPIC_API_KEY) {

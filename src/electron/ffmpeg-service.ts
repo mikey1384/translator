@@ -5,6 +5,7 @@ import { app } from "electron";
 import log from "electron-log";
 import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 import ffprobePath from "@ffprobe-installer/ffprobe";
+import os from "os";
 
 export class FFmpegError extends Error {
   constructor(message: string) {
@@ -21,7 +22,15 @@ export class FFmpegService {
   constructor() {
     this.ffmpegPath = ffmpegPath.path;
     this.ffprobePath = ffprobePath.path;
-    this.tempDir = path.join(app.getPath("userData"), "temp");
+
+    // Safely get a temp directory - use app.getPath if available, otherwise use OS temp dir
+    try {
+      this.tempDir = path.join(app.getPath("userData"), "temp");
+    } catch (error) {
+      // Fallback to OS temp directory if app is not ready yet
+      log.warn("Electron app not ready, using OS temp directory as fallback");
+      this.tempDir = path.join(os.tmpdir(), "translator-electron-temp");
+    }
 
     // Ensure temp directory exists
     if (!fs.existsSync(this.tempDir)) {
