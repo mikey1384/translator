@@ -4,6 +4,7 @@ import log from "electron-log";
 import { FFmpegService } from "./ffmpeg-service";
 import { FileManager } from "./file-manager";
 import { SubtitleProcessing } from "../api/subtitle-processing";
+import { AIService } from "../api/ai-service";
 
 // Import types from preload script
 import {
@@ -22,7 +23,12 @@ import {
 // Create service instances
 const ffmpegService = new FFmpegService();
 const fileManager = new FileManager();
-const subtitleProcessing = new SubtitleProcessing(ffmpegService, fileManager);
+const aiService = new AIService();
+const subtitleProcessing = new SubtitleProcessing(
+  ffmpegService,
+  fileManager,
+  aiService
+);
 
 /**
  * Set up all IPC handlers

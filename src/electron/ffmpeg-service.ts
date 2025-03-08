@@ -219,4 +219,48 @@ export class FFmpegService {
       });
     });
   }
+
+  /**
+   * Extract a segment of audio from a file
+   */
+  async extractAudioSegment(
+    inputPath: string,
+    outputPath: string,
+    startTime: number,
+    duration: number
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const process = spawn(this.ffmpegPath, [
+        "-i",
+        inputPath,
+        "-ss",
+        startTime.toString(),
+        "-t",
+        duration.toString(),
+        "-acodec",
+        "libmp3lame",
+        "-q:a",
+        "4",
+        outputPath,
+      ]);
+
+      process.on("close", (code) => {
+        if (code === 0) {
+          resolve(outputPath);
+        } else {
+          reject(
+            new FFmpegError(
+              `Failed to extract audio segment, process exited with code ${code}`
+            )
+          );
+        }
+      });
+
+      process.on("error", (err) => {
+        reject(
+          new FFmpegError(`Error extracting audio segment: ${err.message}`)
+        );
+      });
+    });
+  }
 }

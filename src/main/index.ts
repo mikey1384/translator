@@ -5,6 +5,16 @@ import isDev from "electron-is-dev";
 import log from "electron-log";
 import { setupIpcHandlers as initIpcHandlers } from "../electron/ipc-handlers";
 import { FileManager } from "../electron/file-manager";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
+
+// Log that environment variables are loaded (don't log the actual values)
+console.log("Environment variables loaded:", {
+  hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+  hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+});
 
 // Configure logger
 log.initialize({ preload: true });

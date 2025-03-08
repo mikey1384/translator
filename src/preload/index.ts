@@ -3,9 +3,9 @@ import { contextBridge, ipcRenderer } from "electron";
 // Log when preload script is executed
 console.log("Preload script executing...");
 
-// Define a simplified API for testing
+// Define a complete API for our application
 const electronAPI = {
-  // Simple ping function to test IPC
+  // Test methods
   ping: () => ipcRenderer.invoke("ping"),
 
   // Show a message from main process
@@ -14,14 +14,57 @@ const electronAPI = {
   // Simple test function that returns a value immediately
   test: () => "Electron API is working",
 
-  // The actual API functions will be implemented later
+  // Subtitle generation
   generateSubtitles: (options: any) =>
     ipcRenderer.invoke("generate-subtitles", options),
 
-  onGenerateSubtitlesProgress: (callback: (progress: any) => void) =>
+  onGenerateSubtitlesProgress: (callback: (progress: any) => void) => {
     ipcRenderer.on("generate-subtitles-progress", (_event, progress) =>
       callback(progress)
-    ),
+    );
+    // Return a function to remove the listener when no longer needed
+    return () =>
+      ipcRenderer.removeListener(
+        "generate-subtitles-progress",
+        (_event, progress) => callback(progress)
+      );
+  },
+
+  // Subtitle translation
+  translateSubtitles: (options: any) =>
+    ipcRenderer.invoke("translate-subtitles", options),
+
+  onTranslateSubtitlesProgress: (callback: (progress: any) => void) => {
+    ipcRenderer.on("translate-subtitles-progress", (_event, progress) =>
+      callback(progress)
+    );
+    // Return a function to remove the listener when no longer needed
+    return () =>
+      ipcRenderer.removeListener(
+        "translate-subtitles-progress",
+        (_event, progress) => callback(progress)
+      );
+  },
+
+  // Subtitle merging with video
+  mergeSubtitles: (options: any) =>
+    ipcRenderer.invoke("merge-subtitles", options),
+
+  onMergeSubtitlesProgress: (callback: (progress: any) => void) => {
+    ipcRenderer.on("merge-subtitles-progress", (_event, progress) =>
+      callback(progress)
+    );
+    // Return a function to remove the listener when no longer needed
+    return () =>
+      ipcRenderer.removeListener(
+        "merge-subtitles-progress",
+        (_event, progress) => callback(progress)
+      );
+  },
+
+  // File operations
+  saveFile: (options: any) => ipcRenderer.invoke("save-file", options),
+  openFile: (options: any) => ipcRenderer.invoke("open-file", options),
 };
 
 // Expose the API to the renderer process

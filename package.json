@@ -5,8 +5,10 @@
   "main": "dist/main/index.js",
   "scripts": {
     "start": "bun run build && electron .",
-    "dev": "tsc && concurrently \"tsc -w\" \"electron .\"",
-    "build": "tsc && bun run bundle-renderer",
+    "dev": "concurrently \"bun run --watch build-main\" \"bun run --watch bundle-renderer\" \"electron-dev\"",
+    "electron-dev": "wait-on dist/main/index.js dist/renderer/index.js && electron .",
+    "build-main": "bun build ./src/main/index.ts --outdir ./dist/main --target node",
+    "build": "bun run build-main && bun run bundle-renderer",
     "bundle-renderer": "bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser",
     "package": "bun run build && electron-builder build --mac --win --linux",
     "package:mac": "bun run build && electron-builder build --mac",
@@ -68,12 +70,16 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "wait-on": "^8.0.2"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "axios": "^1.8.2",
+    "dotenv": "^16.4.7",
+    "openai": "^4.86.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

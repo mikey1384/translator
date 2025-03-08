@@ -2,7 +2,7 @@ import path from "path";
 import log from "electron-log";
 import { FFmpegService } from "../electron/ffmpeg-service";
 import { FileManager } from "../electron/file-manager";
-import { AIService } from "./ai-integration";
+import { AIService } from "./ai-service";
 
 // Import types from preload script
 import {
