@@ -263,7 +263,7 @@ export default function EditSubtitles({
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState("");
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  const [fileKey, setFileKey] = useState<number>(Date.now());
+  // Removed fileKey state that was causing component remounting
 
   // Refs
   const playTimeoutRef = useRef<number | null>(null);
@@ -432,9 +432,8 @@ export default function EditSubtitles({
         // Parse and set the new content
         const parsed = parseSrt(srtContent);
         setSubtitles(parsed);
-
-        // Force update fileKey to reset the file input
-        setFileKey(Date.now());
+        
+        // No longer need to update the fileKey as we removed that dependency
       } catch (error) {
         console.error("Error parsing SRT:", error);
         onSetError("Invalid SRT file");
@@ -512,20 +511,37 @@ export default function EditSubtitles({
     console.log("Player ready, configuring event handlers");
 
     // Add event listeners to the native player
-    player.addEventListener("play", () => {
-      console.log("Video playing");
+    const handlePlay = () => {
+      console.log("Video playing event fired");
       setIsPlaying(true);
-    });
+    };
 
-    player.addEventListener("pause", () => {
-      console.log("Video paused");
+    const handlePause = () => {
+      console.log("Video paused event fired");
       setIsPlaying(false);
-    });
+    };
 
-    player.addEventListener("ended", () => {
-      console.log("Video ended");
+    const handleEnded = () => {
+      console.log("Video ended event fired");
       setIsPlaying(false);
-    });
+    };
+
+    // Add proper cleanup for listeners to avoid memory leaks and ensure reliable state
+    player.addEventListener("play", handlePlay);
+    player.addEventListener("playing", handlePlay); // additional event for more reliability
+    player.addEventListener("pause", handlePause);
+    player.addEventListener("ended", handleEnded);
+
+    // Set initial state based on player
+    setIsPlaying(!player.paused);
+    
+    // Return cleanup function to remove these listeners when component unmounts or when player changes
+    return () => {
+      player.removeEventListener("play", handlePlay);
+      player.removeEventListener("playing", handlePlay);
+      player.removeEventListener("pause", handlePause);
+      player.removeEventListener("ended", handleEnded);
+    };
 
     // Handle time updates
     player.addEventListener("timeupdate", () => {
@@ -579,22 +595,50 @@ export default function EditSubtitles({
           ? endTime
           : validStartTime + 3;
 
-      // Get current position
-      const currentPosition = nativePlayer.getCurrentTime();
+      console.log("Play with start time:", validStartTime, "end time:", validEndTime);
+      
+      // Get current position directly from the player instance
+      let currentPosition = 0;
+      try {
+        if (nativePlayer.instance) {
+          currentPosition = nativePlayer.instance.currentTime;
+        } else {
+          currentPosition = nativePlayer.getCurrentTime();
+        }
+      } catch (err) {
+        console.error("Error getting current time:", err);
+      }
+      
+      console.log("Current position before play:", currentPosition);
 
-      // Only seek if we're not already at the right position (with a small tolerance)
-      if (Math.abs(currentPosition - validStartTime) > 0.5) {
-        console.log(`Seeking to position ${validStartTime} before play`);
-        nativePlayer.seek(validStartTime);
-
-        // Wait a bit longer to ensure seek completes before playing
-        setTimeout(() => {
-          playFromCurrentPosition(validStartTime, validEndTime);
-        }, 100);
+      // If we're already within this subtitle's time range, play from current position
+      if (currentPosition >= validStartTime && currentPosition < validEndTime) {
+        console.log("Within subtitle range, playing from current position");
+        playFromCurrentPosition(currentPosition, validEndTime);
       } else {
-        // Already at the right position, just play
-        console.log("Already at the right position, playing immediately");
-        playFromCurrentPosition(validStartTime, validEndTime);
+        // Only seek if we're not in the subtitle range
+        console.log(`Seeking to position ${validStartTime} before play`);
+        
+        try {
+          // Direct property access for more reliable seeking
+          if (nativePlayer.instance) {
+            nativePlayer.instance.currentTime = validStartTime;
+            console.log("Direct seek completed, now at:", nativePlayer.instance.currentTime);
+          } else {
+            nativePlayer.seek(validStartTime);
+          }
+          
+          // Wait a bit longer to ensure seek completes before playing
+          setTimeout(() => {
+            let actualPosition = nativePlayer.getCurrentTime();
+            console.log("Position after seek timeout:", actualPosition);
+            playFromCurrentPosition(actualPosition, validEndTime);
+          }, 200); // Increased timeout for more reliable seek completion
+        } catch (seekErr) {
+          console.error("Error during seek:", seekErr);
+          // Fall back to playing from start time even if seek fails
+          playFromCurrentPosition(validStartTime, validEndTime);
+        }
       }
     } catch (err) {
       console.error("Error during subtitle playback:", err);
@@ -604,42 +648,87 @@ export default function EditSubtitles({
 
   // Helper function to play from current position
   function playFromCurrentPosition(startTime: number, endTime: number) {
-    // Double check current time after seek
-    console.log(`Now playing from position ${nativePlayer.getCurrentTime()}`);
+    // Get the actual current time directly from the player element
+    let actualCurrentTime = startTime;
+    try {
+      if (nativePlayer.instance) {
+        actualCurrentTime = nativePlayer.instance.currentTime;
+      } else {
+        actualCurrentTime = nativePlayer.getCurrentTime();
+      }
+    } catch (err) {
+      console.error("Error getting current time before play:", err);
+    }
+    
+    console.log(`Now playing from position ${actualCurrentTime}`);
 
     // Play from that position with proper error handling
-    // We'll use a try/catch to handle any errors and avoid promises
     try {
-      nativePlayer
-        .play()
+      // Try to play using both direct DOM API and the wrapper function
+      const playPromise = nativePlayer.instance 
+        ? nativePlayer.instance.play() 
+        : nativePlayer.play();
+      
+      playPromise
         .then(() => {
           console.log("Successfully started playback");
           setIsPlaying(true);
 
-          // Calculate how long to play this segment
-          const duration = (endTime - startTime) * 1000; // Convert to milliseconds
-          console.log(`Will pause after ${duration}ms`);
+          // Recalculate the actual duration based on current position
+          const duration = Math.max(0, (endTime - actualCurrentTime) * 1000); // Convert to milliseconds
+          console.log(`Will pause after ${duration}ms (at ${endTime}s)`);
 
           // Set timeout to pause at end time
-          playTimeoutRef.current = window.setTimeout(() => {
-            try {
-              nativePlayer.pause();
-              setIsPlaying(false);
-              console.log("Paused after timeout");
-            } catch (err) {
-              console.error("Error pausing player after timeout:", err);
-            } finally {
-              playTimeoutRef.current = null;
-            }
-          }, duration);
+          if (duration > 0) {
+            playTimeoutRef.current = window.setTimeout(() => {
+              try {
+                // Access player directly if possible for more reliable pausing
+                if (nativePlayer.instance) {
+                  nativePlayer.instance.pause();
+                } else {
+                  nativePlayer.pause();
+                }
+                setIsPlaying(false);
+                console.log("Paused after timeout");
+              } catch (err) {
+                console.error("Error pausing player after timeout:", err);
+              } finally {
+                playTimeoutRef.current = null;
+              }
+            }, duration);
+          }
         })
         .catch((err) => {
           console.error("Error starting playback:", err);
           setIsPlaying(false);
+          
+          // Try direct play as fallback if the promise-based approach fails
+          try {
+            if (nativePlayer.instance) {
+              nativePlayer.instance.play();
+              setIsPlaying(true);
+              console.log("Fallback play method succeeded");
+            }
+          } catch (directErr) {
+            console.error("Fallback play method also failed:", directErr);
+          }
         });
     } catch (err) {
       console.error("Unexpected error during play operation:", err);
       setIsPlaying(false);
+      
+      // Last resort attempt using a timeout to try again
+      setTimeout(() => {
+        try {
+          if (nativePlayer.instance) {
+            nativePlayer.instance.play();
+            setIsPlaying(true);
+            console.log("Last resort play succeeded");
+          }
+        } catch (finalErr) {
+          console.error("All play attempts failed:", finalErr);
+        }
+      }, 200);
     }
   }
 
@@ -844,7 +933,6 @@ export default function EditSubtitles({
           )}
           <div style={{ marginBottom: 10 }}>
             <StylizedFileInput
-              key={fileKey}
               accept=".srt"
               onChange={handleSrtFileInputChange}
               label="Load SRT:"
@@ -878,7 +966,7 @@ export default function EditSubtitles({
           `}
         >
           <NativeVideoPlayer
-            key={`video-player-${videoUrl}`}
+            // Remove the key that forces remounting when props change
             videoUrl={videoUrl}
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
@@ -970,7 +1058,6 @@ export default function EditSubtitles({
               buttonText="Change Video"
             />
             <StylizedFileInput
-              key={fileKey}
               accept=".srt"
               onChange={handleSrtFileInputChange}
               buttonText="Change SRT"
@@ -981,41 +1068,18 @@ export default function EditSubtitles({
                   if (isPlaying) {
                     console.log("Pausing video (main button)");
                     nativePlayer.pause();
-                    setIsPlaying(false);
                   } else {
-                    // Get the current position
-                    const currentPosition = nativePlayer.getCurrentTime();
-                    console.log(
-                      `Playing video from current position: ${currentPosition}s (main button)`
-                    );
-
-                    // Don't seek if already at the right position - just play
-                    try {
-                      nativePlayer
-                        .play()
-                        .then(() => {
-                          console.log(
-                            "Main play button: successfully started playback"
-                          );
-                          setIsPlaying(true);
-                        })
-                        .catch((err) => {
-                          console.error("Error playing video:", err);
-                          setIsPlaying(false);
-                        });
-                    } catch (err) {
-                      console.error("Unexpected error during main play:", err);
-                      setIsPlaying(false);
-                    }
+                    console.log("Playing video (main button)");
+                    nativePlayer.play();
                   }
                 } catch (err) {
                   console.error("Error controlling playback:", err);
                 }
               }}
-              variant="primary"
+              variant={isPlaying ? "danger" : "primary"}
               size="md"
               className={`${buttonGradientStyles.base} ${
-                buttonGradientStyles.primary
+                isPlaying ? buttonGradientStyles.danger : buttonGradientStyles.primary
               } ${css`
                 display: inline-flex;
                 align-items: center;

@@ -1,10 +1,9 @@
 # CLAUDE.md - Guidance for Claude Code
 
 ## Build & Development Commands
-- `bun run dev` - Development mode with hot reloading
-- `bun run dev-quick` - Fast development mode (no type checking)
-- `bun run build` - Full application build
-- `bun run start` - Build and start the Electron app
+- `bun run dev` - Development mode with hot reloading (TypeScript compilation + watch mode)
+- `bun run start` - Quick start using CommonJS version (no build step, fastest startup)
+- `bun run build` - Build all components (main, preload, renderer)
 
 ## Test Commands
 - `bun run test` - Run all Jest tests

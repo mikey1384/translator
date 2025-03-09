@@ -142,9 +142,14 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    // Only initialize if not already initialized with the same URL
-    if (nativePlayer.isInitialized && nativePlayer.instance === videoElement) {
-      console.log("Video player already initialized, skipping initialization");
+    // If we already have the same URL loaded, don't reinitialize
+    if (videoElement.src === videoUrl) {
+      console.log("Video already has the same URL, no need to reinitialize");
+      // Still update the global reference if needed
+      if (nativePlayer.instance !== videoElement) {
+        nativePlayer.instance = videoElement;
+        nativePlayer.isReady = true;
+      }
       return;
     }
 
@@ -327,7 +332,8 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     >
       <video
         ref={videoRef}
-        src={videoUrl}
+        // Remove src prop to prevent React from controlling it and causing remounts
+        // We'll manage src via setAttribute in the useEffect
         style={{
           width: "100%",
           height: "100%",

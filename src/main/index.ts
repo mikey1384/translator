@@ -104,6 +104,7 @@ const createWindow = async () => {
 
       // Potential preload paths to try
       const possiblePaths = [
+        path.join(process.cwd(), "preload.cjs"), // Direct CJS preload script
         path.join(__dirname, "../../preload/index.js"), // Normal path after TS compile
         path.join(__dirname, "../preload/index.js"), // Alternative path
         path.join(process.cwd(), "dist/preload/index.js"), // Absolute path

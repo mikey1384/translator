@@ -360,21 +360,8 @@ function SubtitleEditor({
           </Button>
           <Button
             onClick={() => {
-              if (isPlaying) {
-                // If already playing, just call onPlaySubtitle which will handle pausing
-                onPlaySubtitle(sub.start, sub.end);
-              } else {
-                // Get the current time from the player first
-                const currentTime = nativePlayer.getCurrentTime() || 0;
-
-                // If we're already within this subtitle's time range, play from current position
-                if (currentTime >= sub.start && currentTime < sub.end) {
-                  onPlaySubtitle(currentTime, sub.end);
-                } else {
-                  // Otherwise play from the subtitle's start
-                  onPlaySubtitle(sub.start, sub.end);
-                }
-              }
+              // Use the onPlaySubtitle handler which will handle play/pause states
+              onPlaySubtitle(sub.start, sub.end);
             }}
             size="sm"
             variant={isPlaying ? "danger" : "primary"}

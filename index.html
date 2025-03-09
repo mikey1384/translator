@@ -80,7 +80,8 @@
     </div>
     <div id="root"></div>
     <div class="debug-info" id="debug-info">
-      Electron API: <span id="electron-status">Checking...</span>
+      Electron API: <span id="electron-status">Checking...</span><br>
+      IPC Connection: <span id="ipc-status">Checking...</span>
     </div>
 
     <script>
@@ -88,6 +89,7 @@
       document.addEventListener("DOMContentLoaded", () => {
         const debugInfo = document.getElementById("debug-info");
         const electronStatus = document.getElementById("electron-status");
+        const ipcStatus = document.getElementById("ipc-status");
 
         if (window.electron) {
           electronStatus.textContent = "Available";
@@ -97,14 +99,18 @@
           window.electron
             .ping()
             .then((response) => {
-              debugInfo.innerHTML += `<br>Ping test: ${response}`;
+              ipcStatus.textContent = `Working (${response})`;
+              ipcStatus.style.color = "green";
             })
             .catch((error) => {
-              debugInfo.innerHTML += `<br>Ping error: ${error.message}`;
+              ipcStatus.textContent = `Error: ${error.message}`;
+              ipcStatus.style.color = "red";
             });
         } else {
           electronStatus.textContent = "Not Available";
           electronStatus.style.color = "red";
+          ipcStatus.textContent = "Disconnected";
+          ipcStatus.style.color = "red";
         }
       });
     </script>
