@@ -5,18 +5,9 @@
   "main": "main.cjs",
   "scripts": {
     "start": "electron main.cjs --no-sandbox",
-    "dev": "concurrently \"bun run --watch build-main-alt\" \"bun run --watch build-preload-quick\" \"bun run --watch bundle-renderer-dev\" \"bun run electron-dev-safe\"",
-    "build": "bun run build-main-alt && bun run build-preload-quick && bun run bundle-renderer",
-    "electron-dev-safe": "wait-on dist/main/main/index.js dist/preload/index.js dist/renderer/index.js && electron . --no-sandbox",
-    "build-main-alt": "tsc -p tsconfig.main.json",
-    "build-preload-quick": "bun build ./src/preload/index.ts --outdir ./dist/preload --target node --no-typecheck",
-    "bundle-renderer": "bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck",
-    "bundle-renderer-dev": "bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch --sourcemap --format=esm",
-    "package": "bun run build && electron-builder build --mac --win --linux",
-    "package:mac": "bun run build && electron-builder build --mac",
-    "package:win": "bun run build && electron-builder build --win",
-    "package:linux": "bun run build && electron-builder build --linux",
-    "test": "jest"
+    "build": "tsc -p tsconfig.main.json && bun build ./src/preload/index.ts --outdir ./dist/preload --target node --no-typecheck && bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck",
+    "dev": "concurrently \"tsc -p tsconfig.main.json --watch\" \"bun build ./src/preload/index.ts --outdir ./dist/preload --target node --no-typecheck --watch\" \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch\" \"wait-on dist/main/main/index.js dist/preload/index.js dist/renderer/index.js && electron . --no-sandbox\"",
+    "package": "bun run build && electron-builder build --mac --win --linux"
   },
   "build": {
     "appId": "com.translator.electron",

@@ -1,15 +1,15 @@
-import { ChatCompletionContentPart } from 'openai/resources/chat/completions';
-import { Message, User } from '../../types';
-import { isImageFile } from '../string';
-import { load } from 'cheerio';
-import moment from 'moment';
-import request from 'axios';
-import socket from '../../constants/socketClient';
-import { poolQuery } from '..';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { ChatCompletionContentPart } from "openai/resources/chat/completions";
+import { Message, User } from "../../types";
+import { isImageFile } from "../string";
+import { load } from "cheerio";
+import moment from "moment";
+import request from "axios";
+import socket from "../../constants/socketClient";
+import { poolQuery } from "..";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import {
   GPT4,
   GPT4_MINI,
@@ -17,111 +17,111 @@ import {
   GPT4_MINI_MAX_OUTPUT_TOKENS,
   GPT4_MAX_OUTPUT_TOKENS,
   O1_MINI,
-  O1_PREVIEW
-} from '../../constants';
-import OpenAI from 'openai';
-import { getAssistant } from '../../assistants';
+  O1_PREVIEW,
+} from "../../constants";
+import OpenAI from "openai";
+import { getAssistant } from "../../assistants";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   defaultHeaders: {
-    'OpenAI-Beta': 'assistants=v2'
-  }
+    "OpenAI-Beta": "assistants=v2",
+  },
 });
 
 const SUPPORTED_IMAGE_EXTENSIONS = new Set([
-  'jpg',
-  'jpeg',
-  'png',
-  'gif',
-  'webp'
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "webp",
 ]);
 
 const SUPPORTED_IMAGE_CONTENT_TYPES = new Set([
-  'image/jpg',
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp'
+  "image/jpg",
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
 ]);
 
 const FILE_SEARCH_SUPPORTED_EXTENSIONS = new Set([
-  'c',
-  'cpp',
-  'cs',
-  'css',
-  'doc',
-  'docx',
-  'go',
-  'html',
-  'java',
-  'js',
-  'json',
-  'md',
-  'pdf',
-  'php',
-  'pptx',
-  'py',
-  'rb',
-  'sh',
-  'tex',
-  'ts',
-  'txt'
+  "c",
+  "cpp",
+  "cs",
+  "css",
+  "doc",
+  "docx",
+  "go",
+  "html",
+  "java",
+  "js",
+  "json",
+  "md",
+  "pdf",
+  "php",
+  "pptx",
+  "py",
+  "rb",
+  "sh",
+  "tex",
+  "ts",
+  "txt",
 ]);
 
 const CODE_INTERPRETER_SUPPORTED_EXTENSIONS = new Set([
-  'c',
-  'cpp',
-  'cs',
-  'csv',
-  'css',
-  'doc',
-  'docx',
-  'gif',
-  'html',
-  'java',
-  'jpeg',
-  'jpg',
-  'js',
-  'json',
-  'md',
-  'pdf',
-  'php',
-  'pkl',
-  'png',
-  'pptx',
-  'py',
-  'rb',
-  'sh',
-  'tar',
-  'tex',
-  'ts',
-  'txt',
-  'xlsx',
-  'xml',
-  'zip'
+  "c",
+  "cpp",
+  "cs",
+  "csv",
+  "css",
+  "doc",
+  "docx",
+  "gif",
+  "html",
+  "java",
+  "jpeg",
+  "jpg",
+  "js",
+  "json",
+  "md",
+  "pdf",
+  "php",
+  "pkl",
+  "png",
+  "pptx",
+  "py",
+  "rb",
+  "sh",
+  "tar",
+  "tex",
+  "ts",
+  "txt",
+  "xlsx",
+  "xml",
+  "zip",
 ]);
 
 export function formatUserJSON(user: User) {
-  const sanitize = (str: string) => str.replace(/[^\w\s]/gi, '');
-  const appliedUsername = user.username === 'mikey' ? 'Mikey' : user.username;
+  const sanitize = (str: string) => str.replace(/[^\w\s]/gi, "");
+  const appliedUsername = user.username === "mikey" ? "Mikey" : user.username;
   return JSON.stringify({
     username: appliedUsername,
     realName: user.realName,
     email: user.email,
     bio: [
-      sanitize(user.profileFirstRow || ''),
-      sanitize(user.profileSecondRow || ''),
-      sanitize(user.profileThirdRow || '')
+      sanitize(user.profileFirstRow || ""),
+      sanitize(user.profileSecondRow || ""),
+      sanitize(user.profileThirdRow || ""),
     ],
-    greeting: sanitize(user.greeting || ''),
+    greeting: sanitize(user.greeting || ""),
     twinkleXP: user.twinkleXP,
-    joinDate: moment.unix(user.joinDate || 0).format('lll'),
+    joinDate: moment.unix(user.joinDate || 0).format("lll"),
     userType: user.userType,
-    statusMsg: sanitize(user.statusMsg || ''),
+    statusMsg: sanitize(user.statusMsg || ""),
     profileTheme: user.profileTheme,
     youtubeUrl: user.youtubeUrl,
-    website: user.website
+    website: user.website,
   });
 }
 
@@ -132,7 +132,7 @@ export async function formatMessages({
   AIUserId,
   model,
   channelId,
-  topicId
+  topicId,
 }: {
   AIMessageId?: number;
   messages: Message[];
@@ -142,7 +142,7 @@ export async function formatMessages({
   channelId?: number;
   topicId?: number | null;
 }): Promise<{ formattedMessages: any[]; isFileMessage?: boolean }> {
-  const isO1Model = ['o1-mini', 'o1'].includes(model);
+  const isO1Model = ["o1-mini", "o1"].includes(model);
   const formattedMessages: any[] = [];
 
   const lastMessage = messages[messages.length - 1];
@@ -155,7 +155,7 @@ export async function formatMessages({
     const message = messages[i];
     const contentArray: ChatCompletionContentPart[] = [];
     const isUser = message.userId === user?.id;
-    const messageContent = message.content || '.';
+    const messageContent = message.content || ".";
 
     const urls = extractUrls(messageContent);
     let lastIndex = 0;
@@ -165,7 +165,7 @@ export async function formatMessages({
     for (const { url, index } of urlsToProcess) {
       const textBeforeUrl = messageContent.slice(lastIndex, index);
       if (textBeforeUrl) {
-        contentArray.push({ type: 'text', text: textBeforeUrl });
+        contentArray.push({ type: "text", text: textBeforeUrl });
       }
 
       if (isUser) {
@@ -173,10 +173,10 @@ export async function formatMessages({
           contentArray,
           fileUrl: url,
           isO1Model,
-          text: messageContent || url
+          text: messageContent || url,
         });
       } else {
-        contentArray.push({ type: 'text', text: url });
+        contentArray.push({ type: "text", text: url });
       }
 
       lastIndex = index + url.length;
@@ -184,10 +184,10 @@ export async function formatMessages({
 
     const remainingText = messageContent.slice(lastIndex);
     if (remainingText) {
-      contentArray.push({ type: 'text', text: remainingText });
+      contentArray.push({ type: "text", text: remainingText });
     }
 
-    let fileUrl = '';
+    let fileUrl = "";
     if (message.filePath && message.fileName && AIMessageId) {
       fileUrl = `https://d3jvoamd2k4p0s.cloudfront.net/attachments/chat/${message.filePath}/${message.fileName}`;
 
@@ -206,15 +206,15 @@ export async function formatMessages({
               messageId: AIMessageId,
               prompt:
                 lastMessageIsAReply && i === messages.length - 2
-                  ? lastMessage?.content || ''
-                  : messageContent
+                  ? lastMessage?.content || ""
+                  : messageContent,
             });
           if (isNew) {
-            const [{ actualFileName = '' }] = await poolQuery(
+            const [{ actualFileName = "" }] = await poolQuery(
               `SELECT actualFileName FROM content_files WHERE filePath = ?`,
               [message.filePath]
             );
-            socket.emit('update_last_used_file', {
+            socket.emit("update_last_used_file", {
               channelId,
               topicId,
               file: {
@@ -227,30 +227,30 @@ export async function formatMessages({
                 actualFileName,
                 messageId: message.id,
                 messageContent,
-                timeStamp: message.timeStamp
-              }
+                timeStamp: message.timeStamp,
+              },
             });
           }
           if (description) {
             contentArray.push({
-              type: 'text',
-              text: `[FILE SUMMARY]: ${description}\n\nPrompt: ${messageContent}`
+              type: "text",
+              text: `[FILE SUMMARY]: ${description}\n\nPrompt: ${messageContent}`,
             });
           } else if (!isImageFile(fileUrl)) {
             contentArray.push({
-              type: 'text',
-              text: `File URL: ${fileUrl}\nPrompt: ${messageContent}`
+              type: "text",
+              text: `File URL: ${fileUrl}\nPrompt: ${messageContent}`,
             });
           } else {
             await handleImageFile({
               contentArray,
               fileUrl,
               isO1Model,
-              text: message.content || fileUrl
+              text: message.content || fileUrl,
             });
           }
         } catch (error) {
-          console.error('Error handling file thread:', error);
+          console.error("Error handling file thread:", error);
         }
       }
     }
@@ -263,14 +263,14 @@ export async function formatMessages({
     }
 
     formattedMessages.push({
-      role: Number(message.userId) === AIUserId ? 'assistant' : 'user',
-      content: finalContent
+      role: Number(message.userId) === AIUserId ? "assistant" : "user",
+      content: finalContent,
     });
   }
 
   return {
     formattedMessages,
-    isFileMessage
+    isFileMessage,
   };
 
   function extractUrls(text: string): { url: string; index: number }[] {
@@ -279,7 +279,7 @@ export async function formatMessages({
     let match: RegExpExecArray | null;
 
     while ((match = urlRegex.exec(text)) !== null) {
-      urls.push({ url: match[0].replace(/\)$/, ''), index: match.index });
+      urls.push({ url: match[0].replace(/\)$/, ""), index: match.index });
     }
 
     return urls;
@@ -289,7 +289,7 @@ export async function formatMessages({
     contentArray,
     fileUrl,
     isO1Model,
-    text
+    text,
   }: {
     contentArray: ChatCompletionContentPart[];
     fileUrl: string;
@@ -299,16 +299,16 @@ export async function formatMessages({
     if (isO1Model) {
       try {
         const imageDescription = await getImageDescription(fileUrl);
-        contentArray.push({ type: 'text', text: imageDescription });
+        contentArray.push({ type: "text", text: imageDescription });
       } catch (error) {
         console.error(error);
         if (text) {
           contentArray.push({
-            type: 'text',
-            text: `File URL: ${fileUrl}\nPrompt: ${text}`
+            type: "text",
+            text: `File URL: ${fileUrl}\nPrompt: ${text}`,
           });
         } else {
-          contentArray.push({ type: 'text', text: `File URL: ${fileUrl}` });
+          contentArray.push({ type: "text", text: `File URL: ${fileUrl}` });
         }
       }
     } else {
@@ -316,24 +316,24 @@ export async function formatMessages({
         const validImageUrl = await validateImageFile(fileUrl);
         if (validImageUrl) {
           contentArray.push({
-            type: 'image_url',
-            image_url: { url: validImageUrl }
+            type: "image_url",
+            image_url: { url: validImageUrl },
           });
         } else {
           contentArray.push({
-            type: 'text',
-            text: `Image URL: ${fileUrl}\nThis image is too large to process`
+            type: "text",
+            text: `Image URL: ${fileUrl}\nThis image is too large to process`,
           });
         }
       } catch (error) {
-        console.error('Failed to get image description:', error);
+        console.error("Failed to get image description:", error);
         if (text) {
           contentArray.push({
-            type: 'text',
-            text: `Image URL: ${fileUrl}\nPrompt: ${text}`
+            type: "text",
+            text: `Image URL: ${fileUrl}\nPrompt: ${text}`,
           });
         } else {
-          contentArray.push({ type: 'text', text: `Image URL: ${fileUrl}` });
+          contentArray.push({ type: "text", text: `Image URL: ${fileUrl}` });
         }
       }
     }
@@ -358,27 +358,27 @@ export async function formatMessages({
         timeout: 5000,
         maxRedirects: 5,
         validateStatus: (status) => status === 200,
-        responseType: 'arraybuffer'
+        responseType: "arraybuffer",
       });
 
-      let contentType = response.headers['content-type'];
+      let contentType = response.headers["content-type"];
       const contentLength = response.data.length;
 
       if (contentLength > MAX_IMAGE_SIZE) {
-        return '';
+        return "";
       }
 
       if (!contentType) {
-        throw new Error('Content-Type header is missing');
+        throw new Error("Content-Type header is missing");
       }
 
-      contentType = contentType.split(';')[0].trim().toLowerCase();
+      contentType = contentType.split(";")[0].trim().toLowerCase();
 
       const buffer = Buffer.from(response.data);
       const isImage = isValidImageBuffer(buffer);
 
       if (!isImage) {
-        throw new Error('Response is not a valid image');
+        throw new Error("Response is not a valid image");
       }
 
       if (extension && SUPPORTED_IMAGE_EXTENSIONS.has(extension)) {
@@ -389,7 +389,7 @@ export async function formatMessages({
         console.warn(
           `Unexpected Content-Type: ${contentType} for URL: ${validatedUrl}`
         );
-        if (urlObj.hostname === 'd3jvoamd2k4p0s.cloudfront.net') {
+        if (urlObj.hostname === "d3jvoamd2k4p0s.cloudfront.net") {
           return validatedUrl;
         }
         throw new Error(`Unsupported Content-Type: ${contentType}`);
@@ -403,7 +403,7 @@ export async function formatMessages({
           error
         );
       }
-      throw new Error('Invalid image URL');
+      throw new Error("Invalid image URL");
     }
   }
 
@@ -413,13 +413,13 @@ export async function formatMessages({
       png: [0x89, 0x50, 0x4e, 0x47],
       gif87a: [0x47, 0x49, 0x46, 0x38, 0x37, 0x61],
       gif89a: [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
-      webp: [0x52, 0x49, 0x46, 0x46]
+      webp: [0x52, 0x49, 0x46, 0x46],
     };
 
     for (const [format, signature] of Object.entries(signatures)) {
       if (signature.every((byte, i) => buffer[i] === byte)) {
-        if (format === 'webp') {
-          const webpMarker = Buffer.from('WEBP');
+        if (format === "webp") {
+          const webpMarker = Buffer.from("WEBP");
           return webpMarker.every((byte, i) => buffer[i + 8] === byte);
         }
         return true;
@@ -430,7 +430,7 @@ export async function formatMessages({
   }
 
   function getFileExtension(fileName: string) {
-    const parts = fileName.split('.');
+    const parts = fileName.split(".");
     return parts.length > 1 ? parts.pop()?.toLowerCase() || null : null;
   }
 }
@@ -441,7 +441,7 @@ async function getOrCreateFileThread({
   channelId,
   topicId,
   messageId,
-  prompt
+  prompt,
 }: {
   filePath: string;
   fileName: string;
@@ -463,7 +463,7 @@ async function getOrCreateFileThread({
         threadId: null,
         description: null,
         isNew: false,
-        fileRowInsertId: 0
+        fileRowInsertId: 0,
       };
     }
 
@@ -478,13 +478,13 @@ async function getOrCreateFileThread({
 
     if (fileRow) {
       await poolQuery(
-        'UPDATE ai_chat_files SET lastUsed = NOW() WHERE id = ?',
+        "UPDATE ai_chat_files SET lastUsed = NOW() WHERE id = ?",
         [fileRow.id]
       );
-      socket.emit('update_last_used_file', {
+      socket.emit("update_last_used_file", {
         channelId,
         topicId,
-        file: fileRow
+        file: fileRow,
       });
     }
 
@@ -493,14 +493,14 @@ async function getOrCreateFileThread({
         threadId: fileRow.threadId,
         description: fileRow.description,
         isNew: false,
-        fileRowInsertId: 0
+        fileRowInsertId: 0,
       };
     }
 
-    socket.emit('update_ai_thinking_status', {
+    socket.emit("update_ai_thinking_status", {
       channelId,
-      status: 'reading_file',
-      messageId
+      status: "reading_file",
+      messageId,
     });
 
     const existingThreadId = fileRow?.threadId;
@@ -512,14 +512,14 @@ async function getOrCreateFileThread({
           threadId: null,
           description: null,
           isNew: false,
-          fileRowInsertId: 0
+          fileRowInsertId: 0,
         };
       }
     }
 
-    const fileReader = getAssistant('FileReader');
+    const fileReader = getAssistant("FileReader");
     if (!fileReader.assistantId) {
-      throw new Error('FileReader assistant not initialized');
+      throw new Error("FileReader assistant not initialized");
     }
 
     const instructions = prompt
@@ -531,7 +531,7 @@ async function getOrCreateFileThread({
       threadId: newThreadId,
       isPreviousThreadExpired,
       isNewThreadCreated,
-      fileId: appliedFileId
+      fileId: appliedFileId,
     } = await executeFileReaderRun({
       ...(existingThreadId ? { threadId: existingThreadId } : {}),
       fileUrl,
@@ -539,12 +539,12 @@ async function getOrCreateFileThread({
         ? `Please generate a detailed analysis of this file and its contents. Once that's done, respond to this prompt: ${prompt}`
         : `File URL: ${fileUrl}`,
       instructions,
-      attachment
+      attachment,
     });
 
     if (existingThreadId && isPreviousThreadExpired) {
-      await poolQuery('DELETE FROM ai_chat_files WHERE threadId = ?', [
-        existingThreadId
+      await poolQuery("DELETE FROM ai_chat_files WHERE threadId = ?", [
+        existingThreadId,
       ]);
     }
 
@@ -568,7 +568,7 @@ async function getOrCreateFileThread({
           appliedFileId,
           newThreadId,
           channelId,
-          topicId || null
+          topicId || null,
         ]
       );
       fileId = attachment?.file_id;
@@ -580,10 +580,10 @@ async function getOrCreateFileThread({
       description: fileDescription,
       isNew: !fileRow,
       fileId,
-      fileRowInsertId
+      fileRowInsertId,
     };
   } catch (error) {
-    console.error('Error in getOrCreateFileThread:', error);
+    console.error("Error in getOrCreateFileThread:", error);
     throw error;
   }
 }
@@ -600,12 +600,12 @@ export async function attachFile({ filePath }: { filePath: string }) {
     }
 
     const response = await request.get(filePath, {
-      responseType: 'arraybuffer'
+      responseType: "arraybuffer",
     });
 
     const fileBuffer = Buffer.from(response.data);
 
-    const tempFileName = `${uuidv4()}_${path.basename(filePath) || 'file'}`;
+    const tempFileName = `${uuidv4()}_${path.basename(filePath) || "file"}`;
     const tempFilePath = path.join(os.tmpdir(), tempFileName);
 
     fs.writeFileSync(tempFilePath, new Uint8Array(fileBuffer));
@@ -614,22 +614,22 @@ export async function attachFile({ filePath }: { filePath: string }) {
 
     const file = await openai.files.create({
       file: fileStream,
-      purpose: 'assistants'
+      purpose: "assistants",
     });
 
     fs.unlinkSync(tempFilePath);
 
     const tools = [];
-    if (isCodeInterpreter) tools.push({ type: 'code_interpreter' });
-    if (isFileSearch) tools.push({ type: 'file_search' });
+    if (isCodeInterpreter) tools.push({ type: "code_interpreter" });
+    if (isFileSearch) tools.push({ type: "file_search" });
 
     const attachment = {
       file_id: file.id,
-      tools
+      tools,
     };
     return attachment;
   } catch (error) {
-    console.error('Error uploading and attaching file:', error);
+    console.error("Error uploading and attaching file:", error);
     return null;
   }
 }
@@ -639,7 +639,7 @@ export async function getOrCreateThread({
   isReply,
   messages,
   user,
-  AIUserId
+  AIUserId,
 }: {
   threadKey?: string;
   isReply?: boolean;
@@ -647,14 +647,14 @@ export async function getOrCreateThread({
   user?: User;
   AIUserId?: number;
 }) {
-  let currentThreadId = '';
+  let currentThreadId = "";
 
   if (threadKey) {
     const [threadRow] = await poolQuery(
-      'SELECT threadId FROM ai_threads WHERE threadKey = ?',
+      "SELECT threadId FROM ai_threads WHERE threadKey = ?",
       [threadKey]
     );
-    currentThreadId = threadRow ? threadRow.threadId : '';
+    currentThreadId = threadRow ? threadRow.threadId : "";
   }
 
   if (!currentThreadId) {
@@ -662,15 +662,15 @@ export async function getOrCreateThread({
       messages,
       model: GPT4,
       user,
-      AIUserId: AIUserId
+      AIUserId: AIUserId,
     });
     const thread = await openai.beta.threads.create({
-      messages: formattedMessages as any[]
+      messages: formattedMessages as any[],
     });
     currentThreadId = thread.id;
     if (threadKey) {
       await poolQuery(
-        'INSERT INTO ai_threads (threadKey, threadId) VALUES (?, ?)',
+        "INSERT INTO ai_threads (threadKey, threadId) VALUES (?, ?)",
         [threadKey, currentThreadId]
       );
     }
@@ -680,12 +680,12 @@ export async function getOrCreateThread({
         messages,
         model: GPT4,
         user,
-        AIUserId: AIUserId
+        AIUserId: AIUserId,
       });
       for (const message of formattedMessages) {
         await createThreadMessage({
           threadId: currentThreadId,
-          content: message
+          content: message,
         });
       }
     } else {
@@ -695,17 +695,17 @@ export async function getOrCreateThread({
           messages: [lastMessage],
           model: GPT4,
           user,
-          AIUserId: AIUserId
+          AIUserId: AIUserId,
         });
         const formattedMessage = formattedMessages[0];
         if (Array.isArray(formattedMessage.content)) {
           const textParts = await Promise.all(
             formattedMessage.content.map(async (part: any) => {
-              if (part.type === 'image_url') {
+              if (part.type === "image_url") {
                 const description = await getImageDescription(
                   part.image_url.url
                 );
-                return { type: 'text', text: description };
+                return { type: "text", text: description };
               }
               return part;
             })
@@ -715,7 +715,7 @@ export async function getOrCreateThread({
 
         await createThreadMessage({
           threadId: currentThreadId,
-          content: formattedMessage
+          content: formattedMessage,
         });
       }
     }
@@ -725,7 +725,7 @@ export async function getOrCreateThread({
 
 export function cleanJSONString(jsonString: string): string {
   // eslint-disable-next-line no-control-regex
-  return jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+  return jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
 }
 
 export function compareStructure(target: any, expected: any): boolean {
@@ -736,7 +736,7 @@ export function compareStructure(target: any, expected: any): boolean {
     return false;
   }
 
-  if (type1 === 'array' && type2 === 'array') {
+  if (type1 === "array" && type2 === "array") {
     return (
       target.length === 0 ||
       expected.length === 0 ||
@@ -744,7 +744,7 @@ export function compareStructure(target: any, expected: any): boolean {
     );
   }
 
-  if (type1 === 'object' && type2 === 'object') {
+  if (type1 === "object" && type2 === "object") {
     const obj1Keys = Object.keys(target);
     const obj2Keys = Object.keys(expected);
 
@@ -753,7 +753,7 @@ export function compareStructure(target: any, expected: any): boolean {
     for (const key of obj1Keys) {
       if (!(key in expected)) return false;
       if (
-        typeof expected[key] === 'object' &&
+        typeof expected[key] === "object" &&
         !Object.keys(expected[key]).length
       ) {
         return true;
@@ -767,13 +767,13 @@ export function compareStructure(target: any, expected: any): boolean {
 }
 
 export function getType(obj: any): string {
-  if (Array.isArray(obj)) return 'array';
-  if (isObject(obj)) return 'object';
-  return 'primitive';
+  if (Array.isArray(obj)) return "array";
+  if (isObject(obj)) return "object";
+  return "primitive";
 }
 
 export function isObject(obj: any): obj is Record<string, unknown> {
-  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+  return typeof obj === "object" && obj !== null && !Array.isArray(obj);
 }
 
 export function shuffleArray(array: any[]) {
@@ -789,29 +789,29 @@ export async function fetchWebpageText(url: string) {
     const html = response.data;
     const $ = load(html);
 
-    $('script, style, iframe').remove();
+    $("script, style, iframe").remove();
 
     const contentElements = [
-      'p',
-      'div',
-      'main',
-      'span',
-      'font',
-      'article',
-      'section',
-      'h1',
-      'h2',
-      'h3',
-      'h4',
-      'h5',
-      'h6'
+      "p",
+      "div",
+      "main",
+      "span",
+      "font",
+      "article",
+      "section",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
     ];
 
     let maxContentLength = 0;
     let textElement = null;
-    $('body *').each((_, element) => {
+    $("body *").each((_, element) => {
       const contentLength = $(element)
-        .find(contentElements.join(','))
+        .find(contentElements.join(","))
         .text()
         .trim().length;
       if (contentLength > maxContentLength) {
@@ -823,13 +823,13 @@ export async function fetchWebpageText(url: string) {
     const webpageText = textElement
       ? $(textElement)
           .text()
-          .replace(/\s{2,}/g, '')
+          .replace(/\s{2,}/g, "")
           .trim()
-      : '';
+      : "";
 
     return webpageText;
   } catch (error) {
-    console.error('Error fetching article text:', error);
+    console.error("Error fetching article text:", error);
     throw error;
   }
 }
@@ -837,14 +837,16 @@ export async function fetchWebpageText(url: string) {
 export async function getPreviousMessages({
   AIMessageId,
   channelId,
-  topicId
+  topicId,
 }: {
   AIMessageId: number;
   channelId: number;
   topicId?: number | null;
 }) {
   let prevMessages = await poolQuery(
-    `SELECT * FROM msg_chats WHERE id < ? AND channelId = ?${topicId ? ' AND subjectId = ?' : ' AND subjectId IS NULL'} AND isNotification != '1' AND isDeleted != '1' ORDER BY id DESC LIMIT 20`,
+    `SELECT * FROM msg_chats WHERE id < ? AND channelId = ?${
+      topicId ? " AND subjectId = ?" : " AND subjectId IS NULL"
+    } AND isNotification != '1' AND isDeleted != '1' ORDER BY id DESC LIMIT 20`,
     [AIMessageId, channelId, topicId],
     true
   );
@@ -856,22 +858,24 @@ export async function getPreviousMessages({
     prevMessages = [
       replyMessage,
       ...(await poolQuery(
-        `SELECT * FROM msg_chats WHERE id <= ? AND channelId = ?${topicId ? ' AND subjectId = ?' : ' AND subjectId IS NULL'} AND isNotification != '1' AND isDeleted != '1' ORDER BY id DESC LIMIT 4`,
+        `SELECT * FROM msg_chats WHERE id <= ? AND channelId = ?${
+          topicId ? " AND subjectId = ?" : " AND subjectId IS NULL"
+        } AND isNotification != '1' AND isDeleted != '1' ORDER BY id DESC LIMIT 4`,
         [prevMessages[0].targetMessageId, channelId, topicId]
-      ))
+      )),
     ];
   }
 
   return {
     prevMessages: prevMessages.reverse(),
-    isReply
+    isReply,
   };
 }
 
 export async function insertNewEmptyAIMessage({
   channelId,
   topicId,
-  AIUserId
+  AIUserId,
 }: {
   channelId: number;
   topicId?: number | null;
@@ -881,8 +885,8 @@ export async function insertNewEmptyAIMessage({
     channelId,
     subjectId: topicId || null,
     userId: AIUserId,
-    content: '',
-    timeStamp: Math.floor(Date.now() / 1000)
+    content: "",
+    timeStamp: Math.floor(Date.now() / 1000),
   };
   const { insertId: AIMessageId } = await poolQuery(
     `INSERT INTO msg_chats SET ?`,
@@ -898,7 +902,7 @@ export async function createGPTCompletionWithRetry({
   model = APPLIED_MODEL,
   temperature = 0.7,
   timeout = 120000,
-  topP = 1
+  topP = 1,
 }: {
   maxAttempts?: number;
   messages: {
@@ -931,7 +935,7 @@ export async function createGPTCompletionWithRetry({
       model,
       messages,
       temperature,
-      top_p: topP
+      top_p: topP,
     };
 
     if (appliedModel !== O1_MINI && appliedModel !== O1_PREVIEW) {
@@ -959,15 +963,15 @@ export async function createGPTCompletionWithRetry({
         apiCall(appliedModel),
         new Promise((_, reject) =>
           setTimeout(
-            () => reject(new Error('OpenAI request timed out')),
+            () => reject(new Error("OpenAI request timed out")),
             timeout
           )
-        )
+        ),
       ]);
       const result = response.choices
         .map(
           ({
-            message
+            message,
           }: {
             message: {
               content: string;
@@ -980,52 +984,52 @@ export async function createGPTCompletionWithRetry({
             if (message.content) {
               return message.content.trim();
             }
-            return '';
+            return "";
           }
         )
-        .join(' ');
+        .join(" ");
       return {
-        response: (result || '').replace('```json', '').replace('```', ''),
-        model: appliedModel
+        response: (result || "").replace("```json", "").replace("```", ""),
+        model: appliedModel,
       };
     } catch (error: any) {
       console.error(`Attempt ${attempt} failed: ${error.message}`);
       if (attempt === maxAttempts) {
         return {
           response: `[ERROR] AI request failed: ${error.message}`,
-          model: appliedModel
+          model: appliedModel,
         };
       }
     }
   }
   return {
     response:
-      '[ERROR] Maximum retry attempts reached with no successful response',
-    model: appliedModel
+      "[ERROR] Maximum retry attempts reached with no successful response",
+    model: appliedModel,
   };
 }
 
 function fixMismatchedBrackets(jsonString: string): string {
   // Stack to keep track of opening brackets
   const stack: string[] = [];
-  const chars = jsonString.split('');
+  const chars = jsonString.split("");
 
   // First pass: Fix obvious mismatches
   for (let i = 0; i < chars.length; i++) {
-    if (chars[i] === '{' || chars[i] === '[') {
+    if (chars[i] === "{" || chars[i] === "[") {
       stack.push(chars[i]);
-    } else if (chars[i] === '}' || chars[i] === ']') {
+    } else if (chars[i] === "}" || chars[i] === "]") {
       const lastOpening = stack.pop();
       // If we have a mismatch, fix it
-      if (lastOpening === '{' && chars[i] === ']') {
-        chars[i] = '}';
-      } else if (lastOpening === '[' && chars[i] === '}') {
-        chars[i] = ']';
+      if (lastOpening === "{" && chars[i] === "]") {
+        chars[i] = "}";
+      } else if (lastOpening === "[" && chars[i] === "}") {
+        chars[i] = "]";
       }
     }
   }
 
-  return chars.join('');
+  return chars.join("");
 }
 
 export async function generateGPTResponseInObj({
@@ -1035,7 +1039,7 @@ export async function generateGPTResponseInObj({
   temperature = 0.7,
   retryCount = 0,
   MAX_RETRY_COUNT = 3,
-  RETRY_COOLDOWN_MS = 3000
+  RETRY_COOLDOWN_MS = 3000,
 }: {
   model?: string;
   prompt: string;
@@ -1050,24 +1054,24 @@ export async function generateGPTResponseInObj({
 
   try {
     const { response: generatedJSON } = await createGPTCompletionWithRetry({
-      messages: [{ role: 'user', content: fullPrompt }],
+      messages: [{ role: "user", content: fullPrompt }],
       model,
-      temperature
+      temperature,
     });
 
     const jsonMatch = generatedJSON.match(/```(?:json)?\s*([\s\S]*?)```/) || [
       null,
-      generatedJSON
+      generatedJSON,
     ];
     const extractedJSON = jsonMatch[1].trim();
 
     let cleanedJSON = cleanJSONString(extractedJSON)
       .replace(/^\s*{\s*"/, '{"')
       .replace(/"\s*}\s*$/, '"}')
-      .replace(/,\s*([\]}])/g, '$1')
-      .replace(/,\s*,/g, ',')
-      .replace(/\[\s*,/g, '[')
-      .replace(/,\s*\]/g, ']');
+      .replace(/,\s*([\]}])/g, "$1")
+      .replace(/,\s*,/g, ",")
+      .replace(/\[\s*,/g, "[")
+      .replace(/,\s*\]/g, "]");
 
     cleanedJSON = fixMismatchedBrackets(cleanedJSON);
 
@@ -1097,22 +1101,22 @@ export async function generateGPTResponseInObj({
         }
       }
     } catch (parseError) {
-      console.error('Error parsing JSON:', parseError);
-      console.error('Generated JSON:', generatedJSON);
-      console.error('Cleaned JSON:', cleanedJSON);
+      console.error("Error parsing JSON:", parseError);
+      console.error("Generated JSON:", generatedJSON);
+      console.error("Cleaned JSON:", cleanedJSON);
 
       try {
         const recoveredJSON = cleanedJSON
           .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":')
           .replace(/:\s*'([^']*)'/g, ':"$1"')
-          .replace(/,\s*([}\]])/g, '$1')
-          .replace(/\]\s*{/g, '],[')
-          .replace(/}\s*{/g, '},{');
+          .replace(/,\s*([}\]])/g, "$1")
+          .replace(/\]\s*{/g, "],[")
+          .replace(/}\s*{/g, "},{");
 
         result = JSON.parse(recoveredJSON);
         isValid = compareStructure(result, expectedStructure);
       } catch (recoveryError) {
-        console.error('Recovery attempt failed:', recoveryError);
+        console.error("Recovery attempt failed:", recoveryError);
       }
     }
 
@@ -1121,7 +1125,6 @@ export async function generateGPTResponseInObj({
     }
 
     if (retryCount < MAX_RETRY_COUNT) {
-      console.log(`Retry attempt ${retryCount + 1} of ${MAX_RETRY_COUNT}`);
       await new Promise((resolve) => setTimeout(resolve, RETRY_COOLDOWN_MS));
 
       const retryPrompt =
@@ -1136,13 +1139,13 @@ export async function generateGPTResponseInObj({
         temperature: Math.max(0.1, temperature - 0.2),
         retryCount: retryCount + 1,
         MAX_RETRY_COUNT,
-        RETRY_COOLDOWN_MS
+        RETRY_COOLDOWN_MS,
       });
     }
 
-    throw new Error('Maximum retries reached with invalid responses');
+    throw new Error("Maximum retries reached with invalid responses");
   } catch (error) {
-    console.error('Error in generateGPTResponseInObj:', error);
+    console.error("Error in generateGPTResponseInObj:", error);
     if (retryCount < MAX_RETRY_COUNT) {
       await new Promise((resolve) => setTimeout(resolve, RETRY_COOLDOWN_MS));
       return generateGPTResponseInObj({
@@ -1152,7 +1155,7 @@ export async function generateGPTResponseInObj({
         temperature,
         retryCount: retryCount + 1,
         MAX_RETRY_COUNT,
-        RETRY_COOLDOWN_MS
+        RETRY_COOLDOWN_MS,
       });
     }
     throw error;
@@ -1163,14 +1166,14 @@ async function getImageDescription(imageUrl: string): Promise<string> {
   const { response: description } = await createGPTCompletionWithRetry({
     messages: [
       {
-        role: 'user',
+        role: "user",
         content: [
-          { type: 'text', text: 'Describe this image in detail:' },
-          { type: 'image_url', image_url: { url: imageUrl } }
-        ]
-      }
+          { type: "text", text: "Describe this image in detail:" },
+          { type: "image_url", image_url: { url: imageUrl } },
+        ],
+      },
     ],
-    model: GPT4_MINI
+    model: GPT4_MINI,
   });
 
   return `[Image Description: ${description}]`;
@@ -1178,7 +1181,7 @@ async function getImageDescription(imageUrl: string): Promise<string> {
 
 export async function getLatestFileThread({
   channelId,
-  topicId
+  topicId,
 }: {
   channelId: number;
   topicId?: number | null;
@@ -1196,12 +1199,12 @@ export async function getLatestFileThread({
 
   if (!fileRow) return null;
   await poolQuery(`UPDATE ai_chat_files SET lastUsed = NOW() WHERE id = ?`, [
-    fileRow.id
+    fileRow.id,
   ]);
-  socket.emit('update_last_used_file', {
+  socket.emit("update_last_used_file", {
     channelId,
     topicId,
-    file: fileRow
+    file: fileRow,
   });
   return fileRow.threadId;
 }
@@ -1218,7 +1221,6 @@ export async function validateImageUrlWithRetry(url: string): Promise<boolean> {
         await new Promise((resolve) =>
           setTimeout(resolve, IMAGE_VALIDATION_RETRY_DELAY)
         );
-        console.log(`Retry ${attempt} failed for ${url}, attempting again...`);
       }
     } catch (error) {
       console.error(`Attempt ${attempt} failed for ${url}:`, error);
@@ -1239,16 +1241,16 @@ export async function validateImageUrlWithRetry(url: string): Promise<boolean> {
       const timeoutId = setTimeout(() => controller.abort(), IMAGE_TIMEOUT);
 
       const response = await fetch(url, {
-        method: 'HEAD',
-        signal: controller.signal
+        method: "HEAD",
+        signal: controller.signal,
       });
       clearTimeout(timeoutId);
 
       if (!response.ok) return false;
 
-      const contentType = response.headers.get('content-type');
+      const contentType = response.headers.get("content-type");
 
-      if (!contentType?.startsWith('image/')) return false;
+      if (!contentType?.startsWith("image/")) return false;
 
       return true;
     } catch (error) {
@@ -1263,7 +1265,7 @@ export async function executeFileReaderRun({
   content,
   instructions,
   fileUrl,
-  attachment
+  attachment,
 }: {
   threadId?: string;
   content: string;
@@ -1286,17 +1288,17 @@ export async function executeFileReaderRun({
 
     if (!threadId) {
       const createAndRunResponse = await openai.beta.threads.createAndRun({
-        assistant_id: getAssistant('FileReader').assistantId as string,
+        assistant_id: getAssistant("FileReader").assistantId as string,
         thread: {
           messages: [
             {
-              role: 'user',
+              role: "user",
               content,
-              ...(attachment && { attachments: [attachment] })
-            }
-          ]
+              ...(attachment && { attachments: [attachment] }),
+            },
+          ],
         },
-        ...(instructions && { instructions })
+        ...(instructions && { instructions }),
       });
       run = createAndRunResponse;
       newThreadId = createAndRunResponse.thread_id;
@@ -1304,43 +1306,43 @@ export async function executeFileReaderRun({
       await createThreadMessage({
         threadId,
         content,
-        attachment
+        attachment,
       });
 
       run = await openai.beta.threads.runs.create(threadId, {
-        assistant_id: getAssistant('FileReader').assistantId as string,
-        ...(instructions && { instructions })
+        assistant_id: getAssistant("FileReader").assistantId as string,
+        ...(instructions && { instructions }),
       });
     }
 
     const result = await executeOpenAIRun(run);
     return {
       result,
-      threadId: newThreadId || '',
+      threadId: newThreadId || "",
       isNewThreadCreated: !threadId,
       isPreviousThreadExpired: false,
-      fileId: attachment?.file_id || ''
+      fileId: attachment?.file_id || "",
     };
   } catch (error) {
     if (threadId) {
       try {
         const newAttachment = await attachFile({ filePath: fileUrl });
         if (!newAttachment) {
-          throw new Error('Failed to create new attachment');
+          throw new Error("Failed to create new attachment");
         }
 
         const createAndRunResponse = await openai.beta.threads.createAndRun({
-          assistant_id: getAssistant('FileReader').assistantId as string,
+          assistant_id: getAssistant("FileReader").assistantId as string,
           thread: {
             messages: [
               {
-                role: 'user',
+                role: "user",
                 content,
-                attachments: [newAttachment as any]
-              }
-            ]
+                attachments: [newAttachment as any],
+              },
+            ],
           },
-          ...(instructions && { instructions })
+          ...(instructions && { instructions }),
         });
 
         const result = await executeOpenAIRun(createAndRunResponse);
@@ -1349,10 +1351,10 @@ export async function executeFileReaderRun({
           threadId: createAndRunResponse.thread_id,
           fileId: newAttachment.file_id,
           isNewThreadCreated: true,
-          isPreviousThreadExpired: true
+          isPreviousThreadExpired: true,
         };
       } catch (retryError) {
-        console.error('Error during retry attempt:', retryError);
+        console.error("Error during retry attempt:", retryError);
         throw retryError;
       }
     }
@@ -1371,7 +1373,7 @@ export async function executeOpenAIRun(run: {
 
     const timeout = setTimeout(() => {
       clearInterval(statusCheck);
-      reject(new Error('Operation timed out'));
+      reject(new Error("Operation timed out"));
     }, MAX_WAIT_TIME);
 
     const statusCheck = setInterval(async () => {
@@ -1381,22 +1383,22 @@ export async function executeOpenAIRun(run: {
           run.id
         );
 
-        if (runStatus.status === 'completed') {
+        if (runStatus.status === "completed") {
           clearInterval(statusCheck);
           clearTimeout(timeout);
           const messages = await openai.beta.threads.messages.list(
             run.thread_id
           );
           const assistantMessage = messages.data.find(
-            (msg) => msg.role === 'assistant' && msg.run_id === run.id
+            (msg) => msg.role === "assistant" && msg.run_id === run.id
           );
           const textResponse =
-            assistantMessage?.content[0]?.type === 'text'
+            assistantMessage?.content[0]?.type === "text"
               ? assistantMessage.content[0].text
               : null;
-          resolve(textResponse?.value || '');
+          resolve(textResponse?.value || "");
         } else if (
-          ['failed', 'cancelled', 'expired'].includes(runStatus.status)
+          ["failed", "cancelled", "expired"].includes(runStatus.status)
         ) {
           clearInterval(statusCheck);
           clearTimeout(timeout);
@@ -1411,8 +1413,8 @@ export async function executeOpenAIRun(run: {
             const runs = await openai.beta.threads.runs.list(run.thread_id);
             for (const existingRun of runs.data) {
               if (
-                (existingRun.status === 'in_progress' ||
-                  existingRun.status === 'queued') &&
+                (existingRun.status === "in_progress" ||
+                  existingRun.status === "queued") &&
                 existingRun.id !== run.id
               ) {
                 try {
@@ -1426,9 +1428,9 @@ export async function executeOpenAIRun(run: {
                     cancelError
                   );
                 }
-              } else if (existingRun.status === 'cancelling') {
-                await poolQuery('DELETE FROM ai_threads WHERE threadId = ?', [
-                  run.thread_id
+              } else if (existingRun.status === "cancelling") {
+                await poolQuery("DELETE FROM ai_threads WHERE threadId = ?", [
+                  run.thread_id,
                 ]);
                 throw new Error(`Thread ${run.thread_id} is corrupted.`);
               }
@@ -1439,10 +1441,10 @@ export async function executeOpenAIRun(run: {
               run.id
             );
 
-            if (retryRun.status === 'in_progress') {
+            if (retryRun.status === "in_progress") {
               return;
             }
-            reject(new Error('Run failed after cancelling previous runs'));
+            reject(new Error("Run failed after cancelling previous runs"));
           } catch (cancelError: any) {
             reject(
               new Error(`Failed to handle run error: ${cancelError.message}`)
@@ -1458,17 +1460,17 @@ export async function executeOpenAIRun(run: {
 
 export async function createThreadMessage({
   threadId,
-  role = 'user',
+  role = "user",
   content,
-  attachment
+  attachment,
 }: {
   threadId: string;
-  role?: 'user' | 'assistant';
+  role?: "user" | "assistant";
   content: string | { role: string; content: any };
   attachment?: { file_id: string; tools: any[] };
 }) {
   const message =
-    typeof content === 'string'
+    typeof content === "string"
       ? { role, content, ...(attachment && { attachments: [attachment] }) }
       : content;
   try {
@@ -1479,15 +1481,15 @@ export async function createThreadMessage({
         const runs = await openai.beta.threads.runs.list(threadId);
 
         for (const run of runs.data) {
-          if (run.status === 'in_progress' || run.status === 'queued') {
+          if (run.status === "in_progress" || run.status === "queued") {
             try {
               await openai.beta.threads.runs.cancel(threadId, run.id);
             } catch (cancelError) {
               console.error(`Failed to cancel run ${run.id}:`, cancelError);
             }
-          } else if (run.status === 'cancelling') {
-            await poolQuery('DELETE FROM ai_threads WHERE threadId = ?', [
-              threadId
+          } else if (run.status === "cancelling") {
+            await poolQuery("DELETE FROM ai_threads WHERE threadId = ?", [
+              threadId,
             ]);
             throw new Error(
               `Thread ${threadId} is corrupted. Removing thread.`
@@ -1521,19 +1523,19 @@ export function convertSegmentsToSrt(segments: any[]) {
 
       return `${idx + 1}\n${start} --> ${end}\n${text}`;
     })
-    .join('\n\n');
+    .join("\n\n");
 
   function formatSrtTime(sec: number) {
     const hours = Math.floor(sec / 3600);
     const minutes = Math.floor((sec % 3600) / 60);
     const seconds = Math.floor(sec % 60);
     const milliseconds = Math.floor((sec - Math.floor(sec)) * 1000);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
       2,
-      '0'
-    )}:${String(seconds).padStart(2, '0')},${String(milliseconds).padStart(
+      "0"
+    )}:${String(seconds).padStart(2, "0")},${String(milliseconds).padStart(
       3,
-      '0'
+      "0"
     )}`;
   }
 }
