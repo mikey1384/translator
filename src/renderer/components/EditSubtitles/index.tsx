@@ -760,13 +760,16 @@ export default function EditSubtitles({
       // Generate SRT content from subtitles
       const srtContent = generateSrtContent(subtitlesState);
 
-      // Use our reliable save utility
-      console.log("Using Electron's saveFile API with retries");
+      // Use our reliable save utility with dialog mode explicitly set
+      console.log(
+        "Using Electron's saveFile API with dialog mode explicitly enabled"
+      );
       const saveOptions = {
-        title: "Save SRT File",
+        title: "Save SRT File As",
         defaultPath: suggestedName,
         filters: [{ name: "SRT Files", extensions: ["srt"] }],
         content: srtContent,
+        forceDialog: true, // Use our new flag to force a dialog
       };
 
       try {
@@ -777,15 +780,23 @@ export default function EditSubtitles({
           // Update our reference to this file for future saves
           setOriginalSrtPath(result.filePath);
           localStorage.setItem("originalSrtPath", result.filePath);
+          localStorage.setItem("originalLoadPath", result.filePath); // Update originalLoadPath too
+          localStorage.setItem("targetPath", result.filePath); // Update targetPath for consistency
           console.log("File saved as:", result.filePath);
+
+          // Show success message
+          alert(`File saved successfully to:\n${result.filePath}`);
 
           // If we had an originalSrtFile before, we don't need it anymore
           // since we now have a file path for direct saving
           if (originalSrtFile) {
             setOriginalSrtFile(null);
           }
+        } else if (result.error && !result.error.includes("canceled")) {
+          console.error("Error saving file:", result.error);
+          onSetError(`Save failed: ${result.error}`);
         } else {
-          console.warn("Save As dialog completed but no filePath returned");
+          console.warn("Save As dialog was canceled");
         }
       } catch (saveError: any) {
         console.error("Error saving file:", saveError);

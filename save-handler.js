@@ -43,6 +43,7 @@ if (!handlerExists) {
         filePath: options.filePath,
         hasDefaultPath: !!options.defaultPath,
         defaultPath: options.defaultPath,
+        forceDialog: !!options.forceDialog,
       }
     );
 
@@ -53,9 +54,67 @@ if (!handlerExists) {
       filePath: options.filePath,
       originalLoadPath: options.originalLoadPath,
       targetPath: options.targetPath,
+      forceDialog: options.forceDialog,
     });
 
     try {
+      // If forceDialog is true, show a save dialog regardless of other options
+      if (options.forceDialog) {
+        console.log(
+          "🚨 SAVE-HANDLER: forceDialog is true, showing save dialog"
+        );
+
+        try {
+          const { dialog } = require("electron");
+          const BrowserWindow = require("electron").BrowserWindow;
+
+          // Get the focused window or first window
+          const focusedWindow =
+            BrowserWindow.getFocusedWindow() ||
+            BrowserWindow.getAllWindows()[0];
+
+          if (!focusedWindow) {
+            console.error("🚨 SAVE-HANDLER: No window available for dialog");
+            return { error: "No window available for dialog" };
+          }
+
+          // Show the save dialog
+          const { canceled, filePath } = await dialog.showSaveDialog(
+            focusedWindow,
+            {
+              title: options.title || "Save File",
+              defaultPath: options.defaultPath || "untitled.srt",
+              filters: options.filters || [
+                { name: "All Files", extensions: ["*"] },
+              ],
+            }
+          );
+
+          if (canceled || !filePath) {
+            console.log("🚨 SAVE-HANDLER: Save dialog was canceled");
+            return { error: "Save was canceled" };
+          }
+
+          // Save to the selected path
+          fs.writeFileSync(filePath, options.content, "utf8");
+          console.log(
+            "🚨 SAVE-HANDLER: File saved successfully with dialog to:",
+            filePath
+          );
+          return { filePath };
+        } catch (dialogError) {
+          console.error(
+            "🚨 SAVE-HANDLER: Error showing save dialog:",
+            dialogError
+          );
+          return {
+            error: `Error showing save dialog: ${
+              dialogError.message || String(dialogError)
+            }`,
+          };
+        }
+      }
+
       // CASE 1: If originalLoadPath is provided, try to use it first
       if (
         options.originalLoadPath &&

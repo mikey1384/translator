@@ -225,20 +225,27 @@ export async function saveFileWithRetry(options: {
   title?: string;
   originalLoadPath?: string;
   targetPath?: string;
+  forceDialog?: boolean;
 }): Promise<{ filePath?: string; error?: string }> {
   // Get the original file paths if they exist and weren't passed in
   const storedTargetPath = localStorage.getItem("targetPath");
   const storedOriginalLoadPath = localStorage.getItem("originalLoadPath");
 
-  // Use passed values or fall back to stored values
-  const targetPath = options.targetPath || storedTargetPath;
-  const originalLoadPath = options.originalLoadPath || storedOriginalLoadPath;
+  // Use passed values or fall back to stored values, but respect forceDialog
+  const targetPath = options.forceDialog
+    ? undefined
+    : options.targetPath || storedTargetPath;
+  const originalLoadPath = options.forceDialog
+    ? undefined
+    : options.originalLoadPath || storedOriginalLoadPath;
+  const filePath = options.forceDialog ? undefined : options.filePath;
 
   // Log all path information for debugging
   console.log("💥 [PATH DEBUG] saveFileWithRetry called with all path info:", {
     options,
     targetPath,
     originalLoadPath,
+    forceDialog: options.forceDialog,
     allLocalStorageKeys: Object.keys(localStorage).join(", "),
     pathRelatedStorage: Object.keys(localStorage)
       .filter((key) => key.includes("path"))
@@ -273,12 +280,16 @@ export async function saveFileWithRetry(options: {
       ...options,
       targetPath,
       originalLoadPath,
+      filePath,
+      forceDialog: options.forceDialog,
     });
 
     const saveOptions = {
       ...options,
       targetPath,
       originalLoadPath,
+      filePath,
+      forceDialog: options.forceDialog,
     };
 
     console.log(
