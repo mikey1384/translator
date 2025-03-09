@@ -149,22 +149,16 @@ function AppContent() {
             // Skip the ping check since it's causing UI issues
             setElectronConnected(true);
 
-            // Optional debug log
-            console.log("Electron API available, assuming connected");
-
             // Try accessing saveFile to verify it's actually working
             if (typeof window.electron.saveFile === "function") {
-              console.log("Electron saveFile function is available");
+              // Function exists
             }
           } catch (innerError) {
-            console.log("Error during Electron API check:", innerError);
             // Still set connected to true to avoid blocking UI
             setElectronConnected(true);
           }
         }
       } catch (err) {
-        // Suppress error to avoid blocking the UI
-        console.log("Error suppressed in Electron connection check");
         // Force it to true to prevent UI errors
         setElectronConnected(true);
       }
@@ -186,7 +180,7 @@ function AppContent() {
       setSubtitleSegments(fixedSegments);
       setSourceLanguage(segments.length > 0 ? "en" : ""); // Assuming English by default
     } catch (err) {
-      console.error("Error parsing generated subtitles:", err);
+      // Error parsing generated subtitles
     }
   };
 
@@ -243,18 +237,13 @@ function AppContent() {
 
   // Handler for changing SRT file
   const handleChangeSrt = async (file: File) => {
-    console.log("handleChangeSrt called with file:", file.name);
-
     // Always store the filename in localStorage for consistent saving behavior
     localStorage.setItem("loadedSrtFileName", file.name);
-    console.log("App: Stored loadedSrtFileName:", file.name);
 
     // Try to get the real path if possible (for Electron)
     const realPath = (file as any).path;
     if (realPath) {
-      console.log("App: Found real file path:", realPath);
       localStorage.setItem("originalLoadPath", realPath);
-      console.log("App: Stored originalLoadPath:", realPath);
     }
 
     // Import the loadSrtFile function from helpers
@@ -264,7 +253,6 @@ function AppContent() {
     const result = await loadSrtFile(
       file,
       (content, segments, filePath) => {
-        console.log(`SRT file loaded with ${segments.length} segments`);
         setSubtitleSegments(segments);
 
         // Store path in a shared state for the EditSubtitles component to access
@@ -272,7 +260,6 @@ function AppContent() {
           // We could use localStorage, URL parameters, or context API to share this
           // The simplest approach would be localStorage for this quick fix
           localStorage.setItem("originalSrtPath", filePath);
-          console.log("Stored originalSrtPath in localStorage:", filePath);
         }
       },
       (error) => {
@@ -291,7 +278,6 @@ function AppContent() {
   const handleOpenSrtFile = async () => {
     if (window.electron?.openFile) {
       try {
-        console.log("App: Using Electron's file dialog to open SRT file");
         const result = await window.electron.openFile({
           title: "Open SRT File",
           filters: [{ name: "SRT Files", extensions: ["srt"] }],
@@ -305,26 +291,21 @@ function AppContent() {
         ) {
           const filePath = result.filePaths[0];
           const content = result.fileContents[0];
-          console.log("App: File opened from Electron dialog:", filePath);
 
           // Store the real path in localStorage
           localStorage.setItem("originalLoadPath", filePath);
-          console.log("App: Stored originalLoadPath:", filePath);
 
           // Also store the filename for consistency
           const filename = filePath.split(/[\/\\]/).pop() || "subtitles.srt";
           localStorage.setItem("loadedSrtFileName", filename);
-          console.log("App: Stored loadedSrtFileName:", filename);
 
           // Import the parseSrt function and process the file
           const { parseSrt } = await import("./helpers/subtitle-utils");
           const segments = parseSrt(content);
-          console.log(`SRT file loaded with ${segments.length} segments`);
           setSubtitleSegments(segments);
 
           // Store path for EditSubtitles component to access
           localStorage.setItem("originalSrtPath", filePath);
-          console.log("Stored originalSrtPath in localStorage:", filePath);
         }
       } catch (err) {
         console.error("Error using Electron file dialog:", err);

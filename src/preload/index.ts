@@ -1,11 +1,9 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-
 // Define a complete API for our application
 const electronAPI = {
   // Test methods - implementing a direct ping to avoid IPC
   ping: () => {
-    console.log("Ping called in preload - direct response");
     return Promise.resolve("pong");
   },
 
@@ -65,7 +63,6 @@ const electronAPI = {
 
   // File operations
   saveFile: (options: any) => {
-    console.log("Invoking saveFile in preload with options:", options);
     return ipcRenderer.invoke("save-file", options);
   },
   openFile: (options: any) => ipcRenderer.invoke("open-file", options),
@@ -73,4 +70,3 @@ const electronAPI = {
 
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld("electron", electronAPI);
-

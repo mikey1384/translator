@@ -1,7 +1,7 @@
 import {
   app,
   BrowserWindow,
-  ipcMain as electronIpcMain,
+  ipcMain,
   dialog,
 } from "electron";
 import path from "path";
@@ -26,12 +26,9 @@ if (isDev) {
       ],
     });
   } catch (err) {
-    console.error("Error setting up electron-reloader:", err);
+    log.error("Error setting up electron-reloader:", err);
   }
 }
-
-// Ensure ipcMain is properly defined
-const ipcMain = electronIpcMain;
 
 // Load environment variables from .env file
 dotenv.config();
@@ -169,7 +166,7 @@ const createWindow = async () => {
             lastModified = currentModified;
           }
         } catch (err) {
-          console.error("Error checking renderer build:", err);
+          log.error("Error checking renderer build:", err);
         }
       }, 1000);
 
@@ -181,21 +178,13 @@ const createWindow = async () => {
 
     // Add event listeners for debugging
     mainWindow.webContents.on("did-finish-load", () => {
-      console.log("Page finished loading");
+      log.info("Page finished loading");
     });
 
     mainWindow.webContents.on(
       "did-fail-load",
       (event, errorCode, errorDescription) => {
-        console.error("Failed to load page:", errorCode, errorDescription);
-      }
-    );
-
-    mainWindow.webContents.on(
-      "console-message",
-      (event, level, message, line, sourceId) => {
-        const levels = ["verbose", "info", "warning", "error"];
-        console.log(`[${levels[level]}] ${message} (${sourceId}:${line})`);
+        log.error("Failed to load page:", errorCode, errorDescription);
       }
     );
 
@@ -203,7 +192,6 @@ const createWindow = async () => {
 
     return mainWindow;
   } catch (error) {
-    console.error("Error creating window:", error);
     log.error("Error creating window:", error);
     throw error;
   }
@@ -256,45 +244,3 @@ app.on("will-quit", async () => {
   }
 });
 
-// Set up temporary directory for file processing
-function setupTempDirectory() {
-  const tempDir = path.join(app.getPath("userData"), "temp");
-
-  try {
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    log.info(`Temp directory created at: ${tempDir}`);
-  } catch (error) {
-    log.error("Failed to create temp directory:", error);
-  }
-}
-
-// Clean up temporary directory
-async function cleanupTempDirectory() {
-  const tempDir = path.join(app.getPath("userData"), "temp");
-
-  try {
-    if (fs.existsSync(tempDir)) {
-      // Simple cleanup - in a real app, add more sophisticated file management
-      const files = fs.readdirSync(tempDir);
-      for (const file of files) {
-        fs.unlinkSync(path.join(tempDir, file));
-      }
-    }
-  } catch (error) {
-    log.error("Error cleaning up temp directory:", error);
-    throw error;
-  }
-}
-
-// This function is no longer needed as we're using the imported setupIpcHandlers
-// from ../electron/ipc-handlers.ts instead
-/*
-function setupIpcHandlers() {
-  // We'll implement these in separate modules
-  // ipcMain.handle('generate-subtitles', handleGenerateSubtitles);
-  // ipcMain.handle('translate-subtitles', handleTranslateSubtitles);
-  // ipcMain.handle('merge-subtitles', handleMergeSubtitles);
-}
-*/

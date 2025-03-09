@@ -345,12 +345,8 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
             <ElectronFileButton
               buttonText={hasSubtitles ? "Change SRT" : "Add SRT"}
               onClick={async () => {
-                console.log(
-                  "Button clicked in TimestampDisplay, calling openSubtitleWithElectron directly"
-                );
                 await openSubtitleWithElectron(
-                  (file, content, segments, filePath) => {
-                    // Success callback - Pass the file to parent component
+                  (file) => {
                     if (onChangeSrt) {
                       onChangeSrt(file);
                     }

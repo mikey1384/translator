@@ -527,15 +527,9 @@ export default function EditSubtitles({
   useEffect(() => {
     const savedPath = localStorage.getItem("originalSrtPath");
     if (savedPath && !originalSrtPath) {
-      console.log("Loaded originalSrtPath from localStorage:", savedPath);
       setOriginalSrtPath(savedPath);
     }
   }, []);
-
-  // Debug effect to log when originalSrtPath changes
-  useEffect(() => {
-    console.log("originalSrtPath changed:", originalSrtPath);
-  }, [originalSrtPath]);
 
   const handleTimeInputBlur = useCallback(
     (index: number, field: "start" | "end") => {
@@ -689,8 +683,6 @@ export default function EditSubtitles({
   async function handleSrtFileInputChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-    console.log("SRT file input change triggered in EditSubtitles");
-
     // Prevent default browser file input behavior
     event.preventDefault();
 
@@ -702,13 +694,11 @@ export default function EditSubtitles({
 
         // Store the original load path (this is the real file system path now)
         setOriginalLoadPath(filePath);
-        console.log("EditSubtitles: Stored originalLoadPath:", filePath);
 
         // Process the content directly
         processSrtContent(content);
       },
       (error) => {
-        console.error("EditSubtitles: Error opening subtitle:", error);
         onSetError(`Failed to open SRT file: ${error}`);
       }
     );
@@ -719,12 +709,9 @@ export default function EditSubtitles({
     try {
       // Check if we received valid content
       if (!srtContent) {
-        console.error("No SRT content provided to processSrtContent");
         onSetError("Empty SRT file content");
         return;
       }
-
-      console.log("Processing SRT content, length:", srtContent.length);
 
       // Reset states
       setSubtitlesState([]);
@@ -734,15 +721,12 @@ export default function EditSubtitles({
       const parsed = parseSrt(srtContent);
 
       if (parsed.length === 0) {
-        console.warn("No subtitles parsed from SRT content");
         onSetError("No subtitles found in SRT file");
         return;
       }
 
-      console.log(`Successfully parsed ${parsed.length} subtitles`);
       setSubtitlesState(parsed);
     } catch (error) {
-      console.error("Error parsing SRT:", error);
       onSetError("Invalid SRT file");
     }
   }
@@ -755,15 +739,10 @@ export default function EditSubtitles({
     try {
       const suggestedName =
         customFilename || originalSrtFile?.name || "edited_subtitles.srt";
-      console.log("Save As operation with suggested name:", suggestedName);
 
       // Generate SRT content from subtitles
       const srtContent = generateSrtContent(subtitlesState);
 
-      // Use our reliable save utility with dialog mode explicitly set
-      console.log(
-        "Using Electron's saveFile API with dialog mode explicitly enabled"
-      );
       const saveOptions = {
         title: "Save SRT File As",
         defaultPath: suggestedName,
@@ -782,7 +761,6 @@ export default function EditSubtitles({
           localStorage.setItem("originalSrtPath", result.filePath);
           localStorage.setItem("originalLoadPath", result.filePath); // Update originalLoadPath too
           localStorage.setItem("targetPath", result.filePath); // Update targetPath for consistency
-          console.log("File saved as:", result.filePath);
 
           // Show success message
           alert(`File saved successfully to:\n${result.filePath}`);
@@ -793,13 +771,9 @@ export default function EditSubtitles({
             setOriginalSrtFile(null);
           }
         } else if (result.error && !result.error.includes("canceled")) {
-          console.error("Error saving file:", result.error);
           onSetError(`Save failed: ${result.error}`);
-        } else {
-          console.warn("Save As dialog was canceled");
         }
       } catch (saveError: any) {
-        console.error("Error saving file:", saveError);
         onSetError(`Save failed: ${saveError.message || String(saveError)}`);
       }
       return;
@@ -807,17 +781,14 @@ export default function EditSubtitles({
       // Fallback to traditional download is no longer needed since we
       // have a robust retry mechanism
     } catch (error: any) {
-      console.error("Error in Save As operation:", error);
       onSetError(`Error saving SRT file: ${error.message || String(error)}`);
     }
   }
 
   // Function to save directly to the original file (Save)
   async function handleSaveSrt() {
-    console.log("handleSaveSrt called");
     try {
       const content = generateSrtContent(subtitlesState);
-      console.log("Generated content with length:", content.length);
 
       // Get stored paths for saving
       const originalLoadPath = localStorage.getItem("originalLoadPath");
@@ -825,13 +796,6 @@ export default function EditSubtitles({
       const loadedSrtFileName =
         localStorage.getItem("loadedSrtFileName") || "subtitles.srt";
       const targetPath = localStorage.getItem("targetPath");
-
-      console.log("🧩 SAVE PATHS DEBUG:", {
-        originalLoadPath,
-        originalSrtPath,
-        loadedSrtFileName,
-        targetPath,
-      });
 
       const saveResult = await saveFileWithRetry({
         content,
@@ -841,24 +805,16 @@ export default function EditSubtitles({
         targetPath: targetPath || undefined, // Fix type issue
       });
 
-      console.log("Save result:", {
-        resultExists: !!saveResult,
-        resultKeys: saveResult ? Object.keys(saveResult) : [],
-        ...saveResult,
-      });
-
       if (saveResult.error) {
         onSetError(`Error saving file: ${saveResult.error}`);
       } else if (saveResult.filePath) {
         // Update our stored path for next save
         localStorage.setItem("targetPath", saveResult.filePath);
-        console.log("File saved successfully to:", saveResult.filePath);
 
         // Show a success popup
         alert(`File saved successfully to:\n${saveResult.filePath}`);
       }
     } catch (error) {
-      console.error("Error in handleSaveSrt:", error);
       onSetError(`Error saving file: ${error}`);
     }
   }
@@ -900,7 +856,6 @@ export default function EditSubtitles({
   // Player ready handler
   function handlePlayerReady(player: HTMLVideoElement) {
     if (!player) {
-      console.warn("Invalid player received in handlePlayerReady");
       return;
     }
 
@@ -1076,12 +1031,10 @@ export default function EditSubtitles({
 
       playPromise
         .then(() => {
-          console.log("Successfully started playback");
           setIsPlayingState(true);
 
           // Recalculate the actual duration based on current position
-          const duration = Math.max(0, (endTime - actualCurrentTime) * 1000); // Convert to milliseconds
-          console.log(`Will pause after ${duration}ms (at ${endTime}s)`);
+          const duration = Math.max(0, (endTime - actualCurrentTime) * 1000); //
 
           // Set timeout to pause at end time
           if (duration > 0) {
@@ -1094,7 +1047,6 @@ export default function EditSubtitles({
                   nativePlayer.pause();
                 }
                 setIsPlayingState(false);
-                console.log("Paused after timeout");
               } catch (err) {
                 console.error("Error pausing player after timeout:", err);
               } finally {
@@ -1112,7 +1064,6 @@ export default function EditSubtitles({
             if (nativePlayer.instance) {
               nativePlayer.instance.play();
               setIsPlayingState(true);
-              console.log("Fallback play method succeeded");
             }
           } catch (directErr) {
             console.error("Fallback play method also failed:", directErr);
@@ -1128,7 +1079,6 @@ export default function EditSubtitles({
           if (nativePlayer.instance) {
             nativePlayer.instance.play();
             setIsPlayingState(true);
-            console.log("Last resort play succeeded");
           }
         } catch (finalErr) {
           console.error("All play attempts failed:", finalErr);
@@ -1371,8 +1321,7 @@ export default function EditSubtitles({
     const currentSubtitleIndex = findCurrentSubtitle();
 
     if (currentSubtitleIndex === null) {
-      // If no current subtitle, show a message or alert
-      console.log("No subtitle is currently active or coming up next");
+      // If no current subtitle, do nothing
       return;
     }
 
@@ -1429,20 +1378,10 @@ export default function EditSubtitles({
               label="Load SRT:"
               buttonText="Choose SRT File"
               onClick={async () => {
-                console.log(
-                  "Button clicked, calling openSubtitleWithElectron directly"
-                );
                 await openSubtitleWithElectron(
-                  (file, content, segments, filePath) => {
-                    // Set subtitles
+                  (_, content, segments, filePath) => {
                     setSubtitlesState(segments);
-
-                    // Store the original load path (this is the real file system path now)
                     setOriginalLoadPath(filePath);
-                    console.log(
-                      "EditSubtitles: Stored originalLoadPath:",
-                      filePath
-                    );
 
                     // Process the content directly
                     processSrtContent(content);
@@ -1461,10 +1400,6 @@ export default function EditSubtitles({
         </div>
       )}
 
-      {/* Video Player Section - Now handled by StickyVideoPlayer */}
-      {/* The play button has been moved from the title to the TimestampDisplay inside StickyVideoPlayer */}
-
-      {/* Subtitles editing section */}
       {subtitlesState.length > 0 && (
         <>
           <div

@@ -9,7 +9,6 @@ const logFile = path.join(__dirname, "startup-debug.log");
 fs.writeFileSync(logFile, "=== DEBUG STARTUP LOG ===\n\n", "utf8");
 
 // Log basic information
-console.log("🚨 DEBUG SCRIPT STARTING 🚨");
 fs.appendFileSync(logFile, `Started at: ${new Date().toISOString()}\n`, "utf8");
 fs.appendFileSync(logFile, `Current directory: ${process.cwd()}\n`, "utf8");
 fs.appendFileSync(logFile, `Platform: ${os.platform()}\n`, "utf8");
@@ -101,22 +100,17 @@ fs.appendFileSync(logFile, `Electron process ID: ${electron.pid}\n`, "utf8");
 // Capture stdout
 electron.stdout.on("data", (data) => {
   const output = data.toString();
-  console.log(output);
   fs.appendFileSync(logFile, `[STDOUT] ${output}`, "utf8");
 });
 
 // Capture stderr
 electron.stderr.on("data", (data) => {
   const output = data.toString();
-  console.error(output);
   fs.appendFileSync(logFile, `[STDERR] ${output}`, "utf8");
 });
 
 // Handle process exit
 electron.on("close", (code) => {
   const exitMessage = `\n=== ELECTRON PROCESS EXITED WITH CODE ${code} ===\n`;
-  console.log(exitMessage);
   fs.appendFileSync(logFile, exitMessage, "utf8");
 });
-
-console.log(`🚨 DEBUG SCRIPT RUNNING - Logs being saved to ${logFile} 🚨`);
