@@ -9,26 +9,33 @@ interface TimestampDisplayProps {
   customPlayButton?: React.ReactNode;
   onChangeVideo?: (file: File) => void;
   onChangeSrt?: (file: File) => void;
+  hasSubtitles?: boolean;
 }
 
 const timestampContainerStyles = css`
-  font-family: monospace;
+  font-family: "system-ui", -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: ${colors.grayLight};
   color: ${colors.dark};
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 14px;
-  margin-top: 4px;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
 `;
 
 const timeInfoStyles = css`
-  flex: 1;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #555;
+  margin-top: 8px;
+  width: 100%;
 `;
 
 const controlsContainerStyles = css`
@@ -37,27 +44,150 @@ const controlsContainerStyles = css`
   gap: 8px;
 `;
 
+const progressBarContainerStyles = css`
+  width: 100%;
+  padding: 8px 0 0;
+  position: relative;
+`;
+
+const progressBarStyles = css`
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #e1e1e1;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  margin: 8px 0;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: ${colors.primary};
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 10;
+    margin-top: -5px;
+    transition: transform 0.1s ease;
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: ${colors.primary};
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 10;
+    transition: transform 0.1s ease;
+  }
+
+  &::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background: #e1e1e1;
+    cursor: pointer;
+  }
+
+  &::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: #e1e1e1;
+    cursor: pointer;
+  }
+
+  &:hover::-webkit-slider-thumb {
+    background: ${colors.primaryDark || "#0056b3"};
+    transform: scale(1.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  }
+
+  &:hover::-moz-range-thumb {
+    background: ${colors.primaryDark || "#0056b3"};
+    transform: scale(1.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  }
+
+  &:active::-webkit-slider-thumb {
+    transform: scale(1.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  &:active::-moz-range-thumb {
+    transform: scale(1.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+`;
+
+const progressBarBufferedStyles = css`
+  position: absolute;
+  top: 16px;
+  left: 0;
+  height: 8px;
+  background-color: #ccc;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 0;
+`;
+
+const modernTimestampStyles = css`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: monospace;
+`;
+
+const timeValueStyles = css`
+  font-weight: 500;
+  color: #333;
+`;
+
 const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
   videoElement,
   customPlayButton,
   onChangeVideo,
   onChangeSrt,
+  hasSubtitles = false,
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [bufferedWidth, setBufferedWidth] = useState("0%");
 
   useEffect(() => {
     if (!videoElement) return;
+
+    // Function to update the buffered progress bar
+    const updateBufferedWidth = () => {
+      if (videoElement.buffered.length > 0) {
+        const bufferedEnd = videoElement.buffered.end(
+          videoElement.buffered.length - 1
+        );
+        const bufferedPercent = (bufferedEnd / videoElement.duration) * 100;
+        setBufferedWidth(`${bufferedPercent}%`);
+      }
+    };
 
     // Set initial values
     setCurrentTime(videoElement.currentTime || 0);
     setDuration(videoElement.duration || 0);
     setIsPlaying(!videoElement.paused);
+    updateBufferedWidth();
 
     // Event handlers
     const handleTimeUpdate = () => {
       setCurrentTime(videoElement.currentTime);
+      updateBufferedWidth();
     };
 
     const handleDurationChange = () => {
@@ -68,11 +198,16 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
       setIsPlaying(!videoElement.paused);
     };
 
+    const handleProgress = () => {
+      updateBufferedWidth();
+    };
+
     // Add event listeners
     videoElement.addEventListener("timeupdate", handleTimeUpdate);
     videoElement.addEventListener("durationchange", handleDurationChange);
     videoElement.addEventListener("play", handlePlayStateChange);
     videoElement.addEventListener("pause", handlePlayStateChange);
+    videoElement.addEventListener("progress", handleProgress);
 
     // Clean up
     return () => {
@@ -80,10 +215,32 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
       videoElement.removeEventListener("durationchange", handleDurationChange);
       videoElement.removeEventListener("play", handlePlayStateChange);
       videoElement.removeEventListener("pause", handlePlayStateChange);
+      videoElement.removeEventListener("progress", handleProgress);
     };
   }, [videoElement]);
 
-  // Format time in SRT format (00:00:00,000)
+  // Format time in a concise format (HH:MM:SS)
+  const formatTime = (seconds: number): string => {
+    if (isNaN(seconds)) return "00:00:00";
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hours > 0) {
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}:${String(secs).padStart(2, "0")}`;
+    } else {
+      return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
+        2,
+        "0"
+      )}`;
+    }
+  };
+
+  // Format time in SRT format (for proper seeking) (00:00:00,000)
   const formatSrtTime = (seconds: number): string => {
     if (isNaN(seconds)) return "00:00:00,000";
 
@@ -113,13 +270,40 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
     }
   };
 
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (videoElement) {
+      const seekTime = parseFloat(e.target.value);
+      videoElement.currentTime = seekTime;
+    }
+  };
+
   return (
     <div className={timestampContainerStyles}>
+      {/* Progress bar / time slider */}
+      <div className={progressBarContainerStyles}>
+        <div
+          className={progressBarBufferedStyles}
+          style={{ width: bufferedWidth }}
+        />
+        <input
+          type="range"
+          min="0"
+          max={duration || 0}
+          value={currentTime}
+          step="0.1"
+          className={progressBarStyles}
+          onChange={handleSeek}
+          disabled={!videoElement}
+        />
+      </div>
+
+      {/* Time display */}
       <div className={timeInfoStyles}>
-        <span>
-          <strong>Position:</strong> {formatSrtTime(currentTime)} /{" "}
-          <strong>Duration:</strong> {formatSrtTime(duration)}
-        </span>
+        <div className={modernTimestampStyles}>
+          <span className={timeValueStyles}>{formatTime(currentTime)}</span>
+          <span>/</span>
+          <span className={timeValueStyles}>{formatTime(duration)}</span>
+        </div>
       </div>
 
       <div className={controlsContainerStyles}>
@@ -137,7 +321,7 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
             <StylizedFileInput
               accept=".srt"
               onChange={handleSrtChange}
-              buttonText="Change SRT"
+              buttonText={hasSubtitles ? "Change SRT" : "Add SRT"}
               showSelectedFile={false}
             />
           )}

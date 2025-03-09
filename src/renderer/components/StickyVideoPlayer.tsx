@@ -13,37 +13,42 @@ interface StickyVideoPlayerProps {
   onPlayerReady: (player: any) => void;
   onChangeVideo?: (file: File) => void;
   onChangeSrt?: (file: File) => void;
-  onStickyChange?: (isSticky: boolean) => void;
+  onStickyChange?: (isSticky: boolean) => void; // Keeping for backward compatibility
 }
 
-// Use fixed position styling with a scrolling threshold
-const fixedVideoContainerStyles = (isSticky: boolean) => css`
-  position: ${isSticky ? "fixed" : "relative"};
-  top: ${isSticky ? "0" : "auto"};
-  left: ${isSticky ? "50%" : "auto"};
-  transform: ${isSticky ? "translateX(-50%)" : "none"};
-  width: ${isSticky ? "calc(90% - 30px)" : "100%"};
+// Always fixed position styling with dynamic height based on scroll position
+const fixedVideoContainerStyles = (
+  isExpanded: boolean,
+  isFullyExpanded: boolean
+) => css`
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: ${isFullyExpanded ? "calc(95% - 30px)" : "calc(90% - 30px)"};
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 15px;
-  border-radius: ${isSticky ? "0 0 8px 8px" : "8px"};
+  border-radius: 0 0 8px 8px;
   border: 1px solid rgba(238, 238, 238, 0.9);
-  margin-bottom: ${isSticky ? "0" : "10px"};
+  margin-bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-height: ${isSticky ? "40vh" : "60vh"};
+  max-height: ${isFullyExpanded
+    ? "calc(100vh - 60px)"
+    : isExpanded
+    ? "50vh"
+    : "40vh"};
   overflow: visible;
-  transition: all 0.2s ease-out;
-  box-shadow: ${isSticky
-    ? "0 8px 16px rgba(0, 0, 0, 0.15)"
-    : "0 4px 8px rgba(0, 0, 0, 0.1)"};
+  transition: all 0.3s ease-out;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 `;
 
-// Create a placeholder for when the player is fixed to prevent layout jumps
-const placeholderStyles = (isSticky: boolean, height: number) => css`
-  display: ${isSticky ? "block" : "none"};
+// Create a placeholder to prevent layout jumps
+const placeholderStyles = (height: number) => css`
+  display: block;
   height: ${height}px;
   width: 100%;
   margin-bottom: 10px;
@@ -130,55 +135,129 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   onChangeSrt,
   onStickyChange,
 }) => {
-  const [isSticky, setIsSticky] = useState(false);
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollThreshold = 100; // px
-  const prevIsStickyRef = useRef(false); // Track previous sticky state
 
-  // Simple scroll detection without any scrolling behavior
+  // Calculate placeholder height on mount and resize
   useEffect(() => {
-    const checkStickyState = () => {
-      if (!playerRef.current || !containerRef.current) return;
+    const calculateHeight = () => {
+      if (!playerRef.current) return;
 
-      // Get positions
+      // Get the height of the player
       const rect = playerRef.current.getBoundingClientRect();
-
-      // When the component is first mounted, store its height
-      if (!isSticky && rect.height > 0) {
+      if (rect.height > 0) {
         setPlaceholderHeight(rect.height);
-      }
-
-      // Check if should be sticky without scrolling
-      const shouldBeSticky = window.scrollY > scrollThreshold;
-
-      // Only update state if needed
-      if (shouldBeSticky !== isSticky) {
-        setIsSticky(shouldBeSticky);
-
-        // Only notify parent once when sticky state actually changes
-        if (onStickyChange && shouldBeSticky !== prevIsStickyRef.current) {
-          onStickyChange(shouldBeSticky);
-          prevIsStickyRef.current = shouldBeSticky;
-        }
       }
     };
 
-    // Add scroll event listener
-    window.addEventListener("scroll", checkStickyState);
-    window.addEventListener("resize", checkStickyState);
+    // Initial calculation
+    calculateHeight();
 
-    // Initial check
-    checkStickyState();
+    // Add resize event listener
+    window.addEventListener("resize", calculateHeight);
+
+    // Notify parent that video is always sticky
+    if (onStickyChange) {
+      onStickyChange(true);
+    }
 
     // Clean up
     return () => {
-      window.removeEventListener("scroll", checkStickyState);
-      window.removeEventListener("resize", checkStickyState);
+      window.removeEventListener("resize", calculateHeight);
     };
-  }, [scrollThreshold, onStickyChange]); // Remove isSticky from dependency array
+  }, [onStickyChange]);
+
+  // Add scroll listener to check position relative to Edit Subtitles section
+  useEffect(() => {
+    const checkScrollPosition = () => {
+      // Find the sections
+      const editSubtitlesSection = document.getElementById(
+        "edit-subtitles-section"
+      );
+
+      // Find the GenerateSubtitles section by looking for the section with "Generate Subtitles" title
+      const generateSubtitlesSections = Array.from(
+        document.querySelectorAll("h2")
+      ).filter((h2) => h2.textContent?.includes("Generate Subtitles"));
+      const generateSubtitlesSection =
+        generateSubtitlesSections.length > 0
+          ? generateSubtitlesSections[0]
+          : null;
+
+      if (!editSubtitlesSection) return;
+
+      // Get the vertical center point of the screen
+      const screenCenterY = window.innerHeight / 2;
+
+      // Get the top position of the Edit Subtitles section relative to the viewport
+      const editSectionRect = editSubtitlesSection.getBoundingClientRect();
+
+      // Determine expansion states based on scroll position
+      let shouldFullyExpand = false;
+      let shouldExpand = false;
+
+      // 1. Check if we should be in expanded mode (screen center above Edit Subtitles)
+      shouldExpand = editSectionRect.top > screenCenterY;
+
+      // 2. Check if we should be in fully expanded mode (scrolling upward past Generate Subtitles)
+      if (generateSubtitlesSection) {
+        const generateSectionRect =
+          generateSubtitlesSection.getBoundingClientRect();
+        // If user is scrolling UP and the Generate Subtitles is coming into view from the bottom
+        // We want to expand when it's below the viewport or just entering it
+        shouldFullyExpand = generateSectionRect.top > window.innerHeight - 100;
+
+        // For debugging
+        console.log(
+          "Generate section position:",
+          generateSectionRect.top,
+          "Window height:",
+          window.innerHeight,
+          "Should fully expand:",
+          shouldFullyExpand
+        );
+      }
+
+      // Update states if needed, with priority for fully expanded
+      if (shouldFullyExpand !== isFullyExpanded) {
+        setIsFullyExpanded(shouldFullyExpand);
+        // When fully expanding, also ensure expanded is true
+        if (shouldFullyExpand && !isExpanded) {
+          setIsExpanded(true);
+        }
+      } else if (shouldExpand !== isExpanded && !shouldFullyExpand) {
+        setIsExpanded(shouldExpand);
+      }
+    };
+
+    // Check initial position
+    checkScrollPosition();
+
+    // Add scroll event listener with throttling to improve performance
+    let scrollTimeout: number | null = null;
+    const throttledScroll = () => {
+      if (scrollTimeout === null) {
+        scrollTimeout = window.setTimeout(() => {
+          checkScrollPosition();
+          scrollTimeout = null;
+        }, 100);
+      }
+    };
+
+    window.addEventListener("scroll", throttledScroll);
+
+    // Clean up
+    return () => {
+      window.removeEventListener("scroll", throttledScroll);
+      if (scrollTimeout) {
+        window.clearTimeout(scrollTimeout);
+      }
+    };
+  }, [isExpanded, isFullyExpanded]);
 
   // Update isPlaying state when video plays/pauses
   useEffect(() => {
@@ -263,20 +342,27 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
   return (
     <div ref={containerRef}>
-      {/* Placeholder div to prevent layout jumps when player becomes fixed */}
-      <div className={placeholderStyles(isSticky, placeholderHeight)} />
+      {/* Placeholder div to prevent layout jumps */}
+      <div className={placeholderStyles(placeholderHeight)} />
 
       {/* The actual player */}
       <div
         className={`${fixedVideoContainerStyles(
-          isSticky
-        )} sticky-video-container`}
+          isExpanded,
+          isFullyExpanded
+        )} sticky-video-container ${isExpanded ? "expanded" : ""} ${
+          isFullyExpanded ? "fully-expanded" : ""
+        }`}
         ref={playerRef}
+        data-expanded={isExpanded}
+        data-fully-expanded={isFullyExpanded}
       >
         <NativeVideoPlayer
           videoUrl={videoUrl}
           subtitles={subtitles}
           onPlayerReady={handlePlayerReadyWrapper}
+          isExpanded={isExpanded}
+          isFullyExpanded={isFullyExpanded}
         />
 
         <TimestampDisplay
@@ -284,6 +370,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
           customPlayButton={playButton}
           onChangeVideo={onChangeVideo}
           onChangeSrt={onChangeSrt}
+          hasSubtitles={subtitles && subtitles.length > 0}
         />
       </div>
     </div>

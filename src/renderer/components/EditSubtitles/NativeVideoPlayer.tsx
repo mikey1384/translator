@@ -1,33 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { css } from "@emotion/css";
-
-// Custom subtitle overlay styles
-const subtitleOverlayStyles = css`
-  position: absolute;
-  bottom: 5px; /* Reduced from 20px to 5px to move subtitles very close to bottom */
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 90%;
-  background-color: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 16px; /* Smaller font size for small video */
-  font-weight: 600; /* Bolder */
-  line-height: 1.4;
-  font-family: sans-serif;
-  white-space: pre-line;
-  z-index: 1000; /* Ensure it's above everything */
-  pointer-events: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Stronger shadow */
-  border: 1px solid rgba(255, 255, 255, 0.4); /* More visible border */
-  min-width: 40%; /* Ensure visibility even with short text */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9); /* Stronger text shadow */
-  user-select: none;
-  opacity: 0.95; /* High visibility but still slightly transparent */
-  transition: opacity 0.2s ease;
-`;
 
 // Global reference to the player for direct access from other components
 export const nativePlayer: {
@@ -115,12 +87,16 @@ interface NativeVideoPlayerProps {
   videoUrl: string;
   subtitles: any[];
   onPlayerReady: (player: HTMLVideoElement) => void;
+  isExpanded?: boolean;
+  isFullyExpanded?: boolean;
 }
 
 const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
   videoUrl,
   subtitles,
   onPlayerReady,
+  isExpanded = false,
+  isFullyExpanded = false,
 }) => {
   // Remove debug log
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -129,6 +105,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [activeSubtitle, setActiveSubtitle] = useState<string>("");
+  const [containerWidth, setContainerWidth] = useState(0);
 
   // Handle video initialization
   useEffect(() => {
@@ -319,27 +296,56 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     // Only depend on subtitles array, not activeSubtitle to avoid unnecessary re-attaching
   }, [subtitles]);
 
+  // Add a resize observer to adjust subtitle styles based on container size
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const handleResize = () => {
+      // The clamp values in the CSS will handle most of the responsive behavior
+      // This observer gives us a way to add any additional dynamic adjustments if needed
+      if (containerRef.current) {
+        const width = containerRef.current.clientWidth;
+        // We can use this width value if we need to make additional adjustments
+        // For now, the CSS clamp does the responsive work
+        setContainerWidth(width);
+      }
+    };
+
+    // Initialize resize observer
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(containerRef.current);
+
+    // Initial call
+    handleResize();
+
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   return (
     <div
       ref={containerRef}
-      style={{
-        width: "100%",
-        margin: "0 auto",
-        aspectRatio: "16/9",
-        minHeight: "180px",
-        backgroundColor: "#000",
-        position: "relative",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        borderRadius: "6px",
-        overflow: "hidden",
-        transform: "translateZ(0)", // Force hardware acceleration
-        willChange: "transform", // Hint for hardware acceleration
-      }}
+      className={css`
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+        aspect-ratio: 16/9;
+        min-height: 180px;
+        background-color: #000;
+        border-radius: 6px;
+        overflow: hidden;
+        transform: translateZ(0); /* Force hardware acceleration */
+        will-change: transform; /* Hint for hardware acceleration */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      `}
     >
+      {/* Video element */}
       <video
         ref={videoRef}
-        // Remove src prop to prevent React from controlling it and causing remounts
-        // We'll manage src via setAttribute in the useEffect
         style={{
           width: "100%",
           height: "100%",
@@ -360,11 +366,44 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
         Your browser does not support HTML5 video.
       </video>
 
-      {/* Custom subtitle overlay - improved display logic */}
-      {activeSubtitle ? (
-        <div className={subtitleOverlayStyles}>{activeSubtitle}</div>
-      ) : null}
+      {/* Custom subtitle overlay */}
+      {activeSubtitle && (
+        <div
+          className={css`
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            line-height: 1.4;
+            font-family: sans-serif;
+            white-space: pre-line;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            min-width: 40%;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+            user-select: none;
+            opacity: 0.95;
+            width: ${isFullyExpanded ? "90%" : isExpanded ? "95%" : "100%"};
+            font-size: ${isFullyExpanded
+              ? "28px"
+              : isExpanded
+              ? "22px"
+              : "16px"};
+            transition: all 0.3s ease;
+          `}
+        >
+          {activeSubtitle}
+        </div>
+      )}
 
+      {/* Error message if any */}
       {errorMessage && (
         <div
           style={{
@@ -386,22 +425,6 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
             Try a different video format like MP4, WebM, or OGG, or check
             browser compatibility.
           </div>
-        </div>
-      )}
-
-      {!videoUrl && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            color: "white",
-            textAlign: "center",
-            padding: "20px",
-          }}
-        >
-          Please select a video file to load
         </div>
       )}
     </div>

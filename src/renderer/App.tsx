@@ -237,27 +237,23 @@ function AppContent() {
 
   // Update the sticky change handler to scroll to EditSubtitles section
   const handleStickyChange = (isSticky: boolean) => {
-    if (isSticky && !hasScrolledToStickyRef.current) {
-      // Scroll to the EditSubtitles section instead of top
-      if (editSubtitlesRef.current) {
-        // Get the sticky video height for offset calculation
-        const stickyVideoHeight =
-          document.querySelector(".sticky-video-container")?.clientHeight || 0;
+    // Since the video is always sticky now, we just need to ensure
+    // we scroll to the EditSubtitles section when it's mounted
+    if (!hasScrolledToStickyRef.current && editSubtitlesRef.current) {
+      // Get the sticky video height for offset calculation
+      const stickyVideoHeight =
+        document.querySelector(".sticky-video-container")?.clientHeight || 0;
 
-        // Scroll with offset to account for sticky header
-        const offsetTop =
-          editSubtitlesRef.current.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({
-          top: offsetTop - stickyVideoHeight - 20, // 20px extra space
-          behavior: "auto",
-        });
-      }
+      // Scroll with offset to account for sticky header
+      const offsetTop =
+        editSubtitlesRef.current.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: offsetTop - stickyVideoHeight - 20, // 20px extra space
+        behavior: "auto",
+      });
 
       // Mark that we've already scrolled
       hasScrolledToStickyRef.current = true;
-    } else if (!isSticky) {
-      // Reset the flag when no longer sticky
-      hasScrolledToStickyRef.current = false;
     }
   };
 
