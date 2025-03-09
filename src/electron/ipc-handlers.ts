@@ -33,22 +33,32 @@ let subtitleProcessing: SubtitleProcessing;
  * Set up all IPC handlers
  */
 export function setupIpcHandlers(): void {
-  // Verify ipcMain exists and has the handle method
-  if (!ipcMain || typeof ipcMain.handle !== "function") {
-    log.error("IPC main is not properly initialized", { ipcMain });
-    throw new Error("IPC main is missing or not properly initialized");
-  }
+  try {
+    // Verify ipcMain exists and has the handle method
+    if (!ipcMain) {
+      log.error("IPC main is not properly initialized");
+      throw new Error("IPC main is missing or not properly initialized");
+    }
+    
+    if (typeof ipcMain.handle !== "function") {
+      log.error("IPC main missing handle method", { ipcMain });
+      throw new Error("IPC main does not have handle method");
+    }
 
-  // Initialize services
-  log.info("Initializing services for IPC handlers");
-  ffmpegService = new FFmpegService();
-  fileManager = new FileManager();
-  aiService = new AIService(ffmpegService);
-  subtitleProcessing = new SubtitleProcessing(
-    ffmpegService,
-    fileManager,
-    aiService
-  );
+    // Initialize services
+    log.info("Initializing services for IPC handlers");
+    ffmpegService = new FFmpegService();
+    fileManager = new FileManager();
+    aiService = new AIService(ffmpegService);
+    subtitleProcessing = new SubtitleProcessing(
+      ffmpegService,
+      fileManager,
+      aiService
+    );
+  } catch (error) {
+    log.error("Error setting up IPC handlers:", error);
+    throw error;
+  }
 
   // Subtitle generation
   ipcMain.handle(

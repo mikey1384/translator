@@ -157,6 +157,54 @@ export class FFmpegService {
       throw new FFmpegError(`Failed to merge subtitles: ${error}`);
     }
   }
+  
+  /**
+   * Merge subtitles with a video file and specify the output path
+   */
+  async mergeSubtitles(
+    videoPath: string,
+    subtitlesPath: string,
+    outputPath: string,
+    progressCallback?: (progress: { percent: number; stage: string }) => void
+  ): Promise<string> {
+    try {
+      // First get the duration for progress calculation
+      const duration = await this.getMediaDuration(videoPath);
+
+      // Then merge the subtitles
+      await this.runFFmpeg(
+        [
+          "-i",
+          videoPath,
+          "-i",
+          subtitlesPath,
+          "-c:v",
+          "copy",
+          "-c:a",
+          "copy",
+          "-c:s",
+          "mov_text",
+          "-metadata:s:s:0",
+          "language=eng",
+          outputPath,
+        ],
+        duration,
+        (progress) => {
+          if (progressCallback) {
+            progressCallback({
+              percent: progress,
+              stage: "Merging subtitles with video",
+            });
+          }
+        }
+      );
+
+      return outputPath;
+    } catch (error) {
+      log.error("Error merging subtitles:", error);
+      throw new FFmpegError(`Failed to merge subtitles: ${error}`);
+    }
+  }
 
   /**
    * Convert SRT subtitles to ASS format

@@ -558,7 +558,29 @@ async function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.cjs"),
       devTools: true,
+      webSecurity: false, // Disable for development to allow blob:// URLs
+      allowRunningInsecureContent: false,
     },
+  });
+  
+  // Enable loading local resources from blob URLs
+  mainWindow.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media') {
+      return callback(true);
+    }
+    callback(true);
+  });
+  
+  // Set Content Security Policy to allow blob URLs for media and inline styles
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; media-src * blob:; connect-src * blob:; font-src * data:;"
+        ]
+      }
+    });
   });
 
   console.log(

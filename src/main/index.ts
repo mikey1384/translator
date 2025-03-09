@@ -51,63 +51,71 @@ ipcMain.handle("show-message", (_event, message) => {
 
 // Create browser window
 const createWindow = async () => {
-  console.log("Creating window...");
+  try {
+    console.log("Creating window...");
 
-  // Register the ffmpeg module paths
-  // ... existing code ...
+    // Register the ffmpeg module paths
+    // ... existing code ...
 
-  // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, "../preload/index.js"),
-      devTools: true, // Always enable DevTools
-    },
-  });
+    // Create the browser window.
+    mainWindow = new BrowserWindow({
+      width: 1200,
+      height: 800,
+      minWidth: 900,
+      minHeight: 600,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, "../preload/index.js"),
+        devTools: true, // Always enable DevTools
+      },
+    });
 
-  console.log(
-    "Window created, preload path:",
-    path.join(__dirname, "../preload/index.js")
-  );
+    console.log(
+      "Window created, preload path:",
+      path.join(__dirname, "../preload/index.js")
+    );
 
-  // Determine the path to load in the window
-  const indexPath = `file://${path.join(__dirname, "../../index.html")}`;
-  console.log("Loading index file:", indexPath);
+    // Determine the path to load in the window
+    const indexPath = `file://${path.join(__dirname, "../../index.html")}`;
+    console.log("Loading index file:", indexPath);
 
-  // Load the index.html
-  await mainWindow.loadURL(indexPath);
-  console.log("Index file loaded");
+    // Load the index.html
+    await mainWindow.loadURL(indexPath);
+    console.log("Index file loaded");
 
-  // Open the DevTools automatically
-  mainWindow.webContents.openDevTools();
-  console.log("DevTools opened");
+    // Open the DevTools automatically
+    mainWindow.webContents.openDevTools();
+    console.log("DevTools opened");
 
-  // Add event listeners for debugging
-  mainWindow.webContents.on("did-finish-load", () => {
-    console.log("Page finished loading");
-  });
+    // Add event listeners for debugging
+    mainWindow.webContents.on("did-finish-load", () => {
+      console.log("Page finished loading");
+    });
 
-  mainWindow.webContents.on(
-    "did-fail-load",
-    (event, errorCode, errorDescription) => {
-      console.error("Failed to load page:", errorCode, errorDescription);
-    }
-  );
+    mainWindow.webContents.on(
+      "did-fail-load",
+      (event, errorCode, errorDescription) => {
+        console.error("Failed to load page:", errorCode, errorDescription);
+      }
+    );
 
-  mainWindow.webContents.on(
-    "console-message",
-    (event, level, message, line, sourceId) => {
-      const levels = ["verbose", "info", "warning", "error"];
-      console.log(`[${levels[level]}] ${message} (${sourceId}:${line})`);
-    }
-  );
+    mainWindow.webContents.on(
+      "console-message",
+      (event, level, message, line, sourceId) => {
+        const levels = ["verbose", "info", "warning", "error"];
+        console.log(`[${levels[level]}] ${message} (${sourceId}:${line})`);
+      }
+    );
 
-  // ... existing code ...
+    // ... existing code ...
+    
+    return mainWindow;
+  } catch (error) {
+    console.error("Error creating window:", error);
+    log.error("Error creating window:", error);
+    throw error;
+  }
 };
 
 // Create window when Electron is ready
@@ -119,11 +127,11 @@ app.whenReady().then(async () => {
     // Set up temp directory
     await fileManager.ensureTempDir();
 
-    // Set up IPC handlers
-    initIpcHandlers();
-
-    // Create the main window
+    // Create the main window first to ensure the app is ready
     await createWindow();
+    
+    // Set up IPC handlers after the window is created to ensure app is ready
+    initIpcHandlers();
 
     // On macOS, re-create window when dock icon is clicked
     app.on("activate", () => {
@@ -189,10 +197,13 @@ async function cleanupTempDirectory() {
   }
 }
 
-// Set up IPC handlers (will expand these later)
+// This function is no longer needed as we're using the imported setupIpcHandlers
+// from ../electron/ipc-handlers.ts instead
+/*
 function setupIpcHandlers() {
   // We'll implement these in separate modules
   // ipcMain.handle('generate-subtitles', handleGenerateSubtitles);
   // ipcMain.handle('translate-subtitles', handleTranslateSubtitles);
   // ipcMain.handle('merge-subtitles', handleMergeSubtitles);
 }
+*/

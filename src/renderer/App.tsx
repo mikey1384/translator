@@ -6,6 +6,7 @@ import StatusSection from "./components/StatusSection";
 import GenerateSubtitles from "./components/GenerateSubtitles";
 import TranslateSubtitles from "./components/TranslateSubtitles";
 import MergeSubtitles from "./components/MergeSubtitles";
+import EditSubtitles from "./components/EditSubtitles";
 
 // Define the window interface to access our Electron API
 declare global {
@@ -445,6 +446,66 @@ export default function App() {
             translatedSubtitles={translatedSubtitles}
           />
         )}
+
+        {/* Add the Subtitle Editor component */}
+        <EditSubtitles
+          videoFile={videoFile}
+          videoUrl={videoUrl}
+          targetLanguage={targetLanguage}
+          showOriginalText={showOriginalText}
+          onSetVideoFile={setVideoFile}
+          onSetVideoUrl={setVideoUrl}
+          onSetError={(error) => console.error(error)}
+          mergeSubtitlesWithVideo={async (videoFile, subtitles, options) => {
+            setIsMergingInProgress(true);
+            
+            try {
+              // Generate SRT content from subtitles
+              const srtContent = subtitles.map((segment, i) => {
+                const index = i + 1;
+                const startTime = secondsToSrtTime(segment.start);
+                const endTime = secondsToSrtTime(segment.end);
+                return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
+              }).join('\n\n');
+              
+              // Create a temporary file for the subtitles
+              const subtitlesResult = await window.electron.saveFile({
+                content: srtContent,
+                defaultPath: 'subtitles.srt',
+                filters: [{ name: 'Subtitle Files', extensions: ['srt'] }]
+              });
+              
+              if (subtitlesResult.error) {
+                throw new Error(subtitlesResult.error);
+              }
+              
+              // Set up progress tracking
+              window.electron.onMergeSubtitlesProgress((progress) => {
+                options.onProgress(progress.percent);
+              });
+              
+              // Get the path from the videoFile
+              const videoPath = videoFile.path || videoFile.name;
+              
+              // Merge the video with the subtitles
+              const result = await window.electron.mergeSubtitles({
+                videoPath: videoPath,
+                subtitlesPath: subtitlesResult.filePath
+              });
+              
+              setIsMergingInProgress(false);
+              
+              if (result.error) {
+                throw new Error(result.error);
+              }
+              
+              return result;
+            } catch (error) {
+              setIsMergingInProgress(false);
+              throw error;
+            }
+          }}
+        />
       </div>
     </div>
   );

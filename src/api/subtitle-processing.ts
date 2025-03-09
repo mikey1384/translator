@@ -10,6 +10,8 @@ import {
   GenerateSubtitlesResult,
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
+  MergeSubtitlesOptions,
+  MergeSubtitlesResult,
 } from "../types";
 
 export class SubtitleProcessingError extends Error {
@@ -143,6 +145,75 @@ export class SubtitleProcessing {
       log.error("Error translating subtitles:", error);
       throw new SubtitleProcessingError(
         `Failed to translate subtitles: ${error}`
+      );
+    }
+  }
+  
+  /**
+   * Merge subtitles with a video file
+   */
+  async mergeSubtitlesWithVideo(
+    options: MergeSubtitlesOptions,
+    progressCallback?: (progress: { percent: number; stage: string }) => void
+  ): Promise<MergeSubtitlesResult> {
+    try {
+      if (!options.videoPath) {
+        throw new SubtitleProcessingError("Video path is required");
+      }
+      
+      if (!options.subtitlesPath) {
+        throw new SubtitleProcessingError("Subtitles path is required");
+      }
+
+      // Report initial progress
+      if (progressCallback) {
+        progressCallback({
+          percent: 0,
+          stage: "Starting subtitle merging",
+        });
+      }
+
+      // Output path for the merged video
+      const outputPath = options.outputPath || path.join(
+        path.dirname(options.videoPath),
+        `${path.basename(options.videoPath, path.extname(options.videoPath))}_with_subtitles${path.extname(options.videoPath)}`
+      );
+
+      // Use FFmpeg to merge subtitles with video
+      if (progressCallback) {
+        progressCallback({ percent: 25, stage: "Processing video" });
+      }
+
+      await this.ffmpegService.mergeSubtitles(
+        options.videoPath,
+        options.subtitlesPath,
+        outputPath,
+        (progress) => {
+          if (progressCallback) {
+            // Scale FFmpeg progress (typically 0-100) to our 25-90% range
+            const scaledProgress = 25 + (progress.percent * 0.65);
+            progressCallback({
+              percent: Math.min(90, scaledProgress),
+              stage: progress.stage || "Merging subtitles with video",
+            });
+          }
+        }
+      );
+
+      if (progressCallback) {
+        progressCallback({
+          percent: 100,
+          stage: "Subtitle merging complete",
+        });
+      }
+
+      return {
+        outputPath,
+      };
+    } catch (error) {
+      log.error("Error merging subtitles with video:", error);
+      throw new SubtitleProcessingError(
+        `Failed to merge subtitles with video: ${error}`
       );
     }
   }
