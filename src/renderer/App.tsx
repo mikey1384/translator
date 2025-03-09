@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { css } from "@emotion/css";
 
 // Components
@@ -131,6 +131,18 @@ function AppContent() {
 
   // Add this with other refs
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
+
+  // Create a ref for the EditSubtitles component
+  const editSubtitlesMethodsRef = useRef<{
+    scrollToCurrentSubtitle: () => void;
+  }>({ scrollToCurrentSubtitle: () => {} });
+
+  // Function to handle scrolling to current subtitle
+  const handleScrollToCurrentSubtitle = useCallback(() => {
+    if (editSubtitlesMethodsRef.current) {
+      editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
+    }
+  }, []);
 
   // Check if electron is connected
   useEffect(() => {
@@ -274,6 +286,7 @@ function AppContent() {
             onChangeVideo={handleChangeVideo}
             onChangeSrt={handleChangeSrt}
             onStickyChange={handleStickyChange}
+            onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
           />
         )}
 
@@ -317,6 +330,7 @@ function AppContent() {
               videoPlayerRef={videoPlayerRef}
               isMergingInProgress={isMergingInProgress}
               onSetIsMergingInProgress={setIsMergingInProgress}
+              editorRef={editSubtitlesMethodsRef}
               mergeSubtitlesWithVideo={async (
                 videoFile,
                 subtitles,

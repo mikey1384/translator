@@ -3,6 +3,8 @@ import { css } from "@emotion/css";
 import { colors } from "../constants";
 import ButtonGroup from "./ButtonGroup";
 import StylizedFileInput from "./StylizedFileInput";
+import Button from "./Button";
+import { SrtSegment } from "./EditSubtitles";
 
 interface TimestampDisplayProps {
   videoElement: HTMLVideoElement | null;
@@ -10,6 +12,8 @@ interface TimestampDisplayProps {
   onChangeVideo?: (file: File) => void;
   onChangeSrt?: (file: File) => void;
   hasSubtitles?: boolean;
+  subtitles?: SrtSegment[];
+  onScrollToCurrentSubtitle?: () => void;
 }
 
 const timestampContainerStyles = css`
@@ -158,6 +162,8 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
   onChangeVideo,
   onChangeSrt,
   hasSubtitles = false,
+  subtitles,
+  onScrollToCurrentSubtitle,
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -324,6 +330,31 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
               buttonText={hasSubtitles ? "Change SRT" : "Add SRT"}
               showSelectedFile={false}
             />
+          )}
+
+          {hasSubtitles && onScrollToCurrentSubtitle && (
+            <Button
+              onClick={onScrollToCurrentSubtitle}
+              variant="secondary"
+              size="sm"
+              title="Scroll to the subtitle currently being shown in the video"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: "6px" }}
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+              Find Current
+            </Button>
           )}
 
           {customPlayButton}

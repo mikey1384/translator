@@ -244,6 +244,9 @@ export interface EditSubtitlesProps {
     subtitles: SrtSegment[],
     options: { onProgress: (progress: number) => void }
   ) => Promise<{ outputPath: string; error?: string }>;
+  editorRef?: React.RefObject<{
+    scrollToCurrentSubtitle: () => void;
+  }>;
 }
 
 // Utility functions
@@ -312,7 +315,6 @@ const parseSrt = (srtString: string): SrtSegment[] => {
 const validateSubtitleTimings = (subtitles: SrtSegment[]): SrtSegment[] => {
   if (!subtitles || subtitles.length === 0) return [];
 
-
   // Fix basic timing issues (negative times, end before start)
   const fixedSubtitles = subtitles.map((subtitle) => {
     // Create a new object to avoid mutating the original
@@ -355,6 +357,7 @@ export default function EditSubtitles({
   isMergingInProgress: isMergingInProgressProp,
   onSetIsMergingInProgress,
   mergeSubtitlesWithVideo,
+  editorRef,
 }: EditSubtitlesProps) {
   // State for the component - use props if available, otherwise use local state
   const [subtitlesState, setSubtitlesState] = useState<SrtSegment[]>(
@@ -382,6 +385,9 @@ export default function EditSubtitles({
     index: null,
     field: null,
   });
+
+  // Ref to track the subtitle elements
+  const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Use the provided function or fall back to the local implementation
   const parseSrt =
@@ -441,7 +447,6 @@ export default function EditSubtitles({
       // Validate subtitles before setting them
       const validatedSubtitles = validateSubtitleTimings(subtitlesProp);
       setSubtitlesState(validatedSubtitles);
-
     }
     // Only run this effect once on component mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -613,7 +618,7 @@ export default function EditSubtitles({
   );
 
   const handleSeekToSubtitle = useCallback((startTime: number) => {
-      try {
+    try {
       // First ensure any current subtitle display is properly cleared
       if (nativePlayer.instance) {
         const trackElement = nativePlayer.instance.querySelector("track");
@@ -744,7 +749,6 @@ export default function EditSubtitles({
       return;
     }
 
-
     // Add event listeners to the native player
     const handlePlay = () => {
       setIsPlayingState(true);
@@ -798,7 +802,6 @@ export default function EditSubtitles({
   }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
-  
     // Clear any existing timeout
     if (playTimeoutRef.current) {
       window.clearTimeout(playTimeoutRef.current);
@@ -826,7 +829,6 @@ export default function EditSubtitles({
           ? endTime
           : validStartTime + 3;
 
-
       // Get current position directly from the player instance
       let currentPosition = 0;
       try {
@@ -838,7 +840,6 @@ export default function EditSubtitles({
       } catch (err) {
         console.error("Error getting current time:", err);
       }
-
 
       // If we're already within this subtitle's time range, play from current position
       if (currentPosition >= validStartTime && currentPosition < validEndTime) {
@@ -910,7 +911,6 @@ export default function EditSubtitles({
     } catch (err) {
       console.error("Error getting current time before play:", err);
     }
-
 
     // Play from that position with proper error handling
     try {
@@ -1188,6 +1188,65 @@ export default function EditSubtitles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitlesState]);
 
+  // Function to find the current subtitle that matches the video's current time
+  const findCurrentSubtitle = useCallback(() => {
+    if (!subtitlesState.length || !nativePlayer.instance) return null;
+
+    const currentTime = nativePlayer.instance.currentTime;
+
+    // Find the subtitle that contains the current time
+    const currentSubtitleIndex = subtitlesState.findIndex(
+      (sub) => currentTime >= sub.start && currentTime <= sub.end
+    );
+
+    // If no subtitle is currently active, find the next one
+    if (currentSubtitleIndex === -1) {
+      const nextSubtitleIndex = subtitlesState.findIndex(
+        (sub) => currentTime < sub.start
+      );
+
+      return nextSubtitleIndex !== -1 ? nextSubtitleIndex : null;
+    }
+
+    return currentSubtitleIndex;
+  }, [subtitlesState]);
+
+  // Function to scroll to the current subtitle
+  const scrollToCurrentSubtitle = useCallback(() => {
+    const currentSubtitleIndex = findCurrentSubtitle();
+
+    if (currentSubtitleIndex === null) {
+      // If no current subtitle, show a message or alert
+      console.log("No subtitle is currently active or coming up next");
+      return;
+    }
+
+    const subtitleElement = subtitleRefs.current[currentSubtitleIndex];
+
+    if (subtitleElement) {
+      // Scroll the subtitle into view with smooth animation
+      subtitleElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // Add a highlight class temporarily to make it stand out
+      subtitleElement.classList.add("highlight-subtitle");
+
+      // Remove the highlight class after a delay
+      setTimeout(() => {
+        subtitleElement.classList.remove("highlight-subtitle");
+      }, 2000);
+    }
+  }, [findCurrentSubtitle]);
+
+  // Expose methods through ref
+  useEffect(() => {
+    if (editorRef && editorRef.current) {
+      editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
+    }
+  }, [editorRef, scrollToCurrentSubtitle]);
+
   return (
     <Section title="Edit Subtitles" overflowVisible={true}>
       {/* File input fields - Show when not in extraction mode or when video is loaded but no subtitles */}
@@ -1240,31 +1299,51 @@ export default function EditSubtitles({
           </div>
 
           <div
-            className="subtitle-editor-container"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 15,
-              marginBottom: 80,
-            }}
+            className={`subtitle-editor-container ${css`
+              display: flex;
+              flex-direction: column;
+              gap: 15px;
+              margin-bottom: 80px;
+
+              .highlight-subtitle {
+                animation: highlight-pulse 2s ease-in-out;
+              }
+
+              @keyframes highlight-pulse {
+                0%,
+                100% {
+                  background-color: transparent;
+                }
+                50% {
+                  background-color: rgba(255, 215, 0, 0.3);
+                }
+              }
+            `}`}
           >
             {subtitlesState.map((sub, index) => (
-              <SubtitleEditor
-                key={`subtitle-${index}-${sub.start}-${sub.end}`}
-                sub={sub}
-                index={index}
-                editingTimes={editingTimesState}
-                isPlaying={isPlayingState}
-                secondsToSrtTime={secondsToSrtTime}
-                onEditSubtitle={handleEditSubtitle}
-                onTimeInputBlur={handleTimeInputBlur}
-                onRemoveSubtitle={handleRemoveSubtitle}
-                onInsertSubtitle={handleInsertSubtitle}
-                onSeekToSubtitle={handleSeekToSubtitle}
-                onPlaySubtitle={handlePlaySubtitle}
-                onShiftSubtitle={handleShiftSubtitle}
-                isShiftingDisabled={isShiftingDisabled}
-              />
+              <div
+                key={`subtitle-container-${index}`}
+                ref={(el) => {
+                  subtitleRefs.current[index] = el;
+                }}
+              >
+                <SubtitleEditor
+                  key={`subtitle-${index}-${sub.start}-${sub.end}`}
+                  sub={sub}
+                  index={index}
+                  editingTimes={editingTimesState}
+                  isPlaying={isPlayingState}
+                  secondsToSrtTime={secondsToSrtTime}
+                  onEditSubtitle={handleEditSubtitle}
+                  onTimeInputBlur={handleTimeInputBlur}
+                  onRemoveSubtitle={handleRemoveSubtitle}
+                  onInsertSubtitle={handleInsertSubtitle}
+                  onSeekToSubtitle={handleSeekToSubtitle}
+                  onPlaySubtitle={handlePlaySubtitle}
+                  onShiftSubtitle={handleShiftSubtitle}
+                  isShiftingDisabled={isShiftingDisabled}
+                />
+              </div>
             ))}
           </div>
         </>

@@ -14,6 +14,7 @@ interface StickyVideoPlayerProps {
   onChangeVideo?: (file: File) => void;
   onChangeSrt?: (file: File) => void;
   onStickyChange?: (isSticky: boolean) => void; // Keeping for backward compatibility
+  onScrollToCurrentSubtitle?: () => void; // New prop to scroll to current subtitle
 }
 
 // Always fixed position styling with dynamic height based on scroll position
@@ -134,6 +135,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   onChangeVideo,
   onChangeSrt,
   onStickyChange,
+  onScrollToCurrentSubtitle,
 }) => {
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -210,7 +212,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         // If user is scrolling UP and the Generate Subtitles is coming into view from the bottom
         // We want to expand when it's below the viewport or just entering it
         shouldFullyExpand = generateSectionRect.top > window.innerHeight - 100;
-
       }
 
       // Update states if needed, with priority for fully expanded
@@ -356,6 +357,8 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
           onChangeVideo={onChangeVideo}
           onChangeSrt={onChangeSrt}
           hasSubtitles={subtitles && subtitles.length > 0}
+          subtitles={subtitles}
+          onScrollToCurrentSubtitle={onScrollToCurrentSubtitle}
         />
       </div>
     </div>
