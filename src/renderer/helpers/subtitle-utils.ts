@@ -53,7 +53,6 @@ export function validateSubtitleTimings(
 ): SrtSegment[] {
   if (!subtitles || subtitles.length === 0) return [];
 
-  console.log(`Validating timings for ${subtitles.length} subtitles`);
 
   // First pass: fix basic timing issues (negative times, end before start)
   const fixedSubtitles = subtitles.map((subtitle) => {
@@ -62,17 +61,11 @@ export function validateSubtitleTimings(
 
     // Fix negative start time
     if (fixed.start < 0) {
-      console.warn(
-        `Subtitle ${fixed.index} has negative start time: ${fixed.start}`
-      );
       fixed.start = 0;
     }
 
     // Fix end time before or equal to start time
     if (fixed.end <= fixed.start) {
-      console.warn(
-        `Subtitle ${fixed.index} has end time <= start time: ${fixed.start} >= ${fixed.end}`
-      );
       // Make the subtitle last at least 0.5 seconds
       fixed.end = fixed.start + 0.5;
     }
@@ -91,9 +84,6 @@ export function validateSubtitleTimings(
 
       // Check for overlap
       if (current.end > next.start) {
-        console.warn(
-          `Subtitle overlap detected: ${current.index} ends at ${current.end}, ${next.index} starts at ${next.start}`
-        );
 
         // Find a middle point
         const midPoint = (current.end + next.start) / 2;

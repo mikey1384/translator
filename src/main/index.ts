@@ -25,7 +25,6 @@ if (isDev) {
         "**/*.json",
       ],
     });
-    console.log("✨ Hot reloading enabled for Electron app");
   } catch (err) {
     console.error("Error setting up electron-reloader:", err);
   }
@@ -43,11 +42,6 @@ app.commandLine.appendSwitch("ignore-gpu-blacklist");
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
 
-// Log that environment variables are loaded (don't log the actual values)
-console.log("Environment variables loaded:", {
-  hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
-  hasOpenAIKey: !!process.env.OPENAI_API_KEY,
-});
 
 // Configure logger
 log.initialize({ preload: true });
@@ -59,13 +53,11 @@ let fileManager: FileManager;
 // Add these handlers right before creating the window
 // Simple ping-pong handler for testing IPC
 ipcMain.handle("ping", () => {
-  console.log("Received ping from renderer");
   return "pong";
 });
 
 // Show message handler
 ipcMain.handle("show-message", (_event, message) => {
-  console.log("Show message requested:", message);
   dialog.showMessageBox({
     type: "info",
     title: "Message from Renderer",
@@ -77,7 +69,6 @@ ipcMain.handle("show-message", (_event, message) => {
 // Create browser window
 const createWindow = async () => {
   try {
-    console.log("Creating window...");
 
     // Register the ffmpeg module paths
     // ... existing code ...
@@ -114,22 +105,14 @@ const createWindow = async () => {
       const fs = require("fs");
       for (const possiblePath of possiblePaths) {
         if (fs.existsSync(possiblePath)) {
-          console.log(`Using preload path: ${possiblePath}`);
           return possiblePath;
-        } else {
-          console.log(`Preload path not found: ${possiblePath}`);
         }
       }
 
-      // Default to the first path if none exist (will likely fail, but with clearer error)
-      console.error("No valid preload path found! Using default path...");
+      // Default to the first path if none exist
       return possiblePaths[0];
     }
 
-    console.log(
-      "Window created, preload path:",
-      mainWindow.webContents.getURL()
-    );
 
     // Determine the path to load in the window
     const indexPaths = [
@@ -145,27 +128,19 @@ const createWindow = async () => {
     for (const possiblePath of indexPaths) {
       if (fs.existsSync(possiblePath)) {
         indexPath = `file://${possiblePath}`;
-        console.log(`Found valid index.html at: ${possiblePath}`);
         break;
       }
     }
 
     if (!indexPath) {
       indexPath = `file://${indexPaths[0]}`;
-      console.error(
-        `No valid index.html found. Defaulting to ${indexPaths[0]}`
-      );
     }
-
-    console.log("Loading index file:", indexPath);
 
     // Load the index.html
     await mainWindow.loadURL(indexPath);
-    console.log("Index file loaded");
 
     // Open the DevTools automatically
     mainWindow.webContents.openDevTools();
-    console.log("DevTools opened");
 
     // Add a content reload watcher for development
     if (isDev) {
@@ -188,9 +163,6 @@ const createWindow = async () => {
 
             // If the file has been modified since last check
             if (lastModified > 0 && currentModified > lastModified) {
-              console.log(
-                "🔄 Renderer bundle has changed, reloading content..."
-              );
               mainWindow?.webContents.reloadIgnoringCache();
             }
 

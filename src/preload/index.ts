@@ -1,7 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-// Log when preload script is executed
-console.log("Preload script executing...");
 
 // Define a complete API for our application
 const electronAPI = {
@@ -70,5 +68,3 @@ const electronAPI = {
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld("electron", electronAPI);
 
-// Log when preload script has completed
-console.log("Preload script completed, exposed API:", Object.keys(electronAPI));

@@ -19,10 +19,7 @@ export const nativePlayer: {
   isInitialized: false,
 
   play: async () => {
-    if (!nativePlayer.instance) {
-      console.error("play called but no player instance available");
-      return;
-    }
+    if (!nativePlayer.instance) return;
     try {
       await nativePlayer.instance.play();
     } catch (error) {
@@ -32,35 +29,24 @@ export const nativePlayer: {
   },
 
   pause: () => {
-    if (!nativePlayer.instance) {
-      console.error("pause called but no player instance available");
-      return;
-    }
+    if (!nativePlayer.instance) return;
     nativePlayer.instance.pause();
   },
 
   seek: (time: number) => {
-    if (!nativePlayer.instance) {
-      console.error("seek called but no player instance available");
-      return;
-    }
+    if (!nativePlayer.instance) return;
 
     const validTime =
       typeof time === "number" && !isNaN(time) && time >= 0 ? time : 0;
 
     try {
-      // Simply set the current time property - our custom overlay will handle the subtitles
+      // Set the current time property - custom overlay will handle subtitles
       nativePlayer.instance.currentTime = validTime;
 
-      // After seeking, check if it worked correctly
+      // Check if seek worked correctly
       setTimeout(() => {
-        if (nativePlayer.instance) {
-          const actualTime = nativePlayer.instance.currentTime;
-
-          // If the seek didn't work as expected, try again
-          if (Math.abs(actualTime - validTime) > 0.5) {
-            nativePlayer.instance.currentTime = validTime;
-          }
+        if (nativePlayer.instance && Math.abs(nativePlayer.instance.currentTime - validTime) > 0.5) {
+          nativePlayer.instance.currentTime = validTime;
         }
       }, 50);
     } catch (error) {
@@ -163,49 +149,18 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
       }
     };
 
-    const handleLoadedMetadata = () => {
-      // Video metadata loaded successfully
-    };
-
     const handleCanPlay = () => {
       onPlayerReady(videoElement);
     };
 
-    const handlePlay = () => {
-      // Video play event
-    };
-
-    const handlePause = () => {
-      // Video pause event
-    };
-
-    const handleSeeking = () => {
-      // With our custom subtitle overlay, we don't need any track-specific cleanup
-      // The time update handler will automatically find the correct subtitle
-    };
-
-    const handleSeeked = () => {
-      // Video seeked completed
-    };
-
     // Set up event handlers
     videoElement.addEventListener("error", handleError);
-    videoElement.addEventListener("loadedmetadata", handleLoadedMetadata);
     videoElement.addEventListener("canplay", handleCanPlay);
-    videoElement.addEventListener("play", handlePlay);
-    videoElement.addEventListener("pause", handlePause);
-    videoElement.addEventListener("seeking", handleSeeking);
-    videoElement.addEventListener("seeked", handleSeeked);
 
     // Clean up event handlers
     return () => {
       videoElement.removeEventListener("error", handleError);
-      videoElement.removeEventListener("loadedmetadata", handleLoadedMetadata);
       videoElement.removeEventListener("canplay", handleCanPlay);
-      videoElement.removeEventListener("play", handlePlay);
-      videoElement.removeEventListener("pause", handlePause);
-      videoElement.removeEventListener("seeking", handleSeeking);
-      videoElement.removeEventListener("seeked", handleSeeked);
 
       // Clean up global reference
       if (nativePlayer.instance === videoElement) {
@@ -361,7 +316,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
         autoPlay={false}
         muted={false}
         crossOrigin="anonymous"
-        onError={(e) => console.error("Video error event", e)}
+        onError={() => setErrorMessage("Video playback error")}
       >
         Your browser does not support HTML5 video.
       </video>

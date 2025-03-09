@@ -211,15 +211,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         // We want to expand when it's below the viewport or just entering it
         shouldFullyExpand = generateSectionRect.top > window.innerHeight - 100;
 
-        // For debugging
-        console.log(
-          "Generate section position:",
-          generateSectionRect.top,
-          "Window height:",
-          window.innerHeight,
-          "Should fully expand:",
-          shouldFullyExpand
-        );
       }
 
       // Update states if needed, with priority for fully expanded
@@ -283,13 +274,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
   const handleTogglePlay = () => {
     try {
-      if (isPlaying) {
-        console.log("Pausing video");
-        nativePlayer.pause();
-      } else {
-        console.log("Playing video");
-        nativePlayer.play();
-      }
+      isPlaying ? nativePlayer.pause() : nativePlayer.play();
     } catch (err) {
       console.error("Error toggling play state:", err);
     }

@@ -312,9 +312,6 @@ const parseSrt = (srtString: string): SrtSegment[] => {
 const validateSubtitleTimings = (subtitles: SrtSegment[]): SrtSegment[] => {
   if (!subtitles || subtitles.length === 0) return [];
 
-  console.log(
-    `Validating timings for ${subtitles.length} subtitles in EditSubtitles component`
-  );
 
   // Fix basic timing issues (negative times, end before start)
   const fixedSubtitles = subtitles.map((subtitle) => {
@@ -323,17 +320,11 @@ const validateSubtitleTimings = (subtitles: SrtSegment[]): SrtSegment[] => {
 
     // Fix negative start time
     if (fixed.start < 0) {
-      console.warn(
-        `Subtitle ${fixed.index} has negative start time: ${fixed.start}`
-      );
       fixed.start = 0;
     }
 
     // Fix end time before start time
     if (fixed.end <= fixed.start) {
-      console.warn(
-        `Subtitle ${fixed.index} has end time <= start time: ${fixed.start} >= ${fixed.end}`
-      );
       // Make the subtitle last at least 0.5 seconds
       fixed.end = fixed.start + 0.5;
     }
@@ -451,10 +442,6 @@ export default function EditSubtitles({
       const validatedSubtitles = validateSubtitleTimings(subtitlesProp);
       setSubtitlesState(validatedSubtitles);
 
-      // Log validation results
-      console.log(
-        `Validated ${validatedSubtitles.length} subtitles on initial load`
-      );
     }
     // Only run this effect once on component mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -626,8 +613,7 @@ export default function EditSubtitles({
   );
 
   const handleSeekToSubtitle = useCallback((startTime: number) => {
-    console.log("Seeking to:", startTime);
-    try {
+      try {
       // First ensure any current subtitle display is properly cleared
       if (nativePlayer.instance) {
         const trackElement = nativePlayer.instance.querySelector("track");
@@ -758,21 +744,17 @@ export default function EditSubtitles({
       return;
     }
 
-    console.log("Player ready, configuring event handlers");
 
     // Add event listeners to the native player
     const handlePlay = () => {
-      console.log("Video playing event fired");
       setIsPlayingState(true);
     };
 
     const handlePause = () => {
-      console.log("Video paused event fired");
       setIsPlayingState(false);
     };
 
     const handleEnded = () => {
-      console.log("Video ended event fired");
       setIsPlayingState(false);
     };
 
@@ -816,8 +798,7 @@ export default function EditSubtitles({
   }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
-    console.log("Play subtitle called with:", startTime, endTime);
-
+  
     // Clear any existing timeout
     if (playTimeoutRef.current) {
       window.clearTimeout(playTimeoutRef.current);
@@ -845,12 +826,6 @@ export default function EditSubtitles({
           ? endTime
           : validStartTime + 3;
 
-      console.log(
-        "Play with start time:",
-        validStartTime,
-        "end time:",
-        validEndTime
-      );
 
       // Get current position directly from the player instance
       let currentPosition = 0;
@@ -864,15 +839,12 @@ export default function EditSubtitles({
         console.error("Error getting current time:", err);
       }
 
-      console.log("Current position before play:", currentPosition);
 
       // If we're already within this subtitle's time range, play from current position
       if (currentPosition >= validStartTime && currentPosition < validEndTime) {
-        console.log("Within subtitle range, playing from current position");
         playFromCurrentPosition(currentPosition, validEndTime);
       } else {
         // Only seek if we're not in the subtitle range
-        console.log(`Seeking to position ${validStartTime} before play`);
 
         try {
           // Find the track element to reset it before seeking
@@ -885,10 +857,6 @@ export default function EditSubtitles({
 
               // Perform the seek
               nativePlayer.instance.currentTime = validStartTime;
-              console.log(
-                "Direct seek completed, now at:",
-                nativePlayer.instance.currentTime
-              );
 
               // Restore track mode after a short delay
               setTimeout(() => {
@@ -897,7 +865,6 @@ export default function EditSubtitles({
                 }
 
                 let actualPosition = nativePlayer.getCurrentTime();
-                console.log("Position after seek timeout:", actualPosition);
                 playFromCurrentPosition(actualPosition, validEndTime);
               }, 200);
             } else {
@@ -906,7 +873,6 @@ export default function EditSubtitles({
 
               setTimeout(() => {
                 let actualPosition = nativePlayer.getCurrentTime();
-                console.log("Position after seek timeout:", actualPosition);
                 playFromCurrentPosition(actualPosition, validEndTime);
               }, 200);
             }
@@ -916,7 +882,6 @@ export default function EditSubtitles({
 
             setTimeout(() => {
               let actualPosition = nativePlayer.getCurrentTime();
-              console.log("Position after seek timeout:", actualPosition);
               playFromCurrentPosition(actualPosition, validEndTime);
             }, 200);
           }
@@ -946,7 +911,6 @@ export default function EditSubtitles({
       console.error("Error getting current time before play:", err);
     }
 
-    console.log(`Now playing from position ${actualCurrentTime}`);
 
     // Play from that position with proper error handling
     try {
