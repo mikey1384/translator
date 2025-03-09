@@ -4,8 +4,16 @@ import App from "./App";
 
 console.log("Renderer entry point loaded");
 
-const container = document.getElementById("root");
-if (container) {
+// React root reference for potential hot reloading
+let root: ReturnType<typeof createRoot> | null = null;
+
+const renderApp = () => {
+  const container = document.getElementById("root");
+  if (!container) {
+    console.error("Root element not found");
+    return;
+  }
+
   // Clear any existing content in the root element
   const loadingElement = container.querySelector(".loading");
   if (loadingElement) {
@@ -13,8 +21,10 @@ if (container) {
     container.removeChild(loadingElement);
   }
 
-  // Create a root for React
-  const root = createRoot(container);
+  // Create a root for React if it doesn't exist
+  if (!root) {
+    root = createRoot(container);
+  }
 
   // Render the App component
   console.log("Rendering React App");
@@ -23,6 +33,7 @@ if (container) {
       <App />
     </React.StrictMode>
   );
-} else {
-  console.error("Root element not found");
-}
+};
+
+// Initial render
+renderApp();

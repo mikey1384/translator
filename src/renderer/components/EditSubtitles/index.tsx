@@ -1,31 +1,11 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
-import VideoPlayerWithSubtitles, {
-  SrtSegment,
-  subtitleVideoPlayer,
-} from "./VideoPlayerWithSubtitles";
+import { SrtSegment } from "./VideoPlayerWithSubtitles";
+import NativeVideoPlayer, { nativePlayer } from "./NativeVideoPlayer";
 import { css } from "@emotion/css";
 import Button from "../Button";
 import SubtitleEditor from "./SubtitleEditor";
 import { debounce } from "lodash";
 import StylizedFileInput from "../StylizedFileInput";
-import videojs from "video.js";
-
-// Get the VideoJsPlayer type for proper typing
-type VideoJsPlayer = ReturnType<typeof videojs>;
-
-// Fix for videojs Player type
-declare module "video.js" {
-  interface Player {
-    currentTime: () => number;
-    play: () => Promise<void>;
-    pause: () => void;
-    on: (event: string, callback: Function) => void;
-    error: () => any;
-    src: (source: { src: string; type: string }) => void;
-    load: () => void;
-    dispose: () => void;
-  }
-}
 
 // Add container styles
 const containerStyles = css`
@@ -422,18 +402,9 @@ export default function EditSubtitles({
   );
 
   const handleSeekToSubtitle = useCallback((startTime: number) => {
-    if (!subtitleVideoPlayer.instance) {
-      console.warn("Cannot seek - player not available in global state");
-      return;
-    }
-
+    console.log("Seeking to:", startTime);
     try {
-      if (typeof subtitleVideoPlayer.instance.currentTime !== "function") {
-        console.error("Player currentTime method not available");
-        return;
-      }
-
-      subtitleVideoPlayer.instance.currentTime(startTime);
+      nativePlayer.seek(startTime);
     } catch (err) {
       console.error("Error seeking to time:", err);
     }
@@ -532,7 +503,7 @@ export default function EditSubtitles({
   }
 
   // Player ready handler
-  function handlePlayerReady(player: VideoJsPlayer) {
+  function handlePlayerReady(player: HTMLVideoElement) {
     if (!player) {
       console.warn("Invalid player received in handlePlayerReady");
       return;
@@ -540,38 +511,29 @@ export default function EditSubtitles({
 
     console.log("Player ready, configuring event handlers");
 
-    // Verify player has required methods
-    if (
-      typeof player.currentTime !== "function" ||
-      typeof player.play !== "function" ||
-      typeof player.pause !== "function"
-    ) {
-      console.error("Player is missing required methods");
-      return;
-    }
-
-    player.on("play", () => {
+    // Add event listeners to the native player
+    player.addEventListener("play", () => {
       console.log("Video playing");
       setIsPlaying(true);
     });
 
-    player.on("pause", () => {
+    player.addEventListener("pause", () => {
       console.log("Video paused");
       setIsPlaying(false);
     });
 
-    player.on("ended", () => {
+    player.addEventListener("ended", () => {
       console.log("Video ended");
       setIsPlaying(false);
     });
 
-    // Add time update listener
-    player.on("timeupdate", () => {
+    // Handle time updates
+    player.addEventListener("timeupdate", () => {
       const timeDisplay = document.getElementById("current-timestamp");
       if (timeDisplay && player) {
         try {
-          const currentTime = player.currentTime();
-          // Display time in SRT format - ensure currentTime is defined
+          const currentTime = player.currentTime;
+          // Display time in SRT format
           if (currentTime !== undefined && !isNaN(currentTime)) {
             timeDisplay.textContent = secondsToSrtTime(currentTime);
           }
@@ -582,40 +544,13 @@ export default function EditSubtitles({
     });
 
     // Add error handler
-    player.on("error", (e: any) => {
-      console.error("Video player error:", e);
-      if (player.error()) {
-        console.error("Error details:", player.error());
-      }
+    player.addEventListener("error", () => {
+      console.error("Video player error:", player.error);
     });
   }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
-    if (!subtitleVideoPlayer.instance) {
-      console.warn("No player instance available in global state");
-      return;
-    }
-
-    // Access the player directly from global state
-    const player = subtitleVideoPlayer.instance;
-
-    // Check if player is still valid and has required methods
-    try {
-      // Test if the player is still valid by checking its methods
-      if (
-        typeof player.currentTime !== "function" ||
-        typeof player.play !== "function" ||
-        typeof player.pause !== "function"
-      ) {
-        console.error(
-          "Player methods not available - invalid player reference"
-        );
-        return;
-      }
-    } catch (err) {
-      console.error("Error accessing player methods:", err);
-      return;
-    }
+    console.log("Play subtitle called with:", startTime, endTime);
 
     // Clear any existing timeout
     if (playTimeoutRef.current) {
@@ -626,8 +561,9 @@ export default function EditSubtitles({
     // If we're already playing, pause first
     if (isPlaying) {
       try {
-        player.pause();
+        nativePlayer.pause();
         setIsPlaying(false);
+        return; // Important: return early to prevent attempting play while pausing
       } catch (err) {
         console.error("Error pausing player:", err);
       }
@@ -643,42 +579,66 @@ export default function EditSubtitles({
           ? endTime
           : validStartTime + 3;
 
-      // Seek to start time and play
-      player.currentTime(validStartTime);
-      const playPromise = player.play();
+      // Get current position
+      const currentPosition = nativePlayer.getCurrentTime();
 
-      // Handle play() promise for modern browsers
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((err) => {
-            console.error("Error starting playback:", err);
-            setIsPlaying(false);
-          });
+      // Only seek if we're not already at the right position (with a small tolerance)
+      if (Math.abs(currentPosition - validStartTime) > 0.5) {
+        console.log(`Seeking to position ${validStartTime} before play`);
+        nativePlayer.seek(validStartTime);
+
+        // Wait a bit longer to ensure seek completes before playing
+        setTimeout(() => {
+          playFromCurrentPosition(validStartTime, validEndTime);
+        }, 100);
       } else {
-        setIsPlaying(true);
+        // Already at the right position, just play
+        console.log("Already at the right position, playing immediately");
+        playFromCurrentPosition(validStartTime, validEndTime);
       }
-
-      // Set timeout to pause at end time
-      const duration = (validEndTime - validStartTime) * 1000; // Convert to milliseconds
-
-      playTimeoutRef.current = window.setTimeout(() => {
-        try {
-          if (player && typeof player.pause === "function") {
-            player.pause();
-          } else {
-            console.warn("Cannot pause - player not available in timeout");
-          }
-          setIsPlaying(false);
-        } catch (err) {
-          console.error("Error pausing player after timeout:", err);
-        }
-        playTimeoutRef.current = null;
-      }, duration);
     } catch (err) {
       console.error("Error during subtitle playback:", err);
+      setIsPlaying(false);
+    }
+  }
+
+  // Helper function to play from current position
+  function playFromCurrentPosition(startTime: number, endTime: number) {
+    // Double check current time after seek
+    console.log(`Now playing from position ${nativePlayer.getCurrentTime()}`);
+
+    // Play from that position with proper error handling
+    // We'll use a try/catch to handle any errors and avoid promises
+    try {
+      nativePlayer
+        .play()
+        .then(() => {
+          console.log("Successfully started playback");
+          setIsPlaying(true);
+
+          // Calculate how long to play this segment
+          const duration = (endTime - startTime) * 1000; // Convert to milliseconds
+          console.log(`Will pause after ${duration}ms`);
+
+          // Set timeout to pause at end time
+          playTimeoutRef.current = window.setTimeout(() => {
+            try {
+              nativePlayer.pause();
+              setIsPlaying(false);
+              console.log("Paused after timeout");
+            } catch (err) {
+              console.error("Error pausing player after timeout:", err);
+            } finally {
+              playTimeoutRef.current = null;
+            }
+          }, duration);
+        })
+        .catch((err) => {
+          console.error("Error starting playback:", err);
+          setIsPlaying(false);
+        });
+    } catch (err) {
+      console.error("Unexpected error during play operation:", err);
       setIsPlaying(false);
     }
   }
@@ -772,61 +732,47 @@ export default function EditSubtitles({
   }
 
   function handleShiftSubtitle(index: number, shiftSeconds: number) {
-    // If shifting is already in progress, don't allow another one
     if (isShiftingDisabled) return;
 
-    // Disable the shift buttons
+    // Disable shifting during processing to prevent rapid clicks
     setIsShiftingDisabled(true);
 
     try {
       // Get the current subtitle
-      const currentSub = subtitles[index];
-
-      // Calculate the new start and end times
-      const newStart = Math.max(0, currentSub.start + shiftSeconds);
-      const newEnd = currentSub.end + shiftSeconds;
-
-      // Only proceed if start time is still valid (not negative)
-      if (newStart < 0) {
+      const sub = subtitles[index];
+      if (!sub) {
+        console.error("Subtitle not found at index:", index);
         setIsShiftingDisabled(false);
         return;
       }
 
-      // Update both start and end times simultaneously
+      // Calculate new start and end times
+      const newStart = Math.max(0, sub.start + shiftSeconds);
+      const duration = sub.end - sub.start;
+      const newEnd = newStart + duration;
+
+      // Update the subtitle
       setSubtitles((current) =>
-        current.map((sub, i) =>
-          i === index ? { ...sub, start: newStart, end: newEnd } : sub
+        current.map((s, i) =>
+          i === index ? { ...s, start: newStart, end: newEnd } : s
         )
       );
 
       // If we have a player, seek to the new position to show the change
-      if (subtitleVideoPlayer.instance) {
-        // Use method call syntax instead of property assignment
-        if (typeof subtitleVideoPlayer.instance.currentTime !== "function") {
-          console.error("Player currentTime method not available");
-          setIsShiftingDisabled(false);
-          return;
-        }
-
-        // Call the currentTime method
-        subtitleVideoPlayer.instance.currentTime(newStart);
-
-        // Update timestamp display
-        const timeDisplay = document.getElementById("current-timestamp");
-        if (timeDisplay) {
-          timeDisplay.textContent = secondsToSrtTime(newStart);
-        }
+      try {
+        nativePlayer.seek(newStart);
+      } catch (err) {
+        console.error("Error seeking to new position after shift:", err);
       }
-    } catch (err) {
-      console.error("Error during subtitle shift:", err);
-      setIsShiftingDisabled(false);
-      return;
-    }
 
-    // Re-enable the shift buttons after a short delay
-    setTimeout(() => {
+      // Re-enable shifting
+      setTimeout(() => {
+        setIsShiftingDisabled(false);
+      }, 100);
+    } catch (err) {
+      console.error("Error shifting subtitle:", err);
       setIsShiftingDisabled(false);
-    }, 50);
+    }
   }
 
   async function handleMergeVideoWithSubtitles() {
@@ -931,7 +877,7 @@ export default function EditSubtitles({
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
           `}
         >
-          <VideoPlayerWithSubtitles
+          <NativeVideoPlayer
             key={`video-player-${videoUrl}`}
             videoUrl={videoUrl}
             subtitles={subtitles}
@@ -999,6 +945,14 @@ export default function EditSubtitles({
                       const blobUrl = URL.createObjectURL(file);
                       console.log("Created blob URL for video:", blobUrl);
 
+                      // Log detailed file information for debugging
+                      console.log("Video file details:", {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        lastModified: new Date(file.lastModified).toISOString(),
+                      });
+
                       // Set the URL to trigger video loading
                       onSetVideoUrl(blobUrl);
 
@@ -1023,14 +977,39 @@ export default function EditSubtitles({
             />
             <Button
               onClick={() => {
-                if (subtitleVideoPlayer.instance) {
+                try {
                   if (isPlaying) {
-                    subtitleVideoPlayer.instance.pause();
+                    console.log("Pausing video (main button)");
+                    nativePlayer.pause();
                     setIsPlaying(false);
                   } else {
-                    subtitleVideoPlayer.instance.play();
-                    setIsPlaying(true);
+                    // Get the current position
+                    const currentPosition = nativePlayer.getCurrentTime();
+                    console.log(
+                      `Playing video from current position: ${currentPosition}s (main button)`
+                    );
+
+                    // Don't seek if already at the right position - just play
+                    try {
+                      nativePlayer
+                        .play()
+                        .then(() => {
+                          console.log(
+                            "Main play button: successfully started playback"
+                          );
+                          setIsPlaying(true);
+                        })
+                        .catch((err) => {
+                          console.error("Error playing video:", err);
+                          setIsPlaying(false);
+                        });
+                    } catch (err) {
+                      console.error("Unexpected error during main play:", err);
+                      setIsPlaying(false);
+                    }
                   }
+                } catch (err) {
+                  console.error("Error controlling playback:", err);
                 }
               }}
               variant="primary"

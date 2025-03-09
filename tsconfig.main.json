@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "outDir": "dist/main",
+    "rootDir": "src",
+    "sourceMap": true,
+    "paths": {
+      "*": ["*"]
+    }
+  },
+  "include": [
+    "src/main/**/*",
+    "src/electron/**/*",
+    "src/api/**/*",
+    "src/types/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

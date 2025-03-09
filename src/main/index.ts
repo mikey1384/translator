@@ -12,11 +12,36 @@ import { setupIpcHandlers as initIpcHandlers } from "../electron/ipc-handlers";
 import { FileManager } from "../electron/file-manager";
 import dotenv from "dotenv";
 
+// Add hot reload capability in development
+if (isDev) {
+  try {
+    // Using require since this is a development-only dependency
+    require("electron-reloader")(module, {
+      watchRenderer: true,
+      debug: true,
+      ignore: [
+        "node_modules/**/*",
+        "src/renderer/**/*.{css,scss}",
+        "**/*.json",
+      ],
+    });
+    console.log("✨ Hot reloading enabled for Electron app");
+  } catch (err) {
+    console.error("Error setting up electron-reloader:", err);
+  }
+}
+
 // Ensure ipcMain is properly defined
 const ipcMain = electronIpcMain;
 
 // Load environment variables from .env file
 dotenv.config();
+
+// Enable hardware acceleration for video
+app.commandLine.appendSwitch("enable-accelerated-video-decode");
+app.commandLine.appendSwitch("ignore-gpu-blacklist");
+app.commandLine.appendSwitch("enable-gpu-rasterization");
+app.commandLine.appendSwitch("enable-zero-copy");
 
 // Log that environment variables are loaded (don't log the actual values)
 console.log("Environment variables loaded:", {
@@ -66,18 +91,71 @@ const createWindow = async () => {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, "../preload/index.js"),
+        preload: calculatePreloadPath(),
         devTools: true, // Always enable DevTools
+        webSecurity: true, // Ensure web security is enabled
+        additionalArguments: ["--enable-features=VideoPlayback"], // Enable video playback features
       },
     });
 
+    // Calculate the correct preload path based on the current execution environment
+    function calculatePreloadPath() {
+      const isDev = process.env.NODE_ENV === "development";
+
+      // Potential preload paths to try
+      const possiblePaths = [
+        path.join(__dirname, "../../preload/index.js"), // Normal path after TS compile
+        path.join(__dirname, "../preload/index.js"), // Alternative path
+        path.join(process.cwd(), "dist/preload/index.js"), // Absolute path
+      ];
+
+      // Try each path and use the first one that exists
+      const fs = require("fs");
+      for (const possiblePath of possiblePaths) {
+        if (fs.existsSync(possiblePath)) {
+          console.log(`Using preload path: ${possiblePath}`);
+          return possiblePath;
+        } else {
+          console.log(`Preload path not found: ${possiblePath}`);
+        }
+      }
+
+      // Default to the first path if none exist (will likely fail, but with clearer error)
+      console.error("No valid preload path found! Using default path...");
+      return possiblePaths[0];
+    }
+
     console.log(
       "Window created, preload path:",
-      path.join(__dirname, "../preload/index.js")
+      mainWindow.webContents.getURL()
     );
 
     // Determine the path to load in the window
-    const indexPath = `file://${path.join(__dirname, "../../index.html")}`;
+    const indexPaths = [
+      path.join(__dirname, "../../../index.html"),
+      path.join(__dirname, "../../index.html"),
+      path.join(process.cwd(), "index.html"),
+    ];
+
+    let indexPath = "";
+    const fs = require("fs");
+
+    // Find the first valid index.html path
+    for (const possiblePath of indexPaths) {
+      if (fs.existsSync(possiblePath)) {
+        indexPath = `file://${possiblePath}`;
+        console.log(`Found valid index.html at: ${possiblePath}`);
+        break;
+      }
+    }
+
+    if (!indexPath) {
+      indexPath = `file://${indexPaths[0]}`;
+      console.error(
+        `No valid index.html found. Defaulting to ${indexPaths[0]}`
+      );
+    }
+
     console.log("Loading index file:", indexPath);
 
     // Load the index.html
@@ -87,6 +165,46 @@ const createWindow = async () => {
     // Open the DevTools automatically
     mainWindow.webContents.openDevTools();
     console.log("DevTools opened");
+
+    // Add a content reload watcher for development
+    if (isDev) {
+      const fs = require("fs");
+      const path = require("path");
+
+      // Watch for changes in the renderer build output
+      const rendererBuildPath = path.join(
+        __dirname,
+        "../../dist/renderer/index.js"
+      );
+      let lastModified = 0;
+
+      // Check for changes every 1 second
+      const watchInterval = setInterval(() => {
+        try {
+          if (fs.existsSync(rendererBuildPath)) {
+            const stats = fs.statSync(rendererBuildPath);
+            const currentModified = stats.mtimeMs;
+
+            // If the file has been modified since last check
+            if (lastModified > 0 && currentModified > lastModified) {
+              console.log(
+                "🔄 Renderer bundle has changed, reloading content..."
+              );
+              mainWindow?.webContents.reloadIgnoringCache();
+            }
+
+            lastModified = currentModified;
+          }
+        } catch (err) {
+          console.error("Error checking renderer build:", err);
+        }
+      }, 1000);
+
+      // Clean up on window close
+      mainWindow.on("closed", () => {
+        clearInterval(watchInterval);
+      });
+    }
 
     // Add event listeners for debugging
     mainWindow.webContents.on("did-finish-load", () => {
@@ -109,7 +227,7 @@ const createWindow = async () => {
     );
 
     // ... existing code ...
-    
+
     return mainWindow;
   } catch (error) {
     console.error("Error creating window:", error);
@@ -129,7 +247,7 @@ app.whenReady().then(async () => {
 
     // Create the main window first to ensure the app is ready
     await createWindow();
-    
+
     // Set up IPC handlers after the window is created to ensure app is ready
     initIpcHandlers();
 

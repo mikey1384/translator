@@ -121,10 +121,14 @@ interface VideoJsPlayerOptions {
     hls?: {
       overrideNative?: boolean;
     };
+    nativeTextTracks?: boolean;
   };
   techOrder?: string[];
   preload?: string;
   volume?: number;
+  inactivityTimeout?: number;
+  liveui?: boolean;
+  muted?: boolean;
 }
 
 // Interface for SRT segments
@@ -242,10 +246,14 @@ const VideoPlayerWithSubtitles: React.FC<VideoPlayerProps> = ({
         hls: {
           overrideNative: false,
         },
+        nativeTextTracks: true,
       },
       // Use 'html5' first, then fall back to other tech if needed
       techOrder: ["html5"],
       preload: "auto",
+      inactivityTimeout: 0,
+      liveui: false,
+      muted: false,
     };
 
     let player: VideoJsPlayer;
@@ -277,6 +285,32 @@ const VideoPlayerWithSubtitles: React.FC<VideoPlayerProps> = ({
 
         console.log("Video player ready with source:", videoUrl);
         console.log("Using video type:", detectedVideoType);
+
+        // Additional debug info
+        console.log("Video element dimensions:", {
+          videoWidth: videoRef.current?.videoWidth,
+          videoHeight: videoRef.current?.videoHeight,
+          offsetWidth: videoRef.current?.offsetWidth,
+          offsetHeight: videoRef.current?.offsetHeight,
+        });
+
+        // Add more detailed event listeners for debugging
+        player.on("loadedmetadata", () => {
+          console.log("Video loadedmetadata event", {
+            videoWidth: player.videoWidth(),
+            videoHeight: player.videoHeight(),
+            duration: player.duration(),
+            readyState: videoRef.current?.readyState,
+          });
+        });
+
+        player.on("loadeddata", () => {
+          console.log("Video loadeddata event", {
+            videoWidth: player.videoWidth(),
+            videoHeight: player.videoHeight(),
+            readyState: videoRef.current?.readyState,
+          });
+        });
 
         // Call the onPlayerReady callback
         onPlayerReady(player);
@@ -388,6 +422,8 @@ const VideoPlayerWithSubtitles: React.FC<VideoPlayerProps> = ({
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
         borderRadius: "6px",
         overflow: "hidden",
+        transform: "translateZ(0)", // Force hardware acceleration
+        willChange: "transform", // Hint for hardware acceleration
       }}
     >
       <div
@@ -420,11 +456,13 @@ const VideoPlayerWithSubtitles: React.FC<VideoPlayerProps> = ({
             backgroundColor: "#000",
             display: "block",
             zIndex: 1,
+            visibility: "visible",
           }}
           controls
           webkit-playsinline="true"
           x-webkit-airplay="allow"
-          data-setup='{"techOrder": ["html5"], "nativeControlsForTouch": false}'
+          crossOrigin="anonymous"
+          data-setup='{"techOrder": ["html5"], "nativeControlsForTouch": false, "preferFullWindow": false}'
         />
       </div>
 
@@ -448,6 +486,10 @@ const VideoPlayerWithSubtitles: React.FC<VideoPlayerProps> = ({
           <div style={{ fontSize: "12px", opacity: 0.8 }}>
             Try a different video format like MP4, WebM, or OGG, or check
             browser compatibility.
+            <br />
+            <span style={{ color: "#66aaff" }}>
+              Debug Info: {currentVideoType}, {retryCount}/{maxRetries} retries
+            </span>
           </div>
         </div>
       )}
