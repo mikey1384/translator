@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
-import { SrtSegment } from "./VideoPlayerWithSubtitles";
 import NativeVideoPlayer, { nativePlayer } from "./NativeVideoPlayer";
 import { css } from "@emotion/css";
 import Button from "../Button";
@@ -9,6 +8,16 @@ import StylizedFileInput from "../StylizedFileInput";
 import Section from "../Section";
 import { cx } from "@emotion/css";
 import { sectionStyles, sectionTitleStyles } from "../../styles";
+import { subtitleVideoPlayer } from "../../constants";
+
+// Define SrtSegment interface
+export interface SrtSegment {
+  index: number;
+  start: number;
+  end: number;
+  text: string;
+  originalText?: string;
+}
 
 // Add container styles
 const containerStyles = css`
@@ -299,6 +308,42 @@ const parseSrt = (srtString: string): SrtSegment[] => {
   return segments;
 };
 
+// Add a function to validate subtitle timings
+const validateSubtitleTimings = (subtitles: SrtSegment[]): SrtSegment[] => {
+  if (!subtitles || subtitles.length === 0) return [];
+
+  console.log(
+    `Validating timings for ${subtitles.length} subtitles in EditSubtitles component`
+  );
+
+  // Fix basic timing issues (negative times, end before start)
+  const fixedSubtitles = subtitles.map((subtitle) => {
+    // Create a new object to avoid mutating the original
+    const fixed = { ...subtitle };
+
+    // Fix negative start time
+    if (fixed.start < 0) {
+      console.warn(
+        `Subtitle ${fixed.index} has negative start time: ${fixed.start}`
+      );
+      fixed.start = 0;
+    }
+
+    // Fix end time before start time
+    if (fixed.end <= fixed.start) {
+      console.warn(
+        `Subtitle ${fixed.index} has end time <= start time: ${fixed.start} >= ${fixed.end}`
+      );
+      // Make the subtitle last at least 0.5 seconds
+      fixed.end = fixed.start + 0.5;
+    }
+
+    return fixed;
+  });
+
+  return fixedSubtitles;
+};
+
 export default function EditSubtitles({
   videoFile,
   videoUrl,
@@ -399,9 +444,27 @@ export default function EditSubtitles({
       )}:${String(secs).padStart(2, "0")},${String(ms).padStart(3, "0")}`;
     });
 
-  // Sync with props when they change
+  // Add a useEffect that only runs once to validate initial subtitles
+  useEffect(() => {
+    if (subtitlesProp && subtitlesProp.length > 0) {
+      // Validate subtitles before setting them
+      const validatedSubtitles = validateSubtitleTimings(subtitlesProp);
+      setSubtitlesState(validatedSubtitles);
+
+      // Log validation results
+      console.log(
+        `Validated ${validatedSubtitles.length} subtitles on initial load`
+      );
+    }
+    // Only run this effect once on component mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Modify the useEffect that syncs with props to prevent infinite loops
   useEffect(() => {
     if (subtitlesProp) {
+      // Instead of validating on every update, just set the subtitles directly
+      // to avoid potential infinite loops
       setSubtitlesState(subtitlesProp);
     }
   }, [subtitlesProp]);
@@ -565,7 +628,33 @@ export default function EditSubtitles({
   const handleSeekToSubtitle = useCallback((startTime: number) => {
     console.log("Seeking to:", startTime);
     try {
-      nativePlayer.seek(startTime);
+      // First ensure any current subtitle display is properly cleared
+      if (nativePlayer.instance) {
+        const trackElement = nativePlayer.instance.querySelector("track");
+        if (trackElement && trackElement.track) {
+          // Store current mode
+          const currentMode = trackElement.track.mode;
+
+          // Hide track to clear displayed cues
+          trackElement.track.mode = "hidden";
+
+          // Perform seek
+          nativePlayer.instance.currentTime = startTime;
+
+          // Restore track mode after a short delay
+          setTimeout(() => {
+            if (trackElement && trackElement.track) {
+              trackElement.track.mode = currentMode;
+            }
+          }, 50);
+        } else {
+          // Fallback to direct seek if track not found
+          nativePlayer.instance.currentTime = startTime;
+        }
+      } else {
+        // Use the nativePlayer.seek method (which should handle track state)
+        nativePlayer.seek(startTime);
+      }
     } catch (err) {
       console.error("Error seeking to time:", err);
     }
@@ -786,23 +875,51 @@ export default function EditSubtitles({
         console.log(`Seeking to position ${validStartTime} before play`);
 
         try {
-          // Direct property access for more reliable seeking
+          // Find the track element to reset it before seeking
           if (nativePlayer.instance) {
-            nativePlayer.instance.currentTime = validStartTime;
-            console.log(
-              "Direct seek completed, now at:",
-              nativePlayer.instance.currentTime
-            );
-          } else {
-            nativePlayer.seek(validStartTime);
-          }
+            const trackElement = nativePlayer.instance.querySelector("track");
+            // Temporarily hide track to clear displayed cues
+            if (trackElement && trackElement.track) {
+              const currentMode = trackElement.track.mode;
+              trackElement.track.mode = "hidden";
 
-          // Wait a bit longer to ensure seek completes before playing
-          setTimeout(() => {
-            let actualPosition = nativePlayer.getCurrentTime();
-            console.log("Position after seek timeout:", actualPosition);
-            playFromCurrentPosition(actualPosition, validEndTime);
-          }, 200); // Increased timeout for more reliable seek completion
+              // Perform the seek
+              nativePlayer.instance.currentTime = validStartTime;
+              console.log(
+                "Direct seek completed, now at:",
+                nativePlayer.instance.currentTime
+              );
+
+              // Restore track mode after a short delay
+              setTimeout(() => {
+                if (trackElement && trackElement.track) {
+                  trackElement.track.mode = currentMode;
+                }
+
+                let actualPosition = nativePlayer.getCurrentTime();
+                console.log("Position after seek timeout:", actualPosition);
+                playFromCurrentPosition(actualPosition, validEndTime);
+              }, 200);
+            } else {
+              // Fallback if track element not found
+              nativePlayer.instance.currentTime = validStartTime;
+
+              setTimeout(() => {
+                let actualPosition = nativePlayer.getCurrentTime();
+                console.log("Position after seek timeout:", actualPosition);
+                playFromCurrentPosition(actualPosition, validEndTime);
+              }, 200);
+            }
+          } else {
+            // Use the nativePlayer.seek method (which includes track handling)
+            nativePlayer.seek(validStartTime);
+
+            setTimeout(() => {
+              let actualPosition = nativePlayer.getCurrentTime();
+              console.log("Position after seek timeout:", actualPosition);
+              playFromCurrentPosition(actualPosition, validEndTime);
+            }, 200);
+          }
         } catch (seekErr) {
           console.error("Error during seek:", seekErr);
           // Fall back to playing from start time even if seek fails
@@ -1078,6 +1195,35 @@ export default function EditSubtitles({
     }
   }
 
+  // Add an effect to automatically update subtitles whenever they change
+  useEffect(() => {
+    if (subtitlesState.length > 0) {
+      // Use videoPlayerRef from props if available
+      if (videoPlayerRef && typeof videoPlayerRef.currentTime === "function") {
+        try {
+          const currentTime = videoPlayerRef.currentTime();
+          videoPlayerRef.currentTime(currentTime);
+        } catch (e) {
+          console.warn("Error updating player time:", e);
+        }
+      }
+      // Fallback to subtitleVideoPlayer global if available
+      else if (
+        subtitleVideoPlayer &&
+        subtitleVideoPlayer.instance &&
+        typeof subtitleVideoPlayer.instance.currentTime === "function"
+      ) {
+        try {
+          const currentTime = subtitleVideoPlayer.instance.currentTime();
+          subtitleVideoPlayer.instance.currentTime(currentTime);
+        } catch (e) {
+          console.warn("Error updating global player time:", e);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtitlesState]);
+
   return (
     <Section title="Edit Subtitles" overflowVisible={true}>
       {/* File input fields - Show when not in extraction mode or when video is loaded but no subtitles */}
@@ -1122,13 +1268,15 @@ export default function EditSubtitles({
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 15,
+              marginBottom: 10,
+              marginTop: 0,
             }}
           >
             <h3 style={{ margin: 0 }}>Subtitles ({subtitlesState.length})</h3>
           </div>
 
           <div
+            className="subtitle-editor-container"
             style={{
               display: "flex",
               flexDirection: "column",

@@ -13,12 +13,13 @@ interface StickyVideoPlayerProps {
   onPlayerReady: (player: any) => void;
   onChangeVideo?: (file: File) => void;
   onChangeSrt?: (file: File) => void;
+  onStickyChange?: (isSticky: boolean) => void;
 }
 
 // Use fixed position styling with a scrolling threshold
 const fixedVideoContainerStyles = (isSticky: boolean) => css`
   position: ${isSticky ? "fixed" : "relative"};
-  top: ${isSticky ? "10px" : "auto"};
+  top: ${isSticky ? "0" : "auto"};
   left: ${isSticky ? "50%" : "auto"};
   transform: ${isSticky ? "translateX(-50%)" : "none"};
   width: ${isSticky ? "calc(90% - 30px)" : "100%"};
@@ -26,9 +27,9 @@ const fixedVideoContainerStyles = (isSticky: boolean) => css`
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 15px;
-  border-radius: 8px;
+  border-radius: ${isSticky ? "0 0 8px 8px" : "8px"};
   border: 1px solid rgba(238, 238, 238, 0.9);
-  margin-bottom: ${isSticky ? "0" : "20px"};
+  margin-bottom: ${isSticky ? "0" : "10px"};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,7 +46,7 @@ const placeholderStyles = (isSticky: boolean, height: number) => css`
   display: ${isSticky ? "block" : "none"};
   height: ${height}px;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 `;
 
 // Button gradient styles for play/pause button
@@ -127,18 +128,18 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   onPlayerReady,
   onChangeVideo,
   onChangeSrt,
+  onStickyChange,
 }) => {
   const [isSticky, setIsSticky] = useState(false);
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollThreshold = 50; // px
+  const scrollThreshold = 100; // px
+  const prevIsStickyRef = useRef(false); // Track previous sticky state
 
+  // Simple scroll detection without any scrolling behavior
   useEffect(() => {
-    if (!videoUrl) return;
-
-    // Function to check if element should be sticky
     const checkStickyState = () => {
       if (!playerRef.current || !containerRef.current) return;
 
@@ -150,19 +151,24 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         setPlaceholderHeight(rect.height);
       }
 
-      // Check if should be sticky
-      if (window.scrollY > scrollThreshold && !isSticky) {
-        setIsSticky(true);
-      } else if (window.scrollY <= scrollThreshold && isSticky) {
-        setIsSticky(false);
+      // Check if should be sticky without scrolling
+      const shouldBeSticky = window.scrollY > scrollThreshold;
+
+      // Only update state if needed
+      if (shouldBeSticky !== isSticky) {
+        setIsSticky(shouldBeSticky);
+
+        // Only notify parent once when sticky state actually changes
+        if (onStickyChange && shouldBeSticky !== prevIsStickyRef.current) {
+          onStickyChange(shouldBeSticky);
+          prevIsStickyRef.current = shouldBeSticky;
+        }
       }
     };
 
-    // Set up the scroll listener - using both approaches for compatibility
+    // Add scroll event listener
     window.addEventListener("scroll", checkStickyState);
-
-    // For Electron's WebKit renderer, we might need a different approach too
-    const electronScrollHandler = setInterval(checkStickyState, 100);
+    window.addEventListener("resize", checkStickyState);
 
     // Initial check
     checkStickyState();
@@ -170,9 +176,9 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     // Clean up
     return () => {
       window.removeEventListener("scroll", checkStickyState);
-      clearInterval(electronScrollHandler);
+      window.removeEventListener("resize", checkStickyState);
     };
-  }, [videoUrl, isSticky, scrollThreshold]);
+  }, [scrollThreshold, onStickyChange]); // Remove isSticky from dependency array
 
   // Update isPlaying state when video plays/pauses
   useEffect(() => {
@@ -261,7 +267,12 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       <div className={placeholderStyles(isSticky, placeholderHeight)} />
 
       {/* The actual player */}
-      <div className={fixedVideoContainerStyles(isSticky)} ref={playerRef}>
+      <div
+        className={`${fixedVideoContainerStyles(
+          isSticky
+        )} sticky-video-container`}
+        ref={playerRef}
+      >
         <NativeVideoPlayer
           videoUrl={videoUrl}
           subtitles={subtitles}

@@ -18,7 +18,7 @@ const timestampContainerStyles = css`
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 14px;
-  margin-top: 8px;
+  margin-top: 4px;
   display: flex;
   justify-content: space-between;
   align-items: center;

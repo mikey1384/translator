@@ -1,99 +1,92 @@
 import React, { useEffect, useRef, useState } from "react";
-import { SrtSegment } from "./VideoPlayerWithSubtitles";
+import { css } from "@emotion/css";
 
-// Subtitle utilities
-const formatTimeForVtt = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  const ms = Math.round((seconds - Math.floor(seconds)) * 1000);
+// Custom subtitle overlay styles
+const subtitleOverlayStyles = css`
+  position: absolute;
+  bottom: 5px; /* Reduced from 20px to 5px to move subtitles very close to bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 16px; /* Smaller font size for small video */
+  font-weight: 600; /* Bolder */
+  line-height: 1.4;
+  font-family: sans-serif;
+  white-space: pre-line;
+  z-index: 1000; /* Ensure it's above everything */
+  pointer-events: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+  border: 1px solid rgba(255, 255, 255, 0.4); /* More visible border */
+  min-width: 40%; /* Ensure visibility even with short text */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9); /* Stronger text shadow */
+  user-select: none;
+  opacity: 0.95; /* High visibility but still slightly transparent */
+  transition: opacity 0.2s ease;
+`;
 
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0"
-  )}:${String(secs).padStart(2, "0")}.${String(ms).padStart(3, "0")}`;
-};
-
-// Generate WebVTT content from SRT segments
-const generateVttFromSegments = (segments: SrtSegment[]): string => {
-  if (!segments || segments.length === 0) {
-    return "WEBVTT\n\n";
-  }
-
-  const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
-  const lines = ["WEBVTT", ""];
-
-  sortedSegments.forEach((segment) => {
-    const startTime = formatTimeForVtt(segment.start);
-    const endTime = formatTimeForVtt(segment.end);
-    lines.push(`${startTime} --> ${endTime}`);
-    lines.push(segment.text);
-    lines.push("");
-  });
-
-  return lines.join("\n");
-};
-
-// Global state for player access from other components
-export const nativePlayer = {
-  instance: null as HTMLVideoElement | null,
+// Global reference to the player for direct access from other components
+export const nativePlayer: {
+  instance: HTMLVideoElement | null;
+  isReady: boolean;
+  lastAccessed: number;
+  isInitialized: boolean;
+  play: () => Promise<void>;
+  pause: () => void;
+  seek: (time: number) => void;
+  getCurrentTime: () => number;
+  isPlaying: () => boolean;
+} = {
+  instance: null,
   isReady: false,
   lastAccessed: 0,
-  // Flag to prevent re-initialization
   isInitialized: false,
 
-  // Helper methods for controlling the player
   play: async () => {
     if (!nativePlayer.instance) {
-      console.error("Play called but no player instance available");
-      return Promise.reject("No player instance");
+      console.error("play called but no player instance available");
+      return;
     }
-    console.log("Playing video...");
     try {
-      return nativePlayer.instance.play();
+      await nativePlayer.instance.play();
     } catch (error) {
-      console.error("Error during play:", error);
-      return Promise.reject(error);
+      console.error("Error playing video:", error);
+      throw error;
     }
   },
 
   pause: () => {
     if (!nativePlayer.instance) {
-      console.error("Pause called but no player instance available");
+      console.error("pause called but no player instance available");
       return;
     }
-    console.log("Pausing video...");
-    try {
-      nativePlayer.instance.pause();
-    } catch (error) {
-      console.error("Error during pause:", error);
-    }
+    nativePlayer.instance.pause();
   },
 
   seek: (time: number) => {
     if (!nativePlayer.instance) {
-      console.error("Seek called but no player instance available");
+      console.error("seek called but no player instance available");
       return;
     }
 
-    // Ensure time is valid
     const validTime =
       typeof time === "number" && !isNaN(time) && time >= 0 ? time : 0;
 
-    console.log(`Seeking to ${validTime}s`);
     try {
-      // Set the currentTime property
+      // Simply set the current time property - our custom overlay will handle the subtitles
       nativePlayer.instance.currentTime = validTime;
 
-      // Double check if it worked
+      // After seeking, check if it worked correctly
       setTimeout(() => {
         if (nativePlayer.instance) {
           const actualTime = nativePlayer.instance.currentTime;
-          console.log(`After seek, actual time is: ${actualTime}s`);
 
           // If the seek didn't work as expected, try again
           if (Math.abs(actualTime - validTime) > 0.5) {
-            console.log("Seek may not have completed correctly, trying again");
             nativePlayer.instance.currentTime = validTime;
           }
         }
@@ -105,7 +98,6 @@ export const nativePlayer = {
 
   getCurrentTime: () => {
     if (!nativePlayer.instance) {
-      console.error("getCurrentTime called but no player instance available");
       return 0;
     }
     return nativePlayer.instance.currentTime;
@@ -113,7 +105,6 @@ export const nativePlayer = {
 
   isPlaying: () => {
     if (!nativePlayer.instance) {
-      console.error("isPlaying called but no player instance available");
       return false;
     }
     return !nativePlayer.instance.paused;
@@ -122,7 +113,7 @@ export const nativePlayer = {
 
 interface NativeVideoPlayerProps {
   videoUrl: string;
-  subtitles: SrtSegment[];
+  subtitles: any[];
   onPlayerReady: (player: HTMLVideoElement) => void;
 }
 
@@ -131,13 +122,13 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
   subtitles,
   onPlayerReady,
 }) => {
+  // Remove debug log
   const videoRef = useRef<HTMLVideoElement>(null);
-  const trackRef = useRef<HTMLTrackElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
+  const [activeSubtitle, setActiveSubtitle] = useState<string>("");
 
   // Handle video initialization
   useEffect(() => {
@@ -146,7 +137,6 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
 
     // If we already have the same URL loaded, don't reinitialize
     if (videoElement.src === videoUrl) {
-      console.log("Video already has the same URL, no need to reinitialize");
       // Still update the global reference if needed
       if (nativePlayer.instance !== videoElement) {
         nativePlayer.instance = videoElement;
@@ -155,13 +145,9 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
       return;
     }
 
-    console.log("Initializing native video player with URL:", videoUrl);
-
-    // Load video with more diagnostics
+    // Load video
     // In Electron, let's try to explicitly set the src attribute rather than property
     if (videoUrl) {
-      console.log(`Setting video source to: ${videoUrl}`);
-
       // Check if the format is supported
       const videoType = videoUrl.startsWith("blob:")
         ? "video/mp4"
@@ -172,9 +158,6 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
         : videoUrl.endsWith(".ogg")
         ? "video/ogg"
         : "video/mp4";
-
-      const canPlay = videoElement.canPlayType(videoType);
-      console.log(`Browser support for ${videoType}: "${canPlay}"`);
 
       // Set src attribute directly
       videoElement.setAttribute("src", videoUrl);
@@ -204,115 +187,136 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     };
 
     const handleLoadedMetadata = () => {
-      console.log("Video metadata loaded:", {
-        videoWidth: videoElement.videoWidth,
-        videoHeight: videoElement.videoHeight,
-        duration: videoElement.duration,
-        readyState: videoElement.readyState,
-      });
+      // Video metadata loaded successfully
     };
 
     const handleCanPlay = () => {
-      console.log("Video can play event fired");
       onPlayerReady(videoElement);
     };
 
     const handlePlay = () => {
-      console.log(
-        "Video play event fired, currentTime:",
-        videoElement.currentTime
-      );
+      // Video play event
     };
 
     const handlePause = () => {
-      console.log(
-        "Video pause event fired, currentTime:",
-        videoElement.currentTime
-      );
+      // Video pause event
     };
 
     const handleSeeking = () => {
-      console.log(
-        "Video seeking event fired, target time:",
-        videoElement.currentTime
-      );
+      // With our custom subtitle overlay, we don't need any track-specific cleanup
+      // The time update handler will automatically find the correct subtitle
     };
 
     const handleSeeked = () => {
-      console.log(
-        "Video seeked event completed, now at time:",
-        videoElement.currentTime
-      );
+      // Video seeked completed
     };
 
-    const handleTimeUpdate = () => {
-      // Don't log every time update as it would be too verbose
-      // But we can use this if needed
-    };
-
-    // Add event listeners
-    videoElement.addEventListener("error", handleError as EventListener);
+    // Set up event handlers
+    videoElement.addEventListener("error", handleError);
     videoElement.addEventListener("loadedmetadata", handleLoadedMetadata);
     videoElement.addEventListener("canplay", handleCanPlay);
     videoElement.addEventListener("play", handlePlay);
     videoElement.addEventListener("pause", handlePause);
     videoElement.addEventListener("seeking", handleSeeking);
     videoElement.addEventListener("seeked", handleSeeked);
-    videoElement.addEventListener("timeupdate", handleTimeUpdate);
 
-    // Clean up event listeners
+    // Clean up event handlers
     return () => {
-      videoElement.removeEventListener("error", handleError as EventListener);
+      videoElement.removeEventListener("error", handleError);
       videoElement.removeEventListener("loadedmetadata", handleLoadedMetadata);
       videoElement.removeEventListener("canplay", handleCanPlay);
       videoElement.removeEventListener("play", handlePlay);
       videoElement.removeEventListener("pause", handlePause);
       videoElement.removeEventListener("seeking", handleSeeking);
       videoElement.removeEventListener("seeked", handleSeeked);
-      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
 
       // Clean up global reference
       if (nativePlayer.instance === videoElement) {
         nativePlayer.instance = null;
         nativePlayer.isReady = false;
       }
+    };
+  }, [videoUrl, onPlayerReady]);
 
-      // Clean up subtitle URL
-      if (subtitleUrl) {
-        URL.revokeObjectURL(subtitleUrl);
+  // Ensure the activeSubtitle is properly reset when subtitles change
+  useEffect(() => {
+    setActiveSubtitle("");
+
+    // Force check for subtitles at current time when subtitles array changes
+    if (videoRef.current && subtitles && subtitles.length > 0) {
+      const currentTime = videoRef.current.currentTime;
+
+      for (const segment of subtitles) {
+        const start =
+          typeof segment.start === "number"
+            ? segment.start
+            : parseFloat(String(segment.start));
+        const end =
+          typeof segment.end === "number"
+            ? segment.end
+            : parseFloat(String(segment.end));
+
+        if (currentTime >= start && currentTime <= end) {
+          setActiveSubtitle(segment.text);
+          break;
+        }
+      }
+    }
+  }, [subtitles]);
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const handleTimeUpdate = () => {
+      // Find the active subtitle for the current time
+      if (!videoElement) return;
+
+      const currentTime = videoElement.currentTime;
+      let activeText = "";
+
+      // Find the subtitle that should be shown at the current time
+      if (subtitles && subtitles.length > 0) {
+        // Remove logging to prevent console spam
+        for (const segment of subtitles) {
+          // Make sure we're using numeric comparison and handle potential null/undefined
+          const start =
+            typeof segment.start === "number"
+              ? segment.start
+              : parseFloat(String(segment.start));
+          const end =
+            typeof segment.end === "number"
+              ? segment.end
+              : parseFloat(String(segment.end));
+
+          if (currentTime >= start && currentTime <= end) {
+            activeText = segment.text;
+            break;
+          }
+        }
+      }
+
+      // Update the active subtitle state if it's different
+      if (activeText !== activeSubtitle) {
+        setActiveSubtitle(activeText);
+        // Remove logs about subtitle changes
+      }
+
+      // Update other states
+      setCurrentTime(currentTime);
+      if (videoElement.duration && !isNaN(videoElement.duration)) {
+        setDuration(videoElement.duration);
       }
     };
-  }, [videoUrl, onPlayerReady, subtitleUrl]);
 
-  // Handle subtitle changes
-  useEffect(() => {
-    if (!videoRef.current || !trackRef.current) return;
+    // Add event listener for time updates
+    videoElement.addEventListener("timeupdate", handleTimeUpdate);
 
-    // Clean up previous subtitle URL
-    if (subtitleUrl) {
-      URL.revokeObjectURL(subtitleUrl);
-      setSubtitleUrl(null);
-    }
-
-    if (subtitles && subtitles.length > 0) {
-      try {
-        // Generate VTT content
-        const vttContent = generateVttFromSegments(subtitles);
-
-        // Create blob and URL
-        const vttBlob = new Blob([vttContent], { type: "text/vtt" });
-        const url = URL.createObjectURL(vttBlob);
-
-        // Set the URL and make sure track is showing
-        trackRef.current.src = url;
-        trackRef.current.track.mode = "showing";
-        setSubtitleUrl(url);
-
-        console.log("Subtitles updated with", subtitles.length, "segments");
-      } catch (error) {
-        console.error("Error updating subtitles:", error);
-      }
-    }
+    // Cleanup function
+    return () => {
+      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+    // Only depend on subtitles array, not activeSubtitle to avoid unnecessary re-attaching
   }, [subtitles]);
 
   return (
@@ -345,30 +349,21 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
           zIndex: 1,
           visibility: "visible",
         }}
-        controls
+        // controls removed to hide native interface
         playsInline
         preload="auto"
         autoPlay={false}
         muted={false}
         crossOrigin="anonymous"
-        onSeeking={() => console.log("Video seeking event")}
-        onSeeked={() => console.log("Video seeked event")}
-        onLoadedMetadata={() => console.log("Video metadata loaded")}
-        onCanPlay={() => console.log("Video can play event")}
-        onPlay={() => console.log("Video play event")}
-        onPause={() => console.log("Video pause event")}
-        onWaiting={() => console.log("Video waiting event")}
         onError={(e) => console.error("Video error event", e)}
       >
-        <track
-          ref={trackRef}
-          kind="subtitles"
-          label="Subtitles"
-          srcLang="en"
-          default
-        />
         Your browser does not support HTML5 video.
       </video>
+
+      {/* Custom subtitle overlay - improved display logic */}
+      {activeSubtitle ? (
+        <div className={subtitleOverlayStyles}>{activeSubtitle}</div>
+      ) : null}
 
       {errorMessage && (
         <div

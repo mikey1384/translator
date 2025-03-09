@@ -41,7 +41,7 @@ export default function Section({
   noMargin = false,
   noPadding = false,
   noShadow = false,
-  overflowVisible = false
+  overflowVisible = false,
 }: SectionProps) {
   return (
     <section
@@ -53,6 +53,7 @@ export default function Section({
         overflowVisible && overflowVisibleStyle,
         className
       )}
+      style={{ paddingTop: title ? undefined : "0.75rem" }}
     >
       {title && <h2 className={sectionTitleStyles}>{title}</h2>}
       <div className={contentClassName}>{children}</div>

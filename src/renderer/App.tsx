@@ -126,6 +126,12 @@ function AppContent() {
   // Add a ref to track when video is visible for scroll behavior
   const mainContentRef = useRef<HTMLDivElement>(null);
 
+  // Add this with other state declarations
+  const hasScrolledToStickyRef = useRef(false);
+
+  // Add this with other refs
+  const editSubtitlesRef = useRef<HTMLDivElement>(null);
+
   // Check if electron is connected
   useEffect(() => {
     const checkElectron = async () => {
@@ -229,6 +235,32 @@ function AppContent() {
     }
   };
 
+  // Update the sticky change handler to scroll to EditSubtitles section
+  const handleStickyChange = (isSticky: boolean) => {
+    if (isSticky && !hasScrolledToStickyRef.current) {
+      // Scroll to the EditSubtitles section instead of top
+      if (editSubtitlesRef.current) {
+        // Get the sticky video height for offset calculation
+        const stickyVideoHeight =
+          document.querySelector(".sticky-video-container")?.clientHeight || 0;
+
+        // Scroll with offset to account for sticky header
+        const offsetTop =
+          editSubtitlesRef.current.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+          top: offsetTop - stickyVideoHeight - 20, // 20px extra space
+          behavior: "auto",
+        });
+      }
+
+      // Mark that we've already scrolled
+      hasScrolledToStickyRef.current = true;
+    } else if (!isSticky) {
+      // Reset the flag when no longer sticky
+      hasScrolledToStickyRef.current = false;
+    }
+  };
+
   return (
     <div className={pageWrapperStyles}>
       <div id="top-padding" style={{ height: "10px" }}></div>
@@ -245,6 +277,7 @@ function AppContent() {
             onPlayerReady={handleVideoPlayerReady}
             onChangeVideo={handleChangeVideo}
             onChangeSrt={handleChangeSrt}
+            onStickyChange={handleStickyChange}
           />
         )}
 
@@ -267,92 +300,107 @@ function AppContent() {
             />
           )}
 
-          <EditSubtitles
-            videoFile={videoFile}
-            videoUrl={videoUrl}
-            targetLanguage={targetLanguage}
-            showOriginalText={showOriginalText}
-            isPlaying={isPlaying}
-            editingTimes={editingTimes}
-            onSetVideoFile={setVideoFile}
-            onSetVideoUrl={handleSetVideoUrl}
-            onSetError={(error) => console.error(error)}
-            onSetEditingTimes={setEditingTimes}
-            onSetIsPlaying={setIsPlaying}
-            secondsToSrtTime={secondsToSrtTime}
-            parseSrt={parseSrt}
-            subtitles={subtitleSegments}
-            onSetSubtitles={setSubtitleSegments}
-            videoPlayerRef={videoPlayerRef}
-            isMergingInProgress={isMergingInProgress}
-            onSetIsMergingInProgress={setIsMergingInProgress}
-            mergeSubtitlesWithVideo={async (videoFile, subtitles, options) => {
-              setIsMergingInProgress(true);
-              setMergeProgress(0);
-              setMergeStage("Preparing subtitle file...");
+          {/* Wrap EditSubtitles in a div that has the ref */}
+          <div ref={editSubtitlesRef} id="edit-subtitles-section">
+            <EditSubtitles
+              videoFile={videoFile}
+              videoUrl={videoUrl}
+              targetLanguage={targetLanguage}
+              showOriginalText={showOriginalText}
+              isPlaying={isPlaying}
+              editingTimes={editingTimes}
+              onSetVideoFile={setVideoFile}
+              onSetVideoUrl={handleSetVideoUrl}
+              onSetError={(error) => console.error(error)}
+              onSetEditingTimes={setEditingTimes}
+              onSetIsPlaying={setIsPlaying}
+              secondsToSrtTime={secondsToSrtTime}
+              parseSrt={parseSrt}
+              subtitles={subtitleSegments}
+              onSetSubtitles={setSubtitleSegments}
+              videoPlayerRef={videoPlayerRef}
+              isMergingInProgress={isMergingInProgress}
+              onSetIsMergingInProgress={setIsMergingInProgress}
+              mergeSubtitlesWithVideo={async (
+                videoFile,
+                subtitles,
+                options
+              ) => {
+                setIsMergingInProgress(true);
+                setMergeProgress(0);
+                setMergeStage("Preparing subtitle file...");
 
-              try {
-                // Generate SRT content from subtitles using our utility function
-                const srtContent = buildSrt(fixOverlappingSegments(subtitles));
+                try {
+                  // Generate SRT content from subtitles using our utility function
+                  const srtContent = buildSrt(
+                    fixOverlappingSegments(subtitles)
+                  );
 
-                // Create a temporary file for the subtitles
-                setMergeStage("Saving subtitle file...");
-                const subtitlesResult = await window.electron.saveFile({
-                  content: srtContent,
-                  defaultPath: "subtitles.srt",
-                  filters: [{ name: "Subtitle Files", extensions: ["srt"] }],
-                });
+                  // Create a temporary file for the subtitles
+                  setMergeStage("Saving subtitle file...");
+                  const subtitlesResult = await window.electron.saveFile({
+                    content: srtContent,
+                    defaultPath: "subtitles.srt",
+                    filters: [{ name: "Subtitle Files", extensions: ["srt"] }],
+                  });
 
-                if (subtitlesResult.error) {
-                  throw new Error(subtitlesResult.error);
+                  if (subtitlesResult.error) {
+                    throw new Error(subtitlesResult.error);
+                  }
+
+                  // Set up progress tracking
+                  setMergeStage("Merging subtitles with video...");
+                  window.electron.onMergeSubtitlesProgress((progress) => {
+                    setMergeProgress(progress.percent);
+                    setMergeStage(progress.stage);
+                    options.onProgress(progress.percent);
+                  });
+
+                  // Get the path from the videoFile
+                  const videoPath = videoFile.path || videoFile.name;
+
+                  // Merge the video with the subtitles
+                  const result = await window.electron.mergeSubtitles({
+                    videoPath: videoPath,
+                    subtitlesPath: subtitlesResult.filePath,
+                  });
+
+                  setMergeProgress(100);
+                  setMergeStage("Merge complete!");
+
+                  // Add a slight delay before hiding the progress area
+                  setTimeout(() => {
+                    setIsMergingInProgress(false);
+                  }, 1500);
+
+                  if (result.error) {
+                    throw new Error(result.error);
+                  }
+
+                  return result;
+                } catch (error) {
+                  setMergeStage(
+                    `Error: ${
+                      error instanceof Error ? error.message : "Unknown error"
+                    }`
+                  );
+                  setTimeout(() => {
+                    setIsMergingInProgress(false);
+                  }, 3000);
+                  throw error;
                 }
-
-                // Set up progress tracking
-                setMergeStage("Merging subtitles with video...");
-                window.electron.onMergeSubtitlesProgress((progress) => {
-                  setMergeProgress(progress.percent);
-                  setMergeStage(progress.stage);
-                  options.onProgress(progress.percent);
-                });
-
-                // Get the path from the videoFile
-                const videoPath = videoFile.path || videoFile.name;
-
-                // Merge the video with the subtitles
-                const result = await window.electron.mergeSubtitles({
-                  videoPath: videoPath,
-                  subtitlesPath: subtitlesResult.filePath,
-                });
-
-                setMergeProgress(100);
-                setMergeStage("Merge complete!");
-
-                // Add a slight delay before hiding the progress area
-                setTimeout(() => {
-                  setIsMergingInProgress(false);
-                }, 1500);
-
-                if (result.error) {
-                  throw new Error(result.error);
-                }
-
-                return result;
-              } catch (error) {
-                setMergeStage(`Error: ${error.message}`);
-                setTimeout(() => {
-                  setIsMergingInProgress(false);
-                }, 3000);
-                throw error;
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
 
         {isTranslationInProgress && (
           <TranslationProgressArea
             progress={translationProgress}
             progressStage={translationStage}
-            onSetIsTranslationInProgress={setIsTranslationInProgress}
+            translationProgress={translationProgress}
+            translationStage={translationStage}
+            onClose={() => setIsTranslationInProgress(false)}
           />
         )}
 
