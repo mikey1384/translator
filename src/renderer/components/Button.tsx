@@ -1,6 +1,6 @@
 import React, { ButtonHTMLAttributes } from "react";
 import { css, cx } from "@emotion/css";
-import { colors } from "../styles";
+import { colors, gradients, shadows, breakpoints } from "../styles";
 
 // Define the button variants and sizes
 type ButtonVariant = "primary" | "secondary" | "text" | "danger" | "success";
@@ -27,6 +27,10 @@ const baseButtonStyles = css`
   cursor: pointer;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  height: 40px;
+  line-height: 1;
+  box-sizing: border-box;
+  text-align: center;
 
   &:focus {
     outline: none;
@@ -36,6 +40,10 @@ const baseButtonStyles = css`
     opacity: 0.6;
     cursor: not-allowed;
     pointer-events: none;
+  }
+  
+  @media (max-width: ${breakpoints.mobileMaxWidth}) {
+    width: 100%;
   }
 `;
 
@@ -61,16 +69,12 @@ const buttonSizes = {
 // Style variants
 const buttonVariants = {
   primary: css`
-    background: linear-gradient(
-      135deg,
-      ${colors.primary} 0%,
-      ${colors.primaryDark} 100%
-    );
+    background: ${gradients.primary};
     color: white;
-    box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+    box-shadow: ${shadows.button};
 
     &:hover:not(:disabled) {
-      box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+      box-shadow: ${shadows.buttonHover};
       transform: translateY(-2px);
     }
 
@@ -83,12 +87,12 @@ const buttonVariants = {
     background-color: #ffffff;
     color: #212529;
     border: 1px solid #e9ecef;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 
     &:hover:not(:disabled) {
-      border-color: #dee2e6;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      transform: translateY(-2px);
+      background-color: #f1f3f5;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
     }
 
     &:active:not(:disabled) {
@@ -97,20 +101,21 @@ const buttonVariants = {
     }
   `,
   text: css`
-    background-color: transparent;
+    background: transparent;
     color: ${colors.primary};
-    padding: 6px 8px;
+    padding-left: 8px;
+    padding-right: 8px;
 
     &:hover:not(:disabled) {
-      background-color: rgba(67, 97, 238, 0.05);
+      background-color: rgba(67, 97, 238, 0.08);
     }
 
     &:active:not(:disabled) {
-      background-color: rgba(67, 97, 238, 0.1);
+      background-color: rgba(67, 97, 238, 0.12);
     }
   `,
   danger: css`
-    background: linear-gradient(135deg, ${colors.danger} 0%, #f94144 100%);
+    background: ${gradients.danger};
     color: white;
     box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
 
@@ -125,55 +130,52 @@ const buttonVariants = {
     }
   `,
   success: css`
-    background: linear-gradient(135deg, ${colors.success} 0%, #06d6a0 100%);
+    background: ${gradients.success};
     color: white;
-    box-shadow: 0 4px 10px rgba(76, 201, 240, 0.3);
+    box-shadow: 0 4px 10px rgba(46, 196, 182, 0.3);
 
     &:hover:not(:disabled) {
-      box-shadow: 0 6px 15px rgba(76, 201, 240, 0.4);
+      box-shadow: 0 6px 15px rgba(46, 196, 182, 0.4);
       transform: translateY(-2px);
     }
 
     &:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 2px 5px rgba(76, 201, 240, 0.2);
+      box-shadow: 0 2px 5px rgba(46, 196, 182, 0.2);
     }
-  `,
+  `
 };
 
 const fullWidthStyle = css`
   width: 100%;
 `;
 
-const loadingStyle = css`
-  position: relative;
-  color: transparent !important;
-  pointer-events: none;
+// Icon spacing styles
+const iconLeftStyle = css`
+  margin-right: 8px;
+`;
 
-  &::after {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: button-loading-spinner 0.7s linear infinite;
-  }
+const iconRightStyle = css`
+  margin-left: 8px;
+`;
 
-  @keyframes button-loading-spinner {
-    from {
-      transform: rotate(0turn);
-    }
+// Loading spinner style
+const loadingSpinnerStyle = css`
+  @keyframes spin {
     to {
-      transform: rotate(1turn);
+      transform: rotate(360deg);
     }
   }
+
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  vertical-align: text-bottom;
 `;
 
 export default function Button({
@@ -195,18 +197,21 @@ export default function Button({
         buttonVariants[variant],
         buttonSizes[size],
         fullWidth && fullWidthStyle,
-        isLoading && loadingStyle,
         className
       )}
-      disabled={disabled || isLoading}
+      disabled={isLoading || disabled}
       {...rest}
     >
-      {icon && iconPosition === "left" && (
-        <span style={{ marginRight: "8px" }}>{icon}</span>
+      {isLoading && <span className={loadingSpinnerStyle} aria-hidden="true" />}
+
+      {!isLoading && icon && iconPosition === "left" && (
+        <span className={iconLeftStyle}>{icon}</span>
       )}
+
       {children}
-      {icon && iconPosition === "right" && (
-        <span style={{ marginLeft: "8px" }}>{icon}</span>
+
+      {!isLoading && icon && iconPosition === "right" && (
+        <span className={iconRightStyle}>{icon}</span>
       )}
     </button>
   );

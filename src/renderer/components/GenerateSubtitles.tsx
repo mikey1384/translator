@@ -2,33 +2,37 @@ import React, { useState } from "react";
 import { css } from "@emotion/css";
 import {
   formGroupStyles,
-  formLabelStyles,
-  formRowStyles,
-  actionButtonsStyles,
   errorMessageStyles,
   resultsAreaStyles,
   resultsHeaderStyles,
   selectStyles,
+  fileInputWrapperStyles,
+  breakpoints,
 } from "../styles";
 import Button from "./Button";
+import ButtonGroup from "./ButtonGroup";
 import StylizedFileInput from "./StylizedFileInput";
 import ProgressBar from "./ProgressBar";
 import Section from "./Section";
 
-// Languages for subtitle generation
+// Maximum file size in MB
+const MAX_MB = 500;
+const MAX_FILE_SIZE = MAX_MB * 1024 * 1024;
+
+// Languages for translation
 const languages = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "it", name: "Italian" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "zh", name: "Chinese" },
-  { code: "ru", name: "Russian" },
-  { code: "pt", name: "Portuguese" },
-  { code: "ar", name: "Arabic" },
-  { code: "hi", name: "Hindi" },
+  { value: "original", label: "Same as Audio" },
+  { value: "english", label: "Translate to English" },
+  { value: "korean", label: "Translate to Korean" },
+  { value: "spanish", label: "Translate to Spanish" },
+  { value: "french", label: "Translate to French" },
+  { value: "german", label: "Translate to German" },
+  { value: "chinese", label: "Translate to Chinese" },
+  { value: "japanese", label: "Translate to Japanese" },
+  { value: "russian", label: "Translate to Russian" },
+  { value: "portuguese", label: "Translate to Portuguese" },
+  { value: "italian", label: "Translate to Italian" },
+  { value: "arabic", label: "Translate to Arabic" },
 ];
 
 interface GenerateSubtitlesProps {
@@ -40,8 +44,8 @@ export default function GenerateSubtitles({
 }: GenerateSubtitlesProps) {
   // File selection state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [videoPath, setVideoPath] = useState<string>("");
-  const [sourceLanguage, setSourceLanguage] = useState<string>("en");
+  const [targetLanguage, setTargetLanguage] = useState<string>("original");
+  const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
   // Progress tracking
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -57,40 +61,20 @@ export default function GenerateSubtitles({
     setError("");
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      console.log("File selected:", file.name, file.size);
+      
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`File exceeds ${MAX_MB}MB limit`);
+        return;
+      }
+      
       setSelectedFile(file);
-      setVideoPath(""); // Clear path if we have a file object
     }
   };
 
-  // File selection from system
-  const handleFileBrowse = () => {
-    if (!window.electron) {
-      setError("Electron API not available");
-      return;
-    }
-
-    window.electron
-      .openFile({
-        filters: [
-          { name: "Video Files", extensions: ["mp4", "avi", "mkv", "mov"] },
-        ],
-        multiple: false,
-      })
-      .then((result) => {
-        if (result.filePaths && result.filePaths.length > 0) {
-          setVideoPath(result.filePaths[0]);
-          setSelectedFile(null); // Clear the file input if we have a path
-        }
-      })
-      .catch((error) => {
-        setError(`Error selecting file: ${error.message || error}`);
-      });
-  };
 
   // Generate subtitles
   const handleGenerateSubtitles = async () => {
-    if ((!selectedFile && !videoPath) || !window.electron) {
+    if (!selectedFile || !window.electron) {
       setError("Please select a video file first");
       return;
     }
@@ -109,17 +93,11 @@ export default function GenerateSubtitles({
         });
       }
 
-      // Log what we're sending to main process
-      console.log("Sending to main process:", {
-        videoPath: videoPath || undefined,
-        videoFile: selectedFile || {},
-        language: sourceLanguage,
-      });
-
+      // Call the backend API
       const result = await window.electron.generateSubtitles({
-        videoPath: videoPath || undefined,
-        videoFile: selectedFile || {},
-        language: sourceLanguage,
+        videoFile: selectedFile,
+        targetLanguage,
+        showOriginalText,
       });
 
       if (result.error) {
@@ -165,11 +143,7 @@ export default function GenerateSubtitles({
     <Section title="Generate Subtitles">
       {/* Progress indicator */}
       {isGenerating && (
-        <div
-          className={css`
-            margin-bottom: 1rem;
-          `}
-        >
+        <div className={css`margin-bottom: 1rem;`}>
           <ProgressBar
             progress={progress}
             stage={progressStage}
@@ -181,81 +155,99 @@ export default function GenerateSubtitles({
       {/* Error display */}
       {error && <div className={errorMessageStyles}>{error}</div>}
 
-      <div className={formGroupStyles}>
-        <div className={formLabelStyles}>1. Select Video File:</div>
+      <div className={fileInputWrapperStyles}>
+        <label>1. Select Video File (up to {MAX_MB}MB): </label>
+        <StylizedFileInput
+          accept="video/*"
+          onChange={handleFileChange}
+          buttonText="Choose Video"
+          selectedFile={isGenerating ? null : selectedFile}
+        />
+      </div>
 
-        <div className={formRowStyles}>
-          <StylizedFileInput
-            accept="video/*"
-            onChange={handleFileChange}
-            buttonText="Choose File"
-          />
+      <div className={fileInputWrapperStyles}>
+        <label>2. Output Language: </label>
+        <select
+          value={targetLanguage}
+          onChange={(e) => setTargetLanguage(e.target.value)}
+          className={selectStyles}
+          disabled={isGenerating}
+        >
+          {languages.map((lang) => (
+            <option key={lang.value} value={lang.value}>
+              {lang.label}
+            </option>
+          ))}
+        </select>
 
-          <Button
-            variant="secondary"
-            onClick={handleFileBrowse}
-            disabled={isGenerating}
-          >
-            Browse System...
-          </Button>
-        </div>
-
-        {(videoPath || selectedFile) && (
+        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
           <div
             className={css`
-              margin-top: 0.5rem;
-              font-size: 0.9rem;
+              margin-top: 12px;
+              display: flex;
+              align-items: center;
             `}
           >
-            Selected: {videoPath || (selectedFile ? selectedFile.name : "")}
+            <label
+              className={css`
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                user-select: none;
+                margin: 0;
+                line-height: 1;
+              `}
+            >
+              <input
+                type="checkbox"
+                checked={showOriginalText}
+                onChange={(e) => setShowOriginalText(e.target.checked)}
+                className={css`
+                  margin-right: 8px;
+                  width: 16px;
+                  height: 16px;
+                  accent-color: #4361ee;
+                  margin-top: 0;
+                  margin-bottom: 0;
+                  vertical-align: middle;
+                `}
+              />
+              <span
+                className={css`
+                  display: inline-block;
+                  vertical-align: middle;
+                `}
+              >
+                Show original text
+              </span>
+            </label>
           </div>
         )}
       </div>
 
-      <div className={formGroupStyles}>
-        <label className={formLabelStyles}>
-          2. Select Language in the Video:
-        </label>
-        <select
-          className={selectStyles}
-          value={sourceLanguage}
-          onChange={(e) => setSourceLanguage(e.target.value)}
-          disabled={isGenerating}
-        >
-          {languages.map((lang) => (
-            <option key={lang.code} value={lang.code}>
-              {lang.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={actionButtonsStyles}>
+      <ButtonGroup>
         <Button
-          disabled={(!selectedFile && !videoPath) || isGenerating}
           onClick={handleGenerateSubtitles}
+          disabled={!selectedFile || isGenerating}
+          size="md"
+          variant="primary"
           isLoading={isGenerating}
         >
-          {isGenerating ? "Generating..." : "Generate Subtitles"}
+          {isGenerating ? "Processing..." : "Generate Subtitles"}
         </Button>
-      </div>
+        
+        {subtitles && (
+          <Button variant="secondary" onClick={handleSaveSubtitles} size="md">
+            Save SRT
+          </Button>
+        )}
+      </ButtonGroup>
 
       {/* Subtitles Result */}
       {subtitles && (
-        <div
-          className={css`
-            margin-top: 2rem;
-          `}
-        >
+        <div className={css`margin-top: 2rem;`}>
           <h3 className={resultsHeaderStyles}>Generated Subtitles:</h3>
-
           <div className={resultsAreaStyles}>{subtitles}</div>
-
-          <div className={actionButtonsStyles}>
-            <Button variant="secondary" onClick={handleSaveSubtitles}>
-              Save SRT
-            </Button>
-          </div>
         </div>
       )}
     </Section>
