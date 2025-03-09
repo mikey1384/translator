@@ -5,6 +5,12 @@ import ButtonGroup from "./ButtonGroup";
 import StylizedFileInput from "./StylizedFileInput";
 import Button from "./Button";
 import { SrtSegment } from "./EditSubtitles";
+import {
+  loadSrtFile,
+  parseSrt,
+  openSubtitleWithElectron,
+} from "../helpers/subtitle-utils";
+import ElectronFileButton from "./ElectronFileButton";
 
 interface TimestampDisplayProps {
   videoElement: HTMLVideoElement | null;
@@ -270,10 +276,22 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
     }
   };
 
-  const handleSrtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0] && onChangeSrt) {
-      onChangeSrt(e.target.files[0]);
-    }
+  const handleSrtChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent default browser file input behavior
+    e.preventDefault();
+
+    // Use the centralized helper
+    await openSubtitleWithElectron(
+      (file, content, segments, filePath) => {
+        // Success callback - Pass the file to parent component
+        if (onChangeSrt) {
+          onChangeSrt(file);
+        }
+      },
+      (error) => {
+        console.error("TimestampDisplay: Error opening subtitle:", error);
+      }
+    );
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -324,11 +342,27 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
           )}
 
           {onChangeSrt && (
-            <StylizedFileInput
-              accept=".srt"
-              onChange={handleSrtChange}
+            <ElectronFileButton
               buttonText={hasSubtitles ? "Change SRT" : "Add SRT"}
-              showSelectedFile={false}
+              onClick={async () => {
+                console.log(
+                  "Button clicked in TimestampDisplay, calling openSubtitleWithElectron directly"
+                );
+                await openSubtitleWithElectron(
+                  (file, content, segments, filePath) => {
+                    // Success callback - Pass the file to parent component
+                    if (onChangeSrt) {
+                      onChangeSrt(file);
+                    }
+                  },
+                  (error) => {
+                    console.error(
+                      "TimestampDisplay: Error opening subtitle:",
+                      error
+                    );
+                  }
+                );
+              }}
             />
           )}
 

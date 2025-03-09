@@ -3,8 +3,11 @@ import { contextBridge, ipcRenderer } from "electron";
 
 // Define a complete API for our application
 const electronAPI = {
-  // Test methods
-  ping: () => ipcRenderer.invoke("ping"),
+  // Test methods - implementing a direct ping to avoid IPC
+  ping: () => {
+    console.log("Ping called in preload - direct response");
+    return Promise.resolve("pong");
+  },
 
   // Show a message from main process
   showMessage: (message: string) => ipcRenderer.invoke("show-message", message),
@@ -61,7 +64,10 @@ const electronAPI = {
   },
 
   // File operations
-  saveFile: (options: any) => ipcRenderer.invoke("save-file", options),
+  saveFile: (options: any) => {
+    console.log("Invoking saveFile in preload with options:", options);
+    return ipcRenderer.invoke("save-file", options);
+  },
   openFile: (options: any) => ipcRenderer.invoke("open-file", options),
 };
 

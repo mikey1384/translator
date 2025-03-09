@@ -41,6 +41,7 @@ export interface SaveFileOptions {
   content: string;
   defaultPath?: string;
   filters?: { name: string; extensions: string[] }[];
+  filePath?: string; // Direct path to save to without showing dialog
 }
 
 export interface SaveFileResult {
@@ -57,6 +58,7 @@ export interface OpenFileResult {
   filePaths: string[];
   fileContents?: string[];
   error?: string;
+  canceled?: boolean;
 }
 
 // Define the types for the API

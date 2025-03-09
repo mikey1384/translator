@@ -9,6 +9,12 @@ import Section from "../Section";
 import { cx } from "@emotion/css";
 import { sectionStyles, sectionTitleStyles } from "../../styles";
 import { subtitleVideoPlayer } from "../../constants";
+import {
+  loadSrtFile,
+  openSubtitleWithElectron,
+} from "../../helpers/subtitle-utils";
+import { saveFileWithRetry } from "../../helpers/electron-ipc";
+import ElectronFileButton from "../ElectronFileButton";
 
 // Define SrtSegment interface
 export interface SrtSegment {
@@ -337,6 +343,16 @@ const validateSubtitleTimings = (subtitles: SrtSegment[]): SrtSegment[] => {
   return fixedSubtitles;
 };
 
+// Update the global declaration to include Electron's API
+declare global {
+  interface Window {
+    electron: {
+      saveFile: (options: any) => Promise<any>;
+      openFile: (options: any) => Promise<any>;
+    };
+  }
+}
+
 export default function EditSubtitles({
   videoFile,
   videoUrl,
@@ -363,16 +379,21 @@ export default function EditSubtitles({
   const [subtitlesState, setSubtitlesState] = useState<SrtSegment[]>(
     subtitlesProp || []
   );
-  const [isPlayingState, setIsPlayingState] = useState(isPlayingProp || false);
   const [editingTimesState, setEditingTimesState] = useState<
     Record<string, string>
-  >({});
-  const [isMergingInProgressState, setIsMergingInProgressState] = useState(
-    isMergingInProgressProp || false
+  >(editingTimesProp ? {} : {});
+  const [isPlayingState, setIsPlayingState] = useState<boolean>(
+    isPlayingProp || false
   );
+  const [isMergingInProgressState, setIsMergingInProgressState] =
+    useState<boolean>(isMergingInProgressProp || false);
+  const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
+  // Track the original SRT file path for direct saving
+  const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
+  const [originalSrtPath, setOriginalSrtPath] = useState<string | null>(null);
+  const [originalLoadPath, setOriginalLoadPath] = useState<string | null>(null);
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState("");
-  const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
   const [fileKey, setFileKey] = useState<number>(Date.now()); // Add back fileKey for file input resets
 
   // Refs
@@ -501,6 +522,20 @@ export default function EditSubtitles({
       }
     };
   }, []);
+
+  // Check localStorage for originalSrtPath on first render
+  useEffect(() => {
+    const savedPath = localStorage.getItem("originalSrtPath");
+    if (savedPath && !originalSrtPath) {
+      console.log("Loaded originalSrtPath from localStorage:", savedPath);
+      setOriginalSrtPath(savedPath);
+    }
+  }, []);
+
+  // Debug effect to log when originalSrtPath changes
+  useEffect(() => {
+    console.log("originalSrtPath changed:", originalSrtPath);
+  }, [originalSrtPath]);
 
   const handleTimeInputBlur = useCallback(
     (index: number, field: "start" | "end") => {
@@ -651,60 +686,169 @@ export default function EditSubtitles({
     }
   }, []);
 
-  function handleSrtFileInputChange(
+  async function handleSrtFileInputChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    console.log("SRT file input change triggered in EditSubtitles");
 
-    // Clear input value to ensure onChange triggers even for the same file
-    if (event.target) {
-      event.target.value = "";
-    }
+    // Prevent default browser file input behavior
+    event.preventDefault();
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const srtContent = e.target?.result as string;
-      try {
-        // Reset states
-        setSubtitlesState([]);
-        setEditingTimesState({});
+    // Use the centralized helper
+    await openSubtitleWithElectron(
+      (file, content, segments, filePath) => {
+        // Set subtitles
+        setSubtitlesState(segments);
 
-        // Parse and set the new content
-        const parsed = parseSrt(srtContent);
-        setSubtitlesState(parsed);
+        // Store the original load path (this is the real file system path now)
+        setOriginalLoadPath(filePath);
+        console.log("EditSubtitles: Stored originalLoadPath:", filePath);
 
-        // No longer need to update the fileKey as we removed that dependency
-      } catch (error) {
-        console.error("Error parsing SRT:", error);
-        onSetError("Invalid SRT file");
+        // Process the content directly
+        processSrtContent(content);
+      },
+      (error) => {
+        console.error("EditSubtitles: Error opening subtitle:", error);
+        onSetError(`Failed to open SRT file: ${error}`);
       }
-    };
-    reader.onerror = function (e) {
-      console.error("FileReader error:", e);
-      onSetError("Error reading SRT file");
-    };
-    reader.readAsText(file);
+    );
   }
 
-  function handleSaveEditedSrt() {
+  // Helper function to process SRT content
+  function processSrtContent(srtContent: string) {
     try {
+      // Check if we received valid content
+      if (!srtContent) {
+        console.error("No SRT content provided to processSrtContent");
+        onSetError("Empty SRT file content");
+        return;
+      }
+
+      console.log("Processing SRT content, length:", srtContent.length);
+
+      // Reset states
+      setSubtitlesState([]);
+      setEditingTimesState({});
+
+      // Parse and set the new content
+      const parsed = parseSrt(srtContent);
+
+      if (parsed.length === 0) {
+        console.warn("No subtitles parsed from SRT content");
+        onSetError("No subtitles found in SRT file");
+        return;
+      }
+
+      console.log(`Successfully parsed ${parsed.length} subtitles`);
+      setSubtitlesState(parsed);
+    } catch (error) {
+      console.error("Error parsing SRT:", error);
+      onSetError("Invalid SRT file");
+    }
+  }
+
+  // Function to save to a new file (Save As)
+  async function handleSaveEditedSrtAs(
+    event?: React.MouseEvent,
+    customFilename?: string
+  ) {
+    try {
+      const suggestedName =
+        customFilename || originalSrtFile?.name || "edited_subtitles.srt";
+      console.log("Save As operation with suggested name:", suggestedName);
+
       // Generate SRT content from subtitles
       const srtContent = generateSrtContent(subtitlesState);
 
-      // Create a blob and download it
-      const blob = new Blob([srtContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "edited_subtitles.srt";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Use our reliable save utility
+      console.log("Using Electron's saveFile API with retries");
+      const saveOptions = {
+        title: "Save SRT File",
+        defaultPath: suggestedName,
+        filters: [{ name: "SRT Files", extensions: ["srt"] }],
+        content: srtContent,
+      };
+
+      try {
+        // Use our utility function with retry mechanism for more reliable communication
+        const result = await saveFileWithRetry(saveOptions);
+
+        if (result?.filePath) {
+          // Update our reference to this file for future saves
+          setOriginalSrtPath(result.filePath);
+          localStorage.setItem("originalSrtPath", result.filePath);
+          console.log("File saved as:", result.filePath);
+
+          // If we had an originalSrtFile before, we don't need it anymore
+          // since we now have a file path for direct saving
+          if (originalSrtFile) {
+            setOriginalSrtFile(null);
+          }
+        } else {
+          console.warn("Save As dialog completed but no filePath returned");
+        }
+      } catch (saveError: any) {
+        console.error("Error saving file:", saveError);
+        onSetError(`Save failed: ${saveError.message || String(saveError)}`);
+      }
+      return;
+
+      // Fallback to traditional download is no longer needed since we
+      // have a robust retry mechanism
+    } catch (error: any) {
+      console.error("Error in Save As operation:", error);
+      onSetError(`Error saving SRT file: ${error.message || String(error)}`);
+    }
+  }
+
+  // Function to save directly to the original file (Save)
+  async function handleSaveSrt() {
+    console.log("handleSaveSrt called");
+    try {
+      const content = generateSrtContent(subtitlesState);
+      console.log("Generated content with length:", content.length);
+
+      // Get stored paths for saving
+      const originalLoadPath = localStorage.getItem("originalLoadPath");
+      const originalSrtPath = localStorage.getItem("originalSrtPath");
+      const loadedSrtFileName =
+        localStorage.getItem("loadedSrtFileName") || "subtitles.srt";
+      const targetPath = localStorage.getItem("targetPath");
+
+      console.log("🧩 SAVE PATHS DEBUG:", {
+        originalLoadPath,
+        originalSrtPath,
+        loadedSrtFileName,
+        targetPath,
+      });
+
+      const saveResult = await saveFileWithRetry({
+        content,
+        filePath: originalSrtPath || "/temp/subtitles.srt",
+        defaultPath: loadedSrtFileName,
+        originalLoadPath: originalLoadPath || undefined, // Fix type issue
+        targetPath: targetPath || undefined, // Fix type issue
+      });
+
+      console.log("Save result:", {
+        resultExists: !!saveResult,
+        resultKeys: saveResult ? Object.keys(saveResult) : [],
+        ...saveResult,
+      });
+
+      if (saveResult.error) {
+        onSetError(`Error saving file: ${saveResult.error}`);
+      } else if (saveResult.filePath) {
+        // Update our stored path for next save
+        localStorage.setItem("targetPath", saveResult.filePath);
+        console.log("File saved successfully to:", saveResult.filePath);
+
+        // Show a success popup
+        alert(`File saved successfully to:\n${saveResult.filePath}`);
+      }
     } catch (error) {
-      console.error("Error saving SRT file:", error);
-      onSetError("Error saving SRT file");
+      console.error("Error in handleSaveSrt:", error);
+      onSetError(`Error saving file: ${error}`);
     }
   }
 
@@ -1270,11 +1414,37 @@ export default function EditSubtitles({
             </div>
           )}
           <div style={{ marginBottom: 10 }}>
-            <StylizedFileInput
-              accept=".srt"
-              onChange={handleSrtFileInputChange}
+            <ElectronFileButton
               label="Load SRT:"
               buttonText="Choose SRT File"
+              onClick={async () => {
+                console.log(
+                  "Button clicked, calling openSubtitleWithElectron directly"
+                );
+                await openSubtitleWithElectron(
+                  (file, content, segments, filePath) => {
+                    // Set subtitles
+                    setSubtitlesState(segments);
+
+                    // Store the original load path (this is the real file system path now)
+                    setOriginalLoadPath(filePath);
+                    console.log(
+                      "EditSubtitles: Stored originalLoadPath:",
+                      filePath
+                    );
+
+                    // Process the content directly
+                    processSrtContent(content);
+                  },
+                  (error) => {
+                    console.error(
+                      "EditSubtitles: Error opening subtitle:",
+                      error
+                    );
+                    onSetError(`Failed to open SRT file: ${error}`);
+                  }
+                );
+              }}
             />
           </div>
         </div>
@@ -1369,7 +1539,7 @@ export default function EditSubtitles({
           `}
         >
           <Button
-            onClick={handleSaveEditedSrt}
+            onClick={handleSaveSrt}
             variant="primary"
             size="lg"
             className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
@@ -1385,11 +1555,30 @@ export default function EditSubtitles({
               strokeLinejoin="round"
               style={{ marginRight: "8px" }}
             >
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save
+          </Button>
+
+          <Button onClick={handleSaveEditedSrtAs} variant="secondary" size="lg">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginRight: "8px" }}
+            >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Save Edited SRT
+            Save As
           </Button>
           <Button
             onClick={handleMergeVideoWithSubtitles}

@@ -2,7 +2,7 @@
   "name": "translator-electron",
   "version": "1.0.0",
   "description": "Electron-based subtitle and translation tool",
-  "main": "dist/main/main/index.js",
+  "main": "main.cjs",
   "scripts": {
     "start": "electron main.cjs --no-sandbox",
     "dev": "concurrently \"bun run --watch build-main-alt\" \"bun run --watch build-preload-quick\" \"bun run --watch bundle-renderer-dev\" \"bun run electron-dev-safe\"",

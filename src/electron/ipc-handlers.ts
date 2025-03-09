@@ -45,6 +45,12 @@ export function setupIpcHandlers(): void {
       throw new Error("IPC main does not have handle method");
     }
 
+    // Always register basic handlers first
+    ipcMain.handle("ping", () => {
+      log.info("Ping called in ipc-handlers");
+      return "pong";
+    });
+
     // Initialize services
     log.info("Initializing services for IPC handlers");
     ffmpegService = new FFmpegService();
@@ -148,20 +154,36 @@ export function setupIpcHandlers(): void {
     }
   );
 
-  // Save file
-  ipcMain.handle(
-    "save-file",
-    async (
-      _event: IpcMainInvokeEvent,
-      options: SaveFileOptions
-    ): Promise<SaveFileResult> => {
+  // Save file - check if it already exists before registering
+  log.info("Checking if save-file handler already exists");
+  
+  // First check if save-file handler already exists using our helper
+  try {
+    // Temporary handler to test if the channel is already registered
+    const tempHandler = async () => {};
+    ipcMain.handle("save-file", tempHandler);
+    // If we got here, the channel wasn't already registered
+    ipcMain.removeHandler("save-file");
+    
+    // Now register our handler
+    log.info("Registering save-file handler");
+    ipcMain.handle(
+      "save-file",
+      async (
+        _event: IpcMainInvokeEvent,
+        options: SaveFileOptions
+      ): Promise<SaveFileResult> => {
       try {
         log.info("Saving file with options:", options);
 
+        // Pass the options object directly to the new function signature
         const filePath = await fileManager.saveFile(
           options.content,
-          options.defaultPath,
-          options.filters
+          {
+            defaultPath: options.defaultPath,
+            filters: options.filters,
+            filePath: options.filePath
+          }
         );
 
         return { filePath };
@@ -174,14 +196,30 @@ export function setupIpcHandlers(): void {
       }
     }
   );
+  } catch (error) {
+    // If error, handler is already registered
+    log.info("save-file handler already exists, skipping registration");
+  }
 
-  // Open file
-  ipcMain.handle(
-    "open-file",
-    async (
-      _event: IpcMainInvokeEvent,
-      options: OpenFileOptions
-    ): Promise<OpenFileResult> => {
+  // Open file - check if it already exists before registering
+  log.info("Checking if open-file handler already exists");
+  
+  // First check if open-file handler already exists using our helper
+  try {
+    // Temporary handler to test if the channel is already registered
+    const tempHandler = async () => {};
+    ipcMain.handle("open-file", tempHandler);
+    // If we got here, the channel wasn't already registered
+    ipcMain.removeHandler("open-file");
+    
+    // Now register our handler
+    log.info("Registering open-file handler");
+    ipcMain.handle(
+      "open-file",
+      async (
+        _event: IpcMainInvokeEvent,
+        options: OpenFileOptions
+      ): Promise<OpenFileResult> => {
       try {
         log.info("Opening file with options:", options);
 
@@ -190,16 +228,37 @@ export function setupIpcHandlers(): void {
           options.multiple
         );
 
+        // Log success
+        log.info("File opened successfully:", {
+          paths: result.filePaths,
+          hasContent: Boolean(result.fileContents),
+        });
+
         return result;
       } catch (error) {
+        // Extract the error message, handling both Error objects and strings
+        const errorMessage = error instanceof Error ? error.message : String(error);
         log.error("Error opening file:", error);
+        
+        // Don't treat cancellation as an error to the user
+        if (errorMessage.includes("canceled")) {
+          return {
+            filePaths: [],
+            canceled: true,
+          };
+        }
+        
         return {
           filePaths: [],
-          error: `Error opening file: ${error}`,
+          error: `Error opening file: ${errorMessage}`,
         };
       }
     }
   );
+  } catch (error) {
+    // If error, handler is already registered
+    log.info("open-file handler already exists, skipping registration");
+  }
 
   log.info("IPC handlers set up");
 }
