@@ -1,24 +1,24 @@
-import { Router } from 'express';
-import { User, Comment } from '../../types';
-import { fetchTTSChunks, generateSubtitlesFromAudio } from '../../helpers/ai';
-import socket from '../../constants/socketClient';
-import stream from 'stream';
-import fs from 'fs';
-import { generateBlackAICard } from '../chat/model/ai-card';
-import { exec, spawn } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-import archiver from 'archiver';
+import { Router } from "express";
+import { User, Comment } from "../../types";
+import { fetchTTSChunks, generateSubtitlesFromAudio } from "../../helpers/ai";
+import socket from "../../constants/socketClient";
+import stream from "stream";
+import fs from "fs";
+import { generateBlackAICard } from "../chat/model/ai-card";
+import { exec, spawn } from "child_process";
+import { promisify } from "util";
+import path from "path";
+import archiver from "archiver";
 import {
   getMonthIndexFromDayIndex,
   getYearFromDayIndex,
   poolQuery,
-  userQuery
-} from '../../helpers';
-import { requireAuth } from '../../auth';
-import { postVocabularyFeed } from '../chat/model/vocabulary';
-import { v4 as uuid } from 'uuid';
-import { adjustTimeString, reviewTranslationQuality } from './model';
+  userQuery,
+} from "../../helpers";
+import { requireAuth } from "../../auth";
+import { postVocabularyFeed } from "../chat/model/vocabulary";
+import { v4 as uuid } from "uuid";
+import { adjustTimeString, reviewTranslationQuality } from "./model";
 
 const execPromise = promisify(exec);
 const router = Router();
@@ -87,7 +87,7 @@ function cleanupDirectory(directory: string): { files: number; dirs: number } {
 // Clean up all temporary files on server start
 (() => {
   try {
-    const uploadsDir = 'uploads';
+    const uploadsDir = "uploads";
     // Clean up all files in the uploads directory
     const stats = cleanupDirectory(uploadsDir);
 
@@ -95,58 +95,58 @@ function cleanupDirectory(directory: string): { files: number; dirs: number } {
       `Cleanup completed: Removed ${stats.files} files and ${stats.dirs} directories`
     );
   } catch (err) {
-    console.error('Error during temp file cleanup:', err);
+    console.error("Error during temp file cleanup:", err);
   }
 })();
 
 // Admin route to manually trigger cleanup of all temp files
-router.post('/maintenance/cleanup', requireAuth, async (req: any, res) => {
+router.post("/maintenance/cleanup", requireAuth, async (req: any, res) => {
   try {
     // Only allow admins to manually trigger cleanup
     if (!req.user?.isAdmin) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     // Clean up all files in the uploads directory
-    const stats = cleanupDirectory('uploads');
+    const stats = cleanupDirectory("uploads");
 
     return res.json({
       success: true,
       message: `Cleanup completed successfully. Removed ${stats.files} files and ${stats.dirs} directories.`,
       details: {
         filesRemoved: stats.files,
-        directoriesRemoved: stats.dirs
-      }
+        directoriesRemoved: stats.dirs,
+      },
     });
   } catch (error) {
-    console.error('Error during manual cleanup:', error);
-    return res.status(500).json({ error: 'Failed to perform cleanup' });
+    console.error("Error during manual cleanup:", error);
+    return res.status(500).json({ error: "Failed to perform cleanup" });
   }
 });
 
-router.post('/subtitle', requireAuth, async (req: any, res) => {
-  let tempPath = '';
-  let compressedPath = '';
+router.post("/subtitle", requireAuth, async (req: any, res) => {
+  let tempPath = "";
   let chunkPaths: string[] = [];
+  let extractedAudioPath = "";
 
   try {
     const {
       chunk,
-      targetLanguage = 'original',
+      targetLanguage = "original",
       filename,
       chunkIndex,
       totalChunks: reqTotalChunks,
       processAudio = true,
-      contentType = 'video/mp4' // Default content type
+      contentType = "video/mp4", // Default content type
     } = req.body;
 
     if (!chunk || !filename) {
-      return res.status(400).send('Missing chunk data or filename');
+      return res.status(400).send("Missing chunk data or filename");
     }
 
     // Validate file size
-    const base64Data = chunk.split(',')[1] || '';
-    const fileSize = Buffer.byteLength(base64Data, 'base64');
+    const base64Data = chunk.split(",")[1] || "";
+    const fileSize = Buffer.byteLength(base64Data, "base64");
     const MAX_FILE_SIZE_MB = 250;
     const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -154,16 +154,16 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
       return res.status(413).send(`File exceeds ${MAX_FILE_SIZE_MB}MB limit`);
     }
 
-    const buffer = Buffer.from(base64Data, 'base64');
-    const tempDir = 'uploads';
-    let finalFilePath = '';
+    const buffer = Buffer.from(base64Data, "base64");
+    const tempDir = "uploads";
+    let finalFilePath = "";
 
     // Handle chunked uploads
     if (chunkIndex !== undefined && reqTotalChunks !== undefined) {
-      const sessionId = `${filename.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      const sessionId = `${filename.replace(/[^a-zA-Z0-9]/g, "_")}`;
       const sessionDir = path.join(tempDir, sessionId);
-      const reqChunkIndex = parseInt(chunkIndex || '0', 10);
-      const reqTotalChunksNum = parseInt(reqTotalChunks || '1', 10);
+      const reqChunkIndex = parseInt(chunkIndex || "0", 10);
+      const reqTotalChunksNum = parseInt(reqTotalChunks || "1", 10);
 
       if (!fs.existsSync(sessionDir)) {
         fs.mkdirSync(sessionDir, { recursive: true });
@@ -173,11 +173,11 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
       fs.writeFileSync(chunkPath, new Uint8Array(buffer));
 
       if (reqChunkIndex === reqTotalChunksNum - 1) {
-        let fileExtension = '.mp4';
-        if (contentType.includes('audio/')) {
-          fileExtension = contentType.includes('mp3') ? '.mp3' : '.wav';
-        } else if (contentType.includes('video/')) {
-          fileExtension = contentType.includes('webm') ? '.webm' : '.mp4';
+        let fileExtension = ".mp4";
+        if (contentType.includes("audio/")) {
+          fileExtension = contentType.includes("mp3") ? ".mp3" : ".wav";
+        } else if (contentType.includes("video/")) {
+          fileExtension = contentType.includes("webm") ? ".webm" : ".mp4";
         }
 
         finalFilePath = path.join(
@@ -202,7 +202,7 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
         if (missingChunks.length > 0) {
           return res
             .status(400)
-            .send(`Missing chunks: ${missingChunks.join(', ')}`);
+            .send(`Missing chunks: ${missingChunks.join(", ")}`);
         }
 
         if (
@@ -211,7 +211,7 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
         ) {
           return res
             .status(500)
-            .send('Failed to create or validate combined file');
+            .send("Failed to create or validate combined file");
         }
 
         for (let i = 0; i < reqTotalChunksNum; i++) {
@@ -222,7 +222,7 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
       } else {
         return res.json({
           success: true,
-          message: `Chunk ${reqChunkIndex} received`
+          message: `Chunk ${reqChunkIndex} received`,
         });
       }
     } else {
@@ -238,168 +238,186 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
     if (!processAudio) {
       return res.json({
         success: true,
-        message: 'File received, audio processing skipped'
+        message: "File received, audio processing skipped",
       });
     }
 
     // Emit progress updates
     if (req.user?.id) {
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId: req.user.id,
         progress: 1,
-        stage: 'Preparing audio file'
+        stage: "Preparing audio file",
       });
     }
 
-    socket.emit('subtitle_translation_progress', {
-      userId: req.user.id,
-      progress: 2,
-      stage: 'Compressing audio'
-    });
-
-    compressedPath = await convertToCompressedAudio(tempPath);
-
-    if (fs.existsSync(tempPath)) {
-      fs.unlinkSync(tempPath);
-      tempPath = '';
-    }
-
-    socket.emit('subtitle_translation_progress', {
+    socket.emit("subtitle_translation_progress", {
       userId: req.user.id,
       progress: 3,
-      stage: 'Analyzing audio for natural breaks'
+      stage: "Analyzing audio for natural breaks",
     });
 
-    const chunkInfo = await analyzeAndChunkAudio(compressedPath);
+    const chunkInfo = await analyzeAndChunkAudio(tempPath);
     chunkPaths = chunkInfo.chunkPaths;
+    extractedAudioPath = chunkInfo.audioPath;
     const totalChunks = chunkPaths.length;
 
-    socket.emit('subtitle_translation_progress', {
+    socket.emit("subtitle_translation_progress", {
       userId: req.user.id,
       progress: 5,
-      stage: 'Audio preprocessing complete',
+      stage: "Audio preprocessing complete",
       current: 0,
       total: totalChunks,
       warning:
         totalChunks > 15
-          ? 'Large audio file detected. This may take several minutes.'
-          : undefined
+          ? "Large audio file detected. This may take several minutes."
+          : undefined,
     });
 
-    let fullSRT = '';
-    let cumulativeDuration = 0;
-    const delayAdjustment = 1; // Adjust this value (in seconds) based on testing
+    let fullSRT = "";
+    let cumulativeDuration = 0; // This will represent the offset for the next chunk
 
     for (let i = 0; i < chunkPaths.length; i++) {
       const chunkPath = chunkPaths[i];
-      const trimmedChunkPath = await trimLeadingSilence(chunkPath);
-      const chunkDuration = await getAudioDuration(chunkPath);
+      // Trim leading silence and also detect how much silence was removed.
+      const { trimmedPath, silenceDuration } = await trimLeadingSilence(
+        chunkPath
+      );
+      // For the first chunk, add the silence duration removed so that the transcript matches the original timeline.
+      if (i === 0) {
+        cumulativeDuration += silenceDuration;
+      }
+      // Use the trimmed file for transcription and measure its duration
+      const chunkDuration = await getAudioDuration(trimmedPath);
 
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId: req.user.id,
         progress: Math.floor(5 + (i / totalChunks) * 40),
         stage: `Processing chunk ${i + 1} of ${totalChunks}`,
         current: i + 1,
-        total: totalChunks
+        total: totalChunks,
       });
 
       const progressRange = {
         start: 5 + (i / totalChunks) * 40,
-        end: 5 + ((i + 1) / totalChunks) * 40
+        end: 5 + ((i + 1) / totalChunks) * 40,
       };
 
       const rawSRT = await generateSubtitlesFromAudio({
-        inputAudioPath: trimmedChunkPath,
+        inputAudioPath: trimmedPath,
         targetLanguage,
         userId: req.user?.id,
-        progressRange
+        progressRange,
       });
 
+      // Adjust the generated subtitle timestamps by the cumulative offset
       const adjustedSRT = adjustSubtitleTiming(
         rawSRT,
         cumulativeDuration,
-        delayAdjustment
+        /* you can still use a delayAdjustment if needed, or set to 0 */ 0
       );
-      fullSRT += adjustedSRT + '\n\n';
+      fullSRT += adjustedSRT + "\n\n";
+      // Increase the cumulative duration by the duration of the trimmed file
       cumulativeDuration += chunkDuration;
 
       if (fs.existsSync(chunkPath)) fs.unlinkSync(chunkPath);
-      if (fs.existsSync(trimmedChunkPath)) fs.unlinkSync(trimmedChunkPath);
-      chunkPaths[i] = '';
+      if (fs.existsSync(trimmedPath)) fs.unlinkSync(trimmedPath);
+      chunkPaths[i] = "";
     }
 
-    socket.emit('subtitle_translation_progress', {
+    socket.emit("subtitle_translation_progress", {
       userId: req.user.id,
       progress: 45,
-      stage: 'Post-processing subtitles',
+      stage: "Post-processing subtitles",
       current: totalChunks,
-      total: totalChunks
+      total: totalChunks,
     });
 
     const processedSRT = fullSRT.trim();
     let finalSRT = processedSRT;
 
-    if (targetLanguage !== 'original') {
-      socket.emit('subtitle_translation_progress', {
+    if (targetLanguage !== "original") {
+      socket.emit("subtitle_translation_progress", {
         userId: req.user.id,
         progress: 70,
-        stage: 'Reviewing translation quality',
+        stage: "Reviewing translation quality",
         current: totalChunks,
-        total: totalChunks
+        total: totalChunks,
       });
       finalSRT = await reviewTranslationQuality(processedSRT, req.user.id);
     }
 
-    socket.emit('subtitle_translation_progress', {
+    socket.emit("subtitle_translation_progress", {
       userId: req.user.id,
       progress: 100,
-      stage: 'complete',
+      stage: "complete",
       current: totalChunks,
-      total: totalChunks
+      total: totalChunks,
     });
 
     return res.json({ srt: finalSRT });
   } catch (error) {
-    console.error('Error processing chunk:', error);
+    console.error("Error processing chunk:", error);
     if (req.user?.id) {
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId: req.user.id,
         progress: 0,
-        stage: 'error',
+        stage: "error",
         error:
-          error instanceof Error ? error.message : 'Failed to process audio'
+          error instanceof Error ? error.message : "Failed to process audio",
       });
     }
-    return res.status(500).send('Failed to process chunk');
+    return res
+      .status(500)
+      .send(error instanceof Error ? error.message : "Failed to process audio");
   } finally {
-    const filesToCleanup = [tempPath, compressedPath, ...chunkPaths].filter(
-      Boolean
-    );
-    for (const filePath of filesToCleanup) {
-      if (filePath && fs.existsSync(filePath)) {
-        try {
-          if (fs.lstatSync(filePath).isDirectory()) {
-            // Remove directory and its contents
-            fs.rmdirSync(filePath, { recursive: true });
-          } else {
-            fs.unlinkSync(filePath);
-          }
-        } catch (err) {
-          console.error(`Failed to clean up path ${filePath}:`, err);
+    // Clean up temporary files
+    try {
+      // Clean up all chunk files
+      for (const chunkPath of chunkPaths) {
+        if (fs.existsSync(chunkPath)) {
+          fs.unlinkSync(chunkPath);
         }
       }
+
+      // Clean up the extracted audio file
+      if (extractedAudioPath && fs.existsSync(extractedAudioPath)) {
+        fs.unlinkSync(extractedAudioPath);
+      }
+
+      // Clean up the original temp file
+      if (tempPath && fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
+      }
+    } catch (cleanupError) {
+      console.error("Error cleaning up temporary files:", cleanupError);
     }
   }
 
   async function analyzeAndChunkAudio(
     inputPath: string
-  ): Promise<{ chunkPaths: string[] }> {
-    // Placeholder: Implement audio chunking logic (e.g., splitting by silence)
-    const chunkPath = inputPath.replace('.mp3', '_chunk1.mp3');
-    await execPromise(
-      `ffmpeg -y -i "${inputPath}" -acodec copy "${chunkPath}"`
+  ): Promise<{ chunkPaths: string[]; audioPath: string }> {
+    // Extract audio from video file using FFmpeg's -vn flag
+    // Using PCM 16-bit audio at 16kHz mono, optimized for speech recognition
+    const ext = ".wav"; // Always use WAV for consistent audio processing
+    const audioPath = inputPath.replace(
+      path.extname(inputPath),
+      "_audio" + ext
     );
-    return { chunkPaths: [chunkPath] };
+    const chunkPath = inputPath.replace(
+      path.extname(inputPath),
+      `_chunk1${ext}`
+    );
+
+    // Extract just the audio stream from the video file
+    await execPromise(
+      `ffmpeg -y -i "${inputPath}" -vn -acodec pcm_s16le -ar 16000 -ac 1 "${audioPath}"`
+    );
+
+    // Copy extracted audio to the chunk file (this could be expanded to create multiple chunks)
+    fs.copyFileSync(audioPath, chunkPath);
+
+    return { chunkPaths: [chunkPath], audioPath };
   }
 
   function adjustSubtitleTiming(
@@ -407,25 +425,23 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
     offsetSec: number,
     delayAdjustment: number = 0
   ): string {
-    if (!srtData) return '';
+    if (!srtData) return "";
 
-    const lines = srtData.split('\n');
+    const lines = srtData.split("\n");
     const processedLines: string[] = [];
     let previousLineIndex = -1;
-    let previousEndTime = '';
+    let previousEndTime = "";
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line.includes('-->')) {
-        const [start, end] = line.split('-->').map((s) => s.trim());
+      if (line.includes("-->")) {
+        const [start, end] = line.split("-->").map((s) => s.trim());
         let adjustedStart = start;
         let adjustedEnd = end;
 
-        if (offsetSec || delayAdjustment) {
-          const totalOffset = offsetSec + delayAdjustment;
-          adjustedStart = adjustTimeString(start, totalOffset);
-          adjustedEnd = adjustTimeString(end, totalOffset);
-        }
+        const totalOffset = offsetSec + delayAdjustment;
+        adjustedStart = adjustTimeString(start, totalOffset);
+        adjustedEnd = adjustTimeString(end, totalOffset);
 
         if (previousLineIndex !== -1 && previousEndTime) {
           const prevEndSec = timeToSeconds(previousEndTime);
@@ -433,9 +449,10 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
 
           if (currStartSec > prevEndSec) {
             const prevLine = processedLines[previousLineIndex];
-            const [prevStart] = prevLine.split('-->').map((s) => s.trim());
-            processedLines[previousLineIndex] =
-              `${prevStart} --> ${adjustedStart}`;
+            const [prevStart] = prevLine.split("-->").map((s) => s.trim());
+            processedLines[
+              previousLineIndex
+            ] = `${prevStart} --> ${adjustedStart}`;
           } else if (currStartSec < prevEndSec) {
             adjustedStart = previousEndTime;
           }
@@ -449,18 +466,7 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
       }
     }
 
-    return processedLines.join('\n');
-  }
-
-  async function convertToCompressedAudio(inputPath: string): Promise<string> {
-    const outputPath = inputPath.replace(
-      path.extname(inputPath),
-      '_compressed.mp3'
-    );
-    await execPromise(
-      `ffmpeg -y -i "${inputPath}" -c:a libmp3lame -b:a 128k "${outputPath}"`
-    );
-    return outputPath;
+    return processedLines.join("\n");
   }
 
   async function getAudioDuration(inputPath: string): Promise<number> {
@@ -470,33 +476,72 @@ router.post('/subtitle', requireAuth, async (req: any, res) => {
     return parseFloat(stdout.trim());
   }
 
-  async function trimLeadingSilence(inputPath: string): Promise<string> {
-    const trimmedPath = inputPath.replace('.mp3', '_trimmed.mp3');
+  async function trimLeadingSilence(
+    inputPath: string
+  ): Promise<{ trimmedPath: string; silenceDuration: number }> {
+    const ext = path.extname(inputPath);
+    const trimmedPath = inputPath.replace(ext, `_trimmed${ext}`);
     try {
+      // First, detect how much silence is at the beginning.
+      const silenceDuration = await detectLeadingSilence(inputPath);
       await execPromise(
-        `ffmpeg -y -i "${inputPath}" -af "silenceremove=start_periods=1:start_duration=0:start_threshold=-50dB" -c:a libmp3lame "${trimmedPath}"`
+        `ffmpeg -y -i "${inputPath}" -af "silenceremove=start_periods=1:start_duration=0:start_threshold=-50dB" "${trimmedPath}"`
       );
-      return trimmedPath;
+      return { trimmedPath, silenceDuration };
     } catch (error) {
-      console.error('Error trimming leading silence:', error);
-      return inputPath; // Fallback to original if trimming fails
+      console.error("Error trimming leading silence:", error);
+      return { trimmedPath: inputPath, silenceDuration: 0 };
     }
   }
 
+  // Helper: Uses ffmpeg silencedetect filter to capture the end time of initial silence.
+  async function detectLeadingSilence(inputPath: string): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      const ffmpegProcess = spawn("ffmpeg", [
+        "-i",
+        inputPath,
+        "-af",
+        "silencedetect=noise=-50dB:d=0.5",
+        "-f",
+        "null",
+        "-",
+      ]);
+
+      let stderr = "";
+      ffmpegProcess.stderr.on("data", (data) => {
+        stderr += data.toString();
+      });
+
+      ffmpegProcess.on("close", () => {
+        // Look for "silence_end: <time>" in the stderr output.
+        const match = stderr.match(/silence_end:\s*([\d.]+)/);
+        if (match) {
+          resolve(parseFloat(match[1]));
+        } else {
+          resolve(0);
+        }
+      });
+
+      ffmpegProcess.on("error", (err) => {
+        reject(err);
+      });
+    });
+  }
+
   function timeToSeconds(timeStr: string): number {
-    const [hms, ms] = timeStr.split(',');
-    const [hh, mm, ss] = hms.split(':').map(Number);
+    const [hms, ms] = timeStr.split(",");
+    const [hh, mm, ss] = hms.split(":").map(Number);
     return hh * 3600 + mm * 60 + ss + parseInt(ms) / 1000;
   }
 });
 
-router.post('/reward/card', async (req, res) => {
+router.post("/reward/card", async (req, res) => {
   try {
     const { currentDayIndex } = req.body;
-    if (typeof currentDayIndex !== 'number') {
+    if (typeof currentDayIndex !== "number") {
       return res
         .status(400)
-        .json({ error: 'Must provide currentDayIndex as a number' });
+        .json({ error: "Must provide currentDayIndex as a number" });
     }
 
     const previousDayIndex = currentDayIndex - 1;
@@ -507,7 +552,7 @@ router.post('/reward/card', async (req, res) => {
     if (!isLastDayOfMonth && !isLastDayOfYear) {
       return res.json({
         success: true,
-        message: 'Not month-end or year-end; no processing required.'
+        message: "Not month-end or year-end; no processing required.",
       });
     }
 
@@ -521,7 +566,7 @@ router.post('/reward/card', async (req, res) => {
     if (existingEntries.length >= 2) {
       return res.json({
         success: true,
-        message: 'Previous day already processed'
+        message: "Previous day already processed",
       });
     }
 
@@ -529,7 +574,7 @@ router.post('/reward/card', async (req, res) => {
 
     if (isLastDayOfMonth) {
       const monthlyExists = existingEntries.some(
-        (e: any) => e.rewardType === 'monthly'
+        (e: any) => e.rewardType === "monthly"
       );
       if (!monthlyExists) {
         const result = await processMonthlyReward(previousDayIndex);
@@ -539,7 +584,7 @@ router.post('/reward/card', async (req, res) => {
 
     if (isLastDayOfYear) {
       const yearlyExists = existingEntries.some(
-        (e: any) => e.rewardType === 'yearly'
+        (e: any) => e.rewardType === "yearly"
       );
       if (!yearlyExists) {
         const result = await processYearlyReward(previousDayIndex);
@@ -551,13 +596,13 @@ router.post('/reward/card', async (req, res) => {
       for (const reward of processedRewards) {
         await postVocabularyFeed({
           user: await userQuery({ userId: reward.championId }),
-          action: 'reward',
+          action: "reward",
           dayIndex: previousDayIndex,
           timeStamp: Math.floor(Date.now() / 1000),
           year: getYearFromDayIndex(previousDayIndex),
           month: getMonthIndexFromDayIndex(previousDayIndex),
           card: reward.card,
-          rewardType: reward.type
+          rewardType: reward.type,
         });
       }
     }
@@ -565,11 +610,11 @@ router.post('/reward/card', async (req, res) => {
     return res.json({
       success: true,
       processedRewards,
-      message: `Processed ${processedRewards.length} reward(s)`
+      message: `Processed ${processedRewards.length} reward(s)`,
     });
   } catch (err) {
-    console.error('Error processing reward request:', err);
-    return res.status(500).json({ error: 'Failed to process reward request' });
+    console.error("Error processing reward request:", err);
+    return res.status(500).json({ error: "Failed to process reward request" });
   }
 
   function isLastDayOfMonthCheck(dayIndex: number): boolean {
@@ -588,20 +633,20 @@ router.post('/reward/card', async (req, res) => {
     const year = getYearFromDayIndex(dayIndex);
     const month = getMonthIndexFromDayIndex(dayIndex);
 
-    const champion = await calculateChampion('monthly', year, month);
+    const champion = await calculateChampion("monthly", year, month);
     if (champion) {
       const timestamp = Math.floor(Date.now() / 1000);
       const { insertId } = await poolQuery(
         `INSERT INTO content_words_reward_status 
          (rewardType, championId, cardId, dayIndex, timeStamp)
          VALUES (?, ?, ?, ?, ?)`,
-        ['monthly', champion.id, null, dayIndex, timestamp]
+        ["monthly", champion.id, null, dayIndex, timestamp]
       );
 
       try {
         const { card } = await generateBlackAICard({
           user: champion,
-          isElite: true
+          isElite: true,
         });
 
         await poolQuery(
@@ -611,34 +656,34 @@ router.post('/reward/card', async (req, res) => {
           [card.id, insertId]
         );
 
-        return { type: 'monthly', championId: champion.id, card };
+        return { type: "monthly", championId: champion.id, card };
       } catch (error) {
-        console.error('Error generating monthly reward card:', error);
-        return { type: 'monthly', championId: champion.id, card: null };
+        console.error("Error generating monthly reward card:", error);
+        return { type: "monthly", championId: champion.id, card: null };
       }
     }
 
-    await insertPlaceholder(dayIndex, 'monthly');
-    return { type: 'monthly', championId: null, card: null };
+    await insertPlaceholder(dayIndex, "monthly");
+    return { type: "monthly", championId: null, card: null };
   }
 
   async function processYearlyReward(dayIndex: number) {
     const year = getYearFromDayIndex(dayIndex);
 
-    const champion = await calculateChampion('yearly', year);
+    const champion = await calculateChampion("yearly", year);
     if (champion) {
       const timestamp = Math.floor(Date.now() / 1000);
       const { insertId } = await poolQuery(
         `INSERT INTO content_words_reward_status 
          (rewardType, championId, cardId, dayIndex, timeStamp)
          VALUES (?, ?, ?, ?, ?)`,
-        ['yearly', champion.id, null, dayIndex, timestamp]
+        ["yearly", champion.id, null, dayIndex, timestamp]
       );
 
       try {
         const { card } = await generateBlackAICard({
           user: champion,
-          isLegendary: true
+          isLegendary: true,
         });
 
         await poolQuery(
@@ -648,19 +693,19 @@ router.post('/reward/card', async (req, res) => {
           [card.id, insertId]
         );
 
-        return { type: 'yearly', championId: champion.id, card };
+        return { type: "yearly", championId: champion.id, card };
       } catch (error) {
-        console.error('Error generating yearly reward card:', error);
-        return { type: 'yearly', championId: champion.id, card: null };
+        console.error("Error generating yearly reward card:", error);
+        return { type: "yearly", championId: champion.id, card: null };
       }
     }
 
-    await insertPlaceholder(dayIndex, 'yearly');
-    return { type: 'yearly', championId: null, card: null };
+    await insertPlaceholder(dayIndex, "yearly");
+    return { type: "yearly", championId: null, card: null };
   }
 
   async function calculateChampion(
-    type: 'monthly' | 'yearly',
+    type: "monthly" | "yearly",
     year: number,
     month?: number
   ) {
@@ -685,7 +730,7 @@ router.post('/reward/card', async (req, res) => {
         LEFT JOIN content_words w ON w.id = cwf.wordId
         LEFT JOIN content_words_config cwc ON cwc.action = cwf.action
         WHERE cwf.year = ?
-        ${type === 'monthly' ? 'AND cwf.month = ?' : ''}
+        ${type === "monthly" ? "AND cwf.month = ?" : ""}
         GROUP BY u.id
       )
       SELECT id, totalPoints
@@ -694,7 +739,7 @@ router.post('/reward/card', async (req, res) => {
       LIMIT 1
     `;
 
-    const params = type === 'monthly' ? [year, month] : [year];
+    const params = type === "monthly" ? [year, month] : [year];
     const results = await poolQuery(sql, params);
 
     if (!results || results.length === 0) return null;
@@ -705,7 +750,7 @@ router.post('/reward/card', async (req, res) => {
 
   async function insertPlaceholder(
     dayIndex: number,
-    rewardType?: 'monthly' | 'yearly'
+    rewardType?: "monthly" | "yearly"
   ) {
     const insertions = [];
     const timestamp = Math.floor(Date.now() / 1000);
@@ -716,13 +761,13 @@ router.post('/reward/card', async (req, res) => {
           `INSERT INTO content_words_reward_status 
            (rewardType, championId, cardId, dayIndex, timeStamp)
            VALUES (?, ?, ?, ?, ?)`,
-          ['monthly', 0, null, dayIndex, timestamp]
+          ["monthly", 0, null, dayIndex, timestamp]
         ),
         poolQuery(
           `INSERT INTO content_words_reward_status 
            (rewardType, championId, cardId, dayIndex, timeStamp)
            VALUES (?, ?, ?, ?, ?)`,
-          ['yearly', 0, null, dayIndex, timestamp]
+          ["yearly", 0, null, dayIndex, timestamp]
         )
       );
     } else {
@@ -740,7 +785,7 @@ router.post('/reward/card', async (req, res) => {
   }
 });
 
-router.post('/tts', async (req, res) => {
+router.post("/tts", async (req, res) => {
   const MAX_RETRIES = 3;
   const { text, voice } = req.body;
 
@@ -761,7 +806,7 @@ router.post('/tts', async (req, res) => {
       if (attempt >= MAX_RETRIES) {
         return res
           .status(500)
-          .send({ error: 'Failed to generate TTS after multiple attempts.' });
+          .send({ error: "Failed to generate TTS after multiple attempts." });
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -771,14 +816,14 @@ router.post('/tts', async (req, res) => {
   const readStream = new stream.PassThrough();
   readStream.end(combinedBuffer);
 
-  res.setHeader('Content-Type', 'audio/mpeg');
-  res.setHeader('Content-Disposition', 'attachment; filename="output.mp3"');
+  res.setHeader("Content-Type", "audio/mpeg");
+  res.setHeader("Content-Disposition", 'attachment; filename="output.mp3"');
   readStream.pipe(res);
 });
 
-router.get('/profile', requireAuth, async (req: any, res) => {
+router.get("/profile", requireAuth, async (req: any, res) => {
   const {
-    user: Zero
+    user: Zero,
   }: {
     user: User;
   } = req;
@@ -818,7 +863,7 @@ router.get('/profile', requireAuth, async (req: any, res) => {
       if (replies.length === 0) {
         return res.send({
           comment: null,
-          username: null
+          username: null,
         });
       }
       const commentIds = replies.map(
@@ -873,7 +918,7 @@ router.get('/profile', requireAuth, async (req: any, res) => {
     if (!targetComment) {
       return res.send({
         comment: null,
-        username: null
+        username: null,
       });
     }
     const sender = await userQuery({ userId: targetComment?.userId });
@@ -883,7 +928,7 @@ router.get('/profile', requireAuth, async (req: any, res) => {
       username: sender.username,
       isReply,
       rootComment,
-      myPreviousComment
+      myPreviousComment,
     });
   } catch (error) {
     console.error(`Error at ${req.originalUrl}:`, error);
@@ -891,10 +936,10 @@ router.get('/profile', requireAuth, async (req: any, res) => {
   }
 });
 
-router.get('/profile/response', requireAuth, async (req: any, res) => {
+router.get("/profile/response", requireAuth, async (req: any, res) => {
   const {
     user,
-    query: { commentId }
+    query: { commentId },
   }: {
     user: User;
     query: { commentId: string };
@@ -911,27 +956,27 @@ router.get('/profile/response', requireAuth, async (req: any, res) => {
   }
 });
 
-router.put('/subtitle/split', async (req, res) => {
-  let tempDir = '';
+router.put("/subtitle/split", async (req, res) => {
+  let tempDir = "";
   try {
     const { srt, numSplits } = req.body;
 
     if (!srt || !numSplits || numSplits < 2) {
       return res.status(400).json({
-        error: 'Missing srt content or invalid numSplits (must be >= 2)'
+        error: "Missing srt content or invalid numSplits (must be >= 2)",
       });
     }
 
     const splits = splitSRT(srt, numSplits);
 
-    tempDir = path.join('uploads', `split-${Date.now()}`);
+    tempDir = path.join("uploads", `split-${Date.now()}`);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    const zipFilePath = path.join(tempDir, 'splits.zip');
+    const zipFilePath = path.join(tempDir, "splits.zip");
     const output = fs.createWriteStream(zipFilePath);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = archiver("zip", { zlib: { level: 9 } });
 
     // Set up cleanup function that we can use in multiple places
     const cleanupTempDir = () => {
@@ -945,26 +990,23 @@ router.put('/subtitle/split', async (req, res) => {
     };
 
     // Set up a timeout to ensure cleanup happens even if download is interrupted
-    const cleanupTimeout = setTimeout(
-      () => {
-        cleanupTempDir();
-      },
-      30 * 60 * 1000
-    ); // 30 minutes max lifetime for temp files
+    const cleanupTimeout = setTimeout(() => {
+      cleanupTempDir();
+    }, 30 * 60 * 1000); // 30 minutes max lifetime for temp files
 
-    output.on('close', () => {
-      res.download(zipFilePath, 'subtitle_splits.zip', (err) => {
+    output.on("close", () => {
+      res.download(zipFilePath, "subtitle_splits.zip", (err) => {
         clearTimeout(cleanupTimeout); // Clear the timeout as we're explicitly cleaning up
         cleanupTempDir();
-        if (err) console.error('Error sending zip:', err);
+        if (err) console.error("Error sending zip:", err);
       });
     });
 
-    output.on('error', (err) => {
-      console.error('Error creating zip file:', err);
+    output.on("error", (err) => {
+      console.error("Error creating zip file:", err);
       clearTimeout(cleanupTimeout);
       cleanupTempDir();
-      res.status(500).json({ error: 'Failed to create zip file' });
+      res.status(500).json({ error: "Failed to create zip file" });
     });
 
     archive.pipe(output);
@@ -975,7 +1017,7 @@ router.put('/subtitle/split', async (req, res) => {
 
     await archive.finalize();
   } catch (error) {
-    console.error('Error processing SRT split:', error);
+    console.error("Error processing SRT split:", error);
     // Ensure cleanup happens if there's an error
     if (tempDir && fs.existsSync(tempDir)) {
       try {
@@ -984,46 +1026,46 @@ router.put('/subtitle/split', async (req, res) => {
         console.error(`Error cleaning up tempDir on error:`, cleanupErr);
       }
     }
-    return res.status(500).json({ error: 'Failed to split SRT file' });
+    return res.status(500).json({ error: "Failed to split SRT file" });
   }
 
   function splitSRT(srtContent: string, numSplits: number): string[] {
     // Helper function for time conversion within this scope
     const timeToSeconds = (timeStr: string): number => {
-      const [hms, ms] = timeStr.split(',');
-      const [hh, mm, ss] = hms.split(':').map(Number);
+      const [hms, ms] = timeStr.split(",");
+      const [hh, mm, ss] = hms.split(":").map(Number);
       return hh * 3600 + mm * 60 + ss + parseInt(ms) / 1000;
     };
 
     // Normalize line endings and clean up any double spaces
     const normalizedContent = srtContent
-      .replace(/\r\n/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\r\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     // Parse SRT into structured entries
     const entries = normalizedContent
       .split(/\n\n+/)
       .map((block) => {
-        const lines = block.split('\n');
+        const lines = block.split("\n");
         const index = parseInt(lines[0]);
-        let timing = '';
-        let text = '';
+        let timing = "";
+        let text = "";
 
         // Find timing line (contains -->)
-        const timingLineIndex = lines.findIndex((line) => line.includes('-->'));
+        const timingLineIndex = lines.findIndex((line) => line.includes("-->"));
         if (timingLineIndex > 0) {
           timing = lines[timingLineIndex];
-          text = lines.slice(timingLineIndex + 1).join('\n');
+          text = lines.slice(timingLineIndex + 1).join("\n");
         } else {
           timing = lines[1];
-          text = lines.slice(2).join('\n');
+          text = lines.slice(2).join("\n");
         }
 
         return {
           index,
           timing,
-          text: text.trim()
+          text: text.trim(),
         };
       })
       .filter((entry) => !isNaN(entry.index) && entry.timing && entry.text);
@@ -1049,8 +1091,8 @@ router.put('/subtitle/split', async (req, res) => {
 
       // Check for long pause between subtitles (more than 2 seconds)
       try {
-        const currTimeParts = curr.timing.split('-->');
-        const nextTimeParts = next.timing.split('-->');
+        const currTimeParts = curr.timing.split("-->");
+        const nextTimeParts = next.timing.split("-->");
 
         if (currTimeParts.length === 2 && nextTimeParts.length === 2) {
           const currEnd = currTimeParts[1].trim();
@@ -1065,7 +1107,7 @@ router.put('/subtitle/split', async (req, res) => {
           }
         }
       } catch (e) {
-        console.error('Error parsing timing in isSemanticBreak:', e);
+        console.error("Error parsing timing in isSemanticBreak:", e);
       }
 
       // Check if current subtitle ends with sentence-ending punctuation
@@ -1100,7 +1142,7 @@ router.put('/subtitle/split', async (req, res) => {
       ) {
         const splitContent = currentSplit
           .map((entry, idx) => `${idx + 1}\n${entry.timing}\n${entry.text}`)
-          .join('\n\n');
+          .join("\n\n");
 
         splits.push(splitContent);
         currentSplit = [];
@@ -1111,28 +1153,28 @@ router.put('/subtitle/split', async (req, res) => {
 
     // Handle any remaining entries if we haven't created all splits
     while (splits.length < numSplits) {
-      splits.push('');
+      splits.push("");
     }
 
     return splits;
   }
 });
 
-router.put('/subtitle/merge', async (req, res) => {
+router.put("/subtitle/merge", async (req, res) => {
   try {
     const { srt } = req.body;
 
     if (!Array.isArray(srt)) {
       return res.status(400).json({
-        error: 'srt must be an array of SRT file contents'
+        error: "srt must be an array of SRT file contents",
       });
     }
 
     const mergedContent = mergeSRTs(srt);
     res.json({ srt: mergedContent });
   } catch (error) {
-    console.error('Error processing SRT merge:', error);
-    return res.status(500).json({ error: 'Failed to merge SRT files' });
+    console.error("Error processing SRT merge:", error);
+    return res.status(500).json({ error: "Failed to merge SRT files" });
   }
 
   function mergeSRTs(srtContents: string[]): string {
@@ -1141,19 +1183,19 @@ router.put('/subtitle/merge', async (req, res) => {
       .map((content) => {
         return content
           .trim()
-          .split('\n\n')
+          .split("\n\n")
           .map((block) => {
-            const [_, timing, ...textLines] = block.split('\n');
-            return `${globalIndex++}\n${timing}\n${textLines.join('\n')}`;
+            const [_, timing, ...textLines] = block.split("\n");
+            return `${globalIndex++}\n${timing}\n${textLines.join("\n")}`;
           })
-          .join('\n\n');
+          .join("\n\n");
       })
-      .join('\n\n');
+      .join("\n\n");
 
     return mergedContent;
   }
 });
-router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
+router.post("/subtitle/merge-video", requireAuth, async (req: any, res) => {
   try {
     const {
       chunk, // Base64-encoded chunk
@@ -1162,7 +1204,7 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
       chunkIndex, // Index of the current chunk
       totalChunks, // Total number of chunks
       contentType, // MIME type of the video
-      processVideo // Boolean to trigger merging
+      processVideo, // Boolean to trigger merging
     } = req.body;
 
     // Validate required parameters
@@ -1172,11 +1214,11 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
       !totalChunks ||
       !contentType
     ) {
-      return res.status(400).send('Missing required parameters');
+      return res.status(400).send("Missing required parameters");
     }
 
     // Set up session-specific temporary directory
-    const tempDir = path.resolve('uploads', `session_${sessionId}`);
+    const tempDir = path.resolve("uploads", `session_${sessionId}`);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
@@ -1184,7 +1226,7 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
     // Handle chunk storage
     if (chunk) {
       const chunkPath = path.join(tempDir, `chunk_${chunkIndex}`);
-      const buffer = Buffer.from(chunk.split(',')[1] || chunk, 'base64'); // Handle data URI prefix if present
+      const buffer = Buffer.from(chunk.split(",")[1] || chunk, "base64"); // Handle data URI prefix if present
       fs.writeFileSync(chunkPath, buffer as any);
     }
 
@@ -1198,7 +1240,7 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
       }
 
       // Assemble the video from chunks
-      const fileExtension = contentType.includes('webm') ? '.webm' : '.mp4';
+      const fileExtension = contentType.includes("webm") ? ".webm" : ".mp4";
       const fullVideoPath = path.join(tempDir, `video${fileExtension}`);
       const chunks = [];
       for (let i = 0; i < totalChunks; i++) {
@@ -1209,11 +1251,11 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
       fs.writeFileSync(fullVideoPath, videoBuffer as any);
 
       // Write SRT file
-      const tempSrtPath = path.join(tempDir, 'sub.srt');
-      fs.writeFileSync(tempSrtPath, srtContent, 'utf8');
+      const tempSrtPath = path.join(tempDir, "sub.srt");
+      fs.writeFileSync(tempSrtPath, srtContent, "utf8");
 
       // Convert SRT to ASS
-      const tempAssPath = path.join(tempDir, 'sub.ass');
+      const tempAssPath = path.join(tempDir, "sub.ass");
       await convertSrtToAss(tempSrtPath, tempAssPath); // Assuming this function exists
 
       // Prepare output file
@@ -1228,37 +1270,39 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
         );
         totalDuration = parseFloat(stdout.trim()) || 60;
       } catch (error) {
-        console.error('Error getting duration, defaulting to 60s:', error);
+        console.error("Error getting duration, defaulting to 60s:", error);
         totalDuration = 60;
       }
 
       // Get video resolution
       const resolutionCmd = `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "${fullVideoPath}"`;
       const { stdout: resolutionOutput } = await execPromise(resolutionCmd);
-      const [width, height] = resolutionOutput.trim().split('x').map(Number);
+      const [width, height] = resolutionOutput.trim().split("x").map(Number);
 
       // FFmpeg command to merge video with subtitles
       const ffmpegCommand = [
-        '-y',
-        '-i',
+        "-y",
+        "-i",
         path.resolve(fullVideoPath),
-        '-vf',
-        `scale=${width}:${height},subtitles='${path.resolve(tempAssPath).replace(/'/g, "'\\''")}'`,
-        '-c:v',
-        'libx264',
-        '-preset',
-        'slow',
-        '-crf',
-        '18',
-        '-pix_fmt',
-        'yuv420p',
-        '-c:a',
-        'aac',
-        '-b:a',
-        '192k',
-        '-f',
-        'mp4',
-        path.resolve(outputPath)
+        "-vf",
+        `scale=${width}:${height},subtitles='${path
+          .resolve(tempAssPath)
+          .replace(/'/g, "'\\''")}'`,
+        "-c:v",
+        "libx264",
+        "-preset",
+        "slow",
+        "-crf",
+        "18",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-f",
+        "mp4",
+        path.resolve(outputPath),
       ];
 
       await runFFmpegWithProgress(ffmpegCommand, totalDuration, req.user?.id); // Assuming this function exists
@@ -1270,7 +1314,7 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
       await validateMp4File(outputPath); // Assuming this function exists
 
       // Move output to uploads directory and generate URL
-      const finalOutputPath = path.join('uploads', `${fileId}.mp4`);
+      const finalOutputPath = path.join("uploads", `${fileId}.mp4`);
       fs.renameSync(outputPath, finalOutputPath);
       const videoUrl = `/zero/subtitle-download/${fileId}`;
 
@@ -1279,10 +1323,10 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
 
       // Notify completion via socket (if applicable)
       if (req.user?.id) {
-        socket.emit('subtitle_merge_progress', {
+        socket.emit("subtitle_merge_progress", {
           progress: 100,
-          stage: 'Complete',
-          userId: req.user.id
+          stage: "Complete",
+          userId: req.user.id,
         });
       }
 
@@ -1292,21 +1336,21 @@ router.post('/subtitle/merge-video', requireAuth, async (req: any, res) => {
       return res.json({ success: true });
     }
   } catch (error) {
-    console.error('Error in video-subtitle merging:', error);
+    console.error("Error in video-subtitle merging:", error);
     if (req.user?.id) {
-      socket.emit('subtitle_merge_progress', {
+      socket.emit("subtitle_merge_progress", {
         userId: req.user.id,
         progress: 0,
-        stage: 'error',
+        stage: "error",
         error:
           error instanceof Error
             ? error.message
-            : 'Failed to process video with subtitles'
+            : "Failed to process video with subtitles",
       });
     }
     res.status(500).json({
       success: false,
-      error: 'Failed to process video with subtitles'
+      error: "Failed to process video with subtitles",
     });
   }
 });
@@ -1317,7 +1361,7 @@ async function validateMp4File(filePath: string) {
     const { stdout } = await execPromise(cmd);
     const duration = parseFloat(stdout.trim());
     if (isNaN(duration) || duration <= 0) {
-      throw new Error('Invalid MP4 file: duration is invalid');
+      throw new Error("Invalid MP4 file: duration is invalid");
     }
   } catch (error: any) {
     throw new Error(`Invalid MP4 file: ${filePath} - ${error.message}`);
@@ -1334,9 +1378,9 @@ function runFFmpegWithProgress(
       // **Resolve Paths to Absolute Paths**
       for (let i = 0; i < ffmpegCommand.length; i++) {
         if (
-          ffmpegCommand[i].includes('.') &&
+          ffmpegCommand[i].includes(".") &&
           !path.isAbsolute(ffmpegCommand[i]) &&
-          !ffmpegCommand[i].startsWith('-') &&
+          !ffmpegCommand[i].startsWith("-") &&
           fs.existsSync(ffmpegCommand[i])
         ) {
           ffmpegCommand[i] = path.resolve(ffmpegCommand[i]);
@@ -1344,7 +1388,7 @@ function runFFmpegWithProgress(
       }
 
       // **Validate Inputs**
-      const inputIndex = ffmpegCommand.indexOf('-i') + 1;
+      const inputIndex = ffmpegCommand.indexOf("-i") + 1;
       const outputPath = ffmpegCommand[ffmpegCommand.length - 1];
 
       if (inputIndex > 0 && inputIndex < ffmpegCommand.length) {
@@ -1353,11 +1397,11 @@ function runFFmpegWithProgress(
           throw new Error(`Input file does not exist: ${inputPath}`);
         }
       } else {
-        throw new Error('No input file specified in FFmpeg command');
+        throw new Error("No input file specified in FFmpeg command");
       }
 
       // **Validate Subtitle File in -vf**
-      const filterIndex = ffmpegCommand.indexOf('-vf');
+      const filterIndex = ffmpegCommand.indexOf("-vf");
       if (filterIndex !== -1 && filterIndex + 1 < ffmpegCommand.length) {
         const filterValue = ffmpegCommand[filterIndex + 1];
         const subtitleMatch = filterValue.match(/subtitles=filename='(.+?)'/);
@@ -1370,18 +1414,18 @@ function runFFmpegWithProgress(
       }
 
       // **Spawn FFmpeg Process**
-      const ffmpeg = spawn('ffmpeg', ffmpegCommand);
-      let stderrOutput = '';
+      const ffmpeg = spawn("ffmpeg", ffmpegCommand);
+      let stderrOutput = "";
 
       // **Set Timeout (1 Hour)**
       const TIMEOUT = 60 * 60 * 1000;
       const timeoutId = setTimeout(() => {
-        ffmpeg.kill('SIGKILL');
-        reject(new Error('FFmpeg process timed out after 1 hour'));
+        ffmpeg.kill("SIGKILL");
+        reject(new Error("FFmpeg process timed out after 1 hour"));
       }, TIMEOUT);
 
       // **Capture Stderr and Report Progress**
-      ffmpeg.stderr.on('data', (data) => {
+      ffmpeg.stderr.on("data", (data) => {
         const output = data.toString();
         stderrOutput += output;
 
@@ -1392,16 +1436,16 @@ function runFFmpegWithProgress(
             Math.round((currentTime / totalDuration) * 100),
             99
           );
-          socket.emit('subtitle_merge_progress', {
+          socket.emit("subtitle_merge_progress", {
             progress,
-            stage: 'Encoding video with subtitles',
-            userId
+            stage: "Encoding video with subtitles",
+            userId,
           });
         }
       });
 
       // **Handle Process Completion**
-      ffmpeg.on('close', (code) => {
+      ffmpeg.on("close", (code) => {
         clearTimeout(timeoutId);
         if (code === 0) {
           if (!fs.existsSync(outputPath)) {
@@ -1420,9 +1464,9 @@ function runFFmpegWithProgress(
       });
 
       // **Handle Spawn Errors**
-      ffmpeg.on('error', (err) => {
+      ffmpeg.on("error", (err) => {
         clearTimeout(timeoutId);
-        console.error('FFmpeg process error:', err);
+        console.error("FFmpeg process error:", err);
         reject(new Error(`FFmpeg spawn error: ${err.message}`));
       });
     } catch (err) {
@@ -1432,13 +1476,13 @@ function runFFmpegWithProgress(
 }
 
 // Simplified download endpoint that uses the filesystem directly
-router.get('/subtitle-download/:fileId', (req, res) => {
+router.get("/subtitle-download/:fileId", (req, res) => {
   const fileId = req.params.fileId;
-  const filePath = path.join(path.resolve('uploads'), `${fileId}.mp4`);
+  const filePath = path.join(path.resolve("uploads"), `${fileId}.mp4`);
 
   if (!fs.existsSync(filePath)) {
     console.error(`File not found: ${fileId}`);
-    return res.status(404).send('File not found');
+    return res.status(404).send("File not found");
   }
 
   // Check file size to ensure it's valid
@@ -1448,7 +1492,7 @@ router.get('/subtitle-download/:fileId', (req, res) => {
     if (stat.size < 10000) {
       // Less than 10KB is likely an error
       console.error(`File too small (${stat.size} bytes): ${filePath}`);
-      return res.status(500).send('Generated file is invalid');
+      return res.status(500).send("Generated file is invalid");
     }
 
     // Set the Content-Disposition to trigger download with a user-friendly filename
@@ -1456,7 +1500,7 @@ router.get('/subtitle-download/:fileId', (req, res) => {
       if (err) {
         console.error(`Error sending file ${filePath}:`, err);
         if (!res.headersSent) {
-          res.status(500).send('Error sending file');
+          res.status(500).send("Error sending file");
         }
       }
 
@@ -1465,7 +1509,7 @@ router.get('/subtitle-download/:fileId', (req, res) => {
           fs.unlinkSync(filePath);
           // Also delete the timestamp file if it exists
           const timestampPath = path.join(
-            path.resolve('uploads'),
+            path.resolve("uploads"),
             `${fileId}.timestamp`
           );
           if (fs.existsSync(timestampPath)) {
@@ -1481,13 +1525,13 @@ router.get('/subtitle-download/:fileId', (req, res) => {
     });
   } catch (error) {
     console.error(`Error accessing file ${filePath}:`, error);
-    return res.status(500).send('Error accessing file');
+    return res.status(500).send("Error accessing file");
   }
 });
 
 // Add a cleanup function for old files
 function cleanupOldFiles() {
-  const uploadsDir = path.resolve('uploads');
+  const uploadsDir = path.resolve("uploads");
   if (!fs.existsSync(uploadsDir)) return;
 
   const files = fs.readdirSync(uploadsDir);
@@ -1497,14 +1541,14 @@ function cleanupOldFiles() {
     const filePath = path.join(uploadsDir, file);
 
     // Handle timestamp files
-    if (file.endsWith('.timestamp')) {
+    if (file.endsWith(".timestamp")) {
       try {
-        const timestamp = parseInt(fs.readFileSync(filePath, 'utf8'));
+        const timestamp = parseInt(fs.readFileSync(filePath, "utf8"));
         const age = Date.now() - timestamp;
 
         if (age > ONE_HOUR) {
           // Delete the associated MP4 file
-          const fileId = file.replace('.timestamp', '');
+          const fileId = file.replace(".timestamp", "");
           const videoPath = path.join(uploadsDir, `${fileId}.mp4`);
 
           if (fs.existsSync(videoPath)) {
@@ -1519,7 +1563,7 @@ function cleanupOldFiles() {
       }
     }
     // Clean up other temp files (older than 2 hours to ensure they're not still in use)
-    else if (file.startsWith('input_') || file.startsWith('sub_')) {
+    else if (file.startsWith("input_") || file.startsWith("sub_")) {
       try {
         const stats = fs.statSync(filePath);
         const fileAge = Date.now() - stats.mtime.getTime();
@@ -1540,7 +1584,7 @@ setInterval(cleanupOldFiles, 3600000);
 cleanupOldFiles();
 
 function timeToSecondsForMerge(timeStr: string): number {
-  const parts = timeStr.split(':');
+  const parts = timeStr.split(":");
   const hours = parseInt(parts[0], 10);
   const minutes = parseInt(parts[1], 10);
   const seconds = parseFloat(parts[2]);
@@ -1548,7 +1592,7 @@ function timeToSecondsForMerge(timeStr: string): number {
 }
 
 // Keep the old route handler for backward compatibility
-router.get('/temp/:fileId', (req, res) => {
+router.get("/temp/:fileId", (req, res) => {
   const fileId = req.params.fileId;
 
   if (!(global as any).tempFiles) {
@@ -1558,7 +1602,7 @@ router.get('/temp/:fileId', (req, res) => {
 
   if (!fileInfo || !fs.existsSync(fileInfo.path)) {
     console.error(`File not found: ${fileId}`);
-    return res.status(404).send('File not found');
+    return res.status(404).send("File not found");
   }
 
   // Check if expired
@@ -1568,7 +1612,7 @@ router.get('/temp/:fileId', (req, res) => {
       fs.unlinkSync(fileInfo.path);
     }
     console.error(`File expired: ${fileId}`);
-    return res.status(410).send('File has expired');
+    return res.status(410).send("File has expired");
   }
 
   try {
@@ -1578,14 +1622,14 @@ router.get('/temp/:fileId', (req, res) => {
     if (stat.size < 10000) {
       // Less than 10KB is likely an error
       console.error(`File too small (${stat.size} bytes): ${fileInfo.path}`);
-      return res.status(500).send('Generated file is invalid');
+      return res.status(500).send("Generated file is invalid");
     }
 
     return res.download(fileInfo.path, path.basename(fileInfo.path), (err) => {
       if (err) {
         console.error(`Error sending file ${fileInfo.path}:`, err);
         if (!res.headersSent) {
-          return res.status(500).send('Error sending file');
+          return res.status(500).send("Error sending file");
         }
       } else {
         // Clean up additional files only after successful download
@@ -1615,7 +1659,7 @@ router.get('/temp/:fileId', (req, res) => {
     });
   } catch (error) {
     console.error(`Error serving file ${fileInfo.path}:`, error);
-    return res.status(500).send('Error serving file');
+    return res.status(500).send("Error serving file");
   }
 });
 
@@ -1625,7 +1669,7 @@ async function convertSrtToAss(
 ): Promise<void> {
   try {
     // Read the SRT file
-    const srtContent = fs.readFileSync(srtPath, 'utf8');
+    const srtContent = fs.readFileSync(srtPath, "utf8");
 
     // Parse SRT content
     const srtEntries = parseSrtForAss(srtContent);
@@ -1656,20 +1700,20 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         const assEndTime = convertSrtTimeToAssTime(endTime);
 
         // Escape any curly braces in the text as they have special meaning in ASS
-        const escapedText = text.replace(/{/g, '\\{').replace(/}/g, '\\}');
+        const escapedText = text.replace(/{/g, "\\{").replace(/}/g, "\\}");
 
         // Use a simple dialogue line with no special overrides
         return `Dialogue: 0,${assStartTime},${assEndTime},Default,,0,0,0,,${escapedText}`;
       })
-      .join('\n');
+      .join("\n");
 
     // Combine header and events
     const assContent = assHeader + assEvents;
 
     // Write to ASS file
-    fs.writeFileSync(assPath, assContent, 'utf8');
+    fs.writeFileSync(assPath, assContent, "utf8");
   } catch (error) {
-    console.error('Error converting SRT to ASS:', error);
+    console.error("Error converting SRT to ASS:", error);
     throw error;
   }
 }
@@ -1683,18 +1727,18 @@ function parseSrtForAss(
   const blocks = srtContent.trim().split(/\n\s*\n/);
 
   for (const block of blocks) {
-    const lines = block.trim().split('\n');
+    const lines = block.trim().split("\n");
     if (lines.length < 3) continue;
 
     // Find the timing line (contains -->)
-    const timingLineIndex = lines.findIndex((line) => line.includes('-->'));
+    const timingLineIndex = lines.findIndex((line) => line.includes("-->"));
     if (timingLineIndex === -1) continue;
 
     const timingLine = lines[timingLineIndex];
-    const [startTime, endTime] = timingLine.split('-->').map((t) => t.trim());
+    const [startTime, endTime] = timingLine.split("-->").map((t) => t.trim());
 
     // Get the text (all lines after the timing line)
-    const text = lines.slice(timingLineIndex + 1).join('\\N');
+    const text = lines.slice(timingLineIndex + 1).join("\\N");
 
     entries.push({ startTime, endTime, text });
   }
