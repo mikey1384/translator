@@ -7,6 +7,8 @@ import SubtitleEditor from "./SubtitleEditor";
 import { debounce } from "lodash";
 import StylizedFileInput from "../StylizedFileInput";
 import Section from "../Section";
+import { cx } from "@emotion/css";
+import { sectionStyles, sectionTitleStyles } from "../../styles";
 
 // Add container styles
 const containerStyles = css`
@@ -137,6 +139,77 @@ const mergeButtonStyles = css`
   ${buttonGradientStyles.base}
   ${buttonGradientStyles.purple}
 `;
+
+// Additional styles for the SectionWithButton component
+const noMarginStyle = css`
+  margin-bottom: 0;
+`;
+
+const noPaddingStyle = css`
+  padding: 0;
+`;
+
+const noShadowStyle = css`
+  box-shadow: none;
+
+  &:hover {
+    box-shadow: none;
+  }
+`;
+
+const overflowVisibleStyle = css`
+  overflow: visible;
+`;
+
+// Create a custom section component with a title and a button
+const SectionWithButton = ({
+  title,
+  buttonComponent,
+  children,
+  ...rest
+}: {
+  title: string;
+  buttonComponent: React.ReactNode;
+  children: React.ReactNode;
+  [key: string]: any;
+}) => {
+  return (
+    <section
+      className={cx(
+        sectionStyles,
+        rest.noMargin && noMarginStyle,
+        rest.noPadding && noPaddingStyle,
+        rest.noShadow && noShadowStyle,
+        rest.overflowVisible && overflowVisibleStyle,
+        rest.className
+      )}
+    >
+      <div
+        className={css`
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 2px solid #dee2e6;
+          padding-bottom: 0.75rem;
+          margin-bottom: 1.25rem;
+        `}
+      >
+        <h2
+          className={css`
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #212529;
+            margin: 0;
+          `}
+        >
+          {title}
+        </h2>
+        {buttonComponent}
+      </div>
+      <div className={rest.contentClassName}>{children}</div>
+    </section>
+  );
+};
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
@@ -1039,75 +1112,7 @@ export default function EditSubtitles({
       )}
 
       {/* Video Player Section - Now handled by StickyVideoPlayer */}
-      {/* Controls for the video player */}
-      {videoUrl && (
-        <div
-          style={{
-            marginTop: 15,
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            marginBottom: 20,
-          }}
-        >
-          <Button
-            onClick={() => {
-              try {
-                if (isPlayingState) {
-                  console.log("Pausing video (main button)");
-                  nativePlayer.pause();
-                } else {
-                  console.log("Playing video (main button)");
-                  // Use wrapped functions to handle both direct and wrapped players
-                  nativePlayer.play();
-                }
-              } catch (err) {
-                console.error("Error toggling play state:", err);
-              }
-            }}
-            variant={isPlayingState ? "danger" : "primary"}
-            size="md"
-            className={`${buttonGradientStyles.base} ${
-              isPlayingState
-                ? buttonGradientStyles.danger
-                : buttonGradientStyles.primary
-            } ${css`
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-            `}`}
-          >
-            {isPlayingState ? (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
-                </svg>
-                Pause
-              </>
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
-                </svg>
-                Play
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+      {/* The play button has been moved from the title to the TimestampDisplay inside StickyVideoPlayer */}
 
       {/* Subtitles editing section */}
       {subtitlesState.length > 0 && (

@@ -9,6 +9,20 @@ import MergeSubtitles from "./components/MergeSubtitles";
 import EditSubtitles from "./components/EditSubtitles";
 import BackToTopButton from "./components/BackToTopButton";
 import StickyVideoPlayer from "./components/StickyVideoPlayer";
+import MergingProgressArea from "./components/MergingProgressArea";
+import TranslationProgressArea from "./components/TranslationProgressArea";
+
+// Context provider
+import { ManagementContextProvider } from "./context";
+
+// Helper functions
+import {
+  parseSrt,
+  secondsToSrtTime,
+  srtTimeToSeconds,
+  buildSrt,
+  fixOverlappingSegments,
+} from "./helpers";
 
 // Styles
 import {
@@ -65,7 +79,7 @@ const languages = [
   { code: "hi", name: "Hindi" },
 ];
 
-export default function App() {
+function AppContent() {
   // States for electron connection
   const [electronConnected, setElectronConnected] = useState<boolean>(false);
 
@@ -94,6 +108,12 @@ export default function App() {
     useState<boolean>(false);
   const [isMergingInProgress, setIsMergingInProgress] =
     useState<boolean>(false);
+
+  // Progress state
+  const [translationProgress, setTranslationProgress] = useState(0);
+  const [translationStage, setTranslationStage] = useState("");
+  const [mergeProgress, setMergeProgress] = useState(0);
+  const [mergeStage, setMergeStage] = useState("");
 
   // Add state for the video player reference
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
@@ -129,8 +149,11 @@ export default function App() {
 
     // Parse the generated subtitles into segments for possible editing later
     try {
+      // Use our imported parseSrt utility function
       const segments = parseSrt(generatedSubtitles);
-      setSubtitleSegments(segments);
+      // Fix any potential overlapping segments
+      const fixedSegments = fixOverlappingSegments(segments);
+      setSubtitleSegments(fixedSegments);
       setSourceLanguage(segments.length > 0 ? "en" : ""); // Assuming English by default
     } catch (err) {
       console.error("Error parsing generated subtitles:", err);
@@ -143,76 +166,21 @@ export default function App() {
 
     // Parse the translated subtitles into segments for possible editing later
     try {
+      // Use our imported parseSrt utility function
       const segments = parseSrt(translated);
-      setTranslatedSegments(segments);
+      // Fix any potential overlapping segments
+      const fixedSegments = fixOverlappingSegments(segments);
+      setTranslatedSegments(fixedSegments);
     } catch (err) {
       console.error("Error parsing translated subtitles:", err);
     }
   };
 
-  // Simple SRT parser function (this would be expanded in a real implementation)
-  const parseSrt = (srtString: string): SrtSegment[] => {
-    if (!srtString) return [];
-
-    const segments: SrtSegment[] = [];
-    const blocks = srtString.trim().split(/\r?\n\r?\n/);
-
-    blocks.forEach((block) => {
-      const lines = block.split(/\r?\n/);
-      if (lines.length < 3) return;
-
-      const index = parseInt(lines[0].trim(), 10);
-      const timeMatch = lines[1].match(
-        /(\d+:\d+:\d+,\d+)\s*-->\s*(\d+:\d+:\d+,\d+)/
-      );
-
-      if (!timeMatch) return;
-
-      const startTime = srtTimeToSeconds(timeMatch[1]);
-      const endTime = srtTimeToSeconds(timeMatch[2]);
-
-      // Get all text lines and join them
-      const text = lines.slice(2).join("\n");
-
-      segments.push({
-        index,
-        start: startTime,
-        end: endTime,
-        text,
-      });
-    });
-
-    return segments;
-  };
-
-  // Convert SRT time format to seconds
-  const srtTimeToSeconds = (timeString: string): number => {
-    const parts = timeString.split(",");
-    const timeParts = parts[0].split(":");
-
-    const hours = parseInt(timeParts[0], 10);
-    const minutes = parseInt(timeParts[1], 10);
-    const seconds = parseInt(timeParts[2], 10);
-    const milliseconds = parseInt(parts[1], 10);
-
-    return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
-  };
-
-  // Convert seconds to SRT time format
-  const secondsToSrtTime = (totalSeconds: number): string => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds - hours * 3600) / 60);
-    const seconds = Math.floor(totalSeconds - hours * 3600 - minutes * 60);
-    const milliseconds = Math.round(
-      (totalSeconds - Math.floor(totalSeconds)) * 1000
-    );
-
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")},${milliseconds
-      .toString()
-      .padStart(3, "0")}`;
-  };
+  // We now use the imported functions for:
+  // - parseSrt
+  // - secondsToSrtTime
+  // - srtTimeToSeconds
+  // - buildSrt
 
   // Handle video player ready callback
   const handleVideoPlayerReady = (player: any) => {
@@ -223,6 +191,41 @@ export default function App() {
   const handleSetVideoUrl = (url: string | null) => {
     if (url !== null) {
       setVideoUrl(url);
+    }
+  };
+
+  // Handler for changing video file
+  const handleChangeVideo = (file: File) => {
+    if (file) {
+      // Clear any previous errors
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl);
+      }
+
+      // Set the new video file
+      setVideoFile(file);
+
+      // Create and set URL for the new video
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+    }
+  };
+
+  // Handler for changing SRT file
+  const handleChangeSrt = (file: File) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const srtContent = e.target?.result as string;
+        try {
+          // Parse and set the new subtitles
+          const parsed = parseSrt(srtContent);
+          setSubtitleSegments(parsed);
+        } catch (error: unknown) {
+          console.error("Error parsing SRT:", error);
+        }
+      };
+      reader.readAsText(file);
     }
   };
 
@@ -240,6 +243,8 @@ export default function App() {
             videoUrl={videoUrl}
             subtitles={subtitleSegments}
             onPlayerReady={handleVideoPlayerReady}
+            onChangeVideo={handleChangeVideo}
+            onChangeSrt={handleChangeSrt}
           />
         )}
 
@@ -283,19 +288,15 @@ export default function App() {
             onSetIsMergingInProgress={setIsMergingInProgress}
             mergeSubtitlesWithVideo={async (videoFile, subtitles, options) => {
               setIsMergingInProgress(true);
+              setMergeProgress(0);
+              setMergeStage("Preparing subtitle file...");
 
               try {
-                // Generate SRT content from subtitles
-                const srtContent = subtitles
-                  .map((segment, i) => {
-                    const index = i + 1;
-                    const startTime = secondsToSrtTime(segment.start);
-                    const endTime = secondsToSrtTime(segment.end);
-                    return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
-                  })
-                  .join("\n\n");
+                // Generate SRT content from subtitles using our utility function
+                const srtContent = buildSrt(fixOverlappingSegments(subtitles));
 
                 // Create a temporary file for the subtitles
+                setMergeStage("Saving subtitle file...");
                 const subtitlesResult = await window.electron.saveFile({
                   content: srtContent,
                   defaultPath: "subtitles.srt",
@@ -307,7 +308,10 @@ export default function App() {
                 }
 
                 // Set up progress tracking
+                setMergeStage("Merging subtitles with video...");
                 window.electron.onMergeSubtitlesProgress((progress) => {
+                  setMergeProgress(progress.percent);
+                  setMergeStage(progress.stage);
                   options.onProgress(progress.percent);
                 });
 
@@ -320,7 +324,13 @@ export default function App() {
                   subtitlesPath: subtitlesResult.filePath,
                 });
 
-                setIsMergingInProgress(false);
+                setMergeProgress(100);
+                setMergeStage("Merge complete!");
+
+                // Add a slight delay before hiding the progress area
+                setTimeout(() => {
+                  setIsMergingInProgress(false);
+                }, 1500);
 
                 if (result.error) {
                   throw new Error(result.error);
@@ -328,15 +338,43 @@ export default function App() {
 
                 return result;
               } catch (error) {
-                setIsMergingInProgress(false);
+                setMergeStage(`Error: ${error.message}`);
+                setTimeout(() => {
+                  setIsMergingInProgress(false);
+                }, 3000);
                 throw error;
               }
             }}
           />
         </div>
 
+        {isTranslationInProgress && (
+          <TranslationProgressArea
+            progress={translationProgress}
+            progressStage={translationStage}
+            onSetIsTranslationInProgress={setIsTranslationInProgress}
+          />
+        )}
+
+        {isMergingInProgress && (
+          <MergingProgressArea
+            mergeProgress={mergeProgress}
+            mergeStage={mergeStage}
+            onSetIsMergingInProgress={setIsMergingInProgress}
+          />
+        )}
+
         <BackToTopButton />
       </div>
     </div>
+  );
+}
+
+// Export the app with context provider
+export default function App() {
+  return (
+    <ManagementContextProvider>
+      <AppContent />
+    </ManagementContextProvider>
   );
 }

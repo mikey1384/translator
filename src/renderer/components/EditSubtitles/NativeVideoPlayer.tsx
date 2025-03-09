@@ -136,6 +136,8 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
 
   // Handle video initialization
   useEffect(() => {
