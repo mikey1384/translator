@@ -1,7 +1,7 @@
 import path from "path";
 import log from "electron-log";
-import { FFmpegService } from "../electron/ffmpeg-service";
-import { FileManager } from "../electron/file-manager";
+import { FFmpegService } from "./ffmpeg-service";
+import { FileManager } from "./file-manager";
 import { AIService } from "./ai-service";
 
 // Import types from preload script
@@ -148,7 +148,7 @@ export class SubtitleProcessing {
       );
     }
   }
-  
+
   /**
    * Merge subtitles with a video file
    */
@@ -160,7 +160,7 @@ export class SubtitleProcessing {
       if (!options.videoPath) {
         throw new SubtitleProcessingError("Video path is required");
       }
-      
+
       if (!options.subtitlesPath) {
         throw new SubtitleProcessingError("Subtitles path is required");
       }
@@ -174,10 +174,15 @@ export class SubtitleProcessing {
       }
 
       // Output path for the merged video
-      const outputPath = options.outputPath || path.join(
-        path.dirname(options.videoPath),
-        `${path.basename(options.videoPath, path.extname(options.videoPath))}_with_subtitles${path.extname(options.videoPath)}`
-      );
+      const outputPath =
+        options.outputPath ||
+        path.join(
+          path.dirname(options.videoPath),
+          `${path.basename(
+            options.videoPath,
+            path.extname(options.videoPath)
+          )}_with_subtitles${path.extname(options.videoPath)}`
+        );
 
       // Use FFmpeg to merge subtitles with video
       if (progressCallback) {
@@ -191,7 +196,7 @@ export class SubtitleProcessing {
         (progress) => {
           if (progressCallback) {
             // Scale FFmpeg progress (typically 0-100) to our 25-90% range
-            const scaledProgress = 25 + (progress.percent * 0.65);
+            const scaledProgress = 25 + progress.percent * 0.65;
             progressCallback({
               percent: Math.min(90, scaledProgress),
               stage: progress.stage || "Merging subtitles with video",

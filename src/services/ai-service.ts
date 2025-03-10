@@ -2,7 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk";
 import { OpenAI } from "openai";
 import log from "electron-log";
 import fs from "fs";
-import { FFmpegService } from "../electron/ffmpeg-service";
+import { FFmpegService } from "./ffmpeg-service";
 import path from "path";
 
 export class AIServiceError extends Error {

@@ -2,8 +2,8 @@ import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
 import isDev from "electron-is-dev";
 import log from "electron-log";
-import { setupIpcHandlers as initIpcHandlers } from "../electron/ipc-handlers";
-import { FileManager } from "../electron/file-manager";
+import { setupIpcHandlers as initIpcHandlers } from "./services/ipc-handlers";
+import { FileManager } from "./services/file-manager";
 import dotenv from "dotenv";
 
 // Add hot reload capability in development
@@ -40,21 +40,40 @@ log.info("Application starting...");
 let mainWindow: BrowserWindow | null = null;
 let fileManager: FileManager;
 
+// Helper function to check if a handler is already registered
+function isHandlerRegistered(channel: string): boolean {
+  try {
+    // This will throw an error if the handler is already registered
+    const tempHandler = () => {};
+    ipcMain.handle(channel, tempHandler);
+    ipcMain.removeHandler(channel);
+    return false; // Not registered
+  } catch (error) {
+    return true; // Already registered
+  }
+}
+
 // Add these handlers right before creating the window
 // Simple ping-pong handler for testing IPC
-ipcMain.handle("ping", () => {
-  return "pong";
-});
+if (!isHandlerRegistered("ping")) {
+  log.info("Registering ping handler from main.ts");
+  ipcMain.handle("ping", () => {
+    return "pong";
+  });
+}
 
 // Show message handler
-ipcMain.handle("show-message", (_event, message) => {
-  dialog.showMessageBox({
-    type: "info",
-    title: "Message from Renderer",
-    message: message,
+if (!isHandlerRegistered("show-message")) {
+  log.info("Registering show-message handler from main.ts");
+  ipcMain.handle("show-message", (_event, message) => {
+    dialog.showMessageBox({
+      type: "info",
+      title: "Message from Renderer",
+      message: message,
+    });
+    return true;
   });
-  return true;
-});
+}
 
 // Create browser window
 const createWindow = async () => {

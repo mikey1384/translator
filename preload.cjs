@@ -4,9 +4,12 @@ const { contextBridge, ipcRenderer } = require("electron");
 // Add better error handling for IPC calls
 const invokeWithRetry = async (channel, ...args) => {
   try {
+    console.log(`Invoking ${channel} with args:`, args);
     return await ipcRenderer.invoke(channel, ...args);
   } catch (error) {
+    console.error(`Error invoking ${channel}:`, error);
     if (error.message && error.message.includes("No handler registered")) {
+      console.warn(`No handler registered for ${channel}, will retry`);
       const retryDelays = [
         300, 600, 1000, 1500, 2000, 3000, 4000, 5000, 7000, 10000,
       ];
@@ -17,6 +20,7 @@ const invokeWithRetry = async (channel, ...args) => {
           return await ipcRenderer.invoke(channel, ...args);
         } catch (retryError) {
           // Continue to the next retry
+          console.warn(`Retry failed for ${channel}:`, retryError);
         }
       }
       throw new Error(
@@ -88,13 +92,24 @@ const electronAPI = {
 
   // File operations - check readiness first
   saveFile: async (options) => {
+    console.log("Saving file with options:", options);
     return await invokeWithRetry("save-file", options);
   },
 
-  openFile: (options) => {
-    return invokeWithRetry("open-file", options);
+  openFile: async (options) => {
+    console.log("Opening file with options:", options);
+    try {
+      const result = await invokeWithRetry("open-file", options);
+      console.log("Open file result:", result);
+      return result;
+    } catch (error) {
+      console.error("Error in openFile:", error);
+      return { error: String(error), filePaths: [] };
+    }
   },
 };
 
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld("electron", electronAPI);
+
+console.log("Preload script initialized successfully");

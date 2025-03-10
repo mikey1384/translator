@@ -1,197 +1,78 @@
 // CommonJS entry point for Electron main process
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+// This acts as a loader for the compiled TypeScript file
 const path = require("path");
 const fs = require("fs");
-const isDev = require("electron-is-dev");
 const log = require("electron-log");
-const dotenv = require("dotenv");
-
-// Load environment variables
-dotenv.config();
+const { ipcMain } = require("electron");
 
 // Configure logger
 log.initialize({ preload: true });
-log.info("Application starting...");
+log.info("Loading application...");
 
-// Global references
-let mainWindow = null;
-const tempDir = path.join(app.getPath("userData"), "temp");
-
-// Ensure temp directory exists
-function ensureTempDir() {
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-  return tempDir;
-}
-
-// Function to check if a channel is already being handled
-function ipcMainIsHandled(channel) {
+// Helper function to check if a handler is already registered
+function isHandlerRegistered(channel) {
   try {
+    // This will throw an error if the handler is already registered
     const tempHandler = () => {};
     ipcMain.handle(channel, tempHandler);
     ipcMain.removeHandler(channel);
-    return false;
+    return false; // Not registered
   } catch (error) {
-    return true;
+    return true; // Already registered
   }
 }
 
-// Basic IPC handlers only for core functions
-function setupBasicIpcHandlers() {
-  if (!ipcMainIsHandled("show-message")) {
-    ipcMain.handle("show-message", (_event, message) => {
-      dialog.showMessageBox({
-        type: "info",
-        title: "Message from Renderer",
-        message: message,
-      });
-      return true;
-    });
-  }
-}
+// Find the compiled main.js file
+let mainPath;
 
-// Register handlers when app is ready
-let handlersRegistered = false;
-function registerHandlers() {
-  if (handlersRegistered) return;
+// First, try the expected location in dist
+const distMainPath = path.join(__dirname, "dist", "main.js");
+if (fs.existsSync(distMainPath)) {
+  mainPath = distMainPath;
+  log.info(`Found main module at ${mainPath}`);
+} else {
+  // Fall back to scanning potential locations
+  const potentialLocations = [
+    path.join(__dirname, "dist", "main.js"),
+    path.join(__dirname, "main.js"),
+    path.join(__dirname, "dist", "index.js"),
+  ];
 
-  if (typeof ipcMain.removeHandler === "function") {
-    try {
-      ipcMain.removeHandler("ping");
-      ipcMain.removeHandler("open-file");
-    } catch (err) {
-      // Error handling preserved
+  for (const location of potentialLocations) {
+    if (fs.existsSync(location)) {
+      mainPath = location;
+      log.info(`Found main module at ${mainPath}`);
+      break;
     }
   }
-
-  ipcMain.handle("ping", () => "pong");
-
-  ipcMain.handle("open-file", async (_event, options = {}) => {
-    try {
-      const mainWindow = BrowserWindow.getFocusedWindow();
-      if (!mainWindow) return { error: "No focused window found" };
-
-      const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-        title: options.title || "Open File",
-        properties: options.multiple
-          ? ["openFile", "multiSelections"]
-          : ["openFile"],
-        filters: options.filters || [{ name: "All Files", extensions: ["*"] }],
-      });
-
-      if (canceled || filePaths.length === 0) return { canceled: true };
-
-      const fileContents = await Promise.all(
-        filePaths.map(async (filePath) => {
-          try {
-            return await fs.promises.readFile(filePath, "utf8");
-          } catch (err) {
-            return null;
-          }
-        })
-      );
-
-      return {
-        filePaths,
-        fileContents: fileContents.filter(Boolean),
-      };
-    } catch (err) {
-      return { error: String(err) };
-    }
-  });
-
-  // Ensure save-file handler is registered
-  if (!ipcMainIsHandled("save-file")) {
-    require("./save-handler");
-  }
-
-  handlersRegistered = true;
 }
 
-// Ensure critical handlers exist
-function ensureCriticalHandlersExist() {
-  if (!ipcMainIsHandled("save-file")) {
-    require("./save-handler");
-  }
+if (!mainPath) {
+  log.error("Could not find main module! Application cannot start.");
+  process.exit(1);
 }
 
-// Create the main browser window
-async function createWindow() {
+// Initialize handlers early, but only if they're not already registered
+// This prevents duplicate handler registration errors
+if (!isHandlerRegistered("ping")) {
+  log.info("Initializing handlers from main.cjs");
   try {
-    mainWindow = new BrowserWindow({
-      width: 1200,
-      height: 800,
-      minWidth: 900,
-      minHeight: 600,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, "preload.cjs"),
-        devTools: true,
-        webSecurity: false,
-        allowRunningInsecureContent: false,
-      },
-    });
-
-    // Enable loading local resources from blob URLs
-    mainWindow.webContents.session.setPermissionRequestHandler(
-      (webContents, permission, callback) => {
-        if (permission === "media") {
-          return callback(true);
-        }
-        callback(true);
-      }
-    );
-
-    // Set Content Security Policy to allow blob URLs for media and inline styles
-    mainWindow.webContents.session.webRequest.onHeadersReceived(
-      (details, callback) => {
-        callback({
-          responseHeaders: {
-            ...details.responseHeaders,
-            "Content-Security-Policy": [
-              "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; media-src * blob:; connect-src * blob:; font-src * data:;",
-            ],
-          },
-        });
-      }
-    );
-
-    const indexPath = `file://${path.join(__dirname, "index.html")}`;
-    await mainWindow.loadURL(indexPath);
-    mainWindow.webContents.openDevTools();
-  } catch (error) {
-    // Error handling preserved
+    require("./handlers/index");
+    log.info("Handlers initialized successfully");
+  } catch (err) {
+    log.warn("Error initializing handlers:", err.message);
+    // Continue anyway, as the main process might register its own handlers
   }
+} else {
+  log.info(
+    "Handlers already registered, skipping initialization from main.cjs"
+  );
 }
 
-// Initialize app when ready
-app.whenReady().then(async () => {
-  try {
-    ensureTempDir();
-    ensureCriticalHandlersExist();
-    registerHandlers();
-    setupBasicIpcHandlers();
-    await createWindow();
-  } catch (error) {
-    // Error handling preserved
-  }
-});
-
-// Standard Electron lifecycle handlers
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-
-app.on("quit", () => {
-  // Cleanup if needed
-});
+// Load the compiled main module
+try {
+  require(mainPath);
+} catch (err) {
+  log.error("Error loading main module:", err);
+  process.exit(1);
+}
