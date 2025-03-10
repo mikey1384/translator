@@ -8,18 +8,17 @@ import {
   GPT4,
   GPT4_MAX_OUTPUT_TOKENS,
   GPT4_MINI_MAX_OUTPUT_TOKENS,
-  GPT4_MINI
-} from '../../constants';
-import socket from '../../constants/socketClient';
-import { S3Client } from '@aws-sdk/client-s3';
+  GPT4_MINI,
+} from "../../constants";
+import socket from "../../constants/socketClient";
+import { S3Client } from "@aws-sdk/client-s3";
 const client = new S3Client({ region: process.env.AWS_REGION });
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
-import request from 'axios';
-import { v1 as uuidv1 } from 'uuid';
-import { bucketName } from '../../config';
-import { poolQuery, uploadFromStream } from '..';
-import { User } from '../../types';
+import { OpenAI } from "openai";
+import request from "axios";
+import { v1 as uuidv1 } from "uuid";
+import { bucketName } from "../../config";
+import { poolQuery, uploadFromStream } from "..";
+import { User } from "../../types";
 import {
   formatUserJSON,
   formatMessages,
@@ -33,49 +32,95 @@ import {
   getLatestFileThread,
   executeOpenAIRun,
   executeFileReaderRun,
-  convertSegmentsToSrt
-} from './utils';
-import { getAssistant } from '../../assistants';
-import { Stream } from 'openai/streaming';
-import fs from 'fs';
-import ffmpeg from 'fluent-ffmpeg';
-import { spawn } from 'child_process';
-import path from 'path';
+  convertSegmentsToSrt,
+} from "./utils";
+import { getAssistant } from "../../assistants";
+import { Stream } from "openai/streaming";
+import fs from "fs";
+import ffmpeg from "fluent-ffmpeg";
+import { spawn } from "child_process";
+import path from "path";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   defaultHeaders: {
-    'OpenAI-Beta': 'assistants=v2'
-  }
-});
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+    "OpenAI-Beta": "assistants=v2",
+  },
 });
 
 const openAIStreamCancelObj: Record<number, (() => void) | undefined> = {};
+
+/**
+ * Retry a function with exponential backoff
+ * @param fn The function to retry
+ * @param maxRetries Maximum number of retries
+ * @param baseDelayMs Base delay in milliseconds
+ * @param maxDelayMs Maximum delay in milliseconds
+ */
+async function retryWithExponentialBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 5,
+  baseDelayMs: number = 1000,
+  maxDelayMs: number = 30000
+): Promise<T> {
+  let lastError: any;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // If it's not the first attempt, add a log about retrying
+      if (attempt > 0) {
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries}`);
+      }
+
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+
+      // If this is the last attempt, don't delay, just throw
+      if (attempt >= maxRetries - 1) break;
+
+      // Calculate delay with exponential backoff
+      const delay = Math.min(Math.pow(2, attempt) * baseDelayMs, maxDelayMs);
+
+      // Add jitter to prevent all retries happening at the same time
+      const jitter = Math.random() * 0.3 * delay;
+      const delayWithJitter = delay + jitter;
+
+      console.log(
+        `API call failed with error: ${error.message || error}. ` +
+          `Retrying in ${Math.round(delayWithJitter / 1000)} seconds...`
+      );
+
+      // Wait before next attempt
+      await new Promise((resolve) => setTimeout(resolve, delayWithJitter));
+    }
+  }
+
+  // If we've exhausted all retries, throw the last error
+  throw lastError;
+}
 
 async function detectSilenceBoundaries(
   inputAudioPath: string
 ): Promise<number[]> {
   return new Promise<number[]>((resolve, reject) => {
     const boundaries: number[] = [];
-    const ffmpegProcess = spawn('ffmpeg', [
-      '-i',
+    const ffmpegProcess = spawn("ffmpeg", [
+      "-i",
       inputAudioPath,
-      '-af',
-      'silencedetect=noise=-50dB:d=0.5',
-      '-f',
-      'null',
-      '-'
+      "-af",
+      "silencedetect=noise=-50dB:d=0.5",
+      "-f",
+      "null",
+      "-",
     ]);
 
-    let stderr = '';
-    ffmpegProcess.stderr.on('data', (data: Buffer) => {
+    let stderr = "";
+    ffmpegProcess.stderr.on("data", (data: Buffer) => {
       stderr += data.toString();
     });
 
-    ffmpegProcess.on('close', () => {
+    ffmpegProcess.on("close", () => {
       // Look for lines like "silence_end: 5.123 | silence_duration: 0.50"
       const regex = /silence_end:\s*([\d.]+)/g;
       let match;
@@ -85,7 +130,7 @@ async function detectSilenceBoundaries(
       resolve(boundaries);
     });
 
-    ffmpegProcess.on('error', (err: Error) => {
+    ffmpegProcess.on("error", (err: Error) => {
       reject(err);
     });
   });
@@ -106,7 +151,7 @@ async function chunkAudioByDuration(
   });
 
   const totalDuration = metadata.format.duration;
-  if (!totalDuration) throw new Error('Could not determine audio duration');
+  if (!totalDuration) throw new Error("Could not determine audio duration");
 
   // Calculate bytes per second (bitrate) and the target chunk duration (in seconds)
   const bitrate = fileSize / totalDuration; // bytes per second
@@ -140,7 +185,7 @@ async function chunkAudioByDuration(
     }
     const chunkDuration = chosenEnd - startTime;
     const chunkPath = path.join(
-      'uploads',
+      "uploads",
       `chunk_${Date.now()}_${chunkIndex}.mp3`
     );
     await new Promise<void>((resolve, reject) => {
@@ -148,8 +193,8 @@ async function chunkAudioByDuration(
         .setStartTime(startTime)
         .setDuration(chunkDuration)
         .output(chunkPath)
-        .on('end', () => resolve())
-        .on('error', (err: Error) => reject(err))
+        .on("end", () => resolve())
+        .on("error", (err: Error) => reject(err))
         .run();
     });
     chunkPaths.push(chunkPath);
@@ -162,9 +207,9 @@ async function chunkAudioByDuration(
 
 export async function generateSubtitlesFromAudio({
   inputAudioPath,
-  targetLanguage = 'original',
+  targetLanguage = "original",
   userId,
-  progressRange
+  progressRange,
 }: {
   inputAudioPath: string;
   targetLanguage?: string;
@@ -187,35 +232,39 @@ export async function generateSubtitlesFromAudio({
 
   try {
     if (userId) {
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId,
         progress: scaleProgress(0),
-        stage: 'transcription'
+        stage: "transcription",
       });
     }
 
     if (fileSize <= MAX_CHUNK_SIZE) {
       if (userId) {
-        socket.emit('subtitle_translation_progress', {
+        socket.emit("subtitle_translation_progress", {
           userId,
           progress: scaleProgress(10),
-          stage: 'Transcribing audio'
+          stage: "Transcribing audio",
         });
       }
 
-      if (targetLanguage === 'original') {
-        response = await openai.audio.transcriptions.create({
-          file: fs.createReadStream(inputAudioPath) as any,
-          model: 'whisper-1',
-          response_format: 'verbose_json'
-        });
-      } else {
-        response = await openai.audio.translations.create({
-          file: fs.createReadStream(inputAudioPath) as any,
-          model: 'whisper-1',
-          response_format: 'verbose_json'
-        });
-      }
+      // Add retry logic for single file transcription
+      response = await retryWithExponentialBackoff(async () => {
+        if (targetLanguage === "original") {
+          return await openai.audio.transcriptions.create({
+            file: fs.createReadStream(inputAudioPath) as any,
+            model: "whisper-1",
+            response_format: "verbose_json",
+          });
+        } else {
+          return await openai.audio.translations.create({
+            file: fs.createReadStream(inputAudioPath) as any,
+            model: "whisper-1",
+            response_format: "verbose_json",
+          });
+        }
+      });
+
       allSegments = response.segments ?? [];
     } else {
       const { chunkPaths, chunkDuration } = await chunkAudioByDuration(
@@ -226,39 +275,76 @@ export async function generateSubtitlesFromAudio({
       let transcriptionProgress = 10;
       const progressPerChunk = 75 / chunkPaths.length;
 
-      for (let i = 0; i < chunkPaths.length; i++) {
-        const chunkPath = chunkPaths[i];
-        const chunkStartTime = i * chunkDuration;
+      // Process chunks in small batches to avoid rate limiting
+      const BATCH_SIZE = 3; // Process 3 chunks at a time
+      const INTER_CHUNK_DELAY = 1000; // 1 second delay between chunks
 
-        let chunkResponse: any;
-        if (targetLanguage === 'original') {
-          chunkResponse = await openai.audio.transcriptions.create({
-            file: fs.createReadStream(chunkPath) as any,
-            model: 'whisper-1',
-            response_format: 'verbose_json'
-          });
-        } else {
-          chunkResponse = await openai.audio.translations.create({
-            file: fs.createReadStream(chunkPath) as any,
-            model: 'whisper-1',
-            response_format: 'verbose_json'
-          });
+      for (
+        let batchStart = 0;
+        batchStart < chunkPaths.length;
+        batchStart += BATCH_SIZE
+      ) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, chunkPaths.length);
+        const batchChunks = chunkPaths.slice(batchStart, batchEnd);
+
+        // Process each batch of chunks in parallel
+        const batchResults = await Promise.all(
+          batchChunks.map(async (chunkPath, batchIndex) => {
+            const i = batchStart + batchIndex;
+            const chunkStartTime = i * chunkDuration;
+
+            // Add a small delay between chunks in the same batch
+            if (batchIndex > 0) {
+              await new Promise((resolve) =>
+                setTimeout(resolve, INTER_CHUNK_DELAY)
+              );
+            }
+
+            // Add retry logic for chunked transcription
+            const chunkResponse = await retryWithExponentialBackoff(
+              async () => {
+                if (targetLanguage === "original") {
+                  return await openai.audio.transcriptions.create({
+                    file: fs.createReadStream(chunkPath) as any,
+                    model: "whisper-1",
+                    response_format: "verbose_json",
+                  });
+                } else {
+                  return await openai.audio.translations.create({
+                    file: fs.createReadStream(chunkPath) as any,
+                    model: "whisper-1",
+                    response_format: "verbose_json",
+                  });
+                }
+              }
+            );
+
+            return { chunkResponse, i, chunkStartTime };
+          })
+        );
+
+        // Process the results of the batch
+        for (const { chunkResponse, i, chunkStartTime } of batchResults) {
+          const chunkSegments = chunkResponse.segments ?? [];
+          for (const segment of chunkSegments) {
+            segment.start += chunkStartTime;
+            segment.end += chunkStartTime;
+          }
+          allSegments.push(...chunkSegments);
+
+          transcriptionProgress += progressPerChunk;
+          if (userId) {
+            socket.emit("subtitle_translation_progress", {
+              userId,
+              progress: scaleProgress(transcriptionProgress),
+              stage: `Transcribing chunk ${i + 1} of ${chunkPaths.length}`,
+            });
+          }
         }
 
-        const chunkSegments = chunkResponse.segments ?? [];
-        for (const segment of chunkSegments) {
-          segment.start += chunkStartTime;
-          segment.end += chunkStartTime;
-        }
-        allSegments.push(...chunkSegments);
-
-        transcriptionProgress += progressPerChunk;
-        if (userId) {
-          socket.emit('subtitle_translation_progress', {
-            userId,
-            progress: scaleProgress(transcriptionProgress),
-            stage: `Transcribing chunk ${i + 1} of ${chunkPaths.length}`
-          });
+        // Add a cooldown period between batches to avoid API rate limits
+        if (batchEnd < chunkPaths.length) {
+          await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 second cooldown between batches
         }
       }
 
@@ -273,37 +359,39 @@ export async function generateSubtitlesFromAudio({
     }
 
     if (userId) {
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId,
         progress: scaleProgress(85),
-        stage: 'transcription complete'
+        stage: "transcription complete",
       });
     }
 
     response = { segments: allSegments };
 
-    if (targetLanguage !== 'original') {
+    if (targetLanguage !== "original") {
       const segments = response.segments ?? [];
 
       if (userId) {
-        socket.emit('subtitle_translation_progress', {
+        socket.emit("subtitle_translation_progress", {
           userId,
           progress: scaleProgress(90),
-          stage: 'translation',
-          total: segments.length
+          stage: "translation",
+          total: segments.length,
         });
       }
 
-      let languagePrompt = 'the target language';
-      if (targetLanguage === 'korean') languagePrompt = 'Korean';
-      else if (targetLanguage === 'japanese') languagePrompt = 'Japanese';
-      else if (targetLanguage === 'chinese') languagePrompt = 'Chinese';
-      else if (targetLanguage === 'spanish') languagePrompt = 'Spanish';
-      else if (targetLanguage === 'french') languagePrompt = 'French';
-      else if (targetLanguage === 'german') languagePrompt = 'German';
+      let languagePrompt = "the target language";
+      if (targetLanguage === "korean") languagePrompt = "Korean";
+      else if (targetLanguage === "japanese") languagePrompt = "Japanese";
+      else if (targetLanguage === "chinese") languagePrompt = "Chinese";
+      else if (targetLanguage === "spanish") languagePrompt = "Spanish";
+      else if (targetLanguage === "french") languagePrompt = "French";
+      else if (targetLanguage === "german") languagePrompt = "German";
 
       const translatedSegments: any[] = [];
       const BATCH_SIZE = 10;
+      // Add a delay between translation batches to prevent rate limits
+      const TRANSLATION_BATCH_DELAY = 2000; // 2 seconds between batches
 
       for (
         let batchStart = 0;
@@ -325,7 +413,7 @@ export async function generateSubtitlesFromAudio({
 You are a professional subtitle translator. Translate the following subtitles to natural, fluent ${languagePrompt}.
 
 Here are the subtitles to translate:
-${batchContextPrompt.join('\n')}
+${batchContextPrompt.join("\n")}
 
 Translate ALL lines to ${languagePrompt}.
 Respond with ONLY the translations in this format:
@@ -338,103 +426,54 @@ Ensure you preserve the exact line numbers as given in the original text. Transl
 For languages with different politeness levels (Korean, Japanese, Thai, etc.), use ONLY polite form for narration or formal speech (like documentaries, educational content, news).`;
 
         try {
-          const MAX_RETRIES = 3;
-          const TIMEOUT_MS = 120000;
-
-          let retryCount = 0;
-          let lastError: any = null;
-          let success = false;
-
-          while (retryCount < MAX_RETRIES && !success) {
+          // Add retry logic for translation API calls
+          const completion = await retryWithExponentialBackoff(async () => {
             try {
-              const abortController = new AbortController();
-              const timeoutId = setTimeout(() => {
-                abortController.abort('Request timeout');
-              }, TIMEOUT_MS);
-
-              const completion = await anthropic.messages.create(
-                {
-                  model: 'claude-3-7-sonnet-20250219',
-                  max_tokens: 4000,
-                  system: `You are a professional subtitle translator specializing in natural, fluent translations. For languages with different politeness levels (Korean, Japanese, Thai, etc.), always use the polite form by default unless the context clearly indicates informality is required. Maintain the meaning, tone, and cultural nuances of the original while ensuring your translations sound natural to native speakers.`,
-                  messages: [{ role: 'user', content: combinedPrompt }]
-                },
-                { signal: abortController.signal }
-              );
-
-              clearTimeout(timeoutId);
-
-              const translationText =
-                completion.content[0]?.type === 'text'
-                  ? completion.content[0].text.trim()
-                  : '';
-
-              const translationLines = translationText.split('\n');
-              const lineRegex = /^Line (\d+):\s*(.+)$/;
-
-              for (let i = 0; i < currentBatch.length; i++) {
-                const segmentIndex = batchStart + i;
-                const segment = currentBatch[i];
-                const originalTextToPreserve = segment.text;
-
-                let translatedText = originalTextToPreserve;
-                for (const line of translationLines) {
-                  const match = line.match(lineRegex);
-                  if (match && parseInt(match[1]) === segmentIndex + 1) {
-                    translatedText = match[2].trim();
-                    break;
-                  }
-                }
-
-                translatedSegments.push({
-                  ...segment,
-                  text: `${originalTextToPreserve}###TRANSLATION_MARKER###${translatedText}`,
-                  originalText: originalTextToPreserve,
-                  translatedText
+              return await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [{ role: "system", content: combinedPrompt }],
+                temperature: 0.3,
+                max_tokens: 4096,
+              });
+            } catch (error: any) {
+              if (error.message?.includes("context length")) {
+                return await openai.chat.completions.create({
+                  model: "gpt-3.5-turbo-16k",
+                  messages: [{ role: "system", content: combinedPrompt }],
+                  temperature: 0.3,
+                  max_tokens: 4096,
                 });
               }
-              success = true;
-            } catch (err) {
-              lastError = err;
-              const isRetriableError =
-                (err as any).name === 'AbortError' ||
-                ((err as any).status >= 500 && (err as any).status < 600) ||
-                (err as Error).message?.includes('timeout') ||
-                (err as Error).message?.includes('network') ||
-                (err as Error).message?.includes('ECONNRESET');
+              throw error; // Re-throw to let the retry mechanism handle it
+            }
+          });
 
-              if (!isRetriableError) {
+          const translationText =
+            completion.choices[0]?.message?.content?.trim() || "";
+
+          const translationLines = translationText.split("\n");
+          const lineRegex = /^Line (\d+):\s*(.+)$/;
+
+          for (let i = 0; i < currentBatch.length; i++) {
+            const segmentIndex = batchStart + i;
+            const segment = currentBatch[i];
+            const originalTextToPreserve = segment.text;
+
+            let translatedText = originalTextToPreserve;
+            for (const line of translationLines) {
+              const match = line.match(lineRegex);
+              if (match && parseInt(match[1]) === segmentIndex + 1) {
+                translatedText = match[2].trim();
                 break;
               }
-              retryCount++;
-              if (retryCount < MAX_RETRIES) {
-                const backoffTime = Math.min(
-                  1000 * Math.pow(2, retryCount),
-                  8000
-                );
-                await new Promise((resolve) =>
-                  setTimeout(resolve, backoffTime)
-                );
-              }
             }
-          }
 
-          if (!success) {
-            console.error(
-              `All translation retries failed for batch starting at segment ${batchStart}:`,
-              lastError
-            );
-            for (let i = 0; i < currentBatch.length; i++) {
-              const segment = currentBatch[i];
-              if (!translatedSegments.some((s) => s.start === segment.start)) {
-                translatedSegments.push({
-                  ...segment,
-                  text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-                  originalText: segment.text,
-                  translatedText: segment.text
-                });
-              }
-            }
+            translatedSegments.push({
+              ...segment,
+              text: `${originalTextToPreserve}###TRANSLATION_MARKER###${translatedText}`,
+              originalText: originalTextToPreserve,
+              translatedText,
+            });
           }
         } catch (error) {
           console.error(
@@ -448,7 +487,7 @@ For languages with different politeness levels (Korean, Japanese, Thai, etc.), u
                 ...segment,
                 text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
                 originalText: segment.text,
-                translatedText: segment.text
+                translatedText: segment.text,
               });
             }
           }
@@ -458,13 +497,20 @@ For languages with different politeness levels (Korean, Japanese, Thai, etc.), u
           const progressPercentage = Math.floor(
             scaleProgress(90 + (batchEnd / segments.length) * 9)
           );
-          socket.emit('subtitle_translation_progress', {
+          socket.emit("subtitle_translation_progress", {
             userId,
             progress: progressPercentage,
-            stage: 'translation',
+            stage: "translation",
             current: batchEnd,
-            total: segments.length
+            total: segments.length,
           });
+        }
+
+        // Add delay between batches to prevent rate limiting
+        if (batchEnd < segments.length) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, TRANSLATION_BATCH_DELAY)
+          );
         }
       }
 
@@ -472,10 +518,10 @@ For languages with different politeness levels (Korean, Japanese, Thai, etc.), u
     }
 
     if (userId) {
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId,
         progress: scaleProgress(100),
-        stage: 'complete'
+        stage: "complete",
       });
     }
 
@@ -484,37 +530,37 @@ For languages with different politeness levels (Korean, Japanese, Thai, etc.), u
     return srt;
   } catch (error) {
     if (userId) {
-      socket.emit('subtitle_translation_progress', {
+      socket.emit("subtitle_translation_progress", {
         userId,
         progress: scaleProgress(0),
-        stage: 'error',
-        error: error instanceof Error ? error.message : 'Transcription failed'
+        stage: "error",
+        error: error instanceof Error ? error.message : "Transcription failed",
       });
     }
-    console.error('Error in transcription:', error);
+    console.error("Error in transcription:", error);
     throw error;
   }
 }
 
 export function generateThreadKey({
   channelId,
-  topicId
+  topicId,
 }: {
   channelId: number;
   topicId?: number | null;
 }): string {
-  return `chat_${channelId}${topicId ? `_topic_${topicId}` : ''}`;
+  return `chat_${channelId}${topicId ? `_topic_${topicId}` : ""}`;
 }
 
 export async function fetchTTSChunks(
   text: string,
-  voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' = 'echo'
+  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "echo"
 ) {
   const CHUNK_SIZE = 250;
   const TIMEOUT_MS = 20000;
 
   const chunks = chunkText(text);
-  const promises = chunks.map((chunk) => fetchTTS(chunk, voice || 'echo'));
+  const promises = chunks.map((chunk) => fetchTTS(chunk, voice || "echo"));
   return Promise.all(promises);
 
   function chunkText(text: string) {
@@ -556,22 +602,22 @@ export async function fetchTTSChunks(
   }
 
   function isPunctuation(char: string) {
-    return ['.', '!', '?', '\n'].includes(char);
+    return [".", "!", "?", "\n"].includes(char);
   }
 
   async function fetchTTS(
     text: string,
-    voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'
+    voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer"
   ) {
     const response: any = await Promise.race([
       openai.audio.speech.create({
-        model: 'tts-1',
+        model: "tts-1",
         voice,
-        input: text
+        input: text,
       }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out')), TIMEOUT_MS)
-      )
+        setTimeout(() => reject(new Error("Request timed out")), TIMEOUT_MS)
+      ),
     ]);
 
     return Buffer.from(await response.arrayBuffer());
@@ -582,7 +628,7 @@ async function checkIfMessageRelatedToFile(messages: any[]) {
   try {
     const { formattedMessages } = await formatMessages({
       messages,
-      model: GPT4
+      model: GPT4,
     });
 
     const prompt = `
@@ -614,14 +660,14 @@ async function checkIfMessageRelatedToFile(messages: any[]) {
       prompt,
       expectedStructure: {
         output: false,
-        lastMessage: '',
-        reason: '',
-        referredFile: ''
-      }
+        lastMessage: "",
+        reason: "",
+        referredFile: "",
+      },
     });
     return result.output;
   } catch (error) {
-    console.error('Error checking file relation:', error);
+    console.error("Error checking file relation:", error);
     return false;
   }
 }
@@ -653,13 +699,13 @@ async function checkIfMessageNeedsHistory(messages: any[]) {
       model: GPT4_MINI,
       prompt,
       expectedStructure: {
-        output: false
-      }
+        output: false,
+      },
     });
 
     return result.output;
   } catch (error) {
-    console.error('Error checking history relation:', error);
+    console.error("Error checking history relation:", error);
     return false;
   }
 }
@@ -669,17 +715,17 @@ export async function generateAIResponseForChat({
   topicId,
   AIUsername,
   user,
-  AIThinkingLevel = 0
+  AIThinkingLevel = 0,
 }: {
   channelId: number;
   topicId?: number | null;
-  AIUsername: 'Ciel' | 'Zero';
+  AIUsername: "Ciel" | "Zero";
   user: User;
   AIThinkingLevel?: number;
 }) {
   try {
     const aiAgent = getAssistant(AIUsername);
-    let customSysPrompt = '';
+    let customSysPrompt = "";
     let targetSubject = null;
     if (topicId) {
       const topicRow = await poolQuery(
@@ -693,13 +739,15 @@ export async function generateAIResponseForChat({
         targetSubject = topicRow[0];
       }
       if (topicRow.length) {
-        customSysPrompt = targetSubject.settings?.customInstructions || '';
+        customSysPrompt = targetSubject.settings?.customInstructions || "";
       }
     }
 
-    const sysPrompt = `${aiAgent.systemPrompt}${customSysPrompt ? `\n${customSysPrompt}` : ''}`;
+    const sysPrompt = `${aiAgent.systemPrompt}${
+      customSysPrompt ? `\n${customSysPrompt}` : ""
+    }`;
 
-    const AIUserId = AIUsername === 'Ciel' ? CIEL_TWINKLE_ID : ZERO_TWINKLE_ID;
+    const AIUserId = AIUsername === "Ciel" ? CIEL_TWINKLE_ID : ZERO_TWINKLE_ID;
     let model = APPLIED_MODEL;
     if (AIThinkingLevel === 1) {
       model = O1_MINI;
@@ -711,32 +759,32 @@ export async function generateAIResponseForChat({
     const { AIsMessage, AIMessageId } = await insertNewEmptyAIMessage({
       channelId,
       topicId,
-      AIUserId
+      AIUserId,
     });
-    socket.emit('new_ai_message', {
+    socket.emit("new_ai_message", {
       message: {
         ...AIsMessage,
         targetSubject,
         username: AIUsername,
-        id: AIMessageId
+        id: AIMessageId,
       },
-      channelId
+      channelId,
     });
     const { prevMessages, isReply } = await getPreviousMessages({
       AIMessageId,
       channelId,
-      topicId
+      topicId,
     });
 
-    let fileDescription = '';
+    let fileDescription = "";
 
     const isFileRelated = await checkIfMessageRelatedToFile(prevMessages);
     let threadId = null;
     if (isFileRelated && !prevMessages[prevMessages.length - 1].filePath) {
-      socket.emit('update_ai_thinking_status', {
+      socket.emit("update_ai_thinking_status", {
         channelId,
-        status: 'reading_file',
-        messageId: AIMessageId
+        status: "reading_file",
+        messageId: AIMessageId,
       });
       threadId = await getLatestFileThread({ channelId, topicId });
       if (threadId) {
@@ -748,20 +796,20 @@ export async function generateAIResponseForChat({
               await executeFileReaderRun({
                 threadId,
                 fileUrl,
-                content: lastMessage.content
+                content: lastMessage.content,
               });
             if (isPreviousThreadExpired) {
-              await poolQuery('DELETE FROM ai_chat_files WHERE threadId = ?', [
-                threadId
+              await poolQuery("DELETE FROM ai_chat_files WHERE threadId = ?", [
+                threadId,
               ]);
             }
             fileDescription = result;
           } catch (error) {
-            console.error('Error executing file reader run:', error);
-            await poolQuery('DELETE FROM ai_chat_files WHERE threadId = ?', [
-              threadId
+            console.error("Error executing file reader run:", error);
+            await poolQuery("DELETE FROM ai_chat_files WHERE threadId = ?", [
+              threadId,
             ]);
-            fileDescription = '';
+            fileDescription = "";
           }
         }
       }
@@ -775,10 +823,10 @@ export async function generateAIResponseForChat({
       - User profile details: ${userJSON}
       
       CURRENT DATE:
-      ${new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      ${new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       })}
 
       FILE CAPABILITIES:
@@ -790,7 +838,7 @@ export async function generateAIResponseForChat({
           ? `
       [ATTACHED FILE]: ${fileDescription}
       `
-          : ''
+          : ""
       }
     `;
 
@@ -808,53 +856,53 @@ export async function generateAIResponseForChat({
       instructions: appliedSysPrompt,
       model,
       onNewData: (data: any) => {
-        socket.emit('edit_chat_message', {
+        socket.emit("edit_chat_message", {
           channelId,
           editedMessage: data,
-          messageId: AIMessageId
+          messageId: AIMessageId,
         });
       },
       onDone: async (data: any) => {
-        socket.emit('finish_ai_message', channelId);
+        socket.emit("finish_ai_message", channelId);
         await poolQuery(`UPDATE msg_chats SET content = ? WHERE id = ?`, [
           data,
-          AIMessageId
+          AIMessageId,
         ]);
         if (prevMessages[prevMessages.length - 1]) {
           await poolQuery(`INSERT INTO ai_chatbot_prompts SET ?`, {
             chatbotId: AIUserId,
             userId: user.id,
             contentId: prevMessages[prevMessages.length - 1].id,
-            contentType: 'chat',
+            contentType: "chat",
             prompt: prevMessages[prevMessages.length - 1].content,
             response: data,
             topicId: topicId || null,
-            timeStamp: Math.floor(Date.now() / 1000)
+            timeStamp: Math.floor(Date.now() / 1000),
           });
         }
       },
       stream: AIThinkingLevel === 0,
       user,
-      delayTimeout: 10000
+      delayTimeout: 10000,
     });
   } catch (err) {
     console.error(err);
-    socket.emit('finish_ai_message', channelId);
+    socket.emit("finish_ai_message", channelId);
   }
 }
 
 export async function generateAndUploadImage({
   story,
   style,
-  userId
+  userId,
 }: {
   story: string;
   style?: string;
   userId: number;
 }) {
   try {
-    let artStylePrompt = '';
-    let finalArtStyle = '';
+    let artStylePrompt = "";
+    let finalArtStyle = "";
 
     if (style) {
       const styleValidationPrompt = `
@@ -874,8 +922,8 @@ export async function generateAndUploadImage({
         prompt: styleValidationPrompt,
         expectedStructure: {
           isValidStyle: false,
-          artStyle: ''
-        }
+          artStyle: "",
+        },
       });
 
       if (styleValidationResponse.isValidStyle) {
@@ -896,28 +944,28 @@ export async function generateAndUploadImage({
 
     const dallePrompt = await generateGPTResponseInObj({
       prompt: gptPrompt,
-      expectedStructure: { prompt: '' }
+      expectedStructure: { prompt: "" },
     });
 
     const response: any = await Promise.race([
       openai.images.generate({
-        model: 'dall-e-3',
+        model: "dall-e-3",
         prompt: `${dallePrompt.prompt}${artStylePrompt}`,
         n: 1,
-        size: '1024x1024',
-        user: `${process.env.NODE_ENV}-user${userId}`
+        size: "1024x1024",
+        user: `${process.env.NODE_ENV}-user${userId}`,
       }),
       new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('OpenAI request timed out')), 50000);
-      })
+        setTimeout(() => reject(new Error("OpenAI request timed out")), 50000);
+      }),
     ]);
 
     const imageUrl = response.data[0].url;
 
     const { data: fetchedImageData } = await request({
-      method: 'get',
+      method: "get",
       url: imageUrl,
-      responseType: 'arraybuffer'
+      responseType: "arraybuffer",
     });
 
     const path = `${uuidv1()}.png`;
@@ -925,19 +973,19 @@ export async function generateAndUploadImage({
     await uploadFromStream({
       client,
       path,
-      folderName: 'ai-story',
+      folderName: "ai-story",
       bucketName: bucketName as string,
-      data: fetchedImageData
+      data: fetchedImageData,
     });
 
     return {
       imageUrl,
       dallePrompt: dallePrompt.prompt,
       path,
-      artStyle: finalArtStyle || null
+      artStyle: finalArtStyle || null,
     };
   } catch (error) {
-    console.error('Error generating or uploading image:', error);
+    console.error("Error generating or uploading image:", error);
     throw error;
   }
 }
@@ -948,7 +996,7 @@ export async function generateMCQuestions({
   numQuestions,
   numChoices = 4,
   temperature,
-  isShuffled
+  isShuffled,
 }: {
   content: string;
   questionPrompt: string;
@@ -968,8 +1016,8 @@ export async function generateMCQuestions({
 }> {
   const prompt = `A question set according to this specification ((${questionPrompt})) containing ${numQuestions} ${
     numQuestions === 1
-      ? 'multiple choice question'
-      : 'multiple choice questions'
+      ? "multiple choice question"
+      : "multiple choice questions"
   } with ${numChoices} choices each, with 1 correct choice and ${
     numChoices - 1
   } wrong choices based on the following content: ${content}. Do not add numbers or letters to the choices, as this will be handled algorithmically.`;
@@ -979,24 +1027,24 @@ export async function generateMCQuestions({
       questions: [
         {
           id: 1,
-          question: '',
-          choices: ['', '', '', ''],
-          answerIndex: 'number for the index of the correct choice'
-        }
-      ]
+          question: "",
+          choices: ["", "", "", ""],
+          answerIndex: "number for the index of the correct choice",
+        },
+      ],
     };
     if (numQuestions > 1) {
       expectedStructure.questions.push({
         id: 2,
-        question: '',
-        choices: ['', '', '', ''],
-        answerIndex: 'number for the index of the correct choice'
+        question: "",
+        choices: ["", "", "", ""],
+        answerIndex: "number for the index of the correct choice",
       });
     }
     const questionObj = await generateGPTResponseInObj({
       prompt,
       expectedStructure,
-      temperature
+      temperature,
     });
     if (isShuffled) {
       for (const question of questionObj.questions) {
@@ -1030,7 +1078,7 @@ export async function processGPTRequest({
   isRequiresThread = false,
   temperature,
   topP,
-  delayTimeout = 60000
+  delayTimeout = 60000,
 }: {
   AIUserId?: number;
   AIMessageId?: number;
@@ -1058,7 +1106,7 @@ export async function processGPTRequest({
       try {
         abortController.abort();
       } catch (error) {
-        console.error('Error when aborting the stream:', error);
+        console.error("Error when aborting the stream:", error);
       }
     };
   }
@@ -1069,7 +1117,7 @@ export async function processGPTRequest({
         threadKey,
         isReply,
         messages,
-        user
+        user,
       });
     }
 
@@ -1089,17 +1137,17 @@ export async function processGPTRequest({
       user,
       delayTimeout,
       stream,
-      abortController
+      abortController,
     });
   } catch (error: any) {
-    console.error('Error occurred while processing GPT request:', error);
+    console.error("Error occurred while processing GPT request:", error);
 
     if (currentThreadId && isRequiresThread) {
       await poolQuery(`DELETE FROM ai_threads WHERE threadId = ?`, [
-        currentThreadId
+        currentThreadId,
       ]);
     }
-    await onDone(error?.message || 'An error occurred');
+    await onDone(error?.message || "An error occurred");
   } finally {
     if (AIMessageId) {
       delete openAIStreamCancelObj[AIMessageId];
@@ -1123,7 +1171,7 @@ async function processStreamRequest({
   user,
   delayTimeout = 60000,
   stream = true,
-  abortController
+  abortController,
 }: {
   AIUserId?: number;
   AIMessageId?: number;
@@ -1142,7 +1190,7 @@ async function processStreamRequest({
   stream?: boolean;
   abortController?: AbortController;
 }) {
-  let accumulatedText = '';
+  let accumulatedText = "";
   let timer: any;
 
   try {
@@ -1153,28 +1201,28 @@ async function processStreamRequest({
       AIUserId,
       messages,
       user,
-      model
+      model,
     });
-    let memory = '';
+    let memory = "";
     if (AIUserId && AIMessageId) {
       const needsHistory = isFileMessage
         ? false
         : await checkIfMessageNeedsHistory(formattedMessages);
       if (needsHistory && currentThreadId) {
-        socket.emit('update_ai_thinking_status', {
+        socket.emit("update_ai_thinking_status", {
           channelId,
-          status: 'retrieving_memory',
-          messageId: AIMessageId
+          status: "retrieving_memory",
+          messageId: AIMessageId,
         });
         const run = await openai.beta.threads.runs.create(currentThreadId, {
-          assistant_id: getAssistant('MemoryRetriever').assistantId as string
+          assistant_id: getAssistant("MemoryRetriever").assistantId as string,
         });
 
         try {
           memory = await executeOpenAIRun(run);
         } catch (error) {
-          console.error('Error getting memory:', error);
-          memory = '';
+          console.error("Error getting memory:", error);
+          memory = "";
         }
       }
     }
@@ -1183,18 +1231,22 @@ async function processStreamRequest({
       ...(instructions
         ? [
             {
-              role: model === APPLIED_MODEL ? 'system' : 'user',
-              content: `${instructions}${memory ? `\n\nHere are additional data retrieved from your long term memory: [[${memory}]]` : ''}`
-            }
+              role: model === APPLIED_MODEL ? "system" : "user",
+              content: `${instructions}${
+                memory
+                  ? `\n\nHere are additional data retrieved from your long term memory: [[${memory}]]`
+                  : ""
+              }`,
+            },
           ]
         : []),
-      ...formattedMessages
+      ...formattedMessages,
     ];
 
     const requestOptions: any = {
       model,
       messages: requestMessages,
-      stream
+      stream,
     };
 
     if (model !== O1_MINI && model !== O1_PREVIEW) {
@@ -1221,20 +1273,20 @@ async function processStreamRequest({
 
         clearTimeout(timer);
         timer = setTimeout(() => {
-          throw new Error('Stream data delay timeout exceeded');
+          throw new Error("Stream data delay timeout exceeded");
         }, delayTimeout);
 
-        const content = chunk.choices[0]?.delta?.content || '';
+        const content = chunk.choices[0]?.delta?.content || "";
         accumulatedText += content;
         onNewData(accumulatedText);
       }
     } else {
-      if ('choices' in response) {
-        accumulatedText = response.choices[0]?.message?.content || '';
+      if ("choices" in response) {
+        accumulatedText = response.choices[0]?.message?.content || "";
         onNewData(accumulatedText);
       } else {
         throw new Error(
-          'Expected a non-streaming response, but received an invalid one'
+          "Expected a non-streaming response, but received an invalid one"
         );
       }
     }
@@ -1242,10 +1294,10 @@ async function processStreamRequest({
     clearTimeout(timer);
     await onDone(accumulatedText);
   } catch (error: any) {
-    if (error.name === 'AbortError') {
-      console.log('Request was aborted');
+    if (error.name === "AbortError") {
+      console.log("Request was aborted");
     } else {
-      console.error('Error occurred while fetching chat completion:', error);
+      console.error("Error occurred while fetching chat completion:", error);
     }
     await onDone(accumulatedText);
     throw error;
@@ -1255,7 +1307,7 @@ async function processStreamRequest({
 export async function cancelOpenAIStream(AIMessageId: number) {
   const cancelObj = openAIStreamCancelObj[AIMessageId];
   if (cancelObj) {
-    if (typeof cancelObj === 'function') {
+    if (typeof cancelObj === "function") {
       cancelObj();
     }
     delete openAIStreamCancelObj[AIMessageId];
@@ -1266,7 +1318,7 @@ export async function summarizeWeblinkUsingGPT({
   url,
   onNewData,
   onDone,
-  onError
+  onError,
 }: {
   url: string;
   onNewData: (summary: string) => void;
@@ -1274,20 +1326,20 @@ export async function summarizeWeblinkUsingGPT({
   onError: (error: Error) => void;
 }) {
   if (!url) {
-    return console.error('No URL provided');
+    return console.error("No URL provided");
   }
   try {
     const webpageText = await fetchWebpageText(url);
     await processGPTRequest({
       messages: [
         {
-          role: 'system',
-          content: `Summarize the following webpage using words even 10 year olds can understand, focusing on the most interesting article within the page. If there's no article, then describe what the page is about. If there are advanced words in the article, list them at the end with easy explanations and proper formatting.`
+          role: "system",
+          content: `Summarize the following webpage using words even 10 year olds can understand, focusing on the most interesting article within the page. If there's no article, then describe what the page is about. If there are advanced words in the article, list them at the end with easy explanations and proper formatting.`,
         },
-        { role: 'user', content: webpageText }
+        { role: "user", content: webpageText },
       ],
       onNewData,
-      onDone
+      onDone,
     });
   } catch (error: any) {
     onError(error);

@@ -1,11 +1,5 @@
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  dialog,
-} from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
-import fs from "fs";
 import isDev from "electron-is-dev";
 import log from "electron-log";
 import { setupIpcHandlers as initIpcHandlers } from "../electron/ipc-handlers";
@@ -39,7 +33,6 @@ app.commandLine.appendSwitch("ignore-gpu-blacklist");
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
 
-
 // Configure logger
 log.initialize({ preload: true });
 log.info("Application starting...");
@@ -66,7 +59,6 @@ ipcMain.handle("show-message", (_event, message) => {
 // Create browser window
 const createWindow = async () => {
   try {
-
     // Register the ffmpeg module paths
     // ... existing code ...
 
@@ -109,7 +101,6 @@ const createWindow = async () => {
       // Default to the first path if none exist
       return possiblePaths[0];
     }
-
 
     // Determine the path to load in the window
     const indexPaths = [
@@ -243,4 +234,3 @@ app.on("will-quit", async () => {
     log.error("Error cleaning up temp directory:", error);
   }
 });
-
