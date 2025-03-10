@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
 import isDev from "electron-is-dev";
 import log from "electron-log";
-import { setupIpcHandlers as initIpcHandlers } from "./services/ipc-handlers";
 import { FileManager } from "./services/file-manager";
 import dotenv from "dotenv";
 
@@ -218,9 +217,6 @@ app.whenReady().then(async () => {
 
     // Create the main window first to ensure the app is ready
     await createWindow();
-
-    // Set up IPC handlers after the window is created to ensure app is ready
-    initIpcHandlers();
 
     // On macOS, re-create window when dock icon is clicked
     app.on("activate", () => {

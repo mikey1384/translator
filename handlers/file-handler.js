@@ -84,7 +84,10 @@ if (!handlerExists) {
       }
 
       // Return the selected file paths
-      return { filePaths };
+      return {
+        filePaths,
+        filePath: filePaths[0], // Add single filePath for convenience
+      };
     } catch (error) {
       console.error("Open file error:", error);
       return {

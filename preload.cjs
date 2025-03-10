@@ -49,16 +49,41 @@ const electronAPI = {
   test: () => "Electron API is working",
 
   // Subtitle generation
-  generateSubtitles: (options) => {
+  generateSubtitles: async (options) => {
+    console.log("Generate subtitles called with options:", options);
+
+    // Prepare options for sending to main process
     const processedOptions = { ...options };
-    if (options.videoFile && typeof options.videoFile === "object") {
-      processedOptions.videoFile = {
-        name: options.videoFile.name,
-        size: options.videoFile.size,
-        type: options.videoFile.type,
-        lastModified: options.videoFile.lastModified,
-      };
+
+    // If we have a videoFile (browser File object) but no videoPath,
+    // we need to read the file data and send it to the main process
+    if (options.videoFile && !options.videoPath) {
+      console.log("File object detected without path - reading file data");
+
+      try {
+        // Read the File object as an ArrayBuffer
+        const fileData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(options.videoFile);
+        });
+
+        console.log(`Read ${fileData.byteLength} bytes from file`);
+
+        // Create properties for main process to use
+        processedOptions.videoFileData = fileData;
+        processedOptions.videoFileName = options.videoFile.name;
+      } catch (error) {
+        console.error("Error reading file data:", error);
+        throw new Error("Failed to read video file data");
+      }
     }
+
+    // Remove the File object since it can't be serialized for IPC
+    delete processedOptions.videoFile;
+
+    console.log("Sending options to main process");
     return ipcRenderer.invoke("generate-subtitles", processedOptions);
   },
 
@@ -100,7 +125,17 @@ const electronAPI = {
     console.log("Opening file with options:", options);
     try {
       const result = await invokeWithRetry("open-file", options);
-      console.log("Open file result:", result);
+
+      // Add videoPath property if we have filePath or filePaths[0] but no explicit videoPath
+      if (
+        !result.videoPath &&
+        (result.filePath || (result.filePaths && result.filePaths.length > 0))
+      ) {
+        result.videoPath = result.filePath || result.filePaths[0];
+        console.log("Added videoPath to result:", result.videoPath);
+      }
+
+      console.log("Open file result after processing:", result);
       return result;
     } catch (error) {
       console.error("Error in openFile:", error);
