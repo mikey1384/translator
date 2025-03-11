@@ -4,180 +4,29 @@ import { colors } from '../constants';
 import ButtonGroup from './ButtonGroup';
 import StylizedFileInput from './StylizedFileInput';
 import Button from './Button';
-import { SrtSegment } from './EditSubtitles';
-import {
-  loadSrtFile,
-  parseSrt,
-  openSubtitleWithElectron,
-} from '../helpers/subtitle-utils';
+import { openSubtitleWithElectron } from '../helpers/subtitle-utils';
 import ElectronFileButton from './ElectronFileButton';
+import { buttonGradientStyles } from './EditSubtitles/styles';
 
-interface TimestampDisplayProps {
-  videoElement: HTMLVideoElement | null;
-  customPlayButton?: React.ReactNode;
-  onChangeVideo?: (file: File) => void;
-  onChangeSrt?: (file: File) => void;
-  hasSubtitles?: boolean;
-  subtitles?: SrtSegment[];
-  onScrollToCurrentSubtitle?: () => void;
-}
-
-const timestampContainerStyles = css`
-  font-family:
-    'system-ui',
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  background-color: ${colors.grayLight};
-  color: ${colors.dark};
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;
-`;
-
-const timeInfoStyles = css`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 4px 0;
-  font-size: 13px;
-  color: #555;
-  margin-top: 8px;
-  width: 100%;
-`;
-
-const controlsContainerStyles = css`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const progressBarContainerStyles = css`
-  width: 100%;
-  padding: 8px 0 0;
-  position: relative;
-`;
-
-const progressBarStyles = css`
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: #e1e1e1;
-  outline: none;
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-  margin: 8px 0;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: ${colors.primary};
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    position: relative;
-    z-index: 10;
-    margin-top: -5px;
-    transition: transform 0.1s ease;
-  }
-
-  &::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: ${colors.primary};
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    position: relative;
-    z-index: 10;
-    transition: transform 0.1s ease;
-  }
-
-  &::-webkit-slider-runnable-track {
-    height: 8px;
-    border-radius: 4px;
-    background: #e1e1e1;
-    cursor: pointer;
-  }
-
-  &::-moz-range-track {
-    height: 8px;
-    border-radius: 4px;
-    background: #e1e1e1;
-    cursor: pointer;
-  }
-
-  &:hover::-webkit-slider-thumb {
-    background: ${colors.primaryDark || '#0056b3'};
-    transform: scale(1.2);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-  }
-
-  &:hover::-moz-range-thumb {
-    background: ${colors.primaryDark || '#0056b3'};
-    transform: scale(1.2);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-  }
-
-  &:active::-webkit-slider-thumb {
-    transform: scale(1.3);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  }
-
-  &:active::-moz-range-thumb {
-    transform: scale(1.3);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  }
-`;
-
-const progressBarBufferedStyles = css`
-  position: absolute;
-  top: 16px;
-  left: 0;
-  height: 8px;
-  background-color: #ccc;
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 0;
-`;
-
-const modernTimestampStyles = css`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  font-family: monospace;
-`;
-
-const timeValueStyles = css`
-  font-weight: 500;
-  color: #333;
-`;
-
-const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
+export default function TimestampDisplay({
+  isPlaying,
   videoElement,
-  customPlayButton,
   onChangeVideo,
   onChangeSrt,
   hasSubtitles = false,
-  subtitles,
+  onTogglePlay,
   onScrollToCurrentSubtitle,
-}) => {
+}: {
+  isPlaying: boolean;
+  videoElement: HTMLVideoElement | null;
+  onChangeVideo?: (file: File) => void;
+  onChangeSrt?: (file: File) => void;
+  hasSubtitles?: boolean;
+  onTogglePlay?: () => void;
+  onScrollToCurrentSubtitle?: () => void;
+}) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [bufferedWidth, setBufferedWidth] = useState('0%');
 
   useEffect(() => {
@@ -197,7 +46,6 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
     // Set initial values
     setCurrentTime(videoElement.currentTime || 0);
     setDuration(videoElement.duration || 0);
-    setIsPlaying(!videoElement.paused);
     updateBufferedWidth();
 
     // Event handlers
@@ -210,10 +58,6 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
       setDuration(videoElement.duration);
     };
 
-    const handlePlayStateChange = () => {
-      setIsPlaying(!videoElement.paused);
-    };
-
     const handleProgress = () => {
       updateBufferedWidth();
     };
@@ -221,16 +65,12 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
     // Add event listeners
     videoElement.addEventListener('timeupdate', handleTimeUpdate);
     videoElement.addEventListener('durationchange', handleDurationChange);
-    videoElement.addEventListener('play', handlePlayStateChange);
-    videoElement.addEventListener('pause', handlePlayStateChange);
     videoElement.addEventListener('progress', handleProgress);
 
     // Clean up
     return () => {
       videoElement.removeEventListener('timeupdate', handleTimeUpdate);
       videoElement.removeEventListener('durationchange', handleDurationChange);
-      videoElement.removeEventListener('play', handlePlayStateChange);
-      videoElement.removeEventListener('pause', handlePlayStateChange);
       videoElement.removeEventListener('progress', handleProgress);
     };
   }, [videoElement]);
@@ -256,46 +96,10 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
     }
   };
 
-  // Format time in SRT format (for proper seeking) (00:00:00,000)
-  const formatSrtTime = (seconds: number): string => {
-    if (isNaN(seconds)) return '00:00:00,000';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    const milliseconds = Math.round((seconds - Math.floor(seconds)) * 1000);
-
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-      2,
-      '0'
-    )}:${String(secs).padStart(2, '0')},${String(milliseconds).padStart(
-      3,
-      '0'
-    )}`;
-  };
-
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0] && onChangeVideo) {
       onChangeVideo(e.target.files[0]);
     }
-  };
-
-  const handleSrtChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent default browser file input behavior
-    e.preventDefault();
-
-    // Use the centralized helper
-    await openSubtitleWithElectron(
-      (file, content, segments, filePath) => {
-        // Success callback - Pass the file to parent component
-        if (onChangeSrt) {
-          onChangeSrt(file);
-        }
-      },
-      error => {
-        console.error('TimestampDisplay: Error opening subtitle:', error);
-      }
-    );
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -306,11 +110,44 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
   };
 
   return (
-    <div className={timestampContainerStyles}>
-      {/* Progress bar / time slider */}
-      <div className={progressBarContainerStyles}>
+    <div
+      className={css`
+        font-family:
+          'system-ui',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background-color: ${colors.grayLight};
+        color: ${colors.dark};
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 100%;
+      `}
+    >
+      <div
+        className={css`
+          width: 100%;
+          padding: 8px 0 0;
+          position: relative;
+        `}
+      >
         <div
-          className={progressBarBufferedStyles}
+          className={css`
+            position: absolute;
+            top: 16px;
+            left: 0;
+            height: 8px;
+            background-color: #ccc;
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 0;
+          `}
           style={{ width: bufferedWidth }}
         />
         <input
@@ -319,22 +156,137 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
           max={duration || 0}
           value={currentTime}
           step="0.1"
-          className={progressBarStyles}
+          className={css`
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e1e1e1;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            margin: 8px 0;
+
+            &::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              appearance: none;
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              background: ${colors.primary};
+              cursor: pointer;
+              border: 2px solid white;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+              position: relative;
+              z-index: 10;
+              margin-top: -5px;
+              transition: transform 0.1s ease;
+            }
+
+            &::-moz-range-thumb {
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              background: ${colors.primary};
+              cursor: pointer;
+              border: 2px solid white;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+              position: relative;
+              z-index: 10;
+              transition: transform 0.1s ease;
+            }
+
+            &::-webkit-slider-runnable-track {
+              height: 8px;
+              border-radius: 4px;
+              background: #e1e1e1;
+              cursor: pointer;
+            }
+
+            &::-moz-range-track {
+              height: 8px;
+              border-radius: 4px;
+              background: #e1e1e1;
+              cursor: pointer;
+            }
+
+            &:hover::-webkit-slider-thumb {
+              background: ${colors.primaryDark || '#0056b3'};
+              transform: scale(1.2);
+              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            }
+
+            &:hover::-moz-range-thumb {
+              background: ${colors.primaryDark || '#0056b3'};
+              transform: scale(1.2);
+              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            }
+
+            &:active::-webkit-slider-thumb {
+              transform: scale(1.3);
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            }
+
+            &:active::-moz-range-thumb {
+              transform: scale(1.3);
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            }
+          `}
           onChange={handleSeek}
           disabled={!videoElement}
         />
       </div>
 
       {/* Time display */}
-      <div className={timeInfoStyles}>
-        <div className={modernTimestampStyles}>
-          <span className={timeValueStyles}>{formatTime(currentTime)}</span>
+      <div
+        className={css`
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 4px 0;
+          font-size: 13px;
+          color: #555;
+          margin-top: 8px;
+          width: 100%;
+        `}
+      >
+        <div
+          className={css`
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-family: monospace;
+          `}
+        >
+          <span
+            className={css`
+              font-weight: 500;
+              color: #333;
+            `}
+          >
+            {formatTime(currentTime)}
+          </span>
           <span>/</span>
-          <span className={timeValueStyles}>{formatTime(duration)}</span>
+          <span
+            className={css`
+              font-weight: 500;
+              color: #333;
+            `}
+          >
+            {formatTime(duration)}
+          </span>
         </div>
       </div>
 
-      <div className={controlsContainerStyles}>
+      <div
+        className={css`
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        `}
+      >
         <ButtonGroup spacing="sm" mobileStack={false}>
           {onChangeVideo && (
             <StylizedFileInput
@@ -349,19 +301,7 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
             <ElectronFileButton
               buttonText={hasSubtitles ? 'Change SRT' : 'Add SRT'}
               onClick={async () => {
-                await openSubtitleWithElectron(
-                  file => {
-                    if (onChangeSrt) {
-                      onChangeSrt(file);
-                    }
-                  },
-                  error => {
-                    console.error(
-                      'TimestampDisplay: Error opening subtitle:',
-                      error
-                    );
-                  }
-                );
+                await openSubtitleWithElectron();
               }}
             />
           )}
@@ -391,11 +331,51 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
             </Button>
           )}
 
-          {customPlayButton}
+          <Button
+            onClick={onTogglePlay}
+            variant={isPlaying ? 'danger' : 'primary'}
+            size="sm"
+            className={`${buttonGradientStyles.base} ${
+              isPlaying
+                ? buttonGradientStyles.danger
+                : buttonGradientStyles.primary
+            } ${css`
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              min-width: 70px;
+            `}`}
+          >
+            {isPlaying ? (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                </svg>
+                Pause
+              </>
+            ) : (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                </svg>
+                Play
+              </>
+            )}
+          </Button>
         </ButtonGroup>
       </div>
     </div>
   );
-};
-
-export default TimestampDisplay;
+}

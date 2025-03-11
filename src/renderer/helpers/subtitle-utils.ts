@@ -307,15 +307,7 @@ export async function retryElectronCall<T>(
 /**
  * Opens a subtitle file using Electron's native file dialog
  */
-export async function openSubtitleWithElectron(
-  onSuccess?: (
-    file: File,
-    content: string,
-    segments: SrtSegment[],
-    filePath: string
-  ) => void,
-  onError?: (error: string) => void
-): Promise<{
+export async function openSubtitleWithElectron(): Promise<{
   file?: File;
   content?: string;
   segments?: SrtSegment[];
@@ -346,12 +338,10 @@ export async function openSubtitleWithElectron(
     localStorage.setItem('originalLoadPath', filePath);
 
     const segments = parseSrt(content);
-    if (onSuccess) onSuccess(file, content, segments, filePath);
 
     return { file, content, segments, filePath };
   } catch (error) {
     const errorMessage = String(error);
-    if (onError) onError(errorMessage);
     return { error: errorMessage };
   }
 }

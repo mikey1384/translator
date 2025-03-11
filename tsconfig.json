@@ -17,7 +17,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "include": ["src/**/*", ".eslintrc.js"],
   "exclude": ["node_modules", "dist", "src/tests/**/*", "src/__mocks__/**/*"]

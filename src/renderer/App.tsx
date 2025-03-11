@@ -307,69 +307,7 @@ function AppContent() {
               isMergingInProgress={isMergingInProgress}
               onSetIsMergingInProgress={setIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
-              mergeSubtitlesWithVideo={async (
-                videoFile,
-                subtitles,
-                options
-              ) => {
-                setIsMergingInProgress(true);
-                setMergeProgress(0);
-                setMergeStage('Preparing subtitle file...');
-
-                try {
-                  const srtContent = buildSrt(
-                    fixOverlappingSegments(subtitles)
-                  );
-
-                  setMergeStage('Saving subtitle file...');
-                  const subtitlesResult = await window.electron.saveFile({
-                    content: srtContent,
-                    defaultPath: 'subtitles.srt',
-                    filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
-                  });
-
-                  if (subtitlesResult.error) {
-                    throw new Error(subtitlesResult.error);
-                  }
-
-                  setMergeStage('Merging subtitles with video...');
-                  window.electron.onMergeSubtitlesProgress(progress => {
-                    setMergeProgress(progress.percent);
-                    setMergeStage(progress.stage);
-                    options.onProgress(progress.percent);
-                  });
-
-                  const videoPath = videoFile.path || videoFile.name;
-
-                  const result = await window.electron.mergeSubtitles({
-                    videoPath: videoPath,
-                    subtitlesPath: subtitlesResult.filePath,
-                  });
-
-                  setMergeProgress(100);
-                  setMergeStage('Merge complete!');
-
-                  setTimeout(() => {
-                    setIsMergingInProgress(false);
-                  }, 1500);
-
-                  if (result.error) {
-                    throw new Error(result.error);
-                  }
-
-                  return result;
-                } catch (error) {
-                  setMergeStage(
-                    `Error: ${
-                      error instanceof Error ? error.message : 'Unknown error'
-                    }`
-                  );
-                  setTimeout(() => {
-                    setIsMergingInProgress(false);
-                  }, 3000);
-                  throw error;
-                }
-              }}
+              onMergeSubtitlesWithVideo={handleMergeSubtitlesWithVideo}
             />
           </div>
         </div>
@@ -404,6 +342,66 @@ function AppContent() {
       </div>
     </div>
   );
+
+  async function handleMergeSubtitlesWithVideo(
+    videoFile: File,
+    subtitles: SrtSegment[],
+    options: { onProgress: (percent: number) => void }
+  ) {
+    setIsMergingInProgress(true);
+    setMergeProgress(0);
+    setMergeStage('Preparing subtitle file...');
+
+    try {
+      const srtContent = buildSrt(fixOverlappingSegments(subtitles));
+
+      setMergeStage('Saving subtitle file...');
+      const subtitlesResult = await window.electron.saveFile({
+        content: srtContent,
+        defaultPath: 'subtitles.srt',
+        filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
+      });
+
+      if (subtitlesResult.error) {
+        throw new Error(subtitlesResult.error);
+      }
+
+      setMergeStage('Merging subtitles with video...');
+      window.electron.onMergeSubtitlesProgress(progress => {
+        setMergeProgress(progress.percent);
+        setMergeStage(progress.stage);
+        options.onProgress(progress.percent);
+      });
+
+      const videoPath = videoFile.path || videoFile.name;
+
+      const result = await window.electron.mergeSubtitles({
+        videoPath: videoPath,
+        subtitlesPath: subtitlesResult.filePath,
+      });
+
+      setMergeProgress(100);
+      setMergeStage('Merge complete!');
+
+      setTimeout(() => {
+        setIsMergingInProgress(false);
+      }, 1500);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      return result;
+    } catch (error) {
+      setMergeStage(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      setTimeout(() => {
+        setIsMergingInProgress(false);
+      }, 3000);
+      throw error;
+    }
+  }
 
   function handleStickyChange(): void {
     if (!hasScrolledToStickyRef.current && editSubtitlesRef.current) {

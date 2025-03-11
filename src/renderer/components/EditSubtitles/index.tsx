@@ -1,18 +1,15 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import NativeVideoPlayer, { nativePlayer } from './NativeVideoPlayer';
-import { css, cx } from '@emotion/css';
+import { nativePlayer } from './NativeVideoPlayer';
+import { css } from '@emotion/css';
 import Button from '../Button';
 import SubtitleEditor from './SubtitleEditor';
 import { debounce } from 'lodash';
 import StylizedFileInput from '../StylizedFileInput';
 import Section from '../Section';
-import { sectionStyles } from '../../styles';
 import { subtitleVideoPlayer } from '../../constants';
-import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 import { saveFileWithRetry } from '../../helpers/electron-ipc';
 import ElectronFileButton from '../ElectronFileButton';
 
-// New consolidated imports from helper files
 import {
   SrtSegment,
   srtTimeToSeconds,
@@ -26,14 +23,13 @@ import {
   handleRemoveSubtitle,
   handleSaveSrt,
   handleSeekToSubtitle,
-  processSrtContent,
 } from './helpers';
 import { useSubtitleNavigation, useRestoreFocus } from './hooks';
 import { buttonGradientStyles, mergeButtonStyles } from './styles';
 import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
+import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 
 export interface EditSubtitlesProps {
-  translationProgress: number;
   videoFile: File | null;
   videoUrl: string | null;
   onSetVideoFile: (file: File) => void;
@@ -41,7 +37,6 @@ export interface EditSubtitlesProps {
   onSetError: (error: string) => void;
   isPlaying?: boolean;
   editingTimes?: { start: number; end: number } | null;
-  onSetEditingTimes?: (times: { start: number; end: number } | null) => void;
   onSetIsPlaying?: (isPlaying: boolean) => void;
   secondsToSrtTime?: (seconds: number) => string;
   parseSrt?: (srtString: string) => SrtSegment[];
@@ -49,7 +44,7 @@ export interface EditSubtitlesProps {
   videoPlayerRef?: any;
   isMergingInProgress?: boolean;
   onSetIsMergingInProgress?: (isMerging: boolean) => void;
-  mergeSubtitlesWithVideo: (
+  onMergeSubtitlesWithVideo: (
     videoFile: File,
     subtitles: SrtSegment[],
     options: { onProgress: (progress: number) => void }
@@ -60,7 +55,6 @@ export interface EditSubtitlesProps {
 }
 
 export default function EditSubtitles({
-  translationProgress,
   videoFile,
   isPlaying: isPlayingProp,
   editingTimes: editingTimesProp,
@@ -74,10 +68,9 @@ export default function EditSubtitles({
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
   onSetIsMergingInProgress,
-  mergeSubtitlesWithVideo,
+  onMergeSubtitlesWithVideo,
   editorRef,
 }: EditSubtitlesProps) {
-  // State for the component - use props if available, otherwise use local state
   const [subtitlesState, setSubtitlesState] = useState<SrtSegment[]>(
     subtitlesProp || []
   );
@@ -90,13 +83,9 @@ export default function EditSubtitles({
   const [isMergingInProgressState, setIsMergingInProgressState] =
     useState<boolean>(isMergingInProgressProp || false);
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  // Track the original SRT file path for direct saving
   const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
-  const [originalSrtPath, setOriginalSrtPath] = useState<string | null>(null);
-  const [originalLoadPath, setOriginalLoadPath] = useState<string | null>(null);
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
-  const [fileKey, setFileKey] = useState<number>(Date.now()); // Add back fileKey for file input resets
 
   const playTimeoutRef = useRef<number | null>(null);
   const debouncedTimeUpdateRef = useRef<Record<string, any>>({});
@@ -115,12 +104,6 @@ export default function EditSubtitles({
   const parseSrtFn = parseSrtProp || parseSrt;
   const srtTimeToSecondsFn = srtTimeToSeconds; // used in utils if needed
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
-
-  useEffect(() => {
-    if (translationProgress) {
-      setSubtitlesState(subtitlesProp);
-    }
-  }, [translationProgress]);
 
   // useEffect to validate and set subtitles on mount
   useEffect(() => {
@@ -169,14 +152,6 @@ export default function EditSubtitles({
         playTimeoutRef.current = null;
       }
     };
-  }, []);
-
-  // Check localStorage for originalSrtPath
-  useEffect(() => {
-    const savedPath = localStorage.getItem('originalSrtPath');
-    if (savedPath && !originalSrtPath) {
-      setOriginalSrtPath(savedPath);
-    }
   }, []);
 
   // Updated handleTimeInputBlur, using DEBOUNCE_DELAY_MS in debounce
@@ -312,13 +287,9 @@ export default function EditSubtitles({
   }, [editorRef, scrollToCurrentSubtitle]);
 
   // In handleSaveEditedSrtAs, replace hardcoded filename with DEFAULT_FILENAME
-  async function handleSaveEditedSrtAs(
-    event?: React.MouseEvent,
-    customFilename?: string
-  ) {
+  async function handleSaveEditedSrtAs() {
     try {
-      const suggestedName =
-        customFilename || originalSrtFile?.name || DEFAULT_FILENAME;
+      const suggestedName = originalSrtFile?.name || DEFAULT_FILENAME;
       const srtContent = generateSrtContent(subtitlesState);
       const saveOptions = {
         title: 'Save SRT File As',
@@ -330,7 +301,6 @@ export default function EditSubtitles({
       try {
         const result = await saveFileWithRetry(saveOptions);
         if (result?.filePath) {
-          setOriginalSrtPath(result.filePath);
           localStorage.setItem('originalSrtPath', result.filePath);
           localStorage.setItem('originalLoadPath', result.filePath);
           localStorage.setItem('targetPath', result.filePath);
@@ -348,64 +318,6 @@ export default function EditSubtitles({
     } catch (error: any) {
       onSetError(`Error saving SRT file: ${error.message || String(error)}`);
     }
-  }
-
-  // Player ready handler
-  function handlePlayerReady(player: HTMLVideoElement) {
-    if (!player) {
-      return;
-    }
-
-    // Add event listeners to the native player
-    const handlePlay = () => {
-      setIsPlayingState(true);
-    };
-
-    const handlePause = () => {
-      setIsPlayingState(false);
-    };
-
-    const handleEnded = () => {
-      setIsPlayingState(false);
-    };
-
-    // Add proper cleanup for listeners to avoid memory leaks and ensure reliable state
-    player.addEventListener('play', handlePlay);
-    player.addEventListener('playing', handlePlay); // additional event for more reliability
-    player.addEventListener('pause', handlePause);
-    player.addEventListener('ended', handleEnded);
-
-    // Set initial state based on player
-    setIsPlayingState(!player.paused);
-
-    // Return cleanup function to remove these listeners when component unmounts or when player changes
-    return () => {
-      player.removeEventListener('play', handlePlay);
-      player.removeEventListener('playing', handlePlay);
-      player.removeEventListener('pause', handlePause);
-      player.removeEventListener('ended', handleEnded);
-    };
-
-    // Handle time updates
-    player.addEventListener('timeupdate', () => {
-      const timeDisplay = document.getElementById('current-timestamp');
-      if (timeDisplay && player) {
-        try {
-          const currentTime = player.currentTime;
-          // Display time in SRT format
-          if (currentTime !== undefined && !isNaN(currentTime)) {
-            timeDisplay.textContent = secondsToSrtTimeFn(currentTime);
-          }
-        } catch (err) {
-          console.error('Error updating timestamp display:', err);
-        }
-      }
-    });
-
-    // Add error handler
-    player.addEventListener('error', () => {
-      console.error('Video player error:', player.error);
-    });
   }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
@@ -505,9 +417,7 @@ export default function EditSubtitles({
     }
   }
 
-  // Helper function to play from current position
   function playFromCurrentPosition(startTime: number, endTime: number) {
-    // Get the actual current time directly from the player element
     let actualCurrentTime = startTime;
     try {
       if (nativePlayer.instance) {
@@ -519,9 +429,7 @@ export default function EditSubtitles({
       console.error('Error getting current time before play:', err);
     }
 
-    // Play from that position with proper error handling
     try {
-      // Try to play using both direct DOM API and the wrapper function
       const playPromise = nativePlayer.instance
         ? nativePlayer.instance.play()
         : nativePlayer.play();
@@ -555,32 +463,10 @@ export default function EditSubtitles({
         .catch(err => {
           console.error('Error starting playback:', err);
           setIsPlayingState(false);
-
-          // Try direct play as fallback if the promise-based approach fails
-          try {
-            if (nativePlayer.instance) {
-              nativePlayer.instance.play();
-              setIsPlayingState(true);
-            }
-          } catch (directErr) {
-            console.error('Fallback play method also failed:', directErr);
-          }
         });
     } catch (err) {
       console.error('Unexpected error during play operation:', err);
       setIsPlayingState(false);
-
-      // Last resort attempt using a timeout to try again
-      setTimeout(() => {
-        try {
-          if (nativePlayer.instance) {
-            nativePlayer.instance.play();
-            setIsPlayingState(true);
-          }
-        } catch (finalErr) {
-          console.error('All play attempts failed:', finalErr);
-        }
-      }, 200);
     }
   }
 
@@ -642,8 +528,8 @@ export default function EditSubtitles({
       onSetError('');
 
       // Call the merger function
-      await mergeSubtitlesWithVideo(videoFile, subtitlesState, {
-        onProgress: progress => {
+      await onMergeSubtitlesWithVideo(videoFile, subtitlesState, {
+        onProgress: (progress: number) => {
           setMergeProgress(progress);
           if (progress >= 99) {
             setMergeStage('Merging complete');
@@ -728,29 +614,8 @@ export default function EditSubtitles({
             <ElectronFileButton
               label="Load SRT:"
               buttonText="Choose SRT File"
-              onClick={async () => {
-                await openSubtitleWithElectron(
-                  (_, content, segments, filePath) => {
-                    setSubtitlesState(segments);
-                    setOriginalLoadPath(filePath);
-
-                    // Process the content directly
-                    processSrtContent(
-                      content,
-                      parseSrtFn,
-                      setSubtitlesState,
-                      setEditingTimesState,
-                      onSetError
-                    );
-                  },
-                  error => {
-                    console.error(
-                      'EditSubtitles: Error opening subtitle:',
-                      error
-                    );
-                    onSetError(`Failed to open SRT file: ${error}`);
-                  }
-                );
+              onClick={() => {
+                openSubtitleWithElectron();
               }}
             />
           </div>
@@ -865,7 +730,11 @@ export default function EditSubtitles({
             Save
           </Button>
 
-          <Button onClick={handleSaveEditedSrtAs} variant="secondary" size="lg">
+          <Button
+            onClick={() => handleSaveEditedSrtAs()}
+            variant="secondary"
+            size="lg"
+          >
             <svg
               width="18"
               height="18"
