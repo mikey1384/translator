@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { css } from "@emotion/css";
 
 // Components
 import StatusSection from "./components/StatusSection";
 import GenerateSubtitles from "./components/GenerateSubtitles";
-import TranslateSubtitles from "./components/TranslateSubtitles";
 import EditSubtitles from "./components/EditSubtitles";
 import BackToTopButton from "./components/BackToTopButton";
 import StickyVideoPlayer from "./components/StickyVideoPlayer";
@@ -21,20 +19,12 @@ import { ManagementContextProvider } from "./context";
 import {
   parseSrt,
   secondsToSrtTime,
-  srtTimeToSeconds,
   buildSrt,
   fixOverlappingSegments,
-  loadSrtFile,
 } from "./helpers";
 
 // Styles
-import {
-  colors,
-  pageWrapperStyles,
-  containerStyles,
-  titleStyles,
-  statusIndicatorStyles,
-} from "./styles";
+import { pageWrapperStyles, containerStyles, titleStyles } from "./styles";
 
 // Shared types
 export interface SrtSegment {
@@ -42,47 +32,25 @@ export interface SrtSegment {
   start: number; // in seconds
   end: number; // in seconds
   text: string;
+  originalText?: string;
+  translatedText?: string;
 }
-
-// Languages for subtitle generation and translation
-const languages = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "it", name: "Italian" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "zh", name: "Chinese" },
-  { code: "ru", name: "Russian" },
-  { code: "pt", name: "Portuguese" },
-  { code: "ar", name: "Arabic" },
-  { code: "hi", name: "Hindi" },
-];
 
 function AppContent() {
   // States for electron connection
   const [electronConnected, setElectronConnected] = useState<boolean>(false);
 
+  const generatedSubtitleMapRef = useRef<{
+    [key: string]: string;
+  }>({});
+  const generatedSubtitleIndexesRef = useRef<number[]>([]);
+
   // Media states
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
 
-  // Subtitle states
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [generatedSubtitles, setGeneratedSubtitles] = useState<string>("");
-  const [translatedSubtitles, setTranslatedSubtitles] = useState<string>("");
-
   // Parsed subtitle states (for editing)
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
-  const [translatedSegments, setTranslatedSegments] = useState<SrtSegment[]>(
-    []
-  );
-
-  // Language settings
-  const [sourceLanguage, setSourceLanguage] = useState<string>("en");
-  const [targetLanguage, setTargetLanguage] = useState<string>("es");
-  const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
   // Progress tracking
   const [isTranslationInProgress, setIsTranslationInProgress] =
@@ -104,11 +72,8 @@ function AppContent() {
     end: number;
   } | null>(null);
 
-  // State for real-time subtitle streaming
-  const [streamingEnabled, setStreamingEnabled] = useState<boolean>(true);
   const [isReceivingPartialResults, setIsReceivingPartialResults] =
     useState<boolean>(false);
-  const [accumulatedSrt, setAccumulatedSrt] = useState<string>("");
 
   // Add a ref to track when video is visible for scroll behavior
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -160,9 +125,6 @@ function AppContent() {
 
   // Set up real-time subtitle listeners
   useEffect(() => {
-    // Only register listeners if streaming is enabled
-    if (!streamingEnabled) return;
-
     // Define the callback for partial results
     const handlePartialResult = (result: {
       partialResult?: string;
@@ -172,7 +134,6 @@ function AppContent() {
       total?: number;
     }) => {
       try {
-        // Create a safe copy with default values
         const safeResult = {
           partialResult: result?.partialResult || "",
           percent: result?.percent || 0,
@@ -180,36 +141,82 @@ function AppContent() {
           current: result?.current || 0,
           total: result?.total || 100,
         };
-
-        // Only process if we have meaningful content
         if (
           safeResult.partialResult &&
           safeResult.partialResult.trim().length > 0
         ) {
           setIsReceivingPartialResults(true);
-          const newSrt = safeResult.partialResult;
-          try {
-            const segments = parseSrt(newSrt);
-            const fixedSegments = fixOverlappingSegments(segments);
-            setSubtitleSegments(fixedSegments);
-          } catch (e) {
-            console.error("Error processing SRT:", e);
+
+          // Determine if this is a transcription or translation update
+          const isTranscription = safeResult.stage
+            .toLowerCase()
+            .includes("transcribed chunk");
+          const isTranslation = safeResult.stage
+            .toLowerCase()
+            .includes("translating segments");
+
+          // Split the text into lines and process into map
+          const lines = safeResult.partialResult.split("\n");
+          const newSubtitleMap: { [key: string]: string } = {};
+
+          let currentLineNumber: string | null = null;
+          let currentContent: string | null = null;
+
+          for (const line of lines) {
+            // Skip empty lines
+            if (!line.trim()) continue;
+
+            // Check if line is a number
+            if (/^\d+$/.test(line.trim())) {
+              currentLineNumber = line.trim();
+              currentContent = null;
+            }
+            // Skip timestamp lines
+            else if (line.includes("-->")) {
+              continue;
+            }
+            // If we have a line number, this must be content
+            else if (currentLineNumber && !currentContent) {
+              if (!generatedSubtitleMapRef.current[currentLineNumber]) {
+                generatedSubtitleIndexesRef.current.push(
+                  parseInt(currentLineNumber)
+                );
+              }
+              currentContent = line.trim();
+              newSubtitleMap[currentLineNumber] = currentContent;
+            }
+            // If we already have content, append this line
+            else if (currentLineNumber && currentContent) {
+              newSubtitleMap[currentLineNumber] += " " + line.trim();
+            }
           }
-          setAccumulatedSrt(newSrt);
+
+          generatedSubtitleMapRef.current = {
+            ...generatedSubtitleMapRef.current,
+            ...newSubtitleMap,
+          };
+          // Convert map to segments and update state
+          const newSegments: SrtSegment[] =
+            generatedSubtitleIndexesRef.current.map((arrayIndex) => ({
+              index: arrayIndex,
+              start: (arrayIndex - 1) * 3, // Approximate 3 seconds per segment
+              end: arrayIndex * 3,
+              text:
+                generatedSubtitleMapRef.current[arrayIndex.toString()] || "",
+            }));
+
+          console.log(newSegments);
+          setSubtitleSegments(newSegments);
         }
 
         // Always update progress information
         setTranslationProgress(safeResult.percent);
         setTranslationStage(safeResult.stage);
-
-        // Show the progress area for any update
         setIsTranslationInProgress(true);
       } catch (error) {
         console.error("Error handling partial result:", error);
       }
     };
-
-    console.log("Setting up subtitle stream listeners");
 
     // Register the listeners and get the cleanup function
     const cleanup = registerSubtitleStreamListeners(handlePartialResult);
@@ -232,38 +239,17 @@ function AppContent() {
       console.log("Cleaning up subtitle stream listeners");
       cleanup();
     };
-  }, [streamingEnabled]);
+  }, [setSubtitleSegments]);
 
   // Handle generated subtitles
   const handleSubtitlesGenerated = (generatedSubtitles: string) => {
-    setGeneratedSubtitles(generatedSubtitles);
-
     // Parse the generated subtitles into segments for possible editing later
     try {
-      // Use our imported parseSrt utility function
       const segments = parseSrt(generatedSubtitles);
-      // Fix any potential overlapping segments
       const fixedSegments = fixOverlappingSegments(segments);
       setSubtitleSegments(fixedSegments);
-      setSourceLanguage(segments.length > 0 ? "en" : ""); // Assuming English by default
     } catch (err) {
-      // Error parsing generated subtitles
-    }
-  };
-
-  // Handle translated subtitles
-  const handleSubtitlesTranslated = (translated: string) => {
-    setTranslatedSubtitles(translated);
-
-    // Parse the translated subtitles into segments for possible editing later
-    try {
-      // Use our imported parseSrt utility function
-      const segments = parseSrt(translated);
-      // Fix any potential overlapping segments
-      const fixedSegments = fixOverlappingSegments(segments);
-      setTranslatedSegments(fixedSegments);
-    } catch (err) {
-      console.error("Error parsing translated subtitles:", err);
+      console.error("Error parsing generated subtitles:", err);
     }
   };
 
@@ -427,21 +413,11 @@ function AppContent() {
         <div ref={mainContentRef} style={{ position: "relative" }}>
           <GenerateSubtitles onSubtitlesGenerated={handleSubtitlesGenerated} />
 
-          {generatedSubtitles && (
-            <TranslateSubtitles
-              subtitles={generatedSubtitles}
-              sourceLanguage={sourceLanguage}
-              onTranslated={handleSubtitlesTranslated}
-            />
-          )}
-
           {/* Wrap EditSubtitles in a div that has the ref */}
           <div ref={editSubtitlesRef} id="edit-subtitles-section">
             <EditSubtitles
               videoFile={videoFile}
               videoUrl={videoUrl}
-              targetLanguage={targetLanguage}
-              showOriginalText={showOriginalText}
               isPlaying={isPlaying}
               editingTimes={editingTimes}
               onSetVideoFile={setVideoFile}
@@ -452,12 +428,11 @@ function AppContent() {
               secondsToSrtTime={secondsToSrtTime}
               parseSrt={parseSrt}
               subtitles={subtitleSegments}
-              onSetSubtitles={setSubtitleSegments}
+              translationProgress={translationProgress}
               videoPlayerRef={videoPlayerRef}
               isMergingInProgress={isMergingInProgress}
               onSetIsMergingInProgress={setIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
-              streamingEnabled={streamingEnabled}
               mergeSubtitlesWithVideo={async (
                 videoFile,
                 subtitles,

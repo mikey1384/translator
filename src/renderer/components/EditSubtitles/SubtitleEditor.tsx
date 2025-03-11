@@ -3,7 +3,6 @@ import { css } from "@emotion/css";
 import Button from "../Button";
 import { debounce } from "lodash";
 import { SrtSegment } from "./VideoPlayerWithSubtitles";
-import { nativePlayer } from "./NativeVideoPlayer";
 
 interface SubtitleEditorProps {
   sub: SrtSegment;
@@ -175,7 +174,7 @@ const buttonGradientStyles = {
   `,
 };
 
-function SubtitleEditor({
+export default function SubtitleEditor({
   sub,
   index,
   editingTimes,
@@ -380,19 +379,3 @@ function SubtitleEditor({
     </div>
   );
 }
-
-// Export memoized version to prevent unnecessary re-renders
-export default React.memo(SubtitleEditor, (prevProps, nextProps) => {
-  return (
-    prevProps.isPlaying === nextProps.isPlaying &&
-    prevProps.sub.start === nextProps.sub.start &&
-    prevProps.sub.end === nextProps.sub.end &&
-    prevProps.sub.index === nextProps.sub.index &&
-    prevProps.isShiftingDisabled === nextProps.isShiftingDisabled &&
-    prevProps.editingTimes[`${prevProps.index}-start`] ===
-      nextProps.editingTimes[`${nextProps.index}-start`] &&
-    prevProps.editingTimes[`${prevProps.index}-end`] ===
-      nextProps.editingTimes[`${nextProps.index}-end`]
-    // Note: we don't compare text as it's managed locally
-  );
-});

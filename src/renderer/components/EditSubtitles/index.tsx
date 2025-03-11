@@ -29,71 +29,13 @@ import {
   processSrtContent,
 } from "./helpers";
 import { useSubtitleNavigation, useRestoreFocus } from "./hooks";
-import {
-  buttonGradientStyles,
-  mergeButtonStyles,
-  noMarginStyle,
-  noPaddingStyle,
-  noShadowStyle,
-  overflowVisibleStyle,
-} from "./styles";
+import { buttonGradientStyles, mergeButtonStyles } from "./styles";
 import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from "./constants";
 
-// Create a custom section component with a title and a button
-const SectionWithButton = ({
-  title,
-  buttonComponent,
-  children,
-  ...rest
-}: {
-  title: string;
-  buttonComponent: React.ReactNode;
-  children: React.ReactNode;
-  [key: string]: any;
-}) => {
-  return (
-    <section
-      className={cx(
-        sectionStyles,
-        rest.noMargin && noMarginStyle,
-        rest.noPadding && noPaddingStyle,
-        rest.noShadow && noShadowStyle,
-        rest.overflowVisible && overflowVisibleStyle,
-        rest.className
-      )}
-    >
-      <div
-        className={css`
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 2px solid #dee2e6;
-          padding-bottom: 0.75rem;
-          margin-bottom: 1.25rem;
-        `}
-      >
-        <h2
-          className={css`
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #212529;
-            margin: 0;
-          `}
-        >
-          {title}
-        </h2>
-        {buttonComponent}
-      </div>
-      <div className={rest.contentClassName}>{children}</div>
-    </section>
-  );
-};
-
 export interface EditSubtitlesProps {
+  translationProgress: number;
   videoFile: File | null;
   videoUrl: string | null;
-  targetLanguage: string;
-  showOriginalText: boolean;
   onSetVideoFile: (file: File) => void;
   onSetVideoUrl: (url: string | null) => void;
   onSetError: (error: string) => void;
@@ -104,7 +46,6 @@ export interface EditSubtitlesProps {
   secondsToSrtTime?: (seconds: number) => string;
   parseSrt?: (srtString: string) => SrtSegment[];
   subtitles?: SrtSegment[];
-  onSetSubtitles?: (subtitles: SrtSegment[]) => void;
   videoPlayerRef?: any;
   isMergingInProgress?: boolean;
   onSetIsMergingInProgress?: (isMerging: boolean) => void;
@@ -116,10 +57,10 @@ export interface EditSubtitlesProps {
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
   }>;
-  streamingEnabled?: boolean;
 }
 
 export default function EditSubtitles({
+  translationProgress,
   videoFile,
   isPlaying: isPlayingProp,
   editingTimes: editingTimesProp,
@@ -130,7 +71,6 @@ export default function EditSubtitles({
   secondsToSrtTime: secondsToSrtTimeProp,
   parseSrt: parseSrtProp,
   subtitles: subtitlesProp,
-  onSetSubtitles,
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
   onSetIsMergingInProgress,
@@ -175,6 +115,12 @@ export default function EditSubtitles({
   const parseSrtFn = parseSrtProp || parseSrt;
   const srtTimeToSecondsFn = srtTimeToSeconds; // used in utils if needed
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
+
+  useEffect(() => {
+    if (translationProgress) {
+      setSubtitlesState(subtitlesProp);
+    }
+  }, [translationProgress]);
 
   // useEffect to validate and set subtitles on mount
   useEffect(() => {

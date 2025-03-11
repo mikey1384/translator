@@ -42,6 +42,25 @@ interface ElectronAPI {
     error?: string;
   }>;
   showMessage: (message: string) => void;
+  mergeSubtitles: (options: {
+    videoPath: string;
+    subtitlesPath: string;
+  }) => Promise<{
+    outputPath: string;
+    error?: string;
+  }>;
+  onMergeSubtitlesProgress: (
+    callback: (
+      event: any,
+      progress: {
+        percent: number;
+        stage: string;
+        current?: number;
+        total?: number;
+        warning?: string;
+      }
+    ) => void
+  ) => () => void;
 }
 
 declare global {
