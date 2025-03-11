@@ -31,15 +31,6 @@ export default function StickyVideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const calculateHeight = () => {
-      if (!playerRef.current) return;
-
-      const rect = playerRef.current.getBoundingClientRect();
-      if (rect.height > 0) {
-        setPlaceholderHeight(rect.height);
-      }
-    };
-
     calculateHeight();
 
     window.addEventListener('resize', calculateHeight);
@@ -51,10 +42,40 @@ export default function StickyVideoPlayer({
     return () => {
       window.removeEventListener('resize', calculateHeight);
     };
+
+    function calculateHeight() {
+      if (!playerRef.current) return;
+
+      const rect = playerRef.current.getBoundingClientRect();
+      if (rect.height > 0) {
+        setPlaceholderHeight(rect.height);
+      }
+    }
   }, [onStickyChange]);
 
   useEffect(() => {
-    const checkScrollPosition = () => {
+    checkScrollPosition();
+
+    let scrollTimeout: number | null = null;
+    const throttledScroll = () => {
+      if (scrollTimeout === null) {
+        scrollTimeout = window.setTimeout(() => {
+          checkScrollPosition();
+          scrollTimeout = null;
+        }, 100);
+      }
+    };
+
+    window.addEventListener('scroll', throttledScroll);
+
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+      if (scrollTimeout) {
+        window.clearTimeout(scrollTimeout);
+      }
+    };
+
+    function checkScrollPosition() {
       const editSubtitlesSection = document.getElementById(
         'edit-subtitles-section'
       );
@@ -90,28 +111,7 @@ export default function StickyVideoPlayer({
       } else if (shouldExpand !== isExpanded && !shouldFullyExpand) {
         setIsExpanded(shouldExpand);
       }
-    };
-
-    checkScrollPosition();
-
-    let scrollTimeout: number | null = null;
-    const throttledScroll = () => {
-      if (scrollTimeout === null) {
-        scrollTimeout = window.setTimeout(() => {
-          checkScrollPosition();
-          scrollTimeout = null;
-        }, 100);
-      }
-    };
-
-    window.addEventListener('scroll', throttledScroll);
-
-    return () => {
-      window.removeEventListener('scroll', throttledScroll);
-      if (scrollTimeout) {
-        window.clearTimeout(scrollTimeout);
-      }
-    };
+    }
   }, [isExpanded, isFullyExpanded]);
 
   useEffect(() => {
@@ -130,18 +130,6 @@ export default function StickyVideoPlayer({
   }, []);
 
   if (!videoUrl) return null;
-
-  const handlePlayerReadyWrapper = (player: any) => {
-    onPlayerReady(player);
-  };
-
-  const handleTogglePlay = () => {
-    try {
-      isPlaying ? nativePlayer.pause() : nativePlayer.play();
-    } catch (err) {
-      console.error('Error toggling play state:', err);
-    }
-  };
 
   return (
     <div ref={containerRef}>
@@ -187,7 +175,7 @@ export default function StickyVideoPlayer({
         <NativeVideoPlayer
           videoUrl={videoUrl}
           subtitles={subtitles}
-          onPlayerReady={handlePlayerReadyWrapper}
+          onPlayerReady={onPlayerReady}
           isExpanded={isExpanded}
           isFullyExpanded={isFullyExpanded}
         />
@@ -198,7 +186,9 @@ export default function StickyVideoPlayer({
           onChangeVideo={onChangeVideo}
           onChangeSrt={onChangeSrt}
           hasSubtitles={subtitles && subtitles.length > 0}
-          onTogglePlay={handleTogglePlay}
+          onTogglePlay={() =>
+            isPlaying ? nativePlayer.pause() : nativePlayer.play()
+          }
           onScrollToCurrentSubtitle={onScrollToCurrentSubtitle}
         />
       </div>
