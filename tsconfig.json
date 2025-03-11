@@ -19,6 +19,6 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", ".eslintrc.js"],
   "exclude": ["node_modules", "dist", "src/tests/**/*", "src/__mocks__/**/*"]
 }

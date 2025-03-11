@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
-// Components
 import StatusSection from './components/StatusSection';
 import GenerateSubtitles from './components/GenerateSubtitles';
 import EditSubtitles from './components/EditSubtitles';
@@ -9,13 +8,11 @@ import StickyVideoPlayer from './components/StickyVideoPlayer';
 import MergingProgressArea from './components/MergingProgressArea';
 import TranslationProgressArea from './components/TranslationProgressArea';
 
-// Import the real-time subtitle function
 import { registerSubtitleStreamListeners } from './helpers/electron-ipc';
+import { loadSrtFile } from './helpers/subtitle-utils';
 
-// Context provider
 import { ManagementContextProvider } from './context';
 
-// Helper functions
 import {
   parseSrt,
   secondsToSrtTime,
@@ -37,7 +34,6 @@ export interface SrtSegment {
 }
 
 function AppContent() {
-  // States for electron connection
   const [electronConnected, setElectronConnected] = useState<boolean>(false);
 
   const generatedSubtitleMapRef = useRef<{
@@ -45,26 +41,21 @@ function AppContent() {
   }>({});
   const generatedSubtitleIndexesRef = useRef<number[]>([]);
 
-  // Media states
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
 
-  // Parsed subtitle states (for editing)
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
 
-  // Progress tracking
   const [isTranslationInProgress, setIsTranslationInProgress] =
     useState<boolean>(false);
   const [isMergingInProgress, setIsMergingInProgress] =
     useState<boolean>(false);
 
-  // Progress state
   const [translationProgress, setTranslationProgress] = useState(0);
   const [translationStage, setTranslationStage] = useState('');
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
 
-  // Add state for the video player reference
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [editingTimes, setEditingTimes] = useState<{
@@ -75,47 +66,33 @@ function AppContent() {
   const [isReceivingPartialResults, setIsReceivingPartialResults] =
     useState<boolean>(false);
 
-  // Add a ref to track when video is visible for scroll behavior
   const mainContentRef = useRef<HTMLDivElement>(null);
 
-  // Add this with other state declarations
   const hasScrolledToStickyRef = useRef(false);
 
-  // Add this with other refs
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
 
-  // Create a ref for the EditSubtitles component
   const editSubtitlesMethodsRef = useRef<{
     scrollToCurrentSubtitle: () => void;
   }>({ scrollToCurrentSubtitle: () => {} });
 
-  // Function to handle scrolling to current subtitle
   const handleScrollToCurrentSubtitle = useCallback(() => {
     if (editSubtitlesMethodsRef.current) {
       editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
     }
   }, []);
 
-  // Check if electron is connected
   useEffect(() => {
     const checkElectron = async () => {
       try {
         if (window.electron) {
           try {
-            // Skip the ping check since it's causing UI issues
             setElectronConnected(true);
-
-            // Try accessing saveFile to verify it's actually working
-            if (typeof window.electron.saveFile === 'function') {
-              // Function exists
-            }
           } catch (innerError) {
-            // Still set connected to true to avoid blocking UI
             setElectronConnected(true);
           }
         }
       } catch (err) {
-        // Force it to true to prevent UI errors
         setElectronConnected(true);
       }
     };
@@ -123,16 +100,30 @@ function AppContent() {
     checkElectron();
   }, []);
 
-  // Set up real-time subtitle listeners
   useEffect(() => {
-    // Define the callback for partial results
-    const handlePartialResult = (result: {
+    const cleanup = registerSubtitleStreamListeners(handlePartialResult);
+
+    if (window.electron) {
+      const generateListener = (progress: any) => {
+        handlePartialResult(progress || {});
+      };
+
+      if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
+        window.electron.onGenerateSubtitlesProgress(generateListener);
+      }
+    }
+
+    return () => {
+      cleanup();
+    };
+
+    function handlePartialResult(result: {
       partialResult?: string;
       percent?: number;
       stage?: string;
       current?: number;
       total?: number;
-    }) => {
+    }) {
       try {
         const safeResult = {
           partialResult: result?.partialResult || '',
@@ -147,15 +138,6 @@ function AppContent() {
         ) {
           setIsReceivingPartialResults(true);
 
-          // Determine if this is a transcription or translation update
-          const isTranscription = safeResult.stage
-            .toLowerCase()
-            .includes('transcribed chunk');
-          const isTranslation = safeResult.stage
-            .toLowerCase()
-            .includes('translating segments');
-
-          // Split the text into lines and process into map
           const lines = safeResult.partialResult.split('\n');
           const newSubtitleMap: { [key: string]: string } = {};
 
@@ -163,7 +145,6 @@ function AppContent() {
           let currentContent: string | null = null;
 
           for (const line of lines) {
-            // Skip empty lines
             if (!line.trim()) continue;
 
             // Check if line is a number
@@ -174,9 +155,7 @@ function AppContent() {
             // Skip timestamp lines
             else if (line.includes('-->')) {
               continue;
-            }
-            // If we have a line number, this must be content
-            else if (currentLineNumber && !currentContent) {
+            } else if (currentLineNumber && !currentContent) {
               if (!generatedSubtitleMapRef.current[currentLineNumber]) {
                 generatedSubtitleIndexesRef.current.push(
                   parseInt(currentLineNumber)
@@ -195,50 +174,25 @@ function AppContent() {
             ...generatedSubtitleMapRef.current,
             ...newSubtitleMap,
           };
-          // Convert map to segments and update state
           const newSegments: SrtSegment[] =
             generatedSubtitleIndexesRef.current.map(arrayIndex => ({
               index: arrayIndex,
-              start: (arrayIndex - 1) * 3, // Approximate 3 seconds per segment
+              start: (arrayIndex - 1) * 3,
               end: arrayIndex * 3,
               text:
                 generatedSubtitleMapRef.current[arrayIndex.toString()] || '',
             }));
 
-          console.log(newSegments);
           setSubtitleSegments(newSegments);
         }
 
-        // Always update progress information
         setTranslationProgress(safeResult.percent);
         setTranslationStage(safeResult.stage);
         setIsTranslationInProgress(true);
       } catch (error) {
         console.error('Error handling partial result:', error);
       }
-    };
-
-    // Register the listeners and get the cleanup function
-    const cleanup = registerSubtitleStreamListeners(handlePartialResult);
-
-    // Direct IPC listeners as a backup approach
-    if (window.electron) {
-      // Set up direct listeners as a fallback
-      const generateListener = (progress: any) => {
-        console.log('Direct generate progress update:', progress);
-        handlePartialResult(progress || {});
-      };
-
-      if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
-        window.electron.onGenerateSubtitlesProgress(generateListener);
-      }
     }
-
-    // Return the cleanup function
-    return () => {
-      console.log('Cleaning up subtitle stream listeners');
-      cleanup();
-    };
   }, [setSubtitleSegments]);
 
   // Handle generated subtitles
@@ -253,28 +207,18 @@ function AppContent() {
     }
   };
 
-  // We now use the imported functions for:
-  // - parseSrt
-  // - secondsToSrtTime
-  // - srtTimeToSeconds
-  // - buildSrt
-
-  // Handle video player ready callback
   const handleVideoPlayerReady = (player: any) => {
     setVideoPlayerRef(player);
   };
 
-  // Modified wrapper function with correct type signature
   const handleSetVideoUrl = (url: string | null) => {
     if (url !== null) {
       setVideoUrl(url);
     }
   };
 
-  // Handler for changing video file
   const handleChangeVideo = (file: File) => {
     if (file) {
-      // Clear any previous errors
       if (videoUrl) {
         URL.revokeObjectURL(videoUrl);
       }
@@ -299,13 +243,9 @@ function AppContent() {
       localStorage.setItem('originalLoadPath', realPath);
     }
 
-    // Import the loadSrtFile function from helpers
-    const { loadSrtFile } = await import('./helpers/subtitle-utils');
-
-    // Use the shared loadSrtFile utility that handles Electron and browser environments
     const result = await loadSrtFile(
       file,
-      (content, segments, filePath) => {
+      (_, segments, filePath) => {
         setSubtitleSegments(segments);
 
         // Store path in a shared state for the EditSubtitles component to access
@@ -317,8 +257,6 @@ function AppContent() {
       },
       error => {
         console.error('Error loading SRT:', error);
-        // The setError function doesn't exist in this component, so let's just log it
-        console.error(error);
       }
     );
 
@@ -335,7 +273,6 @@ function AppContent() {
 
         <StatusSection isConnected={electronConnected} />
 
-        {/* Place the StickyVideoPlayer here, near the top of the content flow */}
         {videoUrl && (
           <StickyVideoPlayer
             videoUrl={videoUrl}
@@ -348,11 +285,9 @@ function AppContent() {
           />
         )}
 
-        {/* Wrap the main content so we can have better scroll behavior */}
         <div ref={mainContentRef} style={{ position: 'relative' }}>
           <GenerateSubtitles onSubtitlesGenerated={handleSubtitlesGenerated} />
 
-          {/* Wrap EditSubtitles in a div that has the ref */}
           <div ref={editSubtitlesRef} id="edit-subtitles-section">
             <EditSubtitles
               videoFile={videoFile}
@@ -382,12 +317,10 @@ function AppContent() {
                 setMergeStage('Preparing subtitle file...');
 
                 try {
-                  // Generate SRT content from subtitles using our utility function
                   const srtContent = buildSrt(
                     fixOverlappingSegments(subtitles)
                   );
 
-                  // Create a temporary file for the subtitles
                   setMergeStage('Saving subtitle file...');
                   const subtitlesResult = await window.electron.saveFile({
                     content: srtContent,
@@ -399,7 +332,6 @@ function AppContent() {
                     throw new Error(subtitlesResult.error);
                   }
 
-                  // Set up progress tracking
                   setMergeStage('Merging subtitles with video...');
                   window.electron.onMergeSubtitlesProgress(progress => {
                     setMergeProgress(progress.percent);
@@ -407,10 +339,8 @@ function AppContent() {
                     options.onProgress(progress.percent);
                   });
 
-                  // Get the path from the videoFile
                   const videoPath = videoFile.path || videoFile.name;
 
-                  // Merge the video with the subtitles
                   const result = await window.electron.mergeSubtitles({
                     videoPath: videoPath,
                     subtitlesPath: subtitlesResult.filePath,
@@ -419,7 +349,6 @@ function AppContent() {
                   setMergeProgress(100);
                   setMergeStage('Merge complete!');
 
-                  // Add a slight delay before hiding the progress area
                   setTimeout(() => {
                     setIsMergingInProgress(false);
                   }, 1500);
@@ -491,7 +420,6 @@ function AppContent() {
   }
 }
 
-// Export the app with context provider
 export default function App() {
   return (
     <ManagementContextProvider>
