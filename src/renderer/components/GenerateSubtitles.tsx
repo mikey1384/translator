@@ -12,7 +12,6 @@ import {
 import Button from "./Button";
 import ButtonGroup from "./ButtonGroup";
 import StylizedFileInput from "./StylizedFileInput";
-import ProgressBar from "./ProgressBar";
 import Section from "./Section";
 
 // Maximum file size in MB
@@ -61,16 +60,15 @@ export default function GenerateSubtitles({
     setError("");
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      
+
       if (file.size > MAX_FILE_SIZE) {
         setError(`File exceeds ${MAX_MB}MB limit`);
         return;
       }
-      
+
       setSelectedFile(file);
     }
   };
-
 
   // Generate subtitles
   const handleGenerateSubtitles = async () => {
@@ -141,17 +139,6 @@ export default function GenerateSubtitles({
 
   return (
     <Section title="Generate Subtitles">
-      {/* Progress indicator */}
-      {isGenerating && (
-        <div className={css`margin-bottom: 1rem;`}>
-          <ProgressBar
-            progress={progress}
-            stage={progressStage}
-            showPercentage={true}
-          />
-        </div>
-      )}
-
       {/* Error display */}
       {error && <div className={errorMessageStyles}>{error}</div>}
 
@@ -161,7 +148,7 @@ export default function GenerateSubtitles({
           accept="video/*"
           onChange={handleFileChange}
           buttonText="Choose Video"
-          selectedFile={isGenerating ? null : selectedFile}
+          showSelectedFile={isGenerating ? false : !!selectedFile}
         />
       </div>
 
@@ -180,7 +167,7 @@ export default function GenerateSubtitles({
           ))}
         </select>
 
-        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
+        {targetLanguage !== "original" && targetLanguage !== "english" && (
           <div
             className={css`
               margin-top: 12px;
@@ -235,21 +222,13 @@ export default function GenerateSubtitles({
         >
           {isGenerating ? "Processing..." : "Generate Subtitles"}
         </Button>
-        
+
         {subtitles && (
           <Button variant="secondary" onClick={handleSaveSubtitles} size="md">
             Save SRT
           </Button>
         )}
       </ButtonGroup>
-
-      {/* Subtitles Result */}
-      {subtitles && (
-        <div className={css`margin-top: 2rem;`}>
-          <h3 className={resultsHeaderStyles}>Generated Subtitles:</h3>
-          <div className={resultsAreaStyles}>{subtitles}</div>
-        </div>
-      )}
     </Section>
   );
 }

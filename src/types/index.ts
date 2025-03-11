@@ -2,16 +2,29 @@
 export type ProgressCallback = (progress: {
   percent: number;
   stage: string;
+  current?: number;
+  total?: number;
+  partialResult?: string;
 }) => void;
+
+export interface SubtitleSegment {
+  id: number;
+  start: string; // SRT format: "00:00:00,000"
+  end: string;
+  text: string;
+  translation?: string;
+}
 
 export interface GenerateSubtitlesOptions {
   videoPath?: string;
   videoFile?: File;
-  language: string;
+  targetLanguage: string;
+  streamResults?: boolean; // Whether to stream partial results
 }
 
 export interface GenerateSubtitlesResult {
   subtitles: string;
+  segments?: SubtitleSegment[]; // Structured subtitle data
   error?: string;
 }
 
@@ -19,10 +32,13 @@ export interface TranslateSubtitlesOptions {
   subtitles: string;
   sourceLanguage: string;
   targetLanguage: string;
+  segments?: SubtitleSegment[]; // Optional structured format
+  streamResults?: boolean; // Whether to stream partial results
 }
 
 export interface TranslateSubtitlesResult {
   translatedSubtitles: string;
+  segments?: SubtitleSegment[]; // Translated segments in structured format
   error?: string;
 }
 

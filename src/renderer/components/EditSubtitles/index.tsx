@@ -253,6 +253,9 @@ export interface EditSubtitlesProps {
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
   }>;
+  streamingEnabled?: boolean;
+  isReceivingPartialResults?: boolean;
+  onReceivePartialResult?: (callback: (result: string) => void) => void;
 }
 
 // Utility functions
@@ -269,6 +272,60 @@ const srtTimeToSeconds = (timeString: string): number => {
     parseInt(seconds) +
     (milliseconds ? parseInt(milliseconds) / 1000 : 0)
   );
+};
+
+// Function to handle real-time partial subtitle updates
+const handlePartialSubtitleUpdate = (
+  partialSrt: string,
+  parseSrtFn: (srt: string) => SrtSegment[],
+  setSubtitlesFn: (segments: SrtSegment[]) => void
+) => {
+  if (!partialSrt || typeof partialSrt !== "string") {
+    console.warn("Invalid partial SRT content:", partialSrt);
+    return;
+  }
+
+  try {
+    // Make sure the SRT format is correct by adding newlines if needed
+    // Sometimes partial results might have improper formatting
+    let normalizedSrt = partialSrt;
+
+    // Ensure the SRT ends with a newline
+    if (!normalizedSrt.endsWith("\n")) {
+      normalizedSrt += "\n";
+    }
+
+    // Ensure double newlines between subtitle blocks
+    normalizedSrt = normalizedSrt.replace(/\n(\d+)\n/g, "\n\n$1\n");
+
+    // Parse the normalized SRT content
+    const segments = parseSrtFn(normalizedSrt);
+
+    // Only update if we have valid segments
+    if (segments && segments.length > 0) {
+      // Validate each segment to prevent errors
+      const validSegments = segments.filter(
+        (seg) =>
+          typeof seg.index === "number" &&
+          typeof seg.start === "number" &&
+          typeof seg.end === "number" &&
+          typeof seg.text === "string" &&
+          seg.start <= seg.end
+      );
+
+      if (validSegments.length > 0) {
+        // Update the subtitle state with the filtered segments
+        setSubtitlesFn(validSegments);
+      }
+    }
+  } catch (err) {
+    console.error(
+      "Error parsing partial subtitle update:",
+      err,
+      "\nContent:",
+      partialSrt
+    );
+  }
 };
 
 const secondsToSrtTime = (seconds: number): string => {
@@ -374,6 +431,9 @@ export default function EditSubtitles({
   onSetIsMergingInProgress,
   mergeSubtitlesWithVideo,
   editorRef,
+  streamingEnabled,
+  isReceivingPartialResults,
+  onReceivePartialResult,
 }: EditSubtitlesProps) {
   // State for the component - use props if available, otherwise use local state
   const [subtitlesState, setSubtitlesState] = useState<SrtSegment[]>(
@@ -522,6 +582,37 @@ export default function EditSubtitles({
       }
     };
   }, []);
+
+  // Handle partial results
+  const processPartialResult = useCallback(
+    (partialResult: string) => {
+      // Check for valid content and streaming enabled
+      if (!streamingEnabled) return;
+
+      try {
+        // Only process if we have non-empty content
+        if (partialResult && partialResult.trim().length > 0) {
+          console.log(
+            "Received partial result with length:",
+            partialResult.length
+          );
+
+          // Use the utility function to parse and update subtitles
+          handlePartialSubtitleUpdate(partialResult, parseSrt, (segments) => {
+            if (segments && segments.length > 0) {
+              setSubtitlesState(segments);
+              if (onSetSubtitles) {
+                onSetSubtitles(segments);
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error processing partial result:", error);
+      }
+    },
+    [streamingEnabled, parseSrt]
+  );
 
   // Check localStorage for originalSrtPath on first render
   useEffect(() => {
@@ -1350,6 +1441,13 @@ export default function EditSubtitles({
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
     }
   }, [editorRef, scrollToCurrentSubtitle]);
+
+  // Update the effect to include necessary dependencies
+  useEffect(() => {
+    if (onReceivePartialResult && streamingEnabled) {
+      onReceivePartialResult(processPartialResult);
+    }
+  }, [streamingEnabled]);
 
   return (
     <Section title="Edit Subtitles" overflowVisible={true}>

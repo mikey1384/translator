@@ -15,6 +15,8 @@ interface TranslationProgressAreaProps {
   subtitleProgress?: SubtitleProgressInfo;
   onClose: () => void;
   autoCloseDelay?: number;
+  partialResult?: string;
+  onPartialResult?: (partialResult: string) => void;
 }
 
 // Progress area styles
@@ -116,6 +118,8 @@ export default function TranslationProgressArea({
   subtitleProgress,
   onClose,
   autoCloseDelay = 3000,
+  partialResult,
+  onPartialResult,
 }: TranslationProgressAreaProps) {
   // If progress is 100%, auto-close after specified delay
   useEffect(() => {
@@ -126,6 +130,13 @@ export default function TranslationProgressArea({
       return () => clearTimeout(timer);
     }
   }, [translationProgress, onClose, autoCloseDelay]);
+
+  // Effect to handle partial results
+  useEffect(() => {
+    if (partialResult && onPartialResult) {
+      onPartialResult(partialResult);
+    }
+  }, [partialResult, onPartialResult]);
 
   return (
     <div className={progressContainerStyles}>
@@ -139,31 +150,6 @@ export default function TranslationProgressArea({
           ×
         </button>
       </div>
-
-      {/* Audio Processing Progress */}
-      {(progress > 0 || progressStage) && (
-        <div className={progressBlockStyles}>
-          <div className={progressLabelStyles}>
-            <span>
-              <strong>Audio Processing:</strong>{" "}
-              {progressStage || "Starting..."}
-            </span>
-            <span>{progress.toFixed(1)}%</span>
-          </div>
-          <div className={progressBarContainerStyles}>
-            <div
-              className={css`
-                height: 100%;
-                width: ${progress}%;
-                background-color: ${progress === 100 ? "#4cc9f0" : "#4361ee"};
-                border-radius: 10px;
-                transition: width 0.3s ease;
-              `}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Translation Progress */}
       {(translationProgress > 0 || translationStage) && (
         <div className={progressBlockStyles}>

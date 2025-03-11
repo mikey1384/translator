@@ -228,3 +228,74 @@ export async function openFileWithRetry(options: {
     };
   }
 }
+
+/**
+ * Register listeners for real-time subtitle progress events
+ * @param partialResultCallback Callback function to call when partial subtitles become available
+ * @returns Cleanup function to remove the event listeners
+ */
+export function registerSubtitleStreamListeners(
+  partialResultCallback: (result: { 
+    partialResult: string; 
+    percent: number; 
+    stage: string;
+    current?: number;
+    total?: number;
+  }) => void
+): () => void {
+  // These variables will hold the functions so we can remove them later
+  let generateListener: ((event: any, progress: any) => void) | null = null;
+  let translateListener: ((event: any, progress: any) => void) | null = null;
+
+  // Create the listeners if the window.electron object exists
+  if (window.electron) {
+    // Handler for transcription progress events
+    generateListener = (event: any, progress: any) => {
+      // Always provide default values to avoid undefined properties
+      const safeProgress = {
+        partialResult: progress?.partialResult || '',
+        percent: progress?.percent || 0,
+        stage: progress?.stage || 'Processing',
+        current: progress?.current || 0,
+        total: progress?.total || 0
+      };
+      
+      // Always call the callback, even if partialResult is empty
+      // The UI can decide whether to update based on the content
+      partialResultCallback(safeProgress);
+    };
+    
+    // Handler for translation progress events
+    translateListener = (event: any, progress: any) => {
+      // Always provide default values to avoid undefined properties
+      const safeProgress = {
+        partialResult: progress?.partialResult || '',
+        percent: progress?.percent || 0,
+        stage: progress?.stage || 'Translating',
+        current: progress?.current || 0,
+        total: progress?.total || 0
+      };
+      
+      // Always call the callback, even if partialResult is empty
+      // The UI can decide whether to update based on the content
+      partialResultCallback(safeProgress);
+    };
+
+    // Register the listeners
+    window.electron.onGenerateSubtitlesProgress(generateListener);
+    window.electron.onTranslateSubtitlesProgress(translateListener);
+  }
+
+  // Return a cleanup function
+  return () => {
+    if (window.electron) {
+      if (generateListener) {
+        // This assumes there's a method to remove the listener - may need adjustment
+        window.electron.onGenerateSubtitlesProgress(null);
+      }
+      if (translateListener) {
+        window.electron.onTranslateSubtitlesProgress(null);
+      }
+    }
+  };
+}

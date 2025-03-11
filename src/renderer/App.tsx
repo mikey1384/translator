@@ -5,12 +5,14 @@ import { css } from "@emotion/css";
 import StatusSection from "./components/StatusSection";
 import GenerateSubtitles from "./components/GenerateSubtitles";
 import TranslateSubtitles from "./components/TranslateSubtitles";
-import MergeSubtitles from "./components/MergeSubtitles";
 import EditSubtitles from "./components/EditSubtitles";
 import BackToTopButton from "./components/BackToTopButton";
 import StickyVideoPlayer from "./components/StickyVideoPlayer";
 import MergingProgressArea from "./components/MergingProgressArea";
 import TranslationProgressArea from "./components/TranslationProgressArea";
+
+// Import the real-time subtitle function
+import { registerSubtitleStreamListeners } from "./helpers/electron-ipc";
 
 // Context provider
 import { ManagementContextProvider } from "./context";
@@ -119,6 +121,12 @@ function AppContent() {
     end: number;
   } | null>(null);
 
+  // State for real-time subtitle streaming
+  const [streamingEnabled, setStreamingEnabled] = useState<boolean>(true);
+  const [isReceivingPartialResults, setIsReceivingPartialResults] =
+    useState<boolean>(false);
+  const [partialResult, setPartialResult] = useState<string>("");
+
   // Add a ref to track when video is visible for scroll behavior
   const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -166,6 +174,90 @@ function AppContent() {
 
     checkElectron();
   }, []);
+
+  // Set up real-time subtitle listeners
+  useEffect(() => {
+    // Only register listeners if streaming is enabled
+    if (!streamingEnabled) return;
+
+    // Define the callback for partial results
+    const handlePartialResult = (result: {
+      partialResult?: string;
+      percent?: number;
+      stage?: string;
+      current?: number;
+      total?: number;
+    }) => {
+      try {
+        // Create a safe copy with default values
+        const safeResult = {
+          partialResult: result?.partialResult || "",
+          percent: result?.percent || 0,
+          stage: result?.stage || "Processing",
+          current: result?.current || 0,
+          total: result?.total || 100,
+        };
+
+        console.log("Received partial result update:", {
+          hasContent: !!safeResult.partialResult,
+          contentLength: safeResult.partialResult.length,
+          percent: safeResult.percent,
+          stage: safeResult.stage,
+        });
+
+        // Only process if we have meaningful content
+        if (
+          safeResult.partialResult &&
+          safeResult.partialResult.trim().length > 0
+        ) {
+          setIsReceivingPartialResults(true);
+          setPartialResult(safeResult.partialResult);
+        }
+
+        // Always update progress information
+        setTranslationProgress(safeResult.percent);
+        setTranslationStage(safeResult.stage);
+
+        // Show the progress area for any update
+        setIsTranslationInProgress(true);
+      } catch (error) {
+        console.error("Error handling partial result:", error);
+      }
+    };
+
+    console.log("Setting up subtitle stream listeners");
+
+    // Register the listeners and get the cleanup function
+    const cleanup = registerSubtitleStreamListeners(handlePartialResult);
+
+    // Direct IPC listeners as a backup approach
+    if (window.electron) {
+      // Set up direct listeners as a fallback
+      const generateListener = (progress: any) => {
+        console.log("Direct generate progress update:", progress);
+        handlePartialResult(progress || {});
+      };
+
+      const translateListener = (progress: any) => {
+        console.log("Direct translate progress update:", progress);
+        handlePartialResult(progress || {});
+      };
+
+      if (typeof window.electron.onGenerateSubtitlesProgress === "function") {
+        window.electron.onGenerateSubtitlesProgress(generateListener);
+      }
+
+      if (typeof window.electron.onTranslateSubtitlesProgress === "function") {
+        window.electron.onTranslateSubtitlesProgress(translateListener);
+      }
+    }
+
+    // Return the cleanup function
+    return () => {
+      console.log("Cleaning up subtitle stream listeners");
+      cleanup();
+    };
+  }, [streamingEnabled]);
 
   // Handle generated subtitles
   const handleSubtitlesGenerated = (generatedSubtitles: string) => {
@@ -368,13 +460,6 @@ function AppContent() {
             />
           )}
 
-          {(generatedSubtitles || translatedSubtitles) && (
-            <MergeSubtitles
-              originalSubtitles={generatedSubtitles}
-              translatedSubtitles={translatedSubtitles}
-            />
-          )}
-
           {/* Wrap EditSubtitles in a div that has the ref */}
           <div ref={editSubtitlesRef} id="edit-subtitles-section">
             <EditSubtitles
@@ -397,6 +482,21 @@ function AppContent() {
               isMergingInProgress={isMergingInProgress}
               onSetIsMergingInProgress={setIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
+              streamingEnabled={streamingEnabled}
+              isReceivingPartialResults={isReceivingPartialResults}
+              onReceivePartialResult={(partialResultHandler) => {
+                // Store the handler callback to process partial results
+                const processPartial = (partial: string) => {
+                  if (partialResultHandler && partial) {
+                    partialResultHandler(partial);
+                  }
+                };
+
+                // Process current partial result if available
+                if (partialResult) {
+                  processPartial(partialResult);
+                }
+              }}
               mergeSubtitlesWithVideo={async (
                 videoFile,
                 subtitles,
@@ -477,6 +577,20 @@ function AppContent() {
             translationProgress={translationProgress}
             translationStage={translationStage}
             onClose={() => setIsTranslationInProgress(false)}
+            partialResult={partialResult}
+            onPartialResult={(result) => {
+              // This just passes the partial result to the EditSubtitles component
+              // The actual handling is done via the onReceivePartialResult callback
+              setPartialResult(result);
+            }}
+            subtitleProgress={
+              isReceivingPartialResults
+                ? {
+                    current: translationProgress,
+                    total: 100,
+                  }
+                : undefined
+            }
           />
         )}
 

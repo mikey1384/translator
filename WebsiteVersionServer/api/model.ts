@@ -1,8 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import socket from '../../constants/socketClient';
 
+// Default API key for development use only
+const ANTHROPIC_API_KEY = "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";
+
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+  apiKey: process.env.ANTHROPIC_API_KEY || ANTHROPIC_API_KEY
 });
 
 export function adjustTimeString(hhmmssmmm: string, offsetSec: number): string {

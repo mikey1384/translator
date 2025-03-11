@@ -40,15 +40,19 @@ import { Stream } from 'openai/streaming';
 import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 
+// Default API keys for development use only
+const ANTHROPIC_API_KEY = "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";
+const OPENAI_API_KEY = "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";
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || OPENAI_API_KEY,
   defaultHeaders: {
     'OpenAI-Beta': 'assistants=v2'
   }
 });
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+  apiKey: process.env.ANTHROPIC_API_KEY || ANTHROPIC_API_KEY
 });
 
 const openAIStreamCancelObj: Record<number, (() => void) | undefined> = {};

@@ -3,6 +3,7 @@ import log from "electron-log";
 import { FFmpegService } from "./ffmpeg-service";
 import { FileManager } from "./file-manager";
 import { AIService } from "./ai-service";
+import { parseSrt, buildSrt } from "../renderer/helpers/subtitle-utils";
 
 // Import types from preload script
 import {
@@ -44,8 +45,16 @@ export class SubtitleProcessing {
     progressCallback?: (progress: { percent: number; stage: string }) => void
   ): Promise<GenerateSubtitlesResult> {
     try {
+      // If options is undefined, default it to an object with targetLanguage 'original'
+      if (!options) {
+        options = { targetLanguage: "original" } as GenerateSubtitlesOptions;
+      }
       if (!options.videoPath) {
         throw new SubtitleProcessingError("Video path is required");
+      }
+
+      if (!this.aiService) {
+        throw new SubtitleProcessingError("AI Service is not available");
       }
 
       // Report initial progress
@@ -62,25 +71,45 @@ export class SubtitleProcessing {
         options.videoPath
       );
 
-      // For now, we'll just create a dummy SRT file since we don't have the AI service integrated yet
-      // In a real implementation, this would call the AI service to transcribe the audio
-      if (progressCallback) {
-        progressCallback({ percent: 50, stage: "Transcribing audio" });
-      }
-
-      // Simulate AI transcription with a dummy SRT
-      const dummySrt = this.generateDummySrt();
-
-      // Save the SRT to a file
-      const srtPath = path.join(
-        path.dirname(options.videoPath),
-        `${path.basename(
-          options.videoPath,
-          path.extname(options.videoPath)
-        )}.srt`
+      // Use AI service to transcribe the audio
+      const subtitlesContent = await this.aiService.generateSubtitlesFromAudio(
+        audioPath,
+        "original",
+        (progress) => {
+          if (progressCallback) {
+            const scaledPercent = 10 + (progress.percent * 80) / 100;
+            progressCallback({
+              percent: scaledPercent,
+              stage: progress.stage,
+            });
+          }
+        }
       );
 
-      await this.fileManager.writeTempFile(dummySrt, ".srt");
+      let finalSubtitlesContent = subtitlesContent;
+      const targetLang = options.targetLanguage
+        ? options.targetLanguage
+        : "original";
+      if (targetLang.toLowerCase() !== "original") {
+        if (progressCallback) {
+          progressCallback({
+            percent: 90,
+            stage: "Starting subtitle translation",
+          });
+        }
+        const translationResult = await this.translateSubtitles(
+          {
+            subtitles: subtitlesContent,
+            targetLanguage: targetLang,
+            sourceLanguage: "original",
+          },
+          progressCallback
+        );
+        finalSubtitlesContent = translationResult.translatedSubtitles;
+      }
+
+      // Save the SRT to a file
+      await this.fileManager.writeTempFile(finalSubtitlesContent, ".srt");
 
       if (progressCallback) {
         progressCallback({
@@ -90,7 +119,7 @@ export class SubtitleProcessing {
       }
 
       return {
-        subtitles: dummySrt,
+        subtitles: finalSubtitlesContent,
       };
     } catch (error) {
       log.error("Error generating subtitles:", error);
@@ -105,41 +134,182 @@ export class SubtitleProcessing {
    */
   async translateSubtitles(
     options: TranslateSubtitlesOptions,
-    progressCallback?: (progress: { percent: number; stage: string }) => void
+    progressCallback?: (progress: {
+      percent: number;
+      stage: string;
+      partialResult?: string;
+      current?: number;
+      total?: number;
+    }) => void
   ): Promise<TranslateSubtitlesResult> {
     try {
       if (!options.subtitles) {
         throw new SubtitleProcessingError("Subtitles content is required");
       }
 
+      if (!this.aiService) {
+        throw new SubtitleProcessingError("AI Service is not available");
+      }
+
+      // Set default values if not provided
+      const targetLang = options.targetLanguage
+        ? options.targetLanguage
+        : "original";
+      const sourceLang = options.sourceLanguage
+        ? options.sourceLanguage
+        : "original";
+
+      // You can also define a language prompt based on targetLang if needed
+      let languagePrompt = targetLang;
+      if (targetLang.toLowerCase() === "korean") languagePrompt = "Korean";
+      else if (targetLang.toLowerCase() === "japanese")
+        languagePrompt = "Japanese";
+      else if (targetLang.toLowerCase() === "chinese")
+        languagePrompt = "Chinese";
+      else if (targetLang.toLowerCase() === "spanish")
+        languagePrompt = "Spanish";
+      else if (targetLang.toLowerCase() === "french") languagePrompt = "French";
+      else if (targetLang.toLowerCase() === "german") languagePrompt = "German";
+
       // Report initial progress
-      if (progressCallback) {
+      progressCallback &&
         progressCallback({
           percent: 0,
           stage: "Starting subtitle translation",
+          partialResult: "",
         });
+
+      const originalSegments = parseSrt(options.subtitles);
+      const totalSegments = originalSegments.length;
+      const translatedSegments: any[] = [];
+      const BATCH_SIZE = 10;
+
+      for (
+        let batchStart = 0;
+        batchStart < totalSegments;
+        batchStart += BATCH_SIZE
+      ) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, totalSegments);
+        const currentBatch = originalSegments.slice(batchStart, batchEnd);
+
+        // Build prompt context for current batch
+        const batchContextPrompt = currentBatch
+          .map((segment, idx) => {
+            const absoluteIndex = batchStart + idx;
+            return `Line ${absoluteIndex + 1}: ${segment.text}`;
+          })
+          .join("\n");
+
+        const combinedPrompt = `
+You are a professional subtitle translator. Translate the following subtitles to natural, fluent ${languagePrompt}.
+
+Here are the subtitles to translate:
+${batchContextPrompt}
+
+Translate ALL lines to ${languagePrompt}.
+Respond with ONLY the translations in this format:
+Line 1: <translation>
+Line 2: <translation>
+...and so on for each line
+
+Ensure you preserve the exact line numbers as given in the original text.
+IMPORTANT: Do not modify any part of the original text except for performing the translation.
+        `;
+
+        // Batch translation with retry logic
+        const MAX_RETRIES = 3;
+        const TIMEOUT_MS = 120000; // 2 minutes timeout
+        let retryCount = 0;
+        let batchTranslation = "";
+        let success = false;
+        let lastError: any = null;
+
+        while (!success && retryCount < MAX_RETRIES) {
+          try {
+            batchTranslation = await this.aiService.translateBatch(
+              combinedPrompt,
+              sourceLang,
+              targetLang
+            );
+            success = true;
+          } catch (err: any) {
+            lastError = err;
+            if (
+              err.message &&
+              (err.message.includes("timeout") ||
+                err.message.includes("rate") ||
+                err.message.includes("ECONNRESET"))
+            ) {
+              retryCount++;
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * Math.pow(2, retryCount))
+              );
+            } else {
+              break;
+            }
+          }
+        }
+
+        if (!success) {
+          // Fallback: use original text for current batch
+          currentBatch.forEach((segment) => {
+            translatedSegments.push({
+              ...segment,
+              text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
+              originalText: segment.text,
+              translatedText: segment.text,
+            });
+          });
+        } else {
+          // Parse the batch translation response
+          const translationLines = batchTranslation
+            .split("\n")
+            .filter((line) => line.trim() !== "");
+          const lineRegex = /^Line\s+(\d+):\s*(.+)$/;
+          for (let i = 0; i < currentBatch.length; i++) {
+            const absoluteIndex = batchStart + i;
+            const segment = currentBatch[i];
+            let translatedText = segment.text; // default fallback
+            for (const line of translationLines) {
+              const match = line.match(lineRegex);
+              if (match && parseInt(match[1]) === absoluteIndex + 1) {
+                translatedText = match[2].trim();
+                break;
+              }
+            }
+            translatedSegments.push({
+              ...segment,
+              text: `${segment.text}###TRANSLATION_MARKER###${translatedText}`,
+              originalText: segment.text,
+              translatedText,
+            });
+          }
+        }
+
+        const overallProgress = Math.floor((batchEnd / totalSegments) * 100);
+        const partialSrt = buildSrt(translatedSegments);
+        progressCallback &&
+          progressCallback({
+            percent: overallProgress,
+            stage: `Translating segments ${
+              batchStart + 1
+            } to ${batchEnd} of ${totalSegments}`,
+            partialResult: partialSrt,
+            current: batchEnd,
+            total: totalSegments,
+          });
       }
 
-      // For now, we'll just create a dummy translated SRT file
-      // In a real implementation, this would call the AI service to translate the subtitles
-      if (progressCallback) {
-        progressCallback({ percent: 50, stage: "Translating subtitles" });
-      }
-
-      // Simulate AI translation with a dummy translated SRT
-      const translatedSrt = this.generateDummyTranslatedSrt(
-        options.targetLanguage
-      );
-
-      if (progressCallback) {
+      const finalSrt = buildSrt(translatedSegments);
+      progressCallback &&
         progressCallback({
           percent: 100,
           stage: "Subtitle translation complete",
+          partialResult: finalSrt,
         });
-      }
 
       return {
-        translatedSubtitles: translatedSrt,
+        translatedSubtitles: finalSrt,
       };
     } catch (error) {
       log.error("Error translating subtitles:", error);
@@ -221,58 +391,5 @@ export class SubtitleProcessing {
         `Failed to merge subtitles with video: ${error}`
       );
     }
-  }
-
-  /**
-   * Generate a dummy SRT file for testing
-   */
-  private generateDummySrt(): string {
-    return `1
-00:00:01,000 --> 00:00:04,000
-Hello, this is a test subtitle.
-
-2
-00:00:05,000 --> 00:00:08,000
-This is a dummy SRT file for testing.
-
-3
-00:00:10,000 --> 00:00:15,000
-In a real implementation, this would be generated by AI.`;
-  }
-
-  /**
-   * Generate a dummy translated SRT file for testing
-   */
-  private generateDummyTranslatedSrt(language: string): string {
-    if (language === "spanish") {
-      return `1
-00:00:01,000 --> 00:00:04,000
-Hola, esto es un subtítulo de prueba.
-
-2
-00:00:05,000 --> 00:00:08,000
-Este es un archivo SRT ficticio para pruebas.
-
-3
-00:00:10,000 --> 00:00:15,000
-En una implementación real, esto sería generado por IA.`;
-    }
-
-    if (language === "french") {
-      return `1
-00:00:01,000 --> 00:00:04,000
-Bonjour, ceci est un sous-titre de test.
-
-2
-00:00:05,000 --> 00:00:08,000
-Ceci est un fichier SRT fictif pour les tests.
-
-3
-00:00:10,000 --> 00:00:15,000
-Dans une implémentation réelle, cela serait généré par l'IA.`;
-    }
-
-    // Default to the original
-    return this.generateDummySrt();
   }
 }

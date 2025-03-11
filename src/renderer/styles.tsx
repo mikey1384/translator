@@ -83,9 +83,28 @@ export const selectStyles = css`
   background-position: right 10px center;
   padding-right: 35px;
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   box-sizing: border-box;
   vertical-align: middle;
-  max-width: 100%;
+  width: 100%;
+  max-width: 320px;
+
+  @media (max-width: ${breakpoints.mobileMaxWidth}) {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Fix for dropdown menu width in various browsers */
+  &::-ms-expand {
+    display: none;
+  }
+
+  /* Fix for Chrome/Safari/Firefox */
+  option {
+    width: auto;
+    max-width: none;
+  }
 `;
 
 export const fileInputWrapperStyles = css`

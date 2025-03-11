@@ -88,10 +88,31 @@ const electronAPI = {
   },
 
   onGenerateSubtitlesProgress: (callback) => {
-    const listener = (_event, progress) => callback(progress);
-    ipcRenderer.on("generate-subtitles-progress", listener);
-    return () =>
-      ipcRenderer.removeListener("generate-subtitles-progress", listener);
+    // Make sure callback is a function before registering the listener
+    if (typeof callback === 'function') {
+      const listener = (_event, progress) => {
+        try {
+          callback(progress || {});
+        } catch (error) {
+          console.error("Error in generate-subtitles-progress callback:", error);
+        }
+      };
+      
+      ipcRenderer.on("generate-subtitles-progress", listener);
+      
+      // Return a function to remove the listener
+      return () => {
+        try {
+          ipcRenderer.removeListener("generate-subtitles-progress", listener);
+        } catch (error) {
+          console.error("Error removing generate-subtitles-progress listener:", error);
+        }
+      };
+    } else {
+      console.warn("Invalid callback provided to onGenerateSubtitlesProgress");
+      // Return a no-op function so calling code doesn't break
+      return () => {};
+    }
   },
 
   // Subtitle translation
@@ -99,20 +120,62 @@ const electronAPI = {
     ipcRenderer.invoke("translate-subtitles", options),
 
   onTranslateSubtitlesProgress: (callback) => {
-    const listener = (_event, progress) => callback(progress);
-    ipcRenderer.on("translate-subtitles-progress", listener);
-    return () =>
-      ipcRenderer.removeListener("translate-subtitles-progress", listener);
+    // Make sure callback is a function before registering the listener
+    if (typeof callback === 'function') {
+      const listener = (_event, progress) => {
+        try {
+          callback(progress || {});
+        } catch (error) {
+          console.error("Error in translate-subtitles-progress callback:", error);
+        }
+      };
+      
+      ipcRenderer.on("translate-subtitles-progress", listener);
+      
+      // Return a function to remove the listener
+      return () => {
+        try {
+          ipcRenderer.removeListener("translate-subtitles-progress", listener);
+        } catch (error) {
+          console.error("Error removing translate-subtitles-progress listener:", error);
+        }
+      };
+    } else {
+      console.warn("Invalid callback provided to onTranslateSubtitlesProgress");
+      // Return a no-op function so calling code doesn't break
+      return () => {};
+    }
   },
 
   // Subtitle merging with video
   mergeSubtitles: (options) => ipcRenderer.invoke("merge-subtitles", options),
 
   onMergeSubtitlesProgress: (callback) => {
-    const listener = (_event, progress) => callback(progress);
-    ipcRenderer.on("merge-subtitles-progress", listener);
-    return () =>
-      ipcRenderer.removeListener("merge-subtitles-progress", listener);
+    // Make sure callback is a function before registering the listener
+    if (typeof callback === 'function') {
+      const listener = (_event, progress) => {
+        try {
+          callback(progress || {});
+        } catch (error) {
+          console.error("Error in merge-subtitles-progress callback:", error);
+        }
+      };
+      
+      ipcRenderer.on("merge-subtitles-progress", listener);
+      
+      // Return a function to remove the listener
+      return () => {
+        try {
+          ipcRenderer.removeListener("merge-subtitles-progress", listener);
+        } catch (error) {
+          console.error("Error removing merge-subtitles-progress listener:", error);
+        }
+      };
+    } else {
+      console.warn("Invalid callback provided to onMergeSubtitlesProgress");
+      // Return a no-op function so calling code doesn't break
+      return () => {};
+    }
   },
 
   // File operations - check readiness first
