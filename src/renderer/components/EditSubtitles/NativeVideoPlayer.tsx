@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { css } from "@emotion/css";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { css } from '@emotion/css';
 
 // Global reference to the player for direct access from other components
 export const nativePlayer: {
@@ -23,7 +23,7 @@ export const nativePlayer: {
     try {
       await nativePlayer.instance.play();
     } catch (error) {
-      console.error("Error playing video:", error);
+      console.error('Error playing video:', error);
       throw error;
     }
   },
@@ -37,7 +37,7 @@ export const nativePlayer: {
     if (!nativePlayer.instance) return;
 
     const validTime =
-      typeof time === "number" && !isNaN(time) && time >= 0 ? time : 0;
+      typeof time === 'number' && !isNaN(time) && time >= 0 ? time : 0;
 
     try {
       // Set the current time property - custom overlay will handle subtitles
@@ -45,12 +45,15 @@ export const nativePlayer: {
 
       // Check if seek worked correctly
       setTimeout(() => {
-        if (nativePlayer.instance && Math.abs(nativePlayer.instance.currentTime - validTime) > 0.5) {
+        if (
+          nativePlayer.instance &&
+          Math.abs(nativePlayer.instance.currentTime - validTime) > 0.5
+        ) {
           nativePlayer.instance.currentTime = validTime;
         }
       }, 50);
     } catch (error) {
-      console.error("Error during seek operation:", error);
+      console.error('Error during seek operation:', error);
     }
   },
 
@@ -90,7 +93,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
-  const [activeSubtitle, setActiveSubtitle] = useState<string>("");
+  const [activeSubtitle, setActiveSubtitle] = useState<string>('');
   const [containerWidth, setContainerWidth] = useState(0);
 
   // Handle video initialization
@@ -112,18 +115,18 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     // In Electron, let's try to explicitly set the src attribute rather than property
     if (videoUrl) {
       // Check if the format is supported
-      const videoType = videoUrl.startsWith("blob:")
-        ? "video/mp4"
-        : videoUrl.endsWith(".mp4")
-        ? "video/mp4"
-        : videoUrl.endsWith(".webm")
-        ? "video/webm"
-        : videoUrl.endsWith(".ogg")
-        ? "video/ogg"
-        : "video/mp4";
+      const videoType = videoUrl.startsWith('blob:')
+        ? 'video/mp4'
+        : videoUrl.endsWith('.mp4')
+          ? 'video/mp4'
+          : videoUrl.endsWith('.webm')
+            ? 'video/webm'
+            : videoUrl.endsWith('.ogg')
+              ? 'video/ogg'
+              : 'video/mp4';
 
       // Set src attribute directly
-      videoElement.setAttribute("src", videoUrl);
+      videoElement.setAttribute('src', videoUrl);
       videoElement.load();
     }
 
@@ -135,8 +138,8 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
 
     // Set up event handlers
     const handleError = (e: ErrorEvent) => {
-      console.error("Video error:", e);
-      console.error("Video error details:", videoElement.error);
+      console.error('Video error:', e);
+      console.error('Video error details:', videoElement.error);
 
       if (videoElement.error) {
         setErrorMessage(
@@ -145,7 +148,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
           }`
         );
       } else {
-        setErrorMessage("Unknown video error");
+        setErrorMessage('Unknown video error');
       }
     };
 
@@ -154,13 +157,13 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     };
 
     // Set up event handlers
-    videoElement.addEventListener("error", handleError);
-    videoElement.addEventListener("canplay", handleCanPlay);
+    videoElement.addEventListener('error', handleError);
+    videoElement.addEventListener('canplay', handleCanPlay);
 
     // Clean up event handlers
     return () => {
-      videoElement.removeEventListener("error", handleError);
-      videoElement.removeEventListener("canplay", handleCanPlay);
+      videoElement.removeEventListener('error', handleError);
+      videoElement.removeEventListener('canplay', handleCanPlay);
 
       // Clean up global reference
       if (nativePlayer.instance === videoElement) {
@@ -172,7 +175,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
 
   // Ensure the activeSubtitle is properly reset when subtitles change
   useEffect(() => {
-    setActiveSubtitle("");
+    setActiveSubtitle('');
 
     // Force check for subtitles at current time when subtitles array changes
     if (videoRef.current && subtitles && subtitles.length > 0) {
@@ -180,11 +183,11 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
 
       for (const segment of subtitles) {
         const start =
-          typeof segment.start === "number"
+          typeof segment.start === 'number'
             ? segment.start
             : parseFloat(String(segment.start));
         const end =
-          typeof segment.end === "number"
+          typeof segment.end === 'number'
             ? segment.end
             : parseFloat(String(segment.end));
 
@@ -205,7 +208,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
       if (!videoElement) return;
 
       const currentTime = videoElement.currentTime;
-      let activeText = "";
+      let activeText = '';
 
       // Find the subtitle that should be shown at the current time
       if (subtitles && subtitles.length > 0) {
@@ -213,11 +216,11 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
         for (const segment of subtitles) {
           // Make sure we're using numeric comparison and handle potential null/undefined
           const start =
-            typeof segment.start === "number"
+            typeof segment.start === 'number'
               ? segment.start
               : parseFloat(String(segment.start));
           const end =
-            typeof segment.end === "number"
+            typeof segment.end === 'number'
               ? segment.end
               : parseFloat(String(segment.end));
 
@@ -242,11 +245,11 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
     };
 
     // Add event listener for time updates
-    videoElement.addEventListener("timeupdate", handleTimeUpdate);
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
 
     // Cleanup function
     return () => {
-      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
     };
     // Only depend on subtitles array, not activeSubtitle to avoid unnecessary re-attaching
   }, [subtitles]);
@@ -302,13 +305,13 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
       <video
         ref={videoRef}
         style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          backgroundColor: "#000",
-          display: "block",
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          backgroundColor: '#000',
+          display: 'block',
           zIndex: 1,
-          visibility: "visible",
+          visibility: 'visible',
         }}
         // controls removed to hide native interface
         playsInline
@@ -316,7 +319,7 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
         autoPlay={false}
         muted={false}
         crossOrigin="anonymous"
-        onError={() => setErrorMessage("Video playback error")}
+        onError={() => setErrorMessage('Video playback error')}
       >
         Your browser does not support HTML5 video.
       </video>
@@ -345,12 +348,12 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
             user-select: none;
             opacity: 0.95;
-            width: ${isFullyExpanded ? "90%" : isExpanded ? "95%" : "100%"};
+            width: ${isFullyExpanded ? '90%' : isExpanded ? '95%' : '100%'};
             font-size: ${isFullyExpanded
-              ? "28px"
+              ? '28px'
               : isExpanded
-              ? "22px"
-              : "16px"};
+                ? '22px'
+                : '16px'};
             transition: all 0.3s ease;
           `}
         >
@@ -362,21 +365,21 @@ const NativeVideoPlayer: React.FC<NativeVideoPlayerProps> = ({
       {errorMessage && (
         <div
           style={{
-            position: "absolute",
-            bottom: "10px",
-            left: "10px",
-            right: "10px",
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            color: "white",
-            padding: "8px",
-            borderRadius: "4px",
-            textAlign: "center",
+            position: 'absolute',
+            bottom: '10px',
+            left: '10px',
+            right: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            padding: '8px',
+            borderRadius: '4px',
+            textAlign: 'center',
             zIndex: 10,
-            fontWeight: "bold",
+            fontWeight: 'bold',
           }}
         >
-          <div style={{ marginBottom: "5px" }}>{errorMessage}</div>
-          <div style={{ fontSize: "12px", opacity: 0.8 }}>
+          <div style={{ marginBottom: '5px' }}>{errorMessage}</div>
+          <div style={{ fontSize: '12px', opacity: 0.8 }}>
             Try a different video format like MP4, WebM, or OGG, or check
             browser compatibility.
           </div>

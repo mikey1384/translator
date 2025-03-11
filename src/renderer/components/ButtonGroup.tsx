@@ -31,7 +31,7 @@ const spacingVariants = {
   `,
   lg: css`
     gap: 16px;
-  `
+  `,
 };
 
 const alignmentVariants = {
@@ -46,7 +46,7 @@ const alignmentVariants = {
   `,
   'space-between': css`
     justify-content: space-between;
-  `
+  `,
 };
 
 const verticalStyle = css`
@@ -63,7 +63,7 @@ const mobileStackStyle = css`
     flex-direction: column;
     width: 100%;
     gap: 12px;
-    
+
     & > * {
       width: 100%;
       margin: 0;
@@ -78,7 +78,7 @@ export default function ButtonGroup({
   vertical = false,
   wrap = true,
   mobileStack = false,
-  className
+  className,
 }: ButtonGroupProps) {
   return (
     <div

@@ -1,17 +1,17 @@
-import React, { ButtonHTMLAttributes } from "react";
-import { css, cx } from "@emotion/css";
-import { colors, gradients, shadows, breakpoints } from "../styles";
+import React, { ButtonHTMLAttributes } from 'react';
+import { css, cx } from '@emotion/css';
+import { colors, gradients, shadows, breakpoints } from '../styles';
 
 // Define the button variants and sizes
-type ButtonVariant = "primary" | "secondary" | "text" | "danger" | "success";
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger' | 'success';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
   icon?: React.ReactNode;
-  iconPosition?: "left" | "right";
+  iconPosition?: 'left' | 'right';
   className?: string;
   isLoading?: boolean;
 }
@@ -41,7 +41,7 @@ const baseButtonStyles = css`
     cursor: not-allowed;
     pointer-events: none;
   }
-  
+
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     width: 100%;
   }
@@ -143,7 +143,7 @@ const buttonVariants = {
       transform: translateY(0);
       box-shadow: 0 2px 5px rgba(46, 196, 182, 0.2);
     }
-  `
+  `,
 };
 
 const fullWidthStyle = css`
@@ -180,11 +180,11 @@ const loadingSpinnerStyle = css`
 
 export default function Button({
   children,
-  variant = "primary",
-  size = "md",
+  variant = 'primary',
+  size = 'md',
   fullWidth = false,
   icon,
-  iconPosition = "left",
+  iconPosition = 'left',
   className,
   isLoading = false,
   disabled,
@@ -204,13 +204,13 @@ export default function Button({
     >
       {isLoading && <span className={loadingSpinnerStyle} aria-hidden="true" />}
 
-      {!isLoading && icon && iconPosition === "left" && (
+      {!isLoading && icon && iconPosition === 'left' && (
         <span className={iconLeftStyle}>{icon}</span>
       )}
 
       {children}
 
-      {!isLoading && icon && iconPosition === "right" && (
+      {!isLoading && icon && iconPosition === 'right' && (
         <span className={iconRightStyle}>{icon}</span>
       )}
     </button>

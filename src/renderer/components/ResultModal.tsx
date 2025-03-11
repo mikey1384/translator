@@ -75,7 +75,7 @@ const closeButtonStyles = css`
   padding: 0.25rem;
   border-radius: 50%;
   transition: background-color 0.2s;
-  
+
   &:hover {
     background-color: ${colors.grayLight};
   }
@@ -127,18 +127,15 @@ export default function ResultModal({
   onAction,
   onCancel,
   onClose,
-  type = 'info'
+  type = 'info',
 }: ResultModalProps) {
   if (!isOpen) return null;
-  
+
   const iconColor = getTypeColor(type);
-  
+
   return (
     <div className={modalOverlayStyles} onClick={onClose}>
-      <div 
-        className={modalContentStyles}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={modalContentStyles} onClick={e => e.stopPropagation()}>
         <div className={modalHeaderStyles}>
           <h2 className={modalTitleStyles}>
             <span style={{ color: iconColor, marginRight: '0.5rem' }}>
@@ -150,9 +147,7 @@ export default function ResultModal({
             ×
           </button>
         </div>
-        <div className={modalBodyStyles}>
-          {message}
-        </div>
+        <div className={modalBodyStyles}>{message}</div>
         <div className={modalFooterStyles}>
           {cancelLabel && (
             <Button

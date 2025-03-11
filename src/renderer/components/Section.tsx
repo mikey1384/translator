@@ -1,6 +1,6 @@
-import React, { ReactNode } from "react";
-import { css, cx } from "@emotion/css";
-import { sectionStyles, sectionTitleStyles } from "../styles";
+import React, { ReactNode } from 'react';
+import { css, cx } from '@emotion/css';
+import { sectionStyles, sectionTitleStyles } from '../styles';
 
 interface SectionProps {
   children: ReactNode;
@@ -53,7 +53,7 @@ export default function Section({
         overflowVisible && overflowVisibleStyle,
         className
       )}
-      style={{ paddingTop: title ? undefined : "0.75rem" }}
+      style={{ paddingTop: title ? undefined : '0.75rem' }}
     >
       {title && <h2 className={sectionTitleStyles}>{title}</h2>}
       <div className={contentClassName}>{children}</div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { css } from "@emotion/css";
+import React, { useState, useEffect } from 'react';
+import { css } from '@emotion/css';
 import {
   formGroupStyles,
   formLabelStyles,
@@ -8,26 +8,26 @@ import {
   resultsAreaStyles,
   resultsHeaderStyles,
   selectStyles,
-} from "../styles";
-import Button from "./Button";
-import Section from "./Section";
-import TranslationProgressArea from "./TranslationProgressArea";
-import { registerSubtitleStreamListeners } from "../helpers/electron-ipc";
+} from '../styles';
+import Button from './Button';
+import Section from './Section';
+import TranslationProgressArea from './TranslationProgressArea';
+import { registerSubtitleStreamListeners } from '../helpers/electron-ipc';
 
 // Languages for translation
 const languages = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "it", name: "Italian" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "zh", name: "Chinese" },
-  { code: "ru", name: "Russian" },
-  { code: "pt", name: "Portuguese" },
-  { code: "ar", name: "Arabic" },
-  { code: "hi", name: "Hindi" },
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'hi', name: 'Hindi' },
 ];
 
 interface TranslateSubtitlesProps {
@@ -41,15 +41,15 @@ export default function TranslateSubtitles({
   sourceLanguage,
   onTranslated,
 }: TranslateSubtitlesProps) {
-  const [targetLanguage, setTargetLanguage] = useState<string>("en");
+  const [targetLanguage, setTargetLanguage] = useState<string>('en');
 
   // Progress tracking
   const [isTranslationInProgress, setIsTranslationInProgress] =
     useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
-  const [progressStage, setProgressStage] = useState<string>("");
+  const [progressStage, setProgressStage] = useState<string>('');
   const [translationProgress, setTranslationProgress] = useState<number>(0);
-  const [translationStage, setTranslationStage] = useState<string>("");
+  const [translationStage, setTranslationStage] = useState<string>('');
   const [subtitleProgress, setSubtitleProgress] = useState<{
     current?: number;
     total?: number;
@@ -57,19 +57,19 @@ export default function TranslateSubtitles({
   }>({});
 
   // Results
-  const [translatedSubtitles, setTranslatedSubtitles] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [translatedSubtitles, setTranslatedSubtitles] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   // Set up progress listener once
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
     if (isTranslationInProgress) {
-      cleanup = registerSubtitleStreamListeners((data) => {
+      cleanup = registerSubtitleStreamListeners(data => {
         // Update the proper progress metrics based on the stage
         if (
-          data.stage.toLowerCase().includes("audio") ||
-          data.stage.toLowerCase().includes("prepare")
+          data.stage.toLowerCase().includes('audio') ||
+          data.stage.toLowerCase().includes('prepare')
         ) {
           setProgress(data.percent);
           setProgressStage(data.stage);
@@ -85,7 +85,7 @@ export default function TranslateSubtitles({
             });
           }
         }
-      }, "translate");
+      }, 'translate');
     }
 
     return () => {
@@ -96,22 +96,22 @@ export default function TranslateSubtitles({
   // Translate subtitles
   const handleTranslateSubtitles = async () => {
     if (!subtitles || !window.electron) {
-      setError("No subtitles to translate");
+      setError('No subtitles to translate');
       return;
     }
 
     if (sourceLanguage === targetLanguage) {
-      setError("Source and target languages must be different");
+      setError('Source and target languages must be different');
       return;
     }
 
     try {
-      setError("");
+      setError('');
       setIsTranslationInProgress(true);
       setProgress(0);
-      setProgressStage("Starting translation...");
+      setProgressStage('Starting translation...');
       setTranslationProgress(0);
-      setTranslationStage("Preparing translation model...");
+      setTranslationStage('Preparing translation model...');
       setSubtitleProgress({});
 
       const result = await window.electron.translateSubtitles({
@@ -126,7 +126,7 @@ export default function TranslateSubtitles({
 
       setTranslatedSubtitles(result.translatedSubtitles);
       setTranslationProgress(100);
-      setTranslationStage("Translation complete!");
+      setTranslationStage('Translation complete!');
 
       // Auto close will handle this after a delay
       setTimeout(() => {
@@ -142,7 +142,7 @@ export default function TranslateSubtitles({
   // Save translated subtitles
   const handleSaveSubtitles = async () => {
     if (!translatedSubtitles || !window.electron) {
-      setError("No translated subtitles to save");
+      setError('No translated subtitles to save');
       return;
     }
 
@@ -150,7 +150,7 @@ export default function TranslateSubtitles({
       const result = await window.electron.saveFile({
         content: translatedSubtitles,
         defaultPath: `translated_subtitles_${Date.now()}.srt`,
-        filters: [{ name: "Subtitle File", extensions: ["srt"] }],
+        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
       });
 
       if (result.error) {
@@ -190,7 +190,7 @@ export default function TranslateSubtitles({
             margin-bottom: 1rem;
           `}
         >
-          {languages.find((l) => l.code === sourceLanguage)?.name ||
+          {languages.find(l => l.code === sourceLanguage)?.name ||
             sourceLanguage}
         </div>
 
@@ -198,10 +198,10 @@ export default function TranslateSubtitles({
         <select
           className={selectStyles}
           value={targetLanguage}
-          onChange={(e) => setTargetLanguage(e.target.value)}
+          onChange={e => setTargetLanguage(e.target.value)}
           disabled={isTranslationInProgress}
         >
-          {languages.map((lang) => (
+          {languages.map(lang => (
             <option key={lang.code} value={lang.code}>
               {lang.name}
             </option>
@@ -219,7 +219,7 @@ export default function TranslateSubtitles({
           onClick={handleTranslateSubtitles}
           isLoading={isTranslationInProgress}
         >
-          {isTranslationInProgress ? "Translating..." : "Translate Subtitles"}
+          {isTranslationInProgress ? 'Translating...' : 'Translate Subtitles'}
         </Button>
       </div>
 

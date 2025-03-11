@@ -1,8 +1,8 @@
-import { useCallback } from "react";
+import { useCallback } from 'react';
 
 interface FocusedInput {
   index: number | null;
-  field: "start" | "end" | "text" | null;
+  field: 'start' | 'end' | 'text' | null;
 }
 
 export const useRestoreFocus = (
@@ -34,7 +34,7 @@ export const useSubtitleNavigation = (
     if (
       nativePlayer &&
       nativePlayer.instance &&
-      typeof nativePlayer.instance.currentTime === "number"
+      typeof nativePlayer.instance.currentTime === 'number'
     ) {
       currentTime = nativePlayer.instance.currentTime;
     }
@@ -49,10 +49,10 @@ export const useSubtitleNavigation = (
     if (currentSubtitleIndex === -1) return;
     const el = subtitleRefs.current[currentSubtitleIndex];
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("highlight-subtitle");
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('highlight-subtitle');
       setTimeout(() => {
-        el.classList.remove("highlight-subtitle");
+        el.classList.remove('highlight-subtitle');
       }, 2000);
     }
   }, [subtitles, subtitleRefs]);

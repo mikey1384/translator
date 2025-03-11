@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 import {
   statusGridStyles,
   statusItemStyles,
   statusLabelStyles,
   statusIndicatorStyles,
-} from "../styles";
-import Section from "./Section";
+} from '../styles';
+import Section from './Section';
 
 interface StatusSectionProps {
   isConnected: boolean;
@@ -23,14 +23,14 @@ export default function StatusSection({ isConnected }: StatusSectionProps) {
         <div className={statusItemStyles}>
           <div className={statusLabelStyles}>Electron API</div>
           <div className={statusIndicatorStyles(isConnected)}>
-            {isConnected ? "Connected" : "Disconnected"}
+            {isConnected ? 'Connected' : 'Disconnected'}
           </div>
         </div>
 
         <div className={statusItemStyles}>
           <div className={statusLabelStyles}>IPC Connection</div>
           <div className={statusIndicatorStyles(isConnected)}>
-            {isConnected ? "Working" : "Not working"}
+            {isConnected ? 'Working' : 'Not working'}
           </div>
         </div>
       </div>

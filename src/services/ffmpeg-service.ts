@@ -1,16 +1,16 @@
-import { spawn } from "child_process";
-import path from "path";
-import fs from "fs";
-import { app } from "electron";
-import log from "electron-log";
-import ffmpegPath from "@ffmpeg-installer/ffmpeg";
-import ffprobePath from "@ffprobe-installer/ffprobe";
-import os from "os";
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import { app } from 'electron';
+import log from 'electron-log';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import ffprobePath from '@ffprobe-installer/ffprobe';
+import os from 'os';
 
 export class FFmpegError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "FFmpegError";
+    this.name = 'FFmpegError';
   }
 }
 
@@ -25,11 +25,11 @@ export class FFmpegService {
 
     // Safely get a temp directory - use app.getPath if available, otherwise use OS temp dir
     try {
-      this.tempDir = path.join(app.getPath("userData"), "temp");
+      this.tempDir = path.join(app.getPath('userData'), 'temp');
     } catch (error) {
       // Fallback to OS temp directory if app is not ready yet
-      log.warn("Electron app not ready, using OS temp directory as fallback");
-      this.tempDir = path.join(os.tmpdir(), "translator-electron-temp");
+      log.warn('Electron app not ready, using OS temp directory as fallback');
+      this.tempDir = path.join(os.tmpdir(), 'translator-electron-temp');
     }
 
     // Ensure temp directory exists
@@ -53,19 +53,19 @@ export class FFmpegService {
 
     try {
       await this.runFFmpeg([
-        "-i",
+        '-i',
         videoPath,
-        "-vn", // No video
-        "-acodec",
-        "libmp3lame",
-        "-q:a",
-        "4", // Quality setting
+        '-vn', // No video
+        '-acodec',
+        'libmp3lame',
+        '-q:a',
+        '4', // Quality setting
         outputPath,
       ]);
 
       return outputPath;
     } catch (error) {
-      log.error("Error extracting audio:", error);
+      log.error('Error extracting audio:', error);
       throw new FFmpegError(`Failed to extract audio: ${error}`);
     }
   }
@@ -76,26 +76,26 @@ export class FFmpegService {
   async getMediaDuration(filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
       const process = spawn(this.ffprobePath, [
-        "-v",
-        "error",
-        "-show_entries",
-        "format=duration",
-        "-of",
-        "default=noprint_wrappers=1:nokey=1",
+        '-v',
+        'error',
+        '-show_entries',
+        'format=duration',
+        '-of',
+        'default=noprint_wrappers=1:nokey=1',
         filePath,
       ]);
 
-      let output = "";
+      let output = '';
 
-      process.stdout.on("data", (data) => {
+      process.stdout.on('data', data => {
         output += data.toString();
       });
 
-      process.on("close", (code) => {
+      process.on('close', code => {
         if (code === 0) {
           const duration = parseFloat(output.trim());
           if (isNaN(duration)) {
-            reject(new FFmpegError("Could not parse media duration"));
+            reject(new FFmpegError('Could not parse media duration'));
           } else {
             resolve(duration);
           }
@@ -104,7 +104,7 @@ export class FFmpegService {
         }
       });
 
-      process.on("error", (err) => {
+      process.on('error', err => {
         reject(new FFmpegError(`FFprobe error: ${err.message}`));
       });
     });
@@ -133,18 +133,18 @@ export class FFmpegService {
       // Then merge the subtitles
       await this.runFFmpeg(
         [
-          "-i",
+          '-i',
           videoPath,
-          "-i",
+          '-i',
           subtitlesPath,
-          "-c:v",
-          "copy",
-          "-c:a",
-          "copy",
-          "-c:s",
-          "mov_text",
-          "-metadata:s:s:0",
-          "language=eng",
+          '-c:v',
+          'copy',
+          '-c:a',
+          'copy',
+          '-c:s',
+          'mov_text',
+          '-metadata:s:s:0',
+          'language=eng',
           outputPath,
         ],
         duration,
@@ -153,11 +153,11 @@ export class FFmpegService {
 
       return outputPath;
     } catch (error) {
-      log.error("Error merging subtitles:", error);
+      log.error('Error merging subtitles:', error);
       throw new FFmpegError(`Failed to merge subtitles: ${error}`);
     }
   }
-  
+
   /**
    * Merge subtitles with a video file and specify the output path
    */
@@ -174,26 +174,26 @@ export class FFmpegService {
       // Then merge the subtitles
       await this.runFFmpeg(
         [
-          "-i",
+          '-i',
           videoPath,
-          "-i",
+          '-i',
           subtitlesPath,
-          "-c:v",
-          "copy",
-          "-c:a",
-          "copy",
-          "-c:s",
-          "mov_text",
-          "-metadata:s:s:0",
-          "language=eng",
+          '-c:v',
+          'copy',
+          '-c:a',
+          'copy',
+          '-c:s',
+          'mov_text',
+          '-metadata:s:s:0',
+          'language=eng',
           outputPath,
         ],
         duration,
-        (progress) => {
+        progress => {
           if (progressCallback) {
             progressCallback({
               percent: progress,
-              stage: "Merging subtitles with video",
+              stage: 'Merging subtitles with video',
             });
           }
         }
@@ -201,7 +201,7 @@ export class FFmpegService {
 
       return outputPath;
     } catch (error) {
-      log.error("Error merging subtitles:", error);
+      log.error('Error merging subtitles:', error);
       throw new FFmpegError(`Failed to merge subtitles: ${error}`);
     }
   }
@@ -216,11 +216,11 @@ export class FFmpegService {
     );
 
     try {
-      await this.runFFmpeg(["-i", srtPath, outputPath]);
+      await this.runFFmpeg(['-i', srtPath, outputPath]);
 
       return outputPath;
     } catch (error) {
-      log.error("Error converting SRT to ASS:", error);
+      log.error('Error converting SRT to ASS:', error);
       throw new FFmpegError(`Failed to convert SRT to ASS: ${error}`);
     }
   }
@@ -235,9 +235,9 @@ export class FFmpegService {
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const process = spawn(this.ffmpegPath, args);
-      let output = "";
+      let output = '';
 
-      process.stderr.on("data", (data) => {
+      process.stderr.on('data', data => {
         const dataStr = data.toString();
         output += dataStr;
 
@@ -259,7 +259,7 @@ export class FFmpegService {
         }
       });
 
-      process.on("close", (code) => {
+      process.on('close', code => {
         if (code === 0) {
           resolve();
         } else {
@@ -271,7 +271,7 @@ export class FFmpegService {
         }
       });
 
-      process.on("error", (err) => {
+      process.on('error', err => {
         reject(new FFmpegError(`FFmpeg error: ${err.message}`));
       });
     });
@@ -288,20 +288,20 @@ export class FFmpegService {
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const process = spawn(this.ffmpegPath, [
-        "-i",
+        '-i',
         inputPath,
-        "-ss",
+        '-ss',
         startTime.toString(),
-        "-t",
+        '-t',
         duration.toString(),
-        "-acodec",
-        "libmp3lame",
-        "-q:a",
-        "4",
+        '-acodec',
+        'libmp3lame',
+        '-q:a',
+        '4',
         outputPath,
       ]);
 
-      process.on("close", (code) => {
+      process.on('close', code => {
         if (code === 0) {
           resolve(outputPath);
         } else {
@@ -313,7 +313,7 @@ export class FFmpegService {
         }
       });
 
-      process.on("error", (err) => {
+      process.on('error', err => {
         reject(
           new FFmpegError(`Error extracting audio segment: ${err.message}`)
         );

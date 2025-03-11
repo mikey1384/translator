@@ -5,46 +5,46 @@
 /**
  * DIAGNOSTIC TOOL - Test save functionality directly
  */
-export function testSaveFile(method: "direct" | "dialog" = "direct") {
+export function testSaveFile(method: 'direct' | 'dialog' = 'direct') {
   if (!window.electron?.saveFile) {
-    return "ERROR: saveFile method not available";
+    return 'ERROR: saveFile method not available';
   }
 
   // Create test options based on save method
   let saveOptions;
-  if (method === "direct") {
+  if (method === 'direct') {
     // Direct save with filePath
-    const userDataPath = localStorage.getItem("userData") || "";
+    const userDataPath = localStorage.getItem('userData') || '';
     const testPath = `${userDataPath}/temp/diagnostic-test-${Date.now()}.txt`;
     saveOptions = {
       content:
-        "This is a direct save test file.\nCreated for diagnostic purposes.",
+        'This is a direct save test file.\nCreated for diagnostic purposes.',
       filePath: testPath,
     };
   } else {
     // Dialog save with just defaultPath
     saveOptions = {
       content:
-        "This is a dialog save test file.\nCreated for diagnostic purposes.",
-      defaultPath: "diagnostic-test.txt",
+        'This is a dialog save test file.\nCreated for diagnostic purposes.',
+      defaultPath: 'diagnostic-test.txt',
     };
   }
 
   return window.electron
     .saveFile(saveOptions)
-    .then((result) => {
+    .then(result => {
       return `SUCCESS: ${JSON.stringify(result)}`;
     })
-    .catch((error) => {
+    .catch(error => {
       return `ERROR: ${error.message || String(error)}`;
     });
 }
 
 // Make diagnostic function globally available
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   (window as any).testSaveFile = testSaveFile;
-  (window as any).testDirectSave = () => testSaveFile("direct");
-  (window as any).testDialogSave = () => testSaveFile("dialog");
+  (window as any).testDirectSave = () => testSaveFile('direct');
+  (window as any).testDialogSave = () => testSaveFile('dialog');
 }
 
 /**
@@ -57,7 +57,7 @@ export async function retryElectronCall<T>(
   initialDelay = 300
 ): Promise<T> {
   if (!window.electron) {
-    throw new Error("Electron API not available");
+    throw new Error('Electron API not available');
   }
 
   // Get the method from electron
@@ -72,7 +72,7 @@ export async function retryElectronCall<T>(
     return result;
   } catch (error: any) {
     // Only retry for "No handler registered" errors
-    if (!error.message?.includes("No handler registered")) {
+    if (!error.message?.includes('No handler registered')) {
       throw error;
     }
 
@@ -80,14 +80,14 @@ export async function retryElectronCall<T>(
     let delay = initialDelay;
     for (let i = 0; i < maxRetries; i++) {
       // Wait before retrying
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise(resolve => setTimeout(resolve, delay));
 
       try {
         const result = await electronMethod(args);
         return result;
       } catch (retryError: any) {
         // If not a "No handler registered" error, rethrow
-        if (!retryError.message?.includes("No handler registered")) {
+        if (!retryError.message?.includes('No handler registered')) {
           throw retryError;
         }
 
@@ -108,9 +108,9 @@ export async function retryElectronCall<T>(
  */
 function downloadFile(content: string, filename: string): string {
   try {
-    const blob = new Blob([content], { type: "text/plain" });
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
@@ -143,8 +143,8 @@ export async function saveFileWithRetry(options: {
   forceDialog?: boolean;
 }): Promise<{ filePath?: string; error?: string }> {
   // Get the original file paths if they exist and weren't passed in
-  const storedTargetPath = localStorage.getItem("targetPath");
-  const storedOriginalLoadPath = localStorage.getItem("originalLoadPath");
+  const storedTargetPath = localStorage.getItem('targetPath');
+  const storedOriginalLoadPath = localStorage.getItem('originalLoadPath');
 
   // Use passed values or fall back to stored values, but respect forceDialog
   const targetPath = options.forceDialog
@@ -167,12 +167,12 @@ export async function saveFileWithRetry(options: {
     const result = await retryElectronCall<{
       filePath?: string;
       error?: string;
-    }>("saveFile", saveOptions);
+    }>('saveFile', saveOptions);
 
     // Update our path information if the save was successful
     if (result?.filePath && !result.error) {
       // Store the successful path for future use
-      localStorage.setItem("targetPath", result.filePath);
+      localStorage.setItem('targetPath', result.filePath);
     }
 
     return result;
@@ -181,8 +181,8 @@ export async function saveFileWithRetry(options: {
     try {
       const filename =
         options.defaultPath ||
-        options.filePath?.split("/").pop() ||
-        "download.srt";
+        options.filePath?.split('/').pop() ||
+        'download.srt';
       const downloadedFilename = downloadFile(options.content, filename);
       return {
         filePath: downloadedFilename,
@@ -219,7 +219,7 @@ export async function openFileWithRetry(options: {
       fileContents?: string[];
       error?: string;
       canceled?: boolean;
-    }>("openFile", options);
+    }>('openFile', options);
     return result;
   } catch (error: any) {
     return {
@@ -243,7 +243,7 @@ export function registerSubtitleStreamListeners(
     current?: number;
     total?: number;
   }) => void,
-  type: "generate" | "translate" = "generate"
+  type: 'generate' | 'translate' = 'generate'
 ): () => void {
   // This variable will hold the function so we can remove it later
   let listener: ((event: any, progress: any) => void) | null = null;
@@ -254,11 +254,11 @@ export function registerSubtitleStreamListeners(
     listener = (event: any, progress: any) => {
       // Always provide default values to avoid undefined properties
       const safeProgress = {
-        partialResult: progress?.partialResult || "",
+        partialResult: progress?.partialResult || '',
         percent: progress?.percent || 0,
         stage:
           progress?.stage ||
-          (type === "generate" ? "Processing" : "Translating"),
+          (type === 'generate' ? 'Processing' : 'Translating'),
         current: progress?.current || 0,
         total: progress?.total || 0,
       };
@@ -269,7 +269,7 @@ export function registerSubtitleStreamListeners(
     };
 
     // Register only the appropriate listener
-    if (type === "generate") {
+    if (type === 'generate') {
       window.electron.onGenerateSubtitlesProgress(listener);
     } else {
       window.electron.onTranslateSubtitlesProgress(listener);
@@ -279,7 +279,7 @@ export function registerSubtitleStreamListeners(
   // Return a cleanup function
   return () => {
     if (window.electron && listener) {
-      if (type === "generate") {
+      if (type === 'generate') {
         window.electron.onGenerateSubtitlesProgress(null);
       } else {
         window.electron.onTranslateSubtitlesProgress(null);

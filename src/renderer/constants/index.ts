@@ -40,21 +40,21 @@ export const colors = {
   gray: '#6c757d',
   grayLight: '#f1f3f5',
   grayDark: '#343a40',
-  white: '#ffffff'
+  white: '#ffffff',
 };
 
 // Languages for subtitle generation and translation
 export const languages = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "it", name: "Italian" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "zh", name: "Chinese" },
-  { code: "ru", name: "Russian" },
-  { code: "pt", name: "Portuguese" },
-  { code: "ar", name: "Arabic" },
-  { code: "hi", name: "Hindi" },
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'hi', name: 'Hindi' },
 ];

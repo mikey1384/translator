@@ -54,7 +54,7 @@ const cancelButtonStyles = css`
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s;
-  
+
   &:hover {
     background-color: #d32f2f;
   }
@@ -63,29 +63,31 @@ const cancelButtonStyles = css`
 export default function MergingProgressArea({
   mergeProgress,
   mergeStage,
-  onSetIsMergingInProgress
+  onSetIsMergingInProgress,
 }: MergingProgressAreaProps) {
   return (
     <div className={progressAreaStyles}>
       <div className={titleStyles}>
         <span>Merging Progress</span>
-        <button 
+        <button
           className={cancelButtonStyles}
           onClick={() => onSetIsMergingInProgress(false)}
         >
           Cancel
         </button>
       </div>
-      
+
       <div>
-        <ProgressBar 
-          progress={mergeProgress} 
-          barColor={colors.info} 
+        <ProgressBar
+          progress={mergeProgress}
+          barColor={colors.info}
           height={10}
         />
         <p className={progressTextStyles}>
           {mergeStage || 'Preparing to merge...'}
-          {mergeProgress > 0 && mergeProgress < 100 && ` (${Math.round(mergeProgress)}%)`}
+          {mergeProgress > 0 &&
+            mergeProgress < 100 &&
+            ` (${Math.round(mergeProgress)}%)`}
           {mergeProgress >= 100 && ' Complete!'}
         </p>
       </div>

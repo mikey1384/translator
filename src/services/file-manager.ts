@@ -1,13 +1,13 @@
-import { app, dialog, BrowserWindow } from "electron";
-import fs from "fs/promises";
-import path from "path";
-import log from "electron-log";
-import os from "os";
+import { app, dialog, BrowserWindow } from 'electron';
+import fs from 'fs/promises';
+import path from 'path';
+import log from 'electron-log';
+import os from 'os';
 
 export class FileManagerError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "FileManagerError";
+    this.name = 'FileManagerError';
   }
 }
 
@@ -17,13 +17,13 @@ export class FileManager {
   constructor() {
     // Safely get a temp directory - use app.getPath if available, otherwise use OS temp dir
     try {
-      this.tempDir = path.join(app.getPath("userData"), "temp");
+      this.tempDir = path.join(app.getPath('userData'), 'temp');
     } catch (error) {
       // Fallback to OS temp directory if app is not ready yet
       log.warn(
-        "Electron app not ready, using OS temp directory as fallback for FileManager"
+        'Electron app not ready, using OS temp directory as fallback for FileManager'
       );
-      this.tempDir = path.join(os.tmpdir(), "translator-electron-temp");
+      this.tempDir = path.join(os.tmpdir(), 'translator-electron-temp');
     }
 
     log.info(`FileManager temp directory: ${this.tempDir}`);
@@ -37,7 +37,7 @@ export class FileManager {
       await fs.mkdir(this.tempDir, { recursive: true });
       log.info(`Temp directory created at: ${this.tempDir}`);
     } catch (error) {
-      log.error("Failed to create temp directory:", error);
+      log.error('Failed to create temp directory:', error);
       throw new FileManagerError(`Failed to create temp directory: ${error}`);
     }
   }
@@ -49,9 +49,9 @@ export class FileManager {
     try {
       await fs.rm(this.tempDir, { recursive: true, force: true });
       await fs.mkdir(this.tempDir, { recursive: true });
-      log.info("Temp directory cleaned up");
+      log.info('Temp directory cleaned up');
     } catch (error) {
-      log.error("Error cleaning up temp directory:", error);
+      log.error('Error cleaning up temp directory:', error);
       throw new FileManagerError(`Error cleaning up temp directory: ${error}`);
     }
   }
@@ -71,103 +71,122 @@ export class FileManager {
   ): Promise<string> {
     try {
       const { defaultPath, filters, filePath } = options;
-      
+
       // Log all parameters for debugging
-      log.info("saveFile called with options:", {
+      log.info('saveFile called with options:', {
         contentLength: content?.length,
         defaultPath,
         hasFilters: Boolean(filters),
         filePath,
       });
-      
+
       // If a filePath is provided, save directly to that path without showing a dialog
       if (filePath) {
         log.info(`Attempting to save directly to file: ${filePath}`);
-        
+
         // Check if this is a synthetic path from browser uploads
         if (filePath.startsWith('/temp/')) {
-          log.info(`Detected synthetic browser path: ${filePath}, using Save As dialog instead`);
+          log.info(
+            `Detected synthetic browser path: ${filePath}, using Save As dialog instead`
+          );
           // For synthetic paths, use Save As with the filename
           const filename = filePath.split('/').pop() || 'subtitle.srt';
-          
+
           // Show Save As dialog with browser filename
           const window = BrowserWindow.getFocusedWindow();
           if (!window) {
-            throw new FileManagerError("No focused window found");
+            throw new FileManagerError('No focused window found');
           }
-          
-          const { canceled, filePath: selectedPath } = await dialog.showSaveDialog(window, {
-            defaultPath: filename,
-            filters: filters || [
-              { name: "Text Files", extensions: ["txt", "srt"] },
-              { name: "All Files", extensions: ["*"] },
-            ],
-          });
-          
+
+          const { canceled, filePath: selectedPath } =
+            await dialog.showSaveDialog(window, {
+              defaultPath: filename,
+              filters: filters || [
+                { name: 'Text Files', extensions: ['txt', 'srt'] },
+                { name: 'All Files', extensions: ['*'] },
+              ],
+            });
+
           if (canceled || !selectedPath) {
-            throw new FileManagerError("File save was canceled");
+            throw new FileManagerError('File save was canceled');
           }
-          
-          await fs.writeFile(selectedPath, content, "utf8");
+
+          await fs.writeFile(selectedPath, content, 'utf8');
           log.info(`Synthetic path converted to real path: ${selectedPath}`);
           return selectedPath;
         }
-        
+
         try {
           // Verify the file path is valid and accessible
           const pathInfo = await fs.stat(filePath).catch(e => {
-            log.warn(`Path does not exist or is not accessible: ${filePath}`, e);
+            log.warn(
+              `Path does not exist or is not accessible: ${filePath}`,
+              e
+            );
             // Check permissions
             return null;
           });
-          
+
           if (pathInfo && !pathInfo.isFile()) {
             log.error(`Path exists but is not a file: ${filePath}`);
-            throw new FileManagerError(`Cannot save to ${filePath}: not a file`);
+            throw new FileManagerError(
+              `Cannot save to ${filePath}: not a file`
+            );
           }
         } catch (statError: any) {
           // If it's not a "file doesn't exist" error, check for permission issues
           if (statError.code !== 'ENOENT') {
             log.error(`Error checking file path: ${statError.code}`, statError);
-            
+
             // Check for specific permission errors
             if (statError.code === 'EACCES') {
               log.error(`Permission denied for file: ${filePath}`);
-              throw new FileManagerError(`Permission denied: Cannot write to ${filePath}. Try using Save As instead.`);
+              throw new FileManagerError(
+                `Permission denied: Cannot write to ${filePath}. Try using Save As instead.`
+              );
             }
-            
+
             throw statError;
           }
           // Otherwise we'll try to create the file
           log.info(`File doesn't exist yet, will create it: ${filePath}`);
         }
-        
+
         // Try to write the file with proper error handling for permissions
         try {
-          await fs.writeFile(filePath, content, "utf8");
+          await fs.writeFile(filePath, content, 'utf8');
           log.info(`File saved directly to: ${filePath}`);
           return filePath;
         } catch (writeError: any) {
           // Handle permission errors specifically
           if (writeError.code === 'EACCES') {
             log.error(`Permission denied when writing to file: ${filePath}`);
-            
+
             // Try to save to Downloads folder as fallback
             try {
-              const downloadsPath = path.join(app.getPath('downloads'), path.basename(filePath));
-              log.info(`Attempting to save to Downloads folder instead: ${downloadsPath}`);
-              
-              await fs.writeFile(downloadsPath, content, "utf8");
+              const downloadsPath = path.join(
+                app.getPath('downloads'),
+                path.basename(filePath)
+              );
+              log.info(
+                `Attempting to save to Downloads folder instead: ${downloadsPath}`
+              );
+
+              await fs.writeFile(downloadsPath, content, 'utf8');
               log.info(`File saved to Downloads folder: ${downloadsPath}`);
-              
+
               // Return special message that UI can detect
-              throw new FileManagerError(`Permission denied for ${filePath}. File was saved to Downloads folder: ${downloadsPath}`);
+              throw new FileManagerError(
+                `Permission denied for ${filePath}. File was saved to Downloads folder: ${downloadsPath}`
+              );
             } catch (fallbackError) {
               log.error('Failed to save to Downloads folder:', fallbackError);
-              throw new FileManagerError(`Permission denied for ${filePath}. Please try Save As to choose a different location.`);
+              throw new FileManagerError(
+                `Permission denied for ${filePath}. Please try Save As to choose a different location.`
+              );
             }
           }
-          
+
           // Re-throw other errors
           throw writeError;
         }
@@ -176,22 +195,25 @@ export class FileManager {
       // Otherwise, show a save dialog
       const window = BrowserWindow.getFocusedWindow();
       if (!window) {
-        throw new FileManagerError("No focused window found");
+        throw new FileManagerError('No focused window found');
       }
 
-      const { canceled, filePath: selectedPath } = await dialog.showSaveDialog(window, {
-        defaultPath,
-        filters: filters || [
-          { name: "Text Files", extensions: ["txt", "srt"] },
-          { name: "All Files", extensions: ["*"] },
-        ],
-      });
+      const { canceled, filePath: selectedPath } = await dialog.showSaveDialog(
+        window,
+        {
+          defaultPath,
+          filters: filters || [
+            { name: 'Text Files', extensions: ['txt', 'srt'] },
+            { name: 'All Files', extensions: ['*'] },
+          ],
+        }
+      );
 
       if (canceled || !selectedPath) {
-        throw new FileManagerError("File save was canceled");
+        throw new FileManagerError('File save was canceled');
       }
 
-      await fs.writeFile(selectedPath, content, "utf8");
+      await fs.writeFile(selectedPath, content, 'utf8');
       log.info(`File saved to: ${selectedPath}`);
       return selectedPath;
     } catch (error: any) {
@@ -215,55 +237,62 @@ export class FileManager {
     try {
       const window = BrowserWindow.getFocusedWindow();
       if (!window) {
-        throw new FileManagerError("No focused window found");
+        throw new FileManagerError('No focused window found');
       }
 
       const { canceled, filePaths } = await dialog.showOpenDialog(window, {
-        properties: multiple ? ["openFile", "multiSelections"] : ["openFile"],
+        properties: multiple ? ['openFile', 'multiSelections'] : ['openFile'],
         filters: filters || [
-          { name: "Media Files", extensions: ["mp4", "avi", "mkv", "mov"] },
-          { name: "Subtitle Files", extensions: ["srt", "ass", "vtt"] },
-          { name: "All Files", extensions: ["*"] },
+          { name: 'Media Files', extensions: ['mp4', 'avi', 'mkv', 'mov'] },
+          { name: 'Subtitle Files', extensions: ['srt', 'ass', 'vtt'] },
+          { name: 'All Files', extensions: ['*'] },
         ],
       });
 
       if (canceled || filePaths.length === 0) {
-        throw new FileManagerError("File open was canceled");
+        throw new FileManagerError('File open was canceled');
       }
 
       // For text files, also read the content
       const isTextFile = (filePath: string) => {
         const ext = path.extname(filePath).toLowerCase();
-        return [".srt", ".ass", ".vtt", ".txt"].includes(ext);
+        return ['.srt', '.ass', '.vtt', '.txt'].includes(ext);
       };
 
       if (filePaths.some(isTextFile)) {
         try {
           const fileContents = await Promise.all(
-            filePaths.map(async (filePath) => {
+            filePaths.map(async filePath => {
               if (isTextFile(filePath)) {
                 try {
-                  const content = await fs.readFile(filePath, "utf8");
-                  log.info(`Successfully read file content from: ${filePath}, length: ${content.length}`);
+                  const content = await fs.readFile(filePath, 'utf8');
+                  log.info(
+                    `Successfully read file content from: ${filePath}, length: ${content.length}`
+                  );
                   return content;
                 } catch (readError: any) {
-                  log.error(`Error reading file content from: ${filePath}`, readError);
-                  throw new FileManagerError(`Failed to read file content: ${readError.message}`);
+                  log.error(
+                    `Error reading file content from: ${filePath}`,
+                    readError
+                  );
+                  throw new FileManagerError(
+                    `Failed to read file content: ${readError.message}`
+                  );
                 }
               }
-              return "";
+              return '';
             })
           );
           return { filePaths, fileContents };
         } catch (contentError) {
-          log.error("Error processing file contents", contentError);
+          log.error('Error processing file contents', contentError);
           throw contentError;
         }
       }
 
       return { filePaths };
     } catch (error) {
-      log.error("Error opening file:", error);
+      log.error('Error opening file:', error);
       throw new FileManagerError(`Error opening file: ${error}`);
     }
   }
@@ -275,11 +304,11 @@ export class FileManager {
     try {
       const filename = `temp_${Date.now()}${extension}`;
       const filePath = path.join(this.tempDir, filename);
-      await fs.writeFile(filePath, content, "utf8");
+      await fs.writeFile(filePath, content, 'utf8');
       log.info(`Temp file written to: ${filePath}`);
       return filePath;
     } catch (error) {
-      log.error("Error writing temp file:", error);
+      log.error('Error writing temp file:', error);
       throw new FileManagerError(`Error writing temp file: ${error}`);
     }
   }
@@ -289,7 +318,7 @@ export class FileManager {
    */
   async readFile(filePath: string): Promise<string> {
     try {
-      return await fs.readFile(filePath, "utf8");
+      return await fs.readFile(filePath, 'utf8');
     } catch (error) {
       log.error(`Error reading file ${filePath}:`, error);
       throw new FileManagerError(`Error reading file: ${error}`);

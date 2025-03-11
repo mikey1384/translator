@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { css } from "@emotion/css";
+import React, { useState, useEffect, useRef } from 'react';
+import { css } from '@emotion/css';
 import NativeVideoPlayer, {
   nativePlayer,
-} from "./EditSubtitles/NativeVideoPlayer";
-import { SrtSegment } from "../App";
-import TimestampDisplay from "./TimestampDisplay";
-import Button from "./Button";
+} from './EditSubtitles/NativeVideoPlayer';
+import { SrtSegment } from '../App';
+import TimestampDisplay from './TimestampDisplay';
+import Button from './Button';
 
 interface StickyVideoPlayerProps {
   videoUrl: string;
@@ -26,7 +26,7 @@ const fixedVideoContainerStyles = (
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: ${isFullyExpanded ? "calc(95% - 30px)" : "calc(90% - 30px)"};
+  width: ${isFullyExpanded ? 'calc(95% - 30px)' : 'calc(90% - 30px)'};
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -38,10 +38,10 @@ const fixedVideoContainerStyles = (
   flex-direction: column;
   align-items: center;
   max-height: ${isFullyExpanded
-    ? "calc(100vh - 60px)"
+    ? 'calc(100vh - 60px)'
     : isExpanded
-    ? "50vh"
-    : "40vh"};
+      ? '50vh'
+      : '40vh'};
   overflow: visible;
   transition: all 0.3s ease-out;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
@@ -160,7 +160,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     calculateHeight();
 
     // Add resize event listener
-    window.addEventListener("resize", calculateHeight);
+    window.addEventListener('resize', calculateHeight);
 
     // Notify parent that video is always sticky
     if (onStickyChange) {
@@ -169,7 +169,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
     // Clean up
     return () => {
-      window.removeEventListener("resize", calculateHeight);
+      window.removeEventListener('resize', calculateHeight);
     };
   }, [onStickyChange]);
 
@@ -178,13 +178,13 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     const checkScrollPosition = () => {
       // Find the sections
       const editSubtitlesSection = document.getElementById(
-        "edit-subtitles-section"
+        'edit-subtitles-section'
       );
 
       // Find the GenerateSubtitles section by looking for the section with "Generate Subtitles" title
       const generateSubtitlesSections = Array.from(
-        document.querySelectorAll("h2")
-      ).filter((h2) => h2.textContent?.includes("Generate Subtitles"));
+        document.querySelectorAll('h2')
+      ).filter(h2 => h2.textContent?.includes('Generate Subtitles'));
       const generateSubtitlesSection =
         generateSubtitlesSections.length > 0
           ? generateSubtitlesSections[0]
@@ -240,11 +240,11 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       }
     };
 
-    window.addEventListener("scroll", throttledScroll);
+    window.addEventListener('scroll', throttledScroll);
 
     // Clean up
     return () => {
-      window.removeEventListener("scroll", throttledScroll);
+      window.removeEventListener('scroll', throttledScroll);
       if (scrollTimeout) {
         window.clearTimeout(scrollTimeout);
       }
@@ -258,12 +258,12 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     const videoElement = nativePlayer.instance;
     const updatePlayState = () => setIsPlaying(!videoElement.paused);
 
-    videoElement.addEventListener("play", updatePlayState);
-    videoElement.addEventListener("pause", updatePlayState);
+    videoElement.addEventListener('play', updatePlayState);
+    videoElement.addEventListener('pause', updatePlayState);
 
     return () => {
-      videoElement.removeEventListener("play", updatePlayState);
-      videoElement.removeEventListener("pause", updatePlayState);
+      videoElement.removeEventListener('play', updatePlayState);
+      videoElement.removeEventListener('pause', updatePlayState);
     };
   }, [nativePlayer.instance]);
 
@@ -277,7 +277,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     try {
       isPlaying ? nativePlayer.pause() : nativePlayer.play();
     } catch (err) {
-      console.error("Error toggling play state:", err);
+      console.error('Error toggling play state:', err);
     }
   };
 
@@ -285,7 +285,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const playButton = (
     <Button
       onClick={handleTogglePlay}
-      variant={isPlaying ? "danger" : "primary"}
+      variant={isPlaying ? 'danger' : 'primary'}
       size="sm"
       className={`${buttonGradientStyles.base} ${
         isPlaying ? buttonGradientStyles.danger : buttonGradientStyles.primary
@@ -336,8 +336,8 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         className={`${fixedVideoContainerStyles(
           isExpanded,
           isFullyExpanded
-        )} sticky-video-container ${isExpanded ? "expanded" : ""} ${
-          isFullyExpanded ? "fully-expanded" : ""
+        )} sticky-video-container ${isExpanded ? 'expanded' : ''} ${
+          isFullyExpanded ? 'fully-expanded' : ''
         }`}
         ref={playerRef}
         data-expanded={isExpanded}

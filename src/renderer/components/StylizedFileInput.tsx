@@ -1,9 +1,9 @@
-import React, { ChangeEvent, InputHTMLAttributes } from "react";
-import { css } from "@emotion/css";
-import { colors, shadows, breakpoints } from "../styles";
+import React, { ChangeEvent, InputHTMLAttributes } from 'react';
+import { css } from '@emotion/css';
+import { colors, shadows, breakpoints } from '../styles';
 
 interface StylizedFileInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: string;
   buttonText?: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -46,7 +46,7 @@ const fileInputButtonStyles = css`
     transform: translateY(0);
     box-shadow: ${shadows.sm};
   }
-  
+
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     width: 100%;
   }
@@ -59,11 +59,11 @@ const fileInputContainerStyles = css`
   margin-bottom: 16px;
   width: 100%;
   box-sizing: border-box;
-  
+
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     flex-direction: column;
     align-items: flex-start;
-    
+
     > * {
       width: 100%;
     }
@@ -76,7 +76,7 @@ const fileInfoStyles = css`
   color: ${colors.gray};
   display: flex;
   align-items: center;
-  
+
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     margin-left: 0;
     margin-top: 8px;
@@ -107,7 +107,7 @@ const hiddenInputStyles = css`
 
 export default function StylizedFileInput({
   label,
-  buttonText = "Choose File",
+  buttonText = 'Choose File',
   onChange,
   accept,
   showSelectedFile = true,

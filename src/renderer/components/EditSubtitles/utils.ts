@@ -7,10 +7,10 @@ export interface SrtSegment {
 }
 
 export const srtTimeToSeconds = (timeString: string): number => {
-  const parts = timeString.split(":");
+  const parts = timeString.split(':');
   if (parts.length !== 3) return 0;
   const [hours, minutes, secondsPart] = parts;
-  const [seconds, milliseconds] = secondsPart.replace(",", ".").split(".");
+  const [seconds, milliseconds] = secondsPart.replace(',', '.').split('.');
   return (
     parseInt(hours) * 3600 +
     parseInt(minutes) * 60 +
@@ -23,7 +23,7 @@ export const validateSubtitleTimings = (
   subtitles: SrtSegment[]
 ): SrtSegment[] => {
   if (!subtitles || subtitles.length === 0) return [];
-  return subtitles.map((subtitle) => {
+  return subtitles.map(subtitle => {
     const fixed = { ...subtitle };
     if (fixed.start < 0) fixed.start = 0;
     if (fixed.end <= fixed.start) fixed.end = fixed.start + 0.5;
@@ -36,17 +36,17 @@ export const secondsToSrtTime = (seconds: number): string => {
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
   const ms = Math.round((seconds - Math.floor(seconds)) * 1000);
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
     2,
-    "0"
-  )}:${String(secs).padStart(2, "0")},${String(ms).padStart(3, "0")}`;
+    '0'
+  )}:${String(secs).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
 };
 
 export const parseSrt = (srtString: string): SrtSegment[] => {
   if (!srtString) return [];
   const segments: SrtSegment[] = [];
   const blocks = srtString.trim().split(/\r?\n\r?\n/);
-  blocks.forEach((block) => {
+  blocks.forEach(block => {
     const lines = block.split(/\r?\n/);
     if (lines.length < 3) return;
     const index = parseInt(lines[0].trim(), 10);
@@ -56,7 +56,7 @@ export const parseSrt = (srtString: string): SrtSegment[] => {
     if (!timeMatch) return;
     const startTime = srtTimeToSeconds(timeMatch[1]);
     const endTime = srtTimeToSeconds(timeMatch[2]);
-    const text = lines.slice(2).join("\n");
+    const text = lines.slice(2).join('\n');
     segments.push({ index, start: startTime, end: endTime, text });
   });
   return segments;
@@ -70,5 +70,5 @@ export const generateSrtContent = (segments: SrtSegment[]): string => {
       const endTime = secondsToSrtTime(segment.end);
       return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
     })
-    .join("\n\n");
+    .join('\n\n');
 };

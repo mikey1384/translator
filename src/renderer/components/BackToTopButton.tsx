@@ -17,7 +17,7 @@ const buttonContainerStyles = css`
 
 export default function BackToTopButton({
   scrollThreshold = 300,
-  onClick
+  onClick,
 }: BackToTopButtonProps) {
   const [showButton, setShowButton] = useState(false);
 

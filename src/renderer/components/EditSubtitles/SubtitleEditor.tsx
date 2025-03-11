@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { css } from "@emotion/css";
-import Button from "../Button";
-import { debounce } from "lodash";
-import { SrtSegment } from "./VideoPlayerWithSubtitles";
+import React, { useState, useEffect, useRef } from 'react';
+import { css } from '@emotion/css';
+import Button from '../Button';
+import { debounce } from 'lodash';
+import { SrtSegment } from './VideoPlayerWithSubtitles';
 
 interface SubtitleEditorProps {
   sub: SrtSegment;
@@ -12,10 +12,10 @@ interface SubtitleEditorProps {
   secondsToSrtTime: (seconds: number) => string;
   onEditSubtitle: (
     index: number,
-    field: "start" | "end" | "text",
+    field: 'start' | 'end' | 'text',
     value: number | string
   ) => void;
-  onTimeInputBlur: (index: number, field: "start" | "end") => void;
+  onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
   onRemoveSubtitle: (index: number) => void;
   onInsertSubtitle: (index: number) => void;
   onSeekToSubtitle: (startTime: number) => void;
@@ -26,17 +26,17 @@ interface SubtitleEditorProps {
 
 // Style for the textarea
 const textInputStyles = {
-  width: "100%",
-  minHeight: "60px",
-  padding: "8px",
+  width: '100%',
+  minHeight: '60px',
+  padding: '8px',
   borderRadius: 4,
-  border: "1px solid rgba(221, 221, 221, 0.8)",
-  backgroundColor: "rgba(255, 255, 255, 0.9)",
-  resize: "vertical" as const,
-  fontFamily: "monospace",
-  fontSize: "inherit",
-  lineHeight: "1.4",
-  whiteSpace: "pre-wrap" as const,
+  border: '1px solid rgba(221, 221, 221, 0.8)',
+  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  resize: 'vertical' as const,
+  fontFamily: 'monospace',
+  fontSize: 'inherit',
+  lineHeight: '1.4',
+  whiteSpace: 'pre-wrap' as const,
 };
 
 // Style for time inputs
@@ -200,7 +200,7 @@ export default function SubtitleEditor({
   // Debounce the actual update to the parent component
   const debouncedTextUpdate = useRef(
     debounce((index: number, text: string) => {
-      onEditSubtitle(index, "text", text);
+      onEditSubtitle(index, 'text', text);
     }, 300)
   ).current;
 
@@ -230,13 +230,13 @@ export default function SubtitleEditor({
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}
       >
-        <div style={{ fontWeight: "bold" }}>#{sub.index}</div>
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div style={{ fontWeight: 'bold' }}>#{sub.index}</div>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             onClick={() => onRemoveSubtitle(index)}
             size="sm"
@@ -269,10 +269,10 @@ export default function SubtitleEditor({
       </div>
       <div
         style={{
-          display: "flex",
+          display: 'flex',
           gap: 10,
-          alignItems: "center",
-          flexWrap: "wrap",
+          alignItems: 'center',
+          flexWrap: 'wrap',
         }}
       >
         <div>
@@ -282,8 +282,8 @@ export default function SubtitleEditor({
             value={
               editingTimes[`${index}-start`] ?? secondsToSrtTime(sub.start)
             }
-            onChange={(e) => onEditSubtitle(index, "start", e.target.value)}
-            onBlur={() => onTimeInputBlur(index, "start")}
+            onChange={e => onEditSubtitle(index, 'start', e.target.value)}
+            onBlur={() => onTimeInputBlur(index, 'start')}
             className={timeInputStyles}
             id={`subtitle-${index}-start`}
           />
@@ -293,21 +293,21 @@ export default function SubtitleEditor({
           <input
             type="text"
             value={editingTimes[`${index}-end`] ?? secondsToSrtTime(sub.end)}
-            onChange={(e) => onEditSubtitle(index, "end", e.target.value)}
-            onBlur={() => onTimeInputBlur(index, "end")}
+            onChange={e => onEditSubtitle(index, 'end', e.target.value)}
+            onBlur={() => onTimeInputBlur(index, 'end')}
             className={timeInputStyles}
             id={`subtitle-${index}-end`}
           />
         </div>
 
         {/* Add Shift Buttons */}
-        <div style={{ display: "flex", gap: "4px" }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
           <Button
             onClick={() => onShiftSubtitle(index, -0.1)}
             size="sm"
             variant="secondary"
             title="Shift backward by 0.1 second"
-            style={{ padding: "2px 5px", minWidth: "30px" }}
+            style={{ padding: '2px 5px', minWidth: '30px' }}
             className="shift-button"
             disabled={isShiftingDisabled}
           >
@@ -318,7 +318,7 @@ export default function SubtitleEditor({
             size="sm"
             variant="secondary"
             title="Shift backward by 0.5 second"
-            style={{ padding: "2px 5px", minWidth: "30px" }}
+            style={{ padding: '2px 5px', minWidth: '30px' }}
             className="shift-button"
             disabled={isShiftingDisabled}
           >
@@ -329,7 +329,7 @@ export default function SubtitleEditor({
             size="sm"
             variant="secondary"
             title="Shift forward by 0.1 second"
-            style={{ padding: "2px 5px", minWidth: "30px" }}
+            style={{ padding: '2px 5px', minWidth: '30px' }}
             className="shift-button"
             disabled={isShiftingDisabled}
           >
@@ -340,7 +340,7 @@ export default function SubtitleEditor({
             size="sm"
             variant="secondary"
             title="Shift forward by 0.5 second"
-            style={{ padding: "2px 5px", minWidth: "30px" }}
+            style={{ padding: '2px 5px', minWidth: '30px' }}
             className="shift-button"
             disabled={isShiftingDisabled}
           >
@@ -348,7 +348,7 @@ export default function SubtitleEditor({
           </Button>
         </div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             onClick={() => onSeekToSubtitle(sub.start)}
             size="sm"
@@ -363,16 +363,16 @@ export default function SubtitleEditor({
               onPlaySubtitle(sub.start, sub.end);
             }}
             size="sm"
-            variant={isPlaying ? "danger" : "primary"}
-            style={{ minWidth: "60px" }}
-            title={isPlaying ? "Pause playback" : "Play this subtitle segment"}
+            variant={isPlaying ? 'danger' : 'primary'}
+            style={{ minWidth: '60px' }}
+            title={isPlaying ? 'Pause playback' : 'Play this subtitle segment'}
             className={`${buttonGradientStyles.base} ${
               isPlaying
                 ? buttonGradientStyles.danger
                 : buttonGradientStyles.primary
             }`}
           >
-            {isPlaying ? "Pause" : "Play"}
+            {isPlaying ? 'Pause' : 'Play'}
           </Button>
         </div>
       </div>

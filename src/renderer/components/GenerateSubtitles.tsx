@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { css } from "@emotion/css";
+import React, { useState } from 'react';
+import { css } from '@emotion/css';
 import {
   formGroupStyles,
   errorMessageStyles,
@@ -8,11 +8,11 @@ import {
   selectStyles,
   fileInputWrapperStyles,
   breakpoints,
-} from "../styles";
-import Button from "./Button";
-import ButtonGroup from "./ButtonGroup";
-import StylizedFileInput from "./StylizedFileInput";
-import Section from "./Section";
+} from '../styles';
+import Button from './Button';
+import ButtonGroup from './ButtonGroup';
+import StylizedFileInput from './StylizedFileInput';
+import Section from './Section';
 
 // Maximum file size in MB
 const MAX_MB = 500;
@@ -20,18 +20,18 @@ const MAX_FILE_SIZE = MAX_MB * 1024 * 1024;
 
 // Languages for translation
 const languages = [
-  { value: "original", label: "Same as Audio" },
-  { value: "english", label: "Translate to English" },
-  { value: "korean", label: "Translate to Korean" },
-  { value: "spanish", label: "Translate to Spanish" },
-  { value: "french", label: "Translate to French" },
-  { value: "german", label: "Translate to German" },
-  { value: "chinese", label: "Translate to Chinese" },
-  { value: "japanese", label: "Translate to Japanese" },
-  { value: "russian", label: "Translate to Russian" },
-  { value: "portuguese", label: "Translate to Portuguese" },
-  { value: "italian", label: "Translate to Italian" },
-  { value: "arabic", label: "Translate to Arabic" },
+  { value: 'original', label: 'Same as Audio' },
+  { value: 'english', label: 'Translate to English' },
+  { value: 'korean', label: 'Translate to Korean' },
+  { value: 'spanish', label: 'Translate to Spanish' },
+  { value: 'french', label: 'Translate to French' },
+  { value: 'german', label: 'Translate to German' },
+  { value: 'chinese', label: 'Translate to Chinese' },
+  { value: 'japanese', label: 'Translate to Japanese' },
+  { value: 'russian', label: 'Translate to Russian' },
+  { value: 'portuguese', label: 'Translate to Portuguese' },
+  { value: 'italian', label: 'Translate to Italian' },
+  { value: 'arabic', label: 'Translate to Arabic' },
 ];
 
 interface GenerateSubtitlesProps {
@@ -43,21 +43,21 @@ export default function GenerateSubtitles({
 }: GenerateSubtitlesProps) {
   // File selection state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [targetLanguage, setTargetLanguage] = useState<string>("original");
+  const [targetLanguage, setTargetLanguage] = useState<string>('original');
   const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
   // Progress tracking
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
-  const [progressStage, setProgressStage] = useState<string>("");
+  const [progressStage, setProgressStage] = useState<string>('');
 
   // Results
-  const [subtitles, setSubtitles] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [subtitles, setSubtitles] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   // File selection from input element
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError("");
+    setError('');
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
 
@@ -73,19 +73,19 @@ export default function GenerateSubtitles({
   // Generate subtitles
   const handleGenerateSubtitles = async () => {
     if (!selectedFile || !window.electron) {
-      setError("Please select a video file first");
+      setError('Please select a video file first');
       return;
     }
 
     try {
-      setError("");
+      setError('');
       setIsGenerating(true);
       setProgress(0);
-      setProgressStage("Starting subtitle generation...");
+      setProgressStage('Starting subtitle generation...');
 
       // Set up progress listener
-      if (typeof window.electron.onGenerateSubtitlesProgress === "function") {
-        window.electron.onGenerateSubtitlesProgress((data) => {
+      if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
+        window.electron.onGenerateSubtitlesProgress(data => {
           setProgress(data.percent);
           setProgressStage(data.stage);
         });
@@ -104,7 +104,7 @@ export default function GenerateSubtitles({
 
       setSubtitles(result.subtitles);
       setProgress(100);
-      setProgressStage("Subtitles generation complete!");
+      setProgressStage('Subtitles generation complete!');
       onSubtitlesGenerated(result.subtitles);
     } catch (err: any) {
       setError(`Error generating subtitles: ${err.message || err}`);
@@ -116,7 +116,7 @@ export default function GenerateSubtitles({
   // Save subtitles
   const handleSaveSubtitles = async () => {
     if (!subtitles || !window.electron) {
-      setError("No subtitles to save");
+      setError('No subtitles to save');
       return;
     }
 
@@ -124,7 +124,7 @@ export default function GenerateSubtitles({
       const result = await window.electron.saveFile({
         content: subtitles,
         defaultPath: `subtitles_${Date.now()}.srt`,
-        filters: [{ name: "Subtitle File", extensions: ["srt"] }],
+        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
       });
 
       if (result.error) {
@@ -156,18 +156,18 @@ export default function GenerateSubtitles({
         <label>2. Output Language: </label>
         <select
           value={targetLanguage}
-          onChange={(e) => setTargetLanguage(e.target.value)}
+          onChange={e => setTargetLanguage(e.target.value)}
           className={selectStyles}
           disabled={isGenerating}
         >
-          {languages.map((lang) => (
+          {languages.map(lang => (
             <option key={lang.value} value={lang.value}>
               {lang.label}
             </option>
           ))}
         </select>
 
-        {targetLanguage !== "original" && targetLanguage !== "english" && (
+        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
           <div
             className={css`
               margin-top: 12px;
@@ -188,7 +188,7 @@ export default function GenerateSubtitles({
               <input
                 type="checkbox"
                 checked={showOriginalText}
-                onChange={(e) => setShowOriginalText(e.target.checked)}
+                onChange={e => setShowOriginalText(e.target.checked)}
                 className={css`
                   margin-right: 8px;
                   width: 16px;
@@ -220,7 +220,7 @@ export default function GenerateSubtitles({
           variant="primary"
           isLoading={isGenerating}
         >
-          {isGenerating ? "Processing..." : "Generate Subtitles"}
+          {isGenerating ? 'Processing...' : 'Generate Subtitles'}
         </Button>
 
         {subtitles && (

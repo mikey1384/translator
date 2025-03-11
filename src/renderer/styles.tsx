@@ -1,29 +1,29 @@
-import { css } from "@emotion/css";
+import { css } from '@emotion/css';
 
 // Screen sizes for responsive design
 export const breakpoints = {
-  mobileMaxWidth: "576px",
-  tabletMaxWidth: "768px",
-  laptopMaxWidth: "992px",
-  desktopMaxWidth: "1200px",
+  mobileMaxWidth: '576px',
+  tabletMaxWidth: '768px',
+  laptopMaxWidth: '992px',
+  desktopMaxWidth: '1200px',
 };
 
 // Colors system
 export const colors = {
-  primary: "#4361ee",
-  primaryLight: "#4895ef",
-  primaryDark: "#3a0ca3",
-  secondary: "#3f37c9",
-  success: "#4cc9f0",
-  info: "#4895ef",
-  warning: "#f72585",
-  danger: "#e63946",
-  light: "#f8f9fa",
-  dark: "#212529",
-  gray: "#6c757d",
-  grayLight: "#f1f3f5",
-  grayDark: "#343a40",
-  white: "#ffffff",
+  primary: '#4361ee',
+  primaryLight: '#4895ef',
+  primaryDark: '#3a0ca3',
+  secondary: '#3f37c9',
+  success: '#4cc9f0',
+  info: '#4895ef',
+  warning: '#f72585',
+  danger: '#e63946',
+  light: '#f8f9fa',
+  dark: '#212529',
+  gray: '#6c757d',
+  grayLight: '#f1f3f5',
+  grayDark: '#343a40',
+  white: '#ffffff',
 };
 
 // Advanced gradient system
@@ -38,15 +38,15 @@ export const gradients = {
 
 // Shadow system
 export const shadows = {
-  sm: "0 2px 4px rgba(0, 0, 0, 0.08)",
-  md: "0 4px 8px rgba(0, 0, 0, 0.12)",
-  lg: "0 8px 16px rgba(0, 0, 0, 0.15)",
-  xl: "0 12px 20px rgba(0, 0, 0, 0.18)",
-  inner: "inset 0 2px 4px rgba(0, 0, 0, 0.06)",
-  button: "0 4px 10px rgba(67, 97, 238, 0.3)",
-  buttonHover: "0 6px 15px rgba(67, 97, 238, 0.4)",
-  section: "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)",
-  sectionHover: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
+  sm: '0 2px 4px rgba(0, 0, 0, 0.08)',
+  md: '0 4px 8px rgba(0, 0, 0, 0.12)',
+  lg: '0 8px 16px rgba(0, 0, 0, 0.15)',
+  xl: '0 12px 20px rgba(0, 0, 0, 0.18)',
+  inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
+  button: '0 4px 10px rgba(67, 97, 238, 0.3)',
+  buttonHover: '0 6px 15px rgba(67, 97, 238, 0.4)',
+  section: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+  sectionHover: '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)',
 };
 
 // Form input styles
@@ -182,7 +182,9 @@ export const sectionStyles = css`
   box-shadow: ${shadows.section};
   padding: 1.5rem;
   margin-bottom: 2rem;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -285,7 +287,9 @@ export const statusItemStyles = css`
   background-color: ${colors.white};
   border-radius: 8px;
   box-shadow: ${shadows.sm};
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
@@ -382,7 +386,7 @@ export const statusIndicatorStyles = (status: boolean) => css`
   align-items: center;
 
   &::before {
-    content: "";
+    content: '';
     display: inline-block;
     width: 10px;
     height: 10px;
@@ -390,7 +394,7 @@ export const statusIndicatorStyles = (status: boolean) => css`
     background-color: ${status ? colors.success : colors.danger};
     margin-right: 8px;
     box-shadow: 0 0 0 2px
-      ${status ? "rgba(76, 201, 240, 0.3)" : "rgba(230, 57, 70, 0.3)"};
+      ${status ? 'rgba(76, 201, 240, 0.3)' : 'rgba(230, 57, 70, 0.3)'};
   }
 `;
 

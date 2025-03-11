@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { css } from "@emotion/css";
+import React, { useEffect } from 'react';
+import { css } from '@emotion/css';
 
 interface SubtitleProgressInfo {
   current?: number;
@@ -155,10 +155,10 @@ export default function TranslationProgressArea({
         <div className={progressBlockStyles}>
           <div className={progressLabelStyles}>
             <span>
-              <strong>Progress:</strong> {translationStage || "Initializing..."}
+              <strong>Progress:</strong> {translationStage || 'Initializing...'}
               {subtitleProgress?.current && subtitleProgress?.total ? (
                 <span>
-                  {" "}
+                  {' '}
                   ({subtitleProgress.current}/{subtitleProgress.total})
                 </span>
               ) : null}
@@ -171,8 +171,8 @@ export default function TranslationProgressArea({
                 height: 100%;
                 width: ${translationProgress}%;
                 background-color: ${translationProgress === 100
-                  ? "#4cc9f0"
-                  : "#4895ef"};
+                  ? '#4cc9f0'
+                  : '#4895ef'};
                 border-radius: 10px;
                 transition: width 0.3s ease;
               `}

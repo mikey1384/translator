@@ -1,4 +1,4 @@
-import { SrtSegment } from "./utils";
+import { SrtSegment } from './utils';
 
 export const processSrtContent = (
   srtContent: string,
@@ -9,19 +9,19 @@ export const processSrtContent = (
 ) => {
   try {
     if (!srtContent) {
-      onSetError("Empty SRT file content");
+      onSetError('Empty SRT file content');
       return;
     }
     setSubtitlesState([]);
     setEditingTimesState({});
     const parsed = parseSrtFn(srtContent);
     if (parsed.length === 0) {
-      onSetError("No subtitles found in SRT file");
+      onSetError('No subtitles found in SRT file');
       return;
     }
     setSubtitlesState(parsed);
   } catch (error) {
-    onSetError("Invalid SRT file");
+    onSetError('Invalid SRT file');
   }
 };
 
@@ -30,7 +30,7 @@ export const handleRemoveSubtitle = (
   subtitles: any[],
   setSubtitlesState: (subs: any[]) => void
 ) => {
-  if (!window.confirm("Are you sure you want to remove this subtitle block?"))
+  if (!window.confirm('Are you sure you want to remove this subtitle block?'))
     return;
   const updated = subtitles
     .filter((_, i) => i !== index)
@@ -51,7 +51,7 @@ export const handleInsertSubtitle = (
     index: index + 2,
     start: newStart,
     end: newEnd,
-    text: "",
+    text: '',
   };
   const updated = [
     ...subtitles.slice(0, index + 1),
@@ -68,12 +68,12 @@ export const handleSeekToSubtitle = (startTime: number) => {
       nativePlayer.instance.currentTime = startTime;
     }
   } catch (error) {
-    console.error("Error seeking to subtitle:", error);
+    console.error('Error seeking to subtitle:', error);
   }
 };
 
 export const handlePlaySubtitle = (startTime: number, endTime: number) => {
-  console.log("Play subtitle from", startTime, "to", endTime);
+  console.log('Play subtitle from', startTime, 'to', endTime);
   // Implement playback logic as needed
 };
 
@@ -98,6 +98,6 @@ export const handleShiftSubtitle = (
 };
 
 export const handleSaveSrt = () => {
-  console.log("handleSaveSrt called");
+  console.log('handleSaveSrt called');
   // Implement save logic as needed
 };

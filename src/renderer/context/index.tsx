@@ -24,11 +24,20 @@ type ManagementContextType = {
   actions: ReturnType<typeof ManagementActions>;
 };
 
-const ManagementContext = createContext<ManagementContextType | undefined>(undefined);
+const ManagementContext = createContext<ManagementContextType | undefined>(
+  undefined
+);
 
 // Context provider component
-export function ManagementContextProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(ManagementReducer, initialManagementState);
+export function ManagementContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [state, dispatch] = useReducer(
+    ManagementReducer,
+    initialManagementState
+  );
   const actions = ManagementActions(dispatch);
 
   return (
@@ -39,12 +48,16 @@ export function ManagementContextProvider({ children }: { children: React.ReactN
 }
 
 // Custom hook to use the management context
-export function useManagementContext<T>(selector: (context: ManagementContextType) => T): T {
+export function useManagementContext<T>(
+  selector: (context: ManagementContextType) => T
+): T {
   const context = useContext(ManagementContext);
-  
+
   if (!context) {
-    throw new Error('useManagementContext must be used within a ManagementContextProvider');
+    throw new Error(
+      'useManagementContext must be used within a ManagementContextProvider'
+    );
   }
-  
+
   return selector(context);
 }

@@ -1,6 +1,6 @@
-import React from "react";
-import { css } from "@emotion/css";
-import { colors, shadows, breakpoints } from "../styles";
+import React from 'react';
+import { css } from '@emotion/css';
+import { colors, shadows, breakpoints } from '../styles';
 
 interface ElectronFileButtonProps {
   label?: string;

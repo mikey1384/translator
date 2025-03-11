@@ -1,17 +1,16 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App";
-
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
 
 // React root reference for potential hot reloading
 let root: ReturnType<typeof createRoot> | null = null;
 
 const renderApp = () => {
-  const container = document.getElementById("root");
+  const container = document.getElementById('root');
   if (!container) return;
 
   // Clear any existing content in the root element
-  const loadingElement = container.querySelector(".loading");
+  const loadingElement = container.querySelector('.loading');
   if (loadingElement) {
     container.removeChild(loadingElement);
   }

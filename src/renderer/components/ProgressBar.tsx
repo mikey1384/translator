@@ -1,9 +1,9 @@
-import React from "react";
+import React from 'react';
 import {
   progressBarStyles,
   progressBarFillStyles,
   progressStageStyles,
-} from "../styles";
+} from '../styles';
 
 interface ProgressBarProps {
   progress: number;
@@ -23,7 +23,7 @@ export default function ProgressBar({
         <div className={progressBarFillStyles(progress)} />
       </div>
       {showPercentage && (
-        <div className={progressStageStyles} style={{ textAlign: "right" }}>
+        <div className={progressStageStyles} style={{ textAlign: 'right' }}>
           {Math.round(progress)}%
         </div>
       )}

@@ -1,4 +1,4 @@
-import { SrtSegment } from "../App";
+import { SrtSegment } from '../App';
 
 /**
  * Parse SRT content to an array of segments
@@ -9,7 +9,7 @@ export function parseSrt(srtString: string): SrtSegment[] {
   const segments: SrtSegment[] = [];
   const blocks = srtString.trim().split(/\r?\n\r?\n/);
 
-  blocks.forEach((block) => {
+  blocks.forEach(block => {
     const lines = block.split(/\r?\n/);
     if (lines.length < 3) return;
 
@@ -21,7 +21,7 @@ export function parseSrt(srtString: string): SrtSegment[] {
 
     const startTime = srtTimeToSeconds(timeMatch[1]);
     const endTime = srtTimeToSeconds(timeMatch[2]);
-    const text = lines.slice(2).join("\n");
+    const text = lines.slice(2).join('\n');
 
     segments.push({
       index,
@@ -47,7 +47,7 @@ export function validateSubtitleTimings(
 ): SrtSegment[] {
   if (!subtitles || subtitles.length === 0) return [];
 
-  const fixedSubtitles = subtitles.map((subtitle) => {
+  const fixedSubtitles = subtitles.map(subtitle => {
     const fixed = { ...subtitle };
     if (fixed.start < 0) fixed.start = 0;
     if (fixed.end <= fixed.start) fixed.end = fixed.start + 0.5;
@@ -87,7 +87,7 @@ export function validateSubtitleTimings(
  * Build SRT content from segments
  */
 export function buildSrt(segments: SrtSegment[]): string {
-  if (segments.length === 0) return "";
+  if (segments.length === 0) return '';
 
   return segments
     .map((segment, i) => {
@@ -96,15 +96,15 @@ export function buildSrt(segments: SrtSegment[]): string {
       const endTime = secondsToSrtTime(segment.end);
       return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
     })
-    .join("\n\n");
+    .join('\n\n');
 }
 
 /**
  * Convert SRT time format (00:00:00,000) to seconds
  */
 export function srtTimeToSeconds(timeString: string): number {
-  const [time, ms] = timeString.split(",");
-  const [hours, minutes, seconds] = time.split(":").map(Number);
+  const [time, ms] = timeString.split(',');
+  const [hours, minutes, seconds] = time.split(':').map(Number);
   return hours * 3600 + minutes * 60 + seconds + parseInt(ms, 10) / 1000;
 }
 
@@ -112,19 +112,19 @@ export function srtTimeToSeconds(timeString: string): number {
  * Convert seconds to SRT time format (00:00:00,000)
  */
 export function secondsToSrtTime(totalSeconds: number): string {
-  if (isNaN(totalSeconds)) return "00:00:00,000";
+  if (isNaN(totalSeconds)) return '00:00:00,000';
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
   const milliseconds = Math.round((totalSeconds % 1) * 1000);
 
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
     2,
-    "0"
-  )}:${String(seconds).padStart(2, "0")},${String(milliseconds).padStart(
+    '0'
+  )}:${String(seconds).padStart(2, '0')},${String(milliseconds).padStart(
     3,
-    "0"
+    '0'
   )}`;
 }
 
@@ -135,7 +135,7 @@ export function adjustTimeString(
   timeString: string,
   offsetSeconds: number
 ): string {
-  if (!timeString) return "00:00:00,000";
+  if (!timeString) return '00:00:00,000';
   const seconds = srtTimeToSeconds(timeString);
   return secondsToSrtTime(Math.max(0, seconds + offsetSeconds));
 }
@@ -156,10 +156,10 @@ export function doTimeRangesOverlap(
  * Format a time for display (compact format)
  */
 export function formatTimeForDisplay(seconds: number): string {
-  if (isNaN(seconds)) return "00:00";
+  if (isNaN(seconds)) return '00:00';
   const minutes = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 /**
@@ -202,28 +202,28 @@ export async function loadSrtFile(
   try {
     if (!file && window.electron?.openFile) {
       const result = await window.electron.openFile({
-        title: "Open SRT File",
-        filters: [{ name: "SRT Files", extensions: ["srt"] }],
+        title: 'Open SRT File',
+        filters: [{ name: 'SRT Files', extensions: ['srt'] }],
       });
 
-      if (result.canceled) return { error: "Operation canceled" };
+      if (result.canceled) return { error: 'Operation canceled' };
       if (result.error) {
         if (onError) onError(result.error);
         return { error: result.error };
       }
       if (!result.filePaths?.length) {
-        if (onError) onError("No file was selected");
-        return { error: "No file was selected" };
+        if (onError) onError('No file was selected');
+        return { error: 'No file was selected' };
       }
       if (!result.fileContents?.length) {
-        if (onError) onError("Could not read file content");
-        return { error: "Could not read file content" };
+        if (onError) onError('Could not read file content');
+        return { error: 'Could not read file content' };
       }
 
       const filePath = result.filePaths[0];
       const content = result.fileContents[0];
-      localStorage.setItem("targetPath", filePath);
-      localStorage.setItem("originalLoadPath", filePath);
+      localStorage.setItem('targetPath', filePath);
+      localStorage.setItem('originalLoadPath', filePath);
 
       const segments = parseSrt(content);
       if (onContentLoaded) onContentLoaded(content, segments, filePath);
@@ -233,16 +233,16 @@ export async function loadSrtFile(
 
     if (file) {
       const fakePath = `/temp/${file.name}`;
-      localStorage.setItem("originalSrtPath", fakePath);
+      localStorage.setItem('originalSrtPath', fakePath);
 
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         const reader = new FileReader();
 
-        reader.onload = (e) => {
+        reader.onload = e => {
           const content = e.target?.result as string;
           if (!content) {
-            if (onError) onError("Could not read file content");
-            resolve({ error: "Could not read file content" });
+            if (onError) onError('Could not read file content');
+            resolve({ error: 'Could not read file content' });
             return;
           }
 
@@ -252,16 +252,16 @@ export async function loadSrtFile(
         };
 
         reader.onerror = () => {
-          if (onError) onError("Error reading SRT file");
-          resolve({ error: "Error reading SRT file" });
+          if (onError) onError('Error reading SRT file');
+          resolve({ error: 'Error reading SRT file' });
         };
 
         reader.readAsText(file);
       });
     }
 
-    if (onError) onError("No file was provided");
-    return { error: "No file was provided" };
+    if (onError) onError('No file was provided');
+    return { error: 'No file was provided' };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (onError) onError(errorMessage);
@@ -278,7 +278,7 @@ export async function retryElectronCall<T>(
   maxRetries = 5,
   initialDelay = 300
 ): Promise<T> {
-  if (!window.electron) throw new Error("Electron API not available");
+  if (!window.electron) throw new Error('Electron API not available');
 
   const electronMethod = (window.electron as any)[method];
   if (!electronMethod)
@@ -287,15 +287,15 @@ export async function retryElectronCall<T>(
   try {
     return await electronMethod(args);
   } catch (error: any) {
-    if (!error.message?.includes("No handler registered")) throw error;
+    if (!error.message?.includes('No handler registered')) throw error;
 
     let delay = initialDelay;
     for (let i = 0; i < maxRetries; i++) {
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise(resolve => setTimeout(resolve, delay));
       try {
         return await electronMethod(args);
       } catch (retryError: any) {
-        if (!retryError.message?.includes("No handler registered"))
+        if (!retryError.message?.includes('No handler registered'))
           throw retryError;
         delay *= 1.5;
       }
@@ -324,8 +324,8 @@ export async function openSubtitleWithElectron(
 }> {
   try {
     const result = await window.electron.openFile({
-      filters: [{ name: "Subtitle Files", extensions: ["srt"] }],
-      title: "Open Subtitle File",
+      filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
+      title: 'Open Subtitle File',
     });
 
     if (
@@ -333,17 +333,17 @@ export async function openSubtitleWithElectron(
       !result.filePaths?.length ||
       !result.fileContents?.length
     ) {
-      return { error: "File selection was canceled" };
+      return { error: 'File selection was canceled' };
     }
 
     const filePath = result.filePaths[0];
     const content = result.fileContents[0];
-    const filename = filePath.split("/").pop() || "subtitles.srt";
-    const file = new File([content], filename, { type: "text/plain" });
+    const filename = filePath.split('/').pop() || 'subtitles.srt';
+    const file = new File([content], filename, { type: 'text/plain' });
 
-    localStorage.setItem("loadedSrtFileName", filename);
-    localStorage.setItem("originalSrtPath", filePath);
-    localStorage.setItem("originalLoadPath", filePath);
+    localStorage.setItem('loadedSrtFileName', filename);
+    localStorage.setItem('originalSrtPath', filePath);
+    localStorage.setItem('originalLoadPath', filePath);
 
     const segments = parseSrt(content);
     if (onSuccess) onSuccess(file, content, segments, filePath);

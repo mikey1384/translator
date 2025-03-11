@@ -52,7 +52,7 @@ const iconButtonSizes = {
     width: 56px;
     height: 56px;
     font-size: 1.25rem;
-  `
+  `,
 };
 
 // Style variants
@@ -105,7 +105,7 @@ const iconButtonVariants = {
       transform: translateY(-1px);
       box-shadow: ${shadows.sm};
     }
-  `
+  `,
 };
 
 // Loading spinner style

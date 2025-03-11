@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { css } from "@emotion/css";
-import { colors } from "../constants";
-import ButtonGroup from "./ButtonGroup";
-import StylizedFileInput from "./StylizedFileInput";
-import Button from "./Button";
-import { SrtSegment } from "./EditSubtitles";
+import React, { useEffect, useState } from 'react';
+import { css } from '@emotion/css';
+import { colors } from '../constants';
+import ButtonGroup from './ButtonGroup';
+import StylizedFileInput from './StylizedFileInput';
+import Button from './Button';
+import { SrtSegment } from './EditSubtitles';
 import {
   loadSrtFile,
   parseSrt,
   openSubtitleWithElectron,
-} from "../helpers/subtitle-utils";
-import ElectronFileButton from "./ElectronFileButton";
+} from '../helpers/subtitle-utils';
+import ElectronFileButton from './ElectronFileButton';
 
 interface TimestampDisplayProps {
   videoElement: HTMLVideoElement | null;
@@ -23,7 +23,11 @@ interface TimestampDisplayProps {
 }
 
 const timestampContainerStyles = css`
-  font-family: "system-ui", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'system-ui',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background-color: ${colors.grayLight};
   color: ${colors.dark};
   padding: 8px 12px;
@@ -117,13 +121,13 @@ const progressBarStyles = css`
   }
 
   &:hover::-webkit-slider-thumb {
-    background: ${colors.primaryDark || "#0056b3"};
+    background: ${colors.primaryDark || '#0056b3'};
     transform: scale(1.2);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
   }
 
   &:hover::-moz-range-thumb {
-    background: ${colors.primaryDark || "#0056b3"};
+    background: ${colors.primaryDark || '#0056b3'};
     transform: scale(1.2);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
   }
@@ -174,7 +178,7 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [bufferedWidth, setBufferedWidth] = useState("0%");
+  const [bufferedWidth, setBufferedWidth] = useState('0%');
 
   useEffect(() => {
     if (!videoElement) return;
@@ -215,58 +219,58 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
     };
 
     // Add event listeners
-    videoElement.addEventListener("timeupdate", handleTimeUpdate);
-    videoElement.addEventListener("durationchange", handleDurationChange);
-    videoElement.addEventListener("play", handlePlayStateChange);
-    videoElement.addEventListener("pause", handlePlayStateChange);
-    videoElement.addEventListener("progress", handleProgress);
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    videoElement.addEventListener('durationchange', handleDurationChange);
+    videoElement.addEventListener('play', handlePlayStateChange);
+    videoElement.addEventListener('pause', handlePlayStateChange);
+    videoElement.addEventListener('progress', handleProgress);
 
     // Clean up
     return () => {
-      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
-      videoElement.removeEventListener("durationchange", handleDurationChange);
-      videoElement.removeEventListener("play", handlePlayStateChange);
-      videoElement.removeEventListener("pause", handlePlayStateChange);
-      videoElement.removeEventListener("progress", handleProgress);
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      videoElement.removeEventListener('durationchange', handleDurationChange);
+      videoElement.removeEventListener('play', handlePlayStateChange);
+      videoElement.removeEventListener('pause', handlePlayStateChange);
+      videoElement.removeEventListener('progress', handleProgress);
     };
   }, [videoElement]);
 
   // Format time in a concise format (HH:MM:SS)
   const formatTime = (seconds: number): string => {
-    if (isNaN(seconds)) return "00:00:00";
+    if (isNaN(seconds)) return '00:00:00';
 
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
 
     if (hours > 0) {
-      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
         2,
-        "0"
-      )}:${String(secs).padStart(2, "0")}`;
+        '0'
+      )}:${String(secs).padStart(2, '0')}`;
     } else {
-      return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(
+      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(
         2,
-        "0"
+        '0'
       )}`;
     }
   };
 
   // Format time in SRT format (for proper seeking) (00:00:00,000)
   const formatSrtTime = (seconds: number): string => {
-    if (isNaN(seconds)) return "00:00:00,000";
+    if (isNaN(seconds)) return '00:00:00,000';
 
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
     const milliseconds = Math.round((seconds - Math.floor(seconds)) * 1000);
 
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
       2,
-      "0"
-    )}:${String(secs).padStart(2, "0")},${String(milliseconds).padStart(
+      '0'
+    )}:${String(secs).padStart(2, '0')},${String(milliseconds).padStart(
       3,
-      "0"
+      '0'
     )}`;
   };
 
@@ -288,8 +292,8 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
           onChangeSrt(file);
         }
       },
-      (error) => {
-        console.error("TimestampDisplay: Error opening subtitle:", error);
+      error => {
+        console.error('TimestampDisplay: Error opening subtitle:', error);
       }
     );
   };
@@ -343,17 +347,17 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
 
           {onChangeSrt && (
             <ElectronFileButton
-              buttonText={hasSubtitles ? "Change SRT" : "Add SRT"}
+              buttonText={hasSubtitles ? 'Change SRT' : 'Add SRT'}
               onClick={async () => {
                 await openSubtitleWithElectron(
-                  (file) => {
+                  file => {
                     if (onChangeSrt) {
                       onChangeSrt(file);
                     }
                   },
-                  (error) => {
+                  error => {
                     console.error(
-                      "TimestampDisplay: Error opening subtitle:",
+                      'TimestampDisplay: Error opening subtitle:',
                       error
                     );
                   }
@@ -378,7 +382,7 @@ const TimestampDisplay: React.FC<TimestampDisplayProps> = ({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ marginRight: "6px" }}
+                style={{ marginRight: '6px' }}
               >
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <polyline points="19 12 12 19 5 12"></polyline>
