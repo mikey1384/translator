@@ -6,7 +6,7 @@ import StylizedFileInput from './StylizedFileInput';
 import Button from './Button';
 import { openSubtitleWithElectron } from '../helpers/subtitle-utils';
 import ElectronFileButton from './ElectronFileButton';
-import { buttonGradientStyles } from './EditSubtitles/styles';
+import { buttonGradientStyles } from '../containers/EditSubtitles/styles';
 
 export default function TimestampDisplay({
   isPlaying,

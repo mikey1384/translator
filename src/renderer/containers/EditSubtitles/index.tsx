@@ -1,21 +1,20 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { nativePlayer } from './NativeVideoPlayer';
 import { css } from '@emotion/css';
-import Button from '../Button';
+import Button from '../../components/Button';
 import SubtitleEditor from './SubtitleEditor';
 import { debounce } from 'lodash';
-import StylizedFileInput from '../StylizedFileInput';
-import Section from '../Section';
+import StylizedFileInput from '../../components/StylizedFileInput';
+import Section from '../../components/Section';
 import { subtitleVideoPlayer } from '../../constants';
 import { saveFileWithRetry } from '../../helpers/electron-ipc';
-import ElectronFileButton from '../ElectronFileButton';
+import ElectronFileButton from '../../components/ElectronFileButton';
 
 import {
   SrtSegment,
   srtTimeToSeconds,
   validateSubtitleTimings,
   secondsToSrtTime,
-  parseSrt,
   generateSrtContent,
 } from './utils';
 import {
@@ -63,7 +62,6 @@ export default function EditSubtitles({
   onSetError,
   onSetIsPlaying,
   secondsToSrtTime: secondsToSrtTimeProp,
-  parseSrt: parseSrtProp,
   subtitles: subtitlesProp,
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
@@ -100,8 +98,6 @@ export default function EditSubtitles({
   // Ref to track the subtitle elements
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Use imported fallback functions if props not provided
-  const parseSrtFn = parseSrtProp || parseSrt;
   const srtTimeToSecondsFn = srtTimeToSeconds; // used in utils if needed
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
 

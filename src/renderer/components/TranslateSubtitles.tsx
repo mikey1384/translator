@@ -11,7 +11,7 @@ import {
 } from '../styles';
 import Button from './Button';
 import Section from './Section';
-import TranslationProgressArea from './TranslationProgressArea';
+import TranslationProgressArea from '../containers/TranslationProgressArea';
 import { registerSubtitleStreamListeners } from '../helpers/electron-ipc';
 
 // Languages for translation

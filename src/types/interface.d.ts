@@ -56,6 +56,15 @@ export interface OpenFileOptions {
   multiple?: boolean;
 }
 
+export interface SrtSegment {
+  index: number;
+  start: number; // in seconds
+  end: number; // in seconds
+  text: string;
+  originalText?: string;
+  translatedText?: string;
+}
+
 export interface OpenFileResult {
   filePaths: string[];
   fileContents?: string[];

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 import NativeVideoPlayer, {
   nativePlayer,
-} from './EditSubtitles/NativeVideoPlayer';
+} from '../containers/EditSubtitles/NativeVideoPlayer';
 import TimestampDisplay from './TimestampDisplay';
 import { SrtSegment } from '../App';
 

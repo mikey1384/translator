@@ -1,17 +1,19 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
 import StatusSection from './components/StatusSection';
-import GenerateSubtitles from './components/GenerateSubtitles';
-import EditSubtitles from './components/EditSubtitles';
 import BackToTopButton from './components/BackToTopButton';
 import StickyVideoPlayer from './components/StickyVideoPlayer';
-import MergingProgressArea from './components/MergingProgressArea';
-import TranslationProgressArea from './components/TranslationProgressArea';
+
+import EditSubtitles from './containers/EditSubtitles';
+import GenerateSubtitles from './containers/GenerateSubtitles';
+import MergingProgressArea from './containers/MergingProgressArea';
+import TranslationProgressArea from './containers/TranslationProgressArea';
 
 import { registerSubtitleStreamListeners } from './helpers/electron-ipc';
 import { loadSrtFile } from './helpers/subtitle-utils';
 
 import { ManagementContextProvider } from './context';
+import { SrtSegment } from '../types/types';
 
 import {
   parseSrt,
@@ -22,16 +24,6 @@ import {
 
 // Styles
 import { pageWrapperStyles, containerStyles, titleStyles } from './styles';
-
-// Shared types
-export interface SrtSegment {
-  index: number;
-  start: number; // in seconds
-  end: number; // in seconds
-  text: string;
-  originalText?: string;
-  translatedText?: string;
-}
 
 function AppContent() {
   const [electronConnected, setElectronConnected] = useState<boolean>(false);
@@ -58,10 +50,6 @@ function AppContent() {
 
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [editingTimes, setEditingTimes] = useState<{
-    start: number;
-    end: number;
-  } | null>(null);
 
   const [isReceivingPartialResults, setIsReceivingPartialResults] =
     useState<boolean>(false);
@@ -293,16 +281,13 @@ function AppContent() {
               videoFile={videoFile}
               videoUrl={videoUrl}
               isPlaying={isPlaying}
-              editingTimes={editingTimes}
               onSetVideoFile={setVideoFile}
               onSetVideoUrl={handleSetVideoUrl}
               onSetError={error => console.error(error)}
-              onSetEditingTimes={setEditingTimes}
               onSetIsPlaying={setIsPlaying}
               secondsToSrtTime={secondsToSrtTime}
               parseSrt={parseSrt}
               subtitles={subtitleSegments}
-              translationProgress={translationProgress}
               videoPlayerRef={videoPlayerRef}
               isMergingInProgress={isMergingInProgress}
               onSetIsMergingInProgress={setIsMergingInProgress}

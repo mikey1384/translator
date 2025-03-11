@@ -14,7 +14,7 @@ import {
   GenerateSubtitlesResult,
   MergeSubtitlesOptions,
   MergeSubtitlesResult,
-} from '../types';
+} from '../types/types';
 
 dotenv.config();
 

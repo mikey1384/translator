@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
-import Button from '../Button';
+import Button from '../../components/Button';
 import { debounce } from 'lodash';
-import { SrtSegment } from './VideoPlayerWithSubtitles';
+import { SrtSegment } from '../../../types/interface';
 
 interface SubtitleEditorProps {
   sub: SrtSegment;
