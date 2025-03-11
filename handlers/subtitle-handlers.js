@@ -24,13 +24,13 @@ try {
   ffmpegService = new FFmpegService();
   fileManagerService = new FileManager();
   aiService = new AIService(ffmpegService);
-  
+
   // Force-initialize clients by testing if they're available
   console.log("AI service clients availability:", {
     openai: aiService.hasOpenAIClient(),
-    anthropic: aiService.hasAnthropicClient()
+    anthropic: aiService.hasAnthropicClient(),
   });
-  
+
   subtitleProcessingService = new SubtitleProcessing(
     ffmpegService,
     fileManagerService,
@@ -187,13 +187,14 @@ if (!generateHandlerExists) {
           // Create a safe copy of the progress object with default values
           const safeProgress = {
             percent: progress.percent || 0,
-            stage: progress.stage || 'Processing',
+            stage: progress.stage || "Processing",
             current: progress.current || 0,
             total: progress.total || 0,
-            partialResult: progress.partialResult || ''
+            partialResult: progress.partialResult || "",
           };
 
           // Send the progress update to the renderer process with guaranteed properties
+          console.log("Progress Update:", safeProgress.partialResult);
           event.sender.send("generate-subtitles-progress", safeProgress);
         }
       );
@@ -239,10 +240,10 @@ if (!translateHandlerExists) {
           // Create a safe copy of the progress object with default values
           const safeProgress = {
             percent: progress.percent || 0,
-            stage: progress.stage || 'Translating',
+            stage: progress.stage || "Translating",
             current: progress.current || 0,
             total: progress.total || 0,
-            partialResult: progress.partialResult || ''
+            partialResult: progress.partialResult || "",
           };
 
           // Send the progress update to the renderer process with guaranteed properties

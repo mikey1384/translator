@@ -36,23 +36,6 @@ import {
   statusIndicatorStyles,
 } from "./styles";
 
-// Define the window interface to access our Electron API
-declare global {
-  interface Window {
-    electron: {
-      saveFile: (options: any) => Promise<any>;
-      openFile: (options: any) => Promise<any>;
-      ping: () => Promise<string>;
-      showMessage: (message: string) => Promise<boolean>;
-      test: () => string;
-      generateSubtitles: (options: any) => Promise<any>;
-      onGenerateSubtitlesProgress: (callback: (progress: any) => void) => void;
-      mergeSubtitles: (options: any) => Promise<any>;
-      onMergeSubtitlesProgress: (callback: (progress: any) => void) => void;
-    };
-  }
-}
-
 // Shared types
 export interface SrtSegment {
   index: number;
@@ -125,7 +108,7 @@ function AppContent() {
   const [streamingEnabled, setStreamingEnabled] = useState<boolean>(true);
   const [isReceivingPartialResults, setIsReceivingPartialResults] =
     useState<boolean>(false);
-  const [partialResult, setPartialResult] = useState<string>("");
+  const [accumulatedSrt, setAccumulatedSrt] = useState<string>("");
 
   // Add a ref to track when video is visible for scroll behavior
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -198,20 +181,23 @@ function AppContent() {
           total: result?.total || 100,
         };
 
-        console.log("Received partial result update:", {
-          hasContent: !!safeResult.partialResult,
-          contentLength: safeResult.partialResult.length,
-          percent: safeResult.percent,
-          stage: safeResult.stage,
-        });
-
         // Only process if we have meaningful content
         if (
           safeResult.partialResult &&
           safeResult.partialResult.trim().length > 0
         ) {
           setIsReceivingPartialResults(true);
-          setPartialResult(safeResult.partialResult);
+          setAccumulatedSrt((prevSrt) => {
+            const newSrt = prevSrt + safeResult.partialResult;
+            try {
+              const segments = parseSrt(newSrt);
+              const fixedSegments = fixOverlappingSegments(segments);
+              setSubtitleSegments(fixedSegments);
+            } catch (e) {
+              console.error("Error processing accumulated SRT:", e);
+            }
+            return newSrt;
+          });
         }
 
         // Always update progress information
@@ -238,17 +224,8 @@ function AppContent() {
         handlePartialResult(progress || {});
       };
 
-      const translateListener = (progress: any) => {
-        console.log("Direct translate progress update:", progress);
-        handlePartialResult(progress || {});
-      };
-
       if (typeof window.electron.onGenerateSubtitlesProgress === "function") {
         window.electron.onGenerateSubtitlesProgress(generateListener);
-      }
-
-      if (typeof window.electron.onTranslateSubtitlesProgress === "function") {
-        window.electron.onTranslateSubtitlesProgress(translateListener);
       }
     }
 
@@ -483,20 +460,6 @@ function AppContent() {
               onSetIsMergingInProgress={setIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
               streamingEnabled={streamingEnabled}
-              isReceivingPartialResults={isReceivingPartialResults}
-              onReceivePartialResult={(partialResultHandler) => {
-                // Store the handler callback to process partial results
-                const processPartial = (partial: string) => {
-                  if (partialResultHandler && partial) {
-                    partialResultHandler(partial);
-                  }
-                };
-
-                // Process current partial result if available
-                if (partialResult) {
-                  processPartial(partialResult);
-                }
-              }}
               mergeSubtitlesWithVideo={async (
                 videoFile,
                 subtitles,
@@ -577,12 +540,6 @@ function AppContent() {
             translationProgress={translationProgress}
             translationStage={translationStage}
             onClose={() => setIsTranslationInProgress(false)}
-            partialResult={partialResult}
-            onPartialResult={(result) => {
-              // This just passes the partial result to the EditSubtitles component
-              // The actual handling is done via the onReceivePartialResult callback
-              setPartialResult(result);
-            }}
             subtitleProgress={
               isReceivingPartialResults
                 ? {

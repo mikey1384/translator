@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron main.cjs --no-sandbox",
     "build": "tsc -p tsconfig.main.json && webpack --config webpack.preload.js && bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck",
-    "dev": "concurrently \"tsc -p tsconfig.main.json --watch\" \"webpack --config webpack.preload.js --watch\" \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch\" \"wait-on dist/main.js dist/preload/index.js dist/renderer/index.js && electron main.cjs --no-sandbox\"",
+    "dev:build": "concurrently -n tsc,webpack,bun \"tsc -p tsconfig.main.json --watch\" \"webpack --config webpack.preload.js --watch\" \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch\"",
+    "dev": "ELECTRON_ENABLE_LOGGING=true concurrently -n build,electron \"bun run dev:build\" \"wait-on dist/main.js dist/preload/index.js dist/renderer/index.js && electron main.cjs --no-sandbox --enable-logging\"",
     "package": "bun run build && electron-builder build --mac --win --linux"
   },
   "build": {

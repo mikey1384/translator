@@ -1,7 +1,7 @@
 // HANDLERS/INDEX.JS
 // Require all handlers to ensure they are registered early in the application lifecycle
 
-console.log("Initializing handlers...");
+console.info("Initializing handlers...");
 
 // Core handlers
 require("./message-handler");
@@ -13,7 +13,7 @@ require("./file-handler");
 // Subtitle processing handlers
 require("./subtitle-handlers");
 
-console.log("All handlers initialized");
+console.info("All handlers initialized");
 
 // Export a function to verify handlers are working
 module.exports = {
