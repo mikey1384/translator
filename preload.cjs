@@ -83,128 +83,69 @@ const electronAPI = {
     // Remove the File object since it can't be serialized for IPC
     delete processedOptions.videoFile;
 
-    console.log("Sending options to main process");
+    console.log("Sending options to main process:", processedOptions);
     return ipcRenderer.invoke("generate-subtitles", processedOptions);
   },
-
   onGenerateSubtitlesProgress: (callback) => {
-    // Make sure callback is a function before registering the listener
-    if (typeof callback === 'function') {
-      const listener = (_event, progress) => {
-        try {
-          callback(progress || {});
-        } catch (error) {
-          console.error("Error in generate-subtitles-progress callback:", error);
-        }
-      };
-      
-      ipcRenderer.on("generate-subtitles-progress", listener);
-      
-      // Return a function to remove the listener
-      return () => {
-        try {
-          ipcRenderer.removeListener("generate-subtitles-progress", listener);
-        } catch (error) {
-          console.error("Error removing generate-subtitles-progress listener:", error);
-        }
-      };
-    } else {
-      console.warn("Invalid callback provided to onGenerateSubtitlesProgress");
-      // Return a no-op function so calling code doesn't break
-      return () => {};
-    }
-  },
-
-  // Subtitle translation
-  translateSubtitles: (options) =>
-    ipcRenderer.invoke("translate-subtitles", options),
-
-  onTranslateSubtitlesProgress: (callback) => {
-    // Make sure callback is a function before registering the listener
-    if (typeof callback === 'function') {
-      const listener = (_event, progress) => {
-        try {
-          callback(progress || {});
-        } catch (error) {
-          console.error("Error in translate-subtitles-progress callback:", error);
-        }
-      };
-      
-      ipcRenderer.on("translate-subtitles-progress", listener);
-      
-      // Return a function to remove the listener
-      return () => {
-        try {
-          ipcRenderer.removeListener("translate-subtitles-progress", listener);
-        } catch (error) {
-          console.error("Error removing translate-subtitles-progress listener:", error);
-        }
-      };
-    } else {
-      console.warn("Invalid callback provided to onTranslateSubtitlesProgress");
-      // Return a no-op function so calling code doesn't break
-      return () => {};
-    }
-  },
-
-  // Subtitle merging with video
-  mergeSubtitles: (options) => ipcRenderer.invoke("merge-subtitles", options),
-
-  onMergeSubtitlesProgress: (callback) => {
-    // Make sure callback is a function before registering the listener
-    if (typeof callback === 'function') {
-      const listener = (_event, progress) => {
-        try {
-          callback(progress || {});
-        } catch (error) {
-          console.error("Error in merge-subtitles-progress callback:", error);
-        }
-      };
-      
-      ipcRenderer.on("merge-subtitles-progress", listener);
-      
-      // Return a function to remove the listener
-      return () => {
-        try {
-          ipcRenderer.removeListener("merge-subtitles-progress", listener);
-        } catch (error) {
-          console.error("Error removing merge-subtitles-progress listener:", error);
-        }
-      };
-    } else {
-      console.warn("Invalid callback provided to onMergeSubtitlesProgress");
-      // Return a no-op function so calling code doesn't break
-      return () => {};
-    }
-  },
-
-  // File operations - check readiness first
-  saveFile: async (options) => {
-    console.log("Saving file with options:", options);
-    return await invokeWithRetry("save-file", options);
-  },
-
-  openFile: async (options) => {
-    console.log("Opening file with options:", options);
     try {
-      const result = await invokeWithRetry("open-file", options);
-
-      // Add videoPath property if we have filePath or filePaths[0] but no explicit videoPath
-      if (
-        !result.videoPath &&
-        (result.filePath || (result.filePaths && result.filePaths.length > 0))
-      ) {
-        result.videoPath = result.filePath || result.filePaths[0];
-        console.log("Added videoPath to result:", result.videoPath);
+      if (typeof callback !== "function") {
+        console.warn(
+          "Invalid callback provided to onGenerateSubtitlesProgress"
+        );
+        return;
       }
-
-      console.log("Open file result after processing:", result);
-      return result;
+      ipcRenderer.on("generate-subtitles-progress", (event, progress) => {
+        try {
+          callback(progress);
+        } catch (error) {
+          console.error(
+            "Error in generate-subtitles-progress callback:",
+            error
+          );
+        }
+      });
+      return () => {
+        try {
+          ipcRenderer.removeListener("generate-subtitles-progress", callback);
+        } catch (error) {
+          console.error(
+            "Error removing generate-subtitles-progress listener:",
+            error
+          );
+        }
+      };
     } catch (error) {
-      console.error("Error in openFile:", error);
-      return { error: String(error), filePaths: [] };
+      console.error("Error in onGenerateSubtitlesProgress:", error);
     }
   },
+
+  // Video merging
+  mergeSubtitles: (options) => ipcRenderer.invoke("merge-subtitles", options),
+  onMergeSubtitlesProgress: (callback) => {
+    try {
+      if (typeof callback !== "function") {
+        console.warn("Invalid callback provided to onMergeSubtitlesProgress");
+        return;
+      }
+      ipcRenderer.on("merge-subtitles-progress", callback);
+      return () => {
+        try {
+          ipcRenderer.removeListener("merge-subtitles-progress", callback);
+        } catch (error) {
+          console.error(
+            "Error removing merge-subtitles-progress listener:",
+            error
+          );
+        }
+      };
+    } catch (error) {
+      console.error("Error in onMergeSubtitlesProgress:", error);
+    }
+  },
+
+  // File operations
+  saveFile: (options) => ipcRenderer.invoke("save-file", options),
+  openFile: (options) => ipcRenderer.invoke("open-file", options),
 };
 
 // Expose the API to the renderer process

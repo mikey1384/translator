@@ -232,68 +232,56 @@ export async function openFileWithRetry(options: {
 /**
  * Register listeners for real-time subtitle progress events
  * @param partialResultCallback Callback function to call when partial subtitles become available
+ * @param type Type of subtitle progress events to listen for ('generate' or 'translate')
  * @returns Cleanup function to remove the event listeners
  */
 export function registerSubtitleStreamListeners(
-  partialResultCallback: (result: { 
-    partialResult: string; 
-    percent: number; 
+  partialResultCallback: (result: {
+    partialResult: string;
+    percent: number;
     stage: string;
     current?: number;
     total?: number;
-  }) => void
+  }) => void,
+  type: "generate" | "translate" = "generate"
 ): () => void {
-  // These variables will hold the functions so we can remove them later
-  let generateListener: ((event: any, progress: any) => void) | null = null;
-  let translateListener: ((event: any, progress: any) => void) | null = null;
+  // This variable will hold the function so we can remove it later
+  let listener: ((event: any, progress: any) => void) | null = null;
 
-  // Create the listeners if the window.electron object exists
+  // Create the listener if the window.electron object exists
   if (window.electron) {
-    // Handler for transcription progress events
-    generateListener = (event: any, progress: any) => {
+    // Handler for progress events
+    listener = (event: any, progress: any) => {
       // Always provide default values to avoid undefined properties
       const safeProgress = {
-        partialResult: progress?.partialResult || '',
+        partialResult: progress?.partialResult || "",
         percent: progress?.percent || 0,
-        stage: progress?.stage || 'Processing',
+        stage:
+          progress?.stage ||
+          (type === "generate" ? "Processing" : "Translating"),
         current: progress?.current || 0,
-        total: progress?.total || 0
+        total: progress?.total || 0,
       };
-      
-      // Always call the callback, even if partialResult is empty
-      // The UI can decide whether to update based on the content
-      partialResultCallback(safeProgress);
-    };
-    
-    // Handler for translation progress events
-    translateListener = (event: any, progress: any) => {
-      // Always provide default values to avoid undefined properties
-      const safeProgress = {
-        partialResult: progress?.partialResult || '',
-        percent: progress?.percent || 0,
-        stage: progress?.stage || 'Translating',
-        current: progress?.current || 0,
-        total: progress?.total || 0
-      };
-      
+
       // Always call the callback, even if partialResult is empty
       // The UI can decide whether to update based on the content
       partialResultCallback(safeProgress);
     };
 
-    // Register the listeners
-    window.electron.onGenerateSubtitlesProgress(generateListener);
-    window.electron.onTranslateSubtitlesProgress(translateListener);
+    // Register only the appropriate listener
+    if (type === "generate") {
+      window.electron.onGenerateSubtitlesProgress(listener);
+    } else {
+      window.electron.onTranslateSubtitlesProgress(listener);
+    }
   }
 
   // Return a cleanup function
   return () => {
-    if (window.electron) {
-      if (generateListener) {
-        // This assumes there's a method to remove the listener - may need adjustment
+    if (window.electron && listener) {
+      if (type === "generate") {
         window.electron.onGenerateSubtitlesProgress(null);
-      }
-      if (translateListener) {
+      } else {
         window.electron.onTranslateSubtitlesProgress(null);
       }
     }

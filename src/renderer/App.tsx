@@ -187,17 +187,15 @@ function AppContent() {
           safeResult.partialResult.trim().length > 0
         ) {
           setIsReceivingPartialResults(true);
-          setAccumulatedSrt((prevSrt) => {
-            const newSrt = prevSrt + safeResult.partialResult;
-            try {
-              const segments = parseSrt(newSrt);
-              const fixedSegments = fixOverlappingSegments(segments);
-              setSubtitleSegments(fixedSegments);
-            } catch (e) {
-              console.error("Error processing accumulated SRT:", e);
-            }
-            return newSrt;
-          });
+          const newSrt = safeResult.partialResult;
+          try {
+            const segments = parseSrt(newSrt);
+            const fixedSegments = fixOverlappingSegments(segments);
+            setSubtitleSegments(fixedSegments);
+          } catch (e) {
+            console.error("Error processing SRT:", e);
+          }
+          setAccumulatedSrt(newSrt);
         }
 
         // Always update progress information

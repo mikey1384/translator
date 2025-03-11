@@ -6,36 +6,19 @@ const fs = require("fs");
 const os = require("os");
 
 // Load service dependencies
-let subtitleProcessingService;
 let ffmpegService;
 let fileManagerService;
-let aiService;
+let subtitleProcessing;
 
 try {
-  // Import the required services
-  const {
-    SubtitleProcessing,
-  } = require("../dist/services/subtitle-processing");
+  // Import the required services and functions
+  subtitleProcessing = require("../dist/services/subtitle-processing");
   const { FFmpegService } = require("../dist/services/ffmpeg-service");
   const { FileManager } = require("../dist/services/file-manager");
-  const { AIService } = require("../dist/services/ai-service");
 
   // Initialize services
   ffmpegService = new FFmpegService();
   fileManagerService = new FileManager();
-  aiService = new AIService(ffmpegService);
-
-  // Force-initialize clients by testing if they're available
-  console.log("AI service clients availability:", {
-    openai: aiService.hasOpenAIClient(),
-    anthropic: aiService.hasAnthropicClient(),
-  });
-
-  subtitleProcessingService = new SubtitleProcessing(
-    ffmpegService,
-    fileManagerService,
-    aiService
-  );
 
   console.log("Subtitle processing services initialized successfully");
 } catch (err) {
@@ -54,12 +37,12 @@ try {
 if (!generateHandlerExists) {
   ipcMain.handle("generate-subtitles", async (event, options) => {
     try {
-      // If no subtitle service is available, return an error
-      if (!subtitleProcessingService) {
-        console.error("Subtitle processing service is not available");
+      // If required services aren't available, return an error
+      if (!ffmpegService || !fileManagerService || !subtitleProcessing) {
+        console.error("Required services are not available");
         return {
           subtitles: "",
-          error: "Subtitle service is not available",
+          error: "Required services are not available",
         };
       }
 
@@ -180,8 +163,8 @@ if (!generateHandlerExists) {
 
       console.log(`Processing video file at: ${options.videoPath}`);
 
-      // Process the job
-      const result = await subtitleProcessingService.generateSubtitlesFromVideo(
+      // Process the job using the function directly
+      const result = await subtitleProcessing.generateSubtitlesFromVideo(
         options,
         (progress) => {
           // Create a safe copy of the progress object with default values
@@ -196,7 +179,8 @@ if (!generateHandlerExists) {
           // Send the progress update to the renderer process with guaranteed properties
           console.log("Progress Update:", safeProgress.partialResult);
           event.sender.send("generate-subtitles-progress", safeProgress);
-        }
+        },
+        { ffmpegService, fileManager: fileManagerService }
       );
 
       return result;
@@ -212,58 +196,6 @@ if (!generateHandlerExists) {
   console.log("Generate subtitles handler registered");
 }
 
-// Register translate-subtitles handler
-let translateHandlerExists = false;
-try {
-  ipcMain.handle("translate-subtitles", () => {});
-  ipcMain.removeHandler("translate-subtitles");
-} catch (err) {
-  translateHandlerExists = true;
-}
-
-if (!translateHandlerExists) {
-  ipcMain.handle("translate-subtitles", async (event, options) => {
-    try {
-      // If no subtitle service is available, return an error
-      if (!subtitleProcessingService) {
-        console.error("Subtitle processing service is not available");
-        return {
-          translatedSubtitles: "",
-          error: "Subtitle service is not available",
-        };
-      }
-
-      // Process the job
-      const result = await subtitleProcessingService.translateSubtitles(
-        options,
-        (progress) => {
-          // Create a safe copy of the progress object with default values
-          const safeProgress = {
-            percent: progress.percent || 0,
-            stage: progress.stage || "Translating",
-            current: progress.current || 0,
-            total: progress.total || 0,
-            partialResult: progress.partialResult || "",
-          };
-
-          // Send the progress update to the renderer process with guaranteed properties
-          event.sender.send("translate-subtitles-progress", safeProgress);
-        }
-      );
-
-      return result;
-    } catch (error) {
-      console.error("Error in translate-subtitles handler:", error);
-      return {
-        translatedSubtitles: "",
-        error: `Translate subtitles error: ${error.message || String(error)}`,
-      };
-    }
-  });
-
-  console.log("Translate subtitles handler registered");
-}
-
 // Register merge-subtitles handler
 let mergeHandlerExists = false;
 try {
@@ -276,21 +208,22 @@ try {
 if (!mergeHandlerExists) {
   ipcMain.handle("merge-subtitles", async (event, options) => {
     try {
-      // If no subtitle service is available, return an error
-      if (!subtitleProcessingService) {
-        console.error("Subtitle processing service is not available");
+      // If required services aren't available, return an error
+      if (!ffmpegService || !fileManagerService || !subtitleProcessing) {
+        console.error("Required services are not available");
         return {
           outputPath: "",
-          error: "Subtitle service is not available",
+          error: "Required services are not available",
         };
       }
 
-      // Process the job
-      const result = await subtitleProcessingService.mergeSubtitlesWithVideo(
+      // Process the job using the function directly
+      const result = await subtitleProcessing.mergeSubtitlesWithVideo(
         options,
         (progress) => {
           event.sender.send("merge-subtitles-progress", progress);
-        }
+        },
+        { ffmpegService }
       );
 
       return result;

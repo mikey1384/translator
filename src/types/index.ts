@@ -28,20 +28,6 @@ export interface GenerateSubtitlesResult {
   error?: string;
 }
 
-export interface TranslateSubtitlesOptions {
-  subtitles: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  segments?: SubtitleSegment[]; // Optional structured format
-  streamResults?: boolean; // Whether to stream partial results
-}
-
-export interface TranslateSubtitlesResult {
-  translatedSubtitles: string;
-  segments?: SubtitleSegment[]; // Translated segments in structured format
-  error?: string;
-}
-
 export interface MergeSubtitlesOptions {
   videoPath: string;
   subtitlesPath: string;
@@ -89,12 +75,6 @@ export interface IpcApi {
     options: GenerateSubtitlesOptions
   ) => Promise<GenerateSubtitlesResult>;
   onGenerateSubtitlesProgress: (callback: ProgressCallback) => void;
-
-  // Subtitle translation
-  translateSubtitles: (
-    options: TranslateSubtitlesOptions
-  ) => Promise<TranslateSubtitlesResult>;
-  onTranslateSubtitlesProgress: (callback: ProgressCallback) => void;
 
   // Video merging
   mergeSubtitles: (

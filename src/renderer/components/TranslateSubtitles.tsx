@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { css } from "@emotion/css";
 import {
   formGroupStyles,
@@ -12,6 +12,7 @@ import {
 import Button from "./Button";
 import Section from "./Section";
 import TranslationProgressArea from "./TranslationProgressArea";
+import { registerSubtitleStreamListeners } from "../helpers/electron-ipc";
 
 // Languages for translation
 const languages = [
@@ -59,6 +60,39 @@ export default function TranslateSubtitles({
   const [translatedSubtitles, setTranslatedSubtitles] = useState<string>("");
   const [error, setError] = useState<string>("");
 
+  // Set up progress listener once
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
+    if (isTranslationInProgress) {
+      cleanup = registerSubtitleStreamListeners((data) => {
+        // Update the proper progress metrics based on the stage
+        if (
+          data.stage.toLowerCase().includes("audio") ||
+          data.stage.toLowerCase().includes("prepare")
+        ) {
+          setProgress(data.percent);
+          setProgressStage(data.stage);
+        } else {
+          setTranslationProgress(data.percent);
+          setTranslationStage(data.stage);
+
+          if (data.current && data.total) {
+            setSubtitleProgress({
+              current: data.current,
+              total: data.total,
+              warning: data.warning || undefined,
+            });
+          }
+        }
+      }, "translate");
+    }
+
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [isTranslationInProgress]);
+
   // Translate subtitles
   const handleTranslateSubtitles = async () => {
     if (!subtitles || !window.electron) {
@@ -80,31 +114,6 @@ export default function TranslateSubtitles({
       setTranslationStage("Preparing translation model...");
       setSubtitleProgress({});
 
-      // Set up progress listener
-      if (typeof window.electron.onTranslateSubtitlesProgress === "function") {
-        window.electron.onTranslateSubtitlesProgress((data) => {
-          // Update the proper progress metrics based on the stage
-          if (
-            data.stage.toLowerCase().includes("audio") ||
-            data.stage.toLowerCase().includes("prepare")
-          ) {
-            setProgress(data.percent);
-            setProgressStage(data.stage);
-          } else {
-            setTranslationProgress(data.percent);
-            setTranslationStage(data.stage);
-
-            if (data.current && data.total) {
-              setSubtitleProgress({
-                current: data.current,
-                total: data.total,
-                warning: data.warning || undefined,
-              });
-            }
-          }
-        });
-      }
-
       const result = await window.electron.translateSubtitles({
         subtitles,
         sourceLanguage,
@@ -125,6 +134,7 @@ export default function TranslateSubtitles({
       }, 2000);
     } catch (err: any) {
       setError(`Error translating subtitles: ${err.message || err}`);
+    } finally {
       setIsTranslationInProgress(false);
     }
   };
