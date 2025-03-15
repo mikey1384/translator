@@ -1,55 +1,3 @@
-/**
- * Utility functions for reliable IPC communication with Electron main process
- */
-
-/**
- * DIAGNOSTIC TOOL - Test save functionality directly
- */
-export function testSaveFile(method: 'direct' | 'dialog' = 'direct') {
-  if (!window.electron?.saveFile) {
-    return 'ERROR: saveFile method not available';
-  }
-
-  // Create test options based on save method
-  let saveOptions;
-  if (method === 'direct') {
-    // Direct save with filePath
-    const userDataPath = localStorage.getItem('userData') || '';
-    const testPath = `${userDataPath}/temp/diagnostic-test-${Date.now()}.txt`;
-    saveOptions = {
-      content:
-        'This is a direct save test file.\nCreated for diagnostic purposes.',
-      filePath: testPath,
-    };
-  } else {
-    // Dialog save with just defaultPath
-    saveOptions = {
-      content:
-        'This is a dialog save test file.\nCreated for diagnostic purposes.',
-      defaultPath: 'diagnostic-test.txt',
-    };
-  }
-
-  return window.electron
-    .saveFile(saveOptions)
-    .then(result => {
-      return `SUCCESS: ${JSON.stringify(result)}`;
-    })
-    .catch(error => {
-      return `ERROR: ${error.message || String(error)}`;
-    });
-}
-
-// Make diagnostic function globally available
-if (typeof window !== 'undefined') {
-  (window as any).testSaveFile = testSaveFile;
-  (window as any).testDirectSave = () => testSaveFile('direct');
-  (window as any).testDialogSave = () => testSaveFile('dialog');
-}
-
-/**
- * Safely call Electron IPC with extended retries to handle "No handler registered" errors
- */
 export async function retryElectronCall<T>(
   method: string,
   args: any,
@@ -248,10 +196,9 @@ export function registerSubtitleStreamListeners(
   // This variable will hold the function so we can remove it later
   let listener: ((event: any, progress: any) => void) | null = null;
 
-  // Create the listener if the window.electron object exists
   if (window.electron) {
     // Handler for progress events
-    listener = (event: any, progress: any) => {
+    listener = (_: any, progress: any) => {
       // Always provide default values to avoid undefined properties
       const safeProgress = {
         partialResult: progress?.partialResult || '',

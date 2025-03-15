@@ -1,30 +1,43 @@
 interface ElectronAPI {
   onGenerateSubtitlesProgress: (
-    callback: (
-      event: any,
-      progress: {
-        partialResult: string;
-        percent: number;
-        stage: string;
-        current?: number;
-        total?: number;
-        warning?: string;
-      }
-    ) => void
+    callback:
+      | ((
+          event: any,
+          progress: {
+            partialResult: string;
+            percent: number;
+            stage: string;
+            current?: number;
+            total?: number;
+            warning?: string;
+          }
+        ) => void)
+      | null
   ) => () => void;
   onTranslateSubtitlesProgress: (
-    callback: (
-      event: any,
-      progress: {
-        partialResult: string;
-        percent: number;
-        stage: string;
-        current?: number;
-        total?: number;
-        warning?: string;
-      }
-    ) => void
+    callback:
+      | ((
+          event: any,
+          progress: {
+            partialResult: string;
+            percent: number;
+            stage: string;
+            current?: number;
+            total?: number;
+            warning?: string;
+          }
+        ) => void)
+      | null
   ) => () => void;
+  generateSubtitles: (options: {
+    videoFile?: File;
+    videoPath?: string;
+    targetLanguage: string;
+    showOriginalText?: boolean;
+  }) => Promise<{
+    subtitles: string;
+    error?: string;
+  }>;
   translateSubtitles: (params: {
     subtitles: string;
     sourceLanguage: string;

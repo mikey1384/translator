@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { nativePlayer } from '../../components/NativeVideoPlayer';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
-import SubtitleEditor from './SubtitleEditor';
-import { debounce } from 'lodash';
-import StylizedFileInput from '../../components/StylizedFileInput';
 import Section from '../../components/Section';
-import { subtitleVideoPlayer } from '../../constants';
-import { saveFileWithRetry } from '../../helpers/electron-ipc';
+import StylizedFileInput from '../../components/StylizedFileInput';
 import ElectronFileButton from '../../components/ElectronFileButton';
+
+import SubtitleEditor from './SubtitleEditor';
+import { nativePlayer } from '../../components/NativeVideoPlayer';
+import { subtitleVideoPlayer } from '../../constants';
+
+import { debounce } from 'lodash';
+import { saveFileWithRetry } from '../../helpers/electron-ipc';
+import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 
 import {
   srtTimeToSeconds,
@@ -23,9 +26,12 @@ import {
   handleSeekToSubtitle,
 } from './helpers';
 import { useSubtitleNavigation, useRestoreFocus } from './hooks';
-import { buttonGradientStyles, mergeButtonStyles } from './styles';
+import {
+  buttonGradientStyles,
+  mergeButtonStyles as mergeButtonClass,
+} from './styles';
 import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
-import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
+
 import { SrtSegment } from '../../../types/interface';
 
 export interface EditSubtitlesProps {
@@ -33,7 +39,6 @@ export interface EditSubtitlesProps {
   videoUrl: string | null;
   onSetVideoFile: (file: File) => void;
   onSetVideoUrl: (url: string | null) => void;
-  onSetError: (error: string) => void;
   isPlaying?: boolean;
   editingTimes?: { start: number; end: number } | null;
   onSetIsPlaying?: (isPlaying: boolean) => void;
@@ -53,13 +58,11 @@ export interface EditSubtitlesProps {
   }>;
 }
 
-export default function EditSubtitles({
+export function EditSubtitles({
   videoFile,
-  isPlaying: isPlayingProp,
-  editingTimes: editingTimesProp,
   onSetVideoFile,
   onSetVideoUrl,
-  onSetError,
+  isPlaying: isPlayingProp,
   onSetIsPlaying,
   secondsToSrtTime: secondsToSrtTimeProp,
   subtitles: subtitlesProp,
@@ -69,12 +72,17 @@ export default function EditSubtitles({
   onMergeSubtitlesWithVideo,
   editorRef,
 }: EditSubtitlesProps) {
+  /**
+   * ------------------------------------------------------
+   * State Management
+   * ------------------------------------------------------
+   */
   const [subtitlesState, setSubtitlesState] = useState<SrtSegment[]>(
     subtitlesProp || []
   );
   const [editingTimesState, setEditingTimesState] = useState<
     Record<string, string>
-  >(editingTimesProp ? {} : {});
+  >({});
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
@@ -84,63 +92,77 @@ export default function EditSubtitles({
   const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
+  const [error, setError] = useState<string>('');
 
+  // For controlling a timed auto‐pause
   const playTimeoutRef = useRef<number | null>(null);
-  const debouncedTimeUpdateRef = useRef<Record<string, any>>({});
+
+  // Debounced references
+  const debouncedTimeUpdateRef = useRef<
+    Record<string, ReturnType<typeof debounce>>
+  >({});
+
+  // Used to restore focus after editing
   const focusedInputRef = useRef<{
     index: number | null;
     field: 'start' | 'end' | 'text' | null;
-  }>({
-    index: null,
-    field: null,
-  });
+  }>({ index: null, field: null });
 
-  // Ref to track the subtitle elements
+  // Subtitle DOM references
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const srtTimeToSecondsFn = srtTimeToSeconds; // used in utils if needed
+  // If the user passed in a custom `secondsToSrtTime`, use that; otherwise fallback
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
 
-  // useEffect to validate and set subtitles on mount
+  /**
+   * ------------------------------------------------------
+   * Initialization & Updates
+   * ------------------------------------------------------
+   */
+  // Validate subtitles on mount
   useEffect(() => {
     if (subtitlesProp && subtitlesProp.length > 0) {
       const validatedSubtitles = validateSubtitleTimings(subtitlesProp);
       setSubtitlesState(validatedSubtitles);
     }
-  }, []);
+  }, [subtitlesProp]);
 
-  // Other useEffects remain unchanged
+  // Keep local subtitlesState in sync when the prop changes
   useEffect(() => {
     if (subtitlesProp) {
       setSubtitlesState(subtitlesProp);
     }
   }, [subtitlesProp]);
 
+  // Keep local isPlayingState in sync
   useEffect(() => {
-    if (isPlayingProp !== undefined) {
+    if (typeof isPlayingProp !== 'undefined') {
       setIsPlayingState(isPlayingProp);
     }
   }, [isPlayingProp]);
 
+  // Keep local merging state in sync
   useEffect(() => {
-    if (isMergingInProgressProp !== undefined) {
+    if (typeof isMergingInProgressProp !== 'undefined') {
       setIsMergingInProgressState(isMergingInProgressProp);
     }
   }, [isMergingInProgressProp]);
 
+  // Send `isPlayingState` updates up
   useEffect(() => {
-    if (onSetIsPlaying !== undefined) {
+    if (onSetIsPlaying) {
       onSetIsPlaying(isPlayingState);
     }
   }, [isPlayingState, onSetIsPlaying]);
 
+  // Send `isMergingInProgressState` updates up
   useEffect(() => {
-    if (onSetIsMergingInProgress !== undefined) {
+    if (onSetIsMergingInProgress) {
       onSetIsMergingInProgress(isMergingInProgressState);
     }
   }, [isMergingInProgressState, onSetIsMergingInProgress]);
 
-  // Cleanup effect remains unchanged
+  // Cleanup any outstanding timeouts
   useEffect(() => {
     return () => {
       if (playTimeoutRef.current) {
@@ -150,424 +172,22 @@ export default function EditSubtitles({
     };
   }, []);
 
-  // Updated handleTimeInputBlur, using DEBOUNCE_DELAY_MS in debounce
-  const handleTimeInputBlur = useCallback(
-    (index: number, field: 'start' | 'end') => {
-      const editKey = `${index}-${field}`;
-      const currentEditValue = editingTimesState[editKey];
-      if (currentEditValue) {
-        let numValue: number;
-        if (
-          typeof currentEditValue === 'string' &&
-          currentEditValue.includes(':')
-        ) {
-          numValue = srtTimeToSecondsFn(currentEditValue);
-        } else {
-          numValue = parseFloat(currentEditValue);
-        }
-        if (!isNaN(numValue) && numValue >= 0) {
-          const currentSub = subtitlesState[index];
-          const prevSub = index > 0 ? subtitlesState[index - 1] : null;
-          let isValid = true;
-          let newEnd = currentSub.end;
-          if (field === 'start') {
-            if (prevSub && numValue < prevSub.start) {
-              isValid = false;
-            }
-            if (numValue >= currentSub.end) {
-              const originalDuration = currentSub.end - currentSub.start;
-              newEnd = numValue + originalDuration;
-            }
-          }
-          if (isValid) {
-            if (field === 'start' && numValue >= currentSub.end) {
-              setSubtitlesState(current =>
-                current.map((sub, i) =>
-                  i === index ? { ...sub, start: numValue, end: newEnd } : sub
-                )
-              );
-            } else {
-              setSubtitlesState(current =>
-                current.map((sub, i) =>
-                  i === index ? { ...sub, [field]: numValue } : sub
-                )
-              );
-            }
-          }
-        }
-      }
-      setEditingTimesState(prev => {
-        const newTimes = { ...prev };
-        delete newTimes[editKey];
-        return newTimes;
-      });
-    },
-    [subtitlesState, editingTimesState, srtTimeToSecondsFn]
-  );
-
-  // Updated handleEditSubtitle to use useRestoreFocus hook
-  const restoreFocus = useRestoreFocus(focusedInputRef);
-  const handleEditSubtitle = useCallback(
-    (
-      index: number,
-      field: 'start' | 'end' | 'text',
-      value: number | string
-    ) => {
-      focusedInputRef.current = { index, field };
-      if (field === 'text') {
-        setSubtitlesState(current =>
-          current.map((sub, i) =>
-            i === index ? { ...sub, text: value as string } : sub
-          )
-        );
-        return;
-      }
-      setEditingTimesState(prev => ({
-        ...prev,
-        [`${index}-${field}`]: value as string,
-      }));
-      const debounceKey = `${index}-${field}`;
-      if (!debouncedTimeUpdateRef.current[debounceKey]) {
-        debouncedTimeUpdateRef.current[debounceKey] = debounce(
-          (value: string) => {
-            let numValue: number;
-            if (typeof value === 'string' && value.includes(':')) {
-              numValue = srtTimeToSecondsFn(value);
-            } else {
-              numValue = parseFloat(value as string);
-            }
-            if (isNaN(numValue) || numValue < 0) {
-              return;
-            }
-            const currentSub = subtitlesState[index];
-            const prevSub = index > 0 ? subtitlesState[index - 1] : null;
-            if (field === 'start') {
-              if (prevSub && numValue < prevSub.start) return;
-              let newEnd = currentSub.end;
-              if (numValue >= currentSub.end) {
-                const originalDuration = currentSub.end - currentSub.start;
-                newEnd = numValue + originalDuration;
-              }
-              setSubtitlesState(current =>
-                current.map((sub, i) =>
-                  i === index ? { ...sub, start: numValue, end: newEnd } : sub
-                )
-              );
-            } else {
-              setSubtitlesState(current =>
-                current.map((sub, i) =>
-                  i === index ? { ...sub, [field]: numValue } : sub
-                )
-              );
-            }
-            setTimeout(restoreFocus, 50);
-          },
-          DEBOUNCE_DELAY_MS
-        );
-      }
-      debouncedTimeUpdateRef.current[debounceKey](value);
-    },
-    [subtitlesState, srtTimeToSecondsFn, restoreFocus]
-  );
-
-  // Remove inline definitions of findCurrentSubtitle and scrollToCurrentSubtitle and use the hook instead
-  const { scrollToCurrentSubtitle } = useSubtitleNavigation(
-    subtitlesState,
-    subtitleRefs
-  );
-
-  useEffect(() => {
-    if (editorRef && editorRef.current) {
-      editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
-    }
-  }, [editorRef, scrollToCurrentSubtitle]);
-
-  // In handleSaveEditedSrtAs, replace hardcoded filename with DEFAULT_FILENAME
-  async function handleSaveEditedSrtAs() {
-    try {
-      const suggestedName = originalSrtFile?.name || DEFAULT_FILENAME;
-      const srtContent = generateSrtContent(subtitlesState);
-      const saveOptions = {
-        title: 'Save SRT File As',
-        defaultPath: suggestedName,
-        filters: [{ name: 'SRT Files', extensions: ['srt'] }],
-        content: srtContent,
-        forceDialog: true,
-      };
-      try {
-        const result = await saveFileWithRetry(saveOptions);
-        if (result?.filePath) {
-          localStorage.setItem('originalSrtPath', result.filePath);
-          localStorage.setItem('originalLoadPath', result.filePath);
-          localStorage.setItem('targetPath', result.filePath);
-          alert(`File saved successfully to:\n${result.filePath}`);
-          if (originalSrtFile) {
-            setOriginalSrtFile(null);
-          }
-        } else if (result.error && !result.error.includes('canceled')) {
-          onSetError(`Save failed: ${result.error}`);
-        }
-      } catch (saveError: any) {
-        onSetError(`Save failed: ${saveError.message || String(saveError)}`);
-      }
-      return;
-    } catch (error: any) {
-      onSetError(`Error saving SRT file: ${error.message || String(error)}`);
-    }
-  }
-
-  function handlePlaySubtitle(startTime: number, endTime: number) {
-    // Clear any existing timeout
-    if (playTimeoutRef.current) {
-      window.clearTimeout(playTimeoutRef.current);
-      playTimeoutRef.current = null;
-    }
-
-    // If we're already playing, pause first
-    if (isPlayingState) {
-      try {
-        nativePlayer.pause();
-        setIsPlayingState(false);
-        return; // Important: return early to prevent attempting play while pausing
-      } catch (err) {
-        console.error('Error pausing player:', err);
-      }
-      return;
-    }
-
-    try {
-      // Ensure startTime is a valid number before using it
-      const validStartTime =
-        typeof startTime === 'number' && !isNaN(startTime) ? startTime : 0;
-      const validEndTime =
-        typeof endTime === 'number' && !isNaN(endTime)
-          ? endTime
-          : validStartTime + 3;
-
-      // Get current position directly from the player instance
-      let currentPosition = 0;
-      try {
-        if (nativePlayer.instance) {
-          currentPosition = nativePlayer.instance.currentTime;
-        } else {
-          currentPosition = nativePlayer.getCurrentTime();
-        }
-      } catch (err) {
-        console.error('Error getting current time:', err);
-      }
-
-      // If we're already within this subtitle's time range, play from current position
-      if (currentPosition >= validStartTime && currentPosition < validEndTime) {
-        playFromCurrentPosition(currentPosition, validEndTime);
-      } else {
-        // Only seek if we're not in the subtitle range
-
-        try {
-          // Find the track element to reset it before seeking
-          if (nativePlayer.instance) {
-            const trackElement = nativePlayer.instance.querySelector('track');
-            // Temporarily hide track to clear displayed cues
-            if (trackElement && trackElement.track) {
-              const currentMode = trackElement.track.mode;
-              trackElement.track.mode = 'hidden';
-
-              // Perform the seek
-              nativePlayer.instance.currentTime = validStartTime;
-
-              // Restore track mode after a short delay
-              setTimeout(() => {
-                if (trackElement && trackElement.track) {
-                  trackElement.track.mode = currentMode;
-                }
-
-                const actualPosition = nativePlayer.getCurrentTime();
-                playFromCurrentPosition(actualPosition, validEndTime);
-              }, 200);
-            } else {
-              // Fallback if track element not found
-              nativePlayer.instance.currentTime = validStartTime;
-
-              setTimeout(() => {
-                const actualPosition = nativePlayer.getCurrentTime();
-                playFromCurrentPosition(actualPosition, validEndTime);
-              }, 200);
-            }
-          } else {
-            // Use the nativePlayer.seek method (which includes track handling)
-            nativePlayer.seek(validStartTime);
-
-            setTimeout(() => {
-              const actualPosition = nativePlayer.getCurrentTime();
-              playFromCurrentPosition(actualPosition, validEndTime);
-            }, 200);
-          }
-        } catch (seekErr) {
-          console.error('Error during seek:', seekErr);
-          // Fall back to playing from start time even if seek fails
-          playFromCurrentPosition(validStartTime, validEndTime);
-        }
-      }
-    } catch (err) {
-      console.error('Error during subtitle playback:', err);
-      setIsPlayingState(false);
-    }
-  }
-
-  function playFromCurrentPosition(startTime: number, endTime: number) {
-    let actualCurrentTime = startTime;
-    try {
-      if (nativePlayer.instance) {
-        actualCurrentTime = nativePlayer.instance.currentTime;
-      } else {
-        actualCurrentTime = nativePlayer.getCurrentTime();
-      }
-    } catch (err) {
-      console.error('Error getting current time before play:', err);
-    }
-
-    try {
-      const playPromise = nativePlayer.instance
-        ? nativePlayer.instance.play()
-        : nativePlayer.play();
-
-      playPromise
-        .then(() => {
-          setIsPlayingState(true);
-
-          // Recalculate the actual duration based on current position
-          const duration = Math.max(0, (endTime - actualCurrentTime) * 1000); //
-
-          // Set timeout to pause at end time
-          if (duration > 0) {
-            playTimeoutRef.current = window.setTimeout(() => {
-              try {
-                // Access player directly if possible for more reliable pausing
-                if (nativePlayer.instance) {
-                  nativePlayer.instance.pause();
-                } else {
-                  nativePlayer.pause();
-                }
-                setIsPlayingState(false);
-              } catch (err) {
-                console.error('Error pausing player after timeout:', err);
-              } finally {
-                playTimeoutRef.current = null;
-              }
-            }, duration);
-          }
-        })
-        .catch(err => {
-          console.error('Error starting playback:', err);
-          setIsPlayingState(false);
-        });
-    } catch (err) {
-      console.error('Unexpected error during play operation:', err);
-      setIsPlayingState(false);
-    }
-  }
-
-  function handleShiftSubtitle(index: number, shiftSeconds: number) {
-    if (isShiftingDisabled) return;
-
-    // Disable shifting during processing to prevent rapid clicks
-    setIsShiftingDisabled(true);
-
-    try {
-      // Get the current subtitle
-      const sub = subtitlesState[index];
-      if (!sub) {
-        console.error('Subtitle not found at index:', index);
-        setIsShiftingDisabled(false);
-        return;
-      }
-
-      // Calculate new start and end times
-      const newStart = Math.max(0, sub.start + shiftSeconds);
-      const duration = sub.end - sub.start;
-      const newEnd = newStart + duration;
-
-      // Update the subtitle
-      setSubtitlesState(current =>
-        current.map((s, i) =>
-          i === index ? { ...s, start: newStart, end: newEnd } : s
-        )
-      );
-
-      // If we have a player, seek to the new position to show the change
-      try {
-        nativePlayer.seek(newStart);
-      } catch (err) {
-        console.error('Error seeking to new position after shift:', err);
-      }
-
-      // Re-enable shifting
-      setTimeout(() => {
-        setIsShiftingDisabled(false);
-      }, 100);
-    } catch (err) {
-      console.error('Error shifting subtitle:', err);
-      setIsShiftingDisabled(false);
-    }
-  }
-
-  async function handleMergeVideoWithSubtitles() {
-    if (!videoFile || subtitlesState.length === 0) {
-      onSetError('Please upload a video file and subtitle file first');
-      return;
-    }
-
-    try {
-      // Update UI state
-      setIsMergingInProgressState(true);
-      setMergeProgress(0);
-      setMergeStage('Preparing files');
-      onSetError('');
-
-      // Call the merger function
-      await onMergeSubtitlesWithVideo(videoFile, subtitlesState, {
-        onProgress: (progress: number) => {
-          setMergeProgress(progress);
-          if (progress >= 99) {
-            setMergeStage('Merging complete');
-          } else if (progress >= 50) {
-            setMergeStage('Merging video with subtitles');
-          } else if (progress >= 10) {
-            setMergeStage('Processing video');
-          }
-        },
-      });
-
-      setMergeStage('Merging complete');
-
-      // Keep UI showing completion for 2 seconds
-      setTimeout(() => {
-        setIsMergingInProgressState(false);
-      }, 2000);
-    } catch (error) {
-      console.error('Error merging video with subtitles:', error);
-      onSetError(
-        error instanceof Error
-          ? error.message
-          : 'An error occurred while merging video with subtitles'
-      );
-      setIsMergingInProgressState(false);
-      setMergeStage('Error occurred');
-    }
-  }
-
-  // Add an effect to automatically update subtitles whenever they change
+  /**
+   *  For dynamic sub updates, attempt to keep the external
+   *  or global player in sync
+   */
   useEffect(() => {
     if (subtitlesState.length > 0) {
-      // Use videoPlayerRef from props if available
+      // Use the videoPlayerRef from props if available
       if (videoPlayerRef && typeof videoPlayerRef.currentTime === 'function') {
         try {
           const currentTime = videoPlayerRef.currentTime();
           videoPlayerRef.currentTime(currentTime);
         } catch (e) {
-          console.warn('Error updating player time:', e);
+          console.warn('Error updating player time via videoPlayerRef:', e);
         }
       }
-      // Fallback to subtitleVideoPlayer global if available
+      // Otherwise use the global reference from subtitleVideoPlayer
       else if (
         subtitleVideoPlayer &&
         subtitleVideoPlayer.instance &&
@@ -584,9 +204,461 @@ export default function EditSubtitles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitlesState]);
 
+  /**
+   * ------------------------------------------------------
+   * Subtitle Editing Logic
+   * ------------------------------------------------------
+   */
+  const restoreFocus = useRestoreFocus(focusedInputRef);
+
+  const handleTimeInputBlur = useCallback(
+    (index: number, field: 'start' | 'end') => {
+      const editKey = `${index}-${field}`;
+      const currentEditValue = editingTimesState[editKey];
+      if (!currentEditValue) {
+        // If there's no stored time string, do nothing
+        return;
+      }
+
+      let numValue: number;
+      // Support HH:MM:SS or numeric
+      if (currentEditValue.includes(':')) {
+        numValue = srtTimeToSeconds(currentEditValue);
+      } else {
+        numValue = parseFloat(currentEditValue);
+      }
+
+      if (isNaN(numValue) || numValue < 0) {
+        // If invalid or negative, revert
+        setEditingTimesState(prev => {
+          const newTimes = { ...prev };
+          delete newTimes[editKey];
+          return newTimes;
+        });
+        return;
+      }
+
+      const currentSub = subtitlesState[index];
+      if (!currentSub) return;
+
+      const prevSub = index > 0 ? subtitlesState[index - 1] : null;
+      let newEnd = currentSub.end;
+
+      // If editing start, check special conditions
+      if (field === 'start') {
+        // If user typed something smaller than the previous sub's start
+        if (prevSub && numValue < prevSub.start) {
+          // Not strictly an error, but you can handle it if you want
+        }
+        // If the new start is beyond or equal to the old end, shift the end
+        if (numValue >= currentSub.end) {
+          const originalDuration = currentSub.end - currentSub.start;
+          newEnd = numValue + originalDuration;
+        }
+      }
+
+      setSubtitlesState(current =>
+        current.map((sub, i) => {
+          if (i !== index) return sub;
+          return field === 'start'
+            ? { ...sub, start: numValue, end: newEnd }
+            : { ...sub, end: numValue };
+        })
+      );
+
+      // Clean up the "editingTimesState" for this field
+      setEditingTimesState(prev => {
+        const newTimes = { ...prev };
+        delete newTimes[editKey];
+        return newTimes;
+      });
+    },
+    [editingTimesState, subtitlesState]
+  );
+
+  const handleEditSubtitle = useCallback(
+    (
+      index: number,
+      field: 'start' | 'end' | 'text',
+      value: number | string
+    ) => {
+      // Save the current input for potential re-focus after updates
+      focusedInputRef.current = { index, field };
+
+      // If editing the text, just set immediately
+      if (field === 'text') {
+        setSubtitlesState(current =>
+          current.map((sub, i) =>
+            i === index ? { ...sub, text: value as string } : sub
+          )
+        );
+        return;
+      }
+
+      // Otherwise, we are editing start/end
+      setEditingTimesState(prev => ({
+        ...prev,
+        [`${index}-${field}`]: String(value),
+      }));
+
+      const debounceKey = `${index}-${field}`;
+      if (!debouncedTimeUpdateRef.current[debounceKey]) {
+        debouncedTimeUpdateRef.current[debounceKey] = debounce(
+          (val: string) => {
+            let numValue: number;
+            if (val.includes(':')) {
+              numValue = srtTimeToSeconds(val);
+            } else {
+              numValue = parseFloat(val);
+            }
+            if (isNaN(numValue) || numValue < 0) return;
+
+            const currentSub = subtitlesState[index];
+            if (!currentSub) return;
+
+            const prevSub = index > 0 ? subtitlesState[index - 1] : null;
+            let newEnd = currentSub.end;
+
+            // If we're editing start time
+            if (field === 'start') {
+              if (prevSub && numValue < prevSub.start) {
+                // Could handle overlap or do nothing
+              }
+              // If user moves start beyond end, shift end
+              if (numValue >= currentSub.end) {
+                const duration = currentSub.end - currentSub.start;
+                newEnd = numValue + duration;
+              }
+              setSubtitlesState(curr =>
+                curr.map((sub, i) => {
+                  if (i !== index) return sub;
+                  return { ...sub, start: numValue, end: newEnd };
+                })
+              );
+            }
+            // If we're editing end time
+            else {
+              setSubtitlesState(curr =>
+                curr.map((sub, i) =>
+                  i === index ? { ...sub, end: numValue } : sub
+                )
+              );
+            }
+
+            // Attempt to restore cursor/focus after a tiny delay
+            setTimeout(() => restoreFocus(), 50);
+          },
+          DEBOUNCE_DELAY_MS
+        );
+      }
+
+      // Trigger the debounced function
+      debouncedTimeUpdateRef.current[debounceKey](String(value));
+    },
+    [subtitlesState, restoreFocus]
+  );
+
+  /**
+   * ------------------------------------------------------
+   * Navigation: highlight or scroll to current subtitle
+   * ------------------------------------------------------
+   */
+  const { scrollToCurrentSubtitle } = useSubtitleNavigation(
+    subtitlesState,
+    subtitleRefs
+  );
+
+  // If an external editorRef is provided, expose `scrollToCurrentSubtitle`
+  useEffect(() => {
+    if (editorRef?.current) {
+      editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
+    }
+  }, [editorRef, scrollToCurrentSubtitle]);
+
+  /**
+   * ------------------------------------------------------
+   * Save & Merge Functionality
+   * ------------------------------------------------------
+   */
+  async function handleSaveEditedSrtAs() {
+    try {
+      const suggestedName = originalSrtFile?.name || DEFAULT_FILENAME;
+      const srtContent = generateSrtContent(subtitlesState);
+
+      const saveOptions = {
+        title: 'Save SRT File As',
+        defaultPath: suggestedName,
+        filters: [{ name: 'SRT Files', extensions: ['srt'] }],
+        content: srtContent,
+        forceDialog: true,
+      };
+
+      const result = await saveFileWithRetry(saveOptions);
+      if (result?.filePath) {
+        localStorage.setItem('originalSrtPath', result.filePath);
+        localStorage.setItem('originalLoadPath', result.filePath);
+        localStorage.setItem('targetPath', result.filePath);
+
+        alert(`File saved successfully to:\n${result.filePath}`);
+
+        if (originalSrtFile) {
+          setOriginalSrtFile(null);
+        }
+      } else if (result.error && !result.error.includes('canceled')) {
+        setError(`Save failed: ${result.error}`);
+      }
+    } catch (error: any) {
+      setError(`Error saving SRT file: ${error.message || String(error)}`);
+    }
+  }
+
+  /**
+   * Attempt to play or pause a subtitle snippet
+   */
+  function handlePlaySubtitle(startTime: number, endTime: number) {
+    // If there was a scheduled pause, clear it
+    if (playTimeoutRef.current) {
+      window.clearTimeout(playTimeoutRef.current);
+      playTimeoutRef.current = null;
+    }
+
+    // If we're already playing, pause and exit
+    if (isPlayingState) {
+      try {
+        nativePlayer.pause();
+      } catch (err) {
+        console.error('Error pausing player:', err);
+      }
+      setIsPlayingState(false);
+      return;
+    }
+
+    // Otherwise, attempt to play from [startTime..endTime]
+    try {
+      const validStartTime = isNaN(startTime) ? 0 : startTime;
+      const validEndTime = isNaN(endTime) ? validStartTime + 3 : endTime;
+
+      let currentPosition = 0;
+      if (nativePlayer.instance) {
+        currentPosition = nativePlayer.instance.currentTime;
+      } else {
+        currentPosition = nativePlayer.getCurrentTime();
+      }
+
+      // If already in the subtitle range, just play from current
+      if (currentPosition >= validStartTime && currentPosition < validEndTime) {
+        playFromCurrentPosition(currentPosition, validEndTime);
+      } else {
+        // Seek first, then play
+        if (nativePlayer.instance) {
+          const trackElement = nativePlayer.instance.querySelector('track');
+          if (trackElement && trackElement.track) {
+            const oldMode = trackElement.track.mode;
+            trackElement.track.mode = 'hidden';
+
+            nativePlayer.instance.currentTime = validStartTime;
+
+            setTimeout(() => {
+              trackElement.track.mode = oldMode;
+              playFromCurrentPosition(
+                nativePlayer.instance!.currentTime,
+                validEndTime
+              );
+            }, 200);
+          } else {
+            // Fallback if no <track> present
+            nativePlayer.instance.currentTime = validStartTime;
+            setTimeout(() => {
+              playFromCurrentPosition(
+                nativePlayer.instance!.currentTime,
+                validEndTime
+              );
+            }, 200);
+          }
+        } else {
+          // Or use the direct seek method
+          nativePlayer.seek(validStartTime);
+          setTimeout(() => {
+            playFromCurrentPosition(
+              nativePlayer.getCurrentTime(),
+              validEndTime
+            );
+          }, 200);
+        }
+      }
+    } catch (err) {
+      console.error('Error during subtitle playback:', err);
+      setIsPlayingState(false);
+    }
+  }
+
+  function playFromCurrentPosition(startTime: number, endTime: number) {
+    let actualTime = startTime;
+    try {
+      if (nativePlayer.instance) {
+        actualTime = nativePlayer.instance.currentTime;
+      } else {
+        actualTime = nativePlayer.getCurrentTime();
+      }
+    } catch (err) {
+      console.error('Error retrieving current time:', err);
+    }
+
+    try {
+      const playPromise = nativePlayer.instance
+        ? nativePlayer.instance.play()
+        : nativePlayer.play();
+      playPromise
+        .then(() => {
+          setIsPlayingState(true);
+
+          const durationMs = (endTime - actualTime) * 1000;
+          if (durationMs > 0) {
+            playTimeoutRef.current = window.setTimeout(() => {
+              try {
+                if (nativePlayer.instance) {
+                  nativePlayer.instance.pause();
+                } else {
+                  nativePlayer.pause();
+                }
+              } catch (err) {
+                console.error('Error pausing after snippet playback:', err);
+              }
+              setIsPlayingState(false);
+              playTimeoutRef.current = null;
+            }, durationMs);
+          }
+        })
+        .catch(error => {
+          console.error('Error starting playback:', error);
+          setIsPlayingState(false);
+        });
+    } catch (err) {
+      console.error('Unexpected error in playFromCurrentPosition:', err);
+      setIsPlayingState(false);
+    }
+  }
+
+  /**
+   * Shift an individual subtitle's start/end by N seconds
+   */
+  function handleShiftSubtitle(index: number, shiftSeconds: number) {
+    if (isShiftingDisabled) return;
+
+    setIsShiftingDisabled(true);
+    try {
+      const sub = subtitlesState[index];
+      if (!sub) {
+        console.error(`No subtitle found at index ${index}`);
+        setIsShiftingDisabled(false);
+        return;
+      }
+      const newStart = Math.max(0, sub.start + shiftSeconds);
+      const duration = sub.end - sub.start;
+      const newEnd = newStart + duration;
+
+      setSubtitlesState(current =>
+        current.map((s, i) =>
+          i === index ? { ...s, start: newStart, end: newEnd } : s
+        )
+      );
+
+      // Optionally seek to newStart
+      try {
+        nativePlayer.seek(newStart);
+      } catch (seekError) {
+        console.error('Error seeking after shiftSubtitle:', seekError);
+      }
+
+      // Re-enable shifting after short delay
+      setTimeout(() => {
+        setIsShiftingDisabled(false);
+      }, 100);
+    } catch (err) {
+      console.error('Error shifting subtitle:', err);
+      setIsShiftingDisabled(false);
+    }
+  }
+
+  /**
+   * Merge Subtitles with Video
+   */
+  async function handleMergeVideoWithSubtitles() {
+    if (!videoFile || subtitlesState.length === 0) {
+      setError(
+        'Please upload a video file and at least one subtitle entry first.'
+      );
+      return;
+    }
+
+    setIsMergingInProgressState(true);
+    setMergeProgress(0);
+    setMergeStage('Preparing files');
+    setError('');
+
+    try {
+      // Call the merge function
+      await onMergeSubtitlesWithVideo(videoFile, subtitlesState, {
+        onProgress: (progress: number) => {
+          setMergeProgress(progress);
+          if (progress >= 99) setMergeStage('Merging complete');
+          else if (progress >= 50)
+            setMergeStage('Merging video with subtitles');
+          else if (progress >= 10) setMergeStage('Processing video');
+        },
+      });
+
+      setMergeStage('Merging complete');
+
+      // Keep it on screen for 2 seconds, for visual confirmation
+      setTimeout(() => {
+        setIsMergingInProgressState(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error merging video with subtitles:', err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'An error occurred while merging video with subtitles'
+      );
+      setIsMergingInProgressState(false);
+      setMergeStage('Error occurred');
+    }
+  }
+
+  const handleRemoveSubtitleLocal = (index: number) => {
+    handleRemoveSubtitle(index, subtitlesState, setSubtitlesState);
+  };
+
+  const handleInsertSubtitleLocal = (index: number) => {
+    handleInsertSubtitle(index, subtitlesState, setSubtitlesState);
+  };
+
+  /**
+   * ------------------------------------------------------
+   * Render
+   * ------------------------------------------------------
+   */
   return (
-    <Section title="Edit Subtitles" overflowVisible={true}>
-      {/* File input fields - Show when not in extraction mode or when video is loaded but no subtitles */}
+    <Section title="Edit Subtitles" overflowVisible>
+      {/* Error display */}
+      {error && (
+        <div
+          className={css`
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+          `}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* If no video or no subtitles loaded yet, show these inputs */}
       {(!videoFile || (videoFile && subtitlesState.length === 0)) && (
         <div style={{ marginBottom: 20 }}>
           {!videoFile && (
@@ -596,7 +668,7 @@ export default function EditSubtitles({
                 onChange={e => {
                   if (e.target.files?.[0]) {
                     onSetVideoFile(e.target.files[0]);
-                    // Create a URL for the video file
+                    // Create an object URL for the new file
                     const url = URL.createObjectURL(e.target.files[0]);
                     onSetVideoUrl(url);
                   }
@@ -606,6 +678,7 @@ export default function EditSubtitles({
               />
             </div>
           )}
+
           <div style={{ marginBottom: 10 }}>
             <ElectronFileButton
               label="Load SRT:"
@@ -670,8 +743,8 @@ export default function EditSubtitles({
                   secondsToSrtTime={secondsToSrtTimeFn}
                   onEditSubtitle={handleEditSubtitle}
                   onTimeInputBlur={handleTimeInputBlur}
-                  onRemoveSubtitle={handleRemoveSubtitle}
-                  onInsertSubtitle={handleInsertSubtitle}
+                  onRemoveSubtitle={handleRemoveSubtitleLocal}
+                  onInsertSubtitle={handleInsertSubtitleLocal}
                   onSeekToSubtitle={handleSeekToSubtitle}
                   onPlaySubtitle={handlePlaySubtitle}
                   onShiftSubtitle={handleShiftSubtitle}
@@ -726,11 +799,7 @@ export default function EditSubtitles({
             Save
           </Button>
 
-          <Button
-            onClick={() => handleSaveEditedSrtAs()}
-            variant="secondary"
-            size="lg"
-          >
+          <Button onClick={handleSaveEditedSrtAs} variant="secondary" size="lg">
             <svg
               width="18"
               height="18"
@@ -748,6 +817,7 @@ export default function EditSubtitles({
             </svg>
             Save As
           </Button>
+
           <Button
             onClick={handleMergeVideoWithSubtitles}
             variant="secondary"
@@ -757,7 +827,7 @@ export default function EditSubtitles({
               subtitlesState.length === 0 ||
               isMergingInProgressState
             }
-            className={mergeButtonStyles}
+            className={mergeButtonClass}
           >
             <svg
               width="18"
@@ -780,7 +850,7 @@ export default function EditSubtitles({
         </div>
       )}
 
-      {/* Progress display for merging */}
+      {/* Progress display overlay */}
       {isMergingInProgressState && (
         <div
           style={{

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../constants';
 import ButtonGroup from './ButtonGroup';
@@ -8,15 +8,7 @@ import { openSubtitleWithElectron } from '../helpers/subtitle-utils';
 import ElectronFileButton from './ElectronFileButton';
 import { buttonGradientStyles } from '../containers/EditSubtitles/styles';
 
-export default function TimestampDisplay({
-  isPlaying,
-  videoElement,
-  onChangeVideo,
-  onChangeSrt,
-  hasSubtitles = false,
-  onTogglePlay,
-  onScrollToCurrentSubtitle,
-}: {
+interface TimestampDisplayProps {
   isPlaying: boolean;
   videoElement: HTMLVideoElement | null;
   onChangeVideo?: (file: File) => void;
@@ -24,77 +16,35 @@ export default function TimestampDisplay({
   hasSubtitles?: boolean;
   onTogglePlay?: () => void;
   onScrollToCurrentSubtitle?: () => void;
-}) {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [bufferedWidth, setBufferedWidth] = useState('0%');
+}
 
-  useEffect(() => {
-    if (!videoElement) return;
+export function TimestampDisplay({
+  isPlaying,
+  videoElement,
+  onChangeVideo,
+  onChangeSrt,
+  hasSubtitles = false,
+  onTogglePlay,
+  onScrollToCurrentSubtitle,
+}: TimestampDisplayProps) {
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [bufferedWidth, setBufferedWidth] = useState<string>('0%');
 
-    // Function to update the buffered progress bar
-    const updateBufferedWidth = () => {
-      if (videoElement.buffered.length > 0) {
-        const bufferedEnd = videoElement.buffered.end(
-          videoElement.buffered.length - 1
-        );
-        const bufferedPercent = (bufferedEnd / videoElement.duration) * 100;
-        setBufferedWidth(`${bufferedPercent}%`);
-      }
-    };
-
-    // Set initial values
-    setCurrentTime(videoElement.currentTime || 0);
-    setDuration(videoElement.duration || 0);
-    updateBufferedWidth();
-
-    // Event handlers
-    const handleTimeUpdate = () => {
-      setCurrentTime(videoElement.currentTime);
-      updateBufferedWidth();
-    };
-
-    const handleDurationChange = () => {
-      setDuration(videoElement.duration);
-    };
-
-    const handleProgress = () => {
-      updateBufferedWidth();
-    };
-
-    // Add event listeners
-    videoElement.addEventListener('timeupdate', handleTimeUpdate);
-    videoElement.addEventListener('durationchange', handleDurationChange);
-    videoElement.addEventListener('progress', handleProgress);
-
-    // Clean up
-    return () => {
-      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
-      videoElement.removeEventListener('durationchange', handleDurationChange);
-      videoElement.removeEventListener('progress', handleProgress);
-    };
-  }, [videoElement]);
-
-  // Format time in a concise format (HH:MM:SS)
-  const formatTime = (seconds: number): string => {
-    if (isNaN(seconds)) return '00:00:00';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+  const formatTime = useCallback((seconds: number): string => {
+    if (isNaN(seconds)) return '00:00';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
 
-    if (hours > 0) {
-      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+    if (hrs > 0) {
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(
         2,
         '0'
       )}:${String(secs).padStart(2, '0')}`;
-    } else {
-      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(
-        2,
-        '0'
-      )}`;
     }
-  };
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }, []);
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0] && onChangeVideo) {
@@ -108,6 +58,47 @@ export default function TimestampDisplay({
       videoElement.currentTime = seekTime;
     }
   };
+
+  useEffect(() => {
+    if (!videoElement) return;
+
+    setCurrentTime(videoElement.currentTime || 0);
+    setDuration(videoElement.duration || 0);
+
+    const updateBufferedWidth = () => {
+      if (videoElement.buffered.length > 0 && videoElement.duration) {
+        const bufferedEnd = videoElement.buffered.end(
+          videoElement.buffered.length - 1
+        );
+        const bufferedPercent = (bufferedEnd / videoElement.duration) * 100;
+        setBufferedWidth(`${bufferedPercent.toFixed(1)}%`);
+      }
+    };
+
+    updateBufferedWidth();
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(videoElement.currentTime);
+      updateBufferedWidth();
+    };
+    const handleDurationChange = () => {
+      setDuration(videoElement.duration);
+    };
+    const handleProgress = () => {
+      updateBufferedWidth();
+    };
+
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    videoElement.addEventListener('durationchange', handleDurationChange);
+    videoElement.addEventListener('progress', handleProgress);
+
+    // Cleanup
+    return () => {
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      videoElement.removeEventListener('durationchange', handleDurationChange);
+      videoElement.removeEventListener('progress', handleProgress);
+    };
+  }, [videoElement]);
 
   return (
     <div
@@ -130,6 +121,7 @@ export default function TimestampDisplay({
         width: 100%;
       `}
     >
+      {/* Progress bar container */}
       <div
         className={css`
           width: 100%;
@@ -137,6 +129,7 @@ export default function TimestampDisplay({
           position: relative;
         `}
       >
+        {/* Buffered progress bar */}
         <div
           className={css`
             position: absolute;
@@ -150,12 +143,14 @@ export default function TimestampDisplay({
           `}
           style={{ width: bufferedWidth }}
         />
+        {/* Slider (seek bar) */}
         <input
           type="range"
           min="0"
           max={duration || 0}
           value={currentTime}
           step="0.1"
+          aria-label="Video Seek"
           className={css`
             -webkit-appearance: none;
             appearance: none;
@@ -177,7 +172,7 @@ export default function TimestampDisplay({
               border-radius: 50%;
               background: ${colors.primary};
               cursor: pointer;
-              border: 2px solid white;
+              border: 2px solid #fff;
               box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
               position: relative;
               z-index: 10;
@@ -191,7 +186,7 @@ export default function TimestampDisplay({
               border-radius: 50%;
               background: ${colors.primary};
               cursor: pointer;
-              border: 2px solid white;
+              border: 2px solid #fff;
               box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
               position: relative;
               z-index: 10;
@@ -204,7 +199,6 @@ export default function TimestampDisplay({
               background: #e1e1e1;
               cursor: pointer;
             }
-
             &::-moz-range-track {
               height: 8px;
               border-radius: 4px;
@@ -217,7 +211,6 @@ export default function TimestampDisplay({
               transform: scale(1.2);
               box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
             }
-
             &:hover::-moz-range-thumb {
               background: ${colors.primaryDark || '#0056b3'};
               transform: scale(1.2);
@@ -228,7 +221,6 @@ export default function TimestampDisplay({
               transform: scale(1.3);
               box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
             }
-
             &:active::-moz-range-thumb {
               transform: scale(1.3);
               box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
@@ -280,6 +272,7 @@ export default function TimestampDisplay({
         </div>
       </div>
 
+      {/* Bottom controls: Upload, SRT, etc */}
       <div
         className={css`
           display: flex;
@@ -324,56 +317,58 @@ export default function TimestampDisplay({
                 strokeLinejoin="round"
                 style={{ marginRight: '6px' }}
               >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <polyline points="19 12 12 19 5 12"></polyline>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <polyline points="19 12 12 19 5 12" />
               </svg>
               Find Current
             </Button>
           )}
 
-          <Button
-            onClick={onTogglePlay}
-            variant={isPlaying ? 'danger' : 'primary'}
-            size="sm"
-            className={`${buttonGradientStyles.base} ${
-              isPlaying
-                ? buttonGradientStyles.danger
-                : buttonGradientStyles.primary
-            } ${css`
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              min-width: 70px;
-            `}`}
-          >
-            {isPlaying ? (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
-                </svg>
-                Pause
-              </>
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
-                </svg>
-                Play
-              </>
-            )}
-          </Button>
+          {onTogglePlay && (
+            <Button
+              onClick={onTogglePlay}
+              variant={isPlaying ? 'danger' : 'primary'}
+              size="sm"
+              className={`${buttonGradientStyles.base} ${
+                isPlaying
+                  ? buttonGradientStyles.danger
+                  : buttonGradientStyles.primary
+              } ${css`
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                min-width: 70px;
+              `}`}
+            >
+              {isPlaying ? (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                  </svg>
+                  Pause
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                  </svg>
+                  Play
+                </>
+              )}
+            </Button>
+          )}
         </ButtonGroup>
       </div>
     </div>

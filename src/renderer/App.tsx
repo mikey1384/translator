@@ -4,7 +4,7 @@ import StatusSection from './components/StatusSection';
 import BackToTopButton from './components/BackToTopButton';
 import StickyVideoPlayer from './containers/EditSubtitles/StickyVideoPlayer';
 
-import EditSubtitles from './containers/EditSubtitles';
+import { EditSubtitles } from './containers/EditSubtitles';
 import GenerateSubtitles from './containers/GenerateSubtitles';
 import MergingProgressArea from './containers/MergingProgressArea';
 import TranslationProgressArea from './containers/TranslationProgressArea';
@@ -283,7 +283,6 @@ function AppContent() {
               isPlaying={isPlaying}
               onSetVideoFile={setVideoFile}
               onSetVideoUrl={handleSetVideoUrl}
-              onSetError={error => console.error(error)}
               onSetIsPlaying={setIsPlaying}
               secondsToSrtTime={secondsToSrtTime}
               parseSrt={parseSrt}

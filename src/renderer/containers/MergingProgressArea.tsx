@@ -1,7 +1,6 @@
-import React from 'react';
 import { css, keyframes } from '@emotion/css';
 import { colors } from '../constants';
-import ProgressBar from './ProgressBar';
+import ProgressBar from '../components/ProgressBar';
 
 interface MergingProgressAreaProps {
   mergeProgress: number;
@@ -78,11 +77,7 @@ export default function MergingProgressArea({
       </div>
 
       <div>
-        <ProgressBar
-          progress={mergeProgress}
-          barColor={colors.info}
-          height={10}
-        />
+        <ProgressBar progress={mergeProgress} />
         <p className={progressTextStyles}>
           {mergeStage || 'Preparing to merge...'}
           {mergeProgress > 0 &&

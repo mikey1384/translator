@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import { css } from '@emotion/css';
 import {
-  formGroupStyles,
   errorMessageStyles,
-  resultsAreaStyles,
-  resultsHeaderStyles,
   selectStyles,
   fileInputWrapperStyles,
-  breakpoints,
 } from '../styles';
-import Button from './Button';
-import ButtonGroup from './ButtonGroup';
-import StylizedFileInput from './StylizedFileInput';
-import Section from './Section';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
+import StylizedFileInput from '../components/StylizedFileInput';
+import Section from '../components/Section';
 
 // Maximum file size in MB
 const MAX_MB = 500;
@@ -41,21 +37,15 @@ interface GenerateSubtitlesProps {
 export default function GenerateSubtitles({
   onSubtitlesGenerated,
 }: GenerateSubtitlesProps) {
-  // File selection state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
   const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
-  // Progress tracking
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
-  const [progressStage, setProgressStage] = useState<string>('');
 
-  // Results
   const [subtitles, setSubtitles] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  // File selection from input element
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError('');
     if (e.target.files && e.target.files.length > 0) {
@@ -80,16 +70,6 @@ export default function GenerateSubtitles({
     try {
       setError('');
       setIsGenerating(true);
-      setProgress(0);
-      setProgressStage('Starting subtitle generation...');
-
-      // Set up progress listener
-      if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
-        window.electron.onGenerateSubtitlesProgress(data => {
-          setProgress(data.percent);
-          setProgressStage(data.stage);
-        });
-      }
 
       // Call the backend API
       const result = await window.electron.generateSubtitles({
@@ -103,8 +83,6 @@ export default function GenerateSubtitles({
       }
 
       setSubtitles(result.subtitles);
-      setProgress(100);
-      setProgressStage('Subtitles generation complete!');
       onSubtitlesGenerated(result.subtitles);
     } catch (err: any) {
       setError(`Error generating subtitles: ${err.message || err}`);
