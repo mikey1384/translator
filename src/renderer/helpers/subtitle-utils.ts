@@ -1,4 +1,4 @@
-import { SrtSegment } from '../App';
+import { SrtSegment } from '../../types/interface';
 
 /**
  * Parse SRT content to an array of segments

@@ -58,8 +58,8 @@ export interface OpenFileOptions {
 
 export interface SrtSegment {
   index: number;
-  start: number; // in seconds
-  end: number; // in seconds
+  start: number;
+  end: number;
   text: string;
   originalText?: string;
   translatedText?: string;

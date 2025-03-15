@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { nativePlayer } from './NativeVideoPlayer';
+import { nativePlayer } from '../../components/NativeVideoPlayer';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
 import SubtitleEditor from './SubtitleEditor';
@@ -11,7 +11,6 @@ import { saveFileWithRetry } from '../../helpers/electron-ipc';
 import ElectronFileButton from '../../components/ElectronFileButton';
 
 import {
-  SrtSegment,
   srtTimeToSeconds,
   validateSubtitleTimings,
   secondsToSrtTime,
@@ -27,6 +26,7 @@ import { useSubtitleNavigation, useRestoreFocus } from './hooks';
 import { buttonGradientStyles, mergeButtonStyles } from './styles';
 import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
 import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
+import { SrtSegment } from '../../../types/interface';
 
 export interface EditSubtitlesProps {
   videoFile: File | null;

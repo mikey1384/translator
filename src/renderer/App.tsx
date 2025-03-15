@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 
 import StatusSection from './components/StatusSection';
 import BackToTopButton from './components/BackToTopButton';
-import StickyVideoPlayer from './components/StickyVideoPlayer';
+import StickyVideoPlayer from './containers/EditSubtitles/StickyVideoPlayer';
 
 import EditSubtitles from './containers/EditSubtitles';
 import GenerateSubtitles from './containers/GenerateSubtitles';
@@ -13,7 +13,7 @@ import { registerSubtitleStreamListeners } from './helpers/electron-ipc';
 import { loadSrtFile } from './helpers/subtitle-utils';
 
 import { ManagementContextProvider } from './context';
-import { SrtSegment } from '../types/types';
+import { SrtSegment } from '../types/interface';
 
 import {
   parseSrt,

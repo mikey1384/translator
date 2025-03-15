@@ -1,4 +1,4 @@
-import { SrtSegment } from './utils';
+import { SrtSegment } from '../../../types/interface';
 
 export const processSrtContent = (
   srtContent: string,

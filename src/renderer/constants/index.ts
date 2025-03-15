@@ -1,4 +1,4 @@
-import { SrtSegment } from '../App';
+import { SrtSegment } from '../../types/interface';
 
 // Global state objects to maintain shared state across components
 export const subtitlesState = {

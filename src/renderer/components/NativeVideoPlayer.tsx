@@ -80,7 +80,7 @@ interface NativeVideoPlayerProps {
   isFullyExpanded?: boolean;
 }
 
-export function NativeVideoPlayer({
+export default function NativeVideoPlayer({
   videoUrl,
   subtitles,
   onPlayerReady,

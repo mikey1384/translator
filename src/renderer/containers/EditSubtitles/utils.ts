@@ -1,10 +1,4 @@
-export interface SrtSegment {
-  index: number;
-  start: number;
-  end: number;
-  text: string;
-  originalText?: string;
-}
+import { SrtSegment } from '../../../types/interface';
 
 export const srtTimeToSeconds = (timeString: string): number => {
   const parts = timeString.split(':');

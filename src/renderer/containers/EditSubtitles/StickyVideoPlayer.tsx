@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 import NativeVideoPlayer, {
   nativePlayer,
-} from '../containers/EditSubtitles/NativeVideoPlayer';
-import TimestampDisplay from './TimestampDisplay';
-import { SrtSegment } from '../App';
+} from '../../components/NativeVideoPlayer';
+import TimestampDisplay from '../../components/TimestampDisplay';
+import { SrtSegment } from '../../../types/interface';
 
 export default function StickyVideoPlayer({
   videoUrl,
