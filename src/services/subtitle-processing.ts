@@ -8,17 +8,15 @@ import { OpenAI } from 'openai';
 import fs from 'fs';
 import dotenv from 'dotenv';
 
-// Import types from preload script
 import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
   MergeSubtitlesOptions,
   MergeSubtitlesResult,
-} from '../types/types';
+} from '../types/interface';
 
 dotenv.config();
 
-// Initialize API clients at module level
 const ANTHROPIC_API_KEY =
   process.env.ANTHROPIC_API_KEY || 'hardcoded_anthropic_key_fallback';
 const OPENAI_API_KEY =
@@ -49,31 +47,11 @@ try {
   }
 }
 
-// Base SRT segment interface
-interface SrtSegment {
-  index: number;
-  start: number; // in seconds
-  end: number; // in seconds
-  text: string;
-}
-
 export class SubtitleProcessingError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'SubtitleProcessingError';
   }
-}
-
-// Extend SrtSegment with translation fields
-interface TranslatedSegment extends SrtSegment {
-  originalText: string;
-  translatedText: string;
-}
-
-interface TranslationBatch {
-  segments: SrtSegment[];
-  startIndex: number;
-  endIndex: number;
 }
 
 // Helper: Create a readable stream from a file path
