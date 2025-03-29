@@ -1,14 +1,11 @@
-// Export all helper functions for convenient imports
 export * from './subtitle-utils';
 
-/**
- * Throttle function to limit how often a function can be called
- * @param func The function to throttle
- * @param limit The time limit in milliseconds
- */
-export function throttle(func: Function, limit: number): Function {
+export function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  return function (this: any, ...args: any[]) {
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -17,32 +14,23 @@ export function throttle(func: Function, limit: number): Function {
   };
 }
 
-/**
- * Debounce function to delay function execution until after a period of inactivity
- * @param func The function to debounce
- * @param wait The wait time in milliseconds
- */
-export function debounce(func: Function, wait: number): Function {
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout>;
-  return function (this: any, ...args: any[]) {
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }
 
-/**
- * Check if the current device is a mobile device
- */
 export function isMobile(): boolean {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
   );
 }
 
-/**
- * Format a filesize in bytes to a human-readable string
- * @param bytes File size in bytes
- */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
 
@@ -53,16 +41,10 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-/**
- * Get file extension from filename
- */
 export function getFileExtension(filename: string): string {
   return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2);
 }
 
-/**
- * Check if a scroll element is at the bottom
- */
 export function isScrolledToBottom(
   element: HTMLElement,
   threshold: number = 20
@@ -72,16 +54,10 @@ export function isScrolledToBottom(
   );
 }
 
-/**
- * Scroll an element to the bottom
- */
 export function scrollToBottom(element: HTMLElement): void {
   element.scrollTop = element.scrollHeight;
 }
 
-/**
- * Get the last element of an array
- */
 export function last<T>(array: T[]): T | undefined {
   return array.length > 0 ? array[array.length - 1] : undefined;
 }

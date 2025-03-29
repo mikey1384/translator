@@ -6,6 +6,7 @@ import { parseSrt, buildSrt } from '../renderer/helpers/subtitle-utils';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { OpenAI } from 'openai';
 import fs from 'fs';
+import fsp from 'fs/promises';
 import dotenv from 'dotenv';
 
 import {
@@ -245,21 +246,90 @@ IMPORTANT: Do not modify any part of the original text except for performing the
   }));
 }
 
-// Function: generateSubtitlesFromAudio
-async function generateSubtitlesFromAudio(
-  inputAudioPath: string,
-  targetLanguage: string = 'original',
+// --- NEW HELPER: Retry with Exponential Backoff (for OpenAI) ---
+async function retryWithExponentialBackoff<T>(
+  asyncFn: () => Promise<T>,
+  maxRetries = 3,
+  initialDelay = 1000
+): Promise<T> {
+  let lastError: any = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await asyncFn();
+    } catch (error) {
+      lastError = error;
+      const isRetriable =
+        (error as any).status === 429 || // Rate limit
+        (error as any).status >= 500 || // Server error
+        (error as Error).message?.includes('timeout') ||
+        (error as Error).message?.includes('network') ||
+        (error as Error).message?.includes('ECONNRESET');
+
+      if (!isRetriable || attempt === maxRetries - 1) {
+        log.error(
+          `[Retryable Error] Final attempt failed after ${attempt + 1} tries:`,
+          error
+        );
+        throw error; // Rethrow after final attempt or if non-retriable
+      }
+
+      const backoffTime = initialDelay * Math.pow(2, attempt);
+      log.warn(
+        `[Retryable Error] Attempt ${
+          attempt + 1
+        } failed, retrying in ${backoffTime}ms:`,
+        error
+      );
+      await new Promise(resolve => setTimeout(resolve, backoffTime));
+    }
+  }
+  // Should not be reached if maxRetries > 0, but satisfies TypeScript
+  throw (
+    lastError ||
+    new SubtitleProcessingError(
+      'Failed operation after multiple retries, but no error was captured.'
+    )
+  );
+}
+
+// --- REFACTORED FUNCTION: generateSubtitlesFromAudio ---
+interface GenerateSubtitlesFromAudioOptions {
+  inputAudioPath: string;
+  targetLanguage?: string;
   progressCallback?: (progress: {
     percent: number;
     stage: string;
     current?: number;
     total?: number;
     partialResult?: string;
-  }) => void
-): Promise<string> {
-  const callId = Date.now() + Math.random().toString(36).substring(2);
-  log.info(`[${callId}] Starting audio transcription for: ${inputAudioPath}`);
+    error?: string; // Added for error reporting
+  }) => void;
+  progressRange?: { start: number; end: number };
+}
 
+async function generateSubtitlesFromAudio({
+  inputAudioPath,
+  targetLanguage = 'original',
+  progressCallback,
+  progressRange,
+}: GenerateSubtitlesFromAudioOptions): Promise<string> {
+  const callId = Date.now() + Math.random().toString(36).substring(2);
+  log.info(
+    `[${callId}] Starting audio transcription for: ${inputAudioPath}, Target Lang: ${targetLanguage}`
+  );
+
+  // --- Progress Scaling Setup ---
+  const progressStart = progressRange?.start || 0;
+  const progressEnd = progressRange?.end || 100;
+  const progressSpan = progressEnd - progressStart;
+
+  const scaleProgress = (originalProgress: number): number => {
+    // Ensure progress stays within the allocated range
+    const scaled = progressStart + (originalProgress / 100) * progressSpan;
+    return Math.min(progressEnd, Math.max(progressStart, scaled));
+  };
+
+  // --- Initial Checks ---
   if (!fs.existsSync(inputAudioPath)) {
     throw new SubtitleProcessingError(
       `Audio file not found: ${inputAudioPath}`
@@ -269,87 +339,349 @@ async function generateSubtitlesFromAudio(
     throw new SubtitleProcessingError('OpenAI client not initialized');
   }
 
+  // --- Constants and Initialization ---
   const ffmpegService = new FFmpegService();
   const fileSize = fs.statSync(inputAudioPath).size;
   const duration = await ffmpegService.getMediaDuration(inputAudioPath);
-  const CHUNK_SIZE = 20 * 1024 * 1024;
-  const bitrate = fileSize / duration;
-  const chunkDuration = CHUNK_SIZE / bitrate;
-  const numChunks = Math.ceil(duration / chunkDuration);
+  // Keep the 20MB chunk size from original, example's 2MB might be too small/costly
+  const CHUNK_SIZE_BYTES = 20 * 1024 * 1024;
+  // Calculate chunk duration based on size and bitrate
+  const bitrate = fileSize > 0 && duration > 0 ? fileSize / duration : 128000; // Assume 128kbps if calculation fails
+  const chunkDurationSeconds = Math.max(10, CHUNK_SIZE_BYTES / bitrate); // Ensure minimum chunk duration
+  const numChunks = Math.max(1, Math.ceil(duration / chunkDurationSeconds));
 
-  log.info(`[${callId}] Processing audio in ${numChunks} chunks`);
+  log.info(
+    `[${callId}] File size: ${fileSize}, Duration: ${duration}s, Bitrate: ${bitrate.toFixed(
+      2
+    )} B/s`
+  );
+  log.info(
+    `[${callId}] Calculated chunk duration: ${chunkDurationSeconds.toFixed(
+      2
+    )}s, Number of chunks: ${numChunks}`
+  );
+
   const allSegments: any[] = [];
   const tempDir = path.dirname(inputAudioPath);
+  const chunkMetadata: { path: string; start: number; duration: number }[] = [];
+  const TRANSCRIPTION_BATCH_SIZE = 3; // Process 3 chunks concurrently
+  const INTER_CHUNK_TRANSCRIPTION_DELAY = 1000; // 1s delay between starting transcriptions in a batch
+  const INTER_BATCH_DELAY = 3000; // 3s delay between batches
 
-  for (let i = 0; i < numChunks; i++) {
-    const startTime = i * chunkDuration;
-    const chunkPath = path.join(tempDir, `chunk_${callId}_${i}.mp3`);
+  // --- Report Initial Progress ---
+  progressCallback?.({
+    percent: scaleProgress(0),
+    stage: 'Starting transcription',
+    total: numChunks,
+  });
 
-    try {
+  // --- Main Logic ---
+  try {
+    // 1. Prepare chunk metadata and extract audio segments sequentially
+    progressCallback?.({
+      percent: scaleProgress(5), // Changed from 10% to 5% as extraction is part of prep
+      stage: 'Preparing audio chunks',
+      total: numChunks,
+    });
+
+    for (let i = 0; i < numChunks; i++) {
+      const startTime = i * chunkDurationSeconds;
+      // Use a more specific chunk name
+      const chunkPath = path.join(
+        tempDir,
+        `chunk_${callId}_${i + 1}_of_${numChunks}.mp3`
+      );
+      const currentChunkDuration =
+        i === numChunks - 1 ? duration - startTime : chunkDurationSeconds; // Last chunk might be shorter
+
+      log.info(
+        `[${callId}] Preparing chunk ${i + 1}/${numChunks}: ${chunkPath} (Start: ${startTime.toFixed(
+          2
+        )}s, Duration: ${currentChunkDuration.toFixed(2)}s)`
+      );
+
+      // Extract segment using ffmpeg
+      // Note: Running multiple ffmpeg instances concurrently can be heavy.
+      // Consider sequential extraction if performance issues arise.
       await ffmpegService.extractAudioSegment(
         inputAudioPath,
         chunkPath,
         startTime,
-        chunkDuration
+        currentChunkDuration // Use actual duration for extraction
       );
 
-      const MAX_RETRIES = 3;
-      let chunkResponse = null;
+      // Check if file exists and has size > 0 after extraction
+      try {
+        const stats = await fsp.stat(chunkPath);
+        if (stats.size === 0) {
+          log.warn(`[${callId}] Chunk ${i + 1} is empty, skipping.`);
+          await fsp.unlink(chunkPath); // Clean up empty file
+          continue; // Skip this chunk
+        }
+      } catch (statError) {
+        log.warn(
+          `[${callId}] Could not stat chunk ${
+            i + 1
+          } after extraction, skipping: ${statError}`
+        );
+        continue; // Skip if file doesn't exist or other error
+      }
 
-      for (let retry = 0; retry < MAX_RETRIES; retry++) {
-        try {
-          chunkResponse = await openai.audio.transcriptions.create({
-            file: createFileFromPath(chunkPath),
-            model: 'whisper-1',
-            response_format: 'verbose_json',
-            language:
-              targetLanguage === 'original' ? undefined : targetLanguage,
-          });
-          break;
-        } catch (err) {
-          if (retry === MAX_RETRIES - 1) throw err;
-          await new Promise(resolve =>
-            setTimeout(resolve, 1000 * Math.pow(2, retry))
+      chunkMetadata.push({
+        path: chunkPath,
+        start: startTime,
+        duration: currentChunkDuration,
+      });
+
+      // Update progress slightly during preparation phase
+      const prepProgress = 5 + ((i + 1) / numChunks) * 5; // Allocate 5% for prep (5% to 10%)
+      progressCallback?.({
+        percent: scaleProgress(prepProgress),
+        stage: `Prepared chunk ${i + 1} of ${numChunks}`,
+        current: i + 1,
+        total: numChunks,
+      });
+    }
+
+    log.info(
+      `[${callId}] Finished preparing ${chunkMetadata.length} non-empty chunks.`
+    );
+    if (chunkMetadata.length === 0 && numChunks > 0) {
+      throw new SubtitleProcessingError(
+        'All audio chunks were empty or failed extraction.'
+      );
+    }
+
+    // 2. Transcribe chunks in batches
+    progressCallback?.({
+      percent: scaleProgress(10), // Start transcription phase at 10%
+      stage: 'Starting batch transcription',
+      total: chunkMetadata.length,
+    });
+
+    let transcriptionProgress = 10; // Percentage starts at 10
+    // Allocate 75% of progress range for transcription (10% to 85%)
+    const progressPerChunk =
+      chunkMetadata.length > 0 ? 75 / chunkMetadata.length : 0;
+
+    for (
+      let batchStart = 0;
+      batchStart < chunkMetadata.length;
+      batchStart += TRANSCRIPTION_BATCH_SIZE
+    ) {
+      const batchEnd = Math.min(
+        batchStart + TRANSCRIPTION_BATCH_SIZE,
+        chunkMetadata.length
+      );
+      const batchChunks = chunkMetadata.slice(batchStart, batchEnd);
+      const currentBatchNumber =
+        Math.floor(batchStart / TRANSCRIPTION_BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(
+        chunkMetadata.length / TRANSCRIPTION_BATCH_SIZE
+      );
+
+      log.info(
+        `[${callId}] Processing transcription batch ${currentBatchNumber}/${totalBatches} (Chunks ${
+          batchStart + 1
+        } to ${batchEnd})`
+      );
+
+      const batchResults = await Promise.all(
+        batchChunks.map(async (meta, batchIndex) => {
+          const overallChunkIndex = batchStart + batchIndex; // Index relative to all chunks
+
+          // Add delay before starting transcription for subsequent chunks in the batch
+          if (batchIndex > 0) {
+            await new Promise(resolve =>
+              setTimeout(resolve, INTER_CHUNK_TRANSCRIPTION_DELAY)
+            );
+          }
+
+          log.info(
+            `[${callId}] Transcribing chunk ${overallChunkIndex + 1}/${
+              chunkMetadata.length
+            } (Path: ${meta.path})`
           );
+          try {
+            const chunkResponse = await retryWithExponentialBackoff(
+              async () => {
+                // Use the helper function to create the stream
+                const fileStream = createFileFromPath(meta.path);
+                return await openai!.audio.transcriptions.create({
+                  file: fileStream, // Pass the stream directly
+                  model: 'whisper-1',
+                  response_format: 'verbose_json',
+                  // Pass language only if not 'original'
+                  language:
+                    targetLanguage === 'original' ? undefined : targetLanguage,
+                });
+              }
+            );
+            log.info(
+              `[${callId}] Successfully transcribed chunk ${
+                overallChunkIndex + 1
+              }`
+            );
+            return {
+              status: 'success',
+              chunkResponse,
+              chunkIndex: overallChunkIndex,
+              chunkStartTime: meta.start,
+              chunkPath: meta.path, // Include path for potential cleanup logging
+            };
+          } catch (transcriptionError) {
+            log.error(
+              `[${callId}] Failed to transcribe chunk ${overallChunkIndex + 1} (${meta.path}) after retries:`,
+              transcriptionError
+            );
+            return {
+              status: 'error',
+              chunkIndex: overallChunkIndex,
+              chunkPath: meta.path,
+              error: transcriptionError,
+            };
+          }
+        })
+      );
+
+      // Process batch results
+      let partialSrtForBatch = '';
+      for (const result of batchResults) {
+        if (
+          result.status === 'success' &&
+          result.chunkResponse &&
+          result.chunkStartTime !== undefined
+        ) {
+          const { chunkResponse, chunkIndex, chunkStartTime } = result;
+          const chunkSegments = chunkResponse.segments || [];
+          for (const segment of chunkSegments) {
+            segment.start += chunkStartTime;
+            segment.end += chunkStartTime;
+          }
+          allSegments.push(...chunkSegments);
+          // Sort immediately after adding to maintain order for partial SRT
+          allSegments.sort((a, b) => a.start - b.start);
+          // Generate partial SRT after processing each successful chunk in the batch
+          partialSrtForBatch = convertSegmentsToSrt(allSegments);
+
+          // Update progress
+          transcriptionProgress += progressPerChunk;
+          progressCallback?.({
+            percent: scaleProgress(transcriptionProgress),
+            stage: `Transcribed chunk ${chunkIndex + 1} of ${
+              chunkMetadata.length
+            }`,
+            current: chunkIndex + 1, // Use overall index
+            total: chunkMetadata.length,
+            partialResult: partialSrtForBatch, // Provide incremental result
+          });
+        } else {
+          // Optionally report error for specific chunk, or just log it
+          log.error(
+            `[${callId}] Skipping segments for failed chunk ${result.chunkIndex + 1}`
+          );
+          // Decide if progress should still advance or halt on error
+          // Advancing progress might be misleading if chunks fail
+          // Let's advance slightly less or log it clearly
+          // transcriptionProgress += progressPerChunk; // Decide if failed chunks count towards progress
+          progressCallback?.({
+            percent: scaleProgress(transcriptionProgress), // Don't advance progress % for failed chunk
+            stage: `Failed to transcribe chunk ${result.chunkIndex + 1}`,
+            current: result.chunkIndex + 1,
+            total: chunkMetadata.length,
+            error: `Chunk ${result.chunkIndex + 1} failed.`,
+            partialResult: partialSrtForBatch, // Show SRT up to the failure point
+          });
         }
       }
 
-      if (!chunkResponse) {
-        throw new SubtitleProcessingError(
-          `Failed to transcribe chunk ${i} after ${MAX_RETRIES} retries`
+      // Add delay between batches if not the last batch
+      if (batchEnd < chunkMetadata.length) {
+        log.info(
+          `[${callId}] Waiting ${INTER_BATCH_DELAY}ms before next batch...`
         );
-      }
-
-      const chunkSegments = chunkResponse.segments || [];
-      for (const segment of chunkSegments) {
-        segment.start += startTime;
-        segment.end += startTime;
-      }
-      allSegments.push(...chunkSegments);
-
-      if (progressCallback) {
-        const percent = Math.floor(((i + 1) / numChunks) * 100);
-        const partialSrt = convertSegmentsToSrt(allSegments);
-        progressCallback({
-          percent,
-          stage: `Transcribed chunk ${i + 1} of ${numChunks}`,
-          current: i + 1,
-          total: numChunks,
-          partialResult: partialSrt,
-        });
-      }
-    } finally {
-      try {
-        fs.unlinkSync(chunkPath);
-      } catch (err) {
-        log.warn(`[${callId}] Failed to delete chunk file ${chunkPath}:`, err);
+        await new Promise(resolve => setTimeout(resolve, INTER_BATCH_DELAY));
       }
     }
-  }
 
-  const finalSrt = convertSegmentsToSrt(allSegments);
-  log.info(`[${callId}] Transcription completed successfully`);
-  return finalSrt;
+    // 3. Finalize and Cleanup
+    progressCallback?.({
+      percent: scaleProgress(85), // Transcription phase ends at 85%
+      stage: 'Transcription complete, finalizing',
+    });
+
+    // Final sort just in case (though should be sorted already)
+    allSegments.sort((a, b) => a.start - b.start);
+    const finalSrt = convertSegmentsToSrt(allSegments);
+
+    // Cleanup chunk files asynchronously
+    log.info(
+      `[${callId}] Starting cleanup of ${chunkMetadata.length} chunk files...`
+    );
+    await Promise.allSettled(
+      chunkMetadata.map(async meta => {
+        try {
+          await fsp.unlink(meta.path);
+          log.debug(`[${callId}] Deleted chunk file: ${meta.path}`);
+        } catch (err) {
+          log.warn(
+            `[${callId}] Failed to delete chunk file ${meta.path}:`,
+            err
+          );
+        }
+      })
+    );
+    log.info(`[${callId}] Chunk file cleanup finished.`);
+
+    progressCallback?.({
+      percent: scaleProgress(100),
+      stage: 'Processing complete',
+      partialResult: finalSrt, // Include final result
+    });
+
+    log.info(`[${callId}] Transcription completed successfully.`);
+    return finalSrt;
+  } catch (error: any) {
+    log.error(`[${callId}] Error in generateSubtitlesFromAudio:`, error);
+
+    // Attempt to clean up any remaining chunk files on error
+    log.warn(`[${callId}] Attempting cleanup after error...`);
+    await Promise.allSettled(
+      chunkMetadata.map(async meta => {
+        try {
+          // Check existence before unlinking after an error
+          if (fs.existsSync(meta.path)) {
+            await fsp.unlink(meta.path);
+            log.debug(
+              `[${callId}] Cleaned up chunk file after error: ${meta.path}`
+            );
+          }
+        } catch (err) {
+          log.warn(
+            `[${callId}] Failed to delete chunk file ${meta.path} during error cleanup:`,
+            err
+          );
+        }
+      })
+    );
+
+    // Report error via progress callback
+    progressCallback?.({
+      percent: scaleProgress(0), // Reset progress or use last known good? Resetting is clearer.
+      stage: 'Error during processing',
+      error:
+        error instanceof Error ? error.message : 'Unknown transcription error',
+    });
+
+    // Re-throw specific error type
+    if (error instanceof SubtitleProcessingError) {
+      throw error;
+    } else {
+      throw new SubtitleProcessingError(
+        `Transcription failed: ${error.message || 'Unknown error'}`
+      );
+    }
+  }
 }
 
 // Exported Function: generateSubtitlesFromVideo
@@ -361,6 +693,7 @@ export async function generateSubtitlesFromVideo(
     partialResult?: string;
     current?: number;
     total?: number;
+    error?: string;
   }) => void,
   services?: {
     ffmpegService: FFmpegService;
@@ -394,20 +727,28 @@ export async function generateSubtitlesFromVideo(
   log.info(`[${callId}] Audio extracted to: ${audioPath}`);
 
   log.info(`[${callId}] Starting audio transcription`);
-  const subtitlesContent = await generateSubtitlesFromAudio(
-    audioPath,
-    'original',
-    progress => {
+  const subtitlesContent = await generateSubtitlesFromAudio({
+    inputAudioPath: audioPath,
+    targetLanguage: 'original',
+    progressCallback: progress => {
       if (progressCallback) {
-        const scaledPercent = 10 + (progress.percent * 40) / 100;
+        // Calculate scaled percent based on the range allocated for transcription (e.g., 10% to 50%)
+        const basePercent = 10;
+        const transcriptionSpan = 40; // 50 - 10
+        const scaledPercent =
+          basePercent + (progress.percent / 100) * transcriptionSpan;
         progressCallback({
           percent: scaledPercent,
           stage: progress.stage,
-          partialResult: progress.partialResult,
+          partialResult: progress.partialResult, // Pass through partial result
+          current: progress.current, // Pass through current/total if available
+          total: progress.total,
+          error: progress.error, // Pass through error if available
         });
       }
-    }
-  );
+    },
+    progressRange: { start: 10, end: 50 }, // Tell transcription it operates within 10-50% of the overall process
+  });
 
   const targetLang = options.targetLanguage?.toLowerCase() || 'original';
   if (targetLang === 'original') {
@@ -540,3 +881,8 @@ export async function mergeSubtitlesWithVideo(
 
   return { outputPath };
 }
+
+export // generateSubtitlesFromVideo, // Already exported above
+// mergeSubtitlesWithVideo,   // Already exported above
+// SubtitleProcessingError    // Already exported above
+ {};
