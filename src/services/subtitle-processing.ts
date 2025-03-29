@@ -684,7 +684,6 @@ async function generateSubtitlesFromAudio({
   }
 }
 
-// Exported Function: generateSubtitlesFromVideo
 export async function generateSubtitlesFromVideo(
   options: GenerateSubtitlesOptions,
   progressCallback?: (progress: {
@@ -747,7 +746,7 @@ export async function generateSubtitlesFromVideo(
         });
       }
     },
-    progressRange: { start: 10, end: 50 }, // Tell transcription it operates within 10-50% of the overall process
+    progressRange: { start: 10, end: 50 },
   });
 
   const targetLang = options.targetLanguage?.toLowerCase() || 'original';

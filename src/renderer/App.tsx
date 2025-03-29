@@ -139,9 +139,7 @@ function AppContent() {
             if (/^\d+$/.test(line.trim())) {
               currentLineNumber = line.trim();
               currentContent = null;
-            }
-            // Skip timestamp lines
-            else if (line.includes('-->')) {
+            } else if (line.includes('-->')) {
               continue;
             } else if (currentLineNumber && !currentContent) {
               if (!generatedSubtitleMapRef.current[currentLineNumber]) {
@@ -151,9 +149,7 @@ function AppContent() {
               }
               currentContent = line.trim();
               newSubtitleMap[currentLineNumber] = currentContent;
-            }
-            // If we already have content, append this line
-            else if (currentLineNumber && currentContent) {
+            } else if (currentLineNumber && currentContent) {
               newSubtitleMap[currentLineNumber] += ' ' + line.trim();
             }
           }
@@ -163,14 +159,20 @@ function AppContent() {
             ...newSubtitleMap,
           };
           const newSegments: SrtSegment[] =
-            generatedSubtitleIndexesRef.current.map(arrayIndex => ({
-              index: arrayIndex,
-              start: (arrayIndex - 1) * 3,
-              end: arrayIndex * 3,
-              text:
-                generatedSubtitleMapRef.current[arrayIndex.toString()] || '',
-            }));
-
+            generatedSubtitleIndexesRef.current.map(arrayIndex => {
+              const originalText =
+                generatedSubtitleMapRef.current[arrayIndex.toString()] || '';
+              const formattedText = originalText.replace(
+                '###TRANSLATION_MARKER###',
+                '\n'
+              );
+              return {
+                index: arrayIndex,
+                start: (arrayIndex - 1) * 3,
+                end: arrayIndex * 3,
+                text: formattedText,
+              };
+            });
           setSubtitleSegments(newSegments);
         }
 
