@@ -31,7 +31,7 @@ const languages = [
 ];
 
 interface GenerateSubtitlesProps {
-  onSubtitlesGenerated: (subtitles: string) => void;
+  onSubtitlesGenerated: (subtitles: string, videoFile: File) => void;
 }
 
 export default function GenerateSubtitles({
@@ -45,75 +45,6 @@ export default function GenerateSubtitles({
 
   const [subtitles, setSubtitles] = useState<string>('');
   const [error, setError] = useState<string>('');
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError('');
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-
-      if (file.size > MAX_FILE_SIZE) {
-        setError(`File exceeds ${MAX_MB}MB limit`);
-        return;
-      }
-
-      setSelectedFile(file);
-    }
-  };
-
-  // Generate subtitles
-  const handleGenerateSubtitles = async () => {
-    if (!selectedFile || !window.electron) {
-      setError('Please select a video file first');
-      return;
-    }
-
-    try {
-      setError('');
-      setIsGenerating(true);
-
-      // Call the backend API
-      const result = await window.electron.generateSubtitles({
-        videoFile: selectedFile,
-        targetLanguage,
-        showOriginalText,
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setSubtitles(result.subtitles);
-      onSubtitlesGenerated(result.subtitles);
-    } catch (err: any) {
-      setError(`Error generating subtitles: ${err.message || err}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Save subtitles
-  const handleSaveSubtitles = async () => {
-    if (!subtitles || !window.electron) {
-      setError('No subtitles to save');
-      return;
-    }
-
-    try {
-      const result = await window.electron.saveFile({
-        content: subtitles,
-        defaultPath: `subtitles_${Date.now()}.srt`,
-        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      window.electron.showMessage(`Subtitles saved to: ${result.filePath}`);
-    } catch (err: any) {
-      setError(`Error saving subtitles: ${err.message || err}`);
-    }
-  };
 
   return (
     <Section title="Generate Subtitles">
@@ -209,4 +140,74 @@ export default function GenerateSubtitles({
       </ButtonGroup>
     </Section>
   );
+
+  // --- Helper Functions ---
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setError('');
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`File exceeds ${MAX_MB}MB limit`);
+        return;
+      }
+
+      setSelectedFile(file);
+    }
+  }
+
+  async function handleGenerateSubtitles() {
+    if (!selectedFile || !window.electron) {
+      setError('Please select a video file first');
+      return;
+    }
+
+    try {
+      setError('');
+      setIsGenerating(true);
+
+      const result = await window.electron.generateSubtitles({
+        videoFile: selectedFile,
+        targetLanguage,
+        showOriginalText,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setSubtitles(result.subtitles);
+      if (selectedFile) {
+        onSubtitlesGenerated(result.subtitles, selectedFile);
+      }
+    } catch (err: any) {
+      setError(`Error generating subtitles: ${err.message || err}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  async function handleSaveSubtitles() {
+    if (!subtitles || !window.electron) {
+      setError('No subtitles to save');
+      return;
+    }
+
+    try {
+      const result = await window.electron.saveFile({
+        content: subtitles,
+        defaultPath: `subtitles_${Date.now()}.srt`,
+        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      window.electron.showMessage(`Subtitles saved to: ${result.filePath}`);
+    } catch (err: any) {
+      setError(`Error saving subtitles: ${err.message || err}`);
+    }
+  }
 }

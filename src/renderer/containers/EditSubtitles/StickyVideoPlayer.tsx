@@ -68,44 +68,31 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate placeholder height on mount and resize
   useEffect(() => {
     const calculateHeight = () => {
       if (!playerRef.current) return;
-
-      // Get the height of the player
       const rect = playerRef.current.getBoundingClientRect();
       if (rect.height > 0) {
         setPlaceholderHeight(rect.height);
       }
     };
 
-    // Initial calculation
     calculateHeight();
-
-    // Add resize event listener
     window.addEventListener('resize', calculateHeight);
-
-    // Notify parent that video is always sticky
     if (onStickyChange) {
       onStickyChange(true);
     }
-
-    // Clean up
     return () => {
       window.removeEventListener('resize', calculateHeight);
     };
   }, [onStickyChange]);
 
-  // Add scroll listener to check position relative to Edit Subtitles section
   useEffect(() => {
     const checkScrollPosition = () => {
-      // Find the sections
       const editSubtitlesSection = document.getElementById(
         'edit-subtitles-section'
       );
 
-      // Find the GenerateSubtitles section by looking for the section with "Generate Subtitles" title
       const generateSubtitlesSections = Array.from(
         document.querySelectorAll('h2')
       ).filter(h2 => h2.textContent?.includes('Generate Subtitles'));
@@ -116,32 +103,23 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
       if (!editSubtitlesSection) return;
 
-      // Get the vertical center point of the screen
       const screenCenterY = window.innerHeight / 2;
 
-      // Get the top position of the Edit Subtitles section relative to the viewport
       const editSectionRect = editSubtitlesSection.getBoundingClientRect();
 
-      // Determine expansion states based on scroll position
       let shouldFullyExpand = false;
       let shouldExpand = false;
 
-      // 1. Check if we should be in expanded mode (screen center above Edit Subtitles)
       shouldExpand = editSectionRect.top > screenCenterY;
 
-      // 2. Check if we should be in fully expanded mode (scrolling upward past Generate Subtitles)
       if (generateSubtitlesSection) {
         const generateSectionRect =
           generateSubtitlesSection.getBoundingClientRect();
-        // If user is scrolling UP and the Generate Subtitles is coming into view from the bottom
-        // We want to expand when it's below the viewport or just entering it
         shouldFullyExpand = generateSectionRect.top > window.innerHeight - 100;
       }
 
-      // Update states if needed, with priority for fully expanded
       if (shouldFullyExpand !== isFullyExpanded) {
         setIsFullyExpanded(shouldFullyExpand);
-        // When fully expanding, also ensure expanded is true
         if (shouldFullyExpand && !isExpanded) {
           setIsExpanded(true);
         }
@@ -150,10 +128,8 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       }
     };
 
-    // Check initial position
     checkScrollPosition();
 
-    // Add scroll event listener with throttling to improve performance
     let scrollTimeout: number | null = null;
     const throttledScroll = () => {
       if (scrollTimeout === null) {
@@ -166,7 +142,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
     window.addEventListener('scroll', throttledScroll);
 
-    // Clean up
     return () => {
       window.removeEventListener('scroll', throttledScroll);
       if (scrollTimeout) {
@@ -192,10 +167,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
   if (!videoUrl) return null;
 
-  const handlePlayerReadyWrapper = (player: any) => {
-    onPlayerReady(player);
-  };
-
   return (
     <div ref={containerRef}>
       <div className={placeholderStyles(placeholderHeight)} />
@@ -214,7 +185,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         <NativeVideoPlayer
           videoUrl={videoUrl}
           subtitles={subtitles}
-          onPlayerReady={handlePlayerReadyWrapper}
+          onPlayerReady={handlePlayerReady}
           isExpanded={isExpanded}
           isFullyExpanded={isFullyExpanded}
         />
@@ -230,6 +201,10 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       </div>
     </div>
   );
+
+  function handlePlayerReady(player: any) {
+    onPlayerReady(player);
+  }
 };
 
 export default StickyVideoPlayer;

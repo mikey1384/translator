@@ -183,76 +183,6 @@ function AppContent() {
     }
   }, [setSubtitleSegments]);
 
-  // Handle generated subtitles
-  const handleSubtitlesGenerated = (generatedSubtitles: string) => {
-    // Parse the generated subtitles into segments for possible editing later
-    try {
-      const segments = parseSrt(generatedSubtitles);
-      const fixedSegments = fixOverlappingSegments(segments);
-      setSubtitleSegments(fixedSegments);
-    } catch (err) {
-      console.error('Error parsing generated subtitles:', err);
-    }
-  };
-
-  const handleVideoPlayerReady = (player: any) => {
-    setVideoPlayerRef(player);
-  };
-
-  const handleSetVideoUrl = (url: string | null) => {
-    if (url !== null) {
-      setVideoUrl(url);
-    }
-  };
-
-  const handleChangeVideo = (file: File) => {
-    if (file) {
-      if (videoUrl) {
-        URL.revokeObjectURL(videoUrl);
-      }
-
-      // Set the new video file
-      setVideoFile(file);
-
-      // Create and set URL for the new video
-      const url = URL.createObjectURL(file);
-      setVideoUrl(url);
-    }
-  };
-
-  // Handler for changing SRT file
-  const handleChangeSrt = async (file: File) => {
-    // Always store the filename in localStorage for consistent saving behavior
-    localStorage.setItem('loadedSrtFileName', file.name);
-
-    // Try to get the real path if possible (for Electron)
-    const realPath = (file as any).path;
-    if (realPath) {
-      localStorage.setItem('originalLoadPath', realPath);
-    }
-
-    const result = await loadSrtFile(
-      file,
-      (_, segments, filePath) => {
-        setSubtitleSegments(segments);
-
-        // Store path in a shared state for the EditSubtitles component to access
-        if (filePath) {
-          // We could use localStorage, URL parameters, or context API to share this
-          // The simplest approach would be localStorage for this quick fix
-          localStorage.setItem('originalSrtPath', filePath);
-        }
-      },
-      error => {
-        console.error('Error loading SRT:', error);
-      }
-    );
-
-    if (result.error && !result.error.includes('canceled')) {
-      console.error('Error in loadSrtFile:', result.error);
-    }
-  };
-
   return (
     <div className={pageWrapperStyles}>
       <div id="top-padding" style={{ height: '10px' }}></div>
@@ -326,6 +256,75 @@ function AppContent() {
       </div>
     </div>
   );
+
+  // --- Helper Functions ---
+
+  function handleSubtitlesGenerated(
+    generatedSubtitles: string,
+    videoFile: File
+  ) {
+    try {
+      const segments = parseSrt(generatedSubtitles);
+      const fixedSegments = fixOverlappingSegments(segments);
+      setSubtitleSegments(fixedSegments);
+
+      // Now also set the video file and URL
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl); // Clean up previous URL if exists
+      }
+      setVideoFile(videoFile);
+      const url = URL.createObjectURL(videoFile);
+      setVideoUrl(url);
+    } catch (err) {
+      console.error('Error parsing generated subtitles:', err);
+    }
+  }
+
+  function handleVideoPlayerReady(player: any) {
+    setVideoPlayerRef(player);
+  }
+
+  function handleSetVideoUrl(url: string | null) {
+    if (url !== null) {
+      setVideoUrl(url);
+    }
+  }
+
+  function handleChangeVideo(file: File) {
+    if (file) {
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl);
+      }
+      setVideoFile(file);
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+    }
+  }
+
+  async function handleChangeSrt(file: File) {
+    localStorage.setItem('loadedSrtFileName', file.name);
+    const realPath = (file as any).path;
+    if (realPath) {
+      localStorage.setItem('originalLoadPath', realPath);
+    }
+
+    const result = await loadSrtFile(
+      file,
+      (_, segments, filePath) => {
+        setSubtitleSegments(segments);
+        if (filePath) {
+          localStorage.setItem('originalSrtPath', filePath);
+        }
+      },
+      error => {
+        console.error('Error loading SRT:', error);
+      }
+    );
+
+    if (result.error && !result.error.includes('canceled')) {
+      console.error('Error in loadSrtFile:', result.error);
+    }
+  }
 
   async function handleMergeSubtitlesWithVideo(
     videoFile: File,

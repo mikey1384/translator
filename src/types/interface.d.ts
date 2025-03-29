@@ -20,6 +20,8 @@ export interface GenerateSubtitlesOptions {
   videoFile?: File;
   targetLanguage: string;
   streamResults?: boolean; // Whether to stream partial results
+  filters?: { name: string; extensions: string[] }[];
+  multiple?: boolean;
 }
 
 export interface GenerateSubtitlesResult {
@@ -52,6 +54,7 @@ export interface SaveFileResult {
 }
 
 export interface OpenFileOptions {
+  title?: string;
   filters?: { name: string; extensions: string[] }[];
   multiple?: boolean;
 }
@@ -66,32 +69,20 @@ export interface SrtSegment {
 }
 
 export interface OpenFileResult {
-  filePaths: string[];
-  fileContents?: string[];
+  filePaths?: string[]; // Made optional as checks exist in usage
+  fileContents?: string[]; // Made optional as checks exist in usage
   error?: string;
   canceled?: boolean;
 }
 
-// Define the types for the API
-export interface IpcApi {
-  // Test methods
-  ping: () => Promise<string>;
-  showMessage: (message: string) => Promise<boolean>;
-  test: () => string;
+// Add missing types for translateSubtitles
+export interface TranslateSubtitlesOptions {
+  subtitles: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+}
 
-  // Subtitle generation
-  generateSubtitles: (
-    options: GenerateSubtitlesOptions
-  ) => Promise<GenerateSubtitlesResult>;
-  onGenerateSubtitlesProgress: (callback: ProgressCallback) => void;
-
-  // Video merging
-  mergeSubtitles: (
-    options: MergeSubtitlesOptions
-  ) => Promise<MergeSubtitlesResult>;
-  onMergeSubtitlesProgress: (callback: ProgressCallback) => void;
-
-  // File operations
-  saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
-  openFile: (options: OpenFileOptions) => Promise<OpenFileResult>;
+export interface TranslateSubtitlesResult {
+  translatedSubtitles: string;
+  error?: string;
 }

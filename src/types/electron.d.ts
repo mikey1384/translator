@@ -1,79 +1,51 @@
+import {
+  GenerateSubtitlesOptions,
+  GenerateSubtitlesResult,
+  MergeSubtitlesOptions,
+  MergeSubtitlesResult,
+  SaveFileOptions,
+  SaveFileResult,
+  OpenFileOptions,
+  OpenFileResult,
+  TranslateSubtitlesOptions,
+  TranslateSubtitlesResult,
+} from './interface';
+
+// Define a reusable type for the progress event callback
+type ProgressEventCallback = (
+  event: any,
+  progress: {
+    partialResult?: string;
+    percent: number;
+    stage: string;
+    current?: number;
+    total?: number;
+    warning?: string;
+  }
+) => void;
+
 interface ElectronAPI {
   onGenerateSubtitlesProgress: (
-    callback:
-      | ((
-          event: any,
-          progress: {
-            partialResult: string;
-            percent: number;
-            stage: string;
-            current?: number;
-            total?: number;
-            warning?: string;
-          }
-        ) => void)
-      | null
+    callback: ProgressEventCallback | null
   ) => () => void;
   onTranslateSubtitlesProgress: (
-    callback:
-      | ((
-          event: any,
-          progress: {
-            partialResult: string;
-            percent: number;
-            stage: string;
-            current?: number;
-            total?: number;
-            warning?: string;
-          }
-        ) => void)
-      | null
+    callback: ProgressEventCallback | null
   ) => () => void;
-  generateSubtitles: (options: {
-    videoFile?: File;
-    videoPath?: string;
-    targetLanguage: string;
-    showOriginalText?: boolean;
-  }) => Promise<{
-    subtitles: string;
-    error?: string;
-  }>;
-  translateSubtitles: (params: {
-    subtitles: string;
-    sourceLanguage: string;
-    targetLanguage: string;
-  }) => Promise<{
-    translatedSubtitles: string;
-    error?: string;
-  }>;
-  saveFile: (params: {
-    content: string;
-    defaultPath: string;
-    filters: Array<{ name: string; extensions: string[] }>;
-  }) => Promise<{
-    filePath: string;
-    error?: string;
-  }>;
+  generateSubtitles: (
+    options: GenerateSubtitlesOptions
+  ) => Promise<GenerateSubtitlesResult>;
+  translateSubtitles: (
+    params: TranslateSubtitlesOptions
+  ) => Promise<TranslateSubtitlesResult>;
+  saveFile: (params: SaveFileOptions) => Promise<SaveFileResult>;
   showMessage: (message: string) => void;
-  mergeSubtitles: (options: {
-    videoPath: string;
-    subtitlesPath: string;
-  }) => Promise<{
-    outputPath: string;
-    error?: string;
-  }>;
+  mergeSubtitles: (
+    options: MergeSubtitlesOptions
+  ) => Promise<MergeSubtitlesResult>;
   onMergeSubtitlesProgress: (
-    callback: (
-      event: any,
-      progress: {
-        percent: number;
-        stage: string;
-        current?: number;
-        total?: number;
-        warning?: string;
-      }
-    ) => void
+    callback: ProgressEventCallback | null
   ) => () => void;
+  openFile: (options: OpenFileOptions) => Promise<OpenFileResult>;
 }
 
 declare global {
@@ -81,5 +53,3 @@ declare global {
     electron: ElectronAPI;
   }
 }
-
-export {};

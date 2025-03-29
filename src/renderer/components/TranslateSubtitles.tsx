@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import {
   formGroupStyles,
@@ -14,7 +14,6 @@ import Section from './Section';
 import TranslationProgressArea from '../containers/TranslationProgressArea';
 import { registerSubtitleStreamListeners } from '../helpers/electron-ipc';
 
-// Languages for translation
 const languages = [
   { code: 'en', name: 'English' },
   { code: 'es', name: 'Spanish' },
@@ -43,7 +42,6 @@ export default function TranslateSubtitles({
 }: TranslateSubtitlesProps) {
   const [targetLanguage, setTargetLanguage] = useState<string>('en');
 
-  // Progress tracking
   const [isTranslationInProgress, setIsTranslationInProgress] =
     useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
@@ -53,20 +51,18 @@ export default function TranslateSubtitles({
   const [subtitleProgress, setSubtitleProgress] = useState<{
     current?: number;
     total?: number;
-    warning?: string;
   }>({});
 
-  // Results
   const [translatedSubtitles, setTranslatedSubtitles] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  // Set up progress listener once
+  const COMPLETION_DISPLAY_DURATION_MS = 2000;
+
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
     if (isTranslationInProgress) {
       cleanup = registerSubtitleStreamListeners(data => {
-        // Update the proper progress metrics based on the stage
         if (
           data.stage.toLowerCase().includes('audio') ||
           data.stage.toLowerCase().includes('prepare')
@@ -81,7 +77,6 @@ export default function TranslateSubtitles({
             setSubtitleProgress({
               current: data.current,
               total: data.total,
-              warning: data.warning || undefined,
             });
           }
         }
@@ -93,81 +88,8 @@ export default function TranslateSubtitles({
     };
   }, [isTranslationInProgress]);
 
-  // Translate subtitles
-  const handleTranslateSubtitles = async () => {
-    if (!subtitles || !window.electron) {
-      setError('No subtitles to translate');
-      return;
-    }
-
-    if (sourceLanguage === targetLanguage) {
-      setError('Source and target languages must be different');
-      return;
-    }
-
-    try {
-      setError('');
-      setIsTranslationInProgress(true);
-      setProgress(0);
-      setProgressStage('Starting translation...');
-      setTranslationProgress(0);
-      setTranslationStage('Preparing translation model...');
-      setSubtitleProgress({});
-
-      const result = await window.electron.translateSubtitles({
-        subtitles,
-        sourceLanguage,
-        targetLanguage,
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setTranslatedSubtitles(result.translatedSubtitles);
-      setTranslationProgress(100);
-      setTranslationStage('Translation complete!');
-
-      // Auto close will handle this after a delay
-      setTimeout(() => {
-        onTranslated(result.translatedSubtitles);
-      }, 2000);
-    } catch (err: any) {
-      setError(`Error translating subtitles: ${err.message || err}`);
-    } finally {
-      setIsTranslationInProgress(false);
-    }
-  };
-
-  // Save translated subtitles
-  const handleSaveSubtitles = async () => {
-    if (!translatedSubtitles || !window.electron) {
-      setError('No translated subtitles to save');
-      return;
-    }
-
-    try {
-      const result = await window.electron.saveFile({
-        content: translatedSubtitles,
-        defaultPath: `translated_subtitles_${Date.now()}.srt`,
-        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      window.electron.showMessage(
-        `Translated subtitles saved to: ${result.filePath}`
-      );
-    } catch (err: any) {
-      setError(`Error saving translated subtitles: ${err.message || err}`);
-    }
-  };
-
   return (
     <Section title="Translate Subtitles">
-      {/* Progress overlay */}
       {isTranslationInProgress && (
         <TranslationProgressArea
           progress={progress}
@@ -179,7 +101,6 @@ export default function TranslateSubtitles({
         />
       )}
 
-      {/* Error display */}
       {error && <div className={errorMessageStyles}>{error}</div>}
 
       <div className={formGroupStyles}>
@@ -223,7 +144,6 @@ export default function TranslateSubtitles({
         </Button>
       </div>
 
-      {/* Translation Result */}
       {translatedSubtitles && (
         <div
           className={css`
@@ -243,4 +163,73 @@ export default function TranslateSubtitles({
       )}
     </Section>
   );
+
+  async function handleTranslateSubtitles() {
+    if (!subtitles || !window.electron) {
+      setError('No subtitles to translate');
+      return;
+    }
+
+    if (sourceLanguage === targetLanguage) {
+      setError('Source and target languages must be different');
+      return;
+    }
+
+    try {
+      setError('');
+      setIsTranslationInProgress(true);
+      setProgress(0);
+      setProgressStage('Starting translation...');
+      setTranslationProgress(0);
+      setTranslationStage('Preparing translation model...');
+      setSubtitleProgress({});
+
+      const result = await window.electron.translateSubtitles({
+        subtitles,
+        sourceLanguage,
+        targetLanguage,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setTranslatedSubtitles(result.translatedSubtitles);
+      setTranslationProgress(100);
+      setTranslationStage('Translation complete!');
+
+      setTimeout(() => {
+        onTranslated(result.translatedSubtitles);
+      }, COMPLETION_DISPLAY_DURATION_MS);
+    } catch (err: any) {
+      setError(`Error translating subtitles: ${err.message || err}`);
+    } finally {
+      setIsTranslationInProgress(false);
+    }
+  }
+
+  async function handleSaveSubtitles() {
+    if (!translatedSubtitles || !window.electron) {
+      setError('No translated subtitles to save');
+      return;
+    }
+
+    try {
+      const result = await window.electron.saveFile({
+        content: translatedSubtitles,
+        defaultPath: `translated_subtitles_${Date.now()}.srt`,
+        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      window.electron.showMessage(
+        `Translated subtitles saved to: ${result.filePath}`
+      );
+    } catch (err: any) {
+      setError(`Error saving translated subtitles: ${err.message || err}`);
+    }
+  }
 }
