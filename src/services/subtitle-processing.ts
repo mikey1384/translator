@@ -187,11 +187,11 @@ Translate EACH line individually, preserving the line order.
           if (match && parseInt(match[1]) === absoluteIndex + 1) {
             const potentialTranslation = match[2].trim();
             if (potentialTranslation === originalSegmentText) {
-              translatedText = lastNonEmptyTranslation || '';
+              translatedText = lastNonEmptyTranslation;
             } else {
-              translatedText = potentialTranslation;
-              lastNonEmptyTranslation = potentialTranslation;
+              translatedText = potentialTranslation || lastNonEmptyTranslation;
             }
+            lastNonEmptyTranslation = translatedText;
             break;
           }
         }
