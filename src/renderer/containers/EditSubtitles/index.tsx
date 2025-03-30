@@ -29,7 +29,6 @@ import {
   handleInsertSubtitle,
   handleRemoveSubtitle,
   handleSaveSrt,
-  handleSeekToSubtitle,
 } from './helpers';
 import { useSubtitleNavigation, useRestoreFocus } from './hooks';
 import {
@@ -349,6 +348,31 @@ export function EditSubtitles({
     }
   }, [editorRef, scrollToCurrentSubtitle]);
 
+  // --- NEW Seek Handler ---
+  const seekPlayerToTime = useCallback(
+    (time: number) => {
+      if (videoPlayerRef && typeof videoPlayerRef.seek === 'function') {
+        try {
+          videoPlayerRef.seek(time);
+        } catch (error) {
+          console.error('Error seeking player via ref:', error);
+        }
+      } else if (
+        nativePlayer &&
+        nativePlayer.instance &&
+        typeof nativePlayer.seek === 'function'
+      ) {
+        // Fallback just in case, though should prioritize ref
+        try {
+          nativePlayer.seek(time);
+        } catch (error) {
+          console.error('Error seeking player via global nativePlayer:', error);
+        }
+      }
+    },
+    [videoPlayerRef] // Depend on videoPlayerRef state
+  );
+
   /**
    * ------------------------------------------------------
    * Save & Merge Functionality
@@ -472,7 +496,7 @@ export function EditSubtitles({
                   onTimeInputBlur={handleTimeInputBlur}
                   onRemoveSubtitle={handleRemoveSubtitleLocal}
                   onInsertSubtitle={handleInsertSubtitleLocal}
-                  onSeekToSubtitle={handleSeekToSubtitle}
+                  onSeekToSubtitle={seekPlayerToTime}
                   onPlaySubtitle={handlePlaySubtitle}
                   onShiftSubtitle={handleShiftSubtitle}
                   isShiftingDisabled={isShiftingDisabled}
