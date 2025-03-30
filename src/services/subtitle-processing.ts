@@ -156,8 +156,8 @@ Translate EACH line individually, preserving the line order.
 - If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
 - Provide exactly one translation for every line, in the same order, 
   prefixed by "Line X:" where X is the line number.
-- For languages with different politeness levels, use polite/formal style.
-- If you're unsure, err on the side of literal translations.
+- If you’re unsure, err on the side of literal translations.
+- For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
 `;
 
   while (retryCount < MAX_RETRIES) {
@@ -174,7 +174,7 @@ Translate EACH line individually, preserving the line order.
       const translationLines = batchTranslation
         .split('\n')
         .filter((line: string) => line.trim() !== '');
-      const lineRegex = /^Line\s+(\d+):\s*(.+)$/;
+      const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
 
       let lastNonEmptyTranslation = '';
       return batch.segments.map((segment, idx) => {
