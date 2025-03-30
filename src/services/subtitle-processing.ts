@@ -8,6 +8,7 @@ import { OpenAI } from 'openai';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import dotenv from 'dotenv';
+import { AI_MODELS } from '../renderer/constants';
 
 import {
   GenerateSubtitlesOptions,
@@ -171,8 +172,8 @@ IMPORTANT: Do not modify any part of the original text except for performing the
         }, attempt ${retryCount + 1}/${MAX_RETRIES}`
       );
       const batchTranslationResponse = await callClaudeWithRetry({
-        model: 'claude-3-7-sonnet-20250219',
-        max_tokens: 4000,
+        model: AI_MODELS.CLAUDE_3_7_SONNET,
+        max_tokens: AI_MODELS.MAX_TOKENS,
         system: `You are a professional subtitle translator. Translate the following subtitles from original to ${targetLang}. Maintain the original format and structure.`,
         messages: [{ role: 'user', content: combinedPrompt }],
       });
@@ -454,13 +455,12 @@ async function generateSubtitlesFromAudio({
 
     // 2. Transcribe chunks in batches
     progressCallback?.({
-      percent: scaleProgress(10), // Start transcription phase at 10%
+      percent: scaleProgress(10),
       stage: 'Starting batch transcription',
       total: chunkMetadata.length,
     });
 
-    let transcriptionProgress = 10; // Percentage starts at 10
-    // Allocate 75% of progress range for transcription (10% to 85%)
+    let transcriptionProgress = 10;
     const progressPerChunk =
       chunkMetadata.length > 0 ? 75 / chunkMetadata.length : 0;
 
@@ -505,13 +505,11 @@ async function generateSubtitlesFromAudio({
           try {
             const chunkResponse = await retryWithExponentialBackoff(
               async () => {
-                // Use the helper function to create the stream
                 const fileStream = createFileFromPath(meta.path);
                 return await openai!.audio.transcriptions.create({
-                  file: fileStream, // Pass the stream directly
+                  file: fileStream,
                   model: 'whisper-1',
                   response_format: 'verbose_json',
-                  // Pass language only if not 'original'
                   language:
                     targetLanguage === 'original' ? undefined : targetLanguage,
                 });
@@ -580,10 +578,6 @@ async function generateSubtitlesFromAudio({
           log.error(
             `[${callId}] Skipping segments for failed chunk ${result.chunkIndex + 1}`
           );
-          // Decide if progress should still advance or halt on error
-          // Advancing progress might be misleading if chunks fail
-          // Let's advance slightly less or log it clearly
-          // transcriptionProgress += progressPerChunk; // Decide if failed chunks count towards progress
           progressCallback?.({
             percent: scaleProgress(transcriptionProgress), // Don't advance progress % for failed chunk
             stage: `Failed to transcribe chunk ${result.chunkIndex + 1}`,

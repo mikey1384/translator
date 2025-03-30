@@ -32,14 +32,17 @@ const languages = [
 
 interface GenerateSubtitlesProps {
   onSubtitlesGenerated: (subtitles: string, videoFile: File) => void;
+  showOriginalText: boolean;
+  onShowOriginalTextChange: (show: boolean) => void;
 }
 
 export default function GenerateSubtitles({
   onSubtitlesGenerated,
+  showOriginalText,
+  onShowOriginalTextChange,
 }: GenerateSubtitlesProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
-  const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
@@ -97,7 +100,7 @@ export default function GenerateSubtitles({
               <input
                 type="checkbox"
                 checked={showOriginalText}
-                onChange={e => setShowOriginalText(e.target.checked)}
+                onChange={e => onShowOriginalTextChange(e.target.checked)}
                 className={css`
                   margin-right: 8px;
                   width: 16px;
@@ -170,7 +173,6 @@ export default function GenerateSubtitles({
       const result = await window.electron.generateSubtitles({
         videoFile: selectedFile,
         targetLanguage,
-        showOriginalText,
       });
 
       if (result.error) {

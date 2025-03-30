@@ -6,6 +6,12 @@ export const subtitlesState = {
   lastEdited: 0,
 };
 
+// AI Model Constants
+export const AI_MODELS = {
+  CLAUDE_3_7_SONNET: 'claude-3-7-sonnet-20250219',
+  MAX_TOKENS: 4000,
+} as const;
+
 export const mergeStates = {
   merging: false,
   progress: 0,

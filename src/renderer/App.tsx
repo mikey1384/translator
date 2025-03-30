@@ -50,6 +50,7 @@ function AppContent() {
 
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
   const [isReceivingPartialResults, setIsReceivingPartialResults] =
     useState<boolean>(false);
@@ -162,15 +163,24 @@ function AppContent() {
             generatedSubtitleIndexesRef.current.map(arrayIndex => {
               const originalText =
                 generatedSubtitleMapRef.current[arrayIndex.toString()] || '';
-              const formattedText = originalText.replace(
-                '###TRANSLATION_MARKER###',
-                '\n'
-              );
+              let processedText = originalText;
+              if (originalText.includes('###TRANSLATION_MARKER###')) {
+                if (showOriginalText) {
+                  processedText = originalText.replace(
+                    '###TRANSLATION_MARKER###',
+                    '\n'
+                  );
+                } else {
+                  const parts = originalText.split('###TRANSLATION_MARKER###');
+                  processedText = parts[1] ? parts[1].trim() : '';
+                }
+              }
+
               return {
                 index: arrayIndex,
                 start: (arrayIndex - 1) * 3,
                 end: arrayIndex * 3,
-                text: formattedText,
+                text: processedText,
               };
             });
           setSubtitleSegments(newSegments);
@@ -183,7 +193,7 @@ function AppContent() {
         console.error('Error handling partial result:', error);
       }
     }
-  }, [setSubtitleSegments]);
+  }, [setSubtitleSegments, showOriginalText]);
 
   return (
     <div className={pageWrapperStyles}>
@@ -206,7 +216,11 @@ function AppContent() {
         )}
 
         <div ref={mainContentRef} style={{ position: 'relative' }}>
-          <GenerateSubtitles onSubtitlesGenerated={handleSubtitlesGenerated} />
+          <GenerateSubtitles
+            onSubtitlesGenerated={handleSubtitlesGenerated}
+            showOriginalText={showOriginalText}
+            onShowOriginalTextChange={setShowOriginalText}
+          />
 
           <div ref={editSubtitlesRef} id="edit-subtitles-section">
             <EditSubtitles
