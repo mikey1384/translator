@@ -1,11 +1,14 @@
 import { css, keyframes } from '@emotion/css';
 import { colors } from '../constants';
 import ProgressBar from '../components/ProgressBar';
+import { useState } from 'react';
 
 interface MergingProgressAreaProps {
   mergeProgress: number;
   mergeStage: string;
   onSetIsMergingInProgress: (inProgress: boolean) => void;
+  operationId: string;
+  onCancelComplete: () => void;
 }
 
 const fadeIn = keyframes`
@@ -63,16 +66,48 @@ export default function MergingProgressArea({
   mergeProgress,
   mergeStage,
   onSetIsMergingInProgress,
+  operationId,
+  onCancelComplete,
 }: MergingProgressAreaProps) {
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (isCancelling) return;
+    setIsCancelling(true);
+    console.log(`Requesting cancellation for merge operation: ${operationId}`);
+    try {
+      const result = await window.electron.cancelMerge(operationId);
+      console.log(`Cancellation result for ${operationId}:`, result);
+      if (result.success) {
+        // Optionally show a message or change stage
+      } else {
+        // Handle cancellation failure (e.g., show error)
+        console.error(
+          `Failed to cancel operation ${operationId}:`,
+          result.error
+        );
+        // Maybe show an alert to the user?
+      }
+    } catch (error) {
+      console.error(`Error calling cancelMerge for ${operationId}:`, error);
+      // Handle IPC error
+    } finally {
+      setIsCancelling(false);
+      onSetIsMergingInProgress(false); // Hide the progress area
+      onCancelComplete(); // Notify parent to clear the ID
+    }
+  };
+
   return (
     <div className={progressAreaStyles}>
       <div className={titleStyles}>
         <span>Merging Progress</span>
         <button
           className={cancelButtonStyles}
-          onClick={() => onSetIsMergingInProgress(false)}
+          onClick={handleCancel}
+          disabled={isCancelling}
         >
-          Cancel
+          {isCancelling ? 'Cancelling...' : 'Cancel'}
         </button>
       </div>
 

@@ -31,9 +31,13 @@ export interface GenerateSubtitlesResult {
 }
 
 export interface MergeSubtitlesOptions {
-  videoPath: string;
-  subtitlesPath: string;
+  videoPath?: string; // Can be optional if videoFile is provided
+  subtitlesPath?: string; // Optional if srtContent is provided
   outputPath?: string;
+  videoFile?: File; // Added previously
+  srtContent?: string; // <-- Add this optional property
+  videoFileName?: string; // Needed for temp file creation
+  videoFileData?: ArrayBuffer; // Needed for temp file creation
 }
 
 export interface MergeSubtitlesResult {
@@ -46,6 +50,7 @@ export interface SaveFileOptions {
   defaultPath?: string;
   filters?: { name: string; extensions: string[] }[];
   filePath?: string; // Direct path to save to without showing dialog
+  title?: string; // Add title for save dialog
 }
 
 export interface SaveFileResult {

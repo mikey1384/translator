@@ -21,6 +21,7 @@ type ProgressEventCallback = (
     current?: number;
     total?: number;
     warning?: string;
+    operationId?: string;
   }
 ) => void;
 
@@ -41,11 +42,14 @@ interface ElectronAPI {
   showMessage: (message: string) => void;
   mergeSubtitles: (
     options: MergeSubtitlesOptions
-  ) => Promise<MergeSubtitlesResult>;
+  ) => Promise<MergeSubtitlesResult & { operationId?: string }>;
   onMergeSubtitlesProgress: (
     callback: ProgressEventCallback | null
   ) => () => void;
   openFile: (options: OpenFileOptions) => Promise<OpenFileResult>;
+  cancelMerge: (
+    operationId: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {

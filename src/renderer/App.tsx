@@ -10,7 +10,7 @@ import MergingProgressArea from './containers/MergingProgressArea';
 import TranslationProgressArea from './containers/TranslationProgressArea';
 
 import { ManagementContextProvider } from './context';
-import { SrtSegment } from '../types/interface';
+import { SrtSegment, MergeSubtitlesResult } from '../types/interface';
 
 import {
   parseSrt,
@@ -39,6 +39,11 @@ function AppContent() {
   const [translationStage, setTranslationStage] = useState('');
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
+
+  const [currentMergeOperationId, setCurrentMergeOperationId] = useState<
+    string | null
+  >(null);
+  const currentMergeOperationIdRef = useRef<string | null>(null);
 
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -157,6 +162,7 @@ function AppContent() {
 
     let cleanupGenerate: (() => void) | null = null;
     let cleanupTranslate: (() => void) | null = null;
+    let cleanupMerge: (() => void) | null = null;
 
     if (window.electron) {
       if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
@@ -172,13 +178,50 @@ function AppContent() {
           window.electron.onTranslateSubtitlesProgress(null);
         };
       }
+
+      if (typeof window.electron.onMergeSubtitlesProgress === 'function') {
+        window.electron.onMergeSubtitlesProgress((_event, progress) => {
+          if (progress.operationId === currentMergeOperationIdRef.current) {
+            setMergeProgress(progress.percent);
+            setMergeStage(progress.stage);
+
+            if (progress.percent === 100) {
+              if (progress.stage?.startsWith('Error:')) {
+                console.error(
+                  'Merge operation finished with error:',
+                  progress.stage
+                );
+              } else {
+                setMergeStage('Merge complete!');
+              }
+              setTimeout(() => {
+                setIsMergingInProgress(false);
+                setCurrentMergeOperationId(null);
+                currentMergeOperationIdRef.current = null;
+              }, 2500);
+            }
+          } else {
+            console.log(
+              'Ignoring progress for old/mismatched merge operation:',
+              progress.operationId,
+              '(current is',
+              currentMergeOperationIdRef.current,
+              ')'
+            );
+          }
+        });
+        cleanupMerge = () => {
+          window.electron.onMergeSubtitlesProgress(null);
+        };
+      }
     }
 
     return () => {
       cleanupGenerate?.();
       cleanupTranslate?.();
+      cleanupMerge?.();
     };
-  }, [handlePartialResult]);
+  }, [handlePartialResult, currentMergeOperationId]);
 
   // --- Player Control Handlers ---
   const handleTogglePlay = useCallback(async () => {
@@ -275,11 +318,16 @@ function AppContent() {
           />
         )}
 
-        {isMergingInProgress && (
+        {isMergingInProgress && currentMergeOperationId && (
           <MergingProgressArea
             mergeProgress={mergeProgress}
             mergeStage={mergeStage}
             onSetIsMergingInProgress={setIsMergingInProgress}
+            operationId={currentMergeOperationId}
+            onCancelComplete={() => {
+              setCurrentMergeOperationId(null);
+              currentMergeOperationIdRef.current = null;
+            }}
           />
         )}
 
@@ -338,9 +386,8 @@ function AppContent() {
 
   async function handleMergeSubtitlesWithVideo(
     videoFile: File,
-    subtitles: SrtSegment[],
-    options: { onProgress: (percent: number) => void }
-  ) {
+    subtitles: SrtSegment[]
+  ): Promise<MergeSubtitlesResult> {
     setIsMergingInProgress(true);
     setMergeProgress(0);
     setMergeStage('Preparing subtitle file...');
@@ -348,51 +395,106 @@ function AppContent() {
     try {
       const srtContent = buildSrt(fixOverlappingSegments(subtitles));
 
-      setMergeStage('Saving subtitle file...');
-      const subtitlesResult = await window.electron.saveFile({
-        content: srtContent,
-        defaultPath: 'subtitles.srt',
-        filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
+      // --- Prompt user for output path BEFORE starting merge ---
+      setMergeStage('Waiting for output file selection...');
+
+      const inputExt = videoFile.name.includes('.')
+        ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
+        : '.mp4'; // Default extension
+      const inputNameWithoutExt = videoFile.name.includes('.')
+        ? videoFile.name.substring(0, videoFile.name.lastIndexOf('.'))
+        : videoFile.name;
+      const suggestedOutputName = `${inputNameWithoutExt}_with_subtitles${inputExt}`;
+
+      // Use saveFile dialog to get the desired output path
+      const savePathResult = await window.electron.saveFile({
+        content: '', // No content needed, just getting path
+        defaultPath: suggestedOutputName,
+        title: 'Save Merged Video As',
+        filters: [
+          { name: 'Video Files', extensions: [inputExt.slice(1)] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
       });
 
-      if (subtitlesResult.error) {
-        throw new Error(subtitlesResult.error);
+      if (savePathResult.error) {
+        if (savePathResult.error.includes('canceled')) {
+          setMergeStage('Merge canceled by user.');
+          setIsMergingInProgress(false);
+          setCurrentMergeOperationId(null);
+          throw new Error('Merge operation canceled by user during file save.');
+        } else {
+          throw new Error(`Failed to get save path: ${savePathResult.error}`);
+        }
       }
 
-      setMergeStage('Merging subtitles with video...');
-      window.electron.onMergeSubtitlesProgress(progress => {
-        setMergeProgress(progress.percent);
-        setMergeStage(progress.stage);
-        options.onProgress(progress.percent);
+      const userOutputPath = savePathResult.filePath;
+      // --- End Prompt user ---
+
+      setMergeStage('Preparing merge operation...');
+      window.electron.onMergeSubtitlesProgress((_event, progress) => {
+        if (progress.operationId === currentMergeOperationIdRef.current) {
+          setMergeProgress(progress.percent);
+          setMergeStage(progress.stage);
+
+          if (progress.percent === 100) {
+            if (progress.stage?.startsWith('Error:')) {
+              console.error(
+                'Merge operation finished with error:',
+                progress.stage
+              );
+            } else {
+              setMergeStage('Merge complete!');
+            }
+            setTimeout(() => {
+              setIsMergingInProgress(false);
+              setCurrentMergeOperationId(null);
+              currentMergeOperationIdRef.current = null;
+            }, 2500);
+          }
+        } else {
+          console.log(
+            'Ignoring progress for old/mismatched merge operation:',
+            progress.operationId,
+            '(current is',
+            currentMergeOperationIdRef.current,
+            ')'
+          );
+        }
       });
 
       const videoPath = videoFile.path || videoFile.name;
 
       const result = await window.electron.mergeSubtitles({
         videoPath: videoPath,
-        subtitlesPath: subtitlesResult.filePath,
+        videoFile: videoFile,
+        srtContent: srtContent,
+        outputPath: userOutputPath, // Pass the user-selected path
       });
 
-      setMergeProgress(100);
-      setMergeStage('Merge complete!');
-
-      setTimeout(() => {
-        setIsMergingInProgress(false);
-      }, 1500);
-
-      if (result.error) {
-        throw new Error(result.error);
+      if (result && result.operationId) {
+        currentMergeOperationIdRef.current = result.operationId;
+        setCurrentMergeOperationId(result.operationId);
+        setIsMergingInProgress(true);
+        setMergeStage('Merge process initiated...');
+        setMergeProgress(0);
+      } else {
+        console.error('Failed to initiate merge operation properly.');
+        throw new Error(
+          'Failed to start merge process: No operation ID received.'
+        );
       }
 
-      return result;
+      return { outputPath: userOutputPath, error: undefined };
     } catch (error) {
-      setMergeStage(
-        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      setMergeStage(`Error: ${errorMessage}`);
       setTimeout(() => {
         setIsMergingInProgress(false);
+        setCurrentMergeOperationId(null);
       }, 3000);
-      throw error;
+      return { outputPath: '', error: errorMessage };
     }
   }
 

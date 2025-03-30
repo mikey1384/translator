@@ -5,9 +5,9 @@
   "main": "main.cjs",
   "scripts": {
     "start": "electron main.cjs --no-sandbox",
-    "build": "tsc -p tsconfig.main.json && webpack --config webpack.preload.js && bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck",
-    "dev:build": "concurrently -n tsc,webpack,bun \"tsc -p tsconfig.main.json --watch\" \"webpack --config webpack.preload.js --watch\" \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch\"",
-    "dev": "ELECTRON_ENABLE_LOGGING=true concurrently -n build,electron \"bun run dev:build\" \"wait-on dist/main.js dist/preload/index.js dist/renderer/index.js && electron main.cjs --no-sandbox --enable-logging\"",
+    "build": "tsc -p tsconfig.main.json && npx webpack --config webpack.preload.js && bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck && cp index.html dist/renderer/",
+    "dev:build": "concurrently -n tsc,webpack,bun,copy \"tsc -p tsconfig.main.json --watch\" \"webpack --config webpack.preload.js --watch\" \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch\" \"cp index.html dist/renderer/ && chokidar 'index.html' -c 'cp index.html dist/renderer/'\"",
+    "dev": "ELECTRON_ENABLE_LOGGING=true concurrently -n build,electron \"bun run dev:build\" \"wait-on dist/main.js dist/preload/index.js dist/renderer/index.js dist/renderer/index.html && npx electron main.cjs --no-sandbox --enable-logging\"",
     "package": "bun run build && electron-builder build --mac --win --linux",
     "lint": "bunx eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "bunx eslint . --ext .js,.jsx,.ts,.tsx --fix",
@@ -64,6 +64,7 @@
     "@types/react-dom": "^19.0.4",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
+    "chokidar-cli": "^3.0.0",
     "concurrently": "^9.1.2",
     "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
@@ -81,7 +82,9 @@
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "wait-on": "^8.0.2"
+    "wait-on": "^8.0.2",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

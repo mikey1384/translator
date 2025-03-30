@@ -55,8 +55,7 @@ export interface EditSubtitlesProps {
   onSetIsMergingInProgress?: (isMerging: boolean) => void;
   onMergeSubtitlesWithVideo: (
     videoFile: File,
-    subtitles: SrtSegment[],
-    options: { onProgress: (progress: number) => void }
+    subtitles: SrtSegment[]
   ) => Promise<{ outputPath: string; error?: string }>;
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
@@ -802,11 +801,7 @@ export function EditSubtitles({
     setError('');
 
     try {
-      await onMergeSubtitlesWithVideo(videoFile, subtitlesState, {
-        onProgress: (_progress: number) => {
-          // Remove local progress update
-        },
-      });
+      await onMergeSubtitlesWithVideo(videoFile, subtitlesState);
 
       // App.tsx will handle hiding the progress via its state
     } catch (err: any) {

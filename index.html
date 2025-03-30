@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -11,8 +11,9 @@
     <title>Subtitle Translator</title>
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+          Arial, sans-serif;
         margin: 0;
         padding: 0;
         background-color: #f5f5f5;
@@ -80,46 +81,46 @@
     </div>
     <div id="root"></div>
     <div class="debug-info" id="debug-info">
-      Electron API: <span id="electron-status">Checking...</span><br>
+      Electron API: <span id="electron-status">Checking...</span><br />
       IPC Connection: <span id="ipc-status">Checking...</span>
     </div>
 
     <script>
       // Check if the Electron API is available and update debug info
-      document.addEventListener("DOMContentLoaded", () => {
-        const debugInfo = document.getElementById("debug-info");
-        const electronStatus = document.getElementById("electron-status");
-        const ipcStatus = document.getElementById("ipc-status");
+      document.addEventListener('DOMContentLoaded', () => {
+        const debugInfo = document.getElementById('debug-info');
+        const electronStatus = document.getElementById('electron-status');
+        const ipcStatus = document.getElementById('ipc-status');
 
         if (window.electron) {
-          electronStatus.textContent = "Available";
-          electronStatus.style.color = "green";
+          electronStatus.textContent = 'Available';
+          electronStatus.style.color = 'green';
 
           // Test ping to verify IPC
           window.electron
             .ping()
-            .then((response) => {
+            .then(response => {
               ipcStatus.textContent = `Working (${response})`;
-              ipcStatus.style.color = "green";
+              ipcStatus.style.color = 'green';
             })
-            .catch((error) => {
+            .catch(error => {
               ipcStatus.textContent = `Error: ${error.message}`;
-              ipcStatus.style.color = "red";
+              ipcStatus.style.color = 'red';
             });
         } else {
-          electronStatus.textContent = "Not Available";
-          electronStatus.style.color = "red";
-          ipcStatus.textContent = "Disconnected";
-          ipcStatus.style.color = "red";
+          electronStatus.textContent = 'Not Available';
+          electronStatus.style.color = 'red';
+          ipcStatus.textContent = 'Disconnected';
+          ipcStatus.style.color = 'red';
         }
       });
     </script>
-    <script src="./dist/renderer/index.js" type="module"></script>
+    <script src="./index.js" type="module"></script>
     <script>
       // Hide loading after everything is loaded
-      window.addEventListener("load", () => {
+      window.addEventListener('load', () => {
         setTimeout(() => {
-          document.body.classList.add("loaded");
+          document.body.classList.add('loaded');
         }, 1000);
       });
     </script>

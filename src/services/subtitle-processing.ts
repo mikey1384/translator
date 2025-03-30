@@ -18,24 +18,32 @@ import {
 
 dotenv.config();
 
-const ANTHROPIC_API_KEY =
-  process.env.ANTHROPIC_API_KEY || 'hardcoded_anthropic_key_fallback';
-const OPENAI_API_KEY =
-  process.env.OPENAI_API_KEY || 'hardcoded_openai_key_fallback';
+// Rely solely on environment variables
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 let anthropic: Anthropic | null = null;
 let openai: OpenAI | null = null;
 
+// Initialize clients only if keys are present
 try {
-  anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-  openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-} catch (error) {
-  try {
+  if (ANTHROPIC_API_KEY) {
     anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-    openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-  } catch (retryError) {
-    // No action needed if secondary init fails, clients remain null
+  } else {
+    console.warn('Anthropic API key not found in environment variables.');
   }
+} catch (error) {
+  console.error('Error initializing Anthropic client:', error);
+}
+
+try {
+  if (OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+  } else {
+    console.warn('OpenAI API key not found in environment variables.');
+  }
+} catch (error) {
+  console.error('Error initializing OpenAI client:', error);
 }
 
 export class SubtitleProcessingError extends Error {
@@ -122,6 +130,13 @@ async function translateBatch(
   targetLang: string,
   _callId: string
 ): Promise<any[]> {
+  // Check if Anthropic client is available
+  if (!anthropic) {
+    throw new SubtitleProcessingError(
+      'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
+    );
+  }
+
   const MAX_RETRIES = 3;
   let retryCount = 0;
   const batchContextPrompt = batch.segments.map((segment, idx) => {
@@ -161,6 +176,7 @@ Translate EACH line individually, preserving the line order.
         .filter((line: string) => line.trim() !== '');
       const lineRegex = /^Line\s+(\d+):\s*(.+)$/;
 
+      let lastNonEmptyTranslation = '';
       return batch.segments.map((segment, idx) => {
         const absoluteIndex = batch.startIndex + idx;
         let translatedText = segment.text;
@@ -171,9 +187,10 @@ Translate EACH line individually, preserving the line order.
           if (match && parseInt(match[1]) === absoluteIndex + 1) {
             const potentialTranslation = match[2].trim();
             if (potentialTranslation === originalSegmentText) {
-              translatedText = '';
+              translatedText = lastNonEmptyTranslation || '';
             } else {
               translatedText = potentialTranslation;
+              lastNonEmptyTranslation = potentialTranslation;
             }
             break;
           }
@@ -271,6 +288,13 @@ async function generateSubtitlesFromAudio({
   progressCallback,
   progressRange,
 }: GenerateSubtitlesFromAudioOptions): Promise<string> {
+  // Check if OpenAI client is available
+  if (!openai) {
+    throw new SubtitleProcessingError(
+      'OpenAI API key is missing or client failed to initialize. Please check your .env configuration.'
+    );
+  }
+
   const _callId = Date.now() + Math.random().toString(36).substring(2);
 
   const progressStart = progressRange?.start || 0;
@@ -286,9 +310,6 @@ async function generateSubtitlesFromAudio({
     throw new SubtitleProcessingError(
       `Audio file not found: ${inputAudioPath}`
     );
-  }
-  if (!openai) {
-    throw new SubtitleProcessingError('OpenAI client not initialized');
   }
 
   const ffmpegService = new FFmpegService();
@@ -433,11 +454,6 @@ async function generateSubtitlesFromAudio({
         chunkMetadata.length
       );
       const batchChunks = chunkMetadata.slice(batchStart, batchEnd);
-      const _currentBatchNumber =
-        Math.floor(batchStart / TRANSCRIPTION_BATCH_SIZE) + 1;
-      const _totalBatches = Math.ceil(
-        chunkMetadata.length / TRANSCRIPTION_BATCH_SIZE
-      );
 
       await Promise.all(
         batchChunks.map(async (meta, batchIndex) => {
@@ -589,108 +605,127 @@ export async function generateSubtitlesFromVideo(
   }
 
   const { ffmpegService, fileManager } = services;
+  let audioPath: string | null = null; // Keep track of the audio path
 
-  if (progressCallback) {
-    progressCallback({ percent: 0, stage: 'Starting subtitle generation' });
-    progressCallback({ percent: 10, stage: 'Extracting audio from video' });
-  }
+  try {
+    if (progressCallback) {
+      progressCallback({ percent: 0, stage: 'Starting subtitle generation' });
+      progressCallback({ percent: 10, stage: 'Extracting audio from video' });
+    }
 
-  const audioPath = await ffmpegService.extractAudio(options.videoPath);
+    audioPath = await ffmpegService.extractAudio(options.videoPath);
 
-  const subtitlesContent = await generateSubtitlesFromAudio({
-    inputAudioPath: audioPath,
-    targetLanguage: 'original',
-    progressCallback: progress => {
+    const subtitlesContent = await generateSubtitlesFromAudio({
+      inputAudioPath: audioPath,
+      targetLanguage: 'original',
+      progressCallback: progress => {
+        if (progressCallback) {
+          const basePercent = 10;
+          const transcriptionSpan = 40;
+          const scaledPercent =
+            basePercent + (progress.percent / 100) * transcriptionSpan;
+          progressCallback({
+            percent: scaledPercent,
+            stage: progress.stage,
+            partialResult: progress.partialResult,
+            current: progress.current,
+            total: progress.total,
+            error: progress.error,
+          });
+        }
+      },
+      progressRange: { start: 10, end: 50 },
+    });
+
+    const targetLang = options.targetLanguage?.toLowerCase() || 'original';
+    if (targetLang === 'original') {
+      await fileManager.writeTempFile(subtitlesContent, '.srt');
       if (progressCallback) {
-        const basePercent = 10;
-        const transcriptionSpan = 40;
-        const scaledPercent =
-          basePercent + (progress.percent / 100) * transcriptionSpan;
         progressCallback({
-          percent: scaledPercent,
-          stage: progress.stage,
-          partialResult: progress.partialResult,
-          current: progress.current,
-          total: progress.total,
-          error: progress.error,
+          percent: 100,
+          stage: 'Subtitle generation complete',
+          partialResult: subtitlesContent,
         });
       }
-    },
-    progressRange: { start: 10, end: 50 },
-  });
+      return { subtitles: subtitlesContent };
+    }
 
-  const targetLang = options.targetLanguage?.toLowerCase() || 'original';
-  if (targetLang === 'original') {
-    await fileManager.writeTempFile(subtitlesContent, '.srt');
+    const originalSegments = parseSrt(subtitlesContent);
+    const totalSegments = originalSegments.length;
+    const translatedSegments: any[] = [];
+
+    const BATCH_SIZE = 10;
+    for (
+      let batchStart = 0;
+      batchStart < totalSegments;
+      batchStart += BATCH_SIZE
+    ) {
+      const batchEnd = Math.min(batchStart + BATCH_SIZE, totalSegments);
+      const currentBatch = {
+        segments: originalSegments.slice(batchStart, batchEnd),
+        startIndex: batchStart,
+        endIndex: batchEnd,
+      };
+
+      const translatedBatch = await translateBatch(
+        currentBatch,
+        targetLang,
+        _callId
+      );
+
+      translatedSegments.push(...translatedBatch);
+
+      const overallProgress = Math.floor((batchEnd / totalSegments) * 100);
+      const scaledPercent = 50 + (overallProgress * 50) / 100;
+
+      if (progressCallback) {
+        const cumulativeSrt = buildSrt(translatedSegments);
+
+        progressCallback({
+          percent: scaledPercent,
+          stage: `Translating segments ${
+            batchStart + 1
+          } to ${batchEnd} of ${totalSegments}`,
+          partialResult: cumulativeSrt,
+          current: batchEnd,
+          total: totalSegments,
+        });
+      }
+    }
+
+    const finalSubtitlesContent = buildSrt(translatedSegments);
+    await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
+
     if (progressCallback) {
       progressCallback({
         percent: 100,
         stage: 'Subtitle generation complete',
-        partialResult: subtitlesContent,
+        partialResult: finalSubtitlesContent,
       });
     }
-    return { subtitles: subtitlesContent };
-  }
 
-  const originalSegments = parseSrt(subtitlesContent);
-  const totalSegments = originalSegments.length;
-  const translatedSegments: any[] = [];
-
-  const BATCH_SIZE = 10;
-  for (
-    let batchStart = 0;
-    batchStart < totalSegments;
-    batchStart += BATCH_SIZE
-  ) {
-    const batchEnd = Math.min(batchStart + BATCH_SIZE, totalSegments);
-    const currentBatch = {
-      segments: originalSegments.slice(batchStart, batchEnd),
-      startIndex: batchStart,
-      endIndex: batchEnd,
-    };
-
-    const translatedBatch = await translateBatch(
-      currentBatch,
-      targetLang,
-      _callId
-    );
-
-    translatedSegments.push(...translatedBatch);
-
-    const overallProgress = Math.floor((batchEnd / totalSegments) * 100);
-    const scaledPercent = 50 + (overallProgress * 50) / 100;
-
-    if (progressCallback) {
-      const cumulativeSrt = buildSrt(translatedSegments);
-
-      progressCallback({
-        percent: scaledPercent,
-        stage: `Translating segments ${
-          batchStart + 1
-        } to ${batchEnd} of ${totalSegments}`,
-        partialResult: cumulativeSrt,
-        current: batchEnd,
-        total: totalSegments,
-      });
+    return { subtitles: finalSubtitlesContent };
+  } finally {
+    // Cleanup the extracted audio file
+    if (audioPath) {
+      console.log(`Attempting to clean up temporary audio file: ${audioPath}`);
+      try {
+        await fsp.unlink(audioPath);
+        console.log(`Successfully deleted temporary audio file: ${audioPath}`);
+      } catch (cleanupError) {
+        console.error(
+          `Failed to delete temporary audio file ${audioPath}:`,
+          cleanupError
+        );
+        // Log error but don't re-throw, allow main function to complete
+      }
     }
   }
-
-  const finalSubtitlesContent = buildSrt(translatedSegments);
-  await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
-
-  if (progressCallback) {
-    progressCallback({
-      percent: 100,
-      stage: 'Subtitle generation complete',
-      partialResult: finalSubtitlesContent,
-    });
-  }
-
-  return { subtitles: finalSubtitlesContent };
 }
 
 export async function mergeSubtitlesWithVideo(
   options: MergeSubtitlesOptions,
+  operationId: string,
   progressCallback?: (progress: { percent: number; stage: string }) => void,
   services?: {
     ffmpegService: FFmpegService;
@@ -730,6 +765,7 @@ export async function mergeSubtitlesWithVideo(
     options.videoPath,
     options.subtitlesPath,
     outputPath,
+    operationId,
     progress => {
       if (progressCallback) {
         const scaledProgress = 25 + progress.percent * 0.65;

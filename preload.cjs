@@ -88,7 +88,38 @@ const electronAPI = {
   },
 
   // Video merging
-  mergeSubtitles: options => ipcRenderer.invoke('merge-subtitles', options),
+  mergeSubtitles: async options => {
+    console.log('Merge subtitles called with options:', options);
+    const processedOptions = { ...options };
+
+    // If we have a videoFile, read its data
+    if (options.videoFile) {
+      console.log('File object detected in merge options - reading file data');
+      try {
+        const fileData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(options.videoFile);
+        });
+        console.log(
+          `Read ${fileData.byteLength} bytes from video file for merge`
+        );
+        processedOptions.videoFileData = fileData;
+        processedOptions.videoFileName = options.videoFile.name; // Include filename
+      } catch (error) {
+        console.error('Error reading video file data for merge:', error);
+        throw new Error('Failed to read video file data for merge');
+      }
+    }
+
+    // Remove the File object before sending
+    delete processedOptions.videoFile;
+
+    console.log('Sending merge options to main process:', processedOptions);
+    return ipcRenderer.invoke('merge-subtitles', processedOptions);
+  },
+
   onMergeSubtitlesProgress: callback => {
     try {
       if (typeof callback !== 'function') {
@@ -114,6 +145,9 @@ const electronAPI = {
   // File operations
   saveFile: options => ipcRenderer.invoke('save-file', options),
   openFile: options => ipcRenderer.invoke('open-file', options),
+
+  // Merge cancellation
+  cancelMerge: operationId => ipcRenderer.invoke('cancel-merge', operationId),
 };
 
 // Expose the API to the renderer process
