@@ -11,9 +11,11 @@ interface StickyVideoPlayerProps {
   subtitles: SrtSegment[];
   onPlayerReady: (player: any) => void;
   onChangeVideo?: (file: File) => void;
-  onChangeSrt?: (file: File) => void;
+  onSrtLoaded: (segments: SrtSegment[]) => void;
   onStickyChange?: (isSticky: boolean) => void;
   onScrollToCurrentSubtitle?: () => void;
+  onTogglePlay?: () => void;
+  onShiftAllSubtitles?: (offsetSeconds: number) => void;
 }
 
 const fixedVideoContainerStyles = (
@@ -57,9 +59,11 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   subtitles,
   onPlayerReady,
   onChangeVideo,
-  onChangeSrt,
+  onSrtLoaded,
   onStickyChange,
   onScrollToCurrentSubtitle,
+  onTogglePlay,
+  onShiftAllSubtitles,
 }) => {
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -159,6 +163,8 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     videoElement.addEventListener('play', updatePlayState);
     videoElement.addEventListener('pause', updatePlayState);
 
+    updatePlayState();
+
     return () => {
       videoElement.removeEventListener('play', updatePlayState);
       videoElement.removeEventListener('pause', updatePlayState);
@@ -193,10 +199,12 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         <TimestampDisplay
           videoElement={nativePlayer.instance}
           onChangeVideo={onChangeVideo}
-          onChangeSrt={onChangeSrt}
+          onSrtLoaded={onSrtLoaded}
           hasSubtitles={subtitles && subtitles.length > 0}
           onScrollToCurrentSubtitle={onScrollToCurrentSubtitle}
           isPlaying={isPlaying}
+          onTogglePlay={onTogglePlay}
+          onShiftAllSubtitles={onShiftAllSubtitles}
         />
       </div>
     </div>

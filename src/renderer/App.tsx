@@ -3,14 +3,11 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import StatusSection from './components/StatusSection';
 import BackToTopButton from './components/BackToTopButton';
 import StickyVideoPlayer from './containers/EditSubtitles/StickyVideoPlayer';
-
+import { nativePlayer } from './components/NativeVideoPlayer';
 import { EditSubtitles } from './containers/EditSubtitles';
 import GenerateSubtitles from './containers/GenerateSubtitles';
 import MergingProgressArea from './containers/MergingProgressArea';
 import TranslationProgressArea from './containers/TranslationProgressArea';
-
-import { registerSubtitleStreamListeners } from './helpers/electron-ipc';
-import { loadSrtFile } from './helpers/subtitle-utils';
 
 import { ManagementContextProvider } from './context';
 import { SrtSegment } from '../types/interface';
@@ -27,11 +24,6 @@ import { pageWrapperStyles, containerStyles, titleStyles } from './styles';
 
 function AppContent() {
   const [electronConnected, setElectronConnected] = useState<boolean>(false);
-
-  const generatedSubtitleMapRef = useRef<{
-    [key: string]: string;
-  }>({});
-  const generatedSubtitleIndexesRef = useRef<number[]>([]);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -63,13 +55,82 @@ function AppContent() {
 
   const editSubtitlesMethodsRef = useRef<{
     scrollToCurrentSubtitle: () => void;
-  }>({ scrollToCurrentSubtitle: () => {} });
+  }>({
+    scrollToCurrentSubtitle: () => {},
+  });
 
-  const handleScrollToCurrentSubtitle = useCallback(() => {
+  const handleScrollToCurrentSubtitle = () => {
     if (editSubtitlesMethodsRef.current) {
       editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
     }
-  }, []);
+  };
+
+  const handlePartialResult = useCallback(
+    (result: {
+      partialResult?: string;
+      percent?: number;
+      stage?: string;
+      current?: number;
+      total?: number;
+    }) => {
+      try {
+        const safeResult = {
+          partialResult: result?.partialResult || '',
+          percent: result?.percent || 0,
+          stage: result?.stage || 'Processing',
+          current: result?.current || 0,
+          total: result?.total || 100,
+        };
+
+        if (
+          safeResult.partialResult &&
+          safeResult.partialResult.trim().length > 0
+        ) {
+          setIsReceivingPartialResults(true);
+
+          const parsedSegments = parseSrt(safeResult.partialResult);
+
+          const processedSegments = parsedSegments.map(segment => {
+            let processedText = segment.text;
+            if (segment.text.includes('###TRANSLATION_MARKER###')) {
+              if (showOriginalText) {
+                processedText = segment.text.replace(
+                  '###TRANSLATION_MARKER###',
+                  '\n'
+                );
+              } else {
+                const parts = segment.text.split('###TRANSLATION_MARKER###');
+                processedText = parts[1] ? parts[1].trim() : '';
+              }
+            }
+            return {
+              ...segment,
+              text: processedText,
+            };
+          });
+
+          setSubtitleSegments(prevSegments => {
+            if (prevSegments.length !== processedSegments.length) {
+              return processedSegments;
+            }
+            const prevSrt = buildSrt(prevSegments);
+            const newSrt = buildSrt(processedSegments);
+            if (prevSrt !== newSrt) {
+              return processedSegments;
+            }
+            return prevSegments;
+          });
+        }
+
+        setTranslationProgress(safeResult.percent);
+        setTranslationStage(safeResult.stage);
+        setIsTranslationInProgress(true);
+      } catch (error) {
+        console.error('Error handling partial result:', error);
+      }
+    },
+    [showOriginalText, setSubtitleSegments]
+  );
 
   useEffect(() => {
     const checkElectron = async () => {
@@ -90,110 +151,61 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    const cleanup = registerSubtitleStreamListeners(handlePartialResult);
+    const handleProgressUpdate = (progress: any) => {
+      handlePartialResult(progress || {});
+    };
+
+    let cleanupGenerate: (() => void) | null = null;
+    let cleanupTranslate: (() => void) | null = null;
 
     if (window.electron) {
-      const generateListener = (progress: any) => {
-        handlePartialResult(progress || {});
-      };
-
       if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
-        window.electron.onGenerateSubtitlesProgress(generateListener);
+        window.electron.onGenerateSubtitlesProgress(handleProgressUpdate);
+        cleanupGenerate = () => {
+          window.electron.onGenerateSubtitlesProgress(null);
+        };
+      }
+
+      if (typeof window.electron.onTranslateSubtitlesProgress === 'function') {
+        window.electron.onTranslateSubtitlesProgress(handleProgressUpdate);
+        cleanupTranslate = () => {
+          window.electron.onTranslateSubtitlesProgress(null);
+        };
       }
     }
 
     return () => {
-      cleanup();
+      cleanupGenerate?.();
+      cleanupTranslate?.();
     };
+  }, [handlePartialResult]);
 
-    function handlePartialResult(result: {
-      partialResult?: string;
-      percent?: number;
-      stage?: string;
-      current?: number;
-      total?: number;
-    }) {
-      try {
-        const safeResult = {
-          partialResult: result?.partialResult || '',
-          percent: result?.percent || 0,
-          stage: result?.stage || 'Processing',
-          current: result?.current || 0,
-          total: result?.total || 100,
-        };
-        if (
-          safeResult.partialResult &&
-          safeResult.partialResult.trim().length > 0
-        ) {
-          setIsReceivingPartialResults(true);
-
-          const lines = safeResult.partialResult.split('\n');
-          const newSubtitleMap: { [key: string]: string } = {};
-
-          let currentLineNumber: string | null = null;
-          let currentContent: string | null = null;
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-
-            // Check if line is a number
-            if (/^\d+$/.test(line.trim())) {
-              currentLineNumber = line.trim();
-              currentContent = null;
-            } else if (line.includes('-->')) {
-              continue;
-            } else if (currentLineNumber && !currentContent) {
-              if (!generatedSubtitleMapRef.current[currentLineNumber]) {
-                generatedSubtitleIndexesRef.current.push(
-                  parseInt(currentLineNumber)
-                );
-              }
-              currentContent = line.trim();
-              newSubtitleMap[currentLineNumber] = currentContent;
-            } else if (currentLineNumber && currentContent) {
-              newSubtitleMap[currentLineNumber] += ' ' + line.trim();
-            }
-          }
-
-          generatedSubtitleMapRef.current = {
-            ...generatedSubtitleMapRef.current,
-            ...newSubtitleMap,
-          };
-          const newSegments: SrtSegment[] =
-            generatedSubtitleIndexesRef.current.map(arrayIndex => {
-              const originalText =
-                generatedSubtitleMapRef.current[arrayIndex.toString()] || '';
-              let processedText = originalText;
-              if (originalText.includes('###TRANSLATION_MARKER###')) {
-                if (showOriginalText) {
-                  processedText = originalText.replace(
-                    '###TRANSLATION_MARKER###',
-                    '\n'
-                  );
-                } else {
-                  const parts = originalText.split('###TRANSLATION_MARKER###');
-                  processedText = parts[1] ? parts[1].trim() : '';
-                }
-              }
-
-              return {
-                index: arrayIndex,
-                start: (arrayIndex - 1) * 3,
-                end: arrayIndex * 3,
-                text: processedText,
-              };
-            });
-          setSubtitleSegments(newSegments);
+  // --- Player Control Handlers ---
+  const handleTogglePlay = useCallback(async () => {
+    try {
+      if (nativePlayer.instance) {
+        if (nativePlayer.isPlaying()) {
+          nativePlayer.pause();
+          setIsPlaying(false);
+        } else {
+          await nativePlayer.play();
+          setIsPlaying(true);
         }
-
-        setTranslationProgress(safeResult.percent);
-        setTranslationStage(safeResult.stage);
-        setIsTranslationInProgress(true);
-      } catch (error) {
-        console.error('Error handling partial result:', error);
       }
+    } catch (error) {
+      console.error('Error toggling play/pause:', error);
     }
-  }, [setSubtitleSegments, showOriginalText]);
+  }, []); // No dependencies needed if only using nativePlayer and setIsPlaying
+
+  const handleShiftAllSubtitles = useCallback((offsetSeconds: number) => {
+    setSubtitleSegments(currentSegments =>
+      currentSegments.map(segment => ({
+        ...segment,
+        start: Math.max(0, segment.start + offsetSeconds),
+        end: Math.max(0.01, segment.end + offsetSeconds), // Ensure end is slightly after start if start becomes 0
+      }))
+    );
+  }, []);
 
   return (
     <div className={pageWrapperStyles}>
@@ -209,9 +221,11 @@ function AppContent() {
             subtitles={subtitleSegments}
             onPlayerReady={handleVideoPlayerReady}
             onChangeVideo={handleChangeVideo}
-            onChangeSrt={handleChangeSrt}
+            onSrtLoaded={setSubtitleSegments}
             onStickyChange={handleStickyChange}
             onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
+            onTogglePlay={handleTogglePlay}
+            onShiftAllSubtitles={handleShiftAllSubtitles}
           />
         )}
 
@@ -238,6 +252,7 @@ function AppContent() {
               onSetIsMergingInProgress={setIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
               onMergeSubtitlesWithVideo={handleMergeSubtitlesWithVideo}
+              onSetSubtitlesDirectly={setSubtitleSegments}
             />
           </div>
         </div>
@@ -298,6 +313,9 @@ function AppContent() {
 
   function handleVideoPlayerReady(player: any) {
     setVideoPlayerRef(player);
+    if (player) {
+      setIsPlaying(!player.paused);
+    }
   }
 
   function handleSetVideoUrl(url: string | null) {
@@ -314,31 +332,7 @@ function AppContent() {
       setVideoFile(file);
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
-    }
-  }
-
-  async function handleChangeSrt(file: File) {
-    localStorage.setItem('loadedSrtFileName', file.name);
-    const realPath = (file as any).path;
-    if (realPath) {
-      localStorage.setItem('originalLoadPath', realPath);
-    }
-
-    const result = await loadSrtFile(
-      file,
-      (_, segments, filePath) => {
-        setSubtitleSegments(segments);
-        if (filePath) {
-          localStorage.setItem('originalSrtPath', filePath);
-        }
-      },
-      error => {
-        console.error('Error loading SRT:', error);
-      }
-    );
-
-    if (result.error && !result.error.includes('canceled')) {
-      console.error('Error in loadSrtFile:', result.error);
+      setIsPlaying(false);
     }
   }
 

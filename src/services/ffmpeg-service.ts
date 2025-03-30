@@ -279,6 +279,11 @@ export class FFmpegService {
 
   /**
    * Extract a segment of audio from a file
+   * @param inputPath Path to the input audio file
+   * @param outputPath Path where the extracted segment will be saved
+   * @param startTime Start time in seconds
+   * @param duration Duration in seconds
+   * @returns Promise that resolves with the output path
    */
   async extractAudioSegment(
     inputPath: string,
@@ -297,7 +302,7 @@ export class FFmpegService {
         '-acodec',
         'libmp3lame',
         '-q:a',
-        '4',
+        '2', // Using higher quality setting (2 is better than 4)
         outputPath,
       ]);
 
@@ -314,9 +319,59 @@ export class FFmpegService {
       });
 
       process.on('error', err => {
+        log.error('Error in audio segment extraction:', err);
         reject(
           new FFmpegError(`Error extracting audio segment: ${err.message}`)
         );
+      });
+    });
+  }
+
+  async detectSilenceBoundaries(inputAudioPath: string): Promise<{
+    silenceStarts: number[];
+    silenceEnds: number[];
+  }> {
+    return new Promise((resolve, reject) => {
+      const silenceStarts: number[] = [];
+      const silenceEnds: number[] = [];
+      const ffmpegProcess = spawn(this.ffmpegPath, [
+        '-i',
+        inputAudioPath,
+        '-af',
+        'silencedetect=noise=-50dB:d=0.5',
+        '-f',
+        'null',
+        '-',
+      ]);
+
+      let stderr = '';
+      ffmpegProcess.stderr.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+
+      ffmpegProcess.on('close', () => {
+        const startRegex = /silence_start:\s*([\d.]+)/g;
+        const endRegex = /silence_end:\s*([\d.]+)/g;
+
+        let match;
+        while ((match = startRegex.exec(stderr)) !== null) {
+          silenceStarts.push(parseFloat(match[1]));
+        }
+        while ((match = endRegex.exec(stderr)) !== null) {
+          silenceEnds.push(parseFloat(match[1]));
+        }
+
+        // If the first silence_end is after 0, add a silence_start at 0
+        if (silenceEnds.length > 0 && silenceEnds[0] > 0) {
+          silenceStarts.unshift(0);
+        }
+
+        resolve({ silenceStarts, silenceEnds });
+      });
+
+      ffmpegProcess.on('error', (err: Error) => {
+        log.error('Error in silence detection:', err);
+        reject(err);
       });
     });
   }

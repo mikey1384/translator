@@ -98,33 +98,10 @@ export default function NativeVideoPlayer({
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    if (videoElement.src === videoUrl) {
-      if (nativePlayer.instance !== videoElement) {
-        nativePlayer.instance = videoElement;
-        nativePlayer.isReady = true;
-      }
-      return;
-    }
+    // Flag to track if the player is ready in this effect run
+    let isReady = false;
 
-    const isBlob = videoUrl.startsWith('blob:');
-    let videoType = 'video/mp4';
-    if (!isBlob) {
-      if (videoUrl.endsWith('.webm')) videoType = 'video/webm';
-      else if (videoUrl.endsWith('.ogg')) videoType = 'video/ogg';
-    }
-
-    videoElement.setAttribute('src', videoUrl);
-    videoElement.setAttribute('type', videoType);
-    videoElement.load();
-
-    nativePlayer.instance = videoElement;
-    nativePlayer.isReady = true;
-    nativePlayer.lastAccessed = Date.now();
-    nativePlayer.isInitialized = true;
-
-    const handleError = (e: Event) => {
-      console.error('Video error event:', e);
-
+    const handleError = (_e: Event) => {
       if (videoElement.error) {
         setErrorMessage(
           `Video error: ${videoElement.error.message || videoElement.error.code}`
@@ -132,25 +109,64 @@ export default function NativeVideoPlayer({
       } else {
         setErrorMessage('Unknown video error');
       }
-    };
-
-    const handleCanPlay = () => {
-      onPlayerReady(videoElement);
-    };
-
-    videoElement.addEventListener('error', handleError);
-    videoElement.addEventListener('canplay', handleCanPlay);
-
-    return () => {
-      videoElement.removeEventListener('error', handleError);
-      videoElement.removeEventListener('canplay', handleCanPlay);
-
+      // Ensure player isn't marked as ready globally on error
       if (nativePlayer.instance === videoElement) {
-        nativePlayer.instance = null;
         nativePlayer.isReady = false;
       }
     };
-  }, [videoUrl, onPlayerReady]);
+
+    const handleCanPlay = () => {
+      if (isReady) return; // Prevent multiple calls if event fires again
+      isReady = true;
+      // Update global state as well
+      if (nativePlayer.instance !== videoElement) {
+        nativePlayer.instance = videoElement;
+      }
+      nativePlayer.isReady = true;
+      nativePlayer.lastAccessed = Date.now();
+      nativePlayer.isInitialized = true;
+      // Call the prop callback
+      onPlayerReady(videoElement);
+    };
+
+    // Always add listeners
+    videoElement.addEventListener('error', handleError);
+    videoElement.addEventListener('canplay', handleCanPlay);
+
+    // Check if the source needs to be set/reset
+    if (videoElement.src !== videoUrl) {
+      const isBlob = videoUrl.startsWith('blob:');
+      let videoType = 'video/mp4';
+      if (!isBlob) {
+        if (videoUrl.endsWith('.webm')) videoType = 'video/webm';
+        else if (videoUrl.endsWith('.ogg')) videoType = 'video/ogg';
+      }
+      videoElement.setAttribute('src', videoUrl);
+      videoElement.setAttribute('type', videoType);
+      videoElement.load(); // Explicitly call load()
+      // Reset global state until canplay fires
+      nativePlayer.instance = videoElement;
+      nativePlayer.isReady = false;
+      nativePlayer.isInitialized = true; // Mark as initialized even if not ready
+    } else {
+      // If src is the same, check if it can play already, maybe it loaded quickly
+      if (videoElement.readyState >= 3) {
+        // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
+        handleCanPlay(); // Manually trigger if already playable
+      }
+      // Ensure global instance is set if src matches but instance was lost
+      else if (nativePlayer.instance !== videoElement) {
+        nativePlayer.instance = videoElement;
+        // Don't set isReady true here, wait for canplay
+      }
+    }
+
+    // Cleanup
+    return () => {
+      videoElement.removeEventListener('error', handleError);
+      videoElement.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [videoUrl, onPlayerReady]); // Keep dependencies
 
   useEffect(() => {
     const videoElement = videoRef.current;

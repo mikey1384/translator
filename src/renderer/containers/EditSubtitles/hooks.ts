@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { SrtSegment } from '../../../types/interface';
 
 interface FocusedInput {
   index: number | null;
@@ -24,29 +25,56 @@ export const useRestoreFocus = (
 };
 
 export const useSubtitleNavigation = (
-  subtitles: any[],
-  subtitleRefs: React.MutableRefObject<(HTMLElement | null)[]>
+  subtitles: SrtSegment[],
+  subtitleRefs: React.MutableRefObject<(HTMLElement | null)[]>,
+  videoPlayerRef: any
 ) => {
   const scrollToCurrentSubtitle = useCallback(() => {
-    if (subtitles.length === 0) return;
+    if (subtitles.length === 0) {
+      return;
+    }
+    if (!videoPlayerRef) {
+      return;
+    }
+
     let currentTime = 0;
-    const nativePlayer = (window as any).nativePlayer;
-    if (
-      nativePlayer &&
-      nativePlayer.instance &&
-      typeof nativePlayer.instance.currentTime === 'number'
+    const playerInstance = videoPlayerRef; // Direct use of state value
+
+    // Check if playerInstance exists and currentTime is a valid property/method
+    if (playerInstance && typeof playerInstance.currentTime === 'number') {
+      currentTime = playerInstance.currentTime;
+    } else if (
+      playerInstance &&
+      typeof playerInstance.currentTime === 'function'
     ) {
-      currentTime = nativePlayer.instance.currentTime;
+      try {
+        currentTime = playerInstance.currentTime();
+      } catch (e) {
+        // Error handling for currentTime function call can be added here if needed
+      }
+    } else {
+      // Keep currentTime as 0 if videoPlayerRef state is invalid
     }
-    let currentSubtitleIndex = subtitles.findIndex(
-      (sub: any) => currentTime >= sub.start && currentTime <= sub.end
+
+    // 1. Find subtitle containing current time
+    const indexInRange = subtitles.findIndex(
+      sub => currentTime >= sub.start && currentTime <= sub.end
     );
+
+    let currentSubtitleIndex = indexInRange;
+
+    // 2. If not found, find the *next* subtitle
     if (currentSubtitleIndex === -1) {
-      currentSubtitleIndex = subtitles.findIndex(
-        (sub: any) => currentTime < sub.start
-      );
+      const nextIndex = subtitles.findIndex(sub => currentTime < sub.start);
+      currentSubtitleIndex = nextIndex;
     }
-    if (currentSubtitleIndex === -1) return;
+
+    // 3. If still not found (e.g., time is after last subtitle), do nothing
+    if (currentSubtitleIndex === -1) {
+      return;
+    }
+
+    // 4. Scroll to the found index
     const el = subtitleRefs.current[currentSubtitleIndex];
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -54,8 +82,10 @@ export const useSubtitleNavigation = (
       setTimeout(() => {
         el.classList.remove('highlight-subtitle');
       }, 2000);
+    } else {
+      // Handle case where element is not found if necessary
     }
-  }, [subtitles, subtitleRefs]);
+  }, [subtitles, subtitleRefs, videoPlayerRef]);
 
   return { scrollToCurrentSubtitle };
 };

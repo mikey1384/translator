@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useCallback,
+  useState,
+  SetStateAction,
+  Dispatch,
+} from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
 import Section from '../../components/Section';
@@ -15,7 +22,6 @@ import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 
 import {
   srtTimeToSeconds,
-  validateSubtitleTimings,
   secondsToSrtTime,
   generateSrtContent,
 } from './utils';
@@ -56,6 +62,7 @@ export interface EditSubtitlesProps {
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
   }>;
+  onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
 }
 
 export function EditSubtitles({
@@ -63,7 +70,7 @@ export function EditSubtitles({
   onSetVideoFile,
   onSetVideoUrl,
   isPlaying: isPlayingProp,
-  onSetIsPlaying,
+  onSetIsPlaying: _onSetIsPlaying,
   secondsToSrtTime: secondsToSrtTimeProp,
   subtitles: subtitlesProp,
   videoPlayerRef,
@@ -71,6 +78,7 @@ export function EditSubtitles({
   onSetIsMergingInProgress,
   onMergeSubtitlesWithVideo,
   editorRef,
+  onSetSubtitlesDirectly,
 }: EditSubtitlesProps) {
   /**
    * ------------------------------------------------------
@@ -86,11 +94,8 @@ export function EditSubtitles({
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
-  const [isMergingInProgressState, setIsMergingInProgressState] =
-    useState<boolean>(isMergingInProgressProp || false);
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
   const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
-  const [mergeProgress, setMergeProgress] = useState(0);
   const [error, setError] = useState<string>('');
 
   // For controlling a timed auto‐pause
@@ -118,17 +123,13 @@ export function EditSubtitles({
    * Initialization & Updates
    * ------------------------------------------------------
    */
-  // Validate subtitles on mount
-  useEffect(() => {
-    if (subtitlesProp && subtitlesProp.length > 0) {
-      const validatedSubtitles = validateSubtitleTimings(subtitlesProp);
-      setSubtitlesState(validatedSubtitles);
-    }
-  }, [subtitlesProp]);
-
   // Keep local subtitlesState in sync when the prop changes
   useEffect(() => {
     if (subtitlesProp) {
+      // console.log(
+      //   '[EditSubtitles useEffect] subtitlesProp updated:',
+      //   subtitlesProp
+      // );
       setSubtitlesState(subtitlesProp);
     }
   }, [subtitlesProp]);
@@ -139,37 +140,6 @@ export function EditSubtitles({
       setIsPlayingState(isPlayingProp);
     }
   }, [isPlayingProp]);
-
-  // Keep local merging state in sync
-  useEffect(() => {
-    if (typeof isMergingInProgressProp !== 'undefined') {
-      setIsMergingInProgressState(isMergingInProgressProp);
-    }
-  }, [isMergingInProgressProp]);
-
-  // Send `isPlayingState` updates up
-  useEffect(() => {
-    if (onSetIsPlaying) {
-      onSetIsPlaying(isPlayingState);
-    }
-  }, [isPlayingState, onSetIsPlaying]);
-
-  // Send `isMergingInProgressState` updates up
-  useEffect(() => {
-    if (onSetIsMergingInProgress) {
-      onSetIsMergingInProgress(isMergingInProgressState);
-    }
-  }, [isMergingInProgressState, onSetIsMergingInProgress]);
-
-  // Cleanup any outstanding timeouts
-  useEffect(() => {
-    return () => {
-      if (playTimeoutRef.current) {
-        window.clearTimeout(playTimeoutRef.current);
-        playTimeoutRef.current = null;
-      }
-    };
-  }, []);
 
   /**
    *  For dynamic sub updates, attempt to keep the external
@@ -183,7 +153,7 @@ export function EditSubtitles({
           const currentTime = videoPlayerRef.currentTime();
           videoPlayerRef.currentTime(currentTime);
         } catch (e) {
-          console.warn('Error updating player time via videoPlayerRef:', e);
+          // console.warn('Error updating player time via videoPlayerRef:', e);
         }
       }
       // Otherwise use the global reference from subtitleVideoPlayer
@@ -196,7 +166,7 @@ export function EditSubtitles({
           const currentTime = subtitleVideoPlayer.instance.currentTime();
           subtitleVideoPlayer.instance.currentTime(currentTime);
         } catch (e) {
-          console.warn('Error updating global player time:', e);
+          // console.warn('Error updating global player time:', e);
         }
       }
     }
@@ -364,11 +334,16 @@ export function EditSubtitles({
    */
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
     subtitlesState,
-    subtitleRefs
+    subtitleRefs,
+    videoPlayerRef
   );
 
   // If an external editorRef is provided, expose `scrollToCurrentSubtitle`
   useEffect(() => {
+    // console.log(
+    //   '[EditSubtitles useEffect] Assigning scrollToCurrentSubtitle to editorRef.',
+    //   { editorRef: editorRef?.current, scrollToCurrentSubtitle }
+    // );
     if (editorRef?.current) {
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
     }
@@ -423,8 +398,20 @@ export function EditSubtitles({
             <ElectronFileButton
               label="Load SRT:"
               buttonText="Choose SRT File"
-              onClick={() => {
-                openSubtitleWithElectron();
+              onClick={async () => {
+                const result = await openSubtitleWithElectron();
+                if (result.error) {
+                  setError(`Error loading SRT: ${result.error}`);
+                  if (result.error.includes('canceled')) {
+                    // Optional: Clear error if user just canceled
+                    setError('');
+                  }
+                } else if (result.segments && onSetSubtitlesDirectly) {
+                  // Call the new prop to update App.tsx state
+                  onSetSubtitlesDirectly(result.segments);
+                  // Optionally also update local state if needed, though App.tsx should propagate
+                  setError(''); // Clear any previous error
+                }
               }}
             />
           </div>
@@ -469,13 +456,13 @@ export function EditSubtitles({
           >
             {subtitlesState.map((sub, index) => (
               <div
-                key={`subtitle-container-${index}`}
+                key={sub.index}
                 ref={el => {
                   subtitleRefs.current[index] = el;
                 }}
               >
                 <SubtitleEditor
-                  key={`subtitle-${index}-${sub.start}-${sub.end}`}
+                  key={sub.index}
                   sub={sub}
                   index={index}
                   editingTimes={editingTimesState}
@@ -565,7 +552,8 @@ export function EditSubtitles({
             disabled={
               !videoFile ||
               subtitlesState.length === 0 ||
-              isMergingInProgressState
+              isMergingInProgressProp ||
+              false
             }
             className={mergeButtonClass}
           >
@@ -587,48 +575,6 @@ export function EditSubtitles({
             </svg>
             Merge Video with Subtitles
           </Button>
-        </div>
-      )}
-
-      {/* Progress display overlay */}
-      {isMergingInProgressState && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-            padding: '20px',
-            width: '80%',
-            maxWidth: '500px',
-            zIndex: 1000,
-          }}
-        >
-          <h3>Merging Video with Subtitles</h3>
-          <div>{mergeProgress}%</div>
-          <div
-            style={{
-              width: '100%',
-              height: '20px',
-              backgroundColor: '#f0f0f0',
-              borderRadius: '10px',
-              overflow: 'hidden',
-              marginTop: '10px',
-            }}
-          >
-            <div
-              style={{
-                width: `${mergeProgress}%`,
-                height: '100%',
-                backgroundColor: '#4361ee',
-                borderRadius: '10px',
-                transition: 'width 0.3s ease-in-out',
-              }}
-            />
-          </div>
         </div>
       )}
     </Section>
@@ -678,7 +624,7 @@ export function EditSubtitles({
       try {
         nativePlayer.pause();
       } catch (err) {
-        console.error('Error pausing player:', err);
+        // console.error('Error pausing player:', err);
       }
       setIsPlayingState(false);
       return;
@@ -733,7 +679,7 @@ export function EditSubtitles({
         }
       }
     } catch (err) {
-      console.error('Error during subtitle playback:', err);
+      // console.error('Error during subtitle playback:', err);
       setIsPlayingState(false);
     }
   }
@@ -747,7 +693,7 @@ export function EditSubtitles({
         actualTime = nativePlayer.getCurrentTime();
       }
     } catch (err) {
-      console.error('Error retrieving current time:', err);
+      // console.error('Error retrieving current time:', err);
     }
 
     try {
@@ -768,19 +714,19 @@ export function EditSubtitles({
                   nativePlayer.pause();
                 }
               } catch (err) {
-                console.error('Error pausing after snippet playback:', err);
+                // console.error('Error pausing after snippet playback:', err);
               }
               setIsPlayingState(false);
               playTimeoutRef.current = null;
             }, durationMs);
           }
         })
-        .catch(error => {
-          console.error('Error starting playback:', error);
+        .catch(_error => {
+          // console.error('Error starting playback:', _error);
           setIsPlayingState(false);
         });
     } catch (err) {
-      console.error('Unexpected error in playFromCurrentPosition:', err);
+      // console.error('Unexpected error in playFromCurrentPosition:', err);
       setIsPlayingState(false);
     }
   }
@@ -792,7 +738,7 @@ export function EditSubtitles({
     try {
       const sub = subtitlesState[index];
       if (!sub) {
-        console.error(`No subtitle found at index ${index}`);
+        // console.error(`No subtitle found at index ${index}`);
         setIsShiftingDisabled(false);
         return;
       }
@@ -809,14 +755,14 @@ export function EditSubtitles({
       try {
         nativePlayer.seek(newStart);
       } catch (seekError) {
-        console.error('Error seeking after shiftSubtitle:', seekError);
+        // console.error('Error seeking after shiftSubtitle:', seekError);
       }
 
       setTimeout(() => {
         setIsShiftingDisabled(false);
       }, 100);
     } catch (err) {
-      console.error('Error shifting subtitle:', err);
+      // console.error('Error shifting subtitle:', err);
       setIsShiftingDisabled(false);
     }
   }
@@ -829,28 +775,26 @@ export function EditSubtitles({
       return;
     }
 
-    setIsMergingInProgressState(true);
-    setMergeProgress(0);
     setError('');
 
     try {
       await onMergeSubtitlesWithVideo(videoFile, subtitlesState, {
-        onProgress: (progress: number) => {
-          setMergeProgress(progress);
+        onProgress: (_progress: number) => {
+          // Remove local progress update
         },
       });
 
-      setTimeout(() => {
-        setIsMergingInProgressState(false);
-      }, 2000);
+      // App.tsx will handle hiding the progress via its state
     } catch (err: any) {
-      console.error('Error merging video with subtitles:', err);
+      // console.error('Error merging video with subtitles:', err);
       setError(
         err instanceof Error
           ? err.message
           : 'An error occurred while merging video with subtitles'
       );
-      setIsMergingInProgressState(false);
+      if (onSetIsMergingInProgress) {
+        onSetIsMergingInProgress(false); // Notify parent about the error state
+      }
     }
   }
 

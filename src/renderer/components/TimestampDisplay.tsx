@@ -7,29 +7,52 @@ import Button from './Button';
 import { openSubtitleWithElectron } from '../helpers/subtitle-utils';
 import ElectronFileButton from './ElectronFileButton';
 import { buttonGradientStyles } from '../containers/EditSubtitles/styles';
+import { SrtSegment } from '../../types/interface';
 
 interface TimestampDisplayProps {
   isPlaying: boolean;
   videoElement: HTMLVideoElement | null;
   onChangeVideo?: (file: File) => void;
-  onChangeSrt?: (file: File) => void;
   hasSubtitles?: boolean;
   onTogglePlay?: () => void;
+  onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
+  onSrtLoaded: (segments: SrtSegment[]) => void;
 }
+
+// Simple input style similar to time inputs in editor
+const shiftInputStyles = css`
+  width: 80px; /* Adjust width as needed */
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(221, 221, 221, 0.8);
+  background-color: rgba(255, 255, 255, 0.9);
+  font-family: monospace;
+  text-align: right;
+  margin-right: 5px; /* Space between input and button */
+  transition: border-color 0.2s ease;
+  &:focus {
+    outline: none;
+    border-color: rgba(0, 123, 255, 0.8);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+`;
 
 export function TimestampDisplay({
   isPlaying,
   videoElement,
   onChangeVideo,
-  onChangeSrt,
   hasSubtitles = false,
   onTogglePlay,
+  onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
+  onSrtLoaded,
 }: TimestampDisplayProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [bufferedWidth, setBufferedWidth] = useState<string>('0%');
+  // State for the shift input field
+  const [shiftAmount, setShiftAmount] = useState<string>('0');
 
   const formatTime = useCallback((seconds: number): string => {
     if (isNaN(seconds)) return '00:00';
@@ -99,6 +122,16 @@ export function TimestampDisplay({
       videoElement.removeEventListener('progress', handleProgress);
     };
   }, [videoElement]);
+
+  // Handler for applying the shift
+  const handleApplyShift = () => {
+    const offset = parseFloat(shiftAmount);
+    if (onShiftAllSubtitles && !isNaN(offset) && offset !== 0) {
+      onShiftAllSubtitles(offset);
+      // Optional: Reset input after applying, or leave it
+      // setShiftAmount('0');
+    }
+  };
 
   return (
     <div
@@ -278,52 +311,21 @@ export function TimestampDisplay({
           display: flex;
           align-items: center;
           gap: 8px;
+          flex-wrap: wrap;
+          justify-content: center;
+          width: 100%; /* Ensure container takes full width */
+          padding-top: 8px;
         `}
       >
-        <ButtonGroup spacing="sm" mobileStack={false}>
-          {onChangeVideo && (
-            <StylizedFileInput
-              accept="video/*"
-              onChange={handleVideoChange}
-              buttonText="Change Video"
-              showSelectedFile={false}
-            />
-          )}
-
-          {onChangeSrt && (
-            <ElectronFileButton
-              buttonText={hasSubtitles ? 'Change SRT' : 'Add SRT'}
-              onClick={async () => {
-                await openSubtitleWithElectron();
-              }}
-            />
-          )}
-
-          {hasSubtitles && onScrollToCurrentSubtitle && (
-            <Button
-              onClick={onScrollToCurrentSubtitle}
-              variant="secondary"
-              size="sm"
-              title="Scroll to the subtitle currently being shown in the video"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ marginRight: '6px' }}
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <polyline points="19 12 12 19 5 12" />
-              </svg>
-              Find Current
-            </Button>
-          )}
-
+        <ButtonGroup
+          spacing="sm"
+          mobileStack={false}
+          className={css`
+            flex-wrap: wrap;
+            justify-content: center;
+          `}
+        >
+          {/* Single Play/Pause Toggle Button */}
           {onTogglePlay && (
             <Button
               onClick={onTogglePlay}
@@ -368,6 +370,93 @@ export function TimestampDisplay({
                 </>
               )}
             </Button>
+          )}
+
+          {onChangeVideo && (
+            <StylizedFileInput
+              accept="video/*"
+              onChange={handleVideoChange}
+              buttonText="Change Video"
+              showSelectedFile={false}
+            />
+          )}
+          <ElectronFileButton
+            buttonText={hasSubtitles ? 'Change SRT' : 'Add SRT'}
+            onClick={async () => {
+              try {
+                const result = await openSubtitleWithElectron();
+                if (result.error && !result.error.includes('canceled')) {
+                  // console.error(
+                  //   'Error loading SRT via TimestampDisplay:',
+                  //   result.error
+                  // );
+                } else if (result.segments) {
+                  onSrtLoaded(result.segments);
+                }
+              } catch (err) {
+                // console.error(
+                //   'Unexpected error in openSubtitleWithElectron:',
+                //   err
+                // );
+              }
+            }}
+          />
+
+          {hasSubtitles && onScrollToCurrentSubtitle && (
+            <Button
+              onClick={onScrollToCurrentSubtitle}
+              variant="secondary"
+              size="sm"
+              title="Scroll to the subtitle currently being shown in the video"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: '6px' }}
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <polyline points="19 12 12 19 5 12" />
+              </svg>
+              Find Current
+            </Button>
+          )}
+
+          {/* Shift All Subtitles Input and Button */}
+          {hasSubtitles && onShiftAllSubtitles && (
+            <div
+              className={css`
+                display: flex;
+                align-items: center;
+              `}
+            >
+              <input
+                type="number"
+                value={shiftAmount}
+                onChange={e => setShiftAmount(e.target.value)}
+                step="0.1"
+                placeholder="Offset (s)"
+                className={shiftInputStyles}
+                aria-label="Shift all subtitles by seconds"
+              />
+              <Button
+                onClick={handleApplyShift}
+                variant="secondary"
+                size="sm"
+                title="Apply shift to all subtitles"
+                disabled={
+                  isNaN(parseFloat(shiftAmount)) ||
+                  parseFloat(shiftAmount) === 0
+                }
+              >
+                Shift All
+              </Button>
+            </div>
           )}
         </ButtonGroup>
       </div>

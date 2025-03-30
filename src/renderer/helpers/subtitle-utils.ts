@@ -7,21 +7,39 @@ export function parseSrt(srtString: string): SrtSegment[] {
   if (!srtString) return [];
 
   const segments: SrtSegment[] = [];
-  const blocks = srtString.trim().split(/\r?\n\r?\n/);
+  const blocks = srtString
+    .trim()
+    .split(/\r?\n\r?\n/)
+    .filter(block => block.trim() !== '');
 
-  blocks.forEach(block => {
-    const lines = block.split(/\r?\n/);
-    if (lines.length < 3) return;
+  blocks.forEach((block, _blockIndex) => {
+    const lines = block.trim().split(/\r?\n/);
+    if (lines.length < 3) {
+      return;
+    }
 
-    const index = parseInt(lines[0].trim(), 10);
-    const timeMatch = lines[1].match(
+    const indexLine = lines[0].trim();
+    const timeLine = lines[1].trim();
+    const textLines = lines.slice(2);
+    const text = textLines.join('\n').trim();
+
+    const index = parseInt(indexLine, 10);
+    const timeMatch = timeLine.match(
       /(\d+:\d+:\d+,\d+)\s*-->\s*(\d+:\d+:\d+,\d+)/
     );
-    if (!timeMatch) return;
+
+    if (isNaN(index)) {
+      return;
+    }
+    if (!timeMatch) {
+      return;
+    }
+    if (text === '') {
+      // Allow empty text content, no action needed
+    }
 
     const startTime = srtTimeToSeconds(timeMatch[1]);
     const endTime = srtTimeToSeconds(timeMatch[2]);
-    const text = lines.slice(2).join('\n');
 
     segments.push({
       index,
