@@ -40,6 +40,10 @@ export class FFmpegService {
     log.info(`Temp directory: ${this.tempDir}`);
   }
 
+  getTempDir(): string {
+    return this.tempDir;
+  }
+
   async extractAudio(videoPath: string): Promise<string> {
     const outputPath = path.join(
       this.tempDir,
@@ -179,8 +183,23 @@ export class FFmpegService {
     }
 
     try {
+      log.info(`[${operationId}] Starting subtitle merge process`);
+      log.info(`[${operationId}] Video path: ${videoPath}`);
+      log.info(`[${operationId}] Subtitles path: ${subtitlesPath}`);
+
+      // Use the outputPath provided directly, don't recalculate
+      // const tempOutputPath = path.join(
+      //   this.tempDir,
+      //   `temp_merge_${Date.now()}_${path.basename(outputPath)}`
+      // );
+      // log.info(`[${operationId}] Temporary output path: ${tempOutputPath}`);
+      log.info(`[${operationId}] Using provided output path: ${outputPath}`); // Log the correct path
+
       const { width, height } = await this.getVideoResolution(videoPath);
       const duration = await this.getMediaDuration(videoPath);
+
+      log.info(`[${operationId}] Video resolution: ${width}x${height}`);
+      log.info(`[${operationId}] Video duration: ${duration} seconds`);
 
       const subtitleExt = path.extname(subtitlesPath).toLowerCase();
       const isAss = subtitleExt === '.ass';
@@ -211,8 +230,18 @@ export class FFmpegService {
             'language=eng',
           ];
 
+      log.info(`[${operationId}] FFmpeg arguments: ${subtitleArgs.join(' ')}`);
+
       await this.runFFmpeg(
-        ['-loglevel', 'verbose', '-i', videoPath, ...subtitleArgs, outputPath],
+        [
+          '-loglevel',
+          'verbose',
+          '-i',
+          videoPath,
+          ...subtitleArgs,
+          // tempOutputPath, // Use the argument directly
+          outputPath,
+        ],
         operationId,
         duration,
         progress => {
@@ -225,11 +254,16 @@ export class FFmpegService {
         }
       );
 
-      await this.validateOutputFile(outputPath);
+      log.info(`[${operationId}] FFmpeg process completed successfully`);
 
+      // Validate the correct outputPath
+      await this.validateOutputFile(outputPath);
+      log.info(`[${operationId}] Output file validated successfully`);
+
+      // Return the correct outputPath
       return outputPath;
     } catch (error) {
-      log.error('Error merging subtitles:', error);
+      log.error(`[${operationId}] Error merging subtitles:`, error);
       throw new FFmpegError(`Failed to merge subtitles: ${error}`);
     }
   }
@@ -296,13 +330,36 @@ export class FFmpegService {
       }, TIMEOUT);
 
       let output = '';
+      let lastProgressUpdate = Date.now();
+      const PROGRESS_TIMEOUT = 30 * 1000; // 30 seconds
+
+      // Monitor for process hanging
+      const progressInterval = setInterval(() => {
+        const now = Date.now();
+        if (now - lastProgressUpdate > PROGRESS_TIMEOUT) {
+          log.warn(
+            `[${operationId || 'ffmpeg'}] No progress update for ${Math.floor((now - lastProgressUpdate) / 1000)} seconds`
+          );
+          // Don't kill the process, just log the warning
+        }
+      }, 5000);
 
       process.stderr.on('data', data => {
         const dataStr = data.toString();
         output += dataStr;
+        lastProgressUpdate = Date.now();
+
+        // Log all FFmpeg output for debugging
         log.debug(
           `[${operationId || 'ffmpeg'}] stderr chunk: ${dataStr.trim()}`
         );
+
+        // Check for common FFmpeg errors
+        if (dataStr.includes('Error') || dataStr.includes('error')) {
+          log.warn(
+            `[${operationId || 'ffmpeg'}] FFmpeg reported error: ${dataStr.trim()}`
+          );
+        }
 
         if (progressCallback && totalDuration && totalDuration > 0) {
           const timeMatch = dataStr.match(/time=(\d+):(\d+):(\d+\.\d+)/);
@@ -316,13 +373,27 @@ export class FFmpegService {
               Math.round((currentTime / totalDuration) * 100)
             );
 
+            // --- ADD DETAILED LOGGING ---
+            log.debug(
+              `[${operationId || 'ffmpeg'}] Progress Parse: timeMatch=${timeMatch[0]}, currentTime=${currentTime.toFixed(2)}, totalDuration=${totalDuration.toFixed(2)}, calculatedPercent=${progressPercent}`
+            );
+            // -----------------------------
+
             progressCallback(progressPercent);
           }
         }
       });
 
+      process.stdout.on('data', data => {
+        const dataStr = data.toString();
+        log.debug(
+          `[${operationId || 'ffmpeg'}] stdout chunk: ${dataStr.trim()}`
+        );
+      });
+
       process.on('close', code => {
         clearTimeout(timeoutId);
+        clearInterval(progressInterval);
 
         log.info(
           `[${operationId || 'ffmpeg'}] 'close' event received. Exit code: ${code}`
@@ -348,6 +419,7 @@ export class FFmpegService {
 
       process.on('error', err => {
         clearTimeout(timeoutId);
+        clearInterval(progressInterval);
 
         log.error(`[${operationId || 'ffmpeg'}] FFmpeg error: ${err.message}`);
         if (operationId) {
@@ -355,6 +427,13 @@ export class FFmpegService {
           log.error(`[${operationId}] Process stopped tracking due to error.`);
         }
         reject(new FFmpegError(`FFmpeg error: ${err.message}`));
+      });
+
+      // Monitor process state
+      process.on('exit', code => {
+        log.info(
+          `[${operationId || 'ffmpeg'}] Process exited with code ${code}`
+        );
       });
     });
   }

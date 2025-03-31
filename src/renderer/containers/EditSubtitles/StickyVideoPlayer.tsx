@@ -4,7 +4,7 @@ import NativeVideoPlayer, {
   nativePlayer,
 } from '../../components/NativeVideoPlayer';
 import { SrtSegment } from '../../../types/interface';
-import { TimestampDisplay } from '../../components/TimestampDisplay';
+import { TimestampDisplay } from './TimestampDisplay';
 
 interface StickyVideoPlayerProps {
   videoUrl: string;

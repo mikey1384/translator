@@ -13,7 +13,6 @@ import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
   MergeSubtitlesOptions,
-  MergeSubtitlesResult,
 } from '../types/interface';
 
 dotenv.config();
@@ -153,7 +152,7 @@ Translate EACH line individually, preserving the line order.
 - If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
 - Provide exactly one translation for every line, in the same order, 
   prefixed by "Line X:" where X is the line number.
-- If you’re unsure, err on the side of literal translations.
+- If you're unsure, err on the side of literal translations.
 - For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
 `;
 
@@ -726,9 +725,15 @@ export async function mergeSubtitlesWithVideo(
   services?: {
     ffmpegService: FFmpegService;
   }
-): Promise<MergeSubtitlesResult> {
+): Promise<{ tempOutputPath: string }> {
+  const inputPathForNaming = options.videoFileName || options.videoPath;
+  if (!inputPathForNaming) {
+    throw new SubtitleProcessingError(
+      'Either videoFileName or videoPath is required for naming output.'
+    );
+  }
   if (!options.videoPath) {
-    throw new SubtitleProcessingError('Video path is required');
+    throw new SubtitleProcessingError('Video path is required for merging');
   }
   if (!options.subtitlesPath) {
     throw new SubtitleProcessingError('Subtitles path is required');
@@ -743,15 +748,13 @@ export async function mergeSubtitlesWithVideo(
     progressCallback({ percent: 0, stage: 'Starting subtitle merging' });
   }
 
-  const outputPath =
-    options.outputPath ||
-    path.join(
-      path.dirname(options.videoPath),
-      `${path.basename(
-        options.videoPath,
-        path.extname(options.videoPath)
-      )}_with_subtitles${path.extname(options.videoPath)}`
-    );
+  const videoExt = path.extname(inputPathForNaming);
+  const baseName = path.basename(inputPathForNaming, videoExt);
+  const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles${videoExt}`;
+  const tempOutputPath = path.join(ffmpegService.getTempDir(), tempFilename);
+  console.log(
+    `[${operationId}] Generated temporary output path: ${tempOutputPath}`
+  );
 
   if (progressCallback) {
     progressCallback({ percent: 25, stage: 'Processing video' });
@@ -760,13 +763,13 @@ export async function mergeSubtitlesWithVideo(
   await ffmpegService.mergeSubtitles(
     options.videoPath,
     options.subtitlesPath,
-    outputPath,
+    tempOutputPath,
     operationId,
     progress => {
       if (progressCallback) {
-        const scaledProgress = 25 + progress.percent * 0.65;
+        const scaledProgress = 25 + progress.percent * 0.7;
         progressCallback({
-          percent: Math.min(90, scaledProgress),
+          percent: Math.min(95, scaledProgress),
           stage: progress.stage || 'Merging subtitles with video',
         });
       }
@@ -774,8 +777,7 @@ export async function mergeSubtitlesWithVideo(
   );
 
   if (progressCallback) {
-    progressCallback({ percent: 100, stage: 'Subtitle merging complete' });
+    progressCallback({ percent: 100, stage: 'Merge complete, ready to save' });
   }
-
-  return { outputPath };
+  return { tempOutputPath };
 }

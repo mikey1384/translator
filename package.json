@@ -13,7 +13,7 @@
     "watch:main": "tsc -p tsconfig.main.json --watch",
     "watch:preload": "webpack --config webpack.preload.js --watch",
     "watch:renderer": "concurrently -n bun,copy \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch\" \"chokidar 'index.html' -c 'cp index.html dist/renderer/'\"",
-    "restart:electron": "nodemon --watch dist/main.js --watch dist/services --ext js --exec \"electron main.cjs --no-sandbox --enable-logging\"",
+    "restart:electron": "nodemon --watch dist --ext js --exec \"electron main.cjs --no-sandbox --enable-logging\"",
     "dev": "ELECTRON_ENABLE_LOGGING=true concurrently -n main,preload,renderer,electron \"bun run watch:main\" \"bun run watch:preload\" \"bun run watch:renderer\" \"wait-on dist/main.js dist/preload/index.js dist/renderer/index.js && bun run restart:electron\"",
     "dev:clean": "bun run clean && bun run build && bun run dev",
     "rebuild:main": "bun run build:main && (pkill -f 'electron main.cjs' || true) && bun run start",
@@ -100,10 +100,12 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
+    "@types/path-browserify": "^1.0.3",
     "axios": "^1.8.2",
     "dotenv": "^16.4.7",
     "form-data": "^4.0.2",
     "openai": "^4.86.2",
+    "path-browserify": "^1.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

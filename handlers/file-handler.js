@@ -1,45 +1,45 @@
 // FILE-HANDLER.JS
 // Import required modules
-const { ipcMain } = require("electron");
-const { dialog } = require("electron");
-const fs = require("fs");
-const path = require("path");
+const { ipcMain } = require('electron');
+const { dialog } = require('electron');
+const fs = require('fs');
+const path = require('path');
 
 // Check if handler already exists
 let handlerExists = false;
 try {
-  ipcMain.handle("open-file", () => {});
-  ipcMain.removeHandler("open-file");
+  ipcMain.handle('open-file', () => {});
+  ipcMain.removeHandler('open-file');
 } catch (err) {
   handlerExists = true;
 }
 
 // Only register if not already registered
 if (!handlerExists) {
-  ipcMain.handle("open-file", async (_event, options = {}) => {
+  ipcMain.handle('open-file', async (_event, options = {}) => {
     try {
-      const BrowserWindow = require("electron").BrowserWindow;
+      const BrowserWindow = require('electron').BrowserWindow;
 
       // Get the focused window or first window
       const focusedWindow =
         BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
 
       if (!focusedWindow) {
-        return { error: "No window available for dialog", filePaths: [] };
+        return { error: 'No window available for dialog', filePaths: [] };
       }
 
       // Show the open dialog
       const { canceled, filePaths } = await dialog.showOpenDialog(
         focusedWindow,
         {
-          properties: options.properties || ["openFile"],
+          properties: options.properties || ['openFile'],
           filters: options.filters || [
-            { name: "All Files", extensions: ["*"] },
+            { name: 'All Files', extensions: ['*'] },
           ],
-          title: options.title || "Open File",
-          defaultPath: options.defaultPath || "",
-          buttonLabel: options.buttonLabel || "Open",
-          message: options.message || "",
+          title: options.title || 'Open File',
+          defaultPath: options.defaultPath || '',
+          buttonLabel: options.buttonLabel || 'Open',
+          message: options.message || '',
         }
       );
 
@@ -50,7 +50,7 @@ if (!handlerExists) {
       // For SRT files, always read the content
       const isSrtFile =
         options.filters &&
-        options.filters.some((f) => f.extensions.includes("srt"));
+        options.filters.some(f => f.extensions.includes('srt'));
 
       // If readFile option is true or it's an SRT file, read the file content
       if (options.readFile || isSrtFile) {
@@ -59,7 +59,7 @@ if (!handlerExists) {
           const fileContents = [];
           for (const filePath of filePaths) {
             try {
-              const content = fs.readFileSync(filePath, "utf8");
+              const content = fs.readFileSync(filePath, 'utf8');
               fileContents.push(content);
             } catch (readError) {
               console.error(`Error reading file ${filePath}:`, readError);
@@ -89,7 +89,7 @@ if (!handlerExists) {
         filePath: filePaths[0], // Add single filePath for convenience
       };
     } catch (error) {
-      console.error("Open file error:", error);
+      console.error('Open file error:', error);
       return {
         error: `Open file error: ${error.message || String(error)}`,
         filePaths: [],
@@ -97,5 +97,33 @@ if (!handlerExists) {
     }
   });
 
-  console.log("File handler (open-file) registered");
+  console.log('File handler (open-file) registered');
+}
+
+// Register move-file handler
+let moveFileHandlerExists = false;
+try {
+  ipcMain.handle('move-file', () => {});
+  ipcMain.removeHandler('move-file');
+} catch (err) {
+  moveFileHandlerExists = true;
+}
+
+if (!moveFileHandlerExists) {
+  ipcMain.handle('move-file', async (_event, { sourcePath, targetPath }) => {
+    try {
+      // Ensure the target directory exists
+      const targetDir = path.dirname(targetPath);
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      // Move the file
+      await fs.promises.rename(sourcePath, targetPath);
+      return { success: true };
+    } catch (error) {
+      console.error('Error moving file:', error);
+      return { success: false, error: error.message };
+    }
+  });
 }

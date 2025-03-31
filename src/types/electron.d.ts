@@ -2,7 +2,6 @@ import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
   MergeSubtitlesOptions,
-  MergeSubtitlesResult,
   SaveFileOptions,
   SaveFileResult,
   OpenFileOptions,
@@ -38,11 +37,18 @@ interface ElectronAPI {
   translateSubtitles: (
     params: TranslateSubtitlesOptions
   ) => Promise<TranslateSubtitlesResult>;
-  saveFile: (params: SaveFileOptions) => Promise<SaveFileResult>;
+  saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
   showMessage: (message: string) => void;
   mergeSubtitles: (
-    options: MergeSubtitlesOptions
-  ) => Promise<MergeSubtitlesResult & { operationId?: string }>;
+    options: Omit<MergeSubtitlesOptions, 'outputPath'> & {
+      operationId?: string;
+    }
+  ) => Promise<{
+    success: boolean;
+    tempOutputPath?: string;
+    error?: string;
+    operationId: string;
+  }>;
   onMergeSubtitlesProgress: (
     callback: ProgressEventCallback | null
   ) => () => void;
@@ -50,6 +56,13 @@ interface ElectronAPI {
   cancelMerge: (
     operationId: string
   ) => Promise<{ success: boolean; error?: string }>;
+  moveFile: (
+    sourcePath: string,
+    targetPath: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  deleteFile: (options: {
+    filePathToDelete: string;
+  }) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {

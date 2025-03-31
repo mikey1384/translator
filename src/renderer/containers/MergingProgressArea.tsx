@@ -7,7 +7,7 @@ interface MergingProgressAreaProps {
   mergeProgress: number;
   mergeStage: string;
   onSetIsMergingInProgress: (inProgress: boolean) => void;
-  operationId: string;
+  operationId: string | null;
   onCancelComplete: () => void;
 }
 
@@ -75,6 +75,13 @@ export default function MergingProgressArea({
     if (isCancelling) return;
     setIsCancelling(true);
     console.log(`Requesting cancellation for merge operation: ${operationId}`);
+    if (!operationId) {
+      console.warn('Cannot cancel merge: operationId is null.');
+      setIsCancelling(false);
+      onSetIsMergingInProgress(false); // Still hide progress area
+      onCancelComplete();
+      return;
+    }
     try {
       const result = await window.electron.cancelMerge(operationId);
       console.log(`Cancellation result for ${operationId}:`, result);

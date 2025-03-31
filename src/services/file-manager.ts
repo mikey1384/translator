@@ -70,129 +70,16 @@ export class FileManager {
     }
   ): Promise<string> {
     try {
-      const { defaultPath, filters, filePath } = options;
+      const { defaultPath, filters } = options;
 
       // Log all parameters for debugging
       log.info('saveFile called with options:', {
         contentLength: content?.length,
         defaultPath,
         hasFilters: Boolean(filters),
-        filePath,
       });
 
-      // If a filePath is provided, save directly to that path without showing a dialog
-      if (filePath) {
-        log.info(`Attempting to save directly to file: ${filePath}`);
-
-        // Check if this is a synthetic path from browser uploads
-        if (filePath.startsWith('/temp/')) {
-          log.info(
-            `Detected synthetic browser path: ${filePath}, using Save As dialog instead`
-          );
-          // For synthetic paths, use Save As with the filename
-          const filename = filePath.split('/').pop() || 'subtitle.srt';
-
-          // Show Save As dialog with browser filename
-          const window = BrowserWindow.getFocusedWindow();
-          if (!window) {
-            throw new FileManagerError('No focused window found');
-          }
-
-          const { canceled, filePath: selectedPath } =
-            await dialog.showSaveDialog(window, {
-              defaultPath: filename,
-              filters: filters || [
-                { name: 'Text Files', extensions: ['txt', 'srt'] },
-                { name: 'All Files', extensions: ['*'] },
-              ],
-            });
-
-          if (canceled || !selectedPath) {
-            throw new FileManagerError('File save was canceled');
-          }
-
-          await fs.writeFile(selectedPath, content, 'utf8');
-          log.info(`Synthetic path converted to real path: ${selectedPath}`);
-          return selectedPath;
-        }
-
-        try {
-          // Verify the file path is valid and accessible
-          const pathInfo = await fs.stat(filePath).catch(e => {
-            log.warn(
-              `Path does not exist or is not accessible: ${filePath}`,
-              e
-            );
-            // Check permissions
-            return null;
-          });
-
-          if (pathInfo && !pathInfo.isFile()) {
-            log.error(`Path exists but is not a file: ${filePath}`);
-            throw new FileManagerError(
-              `Cannot save to ${filePath}: not a file`
-            );
-          }
-        } catch (statError: any) {
-          // If it's not a "file doesn't exist" error, check for permission issues
-          if (statError.code !== 'ENOENT') {
-            log.error(`Error checking file path: ${statError.code}`, statError);
-
-            // Check for specific permission errors
-            if (statError.code === 'EACCES') {
-              log.error(`Permission denied for file: ${filePath}`);
-              throw new FileManagerError(
-                `Permission denied: Cannot write to ${filePath}. Try using Save As instead.`
-              );
-            }
-
-            throw statError;
-          }
-          // Otherwise we'll try to create the file
-          log.info(`File doesn't exist yet, will create it: ${filePath}`);
-        }
-
-        // Try to write the file with proper error handling for permissions
-        try {
-          await fs.writeFile(filePath, content, 'utf8');
-          log.info(`File saved directly to: ${filePath}`);
-          return filePath;
-        } catch (writeError: any) {
-          // Handle permission errors specifically
-          if (writeError.code === 'EACCES') {
-            log.error(`Permission denied when writing to file: ${filePath}`);
-
-            // Try to save to Downloads folder as fallback
-            try {
-              const downloadsPath = path.join(
-                app.getPath('downloads'),
-                path.basename(filePath)
-              );
-              log.info(
-                `Attempting to save to Downloads folder instead: ${downloadsPath}`
-              );
-
-              await fs.writeFile(downloadsPath, content, 'utf8');
-              log.info(`File saved to Downloads folder: ${downloadsPath}`);
-
-              // Return special message that UI can detect
-              throw new FileManagerError(
-                `Permission denied for ${filePath}. File was saved to Downloads folder: ${downloadsPath}`
-              );
-            } catch (fallbackError) {
-              log.error('Failed to save to Downloads folder:', fallbackError);
-              throw new FileManagerError(
-                `Permission denied for ${filePath}. Please try Save As to choose a different location.`
-              );
-            }
-          }
-
-          // Re-throw other errors
-          throw writeError;
-        }
-      }
-
-      // Otherwise, show a save dialog
+      // Always show a save dialog
       const window = BrowserWindow.getFocusedWindow();
       if (!window) {
         throw new FileManagerError('No focused window found');
@@ -220,8 +107,6 @@ export class FileManager {
       const errorMessage = `Error saving file: ${error.message || error}`;
       log.error(errorMessage, {
         defaultPath: options.defaultPath,
-        hasFilePath: Boolean(options.filePath),
-        path: options.filePath || options.defaultPath,
       });
       throw new FileManagerError(errorMessage);
     }
@@ -230,70 +115,116 @@ export class FileManager {
   /**
    * Open a file with a dialog
    */
-  async openFile(
-    filters?: { name: string; extensions: string[] }[],
-    multiple = false
-  ): Promise<{ filePaths: string[]; fileContents?: string[] }> {
+  async openFile(options: {
+    title?: string;
+    filters?: { name: string; extensions: string[] }[];
+    properties?: (
+      | 'openFile'
+      | 'openDirectory'
+      | 'multiSelections'
+      | 'showHiddenFiles'
+      | 'createDirectory'
+      | 'promptToCreate'
+      | 'noResolveAliases'
+      | 'treatPackageAsDirectory'
+      | 'dontAddToRecent'
+    )[];
+    defaultPath?: string;
+    buttonLabel?: string;
+    message?: string;
+    securityScopedBookmarks?: boolean;
+  }): Promise<{
+    canceled: boolean;
+    filePaths: string[];
+    bookmarks?: string[];
+    fileContents?: string[];
+    error?: string;
+  }> {
     try {
       const window = BrowserWindow.getFocusedWindow();
       if (!window) {
-        throw new FileManagerError('No focused window found');
+        throw new FileManagerError('No focused window found for open dialog');
       }
 
-      const { canceled, filePaths } = await dialog.showOpenDialog(window, {
-        properties: multiple ? ['openFile', 'multiSelections'] : ['openFile'],
-        filters: filters || [
+      const result = await dialog.showOpenDialog(window, {
+        title: options.title || 'Open File',
+        filters: options.filters || [
           { name: 'Media Files', extensions: ['mp4', 'avi', 'mkv', 'mov'] },
           { name: 'Subtitle Files', extensions: ['srt', 'ass', 'vtt'] },
           { name: 'All Files', extensions: ['*'] },
         ],
+        properties: options.properties || ['openFile'],
+        defaultPath: options.defaultPath,
+        buttonLabel: options.buttonLabel,
+        message: options.message,
+        securityScopedBookmarks: options.securityScopedBookmarks,
       });
 
-      if (canceled || filePaths.length === 0) {
-        throw new FileManagerError('File open was canceled');
+      if (result.canceled || result.filePaths.length === 0) {
+        log.info('File open canceled by user.');
+        return { canceled: true, filePaths: [] };
       }
 
-      // For text files, also read the content
-      const isTextFile = (filePath: string) => {
-        const ext = path.extname(filePath).toLowerCase();
-        return ['.srt', '.ass', '.vtt', '.txt'].includes(ext);
-      };
+      log.info('Files selected:', result.filePaths);
 
-      if (filePaths.some(isTextFile)) {
+      // Optional: Read content for text-based subtitle files
+      const subtitleExtensions = ['.srt', '.vtt', '.ass', '.txt']; // Add other text types if needed
+      const needsContentRead = result.filePaths.some(fp =>
+        subtitleExtensions.includes(path.extname(fp).toLowerCase())
+      );
+
+      let fileContents: string[] | undefined = undefined;
+      if (needsContentRead) {
         try {
-          const fileContents = await Promise.all(
-            filePaths.map(async filePath => {
-              if (isTextFile(filePath)) {
+          fileContents = await Promise.all(
+            result.filePaths.map(async filePath => {
+              if (
+                subtitleExtensions.includes(
+                  path.extname(filePath).toLowerCase()
+                )
+              ) {
                 try {
-                  const content = await fs.readFile(filePath, 'utf8');
-                  log.info(
-                    `Successfully read file content from: ${filePath}, length: ${content.length}`
-                  );
-                  return content;
+                  return await fs.readFile(filePath, 'utf8');
                 } catch (readError: any) {
                   log.error(
-                    `Error reading file content from: ${filePath}`,
+                    `Error reading file content for ${filePath}:`,
                     readError
                   );
-                  throw new FileManagerError(
-                    `Failed to read file content: ${readError.message}`
-                  );
+                  // Return null or specific error marker if needed, instead of throwing
+                  // Throwing here would fail the whole Promise.all
+                  return `Error reading file: ${readError.message}`;
                 }
               }
+              // Return empty string for non-subtitle files if mixed selection is possible
               return '';
             })
           );
-          return { filePaths, fileContents };
-        } catch (contentError) {
-          log.error('Error processing file contents', contentError);
-          throw contentError;
+          log.info('Successfully read content for subtitle files.');
+        } catch (contentError: any) {
+          log.error('Error processing file contents:', contentError);
+          // Decide how to handle partial success, maybe return paths without content?
+          return {
+            canceled: false,
+            filePaths: result.filePaths,
+            bookmarks: result.bookmarks,
+            error: `Failed to read content for one or more files: ${contentError.message}`,
+          };
         }
       }
 
-      return { filePaths };
-    } catch (error) {
-      log.error('Error opening file:', error);
-      throw new FileManagerError(`Error opening file: ${error}`);
+      return {
+        canceled: false,
+        filePaths: result.filePaths,
+        bookmarks: result.bookmarks,
+        fileContents: fileContents,
+      };
+    } catch (error: any) {
+      log.error('Error opening file dialog:', error);
+      return {
+        canceled: false,
+        filePaths: [],
+        error: `Error opening file: ${error.message || error}`,
+      };
     }
   }
 

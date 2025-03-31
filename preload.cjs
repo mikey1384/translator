@@ -90,34 +90,27 @@ const electronAPI = {
   // Video merging
   mergeSubtitles: async options => {
     console.log('Merge subtitles called with options:', options);
-    const processedOptions = { ...options };
 
-    // If we have a videoFile, read its data
-    if (options.videoFile) {
+    // Handle File object if present
+    if (options.videoFile instanceof File) {
       console.log('File object detected in merge options - reading file data');
-      try {
-        const fileData = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsArrayBuffer(options.videoFile);
-        });
-        console.log(
-          `Read ${fileData.byteLength} bytes from video file for merge`
-        );
-        processedOptions.videoFileData = fileData;
-        processedOptions.videoFileName = options.videoFile.name; // Include filename
-      } catch (error) {
-        console.error('Error reading video file data for merge:', error);
-        throw new Error('Failed to read video file data for merge');
-      }
+      const file = options.videoFile;
+      const buffer = await file.arrayBuffer();
+      console.log(`Read ${buffer.byteLength} bytes from video file for merge`);
+      // Modify options for IPC: replace File with ArrayBuffer and name
+      options.videoFileData = buffer;
+      options.videoFileName = file.name;
+      delete options.videoFile; // Remove non-serializable File object
     }
 
-    // Remove the File object before sending
-    delete processedOptions.videoFile;
+    // Keep operationId if present
+    const finalOptions = { ...options };
+    if (options.operationId) {
+      finalOptions.operationId = options.operationId;
+    }
 
-    console.log('Sending merge options to main process:', processedOptions);
-    return ipcRenderer.invoke('merge-subtitles', processedOptions);
+    console.log('Sending merge options to main process:', finalOptions);
+    return ipcRenderer.invoke('merge-subtitles', finalOptions);
   },
 
   onMergeSubtitlesProgress: callback => {
@@ -148,6 +141,13 @@ const electronAPI = {
 
   // Merge cancellation
   cancelMerge: operationId => ipcRenderer.invoke('cancel-merge', operationId),
+
+  // Move file
+  moveFile: (sourcePath, targetPath) =>
+    ipcRenderer.invoke('move-file', { sourcePath, targetPath }),
+
+  // Delete file
+  deleteFile: options => ipcRenderer.invoke('delete-file', options),
 };
 
 // Expose the API to the renderer process

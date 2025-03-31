@@ -334,14 +334,43 @@ if (!mergeHandlerExists) {
           { ffmpegService }
         );
 
-        // Send final success status
-        console.log(`[${operationId}] Async merge completed successfully.`);
+        // Send final success status with the outputPath
+        console.log(
+          `[${operationId}] Async merge completed successfully. Output path: ${result.outputPath}`
+        );
         event.sender.send('merge-subtitles-progress', {
           percent: 100,
           stage: 'Merge complete!',
-          outputPath: result.outputPath, // Include final path
+          outputPath: result.outputPath,
           operationId,
         });
+
+        // Move the file to the final destination if outputPath is different from the target path
+        if (
+          result.outputPath &&
+          options.outputPath &&
+          result.outputPath !== options.outputPath
+        ) {
+          try {
+            console.log(
+              `[${operationId}] Moving file from ${result.outputPath} to ${options.outputPath}`
+            );
+            await fs.promises.rename(result.outputPath, options.outputPath);
+            console.log(
+              `[${operationId}] Successfully moved file to final destination`
+            );
+            // Update the result's outputPath to reflect the final location
+            result.outputPath = options.outputPath;
+          } catch (moveError) {
+            console.error(
+              `[${operationId}] Error moving file to final destination:`,
+              moveError
+            );
+            throw new Error(
+              `Failed to move file to final destination: ${moveError.message}`
+            );
+          }
+        }
       } catch (error) {
         // Send final error status
         console.error(`[${operationId}] Error during async merge:`, error);

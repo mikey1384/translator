@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../constants';
-import ButtonGroup from './ButtonGroup';
-import StylizedFileInput from './StylizedFileInput';
-import Button from './Button';
-import { openSubtitleWithElectron } from '../helpers/subtitle-utils';
-import ElectronFileButton from './ElectronFileButton';
-import { buttonGradientStyles } from '../containers/EditSubtitles/styles';
-import { SrtSegment } from '../../types/interface';
+import { colors } from '../../constants';
+import ButtonGroup from '../../components/ButtonGroup';
+import StylizedFileInput from '../../components/StylizedFileInput';
+import Button from '../../components/Button';
+import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
+import ElectronFileButton from '../../components/ElectronFileButton';
+import { buttonGradientStyles } from './styles';
+import { SrtSegment } from '../../../types/interface';
 
 interface TimestampDisplayProps {
   isPlaying: boolean;
