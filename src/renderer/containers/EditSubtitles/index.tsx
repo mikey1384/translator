@@ -41,7 +41,7 @@ import {
 } from './styles';
 import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
 
-import { SrtSegment, MergeSubtitlesResult } from '../../../types/interface';
+import { SrtSegment } from '../../../types/interface';
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
@@ -59,10 +59,6 @@ export interface EditSubtitlesProps {
   setMergeProgress: React.Dispatch<React.SetStateAction<number>>;
   setMergeStage: React.Dispatch<React.SetStateAction<string>>;
   setIsMergingInProgress: React.Dispatch<React.SetStateAction<boolean>>;
-  onMergeSubtitlesWithVideo: (
-    videoFile: File,
-    subtitles: SrtSegment[]
-  ) => Promise<{ outputPath: string; error?: string }>;
   editorRef?: React.RefObject<{ scrollToCurrentSubtitle: () => void }>;
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
 }
@@ -80,7 +76,6 @@ export function EditSubtitles({
   setMergeProgress,
   setMergeStage,
   setIsMergingInProgress,
-  onMergeSubtitlesWithVideo: _onMergeSubtitlesWithVideo,
   editorRef,
   onSetSubtitlesDirectly,
 }: EditSubtitlesProps) {
@@ -809,7 +804,7 @@ export function EditSubtitles({
   async function handleMergeVideoWithSubtitles(
     videoFile: File,
     subtitles: SrtSegment[]
-  ): Promise<MergeSubtitlesResult> {
+  ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
     // Generate operationId here
     const operationId = `merge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     currentMergeOperationIdRef.current = operationId; // Set the ref immediately
@@ -821,27 +816,24 @@ export function EditSubtitles({
     let cleanupMergeListener: (() => void) | null = null; // For listener cleanup
 
     try {
-      // --- Setup Progress Listener --- //
+      // Setup Progress Listener
       const handleProgress = (_event: any, progress: any) => {
-        // Only process updates for the current operation
         if (progress?.operationId === operationId) {
-          console.log(
-            `[Renderer] Received progress for ${operationId}:`,
-            progress
-          ); // Add log
+          // console.log(
+          //   `[Renderer] Received progress for ${operationId}:`,
+          //   progress
+          // ); // Remove log
           setMergeProgress(progress.percent);
           setMergeStage(progress.stage);
-          // Note: We might not need the 100% check here anymore as the main logic proceeds after await
         }
       };
 
       if (window.electron?.onMergeSubtitlesProgress) {
         window.electron.onMergeSubtitlesProgress(handleProgress);
-        // Function to remove the listener later
         cleanupMergeListener = () => {
-          console.log(
-            `[Renderer] Cleaning up merge listener for ${operationId}`
-          ); // Add log
+          // console.log(
+          //   `[Renderer] Cleaning up merge listener for ${operationId}`
+          // ); // Remove log
           window.electron.onMergeSubtitlesProgress(null);
         };
       } else {
@@ -849,18 +841,17 @@ export function EditSubtitles({
           '[Renderer] window.electron.onMergeSubtitlesProgress not available'
         );
       }
-      // --------------------------------
 
       const srtContent = buildSrt(fixOverlappingSegments(subtitles));
 
-      // --- Start Merge Process First --- //
+      // Start Merge Process
       setMergeStage('Starting merge process...');
 
-      // Call merge without outputPath, pass videoFile object AND operationId
+      // Call Electron merge function
       const mergeResult = await window.electron.mergeSubtitles({
-        videoFile: videoFile, // <-- PASS THE FILE OBJECT
+        videoFile: videoFile,
         srtContent: srtContent,
-        operationId: operationId, // <-- Pass the generated ID
+        operationId: operationId,
       });
 
       if (!mergeResult?.success || !mergeResult.tempOutputPath) {
@@ -870,15 +861,14 @@ export function EditSubtitles({
       }
 
       tempMergedFilePath = mergeResult.tempOutputPath; // Store temp path
-      console.log(`Merge complete. Temporary file at: ${tempMergedFilePath}`);
       setMergeStage('Merge complete. Select save location...');
       setMergeProgress(100); // Indicate merge part is done
 
-      // --- Prompt User to Save --- //
+      // Prompt User to Save
       const inputExt = videoFile.name.includes('.')
         ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
         : '.mp4';
-      const suggestedOutputName = `video-with-subtitles${inputExt}`;
+      const suggestedOutputName = `video-with-subtitles${inputExt}`; // Simplified name
 
       const saveResult = await window.electron.saveFile({
         content: '', // Not saving content directly, just getting path
@@ -905,7 +895,13 @@ export function EditSubtitles({
 
       const finalOutputPath = saveResult.filePath;
 
-      // --- Move Temporary File to Final Location --- //
+      // Move Temporary File to Final Location
+      if (!tempMergedFilePath) {
+        throw new Error(
+          'Temporary merge file path is missing before move operation.'
+        );
+      }
+
       setMergeStage('Moving file to final destination...');
       const moveResult = await window.electron.moveFile(
         tempMergedFilePath,
@@ -921,29 +917,30 @@ export function EditSubtitles({
       setMergeStage('File saved successfully!');
       tempMergedFilePath = null; // Clear temp path as it's now moved
       setTimeout(() => setIsMergingInProgress(false), 2000);
-      return { outputPath: finalOutputPath, error: undefined };
+      // Return final path on success
+      return { success: true, outputPath: finalOutputPath };
     } catch (error: any) {
       const errorMessage = error.message || 'Unknown merge error';
       console.error('Error during merge/save process:', error);
       setMergeStage(`Error: ${errorMessage}`);
       // Cleanup is now handled in finally
       setTimeout(() => setIsMergingInProgress(false), 3000);
-      return { outputPath: '', error: errorMessage };
+      // Return error on failure
+      return { success: false, error: errorMessage };
     } finally {
-      // --- Cleanup Temporary File --- //
+      // Cleanup Temporary File
       if (tempMergedFilePath) {
-        console.log(`Cleaning up temporary file: ${tempMergedFilePath}`);
+        // console.log(`Cleaning up temporary file: ${tempMergedFilePath}`); // Remove log
         try {
           await window.electron.deleteFile({
             filePathToDelete: tempMergedFilePath,
           });
-          console.log(`Successfully cleaned up: ${tempMergedFilePath}`);
+          // console.log(`Successfully cleaned up: ${tempMergedFilePath}`); // Remove log
         } catch (cleanupError: any) {
           console.error(
             `Failed to clean up temporary file ${tempMergedFilePath}:`,
             cleanupError.message || cleanupError
           );
-          // Optionally inform the user cleanup failed, but don't overwrite the main error
         }
       }
 

@@ -64,6 +64,7 @@ try {
   const { FFmpegService } = require('./dist/services/ffmpeg-service');
   const {
     mergeSubtitlesWithVideo,
+    generateSubtitlesFromVideo,
   } = require('./dist/services/subtitle-processing');
 
   // Initialize services
@@ -304,6 +305,199 @@ try {
     }
   });
   console.info('Registered delete-file handler.');
+
+  // Register cancel-merge handler
+  ipcMain.handle('cancel-merge', async (_event, operationId) => {
+    // ... existing cancel-merge handler code ...
+  });
+  console.info('Registered cancel-merge handler.');
+
+  // === Register generate-subtitles handler ===
+  ipcMain.handle('generate-subtitles', async (event, options) => {
+    const operationId = `generate-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
+    console.log(
+      `[${operationId}] Received generate-subtitles request via IPC. Options keys:`,
+      Object.keys(options)
+    );
+
+    let tempVideoPath = null;
+    let finalOptions = { ...options }; // Clone options to avoid mutation
+
+    try {
+      // --- Handle Temporary Video --- //
+      if (options.videoFileData && options.videoFileName) {
+        console.log(
+          `[${operationId}] Processing video file data for generation.`
+        );
+        const safeFileName = options.videoFileName.replace(
+          /[^a-zA-Z0-9_.-]/g,
+          '_'
+        );
+        tempVideoPath = path.join(
+          ffmpegService.getTempDir(),
+          `temp_generate_${Date.now()}_${safeFileName}`
+        );
+        const buffer = Buffer.from(options.videoFileData);
+        await fs.promises.writeFile(tempVideoPath, buffer);
+        finalOptions.videoPath = tempVideoPath; // Use the temp path
+        // Clean up data passed over IPC
+        delete finalOptions.videoFileData;
+        console.log(
+          `[${operationId}] Wrote temporary video to ${tempVideoPath}`
+        );
+      }
+
+      // --- Validation --- //
+      if (!finalOptions.videoPath) {
+        throw new Error('Video path is required for subtitle generation.');
+      }
+      finalOptions.videoPath = path.normalize(finalOptions.videoPath);
+      await fs.promises.access(finalOptions.videoPath, fs.constants.R_OK);
+      console.log(
+        `[${operationId}] Verified file access for video: ${finalOptions.videoPath}`
+      );
+
+      // --- Execute Generation --- //
+      const result = await generateSubtitlesFromVideo(
+        finalOptions, // Pass the potentially modified options
+        progress => {
+          event.sender.send('generate-subtitles-progress', {
+            ...progress,
+            operationId,
+          });
+        },
+        { ffmpegService, fileManager } // Pass dependencies
+      );
+
+      // Return the successful result
+      console.log(
+        `[${operationId}] Subtitle generation successful. Subtitle length: ${result.subtitles?.length || 0}`
+      );
+      return {
+        success: true,
+        subtitles: result.subtitles,
+        operationId,
+      };
+    } catch (error) {
+      console.error(
+        `[${operationId}] Error handling generate-subtitles:`,
+        error
+      );
+      event.sender.send('generate-subtitles-progress', {
+        percent: 100,
+        stage: `Error: ${error.message || 'Unknown generation error'}`,
+        error: error.message || 'Unknown generation error',
+        operationId,
+      });
+      return {
+        success: false,
+        error: error.message || String(error),
+        operationId,
+      };
+    } finally {
+      // --- Cleanup --- //
+      console.log(`[${operationId}] Starting cleanup in finally block.`);
+      // Clean up temporary Video file if created
+      if (tempVideoPath) {
+        try {
+          await fs.promises.unlink(tempVideoPath);
+          console.log(
+            `[${operationId}] Cleaned up temp video: ${tempVideoPath}`
+          );
+        } catch (cleanupError) {
+          console.warn(
+            `[${operationId}] Failed to cleanup temp video ${tempVideoPath}:`,
+            cleanupError
+          );
+        }
+      }
+      console.log(`[${operationId}] Cleanup finished.`);
+    }
+  });
+  console.info('Registered generate-subtitles handler.');
+
+  // === Register translate-subtitles handler (Placeholder) ===
+  ipcMain.handle('translate-subtitles', async (event, options) => {
+    const operationId = `translate-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
+    console.log(
+      `[${operationId}] Received translate-subtitles request via IPC. Options keys:`,
+      Object.keys(options)
+    );
+
+    // Simulate some work and progress
+    const sendProgress = (percent, stage) => {
+      try {
+        event.sender.send('translate-subtitles-progress', {
+          percent,
+          stage,
+          operationId,
+        });
+      } catch (sendError) {
+        console.error(`[${operationId}] Error sending progress:`, sendError);
+      }
+    };
+
+    try {
+      sendProgress(10, 'Starting translation...');
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+
+      sendProgress(50, 'Translating segments...');
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+
+      // Simulate creating translated content (replace with actual logic later)
+      let dummyTranslatedSrt = '';
+      if (typeof options.subtitles === 'string') {
+        dummyTranslatedSrt = options.subtitles
+          .split('\n\n')
+          .map(block => {
+            const lines = block.split('\n');
+            if (lines.length >= 3) {
+              // Add translation prefix to text lines
+              for (let i = 2; i < lines.length; i++) {
+                if (lines[i].trim() !== '') {
+                  // Avoid translating empty lines
+                  lines[i] = `[Translated] ${lines[i]}`;
+                }
+              }
+            }
+            return lines.join('\n');
+          })
+          .join('\n\n');
+      } else {
+        console.warn(
+          `[${operationId}] Subtitles option is not a string, skipping dummy translation.`
+        );
+      }
+
+      sendProgress(100, 'Translation complete.');
+
+      console.log(`[${operationId}] Translation simulation complete.`);
+      return {
+        success: true,
+        translatedSubtitles: dummyTranslatedSrt,
+        operationId,
+      };
+    } catch (error) {
+      // Use 'unknown' or 'any' if unsure about error type
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        `[${operationId}] Error handling translate-subtitles:`,
+        error
+      );
+      sendProgress(100, `Error: ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage,
+        operationId,
+      };
+    }
+  });
+  console.info('Registered translate-subtitles handler (Placeholder).');
 
   console.info('TypeScript service handlers registered.');
 } catch (error) {

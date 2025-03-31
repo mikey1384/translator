@@ -62,8 +62,9 @@ const electronAPI = {
         );
         return;
       }
-      ipcRenderer.on('generate-subtitles-progress', (event, progress) => {
+      const listener = (event, progress) => {
         try {
+          // Pass the progress object directly to the callback
           callback(progress);
         } catch (error) {
           console.error(
@@ -71,10 +72,13 @@ const electronAPI = {
             error
           );
         }
-      });
+      };
+      ipcRenderer.on('generate-subtitles-progress', listener);
+
+      // Return cleanup function
       return () => {
         try {
-          ipcRenderer.removeListener('generate-subtitles-progress', callback);
+          ipcRenderer.removeListener('generate-subtitles-progress', listener);
         } catch (error) {
           console.error(
             'Error removing generate-subtitles-progress listener:',
@@ -119,10 +123,13 @@ const electronAPI = {
         console.warn('Invalid callback provided to onMergeSubtitlesProgress');
         return;
       }
-      ipcRenderer.on('merge-subtitles-progress', callback);
+      const listener = (event, progress) => callback(event, progress);
+      ipcRenderer.on('merge-subtitles-progress', listener);
+
+      // Return cleanup function
       return () => {
         try {
-          ipcRenderer.removeListener('merge-subtitles-progress', callback);
+          ipcRenderer.removeListener('merge-subtitles-progress', listener);
         } catch (error) {
           console.error(
             'Error removing merge-subtitles-progress listener:',
@@ -148,6 +155,23 @@ const electronAPI = {
 
   // Delete file
   deleteFile: options => ipcRenderer.invoke('delete-file', options),
+
+  // === Add Subtitle Translation ===
+  translateSubtitles: options =>
+    ipcRenderer.invoke('translate-subtitles', options),
+  onTranslateSubtitlesProgress: callback => {
+    if (!callback) {
+      ipcRenderer.removeAllListeners('translate-subtitles-progress');
+      return;
+    }
+    const listener = (event, progress) => callback(event, progress);
+    ipcRenderer.on('translate-subtitles-progress', listener);
+
+    // Return cleanup function
+    return () => {
+      ipcRenderer.removeListener('translate-subtitles-progress', listener);
+    };
+  },
 };
 
 // Expose the API to the renderer process

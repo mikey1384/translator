@@ -373,12 +373,6 @@ export class FFmpegService {
               Math.round((currentTime / totalDuration) * 100)
             );
 
-            // --- ADD DETAILED LOGGING ---
-            log.debug(
-              `[${operationId || 'ffmpeg'}] Progress Parse: timeMatch=${timeMatch[0]}, currentTime=${currentTime.toFixed(2)}, totalDuration=${totalDuration.toFixed(2)}, calculatedPercent=${progressPercent}`
-            );
-            // -----------------------------
-
             progressCallback(progressPercent);
           }
         }

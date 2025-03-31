@@ -10,7 +10,7 @@ import MergingProgressArea from './containers/MergingProgressArea';
 import TranslationProgressArea from './containers/TranslationProgressArea';
 
 import { ManagementContextProvider } from './context';
-import { SrtSegment, MergeSubtitlesResult } from '../types/interface';
+import { SrtSegment } from '../types/interface';
 
 import {
   parseSrt,
@@ -129,7 +129,14 @@ function AppContent() {
         console.error('Error handling partial result:', error);
       }
     },
-    [showOriginalText, setSubtitleSegments]
+    [
+      showOriginalText,
+      setSubtitleSegments,
+      setIsTranslationInProgress,
+      setTranslationProgress,
+      setTranslationStage,
+      setIsReceivingPartialResults,
+    ]
   );
 
   useEffect(() => {
@@ -160,17 +167,19 @@ function AppContent() {
 
     if (window.electron) {
       if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
-        window.electron.onGenerateSubtitlesProgress(handleProgressUpdate);
-        cleanupGenerate = () => {
-          window.electron.onGenerateSubtitlesProgress(null);
-        };
+        const cleanup =
+          window.electron.onGenerateSubtitlesProgress(handleProgressUpdate);
+        if (typeof cleanup === 'function') {
+          cleanupGenerate = cleanup;
+        }
       }
 
       if (typeof window.electron.onTranslateSubtitlesProgress === 'function') {
-        window.electron.onTranslateSubtitlesProgress(handleProgressUpdate);
-        cleanupTranslate = () => {
-          window.electron.onTranslateSubtitlesProgress(null);
-        };
+        const cleanup =
+          window.electron.onTranslateSubtitlesProgress(handleProgressUpdate);
+        if (typeof cleanup === 'function') {
+          cleanupTranslate = cleanup;
+        }
       }
     }
 
@@ -253,7 +262,6 @@ function AppContent() {
               setMergeStage={setMergeStage}
               setIsMergingInProgress={setIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
-              onMergeSubtitlesWithVideo={handleMergeSubtitlesWithVideo}
               onSetSubtitlesDirectly={setSubtitleSegments}
             />
           </div>
@@ -337,86 +345,6 @@ function AppContent() {
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
       setIsPlaying(false);
-    }
-  }
-
-  async function handleMergeSubtitlesWithVideo(
-    videoFile: File,
-    subtitles: SrtSegment[]
-  ): Promise<MergeSubtitlesResult> {
-    setIsMergingInProgress(true);
-    setMergeProgress(0);
-    setMergeStage('Preparing subtitle file...');
-
-    try {
-      const srtContent = buildSrt(fixOverlappingSegments(subtitles));
-
-      // Get the output path from user before starting merge
-      setMergeStage('Waiting for output file selection...');
-
-      const inputExt = videoFile.name.includes('.')
-        ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
-        : '.mp4';
-      const inputNameWithoutExt = videoFile.name.includes('.')
-        ? videoFile.name.substring(0, videoFile.name.lastIndexOf('.'))
-        : videoFile.name;
-      const suggestedOutputName = `${inputNameWithoutExt}_with_subtitles${inputExt}`;
-
-      // Use saveFile dialog to get the desired output path
-      const savePathResult = await window.electron.saveFile({
-        content: '', // No content needed, just getting path
-        defaultPath: suggestedOutputName,
-        title: 'Save Merged Video As',
-        filters: [
-          { name: 'Video Files', extensions: [inputExt.slice(1)] },
-          { name: 'All Files', extensions: ['*'] },
-        ],
-      });
-
-      if (savePathResult.error) {
-        if (savePathResult.error.includes('canceled')) {
-          setMergeStage('Merge canceled by user.');
-          setIsMergingInProgress(false);
-          throw new Error('Merge operation canceled by user during file save.');
-        } else {
-          throw new Error(`Failed to get save path: ${savePathResult.error}`);
-        }
-      }
-
-      if (!savePathResult.filePath) {
-        throw new Error('No output path selected');
-      }
-
-      const userOutputPath = savePathResult.filePath;
-
-      const videoPath = videoFile.path || videoFile.name;
-
-      // Start the merge operation
-      const result = await window.electron.mergeSubtitles({
-        videoPath: videoPath,
-        videoFile: videoFile,
-        srtContent: srtContent,
-      });
-
-      if (result && result.operationId) {
-        setIsMergingInProgress(true);
-        setMergeStage('Merge process initiated...');
-        setMergeProgress(0);
-      } else {
-        throw new Error(
-          'Failed to start merge process: No operation ID received.'
-        );
-      }
-
-      return { outputPath: userOutputPath, error: undefined };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      setMergeStage(`Error: ${errorMessage}`);
-      setTimeout(() => {
-        setIsMergingInProgress(false);
-      }, 3000);
-      return { outputPath: '', error: errorMessage };
     }
   }
 

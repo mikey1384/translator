@@ -31,18 +31,21 @@ export interface GenerateSubtitlesResult {
 }
 
 export interface MergeSubtitlesOptions {
-  videoPath?: string; // Can be optional if videoFile is provided
-  subtitlesPath?: string; // Optional if srtContent is provided
+  videoPath?: string;
+  subtitlesPath?: string;
   outputPath?: string;
-  videoFile?: File; // Added previously
-  srtContent?: string; // <-- Add this optional property
-  videoFileName?: string; // Needed for temp file creation
-  videoFileData?: ArrayBuffer; // Needed for temp file creation
+  videoFile?: File;
+  srtContent?: string;
+  videoFileName?: string;
+  videoFileData?: ArrayBuffer;
+  operationId?: string;
 }
 
 export interface MergeSubtitlesResult {
-  outputPath: string;
+  success: boolean;
+  tempOutputPath?: string;
   error?: string;
+  operationId?: string;
 }
 
 export interface SaveFileOptions {

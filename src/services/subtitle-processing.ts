@@ -752,9 +752,6 @@ export async function mergeSubtitlesWithVideo(
   const baseName = path.basename(inputPathForNaming, videoExt);
   const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles${videoExt}`;
   const tempOutputPath = path.join(ffmpegService.getTempDir(), tempFilename);
-  console.log(
-    `[${operationId}] Generated temporary output path: ${tempOutputPath}`
-  );
 
   if (progressCallback) {
     progressCallback({ percent: 25, stage: 'Processing video' });

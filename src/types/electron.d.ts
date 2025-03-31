@@ -1,14 +1,20 @@
+import { IpcRenderer } from 'electron';
 import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
   MergeSubtitlesOptions,
+  MergeSubtitlesResult,
   SaveFileOptions,
   SaveFileResult,
   OpenFileOptions,
   OpenFileResult,
+  DeleteFileOptions,
+  DeleteFileResult,
+  MoveFileResult,
+  CancelMergeResult,
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
-} from './interface';
+} from './interface'; // Make sure this path is correct
 
 // Define a reusable type for the progress event callback
 type ProgressEventCallback = (
@@ -25,48 +31,45 @@ type ProgressEventCallback = (
 ) => void;
 
 interface ElectronAPI {
-  onGenerateSubtitlesProgress: (
-    callback: ProgressEventCallback | null
-  ) => () => void;
-  onTranslateSubtitlesProgress: (
-    callback: ProgressEventCallback | null
-  ) => () => void;
-  generateSubtitles: (
-    options: GenerateSubtitlesOptions
-  ) => Promise<GenerateSubtitlesResult>;
-  translateSubtitles: (
-    params: TranslateSubtitlesOptions
-  ) => Promise<TranslateSubtitlesResult>;
+  ping: () => Promise<string>;
   saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
-  showMessage: (message: string) => void;
+  openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
   mergeSubtitles: (
-    options: Omit<MergeSubtitlesOptions, 'outputPath'> & {
-      operationId?: string;
-    }
-  ) => Promise<{
-    success: boolean;
-    tempOutputPath?: string;
-    error?: string;
-    operationId: string;
-  }>;
+    options: MergeSubtitlesOptions
+  ) => Promise<MergeSubtitlesResult>;
   onMergeSubtitlesProgress: (
     callback: ProgressEventCallback | null
   ) => () => void;
-  openFile: (options: OpenFileOptions) => Promise<OpenFileResult>;
-  cancelMerge: (
-    operationId: string
-  ) => Promise<{ success: boolean; error?: string }>;
   moveFile: (
     sourcePath: string,
-    targetPath: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  deleteFile: (options: {
-    filePathToDelete: string;
-  }) => Promise<{ success: boolean; error?: string }>;
+    destinationPath: string
+  ) => Promise<MoveFileResult>;
+  deleteFile: (options: DeleteFileOptions) => Promise<DeleteFileResult>;
+  cancelMerge: (operationId: string) => Promise<CancelMergeResult>;
+
+  // === Add generateSubtitles and its progress listener ===
+  generateSubtitles: (
+    options: GenerateSubtitlesOptions
+  ) => Promise<GenerateSubtitlesResult>;
+  onGenerateSubtitlesProgress: (
+    callback: ProgressEventCallback | null
+  ) => () => void;
+
+  // === Add Subtitle Translation ===
+  translateSubtitles: (
+    options: TranslateSubtitlesOptions
+  ) => Promise<TranslateSubtitlesResult>;
+  onTranslateSubtitlesProgress: (
+    callback: ProgressEventCallback | null
+  ) => () => void;
 }
 
 declare global {
   interface Window {
     electron: ElectronAPI;
+    ipcRenderer: IpcRenderer;
   }
 }
+
+// This export is necessary to treat this file as a module
+export {};
