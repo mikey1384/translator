@@ -18,14 +18,12 @@ import {
 
 dotenv.config();
 
-// Rely solely on environment variables
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 let anthropic: Anthropic | null = null;
 let openai: OpenAI | null = null;
 
-// Initialize clients only if keys are present
 try {
   if (ANTHROPIC_API_KEY) {
     anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
@@ -130,7 +128,6 @@ async function translateBatch(
   targetLang: string,
   _callId: string
 ): Promise<any[]> {
-  // Check if Anthropic client is available
   if (!anthropic) {
     throw new SubtitleProcessingError(
       'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
@@ -535,7 +532,10 @@ async function generateSubtitlesFromAudio({
         try {
           await fsp.unlink(meta.path);
         } catch (err) {
-          // Ignored: Failure to delete temp file is not critical
+          console.error(
+            `Failed to delete temporary audio file ${meta.path}:`,
+            err
+          );
         }
       })
     );
@@ -706,18 +706,14 @@ export async function generateSubtitlesFromVideo(
 
     return { subtitles: finalSubtitlesContent };
   } finally {
-    // Cleanup the extracted audio file
     if (audioPath) {
-      console.log(`Attempting to clean up temporary audio file: ${audioPath}`);
       try {
         await fsp.unlink(audioPath);
-        console.log(`Successfully deleted temporary audio file: ${audioPath}`);
       } catch (cleanupError) {
         console.error(
           `Failed to delete temporary audio file ${audioPath}:`,
           cleanupError
         );
-        // Log error but don't re-throw, allow main function to complete
       }
     }
   }

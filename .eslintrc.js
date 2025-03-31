@@ -52,7 +52,6 @@ module.exports = {
         destructuredArrayIgnorePattern: '^_',
       },
     ],
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
     'prettier/prettier': [
       'error',
       {
