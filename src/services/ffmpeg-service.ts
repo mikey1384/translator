@@ -102,6 +102,68 @@ export class FFmpegService {
     });
   }
 
+  async getVideoResolution(
+    filePath: string
+  ): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+      const process = spawn(this.ffprobePath, [
+        '-v',
+        'error',
+        '-select_streams',
+        'v:0',
+        '-show_entries',
+        'stream=width,height',
+        '-of',
+        'csv=s=x:p=0',
+        filePath,
+      ]);
+
+      let output = '';
+      process.stdout.on('data', data => {
+        output += data.toString();
+      });
+
+      process.on('close', code => {
+        if (code === 0) {
+          const [width, height] = output.trim().split('x').map(Number);
+          if (!isNaN(width) && !isNaN(height)) {
+            resolve({ width, height });
+          } else {
+            reject(new FFmpegError('Could not parse video resolution'));
+          }
+        } else {
+          reject(new FFmpegError(`FFprobe process exited with code ${code}`));
+        }
+      });
+
+      process.on('error', err => {
+        reject(new FFmpegError(`FFprobe error: ${err.message}`));
+      });
+    });
+  }
+
+  async validateOutputFile(filePath: string): Promise<void> {
+    if (!fs.existsSync(filePath)) {
+      throw new FFmpegError(`Output file was not created: ${filePath}`);
+    }
+
+    try {
+      const duration = await this.getMediaDuration(filePath);
+      if (isNaN(duration) || duration <= 0) {
+        throw new FFmpegError('Invalid output file: duration is invalid');
+      }
+
+      const stats = fs.statSync(filePath);
+      if (stats.size < 10000) {
+        throw new FFmpegError(`Output file is too small: ${stats.size} bytes`);
+      }
+    } catch (error: unknown) {
+      throw new FFmpegError(
+        `Invalid output file: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
   async mergeSubtitles(
     videoPath: string,
     subtitlesPath: string,
@@ -109,23 +171,48 @@ export class FFmpegService {
     operationId: string,
     progressCallback?: (progress: { percent: number; stage: string }) => void
   ): Promise<string> {
+    if (!fs.existsSync(videoPath)) {
+      throw new FFmpegError(`Input video file does not exist: ${videoPath}`);
+    }
+    if (!fs.existsSync(subtitlesPath)) {
+      throw new FFmpegError(`Subtitle file does not exist: ${subtitlesPath}`);
+    }
+
     try {
+      const { width, height } = await this.getVideoResolution(videoPath);
       const duration = await this.getMediaDuration(videoPath);
 
+      const subtitleExt = path.extname(subtitlesPath).toLowerCase();
+      const isAss = subtitleExt === '.ass';
+
+      const subtitleArgs = isAss
+        ? [
+            '-vf',
+            `scale=${width}:${height},subtitles='${subtitlesPath.replace(/'/g, "'\\''")}'`,
+            '-c:v',
+            'libx264',
+            '-preset',
+            'slow',
+            '-crf',
+            '18',
+            '-pix_fmt',
+            'yuv420p',
+            '-c:a',
+            'aac',
+            '-b:a',
+            '192k',
+          ]
+        : [
+            '-i',
+            subtitlesPath,
+            '-c:s',
+            'mov_text',
+            '-metadata:s:s:0',
+            'language=eng',
+          ];
+
       await this.runFFmpeg(
-        [
-          '-loglevel',
-          'verbose',
-          '-i',
-          videoPath,
-          '-i',
-          subtitlesPath,
-          '-c:s',
-          'mov_text',
-          '-metadata:s:s:0',
-          'language=eng',
-          outputPath,
-        ],
+        ['-loglevel', 'verbose', '-i', videoPath, ...subtitleArgs, outputPath],
         operationId,
         duration,
         progress => {
@@ -138,6 +225,8 @@ export class FFmpegService {
         }
       );
 
+      await this.validateOutputFile(outputPath);
+
       return outputPath;
     } catch (error) {
       log.error('Error merging subtitles:', error);
@@ -145,14 +234,30 @@ export class FFmpegService {
     }
   }
 
-  async convertSrtToAss(srtPath: string): Promise<string> {
+  async convertSrtToAss(
+    srtPath: string,
+    fontSize: number = 24
+  ): Promise<string> {
     const outputPath = path.join(
       this.tempDir,
       `${path.basename(srtPath, path.extname(srtPath))}.ass`
     );
 
     try {
-      await this.runFFmpeg(['-i', srtPath, outputPath]);
+      if (fontSize !== 24) {
+        await this.runFFmpeg([
+          '-i',
+          srtPath,
+          '-c:s',
+          'ssa',
+          '-metadata:s:s:0',
+          `Style=FontSize=${fontSize}`,
+          outputPath,
+        ]);
+      } else {
+        // Use default conversion if no custom font size
+        await this.runFFmpeg(['-i', srtPath, outputPath]);
+      }
 
       return outputPath;
     } catch (error) {
@@ -182,6 +287,14 @@ export class FFmpegService {
         log.info(`[${operationId}] Process started and tracked.`);
       }
 
+      // Add timeout handling
+      const TIMEOUT = 60 * 60 * 1000; // 1 hour
+      const timeoutId = setTimeout(() => {
+        log.warn(`[${operationId || 'ffmpeg'}] Process timed out after 1 hour`);
+        process.kill('SIGKILL');
+        reject(new FFmpegError('FFmpeg process timed out after 1 hour'));
+      }, TIMEOUT);
+
       let output = '';
 
       process.stderr.on('data', data => {
@@ -209,6 +322,8 @@ export class FFmpegService {
       });
 
       process.on('close', code => {
+        clearTimeout(timeoutId);
+
         log.info(
           `[${operationId || 'ffmpeg'}] 'close' event received. Exit code: ${code}`
         );
@@ -232,6 +347,8 @@ export class FFmpegService {
       });
 
       process.on('error', err => {
+        clearTimeout(timeoutId);
+
         log.error(`[${operationId || 'ffmpeg'}] FFmpeg error: ${err.message}`);
         if (operationId) {
           this.activeProcesses.delete(operationId);
@@ -263,7 +380,15 @@ export class FFmpegService {
         outputPath,
       ]);
 
+      const TIMEOUT = 10 * 60 * 1000;
+      const timeoutId = setTimeout(() => {
+        process.kill('SIGKILL');
+        reject(new FFmpegError('Audio extraction timed out after 10 minutes'));
+      }, TIMEOUT);
+
       process.on('close', code => {
+        clearTimeout(timeoutId);
+
         if (code === 0) {
           resolve(outputPath);
         } else {
@@ -276,6 +401,8 @@ export class FFmpegService {
       });
 
       process.on('error', err => {
+        clearTimeout(timeoutId);
+
         log.error('Error in audio segment extraction:', err);
         reject(
           new FFmpegError(`Error extracting audio segment: ${err.message}`)
@@ -301,12 +428,26 @@ export class FFmpegService {
         '-',
       ]);
 
+      // Add timeout handling
+      const TIMEOUT = 15 * 60 * 1000; // 15 minutes
+      const timeoutId = setTimeout(() => {
+        ffmpegProcess.kill('SIGKILL');
+        reject(new FFmpegError('Silence detection timed out after 15 minutes'));
+      }, TIMEOUT);
+
       let stderr = '';
       ffmpegProcess.stderr.on('data', (data: Buffer) => {
         stderr += data.toString();
       });
 
-      ffmpegProcess.on('close', () => {
+      ffmpegProcess.on('close', code => {
+        clearTimeout(timeoutId);
+
+        if (code !== 0) {
+          reject(new FFmpegError(`Silence detection failed with code ${code}`));
+          return;
+        }
+
         const startRegex = /silence_start:\s*([\d.]+)/g;
         const endRegex = /silence_end:\s*([\d.]+)/g;
 
@@ -330,8 +471,10 @@ export class FFmpegService {
       });
 
       ffmpegProcess.on('error', (err: Error) => {
+        clearTimeout(timeoutId);
+
         log.error('Error in silence detection:', err);
-        reject(err);
+        reject(new FFmpegError(`Silence detection error: ${err.message}`));
       });
     });
   }
