@@ -18,22 +18,19 @@ export class FFmpegService {
   private ffmpegPath: string;
   private ffprobePath: string;
   private tempDir: string;
-  private activeProcesses = new Map<string, ChildProcess>(); // Map to track active FFmpeg processes
+  private activeProcesses = new Map<string, ChildProcess>();
 
   constructor() {
     this.ffmpegPath = ffmpegPath.path;
     this.ffprobePath = ffprobePath.path;
 
-    // Safely get a temp directory - use app.getPath if available, otherwise use OS temp dir
     try {
       this.tempDir = path.join(app.getPath('userData'), 'temp');
     } catch (error) {
-      // Fallback to OS temp directory if app is not ready yet
       log.warn('Electron app not ready, using OS temp directory as fallback');
       this.tempDir = path.join(os.tmpdir(), 'translator-electron-temp');
     }
 
-    // Ensure temp directory exists
     if (!fs.existsSync(this.tempDir)) {
       fs.mkdirSync(this.tempDir, { recursive: true });
     }
@@ -43,9 +40,6 @@ export class FFmpegService {
     log.info(`Temp directory: ${this.tempDir}`);
   }
 
-  /**
-   * Extract audio from a video file
-   */
   async extractAudio(videoPath: string): Promise<string> {
     const outputPath = path.join(
       this.tempDir,
@@ -56,11 +50,11 @@ export class FFmpegService {
       await this.runFFmpeg([
         '-i',
         videoPath,
-        '-vn', // No video
+        '-vn',
         '-acodec',
         'libmp3lame',
         '-q:a',
-        '4', // Quality setting
+        '4',
         outputPath,
       ]);
 
@@ -71,9 +65,6 @@ export class FFmpegService {
     }
   }
 
-  /**
-   * Get the duration of a media file in seconds
-   */
   async getMediaDuration(filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
       const process = spawn(this.ffprobePath, [
@@ -111,58 +102,6 @@ export class FFmpegService {
     });
   }
 
-  /**
-   * ===================================================
-   * UNUSED & CAUSING BUILD ERRORS - Commented Out
-   * ===================================================
-   * Merge subtitles into a video file (Simplified version - seems unused)
-   */
-  // async mergeSubtitlesWithVideo(
-  //   videoPath: string,
-  //   subtitlesPath: string,
-  //   outputPath: string,
-  //   progressCallback?: (progress: { percent: number; stage: string }) => void
-  // ): Promise<string> {
-  //   try {
-  //     // First get the duration for progress calculation
-  //     const duration = await this.getMediaDuration(videoPath);
-  //     log.info(`Duration for progress: ${duration}`);
-  //     await this.runFFmpeg(
-  //       [
-  //         '-i',
-  //         videoPath,
-  //         '-i',
-  //         subtitlesPath,
-  //         '-c',
-  //         'copy', // Assuming copy for simplicity, might fail
-  //         '-c:s',
-  //         'mov_text',
-  //         '-metadata:s:s:0',
-  //         'language=eng',
-  //         outputPath,
-  //       ],
-  //       // FIX ME: Incorrect argument order here - passing duration as operationId
-  //       duration.toString(), // THIS IS WRONG - Should be operationId (string), passing as string to satisfy type for now
-  //       progress => {
-  //         if (progressCallback) {
-  //           progressCallback({
-  //             percent: progress,
-  //             stage: 'Merging subtitles with video',
-  //           });
-  //         }
-  //       }
-  //     );
-
-  //     return outputPath;
-  //   } catch (error) {
-  //     log.error('Error merging subtitles:', error);
-  //     throw new FFmpegError(`Failed to merge subtitles: ${error}`);
-  //   }
-  // }
-
-  /**
-   * Merge subtitles into a video file (Handles temporary files)
-   */
   async mergeSubtitles(
     videoPath: string,
     subtitlesPath: string,
@@ -171,28 +110,20 @@ export class FFmpegService {
     progressCallback?: (progress: { percent: number; stage: string }) => void
   ): Promise<string> {
     try {
-      // First get the duration for progress calculation
       const duration = await this.getMediaDuration(videoPath);
 
-      // Then merge the subtitles
       await this.runFFmpeg(
         [
-          // Global options first
           '-loglevel',
           'verbose',
-          // Then inputs
           '-i',
           videoPath,
           '-i',
           subtitlesPath,
-          // Then output options (re-encode video/audio, add subtitles)
-          // '-c:v', 'libx264', // Example re-encoding, adjust as needed
-          // '-c:a', 'aac',     // Example re-encoding, adjust as needed
           '-c:s',
           'mov_text',
           '-metadata:s:s:0',
           'language=eng',
-          // Finally, the output path
           outputPath,
         ],
         operationId,
@@ -214,9 +145,6 @@ export class FFmpegService {
     }
   }
 
-  /**
-   * Convert SRT subtitles to ASS format
-   */
   async convertSrtToAss(srtPath: string): Promise<string> {
     const outputPath = path.join(
       this.tempDir,
@@ -233,9 +161,6 @@ export class FFmpegService {
     }
   }
 
-  /**
-   * Run FFmpeg with the given arguments
-   */
   private runFFmpeg(
     args: string[],
     operationId?: string,
@@ -252,7 +177,6 @@ export class FFmpegService {
         `[${operationId || 'ffmpeg'}] Spawning FFmpeg with args: ${args.join(' ')}`
       );
 
-      // Track the process if an ID is provided
       if (operationId) {
         this.activeProcesses.set(operationId, process);
         log.info(`[${operationId}] Process started and tracked.`);
@@ -263,12 +187,10 @@ export class FFmpegService {
       process.stderr.on('data', data => {
         const dataStr = data.toString();
         output += dataStr;
-        // Log stderr chunks for debugging hangs
         log.debug(
           `[${operationId || 'ffmpeg'}] stderr chunk: ${dataStr.trim()}`
         );
 
-        // Parse progress information if callback provided
         if (progressCallback && totalDuration && totalDuration > 0) {
           const timeMatch = dataStr.match(/time=(\d+):(\d+):(\d+\.\d+)/);
           if (timeMatch) {
@@ -287,7 +209,6 @@ export class FFmpegService {
       });
 
       process.on('close', code => {
-        // CRITICAL LOG: Log when the process closes and its code
         log.info(
           `[${operationId || 'ffmpeg'}] 'close' event received. Exit code: ${code}`
         );
@@ -295,7 +216,6 @@ export class FFmpegService {
         log.info(
           `[${operationId || 'ffmpeg'}] Process exited with code ${code}.`
         );
-        // Stop tracking on close
         if (operationId) {
           this.activeProcesses.delete(operationId);
           log.info(`[${operationId}] Process stopped tracking.`);
@@ -313,7 +233,6 @@ export class FFmpegService {
 
       process.on('error', err => {
         log.error(`[${operationId || 'ffmpeg'}] FFmpeg error: ${err.message}`);
-        // Stop tracking on error
         if (operationId) {
           this.activeProcesses.delete(operationId);
           log.error(`[${operationId}] Process stopped tracking due to error.`);
@@ -323,14 +242,6 @@ export class FFmpegService {
     });
   }
 
-  /**
-   * Extract a segment of audio from a file
-   * @param inputPath Path to the input audio file
-   * @param outputPath Path where the extracted segment will be saved
-   * @param startTime Start time in seconds
-   * @param duration Duration in seconds
-   * @returns Promise that resolves with the output path
-   */
   async extractAudioSegment(
     inputPath: string,
     outputPath: string,
@@ -346,9 +257,9 @@ export class FFmpegService {
         '-t',
         duration.toString(),
         '-acodec',
-        'libmp3lame', // Or 'aac' or 'copy' if applicable
+        'libmp3lame',
         '-q:a',
-        '2', // Adjust quality as needed
+        '2',
         outputPath,
       ]);
 
@@ -384,10 +295,10 @@ export class FFmpegService {
         '-i',
         inputAudioPath,
         '-af',
-        'silencedetect=noise=-50dB:d=0.5', // Adjust parameters as needed
+        'silencedetect=noise=-50dB:d=0.5',
         '-f',
         'null',
-        '-', // Output to stderr
+        '-',
       ]);
 
       let stderr = '';
@@ -407,13 +318,12 @@ export class FFmpegService {
           silenceEnds.push(parseFloat(match[1]));
         }
 
-        // Adjust based on common patterns if needed
         if (
           silenceEnds.length > 0 &&
           silenceEnds[0] > 0 &&
           silenceStarts.length === silenceEnds.length - 1
         ) {
-          silenceStarts.unshift(0); // Assume silence starts at 0 if first end > 0
+          silenceStarts.unshift(0);
         }
 
         resolve({ silenceStarts, silenceEnds });
@@ -426,26 +336,18 @@ export class FFmpegService {
     });
   }
 
-  /**
-   * Attempt to cancel/kill an active FFmpeg operation by its ID.
-   * @param operationId The unique ID of the operation to cancel.
-   * @returns True if the process was found and kill signal was sent, false otherwise.
-   */
   public cancelOperation(operationId: string): boolean {
     const process = this.activeProcesses.get(operationId);
     if (process) {
       log.warn(`[${operationId}] Attempting to cancel operation.`);
       try {
-        // Use SIGTERM first for graceful shutdown, could use SIGKILL for forceful
         const killed = process.kill('SIGTERM');
         if (killed) {
           log.warn(`[${operationId}] Kill signal sent successfully.`);
-          // Remove immediately as the 'close' event might not fire reliably after kill
           this.activeProcesses.delete(operationId);
           return true;
         } else {
           log.error(`[${operationId}] Kill signal failed to send.`);
-          // Process might have already exited but wasn't cleaned up?
           this.activeProcesses.delete(operationId);
           return false;
         }
@@ -453,15 +355,14 @@ export class FFmpegService {
         log.error(
           `[${operationId}] Error sending kill signal: ${error.message}`
         );
-        // Process might have already exited
-        this.activeProcesses.delete(operationId); // Clean up map entry
+        this.activeProcesses.delete(operationId);
         return false;
       }
     } else {
       log.warn(
         `[${operationId}] Cancel request received, but process not found (may have already finished).`
       );
-      return false; // Process not found (might have finished already)
+      return false;
     }
   }
 }
