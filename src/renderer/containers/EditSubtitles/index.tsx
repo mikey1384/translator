@@ -72,7 +72,6 @@ const mergeOptionsStyles = css`
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-top: 1rem;
   flex-wrap: wrap;
 `;
 
@@ -170,11 +169,20 @@ export function EditSubtitles({
   // New ref for current merge operation ID
   const currentMergeOperationIdRef = useRef<string | null>(null);
 
+  // State to track if original path exists for enabling/disabling Save button
+  const [canSaveDirectly, setCanSaveDirectly] = useState(false);
+
   /**
    * ------------------------------------------------------
    * Initialization & Updates
    * ------------------------------------------------------
    */
+  // Check localStorage for original path on mount and when subtitles change
+  useEffect(() => {
+    const path = localStorage.getItem('originalSrtPath');
+    setCanSaveDirectly(!!path);
+  }, [subtitlesState]); // Re-check if subtitles change, might indicate a 'Save As' happened
+
   // Keep local subtitlesState in sync when the prop changes
   useEffect(() => {
     if (subtitlesProp) {
@@ -565,6 +573,7 @@ export function EditSubtitles({
             backdrop-filter: blur(8px);
             border-top: 1px solid rgba(238, 238, 238, 0.8);
             display: flex;
+            align-items: center;
             gap: 10px;
             justify-content: center;
             z-index: 100;
@@ -576,6 +585,12 @@ export function EditSubtitles({
             variant="primary"
             size="lg"
             className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
+            disabled={!canSaveDirectly}
+            title={
+              !canSaveDirectly
+                ? 'Save As first to enable direct save'
+                : 'Save changes to original file'
+            }
           >
             <svg
               width="18"
@@ -704,6 +719,7 @@ export function EditSubtitles({
         localStorage.setItem('originalSrtPath', result.filePath);
         localStorage.setItem('originalLoadPath', result.filePath);
         localStorage.setItem('targetPath', result.filePath);
+        setCanSaveDirectly(true);
 
         alert(`File saved successfully to:\n${result.filePath}`);
 
