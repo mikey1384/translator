@@ -141,6 +141,7 @@ export function EditSubtitles({
   const [mergeFontSize, setMergeFontSize] = useState<number>(24);
   const [mergeStylePreset, setMergeStylePreset] =
     useState<AssStylePresetKey>('Default');
+  const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
 
   // For controlling a timed auto‐pause
   const playTimeoutRef = useRef<number | null>(null);
@@ -173,6 +174,97 @@ export function EditSubtitles({
    * Initialization & Updates
    * ------------------------------------------------------
    */
+  // Load saved merge settings from localStorage on mount
+  useEffect(() => {
+    console.log(
+      '[EditSubtitles] Attempting to load settings from localStorage...'
+    );
+    try {
+      const savedFontSize = localStorage.getItem('savedMergeFontSize');
+      console.log('[EditSubtitles] Loaded savedFontSize:', savedFontSize);
+      if (savedFontSize) {
+        const size = parseInt(savedFontSize, 10);
+        if (!isNaN(size) && size >= 10 && size <= 72) {
+          console.log(`[EditSubtitles] Applying saved font size: ${size}`);
+          setMergeFontSize(size);
+        } else {
+          console.warn(
+            '[EditSubtitles] Invalid saved font size ignored:',
+            savedFontSize
+          );
+        }
+      }
+
+      const savedStylePreset = localStorage.getItem('savedMergeStylePreset');
+      console.log('[EditSubtitles] Loaded savedStylePreset:', savedStylePreset);
+      if (
+        savedStylePreset &&
+        Object.keys(ASS_STYLE_PRESETS).includes(savedStylePreset)
+      ) {
+        console.log(
+          `[EditSubtitles] Applying saved style preset: ${savedStylePreset}`
+        );
+        setMergeStylePreset(savedStylePreset as AssStylePresetKey);
+      } else if (savedStylePreset) {
+        console.warn(
+          '[EditSubtitles] Invalid saved style preset ignored:',
+          savedStylePreset
+        );
+      }
+    } catch (error) {
+      console.error(
+        '[EditSubtitles] Error loading settings from localStorage:',
+        error
+      );
+    } finally {
+      // Ensure loading state is set to false after attempting to load
+      console.log('[EditSubtitles] Finished loading settings attempt.');
+      setIsLoadingSettings(false);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  // Save mergeFontSize to localStorage whenever it changes
+  useEffect(() => {
+    // Only save if initial loading is complete
+    if (!isLoadingSettings) {
+      console.log(
+        `[EditSubtitles] Attempting to save mergeFontSize: ${mergeFontSize}`
+      );
+      try {
+        localStorage.setItem('savedMergeFontSize', String(mergeFontSize));
+        console.log(
+          `[EditSubtitles] Successfully saved mergeFontSize: ${mergeFontSize}`
+        );
+      } catch (error) {
+        console.error(
+          '[EditSubtitles] Error saving mergeFontSize to localStorage:',
+          error
+        );
+      }
+    }
+  }, [mergeFontSize, isLoadingSettings]); // Add isLoadingSettings dependency
+
+  // Save mergeStylePreset to localStorage whenever it changes
+  useEffect(() => {
+    // Only save if initial loading is complete
+    if (!isLoadingSettings) {
+      console.log(
+        `[EditSubtitles] Attempting to save mergeStylePreset: ${mergeStylePreset}`
+      );
+      try {
+        localStorage.setItem('savedMergeStylePreset', mergeStylePreset);
+        console.log(
+          `[EditSubtitles] Successfully saved mergeStylePreset: ${mergeStylePreset}`
+        );
+      } catch (error) {
+        console.error(
+          '[EditSubtitles] Error saving mergeStylePreset to localStorage:',
+          error
+        );
+      }
+    }
+  }, [mergeStylePreset, isLoadingSettings]); // Add isLoadingSettings dependency
+
   // Check localStorage for original path on mount and when subtitles change
   useEffect(() => {
     const path = localStorage.getItem('originalSrtPath');
@@ -633,14 +725,31 @@ export function EditSubtitles({
             </label>
             <input
               id="mergeFontSizeInput"
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className={fontSizeInputStyles}
               value={mergeFontSize}
-              onChange={e =>
-                setMergeFontSize(parseInt(e.target.value, 10) || 0)
-              }
-              min="10"
-              max="72"
+              onChange={e => {
+                const stringValue = e.target.value;
+                if (stringValue === '') {
+                  setMergeFontSize(0);
+                  return;
+                }
+                const numericString = stringValue.replace(/\D/g, '');
+                if (numericString === '') {
+                  setMergeFontSize(0);
+                  return;
+                }
+                const numValue = parseInt(numericString, 10);
+                setMergeFontSize(numValue);
+              }}
+              onBlur={() => {
+                const clampedSize = Math.max(10, Math.min(mergeFontSize, 72));
+                if (clampedSize !== mergeFontSize) {
+                  setMergeFontSize(clampedSize);
+                }
+              }}
             />
 
             {/* Style Preset Select */}

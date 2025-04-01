@@ -189,25 +189,47 @@ export default function SubtitleEditor({
   onShiftSubtitle,
   isShiftingDisabled,
 }: SubtitleEditorProps) {
+  // --- Text Splitting Logic ---
+  const [originalText, setOriginalText] = useState('');
+  const [editableText, setEditableText] = useState('');
+  const hasMarker = sub.text.includes('###TRANSLATION_MARKER###');
+
+  useEffect(() => {
+    if (hasMarker) {
+      const parts = sub.text.split('###TRANSLATION_MARKER###');
+      setOriginalText(parts[0] || '');
+      setEditableText(parts[1] || '');
+    } else {
+      // If no marker, the whole text is editable, and original is empty
+      setOriginalText('');
+      setEditableText(sub.text);
+    }
+  }, [sub.text, hasMarker]);
+  // --- End Text Splitting Logic ---
+
   // Local state for the textarea to avoid re-renders of all items
-  const [text, setText] = useState(sub.text);
+  // const [text, setText] = useState(sub.text); // Replaced by editableText
 
   // Update local state when subtitle changes from outside
-  useEffect(() => {
-    setText(sub.text);
-  }, [sub.text]);
+  // useEffect(() => {
+  //   setText(sub.text);
+  // }, [sub.text]); // Replaced by the effect above
 
   // Debounce the actual update to the parent component
   const debouncedTextUpdate = useRef(
-    debounce((index: number, text: string) => {
-      onEditSubtitle(index, 'text', text);
+    debounce((index: number, newEditableText: string) => {
+      // Reconstruct the full text before sending to parent
+      const fullText = hasMarker
+        ? `${originalText}###TRANSLATION_MARKER###${newEditableText}`
+        : newEditableText;
+      onEditSubtitle(index, 'text', fullText);
     }, 300)
   ).current;
 
   // Handle local text changes
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
-    setText(newText);
+    setEditableText(newText); // Update only the editable part locally
     debouncedTextUpdate(index, newText);
   };
 
@@ -259,11 +281,37 @@ export default function SubtitleEditor({
       </div>
 
       <div>
+        {/* Display Original Text if present */}
+        {hasMarker && (
+          <div
+            className={css`
+              margin-bottom: 8px;
+              padding: 8px;
+              background-color: rgba(233, 236, 239, 0.6); // Lighter gray
+              border-radius: 4px;
+              border: 1px dashed rgba(206, 212, 218, 0.7);
+              font-family: monospace;
+              font-size: 0.95em;
+              color: #495057; // Darker gray for text
+              white-space: pre-wrap; // Preserve line breaks
+              cursor: default; // Indicate read-only
+            `}
+          >
+            <strong style={{ color: '#6c757d', fontSize: '0.9em' }}>
+              Original:{' '}
+            </strong>
+            {originalText}
+          </div>
+        )}
+
+        {/* Editable Text Area */}
         <textarea
-          value={text}
-          onChange={handleTextChange}
+          value={editableText} // Bind to editableText
+          onChange={handleTextChange} // Use updated handler
           style={textInputStyles}
-          placeholder="Enter subtitle text (press Enter for line breaks)"
+          placeholder={
+            hasMarker ? 'Enter reviewed/translated text' : 'Enter subtitle text'
+          }
           id={`subtitle-${index}-text`}
         />
       </div>

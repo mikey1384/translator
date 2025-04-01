@@ -59,6 +59,50 @@ function AppContent() {
     scrollToCurrentSubtitle: () => {},
   });
 
+  // --- Wrapped State Setters/Callbacks ---
+  const handleSetVideoFile = useCallback((file: File | null) => {
+    setVideoFile(file);
+  }, []);
+
+  const handleSetVideoUrlCallback = useCallback((url: string | null) => {
+    if (url !== null) {
+      setVideoUrl(url);
+    }
+  }, []);
+
+  const handleSetIsPlaying = useCallback((playing: boolean) => {
+    setIsPlaying(playing);
+  }, []);
+
+  const handleSetSubtitleSegments = useCallback(
+    (segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])) => {
+      setSubtitleSegments(segments);
+    },
+    []
+  );
+
+  const handleSetMergeProgress = useCallback(
+    (progress: number | ((prevState: number) => number)) => {
+      setMergeProgress(progress);
+    },
+    []
+  );
+
+  const handleSetMergeStage = useCallback(
+    (stage: string | ((prevState: string) => string)) => {
+      setMergeStage(stage);
+    },
+    []
+  );
+
+  const handleSetIsMergingInProgress = useCallback(
+    (inProgress: boolean | ((prevState: boolean) => boolean)) => {
+      setIsMergingInProgress(inProgress);
+    },
+    []
+  );
+  // --- End Wrapped Callbacks ---
+
   const handleScrollToCurrentSubtitle = () => {
     if (editSubtitlesMethodsRef.current) {
       editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
@@ -250,19 +294,19 @@ function AppContent() {
               videoFile={videoFile}
               videoUrl={videoUrl}
               isPlaying={isPlaying}
-              onSetVideoFile={setVideoFile}
-              onSetVideoUrl={handleSetVideoUrl}
-              onSetIsPlaying={setIsPlaying}
+              onSetVideoFile={handleSetVideoFile}
+              onSetVideoUrl={handleSetVideoUrlCallback}
+              onSetIsPlaying={handleSetIsPlaying}
               secondsToSrtTime={secondsToSrtTime}
               parseSrt={parseSrt}
               subtitles={subtitleSegments}
               videoPlayerRef={videoPlayerRef}
               isMergingInProgress={isMergingInProgress}
-              setMergeProgress={setMergeProgress}
-              setMergeStage={setMergeStage}
-              setIsMergingInProgress={setIsMergingInProgress}
+              setMergeProgress={handleSetMergeProgress}
+              setMergeStage={handleSetMergeStage}
+              setIsMergingInProgress={handleSetIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
-              onSetSubtitlesDirectly={setSubtitleSegments}
+              onSetSubtitlesDirectly={handleSetSubtitleSegments}
             />
           </div>
         </div>
@@ -325,12 +369,6 @@ function AppContent() {
     setVideoPlayerRef(player);
     if (player) {
       setIsPlaying(!player.paused);
-    }
-  }
-
-  function handleSetVideoUrl(url: string | null) {
-    if (url !== null) {
-      setVideoUrl(url);
     }
   }
 

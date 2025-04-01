@@ -495,7 +495,9 @@ export async function generateSubtitlesFromVideo(
     stage: { start: number; end: number }
   ) => {
     const stageSpan = stage.end - stage.start;
-    return stage.start + (percent / 100) * stageSpan;
+    const calculatedPercent = stage.start + (percent / 100) * stageSpan;
+    // Round the result to the nearest integer
+    return Math.round(calculatedPercent);
   };
 
   try {
@@ -520,10 +522,8 @@ export async function generateSubtitlesFromVideo(
           progressCallback({
             percent: scaleProgress(progress.percent, STAGE_TRANSCRIPTION),
             stage: progress.stage,
-            // Don't send partial result during transcription if translation will happen
-            partialResult: isTranslationNeeded
-              ? undefined
-              : progress.partialResult,
+            // ALWAYS send partial result from transcription, even if translating later
+            partialResult: progress.partialResult,
             current: progress.current,
             total: progress.total,
             error: progress.error,
@@ -547,10 +547,11 @@ export async function generateSubtitlesFromVideo(
     }
 
     // --- Translation Step ---
-    const originalSegments = parseSrt(subtitlesContent);
-    const totalSegments = originalSegments.length;
-    const translatedSegments: any[] = [];
-    const TRANSLATION_BATCH_SIZE = 10; // Keep existing batch size
+    // Start with the original segments, which will be updated in place
+    const segmentsInProcess = parseSrt(subtitlesContent);
+    const totalSegments = segmentsInProcess.length;
+    // translatedSegments is no longer needed as a separate array for building cumulative SRT
+    const TRANSLATION_BATCH_SIZE = 10;
 
     for (
       let batchStart = 0;
@@ -561,31 +562,38 @@ export async function generateSubtitlesFromVideo(
         batchStart + TRANSLATION_BATCH_SIZE,
         totalSegments
       );
-      const currentBatchSegments = originalSegments.slice(batchStart, batchEnd);
+      // Get the original segments for this batch from the main list
+      const currentBatchOriginals = segmentsInProcess.slice(
+        batchStart,
+        batchEnd
+      );
 
       const batchToTranslate = {
-        segments: currentBatchSegments,
+        // Pass only the original text to translateBatch if needed, or let translateBatch handle it
+        segments: currentBatchOriginals.map(seg => ({ ...seg })), // Pass copies to avoid direct mutation if translateBatch modifies
         startIndex: batchStart,
         endIndex: batchEnd,
       };
 
-      // Assuming translateBatch modifies segments in place or returns new ones
-      // Note: translateBatch currently returns segments with '###TRANSLATION_MARKER###'
       const translatedBatch = await translateBatch(
         batchToTranslate,
         targetLang
       );
-      translatedSegments.push(...translatedBatch);
+
+      // Update the segmentsInProcess list with the translated results
+      for (let i = 0; i < translatedBatch.length; i++) {
+        segmentsInProcess[batchStart + i] = translatedBatch[i];
+      }
 
       if (progressCallback) {
         const overallProgressPercent = (batchEnd / totalSegments) * 100;
-        // Send cumulative result *after* translation, before review
-        const cumulativeSrt = buildSrt(translatedSegments);
+        // Build cumulative SRT from the *entire* segmentsInProcess list
+        const cumulativeSrt = buildSrt(segmentsInProcess);
 
         progressCallback({
           percent: scaleProgress(overallProgressPercent, STAGE_TRANSLATION),
           stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(totalSegments / TRANSLATION_BATCH_SIZE)}`,
-          partialResult: cumulativeSrt, // Send translated (but not reviewed) SRT
+          partialResult: cumulativeSrt, // Send SRT with original + translated segments
           current: batchEnd,
           total: totalSegments,
         });
@@ -593,52 +601,53 @@ export async function generateSubtitlesFromVideo(
     }
 
     // --- Review Step ---
-    const reviewedSegments: any[] = [];
+    // reviewedSegments is no longer needed for building cumulative SRT
     const REVIEW_BATCH_SIZE = 20; // Can use a different batch size for review
 
     for (
       let batchStart = 0;
-      batchStart < translatedSegments.length; // Iterate through translated segments
+      // Iterate through segmentsInProcess which now contains translated segments
+      batchStart < segmentsInProcess.length;
       batchStart += REVIEW_BATCH_SIZE
     ) {
       const batchEnd = Math.min(
         batchStart + REVIEW_BATCH_SIZE,
-        translatedSegments.length
+        segmentsInProcess.length
       );
-      const currentBatchSegments = translatedSegments.slice(
+      // Get the translated segments for this batch from the main list
+      const currentBatchTranslated = segmentsInProcess.slice(
         batchStart,
         batchEnd
       );
 
       const batchToReview = {
-        segments: currentBatchSegments,
-        startIndex: batchStart, // Use index within translatedSegments
+        segments: currentBatchTranslated.map(seg => ({ ...seg })), // Pass copies
+        startIndex: batchStart,
         endIndex: batchEnd,
-        targetLang: targetLang, // Pass target language for context
+        targetLang: targetLang,
       };
 
       const reviewedBatch = await reviewTranslationBatch(batchToReview);
-      reviewedSegments.push(...reviewedBatch); // Collect reviewed segments
+
+      // Update the segmentsInProcess list with the reviewed results
+      for (let i = 0; i < reviewedBatch.length; i++) {
+        segmentsInProcess[batchStart + i] = reviewedBatch[i];
+      }
 
       if (progressCallback) {
         const overallProgressPercent =
-          (batchEnd / translatedSegments.length) * 100;
+          (batchEnd / segmentsInProcess.length) * 100;
 
-        // Build cumulative SRT from reviewed + remaining *translated* segments
-        const remainingTranslated = translatedSegments.slice(
-          reviewedSegments.length
-        );
-        const cumulativeReviewedSrt = buildSrt([
-          ...reviewedSegments,
-          ...remainingTranslated,
-        ]);
+        // Build cumulative SRT from the *entire* segmentsInProcess list
+        // This list now contains [reviewed] + [translated_remaining] segments
+        const cumulativeReviewedSrt = buildSrt(segmentsInProcess);
 
         progressCallback({
           percent: scaleProgress(overallProgressPercent, STAGE_REVIEW),
-          stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(translatedSegments.length / REVIEW_BATCH_SIZE)}`,
+          stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(segmentsInProcess.length / REVIEW_BATCH_SIZE)}`,
           partialResult: cumulativeReviewedSrt, // Send reviewed SRT incrementally
           current: batchEnd,
-          total: translatedSegments.length,
+          total: segmentsInProcess.length,
         });
       }
     }
@@ -651,14 +660,16 @@ export async function generateSubtitlesFromVideo(
       });
     }
 
-    // Reassign indices sequentially after review
-    const finalSegments = reviewedSegments.map((block, idx) => ({
+    // Reassign indices sequentially is still good practice if needed,
+    // but keep the Original###MARKER###Reviewed format
+    const finalSegments = segmentsInProcess.map((block, idx) => ({
       ...block,
       index: idx + 1,
-      // Keep only the final reviewed text for building SRT
-      text: block.text.split('###TRANSLATION_MARKER###')[1] || '', // Use reviewed text, handle blanks
+      // Keep the combined text as is
+      // text: block.text, // No change needed here, buildSrt will use block.text
     }));
 
+    // Build final SRT using the segments that retain the marker
     const finalSubtitlesContent = buildSrt(finalSegments);
     await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
 
@@ -666,10 +677,11 @@ export async function generateSubtitlesFromVideo(
       progressCallback({
         percent: STAGE_FINALIZING.end, // 100%
         stage: 'Translation and review complete',
-        partialResult: finalSubtitlesContent,
+        partialResult: finalSubtitlesContent, // Send final result with marker
       });
     }
 
+    // Return the final content with the marker
     return { subtitles: finalSubtitlesContent };
   } finally {
     if (audioPath) {

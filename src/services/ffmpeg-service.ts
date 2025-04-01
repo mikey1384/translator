@@ -202,7 +202,7 @@ export class FFmpegService {
     subtitlesPath: string,
     outputPath: string,
     operationId: string,
-    fontSize: number = 24,
+    fontSize: number = 40,
     stylePreset: AssStylePresetKey = 'Default',
     progressCallback?: (progress: { percent: number; stage: string }) => void
   ): Promise<string> {
