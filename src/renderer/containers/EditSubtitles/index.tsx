@@ -29,11 +29,7 @@ import {
   secondsToSrtTime,
   generateSrtContent,
 } from './utils';
-import {
-  handleInsertSubtitle,
-  handleRemoveSubtitle,
-  handleSaveSrt,
-} from './helpers';
+import { handleInsertSubtitle, handleRemoveSubtitle } from './helpers';
 import { useSubtitleNavigation, useRestoreFocus } from './hooks';
 import {
   buttonGradientStyles,
@@ -703,19 +699,34 @@ export function EditSubtitles({
 
   async function handleSaveEditedSrtAs() {
     try {
-      const suggestedName = originalSrtFile?.name || DEFAULT_FILENAME;
+      // Ensure the suggested name ends with .srt
+      let suggestedName = originalSrtFile?.name || DEFAULT_FILENAME;
+      if (!suggestedName.toLowerCase().endsWith('.srt')) {
+        // Simple string manipulation to remove potential existing extension and add .srt
+        const nameWithoutExt = suggestedName.includes('.')
+          ? suggestedName.substring(0, suggestedName.lastIndexOf('.'))
+          : suggestedName;
+        suggestedName = `${nameWithoutExt}.srt`;
+      }
+
       const srtContent = generateSrtContent(subtitlesState);
 
       const saveOptions = {
         title: 'Save SRT File As',
-        defaultPath: suggestedName,
+        defaultPath: suggestedName, // Now guaranteed to suggest .srt
         filters: [{ name: 'SRT Files', extensions: ['srt'] }],
         content: srtContent,
-        forceDialog: true,
+        forceDialog: true, // Ensure dialog is shown for "Save As"
       };
 
+      console.log('[Save As] Attempting to save with options:', saveOptions);
       const result = await saveFileWithRetry(saveOptions);
+      console.log('[Save As] Result from saveFileWithRetry:', result);
+
       if (result?.filePath) {
+        console.log(
+          `[Save As] Storing path in localStorage: ${result.filePath}`
+        );
         localStorage.setItem('originalSrtPath', result.filePath);
         localStorage.setItem('originalLoadPath', result.filePath);
         localStorage.setItem('targetPath', result.filePath);
@@ -1045,5 +1056,51 @@ export function EditSubtitles({
 
   function handleInsertSubtitleLocal(index: number) {
     handleInsertSubtitle(index, subtitlesState, setSubtitlesState);
+  }
+
+  // Function to save SRT content directly to the original path
+  async function handleSaveSrt() {
+    const originalPath = localStorage.getItem('originalSrtPath');
+    console.log('Attempting to save directly...');
+
+    if (!originalPath) {
+      console.warn(
+        'No original path found in localStorage. Cannot perform direct save.'
+      );
+      setError(
+        'Cannot save directly. Use "Save As..." first or load an SRT file.'
+      ); // Inform user
+      return; // Exit early
+    }
+
+    try {
+      setError(''); // Clear previous errors
+      const srtContent = generateSrtContent(subtitlesState);
+
+      const saveOptions = {
+        content: srtContent,
+        filePath: originalPath, // Provide the specific path to overwrite
+        // No title, filters, or forceDialog needed for direct save
+      };
+
+      console.log(`Saving content to: ${originalPath}`);
+      const result = await saveFileWithRetry(saveOptions);
+
+      if (result?.filePath) {
+        console.log(`File saved successfully to: ${result.filePath}`);
+        // Maybe show a temporary success message instead of alert?
+        // e.g., set a state variable for a temporary notification
+        alert('File saved successfully!'); // Simple feedback for now
+      } else if (result.error) {
+        // Error handled by saveFileWithRetry (should throw), but catch just in case
+        setError(`Save failed: ${result.error}`);
+        console.error(`Save failed: ${result.error}`);
+      }
+    } catch (error: any) {
+      setError(`Error saving SRT file: ${error.message || String(error)}`);
+      console.error(
+        `Error during direct save: ${error.message || String(error)}`
+      );
+    }
   }
 }
