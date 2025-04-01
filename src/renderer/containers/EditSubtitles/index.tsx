@@ -43,6 +43,10 @@ import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
 import { colors } from '../../constants';
 
 import { SrtSegment } from '../../../types/interface';
+import {
+  ASS_STYLE_PRESETS,
+  AssStylePresetKey,
+} from '../../constants/subtitle-styles';
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
@@ -89,6 +93,22 @@ const fontSizeLabelStyles = css`
   font-weight: 500;
   color: ${colors.grayDark};
 `;
+
+// Add style for the select dropdown
+const styleSelectStyles = css`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid ${colors.grayLight};
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 2px ${colors.primaryLight};
+  }
+`;
+
 // --- Local Styles Definition --- END
 
 export function EditSubtitles({
@@ -96,7 +116,6 @@ export function EditSubtitles({
   onSetVideoFile,
   onSetVideoUrl,
   isPlaying: isPlayingProp,
-  onSetIsPlaying: _onSetIsPlaying,
   secondsToSrtTime: secondsToSrtTimeProp,
   subtitles: subtitlesProp,
   videoPlayerRef,
@@ -125,6 +144,8 @@ export function EditSubtitles({
   const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [mergeFontSize, setMergeFontSize] = useState<number>(24);
+  const [mergeStylePreset, setMergeStylePreset] =
+    useState<AssStylePresetKey>('Default');
 
   // For controlling a timed auto‐pause
   const playTimeoutRef = useRef<number | null>(null);
@@ -611,6 +632,31 @@ export function EditSubtitles({
               max="72"
             />
 
+            {/* Style Preset Select */}
+            <label
+              className={fontSizeLabelStyles}
+              htmlFor="mergeStylePresetSelect"
+            >
+              Style:
+            </label>
+            <select
+              id="mergeStylePresetSelect"
+              className={styleSelectStyles}
+              value={mergeStylePreset}
+              onChange={e =>
+                setMergeStylePreset(e.target.value as AssStylePresetKey)
+              }
+              disabled={isMergingInProgressProp}
+            >
+              {(Object.keys(ASS_STYLE_PRESETS) as AssStylePresetKey[]).map(
+                key => (
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
+                )
+              )}
+            </select>
+
             {/* Merge Button (Keep existing button logic here) */}
             <Button
               className={mergeButtonClass}
@@ -877,6 +923,7 @@ export function EditSubtitles({
         srtContent: srtContent,
         operationId: operationId,
         fontSize: mergeFontSize,
+        stylePreset: mergeStylePreset,
       });
 
       if (!mergeResult?.success || !mergeResult.tempOutputPath) {

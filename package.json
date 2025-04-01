@@ -32,6 +32,15 @@
       "node_modules/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "assets/fonts",
+        "to": "fonts",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "directories": {
       "buildResources": "assets",
       "output": "release"

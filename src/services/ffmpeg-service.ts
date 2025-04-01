@@ -7,6 +7,12 @@ import log from 'electron-log';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import ffprobePath from '@ffprobe-installer/ffprobe';
 import os from 'os';
+import nodeProcess from 'process'; // Use alias to avoid conflict with ChildProcess type
+// Import the helper and type
+import {
+  getAssStyleLine,
+  AssStylePresetKey,
+} from '../renderer/constants/subtitle-styles';
 
 export class FFmpegError extends Error {
   constructor(message: string) {
@@ -193,10 +199,11 @@ export class FFmpegService {
 
   async mergeSubtitles(
     videoPath: string,
-    subtitlesPath: string, // Path to the original SRT or ASS
+    subtitlesPath: string,
     outputPath: string,
     operationId: string,
-    fontSize: number = 24, // Add fontSize parameter with default
+    fontSize: number = 24,
+    stylePreset: AssStylePresetKey = 'Default',
     progressCallback?: (progress: { percent: number; stage: string }) => void
   ): Promise<string> {
     if (!fs.existsSync(videoPath)) {
@@ -206,11 +213,11 @@ export class FFmpegService {
       throw new FFmpegError(`Subtitle file does not exist: ${subtitlesPath}`);
     }
 
-    let tempAssPath: string | null = null; // Path for styled ASS file
+    let tempAssPath: string | null = null;
 
     try {
       log.info(
-        `[${operationId}] Starting subtitle merge process (Font Size: ${fontSize})`
+        `[${operationId}] Starting subtitle merge (Font: ${fontSize}, Style: ${stylePreset})`
       );
       log.info(`[${operationId}] Video path: ${videoPath}`);
       log.info(`[${operationId}] Original Subtitles path: ${subtitlesPath}`);
@@ -225,28 +232,58 @@ export class FFmpegService {
       tempAssPath = await this.prepareStyledAss(
         subtitlesPath,
         fontSize,
+        stylePreset,
         operationId
       );
       log.info(`[${operationId}] Prepared styled ASS file: ${tempAssPath}`);
       progressCallback?.({ percent: 10, stage: 'Applying subtitle style' });
       // --- Prepare Styled ASS --- END
 
-      // --- Use subtitles filter for burning in --- START
-      // Escape path for FFmpeg filter graph complex syntax (escape : and normalize \ to /)
-      // FFmpeg requires escaping the colon in Windows paths (C:\...) for filters
-      const escapedAssPath = tempAssPath
+      // --- Determine Font Path --- START
+      const isDev = !app.isPackaged;
+      const relativeFontPath = isDev ? 'assets/fonts' : 'fonts';
+      const fontsDir = path.join(
+        isDev ? app.getAppPath() : nodeProcess.resourcesPath, // Use alias here
+        relativeFontPath
+      );
+      log.info(`[${operationId}] Determined fonts directory: ${fontsDir}`);
+
+      // --- Prepare Environment for FFmpeg --- START
+      const env = { ...nodeProcess.env }; // Use alias here
+      const fontsConfPath = path.join(fontsDir, 'fonts.conf');
+
+      if (nodeProcess.platform !== 'win32' && fs.existsSync(fontsConfPath)) {
+        // On Linux/macOS, set FONTCONFIG_FILE if fonts.conf exists
+        env.FONTCONFIG_FILE = fontsConfPath;
+        log.info(`[${operationId}] Setting FONTCONFIG_FILE=${fontsConfPath}`);
+      } else if (nodeProcess.platform !== 'win32') {
+        log.warn(
+          `[${operationId}] fonts.conf not found at ${fontsConfPath}, Fontconfig might not use bundled fonts.`
+        );
+      }
+      // --- Prepare Environment for FFmpeg --- END
+
+      // --- Prepare FFmpeg Subtitle Filter --- START
+      // Escape path for FFmpeg filter graph complex syntax
+      const escapedAssPath = tempAssPath!
         .replace(/\\/g, '/')
         .replace(/:/g, '\\:');
-      const subtitleFilter = `subtitles=${escapedAssPath}`;
+
+      // Define the subtitle filter *without* fontdir, relying on FONTCONFIG_FILE env var
+      const subtitleFilter = `subtitles=filename='${escapedAssPath}'`;
+      log.info(
+        `[${operationId}] Using subtitle filter: ${subtitleFilter} (relying on Fontconfig/Env)`
+      );
+      // --- Prepare FFmpeg Subtitle Filter --- END
 
       const ffmpegArgs = [
-        '-y', // Overwrite output without asking
+        '-y',
         '-loglevel',
-        'level+verbose', // Show verbose logs including progress
+        'level+verbose',
         '-i',
         videoPath,
         '-vf',
-        subtitleFilter, // Use the prepared ASS file with escaped path
+        subtitleFilter, // Use filter with fontdir
         '-c:v',
         'libx264',
         '-preset',
@@ -261,22 +298,27 @@ export class FFmpegService {
         '160k', // Slightly lower audio bitrate
         outputPath,
       ];
-      // --- Use subtitles filter for burning in --- END
 
       log.info(`[${operationId}] FFmpeg arguments: ${ffmpegArgs.join(' ')}`);
 
       progressCallback?.({ percent: 15, stage: 'Starting video encoding' });
 
-      await this.runFFmpeg(ffmpegArgs, operationId, duration, progress => {
-        if (progressCallback) {
-          // Scale ffmpeg progress (0-100) to the range 15-95
-          const scaledProgress = 15 + progress * 0.8;
-          progressCallback({
-            percent: Math.min(95, scaledProgress),
-            stage: 'Encoding video with subtitles',
-          });
-        }
-      });
+      await this.runFFmpeg(
+        ffmpegArgs,
+        operationId,
+        duration,
+        progress => {
+          if (progressCallback) {
+            // Scale ffmpeg progress (0-100) to the range 15-95
+            const scaledProgress = 15 + progress * 0.8;
+            progressCallback({
+              percent: Math.min(95, scaledProgress),
+              stage: 'Encoding video with subtitles',
+            });
+          }
+        },
+        env
+      );
 
       progressCallback?.({ percent: 98, stage: 'Validating output file' });
       await this.validateOutputFile(outputPath);
@@ -311,10 +353,10 @@ export class FFmpegService {
     }
   }
 
-  // Renamed and modified from convertSrtToAss
   private async prepareStyledAss(
     originalSubtitlePath: string,
     fontSize: number,
+    stylePreset: AssStylePresetKey,
     operationId: string
   ): Promise<string> {
     const tempAssPath = path.join(
@@ -325,9 +367,8 @@ export class FFmpegService {
       `[${operationId}] Creating temporary styled ASS at: ${tempAssPath}`
     );
 
-    // Use a known good default font if possible, adjust as needed
-    // Noto Sans is a good choice for wide character support if available
-    const defaultFont = 'Arial'; // Or 'Noto Sans', 'Verdana', etc.
+    // Get the style line using the helper function
+    const styleLine = getAssStyleLine(stylePreset, fontSize);
 
     const assHeader = `[Script Info]
 ; Script generated by Translator Electron App
@@ -341,7 +382,7 @@ PlayResY: 720
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,${defaultFont},${fontSize},&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,1.5,0.5,2,10,10,15,1
+${styleLine} // Use the generated style line
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -443,31 +484,34 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     args: string[],
     operationId?: string,
     totalDuration?: number,
-    progressCallback?: (progress: number) => void
+    progressCallback?: (progress: number) => void,
+    env?: NodeJS.ProcessEnv
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       log.info(`Running FFmpeg command: ${this.ffmpegPath} ${args.join(' ')}`);
-      const process = spawn(this.ffmpegPath, args);
+      const ffmpegProcess = spawn(this.ffmpegPath, args, {
+        env: env || nodeProcess.env,
+      });
 
       if (operationId) {
-        this.activeProcesses.set(operationId, process);
+        this.activeProcesses.set(operationId, ffmpegProcess);
         log.info(
-          `[${operationId}] FFmpeg process started (PID: ${process.pid})`
+          `[${operationId}] FFmpeg process started (PID: ${ffmpegProcess.pid})`
         );
       } else {
-        log.info(`FFmpeg process started (PID: ${process.pid})`);
+        log.info(`FFmpeg process started (PID: ${ffmpegProcess.pid})`);
       }
 
       let stderrOutput = '';
-      const progressRegex = /time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/; // Matches time=HH:MM:SS.ms
+      const progressRegex = /time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/;
 
-      process.stdout.on('data', data => {
-        log.info(`FFmpeg stdout: ${data}`);
+      ffmpegProcess.stdout.on('data', (data: Buffer) => {
+        log.info(`FFmpeg stdout: ${data.toString()}`);
       });
 
-      process.stderr.on('data', data => {
+      ffmpegProcess.stderr.on('data', (data: Buffer) => {
         const line = data.toString();
-        stderrOutput += line; // Accumulate stderr
+        stderrOutput += line;
         // log.debug(`FFmpeg stderr line: ${line.trim()}`); // Log raw stderr lines if needed
 
         if (totalDuration && progressCallback) {
@@ -493,14 +537,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         }
       });
 
-      process.on('close', code => {
+      ffmpegProcess.on('close', (code: number | null) => {
         if (operationId) {
           this.activeProcesses.delete(operationId);
           log.info(
-            `[${operationId}] FFmpeg process finished (PID: ${process.pid})`
+            `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid})`
           );
         } else {
-          log.info(`FFmpeg process finished (PID: ${process.pid})`);
+          log.info(`FFmpeg process finished (PID: ${ffmpegProcess.pid})`);
         }
 
         if (code === 0) {
@@ -517,14 +561,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         }
       });
 
-      process.on('error', err => {
+      ffmpegProcess.on('error', (err: Error) => {
         if (operationId) {
           this.activeProcesses.delete(operationId);
           log.info(
-            `[${operationId}] FFmpeg process errored (PID: ${process.pid})`
+            `[${operationId}] FFmpeg process errored (PID: ${ffmpegProcess.pid})`
           );
         } else {
-          log.info(`FFmpeg process errored (PID: ${process.pid})`);
+          log.info(`FFmpeg process errored (PID: ${ffmpegProcess.pid})`);
         }
         log.error(`FFmpeg process error: ${err.message}`);
         reject(new FFmpegError(`FFmpeg process error: ${err.message}`));

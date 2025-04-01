@@ -15,6 +15,7 @@ import {
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
 } from './interface'; // Make sure this path is correct
+import { AssStylePresetKey } from '../renderer/constants/subtitle-styles'; // Import the type
 
 // Define a reusable type for the progress event callback
 type ProgressEventCallback = (
@@ -115,7 +116,8 @@ export interface MergeSubtitlesOptions {
   videoFileName?: string;
   videoFileData?: ArrayBuffer;
   operationId?: string;
-  fontSize?: number; // Add optional font size
+  fontSize?: number;
+  stylePreset?: AssStylePresetKey; // Add style preset key
 }
 
 export interface MergeSubtitlesResult {

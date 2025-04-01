@@ -627,11 +627,12 @@ export async function mergeSubtitlesWithVideo(
   }
 
   await ffmpegService.mergeSubtitles(
-    options.videoPath,
-    options.subtitlesPath,
+    options.videoPath!,
+    options.subtitlesPath!,
     tempOutputPath,
     operationId,
     options.fontSize,
+    options.stylePreset,
     progress => {
       if (progressCallback) {
         const mergeProgressSpan = 75;
