@@ -631,9 +631,12 @@ export async function mergeSubtitlesWithVideo(
     options.subtitlesPath,
     tempOutputPath,
     operationId,
+    options.fontSize,
     progress => {
       if (progressCallback) {
-        const scaledProgress = 25 + progress.percent * 0.7;
+        const mergeProgressSpan = 75;
+        const scaledProgress =
+          25 + (progress.percent / 100) * mergeProgressSpan;
         progressCallback({
           percent: Math.min(95, scaledProgress),
           stage: progress.stage || 'Merging subtitles with video',

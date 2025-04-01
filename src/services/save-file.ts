@@ -37,14 +37,19 @@ export class SaveFileService {
         hasFilters: Boolean(filters),
       });
 
-      // Always show a save dialog
-      const window = BrowserWindow.getFocusedWindow();
+      // Get the window reference more robustly
+      const window =
+        BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]; // Fallback
+
       if (!window) {
-        throw new SaveFileError('No focused window found');
+        // Only throw if absolutely no window is available
+        throw new SaveFileError(
+          'No application window available to show save dialog.'
+        );
       }
 
       const { canceled, filePath: selectedPath } = await dialog.showSaveDialog(
-        window,
+        window, // Pass the potentially fallback window reference
         {
           defaultPath,
           filters: filters || [

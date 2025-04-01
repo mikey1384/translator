@@ -40,6 +40,7 @@ import {
   mergeButtonStyles as mergeButtonClass,
 } from './styles';
 import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
+import { colors } from '../../constants';
 
 import { SrtSegment } from '../../../types/interface';
 
@@ -62,6 +63,33 @@ export interface EditSubtitlesProps {
   editorRef?: React.RefObject<{ scrollToCurrentSubtitle: () => void }>;
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
 }
+
+const mergeOptionsStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+`;
+
+const fontSizeInputStyles = css`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid ${colors.grayLight};
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 80px;
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 2px ${colors.primaryLight};
+  }
+`;
+
+const fontSizeLabelStyles = css`
+  font-weight: 500;
+  color: ${colors.grayDark};
+`;
+// --- Local Styles Definition --- END
 
 export function EditSubtitles({
   videoFile,
@@ -96,6 +124,7 @@ export function EditSubtitles({
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
   const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
+  const [mergeFontSize, setMergeFontSize] = useState<number>(24);
 
   // For controlling a timed auto‐pause
   const playTimeoutRef = useRef<number | null>(null);
@@ -128,10 +157,6 @@ export function EditSubtitles({
   // Keep local subtitlesState in sync when the prop changes
   useEffect(() => {
     if (subtitlesProp) {
-      // console.log(
-      //   '[EditSubtitles useEffect] subtitlesProp updated:',
-      //   subtitlesProp
-      // );
       setSubtitlesState(subtitlesProp);
     }
   }, [subtitlesProp]);
@@ -342,10 +367,6 @@ export function EditSubtitles({
 
   // If an external editorRef is provided, expose `scrollToCurrentSubtitle`
   useEffect(() => {
-    // console.log(
-    //   '[EditSubtitles useEffect] Assigning scrollToCurrentSubtitle to editorRef.',
-    //   { editorRef: editorRef?.current, scrollToCurrentSubtitle }
-    // );
     if (editorRef?.current) {
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
     }
@@ -572,43 +593,46 @@ export function EditSubtitles({
             Save As
           </Button>
 
-          <Button
-            onClick={async () => {
-              // Ensure videoFile and subtitlesState are available
-              if (videoFile && subtitlesState.length > 0) {
-                await handleMergeVideoWithSubtitles(videoFile, subtitlesState);
-              } else {
-                setError('Video file or subtitles missing for merge.');
+          {/* --- Merge Section --- */}
+          <div className={mergeOptionsStyles}>
+            {/* Font Size Input */}
+            <label className={fontSizeLabelStyles} htmlFor="mergeFontSizeInput">
+              Font Size:
+            </label>
+            <input
+              id="mergeFontSizeInput"
+              type="number"
+              className={fontSizeInputStyles}
+              value={mergeFontSize}
+              onChange={e =>
+                setMergeFontSize(parseInt(e.target.value, 10) || 0)
               }
-            }}
-            variant="secondary"
-            size="lg"
-            disabled={
-              !videoFile ||
-              subtitlesState.length === 0 ||
-              isMergingInProgressProp ||
-              false
-            }
-            className={mergeButtonClass}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ marginRight: '8px' }}
+              min="10"
+              max="72"
+            />
+
+            {/* Merge Button (Keep existing button logic here) */}
+            <Button
+              className={mergeButtonClass}
+              onClick={() => {
+                if (videoFile && subtitlesState.length > 0) {
+                  handleMergeVideoWithSubtitles(videoFile, subtitlesState);
+                } else {
+                  setError('Video file and subtitles are required to merge.');
+                }
+              }}
+              disabled={
+                !videoFile ||
+                subtitlesState.length === 0 ||
+                isMergingInProgressProp
+              }
+              isLoading={isMergingInProgressProp}
             >
-              <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-              <path d="M12 11v6" />
-              <path d="M9 14l3 -3l3 3" />
-            </svg>
-            Merge Video with Subtitles
-          </Button>
+              {isMergingInProgressProp
+                ? 'Merging...'
+                : 'Merge Subtitles to Video'}
+            </Button>
+          </div>
         </div>
       )}
     </Section>
@@ -852,6 +876,7 @@ export function EditSubtitles({
         videoFile: videoFile,
         srtContent: srtContent,
         operationId: operationId,
+        fontSize: mergeFontSize,
       });
 
       if (!mergeResult?.success || !mergeResult.tempOutputPath) {

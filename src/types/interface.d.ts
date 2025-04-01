@@ -115,6 +115,7 @@ export interface MergeSubtitlesOptions {
   videoFileName?: string;
   videoFileData?: ArrayBuffer;
   operationId?: string;
+  fontSize?: number; // Add optional font size
 }
 
 export interface MergeSubtitlesResult {
