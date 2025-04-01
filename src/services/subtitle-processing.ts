@@ -8,6 +8,7 @@ import fs from 'fs';
 import fsp from 'fs/promises';
 import dotenv from 'dotenv';
 import { AI_MODELS } from '../renderer/constants';
+import { SrtSegment } from '../types/interface';
 
 import {
   GenerateSubtitlesOptions,
@@ -662,14 +663,25 @@ export async function generateSubtitlesFromVideo(
 
     // Reassign indices sequentially is still good practice if needed,
     // but keep the Original###MARKER###Reviewed format
-    const finalSegments = segmentsInProcess.map((block, idx) => ({
+    const indexedSegments = segmentsInProcess.map((block, idx) => ({
       ...block,
       index: idx + 1,
       // Keep the combined text as is
-      // text: block.text, // No change needed here, buildSrt will use block.text
     }));
 
-    // Build final SRT using the segments that retain the marker
+    // --- Post-processing Adjustments ---
+    // 1. Extend short gaps
+    console.log(
+      '[generateSubtitlesFromVideo] Extending short subtitle gaps...'
+    );
+    const gapFilledSegments = extendShortSubtitleGaps(indexedSegments, 3);
+
+    // 2. Fill blank translations
+    console.log('[generateSubtitlesFromVideo] Filling blank translations...');
+    const finalSegments = fillBlankTranslations(gapFilledSegments);
+    // --- End Post-processing Adjustments ---
+
+    // Build final SRT using the adjusted segments
     const finalSubtitlesContent = buildSrt(finalSegments);
     await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
 
@@ -1007,4 +1019,91 @@ async function retryWithExponentialBackoff<T>(
       'Failed operation after multiple retries, but no error was captured.'
     )
   );
+}
+
+/**
+ * Extends the duration of subtitles to fill short gaps before the next subtitle.
+ * @param segments The array of subtitle segments.
+ * @param threshold The maximum gap duration (in seconds) to fill.
+ * @returns The modified array of subtitle segments.
+ */
+function extendShortSubtitleGaps(
+  segments: SrtSegment[],
+  threshold: number = 3
+): SrtSegment[] {
+  if (!segments || segments.length < 2) {
+    return segments; // Need at least two segments to have a gap
+  }
+
+  const adjustedSegments = segments.map(segment => ({ ...segment })); // Create a copy to modify
+
+  for (let i = 0; i < adjustedSegments.length - 1; i++) {
+    const currentSegment = adjustedSegments[i];
+    const nextSegment = adjustedSegments[i + 1];
+
+    // Ensure times are valid numbers
+    const currentEndTime = Number(currentSegment.end);
+    const nextStartTime = Number(nextSegment.start);
+
+    if (isNaN(currentEndTime) || isNaN(nextStartTime)) {
+      console.warn(
+        `Invalid time encountered at index ${i}, skipping gap adjustment.`
+      );
+      continue; // Skip if times are invalid
+    }
+
+    const gap = nextStartTime - currentEndTime;
+
+    // Check if the gap is positive (no overlap) and less than the threshold
+    if (gap > 0 && gap < threshold) {
+      // Adjust the end time of the current segment to meet the start of the next
+      currentSegment.end = nextStartTime;
+      // console.log(`Adjusted end time for segment ${currentSegment.index} to ${nextStartTime} (gap was ${gap.toFixed(3)}s)`);
+    }
+  }
+
+  return adjustedSegments;
+}
+
+/**
+ * Fills blank translations by copying the translation from the previous segment.
+ * Assumes segments have the format "original###TRANSLATION_MARKER###translation".
+ * @param segments The array of subtitle segments.
+ * @returns The modified array of subtitle segments.
+ */
+function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
+  if (!segments || segments.length < 2) {
+    return segments;
+  }
+
+  const adjustedSegments = segments.map(segment => ({ ...segment })); // Create a copy
+
+  for (let i = 1; i < adjustedSegments.length; i++) {
+    const currentSegment = adjustedSegments[i];
+    const prevSegment = adjustedSegments[i - 1];
+
+    // Check if current segment has the marker and a blank translation
+    const currentParts = currentSegment.text.split('###TRANSLATION_MARKER###');
+    const currentHasMarker = currentParts.length > 1;
+    const currentOriginal = currentParts[0] || '';
+    const currentTranslation = currentParts[1] || '';
+    const isCurrentBlank =
+      currentHasMarker &&
+      currentOriginal.trim() !== '' &&
+      currentTranslation.trim() === '';
+
+    if (isCurrentBlank) {
+      // Get the previous segment's translation
+      const prevParts = prevSegment.text.split('###TRANSLATION_MARKER###');
+      const prevTranslation = prevParts[1] || ''; // Use prev original if no marker?
+
+      if (prevTranslation.trim() !== '') {
+        // Construct the new text with the copied translation
+        currentSegment.text = `${currentOriginal}###TRANSLATION_MARKER###${prevTranslation}`;
+        // console.log(`Filled blank translation for segment ${currentSegment.index} with previous translation.`);
+      }
+    }
+  }
+
+  return adjustedSegments;
 }
