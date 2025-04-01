@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { css } from '@emotion/css';
 
 interface SubtitleProgressInfo {
@@ -8,8 +8,6 @@ interface SubtitleProgressInfo {
 }
 
 interface TranslationProgressAreaProps {
-  progress: number;
-  progressStage: string;
   translationProgress: number;
   translationStage: string;
   subtitleProgress?: SubtitleProgressInfo;
@@ -111,8 +109,6 @@ const closeButtonStyles = css`
 `;
 
 export default function TranslationProgressArea({
-  progress,
-  progressStage,
   translationProgress,
   translationStage,
   subtitleProgress,

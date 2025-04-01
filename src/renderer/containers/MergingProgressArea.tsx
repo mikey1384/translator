@@ -1,7 +1,6 @@
-import { css, keyframes } from '@emotion/css';
+import { css } from '@emotion/css';
 import { colors } from '../constants';
-import ProgressBar from '../components/ProgressBar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface MergingProgressAreaProps {
   mergeProgress: number;
@@ -9,56 +8,86 @@ interface MergingProgressAreaProps {
   onSetIsMergingInProgress: (inProgress: boolean) => void;
   operationId: string | null;
   onCancelComplete: () => void;
+  autoCloseDelay?: number;
 }
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const progressAreaStyles = css`
+const progressContainerStyles = css`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background-color: ${colors.dark};
-  color: ${colors.white};
-  padding: 1.5rem;
-  z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  animation: ${fadeIn} 0.3s ease-in-out;
+  z-index: 1100;
+  padding: 18px 24px;
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  animation: slideDown 0.3s ease-out;
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
 `;
 
-const titleStyles = css`
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
+const headerStyles = css`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 5px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #3f37c9;
+  }
 `;
 
-const progressTextStyles = css`
-  font-size: 1rem;
-  margin: 0.5rem 0;
-  color: ${colors.grayLight};
+const progressBlockStyles = css`
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #eaedf0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 `;
 
-const cancelButtonStyles = css`
-  background-color: ${colors.danger};
-  border: none;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
+const progressBarContainerStyles = css`
+  height: 10px;
+  background-color: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px 0;
+`;
+
+const progressLabelStyles = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
   font-weight: 500;
-  transition: background-color 0.2s;
+  font-size: 0.95rem;
+`;
 
+const closeButtonStyles = css`
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
   &:hover {
-    background-color: #d32f2f;
+    color: #343a40;
   }
 `;
 
@@ -68,8 +97,24 @@ export default function MergingProgressArea({
   onSetIsMergingInProgress,
   operationId,
   onCancelComplete,
+  autoCloseDelay = 5000,
 }: MergingProgressAreaProps) {
   const [isCancelling, setIsCancelling] = useState(false);
+
+  useEffect(() => {
+    if (mergeProgress >= 100) {
+      const timer = setTimeout(() => {
+        onSetIsMergingInProgress(false);
+        onCancelComplete();
+      }, autoCloseDelay);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    mergeProgress,
+    onSetIsMergingInProgress,
+    onCancelComplete,
+    autoCloseDelay,
+  ]);
 
   const handleCancel = async () => {
     if (isCancelling) return;
@@ -78,7 +123,7 @@ export default function MergingProgressArea({
     if (!operationId) {
       console.warn('Cannot cancel merge: operationId is null.');
       setIsCancelling(false);
-      onSetIsMergingInProgress(false); // Still hide progress area
+      onSetIsMergingInProgress(false);
       onCancelComplete();
       return;
     }
@@ -86,47 +131,55 @@ export default function MergingProgressArea({
       const result = await window.electron.cancelMerge(operationId);
       console.log(`Cancellation result for ${operationId}:`, result);
       if (result.success) {
-        // Optionally show a message or change stage
+        // Cancellation successful
       } else {
-        // Handle cancellation failure (e.g., show error)
         console.error(
           `Failed to cancel operation ${operationId}:`,
           result.error
         );
-        // Maybe show an alert to the user?
       }
     } catch (error) {
       console.error(`Error calling cancelMerge for ${operationId}:`, error);
-      // Handle IPC error
     } finally {
       setIsCancelling(false);
-      onSetIsMergingInProgress(false); // Hide the progress area
-      onCancelComplete(); // Notify parent to clear the ID
+      onSetIsMergingInProgress(false);
+      onCancelComplete();
     }
   };
 
   return (
-    <div className={progressAreaStyles}>
-      <div className={titleStyles}>
-        <span>Merging Progress</span>
+    <div className={progressContainerStyles}>
+      <div className={headerStyles}>
+        <h3>Merge in Progress</h3>
         <button
-          className={cancelButtonStyles}
+          className={closeButtonStyles}
           onClick={handleCancel}
           disabled={isCancelling}
+          aria-label="Cancel merge process"
         >
-          {isCancelling ? 'Cancelling...' : 'Cancel'}
+          {isCancelling ? '...' : '×'}
         </button>
       </div>
-
-      <div>
-        <ProgressBar progress={mergeProgress} />
-        <p className={progressTextStyles}>
-          {mergeStage || 'Preparing to merge...'}
-          {mergeProgress > 0 &&
-            mergeProgress < 100 &&
-            ` (${Math.round(mergeProgress)}%)`}
-          {mergeProgress >= 100 && ' Complete!'}
-        </p>
+      <div className={progressBlockStyles}>
+        <div className={progressLabelStyles}>
+          <span>
+            <strong>Progress:</strong> {mergeStage || 'Preparing...'}
+          </span>
+          <span>{mergeProgress.toFixed(1)}%</span>
+        </div>
+        <div className={progressBarContainerStyles}>
+          <div
+            className={css`
+              height: 100%;
+              width: ${mergeProgress}%;
+              background-color: ${mergeProgress === 100
+                ? colors.success
+                : colors.warning};
+              border-radius: 10px;
+              transition: width 0.3s ease;
+            `}
+          />
+        </div>
       </div>
     </div>
   );

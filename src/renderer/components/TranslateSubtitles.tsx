@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/css';
 import {
   formGroupStyles,
@@ -11,8 +11,6 @@ import {
 } from '../styles';
 import Button from './Button';
 import Section from './Section';
-import TranslationProgressArea from '../containers/TranslationProgressArea';
-import { registerSubtitleStreamListeners } from '../helpers/electron-ipc';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -42,65 +40,13 @@ export default function TranslateSubtitles({
 }: TranslateSubtitlesProps) {
   const [targetLanguage, setTargetLanguage] = useState<string>('en');
 
-  const [isTranslationInProgress, setIsTranslationInProgress] =
-    useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
-  const [progressStage, setProgressStage] = useState<string>('');
-  const [translationProgress, setTranslationProgress] = useState<number>(0);
-  const [translationStage, setTranslationStage] = useState<string>('');
-  const [subtitleProgress, setSubtitleProgress] = useState<{
-    current?: number;
-    total?: number;
-  }>({});
-
   const [translatedSubtitles, setTranslatedSubtitles] = useState<string>('');
   const [error, setError] = useState<string>('');
 
   const COMPLETION_DISPLAY_DURATION_MS = 2000;
 
-  useEffect(() => {
-    let cleanup: (() => void) | undefined;
-
-    if (isTranslationInProgress) {
-      cleanup = registerSubtitleStreamListeners(data => {
-        if (
-          data.stage.toLowerCase().includes('audio') ||
-          data.stage.toLowerCase().includes('prepare')
-        ) {
-          setProgress(data.percent);
-          setProgressStage(data.stage);
-        } else {
-          setTranslationProgress(data.percent);
-          setTranslationStage(data.stage);
-
-          if (data.current && data.total) {
-            setSubtitleProgress({
-              current: data.current,
-              total: data.total,
-            });
-          }
-        }
-      }, 'translate');
-    }
-
-    return () => {
-      if (cleanup) cleanup();
-    };
-  }, [isTranslationInProgress]);
-
   return (
     <Section title="Translate Subtitles">
-      {isTranslationInProgress && (
-        <TranslationProgressArea
-          progress={progress}
-          progressStage={progressStage}
-          translationProgress={translationProgress}
-          translationStage={translationStage}
-          subtitleProgress={subtitleProgress}
-          onClose={() => setIsTranslationInProgress(false)}
-        />
-      )}
-
       {error && <div className={errorMessageStyles}>{error}</div>}
 
       <div className={formGroupStyles}>
@@ -120,7 +66,6 @@ export default function TranslateSubtitles({
           className={selectStyles}
           value={targetLanguage}
           onChange={e => setTargetLanguage(e.target.value)}
-          disabled={isTranslationInProgress}
         >
           {languages.map(lang => (
             <option key={lang.code} value={lang.code}>
@@ -132,15 +77,10 @@ export default function TranslateSubtitles({
 
       <div className={actionButtonsStyles}>
         <Button
-          disabled={
-            !subtitles ||
-            isTranslationInProgress ||
-            sourceLanguage === targetLanguage
-          }
+          disabled={!subtitles || sourceLanguage === targetLanguage}
           onClick={handleTranslateSubtitles}
-          isLoading={isTranslationInProgress}
         >
-          {isTranslationInProgress ? 'Translating...' : 'Translate Subtitles'}
+          Translate Subtitles
         </Button>
       </div>
 
@@ -177,12 +117,6 @@ export default function TranslateSubtitles({
 
     try {
       setError('');
-      setIsTranslationInProgress(true);
-      setProgress(0);
-      setProgressStage('Starting translation...');
-      setTranslationProgress(0);
-      setTranslationStage('Preparing translation model...');
-      setSubtitleProgress({});
 
       const result = await window.electron.translateSubtitles({
         subtitles,
@@ -195,16 +129,12 @@ export default function TranslateSubtitles({
       }
 
       setTranslatedSubtitles(result.translatedSubtitles);
-      setTranslationProgress(100);
-      setTranslationStage('Translation complete!');
 
       setTimeout(() => {
         onTranslated(result.translatedSubtitles);
       }, COMPLETION_DISPLAY_DURATION_MS);
     } catch (err: any) {
       setError(`Error translating subtitles: ${err.message || err}`);
-    } finally {
-      setIsTranslationInProgress(false);
     }
   }
 

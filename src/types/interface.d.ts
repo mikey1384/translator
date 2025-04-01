@@ -62,6 +62,9 @@ interface ElectronAPI {
   onTranslateSubtitlesProgress: (
     callback: ProgressEventCallback | null
   ) => () => void;
+
+  // Add the missing showMessage method
+  showMessage: (message: string) => Promise<void>;
 }
 
 declare global {

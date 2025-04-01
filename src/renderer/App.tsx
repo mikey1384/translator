@@ -269,8 +269,6 @@ function AppContent() {
 
         {isTranslationInProgress && (
           <TranslationProgressArea
-            progress={translationProgress}
-            progressStage={translationStage}
             translationProgress={translationProgress}
             translationStage={translationStage}
             onClose={() => setIsTranslationInProgress(false)}
