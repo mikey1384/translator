@@ -472,102 +472,200 @@ export async function generateSubtitlesFromVideo(
   const { ffmpegService, fileManager } = services;
   let audioPath: string | null = null;
 
+  const targetLang = options.targetLanguage?.toLowerCase() || 'original';
+  const isTranslationNeeded = targetLang !== 'original';
+
+  // Define progress stages and ranges
+  const STAGE_AUDIO_EXTRACTION = { start: 0, end: 10 };
+  const STAGE_TRANSCRIPTION = { start: 10, end: 50 };
+  // Adjust ranges if translation/review is needed
+  const STAGE_TRANSLATION = isTranslationNeeded
+    ? { start: 50, end: 75 }
+    : { start: 50, end: 100 };
+  const STAGE_REVIEW = isTranslationNeeded
+    ? { start: 75, end: 95 }
+    : { start: -1, end: -1 }; // Review only if translating
+  const STAGE_FINALIZING = {
+    start: isTranslationNeeded ? 95 : STAGE_TRANSLATION.end,
+    end: 100,
+  };
+
+  const scaleProgress = (
+    percent: number,
+    stage: { start: number; end: number }
+  ) => {
+    const stageSpan = stage.end - stage.start;
+    return stage.start + (percent / 100) * stageSpan;
+  };
+
   try {
     if (progressCallback) {
-      progressCallback({ percent: 0, stage: 'Starting subtitle generation' });
-      progressCallback({ percent: 10, stage: 'Extracting audio from video' });
+      progressCallback({
+        percent: STAGE_AUDIO_EXTRACTION.start,
+        stage: 'Starting subtitle generation',
+      });
+      progressCallback({
+        percent: STAGE_AUDIO_EXTRACTION.end,
+        stage: 'Extracting audio from video',
+      });
     }
 
     audioPath = await ffmpegService.extractAudio(options.videoPath);
 
     const subtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath,
-      targetLanguage: 'original',
+      targetLanguage: 'original', // Always transcribe in original language first
       progressCallback: progress => {
         if (progressCallback) {
-          const basePercent = 10;
-          const transcriptionSpan = 40;
-          const scaledPercent =
-            basePercent + (progress.percent / 100) * transcriptionSpan;
           progressCallback({
-            percent: scaledPercent,
+            percent: scaleProgress(progress.percent, STAGE_TRANSCRIPTION),
             stage: progress.stage,
-            partialResult: progress.partialResult,
+            // Don't send partial result during transcription if translation will happen
+            partialResult: isTranslationNeeded
+              ? undefined
+              : progress.partialResult,
             current: progress.current,
             total: progress.total,
             error: progress.error,
           });
         }
       },
-      progressRange: { start: 10, end: 50 },
+      progressRange: { start: 0, end: 100 }, // Use full range for sub-process
     });
 
-    const targetLang = options.targetLanguage?.toLowerCase() || 'original';
-    if (targetLang === 'original') {
+    // If target language is original, we're done after transcription.
+    if (!isTranslationNeeded) {
       await fileManager.writeTempFile(subtitlesContent, '.srt');
       if (progressCallback) {
         progressCallback({
-          percent: 100,
-          stage: 'Subtitle generation complete',
+          percent: STAGE_FINALIZING.end, // 100%
+          stage: 'Transcription complete',
           partialResult: subtitlesContent,
         });
       }
       return { subtitles: subtitlesContent };
     }
 
+    // --- Translation Step ---
     const originalSegments = parseSrt(subtitlesContent);
     const totalSegments = originalSegments.length;
     const translatedSegments: any[] = [];
+    const TRANSLATION_BATCH_SIZE = 10; // Keep existing batch size
 
-    const BATCH_SIZE = 10;
     for (
       let batchStart = 0;
       batchStart < totalSegments;
-      batchStart += BATCH_SIZE
+      batchStart += TRANSLATION_BATCH_SIZE
     ) {
-      const batchEnd = Math.min(batchStart + BATCH_SIZE, totalSegments);
-      const currentBatch = {
-        segments: originalSegments.slice(batchStart, batchEnd),
+      const batchEnd = Math.min(
+        batchStart + TRANSLATION_BATCH_SIZE,
+        totalSegments
+      );
+      const currentBatchSegments = originalSegments.slice(batchStart, batchEnd);
+
+      const batchToTranslate = {
+        segments: currentBatchSegments,
         startIndex: batchStart,
         endIndex: batchEnd,
       };
 
-      const translatedBatch = await translateBatch(currentBatch, targetLang);
-
+      // Assuming translateBatch modifies segments in place or returns new ones
+      // Note: translateBatch currently returns segments with '###TRANSLATION_MARKER###'
+      const translatedBatch = await translateBatch(
+        batchToTranslate,
+        targetLang
+      );
       translatedSegments.push(...translatedBatch);
 
-      const overallProgress = Math.floor((batchEnd / totalSegments) * 100);
-      const scaledPercent = 50 + (overallProgress * 50) / 100;
-
       if (progressCallback) {
-        const remainingOriginalSegments = originalSegments.slice(
-          translatedSegments.length
-        );
-        const currentStateSegments = [
-          ...translatedSegments,
-          ...remainingOriginalSegments,
-        ];
-        const cumulativeSrt = buildSrt(currentStateSegments);
+        const overallProgressPercent = (batchEnd / totalSegments) * 100;
+        // Send cumulative result *after* translation, before review
+        const cumulativeSrt = buildSrt(translatedSegments);
 
         progressCallback({
-          percent: scaledPercent,
-          stage: `Translating segments ${
-            batchStart + 1
-          } to ${batchEnd} of ${totalSegments}`,
-          partialResult: cumulativeSrt,
+          percent: scaleProgress(overallProgressPercent, STAGE_TRANSLATION),
+          stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(totalSegments / TRANSLATION_BATCH_SIZE)}`,
+          partialResult: cumulativeSrt, // Send translated (but not reviewed) SRT
           current: batchEnd,
           total: totalSegments,
         });
       }
     }
 
-    const finalSubtitlesContent = buildSrt(translatedSegments);
+    // --- Review Step ---
+    const reviewedSegments: any[] = [];
+    const REVIEW_BATCH_SIZE = 20; // Can use a different batch size for review
+
+    for (
+      let batchStart = 0;
+      batchStart < translatedSegments.length; // Iterate through translated segments
+      batchStart += REVIEW_BATCH_SIZE
+    ) {
+      const batchEnd = Math.min(
+        batchStart + REVIEW_BATCH_SIZE,
+        translatedSegments.length
+      );
+      const currentBatchSegments = translatedSegments.slice(
+        batchStart,
+        batchEnd
+      );
+
+      const batchToReview = {
+        segments: currentBatchSegments,
+        startIndex: batchStart, // Use index within translatedSegments
+        endIndex: batchEnd,
+        targetLang: targetLang, // Pass target language for context
+      };
+
+      const reviewedBatch = await reviewTranslationBatch(batchToReview);
+      reviewedSegments.push(...reviewedBatch); // Collect reviewed segments
+
+      if (progressCallback) {
+        const overallProgressPercent =
+          (batchEnd / translatedSegments.length) * 100;
+
+        // Build cumulative SRT from reviewed + remaining *translated* segments
+        const remainingTranslated = translatedSegments.slice(
+          reviewedSegments.length
+        );
+        const cumulativeReviewedSrt = buildSrt([
+          ...reviewedSegments,
+          ...remainingTranslated,
+        ]);
+
+        progressCallback({
+          percent: scaleProgress(overallProgressPercent, STAGE_REVIEW),
+          stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(translatedSegments.length / REVIEW_BATCH_SIZE)}`,
+          partialResult: cumulativeReviewedSrt, // Send reviewed SRT incrementally
+          current: batchEnd,
+          total: translatedSegments.length,
+        });
+      }
+    }
+
+    // --- Finalizing ---
+    if (progressCallback) {
+      progressCallback({
+        percent: STAGE_FINALIZING.start,
+        stage: 'Finalizing subtitles',
+      });
+    }
+
+    // Reassign indices sequentially after review
+    const finalSegments = reviewedSegments.map((block, idx) => ({
+      ...block,
+      index: idx + 1,
+      // Keep only the final reviewed text for building SRT
+      text: block.text.split('###TRANSLATION_MARKER###')[1] || '', // Use reviewed text, handle blanks
+    }));
+
+    const finalSubtitlesContent = buildSrt(finalSegments);
     await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
 
     if (progressCallback) {
       progressCallback({
-        percent: 100,
-        stage: 'Subtitle generation complete',
+        percent: STAGE_FINALIZING.end, // 100%
+        stage: 'Translation and review complete',
         partialResult: finalSubtitlesContent,
       });
     }
@@ -756,6 +854,112 @@ Translate EACH line individually, preserving the line order.
     originalText: segment.text,
     translatedText: segment.text,
   }));
+}
+
+// New function to review a batch of translated segments
+async function reviewTranslationBatch(batch: {
+  segments: any[];
+  startIndex: number;
+  endIndex: number;
+  targetLang: string;
+}): Promise<any[]> {
+  if (!anthropic) {
+    throw new SubtitleProcessingError(
+      'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
+    );
+  }
+
+  const batchItems = batch.segments.map((block: any, idx: number) => {
+    const absoluteIndex = batch.startIndex + idx;
+    const [original, translation] = block.text.split(
+      '###TRANSLATION_MARKER###'
+    );
+    return {
+      index: absoluteIndex + 1, // Use 1-based index for prompt clarity
+      original: original?.trim() || '',
+      translation: (translation || original || '').trim(),
+    };
+  });
+
+  const originalTexts = batchItems
+    .map(item => `[${item.index}] ${item.original}`)
+    .join('\n');
+  const translatedTexts = batchItems
+    .map(item => `[${item.index}] ${item.translation}`)
+    .join('\n');
+
+  // Refined prompt asking for plain text lines without index prefixes
+  const prompt = `
+You are a professional subtitle translator and reviewer for ${batch.targetLang}.
+Review and improve each translated subtitle block below **individually**.
+
+**RULES:**
+- Maintain the original order. **NEVER** merge or split blocks.
+- For each block, provide the improved translation. Focus on accuracy, completeness, consistency, and context based on the original text.
+- Preserve the sequence of information from the corresponding original text.
+- **CRITICAL SYNC RULE:** If a block's content (e.g., 1-2 leftover words) logically belongs to the *previous* block's translation, leave the *current* block's translation **COMPLETELY BLANK**. Do not fill it with the *next* block's content.
+
+**ORIGINAL TEXT (Context Only - DO NOT MODIFY):**
+${originalTexts}
+
+**TRANSLATION TO REVIEW & IMPROVE:**
+${translatedTexts}
+
+**Output Format:**
+- Return **ONLY** the improved translation text for each block, one per line, in the **exact same order** as the input.
+- **DO NOT** include the "[index]" prefixes in your output.
+- If a line should be blank (per the SYNC RULE), output an empty line.
+
+Example Output (for 3 blocks):
+Improved translation for block 1
+
+Improved translation for block 3
+`;
+
+  try {
+    const reviewResponse = await callClaudeWithRetry({
+      model: AI_MODELS.CLAUDE_3_7_SONNET, // Ensure this constant is defined correctly
+      temperature: 0.1,
+      max_tokens: AI_MODELS.MAX_TOKENS, // Ensure this constant is defined correctly
+      system: `You are an expert subtitle reviewer. Follow the output format instructions precisely. Output only the improved ${batch.targetLang} translations, one per line, matching the input order.`,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const reviewedContent = reviewResponse.content[0].text;
+    // Split reviewed content into lines, expecting one line per segment
+    const reviewedLines = reviewedContent.split('\n');
+
+    // Check if the number of lines matches the number of segments
+    if (reviewedLines.length !== batch.segments.length) {
+      console.warn(
+        `Translation review output line count (${reviewedLines.length}) does not match batch size (${batch.segments.length}). Using original translations for this batch.`
+      );
+      // Fallback: return original translations if response format is unexpected
+      return batch.segments;
+    }
+
+    // Map reviewed lines back to segments
+    return batch.segments.map((segment, idx) => {
+      const [originalText] = segment.text.split('###TRANSLATION_MARKER###');
+      const reviewedTranslation = reviewedLines[idx]?.trim() ?? ''; // Use '' for potentially blank lines
+
+      // Handle the case where review might return an empty string
+      const finalTranslation =
+        reviewedTranslation === '' ? '' : reviewedTranslation;
+
+      return {
+        ...segment,
+        text: `${originalText}###TRANSLATION_MARKER###${finalTranslation}`,
+        // Optionally keep track of original/reviewed if needed later
+        originalText: originalText,
+        reviewedText: finalTranslation,
+      };
+    });
+  } catch (error) {
+    console.error('Error calling Claude for translation review batch:', error);
+    // Fallback: return original translations on error
+    return batch.segments;
+  }
 }
 
 async function retryWithExponentialBackoff<T>(
