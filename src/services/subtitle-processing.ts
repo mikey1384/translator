@@ -122,148 +122,6 @@ async function callClaudeWithRetry(params: any, maxRetries = 3): Promise<any> {
   );
 }
 
-async function translateBatch(
-  batch: { segments: any[]; startIndex: number; endIndex: number },
-  targetLang: string,
-  _callId: string
-): Promise<any[]> {
-  if (!anthropic) {
-    throw new SubtitleProcessingError(
-      'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
-    );
-  }
-
-  const MAX_RETRIES = 3;
-  let retryCount = 0;
-  const batchContextPrompt = batch.segments.map((segment, idx) => {
-    const absoluteIndex = batch.startIndex + idx;
-    return `Line ${absoluteIndex + 1}: ${segment.text}`;
-  });
-
-  const combinedPrompt = `
-You are a professional subtitle translator. Translate the following subtitles 
-into natural, fluent ${targetLang}.
-
-Here are the subtitles to translate:
-${batchContextPrompt.join('\n')}
-
-Translate EACH line individually, preserving the line order. 
-- **Never merge** multiple lines into one, and never skip or omit a line. 
-- If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
-- Provide exactly one translation for every line, in the same order, 
-  prefixed by "Line X:" where X is the line number.
-- If you're unsure, err on the side of literal translations.
-- For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
-`;
-
-  while (retryCount < MAX_RETRIES) {
-    try {
-      const batchTranslationResponse = await callClaudeWithRetry({
-        model: AI_MODELS.CLAUDE_3_7_SONNET,
-        temperature: 0.1,
-        max_tokens: AI_MODELS.MAX_TOKENS,
-        system: `You are a professional subtitle translator. Translate the following subtitles from original to ${targetLang}. Maintain the original format and structure.`,
-        messages: [{ role: 'user', content: combinedPrompt }],
-      });
-
-      const batchTranslation = batchTranslationResponse.content[0].text;
-      const translationLines = batchTranslation
-        .split('\n')
-        .filter((line: string) => line.trim() !== '');
-      const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
-
-      let lastNonEmptyTranslation = '';
-      return batch.segments.map((segment, idx) => {
-        const absoluteIndex = batch.startIndex + idx;
-        let translatedText = segment.text;
-        const originalSegmentText = segment.text;
-
-        for (const line of translationLines) {
-          const match = line.match(lineRegex);
-          if (match && parseInt(match[1]) === absoluteIndex + 1) {
-            const potentialTranslation = match[2].trim();
-            if (potentialTranslation === originalSegmentText) {
-              translatedText = lastNonEmptyTranslation;
-            } else {
-              translatedText = potentialTranslation || lastNonEmptyTranslation;
-            }
-            lastNonEmptyTranslation = translatedText;
-            break;
-          }
-        }
-
-        return {
-          ...segment,
-          text: `${originalSegmentText}###TRANSLATION_MARKER###${translatedText}`,
-          originalText: originalSegmentText,
-          translatedText,
-        };
-      });
-    } catch (err: any) {
-      if (
-        err.message &&
-        (err.message.includes('timeout') ||
-          err.message.includes('rate') ||
-          err.message.includes('ECONNRESET'))
-      ) {
-        retryCount++;
-        const delay = 1000 * Math.pow(2, retryCount);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-
-      return batch.segments.map(segment => ({
-        ...segment,
-        text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-        originalText: segment.text,
-        translatedText: segment.text,
-      }));
-    }
-  }
-
-  return batch.segments.map(segment => ({
-    ...segment,
-    text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-    originalText: segment.text,
-    translatedText: segment.text,
-  }));
-}
-
-async function retryWithExponentialBackoff<T>(
-  asyncFn: () => Promise<T>,
-  maxRetries = 3,
-  initialDelay = 1000
-): Promise<T> {
-  let lastError: any = null;
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await asyncFn();
-    } catch (error) {
-      lastError = error;
-      const isRetriable =
-        (error as any).status === 429 ||
-        (error as any).status >= 500 ||
-        (error as Error).message?.includes('timeout') ||
-        (error as Error).message?.includes('network') ||
-        (error as Error).message?.includes('ECONNRESET');
-
-      if (!isRetriable || attempt === maxRetries - 1) {
-        throw error;
-      }
-
-      const backoffTime = initialDelay * Math.pow(2, attempt);
-      await new Promise(resolve => setTimeout(resolve, backoffTime));
-    }
-  }
-
-  throw (
-    lastError ||
-    new SubtitleProcessingError(
-      'Failed operation after multiple retries, but no error was captured.'
-    )
-  );
-}
-
 interface GenerateSubtitlesFromAudioOptions {
   inputAudioPath: string;
   targetLanguage?: string;
@@ -284,7 +142,6 @@ async function generateSubtitlesFromAudio({
   progressCallback,
   progressRange,
 }: GenerateSubtitlesFromAudioOptions): Promise<string> {
-  // Check if OpenAI client is available
   if (!openai) {
     throw new SubtitleProcessingError(
       'OpenAI API key is missing or client failed to initialize. Please check your .env configuration.'
@@ -372,10 +229,6 @@ async function generateSubtitlesFromAudio({
         } else if (boundary > startTime && boundary > idealEnd + tolerance) {
           break;
         }
-      }
-
-      if (chosenEnd < idealEnd && chosenEnd !== duration) {
-        // No suitable boundary found, stick to idealEnd
       }
     }
 
@@ -526,18 +379,25 @@ async function generateSubtitlesFromAudio({
     allSegments.sort((a, b) => a.start - b.start);
     const finalSrt = convertSegmentsToSrt(allSegments);
 
+    const failedToDelete: string[] = [];
     await Promise.allSettled(
       chunkMetadata.map(async meta => {
         try {
-          await fsp.unlink(meta.path);
+          if (fs.existsSync(meta.path)) {
+            await fsp.unlink(meta.path);
+          }
         } catch (err) {
-          console.error(
-            `Failed to delete temporary audio file ${meta.path}:`,
-            err
-          );
+          failedToDelete.push(meta.path);
+          console.error(`Error attempting to delete ${meta.path}:`, err);
         }
       })
     );
+
+    if (failedToDelete.length > 0) {
+      console.warn(
+        `Could not automatically delete the following temporary files. Please remove them manually:\n${failedToDelete.join('\n')}`
+      );
+    }
 
     progressCallback?.({
       percent: scaleProgress(100),
@@ -547,6 +407,7 @@ async function generateSubtitlesFromAudio({
 
     return finalSrt;
   } catch (error: any) {
+    const failedToDelete: string[] = [];
     await Promise.allSettled(
       chunkMetadata.map(async meta => {
         try {
@@ -554,10 +415,17 @@ async function generateSubtitlesFromAudio({
             await fsp.unlink(meta.path);
           }
         } catch (err) {
-          // Ignored: Failure to delete temp file during error cleanup
+          failedToDelete.push(meta.path);
+          console.error(`Error attempting to delete ${meta.path}:`, err);
         }
       })
     );
+
+    if (failedToDelete.length > 0) {
+      console.warn(
+        `Could not automatically delete the following temporary files. Please remove them manually:\n${failedToDelete.join('\n')}`
+      );
+    }
 
     progressCallback?.({
       percent: scaleProgress(0),
@@ -591,8 +459,6 @@ export async function generateSubtitlesFromVideo(
     fileManager: FileManager;
   }
 ): Promise<GenerateSubtitlesResult> {
-  const _callId = Date.now() + Math.random().toString(36).substring(2);
-
   if (!options) {
     options = { targetLanguage: 'original' } as GenerateSubtitlesOptions;
   }
@@ -604,7 +470,7 @@ export async function generateSubtitlesFromVideo(
   }
 
   const { ffmpegService, fileManager } = services;
-  let audioPath: string | null = null; // Keep track of the audio path
+  let audioPath: string | null = null;
 
   try {
     if (progressCallback) {
@@ -666,11 +532,7 @@ export async function generateSubtitlesFromVideo(
         endIndex: batchEnd,
       };
 
-      const translatedBatch = await translateBatch(
-        currentBatch,
-        targetLang,
-        _callId
-      );
+      const translatedBatch = await translateBatch(currentBatch, targetLang);
 
       translatedSegments.push(...translatedBatch);
 
@@ -678,7 +540,14 @@ export async function generateSubtitlesFromVideo(
       const scaledPercent = 50 + (overallProgress * 50) / 100;
 
       if (progressCallback) {
-        const cumulativeSrt = buildSrt(translatedSegments);
+        const remainingOriginalSegments = originalSegments.slice(
+          translatedSegments.length
+        );
+        const currentStateSegments = [
+          ...translatedSegments,
+          ...remainingOriginalSegments,
+        ];
+        const cumulativeSrt = buildSrt(currentStateSegments);
 
         progressCallback({
           percent: scaledPercent,
@@ -777,4 +646,145 @@ export async function mergeSubtitlesWithVideo(
     progressCallback({ percent: 100, stage: 'Merge complete, ready to save' });
   }
   return { tempOutputPath };
+}
+
+async function translateBatch(
+  batch: { segments: any[]; startIndex: number; endIndex: number },
+  targetLang: string
+): Promise<any[]> {
+  if (!anthropic) {
+    throw new SubtitleProcessingError(
+      'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
+    );
+  }
+
+  const MAX_RETRIES = 3;
+  let retryCount = 0;
+  const batchContextPrompt = batch.segments.map((segment, idx) => {
+    const absoluteIndex = batch.startIndex + idx;
+    return `Line ${absoluteIndex + 1}: ${segment.text}`;
+  });
+
+  const combinedPrompt = `
+You are a professional subtitle translator. Translate the following subtitles 
+into natural, fluent ${targetLang}.
+
+Here are the subtitles to translate:
+${batchContextPrompt.join('\n')}
+
+Translate EACH line individually, preserving the line order. 
+- **Never merge** multiple lines into one, and never skip or omit a line. 
+- If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
+- Provide exactly one translation for every line, in the same order, 
+  prefixed by "Line X:" where X is the line number.
+- If you're unsure, err on the side of literal translations.
+- For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
+`;
+
+  while (retryCount < MAX_RETRIES) {
+    try {
+      const batchTranslationResponse = await callClaudeWithRetry({
+        model: AI_MODELS.CLAUDE_3_7_SONNET,
+        temperature: 0.1,
+        max_tokens: AI_MODELS.MAX_TOKENS,
+        system: `You are a professional subtitle translator. Translate the following subtitles from original to ${targetLang}. Maintain the original format and structure.`,
+        messages: [{ role: 'user', content: combinedPrompt }],
+      });
+
+      const batchTranslation = batchTranslationResponse.content[0].text;
+      const translationLines = batchTranslation
+        .split('\n')
+        .filter((line: string) => line.trim() !== '');
+      const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
+
+      let lastNonEmptyTranslation = '';
+      return batch.segments.map((segment, idx) => {
+        const absoluteIndex = batch.startIndex + idx;
+        let translatedText = segment.text;
+        const originalSegmentText = segment.text;
+
+        for (const line of translationLines) {
+          const match = line.match(lineRegex);
+          if (match && parseInt(match[1]) === absoluteIndex + 1) {
+            const potentialTranslation = match[2].trim();
+            if (potentialTranslation === originalSegmentText) {
+              translatedText = lastNonEmptyTranslation;
+            } else {
+              translatedText = potentialTranslation || lastNonEmptyTranslation;
+            }
+            lastNonEmptyTranslation = translatedText;
+            break;
+          }
+        }
+
+        return {
+          ...segment,
+          text: `${originalSegmentText}###TRANSLATION_MARKER###${translatedText}`,
+          originalText: originalSegmentText,
+          translatedText,
+        };
+      });
+    } catch (err: any) {
+      if (
+        err.message &&
+        (err.message.includes('timeout') ||
+          err.message.includes('rate') ||
+          err.message.includes('ECONNRESET'))
+      ) {
+        retryCount++;
+        const delay = 1000 * Math.pow(2, retryCount);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      return batch.segments.map(segment => ({
+        ...segment,
+        text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
+        originalText: segment.text,
+        translatedText: segment.text,
+      }));
+    }
+  }
+
+  return batch.segments.map(segment => ({
+    ...segment,
+    text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
+    originalText: segment.text,
+    translatedText: segment.text,
+  }));
+}
+
+async function retryWithExponentialBackoff<T>(
+  asyncFn: () => Promise<T>,
+  maxRetries = 3,
+  initialDelay = 1000
+): Promise<T> {
+  let lastError: any = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await asyncFn();
+    } catch (error) {
+      lastError = error;
+      const isRetriable =
+        (error as any).status === 429 ||
+        (error as any).status >= 500 ||
+        (error as Error).message?.includes('timeout') ||
+        (error as Error).message?.includes('network') ||
+        (error as Error).message?.includes('ECONNRESET');
+
+      if (!isRetriable || attempt === maxRetries - 1) {
+        throw error;
+      }
+
+      const backoffTime = initialDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, backoffTime));
+    }
+  }
+
+  throw (
+    lastError ||
+    new SubtitleProcessingError(
+      'Failed operation after multiple retries, but no error was captured.'
+    )
+  );
 }

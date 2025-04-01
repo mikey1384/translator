@@ -2,10 +2,9 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <!-- CSP relaxed for development purposes -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; media-src * blob:; connect-src * blob:; font-src * data:;"
+      content="default-src * 'unsafe-inline' data: blob:; script-src * 'unsafe-inline'; style-src * 'unsafe-inline'; img-src * data: blob:; media-src * blob:; connect-src * blob:; font-src * data:;"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Subtitle Translator</title>
@@ -117,7 +116,6 @@
     </script>
     <script src="./index.js" type="module"></script>
     <script>
-      // Hide loading after everything is loaded
       window.addEventListener('load', () => {
         setTimeout(() => {
           document.body.classList.add('loaded');
