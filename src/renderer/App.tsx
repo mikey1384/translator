@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 
-import StatusSection from './components/StatusSection';
 import BackToTopButton from './components/BackToTopButton';
 import SettingsPage from './containers/SettingsPage';
 import StickyVideoPlayer from './containers/EditSubtitles/StickyVideoPlayer';
@@ -23,9 +22,6 @@ import {
 // Styles
 import { pageWrapperStyles, containerStyles, titleStyles } from './styles';
 import { css } from '@emotion/css';
-
-// Check if the environment is not production
-const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const headerStyles = css`
   display: flex;
@@ -50,7 +46,6 @@ const settingsButtonStyles = css`
 `;
 
 function AppContent() {
-  const [electronConnected, setElectronConnected] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -92,7 +87,6 @@ function AppContent() {
     scrollToCurrentSubtitle: () => {},
   });
 
-  // --- Wrapped State Setters/Callbacks ---
   const handleSetVideoFile = useCallback((file: File | null) => {
     setVideoFile(file);
   }, []);
@@ -225,24 +219,6 @@ function AppContent() {
   );
 
   useEffect(() => {
-    const checkElectron = async () => {
-      try {
-        if (window.electron) {
-          try {
-            setElectronConnected(true);
-          } catch (innerError) {
-            setElectronConnected(true);
-          }
-        }
-      } catch (err) {
-        setElectronConnected(true);
-      }
-    };
-
-    checkElectron();
-  }, []);
-
-  useEffect(() => {
     const handleProgressUpdate = (progress: any) => {
       handlePartialResult(progress || {});
     };
@@ -318,13 +294,10 @@ function AppContent() {
             </button>
           )}
         </div>
-
         {showSettings ? (
           <SettingsPage onBack={() => setShowSettings(false)} />
         ) : (
           <>
-            {isDevelopment && <StatusSection isConnected={electronConnected} />}
-
             {videoUrl && (
               <StickyVideoPlayer
                 videoUrl={videoUrl}

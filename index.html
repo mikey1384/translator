@@ -60,17 +60,6 @@
       .loaded #root {
         opacity: 1;
       }
-      .debug-info {
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.8);
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 12px;
-        z-index: 1000;
-      }
     </style>
   </head>
   <body>
@@ -79,41 +68,7 @@
       <div class="loading-text">Loading application...</div>
     </div>
     <div id="root"></div>
-    <div class="debug-info" id="debug-info">
-      Electron API: <span id="electron-status">Checking...</span><br />
-      IPC Connection: <span id="ipc-status">Checking...</span>
-    </div>
 
-    <script>
-      // Check if the Electron API is available and update debug info
-      document.addEventListener('DOMContentLoaded', () => {
-        const debugInfo = document.getElementById('debug-info');
-        const electronStatus = document.getElementById('electron-status');
-        const ipcStatus = document.getElementById('ipc-status');
-
-        if (window.electron) {
-          electronStatus.textContent = 'Available';
-          electronStatus.style.color = 'green';
-
-          // Test ping to verify IPC
-          window.electron
-            .ping()
-            .then(response => {
-              ipcStatus.textContent = `Working (${response})`;
-              ipcStatus.style.color = 'green';
-            })
-            .catch(error => {
-              ipcStatus.textContent = `Error: ${error.message}`;
-              ipcStatus.style.color = 'red';
-            });
-        } else {
-          electronStatus.textContent = 'Not Available';
-          electronStatus.style.color = 'red';
-          ipcStatus.textContent = 'Disconnected';
-          ipcStatus.style.color = 'red';
-        }
-      });
-    </script>
     <script src="./index.js" type="module"></script>
     <script>
       window.addEventListener('load', () => {
