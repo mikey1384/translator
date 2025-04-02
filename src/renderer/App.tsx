@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 
 import StatusSection from './components/StatusSection';
 import BackToTopButton from './components/BackToTopButton';
+import SettingsPage from './containers/SettingsPage';
 import StickyVideoPlayer from './containers/EditSubtitles/StickyVideoPlayer';
 import { nativePlayer } from './components/NativeVideoPlayer';
 import { EditSubtitles } from './containers/EditSubtitles';
@@ -21,9 +22,36 @@ import {
 
 // Styles
 import { pageWrapperStyles, containerStyles, titleStyles } from './styles';
+import { css } from '@emotion/css';
+
+// Check if the environment is not production
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const headerStyles = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+`;
+
+const settingsButtonStyles = css`
+  padding: 8px 15px;
+  font-size: 0.9em;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #5a6268;
+  }
+`;
 
 function AppContent() {
   const [electronConnected, setElectronConnected] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -277,81 +305,99 @@ function AppContent() {
     <div className={pageWrapperStyles}>
       <div id="top-padding" style={{ height: '10px' }}></div>
       <div className={containerStyles}>
-        <h1 className={titleStyles}>Subtitle Generator & Translator</h1>
-
-        <StatusSection isConnected={electronConnected} />
-
-        {videoUrl && (
-          <StickyVideoPlayer
-            videoUrl={videoUrl}
-            subtitles={subtitleSegments}
-            onPlayerReady={handleVideoPlayerReady}
-            onChangeVideo={handleChangeVideo}
-            onSrtLoaded={setSubtitleSegments}
-            onStickyChange={handleStickyChange}
-            onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
-            onTogglePlay={handleTogglePlay}
-            onShiftAllSubtitles={handleShiftAllSubtitles}
-          />
-        )}
-
-        <div ref={mainContentRef} style={{ position: 'relative' }}>
-          <GenerateSubtitles
-            onSubtitlesGenerated={handleSubtitlesGenerated}
-            showOriginalText={showOriginalText}
-            onShowOriginalTextChange={setShowOriginalText}
-          />
-
-          <div ref={editSubtitlesRef} id="edit-subtitles-section">
-            <EditSubtitles
-              videoFile={videoFile}
-              videoUrl={videoUrl}
-              isPlaying={isPlaying}
-              onSetVideoFile={handleSetVideoFile}
-              onSetVideoUrl={handleSetVideoUrlCallback}
-              onSetIsPlaying={handleSetIsPlaying}
-              secondsToSrtTime={secondsToSrtTime}
-              parseSrt={parseSrt}
-              subtitles={subtitleSegments}
-              videoPlayerRef={videoPlayerRef}
-              isMergingInProgress={isMergingInProgress}
-              setMergeProgress={handleSetMergeProgress}
-              setMergeStage={handleSetMergeStage}
-              setIsMergingInProgress={handleSetIsMergingInProgress}
-              editorRef={editSubtitlesMethodsRef}
-              onSetSubtitlesDirectly={handleSetSubtitleSegments}
-              reviewedBatchStartIndex={reviewedBatchStartIndex}
-            />
-          </div>
+        <div className={headerStyles}>
+          <h1 className={titleStyles} style={{ marginBottom: 0 }}>
+            Subtitle Generator & Translator
+          </h1>
+          {!showSettings && (
+            <button
+              className={settingsButtonStyles}
+              onClick={() => setShowSettings(true)}
+            >
+              Settings
+            </button>
+          )}
         </div>
 
-        {isTranslationInProgress && (
-          <TranslationProgressArea
-            translationProgress={translationProgress}
-            translationStage={translationStage}
-            onClose={() => setIsTranslationInProgress(false)}
-            subtitleProgress={
-              isReceivingPartialResults
-                ? {
-                    current: translationProgress,
-                    total: 100,
-                  }
-                : undefined
-            }
-          />
-        )}
+        {showSettings ? (
+          <SettingsPage onBack={() => setShowSettings(false)} />
+        ) : (
+          <>
+            {isDevelopment && <StatusSection isConnected={electronConnected} />}
 
-        {isMergingInProgress && (
-          <MergingProgressArea
-            mergeProgress={mergeProgress}
-            mergeStage={mergeStage}
-            onSetIsMergingInProgress={setIsMergingInProgress}
-            operationId={null}
-            onCancelComplete={() => {}}
-          />
-        )}
+            {videoUrl && (
+              <StickyVideoPlayer
+                videoUrl={videoUrl}
+                subtitles={subtitleSegments}
+                onPlayerReady={handleVideoPlayerReady}
+                onChangeVideo={handleChangeVideo}
+                onSrtLoaded={setSubtitleSegments}
+                onStickyChange={handleStickyChange}
+                onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
+                onTogglePlay={handleTogglePlay}
+                onShiftAllSubtitles={handleShiftAllSubtitles}
+              />
+            )}
 
-        <BackToTopButton />
+            <div ref={mainContentRef} style={{ position: 'relative' }}>
+              <GenerateSubtitles
+                onSubtitlesGenerated={handleSubtitlesGenerated}
+                showOriginalText={showOriginalText}
+                onShowOriginalTextChange={setShowOriginalText}
+              />
+
+              <div ref={editSubtitlesRef} id="edit-subtitles-section">
+                <EditSubtitles
+                  videoFile={videoFile}
+                  videoUrl={videoUrl}
+                  isPlaying={isPlaying}
+                  onSetVideoFile={handleSetVideoFile}
+                  onSetVideoUrl={handleSetVideoUrlCallback}
+                  onSetIsPlaying={handleSetIsPlaying}
+                  secondsToSrtTime={secondsToSrtTime}
+                  parseSrt={parseSrt}
+                  subtitles={subtitleSegments}
+                  videoPlayerRef={videoPlayerRef}
+                  isMergingInProgress={isMergingInProgress}
+                  setMergeProgress={handleSetMergeProgress}
+                  setMergeStage={handleSetMergeStage}
+                  setIsMergingInProgress={handleSetIsMergingInProgress}
+                  editorRef={editSubtitlesMethodsRef}
+                  onSetSubtitlesDirectly={handleSetSubtitleSegments}
+                  reviewedBatchStartIndex={reviewedBatchStartIndex}
+                />
+              </div>
+            </div>
+
+            {isTranslationInProgress && (
+              <TranslationProgressArea
+                translationProgress={translationProgress}
+                translationStage={translationStage}
+                onClose={() => setIsTranslationInProgress(false)}
+                subtitleProgress={
+                  isReceivingPartialResults
+                    ? {
+                        current: translationProgress,
+                        total: 100,
+                      }
+                    : undefined
+                }
+              />
+            )}
+
+            {isMergingInProgress && (
+              <MergingProgressArea
+                mergeProgress={mergeProgress}
+                mergeStage={mergeStage}
+                onSetIsMergingInProgress={setIsMergingInProgress}
+                operationId={null}
+                onCancelComplete={() => {}}
+              />
+            )}
+
+            <BackToTopButton />
+          </>
+        )}
       </div>
     </div>
   );

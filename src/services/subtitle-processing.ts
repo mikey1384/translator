@@ -2,13 +2,13 @@ import path from 'path';
 import { FFmpegService } from './ffmpeg-service';
 import { FileManager } from './file-manager';
 import { parseSrt, buildSrt } from '../renderer/helpers/subtitle-utils';
-import { Anthropic } from '@anthropic-ai/sdk';
-import { OpenAI } from 'openai';
 import fs from 'fs';
 import fsp from 'fs/promises';
-import dotenv from 'dotenv';
+import keytar from 'keytar';
 import { AI_MODELS } from '../renderer/constants';
 import { SrtSegment } from '../types/interface';
+import { Anthropic } from '@anthropic-ai/sdk';
+import { OpenAI } from 'openai';
 
 import {
   GenerateSubtitlesOptions,
@@ -16,32 +16,16 @@ import {
   MergeSubtitlesOptions,
 } from '../types/interface';
 
-dotenv.config();
+const KEYTAR_SERVICE_NAME = 'TranslatorApp';
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-let anthropic: Anthropic | null = null;
-let openai: OpenAI | null = null;
-
-try {
-  if (ANTHROPIC_API_KEY) {
-    anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-  } else {
-    console.warn('Anthropic API key not found in environment variables.');
+async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
+  const key = await keytar.getPassword(KEYTAR_SERVICE_NAME, keyType);
+  if (!key) {
+    throw new SubtitleProcessingError(
+      `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} API key not found. Please set it in the application settings.`
+    );
   }
-} catch (error) {
-  console.error('Error initializing Anthropic client:', error);
-}
-
-try {
-  if (OPENAI_API_KEY) {
-    openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-  } else {
-    console.warn('OpenAI API key not found in environment variables.');
-  }
-} catch (error) {
-  console.error('Error initializing OpenAI client:', error);
+  return key;
 }
 
 export class SubtitleProcessingError extends Error {
@@ -86,7 +70,11 @@ function formatSrtTimestamp(seconds: number): string {
     .padStart(3, '0')}`;
 }
 
-async function callClaudeWithRetry(params: any, maxRetries = 3): Promise<any> {
+async function callClaudeWithRetry(
+  anthropicClient: Anthropic,
+  params: any,
+  maxRetries = 3
+): Promise<any> {
   let lastError: any = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -95,7 +83,7 @@ async function callClaudeWithRetry(params: any, maxRetries = 3): Promise<any> {
         abortController.abort('Request timeout');
       }, 45000);
 
-      const result = await anthropic!.messages.create(params, {
+      const result = await anthropicClient.messages.create(params, {
         signal: abortController.signal,
       });
       clearTimeout(timeoutId);
@@ -143,9 +131,13 @@ async function generateSubtitlesFromAudio({
   progressCallback,
   progressRange,
 }: GenerateSubtitlesFromAudioOptions): Promise<string> {
-  if (!openai) {
+  let openai: OpenAI;
+  try {
+    const openaiApiKey = await getApiKey('openai');
+    openai = new OpenAI({ apiKey: openaiApiKey });
+  } catch (keyError) {
     throw new SubtitleProcessingError(
-      'OpenAI API key is missing or client failed to initialize. Please check your .env configuration.'
+      keyError instanceof Error ? keyError.message : String(keyError)
     );
   }
 
@@ -319,7 +311,7 @@ async function generateSubtitlesFromAudio({
             const chunkResponse = await retryWithExponentialBackoff(
               async () => {
                 const fileStream = createFileFromPath(meta.path);
-                return await openai!.audio.transcriptions.create({
+                return await openai.audio.transcriptions.create({
                   file: fileStream,
                   model: 'whisper-1',
                   response_format: 'verbose_json',
@@ -780,9 +772,13 @@ async function translateBatch(
   batch: { segments: any[]; startIndex: number; endIndex: number },
   targetLang: string
 ): Promise<any[]> {
-  if (!anthropic) {
+  let anthropic: Anthropic;
+  try {
+    const anthropicApiKey = await getApiKey('anthropic');
+    anthropic = new Anthropic({ apiKey: anthropicApiKey });
+  } catch (keyError) {
     throw new SubtitleProcessingError(
-      'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
+      keyError instanceof Error ? keyError.message : String(keyError)
     );
   }
 
@@ -811,7 +807,7 @@ Translate EACH line individually, preserving the line order.
 
   while (retryCount < MAX_RETRIES) {
     try {
-      const batchTranslationResponse = await callClaudeWithRetry({
+      const batchTranslationResponse = await callClaudeWithRetry(anthropic, {
         model: AI_MODELS.CLAUDE_3_7_SONNET,
         temperature: 0.1,
         max_tokens: AI_MODELS.MAX_TOKENS,
@@ -889,9 +885,13 @@ async function reviewTranslationBatch(batch: {
   endIndex: number;
   targetLang: string;
 }): Promise<any[]> {
-  if (!anthropic) {
+  let anthropic: Anthropic;
+  try {
+    const anthropicApiKey = await getApiKey('anthropic');
+    anthropic = new Anthropic({ apiKey: anthropicApiKey });
+  } catch (keyError) {
     throw new SubtitleProcessingError(
-      'Anthropic API key is missing or client failed to initialize. Please check your .env configuration.'
+      keyError instanceof Error ? keyError.message : String(keyError)
     );
   }
 
@@ -943,10 +943,10 @@ Improved translation for block 3
 `;
 
   try {
-    const reviewResponse = await callClaudeWithRetry({
-      model: AI_MODELS.CLAUDE_3_7_SONNET, // Ensure this constant is defined correctly
+    const reviewResponse = await callClaudeWithRetry(anthropic, {
+      model: AI_MODELS.CLAUDE_3_7_SONNET,
       temperature: 0.1,
-      max_tokens: AI_MODELS.MAX_TOKENS, // Ensure this constant is defined correctly
+      max_tokens: AI_MODELS.MAX_TOKENS,
       system: `You are an expert subtitle reviewer. Follow the output format instructions precisely. Output only the improved ${batch.targetLang} translations, one per line, matching the input order.`,
       messages: [{ role: 'user', content: prompt }],
     });

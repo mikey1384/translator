@@ -64,6 +64,17 @@ interface ElectronAPI {
     callback: ProgressEventCallback | null
   ) => () => void;
 
+  // === API Key Management ===
+  getApiKeyStatus: () => Promise<{
+    success: boolean;
+    status: { openai: boolean; anthropic: boolean };
+    error?: string;
+  }>;
+  saveApiKey: (
+    keyType: 'openai' | 'anthropic',
+    apiKey: string
+  ) => Promise<{ success: boolean; error?: string }>;
+
   // Add the missing showMessage method
   showMessage: (message: string) => Promise<void>;
 }

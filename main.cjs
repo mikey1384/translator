@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { ipcMain, app } = require('electron');
+const keytar = require('keytar');
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -115,6 +116,58 @@ try {
     }
   });
   console.info('Registered open-file handler.');
+
+  // === API Key Handlers ===
+  const SERVICE_NAME = 'TranslatorApp'; // Used for keytar service identifier
+
+  ipcMain.handle('get-api-key-status', async () => {
+    console.info('Received get-api-key-status request');
+    try {
+      const openAIKey = await keytar.getPassword(SERVICE_NAME, 'openai');
+      const anthropicKey = await keytar.getPassword(SERVICE_NAME, 'anthropic');
+      const status = {
+        openai: !!openAIKey,
+        anthropic: !!anthropicKey,
+      };
+      console.info('API Key Status:', status);
+      return { success: true, status };
+    } catch (error) {
+      console.error('Error getting API key status:', error);
+      // Avoid exposing error details potentially containing sensitive info
+      return {
+        success: false,
+        error: 'Failed to retrieve key status.',
+        status: { openai: false, anthropic: false },
+      };
+    }
+  });
+  console.info('Registered get-api-key-status handler.');
+
+  ipcMain.handle('save-api-key', async (_event, { keyType, apiKey }) => {
+    console.info(`Received save-api-key request for type: ${keyType}`);
+    if (!keyType || !apiKey) {
+      return { success: false, error: 'Key type and API key are required.' };
+    }
+    if (keyType !== 'openai' && keyType !== 'anthropic') {
+      return { success: false, error: 'Invalid key type specified.' };
+    }
+
+    try {
+      // Basic validation (example: check prefix)
+      if (keyType === 'openai' && !apiKey.startsWith('sk-')) {
+        return { success: false, error: 'Invalid OpenAI key format.' };
+      }
+      // Add similar check for Anthropic if needed
+
+      await keytar.setPassword(SERVICE_NAME, keyType, apiKey);
+      console.info(`Successfully saved ${keyType} API key.`);
+      return { success: true };
+    } catch (error) {
+      console.error(`Error saving ${keyType} API key:`, error);
+      return { success: false, error: `Failed to save ${keyType} key.` };
+    }
+  });
+  console.info('Registered save-api-key handler.');
 
   // Register merge-subtitles handler (updated)
   ipcMain.handle('merge-subtitles', async (event, options) => {

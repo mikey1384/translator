@@ -156,6 +156,11 @@ const electronAPI = {
   // Delete file
   deleteFile: options => ipcRenderer.invoke('delete-file', options),
 
+  // === API Key Management ===
+  getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
+  saveApiKey: (keyType, apiKey) =>
+    ipcRenderer.invoke('save-api-key', { keyType, apiKey }),
+
   // === Add Subtitle Translation ===
   translateSubtitles: options =>
     ipcRenderer.invoke('translate-subtitles', options),
