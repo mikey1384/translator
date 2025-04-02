@@ -454,6 +454,7 @@ export async function generateSubtitlesFromVideo(
     current?: number;
     total?: number;
     error?: string;
+    batchStartIndex?: number;
   }) => void,
   services?: {
     ffmpegService: FFmpegService;
@@ -649,6 +650,7 @@ export async function generateSubtitlesFromVideo(
           partialResult: cumulativeReviewedSrt, // Send reviewed SRT incrementally
           current: batchEnd,
           total: segmentsInProcess.length,
+          batchStartIndex: batchStart, // Add the start index of the reviewed batch
         });
       }
     }

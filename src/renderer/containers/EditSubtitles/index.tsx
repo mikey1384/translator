@@ -62,6 +62,7 @@ export interface EditSubtitlesProps {
   setIsMergingInProgress: React.Dispatch<React.SetStateAction<boolean>>;
   editorRef?: React.RefObject<{ scrollToCurrentSubtitle: () => void }>;
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
+  reviewedBatchStartIndex?: number | null;
 }
 
 const mergeOptionsStyles = css`
@@ -120,6 +121,7 @@ export function EditSubtitles({
   setIsMergingInProgress,
   editorRef,
   onSetSubtitlesDirectly,
+  reviewedBatchStartIndex,
 }: EditSubtitlesProps) {
   /**
    * ------------------------------------------------------
@@ -316,6 +318,35 @@ export function EditSubtitles({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitlesState]);
+
+  // Scroll to the start of the last reviewed batch
+  useEffect(() => {
+    if (
+      reviewedBatchStartIndex !== null &&
+      reviewedBatchStartIndex !== undefined &&
+      reviewedBatchStartIndex >= 0
+    ) {
+      // Ensure the index is within bounds
+      if (reviewedBatchStartIndex < subtitleRefs.current.length) {
+        const targetElement = subtitleRefs.current[reviewedBatchStartIndex];
+        if (targetElement) {
+          console.log(
+            `[EditSubtitles] Scrolling to reviewed index: ${reviewedBatchStartIndex}`
+          );
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add a temporary highlight effect
+          targetElement.classList.add('highlight-subtitle');
+          setTimeout(() => {
+            targetElement.classList.remove('highlight-subtitle');
+          }, 2000); // Remove highlight after 2 seconds
+        }
+      } else {
+        console.warn(
+          `[EditSubtitles] reviewedBatchStartIndex ${reviewedBatchStartIndex} is out of bounds.`
+        );
+      }
+    }
+  }, [reviewedBatchStartIndex]); // Trigger only when this index changes
 
   /**
    * ------------------------------------------------------

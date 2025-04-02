@@ -47,6 +47,11 @@ function AppContent() {
   const [isReceivingPartialResults, setIsReceivingPartialResults] =
     useState<boolean>(false);
 
+  // New state to track the start index of the last reviewed batch
+  const [reviewedBatchStartIndex, setReviewedBatchStartIndex] = useState<
+    number | null
+  >(null);
+
   const mainContentRef = useRef<HTMLDivElement>(null);
 
   const hasScrolledToStickyRef = useRef(false);
@@ -116,6 +121,7 @@ function AppContent() {
       stage?: string;
       current?: number;
       total?: number;
+      batchStartIndex?: number;
     }) => {
       try {
         const safeResult = {
@@ -124,7 +130,13 @@ function AppContent() {
           stage: result?.stage || 'Processing',
           current: result?.current || 0,
           total: result?.total || 100,
+          batchStartIndex: result?.batchStartIndex,
         };
+
+        // Update the batch start index state if it's present in the update
+        if (safeResult.batchStartIndex !== undefined) {
+          setReviewedBatchStartIndex(safeResult.batchStartIndex);
+        }
 
         if (
           safeResult.partialResult &&
@@ -180,6 +192,7 @@ function AppContent() {
       setTranslationProgress,
       setTranslationStage,
       setIsReceivingPartialResults,
+      setReviewedBatchStartIndex,
     ]
   );
 
@@ -307,6 +320,7 @@ function AppContent() {
               setIsMergingInProgress={handleSetIsMergingInProgress}
               editorRef={editSubtitlesMethodsRef}
               onSetSubtitlesDirectly={handleSetSubtitleSegments}
+              reviewedBatchStartIndex={reviewedBatchStartIndex}
             />
           </div>
         </div>
