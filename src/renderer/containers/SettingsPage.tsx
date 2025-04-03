@@ -1,36 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
+import { colors, linkStyles as globalLinkStyles } from '../styles';
 // Assuming Button component exists
 
-// Basic Styling using @emotion/css
+// Basic Styling using @emotion/css - Dark Theme
 const settingsPageStyles = css`
   padding: 30px;
   max-width: 700px;
   margin: 20px auto;
-  background-color: #ffffff;
+  background-color: ${colors.white}; // Main dark background
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  // box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); // Remove shadow for flat
+  border: 1px solid ${colors.border};
 `;
 
 const titleStyles = css`
   font-size: 1.8em;
-  color: #333;
+  color: ${colors.dark}; // Light text
   margin-bottom: 25px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid ${colors.border};
   padding-bottom: 15px;
 `;
 
 const sectionStyles = css`
   margin-bottom: 35px;
   padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px solid #e0e0e0;
+  background-color: ${colors.light}; // Secondary dark bg
+  border: 1px solid ${colors.border};
   border-radius: 6px;
 `;
 
 const sectionTitleStyles = css`
   font-size: 1.3em;
-  color: #444;
+  color: ${colors.dark}; // Light text
   margin-bottom: 20px;
 `;
 
@@ -38,37 +40,53 @@ const labelStyles = css`
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #555;
+  color: ${colors.grayDark}; // Secondary light text
 `;
 
 const inputStyles = css`
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid ${colors.border};
   border-radius: 4px;
   font-size: 1em;
   box-sizing: border-box; /* Ensure padding doesn't increase width */
   margin-bottom: 15px;
+  background-color: ${colors.grayLight}; // Surface color for inputs
+  color: ${colors.dark}; // Light text
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: none;
+  }
+
+  &::placeholder {
+    color: ${colors.gray};
+  }
 `;
 
 const buttonStyles = css`
   padding: 10px 18px;
-  background-color: #4a90e2; // A nice blue
+  background-color: ${colors.primary}; // Use primary accent
   color: white;
-  border: none;
+  border: none; // Maybe a subtle border? 1px solid ${colors.primaryDark}
   border-radius: 4px;
   cursor: pointer;
   font-size: 1em;
   transition: background-color 0.2s ease;
   margin-right: 10px;
+  box-shadow: none;
 
   &:hover {
-    background-color: #357abd;
+    background-color: ${colors.primaryLight};
   }
 
   &:disabled {
-    background-color: #ccc;
+    background-color: ${colors.gray};
+    color: ${colors.grayDark};
     cursor: not-allowed;
+    opacity: 0.7;
   }
 `;
 
@@ -81,16 +99,17 @@ const statusIndicatorStyles = css`
   vertical-align: middle;
 `;
 
+// Use styles from global theme file if they exist and match
 const statusSetStyles = css`
-  background-color: #d4edda; // Light green
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: rgba(76, 201, 176, 0.1);
+  color: ${colors.success};
+  border: 1px solid ${colors.success};
 `;
 
 const statusNotSetStyles = css`
-  background-color: #f8d7da; // Light red
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: rgba(230, 94, 106, 0.1);
+  color: ${colors.danger};
+  border: 1px solid ${colors.danger};
 `;
 
 const feedbackMessageStyles = css`
@@ -101,28 +120,24 @@ const feedbackMessageStyles = css`
 `;
 
 const successMessageStyles = css`
-  background-color: #e6ffed;
-  color: #006421;
-  border: 1px solid #c1f0d0;
+  background-color: rgba(76, 201, 176, 0.15);
+  color: ${colors.success};
+  border: 1px solid ${colors.success};
 `;
 
 const errorMessageStyles = css`
-  background-color: #fff0f1;
-  color: #a30011;
-  border: 1px solid #ffccd1;
+  background-color: rgba(230, 94, 106, 0.15);
+  color: ${colors.danger};
+  border: 1px solid ${colors.danger};
 `;
 
 const linkStyles = css`
-  color: #4a90e2;
-  text-decoration: none;
-  &:hover {
-    text-decoration: underline;
-  }
+  ${globalLinkStyles}// Use global link style
 `;
 
 const infoTextStyles = css`
   font-size: 0.9em;
-  color: #666;
+  color: ${colors.grayDark}; // Secondary light text
   margin-top: 10px;
   margin-bottom: 15px;
   line-height: 1.4;
@@ -147,21 +162,21 @@ interface SettingsPageProps {
   isLoadingStatus: boolean;
 }
 
-// Add styles for the key status area when key is set
+// Add styles for the key status area when key is set - Dark Theme
 const keySetInfoStyles = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 15px;
-  background-color: #e6f7ff; // Light blue background
-  border: 1px solid #b3e0ff;
+  background-color: ${colors.light}; // Use secondary dark bg
+  border: 1px solid ${colors.border};
   border-radius: 4px;
   margin-bottom: 15px;
 `;
 
 const keySetTextStyles = css`
   font-weight: 500;
-  color: #0056b3; // Darker blue text
+  color: ${colors.dark}; // Light text
 `;
 
 const keyActionButtonsStyles = css`
@@ -169,23 +184,45 @@ const keyActionButtonsStyles = css`
   gap: 8px;
 `;
 
-// Small utility button style
+// Small utility button style - Dark Theme
 const utilityButtonStyles = css`
   padding: 5px 10px;
   font-size: 0.85em;
-  background-color: #f8f9fa;
-  color: #495057;
-  border: 1px solid #ced4da;
+  background-color: ${colors.grayLight}; // Surface color
+  color: ${colors.dark}; // Light text
+  border: 1px solid ${colors.border};
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: none;
+
   &:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
+    background-color: ${colors.light}; // Secondary dark bg
+    border-color: ${colors.primary}; // Primary accent
   }
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+`;
+
+// Back Button - Dark Theme Specific Style
+const backButtonStyles = css`
+  ${utilityButtonStyles} // Inherit base utility style
+  background-color: ${colors.gray}; // Use medium gray
+  color: ${colors.dark};
+  margin-bottom: 20px;
+
+  &:hover {
+    background-color: ${colors.grayDark};
+    color: ${colors.white}; // Main background for contrast?
+    border-color: ${colors.grayDark};
+  }
+
+  &:disabled {
+    // Keep utility disabled style
   }
 `;
 
@@ -491,16 +528,9 @@ function SettingsPage({
 
   return (
     <div className={settingsPageStyles}>
-      {/* <<< Add Back button >>> */}
+      {/* <<< Update Back button to use specific style >>> */}
       <button
-        className={css`
-          ${buttonStyles}
-          background-color: #6c757d; // Grey color
-          margin-bottom: 20px;
-          &:hover {
-            background-color: #5a6268;
-          }
-        `}
+        className={backButtonStyles}
         onClick={onBack}
         disabled={isSaving} // Disable while saving either key
       >

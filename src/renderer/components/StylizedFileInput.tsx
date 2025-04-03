@@ -1,6 +1,6 @@
 import React, { ChangeEvent, InputHTMLAttributes } from 'react';
 import { css } from '@emotion/css';
-import { colors, shadows, breakpoints } from '../styles';
+import { colors, breakpoints } from '../styles';
 
 interface StylizedFileInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -22,30 +22,34 @@ const fileInputButtonStyles = css`
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
-  background-color: #f8f9fa;
-  border: 1px dashed #ced4da;
+  background-color: ${colors.light};
+  border: 1px solid ${colors.border};
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.95rem;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  color: #212529;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  color: ${colors.dark};
   min-width: 140px;
   text-align: center;
   height: 40px;
   line-height: 1;
   box-sizing: border-box;
   white-space: nowrap;
+  box-shadow: none;
 
   &:hover {
-    background-color: #e9ecef;
+    background-color: ${colors.grayLight};
     border-color: ${colors.primary};
-    transform: translateY(-1px);
-    box-shadow: ${shadows.md};
+    transform: none;
+    box-shadow: none;
   }
 
   &:active {
-    transform: translateY(0);
-    box-shadow: ${shadows.sm};
+    transform: none;
+    box-shadow: none;
+    background-color: ${colors.border};
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -85,13 +89,13 @@ const fileInfoStyles = css`
 `;
 
 const fileSizeStyles = css`
-  background-color: #e9ecef;
+  background-color: ${colors.grayLight};
   border-radius: 4px;
   padding: 2px 8px;
   font-size: 0.8rem;
   margin-left: 8px;
   font-weight: 500;
-  color: #495057;
+  color: ${colors.dark};
 `;
 
 const hiddenInputStyles = css`
@@ -163,7 +167,7 @@ export default function StylizedFileInput({
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke={colors.dark}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"

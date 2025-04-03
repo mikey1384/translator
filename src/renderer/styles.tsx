@@ -8,65 +8,64 @@ export const breakpoints = {
   desktopMaxWidth: '1200px',
 };
 
-// Colors system
+// Colors system - Dark Theme
 export const colors = {
-  primary: '#4361ee',
-  primaryLight: '#4895ef',
-  primaryDark: '#3a0ca3',
-  secondary: '#3f37c9',
-  success: '#4cc9f0',
-  info: '#4895ef',
-  warning: '#f72585',
-  danger: '#e63946',
-  light: '#f8f9fa',
-  dark: '#212529',
-  gray: '#6c757d',
-  grayLight: '#f1f3f5',
-  grayDark: '#343a40',
-  white: '#ffffff',
+  primary: '#5876F5', // Brighter blue accent
+  primaryLight: '#7B97FF',
+  primaryDark: '#3A57D1',
+  secondary: '#4A43C9', // Adjusted secondary accent
+  success: '#4CE0B3', // Brighter teal/green
+  info: '#5BC0DE', // Adjusted info blue
+  warning: '#F7559A', // Adjusted pink/warning
+  danger: '#E65E6A', // Adjusted red/danger
+  light: '#1E1E1E', // Secondary dark background (e.g., cards, inputs on main bg)
+  dark: '#F5F5F5', // Primary light text color
+  gray: '#8A8A8A', // Medium gray for secondary text/elements
+  grayLight: '#2A2A2A', // Surface color (slightly lighter than main bg)
+  grayDark: '#E0E0E0', // Secondary light text color
+  white: '#080808', // Darker main background
+  border: '#333333', // Subtle border color
 };
 
-// Advanced gradient system
-export const gradients = {
-  primary: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
-  secondary: `linear-gradient(135deg, ${colors.secondary} 0%, ${colors.primaryDark} 100%)`,
-  success: `linear-gradient(135deg, ${colors.success} 0%, #06d6a0 100%)`,
-  danger: `linear-gradient(135deg, ${colors.danger} 0%, #f94144 100%)`,
-  warning: `linear-gradient(135deg, ${colors.warning} 0%, #ff3d7f 100%)`,
-  info: `linear-gradient(135deg, ${colors.info} 0%, #16b9ef 100%)`,
-};
+// Advanced gradient system - Removed for flat design
+export const gradients = {};
 
-// Shadow system
+// Shadow system - Removed for flat design
 export const shadows = {
-  sm: '0 2px 4px rgba(0, 0, 0, 0.08)',
-  md: '0 4px 8px rgba(0, 0, 0, 0.12)',
-  lg: '0 8px 16px rgba(0, 0, 0, 0.15)',
-  xl: '0 12px 20px rgba(0, 0, 0, 0.18)',
-  inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
-  button: '0 4px 10px rgba(67, 97, 238, 0.3)',
-  buttonHover: '0 6px 15px rgba(67, 97, 238, 0.4)',
-  section: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
-  sectionHover: '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)',
+  sm: 'none',
+  md: 'none',
+  lg: 'none',
+  xl: 'none',
+  inner: 'none',
+  button: 'none',
+  buttonHover: 'none',
+  section: 'none',
+  sectionHover: 'none',
 };
 
-// Form input styles
+// Form input styles - Dark Theme
 export const inputStyles = css`
   padding: 10px 14px;
   border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border: 1px solid ${colors.border}; // Use dark border
   font-size: 0.95rem;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: border-color 0.2s ease; // Simpler transition
   width: 100%;
   max-width: 320px;
-  background-color: white;
-  box-shadow: ${shadows.sm};
+  background-color: ${colors.light}; // Use secondary dark bg
+  color: ${colors.dark}; // Use light text color
+  box-shadow: ${shadows.sm}; // Removed shadow
   box-sizing: border-box;
   line-height: 1.2;
 
   &:focus {
     outline: none;
-    border-color: ${colors.primary};
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    border-color: ${colors.primary}; // Use primary accent for focus border
+    box-shadow: none; // Ensure no focus shadow
+  }
+
+  &::placeholder {
+    color: ${colors.gray}; // Placeholder text color
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -74,11 +73,15 @@ export const inputStyles = css`
   }
 `;
 
+// Select styles - Dark Theme
 export const selectStyles = css`
-  ${inputStyles}
+  ${inputStyles} // Inherit base input styles
   height: 40px;
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='6 9 12 15 18 9'%3E%3C/polygon%3E%3C/svg%3E");
+  // Update SVG color for dark theme
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(
+    colors.gray
+  )}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='6 9 12 15 18 9'%3E%3C/polygon%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 35px;
@@ -90,23 +93,34 @@ export const selectStyles = css`
   width: 100%;
   max-width: 320px;
 
+  &:disabled {
+    background-color: ${colors.grayLight};
+    color: ${colors.gray};
+    cursor: not-allowed;
+    border-color: ${colors.border};
+  }
+
+  option {
+    background-color: ${colors.light}; // Option background
+    color: ${colors.dark}; // Option text color
+  }
+
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     max-width: 100%;
     width: 100%;
   }
 
-  /* Fix for dropdown menu width in various browsers */
   &::-ms-expand {
     display: none;
   }
 
-  /* Fix for Chrome/Safari/Firefox */
   option {
     width: auto;
     max-width: none;
   }
 `;
 
+// File Input Wrapper - Dark Theme
 export const fileInputWrapperStyles = css`
   margin-bottom: 16px;
   width: 100%;
@@ -117,10 +131,11 @@ export const fileInputWrapperStyles = css`
     margin-bottom: 8px;
     font-weight: 500;
     font-size: 0.95rem;
-    color: ${colors.dark};
+    color: ${colors.dark}; // Use light text color
   }
 `;
 
+// Container Styles - No theme change needed usually
 export const containerStyles = css`
   max-width: 90%;
   width: 100%;
@@ -134,14 +149,15 @@ export const containerStyles = css`
   }
 `;
 
+// Video Container - Dark Theme (adjust background/border)
 export const videoContainerStyles = css`
   position: relative;
   z-index: 1;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background-color: rgba(30, 30, 30, 0.9); // Darker semi-transparent bg
+  backdrop-filter: blur(8px);
   padding: 15px;
   border-radius: 8px;
-  border: 1px solid rgba(238, 238, 238, 0.9);
+  border: 1px solid ${colors.border}; // Subtle dark border
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
@@ -150,23 +166,22 @@ export const videoContainerStyles = css`
   max-height: 60vh;
   overflow: visible;
   transition: all 0.2s ease-out;
-  box-shadow: ${shadows.md};
+  box-shadow: ${shadows.md}; // Removed shadow
 
-  /* Ensure the player isn't too tall on small screens */
   @media (max-height: 700px) {
     max-height: 40vh;
     padding: 10px;
   }
 
-  /* On very small screens, reduce size further */
   @media (max-height: 500px) {
     max-height: 30vh;
   }
 `;
 
+// Title Styles - Dark Theme
 export const titleStyles = css`
   font-size: 2.5rem;
-  color: ${colors.dark};
+  color: ${colors.dark}; // Use light text color
   margin-bottom: 1.5rem;
   font-weight: 700;
 
@@ -176,21 +191,21 @@ export const titleStyles = css`
   }
 `;
 
+// Section Styles - Dark Theme
 export const sectionStyles = css`
-  background-color: ${colors.white};
+  background-color: ${colors.grayLight}; // Use surface color
   border-radius: 8px;
-  box-shadow: ${shadows.section};
+  box-shadow: ${shadows.section}; // Removed shadow
   padding: 1.5rem;
   margin-bottom: 2rem;
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.3s ease;
+  transition: none; // Removed shadow transition
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  border: 1px solid ${colors.border}; // Add subtle border for definition
 
   &:hover {
-    box-shadow: ${shadows.sectionHover};
+    box-shadow: ${shadows.sectionHover}; // Removed shadow
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -199,104 +214,140 @@ export const sectionStyles = css`
   }
 `;
 
+// Section Title - Dark Theme
 export const sectionTitleStyles = css`
   font-size: 1.5rem;
   font-weight: 600;
-  color: ${colors.dark};
-  margin-bottom: 1.25rem;
+  color: ${colors.dark}; // Light text
+  margin-top: 0;
+  margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid #dee2e6;
+  border-bottom: 1px solid ${colors.border}; // Subtle border
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
   }
 `;
 
+// Text Area Styles - Dark Theme
 export const textAreaStyles = css`
   width: 100%;
   min-height: 80px;
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid ${colors.border};
   border-radius: 6px;
   font-size: 14px;
   resize: vertical;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: border-color 0.2s ease;
+  background-color: ${colors.light};
+  color: ${colors.dark};
 
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.15);
+    box-shadow: none; // Remove focus shadow
+  }
+
+  &::placeholder {
+    color: ${colors.gray};
   }
 `;
 
-export const progressBarStyles = css`
-  width: 100%;
-  height: 8px;
-  background-color: ${colors.grayLight};
-  border-radius: 4px;
+// Progress Bar Background - Dark Theme
+export const progressBarBackgroundStyles = css`
+  height: 12px;
+  background-color: ${colors.light}; // Use secondary dark bg
+  border-radius: 6px;
   overflow: hidden;
-  margin: 1rem 0;
-  box-shadow: ${shadows.inner};
+  margin: 8px 0;
+  border: 1px solid ${colors.border};
 `;
 
+// Progress Bar Fill - Dark Theme (adjusted stripe visibility)
 export const progressBarFillStyles = (progress: number) => css`
   height: 100%;
   width: ${progress}%;
-  background: ${gradients.primary};
-  border-radius: 4px;
-  transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background-color: ${colors.primary}; // Solid primary color
+  border-radius: 6px 0 0 6px; // Maintain radius on left
+  transition: width 0.3s ease-in-out;
+  // Subtle stripes for dark theme
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.08) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 30px 30px; // Smaller stripes
+  animation: progress-bar-stripes 1s linear infinite;
+
+  @keyframes progress-bar-stripes {
+    from {
+      background-position: 30px 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+  }
 `;
 
+// Progress Stage - Dark Theme
 export const progressStageStyles = css`
   font-size: 0.875rem;
-  color: ${colors.gray};
+  color: ${colors.grayDark}; // Use secondary light text
   margin-bottom: 0.5rem;
   font-weight: 500;
 `;
 
+// Results Area - Dark Theme
 export const resultsAreaStyles = css`
   margin-top: 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid ${colors.border}; // Dark border
   border-radius: 6px;
   padding: 1rem;
-  background-color: ${colors.grayLight};
+  background-color: ${colors.light}; // Secondary dark bg
   max-height: 300px;
   overflow-y: auto;
   font-family: monospace;
   white-space: pre-wrap;
   font-size: 0.875rem;
-  box-shadow: ${shadows.inner};
+  box-shadow: ${shadows.inner}; // Removed shadow
+  color: ${colors.dark}; // Light text
   width: 100%;
   box-sizing: border-box;
   overflow-x: auto;
 `;
 
+// General page wrapper - Dark Theme
 export const pageWrapperStyles = css`
+  background-color: ${colors.white}; // Use main dark background
+  color: ${colors.dark}; // Default text color
   min-height: 100vh;
-  background-color: ${colors.grayLight};
-  padding: 1rem 0;
-  box-sizing: border-box;
-  width: 100%;
   overflow-x: hidden;
 `;
 
+// Status Item - Dark Theme
 export const statusItemStyles = css`
   padding: 1rem;
-  background-color: ${colors.white};
+  background-color: ${colors.light}; // Use secondary dark bg
   border-radius: 8px;
-  box-shadow: ${shadows.sm};
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: ${shadows.sm}; // Removed shadow
+  transition: none;
+  border: 1px solid ${colors.border};
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${shadows.md};
+    transform: none;
+    box-shadow: ${shadows.md}; // Removed shadow
+    // Optional: Slightly change border or background on hover for feedback
+    // border-color: ${colors.primary};
   }
 `;
 
+// Status Grid - No theme change needed
 export const statusGridStyles = css`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -307,25 +358,29 @@ export const statusGridStyles = css`
   }
 `;
 
+// Status Label - Dark Theme
 export const statusLabelStyles = css`
   font-weight: 500;
   margin-bottom: 0.5rem;
-  color: ${colors.grayDark};
+  color: ${colors.grayDark}; // Use secondary light text
 `;
 
+// Form Group - No theme change needed
 export const formGroupStyles = css`
   margin-bottom: 1.5rem;
   width: 100%;
   box-sizing: border-box;
 `;
 
+// Form Label - Dark Theme
 export const formLabelStyles = css`
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: ${colors.dark};
+  color: ${colors.dark}; // Use light text
 `;
 
+// Form Row - No theme change needed
 export const formRowStyles = css`
   display: flex;
   flex-wrap: wrap;
@@ -346,6 +401,7 @@ export const formRowStyles = css`
   }
 `;
 
+// Action Buttons - No theme change needed
 export const actionButtonsStyles = css`
   display: flex;
   gap: 1rem;
@@ -361,67 +417,94 @@ export const actionButtonsStyles = css`
   }
 `;
 
+// Error message styles - Dark Theme
 export const errorMessageStyles = css`
-  background-color: ${colors.danger};
-  color: white;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  box-shadow: ${shadows.sm};
-  width: 100%;
-  box-sizing: border-box;
-  word-break: break-word;
+  background-color: rgba(230, 94, 106, 0.15); // Danger background tint
+  color: ${colors.danger}; // Danger text color
+  border: 1px solid ${colors.danger};
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
 `;
 
+// Results Header - Dark Theme
 export const resultsHeaderStyles = css`
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: ${colors.dark};
+  color: ${colors.dark}; // Light text
 `;
 
+// Key Status Indicators - Dark Theme
 export const statusIndicatorStyles = (status: boolean) => css`
-  display: inline-flex;
-  align-items: center;
-
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: ${status ? colors.success : colors.danger};
-    margin-right: 8px;
-    box-shadow: 0 0 0 2px
-      ${status ? 'rgba(76, 201, 240, 0.3)' : 'rgba(230, 57, 70, 0.3)'};
-  }
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px; // Pill shape
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 12px;
+  vertical-align: middle;
+  border: 1px solid ${status ? colors.success : colors.danger};
+  background-color: ${status
+    ? 'rgba(76, 201, 176, 0.1)'
+    : 'rgba(230, 94, 106, 0.1)'}; // Tinted background
+  color: ${status ? colors.success : colors.danger};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
+// Status Loading - Dark Theme
+export const statusLoadingStyles = css`
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 12px;
+  vertical-align: middle;
+  border: 1px solid ${colors.gray};
+  background-color: rgba(138, 138, 138, 0.1);
+  color: ${colors.gray};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+// Timestamp Styles - Dark Theme
 export const timestampStyles = css`
   margin-top: 5px;
   font-size: 14px;
   font-family: monospace;
-  background-color: rgba(248, 249, 250, 0.7);
+  background-color: ${colors.light}; // Use secondary dark bg
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid rgba(222, 226, 230, 0.7);
+  border: 1px solid ${colors.border}; // Use dark border
+  color: ${colors.grayDark}; // Use secondary light text
   display: inline-block;
 `;
 
+// Controls Styles - Dark Theme
 export const controlsStyles = css`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-top: 1rem;
+  background-color: ${colors.light}; // Use secondary dark bg
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid ${colors.border}; // Use dark border
+`;
 
-  h3 {
-    margin: 0;
-  }
+// Link Styles - Dark Theme
+export const linkStyles = css`
+  color: ${colors.primary}; // Use primary accent
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
 
-  @media (max-width: ${breakpoints.mobileMaxWidth}) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  &:hover {
+    color: ${colors.primaryLight}; // Lighter accent on hover
+    text-decoration: underline;
   }
 `;

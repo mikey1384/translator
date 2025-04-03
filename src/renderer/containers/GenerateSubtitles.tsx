@@ -104,12 +104,12 @@ interface GenerateSubtitlesProps {
   onNavigateToSettings: (show: boolean) => void;
 }
 
-// Add styles for the locked state
+// Add styles for the locked state - Dark Theme
 const lockedContainerStyles = css`
   padding: 2rem 1.5rem;
-  border: 1px dashed ${colors.grayLight};
+  border: 1px solid ${colors.border}; // Use theme border color
   border-radius: 8px;
-  background-color: #f8f9fa;
+  background-color: ${colors.light}; // Use secondary dark background
   text-align: center;
   margin-bottom: 1rem;
 `;
@@ -117,34 +117,36 @@ const lockedContainerStyles = css`
 const lockedTitleStyles = css`
   font-size: 1.1rem;
   font-weight: 600;
-  color: ${colors.grayDark};
+  color: ${colors.dark}; // Use light text color
   margin-bottom: 0.75rem;
 `;
 
 const lockedProgressStyles = css`
   font-size: 1rem;
-  color: ${colors.gray};
+  color: ${colors.grayDark}; // Use secondary light text
   margin-bottom: 1.5rem;
   span {
     font-weight: bold;
-    color: ${colors.primary};
+    color: ${colors.primary}; // Use primary accent color
   }
 `;
 
 const goToSettingsButtonStyles = css`
-  // Use similar styles to the main settings button
   padding: 8px 16px;
   font-size: 0.9rem;
-  background-color: ${colors.grayLight};
-  color: ${colors.grayDark};
-  border: 1px solid ${colors.grayLight};
+  background-color: ${colors.grayLight}; // Use surface color for background
+  color: ${colors.dark}; // Use light text color
+  border: 1px solid ${colors.border}; // Use theme border color
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: none; // Flat design
 
   &:hover {
-    background-color: ${colors.grayLight};
-    border-color: ${colors.gray};
+    background-color: ${colors.border}; // Slightly darker on hover
+    border-color: ${colors.primary};
     color: ${colors.dark};
   }
 `;

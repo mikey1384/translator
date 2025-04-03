@@ -8,11 +8,11 @@ const logoTextColor = '#FAF0E6'; // Linen color
 const logoContainerStyles = css`
   display: flex;
   flex-direction: column;
-  align-items: center; // Align text to the CENTER within the container
-  // Add background color, padding, and border-radius
-  background-color: #000000;
-  padding: 5px 8px;
-  border-radius: 4px;
+  align-items: center; // Center horizontally
+  // Remove background properties for transparency
+  // background-color: #000000;
+  // padding: 5px 8px;
+  // border-radius: 4px;
 `;
 
 const translatorTextStyles = css`
