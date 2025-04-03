@@ -8,6 +8,7 @@ import { EditSubtitles } from './containers/EditSubtitles';
 import GenerateSubtitles from './containers/GenerateSubtitles';
 import MergingProgressArea from './containers/MergingProgressArea';
 import TranslationProgressArea from './containers/TranslationProgressArea';
+import LogoDisplay from './components/LogoDisplay';
 
 import { ManagementContextProvider } from './context';
 import { SrtSegment } from '../types/interface';
@@ -20,8 +21,15 @@ import {
 } from './helpers';
 
 // Styles
-import { pageWrapperStyles, containerStyles, titleStyles } from './styles';
+import { pageWrapperStyles, containerStyles } from './styles';
 import { css } from '@emotion/css';
+
+// Group for logo and settings button
+const headerRightGroupStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 15px; // Gap between logo and button
+`;
 
 // Define Key Status Type
 type ApiKeyStatus = {
@@ -34,6 +42,7 @@ const headerStyles = css`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+  gap: 15px; // Add gap between title and right group
 `;
 
 const settingsButtonStyles = css`
@@ -367,17 +376,25 @@ function AppContent() {
       <div id="top-padding" style={{ height: '10px' }}></div>
       <div className={containerStyles}>
         <div className={headerStyles}>
-          <h1 className={titleStyles} style={{ marginBottom: 0 }}>
-            Subtitle Generator & Translator
-          </h1>
-          {!showSettings && (
-            <button
-              className={settingsButtonStyles}
-              onClick={() => handleToggleSettings(true)}
-            >
-              Settings
-            </button>
-          )}
+          {/* Left side: Logo */}
+          <LogoDisplay />
+
+          {/* Right side: Settings Button */}
+          <div
+            className={
+              headerRightGroupStyles
+            } /* REMOVE style={{ marginLeft: 'auto' }} */
+          >
+            {/* <LogoDisplay />  MOVED */}
+            {!showSettings && (
+              <button
+                className={settingsButtonStyles}
+                onClick={() => handleToggleSettings(true)}
+              >
+                Settings
+              </button>
+            )}
+          </div>
         </div>
         {showSettings ? (
           <SettingsPage
