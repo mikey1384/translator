@@ -1,4 +1,3 @@
-import React from 'react';
 import { css } from '@emotion/css';
 
 // Color similar to the logo text - REVERTING TO OFF-WHITE

@@ -4,6 +4,7 @@ const { ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const fsp = require('fs').promises; // Use fs.promises
 
 // Load service dependencies
 let ffmpegService;
@@ -34,166 +35,257 @@ try {
   generateHandlerExists = true;
 }
 
+// Helper function to send progress updates safely
+function sendProgress(event, operationId, progressData) {
+  try {
+    const safeProgress = {
+      operationId: operationId || progressData.operationId,
+      percent: progressData.percent || 0,
+      stage: progressData.stage || 'Processing...',
+      current: progressData.current || 0,
+      total: progressData.total || 0,
+      partialResult: progressData.partialResult || '',
+      error: progressData.error || null,
+    };
+    event.sender.send('generate-subtitles-progress', safeProgress);
+  } catch (e) {
+    console.error(`[${operationId}] Error sending progress update:`, e);
+  }
+}
+
 if (!generateHandlerExists) {
   ipcMain.handle('generate-subtitles', async (event, options) => {
+    const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    let fullAudioPath = null;
+    let tempVideoPath = null; // For handling file data from renderer
+
     try {
-      // If required services aren't available, return an error
       if (!ffmpegService || !fileManagerService || !subtitleProcessing) {
-        console.error('Required services are not available');
-        return {
-          subtitles: '',
-          error: 'Required services are not available',
-        };
+        throw new Error('Required services are not available');
       }
 
+      sendProgress(event, operationId, {
+        percent: 0,
+        stage: 'Initializing...',
+      });
       console.log(
-        'Generate subtitles received options:',
+        `[${operationId}] Generate subtitles received options:`,
         JSON.stringify(options, null, 2)
       );
 
-      // Handle videoFile from browser context (packaged app)
+      // --- Handle video file data if sent from renderer --- START ---
       if (options.videoFileName && options.videoFileData) {
-        console.log('Processing video file data from browser context');
-
+        console.log(
+          `[${operationId}] Processing video file data from browser context`
+        );
         try {
-          // Create a temporary file path
           const tempDir = fileManagerService.tempDir;
           const safeFileName = options.videoFileName.replace(
             /[^a-zA-Z0-9_.-]/g,
             '_'
           );
-          const tempFilePath = path.join(
+          tempVideoPath = path.join(
             tempDir,
             `temp_${Date.now()}_${safeFileName}`
           );
-
-          console.log(`Created temporary path: ${tempFilePath}`);
-
-          // Write the file data to the temporary path
-          const buffer = Buffer.from(options.videoFileData);
-          await fs.promises.writeFile(tempFilePath, buffer);
-
-          console.log(`Wrote ${buffer.length} bytes to ${tempFilePath}`);
-
-          // Set the videoPath to the temporary path
-          options.videoPath = tempFilePath;
-
-          // Remove the data from options to save memory
-          delete options.videoFileData;
-
-          // We'll continue processing with this path
           console.log(
-            `Using temporary path for video processing: ${options.videoPath}`
+            `[${operationId}] Created temporary path: ${tempVideoPath}`
           );
+          const buffer = Buffer.from(options.videoFileData);
+          await fsp.writeFile(tempVideoPath, buffer);
+          console.log(
+            `[${operationId}] Wrote ${buffer.length} bytes to ${tempVideoPath}`
+          );
+          options.videoPath = tempVideoPath; // Use this temp path
+          delete options.videoFileData;
         } catch (error) {
-          console.error('Error saving temporary file:', error);
-          return {
-            subtitles: '',
-            error: 'Failed to save temporary video file: ' + error.message,
-          };
+          console.error(`[${operationId}] Error saving temporary file:`, error);
+          throw new Error(
+            `Failed to save temporary video file: ${error.message}`
+          );
         }
       }
+      // --- Handle video file data if sent from renderer --- END ---
 
-      // Simple validation: ensure videoPath exists and is accessible
+      // --- Validate and Normalize Video Path --- START ---
       if (!options.videoPath) {
-        console.error(
-          'No videoPath provided in options:',
-          JSON.stringify(options)
-        );
-
-        // Check if there are other properties that might contain the path
-        if (options.filePath) {
-          console.log('Using filePath instead of videoPath');
-          options.videoPath = options.filePath;
-        } else if (options.filePaths && options.filePaths.length > 0) {
-          console.log('Using filePaths[0] instead of videoPath');
+        console.error(`[${operationId}] No videoPath provided.`);
+        // Attempt to find path in other fields (optional, adapt as needed)
+        if (options.filePath) options.videoPath = options.filePath;
+        else if (options.filePaths && options.filePaths.length > 0)
           options.videoPath = options.filePaths[0];
-        } else {
-          return {
-            subtitles: '',
-            error: 'Video path is required and was not provided in any field',
-          };
-        }
+        else throw new Error('Video path is required.');
       }
-
-      // Log path details to help with debugging
-      console.log(`Video path: ${options.videoPath}`);
+      options.videoPath = path.normalize(options.videoPath);
       console.log(
-        `Path as Buffer: ${Buffer.from(options.videoPath).toString('hex')}`
+        `[${operationId}] Normalized video path: ${options.videoPath}`
       );
 
-      // Normalize the path - important for paths with international characters
-      options.videoPath = path.normalize(options.videoPath);
-      console.log(`Normalized path: ${options.videoPath}`);
-
-      // Verify file exists and is readable using fs.promises for better error handling
       try {
-        await fs.promises.access(options.videoPath, fs.constants.R_OK);
+        await fsp.access(options.videoPath, fs.constants.R_OK);
         console.log(
-          `Verified file exists and is readable: ${options.videoPath}`
+          `[${operationId}] Verified file exists and is readable: ${options.videoPath}`
         );
       } catch (err) {
-        console.error(`Cannot access video file at ${options.videoPath}:`, err);
-
-        // Try an alternative approach with Buffer for paths with international characters
-        try {
-          // Create a temporary copy with a simpler path if needed
-          const tempDir = fileManagerService.tempDir;
-          const tempFileName = `temp_video_${Date.now()}${path.extname(
-            options.videoPath
-          )}`;
-          const tempFilePath = path.join(tempDir, tempFileName);
-
-          console.log(`Creating temporary copy at: ${tempFilePath}`);
-
-          // Copy the file to a temp location without international characters
-          await fs.promises.copyFile(options.videoPath, tempFilePath);
-          console.log(`Successfully copied to: ${tempFilePath}`);
-
-          // Use the temporary path instead
-          options.videoPath = tempFilePath;
-        } catch (copyErr) {
-          console.error(`Failed to create temporary copy:`, copyErr);
-          return {
-            subtitles: '',
-            error: `Cannot access video file. The path may contain unsupported characters: ${err.message}`,
-          };
-        }
+        // Consider if temp copy logic is still needed or if FFmpeg handles paths better now
+        console.error(
+          `[${operationId}] Cannot access video file at ${options.videoPath}:`,
+          err
+        );
+        throw new Error(
+          `Cannot access video file: ${err.message}. Check path and permissions.`
+        );
+        // If needed, re-add logic to copy to a temp file with simpler name here
       }
+      // --- Validate and Normalize Video Path --- END ---
 
-      console.log(`Processing video file at: ${options.videoPath}`);
-
-      // Process the job using the function directly
-      const result = await subtitleProcessing.generateSubtitlesFromVideo(
-        options,
-        progress => {
-          // Create a safe copy of the progress object with default values
-          const safeProgress = {
-            percent: progress.percent || 0,
-            stage: progress.stage || 'Processing',
-            current: progress.current || 0,
-            total: progress.total || 0,
-            partialResult: progress.partialResult || '',
-          };
-
-          // Send the progress update to the renderer process with guaranteed properties
-          console.log('Progress Update:', safeProgress.partialResult);
-          event.sender.send('generate-subtitles-progress', safeProgress);
-        },
-        { ffmpegService, fileManager: fileManagerService }
+      console.log(
+        `[${operationId}] Processing video file at: ${options.videoPath}`
       );
 
-      return result;
+      // === Simplified Workflow Using Internal Chunking ===
+
+      // 1. Extract Full Audio
+      sendProgress(event, operationId, {
+        percent: 5,
+        stage: 'Extracting audio...',
+      });
+      console.log(
+        `[${operationId}] Extracting audio from ${options.videoPath}`
+      );
+      fullAudioPath = await ffmpegService.extractAudio(options.videoPath);
+      console.log(`[${operationId}] Extracted full audio to: ${fullAudioPath}`);
+      // Don't send 10% progress here, let generateSubtitlesFromAudio handle it
+
+      // 2. Call the service function that handles internal chunking and transcription
+      sendProgress(event, operationId, {
+        percent: 10,
+        stage: 'Starting transcription...',
+      });
+      console.log(
+        `[${operationId}] Calling generateSubtitlesFromAudio for: ${fullAudioPath}`
+      );
+
+      // Define the progress callback to forward updates
+      const internalProgressCallback = progress => {
+        // Log the raw progress object received from the service
+        console.log(
+          `[${operationId}] RAW Internal Progress Received:`,
+          JSON.stringify(progress, null, 2)
+        );
+
+        // Assuming generateSubtitlesFromAudio reports progress from 0-100
+        // We scale it here to fit within the 10%-95% range of the overall process
+        const overallPercent = 10 + (progress.percent / 100) * 85;
+        sendProgress(event, operationId, {
+          percent: overallPercent,
+          stage: progress.stage || 'Transcribing...',
+          current: progress.current,
+          total: progress.total,
+          partialResult: progress.partialResult,
+          error: progress.error,
+        });
+      };
+
+      // Call the function from subtitle-processing which handles chunking internally
+      // We need to ensure this function exists and accepts these parameters.
+      // Assuming it returns the final SRT string.
+      if (typeof subtitleProcessing.generateSubtitlesFromAudio !== 'function') {
+        throw new Error(
+          'subtitleProcessing.generateSubtitlesFromAudio is not available or not a function.'
+        );
+      }
+
+      const finalSrt = await subtitleProcessing.generateSubtitlesFromAudio({
+        inputAudioPath: fullAudioPath,
+        targetLanguage: options.targetLanguage, // Pass target language if provided
+        progressCallback: internalProgressCallback,
+        // We don't need to pass progressRange here, the callback handles scaling
+      });
+
+      console.log(
+        `[${operationId}] Received final SRT from subtitleProcessing service.`
+      );
+      sendProgress(event, operationId, {
+        percent: 98,
+        stage: 'Transcription complete!',
+      });
+
+      // 3. Return final result
+      return {
+        subtitles: finalSrt,
+        error: null,
+      };
     } catch (error) {
-      console.error('Error in generate-subtitles handler:', error);
+      console.error(
+        `[${operationId}] Error in generate-subtitles handler:`,
+        error
+      );
+      // Ensure error is sent via progress update
+      sendProgress(event, operationId, {
+        percent: 100,
+        stage: 'Error',
+        error: error.message || String(error),
+      });
       return {
         subtitles: '',
         error: `Generate subtitles error: ${error.message || String(error)}`,
       };
+    } finally {
+      // 4. Cleanup (Only full audio and temp video if created)
+      console.log(`[${operationId}] Starting cleanup...`);
+      const cleanupPromises = [];
+
+      if (fullAudioPath && fs.existsSync(fullAudioPath)) {
+        console.log(
+          `[${operationId}] Deleting full audio file: ${fullAudioPath}`
+        );
+        cleanupPromises.push(
+          fsp
+            .unlink(fullAudioPath)
+            .catch(err =>
+              console.error(
+                `[${operationId}] Failed to delete full audio:`,
+                err
+              )
+            )
+        );
+      } else {
+        console.log(
+          `[${operationId}] Full audio path not found or already deleted: ${fullAudioPath}`
+        );
+      }
+
+      // Remove chunk dir cleanup - no longer created here
+
+      if (tempVideoPath && fs.existsSync(tempVideoPath)) {
+        console.log(
+          `[${operationId}] Deleting temporary video file: ${tempVideoPath}`
+        );
+        cleanupPromises.push(
+          fsp
+            .unlink(tempVideoPath)
+            .catch(err =>
+              console.error(
+                `[${operationId}] Failed to delete temp video:`,
+                err
+              )
+            )
+        );
+      } else {
+        console.log(
+          `[${operationId}] Temp video path not found or already deleted: ${tempVideoPath}`
+        );
+      }
+
+      await Promise.allSettled(cleanupPromises);
+      console.log(`[${operationId}] Cleanup finished.`);
     }
   });
 
-  console.log('Generate subtitles handler registered');
+  console.log(
+    'Generate subtitles handler registered (using internal chunking)'
+  );
 }
 
 // Register merge-subtitles handler
@@ -247,7 +339,7 @@ if (!mergeHandlerExists) {
               `[${operationId}] Creating temporary video file for merge at: ${tempVideoPath}`
             );
             const buffer = Buffer.from(options.videoFileData);
-            await fs.promises.writeFile(tempVideoPath, buffer);
+            await fsp.writeFile(tempVideoPath, buffer);
             console.log(
               `[${operationId}] Wrote ${buffer.length} bytes to temporary merge video file ${tempVideoPath}`
             );
@@ -275,11 +367,7 @@ if (!mergeHandlerExists) {
             console.log(
               `[${operationId}] Creating temporary SRT file for merge at: ${tempSrtPath}`
             );
-            await fs.promises.writeFile(
-              tempSrtPath,
-              options.srtContent,
-              'utf8'
-            );
+            await fsp.writeFile(tempSrtPath, options.srtContent, 'utf8');
             console.log(
               `[${operationId}] Wrote SRT content to temporary file ${tempSrtPath}`
             );
@@ -306,8 +394,8 @@ if (!mergeHandlerExists) {
         options.subtitlesPath = path.normalize(options.subtitlesPath);
 
         try {
-          await fs.promises.access(options.videoPath, fs.constants.R_OK);
-          await fs.promises.access(options.subtitlesPath, fs.constants.R_OK);
+          await fsp.access(options.videoPath, fs.constants.R_OK);
+          await fsp.access(options.subtitlesPath, fs.constants.R_OK);
           console.log(`[${operationId}] Verified final file access for merge.`);
         } catch (err) {
           console.error(
@@ -355,7 +443,7 @@ if (!mergeHandlerExists) {
             console.log(
               `[${operationId}] Moving file from ${result.outputPath} to ${options.outputPath}`
             );
-            await fs.promises.rename(result.outputPath, options.outputPath);
+            await fsp.rename(result.outputPath, options.outputPath);
             console.log(
               `[${operationId}] Successfully moved file to final destination`
             );
@@ -385,7 +473,7 @@ if (!mergeHandlerExists) {
         console.log(`[${operationId}] Starting async cleanup.`);
         if (tempVideoPath) {
           try {
-            await fs.promises.unlink(tempVideoPath);
+            await fsp.unlink(tempVideoPath);
             console.log(
               `[${operationId}] Successfully deleted temporary video file: ${tempVideoPath}`
             );
@@ -398,7 +486,7 @@ if (!mergeHandlerExists) {
         }
         if (tempSrtPath) {
           try {
-            await fs.promises.unlink(tempSrtPath);
+            await fsp.unlink(tempSrtPath);
             console.log(
               `[${operationId}] Successfully deleted temporary SRT file: ${tempSrtPath}`
             );

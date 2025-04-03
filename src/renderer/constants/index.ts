@@ -4,6 +4,7 @@
 export const AI_MODELS = {
   CLAUDE_3_7_SONNET: 'claude-3-7-sonnet-20250219',
   MAX_TOKENS: 4000,
+  WHISPER: { id: 'whisper-1' },
 } as const;
 
 export const subtitleVideoPlayer = {

@@ -13,6 +13,7 @@ import {
   getAssStyleLine,
   AssStylePresetKey,
 } from '../renderer/constants/subtitle-styles';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid for unique directory names
 
 export class FFmpegError extends Error {
   constructor(message: string) {
@@ -719,5 +720,163 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     }
     log.warn(`[${operationId}] No active process found to cancel.`);
     return false;
+  }
+
+  /**
+   * Splits a large audio file into smaller chunks.
+   *
+   * @param audioPath Path to the input audio file.
+   * @param chunkDurationSeconds Desired duration of each chunk in seconds.
+   * @param operationId Optional operation ID for logging.
+   * @returns Promise<Array<{ path: string; startTime: number }>> An array of objects, each containing the path to a chunk file and its start time offset.
+   */
+  async splitAudioIntoChunks(
+    audioPath: string,
+    chunkDurationSeconds: number = 600, // Default 10 minutes
+    operationId?: string
+  ): Promise<{ path: string; startTime: number }[]> {
+    const logPrefix = operationId ? `[${operationId}] ` : '';
+    log.info(`${logPrefix}Starting audio splitting for: ${audioPath}`);
+
+    if (!fs.existsSync(audioPath)) {
+      throw new FFmpegError(`Input audio file not found: ${audioPath}`);
+    }
+
+    const totalDuration = await this.getMediaDuration(audioPath);
+    log.info(`${logPrefix}Total audio duration: ${totalDuration} seconds.`);
+
+    if (totalDuration <= 0 || isNaN(totalDuration)) {
+      throw new FFmpegError(
+        `Invalid audio duration detected: ${totalDuration}`
+      );
+    }
+
+    const numChunks = Math.ceil(totalDuration / chunkDurationSeconds);
+    log.info(
+      `${logPrefix}Splitting into ${numChunks} chunks of max ${chunkDurationSeconds} seconds.`
+    );
+
+    const chunksDir = path.join(this.tempDir, `chunks_${uuidv4()}`);
+    try {
+      await fsp.mkdir(chunksDir, { recursive: true });
+      log.info(
+        `${logPrefix}Created temporary directory for chunks: ${chunksDir}`
+      );
+    } catch (err) {
+      log.error(
+        `${logPrefix}Failed to create chunk directory: ${chunksDir}`,
+        err
+      );
+      throw new FFmpegError(
+        `Failed to create chunk directory: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+
+    const chunkPromises: Promise<{ path: string; startTime: number }>[] = [];
+
+    for (let i = 0; i < numChunks; i++) {
+      const startTime = i * chunkDurationSeconds;
+      // Calculate actual duration for this chunk (last chunk might be shorter)
+      const currentChunkDuration = Math.min(
+        chunkDurationSeconds,
+        totalDuration - startTime
+      );
+
+      // Ensure duration is positive
+      if (currentChunkDuration <= 0) {
+        log.warn(
+          `${logPrefix}Skipping chunk ${i + 1} due to zero or negative duration.`
+        );
+        continue;
+      }
+
+      const chunkFileName = `chunk_${String(i + 1).padStart(4, '0')}${path.extname(audioPath)}`;
+      const chunkOutputPath = path.join(chunksDir, chunkFileName);
+
+      const args = [
+        '-i',
+        audioPath,
+        '-ss',
+        startTime.toFixed(6), // Use precise start time
+        '-t',
+        currentChunkDuration.toFixed(6), // Use precise duration
+        '-vn', // No video
+        '-acodec',
+        'copy', // Copy codec - faster, assumes compatible format
+        '-y', // Overwrite without asking
+        chunkOutputPath,
+      ];
+
+      // Add a promise for running ffmpeg for this chunk
+      const chunkPromise = new Promise<{ path: string; startTime: number }>(
+        (resolve, reject) => {
+          log.info(
+            `${logPrefix}Creating chunk ${i + 1}/${numChunks}: ${chunkOutputPath} (Start: ${startTime.toFixed(3)}s, Duration: ${currentChunkDuration.toFixed(3)}s)`
+          );
+          const process = spawn(this.ffmpegPath, args);
+
+          let stderrOutput = '';
+          process.stderr.on('data', data => {
+            stderrOutput += data.toString();
+          });
+
+          process.on('close', code => {
+            if (code === 0) {
+              log.info(
+                `${logPrefix}Successfully created chunk ${i + 1}/${numChunks}`
+              );
+              resolve({ path: chunkOutputPath, startTime });
+            } else {
+              log.error(
+                `${logPrefix}FFmpeg failed for chunk ${i + 1}. Code: ${code}. Path: ${chunkOutputPath}`
+              );
+              log.error(`${logPrefix}FFmpeg stderr: ${stderrOutput}`);
+              reject(
+                new FFmpegError(
+                  `FFmpeg process for chunk ${i + 1} exited with code ${code}. Stderr: ${stderrOutput.substring(0, 500)}`
+                )
+              );
+            }
+          });
+
+          process.on('error', err => {
+            log.error(
+              `${logPrefix}FFmpeg spawn error for chunk ${i + 1}:`,
+              err
+            );
+            reject(
+              new FFmpegError(
+                `FFmpeg spawn error for chunk ${i + 1}: ${err.message}`
+              )
+            );
+          });
+        }
+      );
+      chunkPromises.push(chunkPromise);
+    }
+
+    try {
+      const chunkResults = await Promise.all(chunkPromises);
+      log.info(
+        `${logPrefix}Successfully created all ${chunkResults.length} audio chunks.`
+      );
+      // We don't delete the chunksDir here, the caller (generate-subtitles handler) should do that
+      return chunkResults;
+    } catch (error) {
+      log.error(`${logPrefix}Error during audio chunk creation:`, error);
+      // Attempt cleanup of the chunk directory on error
+      try {
+        await fsp.rm(chunksDir, { recursive: true, force: true });
+        log.info(
+          `${logPrefix}Cleaned up chunk directory due to error: ${chunksDir}`
+        );
+      } catch (cleanupError) {
+        log.error(
+          `${logPrefix}Failed to cleanup chunk directory after error: ${chunksDir}`,
+          cleanupError
+        );
+      }
+      throw error; // Re-throw the original error
+    }
   }
 }
