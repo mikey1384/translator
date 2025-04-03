@@ -152,12 +152,13 @@ export default function TranslationProgressArea({
           <div className={progressLabelStyles}>
             <span>
               <strong>Progress:</strong> {translationStage || 'Initializing...'}
-              {subtitleProgress?.current && subtitleProgress?.total ? (
+              {/* Remove the (current/total) display */}
+              {/* {subtitleProgress?.current && subtitleProgress?.total ? (
                 <span>
                   {' '}
                   ({subtitleProgress.current}/{subtitleProgress.total})
                 </span>
-              ) : null}
+              ) : null} */}
             </span>
             <span>{translationProgress.toFixed(1)}%</span>
           </div>

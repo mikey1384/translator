@@ -14,38 +14,95 @@ import Section from '../components/Section';
 const MAX_MB = 500;
 const MAX_FILE_SIZE = MAX_MB * 1024 * 1024;
 
-// Languages for translation
-const languages = [
+// Expanded and grouped languages
+const languageGroups = [
+  {
+    label: 'East Asia',
+    options: [
+      { value: 'korean', label: 'Korean' },
+      { value: 'japanese', label: 'Japanese' },
+      { value: 'chinese_simplified', label: 'Chinese (Simplified)' },
+      { value: 'chinese_traditional', label: 'Chinese (Traditional)' },
+      { value: 'vietnamese', label: 'Vietnamese' },
+    ],
+  },
+  {
+    label: 'Europe',
+    options: [
+      { value: 'spanish', label: 'Spanish' },
+      { value: 'french', label: 'French' },
+      { value: 'german', label: 'German' },
+      { value: 'italian', label: 'Italian' },
+      { value: 'portuguese', label: 'Portuguese' },
+      { value: 'russian', label: 'Russian' },
+      { value: 'dutch', label: 'Dutch' },
+      { value: 'polish', label: 'Polish' },
+      { value: 'swedish', label: 'Swedish' },
+      { value: 'turkish', label: 'Turkish' },
+      { value: 'norwegian', label: 'Norwegian' },
+      { value: 'danish', label: 'Danish' },
+      { value: 'finnish', label: 'Finnish' },
+      { value: 'greek', label: 'Greek' },
+      { value: 'czech', label: 'Czech' },
+      { value: 'hungarian', label: 'Hungarian' },
+      { value: 'romanian', label: 'Romanian' },
+      { value: 'ukrainian', label: 'Ukrainian' },
+      // Add more European languages if needed
+    ],
+  },
+  {
+    label: 'South / Southeast Asia',
+    options: [
+      { value: 'hindi', label: 'Hindi' },
+      { value: 'indonesian', label: 'Indonesian' },
+      { value: 'thai', label: 'Thai' },
+      { value: 'malay', label: 'Malay' },
+      { value: 'tagalog', label: 'Tagalog (Filipino)' },
+      { value: 'bengali', label: 'Bengali' },
+      { value: 'tamil', label: 'Tamil' },
+      { value: 'telugu', label: 'Telugu' },
+      { value: 'marathi', label: 'Marathi' },
+      { value: 'urdu', label: 'Urdu' },
+      // Add more South/Southeast Asian languages if needed
+    ],
+  },
+  {
+    label: 'Middle East / Africa',
+    options: [
+      { value: 'arabic', label: 'Arabic' },
+      { value: 'hebrew', label: 'Hebrew' },
+      { value: 'farsi', label: 'Farsi (Persian)' },
+      { value: 'swahili', label: 'Swahili' },
+      { value: 'afrikaans', label: 'Afrikaans' },
+      // Add more relevant languages here if needed
+    ],
+  },
+  // Add more groups as needed
+];
+
+// Base options
+const baseLanguageOptions = [
   { value: 'original', label: 'Same as Audio' },
-  { value: 'english', label: 'Translate to English' },
-  { value: 'korean', label: 'Translate to Korean' },
-  { value: 'spanish', label: 'Translate to Spanish' },
-  { value: 'french', label: 'Translate to French' },
-  { value: 'german', label: 'Translate to German' },
-  { value: 'chinese', label: 'Translate to Chinese' },
-  { value: 'japanese', label: 'Translate to Japanese' },
-  { value: 'russian', label: 'Translate to Russian' },
-  { value: 'portuguese', label: 'Translate to Portuguese' },
-  { value: 'italian', label: 'Translate to Italian' },
-  { value: 'arabic', label: 'Translate to Arabic' },
+  { value: 'english', label: 'English' },
 ];
 
 interface GenerateSubtitlesProps {
-  onSubtitlesGenerated: (subtitles: string, videoFile: File) => void;
+  videoFile: File | null;
+  onSetVideoFile: (file: File | null) => void;
+  onSubtitlesGenerated: (subtitles: string) => void;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
 }
 
 export default function GenerateSubtitles({
+  videoFile,
+  onSetVideoFile,
   onSubtitlesGenerated,
   showOriginalText,
   onShowOriginalTextChange,
 }: GenerateSubtitlesProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
-
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-
   const [subtitles, setSubtitles] = useState<string>('');
   const [error, setError] = useState<string>('');
 
@@ -60,7 +117,9 @@ export default function GenerateSubtitles({
           accept="video/*"
           onChange={handleFileChange}
           buttonText="Choose Video"
-          showSelectedFile={isGenerating ? false : !!selectedFile}
+          showSelectedFile={isGenerating ? false : !!videoFile}
+          key={videoFile ? videoFile.name + videoFile.lastModified : 'no-file'}
+          currentFile={videoFile}
         />
       </div>
 
@@ -72,10 +131,21 @@ export default function GenerateSubtitles({
           className={selectStyles}
           disabled={isGenerating}
         >
-          {languages.map(lang => (
+          {/* Render base options first */}
+          {baseLanguageOptions.map(lang => (
             <option key={lang.value} value={lang.value}>
               {lang.label}
             </option>
+          ))}
+          {/* Render grouped options */}
+          {languageGroups.map(group => (
+            <optgroup key={group.label} label={group.label}>
+              {group.options.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
 
@@ -127,7 +197,7 @@ export default function GenerateSubtitles({
       <ButtonGroup>
         <Button
           onClick={handleGenerateSubtitles}
-          disabled={!selectedFile || isGenerating}
+          disabled={!videoFile || isGenerating}
           size="md"
           variant="primary"
           isLoading={isGenerating}
@@ -148,20 +218,22 @@ export default function GenerateSubtitles({
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setError('');
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
+    const file = e.target.files?.[0];
 
+    if (file) {
       if (file.size > MAX_FILE_SIZE) {
         setError(`File exceeds ${MAX_MB}MB limit`);
+        onSetVideoFile(null);
         return;
       }
-
-      setSelectedFile(file);
+      onSetVideoFile(file);
+    } else {
+      onSetVideoFile(null);
     }
   }
 
   async function handleGenerateSubtitles() {
-    if (!selectedFile || !window.electron) {
+    if (!videoFile || !window.electron) {
       setError('Please select a video file first');
       return;
     }
@@ -171,7 +243,7 @@ export default function GenerateSubtitles({
       setIsGenerating(true);
 
       const result = await window.electron.generateSubtitles({
-        videoFile: selectedFile,
+        videoFile: videoFile,
         targetLanguage,
       });
 
@@ -180,9 +252,7 @@ export default function GenerateSubtitles({
       }
 
       setSubtitles(result.subtitles);
-      if (selectedFile) {
-        onSubtitlesGenerated(result.subtitles, selectedFile);
-      }
+      onSubtitlesGenerated(result.subtitles);
     } catch (err: any) {
       setError(`Error generating subtitles: ${err.message || err}`);
     } finally {

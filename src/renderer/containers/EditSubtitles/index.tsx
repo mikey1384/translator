@@ -46,8 +46,7 @@ import {
 export interface EditSubtitlesProps {
   videoFile: File | null;
   videoUrl: string | null;
-  onSetVideoFile: (file: File) => void;
-  onSetVideoUrl: (url: string | null) => void;
+  onSetVideoFile: (file: File | null) => void;
   isPlaying?: boolean;
   editingTimes?: { start: number; end: number } | null;
   onSetIsPlaying?: (isPlaying: boolean) => void;
@@ -109,7 +108,6 @@ const styleSelectStyles = css`
 export function EditSubtitles({
   videoFile,
   onSetVideoFile,
-  onSetVideoUrl,
   isPlaying: isPlayingProp,
   secondsToSrtTime: secondsToSrtTimeProp,
   subtitles: subtitlesProp,
@@ -602,15 +600,17 @@ export function EditSubtitles({
               <StylizedFileInput
                 accept="video/*"
                 onChange={e => {
-                  if (e.target.files?.[0]) {
+                  if (e.target.files && e.target.files.length > 0) {
+                    // Call the centralized handler from App.tsx
                     onSetVideoFile(e.target.files[0]);
-                    // Create an object URL for the new file
-                    const url = URL.createObjectURL(e.target.files[0]);
-                    onSetVideoUrl(url);
+                    // No longer need to set URL separately
+                    // const url = URL.createObjectURL(e.target.files[0]);
+                    // onSetVideoUrl(url);
                   }
                 }}
                 label="Load Video:"
                 buttonText="Choose Video"
+                style={{ display: 'none' }} // Keep input hidden
               />
             </div>
           )}

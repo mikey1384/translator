@@ -8,6 +8,7 @@ interface StylizedFileInputProps
   buttonText?: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   showSelectedFile?: boolean;
+  currentFile?: File | null;
 }
 
 const fileInputLabelStyles = css`
@@ -111,22 +112,16 @@ export default function StylizedFileInput({
   onChange,
   accept,
   showSelectedFile = true,
+  currentFile,
   ...rest
 }: StylizedFileInputProps) {
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setSelectedFile(files[0]);
-    } else {
-      setSelectedFile(null);
-    }
-
     if (onChange) {
       onChange(e);
     }
   };
+
+  const fileToDisplay = currentFile;
 
   return (
     <div>
@@ -140,7 +135,7 @@ export default function StylizedFileInput({
             className={hiddenInputStyles}
             {...rest}
           />
-          {selectedFile ? (
+          {fileToDisplay ? (
             <React.Fragment>
               <span
                 className={css`
@@ -151,7 +146,7 @@ export default function StylizedFileInput({
                   display: block;
                 `}
               >
-                {selectedFile.name}
+                {fileToDisplay.name}
               </span>
             </React.Fragment>
           ) : (
@@ -187,10 +182,10 @@ export default function StylizedFileInput({
             </div>
           )}
         </label>
-        {showSelectedFile && selectedFile && (
+        {showSelectedFile && fileToDisplay && (
           <span className={fileInfoStyles}>
             <span className={fileSizeStyles}>
-              {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+              {(fileToDisplay.size / (1024 * 1024)).toFixed(2)} MB
             </span>
           </span>
         )}

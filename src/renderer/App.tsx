@@ -87,15 +87,34 @@ function AppContent() {
     scrollToCurrentSubtitle: () => {},
   });
 
-  const handleSetVideoFile = useCallback((file: File | null) => {
-    setVideoFile(file);
-  }, []);
+  // Ref to hold the latest handlePartialResult callback
+  const handlePartialResultRef = useRef<any>(null);
 
-  const handleSetVideoUrlCallback = useCallback((url: string | null) => {
-    if (url !== null) {
-      setVideoUrl(url);
-    }
-  }, []);
+  // --- Centralized Video File Handling ---
+  const handleSetVideoFile = useCallback(
+    (file: File | null) => {
+      // Clean up previous URL if it exists
+      if (videoUrl) {
+        URL.revokeObjectURL(videoUrl);
+      }
+
+      setVideoFile(file);
+
+      if (file) {
+        const url = URL.createObjectURL(file);
+        setVideoUrl(url);
+        setIsPlaying(false); // Reset playback state on new video
+        // Potentially reset subtitle segments if needed?
+        // setSubtitleSegments([]);
+      } else {
+        // If file is null, clear the URL
+        setVideoUrl('');
+        setIsPlaying(false);
+        setSubtitleSegments([]); // Clear subtitles if video removed
+      }
+    },
+    [videoUrl] // Dependency: videoUrl for cleanup
+  );
 
   const handleSetIsPlaying = useCallback((playing: boolean) => {
     setIsPlaying(playing);
@@ -155,7 +174,6 @@ function AppContent() {
           batchStartIndex: result?.batchStartIndex,
         };
 
-        // Update the batch start index state if it's present in the update
         if (safeResult.batchStartIndex !== undefined) {
           setReviewedBatchStartIndex(safeResult.batchStartIndex);
         }
@@ -165,9 +183,7 @@ function AppContent() {
           safeResult.partialResult.trim().length > 0
         ) {
           setIsReceivingPartialResults(true);
-
           const parsedSegments = parseSrt(safeResult.partialResult);
-
           const processedSegments = parsedSegments.map(segment => {
             let processedText = segment.text;
             if (segment.text.includes('###TRANSLATION_MARKER###')) {
@@ -188,25 +204,25 @@ function AppContent() {
           });
 
           setSubtitleSegments(prevSegments => {
-            if (prevSegments.length !== processedSegments.length) {
-              return processedSegments;
-            }
-            const prevSrt = buildSrt(prevSegments);
+            // Simplified update logic for clarity
+            // A more robust check might compare based on segment IDs if available
             const newSrt = buildSrt(processedSegments);
-            if (prevSrt !== newSrt) {
-              return processedSegments;
-            }
-            return prevSegments;
+            const prevSrt = buildSrt(prevSegments);
+            return newSrt !== prevSrt ? processedSegments : prevSegments;
           });
         }
 
         setTranslationProgress(safeResult.percent);
         setTranslationStage(safeResult.stage);
-        setIsTranslationInProgress(true);
+        // Only set to true, let other components set to false when done/closed
+        if (safeResult.percent < 100) {
+          setIsTranslationInProgress(true);
+        }
       } catch (error) {
         console.error('Error handling partial result:', error);
       }
     },
+    // Keep dependencies for useCallback
     [
       showOriginalText,
       setSubtitleSegments,
@@ -218,9 +234,18 @@ function AppContent() {
     ]
   );
 
+  // Effect to keep the ref updated with the latest callback
   useEffect(() => {
+    handlePartialResultRef.current = handlePartialResult;
+  }, [handlePartialResult]);
+
+  // Effect to set up IPC listeners - runs only once
+  useEffect(() => {
+    // Use the ref inside the handler
     const handleProgressUpdate = (progress: any) => {
-      handlePartialResult(progress || {});
+      if (handlePartialResultRef.current) {
+        handlePartialResultRef.current(progress || {});
+      }
     };
 
     let cleanupGenerate: (() => void) | null = null;
@@ -234,7 +259,6 @@ function AppContent() {
           cleanupGenerate = cleanup;
         }
       }
-
       if (typeof window.electron.onTranslateSubtitlesProgress === 'function') {
         const cleanup =
           window.electron.onTranslateSubtitlesProgress(handleProgressUpdate);
@@ -248,7 +272,7 @@ function AppContent() {
       cleanupGenerate?.();
       cleanupTranslate?.();
     };
-  }, [handlePartialResult]);
+  }, []); // Empty dependency array - runs only once
 
   // --- Player Control Handlers ---
   const handleTogglePlay = useCallback(async () => {
@@ -277,6 +301,22 @@ function AppContent() {
     );
   }, []);
 
+  // --- Updated Subtitle Generated Handler ---
+  // Only needs to handle subtitles now, video is set via handleSetVideoFile
+  const handleSubtitlesGenerated = useCallback(
+    (generatedSubtitles: string) => {
+      try {
+        const segments = parseSrt(generatedSubtitles);
+        const fixedSegments = fixOverlappingSegments(segments);
+        setSubtitleSegments(fixedSegments);
+        // No need to set video file/URL here anymore
+      } catch (err) {
+        console.error('Error parsing generated subtitles:', err);
+      }
+    },
+    [] // No dependencies needed now
+  );
+
   return (
     <div className={pageWrapperStyles}>
       <div id="top-padding" style={{ height: '10px' }}></div>
@@ -303,7 +343,7 @@ function AppContent() {
                 videoUrl={videoUrl}
                 subtitles={subtitleSegments}
                 onPlayerReady={handleVideoPlayerReady}
-                onChangeVideo={handleChangeVideo}
+                onChangeVideo={handleSetVideoFile}
                 onSrtLoaded={setSubtitleSegments}
                 onStickyChange={handleStickyChange}
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
@@ -314,6 +354,8 @@ function AppContent() {
 
             <div ref={mainContentRef} style={{ position: 'relative' }}>
               <GenerateSubtitles
+                videoFile={videoFile}
+                onSetVideoFile={handleSetVideoFile}
                 onSubtitlesGenerated={handleSubtitlesGenerated}
                 showOriginalText={showOriginalText}
                 onShowOriginalTextChange={setShowOriginalText}
@@ -325,7 +367,6 @@ function AppContent() {
                   videoUrl={videoUrl}
                   isPlaying={isPlaying}
                   onSetVideoFile={handleSetVideoFile}
-                  onSetVideoUrl={handleSetVideoUrlCallback}
                   onSetIsPlaying={handleSetIsPlaying}
                   secondsToSrtTime={secondsToSrtTime}
                   parseSrt={parseSrt}
@@ -377,43 +418,10 @@ function AppContent() {
 
   // --- Helper Functions ---
 
-  function handleSubtitlesGenerated(
-    generatedSubtitles: string,
-    videoFile: File
-  ) {
-    try {
-      const segments = parseSrt(generatedSubtitles);
-      const fixedSegments = fixOverlappingSegments(segments);
-      setSubtitleSegments(fixedSegments);
-
-      // Now also set the video file and URL
-      if (videoUrl) {
-        URL.revokeObjectURL(videoUrl); // Clean up previous URL if exists
-      }
-      setVideoFile(videoFile);
-      const url = URL.createObjectURL(videoFile);
-      setVideoUrl(url);
-    } catch (err) {
-      console.error('Error parsing generated subtitles:', err);
-    }
-  }
-
   function handleVideoPlayerReady(player: any) {
     setVideoPlayerRef(player);
     if (player) {
       setIsPlaying(!player.paused);
-    }
-  }
-
-  function handleChangeVideo(file: File) {
-    if (file) {
-      if (videoUrl) {
-        URL.revokeObjectURL(videoUrl);
-      }
-      setVideoFile(file);
-      const url = URL.createObjectURL(file);
-      setVideoUrl(url);
-      setIsPlaying(false);
     }
   }
 
