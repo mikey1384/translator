@@ -237,7 +237,6 @@ const inputSectionStyles = css`
 export default function GenerateSubtitles({
   videoFile,
   onSetVideoFile,
-  onSubtitlesGenerated,
   showOriginalText,
   onShowOriginalTextChange,
   apiKeyStatus,
@@ -432,13 +431,7 @@ export default function GenerateSubtitles({
     } finally {
       setIsGenerating(false);
     }
-  }, [
-    videoFile,
-    targetLanguage,
-    onSubtitlesGenerated,
-    setError,
-    setIsGenerating,
-  ]); // Ensure dependencies are correct
+  }, [videoFile, targetLanguage, setError, setIsGenerating]); // Ensure dependencies are correct
 
   // --- Cleanup listener on unmount --- (Original useEffect for progress)
   useEffect(() => {
