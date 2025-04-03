@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
-import { debounce } from 'lodash';
 import { SrtSegment } from '../../../types/interface';
+import { debounce } from 'lodash';
+import { DEBOUNCE_DELAY_MS } from './constants';
 
 interface SubtitleEditorProps {
   sub: SrtSegment;
@@ -190,48 +191,62 @@ export default function SubtitleEditor({
   isShiftingDisabled,
 }: SubtitleEditorProps) {
   // --- Text Splitting Logic ---
-  const [originalText, setOriginalText] = useState('');
-  const [editableText, setEditableText] = useState('');
+  let originalText = '';
+  let initialEditableText = sub.text;
   const hasMarker = sub.text.includes('###TRANSLATION_MARKER###');
 
-  useEffect(() => {
-    if (hasMarker) {
-      const parts = sub.text.split('###TRANSLATION_MARKER###');
-      setOriginalText(parts[0] || '');
-      setEditableText(parts[1] || '');
-    } else {
-      // If no marker, the whole text is editable, and original is empty
-      setOriginalText('');
-      setEditableText(sub.text);
-    }
-  }, [sub.text, hasMarker]);
+  if (hasMarker) {
+    const parts = sub.text.split('###TRANSLATION_MARKER###');
+    originalText = parts[0] || '';
+    initialEditableText = parts[1] || '';
+  }
   // --- End Text Splitting Logic ---
 
-  // Local state for the textarea to avoid re-renders of all items
-  // const [text, setText] = useState(sub.text); // Replaced by editableText
+  // --- Local State and Debounce ---
+  const [currentText, setCurrentText] = useState(initialEditableText);
 
-  // Update local state when subtitle changes from outside
-  // useEffect(() => {
-  //   setText(sub.text);
-  // }, [sub.text]); // Replaced by the effect above
+  // Update local state if the prop changes externally
+  useEffect(() => {
+    let newInitialEditableText = sub.text;
+    if (sub.text.includes('###TRANSLATION_MARKER###')) {
+      const parts = sub.text.split('###TRANSLATION_MARKER###');
+      newInitialEditableText = parts[1] || '';
+    }
+    // Only update if the derived initial text actually differs from current state
+    // to prevent resetting while typing if parent re-renders for other reasons.
+    if (newInitialEditableText !== currentText) {
+      setCurrentText(newInitialEditableText);
+    }
+    // We only want this effect to run when the *external* subtitle text changes.
+    // Including currentText in dependencies would cause loops.
+  }, [sub.text]);
 
-  // Debounce the actual update to the parent component
-  const debouncedTextUpdate = useRef(
-    debounce((index: number, newEditableText: string) => {
-      // Reconstruct the full text before sending to parent
-      const fullText = hasMarker
-        ? `${originalText}###TRANSLATION_MARKER###${newEditableText}`
-        : newEditableText;
-      onEditSubtitle(index, 'text', fullText);
-    }, 300)
+  // Ref to store the debounced function
+  const debouncedUpdateParent = useRef(
+    debounce((newFullText: string) => {
+      onEditSubtitle(index, 'text', newFullText);
+    }, DEBOUNCE_DELAY_MS)
   ).current;
 
   // Handle local text changes
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    setEditableText(newText); // Update only the editable part locally
-    debouncedTextUpdate(index, newText);
-  };
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newEditableText = e.target.value;
+      // Update local state immediately for smooth typing
+      setCurrentText(newEditableText);
+
+      // Reconstruct the full text for the debounced update
+      const fullText = hasMarker
+        ? `${originalText}###TRANSLATION_MARKER###${newEditableText}`
+        : newEditableText;
+
+      // Trigger the debounced update to the parent
+      debouncedUpdateParent(fullText);
+    },
+    [index, hasMarker, originalText, debouncedUpdateParent]
+  );
+
+  // --- End Local State and Debounce ---
 
   return (
     <div
@@ -306,8 +321,8 @@ export default function SubtitleEditor({
 
         {/* Editable Text Area */}
         <textarea
-          value={editableText} // Bind to editableText
-          onChange={handleTextChange} // Use updated handler
+          value={currentText}
+          onChange={handleTextChange}
           style={textInputStyles}
           placeholder={
             hasMarker ? 'Enter reviewed/translated text' : 'Enter subtitle text'

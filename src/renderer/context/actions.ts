@@ -1,6 +1,5 @@
 import { Dispatch } from 'react';
 import { AppAction } from './reducer';
-import { validateSubtitleTimings } from '../helpers/subtitle-utils';
 
 export default function ManagementActions(dispatch: Dispatch<AppAction>) {
   return {

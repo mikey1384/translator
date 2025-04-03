@@ -29,7 +29,6 @@ import {
   secondsToSrtTime,
   generateSrtContent,
 } from './utils';
-import { handleInsertSubtitle, handleRemoveSubtitle } from './helpers';
 import { useSubtitleNavigation, useRestoreFocus } from './hooks';
 import {
   buttonGradientStyles,
@@ -128,9 +127,6 @@ export function EditSubtitles({
    * State Management
    * ------------------------------------------------------
    */
-  const [subtitlesState, setSubtitlesState] = useState<SrtSegment[]>(
-    subtitlesProp || []
-  );
   const [editingTimesState, setEditingTimesState] = useState<
     Record<string, string>
   >({});
@@ -170,6 +166,11 @@ export function EditSubtitles({
 
   // State to track if original path exists for enabling/disabling Save button
   const [canSaveDirectly, setCanSaveDirectly] = useState(false);
+
+  // Add a ref to store debounced text update functions
+  const debouncedTextUpdateRef = useRef<
+    Record<string, ReturnType<typeof debounce>>
+  >({});
 
   /**
    * ------------------------------------------------------
@@ -271,14 +272,7 @@ export function EditSubtitles({
   useEffect(() => {
     const path = localStorage.getItem('originalSrtPath');
     setCanSaveDirectly(!!path);
-  }, [subtitlesState]); // Re-check if subtitles change, might indicate a 'Save As' happened
-
-  // Keep local subtitlesState in sync when the prop changes
-  useEffect(() => {
-    if (subtitlesProp) {
-      setSubtitlesState(subtitlesProp);
-    }
-  }, [subtitlesProp]);
+  }, [subtitlesProp]); // Re-check if subtitles change, might indicate a 'Save As' happened
 
   // Keep local isPlayingState in sync
   useEffect(() => {
@@ -292,7 +286,7 @@ export function EditSubtitles({
    *  or global player in sync
    */
   useEffect(() => {
-    if (subtitlesState.length > 0) {
+    if (subtitlesProp && subtitlesProp.length > 0) {
       // Use the videoPlayerRef from props if available
       if (videoPlayerRef && typeof videoPlayerRef.currentTime === 'function') {
         try {
@@ -317,7 +311,7 @@ export function EditSubtitles({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtitlesState]);
+  }, [subtitlesProp]); // Depend on the prop
 
   // Scroll to the start of the last reviewed batch
   useEffect(() => {
@@ -382,10 +376,13 @@ export function EditSubtitles({
         return;
       }
 
-      const currentSub = subtitlesState[index];
+      // Use subtitlesProp
+      const currentSub = subtitlesProp ? subtitlesProp[index] : null;
       if (!currentSub) return;
 
-      const prevSub = index > 0 ? subtitlesState[index - 1] : null;
+      // Use subtitlesProp
+      const prevSub =
+        index > 0 && subtitlesProp ? subtitlesProp[index - 1] : null;
       let newEnd = currentSub.end;
 
       // If editing start, check special conditions
@@ -401,14 +398,17 @@ export function EditSubtitles({
         }
       }
 
-      setSubtitlesState(current =>
-        current.map((sub, i) => {
-          if (i !== index) return sub;
-          return field === 'start'
-            ? { ...sub, start: numValue, end: newEnd }
-            : { ...sub, end: numValue };
-        })
-      );
+      // Use onSetSubtitlesDirectly to update parent state
+      if (onSetSubtitlesDirectly) {
+        onSetSubtitlesDirectly(current =>
+          current.map((sub, i) => {
+            if (i !== index) return sub;
+            return field === 'start'
+              ? { ...sub, start: numValue, end: newEnd }
+              : { ...sub, end: numValue };
+          })
+        );
+      }
 
       // Clean up the "editingTimesState" for this field
       setEditingTimesState(prev => {
@@ -417,7 +417,8 @@ export function EditSubtitles({
         return newTimes;
       });
     },
-    [editingTimesState, subtitlesState]
+    // Depend on subtitlesProp and onSetSubtitlesDirectly
+    [editingTimesState, subtitlesProp, onSetSubtitlesDirectly]
   );
 
   const handleEditSubtitle = useCallback(
@@ -429,14 +430,26 @@ export function EditSubtitles({
       // Save the current input for potential re-focus after updates
       focusedInputRef.current = { index, field };
 
-      // If editing the text, just set immediately
+      // If editing the text, use debounce
       if (field === 'text') {
-        setSubtitlesState(current =>
-          current.map((sub, i) =>
-            i === index ? { ...sub, text: value as string } : sub
-          )
-        );
-        return;
+        const debounceTextKey = `${index}-text`;
+        if (!debouncedTextUpdateRef.current[debounceTextKey]) {
+          debouncedTextUpdateRef.current[debounceTextKey] = debounce(
+            (newText: string) => {
+              if (onSetSubtitlesDirectly) {
+                onSetSubtitlesDirectly(current =>
+                  current.map((sub, i) =>
+                    i === index ? { ...sub, text: newText } : sub
+                  )
+                );
+              }
+            },
+            DEBOUNCE_DELAY_MS // Use the same debounce delay
+          );
+        }
+        // Trigger the debounced function for text
+        debouncedTextUpdateRef.current[debounceTextKey](value as string);
+        return; // Don't proceed to time input logic
       }
 
       // Otherwise, we are editing start/end
@@ -457,10 +470,13 @@ export function EditSubtitles({
             }
             if (isNaN(numValue) || numValue < 0) return;
 
-            const currentSub = subtitlesState[index];
+            // Use subtitlesProp
+            const currentSub = subtitlesProp ? subtitlesProp[index] : null;
             if (!currentSub) return;
 
-            const prevSub = index > 0 ? subtitlesState[index - 1] : null;
+            // Use subtitlesProp
+            const prevSub =
+              index > 0 && subtitlesProp ? subtitlesProp[index - 1] : null;
             let newEnd = currentSub.end;
 
             // If we're editing start time
@@ -473,20 +489,26 @@ export function EditSubtitles({
                 const duration = currentSub.end - currentSub.start;
                 newEnd = numValue + duration;
               }
-              setSubtitlesState(curr =>
-                curr.map((sub, i) => {
-                  if (i !== index) return sub;
-                  return { ...sub, start: numValue, end: newEnd };
-                })
-              );
+              // Use onSetSubtitlesDirectly
+              if (onSetSubtitlesDirectly) {
+                onSetSubtitlesDirectly(curr =>
+                  curr.map((sub, i) => {
+                    if (i !== index) return sub;
+                    return { ...sub, start: numValue, end: newEnd };
+                  })
+                );
+              }
             }
             // If we're editing end time
             else {
-              setSubtitlesState(curr =>
-                curr.map((sub, i) =>
-                  i === index ? { ...sub, end: numValue } : sub
-                )
-              );
+              // Use onSetSubtitlesDirectly
+              if (onSetSubtitlesDirectly) {
+                onSetSubtitlesDirectly(curr =>
+                  curr.map((sub, i) =>
+                    i === index ? { ...sub, end: numValue } : sub
+                  )
+                );
+              }
             }
 
             // Attempt to restore cursor/focus after a tiny delay
@@ -499,7 +521,8 @@ export function EditSubtitles({
       // Trigger the debounced function
       debouncedTimeUpdateRef.current[debounceKey](String(value));
     },
-    [subtitlesState, restoreFocus]
+    // Depend on subtitlesProp and onSetSubtitlesDirectly
+    [subtitlesProp, onSetSubtitlesDirectly, restoreFocus]
   );
 
   /**
@@ -508,7 +531,8 @@ export function EditSubtitles({
    * ------------------------------------------------------
    */
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
-    subtitlesState,
+    // Use subtitlesProp
+    subtitlesProp || [],
     subtitleRefs,
     videoPlayerRef
   );
@@ -570,7 +594,8 @@ export function EditSubtitles({
       )}
 
       {/* If no video or no subtitles loaded yet, show these inputs */}
-      {(!videoFile || (videoFile && subtitlesState.length === 0)) && (
+      {(!videoFile ||
+        (videoFile && (!subtitlesProp || subtitlesProp.length === 0))) && (
         <div style={{ marginBottom: 20 }}>
           {!videoFile && (
             <div style={{ marginBottom: 10 }}>
@@ -614,7 +639,7 @@ export function EditSubtitles({
         </div>
       )}
 
-      {subtitlesState.length > 0 && (
+      {subtitlesProp && subtitlesProp.length > 0 && (
         <>
           <div
             style={{
@@ -625,7 +650,7 @@ export function EditSubtitles({
               marginTop: 0,
             }}
           >
-            <h3 style={{ margin: 0 }}>Subtitles ({subtitlesState.length})</h3>
+            <h3 style={{ margin: 0 }}>Subtitles ({subtitlesProp.length})</h3>
           </div>
 
           <div
@@ -650,7 +675,7 @@ export function EditSubtitles({
               }
             `}`}
           >
-            {subtitlesState.map((sub, index) => (
+            {subtitlesProp.map((sub, index) => (
               <div
                 key={sub.index}
                 ref={el => {
@@ -680,7 +705,7 @@ export function EditSubtitles({
       )}
 
       {/* Fixed Action Bar */}
-      {subtitlesState.length > 0 && (
+      {subtitlesProp && subtitlesProp.length > 0 && (
         <div
           className={css`
             position: fixed;
@@ -812,15 +837,16 @@ export function EditSubtitles({
             <Button
               className={mergeButtonClass}
               onClick={() => {
-                if (videoFile && subtitlesState.length > 0) {
-                  handleMergeVideoWithSubtitles(videoFile, subtitlesState);
+                if (videoFile && subtitlesProp && subtitlesProp.length > 0) {
+                  handleMergeVideoWithSubtitles(videoFile);
                 } else {
                   setError('Video file and subtitles are required to merge.');
                 }
               }}
               disabled={
                 !videoFile ||
-                subtitlesState.length === 0 ||
+                !subtitlesProp ||
+                subtitlesProp.length === 0 ||
                 isMergingInProgressProp
               }
               isLoading={isMergingInProgressProp}
@@ -849,7 +875,8 @@ export function EditSubtitles({
         suggestedName = `${nameWithoutExt}.srt`;
       }
 
-      const srtContent = generateSrtContent(subtitlesState);
+      // Use subtitlesProp
+      const srtContent = generateSrtContent(subtitlesProp || []);
 
       const saveOptions = {
         title: 'Save SRT File As',
@@ -1007,7 +1034,8 @@ export function EditSubtitles({
 
     setIsShiftingDisabled(true);
     try {
-      const sub = subtitlesState[index];
+      // Use subtitlesProp
+      const sub = subtitlesProp ? subtitlesProp[index] : null;
       if (!sub) {
         // console.error(`No subtitle found at index ${index}`);
         setIsShiftingDisabled(false);
@@ -1017,11 +1045,14 @@ export function EditSubtitles({
       const duration = sub.end - sub.start;
       const newEnd = newStart + duration;
 
-      setSubtitlesState(current =>
-        current.map((s, i) =>
-          i === index ? { ...s, start: newStart, end: newEnd } : s
-        )
-      );
+      // Use onSetSubtitlesDirectly
+      if (onSetSubtitlesDirectly) {
+        onSetSubtitlesDirectly(current =>
+          current.map((s, i) =>
+            i === index ? { ...s, start: newStart, end: newEnd } : s
+          )
+        );
+      }
 
       try {
         nativePlayer.seek(newStart);
@@ -1039,8 +1070,7 @@ export function EditSubtitles({
   }
 
   async function handleMergeVideoWithSubtitles(
-    videoFile: File,
-    subtitles: SrtSegment[]
+    videoFile: File
   ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
     // Generate operationId here
     const operationId = `merge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -1079,7 +1109,8 @@ export function EditSubtitles({
         );
       }
 
-      const srtContent = buildSrt(fixOverlappingSegments(subtitles));
+      // Use subtitlesProp
+      const srtContent = buildSrt(fixOverlappingSegments(subtitlesProp || []));
 
       // Start Merge Process
       setMergeStage('Starting merge process...');
@@ -1191,11 +1222,41 @@ export function EditSubtitles({
   }
 
   function handleRemoveSubtitleLocal(index: number) {
-    handleRemoveSubtitle(index, subtitlesState, setSubtitlesState);
+    // Use onSetSubtitlesDirectly
+    if (onSetSubtitlesDirectly && subtitlesProp) {
+      if (
+        !window.confirm('Are you sure you want to remove this subtitle block?')
+      )
+        return;
+      const updated = (subtitlesProp || [])
+        .filter((_, i) => i !== index)
+        .map((sub, i) => ({ ...sub, index: i + 1 }));
+      onSetSubtitlesDirectly(updated);
+    }
   }
 
   function handleInsertSubtitleLocal(index: number) {
-    handleInsertSubtitle(index, subtitlesState, setSubtitlesState);
+    // Use onSetSubtitlesDirectly
+    if (onSetSubtitlesDirectly && subtitlesProp) {
+      // Use subtitlesProp
+      const currentSub = subtitlesProp[index];
+      const nextSub =
+        index < subtitlesProp.length - 1 ? subtitlesProp[index + 1] : null;
+      const newStart = currentSub.end;
+      const newEnd = nextSub ? nextSub.start : currentSub.end + 2;
+      const newSubtitle = {
+        index: index + 2, // This will be fixed by map below
+        start: newStart,
+        end: newEnd,
+        text: '',
+      };
+      const updated = [
+        ...(subtitlesProp || []).slice(0, index + 1),
+        newSubtitle,
+        ...(subtitlesProp || []).slice(index + 1),
+      ].map((sub, i) => ({ ...sub, index: i + 1 }));
+      onSetSubtitlesDirectly(updated);
+    }
   }
 
   // Function to save SRT content directly to the original path
@@ -1215,7 +1276,8 @@ export function EditSubtitles({
 
     try {
       setError(''); // Clear previous errors
-      const srtContent = generateSrtContent(subtitlesState);
+      // Use subtitlesProp
+      const srtContent = generateSrtContent(subtitlesProp || []);
 
       const saveOptions = {
         content: srtContent,

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import ManagementActions from './actions';
-import { ManagementReducer, AppState, AppAction } from './reducer';
+import { ManagementReducer, AppState } from './reducer';
 
 // Initial state
 export const initialManagementState: AppState = {

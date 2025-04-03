@@ -1,30 +1,10 @@
-import { SrtSegment } from '../../types/interface';
-
 // Global state objects to maintain shared state across components
-export const subtitlesState = {
-  segments: [] as SrtSegment[],
-  lastEdited: 0,
-};
 
 // AI Model Constants
 export const AI_MODELS = {
   CLAUDE_3_7_SONNET: 'claude-3-7-sonnet-20250219',
   MAX_TOKENS: 4000,
 } as const;
-
-export const mergeStates = {
-  merging: false,
-  progress: 0,
-  stage: '',
-  error: '',
-};
-
-export const translationStates = {
-  translating: false,
-  progress: 0,
-  stage: '',
-  error: '',
-};
 
 export const subtitleVideoPlayer = {
   instance: null as any,

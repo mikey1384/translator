@@ -18,6 +18,7 @@ interface TimestampDisplayProps {
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
+  onUiInteraction?: () => void;
 }
 
 // Simple input style similar to time inputs in editor
@@ -47,6 +48,7 @@ export function TimestampDisplay({
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSrtLoaded,
+  onUiInteraction,
 }: TimestampDisplayProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -328,7 +330,14 @@ export function TimestampDisplay({
           {/* Single Play/Pause Toggle Button */}
           {onTogglePlay && (
             <Button
-              onClick={onTogglePlay}
+              onClick={() => {
+                if (onUiInteraction) {
+                  onUiInteraction();
+                }
+                if (onTogglePlay) {
+                  onTogglePlay();
+                }
+              }}
               variant={isPlaying ? 'danger' : 'primary'}
               size="sm"
               className={`${buttonGradientStyles.base} ${
