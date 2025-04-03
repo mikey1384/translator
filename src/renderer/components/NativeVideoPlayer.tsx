@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
+import { colors } from '../styles';
 
 export const nativePlayer: {
   instance: HTMLVideoElement | null;
@@ -229,21 +230,34 @@ export default function NativeVideoPlayer({
     return { width, fontSize };
   }, [isExpanded, isFullyExpanded]);
 
+  // Style for the video error message
+  const videoErrorStyles = css`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: ${colors.light}; // Use theme background
+    color: ${colors.danger}; // Use theme danger color
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    border: 1px solid ${colors.danger};
+    z-index: 10;
+  `;
+
   return (
     <div
       ref={containerRef}
       className={css`
         position: relative;
-        width: 100%;
         margin: 0 auto;
-        aspect-ratio: 16 / 9;
+        width: 100%;
+        height: 100%;
         min-height: 180px;
-        background-color: #000;
         border-radius: 6px;
         overflow: hidden;
-        transform: translateZ(0); /* Force hardware acceleration */
-        will-change: transform; /* Hint for hardware acceleration */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transform: translateZ(0);
+        will-change: transform;
       `}
     >
       <video
@@ -251,8 +265,9 @@ export default function NativeVideoPlayer({
         style={{
           width: '100%',
           height: '100%',
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: 'contain',
-          backgroundColor: '#000',
           display: 'block',
           zIndex: 1,
           visibility: 'visible',
@@ -263,6 +278,7 @@ export default function NativeVideoPlayer({
         muted={false}
         crossOrigin="anonymous"
         onError={() => setErrorMessage('Video playback error')}
+        controls
       >
         Your browser does not support HTML5 video.
       </video>
@@ -301,29 +317,7 @@ export default function NativeVideoPlayer({
         </div>
       )}
 
-      {errorMessage && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '10px',
-            left: '10px',
-            right: '10px',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            padding: '8px',
-            borderRadius: '4px',
-            textAlign: 'center',
-            zIndex: 10,
-            fontWeight: 'bold',
-          }}
-        >
-          <div style={{ marginBottom: '5px' }}>{errorMessage}</div>
-          <div style={{ fontSize: '12px', opacity: 0.8 }}>
-            Try a different video format like MP4, WebM, or OGG, or check
-            browser compatibility.
-          </div>
-        </div>
-      )}
+      {errorMessage && <div className={videoErrorStyles}>{errorMessage}</div>}
     </div>
   );
 }

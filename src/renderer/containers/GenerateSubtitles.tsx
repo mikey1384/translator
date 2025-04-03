@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import { css } from '@emotion/css';
 import {
   errorMessageStyles,
@@ -7,7 +7,6 @@ import {
 } from '../styles';
 import Button from '../components/Button';
 import ButtonGroup from '../components/ButtonGroup';
-import StylizedFileInput from '../components/StylizedFileInput';
 import Section from '../components/Section';
 import { colors } from '../styles';
 
@@ -151,6 +150,11 @@ const goToSettingsButtonStyles = css`
   }
 `;
 
+// Adjusted type for file change events from Button
+type FileChangeEvent =
+  | ChangeEvent<HTMLInputElement>
+  | { target: { files: FileList | { name: string; path: string }[] | null } };
+
 export default function GenerateSubtitles({
   videoFile,
   onSetVideoFile,
@@ -204,21 +208,21 @@ export default function GenerateSubtitles({
 
       {!isLoadingKeyStatus && allKeysSet && (
         <>
-          {/* Error display */}
           {error && <div className={errorMessageStyles}>{error}</div>}
 
           <div className={fileInputWrapperStyles}>
-            <label>1. Select Video File (up to {MAX_MB}MB): </label>
-            <StylizedFileInput
+            <label style={{ marginRight: '8px' }}>
+              1. Select Video File (up to {MAX_MB}MB):{' '}
+            </label>
+            <Button
+              asFileInput
               accept="video/*"
-              onChange={handleFileChange}
-              buttonText="Choose Video"
-              showSelectedFile={isGenerating ? false : !!videoFile}
-              key={
-                videoFile ? videoFile.name + videoFile.lastModified : 'no-file'
-              }
-              currentFile={videoFile}
-            />
+              onFileChange={handleFileChange}
+              variant="secondary"
+              size="md"
+            >
+              {videoFile ? `Selected: ${videoFile.name}` : 'Choose Video'}
+            </Button>
           </div>
 
           <div className={fileInputWrapperStyles}>
@@ -318,11 +322,35 @@ export default function GenerateSubtitles({
     </Section>
   );
 
-  // --- Helper Functions ---
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // Updated file handler to work with Button's event type
+  function handleFileChange(event: FileChangeEvent) {
     setError('');
-    const file = e.target.files?.[0];
+    let file: File | null = null;
+
+    if (
+      'target' in event &&
+      event.target &&
+      'files' in event.target &&
+      event.target.files
+    ) {
+      if (
+        event.target.files instanceof FileList &&
+        event.target.files.length > 0
+      ) {
+        file = event.target.files[0];
+      } else if (
+        Array.isArray(event.target.files) &&
+        event.target.files.length > 0 &&
+        'name' in event.target.files[0]
+      ) {
+        // Handle the simulated directory event (though not expected here)
+        // For a single file input, we only care about FileList
+        console.warn(
+          'Received unexpected directory structure in file input handler'
+        );
+        file = null;
+      }
+    }
 
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
@@ -332,7 +360,10 @@ export default function GenerateSubtitles({
       }
       onSetVideoFile(file);
     } else {
-      onSetVideoFile(null);
+      // If event doesn't yield a file (e.g., cancelled selection), ensure state is null
+      // Don't clear if there was already a valid file selected previously unless explicitly cleared
+      // onSetVideoFile(null); // Might want to avoid clearing if user cancels
+      console.log('No file selected or selection cancelled.');
     }
   }
 

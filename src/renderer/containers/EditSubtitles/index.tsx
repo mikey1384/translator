@@ -5,11 +5,11 @@ import React, {
   useState,
   SetStateAction,
   Dispatch,
+  ChangeEvent,
 } from 'react';
 import { css } from '@emotion/css';
 import Section from '../../components/Section';
-import StylizedFileInput from '../../components/StylizedFileInput';
-import ElectronFileButton from '../../components/ElectronFileButton';
+import Button from '../../components/Button';
 
 import SubtitleList from './SubtitleList';
 import MergeControls from './MergeControls';
@@ -33,6 +33,11 @@ import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../../constants/subtitle-styles';
+
+// Adjusted type for file change events from Button
+type FileChangeEvent =
+  | ChangeEvent<HTMLInputElement>
+  | { target: { files: FileList | { name: string; path: string }[] | null } };
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
@@ -346,45 +351,38 @@ export function EditSubtitles({
         (videoFile && (!subtitlesProp || subtitlesProp.length === 0))) && (
         <div style={{ marginBottom: 20 }}>
           {!videoFile && (
-            <div style={{ marginBottom: 10 }}>
-              <StylizedFileInput
+            <div
+              style={{
+                marginBottom: 10,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <label>Load Video:</label>
+              <Button
+                asFileInput
                 accept="video/*"
-                onChange={e => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    // Call the centralized handler from App.tsx
-                    onSetVideoFile(e.target.files[0]);
-                    // No longer need to set URL separately
-                    // const url = URL.createObjectURL(e.target.files[0]);
-                    // onSetVideoUrl(url);
-                  }
-                }}
-                label="Load Video:"
-                buttonText="Choose Video"
-                style={{ display: 'none' }} // Keep input hidden
-              />
+                onFileChange={handleVideoFileChangeLocal}
+                variant="secondary"
+              >
+                Choose Video
+              </Button>
             </div>
           )}
 
-          <div style={{ marginBottom: 10 }}>
-            <ElectronFileButton
-              label="Load SRT:"
-              buttonText="Choose SRT File"
-              onClick={async () => {
-                const result = await openSubtitleWithElectron();
-                if (result.error) {
-                  setError(`Error loading SRT: ${result.error}`);
-                  if (result.error.includes('canceled')) {
-                    // Optional: Clear error if user just canceled
-                    setError('');
-                  }
-                } else if (result.segments && onSetSubtitlesDirectly) {
-                  // Call the new prop to update App.tsx state
-                  onSetSubtitlesDirectly(result.segments);
-                  // Optionally also update local state if needed, though App.tsx should propagate
-                  setError(''); // Clear any previous error
-                }
-              }}
-            />
+          <div
+            style={{
+              marginBottom: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <label>Load SRT:</label>
+            <Button variant="secondary" onClick={handleLoadSrtLocal}>
+              Choose SRT File
+            </Button>
           </div>
         </div>
       )}
@@ -489,6 +487,39 @@ export function EditSubtitles({
   );
 
   // --- Helper Functions ---
+
+  function handleVideoFileChangeLocal(event: FileChangeEvent) {
+    let file: File | null = null;
+    if (
+      'target' in event &&
+      event.target &&
+      'files' in event.target &&
+      event.target.files instanceof FileList &&
+      event.target.files.length > 0
+    ) {
+      file = event.target.files[0];
+    }
+
+    if (file) {
+      onSetVideoFile(file);
+      // No need to set URL here, App.tsx handles it
+    } else {
+      console.log('No video file selected or selection cancelled.');
+    }
+  }
+
+  async function handleLoadSrtLocal() {
+    const result = await openSubtitleWithElectron();
+    if (result.error) {
+      setError(`Error loading SRT: ${result.error}`);
+      if (result.error.includes('canceled')) {
+        setError('');
+      }
+    } else if (result.segments && onSetSubtitlesDirectly) {
+      onSetSubtitlesDirectly(result.segments);
+      setError('');
+    }
+  }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
     if (playTimeoutRef.current) {

@@ -1,12 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, ChangeEvent } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../../constants';
+import { colors } from '../../styles';
 import ButtonGroup from '../../components/ButtonGroup';
-import StylizedFileInput from '../../components/StylizedFileInput';
 import Button from '../../components/Button';
 import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
-import ElectronFileButton from '../../components/ElectronFileButton';
-import { buttonGradientStyles } from '../../styles';
 import { SrtSegment } from '../../../types/interface';
 
 interface TimestampDisplayProps {
@@ -19,25 +16,31 @@ interface TimestampDisplayProps {
   onScrollToCurrentSubtitle?: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onUiInteraction?: () => void;
+  isStickyExpanded?: boolean;
 }
 
-// Simple input style similar to time inputs in editor
+// Simple input style similar to time inputs in editor - Updated for Dark Theme
 const shiftInputStyles = css`
-  width: 80px; /* Adjust width as needed */
+  width: 80px;
   padding: 6px 8px;
   border-radius: 4px;
-  border: 1px solid rgba(221, 221, 221, 0.8);
-  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid ${colors.border};
+  background-color: ${colors.light};
+  color: ${colors.dark};
   font-family: monospace;
   text-align: right;
-  margin-right: 5px; /* Space between input and button */
+  margin-right: 5px;
   transition: border-color 0.2s ease;
   &:focus {
     outline: none;
-    border-color: rgba(0, 123, 255, 0.8);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    border-color: ${colors.primary};
   }
 `;
+
+// Adjusted type for file change events from Button
+type FileChangeEvent =
+  | ChangeEvent<HTMLInputElement>
+  | { target: { files: FileList | { name: string; path: string }[] | null } };
 
 export function TimestampDisplay({
   isPlaying,
@@ -49,6 +52,7 @@ export function TimestampDisplay({
   onScrollToCurrentSubtitle,
   onSrtLoaded,
   onUiInteraction,
+  isStickyExpanded = true,
 }: TimestampDisplayProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -71,9 +75,36 @@ export function TimestampDisplay({
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }, []);
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0] && onChangeVideo) {
-      onChangeVideo(e.target.files[0]);
+  // Handlers for video/srt buttons
+  const handleVideoChange = (event: FileChangeEvent) => {
+    let file: File | null = null;
+    if (
+      'target' in event &&
+      event.target &&
+      'files' in event.target &&
+      event.target.files instanceof FileList &&
+      event.target.files.length > 0
+    ) {
+      file = event.target.files[0];
+    }
+    if (file && onChangeVideo) {
+      onChangeVideo(file);
+      onUiInteraction?.();
+    }
+  };
+
+  const handleSrtLoad = async () => {
+    try {
+      const result = await openSubtitleWithElectron();
+      if (result.segments) {
+        onSrtLoaded(result.segments);
+      } else if (result.error && !result.error.includes('canceled')) {
+        console.error('Error loading SRT:', result.error);
+        // Consider showing an error message to the user
+      }
+      onUiInteraction?.();
+    } catch (err) {
+      console.error('Failed to load SRT file:', err);
     }
   };
 
@@ -81,6 +112,7 @@ export function TimestampDisplay({
     if (videoElement) {
       const seekTime = parseFloat(e.target.value);
       videoElement.currentTime = seekTime;
+      onUiInteraction?.();
     }
   };
 
@@ -138,336 +170,387 @@ export function TimestampDisplay({
   return (
     <div
       className={css`
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 12px;
         font-family:
           'system-ui',
           -apple-system,
           BlinkMacSystemFont,
           sans-serif;
-        background-color: ${colors.grayLight};
         color: ${colors.dark};
-        padding: 8px 12px;
         border-radius: 8px;
         font-size: 14px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        width: 100%;
       `}
     >
-      {/* Progress bar container */}
-      <div
-        className={css`
-          width: 100%;
-          padding: 8px 0 0;
-          position: relative;
-        `}
-      >
-        {/* Buffered progress bar */}
-        <div
-          className={css`
-            position: absolute;
-            top: 16px;
-            left: 0;
-            height: 8px;
-            background-color: #ccc;
-            border-radius: 4px;
-            pointer-events: none;
-            z-index: 0;
-          `}
-          style={{ width: bufferedWidth }}
-        />
-        {/* Slider (seek bar) */}
-        <input
-          type="range"
-          min="0"
-          max={duration || 0}
-          value={currentTime}
-          step="0.1"
-          aria-label="Video Seek"
-          className={css`
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: #e1e1e1;
-            outline: none;
-            cursor: pointer;
-            position: relative;
-            z-index: 1;
-            margin: 8px 0;
-
-            &::-webkit-slider-thumb {
-              -webkit-appearance: none;
-              appearance: none;
-              width: 18px;
-              height: 18px;
-              border-radius: 50%;
-              background: ${colors.primary};
-              cursor: pointer;
-              border: 2px solid #fff;
-              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-              position: relative;
-              z-index: 10;
-              margin-top: -5px;
-              transition: transform 0.1s ease;
-            }
-
-            &::-moz-range-thumb {
-              width: 18px;
-              height: 18px;
-              border-radius: 50%;
-              background: ${colors.primary};
-              cursor: pointer;
-              border: 2px solid #fff;
-              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-              position: relative;
-              z-index: 10;
-              transition: transform 0.1s ease;
-            }
-
-            &::-webkit-slider-runnable-track {
-              height: 8px;
-              border-radius: 4px;
-              background: #e1e1e1;
-              cursor: pointer;
-            }
-            &::-moz-range-track {
-              height: 8px;
-              border-radius: 4px;
-              background: #e1e1e1;
-              cursor: pointer;
-            }
-
-            &:hover::-webkit-slider-thumb {
-              background: ${colors.primaryDark || '#0056b3'};
-              transform: scale(1.2);
-              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-            }
-            &:hover::-moz-range-thumb {
-              background: ${colors.primaryDark || '#0056b3'};
-              transform: scale(1.2);
-              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-            }
-
-            &:active::-webkit-slider-thumb {
-              transform: scale(1.3);
-              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-            }
-            &:active::-moz-range-thumb {
-              transform: scale(1.3);
-              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-            }
-          `}
-          onChange={handleSeek}
-          disabled={!videoElement}
-        />
-      </div>
-
-      {/* Time display */}
+      {/* Top Buttons Section */}
       <div
         className={css`
           display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 4px 0;
-          font-size: 13px;
-          color: #555;
-          margin-top: 8px;
+          flex-direction: column;
+          gap: 4px;
           width: 100%;
+          margin-bottom: 12px;
+          > div > button,
+          > div > label {
+            height: 40px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+          }
         `}
       >
+        {onChangeVideo && (
+          <Button
+            asFileInput
+            accept="video/*"
+            onFileChange={handleVideoChange}
+            variant="secondary"
+            size="sm"
+            title="Load a different video file"
+          >
+            Change Video
+          </Button>
+        )}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleSrtLoad}
+          title={
+            hasSubtitles ? 'Load a different SRT file' : 'Load an SRT file'
+          }
+        >
+          {hasSubtitles ? 'Change SRT' : 'Add SRT'}
+        </Button>
+      </div>
+
+      {/* Wrapper for Time, Playback, and Bottom Buttons - Pushed Down */}
+      <div
+        className={css`
+          margin-top: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        `}
+      >
+        {/* Time display - Now directly above Playback Controls */}
         <div
           className={css`
             display: flex;
-            gap: 8px;
-            align-items: center;
-            font-family: monospace;
-          `}
-        >
-          <span
-            className={css`
-              font-weight: 500;
-              color: #333;
-            `}
-          >
-            {formatTime(currentTime)}
-          </span>
-          <span>/</span>
-          <span
-            className={css`
-              font-weight: 500;
-              color: #333;
-            `}
-          >
-            {formatTime(duration)}
-          </span>
-        </div>
-      </div>
-
-      {/* Bottom controls: Upload, SRT, etc */}
-      <div
-        className={css`
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content: center;
-          width: 100%; /* Ensure container takes full width */
-          padding-top: 8px;
-        `}
-      >
-        <ButtonGroup
-          spacing="sm"
-          mobileStack={false}
-          className={css`
-            flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
+            font-size: 13px;
+            color: ${colors.gray};
+            width: 100%;
+            text-align: center;
           `}
         >
-          {/* Single Play/Pause Toggle Button */}
-          {onTogglePlay && (
-            <Button
-              onClick={() => {
-                if (onUiInteraction) {
-                  onUiInteraction();
-                }
-                if (onTogglePlay) {
-                  onTogglePlay();
-                }
-              }}
-              variant={isPlaying ? 'danger' : 'primary'}
-              size="sm"
-              className={`${buttonGradientStyles.base} ${
-                isPlaying
-                  ? buttonGradientStyles.danger
-                  : buttonGradientStyles.primary
-              } ${css`
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                min-width: 70px;
-              `}`}
-            >
-              {isPlaying ? (
-                <>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    fill="currentColor"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
-                  </svg>
-                  Pause
-                </>
-              ) : (
-                <>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    fill="currentColor"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
-                  </svg>
-                  Play
-                </>
-              )}
-            </Button>
-          )}
-
-          {onChangeVideo && (
-            <StylizedFileInput
-              accept="video/*"
-              onChange={handleVideoChange}
-              buttonText="Change Video"
-              showSelectedFile={false}
-            />
-          )}
-          <ElectronFileButton
-            buttonText={hasSubtitles ? 'Change SRT' : 'Add SRT'}
-            onClick={async () => {
-              try {
-                const result = await openSubtitleWithElectron();
-                if (result.error && !result.error.includes('canceled')) {
-                  // console.error(
-                  //   'Error loading SRT via TimestampDisplay:',
-                  //   result.error
-                  // );
-                } else if (result.segments) {
-                  onSrtLoaded(result.segments);
-                }
-              } catch (err) {
-                // console.error(
-                //   'Unexpected error in openSubtitleWithElectron:',
-                //   err
-                // );
-              }
-            }}
-          />
-
-          {hasSubtitles && onScrollToCurrentSubtitle && (
-            <Button
-              onClick={onScrollToCurrentSubtitle}
-              variant="secondary"
-              size="sm"
-              title="Scroll to the subtitle currently being shown in the video"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ marginRight: '6px' }}
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <polyline points="19 12 12 19 5 12" />
-              </svg>
-              Find Current
-            </Button>
-          )}
-
-          {/* Shift All Subtitles Input and Button */}
-          {hasSubtitles && onShiftAllSubtitles && (
-            <div
+          <div
+            className={css`
+              display: flex;
+              gap: 8px;
+              align-items: center;
+              font-family: monospace;
+            `}
+          >
+            <span
               className={css`
-                display: flex;
-                align-items: center;
+                font-weight: 500;
+                color: ${colors.dark};
               `}
             >
-              <input
-                type="number"
-                value={shiftAmount}
-                onChange={e => setShiftAmount(e.target.value)}
-                step="0.1"
-                placeholder="Offset (s)"
-                className={shiftInputStyles}
-                aria-label="Shift all subtitles by seconds"
-              />
+              {formatTime(currentTime)}
+            </span>
+            <span>/</span>
+            <span
+              className={css`
+                font-weight: 500;
+                color: ${colors.dark};
+              `}
+            >
+              {formatTime(duration)}
+            </span>
+          </div>
+        </div>
+
+        {/* Playback Controls Section */}
+        <div
+          className={css`
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+          `}
+        >
+          {/* Progress wrapper */}
+          <div
+            className={css`
+              width: 100%;
+              position: relative;
+              height: 20px;
+              display: flex;
+              align-items: center;
+            `}
+          >
+            {/* Buffered progress bar - Positioned absolutely within the new wrapper */}
+            <div
+              className={css`
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                left: 0;
+                height: 8px;
+                background-color: ${colors.gray};
+                border-radius: 4px;
+                pointer-events: none;
+                z-index: 0;
+              `}
+              style={{ width: bufferedWidth }}
+            />
+            {/* Slider (seek bar) - Ensure it overlaps buffer correctly */}
+            <input
+              type="range"
+              min="0"
+              max={duration || 0}
+              value={currentTime}
+              step="0.1"
+              aria-label="Video Seek"
+              className={css`
+                -webkit-appearance: none;
+                appearance: none;
+                width: 100%;
+                height: 8px;
+                border-radius: 4px;
+                background: ${colors.light};
+                outline: none;
+                cursor: pointer;
+                position: relative;
+                z-index: 1;
+                margin: 0;
+                vertical-align: middle;
+
+                &::-webkit-slider-thumb {
+                  -webkit-appearance: none;
+                  appearance: none;
+                  width: 18px;
+                  height: 18px;
+                  border-radius: 50%;
+                  background: ${colors.primary};
+                  cursor: pointer;
+                  border: 2px solid ${colors.white};
+                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+                  position: relative;
+                  z-index: 10;
+                  transition: transform 0.1s ease;
+                  margin-top: -5px;
+                }
+
+                &::-moz-range-thumb {
+                  width: 18px;
+                  height: 18px;
+                  border-radius: 50%;
+                  background: ${colors.primary};
+                  cursor: pointer;
+                  border: 2px solid ${colors.white};
+                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+                  position: relative;
+                  z-index: 10;
+                  transition: transform 0.1s ease;
+                  margin-top: -5px;
+                }
+
+                &::-webkit-slider-runnable-track {
+                  height: 8px;
+                  border-radius: 4px;
+                  background: ${colors.light};
+                  cursor: pointer;
+                }
+                &::-moz-range-track {
+                  height: 8px;
+                  border-radius: 4px;
+                  background: ${colors.light};
+                  cursor: pointer;
+                }
+
+                &:hover::-webkit-slider-thumb {
+                  background: ${colors.primaryDark || colors.primary};
+                  transform: scale(1.2);
+                }
+                &:hover::-moz-range-thumb {
+                  background: ${colors.primaryDark || colors.primary};
+                  transform: scale(1.2);
+                }
+
+                &:active::-webkit-slider-thumb {
+                  transform: scale(1.3);
+                }
+                &:active::-moz-range-thumb {
+                  transform: scale(1.3);
+                }
+              `}
+              onChange={handleSeek}
+              disabled={!videoElement}
+            />
+          </div>
+
+          {/* NEW Row for Play/Pause and Find Current */}
+          <div
+            className={css`
+              display: flex;
+              justify-content: center;
+              gap: 8px;
+              width: 100%;
+            `}
+          >
+            {/* Play/Pause Button - Moved inside new row */}
+            {onTogglePlay && (
               <Button
-                onClick={handleApplyShift}
+                onClick={() => {
+                  if (onUiInteraction) {
+                    onUiInteraction();
+                  }
+                  if (onTogglePlay) {
+                    onTogglePlay();
+                  }
+                }}
+                variant={isPlaying ? 'danger' : 'primary'}
+                size="sm"
+                className={css`
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  min-width: 70px;
+                `}
+              >
+                {isPlaying ? (
+                  <>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                    </svg>
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                    </svg>
+                    Play
+                  </>
+                )}
+              </Button>
+            )}
+
+            {/* Find Current Button - Moved inside new row */}
+            {hasSubtitles && onScrollToCurrentSubtitle && (
+              <Button
+                onClick={onScrollToCurrentSubtitle}
                 variant="secondary"
                 size="sm"
-                title="Apply shift to all subtitles"
-                disabled={
-                  isNaN(parseFloat(shiftAmount)) ||
-                  parseFloat(shiftAmount) === 0
-                }
+                title="Scroll to the subtitle currently being shown in the video"
               >
-                Shift All
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ marginRight: '6px' }}
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
+                Find Current
               </Button>
-            </div>
-          )}
-        </ButtonGroup>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Buttons Section */}
+        <div
+          className={css`
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+          `}
+        >
+          <ButtonGroup
+            spacing="sm"
+            mobileStack={false}
+            className={css`
+              flex-wrap: wrap;
+              justify-content: center;
+              width: 100%;
+              ${!isStickyExpanded &&
+              css`
+                button,
+                > div > button {
+                }
+                > div:last-child {
+                  display: flex;
+                  width: 100%;
+                  > input {
+                    flex-grow: 1;
+                  }
+                  margin-bottom: 0;
+                }
+              `}
+            `}
+          >
+            {/* ... Shift All Group ... */}
+            {hasSubtitles && onShiftAllSubtitles && (
+              <div
+                className={css`
+                  display: flex;
+                  align-items: center;
+                `}
+              >
+                <input
+                  type="number"
+                  value={shiftAmount}
+                  onChange={e => setShiftAmount(e.target.value)}
+                  step="0.1"
+                  placeholder="Offset (s)"
+                  className={shiftInputStyles}
+                  aria-label="Shift all subtitles by seconds"
+                />
+                <Button
+                  onClick={handleApplyShift}
+                  variant="secondary"
+                  size="sm"
+                  title="Apply shift to all subtitles"
+                  disabled={
+                    isNaN(parseFloat(shiftAmount)) ||
+                    parseFloat(shiftAmount) === 0
+                  }
+                >
+                  Shift All
+                </Button>
+              </div>
+            )}
+          </ButtonGroup>
+        </div>
       </div>
     </div>
   );

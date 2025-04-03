@@ -1,45 +1,61 @@
-import React, { ButtonHTMLAttributes } from 'react';
+import React, { useRef, ChangeEvent, ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
-import { colors, gradients, shadows, breakpoints } from '../styles';
+import { colors, breakpoints } from '../styles';
+// import LoadingSpinner from './LoadingSpinner'; // Comment out for now
 
 // Define the button variants and sizes
-type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger' | 'success';
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'text'
+  | 'danger'
+  | 'success'
+  | 'link';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+// Adjusted type for onFileChange to handle directory paths better
+type FileChangeEvent =
+  | ChangeEvent<HTMLInputElement>
+  | { target: { files: FileList | { name: string; path: string }[] | null } };
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
-  icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
   className?: string;
   isLoading?: boolean;
+  children: ReactNode;
+  // File input props
+  asFileInput?: boolean;
+  onFileChange?: (event: FileChangeEvent) => void;
+  accept?: string;
+  directory?: boolean;
+  webkitdirectory?: boolean;
 }
 
 // Base button styles
 const baseButtonStyles = css`
+  position: relative; // Needed for absolute spinner and hidden input
+  overflow: hidden; // Prevent input spillover
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  height: 40px;
-  line-height: 1;
-  box-sizing: border-box;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
   text-align: center;
-
-  &:focus {
-    outline: none;
-  }
+  vertical-align: middle;
+  white-space: nowrap;
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
     cursor: not-allowed;
-    pointer-events: none;
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -48,56 +64,45 @@ const baseButtonStyles = css`
 `;
 
 // Size variants
-const buttonSizes = {
+const buttonSizes: Record<ButtonSize, string> = {
   sm: css`
+    padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
-    padding: 6px 12px;
-    border-radius: 4px;
+    line-height: 1.5;
+    border-radius: 0.2rem;
   `,
   md: css`
-    font-size: 0.95rem;
-    padding: 10px 18px;
-    border-radius: 6px;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
   `,
   lg: css`
-    font-size: 1rem;
-    padding: 12px 24px;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    border-radius: 0.3rem;
   `,
 };
 
 // Style variants
-const buttonVariants = {
+const buttonVariants: Record<ButtonVariant, string> = {
   primary: css`
-    background: ${gradients.primary};
-    color: white;
-    box-shadow: ${shadows.button};
-
+    color: #fff;
+    background-color: ${colors.primary};
+    border-color: ${colors.primary};
     &:hover:not(:disabled) {
-      box-shadow: ${shadows.buttonHover};
-      transform: translateY(-2px);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: 0 2px 5px rgba(67, 97, 238, 0.2);
+      background-color: ${colors.primaryDark};
+      border-color: ${colors.primaryDark};
     }
   `,
   secondary: css`
-    background-color: #ffffff;
-    color: #212529;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-
+    color: ${colors.dark};
+    background-color: ${colors.grayLight};
+    border-color: ${colors.border};
     &:hover:not(:disabled) {
-      background-color: #f1f3f5;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-      transform: translateY(-1px);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      background-color: ${colors.light};
+      border-color: ${colors.grayDark};
     }
   `,
   text: css`
@@ -107,41 +112,42 @@ const buttonVariants = {
     padding-right: 8px;
 
     &:hover:not(:disabled) {
-      background-color: rgba(67, 97, 238, 0.08);
+      background-color: rgba(0, 0, 0, 0.04);
     }
 
     &:active:not(:disabled) {
-      background-color: rgba(67, 97, 238, 0.12);
+      background-color: rgba(0, 0, 0, 0.08);
     }
   `,
   danger: css`
-    background: ${gradients.danger};
-    color: white;
-    box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
-
+    color: #fff;
+    background-color: ${colors.danger};
+    border-color: ${colors.danger};
     &:hover:not(:disabled) {
-      box-shadow: 0 6px 15px rgba(230, 57, 70, 0.4);
-      transform: translateY(-2px);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: 0 2px 5px rgba(230, 57, 70, 0.2);
+      background-color: #c82333;
+      border-color: #bd2130;
     }
   `,
   success: css`
-    background: ${gradients.success};
-    color: white;
-    box-shadow: 0 4px 10px rgba(46, 196, 182, 0.3);
-
+    color: #fff;
+    background-color: ${colors.success};
+    border-color: ${colors.success};
     &:hover:not(:disabled) {
-      box-shadow: 0 6px 15px rgba(46, 196, 182, 0.4);
-      transform: translateY(-2px);
+      background-color: #218838;
+      border-color: #1e7e34;
     }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: 0 2px 5px rgba(46, 196, 182, 0.2);
+  `,
+  link: css`
+    color: ${colors.primary};
+    background-color: transparent;
+    border-color: transparent;
+    text-decoration: none;
+    padding: 0;
+    height: auto;
+    line-height: normal;
+    &:hover:not(:disabled) {
+      color: ${colors.primaryDark};
+      text-decoration: underline;
     }
   `,
 };
@@ -150,69 +156,177 @@ const fullWidthStyle = css`
   width: 100%;
 `;
 
-// Icon spacing styles
-const iconLeftStyle = css`
-  margin-right: 8px;
-`;
-
-const iconRightStyle = css`
-  margin-left: 8px;
-`;
-
 // Loading spinner style
-const loadingSpinnerStyle = css`
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
+// const loadingSpinnerStyle = css` ... `;
 
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  margin-right: 0.5em;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-  vertical-align: text-bottom;
+const loadingOverlayStyles = css`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 `;
 
-export default function Button({
+const hiddenInputStyles = css`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1; // Ensure it's clickable but behind spinner overlay
+  // Hide visually but keep accessible
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  width: 1px;
+`;
+
+const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   size = 'md',
   fullWidth = false,
-  icon,
-  iconPosition = 'left',
   className,
   isLoading = false,
   disabled,
+  asFileInput = false,
+  onFileChange,
+  accept,
+  directory = false,
+  webkitdirectory = false,
+  onClick,
   ...rest
-}: ButtonProps) {
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = async (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    // Prevent default button behavior ONLY if it's NOT acting as a file input trigger
+    // if (asFileInput) {
+    //    event.preventDefault(); // REMOVE THIS
+    // }
+
+    if (isLoading || disabled) return;
+
+    const electron = window.electron as any; // Cast to bypass type error
+
+    // Handle Electron directory selection
+    if (
+      asFileInput &&
+      (directory || webkitdirectory) &&
+      electron?.showOpenDialog &&
+      onFileChange
+    ) {
+      try {
+        const result = await electron.showOpenDialog({
+          properties: ['openDirectory'],
+        });
+        if (!result.canceled && result.filePaths.length > 0) {
+          // Create a simplified object for directory path
+          const directoryPaths = result.filePaths.map((path: string) => ({
+            name: path,
+            path: path,
+          }));
+          onFileChange({
+            target: {
+              files: directoryPaths,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error opening directory dialog:', error);
+      }
+    } else if (asFileInput && inputRef.current) {
+      // Trigger regular file input click
+      inputRef.current.click();
+    } else if (onClick) {
+      // Standard button click
+      onClick(event);
+    }
+  };
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (onFileChange) {
+      onFileChange(event);
+      // Reset input value to allow selecting the same file again
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    }
+  };
+
+  const buttonContent = (
+    <>
+      {isLoading && (
+        <div className={loadingOverlayStyles}>
+          {/* <LoadingSpinner size={size === 'sm' ? 16 : 20} /> */}
+          <span>Loading...</span> {/* Placeholder */}
+        </div>
+      )}
+      <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+        {/* Remove icon rendering logic */}
+        {children}
+      </span>
+    </>
+  );
+
+  const commonButtonProps = {
+    className: cx(
+      baseButtonStyles,
+      buttonVariants[variant],
+      buttonSizes[size],
+      fullWidth && fullWidthStyle,
+      className
+    ),
+    disabled: disabled || isLoading,
+    ...rest,
+  };
+
+  if (asFileInput) {
+    // If acting as file input, use a label wrapping the button styling
+    // But handle the click via the outer button/div to manage Electron logic
+    return (
+      <button {...commonButtonProps} type="button" onClick={handleButtonClick}>
+        {buttonContent}
+        {/* Conditionally render input only if not using Electron dialog */}
+        {!(directory || webkitdirectory) && (
+          <input
+            ref={inputRef}
+            type="file"
+            className={hiddenInputStyles}
+            accept={accept}
+            onChange={handleInputChange}
+            disabled={disabled || isLoading}
+            tabIndex={-1} // Make it non-focusable
+            aria-hidden="true"
+            {...(webkitdirectory ? { webkitdirectory: 'true' } : {})} // Use standard prop if true
+          />
+        )}
+      </button>
+    );
+  }
+
+  // Standard button rendering
   return (
     <button
-      className={cx(
-        baseButtonStyles,
-        buttonVariants[variant],
-        buttonSizes[size],
-        fullWidth && fullWidthStyle,
-        className
-      )}
-      disabled={isLoading || disabled}
-      {...rest}
+      {...commonButtonProps}
+      type={rest.type || 'button'} // Default to button type
+      onClick={onClick}
     >
-      {isLoading && <span className={loadingSpinnerStyle} aria-hidden="true" />}
-
-      {!isLoading && icon && iconPosition === 'left' && (
-        <span className={iconLeftStyle}>{icon}</span>
-      )}
-
-      {children}
-
-      {!isLoading && icon && iconPosition === 'right' && (
-        <span className={iconRightStyle}>{icon}</span>
-      )}
+      {buttonContent}
     </button>
   );
-}
+};
+
+export default Button;
