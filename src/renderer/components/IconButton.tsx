@@ -1,6 +1,6 @@
 import React, { ButtonHTMLAttributes } from 'react';
 import { css, cx } from '@emotion/css';
-import { gradients, shadows } from '../styles';
+import { colors } from '../styles';
 
 // Define the button variants and sizes
 type IconButtonVariant = 'primary' | 'secondary' | 'transparent';
@@ -58,52 +58,41 @@ const iconButtonSizes = {
 // Style variants
 const iconButtonVariants = {
   primary: css`
-    background: ${gradients.primary};
-    color: white;
-    box-shadow: ${shadows.button};
+    background-color: ${colors.primary};
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      transform: translateY(-5px) scale(1.05);
-      box-shadow: ${shadows.buttonHover};
+      background-color: ${colors.primaryDark};
     }
 
     &:active:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 3px 10px rgba(67, 97, 238, 0.3);
+      background-color: ${colors.primaryDark};
     }
   `,
   secondary: css`
-    background-color: #ffffff;
-    color: #212529;
-    border: 1px solid #e9ecef;
-    box-shadow: ${shadows.sm};
+    background-color: ${colors.grayLight};
+    color: ${colors.dark};
+    border: 1px solid ${colors.border};
 
     &:hover:not(:disabled) {
-      background-color: #f8f9fa;
-      transform: translateY(-3px);
-      box-shadow: ${shadows.md};
+      background-color: ${colors.light};
+      border-color: ${colors.grayDark};
     }
 
     &:active:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: ${shadows.sm};
+      background-color: ${colors.light};
     }
   `,
   transparent: css`
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(5px);
-    color: #212529;
-    box-shadow: ${shadows.sm};
+    background: rgba(42, 42, 42, 0.8);
+    color: ${colors.dark};
 
     &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.9);
-      box-shadow: ${shadows.md};
-      transform: translateY(-3px);
+      background: rgba(42, 42, 42, 0.95);
     }
 
     &:active:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: ${shadows.sm};
+      background: rgba(42, 42, 42, 0.95);
     }
   `,
 };

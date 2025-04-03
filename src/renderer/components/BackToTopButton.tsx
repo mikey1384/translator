@@ -13,6 +13,8 @@ const buttonContainerStyles = css`
   bottom: 30px;
   right: 30px;
   z-index: 1000;
+  display: flex;
+  gap: 10px;
 `;
 
 export default function BackToTopButton({
@@ -36,7 +38,7 @@ export default function BackToTopButton({
 
   if (!showButton) return null;
 
-  const handleClick = () => {
+  const handleBackToTopClick = () => {
     if (onClick) {
       onClick();
     } else {
@@ -49,10 +51,45 @@ export default function BackToTopButton({
     }
   };
 
+  const handleReloadClick = () => {
+    if (
+      window.confirm(
+        'Are you sure you want to reload the page? Any unsaved changes might be lost.'
+      )
+    ) {
+      window.location.reload();
+    }
+  };
+
   return (
     <div className={buttonContainerStyles}>
       <IconButton
-        onClick={handleClick}
+        onClick={handleReloadClick}
+        title="Reload Page"
+        aria-label="Reload the page"
+        size="lg"
+        variant="secondary"
+        icon={
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={css`
+              stroke: currentColor;
+              stroke-width: 2;
+              stroke-linecap: round;
+              stroke-linejoin: round;
+            `}
+          >
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        }
+      />
+      <IconButton
+        onClick={handleBackToTopClick}
         title="Back to Top"
         aria-label="Scroll back to top"
         size="lg"
