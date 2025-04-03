@@ -9,6 +9,7 @@ import Button from '../components/Button';
 import ButtonGroup from '../components/ButtonGroup';
 import StylizedFileInput from '../components/StylizedFileInput';
 import Section from '../components/Section';
+import { colors } from '../styles';
 
 // Maximum file size in MB
 const MAX_MB = 500;
@@ -86,13 +87,67 @@ const baseLanguageOptions = [
   { value: 'english', label: 'English' },
 ];
 
+// Define Key Status Type (can be shared or redefined if needed)
+type ApiKeyStatus = {
+  openai: boolean;
+  anthropic: boolean;
+} | null;
+
 interface GenerateSubtitlesProps {
   videoFile: File | null;
   onSetVideoFile: (file: File | null) => void;
   onSubtitlesGenerated: (subtitles: string) => void;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
+  apiKeyStatus: ApiKeyStatus;
+  isLoadingKeyStatus: boolean;
+  onNavigateToSettings: (show: boolean) => void;
 }
+
+// Add styles for the locked state
+const lockedContainerStyles = css`
+  padding: 2rem 1.5rem;
+  border: 1px dashed ${colors.grayLight};
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  text-align: center;
+  margin-bottom: 1rem;
+`;
+
+const lockedTitleStyles = css`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: ${colors.grayDark};
+  margin-bottom: 0.75rem;
+`;
+
+const lockedProgressStyles = css`
+  font-size: 1rem;
+  color: ${colors.gray};
+  margin-bottom: 1.5rem;
+  span {
+    font-weight: bold;
+    color: ${colors.primary};
+  }
+`;
+
+const goToSettingsButtonStyles = css`
+  // Use similar styles to the main settings button
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  background-color: ${colors.grayLight};
+  color: ${colors.grayDark};
+  border: 1px solid ${colors.grayLight};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${colors.grayLight};
+    border-color: ${colors.gray};
+    color: ${colors.dark};
+  }
+`;
 
 export default function GenerateSubtitles({
   videoFile,
@@ -100,117 +155,164 @@ export default function GenerateSubtitles({
   onSubtitlesGenerated,
   showOriginalText,
   onShowOriginalTextChange,
+  apiKeyStatus,
+  isLoadingKeyStatus,
+  onNavigateToSettings,
 }: GenerateSubtitlesProps) {
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [subtitles, setSubtitles] = useState<string>('');
   const [error, setError] = useState<string>('');
 
+  // Calculate key status
+  const keysSetCount = apiKeyStatus
+    ? (apiKeyStatus.openai ? 1 : 0) + (apiKeyStatus.anthropic ? 1 : 0)
+    : 0;
+  const allKeysSet = keysSetCount === 2;
+
   return (
     <Section title="Generate Subtitles">
-      {/* Error display */}
-      {error && <div className={errorMessageStyles}>{error}</div>}
+      {isLoadingKeyStatus && <p>Loading API Key status...</p>}
 
-      <div className={fileInputWrapperStyles}>
-        <label>1. Select Video File (up to {MAX_MB}MB): </label>
-        <StylizedFileInput
-          accept="video/*"
-          onChange={handleFileChange}
-          buttonText="Choose Video"
-          showSelectedFile={isGenerating ? false : !!videoFile}
-          key={videoFile ? videoFile.name + videoFile.lastModified : 'no-file'}
-          currentFile={videoFile}
-        />
-      </div>
+      {!isLoadingKeyStatus && !allKeysSet && (
+        <div className={lockedContainerStyles}>
+          <div className={lockedTitleStyles}>API Key Setup Required</div>
+          <div className={lockedProgressStyles}>
+            Required Keys Set: <span>{keysSetCount}</span>/2
+          </div>
+          <p
+            style={{
+              fontSize: '0.9rem',
+              color: colors.gray,
+              marginBottom: '1rem',
+            }}
+          >
+            Please add your OpenAI and Anthropic API keys in the settings to
+            enable subtitle generation and translation.
+          </p>
+          <button
+            className={goToSettingsButtonStyles}
+            onClick={() => onNavigateToSettings(true)}
+            title="Go to Settings to add API Keys"
+          >
+            Go to Settings
+          </button>
+        </div>
+      )}
 
-      <div className={fileInputWrapperStyles}>
-        <label>2. Output Language: </label>
-        <select
-          value={targetLanguage}
-          onChange={e => setTargetLanguage(e.target.value)}
-          className={selectStyles}
-          disabled={isGenerating}
-        >
-          {/* Render base options first */}
-          {baseLanguageOptions.map(lang => (
-            <option key={lang.value} value={lang.value}>
-              {lang.label}
-            </option>
-          ))}
-          {/* Render grouped options */}
-          {languageGroups.map(group => (
-            <optgroup key={group.label} label={group.label}>
-              {group.options.map(lang => (
+      {!isLoadingKeyStatus && allKeysSet && (
+        <>
+          {/* Error display */}
+          {error && <div className={errorMessageStyles}>{error}</div>}
+
+          <div className={fileInputWrapperStyles}>
+            <label>1. Select Video File (up to {MAX_MB}MB): </label>
+            <StylizedFileInput
+              accept="video/*"
+              onChange={handleFileChange}
+              buttonText="Choose Video"
+              showSelectedFile={isGenerating ? false : !!videoFile}
+              key={
+                videoFile ? videoFile.name + videoFile.lastModified : 'no-file'
+              }
+              currentFile={videoFile}
+            />
+          </div>
+
+          <div className={fileInputWrapperStyles}>
+            <label>2. Output Language: </label>
+            <select
+              value={targetLanguage}
+              onChange={e => setTargetLanguage(e.target.value)}
+              className={selectStyles}
+              disabled={isGenerating}
+            >
+              {/* Render base options first */}
+              {baseLanguageOptions.map(lang => (
                 <option key={lang.value} value={lang.value}>
                   {lang.label}
                 </option>
               ))}
-            </optgroup>
-          ))}
-        </select>
+              {/* Render grouped options */}
+              {languageGroups.map(group => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map(lang => (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
 
-        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
-          <div
-            className={css`
-              margin-top: 12px;
-              display: flex;
-              align-items: center;
-            `}
-          >
-            <label
-              className={css`
-                display: flex;
-                align-items: center;
-                cursor: pointer;
-                user-select: none;
-                margin: 0;
-                line-height: 1;
-              `}
-            >
-              <input
-                type="checkbox"
-                checked={showOriginalText}
-                onChange={e => onShowOriginalTextChange(e.target.checked)}
+            {targetLanguage !== 'original' && targetLanguage !== 'english' && (
+              <div
                 className={css`
-                  margin-right: 8px;
-                  width: 16px;
-                  height: 16px;
-                  accent-color: #4361ee;
-                  margin-top: 0;
-                  margin-bottom: 0;
-                  vertical-align: middle;
-                `}
-              />
-              <span
-                className={css`
-                  display: inline-block;
-                  vertical-align: middle;
+                  margin-top: 12px;
+                  display: flex;
+                  align-items: center;
                 `}
               >
-                Show original text
-              </span>
-            </label>
+                <label
+                  className={css`
+                    display: flex;
+                    align-items: center;
+                    cursor: pointer;
+                    user-select: none;
+                    margin: 0;
+                    line-height: 1;
+                  `}
+                >
+                  <input
+                    type="checkbox"
+                    checked={showOriginalText}
+                    onChange={e => onShowOriginalTextChange(e.target.checked)}
+                    className={css`
+                      margin-right: 8px;
+                      width: 16px;
+                      height: 16px;
+                      accent-color: #4361ee;
+                      margin-top: 0;
+                      margin-bottom: 0;
+                      vertical-align: middle;
+                    `}
+                  />
+                  <span
+                    className={css`
+                      display: inline-block;
+                      vertical-align: middle;
+                    `}
+                  >
+                    Show original text
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      <ButtonGroup>
-        <Button
-          onClick={handleGenerateSubtitles}
-          disabled={!videoFile || isGenerating}
-          size="md"
-          variant="primary"
-          isLoading={isGenerating}
-        >
-          {isGenerating ? 'Processing...' : 'Generate Subtitles'}
-        </Button>
+          <ButtonGroup>
+            <Button
+              onClick={handleGenerateSubtitles}
+              disabled={!videoFile || isGenerating}
+              size="md"
+              variant="primary"
+              isLoading={isGenerating}
+            >
+              {isGenerating ? 'Processing...' : 'Generate Subtitles'}
+            </Button>
 
-        {subtitles && (
-          <Button variant="secondary" onClick={handleSaveSubtitles} size="md">
-            Save SRT
-          </Button>
-        )}
-      </ButtonGroup>
+            {subtitles && (
+              <Button
+                variant="secondary"
+                onClick={handleSaveSubtitles}
+                size="md"
+              >
+                Save SRT
+              </Button>
+            )}
+          </ButtonGroup>
+        </>
+      )}
     </Section>
   );
 

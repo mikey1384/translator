@@ -23,6 +23,12 @@ import {
 import { pageWrapperStyles, containerStyles, titleStyles } from './styles';
 import { css } from '@emotion/css';
 
+// Define Key Status Type
+type ApiKeyStatus = {
+  openai: boolean;
+  anthropic: boolean;
+} | null;
+
 const headerStyles = css`
   display: flex;
   justify-content: space-between;
@@ -47,6 +53,8 @@ const settingsButtonStyles = css`
 
 function AppContent() {
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus>(null);
+  const [isLoadingKeyStatus, setIsLoadingKeyStatus] = useState<boolean>(true);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -89,6 +97,33 @@ function AppContent() {
 
   // Ref to hold the latest handlePartialResult callback
   const handlePartialResultRef = useRef<any>(null);
+
+  // --- Fetch API Key Status ---
+  const fetchKeyStatus = useCallback(async () => {
+    console.log('Attempting to fetch API key status...');
+    setIsLoadingKeyStatus(true);
+    try {
+      const result = await window.electron.getApiKeyStatus();
+      if (result.success) {
+        console.log('API Key Status fetched:', result.status);
+        setApiKeyStatus(result.status);
+      } else {
+        console.error('Failed to fetch key status:', result.error);
+        setApiKeyStatus({ openai: false, anthropic: false }); // Assume none set on error
+      }
+    } catch (error) {
+      console.error('Error calling getApiKeyStatus:', error);
+      setApiKeyStatus({ openai: false, anthropic: false });
+    } finally {
+      setIsLoadingKeyStatus(false);
+      console.log('Finished fetching API key status.');
+    }
+  }, []);
+
+  // Fetch status on initial mount
+  useEffect(() => {
+    fetchKeyStatus();
+  }, [fetchKeyStatus]);
 
   // --- Centralized Video File Handling ---
   const handleSetVideoFile = useCallback(
@@ -317,6 +352,16 @@ function AppContent() {
     [] // No dependencies needed now
   );
 
+  // --- Updated handleToggleSettings ---
+  // Renamed from simple setShowSettings(false) in SettingsPage's onBack
+  const handleToggleSettings = (show: boolean) => {
+    setShowSettings(show);
+    // If returning *from* settings, refresh the key status
+    if (!show) {
+      fetchKeyStatus();
+    }
+  };
+
   return (
     <div className={pageWrapperStyles}>
       <div id="top-padding" style={{ height: '10px' }}></div>
@@ -328,14 +373,18 @@ function AppContent() {
           {!showSettings && (
             <button
               className={settingsButtonStyles}
-              onClick={() => setShowSettings(true)}
+              onClick={() => handleToggleSettings(true)}
             >
               Settings
             </button>
           )}
         </div>
         {showSettings ? (
-          <SettingsPage onBack={() => setShowSettings(false)} />
+          <SettingsPage
+            apiKeyStatus={apiKeyStatus}
+            isLoadingStatus={isLoadingKeyStatus}
+            onBack={() => handleToggleSettings(false)}
+          />
         ) : (
           <>
             {videoUrl && (
@@ -359,6 +408,9 @@ function AppContent() {
                 onSubtitlesGenerated={handleSubtitlesGenerated}
                 showOriginalText={showOriginalText}
                 onShowOriginalTextChange={setShowOriginalText}
+                apiKeyStatus={apiKeyStatus}
+                isLoadingKeyStatus={isLoadingKeyStatus}
+                onNavigateToSettings={handleToggleSettings}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">

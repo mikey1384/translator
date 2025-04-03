@@ -145,26 +145,52 @@ try {
 
   ipcMain.handle('save-api-key', async (_event, { keyType, apiKey }) => {
     console.info(`Received save-api-key request for type: ${keyType}`);
-    if (!keyType || !apiKey) {
+
+    // Adjust validation: Allow empty string for deletion, but not null/undefined
+    if (!keyType || typeof apiKey === 'undefined' || apiKey === null) {
+      console.warn('Save API key rejected: Key type or API key missing.');
       return { success: false, error: 'Key type and API key are required.' };
     }
     if (keyType !== 'openai' && keyType !== 'anthropic') {
+      console.warn(`Save API key rejected: Invalid key type '${keyType}'.`);
       return { success: false, error: 'Invalid key type specified.' };
     }
 
     try {
-      // Basic validation (example: check prefix)
-      if (keyType === 'openai' && !apiKey.startsWith('sk-')) {
-        return { success: false, error: 'Invalid OpenAI key format.' };
-      }
-      // Add similar check for Anthropic if needed
+      if (apiKey === '') {
+        // --- Deletion Logic ---
+        console.info(`Attempting to delete ${keyType} API key...`);
+        const deleted = await keytar.deletePassword(SERVICE_NAME, keyType);
+        if (deleted) {
+          console.info(`Successfully deleted ${keyType} API key.`);
+          return { success: true };
+        } else {
+          // This might happen if the key didn't exist in the first place
+          console.warn(
+            `Keytar reported no key found to delete for ${keyType}, considering success.`
+          );
+          return { success: true }; // Treat as success if key wasn't there
+        }
+      } else {
+        // --- Saving Logic ---
+        console.info(`Attempting to save ${keyType} API key...`);
+        // Basic validation (example: check prefix) - only apply if saving, not deleting
+        if (keyType === 'openai' && !apiKey.startsWith('sk-')) {
+          console.warn('Save API key rejected: Invalid OpenAI key format.');
+          return { success: false, error: 'Invalid OpenAI key format.' };
+        }
+        // Add similar check for Anthropic if needed
+        // if (keyType === 'anthropic' && !apiKey.startsWith('sk-ant-')) { ... }
 
-      await keytar.setPassword(SERVICE_NAME, keyType, apiKey);
-      console.info(`Successfully saved ${keyType} API key.`);
-      return { success: true };
+        await keytar.setPassword(SERVICE_NAME, keyType, apiKey);
+        console.info(`Successfully saved ${keyType} API key.`);
+        return { success: true };
+      }
     } catch (error) {
-      console.error(`Error saving ${keyType} API key:`, error);
-      return { success: false, error: `Failed to save ${keyType} key.` };
+      // Log the error with more context
+      const action = apiKey === '' ? 'deleting' : 'saving';
+      console.error(`Error ${action} ${keyType} API key:`, error);
+      return { success: false, error: `Failed to ${action} ${keyType} key.` };
     }
   });
   console.info('Registered save-api-key handler.');

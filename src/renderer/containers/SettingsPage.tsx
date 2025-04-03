@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
+// Assuming Button component exists
 
 // Basic Styling using @emotion/css
 const settingsPageStyles = css`
@@ -127,10 +128,11 @@ const infoTextStyles = css`
   line-height: 1.4;
 `;
 
-type KeyStatus = {
+// Define Key Status Type (can be shared or redefined if needed)
+type ApiKeyStatus = {
   openai: boolean;
   anthropic: boolean;
-};
+} | null;
 
 type SaveStatus = {
   type: 'openai' | 'anthropic';
@@ -141,48 +143,84 @@ type SaveStatus = {
 // <<< Define Props Interface >>>
 interface SettingsPageProps {
   onBack: () => void;
+  apiKeyStatus: ApiKeyStatus;
+  isLoadingStatus: boolean;
 }
 
-function SettingsPage({ onBack }: SettingsPageProps) {
+// Add styles for the key status area when key is set
+const keySetInfoStyles = css`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background-color: #e6f7ff; // Light blue background
+  border: 1px solid #b3e0ff;
+  border-radius: 4px;
+  margin-bottom: 15px;
+`;
+
+const keySetTextStyles = css`
+  font-weight: 500;
+  color: #0056b3; // Darker blue text
+`;
+
+const keyActionButtonsStyles = css`
+  display: flex;
+  gap: 8px;
+`;
+
+// Small utility button style
+const utilityButtonStyles = css`
+  padding: 5px 10px;
+  font-size: 0.85em;
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  &:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+function SettingsPage({
+  onBack,
+  apiKeyStatus,
+  isLoadingStatus,
+}: SettingsPageProps) {
   const [openaiKeyInput, setOpenaiKeyInput] = useState('');
   const [anthropicKeyInput, setAnthropicKeyInput] = useState('');
-  const [keyStatus, setKeyStatus] = useState<KeyStatus | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [keyStatus, setKeyStatus] = useState<ApiKeyStatus>(apiKeyStatus);
+  const [loadingStatus, setLoadingStatus] = useState(isLoadingStatus);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchKeyStatus = useCallback(async () => {
-    setLoadingStatus(true);
-    try {
-      const result = await window.electron.getApiKeyStatus();
-      if (result.success) {
-        setKeyStatus(result.status);
-      } else {
-        console.error('Failed to fetch key status:', result.error);
-        setKeyStatus({ openai: false, anthropic: false }); // Assume not set on error
-      }
-    } catch (error) {
-      console.error('Error calling getApiKeyStatus:', error);
-      setKeyStatus({ openai: false, anthropic: false });
-    } finally {
-      setLoadingStatus(false);
-    }
-  }, []);
+  // State to control editing view when key is already set
+  const [isEditingOpenAI, setIsEditingOpenAI] = useState(false);
+  const [isEditingAnthropic, setIsEditingAnthropic] = useState(false);
+
+  // Update local state if props change (e.g., after returning from background update)
+  useEffect(() => {
+    setKeyStatus(apiKeyStatus);
+  }, [apiKeyStatus]);
 
   useEffect(() => {
-    fetchKeyStatus();
-  }, [fetchKeyStatus]);
+    setLoadingStatus(isLoadingStatus);
+  }, [isLoadingStatus]);
 
   const handleSaveKey = async (keyType: 'openai' | 'anthropic') => {
     const apiKey = keyType === 'openai' ? openaiKeyInput : anthropicKeyInput;
-    if (!apiKey) {
-      setSaveStatus({
-        type: keyType,
-        success: false,
-        message: 'API Key cannot be empty.',
-      });
-      return;
-    }
+    // Allow saving empty string to effectively remove key via input field
+    // if (!apiKey) {
+    //   setSaveStatus({ type: keyType, success: false, message: 'API Key cannot be empty.' });
+    //   return;
+    // }
 
     setIsSaving(true);
     setSaveStatus(null); // Clear previous status
@@ -193,18 +231,23 @@ function SettingsPage({ onBack }: SettingsPageProps) {
         setSaveStatus({
           type: keyType,
           success: true,
-          message: `${
-            keyType === 'openai' ? 'OpenAI' : 'Anthropic'
-          } key saved successfully!`,
+          message: apiKey
+            ? `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key saved successfully!`
+            : `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key removed successfully!`,
         });
         // Update local status immediately
         setKeyStatus(prevStatus => ({
           ...prevStatus!,
-          [keyType]: true,
+          [keyType]: !!apiKey, // Update status based on whether key is truthy
         }));
-        // Clear input field on success
-        if (keyType === 'openai') setOpenaiKeyInput('');
-        if (keyType === 'anthropic') setAnthropicKeyInput('');
+        // Clear input and hide editing view
+        if (keyType === 'openai') {
+          setOpenaiKeyInput('');
+          setIsEditingOpenAI(false);
+        } else {
+          setAnthropicKeyInput('');
+          setIsEditingAnthropic(false);
+        }
       } else {
         setSaveStatus({
           type: keyType,
@@ -217,10 +260,83 @@ function SettingsPage({ onBack }: SettingsPageProps) {
       setSaveStatus({
         type: keyType,
         success: false,
-        message: 'An unexpected error occurred while saving the key.',
+        message: 'An unexpected error occurred.',
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Function to handle removing a key directly
+  const handleRemoveKey = async (keyType: 'openai' | 'anthropic') => {
+    if (
+      !window.confirm(`Are you sure you want to remove the ${keyType} API key?`)
+    ) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveStatus(null);
+
+    try {
+      // Call saveApiKey with an empty string
+      console.log(
+        `[SettingsPage] Calling saveApiKey to remove ${keyType} key...`
+      );
+      const result = await window.electron.saveApiKey(keyType, '');
+      console.log(
+        `[SettingsPage] Result from saveApiKey for removing ${keyType}:`,
+        result
+      );
+
+      if (result.success) {
+        console.log(
+          `[SettingsPage] Key removal success for ${keyType}. Updating state...`
+        );
+        setSaveStatus({
+          type: keyType,
+          success: true,
+          message: `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key removed successfully!`,
+        });
+        // Add log before setting state
+        console.log(
+          `[SettingsPage] Updating keyStatus for ${keyType} to false.`
+        );
+        setKeyStatus(prevStatus => {
+          const newState = { ...prevStatus!, [keyType]: false };
+          console.log(
+            `[SettingsPage] New keyStatus state (after removal):`,
+            newState
+          );
+          return newState;
+        });
+        // Ensure editing state is false
+        if (keyType === 'openai') setIsEditingOpenAI(false);
+        else setIsEditingAnthropic(false);
+      } else {
+        console.error(
+          `[SettingsPage] Key removal failed for ${keyType}:`,
+          result.error
+        );
+        setSaveStatus({
+          type: keyType,
+          success: false,
+          message: result.error || 'Failed to remove key.',
+        });
+      }
+    } catch (error) {
+      console.error(
+        `[SettingsPage] Error calling saveApiKey to remove ${keyType} key:`,
+        error
+      );
+      setSaveStatus({
+        type: keyType,
+        success: false,
+        message: 'An unexpected error occurred while removing the key.',
+      });
+    } finally {
+      setIsSaving(false);
+      console.log(`[SettingsPage] Finished handleRemoveKey for ${keyType}.`);
     }
   };
 
@@ -258,6 +374,121 @@ function SettingsPage({ onBack }: SettingsPageProps) {
     );
   };
 
+  // Helper to render the input section or the key-set info
+  const renderKeySection = (keyType: 'openai' | 'anthropic') => {
+    const isSet = keyStatus ? keyStatus[keyType] : false;
+    const isEditing =
+      keyType === 'openai' ? isEditingOpenAI : isEditingAnthropic;
+    const currentInputValue =
+      keyType === 'openai' ? openaiKeyInput : anthropicKeyInput;
+    const setInputValue =
+      keyType === 'openai' ? setOpenaiKeyInput : setAnthropicKeyInput;
+    const setIsEditing =
+      keyType === 'openai' ? setIsEditingOpenAI : setIsEditingAnthropic;
+    const placeholder =
+      keyType === 'openai'
+        ? 'Enter your OpenAI key (sk-...)'
+        : 'Enter your Anthropic key (sk-ant-...)';
+    const getName = keyType === 'openai' ? 'OpenAI' : 'Anthropic';
+    const getKeyLink =
+      keyType === 'openai'
+        ? 'https://platform.openai.com/api-keys'
+        : 'https://console.anthropic.com/settings/keys';
+
+    if (loadingStatus) {
+      return <p>Loading key status...</p>;
+    }
+
+    if (isSet && !isEditing) {
+      // Key is set, show info and Change/Remove buttons
+      return (
+        <div className={keySetInfoStyles}>
+          <span className={keySetTextStyles}>{getName} API Key is Set</span>
+          <div className={keyActionButtonsStyles}>
+            <button
+              className={utilityButtonStyles}
+              onClick={() => setIsEditing(true)}
+              disabled={isSaving}
+            >
+              Change Key
+            </button>
+            <button
+              className={css`
+                ${utilityButtonStyles} ${css`
+                  color: #dc3545;
+                  border-color: #dc3545;
+                  &:hover {
+                    background-color: #f8d7da;
+                  }
+                `}
+              `}
+              onClick={() => handleRemoveKey(keyType)}
+              disabled={isSaving}
+            >
+              Remove Key
+            </button>
+          </div>
+        </div>
+      );
+    } else {
+      // Key is not set OR user is editing it
+      return (
+        <>
+          <label htmlFor={`${keyType}-key`} className={labelStyles}>
+            {getName} API Key:
+          </label>
+          <input
+            id={`${keyType}-key`}
+            type="password"
+            className={inputStyles}
+            value={currentInputValue}
+            onChange={e => setInputValue(e.target.value)}
+            placeholder={placeholder}
+            disabled={isSaving}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              className={buttonStyles}
+              onClick={() => handleSaveKey(keyType)}
+              // Disable save if input is empty AND the key wasn't already set (i.e., initial setup)
+              // Allow saving empty string if editing an existing key (to remove it)
+              disabled={isSaving || (!currentInputValue && !isSet)}
+            >
+              {isSaving
+                ? 'Saving...'
+                : isEditing
+                  ? 'Save Changes'
+                  : `Save ${getName} Key`}
+            </button>
+            {isEditing && (
+              <button
+                className={utilityButtonStyles}
+                onClick={() => {
+                  setIsEditing(false);
+                  setInputValue(''); // Clear input on cancel
+                  setSaveStatus(null); // Clear any previous save messages
+                }}
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+            )}
+            <a
+              href={getKeyLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={linkStyles}
+              style={{ marginLeft: isEditing ? '0' : 'auto' }} // Adjust margin
+            >
+              Get {getName} Key
+            </a>
+          </div>
+          {renderFeedbackMessage(keyType)}
+        </>
+      );
+    }
+  };
+
   return (
     <div className={settingsPageStyles}>
       {/* <<< Add Back button >>> */}
@@ -290,36 +521,7 @@ function SettingsPage({ onBack }: SettingsPageProps) {
           OpenAI (GPT models)
           {renderStatusIndicator(keyStatus?.openai)}
         </h2>
-        <label htmlFor="openai-key" className={labelStyles}>
-          OpenAI API Key:
-        </label>
-        <input
-          id="openai-key"
-          type="password"
-          className={inputStyles}
-          value={openaiKeyInput}
-          onChange={e => setOpenaiKeyInput(e.target.value)}
-          placeholder="Enter your OpenAI key (sk-...)"
-          disabled={isSaving}
-        />
-        <button
-          className={buttonStyles}
-          onClick={() => handleSaveKey('openai')}
-          disabled={isSaving || !openaiKeyInput}
-        >
-          {isSaving && saveStatus?.type === 'openai'
-            ? 'Saving...'
-            : 'Save OpenAI Key'}
-        </button>
-        <a
-          href="https://platform.openai.com/api-keys"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkStyles}
-        >
-          Get OpenAI Key
-        </a>
-        {renderFeedbackMessage('openai')}
+        {renderKeySection('openai')}
       </div>
 
       {/* Anthropic Section */}
@@ -328,36 +530,7 @@ function SettingsPage({ onBack }: SettingsPageProps) {
           Anthropic (Claude models)
           {renderStatusIndicator(keyStatus?.anthropic)}
         </h2>
-        <label htmlFor="anthropic-key" className={labelStyles}>
-          Anthropic API Key:
-        </label>
-        <input
-          id="anthropic-key"
-          type="password"
-          className={inputStyles}
-          value={anthropicKeyInput}
-          onChange={e => setAnthropicKeyInput(e.target.value)}
-          placeholder="Enter your Anthropic key (sk-ant-...)"
-          disabled={isSaving}
-        />
-        <button
-          className={buttonStyles}
-          onClick={() => handleSaveKey('anthropic')}
-          disabled={isSaving || !anthropicKeyInput}
-        >
-          {isSaving && saveStatus?.type === 'anthropic'
-            ? 'Saving...'
-            : 'Save Anthropic Key'}
-        </button>
-        <a
-          href="https://console.anthropic.com/settings/keys"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkStyles}
-        >
-          Get Anthropic Key
-        </a>
-        {renderFeedbackMessage('anthropic')}
+        {renderKeySection('anthropic')}
       </div>
     </div>
   );
