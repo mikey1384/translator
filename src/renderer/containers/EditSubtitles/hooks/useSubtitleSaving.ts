@@ -38,11 +38,10 @@ export function useSubtitleSaving(
 
     if (!originalPath) {
       console.warn(
-        '[useSubtitleSaving] No original path found. Cannot perform direct save.'
+        '[useSubtitleSaving] No original path found. Redirecting to Save As...'
       );
-      setError(
-        'Cannot save directly. Use "Save As..." first or load an SRT file.'
-      );
+      // Redirect to Save As if no path exists
+      await handleSaveEditedSrtAs();
       return;
     }
 
