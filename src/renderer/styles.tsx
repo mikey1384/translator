@@ -142,6 +142,9 @@ export const containerStyles = css`
   margin: 0 auto;
   padding: 1.5rem;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     padding: 1rem;
@@ -328,6 +331,8 @@ export const pageWrapperStyles = css`
   color: ${colors.dark}; // Default text color
   min-height: 100vh;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 `;
 
 // Status Item - Dark Theme

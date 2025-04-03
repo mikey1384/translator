@@ -54,6 +54,15 @@ const settingsButtonStyles = css`
   }
 `;
 
+const mainContentStyles = css`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  flex-grow: 1;
+  position: relative;
+`;
+
 function AppContent() {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const { apiKeyStatus, isLoadingKeyStatus, fetchKeyStatus } =
@@ -179,26 +188,8 @@ function AppContent() {
       );
     },
     [handleSetSubtitleSegments]
-  ); // Add hook setter as dependency
+  );
 
-  // --- Updated Subtitle Generated Handler --- MOVED to useSubtitleManagement
-  // Only needs to handle subtitles now, video is set via handleSetVideoFile
-  // const handleSubtitlesGenerated = useCallback(
-  //   (generatedSubtitles: string) => {
-  //     try {
-  //       const segments = parseSrt(generatedSubtitles);
-  //       const fixedSegments = fixOverlappingSegments(segments);
-  //       setSubtitleSegments(fixedSegments);
-  //       // No need to set video file/URL here anymore
-  //     } catch (err) {
-  //       console.error('Error parsing generated subtitles:', err);
-  //     }
-  //   },
-  //   [] // No dependencies needed now
-  // );
-
-  // --- Updated handleToggleSettings ---
-  // Renamed from simple setShowSettings(false) in SettingsPage's onBack
   const handleToggleSettings = (show: boolean) => {
     setShowSettings(show);
     if (!show) {
@@ -253,7 +244,7 @@ function AppContent() {
               />
             )}
 
-            <div ref={mainContentRef} style={{ position: 'relative' }}>
+            <div ref={mainContentRef} className={mainContentStyles}>
               <GenerateSubtitles
                 videoFile={videoFile}
                 onSetVideoFile={handleSetVideoFile}
