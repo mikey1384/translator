@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors, linkStyles as globalLinkStyles } from '../styles';
 // Assuming Button component exists

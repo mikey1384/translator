@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
 import { SrtSegment } from '../../../types/interface';
@@ -160,31 +160,49 @@ export default function SubtitleEditor({
   const [editableText, setEditableText] = useState(initialEditableText);
   const [shiftAmount, setShiftAmount] = useState('0');
 
-  const debouncedEditSubtitle = useCallback(
-    debounce((field: 'text', value: string) => {
+  // 1. Memoize the core subtitle editing logic
+  const handleEditSubtitleText = useCallback(
+    (value: string) => {
       let combinedText = value;
       if (hasMarker) {
         // Reconstruct with marker if original had it
         combinedText = originalText + '###TRANSLATION_MARKER###' + value;
       }
-      onEditSubtitle(index, field, combinedText);
-    }, DEBOUNCE_DELAY_MS),
-    [onEditSubtitle, index, hasMarker, originalText] // Include dependencies
-  );
+      onEditSubtitle(index, 'text', combinedText);
+    },
+    [hasMarker, originalText, onEditSubtitle, index]
+  ); // Dependencies for the core logic
 
+  // 2. Create the debounced function using useMemo
+  const debouncedEditSubtitleText = useMemo(() => {
+    return debounce(handleEditSubtitleText, DEBOUNCE_DELAY_MS);
+  }, [handleEditSubtitleText]); // Recreate debounce only when handleEditSubtitleText changes
+
+  // 3. Cleanup the debounced function on unmount or when it's recreated
   useEffect(() => {
-    // Update local state if the prop changes (e.g., due to external edits)
+    return () => {
+      debouncedEditSubtitleText.cancel();
+    };
+  }, [debouncedEditSubtitleText]);
+
+  // Update local state if the prop changes (e.g., due to external edits)
+  useEffect(() => {
     let currentInitialEditableText = sub.text;
     if (sub.text.includes('###TRANSLATION_MARKER###')) {
       currentInitialEditableText =
         sub.text.split('###TRANSLATION_MARKER###')[1] || '';
     }
-    setEditableText(currentInitialEditableText);
-  }, [sub.text]); // Depend only on sub.text
+    // Only update if the incoming prop text (derived) is different from current local state
+    if (currentInitialEditableText !== editableText) {
+      setEditableText(currentInitialEditableText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sub.text]); // Depend only on sub.text - disable lint rule here as editableText causes loops
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditableText(e.target.value);
-    debouncedEditSubtitle('text', e.target.value);
+    const newValue = e.target.value;
+    setEditableText(newValue); // Update local state immediately
+    debouncedEditSubtitleText(newValue); // Call the memoized debounced function
   };
 
   const handleTimeChange = (field: 'start' | 'end', value: string) => {
