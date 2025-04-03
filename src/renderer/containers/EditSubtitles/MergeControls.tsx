@@ -1,7 +1,7 @@
 import React from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
-import { colors, mergeButtonStyles as mergeButtonClass } from '../../styles';
+import { colors } from '../../styles';
 import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
@@ -132,7 +132,7 @@ function MergeControls({
 
       {/* Merge Button */}
       <Button
-        className={mergeButtonClass} // Assuming mergeButtonClass is imported correctly
+        variant="primary"
         onClick={handleMergeVideoWithSubtitles}
         disabled={!videoFileExists || !subtitlesExist || isMergingInProgress}
         isLoading={isMergingInProgress}

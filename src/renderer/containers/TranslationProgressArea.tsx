@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
+import { colors } from '../styles';
 
 interface SubtitleProgressInfo {
   current?: number;
@@ -17,7 +18,7 @@ interface TranslationProgressAreaProps {
   onPartialResult?: (partialResult: string) => void;
 }
 
-// Progress area styles
+// Progress area styles - Updated for Dark Theme
 const progressContainerStyles = css`
   position: fixed;
   top: 0;
@@ -25,13 +26,14 @@ const progressContainerStyles = css`
   right: 0;
   z-index: 1100;
   padding: 18px 24px;
-  background-color: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  // Apply similar background to sticky video/action bar
+  background-color: rgba(30, 30, 30, 0.75); // Dark semi-transparent
+  backdrop-filter: blur(12px); // Blur effect
+  box-shadow: none; // Remove shadow
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid ${colors.border}; // Theme border color
   animation: slideDown 0.3s ease-out;
 
   @keyframes slideDown {
@@ -56,26 +58,30 @@ const headerStyles = css`
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: #3f37c9;
+    color: ${colors.primaryLight}; // Lighter primary for dark bg
   }
 `;
 
+// Progress block styles - Adjust for dark theme
 const progressBlockStyles = css`
   padding: 16px;
-  background-color: #f8f9fa;
+  background-color: ${colors.light}; // Secondary dark background
   border-radius: 8px;
-  border: 1px solid #eaedf0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid ${colors.border}; // Theme border
+  box-shadow: none; // Remove shadow
 `;
 
+// Progress bar container - Adjust for dark theme
 const progressBarContainerStyles = css`
   height: 10px;
-  background-color: #e9ecef;
+  background-color: ${colors.grayLight}; // Darker background for bar
   border-radius: 10px;
   overflow: hidden;
   margin: 8px 0;
+  border: 1px solid ${colors.border}; // Subtle border
 `;
 
+// Progress label styles - Adjust for dark theme
 const progressLabelStyles = css`
   display: flex;
   justify-content: space-between;
@@ -83,28 +89,35 @@ const progressLabelStyles = css`
   margin-bottom: 8px;
   font-weight: 500;
   font-size: 0.95rem;
+  color: ${colors.dark}; // Light text
+
+  strong {
+    color: ${colors.grayDark}; // Slightly dimmer label text
+  }
 `;
 
+// Warning styles - Adjust for dark theme
 const warningStyles = css`
-  color: #856404;
-  background-color: #fff3cd;
+  color: ${colors.warning}; // Use theme warning color
+  background-color: rgba(247, 85, 154, 0.1); // Tinted background
   padding: 10px;
   margin-top: 8px;
   border-radius: 6px;
   font-size: 0.9rem;
-  border-left: 3px solid #ffc107;
+  border-left: 3px solid ${colors.warning};
 `;
 
+// Close button styles - Adjust for dark theme
 const closeButtonStyles = css`
   background: none;
   border: none;
-  color: #6c757d;
+  color: ${colors.gray}; // Medium gray
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0;
   line-height: 1;
   &:hover {
-    color: #343a40;
+    color: ${colors.dark}; // Light hover color
   }
 `;
 

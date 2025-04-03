@@ -10,6 +10,7 @@ import React, {
 import { css } from '@emotion/css';
 import Section from '../../components/Section';
 import Button from '../../components/Button';
+import { colors } from '../../styles';
 
 import SubtitleList from './SubtitleList';
 import MergeControls from './MergeControls';
@@ -451,15 +452,15 @@ export function EditSubtitles({
             left: 0;
             right: 0;
             padding: 15px 20px;
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(8px);
-            border-top: 1px solid rgba(238, 238, 238, 0.8);
+            background-color: rgba(30, 30, 30, 0.75);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid ${colors.border};
             display: flex;
             align-items: center;
             gap: 10px;
             justify-content: center;
             z-index: 100;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: none;
           `}
         >
           <EditSubtitlesHeader

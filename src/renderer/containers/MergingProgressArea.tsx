@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { colors } from '../constants';
+import { colors } from '../styles';
 import { useState, useEffect } from 'react';
 
 interface MergingProgressAreaProps {
@@ -18,13 +18,13 @@ const progressContainerStyles = css`
   right: 0;
   z-index: 1100;
   padding: 18px 24px;
-  background-color: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background-color: rgba(30, 30, 30, 0.75);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid ${colors.border};
   animation: slideDown 0.3s ease-out;
 
   @keyframes slideDown {
@@ -49,24 +49,25 @@ const headerStyles = css`
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: #3f37c9;
+    color: ${colors.primaryLight};
   }
 `;
 
 const progressBlockStyles = css`
   padding: 16px;
-  background-color: #f8f9fa;
+  background-color: ${colors.light};
   border-radius: 8px;
-  border: 1px solid #eaedf0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid ${colors.border};
+  box-shadow: none;
 `;
 
 const progressBarContainerStyles = css`
   height: 10px;
-  background-color: #e9ecef;
+  background-color: ${colors.grayLight};
   border-radius: 10px;
   overflow: hidden;
   margin: 8px 0;
+  border: 1px solid ${colors.border};
 `;
 
 const progressLabelStyles = css`
@@ -76,18 +77,23 @@ const progressLabelStyles = css`
   margin-bottom: 8px;
   font-weight: 500;
   font-size: 0.95rem;
+  color: ${colors.dark};
+
+  strong {
+    color: ${colors.grayDark};
+  }
 `;
 
 const closeButtonStyles = css`
   background: none;
   border: none;
-  color: #6c757d;
+  color: ${colors.gray};
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0;
   line-height: 1;
   &:hover {
-    color: #343a40;
+    color: ${colors.dark};
   }
 `;
 
