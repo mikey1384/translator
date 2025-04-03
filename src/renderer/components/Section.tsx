@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
 import { sectionStyles, sectionTitleStyles } from '../styles';
 

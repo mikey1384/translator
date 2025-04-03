@@ -217,9 +217,8 @@ export default function SubtitleEditor({
     if (newInitialEditableText !== currentText) {
       setCurrentText(newInitialEditableText);
     }
-    // We only want this effect to run when the *external* subtitle text changes.
-    // Including currentText in dependencies would cause loops.
-  }, [sub.text]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sub?.text]);
 
   // Ref to store the debounced function
   const debouncedUpdateParent = useRef(
@@ -243,6 +242,7 @@ export default function SubtitleEditor({
       // Trigger the debounced update to the parent
       debouncedUpdateParent(fullText);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [index, hasMarker, originalText, debouncedUpdateParent]
   );
 

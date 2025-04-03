@@ -185,6 +185,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       window.removeEventListener('scroll', handleScroll);
       handleScroll.cancel();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onStickyChange]);
 
   useEffect(() => {

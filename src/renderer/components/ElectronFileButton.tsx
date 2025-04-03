@@ -1,4 +1,3 @@
-import React from 'react';
 import { css } from '@emotion/css';
 import { colors, shadows, breakpoints } from '../styles';
 
