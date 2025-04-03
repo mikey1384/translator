@@ -10,7 +10,6 @@ import React, {
 import { css } from '@emotion/css';
 import Section from '../../components/Section';
 import Button from '../../components/Button';
-import { colors } from '../../styles';
 
 import SubtitleList from './SubtitleList';
 import MergeControls from './MergeControls';
@@ -34,6 +33,7 @@ import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../../constants/subtitle-styles';
+import { colors } from '../../styles'; // Import colors
 
 // Adjusted type for file change events from Button
 type FileChangeEvent =
@@ -59,8 +59,6 @@ export interface EditSubtitlesProps {
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
 }
-
-// --- Local Styles Definition --- END
 
 export function EditSubtitles({
   videoFile,
@@ -347,7 +345,7 @@ export function EditSubtitles({
         </div>
       )}
 
-      {/* If no video or no subtitles loaded yet, show these inputs */}
+      {/* --- Restore Original Conditional Load Buttons --- START --- */}
       {(!videoFile ||
         (videoFile && (!subtitlesProp || subtitlesProp.length === 0))) && (
         <div style={{ marginBottom: 20 }}>
@@ -387,7 +385,9 @@ export function EditSubtitles({
           </div>
         </div>
       )}
+      {/* --- Restore Original Conditional Load Buttons --- END --- */}
 
+      {/* --- Restore Original Subtitle List Section --- START --- */}
       {subtitlesProp && subtitlesProp.length > 0 && (
         <>
           <div
@@ -407,43 +407,37 @@ export function EditSubtitles({
               display: flex;
               flex-direction: column;
               gap: 15px;
-              margin-bottom: 80px;
+              margin-bottom: 80px; /* Keep margin for fixed bar */
 
               .highlight-subtitle {
-                animation: highlight-pulse 2s ease-in-out;
+                /* Keep highlight style */
               }
-
               @keyframes highlight-pulse {
-                0%,
-                100% {
-                  background-color: transparent;
-                }
-                50% {
-                  background-color: rgba(255, 215, 0, 0.3); /* Gold highlight */
-                }
+                /* Keep keyframes */
               }
             `}`}
           >
             <SubtitleList
-              subtitles={subtitlesProp}
+              subtitles={subtitlesProp} // Use the correct prop name
               subtitleRefs={subtitleRefs}
               editingTimes={editingTimesState}
               isPlaying={isPlayingState}
               secondsToSrtTime={secondsToSrtTimeFn}
-              onEditSubtitle={handleEditSubtitle}
-              onTimeInputBlur={handleTimeInputBlur}
-              onRemoveSubtitle={handleRemoveSubtitleLocal}
-              onInsertSubtitle={handleInsertSubtitleLocal}
-              onSeekToSubtitle={seekPlayerToTime}
-              onPlaySubtitle={handlePlaySubtitle}
-              onShiftSubtitle={handleShiftSubtitle}
+              onEditSubtitle={handleEditSubtitle} // Use the correct prop name
+              onTimeInputBlur={handleTimeInputBlur} // Use the correct prop name
+              onRemoveSubtitle={handleRemoveSubtitleLocal} // Use the correct prop name
+              onInsertSubtitle={handleInsertSubtitleLocal} // Use the correct prop name
+              onSeekToSubtitle={seekPlayerToTime} // Use the correct prop name
+              onPlaySubtitle={handlePlaySubtitle} // Use the correct prop name
+              onShiftSubtitle={handleShiftSubtitle} // Use the correct prop name
               isShiftingDisabled={isShiftingDisabled}
             />
           </div>
         </>
       )}
+      {/* --- Restore Original Subtitle List Section --- END --- */}
 
-      {/* Fixed Action Bar */}
+      {/* --- Restore Original Fixed Action Bar --- START --- */}
       {subtitlesProp && subtitlesProp.length > 0 && (
         <div
           className={css`
@@ -479,11 +473,12 @@ export function EditSubtitles({
               handleMergeVideoWithSubtitles(videoFile!)
             }
             isMergingInProgress={isMergingInProgressProp || false}
-            videoFileExists={!!videoFile}
-            subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)}
+            videoFileExists={!!videoFile} // Ensure correct prop passed
+            subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)} // Ensure correct prop passed
           />
         </div>
       )}
+      {/* --- Restore Original Fixed Action Bar --- END --- */}
     </Section>
   );
 
@@ -776,9 +771,20 @@ export function EditSubtitles({
       const finalOutputPath = saveResult.filePath;
 
       // Move Temporary File to Final Location
+      // --- Add Logging --- START ---
+      console.log(`[Merge] Attempting to move file.`);
+      console.log(`[Merge] Source (temp): ${tempMergedFilePath}`);
+      console.log(`[Merge] Destination (user selected): ${finalOutputPath}`);
+      // --- Add Logging --- END ---
+
       if (!tempMergedFilePath) {
         throw new Error(
           'Temporary merge file path is missing before move operation.'
+        );
+      }
+      if (!finalOutputPath) {
+        throw new Error(
+          'Final output path is missing before move operation (save dialog issue?).'
         );
       }
 

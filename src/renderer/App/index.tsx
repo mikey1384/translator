@@ -14,8 +14,8 @@ import { ManagementContextProvider } from '../context';
 import { SrtSegment } from '../../types/interface';
 
 import { parseSrt, secondsToSrtTime } from '../helpers';
-import { useApiKeyStatus } from './useApiKeyStatus';
-import { useSubtitleManagement } from './useSubtitleManagement';
+import { useApiKeyStatus } from './hooks/useApiKeyStatus';
+import { useSubtitleManagement } from './hooks/useSubtitleManagement';
 
 import { pageWrapperStyles, containerStyles } from '../styles';
 import { css } from '@emotion/css';
@@ -104,25 +104,39 @@ function AppContent() {
   });
 
   const handleSetVideoFile = useCallback(
-    (file: File | null) => {
-      // Clean up previous URL if it exists
-      if (videoUrl) {
+    (file: File | any | null) => {
+      // Clean up previous object URL if it exists
+      if (videoUrl && !videoUrl.startsWith('file://')) {
+        // Only revoke if it's an object URL, not a file:// URL
         URL.revokeObjectURL(videoUrl);
       }
 
+      // Special case for files with direct URL from downloaded videos
+      if (file && file._isUrlDirect && file._directUrl) {
+        // This is our special file-like object with a direct URL
+        console.log('Using direct file URL:', file._directUrl);
+        setVideoFile(file); // Keep the file-like object in state
+        setVideoUrl(file._directUrl); // Use the direct file:// URL
+        setIsPlaying(false); // Reset playback state on new video
+        // Clear subtitles when a new video (even downloaded) is set
+        handleSetSubtitleSegments([]);
+        return;
+      }
+
+      // Handle standard File objects or null
       setVideoFile(file);
 
       if (file) {
         const url = URL.createObjectURL(file);
         setVideoUrl(url);
         setIsPlaying(false); // Reset playback state on new video
-        // Potentially reset subtitle segments if needed?
-        // handleSetSubtitleSegments([]); // Use hook setter if resetting is desired
+        // Clear subtitles for newly selected local files
+        handleSetSubtitleSegments([]);
       } else {
-        // If file is null, clear the URL
+        // If file is null (cleared or cancelled selection)
         setVideoUrl('');
         setIsPlaying(false);
-        // Clear subtitles if video removed - Use the hook's setter
+        // Clear subtitles if video removed
         handleSetSubtitleSegments([]);
       }
     },
@@ -254,6 +268,8 @@ function AppContent() {
                 apiKeyStatus={apiKeyStatus}
                 isLoadingKeyStatus={isLoadingKeyStatus}
                 onNavigateToSettings={handleToggleSettings}
+                subtitleSegments={subtitleSegments}
+                secondsToSrtTime={secondsToSrtTime}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">

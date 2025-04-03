@@ -10,7 +10,6 @@ import {
   OpenFileResult,
   DeleteFileOptions,
   DeleteFileResult,
-  MoveFileResult,
   CancelMergeResult,
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
@@ -31,6 +30,35 @@ type ProgressEventCallback = (
   }
 ) => void;
 
+// --- Add types for URL Processing --- START ---
+interface ProcessUrlOptions {
+  url: string;
+  targetLanguage: string; // Assuming language is needed
+}
+
+interface ProcessUrlResult {
+  success: boolean;
+  subtitles?: string; // The generated subtitles (kept for backward compatibility)
+  videoPath?: string; // Path to the downloaded video file
+  filename?: string; // Name of the downloaded file
+  size?: number; // Size of the downloaded file in bytes
+  fileUrl?: string; // Direct file:// URL to the downloaded video
+  originalVideoPath?: string; // Path to the downloaded temp file (for potential later use/cleanup by renderer?)
+  error?: string;
+  operationId?: string;
+}
+
+// Define a specific progress type for URL processing (download + generation)
+type UrlProgressCallback = (progress: {
+  percent: number;
+  stage: string;
+  error?: string;
+  operationId?: string;
+  current?: number; // Optional for transcription stage
+  total?: number; // Optional for transcription stage
+}) => void;
+// --- Add types for URL Processing --- END ---
+
 interface ElectronAPI {
   ping: () => Promise<string>;
   saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
@@ -44,7 +72,7 @@ interface ElectronAPI {
   moveFile: (
     sourcePath: string,
     destinationPath: string
-  ) => Promise<MoveFileResult>;
+  ) => Promise<{ success?: boolean; error?: string }>;
   deleteFile: (options: DeleteFileOptions) => Promise<DeleteFileResult>;
   cancelMerge: (operationId: string) => Promise<CancelMergeResult>;
 
@@ -64,6 +92,10 @@ interface ElectronAPI {
     callback: ProgressEventCallback | null
   ) => () => void;
 
+  // === URL Processing ===
+  processUrl: (options: ProcessUrlOptions) => Promise<ProcessUrlResult>;
+  onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
+
   // === API Key Management ===
   getApiKeyStatus: () => Promise<{
     success: boolean;
@@ -77,6 +109,12 @@ interface ElectronAPI {
 
   // Add the missing showMessage method
   showMessage: (message: string) => Promise<void>;
+
+  // Add copyFile signature
+  copyFile: (
+    sourcePath: string,
+    destinationPath: string
+  ) => Promise<{ success?: boolean; error?: string }>;
 }
 
 declare global {

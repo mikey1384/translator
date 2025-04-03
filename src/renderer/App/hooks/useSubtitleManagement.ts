@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SrtSegment } from '../../types/interface';
-import { parseSrt, buildSrt, fixOverlappingSegments } from '../helpers';
+import { SrtSegment } from '../../../types/interface';
+import { parseSrt, buildSrt, fixOverlappingSegments } from '../../helpers';
 
 export function useSubtitleManagement(showOriginalText: boolean) {
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);

@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useCallback, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 import {
   errorMessageStyles,
@@ -94,13 +94,15 @@ type ApiKeyStatus = {
 
 interface GenerateSubtitlesProps {
   videoFile: File | null;
-  onSetVideoFile: (file: File | null) => void;
+  onSetVideoFile: (file: File | any | null) => void;
   onSubtitlesGenerated: (subtitles: string) => void;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
   apiKeyStatus: ApiKeyStatus;
   isLoadingKeyStatus: boolean;
   onNavigateToSettings: (show: boolean) => void;
+  subtitleSegments: { start: number; end: number; text: string }[];
+  secondsToSrtTime: (seconds: number) => string;
 }
 
 // Add styles for the locked state - Dark Theme
@@ -155,6 +157,83 @@ type FileChangeEvent =
   | ChangeEvent<HTMLInputElement>
   | { target: { files: FileList | { name: string; path: string }[] | null } };
 
+const urlInputStyles = css`
+  margin-right: 8px;
+  flex-grow: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid ${colors.border};
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background-color: ${colors.grayLight};
+  color: ${colors.dark};
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+  }
+
+  &::placeholder {
+    color: ${colors.gray};
+  }
+`;
+// --- Add Styles for URL Input ---
+
+// --- Style Adjustments for New Layout --- START ---
+const inputModeToggleStyles = css`
+  display: flex;
+  margin-bottom: 15px;
+  border: none; // Remove all borders initially
+  border-bottom: 1px solid ${colors.border}; // Add only the bottom border
+
+  button {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    border: none;
+    background-color: transparent;
+    color: ${colors.grayDark};
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+    border-radius: 0; // Remove individual button radius
+
+    &:not(:last-child) {
+      border-right: none; // Remove the divider line between buttons
+    }
+
+    &:hover {
+      background-color: transparent;
+      color: ${colors.primary};
+    }
+
+    &.active {
+      background-color: transparent;
+      color: ${colors.primary};
+      border-bottom: 2px solid ${colors.primary};
+      border-top: none;
+      font-weight: 600;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: transparent !important;
+      color: ${colors.gray} !important;
+    }
+  }
+`;
+
+const inputSectionStyles = css`
+  padding: 20px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background-color: ${colors.light};
+`;
+// --- Style Adjustments for New Layout --- END ---
+
 export default function GenerateSubtitles({
   videoFile,
   onSetVideoFile,
@@ -164,17 +243,354 @@ export default function GenerateSubtitles({
   apiKeyStatus,
   isLoadingKeyStatus,
   onNavigateToSettings,
+  subtitleSegments,
+  secondsToSrtTime,
 }: GenerateSubtitlesProps) {
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [subtitles, setSubtitles] = useState<string>('');
+  const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [urlInput, setUrlInput] = useState<string>('');
+
+  // --- Add state for input mode --- START ---
+  const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
+  // --- Add state for input mode --- END ---
+
+  // --- Add state for progress display ---
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [progressStage, setProgressStage] = useState('');
+  const progressCleanupRef = useRef<(() => void) | null>(null); // Ref to store cleanup function
+
+  // --- State for Download Completion --- START ---
+  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
+    null
+  );
+  // --- State for Download Completion --- END ---
 
   // Calculate key status
   const keysSetCount = apiKeyStatus
     ? (apiKeyStatus.openai ? 1 : 0) + (apiKeyStatus.anthropic ? 1 : 0)
     : 0;
   const allKeysSet = keysSetCount === 2;
+
+  // --- New URL Handler --- Updated
+  const handleProcessUrl = useCallback(async () => {
+    if (!urlInput || !window.electron) {
+      setError('Please enter a valid video URL');
+      return;
+    }
+
+    setError('');
+    setIsProcessingUrl(true);
+    setProgressPercent(0);
+    setProgressStage('Initializing...');
+    setDownloadComplete(false); // Reset download status
+    setDownloadedVideoPath(null); // Reset path
+    onSetVideoFile(null);
+    console.log(`Processing URL: ${urlInput}`);
+
+    // Clear previous listener if any
+    progressCleanupRef.current?.();
+
+    try {
+      // --- Set up progress listener ---
+      progressCleanupRef.current = window.electron.onProcessUrlProgress(
+        progress => {
+          console.log('URL Progress Update:', progress);
+          setProgressPercent(progress.percent ?? progressPercent); // Use previous if undefined
+          setProgressStage(progress.stage ?? progressStage); // Use previous if undefined
+          if (progress.error) {
+            setError(`Error during processing: ${progress.error}`);
+            setIsProcessingUrl(false); // Stop loading on error
+          }
+        }
+      );
+
+      // --- Call main process handler to download video ---
+      const result = await window.electron.processUrl({
+        url: urlInput,
+        targetLanguage,
+      });
+
+      // --- Handle result ---
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // When successful, we get back a path to the downloaded video file
+      console.log('Video download successful:', result);
+
+      if (result.fileUrl && result.filename && result.videoPath) {
+        // Update progress UI
+        setProgressStage('Download complete! Setting up video...');
+
+        // --- Store download info and mark complete --- START ---
+        setDownloadComplete(true);
+        setDownloadedVideoPath(result.videoPath);
+        // --- Store download info and mark complete --- END ---
+
+        const videoFileObj = {
+          name: result.filename,
+          size: result.size || 0,
+          path: result.videoPath,
+          _isUrlDirect: true,
+          _directUrl: result.fileUrl,
+        } as any;
+
+        // Set the video file in the parent component
+        console.log(
+          '[GenerateSubtitles] Calling onSetVideoFile with:',
+          videoFileObj
+        );
+        onSetVideoFile(videoFileObj);
+
+        // Clear URL input since we now have a file/URL
+        setUrlInput('');
+      } else {
+        throw new Error('Downloaded video information is incomplete.');
+      }
+    } catch (err: any) {
+      console.error('Error processing URL:', err);
+      setError(`Error processing URL: ${err.message || err}`);
+      setProgressStage('Error'); // Update stage on error
+      setProgressPercent(0); // Reset progress on error
+      setDownloadComplete(false); // Reset on error
+      setDownloadedVideoPath(null);
+    } finally {
+      setIsProcessingUrl(false); // Indicate URL processing end (success or fail)
+
+      // Cleanup listener
+      progressCleanupRef.current?.();
+      progressCleanupRef.current = null;
+    }
+  }, [
+    urlInput,
+    targetLanguage,
+    onSetVideoFile,
+    progressPercent,
+    progressStage,
+  ]);
+
+  // --- handleGenerateSubtitles (define BEFORE useEffect that uses it) ---
+  const handleGenerateSubtitles = useCallback(async () => {
+    if (!videoFile || !window.electron) {
+      setError('Please select a video file first');
+      return;
+    }
+
+    try {
+      setError('');
+      setIsGenerating(true);
+
+      // --- Get API Keys from Main Process ---
+      // Removed as it's handled differently now (passed as prop or context)
+
+      // --- Prepare options ---
+      const options: any = {
+        targetLanguage,
+        streamResults: true, // Assuming streaming is desired
+      };
+
+      // Check if videoFile has a path (local file or downloaded)
+      if (videoFile.path) {
+        options.videoPath = videoFile.path;
+      } else {
+        // Standard browser File object - needs to be handled via preload
+        options.videoFile = videoFile;
+      }
+
+      console.log('Calling window.electron.generateSubtitles with:', {
+        ...options,
+        videoFile: options.videoFile
+          ? {
+              name: options.videoFile.name,
+              size: options.videoFile.size,
+              type: options.videoFile.type,
+            }
+          : undefined, // Log file info, not the object itself
+      });
+
+      // --- Call Main Process ---
+      const result = await window.electron.generateSubtitles(options);
+
+      // --- Handle Result ---
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // The hook useSubtitleManagement now handles setting segments via IPC
+      // console.log('Subtitles received:', result.subtitles.substring(0, 100) + '...');
+      // setSubtitles(result.subtitles);
+      // onSubtitlesGenerated(result.subtitles);
+    } catch (err: any) {
+      console.error('Error generating subtitles:', err);
+      setError(`Error generating subtitles: ${err.message || err}`);
+      // Reset progress on error?
+      // setProgressStage('Error');
+      // setProgressPercent(0);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [
+    videoFile,
+    targetLanguage,
+    onSubtitlesGenerated,
+    setError,
+    setIsGenerating,
+  ]); // Ensure dependencies are correct
+
+  // --- Cleanup listener on unmount --- (Original useEffect for progress)
+  useEffect(() => {
+    // Return the cleanup function stored in the ref
+    return () => {
+      progressCleanupRef.current?.();
+    };
+  }, []);
+
+  const handleFileChange = useCallback(
+    (event: FileChangeEvent) => {
+      setError('');
+      let file: File | null = null;
+
+      if (
+        'target' in event &&
+        event.target &&
+        'files' in event.target &&
+        event.target.files
+      ) {
+        if (
+          event.target.files instanceof FileList &&
+          event.target.files.length > 0
+        ) {
+          file = event.target.files[0];
+        } else if (
+          Array.isArray(event.target.files) &&
+          event.target.files.length > 0 &&
+          'name' in event.target.files[0]
+        ) {
+          // Handle special case for file-like objects (e.g., from URL downloads)
+          // or simulated directory event (though not expected here)
+          console.log('Using file-like object:', event.target.files[0]);
+          file = event.target.files[0] as unknown as File;
+        }
+      }
+
+      if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          setError(`File exceeds ${MAX_MB}MB limit`);
+          onSetVideoFile(null);
+          return;
+        }
+        onSetVideoFile(file);
+        setUrlInput('');
+      } else {
+        // If event doesn't yield a file (e.g., cancelled selection), ensure state is null
+        // Don't clear if there was already a valid file selected previously unless explicitly cleared
+        // onSetVideoFile(null); // Might want to avoid clearing if user cancels
+        console.log('No file selected or selection cancelled.');
+      }
+    },
+    [onSetVideoFile]
+  );
+
+  // --- handleSaveSubtitles (corrected) ---
+  async function handleSaveSubtitles() {
+    // Use subtitleSegments from the useSubtitleManagement hook
+    if (
+      !subtitleSegments ||
+      subtitleSegments.length === 0 ||
+      !window.electron
+    ) {
+      setError('No subtitles to save');
+      return;
+    }
+
+    try {
+      // Build SRT content from segments
+      const srtContent = subtitleSegments
+        .map(
+          (seg, index) =>
+            `${index + 1}\n${secondsToSrtTime(seg.start)} --> ${secondsToSrtTime(seg.end)}\n${seg.text}`
+        )
+        .join('\n\n');
+
+      const result = await window.electron.saveFile({
+        content: srtContent,
+        defaultPath: `subtitles_${Date.now()}.srt`,
+        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      window.electron.showMessage(`Subtitles saved to: ${result.filePath}`);
+    } catch (err: any) {
+      setError(`Error saving subtitles: ${err.message || err}`);
+    }
+  }
+
+  // --- Function to Save Original Downloaded Video --- START ---
+  const handleSaveOriginalVideo = useCallback(async () => {
+    if (!downloadedVideoPath) {
+      setError('Downloaded video path not found.');
+      return;
+    }
+
+    const suggestedName = downloadedVideoPath.includes('ytdl_')
+      ? downloadedVideoPath.substring(downloadedVideoPath.indexOf('ytdl_') + 5)
+      : 'downloaded_video.mp4';
+
+    try {
+      // Step 1: Get the desired destination path using saveFile dialog
+      const saveDialogResult = await window.electron.saveFile({
+        content: '', // No content, just getting path
+        defaultPath: suggestedName,
+        title: 'Save Downloaded Video As',
+        filters: [{ name: 'Video Files', extensions: ['mp4', 'mkv', 'webm'] }],
+      });
+
+      // Handle dialog cancellation or error
+      if (saveDialogResult.error) {
+        if (saveDialogResult.error.includes('canceled')) {
+          setError(''); // Clear error if user cancelled
+          return; // Exit if cancelled
+        } else {
+          throw new Error(`Failed to get save path: ${saveDialogResult.error}`);
+        }
+      }
+
+      if (!saveDialogResult.filePath) {
+        // This shouldn't happen if error handling is correct, but good to check
+        setError('Save path was not selected.');
+        return;
+      }
+
+      const destinationPath = saveDialogResult.filePath;
+
+      // Step 2: Copy the downloaded file to the chosen destination
+      setError(''); // Clear previous errors
+      // Indicate copy is happening? Optional: add more state
+      const copyResult = await window.electron.copyFile(
+        downloadedVideoPath,
+        destinationPath
+      );
+
+      if (copyResult.error) {
+        throw new Error(`Failed to copy video: ${copyResult.error}`);
+      }
+
+      window.electron.showMessage(`Video saved to: ${destinationPath}`);
+      // Keep the state so the button remains visible
+      // setDownloadedVideoPath(null);
+      // setDownloadComplete(false);
+    } catch (err: any) {
+      console.error('Error copying original video:', err);
+      setError(`Error saving video: ${err.message || err}`);
+    }
+  }, [downloadedVideoPath]);
+  // --- Function to Save Original Downloaded Video --- END ---
 
   return (
     <Section title="Generate Subtitles">
@@ -210,211 +626,273 @@ export default function GenerateSubtitles({
         <>
           {error && <div className={errorMessageStyles}>{error}</div>}
 
-          <div className={fileInputWrapperStyles}>
-            <label style={{ marginRight: '8px' }}>
-              1. Select Video File (up to {MAX_MB}MB):{' '}
-            </label>
-            <Button
-              asFileInput
-              accept="video/*"
-              onFileChange={handleFileChange}
-              variant="secondary"
-              size="md"
+          {/* --- Progress Display OR Save Button --- START --- */}
+          {isProcessingUrl && progressPercent > 0 && !downloadComplete && (
+            <div
+              style={{
+                marginBottom: '15px',
+                padding: '10px',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '4px',
+                backgroundColor: colors.light,
+              }}
             >
-              {videoFile ? `Selected: ${videoFile.name}` : 'Choose Video'}
-            </Button>
-          </div>
+              <div
+                style={{
+                  marginBottom: '5px',
+                  fontSize: '0.9em',
+                  color: colors.grayDark,
+                }}
+              >
+                {progressStage}
+              </div>
+              <div
+                style={{
+                  height: '8px',
+                  backgroundColor: colors.grayLight,
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${progressPercent}%`,
+                    height: '100%',
+                    backgroundColor: colors.primary,
+                    transition: 'width 0.2s ease-out',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+          {downloadComplete && downloadedVideoPath && (
+            <div style={{ marginBottom: '15px', textAlign: 'center' }}>
+              <Button
+                variant="success"
+                size="sm"
+                onClick={handleSaveOriginalVideo}
+                title={`Save the downloaded file: ${downloadedVideoPath}`}
+              >
+                Save Original Video
+              </Button>
+            </div>
+          )}
+          {/* --- Progress Display OR Save Button --- END --- */}
 
-          <div className={fileInputWrapperStyles}>
-            <label>2. Output Language: </label>
-            <select
-              value={targetLanguage}
-              onChange={e => setTargetLanguage(e.target.value)}
-              className={selectStyles}
-              disabled={isGenerating}
+          {/* --- Input Mode Toggle --- START --- */}
+          <div className={inputModeToggleStyles}>
+            <button
+              className={inputMode === 'file' ? 'active' : ''}
+              onClick={() => setInputMode('file')}
+              disabled={isGenerating || isProcessingUrl}
             >
-              {/* Render base options first */}
-              {baseLanguageOptions.map(lang => (
-                <option key={lang.value} value={lang.value}>
-                  {lang.label}
-                </option>
-              ))}
-              {/* Render grouped options */}
-              {languageGroups.map(group => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.options.map(lang => (
+              Upload File
+            </button>
+            <button
+              className={inputMode === 'url' ? 'active' : ''}
+              onClick={() => setInputMode('url')}
+              disabled={isGenerating || isProcessingUrl}
+            >
+              Enter URL
+            </button>
+          </div>
+          {/* --- Input Mode Toggle --- END --- */}
+
+          {/* --- Conditional Input Sections --- START --- */}
+          {inputMode === 'file' && (
+            <div className={inputSectionStyles}>
+              <div
+                className={css`
+                  display: flex;
+                  align-items: center;
+                  padding: 5px 0;
+                `}
+              >
+                <label
+                  style={{
+                    marginRight: '12px',
+                    lineHeight: '32px', // Match button height
+                    display: 'inline-block',
+                    minWidth: '220px', // Fixed width for both labels
+                  }}
+                >
+                  1. Select Video File:{' '}
+                </label>
+                <Button
+                  asFileInput
+                  accept="video/*"
+                  onFileChange={handleFileChange}
+                  variant="secondary"
+                  size="md"
+                  disabled={isGenerating || isProcessingUrl}
+                >
+                  {videoFile
+                    ? `Selected: ${videoFile.name}`
+                    : 'Choose Video File'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {inputMode === 'url' && (
+            <div className={inputSectionStyles}>
+              <div
+                className={css`
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 5px 0;
+                `}
+              >
+                <label
+                  style={{
+                    marginRight: '12px',
+                    lineHeight: '32px', // Match input height
+                    display: 'inline-block',
+                    minWidth: '100px',
+                  }}
+                >
+                  1. Enter URL:
+                </label>
+                <input
+                  type="url"
+                  className={urlInputStyles}
+                  placeholder="Enter YouTube or direct video URL"
+                  value={urlInput}
+                  onChange={e => {
+                    setUrlInput(e.target.value);
+                    if (e.target.value) {
+                      // If user starts typing URL, clear any selected file
+                      onSetVideoFile(null);
+                      setError('');
+                    }
+                  }}
+                  disabled={isGenerating || isProcessingUrl}
+                />
+                <Button
+                  onClick={handleProcessUrl}
+                  disabled={!urlInput || isGenerating || isProcessingUrl}
+                  size="md"
+                  variant="secondary"
+                  isLoading={isProcessingUrl}
+                >
+                  {isProcessingUrl ? 'Processing...' : 'Process'}
+                </Button>
+              </div>
+            </div>
+          )}
+          {/* --- Conditional Input Sections --- END --- */}
+
+          {/* --- Output Language Selection (Moved to step 2) --- START --- */}
+          {videoFile && (
+            <Section title="2. Select Output Language" isSubSection>
+              <div className={fileInputWrapperStyles}>
+                <label>Output Language: </label>
+                <select
+                  value={targetLanguage}
+                  onChange={e => setTargetLanguage(e.target.value)}
+                  className={selectStyles}
+                  disabled={isGenerating}
+                >
+                  {/* Render base options first */}
+                  {baseLanguageOptions.map(lang => (
                     <option key={lang.value} value={lang.value}>
                       {lang.label}
                     </option>
                   ))}
-                </optgroup>
-              ))}
-            </select>
-
-            {targetLanguage !== 'original' && targetLanguage !== 'english' && (
-              <div
-                className={css`
-                  margin-top: 12px;
-                  display: flex;
-                  align-items: center;
-                `}
-              >
-                <label
-                  className={css`
-                    display: flex;
-                    align-items: center;
-                    cursor: pointer;
-                    user-select: none;
-                    margin: 0;
-                    line-height: 1;
-                  `}
-                >
-                  <input
-                    type="checkbox"
-                    checked={showOriginalText}
-                    onChange={e => onShowOriginalTextChange(e.target.checked)}
-                    className={css`
-                      margin-right: 8px;
-                      width: 16px;
-                      height: 16px;
-                      accent-color: #4361ee;
-                      margin-top: 0;
-                      margin-bottom: 0;
-                      vertical-align: middle;
-                    `}
-                  />
-                  <span
-                    className={css`
-                      display: inline-block;
-                      vertical-align: middle;
-                    `}
-                  >
-                    Show original text
-                  </span>
-                </label>
+                  {/* Render grouped options */}
+                  {languageGroups.map(group => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.options.map(lang => (
+                        <option key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                {targetLanguage !== 'original' &&
+                  targetLanguage !== 'english' && (
+                    <div
+                      className={css`
+                        margin-top: 12px;
+                        display: flex;
+                        align-items: center;
+                      `}
+                    >
+                      <label
+                        className={css`
+                          display: flex;
+                          align-items: center;
+                          cursor: pointer;
+                          user-select: none;
+                          margin: 0;
+                          line-height: 1;
+                        `}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={showOriginalText}
+                          onChange={e =>
+                            onShowOriginalTextChange(e.target.checked)
+                          }
+                          className={css`
+                            margin-right: 8px;
+                            width: 16px;
+                            height: 16px;
+                            accent-color: #4361ee;
+                            margin-top: 0;
+                            margin-bottom: 0;
+                            vertical-align: middle;
+                          `}
+                        />
+                        <span
+                          className={css`
+                            display: inline-block;
+                            vertical-align: middle;
+                          `}
+                        >
+                          Show original text
+                        </span>
+                      </label>
+                    </div>
+                  )}
               </div>
-            )}
-          </div>
+            </Section>
+          )}
+          {/* --- Output Language Selection --- END --- */}
 
-          <ButtonGroup>
-            <Button
-              onClick={handleGenerateSubtitles}
-              disabled={!videoFile || isGenerating}
-              size="md"
-              variant="primary"
-              isLoading={isGenerating}
-            >
-              {isGenerating ? 'Processing...' : 'Generate Subtitles'}
-            </Button>
+          {/* --- Generate Button (Moved to step 3) --- START --- */}
+          {videoFile && (
+            <Section title="3. Generate Subtitles" isSubSection>
+              <ButtonGroup>
+                {/* Main Generate Button is now outside conditional inputs */}
+                <Button
+                  onClick={handleGenerateSubtitles}
+                  disabled={!videoFile || isGenerating || isProcessingUrl}
+                  size="md"
+                  variant="primary"
+                  isLoading={isGenerating}
+                >
+                  {isGenerating ? 'Generating...' : 'Generate Subtitles Now'}
+                </Button>
 
-            {subtitles && (
-              <Button
-                variant="secondary"
-                onClick={handleSaveSubtitles}
-                size="md"
-              >
-                Save SRT
-              </Button>
-            )}
-          </ButtonGroup>
+                {/* Save SRT button - condition unchanged */}
+                {subtitleSegments && subtitleSegments.length > 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleSaveSubtitles}
+                    size="md"
+                  >
+                    Save SRT
+                  </Button>
+                )}
+              </ButtonGroup>
+            </Section>
+          )}
+          {/* --- Generate Button --- END --- */}
         </>
       )}
     </Section>
   );
-
-  // Updated file handler to work with Button's event type
-  function handleFileChange(event: FileChangeEvent) {
-    setError('');
-    let file: File | null = null;
-
-    if (
-      'target' in event &&
-      event.target &&
-      'files' in event.target &&
-      event.target.files
-    ) {
-      if (
-        event.target.files instanceof FileList &&
-        event.target.files.length > 0
-      ) {
-        file = event.target.files[0];
-      } else if (
-        Array.isArray(event.target.files) &&
-        event.target.files.length > 0 &&
-        'name' in event.target.files[0]
-      ) {
-        // Handle the simulated directory event (though not expected here)
-        // For a single file input, we only care about FileList
-        console.warn(
-          'Received unexpected directory structure in file input handler'
-        );
-        file = null;
-      }
-    }
-
-    if (file) {
-      if (file.size > MAX_FILE_SIZE) {
-        setError(`File exceeds ${MAX_MB}MB limit`);
-        onSetVideoFile(null);
-        return;
-      }
-      onSetVideoFile(file);
-    } else {
-      // If event doesn't yield a file (e.g., cancelled selection), ensure state is null
-      // Don't clear if there was already a valid file selected previously unless explicitly cleared
-      // onSetVideoFile(null); // Might want to avoid clearing if user cancels
-      console.log('No file selected or selection cancelled.');
-    }
-  }
-
-  async function handleGenerateSubtitles() {
-    if (!videoFile || !window.electron) {
-      setError('Please select a video file first');
-      return;
-    }
-
-    try {
-      setError('');
-      setIsGenerating(true);
-
-      const result = await window.electron.generateSubtitles({
-        videoFile: videoFile,
-        targetLanguage,
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setSubtitles(result.subtitles);
-      onSubtitlesGenerated(result.subtitles);
-    } catch (err: any) {
-      setError(`Error generating subtitles: ${err.message || err}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  }
-
-  async function handleSaveSubtitles() {
-    if (!subtitles || !window.electron) {
-      setError('No subtitles to save');
-      return;
-    }
-
-    try {
-      const result = await window.electron.saveFile({
-        content: subtitles,
-        defaultPath: `subtitles_${Date.now()}.srt`,
-        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      window.electron.showMessage(`Subtitles saved to: ${result.filePath}`);
-    } catch (err: any) {
-      setError(`Error saving subtitles: ${err.message || err}`);
-    }
-  }
 }

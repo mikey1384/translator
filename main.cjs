@@ -89,6 +89,24 @@ try {
   });
   console.info('Registered ping handler.');
 
+  ipcMain.handle('show-message', async (_, message) => {
+    console.info('Received show-message request:', message);
+    try {
+      const { dialog } = require('electron');
+      await dialog.showMessageBox({
+        type: 'info',
+        title: 'Translator',
+        message: message || 'Operation completed successfully',
+        buttons: ['OK'],
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error showing message:', error);
+      return { success: false, error: error.message || String(error) };
+    }
+  });
+  console.info('Registered show-message handler.');
+
   ipcMain.handle('save-file', async (_event, options) => {
     console.info('Received save-file request with options:', options);
     try {
@@ -333,24 +351,30 @@ try {
   console.info('Registered merge-subtitles handler.');
 
   // Register move-file handler
-  ipcMain.handle('move-file', async (_event, { sourcePath, targetPath }) => {
-    console.info(
-      `Received move-file request from ${sourcePath} to ${targetPath}`
+  ipcMain.handle('move-file', async (_event, sourcePath, destinationPath) => {
+    // --- Add Logging --- START ---
+    console.log(
+      `[move-file handler] Received source: ${sourcePath}, destination: ${destinationPath}`
     );
+    // --- Add Logging --- END ---
+    if (!sourcePath || !destinationPath) {
+      // Log the error condition too
+      console.error(
+        `[move-file handler] Error: Missing paths. Source: ${sourcePath}, Dest: ${destinationPath}`
+      );
+      return { error: 'Source and target paths are required for move.' };
+    }
     try {
-      if (!sourcePath || !targetPath) {
-        throw new Error('Source and target paths are required for move.');
-      }
       // Ensure target directory exists (optional, rename handles it often, but good practice)
-      const targetDir = path.dirname(targetPath);
+      const targetDir = path.dirname(destinationPath);
       await fs.promises.mkdir(targetDir, { recursive: true });
       // Perform the move
-      await fs.promises.rename(sourcePath, targetPath);
-      console.info(`Successfully moved file to ${targetPath}`);
+      await fs.promises.rename(sourcePath, destinationPath);
+      console.info(`Successfully moved file to ${destinationPath}`);
       return { success: true };
     } catch (error) {
       console.error(
-        `Error handling move-file from ${sourcePath} to ${targetPath}:`,
+        `Error handling move-file from ${sourcePath} to ${destinationPath}:`,
         error
       );
       return { success: false, error: error.message || String(error) };
@@ -578,6 +602,162 @@ try {
   });
   console.info('Registered translate-subtitles handler (Placeholder).');
 
+  // === Register process-url handler ===
+  ipcMain.handle('process-url', async (event, options) => {
+    const operationId = `process-url-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    console.log(`[${operationId}] Received process-url request:`, options);
+
+    const sendProgress = progressData => {
+      try {
+        event.sender.send('process-url-progress', {
+          ...progressData,
+          operationId,
+        });
+      } catch (e) {
+        console.error(`[${operationId}] Error sending URL progress update:`, e);
+      }
+    };
+
+    let downloadedVideoPath = null;
+
+    try {
+      // --- Validation ---
+      if (!options || !options.url) {
+        throw new Error('URL is required.');
+      }
+      const urlToProcess = options.url;
+
+      // --- Setup yt-dlp ---
+      sendProgress({ percent: 0, stage: 'Initializing download...' });
+      const { default: youtubedl } = await import('youtube-dl-exec');
+      const tempDir = ffmpegService.getTempDir(); // Use existing temp dir
+      const outputTemplate = path.join(
+        tempDir,
+        `ytdl_${Date.now()}_%(title)s.%(ext)s`
+      );
+
+      // --- Download Video ---
+      console.log(
+        `[${operationId}] Starting download for URL: ${urlToProcess}`
+      );
+      sendProgress({ percent: 5, stage: 'Downloading video...' });
+
+      // Use youtubedl exec, capturing progress
+      const ytdlProcess = youtubedl.exec(urlToProcess, {
+        output: outputTemplate,
+        format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', // Prefer mp4
+        // Add any other yt-dlp flags needed, e.g., cookies, proxies
+        // cookies: '/path/to/cookies.txt', // Example - don't use without a real file
+        progress: true,
+        progressTemplate:
+          'download-title:%(info.title)s %(progress._percent_str)s of %(progress._total_bytes_str)s at %(progress._speed_str)s ETA %(progress._eta_str)s',
+      });
+
+      ytdlProcess.stdout.on('data', data => {
+        const output = data.toString();
+        console.log(`[${operationId}] yt-dlp stdout:`, output.trim());
+        // Extract progress and update renderer
+        const progressMatch = output.match(
+          /\[download\]\s+(\d+\.\d+)% of.*? ETA (\S+)/
+        );
+        // --- Capture Destination Path --- START ---
+        const destinationMatch = output.match(/\[download\] Destination: (.*)/);
+        if (destinationMatch && destinationMatch[1]) {
+          downloadedVideoPath = destinationMatch[1].trim();
+          console.log(
+            `[${operationId}] Captured destination path: ${downloadedVideoPath}`
+          );
+        }
+        // --- Capture Destination Path --- END ---
+
+        if (progressMatch) {
+          const percent = parseFloat(progressMatch[1]);
+          let stage = 'Downloading...';
+          if (progressMatch[2]) stage += ` (${progressMatch[2]})`;
+          if (progressMatch[3]) stage += ` ETA ${progressMatch[3]}`;
+
+          // Show download progress within 0-100% range
+          sendProgress({ percent, stage });
+        }
+      });
+
+      ytdlProcess.stderr.on('data', data => {
+        console.error(
+          `[${operationId}] yt-dlp stderr: ${data.toString().trim()}`
+        );
+        // Potentially update progress stage on specific errors
+      });
+
+      // Wait for download completion
+      await ytdlProcess;
+      console.log(`[${operationId}] yt-dlp process finished.`);
+      sendProgress({ percent: 100, stage: 'Download complete.' });
+
+      // --- Use the captured path --- START ---
+      if (!downloadedVideoPath) {
+        throw new Error(
+          'Could not determine the downloaded video file path from yt-dlp output.'
+        );
+      }
+      console.log(
+        `[${operationId}] Using captured downloaded video file: ${downloadedVideoPath}`
+      );
+      // --- Use the captured path --- END ---
+
+      // Get file size
+      const stats = await fs.promises.stat(downloadedVideoPath);
+      const fileSize = stats.size;
+
+      // Create a file:// URL that the renderer can use directly
+      const fileUrl = `file://${downloadedVideoPath.replace(/ /g, '%20')}`;
+      console.log(`[${operationId}] Created file URL: ${fileUrl}`);
+
+      // Return success with downloaded file info
+      return {
+        success: true,
+        videoPath: downloadedVideoPath,
+        filename: path.basename(downloadedVideoPath),
+        size: fileSize,
+        fileUrl: fileUrl, // Direct file URL for the renderer
+        operationId,
+      };
+    } catch (error) {
+      console.error(`[${operationId}] Error handling process-url:`, error);
+      sendProgress({
+        percent: 100,
+        stage: `Error: ${error.message || 'Unknown processing error'}`,
+        error: error.message || String(error),
+      });
+      return {
+        success: false,
+        error: error.message || String(error),
+        operationId,
+      };
+    }
+  });
+  console.info('Registered process-url handler.');
+
+  // --- Add Handler for Copying Files --- START ---
+  ipcMain.handle('copy-file', async (_event, sourcePath, destinationPath) => {
+    if (!sourcePath || !destinationPath) {
+      return {
+        error: 'Source or destination path missing for copy operation.',
+      };
+    }
+    try {
+      await fs.promises.copyFile(sourcePath, destinationPath);
+      console.log(`File copied from ${sourcePath} to ${destinationPath}`);
+      return { success: true };
+    } catch (err) {
+      console.error(
+        `Error copying file from ${sourcePath} to ${destinationPath}:`,
+        err
+      );
+      return { error: err.message || 'Failed to copy file.' };
+    }
+  });
+  // --- Add Handler for Copying Files --- END ---
+
   console.info('TypeScript service handlers registered.');
 } catch (error) {
   console.error(
@@ -623,3 +803,59 @@ try {
   console.error('Error loading main module:', err);
   process.exit(1);
 }
+
+// Global error handler (optional but good practice)
+process.on('uncaughtException', error => {
+  console.error('Uncaught exception:', error);
+  process.exit(1);
+});
+
+// --- Cleanup Temporary Files on Quit --- START ---
+app.on('will-quit', async () => {
+  const tempDir = path.join(app.getPath('userData'), 'temp');
+  console.log(
+    `[Cleanup] App quitting, attempting to clean temp directory: ${tempDir}`
+  );
+
+  try {
+    // Use fs.promises for async operations
+    const files = await fs.promises.readdir(tempDir);
+    const tempVideoFiles = files.filter(f => f.startsWith('ytdl_'));
+
+    if (tempVideoFiles.length === 0) {
+      console.log('[Cleanup] No temporary ytdl_ files found to delete.');
+      return;
+    }
+
+    console.log(
+      `[Cleanup] Found ${tempVideoFiles.length} temporary ytdl_ files to delete.`
+    );
+
+    const deletePromises = tempVideoFiles.map(async file => {
+      const filePath = path.join(tempDir, file);
+      try {
+        // Use fs.promises for async operations
+        await fs.promises.unlink(filePath);
+        console.log(`[Cleanup] Deleted: ${file}`);
+        return { file, status: 'deleted' };
+      } catch (err) {
+        console.error(`[Cleanup] Failed to delete ${file}:`, err.message);
+        return { file, status: 'failed', error: err.message };
+      }
+    });
+
+    await Promise.allSettled(deletePromises);
+    console.log('[Cleanup] Finished cleanup attempt.');
+  } catch (err) {
+    // Handle cases where the temp directory itself might not exist
+    if (err.code === 'ENOENT') {
+      console.log('[Cleanup] Temp directory does not exist, nothing to clean.');
+    } else {
+      console.error(
+        '[Cleanup] Error reading temp directory during cleanup:',
+        err
+      );
+    }
+  }
+});
+// --- Cleanup Temporary Files on Quit --- END ---

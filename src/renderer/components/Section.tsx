@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
-import { sectionStyles, sectionTitleStyles } from '../styles';
+import { sectionStyles } from '../styles';
+import { colors } from '../styles';
 
 interface SectionProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface SectionProps {
   noPadding?: boolean;
   noShadow?: boolean;
   overflowVisible?: boolean;
+  isSubSection?: boolean;
 }
 
 const noMarginStyle = css`
@@ -33,6 +35,33 @@ const overflowVisibleStyle = css`
   overflow: visible;
 `;
 
+const subSectionStyles = css`
+  padding: 15px 20px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  background-color: ${colors.light};
+  border: 1px dashed ${colors.border};
+  border-radius: 6px;
+`;
+
+const titleStyles = css`
+  font-size: 1.4em;
+  font-weight: 600;
+  color: ${colors.dark};
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid ${colors.border};
+`;
+
+const subTitleStyles = css`
+  font-size: 1.1em;
+  font-weight: 500;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid ${colors.grayLight};
+`;
+
 export default function Section({
   children,
   title,
@@ -42,6 +71,7 @@ export default function Section({
   noPadding = false,
   noShadow = false,
   overflowVisible = false,
+  isSubSection = false,
 }: SectionProps) {
   return (
     <section
@@ -51,11 +81,14 @@ export default function Section({
         noPadding && noPaddingStyle,
         noShadow && noShadowStyle,
         overflowVisible && overflowVisibleStyle,
+        isSubSection && subSectionStyles,
         className
       )}
       style={{ paddingTop: title ? undefined : '0.75rem' }}
     >
-      {title && <h2 className={sectionTitleStyles}>{title}</h2>}
+      <h2 className={cx(titleStyles, isSubSection && subTitleStyles)}>
+        {title}
+      </h2>
       <div className={contentClassName}>{children}</div>
     </section>
   );

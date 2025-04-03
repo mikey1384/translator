@@ -150,8 +150,8 @@ const electronAPI = {
   cancelMerge: operationId => ipcRenderer.invoke('cancel-merge', operationId),
 
   // Move file
-  moveFile: (sourcePath, targetPath) =>
-    ipcRenderer.invoke('move-file', { sourcePath, targetPath }),
+  moveFile: (sourcePath, destinationPath) =>
+    ipcRenderer.invoke('move-file', sourcePath, destinationPath),
 
   // Delete file
   deleteFile: options => ipcRenderer.invoke('delete-file', options),
@@ -177,6 +177,48 @@ const electronAPI = {
       ipcRenderer.removeListener('translate-subtitles-progress', listener);
     };
   },
+
+  // === URL Processing ===
+  processUrl: async options => {
+    console.log('Process URL called with options:', options);
+    // Add validation if needed
+    if (!options || !options.url) {
+      throw new Error('URL is required for processing.');
+    }
+    return ipcRenderer.invoke('process-url', options);
+  },
+  onProcessUrlProgress: callback => {
+    try {
+      if (typeof callback !== 'function') {
+        console.warn('Invalid callback provided to onProcessUrlProgress');
+        return;
+      }
+      const listener = (event, progress) => {
+        try {
+          callback(progress); // Pass progress data to renderer callback
+        } catch (error) {
+          console.error('Error in process-url-progress callback:', error);
+        }
+      };
+      ipcRenderer.on('process-url-progress', listener);
+
+      // Return cleanup function
+      return () => {
+        try {
+          ipcRenderer.removeListener('process-url-progress', listener);
+        } catch (error) {
+          console.error('Error removing process-url-progress listener:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error in onProcessUrlProgress:', error);
+    }
+  },
+
+  // --- Expose copyFile function --- START ---
+  copyFile: (sourcePath, destinationPath) =>
+    ipcRenderer.invoke('copy-file', sourcePath, destinationPath),
+  // --- Expose copyFile function --- END ---
 };
 
 // Expose the API to the renderer process
