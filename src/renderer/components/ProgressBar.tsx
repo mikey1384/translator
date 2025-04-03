@@ -1,8 +1,4 @@
-import {
-  progressBarStyles,
-  progressBarFillStyles,
-  progressStageStyles,
-} from '../styles';
+import { progressBarFillStyles, progressStageStyles } from '../styles';
 
 interface ProgressBarProps {
   progress: number;
@@ -18,7 +14,7 @@ export default function ProgressBar({
   return (
     <div>
       {stage && <div className={progressStageStyles}>{stage}</div>}
-      <div className={progressBarStyles}>
+      <div>
         <div className={progressBarFillStyles(progress)} />
       </div>
       {showPercentage && (

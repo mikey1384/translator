@@ -21,22 +21,21 @@ export default function BackToTopButton({
   scrollThreshold = 300,
   onClick,
 }: BackToTopButtonProps) {
-  const [showButton, setShowButton] = useState(false);
+  const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > scrollThreshold) {
-        setShowButton(true);
+        setShowScrollToTopButton(true);
       } else {
-        setShowButton(false);
+        setShowScrollToTopButton(false);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, [scrollThreshold]);
-
-  if (!showButton) return null;
 
   const handleBackToTopClick = () => {
     if (onClick) {
@@ -88,29 +87,31 @@ export default function BackToTopButton({
           </svg>
         }
       />
-      <IconButton
-        onClick={handleBackToTopClick}
-        title="Back to Top"
-        aria-label="Scroll back to top"
-        size="lg"
-        icon={
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={css`
-              stroke: currentColor;
-              stroke-width: 2;
-              stroke-linecap: round;
-              stroke-linejoin: round;
-            `}
-          >
-            <path d="M8 12V4M8 4L4 8M8 4L12 8" />
-          </svg>
-        }
-      />
+      {showScrollToTopButton && (
+        <IconButton
+          onClick={handleBackToTopClick}
+          title="Back to Top"
+          aria-label="Scroll back to top"
+          size="lg"
+          icon={
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className={css`
+                stroke: currentColor;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+              `}
+            >
+              <path d="M8 12V4M8 4L4 8M8 4L12 8" />
+            </svg>
+          }
+        />
+      )}
     </div>
   );
 }

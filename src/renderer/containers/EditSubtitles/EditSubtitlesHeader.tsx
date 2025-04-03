@@ -34,7 +34,7 @@ function EditSubtitlesHeader({
       <Button
         onClick={onSave}
         variant="primary"
-        size="lg"
+        size="md"
         className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
         disabled={!canSaveDirectly}
         title={
@@ -62,7 +62,7 @@ function EditSubtitlesHeader({
       </Button>
 
       {/* Save As Button */}
-      <Button onClick={onSaveAs} variant="secondary" size="lg">
+      <Button onClick={onSaveAs} variant="secondary" size="md">
         <svg
           width="18"
           height="18"

@@ -9,6 +9,7 @@ import { AI_MODELS } from '../renderer/constants';
 import { SrtSegment } from '../types/interface';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { OpenAI } from 'openai';
+import log from 'electron-log';
 
 import {
   GenerateSubtitlesOptions,
@@ -735,12 +736,17 @@ export async function mergeSubtitlesWithVideo(
 
   const videoExt = path.extname(inputPathForNaming);
   const baseName = path.basename(inputPathForNaming, videoExt);
-  const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles${videoExt}`;
+  // --- Force .mp4 extension for the temporary output ---
+  const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles.mp4`; // Always use .mp4
   const tempOutputPath = path.join(ffmpegService.getTempDir(), tempFilename);
 
   if (progressCallback) {
     progressCallback({ percent: 25, stage: 'Processing video' });
   }
+
+  log.info(
+    `[${operationId}] Target temporary output path (forced MP4): ${tempOutputPath}`
+  ); // Add log for verification
 
   await ffmpegService.mergeSubtitles(
     options.videoPath!,

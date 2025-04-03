@@ -50,6 +50,25 @@ const styleSelectStyles = css`
   }
 `;
 
+// Define the custom style for the merge button
+const mergeButtonStyle = css`
+  background-color: ${colors.warning}; // Use the 'warning' color
+  border-color: ${colors.warning};
+  color: #ffffff !important; // Ensure text is white for contrast
+
+  &:hover:not(:disabled) {
+    // Define a slightly darker hover state for the warning color
+    background-color: #e0488a; // Darker shade of #F7559A
+    border-color: #e0488a;
+  }
+
+  // Optional: Define active state if needed
+  &:active:not(:disabled) {
+    background-color: #c7407b; // Even darker shade
+    border-color: #c7407b;
+  }
+`;
+
 interface MergeControlsProps {
   mergeFontSize: number;
   setMergeFontSize: (value: number) => void;
@@ -132,10 +151,10 @@ function MergeControls({
 
       {/* Merge Button */}
       <Button
-        variant="primary"
         onClick={handleMergeVideoWithSubtitles}
         disabled={!videoFileExists || !subtitlesExist || isMergingInProgress}
         isLoading={isMergingInProgress}
+        className={mergeButtonStyle}
       >
         {isMergingInProgress ? 'Merging...' : 'Merge Subtitles to Video'}
       </Button>

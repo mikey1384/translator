@@ -51,12 +51,6 @@ const indexStyles = css`
   font-size: 1.1em;
 `;
 
-const timeControlsStyles = css`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-`;
-
 const timeInputStyles = css`
   width: 150px;
   padding: 6px 8px;
@@ -69,7 +63,6 @@ const timeInputStyles = css`
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-    // box-shadow: none; // No focus shadow
   }
 `;
 

@@ -208,21 +208,40 @@ const utilityButtonStyles = css`
   }
 `;
 
-// Back Button - Dark Theme Specific Style
+// Back Button - Style adjusted for Dark Theme consistency
 const backButtonStyles = css`
-  ${utilityButtonStyles} // Inherit base utility style
-  background-color: ${colors.gray}; // Use medium gray
-  color: ${colors.dark};
-  margin-bottom: 20px;
+  // Inherit some basic properties if needed, or define directly
+  padding: 8px 16px; // Adjust padding if necessary
+  font-size: 0.9rem;
+  background-color: ${colors.light}; // Match section background
+  color: ${colors.dark}; // Light text
+  border: 1px solid ${colors.border}; // Standard border
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: none;
+  margin-bottom: 20px; // Keep margin
+  align-self: flex-start; // Keep alignment
 
   &:hover {
-    background-color: ${colors.grayDark};
-    color: ${colors.white}; // Main background for contrast?
-    border-color: ${colors.grayDark};
+    background-color: ${colors.light}; // Keep background same on hover
+    border-color: ${colors.primary}; // Highlight border on hover
+    color: ${colors.dark}; // Keep text color same
   }
 
   &:disabled {
-    // Keep utility disabled style
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: ${colors.grayLight}; // Slightly different disabled bg
+    border-color: ${colors.border};
+    color: ${colors.gray};
+  }
+
+  // Ensure it doesn't take full width on mobile like standard buttons might
+  @media (max-width: 768px) {
+    width: auto !important;
   }
 `;
 
