@@ -7,35 +7,26 @@ import React, {
   Dispatch,
 } from 'react';
 import { css } from '@emotion/css';
-import Button from '../../components/Button';
 import Section from '../../components/Section';
 import StylizedFileInput from '../../components/StylizedFileInput';
 import ElectronFileButton from '../../components/ElectronFileButton';
 
-import SubtitleEditor from './SubtitleEditor';
+import SubtitleList from './SubtitleList';
+import MergeControls from './MergeControls';
+import EditSubtitlesHeader from './EditSubtitlesHeader';
 import { nativePlayer } from '../../components/NativeVideoPlayer';
 import { subtitleVideoPlayer } from '../../constants';
 
-import { debounce } from 'lodash';
-import { saveFileWithRetry } from '../../helpers/electron-ipc';
 import {
   openSubtitleWithElectron,
   buildSrt,
   fixOverlappingSegments,
 } from '../../helpers/subtitle-utils';
 
-import {
-  srtTimeToSeconds,
-  secondsToSrtTime,
-  generateSrtContent,
-} from './utils';
-import { useSubtitleNavigation, useRestoreFocus } from './hooks';
-import {
-  buttonGradientStyles,
-  mergeButtonStyles as mergeButtonClass,
-} from './styles';
-import { DEBOUNCE_DELAY_MS, DEFAULT_FILENAME } from './constants';
-import { colors } from '../../constants';
+import { secondsToSrtTime } from './utils';
+import { useSubtitleNavigation } from './hooks';
+import { useSubtitleEditing } from './hooks/useSubtitleEditing';
+import { useSubtitleSaving } from './hooks/useSubtitleSaving';
 
 import { SrtSegment } from '../../../types/interface';
 import {
@@ -63,46 +54,6 @@ export interface EditSubtitlesProps {
   reviewedBatchStartIndex?: number | null;
 }
 
-const mergeOptionsStyles = css`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-`;
-
-const fontSizeInputStyles = css`
-  padding: 0.5rem 0.75rem;
-  border: 1px solid ${colors.grayLight};
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 80px;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-    box-shadow: 0 0 0 2px ${colors.primaryLight};
-  }
-`;
-
-const fontSizeLabelStyles = css`
-  font-weight: 500;
-  color: ${colors.grayDark};
-`;
-
-// Add style for the select dropdown
-const styleSelectStyles = css`
-  padding: 0.5rem 0.75rem;
-  border: 1px solid ${colors.grayLight};
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: white;
-  cursor: pointer;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-    box-shadow: 0 0 0 2px ${colors.primaryLight};
-  }
-`;
-
 // --- Local Styles Definition --- END
 
 export function EditSubtitles({
@@ -125,14 +76,10 @@ export function EditSubtitles({
    * State Management
    * ------------------------------------------------------
    */
-  const [editingTimesState, setEditingTimesState] = useState<
-    Record<string, string>
-  >({});
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [mergeFontSize, setMergeFontSize] = useState<number>(24);
   const [mergeStylePreset, setMergeStylePreset] =
@@ -142,17 +89,6 @@ export function EditSubtitles({
   // For controlling a timed auto‐pause
   const playTimeoutRef = useRef<number | null>(null);
 
-  // Debounced references
-  const debouncedTimeUpdateRef = useRef<
-    Record<string, ReturnType<typeof debounce>>
-  >({});
-
-  // Used to restore focus after editing
-  const focusedInputRef = useRef<{
-    index: number | null;
-    field: 'start' | 'end' | 'text' | null;
-  }>({ index: null, field: null });
-
   // Subtitle DOM references
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -161,14 +97,6 @@ export function EditSubtitles({
 
   // New ref for current merge operation ID
   const currentMergeOperationIdRef = useRef<string | null>(null);
-
-  // State to track if original path exists for enabling/disabling Save button
-  const [canSaveDirectly, setCanSaveDirectly] = useState(false);
-
-  // Add a ref to store debounced text update functions
-  const debouncedTextUpdateRef = useRef<
-    Record<string, ReturnType<typeof debounce>>
-  >({});
 
   /**
    * ------------------------------------------------------
@@ -266,12 +194,6 @@ export function EditSubtitles({
     }
   }, [mergeStylePreset, isLoadingSettings]); // Add isLoadingSettings dependency
 
-  // Check localStorage for original path on mount and when subtitles change
-  useEffect(() => {
-    const path = localStorage.getItem('originalSrtPath');
-    setCanSaveDirectly(!!path);
-  }, [subtitlesProp]); // Re-check if subtitles change, might indicate a 'Save As' happened
-
   // Keep local isPlayingState in sync
   useEffect(() => {
     if (typeof isPlayingProp !== 'undefined') {
@@ -345,183 +267,8 @@ export function EditSubtitles({
    * Subtitle Editing Logic
    * ------------------------------------------------------
    */
-  const restoreFocus = useRestoreFocus(focusedInputRef);
-
-  const handleTimeInputBlur = useCallback(
-    (index: number, field: 'start' | 'end') => {
-      const editKey = `${index}-${field}`;
-      const currentEditValue = editingTimesState[editKey];
-      if (!currentEditValue) {
-        // If there's no stored time string, do nothing
-        return;
-      }
-
-      let numValue: number;
-      // Support HH:MM:SS or numeric
-      if (currentEditValue.includes(':')) {
-        numValue = srtTimeToSeconds(currentEditValue);
-      } else {
-        numValue = parseFloat(currentEditValue);
-      }
-
-      if (isNaN(numValue) || numValue < 0) {
-        // If invalid or negative, revert
-        setEditingTimesState(prev => {
-          const newTimes = { ...prev };
-          delete newTimes[editKey];
-          return newTimes;
-        });
-        return;
-      }
-
-      // Use subtitlesProp
-      const currentSub = subtitlesProp ? subtitlesProp[index] : null;
-      if (!currentSub) return;
-
-      // Use subtitlesProp
-      const prevSub =
-        index > 0 && subtitlesProp ? subtitlesProp[index - 1] : null;
-      let newEnd = currentSub.end;
-
-      // If editing start, check special conditions
-      if (field === 'start') {
-        // If user typed something smaller than the previous sub's start
-        if (prevSub && numValue < prevSub.start) {
-          // Not strictly an error, but you can handle it if you want
-        }
-        // If the new start is beyond or equal to the old end, shift the end
-        if (numValue >= currentSub.end) {
-          const originalDuration = currentSub.end - currentSub.start;
-          newEnd = numValue + originalDuration;
-        }
-      }
-
-      // Use onSetSubtitlesDirectly to update parent state
-      if (onSetSubtitlesDirectly) {
-        onSetSubtitlesDirectly(current =>
-          current.map((sub, i) => {
-            if (i !== index) return sub;
-            return field === 'start'
-              ? { ...sub, start: numValue, end: newEnd }
-              : { ...sub, end: numValue };
-          })
-        );
-      }
-
-      // Clean up the "editingTimesState" for this field
-      setEditingTimesState(prev => {
-        const newTimes = { ...prev };
-        delete newTimes[editKey];
-        return newTimes;
-      });
-    },
-    // Depend on subtitlesProp and onSetSubtitlesDirectly
-    [editingTimesState, subtitlesProp, onSetSubtitlesDirectly]
-  );
-
-  const handleEditSubtitle = useCallback(
-    (
-      index: number,
-      field: 'start' | 'end' | 'text',
-      value: number | string
-    ) => {
-      // Save the current input for potential re-focus after updates
-      focusedInputRef.current = { index, field };
-
-      // If editing the text, use debounce
-      if (field === 'text') {
-        const debounceTextKey = `${index}-text`;
-        if (!debouncedTextUpdateRef.current[debounceTextKey]) {
-          debouncedTextUpdateRef.current[debounceTextKey] = debounce(
-            (newText: string) => {
-              if (onSetSubtitlesDirectly) {
-                onSetSubtitlesDirectly(current =>
-                  current.map((sub, i) =>
-                    i === index ? { ...sub, text: newText } : sub
-                  )
-                );
-              }
-            },
-            DEBOUNCE_DELAY_MS // Use the same debounce delay
-          );
-        }
-        // Trigger the debounced function for text
-        debouncedTextUpdateRef.current[debounceTextKey](value as string);
-        return; // Don't proceed to time input logic
-      }
-
-      // Otherwise, we are editing start/end
-      setEditingTimesState(prev => ({
-        ...prev,
-        [`${index}-${field}`]: String(value),
-      }));
-
-      const debounceKey = `${index}-${field}`;
-      if (!debouncedTimeUpdateRef.current[debounceKey]) {
-        debouncedTimeUpdateRef.current[debounceKey] = debounce(
-          (val: string) => {
-            let numValue: number;
-            if (val.includes(':')) {
-              numValue = srtTimeToSeconds(val);
-            } else {
-              numValue = parseFloat(val);
-            }
-            if (isNaN(numValue) || numValue < 0) return;
-
-            // Use subtitlesProp
-            const currentSub = subtitlesProp ? subtitlesProp[index] : null;
-            if (!currentSub) return;
-
-            // Use subtitlesProp
-            const prevSub =
-              index > 0 && subtitlesProp ? subtitlesProp[index - 1] : null;
-            let newEnd = currentSub.end;
-
-            // If we're editing start time
-            if (field === 'start') {
-              if (prevSub && numValue < prevSub.start) {
-                // Could handle overlap or do nothing
-              }
-              // If user moves start beyond end, shift end
-              if (numValue >= currentSub.end) {
-                const duration = currentSub.end - currentSub.start;
-                newEnd = numValue + duration;
-              }
-              // Use onSetSubtitlesDirectly
-              if (onSetSubtitlesDirectly) {
-                onSetSubtitlesDirectly(curr =>
-                  curr.map((sub, i) => {
-                    if (i !== index) return sub;
-                    return { ...sub, start: numValue, end: newEnd };
-                  })
-                );
-              }
-            }
-            // If we're editing end time
-            else {
-              // Use onSetSubtitlesDirectly
-              if (onSetSubtitlesDirectly) {
-                onSetSubtitlesDirectly(curr =>
-                  curr.map((sub, i) =>
-                    i === index ? { ...sub, end: numValue } : sub
-                  )
-                );
-              }
-            }
-
-            // Attempt to restore cursor/focus after a tiny delay
-            setTimeout(() => restoreFocus(), 50);
-          },
-          DEBOUNCE_DELAY_MS
-        );
-      }
-
-      // Trigger the debounced function
-      debouncedTimeUpdateRef.current[debounceKey](String(value));
-    },
-    // Depend on subtitlesProp and onSetSubtitlesDirectly
-    [subtitlesProp, onSetSubtitlesDirectly, restoreFocus]
-  );
+  const { editingTimesState, handleEditSubtitle, handleTimeInputBlur } =
+    useSubtitleEditing(subtitlesProp, onSetSubtitlesDirectly);
 
   /**
    * ------------------------------------------------------
@@ -572,6 +319,9 @@ export function EditSubtitles({
    * Save & Merge Functionality
    * ------------------------------------------------------
    */
+  const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs } =
+    useSubtitleSaving(subtitlesProp, setError);
+
   return (
     <Section title="Edit Subtitles" overflowVisible>
       {/* Error display */}
@@ -670,36 +420,26 @@ export function EditSubtitles({
                   background-color: transparent;
                 }
                 50% {
-                  background-color: rgba(255, 215, 0, 0.3);
+                  background-color: rgba(255, 215, 0, 0.3); /* Gold highlight */
                 }
               }
             `}`}
           >
-            {subtitlesProp.map((sub, index) => (
-              <div
-                key={sub.index}
-                ref={el => {
-                  subtitleRefs.current[index] = el;
-                }}
-              >
-                <SubtitleEditor
-                  key={sub.index}
-                  sub={sub}
-                  index={index}
-                  editingTimes={editingTimesState}
-                  isPlaying={isPlayingState}
-                  secondsToSrtTime={secondsToSrtTimeFn}
-                  onEditSubtitle={handleEditSubtitle}
-                  onTimeInputBlur={handleTimeInputBlur}
-                  onRemoveSubtitle={handleRemoveSubtitleLocal}
-                  onInsertSubtitle={handleInsertSubtitleLocal}
-                  onSeekToSubtitle={seekPlayerToTime}
-                  onPlaySubtitle={handlePlaySubtitle}
-                  onShiftSubtitle={handleShiftSubtitle}
-                  isShiftingDisabled={isShiftingDisabled}
-                />
-              </div>
-            ))}
+            <SubtitleList
+              subtitles={subtitlesProp}
+              subtitleRefs={subtitleRefs}
+              editingTimes={editingTimesState}
+              isPlaying={isPlayingState}
+              secondsToSrtTime={secondsToSrtTimeFn}
+              onEditSubtitle={handleEditSubtitle}
+              onTimeInputBlur={handleTimeInputBlur}
+              onRemoveSubtitle={handleRemoveSubtitleLocal}
+              onInsertSubtitle={handleInsertSubtitleLocal}
+              onSeekToSubtitle={seekPlayerToTime}
+              onPlaySubtitle={handlePlaySubtitle}
+              onShiftSubtitle={handleShiftSubtitle}
+              isShiftingDisabled={isShiftingDisabled}
+            />
           </div>
         </>
       )}
@@ -724,193 +464,31 @@ export function EditSubtitles({
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
           `}
         >
-          <Button
-            onClick={handleSaveSrt}
-            variant="primary"
-            size="lg"
-            className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
-            disabled={!canSaveDirectly}
-            title={
-              !canSaveDirectly
-                ? 'Save As first to enable direct save'
-                : 'Save changes to original file'
+          <EditSubtitlesHeader
+            onSave={handleSaveSrt}
+            onSaveAs={handleSaveEditedSrtAs}
+            canSaveDirectly={canSaveDirectly}
+            subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)}
+          />
+
+          <MergeControls
+            mergeFontSize={mergeFontSize}
+            setMergeFontSize={setMergeFontSize}
+            mergeStylePreset={mergeStylePreset}
+            setMergeStylePreset={setMergeStylePreset}
+            handleMergeVideoWithSubtitles={() =>
+              handleMergeVideoWithSubtitles(videoFile!)
             }
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ marginRight: '8px' }}
-            >
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-            Save
-          </Button>
-
-          <Button onClick={handleSaveEditedSrtAs} variant="secondary" size="lg">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ marginRight: '8px' }}
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Save As
-          </Button>
-
-          {/* --- Merge Section --- */}
-          <div className={mergeOptionsStyles}>
-            {/* Font Size Input */}
-            <label className={fontSizeLabelStyles} htmlFor="mergeFontSizeInput">
-              Font Size:
-            </label>
-            <input
-              id="mergeFontSizeInput"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              className={fontSizeInputStyles}
-              value={mergeFontSize}
-              onChange={e => {
-                const stringValue = e.target.value;
-                if (stringValue === '') {
-                  setMergeFontSize(0);
-                  return;
-                }
-                const numericString = stringValue.replace(/\D/g, '');
-                if (numericString === '') {
-                  setMergeFontSize(0);
-                  return;
-                }
-                const numValue = parseInt(numericString, 10);
-                setMergeFontSize(numValue);
-              }}
-              onBlur={() => {
-                const clampedSize = Math.max(10, Math.min(mergeFontSize, 72));
-                if (clampedSize !== mergeFontSize) {
-                  setMergeFontSize(clampedSize);
-                }
-              }}
-            />
-
-            {/* Style Preset Select */}
-            <label
-              className={fontSizeLabelStyles}
-              htmlFor="mergeStylePresetSelect"
-            >
-              Style:
-            </label>
-            <select
-              id="mergeStylePresetSelect"
-              className={styleSelectStyles}
-              value={mergeStylePreset}
-              onChange={e =>
-                setMergeStylePreset(e.target.value as AssStylePresetKey)
-              }
-              disabled={isMergingInProgressProp}
-            >
-              {(Object.keys(ASS_STYLE_PRESETS) as AssStylePresetKey[]).map(
-                key => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                )
-              )}
-            </select>
-
-            {/* Merge Button (Keep existing button logic here) */}
-            <Button
-              className={mergeButtonClass}
-              onClick={() => {
-                if (videoFile && subtitlesProp && subtitlesProp.length > 0) {
-                  handleMergeVideoWithSubtitles(videoFile);
-                } else {
-                  setError('Video file and subtitles are required to merge.');
-                }
-              }}
-              disabled={
-                !videoFile ||
-                !subtitlesProp ||
-                subtitlesProp.length === 0 ||
-                isMergingInProgressProp
-              }
-              isLoading={isMergingInProgressProp}
-            >
-              {isMergingInProgressProp
-                ? 'Merging...'
-                : 'Merge Subtitles to Video'}
-            </Button>
-          </div>
+            isMergingInProgress={isMergingInProgressProp || false}
+            videoFileExists={!!videoFile}
+            subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)}
+          />
         </div>
       )}
     </Section>
   );
 
   // --- Helper Functions ---
-
-  async function handleSaveEditedSrtAs() {
-    try {
-      // Ensure the suggested name ends with .srt
-      let suggestedName = originalSrtFile?.name || DEFAULT_FILENAME;
-      if (!suggestedName.toLowerCase().endsWith('.srt')) {
-        // Simple string manipulation to remove potential existing extension and add .srt
-        const nameWithoutExt = suggestedName.includes('.')
-          ? suggestedName.substring(0, suggestedName.lastIndexOf('.'))
-          : suggestedName;
-        suggestedName = `${nameWithoutExt}.srt`;
-      }
-
-      // Use subtitlesProp
-      const srtContent = generateSrtContent(subtitlesProp || []);
-
-      const saveOptions = {
-        title: 'Save SRT File As',
-        defaultPath: suggestedName, // Now guaranteed to suggest .srt
-        filters: [{ name: 'SRT Files', extensions: ['srt'] }],
-        content: srtContent,
-        forceDialog: true, // Ensure dialog is shown for "Save As"
-      };
-
-      console.log('[Save As] Attempting to save with options:', saveOptions);
-      const result = await saveFileWithRetry(saveOptions);
-      console.log('[Save As] Result from saveFileWithRetry:', result);
-
-      if (result?.filePath) {
-        console.log(
-          `[Save As] Storing path in localStorage: ${result.filePath}`
-        );
-        localStorage.setItem('originalSrtPath', result.filePath);
-        localStorage.setItem('originalLoadPath', result.filePath);
-        localStorage.setItem('targetPath', result.filePath);
-        setCanSaveDirectly(true);
-
-        alert(`File saved successfully to:\n${result.filePath}`);
-
-        if (originalSrtFile) {
-          setOriginalSrtFile(null);
-        }
-      } else if (result.error && !result.error.includes('canceled')) {
-        setError(`Save failed: ${result.error}`);
-      }
-    } catch (error: any) {
-      setError(`Error saving SRT file: ${error.message || String(error)}`);
-    }
-  }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
     if (playTimeoutRef.current) {
@@ -1256,53 +834,6 @@ export function EditSubtitles({
         ...(subtitlesProp || []).slice(index + 1),
       ].map((sub, i) => ({ ...sub, index: i + 1 }));
       onSetSubtitlesDirectly(updated);
-    }
-  }
-
-  // Function to save SRT content directly to the original path
-  async function handleSaveSrt() {
-    const originalPath = localStorage.getItem('originalSrtPath');
-    console.log('Attempting to save directly...');
-
-    if (!originalPath) {
-      console.warn(
-        'No original path found in localStorage. Cannot perform direct save.'
-      );
-      setError(
-        'Cannot save directly. Use "Save As..." first or load an SRT file.'
-      ); // Inform user
-      return; // Exit early
-    }
-
-    try {
-      setError(''); // Clear previous errors
-      // Use subtitlesProp
-      const srtContent = generateSrtContent(subtitlesProp || []);
-
-      const saveOptions = {
-        content: srtContent,
-        filePath: originalPath, // Provide the specific path to overwrite
-        // No title, filters, or forceDialog needed for direct save
-      };
-
-      console.log(`Saving content to: ${originalPath}`);
-      const result = await saveFileWithRetry(saveOptions);
-
-      if (result?.filePath) {
-        console.log(`File saved successfully to: ${result.filePath}`);
-        // Maybe show a temporary success message instead of alert?
-        // e.g., set a state variable for a temporary notification
-        alert('File saved successfully!'); // Simple feedback for now
-      } else if (result.error) {
-        // Error handled by saveFileWithRetry (should throw), but catch just in case
-        setError(`Save failed: ${result.error}`);
-        console.error(`Save failed: ${result.error}`);
-      }
-    } catch (error: any) {
-      setError(`Error saving SRT file: ${error.message || String(error)}`);
-      console.error(
-        `Error during direct save: ${error.message || String(error)}`
-      );
     }
   }
 }

@@ -6,7 +6,7 @@ import StylizedFileInput from '../../components/StylizedFileInput';
 import Button from '../../components/Button';
 import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 import ElectronFileButton from '../../components/ElectronFileButton';
-import { buttonGradientStyles } from './styles';
+import { buttonGradientStyles } from '../../styles';
 import { SrtSegment } from '../../../types/interface';
 
 interface TimestampDisplayProps {
