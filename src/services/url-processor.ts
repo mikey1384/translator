@@ -136,30 +136,58 @@ async function downloadWithYtDlp(
   const formatString = qualityFormatMap[quality] || qualityFormatMap.high;
   console.log(`Using format string for quality '${quality}': ${formatString}`);
 
-  // Try various download options in a sequence, using the selected format
+  // Check if URL is Twitter/X
+  const isTwitterUrl = url.includes('twitter.com') || url.includes('x.com');
+  if (isTwitterUrl) {
+    console.log('Detected Twitter/X URL, omitting format specifier.');
+  }
+
+  // Conditionally add format string
+  const buildArgs = (baseArgs: string): string => {
+    let finalArgs = baseArgs;
+    if (!isTwitterUrl) {
+      finalArgs += ` --format "${formatString}"`; // Add format only if not Twitter
+    }
+    // Add other common arguments
+    finalArgs += ' --no-check-certificates --no-warnings --newline --progress';
+    return finalArgs;
+  };
+
+  // Build base parts of the command
+  const baseCmd = `"${ytDlpPath}" "${url}" -o "${outputPath}"`;
+
+  // Try various download options in a sequence
   const downloadOptions = [
-    // Option 1: Try with a referer and user agent but no cookies
+    // Option 1: Try with a referer and user agent
     {
       name: 'with referer and user agent',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString}" --no-check-certificates --no-warnings --referer "https://www.youtube.com/" --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" --force-ipv4 --newline --progress`,
+      args: buildArgs(
+        `${baseCmd} --referer "https://www.youtube.com/" --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" --force-ipv4`
+      ),
     },
 
     // Option 2: Try with different IP version
     {
       name: 'with IPv6',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString}" --no-check-certificates --no-warnings --force-ipv6 --newline --progress`,
+      args: buildArgs(`${baseCmd} --force-ipv6`),
     },
 
     // Option 3: Just the video URL with minimal options
     {
       name: 'with minimal options',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString.includes('/') ? formatString.split('/')[1] : formatString}" --no-check-certificates --no-warnings --newline --progress`,
+      args: buildArgs(
+        isTwitterUrl
+          ? baseCmd // No format split for Twitter
+          : `${baseCmd} --format "${formatString.includes('/') ? formatString.split('/')[1] : formatString}"`
+      ),
     },
 
-    // Option 4: With extra YouTube-specific options
+    // Option 4: With extra YouTube-specific options (Likely ineffective for Twitter, but kept as fallback)
     {
       name: 'with YouTube options',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString}" --no-check-certificates --no-warnings --extractor-args "youtube:player_client=web" --geo-bypass --no-playlist --newline --progress`,
+      args: buildArgs(
+        `${baseCmd} --extractor-args "youtube:player_client=web" --geo-bypass --no-playlist`
+      ),
     },
   ];
 
@@ -411,82 +439,45 @@ export async function processVideoUrl(
 
     progressCallback?.({ percent: 20, stage: 'Analyzing video source...' });
 
-    // Process URL based on domain
-    const hostname = validUrl.hostname.toLowerCase();
+    // --- MODIFIED: Always try yt-dlp first --- START ---
+    const downloadSuccess = await downloadVideoFromPlatform(
+      url,
+      tempVideoPath,
+      quality,
+      progressCallback
+    );
 
-    // Check if it's a YouTube URL or other supported video platform
-    if (
-      hostname.includes('youtube.com') ||
-      hostname.includes('youtu.be') ||
-      hostname.includes('vimeo.com') ||
-      hostname.includes('dailymotion.com') ||
-      hostname.includes('facebook.com') ||
-      hostname.includes('twitch.tv')
-    ) {
-      // Use specialized video download tools
-      const downloadSuccess = await downloadVideoFromPlatform(
-        url,
-        tempVideoPath,
-        quality,
-        progressCallback
+    if (!downloadSuccess) {
+      // --- Optional: Fallback to fetch if yt-dlp fails --- START ---
+      // console.warn('yt-dlp failed, attempting direct fetch as fallback...');
+      // progressCallback?.({
+      //   percent: 80, // Indicate fallback attempt
+      //   stage: 'Attempting direct download...',
+      // });
+      // try {
+      //   const response = await fetch(url);
+      //   if (!response.ok) {
+      //     throw new Error(`Fetch failed: ${response.statusText}`);
+      //   }
+      //   const fileStream = fs.createWriteStream(tempVideoPath);
+      //   const reader = response.body?.getReader();
+      //   if (!reader) throw new Error('Failed to get fetch reader');
+      //   await new Promise<void>((resolve, reject) => { ... }); // Stream logic
+      //   console.log('Direct fetch fallback successful.');
+      // } catch (fetchError) {
+      //   console.error('Direct fetch fallback also failed:', fetchError);
+      //   throw new Error(
+      //     'Failed to download video using both yt-dlp and direct fetch. URL might be invalid, protected, or require specific handling.'
+      //   );
+      // }
+      // --- Optional: Fallback to fetch if yt-dlp fails --- END ---
+
+      // If not using fetch fallback, throw error directly
+      throw new Error(
+        'Failed to download video using yt-dlp. URL might be invalid, protected, or require specific handling.'
       );
-
-      if (!downloadSuccess) {
-        throw new Error(
-          'Failed to download video after multiple attempts. This may be due to geo-restrictions or content that requires authentication.'
-        );
-      }
-    } else {
-      // For direct media URLs, use fetch
-      progressCallback?.({
-        percent: 30,
-        stage: 'Downloading video content...',
-      });
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to download video: ${response.statusText}`);
-      }
-
-      progressCallback?.({
-        percent: 40,
-        stage: 'Processing downloaded content...',
-      });
-
-      // Stream the response to a file
-      const fileStream = fs.createWriteStream(tempVideoPath);
-      const reader = response.body?.getReader();
-
-      if (!reader) {
-        throw new Error('Failed to get response reader');
-      }
-
-      // Process the data stream
-      await new Promise<void>((resolve, reject) => {
-        function processChunk({
-          done,
-          value,
-        }: ReadableStreamReadResult<Uint8Array>) {
-          if (done) {
-            fileStream.end();
-            return resolve();
-          }
-
-          fileStream.write(value, error => {
-            if (error) {
-              return reject(
-                new Error(`Error writing to file: ${error.message}`)
-              );
-            }
-
-            // Continue reading
-            reader!.read().then(processChunk).catch(reject);
-          });
-        }
-
-        reader.read().then(processChunk).catch(reject);
-      });
     }
+    // --- MODIFIED: Always try yt-dlp first --- END ---
 
     // Verify the file exists and get its metadata
     if (!fs.existsSync(tempVideoPath)) {

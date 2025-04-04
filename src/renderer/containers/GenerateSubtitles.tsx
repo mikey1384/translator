@@ -248,7 +248,7 @@ export default function GenerateSubtitles({
   const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
     null
   );
-  const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('high'); // State for quality
+  const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('mid');
 
   const progressCleanupRef = useRef<(() => void) | null>(null);
 
@@ -276,7 +276,6 @@ export default function GenerateSubtitles({
     setDownloadComplete(false); // Reset download status
     setDownloadedVideoPath(null); // Reset path
     onSetVideoFile(null); // Clear previous video
-    console.log(`Processing URL: ${urlInput}`);
 
     // Clear previous listener if any
     progressCleanupRef.current?.();
@@ -299,7 +298,6 @@ export default function GenerateSubtitles({
       const result = await window.electron.processUrl({
         url: urlInput,
         quality: downloadQuality, // Pass selected quality
-        // targetLanguage, // Removed as it's not needed for download
       });
 
       // --- Handle result ---
@@ -384,7 +382,6 @@ export default function GenerateSubtitles({
     }
   }, [
     urlInput,
-    // targetLanguage, // Removed dependency
     downloadQuality, // Add dependency
     onSetVideoFile,
     progressPercent, // Keep these if needed by listener logic
@@ -815,7 +812,7 @@ export default function GenerateSubtitles({
                     }
                     disabled={isProcessingUrl || isGenerating}
                     className={selectStyles} // Apply existing select styles
-                    style={{ minWidth: '120px' }} // Ensure minimum width
+                    style={{ minWidth: '120px' }}
                   >
                     <option value="high">High</option>
                     <option value="mid">Medium</option>
