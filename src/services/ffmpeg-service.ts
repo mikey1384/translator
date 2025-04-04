@@ -55,7 +55,8 @@ export class FFmpegService {
 
   async extractAudio(
     videoPath: string,
-    progressCallback?: (progress: { percent: number; stage: string }) => void
+    progressCallback?: (progress: { percent: number; stage: string }) => void,
+    operationId?: string
   ): Promise<string> {
     if (!fs.existsSync(videoPath)) {
       throw new FFmpegError(`Input video file not found: ${videoPath}`);
@@ -136,7 +137,7 @@ export class FFmpegService {
           '-y', // Overwrite output without asking
           outputPath,
         ],
-        undefined, // No operation ID
+        operationId,
         duration,
         ffmpegProgress => {
           // Scale FFmpeg progress to our desired range (5-10%)
@@ -182,8 +183,11 @@ export class FFmpegService {
 
       return outputPath;
     } catch (error) {
-      console.error('Error extracting audio:', error);
-      throw new FFmpegError(`Failed to extract audio: ${error}`);
+      console.error(
+        `[extractAudio${operationId ? `/${operationId}` : ''}] Error:`,
+        error
+      );
+      throw error;
     }
   }
 

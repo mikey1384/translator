@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../styles';
 
@@ -16,6 +16,7 @@ interface TranslationProgressAreaProps {
   autoCloseDelay?: number;
   partialResult?: string;
   onPartialResult?: (partialResult: string) => void;
+  translationOperationId?: string | null;
 }
 
 // Progress area styles - Updated for Dark Theme
@@ -129,7 +130,10 @@ export default function TranslationProgressArea({
   autoCloseDelay = 3000,
   partialResult,
   onPartialResult,
+  translationOperationId,
 }: TranslationProgressAreaProps) {
+  const [isCancelling, setIsCancelling] = useState(false);
+
   // If progress is 100%, auto-close after specified delay
   useEffect(() => {
     if (translationProgress === 100) {
@@ -147,16 +151,67 @@ export default function TranslationProgressArea({
     }
   }, [partialResult, onPartialResult]);
 
+  const handleRequestClose = async () => {
+    // Only show confirmation if process is not complete
+    if (translationProgress < 100) {
+      const shouldClose = window.confirm(
+        "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
+      );
+      if (shouldClose) {
+        // Log the ID we are about to use
+        console.log(
+          `[TranslationProgressArea] Attempting cancellation with ID: ${translationOperationId}`
+        );
+
+        // If we have an operation ID, send the cancel request
+        if (translationOperationId && window.electron?.cancelOperation) {
+          setIsCancelling(true);
+          try {
+            // Log before calling IPC
+            console.log(
+              `[TranslationProgressArea] Calling window.electron.cancelOperation for ID: ${translationOperationId}`
+            );
+            const result = await window.electron.cancelOperation(
+              translationOperationId
+            );
+            // Log IPC result
+            console.log(
+              `[TranslationProgressArea] IPC cancelOperation result for ${translationOperationId}:`,
+              result
+            );
+          } catch (error) {
+            console.error(
+              `[TranslationProgressArea] Error calling cancelOperation IPC for ${translationOperationId}:`,
+              error
+            );
+          } finally {
+            setIsCancelling(false);
+            onClose(); // Close UI regardless of backend success/failure for now
+          }
+        } else {
+          // If no operation ID, just close the progress area
+          console.warn(
+            `[TranslationProgressArea] Cannot cancel operation: No operation ID (${translationOperationId}) or IPC function available.`
+          );
+          onClose();
+        }
+      }
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div className={progressContainerStyles}>
       <div className={headerStyles}>
         <h3>Translation in Progress</h3>
         <button
           className={closeButtonStyles}
-          onClick={onClose}
+          onClick={handleRequestClose}
+          disabled={isCancelling}
           aria-label="Close translation progress"
         >
-          ×
+          {isCancelling ? '...' : '×'}
         </button>
       </div>
       {/* Translation Progress */}
@@ -184,15 +239,11 @@ export default function TranslationProgressArea({
                   ? '#4cc9f0'
                   : '#4895ef'};
                 border-radius: 10px;
-                transition: width 0.3s ease;
               `}
             />
           </div>
-
           {subtitleProgress?.warning && (
-            <div className={warningStyles}>
-              <strong>Warning:</strong> {subtitleProgress.warning}
-            </div>
+            <div className={warningStyles}>{subtitleProgress.warning}</div>
           )}
         </div>
       )}

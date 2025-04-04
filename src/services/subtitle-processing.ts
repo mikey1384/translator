@@ -47,6 +47,7 @@ function createFileFromPath(filePath: string): fs.ReadStream {
 async function generateSubtitlesFromAudio({
   inputAudioPath,
   progressCallback,
+  signal,
 }: {
   inputAudioPath: string;
   progressCallback?: (progress: {
@@ -57,6 +58,7 @@ async function generateSubtitlesFromAudio({
     partialResult?: string;
     error?: string;
   }) => void;
+  signal?: AbortSignal;
 }): Promise<string> {
   let openai: OpenAI;
   try {
@@ -167,11 +169,14 @@ async function generateSubtitlesFromAudio({
             );
             const fileStream = createFileFromPath(chunkPath);
 
-            const response = await openai.audio.transcriptions.create({
-              model: AI_MODELS.WHISPER.id,
-              file: fileStream,
-              response_format: 'srt',
-            });
+            const response = await openai.audio.transcriptions.create(
+              {
+                model: AI_MODELS.WHISPER.id,
+                file: fileStream,
+                response_format: 'srt',
+              },
+              { signal }
+            );
 
             console.info(
               `[${_callId}] Received transcription for chunk ${chunkIndex}.`
@@ -308,8 +313,12 @@ export async function generateSubtitlesFromVideo(
   services?: {
     ffmpegService: FFmpegService;
     fileManager: FileManager;
-  }
+  },
+  signal?: AbortSignal
 ): Promise<GenerateSubtitlesResult> {
+  const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  console.log(`[generateSubtitlesFromVideo] Started operation: ${operationId}`);
+
   if (!options) {
     options = { targetLanguage: 'original' } as GenerateSubtitlesOptions;
   }
@@ -349,6 +358,9 @@ export async function generateSubtitlesFromVideo(
   };
 
   try {
+    // Check for early cancellation
+    if (signal?.aborted) throw new Error('Operation cancelled');
+
     if (progressCallback) {
       progressCallback({
         percent: STAGE_AUDIO_EXTRACTION.start,
@@ -368,8 +380,11 @@ export async function generateSubtitlesFromVideo(
             stage: extractionProgress.stage,
           });
         }
-      }
+      },
+      operationId
     );
+
+    if (signal?.aborted) throw new Error('Operation cancelled');
 
     const subtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath,
@@ -385,7 +400,10 @@ export async function generateSubtitlesFromVideo(
           });
         }
       },
+      signal: signal,
     });
+
+    if (signal?.aborted) throw new Error('Operation cancelled');
 
     if (!isTranslationNeeded) {
       await fileManager.writeTempFile(subtitlesContent, '.srt');
@@ -408,6 +426,8 @@ export async function generateSubtitlesFromVideo(
       batchStart < totalSegments;
       batchStart += TRANSLATION_BATCH_SIZE
     ) {
+      if (signal?.aborted) throw new Error('Operation cancelled');
+
       const batchEnd = Math.min(
         batchStart + TRANSLATION_BATCH_SIZE,
         totalSegments
@@ -423,9 +443,15 @@ export async function generateSubtitlesFromVideo(
         endIndex: batchEnd,
       };
 
+      const operationIdForBatch = `${operationId}-trans-${batchStart}`;
+      const anthropicApiKey = await getApiKey('anthropic');
+
       const translatedBatch = await translateBatch(
         batchToTranslate,
-        targetLang
+        targetLang,
+        anthropicApiKey,
+        operationIdForBatch,
+        signal
       );
 
       for (let i = 0; i < translatedBatch.length; i++) {
@@ -453,6 +479,8 @@ export async function generateSubtitlesFromVideo(
       batchStart < segmentsInProcess.length;
       batchStart += REVIEW_BATCH_SIZE
     ) {
+      if (signal?.aborted) throw new Error('Operation cancelled');
+
       const batchEnd = Math.min(
         batchStart + REVIEW_BATCH_SIZE,
         segmentsInProcess.length
@@ -469,7 +497,7 @@ export async function generateSubtitlesFromVideo(
         targetLang: targetLang,
       };
 
-      const reviewedBatch = await reviewTranslationBatch(batchToReview);
+      const reviewedBatch = await reviewTranslationBatch(batchToReview, signal);
 
       for (let i = 0; i < reviewedBatch.length; i++) {
         segmentsInProcess[batchStart + i] = reviewedBatch[i];
@@ -490,6 +518,8 @@ export async function generateSubtitlesFromVideo(
         });
       }
     }
+
+    if (signal?.aborted) throw new Error('Operation cancelled');
 
     if (progressCallback) {
       progressCallback({
@@ -519,6 +549,27 @@ export async function generateSubtitlesFromVideo(
     }
 
     return { subtitles: finalSubtitlesContent };
+  } catch (error) {
+    console.error(`[${operationId}] Error during subtitle generation:`, error);
+    if (progressCallback) {
+      progressCallback({
+        percent: 100,
+        stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+
+    // If this was a cancellation, return empty subtitles
+    if (
+      signal?.aborted ||
+      (error instanceof Error && error.message === 'Operation cancelled')
+    ) {
+      console.info(
+        `[${operationId}] Generation was cancelled, returning empty subtitles`
+      );
+      return { subtitles: '' }; // Empty subtitles indicates cancellation
+    }
+
+    throw error; // Re-throw if it was a genuine error
   } finally {
     if (audioPath) {
       try {
@@ -632,11 +683,21 @@ export async function mergeSubtitlesWithVideo(
 
 async function translateBatch(
   batch: { segments: any[]; startIndex: number; endIndex: number },
-  targetLang: string
+  targetLang: string,
+  anthropicApiKey: string,
+  _operationId: string,
+  signal?: AbortSignal
 ): Promise<any[]> {
+  // Check for early cancellation
+  if (signal?.aborted) {
+    console.info(
+      `[${_operationId}] Translation batch cancelled before starting`
+    );
+    throw new Error('Operation cancelled');
+  }
+
   let anthropic: Anthropic;
   try {
-    const anthropicApiKey = await getApiKey('anthropic');
     anthropic = new Anthropic({ apiKey: anthropicApiKey });
   } catch (keyError) {
     throw new SubtitleProcessingError(
@@ -668,12 +729,27 @@ Translate EACH line individually, preserving the line order.
 `;
 
   while (retryCount < MAX_RETRIES) {
+    // Check for cancellation before each retry
+    if (signal?.aborted) {
+      console.info(
+        `[${_operationId}] Translation batch cancelled during retry attempt ${retryCount}`
+      );
+      throw new Error('Operation cancelled');
+    }
+
     try {
-      const response = await anthropic.messages.create({
-        model: AI_MODELS.CLAUDE_3_7_SONNET,
-        max_tokens: AI_MODELS.MAX_TOKENS,
-        messages: [{ role: 'user', content: combinedPrompt }],
-      } as Anthropic.MessageCreateParams);
+      console.info(
+        `[${_operationId}] Sending translation batch to Claude API (attempt ${retryCount + 1}/${MAX_RETRIES})`
+      );
+
+      const response = await anthropic.messages.create(
+        {
+          model: AI_MODELS.CLAUDE_3_7_SONNET,
+          max_tokens: AI_MODELS.MAX_TOKENS,
+          messages: [{ role: 'user', content: combinedPrompt }],
+        } as Anthropic.MessageCreateParams,
+        { signal }
+      );
 
       const translationResponse = response as Anthropic.Message;
 
@@ -686,7 +762,7 @@ Translate EACH line individually, preserving the line order.
         translation = translationResponse.content[0].text;
       } else {
         console.warn(
-          'Translation response content was not in the expected format.'
+          `[${_operationId}] Translation response content was not in the expected format.`
         );
         throw new Error('Unexpected translation response format from Claude.');
       }
@@ -724,6 +800,15 @@ Translate EACH line individually, preserving the line order.
         };
       });
     } catch (err: any) {
+      // Check for cancellation after an error
+      if (signal?.aborted) {
+        console.info(
+          `[${_operationId}] Translation batch cancelled after API error`
+        );
+        throw new Error('Operation cancelled');
+      }
+
+      // Check if the error is due to API rate limiting or connection issues
       if (
         err.message &&
         (err.message.includes('timeout') ||
@@ -732,10 +817,18 @@ Translate EACH line individually, preserving the line order.
       ) {
         retryCount++;
         const delay = 1000 * Math.pow(2, retryCount);
+        console.info(
+          `[${_operationId}] API error (${err.message}), retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`
+        );
+
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
 
+      // Handle other errors
+      console.error(`[${_operationId}] Translation error:`, err);
+
+      // Return with the original text as translation
       return batch.segments.map(segment => ({
         ...segment,
         text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
@@ -745,6 +838,10 @@ Translate EACH line individually, preserving the line order.
     }
   }
 
+  console.warn(
+    `[${_operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
+  );
+
   return batch.segments.map(segment => ({
     ...segment,
     text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
@@ -753,12 +850,21 @@ Translate EACH line individually, preserving the line order.
   }));
 }
 
-async function reviewTranslationBatch(batch: {
-  segments: any[];
-  startIndex: number;
-  endIndex: number;
-  targetLang: string;
-}): Promise<any[]> {
+async function reviewTranslationBatch(
+  batch: {
+    segments: any[];
+    startIndex: number;
+    endIndex: number;
+    targetLang: string;
+  },
+  signal?: AbortSignal
+): Promise<any[]> {
+  // Check for early cancellation
+  if (signal?.aborted) {
+    console.info(`[Review] Review batch cancelled before starting`);
+    throw new Error('Operation cancelled');
+  }
+
   let anthropic: Anthropic;
   try {
     const anthropicApiKey = await getApiKey('anthropic');
@@ -816,11 +922,22 @@ Improved translation for block 3
 `;
 
   try {
-    const response = await anthropic.messages.create({
-      model: AI_MODELS.CLAUDE_3_7_SONNET,
-      max_tokens: AI_MODELS.MAX_TOKENS,
-      messages: [{ role: 'user', content: prompt }],
-    } as Anthropic.MessageCreateParams);
+    // Check for cancellation before API call
+    if (signal?.aborted) {
+      console.info(`[Review] Review batch cancelled before API call`);
+      throw new Error('Operation cancelled');
+    }
+
+    console.info(`[Review] Sending review batch to Claude API`);
+
+    const response = await anthropic.messages.create(
+      {
+        model: AI_MODELS.CLAUDE_3_7_SONNET,
+        max_tokens: AI_MODELS.MAX_TOKENS,
+        messages: [{ role: 'user', content: prompt }],
+      } as Anthropic.MessageCreateParams,
+      { signal }
+    );
 
     const reviewResponse = response as Anthropic.Message;
 
@@ -832,9 +949,11 @@ Improved translation for block 3
     ) {
       reviewedContent = reviewResponse.content[0].text;
     } else {
-      console.warn('Review response content was not in the expected format.');
       console.warn(
-        `Translation review output format unexpected. Using original translations for this batch.`
+        '[Review] Review response content was not in the expected format.'
+      );
+      console.warn(
+        `[Review] Translation review output format unexpected. Using original translations for this batch.`
       );
       return batch.segments;
     }
@@ -843,7 +962,7 @@ Improved translation for block 3
 
     if (reviewedLines.length !== batch.segments.length) {
       console.warn(
-        `Translation review output line count (${reviewedLines.length}) does not match batch size (${batch.segments.length}). Using original translations for this batch.`
+        `[Review] Translation review output line count (${reviewedLines.length}) does not match batch size (${batch.segments.length}). Using original translations for this batch.`
       );
       return batch.segments;
     }
@@ -863,7 +982,16 @@ Improved translation for block 3
       };
     });
   } catch (error) {
-    console.error('Error calling Claude for translation review batch:', error);
+    // Check for cancellation after an error
+    if (signal?.aborted) {
+      console.info(`[Review] Review batch cancelled after API error`);
+      throw new Error('Operation cancelled');
+    }
+
+    console.error(
+      '[Review] Error calling Claude for translation review batch:',
+      error
+    );
     return batch.segments;
   }
 }

@@ -129,6 +129,16 @@ export default function MergingProgressArea({
 
   const handleCancel = async () => {
     console.log('Cancel button clicked, operationId:', operationId);
+
+    // Ask for confirmation before canceling
+    if (
+      !window.confirm(
+        "Are you sure you want to cancel the subtitle merge process? Any progress will be lost and you'll need to start again."
+      )
+    ) {
+      return;
+    }
+
     setIsCancelling(true);
 
     if (!operationId) {
@@ -139,10 +149,8 @@ export default function MergingProgressArea({
       return;
     }
     try {
-      // Make sure we're using the operationId that was passed from the parent component
-      // This ID must match exactly what was used when starting the merge operation
       console.log(`Attempting to cancel merge operation: ${operationId}`);
-      const result = await window.electron.cancelMerge(operationId);
+      const result = await window.electron.cancelOperation(operationId);
       console.log(`Cancellation result for ${operationId}:`, result);
       if (result.success) {
         console.log(`Successfully canceled operation ${operationId}`);
@@ -153,7 +161,7 @@ export default function MergingProgressArea({
         );
       }
     } catch (error) {
-      console.error(`Error calling cancelMerge for ${operationId}:`, error);
+      console.error(`Error calling cancelOperation for ${operationId}:`, error);
     } finally {
       setIsCancelling(false);
       onSetIsMergingInProgress(false);

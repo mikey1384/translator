@@ -14,6 +14,9 @@ export function useSubtitleManagement(showOriginalText: boolean) {
     number | null
   >(null);
   const [subtitleSourceId, setSubtitleSourceId] = useState(0);
+  const [translationOperationId, setTranslationOperationId] = useState<
+    string | null
+  >(null);
 
   const handlePartialResultRef = useRef<any>(null);
 
@@ -36,6 +39,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       current?: number;
       total?: number;
       batchStartIndex?: number;
+      operationId?: string;
     }) => {
       try {
         const safeResult = {
@@ -45,6 +49,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
           current: result?.current || 0,
           total: result?.total || 100,
           batchStartIndex: result?.batchStartIndex,
+          operationId: result?.operationId,
         };
 
         if (safeResult.batchStartIndex !== undefined) {
@@ -119,6 +124,11 @@ export function useSubtitleManagement(showOriginalText: boolean) {
         if (safeResult.percent < 100) {
           setIsTranslationInProgress(true);
         }
+
+        // Track the operation ID for cancellation
+        if (safeResult.operationId) {
+          setTranslationOperationId(safeResult.operationId);
+        }
       } catch (error) {
         console.error(
           '[useSubtitleManagement] Error handling partial result:',
@@ -134,6 +144,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       setTranslationStage,
       setIsReceivingPartialResults,
       setReviewedBatchStartIndex,
+      setTranslationOperationId,
     ]
   );
 
@@ -209,5 +220,6 @@ export function useSubtitleManagement(showOriginalText: boolean) {
     subtitleSourceId,
     handleSubtitlesGenerated,
     resetSubtitleSource,
+    translationOperationId,
   };
 }

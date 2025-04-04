@@ -82,7 +82,7 @@ try {
     subtitleHandlers.handleTranslateSubtitles
   );
   ipcMain.handle('merge-subtitles', subtitleHandlers.handleMergeSubtitles);
-  ipcMain.handle('cancel-merge', subtitleHandlers.handleCancelMerge);
+  ipcMain.handle('cancel-operation', subtitleHandlers.handleCancelOperation);
   ipcMain.handle(
     'generate-subtitles',
     subtitleHandlers.handleGenerateSubtitles

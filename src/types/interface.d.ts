@@ -121,6 +121,9 @@ interface ElectronAPI {
     filePath: string
   ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
   // === Add readFileContent === END ===
+
+  // Translation cancellation
+  cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
 }
 
 declare global {
@@ -227,5 +230,21 @@ export interface TranslateSubtitlesOptions {
 
 export interface TranslateSubtitlesResult {
   translatedSubtitles: string;
+  error?: string;
+}
+
+export interface CancelMergeResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface CancelTranslationResult {
+  success: boolean;
+  error?: string;
+}
+
+// Define a generic CancelResult type
+export interface CancelOperationResult {
+  success: boolean;
   error?: string;
 }

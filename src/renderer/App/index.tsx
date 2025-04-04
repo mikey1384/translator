@@ -97,6 +97,7 @@ function AppContent() {
     reviewedBatchStartIndex,
     handleSubtitlesGenerated, // Use the handler from the hook
     resetSubtitleSource, // Get the reset function
+    translationOperationId,
   } = useSubtitleManagement(showOriginalText); // Pass showOriginalText
 
   // State for save error (still needed for display, set by the hook via prop)
@@ -383,6 +384,7 @@ function AppContent() {
                       }
                     : undefined
                 }
+                translationOperationId={translationOperationId}
               />
             )}
 

@@ -154,28 +154,23 @@ const electronAPI = {
   openFile: options => ipcRenderer.invoke('open-file', options),
 
   // Merge cancellation
-  cancelMerge: async operationId => {
+  cancelOperation: async operationId => {
     console.log(
-      `[Preload] Invoking 'cancel-merge' for operationId: ${operationId}`
+      `[Preload] Invoking 'cancel-operation' for operationId: ${operationId}`
     );
     try {
+      const result = await ipcRenderer.invoke('cancel-operation', operationId);
       console.log(
-        `[Preload] About to call IPC 'cancel-merge' with operationId: ${operationId}`
-      );
-      const result = await ipcRenderer.invoke('cancel-merge', operationId);
-      console.log(
-        `[Preload] 'cancel-merge' result received for ${operationId}:`,
+        `[Preload] 'cancel-operation' result received for ${operationId}:`,
         result
       );
-      console.log(`[Preload] Returning result for ${operationId}:`, result);
       return result;
     } catch (error) {
       console.error(
-        `[Preload] Error invoking 'cancel-merge' for ${operationId}:`,
+        `[Preload] Error invoking 'cancel-operation' for ${operationId}:`,
         error
       );
-      console.error(`[Preload] Rethrowing error for ${operationId}:`, error);
-      throw error; // Rethrowing preserves the original error for the renderer's catch block
+      throw error;
     }
   },
 
