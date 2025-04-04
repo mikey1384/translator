@@ -313,31 +313,55 @@ export class FFmpegService {
 
       progressCallback?.({ percent: 15, stage: 'Starting video encoding' });
 
-      await this.runFFmpeg(
-        ffmpegArgs,
-        operationId,
-        duration,
-        progress => {
-          if (progressCallback) {
-            // Scale ffmpeg progress (0-100) to the range 15-95
-            const scaledProgress = 15 + progress * 0.8;
-            progressCallback({
-              percent: Math.min(95, scaledProgress),
-              stage: 'Encoding video with subtitles',
-            });
-          }
-        },
-        env
-      );
+      try {
+        await this.runFFmpeg(
+          ffmpegArgs,
+          operationId,
+          duration,
+          progress => {
+            if (progressCallback) {
+              // Scale ffmpeg progress (0-100) to the range 15-95
+              const scaledProgress = 15 + progress * 0.8;
+              progressCallback({
+                percent: Math.min(95, scaledProgress),
+                stage: 'Encoding video with subtitles',
+              });
+            }
+          },
+          env
+        );
 
-      progressCallback?.({ percent: 98, stage: 'Validating output file' });
-      await this.validateOutputFile(outputPath);
+        // If we got here, the process completed successfully (either normally or by cancellation)
+        progressCallback?.({ percent: 98, stage: 'Validating output file' });
 
-      console.info(
-        `[${operationId}] Subtitle merge process completed successfully.`
-      );
-      progressCallback?.({ percent: 100, stage: 'Merge complete' });
-      return outputPath;
+        // Only validate if the output file exists (it won't if cancelled)
+        if (fs.existsSync(outputPath)) {
+          await this.validateOutputFile(outputPath);
+          console.info(
+            `[${operationId}] Subtitle merge process completed successfully.`
+          );
+          progressCallback?.({ percent: 100, stage: 'Merge complete' });
+          return outputPath;
+        } else {
+          console.info(
+            `[${operationId}] Merge was cancelled, output file doesn't exist.`
+          );
+          progressCallback?.({ percent: 100, stage: 'Merge cancelled' });
+          return ''; // Return empty string to indicate cancellation
+        }
+      } catch (ffmpegError) {
+        // Check if the process was cancelled (we can tell by checking if the process still exists in activeProcesses)
+        if (!this.activeProcesses.has(operationId)) {
+          console.info(
+            `[${operationId}] FFmpeg process was cancelled, treating as successful cancellation.`
+          );
+          progressCallback?.({ percent: 100, stage: 'Merge cancelled' });
+          return ''; // Return empty string to indicate cancellation
+        }
+
+        // If not cancelled, rethrow the error
+        throw ffmpegError;
+      }
     } catch (error) {
       console.error(`[${operationId}] Error during subtitle merge:`, error);
       progressCallback?.({ percent: 0, stage: 'Merge failed' });
@@ -505,6 +529,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         env: env || nodeProcess.env,
       });
 
+      // Track if this operation is being cancelled
+      let isCancelling = false;
+
       if (operationId) {
         this.activeProcesses.set(operationId, ffmpegProcess);
         console.info(
@@ -515,7 +542,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       }
 
       let stderrOutput = '';
-      const progressRegex = /time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/;
 
       ffmpegProcess.stdout.on('data', (data: Buffer) => {
         console.info(`FFmpeg stdout: ${data.toString()}`);
@@ -523,25 +549,68 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       ffmpegProcess.stderr.on('data', (data: Buffer) => {
         const line = data.toString();
+        // --- CHANGED: Log every stderr line using console.log --- START ---
+        const lines = line.split(/\r?\n/);
+        lines.forEach(singleLine => {
+          if (singleLine.trim()) {
+            // Avoid logging empty lines
+            console.log(`[FFmpeg STDERR] ${singleLine.trim()}`); // Changed to console.log
+          }
+        });
+        // --- CHANGED: Log every stderr line using console.log --- END ---
         stderrOutput += line;
-        // log.debug(`FFmpeg stderr line: ${line.trim()}`); // Log raw stderr lines if needed
 
         if (totalDuration && progressCallback) {
           try {
-            const match = line.match(progressRegex);
-            if (match) {
-              const hours = parseInt(match[1], 10);
-              const minutes = parseInt(match[2], 10);
-              const seconds = parseInt(match[3], 10);
-              const centiseconds = parseInt(match[4], 10);
-              const currentTime =
-                hours * 3600 + minutes * 60 + seconds + centiseconds / 100;
-              const progressPercent = Math.min(
-                100,
-                Math.max(0, (currentTime / totalDuration) * 100)
+            // Check each line for time information
+            let updated = false;
+            lines.forEach(singleLine => {
+              // Use a more robust regex pattern for time that matches both formats: HH:MM:SS.ms and frame=X time=HH:MM:SS.ms
+              const timeMatch = singleLine.match(
+                /time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/
               );
-              // log.debug(`FFmpeg Progress: ${progressPercent.toFixed(1)}% (Current: ${currentTime}s, Total: ${totalDuration}s)`);
-              progressCallback(progressPercent);
+              if (timeMatch) {
+                const hours = parseInt(timeMatch[1], 10);
+                const minutes = parseInt(timeMatch[2], 10);
+                const seconds = parseInt(timeMatch[3], 10);
+                const centiseconds = parseInt(timeMatch[4], 10);
+                const currentTime =
+                  hours * 3600 + minutes * 60 + seconds + centiseconds / 100;
+                const progressPercent = Math.min(
+                  100,
+                  Math.max(0, (currentTime / totalDuration) * 100)
+                );
+
+                console.log(
+                  `[FFmpeg Progress Callback Invoked] OpID: ${operationId || 'N/A'} | CurrentTime: ${currentTime.toFixed(2)}s | TotalDuration: ${totalDuration?.toFixed(2)}s | Percent: ${progressPercent.toFixed(2)}%`
+                );
+                progressCallback(progressPercent);
+                updated = true;
+              }
+            });
+
+            // If we couldn't find the time in individual lines, try the accumulated output as before
+            if (!updated) {
+              const match = stderrOutput.match(
+                /time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})/
+              );
+              if (match) {
+                const hours = parseInt(match[1], 10);
+                const minutes = parseInt(match[2], 10);
+                const seconds = parseInt(match[3], 10);
+                const centiseconds = parseInt(match[4], 10);
+                const currentTime =
+                  hours * 3600 + minutes * 60 + seconds + centiseconds / 100;
+                const progressPercent = Math.min(
+                  100,
+                  Math.max(0, (currentTime / totalDuration) * 100)
+                );
+
+                console.log(
+                  `[FFmpeg Progress Callback Invoked] OpID: ${operationId || 'N/A'} | CurrentTime: ${currentTime.toFixed(2)}s | TotalDuration: ${totalDuration?.toFixed(2)}s | Percent: ${progressPercent.toFixed(2)}%`
+                );
+                progressCallback(progressPercent);
+              }
             }
           } catch (e) {
             console.warn('Failed to parse FFmpeg progress line:', e);
@@ -551,6 +620,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       ffmpegProcess.on('close', (code: number | null) => {
         if (operationId) {
+          // Check if this process was marked as being cancelled
+          isCancelling = !this.activeProcesses.has(operationId);
           this.activeProcesses.delete(operationId);
           console.info(
             `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid})`
@@ -559,8 +630,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
           console.info(`FFmpeg process finished (PID: ${ffmpegProcess.pid})`);
         }
 
-        if (code === 0) {
-          console.info(`FFmpeg process exited successfully (Code: ${code})`);
+        // Consider success if code is 0 OR if the process was cancelled (which gives code 255)
+        if (code === 0 || (isCancelling && code === 255)) {
+          if (isCancelling && code === 255) {
+            console.info(
+              `FFmpeg process was cancelled as requested, considering as successful completion.`
+            );
+          } else {
+            console.info(`FFmpeg process exited successfully (Code: ${code})`);
+          }
           resolve();
         } else {
           console.error(`FFmpeg process exited with error code ${code}.`);
@@ -727,12 +805,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         );
         process.kill('SIGKILL'); // Force kill if SIGTERM failed
       }
+      // Remove from active processes BEFORE the close event to indicate it was cancelled
       this.activeProcesses.delete(operationId);
       console.info(`[${operationId}] Process cancellation requested.`);
       return true;
     }
     console.warn(`[${operationId}] No active process found to cancel.`);
     return false;
+  }
+
+  /**
+   * Checks if a process with the given operation ID is currently active.
+   * @param operationId The operation ID to check
+   * @returns True if a process with this ID is active, false otherwise
+   */
+  public isActiveProcess(operationId: string): boolean {
+    return this.activeProcesses.has(operationId);
   }
 
   /**

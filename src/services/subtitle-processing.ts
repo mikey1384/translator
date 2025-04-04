@@ -531,7 +531,7 @@ export async function mergeSubtitlesWithVideo(
   services?: {
     ffmpegService: FFmpegService;
   }
-): Promise<{ tempOutputPath: string }> {
+): Promise<{ outputPath: string }> {
   const inputPathForNaming = options.videoFileName || options.videoPath;
   if (!inputPathForNaming) {
     throw new SubtitleProcessingError(
@@ -557,40 +557,68 @@ export async function mergeSubtitlesWithVideo(
   const videoExt = path.extname(inputPathForNaming);
   const baseName = path.basename(inputPathForNaming, videoExt);
   const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles.mp4`;
-  const tempOutputPath = path.join(ffmpegService.getTempDir(), tempFilename);
+  const outputPath = path.join(ffmpegService.getTempDir(), tempFilename);
 
   if (progressCallback) {
     progressCallback({ percent: 25, stage: 'Processing video' });
   }
 
   console.info(
-    `[${operationId}] Target temporary output path (forced MP4): ${tempOutputPath}`
+    `[${operationId}] Target temporary output path (forced MP4): ${outputPath}`
   );
 
-  await ffmpegService.mergeSubtitles(
-    options.videoPath!,
-    options.subtitlesPath!,
-    tempOutputPath,
-    operationId,
-    options.fontSize,
-    options.stylePreset,
-    progress => {
-      if (progressCallback) {
-        const mergeProgressSpan = 75;
-        const scaledProgress =
-          25 + (progress.percent / 100) * mergeProgressSpan;
-        progressCallback({
-          percent: Math.min(95, scaledProgress),
-          stage: progress.stage || 'Merging subtitles with video',
-        });
+  try {
+    const mergeResult = await ffmpegService.mergeSubtitles(
+      options.videoPath!,
+      options.subtitlesPath!,
+      outputPath,
+      operationId,
+      options.fontSize,
+      options.stylePreset,
+      progress => {
+        if (progressCallback) {
+          progressCallback(progress);
+        }
       }
-    }
-  );
+    );
 
-  if (progressCallback) {
-    progressCallback({ percent: 100, stage: 'Merge complete, ready to save' });
+    // Check if file exists - if empty string was returned, it means the operation was cancelled
+    if (!mergeResult || mergeResult === '' || !fs.existsSync(outputPath)) {
+      console.info(
+        `[${operationId}] Merge operation was cancelled or failed to create output file`
+      );
+      if (progressCallback) {
+        progressCallback({ percent: 100, stage: 'Merge cancelled' });
+      }
+      return { outputPath: '' }; // Return empty path to indicate cancellation
+    }
+
+    if (progressCallback) {
+      progressCallback({
+        percent: 100,
+        stage: 'Merge complete, ready to save',
+      });
+    }
+    return { outputPath };
+  } catch (error) {
+    console.error(`[${operationId}] Error during merge:`, error);
+    if (progressCallback) {
+      progressCallback({
+        percent: 100,
+        stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+
+    // Check if this was a cancellation (no active process with this ID)
+    if (!services.ffmpegService.isActiveProcess(operationId)) {
+      console.info(
+        `[${operationId}] Merge was cancelled, returning empty path`
+      );
+      return { outputPath: '' }; // Empty path indicates cancellation
+    }
+
+    throw error; // Re-throw if it was a genuine error
   }
-  return { tempOutputPath };
 }
 
 async function translateBatch(

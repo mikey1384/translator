@@ -75,6 +75,7 @@ function AppContent() {
     useState<boolean>(false);
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
+  const [mergeOperationId, setMergeOperationId] = useState<string | null>(null);
 
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -356,6 +357,7 @@ function AppContent() {
                   setMergeStage={handleSetMergeStage}
                   setIsMergingInProgress={handleSetIsMergingInProgress}
                   editorRef={editSubtitlesMethodsRef}
+                  onSetMergeOperationId={setMergeOperationId}
                   onSetSubtitlesDirectly={handleSetSubtitleSegments}
                   reviewedBatchStartIndex={reviewedBatchStartIndex}
                   canSaveDirectly={canSaveDirectly}
@@ -389,7 +391,7 @@ function AppContent() {
                 mergeProgress={mergeProgress}
                 mergeStage={mergeStage}
                 onSetIsMergingInProgress={setIsMergingInProgress}
-                operationId={null}
+                operationId={mergeOperationId}
                 onCancelComplete={() => {}}
               />
             )}

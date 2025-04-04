@@ -177,7 +177,8 @@ export interface MergeSubtitlesOptions {
 
 export interface MergeSubtitlesResult {
   success: boolean;
-  tempOutputPath?: string;
+  outputPath?: string;
+  cancelled?: boolean;
   error?: string;
   operationId?: string;
 }

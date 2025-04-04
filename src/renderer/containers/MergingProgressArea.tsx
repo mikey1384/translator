@@ -108,13 +108,18 @@ export default function MergingProgressArea({
   const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
-    if (mergeProgress >= 100) {
-      const timer = setTimeout(() => {
+    console.log('MergingProgressArea received operationId:', operationId);
+  }, [operationId]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (mergeProgress === 100) {
+      timer = setTimeout(() => {
         onSetIsMergingInProgress(false);
         onCancelComplete();
       }, autoCloseDelay);
-      return () => clearTimeout(timer);
     }
+    return () => clearTimeout(timer);
   }, [
     mergeProgress,
     onSetIsMergingInProgress,
@@ -123,9 +128,9 @@ export default function MergingProgressArea({
   ]);
 
   const handleCancel = async () => {
-    if (isCancelling) return;
+    console.log('Cancel button clicked, operationId:', operationId);
     setIsCancelling(true);
-    console.log(`Requesting cancellation for merge operation: ${operationId}`);
+
     if (!operationId) {
       console.warn('Cannot cancel merge: operationId is null.');
       setIsCancelling(false);
@@ -134,10 +139,13 @@ export default function MergingProgressArea({
       return;
     }
     try {
+      // Make sure we're using the operationId that was passed from the parent component
+      // This ID must match exactly what was used when starting the merge operation
+      console.log(`Attempting to cancel merge operation: ${operationId}`);
       const result = await window.electron.cancelMerge(operationId);
       console.log(`Cancellation result for ${operationId}:`, result);
       if (result.success) {
-        // Cancellation successful
+        console.log(`Successfully canceled operation ${operationId}`);
       } else {
         console.error(
           `Failed to cancel operation ${operationId}:`,

@@ -114,7 +114,14 @@ const electronAPI = {
     }
 
     console.log('Sending merge options to main process:', finalOptions);
-    return ipcRenderer.invoke('merge-subtitles', finalOptions);
+    try {
+      const result = await ipcRenderer.invoke('merge-subtitles', finalOptions);
+      console.log('Received merge result from main process:', result);
+      return result;
+    } catch (error) {
+      console.error('Error during merge subtitles call:', error);
+      throw error;
+    }
   },
 
   onMergeSubtitlesProgress: callback => {
@@ -147,7 +154,30 @@ const electronAPI = {
   openFile: options => ipcRenderer.invoke('open-file', options),
 
   // Merge cancellation
-  cancelMerge: operationId => ipcRenderer.invoke('cancel-merge', operationId),
+  cancelMerge: async operationId => {
+    console.log(
+      `[Preload] Invoking 'cancel-merge' for operationId: ${operationId}`
+    );
+    try {
+      console.log(
+        `[Preload] About to call IPC 'cancel-merge' with operationId: ${operationId}`
+      );
+      const result = await ipcRenderer.invoke('cancel-merge', operationId);
+      console.log(
+        `[Preload] 'cancel-merge' result received for ${operationId}:`,
+        result
+      );
+      console.log(`[Preload] Returning result for ${operationId}:`, result);
+      return result;
+    } catch (error) {
+      console.error(
+        `[Preload] Error invoking 'cancel-merge' for ${operationId}:`,
+        error
+      );
+      console.error(`[Preload] Rethrowing error for ${operationId}:`, error);
+      throw error; // Rethrowing preserves the original error for the renderer's catch block
+    }
+  },
 
   // Move file
   moveFile: (sourcePath, destinationPath) =>

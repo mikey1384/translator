@@ -81,5 +81,6 @@ module.exports = {
     '!.eslintrc.js',
     'bun.lockb',
     'preload.cjs',
+    '*.cjs',
   ],
 };

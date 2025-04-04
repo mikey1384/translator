@@ -54,6 +54,7 @@ export interface EditSubtitlesProps {
   setMergeProgress: React.Dispatch<React.SetStateAction<number>>;
   setMergeStage: React.Dispatch<React.SetStateAction<string>>;
   setIsMergingInProgress: React.Dispatch<React.SetStateAction<boolean>>;
+  onSetMergeOperationId: Dispatch<SetStateAction<string | null>>;
   editorRef?: React.RefObject<{ scrollToCurrentSubtitle: () => void }>;
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
@@ -77,6 +78,7 @@ export function EditSubtitles({
   setMergeProgress,
   setMergeStage,
   setIsMergingInProgress,
+  onSetMergeOperationId,
   editorRef,
   onSetSubtitlesDirectly,
   reviewedBatchStartIndex,
@@ -109,9 +111,6 @@ export function EditSubtitles({
 
   // If the user passed in a custom `secondsToSrtTime`, use that; otherwise fallback
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
-
-  // New ref for current merge operation ID
-  const currentMergeOperationIdRef = useRef<string | null>(null);
 
   /**
    * ------------------------------------------------------
@@ -719,10 +718,14 @@ export function EditSubtitles({
     }
 
     // Generate operationId here
-    const operationId = `merge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    currentMergeOperationIdRef.current = operationId; // Set the ref immediately
+    const operationId = `merge-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
 
     setIsMergingInProgress(true);
+    // --- Set the operation ID in parent state --- START ---
+    onSetMergeOperationId(operationId);
+    // --- Set the operation ID in parent state --- END ---
     setMergeProgress(0);
     setMergeStage('Preparing subtitle file...');
     let tempMergedFilePath: string | null = null; // Keep track of the temp file
@@ -770,13 +773,24 @@ export function EditSubtitles({
         stylePreset: mergeStylePreset,
       });
 
-      if (!mergeResult?.success || !mergeResult.tempOutputPath) {
+      console.log('Merge result received:', mergeResult);
+
+      // Check for cancellation
+      if (mergeResult?.cancelled) {
+        console.log('Merge was cancelled by user');
+        setMergeStage('Merge cancelled by user');
+        setTimeout(() => setIsMergingInProgress(false), 2000);
+        return { success: false, cancelled: true };
+      }
+
+      // Check for success and outputPath (not tempOutputPath)
+      if (!mergeResult?.success || !mergeResult.outputPath) {
         throw new Error(
           `Merge process failed: ${mergeResult?.error || 'Unknown merge error'}`
         );
       }
 
-      tempMergedFilePath = mergeResult.tempOutputPath; // Store temp path
+      tempMergedFilePath = mergeResult.outputPath; // Use outputPath instead of tempOutputPath
       setMergeStage('Merge complete. Select save location...');
       setMergeProgress(100); // Indicate merge part is done
 
@@ -785,6 +799,11 @@ export function EditSubtitles({
         ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
         : '.mp4';
       const suggestedOutputName = `video-with-subtitles${inputExt}`; // Simplified name
+
+      console.log(
+        'About to show save dialog with suggested name:',
+        suggestedOutputName
+      );
 
       const saveResult = await window.electron.saveFile({
         content: '', // Not saving content directly, just getting path
@@ -796,20 +815,26 @@ export function EditSubtitles({
         ],
       });
 
+      console.log('Save dialog result:', saveResult);
+
       if (saveResult.error) {
         if (saveResult.error.includes('canceled')) {
+          console.log('Save was cancelled by user');
           setMergeStage('Save canceled by user. Cleaning up...');
           throw new Error('Save operation canceled by user.'); // Will trigger finally block
         } else {
+          console.error('Save dialog error:', saveResult.error);
           throw new Error(`Failed to get save path: ${saveResult.error}`);
         }
       }
 
       if (!saveResult.filePath) {
+        console.error('No file path returned from save dialog');
         throw new Error('No output path selected after merge.');
       }
 
       const finalOutputPath = saveResult.filePath;
+      console.log('User selected output path:', finalOutputPath);
 
       // Move Temporary File to Final Location
       // --- Add Logging --- START ---
@@ -875,6 +900,9 @@ export function EditSubtitles({
       if (cleanupMergeListener) {
         cleanupMergeListener();
       }
+      // --- Clear the operation ID in parent state --- START ---
+      onSetMergeOperationId(null);
+      // --- Clear the operation ID in parent state --- END ---
     }
   }
 

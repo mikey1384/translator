@@ -269,4 +269,43 @@ export class FileManager {
       throw new FileManagerError(`Error reading file: ${error}`);
     }
   }
+
+  /**
+   * Move a file from source to destination
+   * This copies the file and then deletes the original
+   */
+  async moveFile(sourcePath: string, destinationPath: string): Promise<void> {
+    try {
+      console.info(`Moving file from ${sourcePath} to ${destinationPath}`);
+
+      // Verify source file exists
+      try {
+        await fs.access(sourcePath);
+      } catch (error) {
+        throw new FileManagerError(
+          `Source file does not exist or is not accessible: ${sourcePath}`
+        );
+      }
+
+      // Create parent directory of destination if it doesn't exist
+      const destDir = path.dirname(destinationPath);
+      await fs.mkdir(destDir, { recursive: true });
+
+      // Copy the file
+      await fs.copyFile(sourcePath, destinationPath);
+      console.info(`File copied to ${destinationPath}`);
+
+      // Delete the source file
+      await fs.unlink(sourcePath);
+      console.info(`Original file ${sourcePath} deleted`);
+    } catch (error) {
+      console.error(
+        `Error moving file from ${sourcePath} to ${destinationPath}:`,
+        error
+      );
+      throw new FileManagerError(
+        `Failed to move file: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
 }
