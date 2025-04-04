@@ -587,17 +587,19 @@ export default function NativeVideoPlayer({
   return (
     <div
       ref={containerRef}
-      className={css`
-        position: relative;
-        margin: 0 auto;
-        width: 100%;
-        height: 100%;
-        min-height: 180px;
-        border-radius: 6px;
-        overflow: hidden;
-        transform: translateZ(0);
-        will-change: transform;
-      `}
+      className={
+        css`
+          position: relative;
+          margin: 0 auto;
+          width: 100%;
+          height: 100%;
+          min-height: 180px;
+          border-radius: 6px;
+          overflow: hidden;
+          transform: translateZ(0);
+          will-change: transform;
+        ` + ' native-video-player-wrapper'
+      }
     >
       <video
         ref={videoRef}

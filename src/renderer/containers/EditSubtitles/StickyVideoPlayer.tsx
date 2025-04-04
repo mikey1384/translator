@@ -276,6 +276,11 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
 
+  // --- State for Fullscreen Control Auto-Hide --- START ---
+  const [showFullscreenControls, setShowFullscreenControls] = useState(true); // Initially visible
+  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // --- State for Fullscreen Control Auto-Hide --- END ---
+
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
@@ -529,6 +534,54 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     setShowOverlay(false);
   }, []);
 
+  // --- Logic for Fullscreen Control Auto-Hide --- START ---
+  const handleActivity = useCallback(() => {
+    if (!isPseudoFullscreen) return; // Only run in fullscreen
+
+    setShowFullscreenControls(true);
+
+    // Clear existing timeout
+    if (activityTimeoutRef.current) {
+      clearTimeout(activityTimeoutRef.current);
+    }
+
+    // Set new timeout to hide controls
+    activityTimeoutRef.current = setTimeout(() => {
+      setShowFullscreenControls(false);
+    }, 3000); // Hide after 3 seconds
+  }, [isPseudoFullscreen]);
+
+  // Effect to attach/detach listeners and clean up timeout
+  useEffect(() => {
+    const playerWrapper = playerRef.current?.querySelector(
+      '.native-video-player-wrapper'
+    ); // Target the inner wrapper
+
+    if (isPseudoFullscreen && playerWrapper) {
+      // Initially show controls and start timer
+      handleActivity();
+
+      playerWrapper.addEventListener('mousemove', handleActivity);
+      playerWrapper.addEventListener('mouseleave', handleActivity); // Hide immediately on leave
+
+      return () => {
+        playerWrapper.removeEventListener('mousemove', handleActivity);
+        playerWrapper.removeEventListener('mouseleave', handleActivity);
+        if (activityTimeoutRef.current) {
+          clearTimeout(activityTimeoutRef.current);
+        }
+      };
+    } else {
+      // Ensure controls are shown when not in fullscreen
+      setShowFullscreenControls(true);
+      // Clear timeout if exiting fullscreen
+      if (activityTimeoutRef.current) {
+        clearTimeout(activityTimeoutRef.current);
+      }
+    }
+  }, [isPseudoFullscreen, handleActivity]);
+  // --- Logic for Fullscreen Control Auto-Hide --- END ---
+
   if (!videoUrl) return null;
 
   // Calculate progress percentage for the seekbar
@@ -569,7 +622,15 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
                 ? fullscreenOverlayControlsStyles
                 : videoOverlayControlsStyles
             }
-            style={{ opacity: showOverlay ? 1 : 0 }}
+            style={{
+              opacity: isPseudoFullscreen
+                ? showFullscreenControls
+                  ? 1
+                  : 0
+                : showOverlay
+                  ? 1
+                  : 0,
+            }}
           >
             <Button
               onClick={handleOverlayTogglePlay}
