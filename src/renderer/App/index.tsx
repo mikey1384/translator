@@ -16,6 +16,7 @@ import { SrtSegment } from '../../types/interface';
 import { parseSrt, secondsToSrtTime } from '../helpers';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus';
 import { useSubtitleManagement } from './hooks/useSubtitleManagement';
+import { useSubtitleSaving } from '../containers/EditSubtitles/hooks/useSubtitleSaving';
 
 import { pageWrapperStyles, containerStyles } from '../styles';
 import { css } from '@emotion/css';
@@ -79,6 +80,11 @@ function AppContent() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
+  // --- State for the original loaded SRT file path ---
+  const [originalSrtFilePath, setOriginalSrtFilePath] = useState<string | null>(
+    null
+  );
+
   const {
     subtitleSegments,
     handleSetSubtitleSegments, // This is the setter for the hook's state
@@ -89,9 +95,32 @@ function AppContent() {
     isReceivingPartialResults,
     reviewedBatchStartIndex,
     handleSubtitlesGenerated, // Use the handler from the hook
-    subtitleSourceId, // Get the source ID
     resetSubtitleSource, // Get the reset function
   } = useSubtitleManagement(showOriginalText); // Pass showOriginalText
+
+  // State for save error (still needed for display, set by the hook via prop)
+  const [saveError, setSaveError] = useState<string>('');
+
+  // Callback for when Save As completes
+  const handleSaveAsComplete = useCallback((newFilePath: string) => {
+    console.log(
+      '[AppContent] Save As complete, setting original path to:',
+      newFilePath
+    );
+    setOriginalSrtFilePath(newFilePath); // Update path after successful Save As
+  }, []);
+
+  // Simplified Subtitle Saving Hook Call
+  const {
+    canSaveDirectly, // This is now derived from originalSrtFilePath passed in
+    handleSaveSrt,
+    handleSaveEditedSrtAs,
+  } = useSubtitleSaving({
+    subtitles: subtitleSegments,
+    originalSrtFilePath: originalSrtFilePath, // Pass the state here
+    setSaveError: setSaveError, // Pass the setter for error display
+    onSaveAsComplete: handleSaveAsComplete, // Pass the callback
+  });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -217,6 +246,28 @@ function AppContent() {
     }
   };
 
+  // Wrapper for subtitle generation completion
+  const handleGeneratedSubtitlesWrapper = useCallback(
+    (generatedSrt: string) => {
+      handleSubtitlesGenerated(generatedSrt); // Call the original handler
+      setOriginalSrtFilePath(null); // Explicitly clear save path after generation
+      console.log(
+        '[AppContent] Subtitles generated, originalSrtFilePath set to null.'
+      );
+    },
+    [handleSubtitlesGenerated]
+  ); // Removed clearSaveState dependency
+
+  // --- New Callback for SRT File Loading ---
+  const handleSrtFileLoaded = useCallback((filePath: string) => {
+    console.log(
+      '[AppContent] SRT file loaded, setting original path:',
+      filePath
+    );
+    setOriginalSrtFilePath(filePath);
+    setSaveError(''); // Clear any previous save errors on successful load
+  }, []);
+
   return (
     <div className={pageWrapperStyles}>
       <div id="top-padding" style={{ height: '10px' }}></div>
@@ -268,7 +319,7 @@ function AppContent() {
               <GenerateSubtitles
                 videoFile={videoFile}
                 onSetVideoFile={handleSetVideoFile}
-                onSubtitlesGenerated={handleSubtitlesGenerated}
+                onSubtitlesGenerated={handleGeneratedSubtitlesWrapper}
                 showOriginalText={showOriginalText}
                 onShowOriginalTextChange={setShowOriginalText}
                 apiKeyStatus={apiKeyStatus}
@@ -296,7 +347,12 @@ function AppContent() {
                   editorRef={editSubtitlesMethodsRef}
                   onSetSubtitlesDirectly={handleSetSubtitleSegments}
                   reviewedBatchStartIndex={reviewedBatchStartIndex}
-                  subtitleSourceId={subtitleSourceId}
+                  canSaveDirectly={canSaveDirectly}
+                  handleSaveSrt={handleSaveSrt}
+                  handleSaveEditedSrtAs={handleSaveEditedSrtAs}
+                  onSrtFileLoaded={handleSrtFileLoaded}
+                  saveError={saveError}
+                  setSaveError={setSaveError}
                 />
               </div>
             </div>

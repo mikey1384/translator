@@ -124,22 +124,54 @@ export function useSubtitleEditing(
       focusedInputRef.current = { index, field };
 
       if (field === 'text') {
+        // --- Restore Debounce Logic --- START ---
         const debounceTextKey = `${index}-text`;
         if (!debouncedTextUpdateRef.current[debounceTextKey]) {
           debouncedTextUpdateRef.current[debounceTextKey] = debounce(
-            (newText: string) => {
-              setSubtitles(current =>
-                current.map((sub, i) =>
-                  i === index ? { ...sub, text: newText } : sub
-                )
+            (newTextValue: string) => {
+              // --- Moved Marker Logic Inside Functional Update --- START ---
+              const currentSegments = subtitles || [];
+              if (index < 0 || index >= currentSegments.length) {
+                // Should not happen, but safety check
+                console.warn(
+                  `[useSubtitleEditing] Debounced update: Invalid index ${index}`
+                );
+                return; // Return unchanged state
+              }
+              const currentSub = currentSegments[index];
+              const currentHasMarker = currentSub.text.includes(
+                '###TRANSLATION_MARKER###'
               );
-              // Attempt to restore focus after text update too
-              setTimeout(() => restoreFocus(), 50);
+              const originalTextPart = currentHasMarker
+                ? currentSub.text.split('###TRANSLATION_MARKER###')[0] || ''
+                : '';
+
+              let combinedText = newTextValue;
+              if (currentHasMarker) {
+                combinedText =
+                  originalTextPart + '###TRANSLATION_MARKER###' + newTextValue;
+              }
+              // --- Moved Marker Logic Inside Functional Update --- END ---
+
+              setSubtitles(current => {
+                const updatedSegments = [...current];
+                if (updatedSegments[index]) {
+                  // Update with the potentially combined text
+                  updatedSegments[index] = {
+                    ...updatedSegments[index],
+                    text: combinedText, // Use the combined text
+                  };
+                }
+                return updatedSegments;
+              });
             },
             DEBOUNCE_DELAY_MS
           );
         }
+        // Pass only the editable part to the debounced function
         debouncedTextUpdateRef.current[debounceTextKey](value as string);
+        // --- Restore Debounce Logic --- END ---
+
         return;
       }
 
@@ -190,8 +222,6 @@ export function useSubtitleEditing(
                 )
               );
             }
-
-            setTimeout(() => restoreFocus(), 50);
           },
           DEBOUNCE_DELAY_MS
         );

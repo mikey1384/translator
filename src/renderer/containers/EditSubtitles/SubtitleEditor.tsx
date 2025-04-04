@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button';
 import { SrtSegment } from '../../../types/interface';
-import { debounce } from 'lodash';
-import { DEBOUNCE_DELAY_MS } from './constants';
 import { colors } from '../../styles';
 
 interface SubtitleEditorProps {
@@ -156,53 +154,39 @@ export default function SubtitleEditor({
   }
   // --- End Text Splitting Logic ---
 
-  // --- Local State and Debounce ---
-  const [editableText, setEditableText] = useState(initialEditableText);
+  // --- Local State for Editable Text --- START ---
+  const [currentTextValue, setCurrentTextValue] =
+    useState<string>(initialEditableText);
+  // --- Local State for Editable Text --- END ---
+
+  // --- Local State for Shift ---
   const [shiftAmount, setShiftAmount] = useState('0');
 
-  // 1. Memoize the core subtitle editing logic
-  const handleEditSubtitleText = useCallback(
-    (value: string) => {
-      let combinedText = value;
-      if (hasMarker) {
-        // Reconstruct with marker if original had it
-        combinedText = originalText + '###TRANSLATION_MARKER###' + value;
-      }
-      onEditSubtitle(index, 'text', combinedText);
-    },
-    [hasMarker, originalText, onEditSubtitle, index]
-  ); // Dependencies for the core logic
-
-  // 2. Create the debounced function using useMemo
-  const debouncedEditSubtitleText = useMemo(() => {
-    return debounce(handleEditSubtitleText, DEBOUNCE_DELAY_MS);
-  }, [handleEditSubtitleText]); // Recreate debounce only when handleEditSubtitleText changes
-
-  // 3. Cleanup the debounced function on unmount or when it's recreated
+  // --- Effect to Sync Local State with Prop Changes --- START ---
   useEffect(() => {
-    return () => {
-      debouncedEditSubtitleText.cancel();
-    };
-  }, [debouncedEditSubtitleText]);
-
-  // Update local state if the prop changes (e.g., due to external edits)
-  useEffect(() => {
-    let currentInitialEditableText = sub.text;
+    // Update local state only if the prop-derived value changes
+    let incomingEditableText = sub.text;
     if (sub.text.includes('###TRANSLATION_MARKER###')) {
-      currentInitialEditableText =
+      incomingEditableText =
         sub.text.split('###TRANSLATION_MARKER###')[1] || '';
     }
-    // Only update if the incoming prop text (derived) is different from current local state
-    if (currentInitialEditableText !== editableText) {
-      setEditableText(currentInitialEditableText);
+    // Only update if the incoming prop text is different from the current local state
+    // This prevents overwriting user input unnecessarily during the debounce period
+    if (incomingEditableText !== currentTextValue) {
+      setCurrentTextValue(incomingEditableText);
     }
+    // Note: We only want to react to external changes to sub.text, not currentTextValue
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sub.text]); // Depend only on sub.text - disable lint rule here as editableText causes loops
+  }, [sub.text]);
+  // --- Effect to Sync Local State with Prop Changes --- END ---
 
+  // --- Update handleTextChange ---
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    setEditableText(newValue); // Update local state immediately
-    debouncedEditSubtitleText(newValue); // Call the memoized debounced function
+    setCurrentTextValue(newValue); // Update local state immediately
+    // Directly call the prop which is handled (debounced) by useSubtitleEditing hook
+    // The hook will handle combining with originalText if needed.
+    onEditSubtitle(index, 'text', newValue);
   };
 
   const handleTimeChange = (field: 'start' | 'end', value: string) => {
@@ -311,9 +295,10 @@ export default function SubtitleEditor({
       {/* Text Area */}
       <textarea
         className={textInputStyles}
-        value={editableText}
+        value={currentTextValue}
         onChange={handleTextChange}
-        aria-label={`Text for subtitle ${sub.index}`}
+        placeholder="Enter subtitle text..."
+        data-testid={`subtitle-text-${index}`}
       />
 
       {/* Original Text Display (Conditional) */}
@@ -333,6 +318,7 @@ export default function SubtitleEditor({
             onBlur={() => onTimeInputBlur(index, 'start')}
             className={timeInputStyles}
             aria-label={`Start time for subtitle ${sub.index}`}
+            data-testid={`subtitle-start-${index}`}
           />
           <span>→</span>
           <input
@@ -342,6 +328,7 @@ export default function SubtitleEditor({
             onBlur={() => onTimeInputBlur(index, 'end')}
             className={timeInputStyles}
             aria-label={`End time for subtitle ${sub.index}`}
+            data-testid={`subtitle-end-${index}`}
           />
           <span style={{ marginLeft: '8px', color: colors.gray }}>|</span>
           <input
@@ -352,6 +339,7 @@ export default function SubtitleEditor({
             className={shiftInputStyles}
             aria-label={`Shift subtitle ${sub.index} by seconds`}
             disabled={isShiftingDisabled}
+            data-testid={`subtitle-shift-input-${index}`}
           />
           <Button
             variant="secondary"
@@ -363,6 +351,7 @@ export default function SubtitleEditor({
               isNaN(parseFloat(shiftAmount)) ||
               parseFloat(shiftAmount) === 0
             }
+            data-testid={`subtitle-shift-button-${index}`}
           >
             Shift
           </Button>

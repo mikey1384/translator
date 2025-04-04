@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SrtSegment } from '../../../types/interface';
-import { parseSrt, buildSrt, fixOverlappingSegments } from '../../helpers';
-import log from 'electron-log';
+import { parseSrt, fixOverlappingSegments } from '../../helpers';
 
 export function useSubtitleManagement(showOriginalText: boolean) {
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
@@ -22,7 +21,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
     (segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])) => {
       setSubtitleSegments(segments);
       setSubtitleSourceId(prevId => prevId + 1);
-      log.info(
+      console.info(
         `[useSubtitleManagement] Segments set externally, incremented source ID.`
       );
     },
@@ -78,14 +77,41 @@ export function useSubtitleManagement(showOriginalText: boolean) {
           });
 
           setSubtitleSegments(prevSegments => {
-            const newSrt = buildSrt(processedSegments);
-            const prevSrt = buildSrt(prevSegments);
-            return newSrt !== prevSrt ? processedSegments : prevSegments;
+            if (!prevSegments || prevSegments.length === 0) {
+              console.debug(
+                `[useSubtitleManagement] Initializing segments with first partial batch. Count: ${processedSegments.length}`
+              );
+              if (safeResult.batchStartIndex !== 0) {
+                console.warn(
+                  `[useSubtitleManagement] First partial batch received, but batchStartIndex is ${safeResult.batchStartIndex}. Initializing from index 0.`
+                );
+              }
+              return processedSegments;
+            }
+
+            const updatedSegments = [...prevSegments];
+            const startIndex = safeResult.batchStartIndex ?? 0;
+
+            console.debug(
+              `[useSubtitleManagement] Merging partial results. StartIndex: ${startIndex}, Count: ${processedSegments.length}`
+            );
+
+            processedSegments.forEach((newSegData, i) => {
+              const targetIndex = startIndex + i;
+              if (targetIndex < updatedSegments.length) {
+                updatedSegments[targetIndex] = {
+                  ...updatedSegments[targetIndex],
+                  text: newSegData.text,
+                };
+              } else {
+                console.warn(
+                  `[useSubtitleManagement] Attempted to update out-of-bounds index ${targetIndex}`
+                );
+              }
+            });
+
+            return updatedSegments;
           });
-          setSubtitleSourceId(prevId => prevId + 1);
-          log.info(
-            `[useSubtitleManagement] Subtitles generated, incremented source ID.`
-          );
         }
 
         setTranslationProgress(safeResult.percent);
@@ -94,7 +120,10 @@ export function useSubtitleManagement(showOriginalText: boolean) {
           setIsTranslationInProgress(true);
         }
       } catch (error) {
-        console.error('Error handling partial result:', error);
+        console.error(
+          '[useSubtitleManagement] Error handling partial result:',
+          error
+        );
       }
     },
     [
@@ -105,7 +134,6 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       setTranslationStage,
       setIsReceivingPartialResults,
       setReviewedBatchStartIndex,
-      setSubtitleSourceId,
     ]
   );
 
@@ -154,14 +182,17 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       const fixedSegments = fixOverlappingSegments(segments);
       setSubtitleSegments(fixedSegments);
     } catch (err) {
-      console.error('Error parsing generated subtitles:', err);
+      console.error(
+        '[useSubtitleManagement] Error parsing generated subtitles:',
+        err
+      );
     }
   }, []);
 
   const resetSubtitleSource = useCallback(() => {
     setSubtitleSegments([]);
     setSubtitleSourceId(prevId => prevId + 1);
-    log.info(
+    console.info(
       `[useSubtitleManagement] Subtitle source reset explicitly, incremented source ID.`
     );
   }, []);

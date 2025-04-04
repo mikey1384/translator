@@ -1,7 +1,6 @@
 import { app, dialog, BrowserWindow } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
-import log from 'electron-log';
 import os from 'os';
 
 export class FileManagerError extends Error {
@@ -19,14 +18,15 @@ export class FileManager {
     try {
       this.tempDir = path.join(app.getPath('userData'), 'temp');
     } catch (error) {
-      // Fallback to OS temp directory if app is not ready yet
-      log.warn(
-        'Electron app not ready, using OS temp directory as fallback for FileManager'
+      // Use console.warn instead of log.warn
+      console.warn(
+        'Electron app not ready, using OS temp directory as fallback'
       );
       this.tempDir = path.join(os.tmpdir(), 'translator-electron-temp');
     }
 
-    log.info(`FileManager temp directory: ${this.tempDir}`);
+    // Use console.info instead of log.info
+    console.info(`FileManager initialized. Temp directory: ${this.tempDir}`);
   }
 
   /**
@@ -35,9 +35,11 @@ export class FileManager {
   async ensureTempDir(): Promise<void> {
     try {
       await fs.mkdir(this.tempDir, { recursive: true });
-      log.info(`Temp directory created at: ${this.tempDir}`);
+      // Use console.info instead of log.info
+      console.info(`Temp directory created at: ${this.tempDir}`);
     } catch (error) {
-      log.error('Failed to create temp directory:', error);
+      // Use console.error instead of log.error
+      console.error('Failed to create temp directory:', error);
       throw new FileManagerError(`Failed to create temp directory: ${error}`);
     }
   }
@@ -48,11 +50,12 @@ export class FileManager {
   async cleanup(): Promise<void> {
     try {
       await fs.rm(this.tempDir, { recursive: true, force: true });
-      await fs.mkdir(this.tempDir, { recursive: true });
-      log.info('Temp directory cleaned up');
+      // Use console.info instead of log.info
+      console.info(`Successfully cleaned up temp directory: ${this.tempDir}`);
     } catch (error) {
-      log.error('Error cleaning up temp directory:', error);
-      throw new FileManagerError(`Error cleaning up temp directory: ${error}`);
+      // Use console.error instead of log.error
+      console.error(`Error cleaning up temp directory ${this.tempDir}:`, error);
+      // Don't re-throw, cleanup failure shouldn't crash the app on exit
     }
   }
 
@@ -73,7 +76,7 @@ export class FileManager {
       const { defaultPath, filters } = options;
 
       // Log all parameters for debugging
-      log.info('saveFile called with options:', {
+      console.info('saveFile called with options:', {
         contentLength: content?.length,
         defaultPath,
         hasFilters: Boolean(filters),
@@ -101,11 +104,13 @@ export class FileManager {
       }
 
       await fs.writeFile(selectedPath, content, 'utf8');
-      log.info(`File saved to: ${selectedPath}`);
+      // Use console.info instead of log.info
+      console.info(`File saved to: ${selectedPath}`);
       return selectedPath;
     } catch (error: any) {
       const errorMessage = `Error saving file: ${error.message || error}`;
-      log.error(errorMessage, {
+      // Use console.error instead of log.error
+      console.error(errorMessage, {
         defaultPath: options.defaultPath,
       });
       throw new FileManagerError(errorMessage);
@@ -161,11 +166,13 @@ export class FileManager {
       });
 
       if (result.canceled || result.filePaths.length === 0) {
-        log.info('File open canceled by user.');
+        // Use console.info instead of log.info
+        console.info('File open canceled by user.');
         return { canceled: true, filePaths: [] };
       }
 
-      log.info('Files selected:', result.filePaths);
+      // Use console.info instead of log.info
+      console.info('Files selected:', result.filePaths);
 
       // Optional: Read content for text-based subtitle files
       const subtitleExtensions = ['.srt', '.vtt', '.ass', '.txt']; // Add other text types if needed
@@ -186,7 +193,8 @@ export class FileManager {
                 try {
                   return await fs.readFile(filePath, 'utf8');
                 } catch (readError: any) {
-                  log.error(
+                  // Use console.error instead of log.error
+                  console.error(
                     `Error reading file content for ${filePath}:`,
                     readError
                   );
@@ -199,9 +207,11 @@ export class FileManager {
               return '';
             })
           );
-          log.info('Successfully read content for subtitle files.');
+          // Use console.info instead of log.info
+          console.info('Successfully read content for subtitle files.');
         } catch (contentError: any) {
-          log.error('Error processing file contents:', contentError);
+          // Use console.error instead of log.error
+          console.error('Error processing file contents:', contentError);
           // Decide how to handle partial success, maybe return paths without content?
           return {
             canceled: false,
@@ -219,7 +229,8 @@ export class FileManager {
         fileContents: fileContents,
       };
     } catch (error: any) {
-      log.error('Error opening file dialog:', error);
+      // Use console.error instead of log.error
+      console.error('Error opening file dialog:', error);
       return {
         canceled: false,
         filePaths: [],
@@ -236,10 +247,12 @@ export class FileManager {
       const filename = `temp_${Date.now()}${extension}`;
       const filePath = path.join(this.tempDir, filename);
       await fs.writeFile(filePath, content, 'utf8');
-      log.info(`Temp file written to: ${filePath}`);
+      // Use console.info instead of log.info
+      console.info(`Temp file written to: ${filePath}`);
       return filePath;
     } catch (error) {
-      log.error('Error writing temp file:', error);
+      // Use console.error instead of log.error
+      console.error('Error writing temp file:', error);
       throw new FileManagerError(`Error writing temp file: ${error}`);
     }
   }
@@ -251,7 +264,8 @@ export class FileManager {
     try {
       return await fs.readFile(filePath, 'utf8');
     } catch (error) {
-      log.error(`Error reading file ${filePath}:`, error);
+      // Use console.error instead of log.error
+      console.error(`Error reading file ${filePath}:`, error);
       throw new FileManagerError(`Error reading file: ${error}`);
     }
   }

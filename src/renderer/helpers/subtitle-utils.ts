@@ -210,9 +210,15 @@ export async function openSubtitleWithElectron(): Promise<{
 
     const segments = parseSrt(content);
 
-    return { file, content, segments, filePath };
-  } catch (error) {
-    const errorMessage = String(error);
-    return { error: errorMessage };
+    return {
+      file,
+      content,
+      segments,
+      filePath,
+    };
+  } catch (error: any) {
+    const message = error.message || String(error);
+    console.error('Error opening subtitle file:', message);
+    return { error: `Failed to open subtitle file: ${message}` };
   }
 }

@@ -26,7 +26,6 @@ import {
 import { secondsToSrtTime } from './utils';
 import { useSubtitleNavigation } from './hooks';
 import { useSubtitleEditing } from './hooks/useSubtitleEditing';
-import { useSubtitleSaving } from './hooks/useSubtitleSaving';
 
 import { SrtSegment } from '../../../types/interface';
 import {
@@ -59,6 +58,12 @@ export interface EditSubtitlesProps {
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
   subtitleSourceId?: number;
+  canSaveDirectly: boolean;
+  handleSaveSrt: () => Promise<void>;
+  handleSaveEditedSrtAs: () => Promise<void>;
+  onSrtFileLoaded: (filePath: string) => void;
+  saveError: string;
+  setSaveError: Dispatch<SetStateAction<string>>;
 }
 
 export function EditSubtitles({
@@ -75,7 +80,12 @@ export function EditSubtitles({
   editorRef,
   onSetSubtitlesDirectly,
   reviewedBatchStartIndex,
-  subtitleSourceId,
+  canSaveDirectly,
+  handleSaveSrt,
+  handleSaveEditedSrtAs,
+  onSrtFileLoaded,
+  saveError,
+  setSaveError,
 }: EditSubtitlesProps) {
   /**
    * ------------------------------------------------------
@@ -86,7 +96,6 @@ export function EditSubtitles({
     isPlayingProp || false
   );
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  const [error, setError] = useState<string>('');
   const [mergeFontSize, setMergeFontSize] = useState<number>(24);
   const [mergeStylePreset, setMergeStylePreset] =
     useState<AssStylePresetKey>('Default');
@@ -325,13 +334,13 @@ export function EditSubtitles({
    * Save & Merge Functionality
    * ------------------------------------------------------
    */
-  const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs } =
-    useSubtitleSaving(subtitlesProp, setError, subtitleSourceId);
+  // const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs, notifyFileLoaded } =
+  //   useSubtitleSaving(subtitlesProp, setSaveError /* pass setSaveError */);
 
   return (
     <Section title="Edit Subtitles" overflowVisible>
-      {/* Error display */}
-      {error && (
+      {/* Error display - Use saveError prop now */}
+      {saveError && (
         <div
           className={css`
             color: #dc3545;
@@ -343,7 +352,7 @@ export function EditSubtitles({
             font-size: 14px;
           `}
         >
-          {error}
+          {saveError}
         </div>
       )}
 
@@ -507,15 +516,30 @@ export function EditSubtitles({
   }
 
   async function handleLoadSrtLocal() {
+    setSaveError(''); // Clear save error on new load attempt
+    console.log('Attempting to load SRT file via Electron...');
     const result = await openSubtitleWithElectron();
+
     if (result.error) {
-      setError(`Error loading SRT: ${result.error}`);
-      if (result.error.includes('canceled')) {
-        setError('');
+      if (!result.error.includes('canceled')) {
+        setSaveError(`Error loading SRT: ${result.error}`); // Use setSaveError
+        console.error('[handleLoadSrtLocal] Error:', result.error);
+      } else {
+        console.log('[handleLoadSrtLocal] File selection canceled.');
+        setSaveError(''); // Clear error if canceled
       }
-    } else if (result.segments && onSetSubtitlesDirectly) {
-      onSetSubtitlesDirectly(result.segments);
-      setError('');
+    } else if (result.segments && result.filePath && onSetSubtitlesDirectly) {
+      console.log(
+        `[handleLoadSrtLocal] Successfully loaded SRT: ${result.filePath}, segments count: ${result.segments.length}`
+      );
+      onSetSubtitlesDirectly(result.segments); // Update segments & potentially trigger ID change in parent
+      onSrtFileLoaded(result.filePath); // Call the new callback prop from App.tsx
+      setSaveError(''); // Clear any previous errors on success
+    } else {
+      console.warn('[handleLoadSrtLocal] Unexpected result:', result);
+      setSaveError(
+        'Failed to load SRT file: Unexpected result from file dialog.'
+      ); // Use setSaveError
     }
   }
 
@@ -688,7 +712,7 @@ export function EditSubtitles({
       const fileSizeGB = (videoFile.size / (1024 * 1024 * 1024)).toFixed(2);
       const errorMessage = `Error: Video file size (${fileSizeGB} GB) exceeds the ${limitGB} GB limit. Merge aborted.`;
       console.error(errorMessage);
-      setError(errorMessage); // Display error to the user
+      setSaveError(errorMessage); // Display error to the user
       setMergeStage('Merge aborted due to file size.');
       setIsMergingInProgress(false); // Ensure merging state is reset
       return { success: false, error: errorMessage };

@@ -69,8 +69,7 @@ function SubtitleList({
           }}
         >
           <SubtitleEditor
-            // Use a more stable key if possible, combining index and time
-            key={`${sub.index}-${sub.start}`}
+            key={sub.index}
             sub={sub}
             index={index}
             editingTimes={editingTimes}

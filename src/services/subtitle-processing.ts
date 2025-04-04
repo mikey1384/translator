@@ -9,7 +9,7 @@ import { AI_MODELS } from '../renderer/constants';
 import { SrtSegment } from '../types/interface';
 import Anthropic from '@anthropic-ai/sdk';
 import { OpenAI } from 'openai';
-import log from 'electron-log';
+// import log from 'electron-log';
 
 import {
   GenerateSubtitlesOptions,
@@ -100,7 +100,7 @@ async function generateSubtitlesFromAudio({
         'Could not determine valid audio duration.'
       );
     }
-    log.info(`[${_callId}] Audio duration: ${duration}s`);
+    console.info(`[${_callId}] Audio duration: ${duration}s`);
     progressCallback?.({ percent: ANALYSIS_PROGRESS, stage: 'Audio analyzed' });
 
     const TARGET_CHUNK_DURATION_SECONDS = 10 * 60;
@@ -108,7 +108,7 @@ async function generateSubtitlesFromAudio({
       1,
       Math.ceil(duration / TARGET_CHUNK_DURATION_SECONDS)
     );
-    log.info(
+    console.info(
       `[${_callId}] Calculated ${numChunks} chunks based on ${TARGET_CHUNK_DURATION_SECONDS}s target duration.`
     );
     progressCallback?.({
@@ -134,7 +134,7 @@ async function generateSubtitlesFromAudio({
       );
       createdChunkPaths.push(chunkPath);
 
-      log.info(
+      console.info(
         `[${_callId}] Extracting chunk ${chunkIndex}/${numChunks} (Start: ${startTime.toFixed(3)}s, Duration: ${currentChunkDuration.toFixed(3)}s) to ${chunkPath}`
       );
 
@@ -144,7 +144,7 @@ async function generateSubtitlesFromAudio({
         startTime,
         currentChunkDuration
       );
-      log.info(
+      console.info(
         `[${_callId}] Successfully extracted chunk ${chunkIndex}: ${chunkPath}`
       );
 
@@ -162,7 +162,7 @@ async function generateSubtitlesFromAudio({
           });
 
           try {
-            log.info(
+            console.info(
               `[${_callId}] Sending chunk ${chunkIndex} to OpenAI Whisper API.`
             );
             const fileStream = createFileFromPath(chunkPath);
@@ -173,7 +173,7 @@ async function generateSubtitlesFromAudio({
               response_format: 'srt',
             });
 
-            log.info(
+            console.info(
               `[${_callId}] Received transcription for chunk ${chunkIndex}.`
             );
 
@@ -182,7 +182,7 @@ async function generateSubtitlesFromAudio({
             if (srtContent && typeof srtContent === 'string') {
               chunkSegments = parseSrt(srtContent);
             } else {
-              log.warn(
+              console.warn(
                 `[${_callId}] Received unexpected non-SRT response for chunk ${chunkIndex}:`,
                 response
               );
@@ -206,7 +206,7 @@ async function generateSubtitlesFromAudio({
 
             return chunkSegments;
           } catch (error) {
-            log.error(
+            console.error(
               `[${_callId}] Error transcribing chunk ${chunkIndex} (${chunkPath}):`,
               error
             );
@@ -231,16 +231,16 @@ async function generateSubtitlesFromAudio({
     results.forEach((result, index) => {
       if (result.status === 'fulfilled' && result.value.length > 0) {
         overallSrtSegments.push(...result.value);
-        log.info(
+        console.info(
           `[${_callId}] Added ${result.value.length} segments from chunk ${index + 1}`
         );
       } else if (result.status === 'rejected') {
-        log.error(
+        console.error(
           `[${_callId}] Promise for chunk ${index + 1} rejected:`,
           result.reason
         );
       } else if (result.status === 'fulfilled' && result.value.length === 0) {
-        log.warn(
+        console.warn(
           `[${_callId}] Chunk ${index + 1} processing returned no segments (potentially due to an error).`
         );
       }
@@ -252,7 +252,7 @@ async function generateSubtitlesFromAudio({
       segment.index = index + 1;
     });
 
-    log.info(
+    console.info(
       `[${_callId}] Total segments processed: ${overallSrtSegments.length}`
     );
     progressCallback?.({
@@ -268,7 +268,7 @@ async function generateSubtitlesFromAudio({
     });
     return finalSrtContent;
   } catch (error) {
-    log.error(`[${_callId}] Error in generateSubtitlesFromAudio:`, error);
+    console.error(`[${_callId}] Error in generateSubtitlesFromAudio:`, error);
     progressCallback?.({
       percent: 100,
       stage: 'Error',
@@ -280,18 +280,18 @@ async function generateSubtitlesFromAudio({
           error instanceof Error ? error.message : String(error)
         );
   } finally {
-    log.info(
+    console.info(
       `[${_callId}] Cleaning up ${createdChunkPaths.length} audio chunks...`
     );
     const cleanupPromises = createdChunkPaths.map(chunkPath =>
       fsp
         .unlink(chunkPath)
         .catch(err =>
-          log.warn(`[${_callId}] Failed to delete chunk ${chunkPath}:`, err)
+          console.warn(`[${_callId}] Failed to delete chunk ${chunkPath}:`, err)
         )
     );
     await Promise.allSettled(cleanupPromises);
-    log.info(`[${_callId}] Chunk cleanup finished.`);
+    console.info(`[${_callId}] Chunk cleanup finished.`);
   }
 }
 
@@ -563,7 +563,7 @@ export async function mergeSubtitlesWithVideo(
     progressCallback({ percent: 25, stage: 'Processing video' });
   }
 
-  log.info(
+  console.info(
     `[${operationId}] Target temporary output path (forced MP4): ${tempOutputPath}`
   );
 
@@ -648,7 +648,7 @@ Translate EACH line individually, preserving the line order.
       ) {
         translation = translationResponse.content[0].text;
       } else {
-        log.warn(
+        console.warn(
           'Translation response content was not in the expected format.'
         );
         throw new Error('Unexpected translation response format from Claude.');
@@ -795,7 +795,7 @@ Improved translation for block 3
     ) {
       reviewedContent = reviewResponse.content[0].text;
     } else {
-      log.warn('Review response content was not in the expected format.');
+      console.warn('Review response content was not in the expected format.');
       console.warn(
         `Translation review output format unexpected. Using original translations for this batch.`
       );
