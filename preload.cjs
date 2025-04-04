@@ -210,7 +210,11 @@ const electronAPI = {
     if (!options || !options.url) {
       throw new Error('URL is required for processing.');
     }
-    return ipcRenderer.invoke('process-url', options);
+    // Ensure quality is passed if present, otherwise main handler will default
+    return ipcRenderer.invoke('process-url', {
+      url: options.url,
+      quality: options.quality, // Pass quality option
+    });
   },
   onProcessUrlProgress: callback => {
     try {

@@ -93,7 +93,7 @@ export function EditSubtitles({
     isPlayingProp || false
   );
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  const [mergeFontSize, setMergeFontSize] = useState<number>(24);
+  const [mergeFontSize, setMergeFontSize] = useState<number>(40);
   const [mergeStylePreset, setMergeStylePreset] =
     useState<AssStylePresetKey>('Default');
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);

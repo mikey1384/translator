@@ -5,6 +5,14 @@ import youtubeDl from 'youtube-dl-exec';
 import { exec } from 'child_process';
 import os from 'os';
 
+// Define quality type and mapping
+export type VideoQuality = 'low' | 'mid' | 'high';
+const qualityFormatMap: Record<VideoQuality, string> = {
+  high: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+  mid: 'best[height<=720]',
+  low: 'best[height<=480]',
+};
+
 interface ProgressCallback {
   (progress: { percent: number; stage: string; error?: string | null }): void;
 }
@@ -122,32 +130,36 @@ async function downloadWithYtDlp(
   url: string,
   outputPath: string,
   ytDlpPath: string,
+  quality: VideoQuality = 'high',
   progressCallback?: ProgressCallback
 ): Promise<boolean> {
-  // Try various download options in a sequence, from most likely to succeed to least
+  const formatString = qualityFormatMap[quality] || qualityFormatMap.high;
+  console.log(`Using format string for quality '${quality}': ${formatString}`);
+
+  // Try various download options in a sequence, using the selected format
   const downloadOptions = [
     // Option 1: Try with a referer and user agent but no cookies
     {
       name: 'with referer and user agent',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "mp4/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --no-check-certificates --no-warnings --referer "https://www.youtube.com/" --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" --force-ipv4 --newline --progress`,
+      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString}" --no-check-certificates --no-warnings --referer "https://www.youtube.com/" --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" --force-ipv4 --newline --progress`,
     },
 
     // Option 2: Try with different IP version
     {
       name: 'with IPv6',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "mp4/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --no-check-certificates --no-warnings --force-ipv6 --newline --progress`,
+      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString}" --no-check-certificates --no-warnings --force-ipv6 --newline --progress`,
     },
 
     // Option 3: Just the video URL with minimal options
     {
       name: 'with minimal options',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "mp4/best[ext=mp4]/best" --no-check-certificates --no-warnings --newline --progress`,
+      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString.includes('/') ? formatString.split('/')[1] : formatString}" --no-check-certificates --no-warnings --newline --progress`,
     },
 
     // Option 4: With extra YouTube-specific options
     {
       name: 'with YouTube options',
-      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "mp4/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --no-check-certificates --no-warnings --extractor-args "youtube:player_client=web" --geo-bypass --no-playlist --newline --progress`,
+      args: `"${ytDlpPath}" "${url}" -o "${outputPath}" --format "${formatString}" --no-check-certificates --no-warnings --extractor-args "youtube:player_client=web" --geo-bypass --no-playlist --newline --progress`,
     },
   ];
 
@@ -163,71 +175,92 @@ async function downloadWithYtDlp(
 
       // Execute yt-dlp command with progress tracking
       let lastProgressTime = Date.now();
+      const reportedFinalProgress = false; // Flag to prevent multiple final updates
 
       await new Promise<void>((resolve, reject) => {
+        console.log(`[downloadWithYtDlp] Executing: ${option.args}`);
         const childProcess = exec(option.args);
         let downloadPercent = 0;
 
         childProcess.stdout?.on('data', data => {
           const output = data.toString();
+          console.log(`[downloadWithYtDlp] stdout: ${output.trim()}`);
 
           // Look for percentage indicators in yt-dlp output
-          // Example: [download] 10.5% of 50.00MiB at 2.00MiB/s ETA 00:20
-          const percentMatch = output.match(/\[download\]\s+(\d+\.\d+)%/);
+          const percentMatch = output.match(/\[download\]\s+(\d+\.?\d*)%/);
           if (percentMatch) {
             const newPercent = parseFloat(percentMatch[1]);
-            if (newPercent > downloadPercent) {
+            // Ensure we don't go backwards or prematurely hit 100
+            if (newPercent > downloadPercent && newPercent < 100) {
               downloadPercent = newPercent;
 
-              // Don't report progress too frequently (limit to once per second)
               const now = Date.now();
               if (now - lastProgressTime > 1000) {
                 lastProgressTime = now;
+                // Scale 0-100 download progress to 40%-80% UI progress
+                const uiPercent = 40 + Math.floor(newPercent * 0.4);
                 progressCallback?.({
-                  percent: 40 + Math.floor(newPercent * 0.4), // Scale to 40-80% range
+                  percent: uiPercent,
                   stage: `Downloading video... ${newPercent.toFixed(1)}%`,
                 });
               }
             }
           }
-
-          // Also detect when download has completed
-          if (
-            output.includes('[download] 100%') ||
-            output.includes('Destination:')
-          ) {
-            progressCallback?.({
-              percent: 80,
-              stage: `Download completed, processing video...`,
-            });
-          }
         });
 
         childProcess.stderr?.on('data', data => {
-          console.error(`yt-dlp stderr: ${data.toString()}`);
+          const output = data.toString();
+          console.error(`[downloadWithYtDlp] stderr: ${output.trim()}`);
         });
 
         childProcess.on('error', error => {
-          console.error(`Error with download option ${option.name}:`, error);
+          console.error(
+            `[downloadWithYtDlp] child process error event for ${option.name}:`,
+            error
+          );
           reject(error);
         });
 
         childProcess.on('close', code => {
+          console.log(
+            `[downloadWithYtDlp] child process close event for ${option.name}. Exit code: ${code}`
+          );
           if (code === 0) {
+            // ---- MOVED: Update progress to near-complete *after* successful close ----
+            if (!reportedFinalProgress) {
+              progressCallback?.({
+                percent: 85, // Indicate download part is done, ready to finalize
+                stage: `Download successful, finalizing...`,
+              });
+            }
+            console.log(
+              `[downloadWithYtDlp] Resolving promise for ${option.name} due to close code 0.`
+            );
             resolve();
           } else {
+            console.error(
+              `[downloadWithYtDlp] Rejecting promise for ${option.name} due to close code ${code}.`
+            );
             reject(new Error(`Process exited with code ${code}`));
           }
         });
       });
 
+      console.log(
+        `[downloadWithYtDlp] Promise settled for ${option.name}. Checking file existence...`
+      );
+
       // Verify download was successful
-      if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0) {
-        console.log(`Successfully downloaded video ${option.name}!`);
-        progressCallback?.({
-          percent: 85,
-          stage: `Video download successful, finalizing...`,
-        });
+      const fileExists = fs.existsSync(outputPath);
+      const fileSize = fileExists ? fs.statSync(outputPath).size : 0;
+      console.log(
+        `[downloadWithYtDlp] File check: Exists=${fileExists}, Size=${fileSize}`
+      );
+
+      if (fileExists && fileSize > 0) {
+        console.log(
+          `[downloadWithYtDlp] Successfully downloaded video ${option.name}!`
+        );
         return true;
       }
     } catch (error) {
@@ -243,6 +276,7 @@ async function downloadWithYtDlp(
 async function downloadVideoFromPlatform(
   url: string,
   tempVideoPath: string,
+  quality: VideoQuality = 'high',
   progressCallback?: ProgressCallback
 ): Promise<boolean> {
   progressCallback?.({
@@ -268,6 +302,7 @@ async function downloadVideoFromPlatform(
         url,
         tempVideoPath,
         ytDlpPath,
+        quality,
         progressCallback
       );
 
@@ -288,13 +323,28 @@ async function downloadVideoFromPlatform(
 
     console.log('Falling back to youtube-dl-exec...');
 
-    // Try various options with youtube-dl-exec
-    for (const format of [
+    // Determine formats to try, prioritizing selected quality
+    const selectedFormat = qualityFormatMap[quality] || qualityFormatMap.high;
+    const fallbackFormats = [
       'mp4/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
       'mp4/best[ext=mp4]/best',
       'best',
-    ]) {
+    ];
+    // Ensure selected format is tried first, avoid duplicates
+    const formatsToTry = [
+      selectedFormat,
+      ...fallbackFormats.filter(f => f !== selectedFormat),
+    ];
+
+    console.log(
+      `Trying youtube-dl-exec with formats (quality '${quality}'):`,
+      formatsToTry
+    );
+
+    // Try various options with youtube-dl-exec
+    for (const format of formatsToTry) {
       try {
+        console.log(`Attempting youtube-dl-exec with format: ${format}`);
         await youtubeDl(url, {
           output: tempVideoPath,
           format,
@@ -327,6 +377,7 @@ async function downloadVideoFromPlatform(
 
 export async function processVideoUrl(
   url: string,
+  quality: VideoQuality = 'high',
   progressCallback?: ProgressCallback
 ): Promise<{
   videoPath: string;
@@ -376,6 +427,7 @@ export async function processVideoUrl(
       const downloadSuccess = await downloadVideoFromPlatform(
         url,
         tempVideoPath,
+        quality,
         progressCallback
       );
 

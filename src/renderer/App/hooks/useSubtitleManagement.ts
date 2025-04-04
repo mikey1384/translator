@@ -62,7 +62,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
         ) {
           setIsReceivingPartialResults(true);
           const parsedSegments = parseSrt(safeResult.partialResult);
-          const processedSegments = parsedSegments.map(segment => {
+          const processedSegments = parsedSegments.map((segment: any) => {
             let processedText = segment.text;
             if (segment.text.includes('###TRANSLATION_MARKER###')) {
               if (showOriginalText) {

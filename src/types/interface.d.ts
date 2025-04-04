@@ -15,6 +15,7 @@ import {
   TranslateSubtitlesResult,
 } from './interface'; // Make sure this path is correct
 import { AssStylePresetKey } from '../renderer/constants/subtitle-styles'; // Import the type
+import { VideoQuality } from '../services/url-processor'; // Import the type
 
 // Define a reusable type for the progress event callback
 type ProgressEventCallback = (
@@ -33,7 +34,7 @@ type ProgressEventCallback = (
 // --- Add types for URL Processing --- START ---
 interface ProcessUrlOptions {
   url: string;
-  targetLanguage: string; // Assuming language is needed
+  quality?: VideoQuality; // Add optional quality setting
 }
 
 interface ProcessUrlResult {

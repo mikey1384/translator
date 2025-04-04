@@ -1,4 +1,5 @@
 const path = require('path');
+const { VideoQuality } = require('../dist/services/url-processor'); // Import type if needed
 
 async function handleProcessUrl(event, options) {
   const operationId = `process-url-${Date.now()}-${Math.random()
@@ -27,9 +28,12 @@ async function handleProcessUrl(event, options) {
     // Dynamically import the required service function
     const { processVideoUrl } = require('../dist/services/url-processor');
 
+    // Extract quality, default to 'high' if not provided
+    const quality = options.quality || 'high';
+
     // Execute URL Processing
     sendProgress(0, 'Initializing URL processing...');
-    const result = await processVideoUrl(options.url, progress => {
+    const result = await processVideoUrl(options.url, quality, progress => {
       sendProgress(progress.percent, progress.stage, progress.error);
     });
 

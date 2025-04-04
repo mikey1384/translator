@@ -1,14 +1,15 @@
 import { useState, ChangeEvent, useCallback, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
+import Section from '../components/Section';
+import { colors } from '../styles';
+import { VideoQuality } from '../../services/url-processor'; // Corrected relative path
 import {
   errorMessageStyles,
   selectStyles,
   fileInputWrapperStyles,
 } from '../styles';
-import Button from '../components/Button';
-import ButtonGroup from '../components/ButtonGroup';
-import Section from '../components/Section';
-import { colors } from '../styles';
 
 // Maximum file size in MB
 const MAX_MB = 500;
@@ -247,25 +248,22 @@ export default function GenerateSubtitles({
 }: GenerateSubtitlesProps) {
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [urlInput, setUrlInput] = useState<string>('');
+  const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
+  const [progressStage, setProgressStage] = useState<string>('');
+  const [downloadComplete, setDownloadComplete] = useState<boolean>(false);
+  const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
+    null
+  );
+  const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('high'); // State for quality
+
+  const progressCleanupRef = useRef<(() => void) | null>(null);
 
   // --- Add state for input mode --- START ---
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
   // --- Add state for input mode --- END ---
-
-  // --- Add state for progress display ---
-  const [progressPercent, setProgressPercent] = useState(0);
-  const [progressStage, setProgressStage] = useState('');
-  const progressCleanupRef = useRef<(() => void) | null>(null); // Ref to store cleanup function
-
-  // --- State for Download Completion --- START ---
-  const [downloadComplete, setDownloadComplete] = useState(false);
-  const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
-    null
-  );
-  // --- State for Download Completion --- END ---
 
   // Calculate key status
   const keysSetCount = apiKeyStatus
@@ -309,7 +307,8 @@ export default function GenerateSubtitles({
       // --- Call main process handler to download video ---
       const result = await window.electron.processUrl({
         url: urlInput,
-        targetLanguage, // Although not used for download, keep for consistency
+        quality: downloadQuality, // Pass selected quality
+        // targetLanguage, // Removed as it's not needed for download
       });
 
       // --- Handle result ---
@@ -394,7 +393,8 @@ export default function GenerateSubtitles({
     }
   }, [
     urlInput,
-    targetLanguage,
+    // targetLanguage, // Removed dependency
+    downloadQuality, // Add dependency
     onSetVideoFile,
     progressPercent, // Keep these if needed by listener logic
     progressStage, // Keep these if needed by listener logic
@@ -615,7 +615,7 @@ export default function GenerateSubtitles({
   // --- Function to Save Original Downloaded Video --- END ---
 
   return (
-    <Section title="Generate Subtitles">
+    <Section title="1. Select Video Source">
       {isLoadingKeyStatus && <p>Loading API Key status...</p>}
 
       {!isLoadingKeyStatus && !allKeysSet && (
@@ -764,6 +764,7 @@ export default function GenerateSubtitles({
                   align-items: center;
                   justify-content: center;
                   padding: 5px 0;
+                  gap: 8px; // Add gap between elements
                 `}
               >
                 <label
@@ -791,14 +792,51 @@ export default function GenerateSubtitles({
                   }}
                   disabled={isGenerating || isProcessingUrl}
                 />
+                <div
+                  className={css`
+                    position: relative;
+                    min-width: 120px;
+                  `}
+                >
+                  <label
+                    htmlFor="quality-select"
+                    className={css`
+                      /* Add screen-reader only styles if needed */
+                      position: absolute;
+                      width: 1px;
+                      height: 1px;
+                      margin: -1px;
+                      padding: 0;
+                      overflow: hidden;
+                      clip: rect(0, 0, 0, 0);
+                      border: 0;
+                    `}
+                  >
+                    Quality
+                  </label>
+                  <select
+                    id="quality-select"
+                    value={downloadQuality}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                      setDownloadQuality(e.target.value as VideoQuality)
+                    }
+                    disabled={isProcessingUrl || isGenerating}
+                    className={selectStyles} // Apply existing select styles
+                    style={{ minWidth: '120px' }} // Ensure minimum width
+                  >
+                    <option value="high">High</option>
+                    <option value="mid">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
                 <Button
                   onClick={handleProcessUrl}
-                  disabled={!urlInput || isGenerating || isProcessingUrl}
+                  disabled={!urlInput || isProcessingUrl || isGenerating}
+                  isLoading={isProcessingUrl}
                   size="md"
                   variant="secondary"
-                  isLoading={isProcessingUrl}
                 >
-                  {isProcessingUrl ? 'Processing...' : 'Process'}
+                  {isProcessingUrl ? 'Processing...' : 'Process URL'}
                 </Button>
               </div>
             </div>
