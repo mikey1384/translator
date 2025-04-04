@@ -95,6 +95,9 @@ export default function NativeVideoPlayer({
 
   const [activeSubtitle, setActiveSubtitle] = useState<string>('');
 
+  // Add a state to track subtitle appearance animation
+  const [subtitleVisible, setSubtitleVisible] = useState(false);
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -201,10 +204,15 @@ export default function NativeVideoPlayer({
           }
         }
         if (newSubtitle !== activeSubtitle) {
+          // When subtitle changes, briefly set visibility to false for transition effect
+          if (activeSubtitle) {
+            setSubtitleVisible(false);
+          }
           setActiveSubtitle(newSubtitle);
         }
       } else {
         if (activeSubtitle) {
+          setSubtitleVisible(false);
           setActiveSubtitle('');
         }
       }
@@ -212,15 +220,29 @@ export default function NativeVideoPlayer({
   }, [subtitles, activeSubtitle]);
 
   useEffect(() => {
+    // Handle subtitle visibility with small delay for smooth appearance
+    if (activeSubtitle) {
+      // Small delay to allow for nice fade-in effect
+      const timer = setTimeout(() => {
+        setSubtitleVisible(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setSubtitleVisible(false);
+    }
+  }, [activeSubtitle]);
+
+  // Add back the effect to reset subtitles when the subtitles array changes
+  useEffect(() => {
     setActiveSubtitle('');
   }, [subtitles]);
 
   const subtitleStyles = useCallback(() => {
-    let fontSize = '16px';
+    let fontSize = '18px';
     if (isFullyExpanded) {
-      fontSize = '28px';
+      fontSize = '32px';
     } else if (isExpanded) {
-      fontSize = '22px';
+      fontSize = '24px';
     }
 
     let width = '100%';
@@ -286,26 +308,43 @@ export default function NativeVideoPlayer({
         <div
           className={css`
             position: absolute;
-            bottom: ${isFullyExpanded ? '110px' : '5px'};
+            bottom: ${isFullyExpanded ? '120px' : '10px'};
             left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.75);
+            transform: translateX(-50%)
+              ${subtitleVisible ? 'translateY(0)' : 'translateY(10px)'};
+            background: linear-gradient(
+              to top,
+              rgba(0, 0, 0, 0.85),
+              rgba(0, 0, 0, 0.65)
+            );
             color: white;
-            border-radius: 4px;
+            border-radius: 8px;
+            padding: ${isFullyExpanded ? '12px 18px' : '8px 14px'};
             text-align: center;
-            font-weight: 600;
-            line-height: 1.4;
-            font-family: sans-serif;
+            font-weight: 500;
+            line-height: 1.6;
+            font-family:
+              'Inter',
+              -apple-system,
+              BlinkMacSystemFont,
+              'Segoe UI',
+              Roboto,
+              sans-serif;
+            letter-spacing: 0.01em;
             white-space: pre-line;
             z-index: 1000;
             pointer-events: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
             min-width: 40%;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
+            max-width: ${isFullyExpanded ? '80%' : '90%'};
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             user-select: none;
-            opacity: 0.95;
-            transition: all 0.3s ease;
+            opacity: ${subtitleVisible ? 1 : 0};
+            transition:
+              opacity 0.25s ease,
+              transform 0.25s ease;
+            border: none;
           `}
           style={{
             width: subtitleStyles().width,

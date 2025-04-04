@@ -7,6 +7,7 @@ import { SrtSegment } from '../../../types/interface';
 import { TimestampDisplay } from './TimestampDisplay';
 import throttle from 'lodash/throttle';
 import { colors } from '../../styles';
+import Button from '../../components/Button';
 
 interface StickyVideoPlayerProps {
   videoUrl: string;
@@ -25,6 +26,139 @@ interface StickyVideoPlayerProps {
 const EXPAND_SCROLL_THRESHOLD = 1000;
 // Duration to ignore scroll events after UI interaction (in milliseconds)
 const SCROLL_IGNORE_DURATION = 200;
+
+// --- Add Video Controls Overlay Styles --- START ---
+const videoOverlayControlsStyles = css`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+// Add fullscreen variants of controls styles
+const fullscreenOverlayControlsStyles = css`
+  ${videoOverlayControlsStyles}
+  height: 100px;
+  padding: 0 40px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    transparent 100%
+  );
+  bottom: 20px;
+`;
+
+const seekbarStyles = css`
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    ${colors.primary} 0%,
+    ${colors.primary} var(--seek-before-width, 0%),
+    rgba(255, 255, 255, 0.3) var(--seek-before-width, 0%),
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  border-radius: 4px;
+  outline: none;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: ${colors.light};
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+  }
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: ${colors.light};
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+  }
+`;
+
+// Add fullscreen variant for seekbar
+const fullscreenSeekbarStyles = css`
+  ${seekbarStyles}
+  height: 12px;
+
+  &::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+  &::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+const timeDisplayStyles = css`
+  font-size: 0.9rem;
+  min-width: 50px;
+  text-align: center;
+  font-family: monospace;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+`;
+
+// Add fullscreen variant for time display
+const fullscreenTimeDisplayStyles = css`
+  ${timeDisplayStyles}
+  font-size: 1.2rem;
+  min-width: 70px;
+`;
+
+const transparentButtonStyles = css`
+  background: transparent !important;
+  border: none !important;
+  padding: 5px;
+  color: white;
+  &:hover {
+    color: ${colors.primary};
+  }
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+// Add fullscreen variant for button
+const fullscreenButtonStyles = css`
+  ${transparentButtonStyles}
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+`;
+// --- Add Video Controls Overlay Styles --- END ---
 
 const fixedVideoContainerBaseStyles = css`
   position: fixed;
@@ -132,20 +266,23 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   onScrollToCurrentSubtitle,
   onTogglePlay,
   onShiftAllSubtitles,
+  onUiInteraction,
 }) => {
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showOverlay, setShowOverlay] = useState(false);
+
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const isStickyActive = useRef(false);
   const scrollUpStartPosition = useRef<number | null>(null);
-  // Ref to flag whether to ignore scroll events
   const ignoreScrollRef = useRef(false);
-  // Timeout ref for clearing the ignore flag
   const ignoreScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to handle UI interaction and set ignore flag
@@ -159,7 +296,10 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     ignoreScrollTimeoutRef.current = setTimeout(() => {
       ignoreScrollRef.current = false;
     }, SCROLL_IGNORE_DURATION);
-  }, []);
+
+    // Call the prop if provided
+    if (onUiInteraction) onUiInteraction();
+  }, [onUiInteraction]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -308,7 +448,91 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     };
   }, [isPseudoFullscreen, togglePseudoFullscreen]);
 
+  // Add utility function to format time for the progress bar
+  const formatTime = useCallback((seconds: number): string => {
+    if (isNaN(seconds)) return '00:00';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hrs > 0) {
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }, []);
+
+  // Add effects for tracking video time and playing status
+  useEffect(() => {
+    if (!nativePlayer.instance) return;
+
+    const videoElement = nativePlayer.instance;
+
+    // Update state when video time changes
+    const handleTimeUpdate = () => {
+      setCurrentTime(videoElement.currentTime);
+    };
+
+    // Update duration when available
+    const handleDurationChange = () => {
+      if (!isNaN(videoElement.duration)) {
+        setDuration(videoElement.duration);
+      }
+    };
+
+    // Update play state
+    const updatePlayState = () => {
+      setIsPlaying(!videoElement.paused);
+    };
+
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    videoElement.addEventListener('durationchange', handleDurationChange);
+    videoElement.addEventListener('play', updatePlayState);
+    videoElement.addEventListener('pause', updatePlayState);
+
+    // Initial setup
+    handleTimeUpdate();
+    handleDurationChange();
+    updatePlayState();
+
+    return () => {
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      videoElement.removeEventListener('durationchange', handleDurationChange);
+      videoElement.removeEventListener('play', updatePlayState);
+      videoElement.removeEventListener('pause', updatePlayState);
+    };
+  }, []);
+
+  // Add handlers for the overlay controls
+  const handleSeek = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (nativePlayer.instance) {
+        const seekTime = parseFloat(e.target.value);
+        nativePlayer.instance.currentTime = seekTime;
+        if (onUiInteraction) onUiInteraction();
+      }
+    },
+    [onUiInteraction]
+  );
+
+  const handleOverlayTogglePlay = useCallback(() => {
+    if (onTogglePlay) {
+      onTogglePlay();
+      if (onUiInteraction) onUiInteraction();
+    }
+  }, [onTogglePlay, onUiInteraction]);
+
+  const handlePlayerWrapperHover = useCallback(() => {
+    setShowOverlay(true);
+  }, []);
+
+  const handlePlayerWrapperLeave = useCallback(() => {
+    setShowOverlay(false);
+  }, []);
+
   if (!videoUrl) return null;
+
+  // Calculate progress percentage for the seekbar
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <div ref={containerRef}>
@@ -325,7 +549,11 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         ref={playerRef}
         data-expanded={isExpanded}
       >
-        <div className={playerWrapperStyles(isPseudoFullscreen)}>
+        <div
+          className={playerWrapperStyles(isPseudoFullscreen)}
+          onMouseEnter={handlePlayerWrapperHover}
+          onMouseLeave={handlePlayerWrapperLeave}
+        >
           <NativeVideoPlayer
             videoUrl={videoUrl}
             subtitles={subtitles}
@@ -333,24 +561,136 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
             isExpanded={isExpanded}
             isFullyExpanded={isPseudoFullscreen}
           />
+
+          {/* Modified Video Controls Overlay to work in both modes */}
+          <div
+            className={
+              isPseudoFullscreen
+                ? fullscreenOverlayControlsStyles
+                : videoOverlayControlsStyles
+            }
+            style={{ opacity: showOverlay ? 1 : 0 }}
+          >
+            <Button
+              onClick={handleOverlayTogglePlay}
+              variant="primary"
+              size="sm"
+              className={
+                isPseudoFullscreen
+                  ? fullscreenButtonStyles
+                  : transparentButtonStyles
+              }
+            >
+              {isPlaying ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                </svg>
+              )}
+            </Button>
+
+            <span
+              className={
+                isPseudoFullscreen
+                  ? fullscreenTimeDisplayStyles
+                  : timeDisplayStyles
+              }
+            >
+              {formatTime(currentTime)}
+            </span>
+
+            <div style={{ flexGrow: 1, position: 'relative' }}>
+              <input
+                type="range"
+                min={0}
+                max={duration || 1}
+                value={currentTime}
+                onChange={handleSeek}
+                step="0.1"
+                className={
+                  isPseudoFullscreen ? fullscreenSeekbarStyles : seekbarStyles
+                }
+                style={{ '--seek-before-width': `${progressPercent}%` } as any}
+              />
+            </div>
+
+            <span
+              className={
+                isPseudoFullscreen
+                  ? fullscreenTimeDisplayStyles
+                  : timeDisplayStyles
+              }
+            >
+              {formatTime(duration)}
+            </span>
+
+            {/* Add Fullscreen Button */}
+            <Button
+              onClick={togglePseudoFullscreen}
+              variant="secondary"
+              size="sm"
+              className={
+                isPseudoFullscreen
+                  ? fullscreenButtonStyles
+                  : transparentButtonStyles
+              }
+              title={
+                isPseudoFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'
+              }
+            >
+              {isPseudoFullscreen ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                >
+                  <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z" />
+                </svg>
+              )}
+            </Button>
+          </div>
         </div>
 
-        <div className={controlsWrapperStyles(isExpanded, isPseudoFullscreen)}>
-          <TimestampDisplay
-            videoElement={nativePlayer.instance}
-            onChangeVideo={onChangeVideo}
-            onSrtLoaded={onSrtLoaded}
-            hasSubtitles={subtitles && subtitles.length > 0}
-            onScrollToCurrentSubtitle={onScrollToCurrentSubtitle}
-            isPlaying={isPlaying}
-            onTogglePlay={onTogglePlay}
-            onShiftAllSubtitles={onShiftAllSubtitles}
-            onUiInteraction={handleUiInteraction}
-            isStickyExpanded={isExpanded}
-            isPseudoFullscreen={isPseudoFullscreen}
-            onTogglePseudoFullscreen={togglePseudoFullscreen}
-          />
-        </div>
+        {/* Only show side controls when not in fullscreen mode */}
+        {!isPseudoFullscreen && (
+          <div
+            className={controlsWrapperStyles(isExpanded, isPseudoFullscreen)}
+          >
+            <TimestampDisplay
+              _videoElement={nativePlayer.instance}
+              onChangeVideo={onChangeVideo}
+              onSrtLoaded={onSrtLoaded}
+              hasSubtitles={subtitles && subtitles.length > 0}
+              onScrollToCurrentSubtitle={onScrollToCurrentSubtitle}
+              _isPlaying={isPlaying}
+              _onTogglePlay={onTogglePlay}
+              onShiftAllSubtitles={onShiftAllSubtitles}
+              onUiInteraction={handleUiInteraction}
+              _isStickyExpanded={isExpanded}
+              _isPseudoFullscreen={isPseudoFullscreen}
+              _onTogglePseudoFullscreen={togglePseudoFullscreen}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
