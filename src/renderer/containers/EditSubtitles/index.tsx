@@ -711,7 +711,7 @@ export function EditSubtitles({
     videoFile: File
   ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
     // Define the file size limit (1GB)
-    const fileSizeLimitBytes = 1 * 1024 * 1024 * 1024; // 1 GB
+    const fileSizeLimitBytes = 3 * 1024 * 1024 * 1024; // 1 GB
 
     // Check file size
     if (videoFile.size > fileSizeLimitBytes) {

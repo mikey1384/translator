@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu, shell } from 'electron';
 import path from 'path';
 import isDev from 'electron-is-dev';
 import log from 'electron-log'; // electron-log is already configured by main.cjs
+import electronContextMenu from 'electron-context-menu'; // Import the library
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -15,13 +16,17 @@ function createWindow() {
       preload: path.join(__dirname, 'preload', 'index.js'),
       // Defaults are recommended:
       // sandbox: true, // default in Electron 20+
-      // contextIsolation: true, // default
-      // nodeIntegration: false, // default
-
-      // Add these settings to fix file:// URL video playback issues
-      webSecurity: false, // Allow loading of local resources like videos
-      allowRunningInsecureContent: true, // Allow loading content from file://
+      contextIsolation: true, // Keep true for security
+      nodeIntegration: false, // Keep false for security
+      webSecurity: false, // Required for loading local files sometimes, but use with caution
+      allowRunningInsecureContent: false, // Keep false for security
     },
+  });
+
+  // Initialize the context menu, hiding Inspect Element
+  electronContextMenu({
+    window: mainWindow,
+    showInspectElement: false,
   });
 
   // Load the renderer entry point using loadFile for local HTML
@@ -61,6 +66,85 @@ function createWindow() {
     log.info('[src/main.ts] Main window closed.');
     mainWindow = null;
   });
+
+  // Basic Menu Setup (you might already have this or more)
+  const menuTemplate: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: 'File',
+      submenu: [{ role: 'quit' }],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    {
+      role: 'window',
+      submenu: [{ role: 'minimize' }, { role: 'close' }],
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'Learn More',
+          click: async () => {
+            await shell.openExternal('https://github.com/your-repo'); // Replace with your repo link
+          },
+        },
+      ],
+    },
+  ];
+
+  // macOS specific menu setup
+  if (process.platform === 'darwin') {
+    const name = app.getName();
+    menuTemplate.unshift({
+      label: name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    });
+    // Window menu
+    menuTemplate[4].submenu = [
+      { role: 'close' },
+      { role: 'minimize' },
+      { role: 'zoom' },
+      { type: 'separator' },
+      { role: 'front' },
+    ];
+  }
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 }
 
 // App lifecycle events handled below
@@ -88,6 +172,13 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     log.info('[src/main.ts] Quitting application (not macOS).');
     app.quit();
+  }
+});
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
   }
 });
 

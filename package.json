@@ -105,6 +105,7 @@
     "@types/uuid": "^10.0.0",
     "axios": "^1.8.2",
     "dotenv": "^16.4.7",
+    "electron-context-menu": "^4.0.5",
     "electron-store": "^10.0.1",
     "form-data": "^4.0.2",
     "keytar": "^7.9.0",
