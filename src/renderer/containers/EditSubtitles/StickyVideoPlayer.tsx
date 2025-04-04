@@ -294,12 +294,9 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const ignoreScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Helper function to update expansion state and log changes
-  const updateExpandedState = (newIsExpanded: boolean, reason: string) => {
+  const updateExpandedState = (newIsExpanded: boolean) => {
     setIsExpanded(prevIsExpanded => {
       if (prevIsExpanded !== newIsExpanded) {
-        console.log(
-          `StickyVideo: Setting isExpanded = ${newIsExpanded} (Reason: ${reason})`
-        );
         return newIsExpanded;
       }
       return prevIsExpanded; // No change
@@ -388,7 +385,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         // Set initial sticky state ref
         isStickyActive.current = shouldInitiallyBeSticky;
         // Always start expanded
-        updateExpandedState(true, 'Initial Load');
+        updateExpandedState(true);
         // Notify parent of initial sticky state
         if (onStickyChange) onStickyChange(shouldInitiallyBeSticky);
         // Log initial calculation details
@@ -432,7 +429,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
       // 2. Disable scroll-based expand/shrink when in pseudo-fullscreen
       if (isPseudoFullscreen) {
-        updateExpandedState(true, 'Pseudo Fullscreen Active');
+        updateExpandedState(true);
         // lastScrollY is already updated above
         return;
       }
@@ -443,7 +440,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       if (shouldBeSticky) {
         // Handle becoming sticky (if not already)
         if (!isStickyActive.current) {
-          updateExpandedState(true, 'Becoming Sticky');
+          updateExpandedState(true);
           isStickyActive.current = true;
           if (onStickyChange) onStickyChange(true);
         }
@@ -452,12 +449,12 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         // Use the calculated scrollDelta from before the early return checks
         if (scrollDelta < 0) {
           // Equivalent to isScrollingUp
-          updateExpandedState(true, 'Scrolling Up');
+          updateExpandedState(true);
         } else {
           // Scrolling DOWN or stopped: Shrink only if scrolled DOWN significantly
           if (scrollDelta > buffer) {
             // Check delta is positive (down) AND exceeds buffer
-            updateExpandedState(false, 'Scrolling Down (Buffer Exceeded)');
+            updateExpandedState(false);
           }
         }
         // --- End Simplified Logic ---
@@ -465,7 +462,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         // Not sticky anymore
         // Handle becoming non-sticky (if was sticky)
         if (isStickyActive.current) {
-          updateExpandedState(true, 'Becoming Non-Sticky');
+          updateExpandedState(true);
           isStickyActive.current = false;
           if (onStickyChange) onStickyChange(false);
         }
