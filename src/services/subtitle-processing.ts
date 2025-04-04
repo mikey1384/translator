@@ -1,6 +1,6 @@
 import path from 'path';
 import { FFmpegService } from './ffmpeg-service';
-import { parseSrt, buildSrt } from '../renderer/helpers/subtitle-utils';
+import { parseSrt, buildSrt } from '../renderer/helpers';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import keytar from 'keytar';
@@ -450,10 +450,7 @@ export async function generateSubtitlesFromVideo({
     // --- Wrap audio extraction in try/catch and pass signal --- END ---
 
     // Check for cancellation
-    if (
-      signal?.aborted ||
-      cancellationService.isOperationActive(operationId) === false
-    ) {
+    if (signal?.aborted) {
       throw new Error('Operation cancelled');
     }
 
@@ -475,10 +472,7 @@ export async function generateSubtitlesFromVideo({
     });
 
     // Check for cancellation
-    if (
-      signal?.aborted ||
-      cancellationService.isOperationActive(operationId) === false
-    ) {
+    if (signal?.aborted) {
       throw new Error('Operation cancelled');
     }
 
@@ -504,10 +498,7 @@ export async function generateSubtitlesFromVideo({
       batchStart += TRANSLATION_BATCH_SIZE
     ) {
       // Check cancellation
-      if (
-        signal.aborted ||
-        cancellationService.isOperationActive(operationId) === false
-      ) {
+      if (signal.aborted) {
         throw new Error('Operation cancelled');
       }
 
@@ -559,10 +550,7 @@ export async function generateSubtitlesFromVideo({
       batchStart < segmentsInProcess.length;
       batchStart += REVIEW_BATCH_SIZE
     ) {
-      if (
-        signal?.aborted ||
-        cancellationService.isOperationActive(operationId) === false
-      ) {
+      if (signal?.aborted) {
         throw new Error('Operation cancelled');
       }
 
@@ -607,10 +595,7 @@ export async function generateSubtitlesFromVideo({
       });
     }
 
-    if (
-      signal?.aborted ||
-      cancellationService.isOperationActive(operationId) === false
-    ) {
+    if (signal?.aborted) {
       throw new Error('Operation cancelled');
     }
 
@@ -649,7 +634,6 @@ export async function generateSubtitlesFromVideo({
     // Check if operation was actually cancelled
     if (
       signal?.aborted ||
-      cancellationService.isOperationActive(operationId) === false ||
       (error instanceof Error && error.message === 'Operation cancelled')
     ) {
       console.info(
@@ -799,10 +783,7 @@ async function translateBatch({
   signal,
 }: TranslateBatchArgs): Promise<any[]> {
   // Check for early cancellation using both signal and cancellationService (explicitly checking for false)
-  if (
-    signal?.aborted ||
-    cancellationService.isOperationActive(operationId) === false
-  ) {
+  if (signal?.aborted) {
     // Log using the destructured operationId
     console.info(
       `[${operationId}] Translation batch cancelled before starting`
@@ -844,10 +825,7 @@ Translate EACH line individually, preserving the line order.
 
   while (retryCount < MAX_RETRIES) {
     // Check for cancellation before each retry attempt
-    if (
-      signal?.aborted ||
-      cancellationService.isOperationActive(operationId) === false
-    ) {
+    if (signal?.aborted) {
       console.info(
         `[${operationId}] Translation batch cancelled during retry check.`
       );
@@ -933,11 +911,7 @@ Translate EACH line individually, preserving the line order.
 
       // --- Modify error handling for cancellation --- START ---
       // Check specifically for AbortError or cancellation signal
-      if (
-        err.name === 'AbortError' ||
-        signal?.aborted ||
-        cancellationService.isOperationActive(operationId) === false
-      ) {
+      if (err.name === 'AbortError' || signal?.aborted) {
         console.info(
           `[${operationId}] Translation batch detected cancellation signal/error.`
         );
@@ -1000,10 +974,7 @@ async function reviewTranslationBatch(
   parentOperationId: string = 'review-batch'
 ): Promise<any[]> {
   // Check for early cancellation (explicitly checking for false)
-  if (
-    signal?.aborted ||
-    cancellationService.isOperationActive(parentOperationId) === false
-  ) {
+  if (signal?.aborted) {
     console.info(`[Review] Review batch cancelled before starting`);
     throw new Error('Operation cancelled');
   }
@@ -1135,10 +1106,7 @@ Improved translation for block 3
 
   try {
     // --- Add explicit check before API call --- START ---
-    if (
-      signal?.aborted ||
-      cancellationService.isOperationActive(parentOperationId) === false
-    ) {
+    if (signal?.aborted) {
       console.info(
         `[Review] Review batch (${parentOperationId}) cancelled just before API call`
       );
@@ -1214,11 +1182,7 @@ Improved translation for block 3
 
     // --- Modify error handling for cancellation --- START ---
     // Check specifically for AbortError or cancellation signal
-    if (
-      error.name === 'AbortError' ||
-      signal?.aborted ||
-      cancellationService.isOperationActive(parentOperationId) === false
-    ) {
+    if (error.name === 'AbortError' || signal?.aborted) {
       console.info(
         `[Review] Review batch (${parentOperationId}) detected cancellation signal/error.`
       );
@@ -1233,6 +1197,8 @@ Improved translation for block 3
     return batch.segments; // Return original segments on other errors
   }
 }
+
+// --- Helper Functions Restored --- START ---
 
 function extendShortSubtitleGaps(
   segments: SrtSegment[],
@@ -1300,3 +1266,5 @@ function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
 
   return adjustedSegments;
 }
+
+// --- Helper Functions Restored --- END ---

@@ -2,7 +2,7 @@ import { useState, ChangeEvent } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
-import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
+import { openSubtitleWithElectron } from '../../helpers';
 import { SrtSegment } from '../../../types/interface';
 
 interface TimestampDisplayProps {

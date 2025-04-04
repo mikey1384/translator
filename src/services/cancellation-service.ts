@@ -68,11 +68,15 @@ export class CancellationService {
    * @returns true if operation is registered and not cancelled, false if cancelled, undefined if never registered
    */
   public isOperationActive(operationId: string): boolean | undefined {
-    // If the operation doesn't exist in our map, it was never registered (not cancelled)
-    if (!this.operations.has(operationId)) {
-      return undefined; // undefined means "unknown/never registered"
+    const operation = this.getOperation(operationId);
+    if (!operation) {
+      return undefined; // Operation ID not found in the map
     }
-    // If it exists, it's active
+    // Check the signal status if a controller exists
+    if (operation.controller?.signal.aborted) {
+      return false; // Operation exists but was cancelled via signal
+    }
+    // If it exists and is not aborted (or has no controller), consider it active
     return true;
   }
 
@@ -139,8 +143,11 @@ export class CancellationService {
         `[CancellationService] Aborting controller for operation ${operationId}`
       );
       try {
-        operation.controller.abort();
-        cancelled = true;
+        // Only abort if not already aborted
+        if (!operation.controller.signal.aborted) {
+          operation.controller.abort();
+        }
+        cancelled = true; // Mark as cancelled even if already aborted
       } catch (error) {
         console.error(
           `[CancellationService] Error aborting controller: ${error}`
@@ -148,11 +155,10 @@ export class CancellationService {
       }
     }
 
-    // Remove from active operations map
+    // Log the outcome
     if (cancelled) {
-      this.operations.delete(operationId);
       console.log(
-        `[CancellationService] Successfully cancelled operation ${operationId}`
+        `[CancellationService] Cancellation signals sent for operation ${operationId}`
       );
     }
 

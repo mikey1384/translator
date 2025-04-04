@@ -774,7 +774,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
           isCancelling = (ffmpegProcess as any).wasCancelled === true;
           // --- Check the wasCancelled flag set by the CancellationService --- END ---
           // Always unregister when the process ends
-          cancellationService.unregisterOperation(operationId);
           console.info(
             `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid}) - Was Explicitly Cancelled: ${isCancelling}`
           );
@@ -806,7 +805,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       ffmpegProcess.on('error', (err: Error) => {
         if (operationId) {
-          cancellationService.unregisterOperation(operationId);
           console.info(
             `[${operationId}] FFmpeg process errored (PID: ${ffmpegProcess.pid})`
           );

@@ -21,7 +21,7 @@ import {
   openSubtitleWithElectron,
   buildSrt,
   fixOverlappingSegments,
-} from '../../helpers/subtitle-utils';
+} from '../../helpers';
 
 import { secondsToSrtTime } from './utils';
 import { useSubtitleNavigation } from './hooks';
@@ -89,11 +89,6 @@ export function EditSubtitles({
   saveError,
   setSaveError,
 }: EditSubtitlesProps) {
-  /**
-   * ------------------------------------------------------
-   * State Management
-   * ------------------------------------------------------
-   */
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
@@ -102,22 +97,10 @@ export function EditSubtitles({
   const [mergeStylePreset, setMergeStylePreset] =
     useState<AssStylePresetKey>('Default');
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
-
-  // For controlling a timed auto‐pause
   const playTimeoutRef = useRef<number | null>(null);
-
-  // Subtitle DOM references
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // If the user passed in a custom `secondsToSrtTime`, use that; otherwise fallback
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
 
-  /**
-   * ------------------------------------------------------
-   * Initialization & Updates
-   * ------------------------------------------------------
-   */
-  // Load saved merge settings from localStorage on mount
   useEffect(() => {
     console.log(
       '[EditSubtitles] Attempting to load settings from localStorage...'
@@ -449,14 +432,7 @@ export function EditSubtitles({
               display: flex;
               flex-direction: column;
               gap: 15px;
-              margin-bottom: 80px; /* Keep margin for fixed bar */
-
-              .highlight-subtitle {
-                /* Keep highlight style */
-              }
-              @keyframes highlight-pulse {
-                /* Keep keyframes */
-              }
+              margin-bottom: 80px;
             `}`}
           >
             <SubtitleList

@@ -35,7 +35,7 @@ function initializeSubtitleHandlers(services) {
     );
   }
 
-  console.info('[subtitle-handlers] Initialized.');
+  console.info('[subtitle-handlers] Initialized!');
 }
 
 async function handleGenerateSubtitles(event, options) {
@@ -47,9 +47,7 @@ async function handleGenerateSubtitles(event, options) {
   console.log(`[handleGenerateSubtitles] Operation ID: ${operationId}`);
 
   // Register the operation with the cancellation service
-  cancellationService?.registerOperation(operationId, {
-    signal,
-  });
+  cancellationService?.registerOperation(operationId, controller);
 
   // We'll store a temp path if we need to create a temp video file
   let tempVideoPath = null;

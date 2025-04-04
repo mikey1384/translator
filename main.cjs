@@ -15,12 +15,16 @@ const urlHandler = require('./handlers/url-handler.cjs');
 const utilityHandlers = require('./handlers/utility-handlers.cjs');
 // --- Require handler modules --- END ---
 
+// --- Restore single instance lock --- START ---
+
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   console.info('Another instance is already running. Quitting...');
   app.quit();
   process.exit(0);
 }
+
+// --- Restore single instance lock --- END ---
 
 console.info('Loading application...');
 
