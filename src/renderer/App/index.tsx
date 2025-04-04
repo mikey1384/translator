@@ -325,6 +325,9 @@ function AppContent() {
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
                 onTogglePlay={handleTogglePlay}
                 onShiftAllSubtitles={handleShiftAllSubtitles}
+                isProgressBarVisible={
+                  isMergingInProgress || isTranslationInProgress
+                }
               />
             )}
 

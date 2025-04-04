@@ -10,6 +10,7 @@ import { colors } from '../../styles';
 import Button from '../../components/Button';
 
 interface StickyVideoPlayerProps {
+  isProgressBarVisible: boolean;
   videoUrl: string;
   subtitles: SrtSegment[];
   onPlayerReady: (player: any) => void;
@@ -256,6 +257,7 @@ const placeholderStyles = (height: number) => css`
 `;
 
 const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
+  isProgressBarVisible,
   videoUrl,
   subtitles,
   onPlayerReady,
@@ -732,7 +734,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
       <div
         className={`${fixedVideoContainerStyles(
-          isExpanded,
+          isExpanded && !isProgressBarVisible,
           isPseudoFullscreen
         )} sticky-video-container ${isExpanded ? 'expanded' : 'shrunk'} ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
         ref={playerRef}
