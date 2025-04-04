@@ -58,6 +58,7 @@ export interface EditSubtitlesProps {
   editorRef?: React.RefObject<{ scrollToCurrentSubtitle: () => void }>;
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
+  subtitleSourceId?: number;
 }
 
 export function EditSubtitles({
@@ -74,6 +75,7 @@ export function EditSubtitles({
   editorRef,
   onSetSubtitlesDirectly,
   reviewedBatchStartIndex,
+  subtitleSourceId,
 }: EditSubtitlesProps) {
   /**
    * ------------------------------------------------------
@@ -324,7 +326,7 @@ export function EditSubtitles({
    * ------------------------------------------------------
    */
   const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs } =
-    useSubtitleSaving(subtitlesProp, setError);
+    useSubtitleSaving(subtitlesProp, setError, subtitleSourceId);
 
   return (
     <Section title="Edit Subtitles" overflowVisible>
@@ -677,6 +679,21 @@ export function EditSubtitles({
   async function handleMergeVideoWithSubtitles(
     videoFile: File
   ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
+    // Define the file size limit (1GB)
+    const fileSizeLimitBytes = 1 * 1024 * 1024 * 1024; // 1 GB
+
+    // Check file size
+    if (videoFile.size > fileSizeLimitBytes) {
+      const limitGB = fileSizeLimitBytes / (1024 * 1024 * 1024);
+      const fileSizeGB = (videoFile.size / (1024 * 1024 * 1024)).toFixed(2);
+      const errorMessage = `Error: Video file size (${fileSizeGB} GB) exceeds the ${limitGB} GB limit. Merge aborted.`;
+      console.error(errorMessage);
+      setError(errorMessage); // Display error to the user
+      setMergeStage('Merge aborted due to file size.');
+      setIsMergingInProgress(false); // Ensure merging state is reset
+      return { success: false, error: errorMessage };
+    }
+
     // Generate operationId here
     const operationId = `merge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     currentMergeOperationIdRef.current = operationId; // Set the ref immediately

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SrtSegment } from '../../../types/interface';
 import { parseSrt, buildSrt, fixOverlappingSegments } from '../../helpers';
+import log from 'electron-log';
 
 export function useSubtitleManagement(showOriginalText: boolean) {
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
@@ -13,12 +14,17 @@ export function useSubtitleManagement(showOriginalText: boolean) {
   const [reviewedBatchStartIndex, setReviewedBatchStartIndex] = useState<
     number | null
   >(null);
+  const [subtitleSourceId, setSubtitleSourceId] = useState(0);
 
   const handlePartialResultRef = useRef<any>(null);
 
   const handleSetSubtitleSegments = useCallback(
     (segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])) => {
       setSubtitleSegments(segments);
+      setSubtitleSourceId(prevId => prevId + 1);
+      log.info(
+        `[useSubtitleManagement] Segments set externally, incremented source ID.`
+      );
     },
     []
   );
@@ -76,6 +82,10 @@ export function useSubtitleManagement(showOriginalText: boolean) {
             const prevSrt = buildSrt(prevSegments);
             return newSrt !== prevSrt ? processedSegments : prevSegments;
           });
+          setSubtitleSourceId(prevId => prevId + 1);
+          log.info(
+            `[useSubtitleManagement] Subtitles generated, incremented source ID.`
+          );
         }
 
         setTranslationProgress(safeResult.percent);
@@ -95,6 +105,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       setTranslationStage,
       setIsReceivingPartialResults,
       setReviewedBatchStartIndex,
+      setSubtitleSourceId,
     ]
   );
 
@@ -147,15 +158,25 @@ export function useSubtitleManagement(showOriginalText: boolean) {
     }
   }, []);
 
+  const resetSubtitleSource = useCallback(() => {
+    setSubtitleSegments([]);
+    setSubtitleSourceId(prevId => prevId + 1);
+    log.info(
+      `[useSubtitleManagement] Subtitle source reset explicitly, incremented source ID.`
+    );
+  }, []);
+
   return {
     subtitleSegments,
-    handleSetSubtitleSegments, // Renamed to setSubtitleSegmentsDirectly in AppContent potentially
+    handleSetSubtitleSegments,
     isTranslationInProgress,
     translationProgress,
     translationStage,
     setIsTranslationInProgress,
     isReceivingPartialResults,
     reviewedBatchStartIndex,
+    subtitleSourceId,
     handleSubtitlesGenerated,
+    resetSubtitleSource,
   };
 }

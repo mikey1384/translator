@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, ChangeEvent } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
-import ButtonGroup from '../../components/ButtonGroup';
 import Button from '../../components/Button';
 import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 import { SrtSegment } from '../../../types/interface';
@@ -17,6 +16,8 @@ interface TimestampDisplayProps {
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onUiInteraction?: () => void;
   isStickyExpanded?: boolean;
+  isPseudoFullscreen?: boolean;
+  onTogglePseudoFullscreen?: () => void;
 }
 
 // Simple input style similar to time inputs in editor - Updated for Dark Theme
@@ -53,6 +54,8 @@ export function TimestampDisplay({
   onSrtLoaded,
   onUiInteraction,
   isStickyExpanded = true,
+  isPseudoFullscreen = false,
+  onTogglePseudoFullscreen,
 }: TimestampDisplayProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -171,12 +174,9 @@ export function TimestampDisplay({
     <div
       className={css`
         display: flex;
-        flex-direction: column;
         height: 100%;
         width: 100%;
         box-sizing: border-box;
-        padding: 8px 12px;
-        padding-top: 16px;
         font-family:
           'system-ui',
           -apple-system,
@@ -185,35 +185,84 @@ export function TimestampDisplay({
         color: ${colors.dark};
         border-radius: 8px;
         font-size: 14px;
+        ${isPseudoFullscreen
+          ? `
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 24px;
+          background: transparent;
+        `
+          : `
+          flex-direction: column;
+          padding: 8px 12px;
+          padding-top: 16px;
+          justify-content: space-between;
+          height: 100%;
+        `}
       `}
     >
-      {/* Top Buttons Section */}
-      <div
-        className={css`
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          width: 100%;
-          margin-bottom: 12px;
-          > div > button,
-          > div > label {
-            height: 40px;
-            box-sizing: border-box;
+      {/* Top Buttons Section - Conditionally rendered */}
+      {!isPseudoFullscreen && (
+        <div
+          className={css`
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
             width: 100%;
-          }
-        `}
-      >
-        {onChangeVideo && (
+            margin-bottom: 8px;
+            > div > button,
+            > div > label {
+              height: 40px;
+              box-sizing: border-box;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+            }
+          `}
+        >
+          {onChangeVideo && (
+            <Button
+              asFileInput
+              accept="video/*"
+              onFileChange={handleVideoChange}
+              variant="secondary"
+              size="sm"
+              title="Load a different video file"
+            >
+              <div
+                className={css`
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                `}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>Change Video</span>
+              </div>
+            </Button>
+          )}
           <Button
-            asFileInput
-            accept="video/*"
-            onFileChange={handleVideoChange}
             variant="secondary"
             size="sm"
-            title="Load a different video file"
+            onClick={handleSrtLoad}
+            title={
+              hasSubtitles ? 'Load a different SRT file' : 'Load an SRT file'
+            }
           >
             <div
               className={css`
@@ -223,8 +272,8 @@ export function TimestampDisplay({
               `}
             >
               <svg
-                width="16"
-                height="16"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -232,372 +281,362 @@ export function TimestampDisplay({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
-              <span>Change Video</span>
+              <span>{hasSubtitles ? 'Change SRT' : 'Add SRT'}</span>
             </div>
           </Button>
-        )}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleSrtLoad}
-          title={
-            hasSubtitles ? 'Load a different SRT file' : 'Load an SRT file'
-          }
-        >
-          <div
-            className={css`
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-            `}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            <span>{hasSubtitles ? 'Change SRT' : 'Add SRT'}</span>
-          </div>
-        </Button>
-      </div>
+        </div>
+      )}
 
-      {/* Wrapper for Time, Playback, and Bottom Buttons - Pushed Down */}
+      {/* Combined controls area - Adapts based on fullscreen */}
       <div
         className={css`
-          margin-top: auto;
           display: flex;
-          flex-direction: column;
-          gap: 8px;
+          width: 100%;
+          ${isPseudoFullscreen
+            ? `
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between; 
+            gap: 15px;
+            padding: 10px 20px;
+          `
+            : `
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+            justify-content: center;
+          `}
         `}
       >
-        {/* Time display - Now directly above Playback Controls */}
+        {/* Left side controls (Play, Scroll) OR Play/Time for fullscreen */}
         <div
           className={css`
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 13px;
-            color: ${colors.gray};
-            width: 100%;
-            text-align: center;
+            gap: 10px;
+            ${isPseudoFullscreen ? 'flex-grow: 1;' : ''}
+            ${!isPseudoFullscreen ? 'width: 100%;' : ''}
           `}
         >
-          <div
-            className={css`
-              display: flex;
-              gap: 8px;
-              align-items: center;
-              font-family: monospace;
-            `}
-          >
-            <span
+          {onTogglePlay && (
+            <Button
+              onClick={() => {
+                if (onUiInteraction) {
+                  onUiInteraction();
+                }
+                if (onTogglePlay) {
+                  onTogglePlay();
+                }
+              }}
+              variant={isPseudoFullscreen ? 'primary' : 'primary'}
+              size="sm"
               className={css`
-                font-weight: 500;
-                color: ${colors.dark};
+                ${isPseudoFullscreen
+                  ? `
+                  padding: 8px 14px;
+                  border-radius: 6px;
+                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                  svg {
+                    width: 20px;
+                    height: 20px;
+                  }
+                `
+                  : ''}
               `}
             >
-              {formatTime(currentTime)}
-            </span>
-            <span>/</span>
-            <span
-              className={css`
-                font-weight: 500;
-                color: ${colors.dark};
-              `}
-            >
-              {formatTime(duration)}
-            </span>
-          </div>
-        </div>
+              {isPlaying ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={isPseudoFullscreen ? '20' : '16'}
+                  height={isPseudoFullscreen ? '20' : '16'}
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={isPseudoFullscreen ? '20' : '16'}
+                  height={isPseudoFullscreen ? '20' : '16'}
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                </svg>
+              )}
+            </Button>
+          )}
 
-        {/* Playback Controls Section */}
-        <div
-          className={css`
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-          `}
-        >
-          {/* Progress wrapper */}
-          <div
+          {/* Time/Seek Bar - Always show, adjusts layout */}
+          <span
             className={css`
-              width: 100%;
-              position: relative;
-              height: 20px;
-              display: flex;
-              align-items: center;
+              font-size: ${isPseudoFullscreen ? '1.1rem' : '0.8rem'};
+              min-width: 45px;
+              text-align: right;
+              font-family: monospace;
+              color: white;
+              ${isPseudoFullscreen
+                ? 'text-shadow: 0 1px 2px rgba(0,0,0,0.8);'
+                : ''}
             `}
           >
-            {/* Buffered progress bar - Positioned absolutely within the new wrapper */}
+            {formatTime(currentTime)}
+          </span>
+          <div
+            className={css`
+              flex-grow: 1;
+              position: relative;
+              height: 12px;
+              cursor: pointer;
+            `}
+          >
+            <input
+              type="range"
+              min={0}
+              max={duration || 1}
+              value={currentTime}
+              onChange={handleSeek}
+              step="0.1"
+              className={css`
+                width: 100%;
+                height: 6px;
+                cursor: pointer;
+                appearance: none;
+                ${isPseudoFullscreen
+                  ? `
+                  height: 8px;
+                  &::-webkit-slider-thumb {
+                    width: 18px !important;
+                    height: 18px !important;
+                  }
+                  &::-moz-range-thumb {
+                    width: 18px !important;
+                    height: 18px !important;
+                  }
+                `
+                  : ''}
+                background: linear-gradient(
+                  to right,
+                  ${colors.primary} 0%,
+                  ${colors.primary} ${(
+                  (currentTime / (duration || 1)) *
+                  100
+                ).toFixed(1)}%,
+                  rgba(255, 255, 255, 0.3) ${(
+                  (currentTime / (duration || 1)) *
+                  100
+                ).toFixed(1)}%,
+                  rgba(255, 255, 255, 0.3) 100%
+                );
+                border-radius: 3px;
+                outline: none;
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 2;
+                margin: 0;
+                &::-webkit-slider-thumb {
+                  appearance: none;
+                  width: 14px;
+                  height: 14px;
+                  background: ${colors.light};
+                  border-radius: 50%;
+                  cursor: pointer;
+                  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+                }
+                &::-moz-range-thumb {
+                  width: 14px;
+                  height: 14px;
+                  background: ${colors.light};
+                  border-radius: 50%;
+                  cursor: pointer;
+                  border: none;
+                  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+                }
+              `}
+            />
+            {/* Buffered range visual */}
             <div
               className={css`
                 position: absolute;
                 top: 50%;
                 transform: translateY(-50%);
                 left: 0;
-                height: 8px;
-                background-color: ${colors.gray};
-                border-radius: 4px;
-                pointer-events: none;
-                z-index: 0;
-              `}
-              style={{ width: bufferedWidth }}
-            />
-            {/* Slider (seek bar) - Ensure it overlaps buffer correctly */}
-            <input
-              type="range"
-              min="0"
-              max={duration || 0}
-              value={currentTime}
-              step="0.1"
-              aria-label="Video Seek"
-              className={css`
-                -webkit-appearance: none;
-                appearance: none;
-                width: 100%;
-                height: 8px;
-                border-radius: 4px;
-                background: ${colors.light};
-                outline: none;
-                cursor: pointer;
-                position: relative;
+                height: 6px;
+                background-color: rgba(255, 255, 255, 0.5);
+                width: ${bufferedWidth};
+                border-radius: 3px;
                 z-index: 1;
-                margin: 0;
-                vertical-align: middle;
-
-                &::-webkit-slider-thumb {
-                  -webkit-appearance: none;
-                  appearance: none;
-                  width: 18px;
-                  height: 18px;
-                  border-radius: 50%;
-                  background: ${colors.primary};
-                  cursor: pointer;
-                  border: 2px solid ${colors.white};
-                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-                  position: relative;
-                  z-index: 10;
-                  transition: transform 0.1s ease;
-                  margin-top: -5px;
-                }
-
-                &::-moz-range-thumb {
-                  width: 18px;
-                  height: 18px;
-                  border-radius: 50%;
-                  background: ${colors.primary};
-                  cursor: pointer;
-                  border: 2px solid ${colors.white};
-                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-                  position: relative;
-                  z-index: 10;
-                  transition: transform 0.1s ease;
-                  margin-top: -5px;
-                }
-
-                &::-webkit-slider-runnable-track {
-                  height: 8px;
-                  border-radius: 4px;
-                  background: ${colors.light};
-                  cursor: pointer;
-                }
-                &::-moz-range-track {
-                  height: 8px;
-                  border-radius: 4px;
-                  background: ${colors.light};
-                  cursor: pointer;
-                }
-
-                &:hover::-webkit-slider-thumb {
-                  background: ${colors.primaryDark || colors.primary};
-                  transform: scale(1.2);
-                }
-                &:hover::-moz-range-thumb {
-                  background: ${colors.primaryDark || colors.primary};
-                  transform: scale(1.2);
-                }
-
-                &:active::-webkit-slider-thumb {
-                  transform: scale(1.3);
-                }
-                &:active::-moz-range-thumb {
-                  transform: scale(1.3);
-                }
+                pointer-events: none;
               `}
-              onChange={handleSeek}
-              disabled={!videoElement}
             />
           </div>
+          <span
+            className={css`
+              font-size: ${isPseudoFullscreen ? '1.1rem' : '0.8rem'};
+              min-width: 45px;
+              text-align: left;
+              font-family: monospace;
+              color: white;
+              ${isPseudoFullscreen
+                ? 'text-shadow: 0 1px 2px rgba(0,0,0,0.8);'
+                : ''}
+            `}
+          >
+            {formatTime(duration)}
+          </span>
+        </div>
 
-          {/* NEW Row for Play/Pause and Find Current */}
+        {/* Bottom Controls Section - For non-fullscreen mode only */}
+        {!isPseudoFullscreen && (
           <div
             className={css`
               display: flex;
-              justify-content: center;
-              gap: 8px;
+              flex-wrap: wrap;
+              gap: 10px;
               width: 100%;
+              margin-top: 8px;
             `}
           >
-            {/* Play/Pause Button - Moved inside new row */}
-            {onTogglePlay && (
-              <Button
-                onClick={() => {
-                  if (onUiInteraction) {
-                    onUiInteraction();
-                  }
-                  if (onTogglePlay) {
-                    onTogglePlay();
-                  }
-                }}
-                variant={isPlaying ? 'danger' : 'primary'}
-                size="sm"
-                className={css`
-                  display: inline-flex;
-                  align-items: center;
-                  gap: 6px;
-                  min-width: 70px;
-                `}
-              >
-                {isPlaying ? (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
-                    </svg>
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
-                    </svg>
-                    Play
-                  </>
-                )}
-              </Button>
-            )}
+            {/* Left side - Scroll to Current */}
+            <div
+              className={css`
+                display: flex;
+                gap: 8px;
+                flex: 1;
+                min-width: 100px;
+              `}
+            >
+              {onScrollToCurrentSubtitle && hasSubtitles && (
+                <Button
+                  onClick={onScrollToCurrentSubtitle}
+                  title="Scroll to current subtitle"
+                  size="sm"
+                  variant="secondary"
+                  className={css`
+                    white-space: nowrap;
+                  `}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 5v14M5 12l7 7 7-7" />
+                  </svg>
+                  <span
+                    className={css`
+                      margin-left: 6px;
+                    `}
+                  >
+                    Scroll to Current
+                  </span>
+                </Button>
+              )}
+            </div>
 
-            {/* Find Current Button - Moved inside new row */}
-            {hasSubtitles && onScrollToCurrentSubtitle && (
+            {/* Center - Fullscreen Toggle */}
+            {onTogglePseudoFullscreen && (
               <Button
-                onClick={onScrollToCurrentSubtitle}
-                variant="secondary"
+                onClick={onTogglePseudoFullscreen}
+                title={
+                  isPseudoFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'
+                }
                 size="sm"
-                title="Scroll to the subtitle currently being shown in the video"
+                variant={isPseudoFullscreen ? 'primary' : 'secondary'}
+                className={css`
+                  white-space: nowrap;
+                  ${isPseudoFullscreen
+                    ? `
+                    padding: 8px 14px;
+                    border-radius: 6px;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                    svg {
+                      width: 20px;
+                      height: 20px;
+                    }
+                  `
+                    : ''}
+                `}
               >
                 <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ marginRight: '6px' }}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={isPseudoFullscreen ? '20' : '16'}
+                  height={isPseudoFullscreen ? '20' : '16'}
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
                 >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <polyline points="19 12 12 19 5 12" />
+                  {isPseudoFullscreen ? (
+                    // Exit fullscreen icon
+                    <path d="M5.5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 .5-.5zm-10 5.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm10 0a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm10 0a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm-5.5 5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zM10.5 11a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z" />
+                  ) : (
+                    // Enter fullscreen icon
+                    <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z" />
+                  )}
                 </svg>
-                Find Current
+                <span
+                  className={css`
+                    margin-left: 6px;
+                  `}
+                >
+                  {isPseudoFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                </span>
               </Button>
             )}
-          </div>
-        </div>
 
-        {/* Bottom Buttons Section */}
-        <div
-          className={css`
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-          `}
-        >
-          <ButtonGroup
-            spacing="sm"
-            mobileStack={false}
-            className={css`
-              flex-wrap: wrap;
-              justify-content: center;
-              width: 100%;
-              ${!isStickyExpanded &&
-              css`
-                button,
-                > div > button {
-                }
-                > div:last-child {
-                  display: flex;
-                  width: 100%;
-                  > input {
-                    flex-grow: 1;
-                  }
-                  margin-bottom: 0;
-                }
+            {/* Right side - Shift Controls */}
+            <div
+              className={css`
+                display: flex;
+                gap: 8px;
+                flex: 1;
+                justify-content: flex-end;
+                min-width: 180px;
               `}
-            `}
-          >
-            {/* ... Shift All Group ... */}
-            {hasSubtitles && onShiftAllSubtitles && (
-              <div
-                className={css`
-                  display: flex;
-                  align-items: center;
-                `}
-              >
-                <input
-                  type="number"
-                  value={shiftAmount}
-                  onChange={e => setShiftAmount(e.target.value)}
-                  step="0.1"
-                  placeholder="Offset (s)"
-                  className={shiftInputStyles}
-                  aria-label="Shift all subtitles by seconds"
-                />
-                <Button
-                  onClick={handleApplyShift}
-                  variant="secondary"
-                  size="sm"
-                  title="Apply shift to all subtitles"
-                  disabled={
-                    isNaN(parseFloat(shiftAmount)) ||
-                    parseFloat(shiftAmount) === 0
-                  }
+            >
+              {onShiftAllSubtitles && hasSubtitles && isStickyExpanded && (
+                <div
+                  className={css`
+                    display: flex;
+                    align-items: center;
+                  `}
                 >
-                  Shift All
-                </Button>
-              </div>
-            )}
-          </ButtonGroup>
-        </div>
+                  <input
+                    type="number"
+                    value={shiftAmount}
+                    onChange={e => setShiftAmount(e.target.value)}
+                    onBlur={handleApplyShift}
+                    onKeyDown={e => e.key === 'Enter' && handleApplyShift()}
+                    className={shiftInputStyles}
+                    step="0.1"
+                    placeholder="Shift (s)"
+                    title="Shift all subtitles by seconds (+/-)"
+                  />
+                  <Button
+                    onClick={handleApplyShift}
+                    size="sm"
+                    variant="secondary"
+                    title="Apply subtitle shift"
+                  >
+                    Apply Shift
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

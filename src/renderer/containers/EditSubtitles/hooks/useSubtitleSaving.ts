@@ -2,6 +2,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   Dispatch,
   SetStateAction,
 } from 'react';
@@ -18,29 +19,41 @@ interface UseSubtitleSavingReturn {
 
 export function useSubtitleSaving(
   subtitles: SrtSegment[] | undefined,
-  setError: Dispatch<SetStateAction<string>>
+  setError: Dispatch<SetStateAction<string>>,
+  subtitleSourceId?: number
 ): UseSubtitleSavingReturn {
   const [canSaveDirectly, setCanSaveDirectly] = useState(false);
-  // State to hold the original file name suggestion if needed (can be derived)
-  // const [originalSrtFile, setOriginalSrtFile] = useState<File | null>(null); // Maybe not needed here
+  const lastSavePathRef = useRef<string | null>(null);
 
-  // Check localStorage for original path on mount and when subtitles change
-  // (Might need adjustment if subtitles reference changes too often)
   useEffect(() => {
-    const path = localStorage.getItem('originalSrtPath');
-    setCanSaveDirectly(!!path);
-  }, [subtitles]); // Re-check if subtitles change slightly (e.g., length), might be too sensitive
+    const initialPath = localStorage.getItem('originalSrtPath');
+    if (initialPath) {
+      lastSavePathRef.current = initialPath;
+      setCanSaveDirectly(true);
+    } else {
+      lastSavePathRef.current = null;
+      setCanSaveDirectly(false);
+    }
+  }, []);
 
-  // Function to save SRT content directly to the original path
+  useEffect(() => {
+    if (subtitleSourceId !== undefined && subtitleSourceId > 0) {
+      console.log(
+        '[useSubtitleSaving] Subtitle source changed, clearing last save path.'
+      );
+      lastSavePathRef.current = null;
+      setCanSaveDirectly(false);
+    }
+  }, [subtitleSourceId]);
+
   const handleSaveSrt = useCallback(async () => {
-    const originalPath = localStorage.getItem('originalSrtPath');
+    const currentSavePath = lastSavePathRef.current;
     console.log('[useSubtitleSaving] Attempting to save directly...');
 
-    if (!originalPath) {
+    if (!currentSavePath) {
       console.warn(
         '[useSubtitleSaving] No original path found. Redirecting to Save As...'
       );
-      // Redirect to Save As if no path exists
       await handleSaveEditedSrtAs();
       return;
     }
@@ -56,17 +69,17 @@ export function useSubtitleSaving(
 
       const saveOptions = {
         content: srtContent,
-        filePath: originalPath,
+        filePath: currentSavePath,
       };
 
-      console.log(`[useSubtitleSaving] Saving content to: ${originalPath}`);
+      console.log(`[useSubtitleSaving] Saving content to: ${currentSavePath}`);
       const result = await saveFileWithRetry(saveOptions);
 
       if (result?.filePath) {
         console.log(
           `[useSubtitleSaving] File saved successfully to: ${result.filePath}`
         );
-        alert('File saved successfully!'); // Consider a less intrusive notification
+        alert('File saved successfully!');
       } else if (result.error) {
         setError(`Save failed: ${result.error}`);
         console.error(`[useSubtitleSaving] Save failed: ${result.error}`);
@@ -78,7 +91,6 @@ export function useSubtitleSaving(
     }
   }, [subtitles, setError]);
 
-  // Function to save edited SRT content to a new file path
   const handleSaveEditedSrtAs = useCallback(async () => {
     if (!subtitles || subtitles.length === 0) {
       setError('No subtitle content to save.');
@@ -86,16 +98,14 @@ export function useSubtitleSaving(
     }
 
     try {
-      // Suggest a filename (can refine this logic)
-      const originalSavedPath = localStorage.getItem('originalSrtPath');
+      const currentSavePath = lastSavePathRef.current;
       let suggestedName = DEFAULT_FILENAME;
-      if (originalSavedPath) {
-        suggestedName = originalSavedPath;
+      if (currentSavePath) {
+        suggestedName = currentSavePath;
       } else {
         // Fallback if no original path, maybe check loaded video/srt file name?
       }
 
-      // Ensure it ends with .srt
       if (!suggestedName.toLowerCase().endsWith('.srt')) {
         const nameWithoutExt = suggestedName.includes('.')
           ? suggestedName.substring(0, suggestedName.lastIndexOf('.'))
@@ -125,12 +135,7 @@ export function useSubtitleSaving(
         console.log(
           `[useSubtitleSaving] Storing new path from Save As: ${result.filePath}`
         );
-        // Update localStorage with the *new* path for subsequent direct saves
-        localStorage.setItem('originalSrtPath', result.filePath);
-        // Maybe clear other related paths?
-        localStorage.setItem('originalLoadPath', result.filePath);
-        localStorage.setItem('targetPath', result.filePath);
-        // Update state to enable direct save button
+        lastSavePathRef.current = result.filePath;
         setCanSaveDirectly(true);
 
         alert(`File saved successfully to:\n${result.filePath}`);

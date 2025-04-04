@@ -278,7 +278,6 @@ export default function NativeVideoPlayer({
         muted={false}
         crossOrigin="anonymous"
         onError={() => setErrorMessage('Video playback error')}
-        controls
       >
         Your browser does not support HTML5 video.
       </video>
@@ -287,7 +286,7 @@ export default function NativeVideoPlayer({
         <div
           className={css`
             position: absolute;
-            bottom: 5px;
+            bottom: ${isFullyExpanded ? '110px' : '5px'};
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.75);

@@ -26,42 +26,93 @@ const EXPAND_SCROLL_THRESHOLD = 1000;
 // Duration to ignore scroll events after UI interaction (in milliseconds)
 const SCROLL_IGNORE_DURATION = 200;
 
-const fixedVideoContainerStyles = (isExpanded: boolean) => css`
+const fixedVideoContainerBaseStyles = css`
   position: fixed;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: ${isExpanded ? 'calc(90% - 30px)' : 'calc(85% - 30px)'};
-  max-height: ${isExpanded ? '60vh' : '25vh'};
-  padding: ${isExpanded ? '15px' : '10px'};
   z-index: 100;
   background-color: rgba(30, 30, 30, 0.75);
   backdrop-filter: blur(12px);
-  border-radius: 0 0 8px 8px;
   border: 1px solid ${colors.border};
-  margin-bottom: 0;
   display: flex;
   flex-direction: row;
   align-items: stretch;
   gap: 15px;
   overflow: visible;
   transition: all 0.3s ease-out;
-
-  @media (max-height: 700px) {
-    max-height: ${isExpanded ? '50vh' : '20vh'};
-  }
 `;
 
-const playerWrapperStyles = css`
+const fixedVideoContainerStyles = (
+  isExpanded: boolean,
+  isPseudoFullscreen: boolean
+) => css`
+  ${fixedVideoContainerBaseStyles}
+
+  ${isPseudoFullscreen
+    ? `
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    transform: none;
+    padding: 0;
+    border-radius: 0;
+    z-index: 9999;
+    background-color: black;
+    gap: 0; /* Adjust gap for fullscreen */
+    flex-direction: column; /* Stack elements vertically */
+  `
+    : `
+    width: ${isExpanded ? 'calc(90% - 30px)' : 'calc(85% - 30px)'};
+    max-height: ${isExpanded ? '60vh' : '25vh'};
+    padding: ${isExpanded ? '15px' : '10px'};
+    border-radius: 0 0 8px 8px;
+    margin-bottom: 0;
+
+    @media (max-height: 700px) {
+      max-height: ${isExpanded ? '50vh' : '20vh'};
+    }
+  `}
+`;
+
+const playerWrapperStyles = (isPseudoFullscreen: boolean) => css`
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 0;
   position: relative;
+  ${isPseudoFullscreen
+    ? 'height: 100%;'
+    : ''}/* Take full height in fullscreen */
 `;
 
-const controlsWrapperStyles = (isExpanded: boolean) => css`
+const controlsWrapperStyles = (
+  isExpanded: boolean,
+  isPseudoFullscreen: boolean
+) => css`
   flex-shrink: 0;
-  width: ${isExpanded ? '280px' : '240px'};
+  transition: background-color 0.3s ease;
+  ${isPseudoFullscreen
+    ? `
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0; // Use right: 0 instead of width: 100%
+    width: 100%;
+    height: 100px; /* Increase height for fullscreen controls */
+    background-color: transparent; // Default to transparent
+    border-top: none; // Remove border when overlaying
+    z-index: 10; // Ensure it's above the video wrapper
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.95); // Darker, more opaque background
+      border-top: 1px solid ${colors.border}; // Show border on hover
+    }
+  `
+    : `
+    width: ${isExpanded ? '280px' : '240px'};
+    border-top: 1px solid ${colors.border}; // Keep border for non-fullscreen
+  `}
 `;
 
 const placeholderStyles = (height: number) => css`
@@ -85,6 +136,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
@@ -149,6 +201,12 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       const placeholderTop = placeholderRef.current?.offsetTop ?? 0;
       const buffer = 30;
 
+      // Disable scroll-based expand/shrink when in pseudo-fullscreen
+      if (isPseudoFullscreen) {
+        if (!isExpanded) setIsExpanded(true); // Ensure it's expanded in fullscreen
+        return;
+      }
+
       const shouldBeSticky = currentScrollY > placeholderTop;
 
       if (shouldBeSticky) {
@@ -199,7 +257,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       handleScroll.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onStickyChange]);
+  }, [onStickyChange, isPseudoFullscreen]);
 
   useEffect(() => {
     if (!nativePlayer.instance) return;
@@ -218,6 +276,38 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     };
   }, []);
 
+  // --- New: Toggle Pseudo Fullscreen Function ---
+  const togglePseudoFullscreen = useCallback(() => {
+    setIsPseudoFullscreen(prev => !prev);
+    // Optionally, pause/play video or trigger other actions
+    // If entering fullscreen, might want to hide scrollbars
+    if (!isPseudoFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    // Recalculate layout or trigger re-render if necessary
+    window.dispatchEvent(new Event('resize'));
+  }, [isPseudoFullscreen]);
+
+  // --- New: Handle Escape key to exit pseudo-fullscreen ---
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isPseudoFullscreen) {
+        togglePseudoFullscreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      // Ensure body overflow is reset if component unmounts while fullscreen
+      if (isPseudoFullscreen) {
+        document.body.style.overflow = '';
+      }
+    };
+  }, [isPseudoFullscreen, togglePseudoFullscreen]);
+
   if (!videoUrl) return null;
 
   return (
@@ -229,21 +319,23 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
       <div
         className={`${fixedVideoContainerStyles(
-          isExpanded
-        )} sticky-video-container ${isExpanded ? 'expanded' : 'shrunk'}`}
+          isExpanded,
+          isPseudoFullscreen
+        )} sticky-video-container ${isExpanded ? 'expanded' : 'shrunk'} ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
         ref={playerRef}
         data-expanded={isExpanded}
       >
-        <div className={playerWrapperStyles}>
+        <div className={playerWrapperStyles(isPseudoFullscreen)}>
           <NativeVideoPlayer
             videoUrl={videoUrl}
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
             isExpanded={isExpanded}
+            isFullyExpanded={isPseudoFullscreen}
           />
         </div>
 
-        <div className={controlsWrapperStyles(isExpanded)}>
+        <div className={controlsWrapperStyles(isExpanded, isPseudoFullscreen)}>
           <TimestampDisplay
             videoElement={nativePlayer.instance}
             onChangeVideo={onChangeVideo}
@@ -255,6 +347,8 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
             onShiftAllSubtitles={onShiftAllSubtitles}
             onUiInteraction={handleUiInteraction}
             isStickyExpanded={isExpanded}
+            isPseudoFullscreen={isPseudoFullscreen}
+            onTogglePseudoFullscreen={togglePseudoFullscreen}
           />
         </div>
       </div>

@@ -619,6 +619,7 @@ try {
     };
 
     let downloadedVideoPath = null;
+    let finalVideoPathFromLog = null; // Variable to store the definitive path
 
     try {
       // --- Validation ---
@@ -651,24 +652,41 @@ try {
         progress: true,
         progressTemplate:
           'download-title:%(info.title)s %(progress._percent_str)s of %(progress._total_bytes_str)s at %(progress._speed_str)s ETA %(progress._eta_str)s',
+        // --- Add merge output format flag --- START ---
+        mergeOutputFormat: 'mp4', // Explicitly ask for mp4 container
       });
 
       ytdlProcess.stdout.on('data', data => {
         const output = data.toString();
         console.log(`[${operationId}] yt-dlp stdout:`, output.trim());
+
+        // --- Try to capture the MERGED path first --- START ---
+        const mergerMatch = output.match(
+          /\[Merger\] Merging formats into "(.*)"/
+        );
+        if (mergerMatch && mergerMatch[1]) {
+          finalVideoPathFromLog = mergerMatch[1].trim();
+          console.log(
+            `[${operationId}] CAPTURED MERGED PATH: ${finalVideoPathFromLog}`
+          );
+        }
+        // --- Try to capture the MERGED path first --- END ---
+
         // Extract progress and update renderer
         const progressMatch = output.match(
           /\[download\]\s+(\d+\.\d+)% of.*? ETA (\S+)/
         );
-        // --- Capture Destination Path --- START ---
+
+        // Only use destination path if merge path wasn't found
         const destinationMatch = output.match(/\[download\] Destination: (.*)/);
         if (destinationMatch && destinationMatch[1]) {
-          downloadedVideoPath = destinationMatch[1].trim();
-          console.log(
-            `[${operationId}] Captured destination path: ${downloadedVideoPath}`
-          );
+          if (!finalVideoPathFromLog) {
+            finalVideoPathFromLog = destinationMatch[1].trim();
+            console.log(
+              `[${operationId}] CAPTURED DESTINATION PATH (fallback): ${finalVideoPathFromLog}`
+            );
+          }
         }
-        // --- Capture Destination Path --- END ---
 
         if (progressMatch) {
           const percent = parseFloat(progressMatch[1]);
@@ -693,30 +711,47 @@ try {
       console.log(`[${operationId}] yt-dlp process finished.`);
       sendProgress({ percent: 100, stage: 'Download complete.' });
 
-      // --- Use the captured path --- START ---
-      if (!downloadedVideoPath) {
+      // --- Add Robustness Check --- START ---
+      if (!finalVideoPathFromLog) {
         throw new Error(
           'Could not determine the downloaded video file path from yt-dlp output.'
         );
       }
+
+      // Verify the final file exists after the process completes
+      try {
+        await fs.promises.access(finalVideoPathFromLog, fs.constants.R_OK);
+        console.log(
+          `[${operationId}] Verified final file exists: ${finalVideoPathFromLog}`
+        );
+      } catch (accessError) {
+        console.error(
+          `[${operationId}] ERROR: Final video file not accessible after download: ${finalVideoPathFromLog}`,
+          accessError
+        );
+        throw new Error(
+          `Downloaded video file is missing or inaccessible: ${path.basename(finalVideoPathFromLog)}`
+        );
+      }
+      // --- Add Robustness Check --- END ---
+
       console.log(
-        `[${operationId}] Using captured downloaded video file: ${downloadedVideoPath}`
+        `[${operationId}] Using final captured video file: ${finalVideoPathFromLog}`
       );
-      // --- Use the captured path --- END ---
 
       // Get file size
-      const stats = await fs.promises.stat(downloadedVideoPath);
+      const stats = await fs.promises.stat(finalVideoPathFromLog);
       const fileSize = stats.size;
 
       // Create a file:// URL that the renderer can use directly
-      const fileUrl = `file://${downloadedVideoPath.replace(/ /g, '%20')}`;
+      const fileUrl = `file://${finalVideoPathFromLog.replace(/ /g, '%20')}`;
       console.log(`[${operationId}] Created file URL: ${fileUrl}`);
 
       // Return success with downloaded file info
       return {
         success: true,
-        videoPath: downloadedVideoPath,
-        filename: path.basename(downloadedVideoPath),
+        videoPath: finalVideoPathFromLog,
+        filename: path.basename(finalVideoPathFromLog),
         size: fileSize,
         fileUrl: fileUrl, // Direct file URL for the renderer
         operationId,

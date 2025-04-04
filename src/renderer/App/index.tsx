@@ -89,6 +89,8 @@ function AppContent() {
     isReceivingPartialResults,
     reviewedBatchStartIndex,
     handleSubtitlesGenerated, // Use the handler from the hook
+    subtitleSourceId, // Get the source ID
+    resetSubtitleSource, // Get the reset function
   } = useSubtitleManagement(showOriginalText); // Pass showOriginalText
 
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -105,6 +107,10 @@ function AppContent() {
 
   const handleSetVideoFile = useCallback(
     (file: File | any | null) => {
+      // --- Reset subtitle source before changing video --- START ---
+      resetSubtitleSource();
+      // --- Reset subtitle source before changing video --- END ---
+
       // Clean up previous object URL if it exists
       if (videoUrl && !videoUrl.startsWith('file://')) {
         // Only revoke if it's an object URL, not a file:// URL
@@ -140,7 +146,7 @@ function AppContent() {
         handleSetSubtitleSegments([]);
       }
     },
-    [videoUrl, handleSetSubtitleSegments]
+    [videoUrl, resetSubtitleSource]
   );
 
   const handleSetIsPlaying = useCallback((playing: boolean) => {
@@ -290,6 +296,7 @@ function AppContent() {
                   editorRef={editSubtitlesMethodsRef}
                   onSetSubtitlesDirectly={handleSetSubtitleSegments}
                   reviewedBatchStartIndex={reviewedBatchStartIndex}
+                  subtitleSourceId={subtitleSourceId}
                 />
               </div>
             </div>
