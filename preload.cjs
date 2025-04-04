@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+console.log('[preload.cjs] Script start');
+
 const electronAPI = {
   // Test methods
   ping: async () => {
@@ -255,9 +257,43 @@ const electronAPI = {
     return ipcRenderer.invoke('readFileContent', filePath);
   },
   // === Add readFileContent === END ===
+
+  // --- Add Find-in-Page Functions ---
+  sendFindInPage: options => {
+    ipcRenderer.send('find-in-page', options);
+  },
+  sendStopFind: () => {
+    ipcRenderer.send('stop-find');
+  },
+  onShowFindBar: callback => {
+    console.log('[preload.cjs] Setting up onShowFindBar listener');
+    const listener = () => callback();
+    ipcRenderer.on('show-find-bar', listener);
+    // Return cleanup function
+    return () => {
+      console.log('[preload.cjs] Cleaning up onShowFindBar listener');
+      ipcRenderer.removeListener('show-find-bar', listener);
+    };
+  },
+  onFindResults: callback => {
+    console.log('[preload.cjs] Setting up onFindResults listener');
+    const listener = (event, results) => callback(results);
+    ipcRenderer.on('find-results', listener);
+    // Return cleanup function
+    return () => {
+      console.log('[preload.cjs] Cleaning up onFindResults listener');
+      ipcRenderer.removeListener('find-results', listener);
+    };
+  },
+  // --- End Find-in-Page Functions ---
 };
 
-// Expose the API to the renderer process
-contextBridge.exposeInMainWorld('electron', electronAPI);
+// Expose your API
+try {
+  contextBridge.exposeInMainWorld('electron', electronAPI);
+  console.log('[preload.cjs] contextBridge.exposeInMainWorld succeeded');
+} catch (error) {
+  console.error('[preload.cjs] Error exposing preload APIs:', error);
+}
 
-console.log('Preload script initialized successfully');
+console.log('[preload.cjs] Script end');

@@ -556,6 +556,44 @@ function StickyVideoPlayer({
     };
   }, []);
 
+  // Add keyboard shortcut handler for time seeking with arrow keys
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Handle escape key for fullscreen toggle
+      if (e.key === 'Escape' && isPseudoFullscreen) {
+        togglePseudoFullscreen();
+        e.preventDefault();
+        return;
+      }
+
+      // Handle arrow keys for seeking if player is ready
+      if (nativePlayer.instance) {
+        const videoElement = nativePlayer.instance;
+        const currentTime = videoElement.currentTime;
+        const duration = videoElement.duration || 0;
+
+        switch (e.key) {
+          case 'ArrowRight':
+            // Skip forward 10 seconds
+            console.log('Seeking forward 10 seconds from StickyVideoPlayer');
+            videoElement.currentTime = Math.min(currentTime + 10, duration);
+            if (onUiInteraction) onUiInteraction();
+            e.preventDefault();
+            break;
+
+          case 'ArrowLeft':
+            // Skip backward 10 seconds
+            console.log('Seeking backward 10 seconds from StickyVideoPlayer');
+            videoElement.currentTime = Math.max(currentTime - 10, 0);
+            if (onUiInteraction) onUiInteraction();
+            e.preventDefault();
+            break;
+        }
+      }
+    },
+    [isPseudoFullscreen, togglePseudoFullscreen, onUiInteraction]
+  );
+
   if (!videoUrl) return null;
 
   // Calculate progress percentage for the seekbar
@@ -569,6 +607,8 @@ function StickyVideoPlayer({
         )} sticky-video-container shrunk ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
         ref={playerRef}
         style={{ top: isPseudoFullscreen ? 0 : progressBarHeight }}
+        tabIndex={0} // Make container focusable
+        onKeyDown={handleKeyDown} // Handle keyboard events at this level
       >
         <div
           className={playerWrapperStyles(isPseudoFullscreen)}
@@ -580,6 +620,7 @@ function StickyVideoPlayer({
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
             isFullyExpanded={isPseudoFullscreen}
+            parentRef={playerRef} // Pass the parent ref
           />
 
           {/* Modified Video Controls Overlay to work in both modes */}

@@ -11,10 +11,6 @@ import {
   fileInputWrapperStyles,
 } from '../styles';
 
-// Maximum file size in MB
-const MAX_MB = 500;
-const MAX_FILE_SIZE = MAX_MB * 1024 * 1024;
-
 // Expanded and grouped languages
 const languageGroups = [
   {
@@ -499,11 +495,6 @@ export default function GenerateSubtitles({
       }
 
       if (file) {
-        if (file.size > MAX_FILE_SIZE) {
-          setError(`File exceeds ${MAX_MB}MB limit`);
-          onSetVideoFile(null);
-          return;
-        }
         onSetVideoFile(file);
         setUrlInput('');
       } else {

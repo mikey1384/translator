@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 import BackToTopButton from '../components/BackToTopButton';
 import SettingsPage from '../containers/SettingsPage';
@@ -9,6 +9,7 @@ import GenerateSubtitles from '../containers/GenerateSubtitles';
 import MergingProgressArea from '../containers/MergingProgressArea';
 import TranslationProgressArea from '../containers/TranslationProgressArea';
 import LogoDisplay from '../components/LogoDisplay';
+import FindBar from '../components/FindBar';
 
 import { ManagementContextProvider } from '../context';
 import { SrtSegment } from '../../types/interface';
@@ -18,14 +19,20 @@ import { useApiKeyStatus } from './hooks/useApiKeyStatus';
 import { useSubtitleManagement } from './hooks/useSubtitleManagement';
 import { useSubtitleSaving } from '../containers/EditSubtitles/hooks/useSubtitleSaving';
 
-import { pageWrapperStyles, containerStyles } from '../styles';
+import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import { css } from '@emotion/css';
-import { colors } from '../styles';
 
+// Define FindResults type
+type FindResults = {
+  matches: number;
+  activeMatchOrdinal: number;
+};
+
+// --- Restore Local Style Definitions ---
 const headerRightGroupStyles = css`
   display: flex;
   align-items: center;
-  gap: 15px; // Gap between logo and button
+  gap: 15px;
 `;
 
 const headerStyles = css`
@@ -33,7 +40,7 @@ const headerStyles = css`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-  gap: 15px; // Add gap between title and right group
+  gap: 15px;
 `;
 
 const settingsButtonStyles = css`
@@ -63,6 +70,7 @@ const mainContentStyles = css`
   flex-grow: 1;
   position: relative;
 `;
+// --- End Restore Local Style Definitions ---
 
 function AppContent() {
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -102,6 +110,14 @@ function AppContent() {
 
   // State for save error (still needed for display, set by the hook via prop)
   const [saveError, setSaveError] = useState<string>('');
+
+  // --- Find Bar State ---
+  const [isFindBarVisible, setIsFindBarVisible] = useState(false);
+  const [findResults, setFindResults] = useState<FindResults>({
+    matches: 0,
+    activeMatchOrdinal: 0,
+  });
+  // --- End Find Bar State ---
 
   // Callback for when Save As completes
   const handleSaveAsComplete = useCallback((newFilePath: string) => {
@@ -279,39 +295,101 @@ function AppContent() {
     setSaveError(''); // Clear any previous save errors on successful load
   }, []);
 
+  // --- Find Bar Listeners ---
+  useEffect(() => {
+    console.log('[AppContent] Find Bar useEffect running.');
+    if (!window.electron) {
+      console.error('[AppContent] window.electron is NOT defined!');
+      return;
+    }
+
+    console.log('[AppContent] Checking preload functions:', {
+      onShowFindBarExists: typeof window.electron.onShowFindBar === 'function',
+      onFindResultsExists: typeof window.electron.onFindResults === 'function',
+    });
+
+    if (
+      typeof window.electron.onShowFindBar !== 'function' ||
+      typeof window.electron.onFindResults !== 'function'
+    ) {
+      console.error(
+        '[AppContent] Required find functions NOT available on window.electron!'
+      );
+      return;
+    }
+
+    console.log('[AppContent] Attempting to set up find listeners...');
+    const cleanupShowListener = window.electron.onShowFindBar(() => {
+      console.log('[AppContent] Show find bar triggered');
+      setIsFindBarVisible(true);
+    });
+
+    const cleanupResultsListener = window.electron.onFindResults(results => {
+      console.log('[AppContent] Find results received:', results);
+      setFindResults({
+        matches: results.matches,
+        activeMatchOrdinal: results.activeMatchOrdinal,
+      });
+    });
+    console.log('[AppContent] Find listeners potentially set up.');
+
+    return () => {
+      console.log('[AppContent] Cleaning up find listeners.');
+      cleanupShowListener();
+      cleanupResultsListener();
+    };
+  }, []); // Runs once on mount
+  // --- End Find Bar Listeners ---
+
+  const handleCloseFindBar = useCallback(() => {
+    setIsFindBarVisible(false);
+    window.electron?.sendStopFind();
+  }, []);
+
+  // Callback from Header to navigate back from Settings
+  const handleBackFromSettings = () => {
+    setShowSettings(false);
+    // Optionally refetch key status when returning from settings
+    fetchKeyStatus();
+  };
+
+  // Function to handle video player readiness
+  function handleVideoPlayerReady(player: any) {
+    setVideoPlayerRef(player);
+    if (player) {
+      setIsPlaying(!player.paused); // Update isPlaying based on initial player state
+    }
+  }
+
   return (
     <div className={pageWrapperStyles}>
-      <div
-        id="top-padding"
-        style={{ height: videoUrl ? 'CALC(35vh + 2rem)' : '10px' }}
-      ></div>
+      {/* --- FindBar Render (Moved near top) --- */}
+      <FindBar
+        isVisible={isFindBarVisible}
+        results={findResults}
+        onClose={handleCloseFindBar}
+      />
       <div className={containerStyles}>
         <div className={headerStyles}>
-          {/* Left side: Logo */}
-          <LogoDisplay />
-
-          {/* Right side: Settings Button */}
-          <div
-            className={
-              headerRightGroupStyles
-            } /* REMOVE style={{ marginLeft: 'auto' }} */
-          >
-            {/* <LogoDisplay />  MOVED */}
-            {!showSettings && (
-              <button
-                className={settingsButtonStyles}
-                onClick={() => handleToggleSettings(true)}
-              >
-                Settings
-              </button>
-            )}
+          {showSettings ? (
+            <button
+              className={settingsButtonStyles}
+              onClick={handleBackFromSettings}
+            >
+              ← Back to App
+            </button>
+          ) : (
+            <LogoDisplay />
+          )}
+          <div className={headerRightGroupStyles}>
+            {/* Removed Settings Button here, handled by header logic */}
           </div>
         </div>
         {showSettings ? (
           <SettingsPage
             apiKeyStatus={apiKeyStatus}
             isLoadingStatus={isLoadingKeyStatus}
-            onBack={() => handleToggleSettings(false)}
+            onBack={handleBackFromSettings}
           />
         ) : (
           <>
@@ -407,13 +485,6 @@ function AppContent() {
       </div>
     </div>
   );
-
-  function handleVideoPlayerReady(player: any) {
-    setVideoPlayerRef(player);
-    if (player) {
-      setIsPlaying(!player.paused); // Update isPlaying based on initial player state
-    }
-  }
 }
 
 export default function App() {

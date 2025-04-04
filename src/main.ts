@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
 import path from 'path';
 import isDev from 'electron-is-dev';
 import log from 'electron-log'; // electron-log is already configured by main.cjs
@@ -6,7 +6,10 @@ import electronContextMenu from 'electron-context-menu'; // Import the library
 
 let mainWindow: BrowserWindow | null = null;
 
-function createWindow() {
+// Variable to store the last search text for findNext
+let lastSearchText = '';
+
+async function createWindow() {
   log.info('[src/main.ts] Creating main window...');
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -67,6 +70,55 @@ function createWindow() {
     mainWindow = null;
   });
 
+  // Find-in-page IPC listeners
+  ipcMain.on(
+    'find-in-page',
+    (_event, { text, findNext, forward, matchCase }) => {
+      if (mainWindow && text) {
+        if (text !== lastSearchText) {
+          // Reset if text changes
+          lastSearchText = text;
+        }
+        const options = {
+          findNext: findNext || false,
+          forward: forward === undefined ? true : forward, // Default to searching forward
+          matchCase: matchCase || false,
+        };
+        log.info(`[main.ts] Finding in page: "${text}", options:`, options);
+        mainWindow.webContents.findInPage(text, options);
+      } else if (mainWindow && !text) {
+        // If text is empty, stop the current find operation
+        log.info('[main.ts] Stopping find due to empty text');
+        mainWindow.webContents.stopFindInPage('clearSelection');
+        lastSearchText = ''; // Reset last search text
+      }
+    }
+  );
+
+  ipcMain.on('stop-find', () => {
+    if (mainWindow) {
+      log.info('[main.ts] Stopping find via IPC');
+      mainWindow.webContents.stopFindInPage('clearSelection');
+      lastSearchText = ''; // Reset last search text
+    }
+  });
+
+  // Listen for find results and forward to renderer
+  if (mainWindow) {
+    // Ensure mainWindow exists before accessing webContents
+    mainWindow.webContents.on('found-in-page', (_event, result) => {
+      log.info('[main.ts] Found in page event:', result);
+      if (mainWindow) {
+        // Check again inside async callback
+        mainWindow.webContents.send('find-results', {
+          matches: result.matches,
+          activeMatchOrdinal: result.activeMatchOrdinal,
+          finalUpdate: result.finalUpdate,
+        });
+      }
+    });
+  }
+
   // Basic Menu Setup (you might already have this or more)
   const menuTemplate: Electron.MenuItemConstructorOptions[] = [
     {
@@ -83,6 +135,20 @@ function createWindow() {
         { role: 'copy' },
         { role: 'paste' },
         { role: 'selectAll' },
+        { type: 'separator' }, // Add separator
+        {
+          // Add Find menu item
+          label: 'Find',
+          accelerator: 'CmdOrCtrl+F',
+          click: () => {
+            if (mainWindow) {
+              log.info(
+                '[main.ts] Find menu item clicked, sending show-find-bar'
+              );
+              mainWindow.webContents.send('show-find-bar');
+            }
+          },
+        },
       ],
     },
     {

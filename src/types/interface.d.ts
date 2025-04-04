@@ -125,6 +125,23 @@ interface ElectronAPI {
 
   // Translation cancellation
   cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
+
+  // Find-in-Page Functions
+  sendFindInPage: (options: {
+    text: string;
+    findNext?: boolean;
+    forward?: boolean;
+    matchCase?: boolean;
+  }) => void;
+  sendStopFind: () => void;
+  onShowFindBar: (callback: () => void) => () => void; // Listener returns cleanup function
+  onFindResults: (
+    callback: (results: {
+      matches: number;
+      activeMatchOrdinal: number;
+      finalUpdate: boolean;
+    }) => void
+  ) => () => void; // Listener returns cleanup function
 }
 
 declare global {

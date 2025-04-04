@@ -48,6 +48,12 @@ export function TimestampDisplay({
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
 
+  // Determine visibility of optional sections
+  const shouldShowScrollButton = onScrollToCurrentSubtitle && hasSubtitles;
+  const shouldShowShiftControls = onShiftAllSubtitles && hasSubtitles;
+  const onlyTopButtonsBlockVisible =
+    !shouldShowScrollButton && !shouldShowShiftControls;
+
   // Handlers for video/srt buttons
   const handleVideoChange = (event: FileChangeEvent) => {
     let file: File | null = null;
@@ -121,6 +127,7 @@ export function TimestampDisplay({
           flex-direction: column;
           gap: 10px;
           width: 100%;
+          ${onlyTopButtonsBlockVisible ? 'margin-top: auto;' : ''}
         `}
       >
         {onChangeVideo && (
@@ -204,7 +211,7 @@ export function TimestampDisplay({
       </div>
 
       {/* Scroll to Current Button */}
-      {onScrollToCurrentSubtitle && hasSubtitles && (
+      {shouldShowScrollButton && (
         <Button
           onClick={() => {
             // Call onUiInteraction first to ignore upcoming scroll events
@@ -244,7 +251,7 @@ export function TimestampDisplay({
       )}
 
       {/* Shift Controls */}
-      {onShiftAllSubtitles && hasSubtitles && (
+      {shouldShowShiftControls && (
         <div
           className={css`
             display: flex;

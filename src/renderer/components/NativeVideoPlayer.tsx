@@ -161,6 +161,7 @@ interface NativeVideoPlayerProps {
   onPlayerReady: (player: HTMLVideoElement) => void;
   isExpanded?: boolean;
   isFullyExpanded?: boolean;
+  parentRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export default function NativeVideoPlayer({
@@ -169,6 +170,7 @@ export default function NativeVideoPlayer({
   onPlayerReady,
   isExpanded = false,
   isFullyExpanded = false,
+  parentRef,
 }: NativeVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -186,6 +188,47 @@ export default function NativeVideoPlayer({
   const isSeekingRef = useRef(false);
   const pendingSeekRef = useRef<number | null>(null);
   const timeUpdateCount = useRef(0);
+
+  // Handle click on player to focus either parent container or local container
+  const handlePlayerClick = useCallback(() => {
+    // Focus parent ref if provided, otherwise focus local container
+    if (parentRef?.current) {
+      parentRef.current.focus();
+      console.log('Video clicked, parent container focused');
+    } else if (containerRef.current) {
+      containerRef.current.focus();
+      console.log('Video clicked, local container focused');
+    }
+  }, [parentRef]);
+
+  // Keyboard event handler for video seeking
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      console.log('Video container keydown:', event.key);
+
+      if (!videoRef.current) return;
+
+      const videoElement = videoRef.current;
+      const currentTime = videoElement.currentTime;
+      const duration = videoElement.duration || 0;
+
+      switch (event.key) {
+        case 'ArrowRight':
+          // Skip forward 10 seconds
+          console.log('Skipping forward 10 seconds');
+          videoElement.currentTime = Math.min(currentTime + 10, duration);
+          event.preventDefault();
+          break;
+        case 'ArrowLeft':
+          // Skip backward 10 seconds
+          console.log('Skipping backward 10 seconds');
+          videoElement.currentTime = Math.max(currentTime - 10, 0);
+          event.preventDefault();
+          break;
+      }
+    },
+    []
+  );
 
   // When video URL changes, check if it's a file:// URL
   useEffect(() => {
@@ -600,6 +643,8 @@ export default function NativeVideoPlayer({
           will-change: transform;
         ` + ' native-video-player-wrapper'
       }
+      tabIndex={-1} /* Make container focusable to capture keyboard events */
+      onKeyDown={handleKeyDown} /* Add keyboard event handler to container */
     >
       <video
         ref={videoRef}
@@ -620,6 +665,7 @@ export default function NativeVideoPlayer({
         crossOrigin="anonymous"
         controlsList="nodownload"
         disablePictureInPicture
+        onClick={handlePlayerClick}
         onEnded={() => console.log('Video ended')}
         onError={() => setErrorMessage('Video playback error')}
       >
