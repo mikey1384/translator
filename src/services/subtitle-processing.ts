@@ -9,6 +9,8 @@ import { AI_MODELS } from '../renderer/constants';
 import { SrtSegment } from '../types/interface';
 import Anthropic from '@anthropic-ai/sdk';
 import { OpenAI } from 'openai';
+import { cancellationService } from './cancellation-service';
+console.log('Imported cancellationService:', cancellationService);
 // import log from 'electron-log';
 
 import {
@@ -330,6 +332,24 @@ export async function generateSubtitlesFromVideo(
   }
 
   const { ffmpegService, fileManager } = services;
+
+  // Register this operation with the cancellation service if a signal is provided
+  if (signal && signal.aborted === false) {
+    // Create a controller that's connected to the provided signal
+    const controller = new AbortController();
+    // Forward abort events from the input signal to our controller
+    const abortHandler = () => controller.abort();
+    signal.addEventListener('abort', abortHandler);
+
+    // Register with cancellation service
+    cancellationService.registerOperation(operationId, controller);
+
+    // Cleanup listener when done
+    setTimeout(() => {
+      signal.removeEventListener('abort', abortHandler);
+    }, 0);
+  }
+
   let audioPath: string | null = null;
 
   const targetLang = options.targetLanguage?.toLowerCase() || 'original';
@@ -358,8 +378,10 @@ export async function generateSubtitlesFromVideo(
   };
 
   try {
-    // Check for early cancellation
-    if (signal?.aborted) throw new Error('Operation cancelled');
+    // Only check the signal, not the cancellation service which might not be registered yet
+    if (signal?.aborted) {
+      throw new Error('Operation cancelled');
+    }
 
     if (progressCallback) {
       progressCallback({
@@ -384,7 +406,13 @@ export async function generateSubtitlesFromVideo(
       operationId
     );
 
-    if (signal?.aborted) throw new Error('Operation cancelled');
+    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+    if (
+      signal?.aborted ||
+      cancellationService.isOperationActive(operationId) === false
+    ) {
+      throw new Error('Operation cancelled');
+    }
 
     const subtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath,
@@ -403,7 +431,13 @@ export async function generateSubtitlesFromVideo(
       signal: signal,
     });
 
-    if (signal?.aborted) throw new Error('Operation cancelled');
+    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+    if (
+      signal?.aborted ||
+      cancellationService.isOperationActive(operationId) === false
+    ) {
+      throw new Error('Operation cancelled');
+    }
 
     if (!isTranslationNeeded) {
       await fileManager.writeTempFile(subtitlesContent, '.srt');
@@ -426,7 +460,13 @@ export async function generateSubtitlesFromVideo(
       batchStart < totalSegments;
       batchStart += TRANSLATION_BATCH_SIZE
     ) {
-      if (signal?.aborted) throw new Error('Operation cancelled');
+      // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+      if (
+        signal?.aborted ||
+        cancellationService.isOperationActive(operationId) === false
+      ) {
+        throw new Error('Operation cancelled');
+      }
 
       const batchEnd = Math.min(
         batchStart + TRANSLATION_BATCH_SIZE,
@@ -479,7 +519,13 @@ export async function generateSubtitlesFromVideo(
       batchStart < segmentsInProcess.length;
       batchStart += REVIEW_BATCH_SIZE
     ) {
-      if (signal?.aborted) throw new Error('Operation cancelled');
+      // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+      if (
+        signal?.aborted ||
+        cancellationService.isOperationActive(operationId) === false
+      ) {
+        throw new Error('Operation cancelled');
+      }
 
       const batchEnd = Math.min(
         batchStart + REVIEW_BATCH_SIZE,
@@ -497,7 +543,11 @@ export async function generateSubtitlesFromVideo(
         targetLang: targetLang,
       };
 
-      const reviewedBatch = await reviewTranslationBatch(batchToReview, signal);
+      const reviewedBatch = await reviewTranslationBatch(
+        batchToReview,
+        signal,
+        operationId
+      );
 
       for (let i = 0; i < reviewedBatch.length; i++) {
         segmentsInProcess[batchStart + i] = reviewedBatch[i];
@@ -519,7 +569,13 @@ export async function generateSubtitlesFromVideo(
       }
     }
 
-    if (signal?.aborted) throw new Error('Operation cancelled');
+    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+    if (
+      signal?.aborted ||
+      cancellationService.isOperationActive(operationId) === false
+    ) {
+      throw new Error('Operation cancelled');
+    }
 
     if (progressCallback) {
       progressCallback({
@@ -558,9 +614,10 @@ export async function generateSubtitlesFromVideo(
       });
     }
 
-    // If this was a cancellation, return empty subtitles
+    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
     if (
       signal?.aborted ||
+      cancellationService.isOperationActive(operationId) === false ||
       (error instanceof Error && error.message === 'Operation cancelled')
     ) {
       console.info(
@@ -571,6 +628,9 @@ export async function generateSubtitlesFromVideo(
 
     throw error; // Re-throw if it was a genuine error
   } finally {
+    // Unregister from cancellation service
+    cancellationService.unregisterOperation(operationId);
+
     if (audioPath) {
       try {
         await fsp.unlink(audioPath);
@@ -610,6 +670,14 @@ export async function mergeSubtitlesWithVideo(
 
   const { ffmpegService } = services;
 
+  // Check explicitly for false (cancelled) and not for undefined (never registered)
+  if (cancellationService.isOperationActive(operationId) === false) {
+    console.log(
+      `[${operationId}] Operation was cancelled before merge started`
+    );
+    return { outputPath: '' }; // Return empty path to indicate cancellation
+  }
+
   if (progressCallback) {
     progressCallback({ percent: 0, stage: 'Starting subtitle merging' });
   }
@@ -642,6 +710,15 @@ export async function mergeSubtitlesWithVideo(
       }
     );
 
+    // Check explicitly for false (cancelled) and not for undefined (never registered)
+    if (cancellationService.isOperationActive(operationId) === false) {
+      console.info(`[${operationId}] Operation was cancelled during merge`);
+      if (progressCallback) {
+        progressCallback({ percent: 100, stage: 'Merge cancelled' });
+      }
+      return { outputPath: '' };
+    }
+
     // Check if file exists - if empty string was returned, it means the operation was cancelled
     if (!mergeResult || mergeResult === '' || !fs.existsSync(outputPath)) {
       console.info(
@@ -669,8 +746,8 @@ export async function mergeSubtitlesWithVideo(
       });
     }
 
-    // Check if this was a cancellation (no active process with this ID)
-    if (!services.ffmpegService.isActiveProcess(operationId)) {
+    // Check explicitly for false (cancelled) and not for undefined (never registered)
+    if (cancellationService.isOperationActive(operationId) === false) {
       console.info(
         `[${operationId}] Merge was cancelled, returning empty path`
       );
@@ -688,8 +765,11 @@ async function translateBatch(
   _operationId: string,
   signal?: AbortSignal
 ): Promise<any[]> {
-  // Check for early cancellation
-  if (signal?.aborted) {
+  // Check for early cancellation using both signal and cancellationService (explicitly checking for false)
+  if (
+    signal?.aborted ||
+    cancellationService.isOperationActive(_operationId) === false
+  ) {
     console.info(
       `[${_operationId}] Translation batch cancelled before starting`
     );
@@ -729,8 +809,11 @@ Translate EACH line individually, preserving the line order.
 `;
 
   while (retryCount < MAX_RETRIES) {
-    // Check for cancellation before each retry
-    if (signal?.aborted) {
+    // Check for cancellation before each retry (explicitly checking for false)
+    if (
+      signal?.aborted ||
+      cancellationService.isOperationActive(_operationId) === false
+    ) {
       console.info(
         `[${_operationId}] Translation batch cancelled during retry attempt ${retryCount}`
       );
@@ -800,8 +883,11 @@ Translate EACH line individually, preserving the line order.
         };
       });
     } catch (err: any) {
-      // Check for cancellation after an error
-      if (signal?.aborted) {
+      // Check for cancellation after an error (explicitly checking for false)
+      if (
+        signal?.aborted ||
+        cancellationService.isOperationActive(_operationId) === false
+      ) {
         console.info(
           `[${_operationId}] Translation batch cancelled after API error`
         );
@@ -857,10 +943,14 @@ async function reviewTranslationBatch(
     endIndex: number;
     targetLang: string;
   },
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  parentOperationId: string = 'review-batch'
 ): Promise<any[]> {
-  // Check for early cancellation
-  if (signal?.aborted) {
+  // Check for early cancellation (explicitly checking for false)
+  if (
+    signal?.aborted ||
+    cancellationService.isOperationActive(parentOperationId) === false
+  ) {
     console.info(`[Review] Review batch cancelled before starting`);
     throw new Error('Operation cancelled');
   }
@@ -922,8 +1012,11 @@ Improved translation for block 3
 `;
 
   try {
-    // Check for cancellation before API call
-    if (signal?.aborted) {
+    // Check for cancellation before API call (explicitly checking for false)
+    if (
+      signal?.aborted ||
+      cancellationService.isOperationActive(parentOperationId) === false
+    ) {
       console.info(`[Review] Review batch cancelled before API call`);
       throw new Error('Operation cancelled');
     }
@@ -982,8 +1075,11 @@ Improved translation for block 3
       };
     });
   } catch (error) {
-    // Check for cancellation after an error
-    if (signal?.aborted) {
+    // Check for cancellation after an error (explicitly checking for false)
+    if (
+      signal?.aborted ||
+      cancellationService.isOperationActive(parentOperationId) === false
+    ) {
       console.info(`[Review] Review batch cancelled after API error`);
       throw new Error('Operation cancelled');
     }

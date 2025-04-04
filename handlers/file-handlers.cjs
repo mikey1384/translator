@@ -61,12 +61,24 @@ async function handleCopyFile(_event, sourcePath, destinationPath) {
   }
 }
 
-async function handleDeleteFile(_event, options) {
-  const filePathToDelete = options?.filePathToDelete;
+async function handleDeleteFile(event, { filePathToDelete }) {
   if (!filePathToDelete) {
-    return { success: false, error: 'File path to delete is required.' };
+    return { success: false, error: 'No file path provided for deletion' };
   }
+
   try {
+    // Check if the file exists before attempting to delete
+    if (!fs.existsSync(filePathToDelete)) {
+      console.log(
+        `[handleDeleteFile] File does not exist: ${filePathToDelete}`
+      );
+      return {
+        success: true,
+        message: 'File does not exist, no deletion needed',
+      };
+    }
+
+    console.log(`[handleDeleteFile] Deleting file: ${filePathToDelete}`);
     await fileManager.deleteFile(filePathToDelete);
     return { success: true };
   } catch (error) {

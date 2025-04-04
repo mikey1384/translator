@@ -5,6 +5,7 @@ const keytar = require('keytar');
 // Services will be injected by the initializer
 let ffmpegService;
 let fileManager;
+let cancellationService;
 
 // Define the service name used for storing credentials (for translation)
 const API_KEY_SERVICE_NAME = 'TranslatorApp';
@@ -18,6 +19,19 @@ function initializeSubtitleHandlers(services) {
   }
   ffmpegService = services.ffmpegService;
   fileManager = services.fileManager;
+
+  // Get cancellationService from the FFmpeg module - this ensures we use the same instance
+  try {
+    cancellationService =
+      require('../dist/services/cancellation-service').cancellationService;
+    console.info('[subtitle-handlers] Initialized with cancellationService.');
+  } catch (error) {
+    console.warn(
+      '[subtitle-handlers] Failed to load cancellationService:',
+      error
+    );
+  }
+
   console.info('[subtitle-handlers] Initialized.');
 }
 
@@ -31,9 +45,14 @@ async function handleGenerateSubtitles(event, options) {
   // Simple cancellation setup - just create a controller
   const controller = new AbortController();
 
-  // Track operations for cancellation
-  if (!global.activeOperations) global.activeOperations = new Map();
-  global.activeOperations.set(operationId, controller);
+  // Register with cancellation service
+  if (cancellationService) {
+    cancellationService.registerOperation(operationId, controller);
+  } else {
+    // Fallback to global map if service not available
+    if (!global.activeOperations) global.activeOperations = new Map();
+    global.activeOperations.set(operationId, controller);
+  }
 
   let tempVideoPath = null;
   let finalOptions = { ...options }; // Clone options to avoid mutation
@@ -117,7 +136,9 @@ async function handleGenerateSubtitles(event, options) {
     };
   } finally {
     // Clean up operation tracking
-    if (global.activeOperations) {
+    if (cancellationService) {
+      cancellationService.unregisterOperation(operationId);
+    } else if (global.activeOperations) {
       global.activeOperations.delete(operationId);
     }
 
@@ -133,20 +154,24 @@ async function handleGenerateSubtitles(event, options) {
 }
 
 async function handleMergeSubtitles(event, options) {
-  // Log the incoming options to see if operationId is already provided
-  console.log(`[handleMergeSubtitles] Received options:`, {
-    hasVideoPath: !!options.videoPath,
-    hasVideoFileData: !!options.videoFileData,
-    hasOperationId: !!options.operationId,
-    originalOperationId: options.operationId,
-  });
-
   // Generate a new operationId if not provided
   const operationId =
     options.operationId ||
     `merge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
   console.log(`[handleMergeSubtitles] Using operationId: ${operationId}`);
+
+  // Simple cancellation setup - create a controller for all operations
+  const controller = new AbortController();
+
+  // Register with cancellation service
+  if (cancellationService) {
+    cancellationService.registerOperation(operationId, controller);
+  } else {
+    // Fallback to global map if service not available
+    if (!global.activeOperations) global.activeOperations = new Map();
+    global.activeOperations.set(operationId, controller);
+  }
 
   let tempVideoPath = null;
   let tempSrtPath = null; // Variable for the temporary SRT path
@@ -201,75 +226,44 @@ async function handleMergeSubtitles(event, options) {
       `[${operationId}] Temporary SRT file written to: ${tempSrtPath}`
     );
 
-    // --- Prepare Merge Options --- START ---
-    const mergeOptions = {
-      videoPath: finalOptions.videoPath,
-      subtitlesPath: tempSrtPath, // <-- USE THE TEMP SRT PATH HERE
-      outputPath: finalOptions.outputPath, // Make sure renderer provides this
-      fontSize: finalOptions.fontSize, // Pass original options if needed by service
-      stylePreset: finalOptions.stylePreset, // Pass original options if needed by service
-      operationId,
-      onProgress: progress => {
-        try {
-          event.sender.send('merge-subtitles-progress', {
-            operationId,
-            ...progress,
-          });
-        } catch (e) {
-          console.warn(
-            `[${operationId}] Error sending progress update:`,
-            e.message
-          );
-        }
-      },
-      // Use a wrapper for registerProcess to ensure it's only called once
-      // and store the process locally if needed, though ffmpegService handles cancellation now
-      registerProcess: process => {
-        console.log(
-          `[${operationId}] Merge process registered by service (PID: ${process?.pid || 'N/A'}).`
-        );
-        // No need to store here if ffmpegService handles cancellation via operationId
-      },
-    };
-    // --- Prepare Merge Options --- END ---
+    // Check if operation was cancelled before proceeding to merge
+    if (
+      global.activeOperations &&
+      global.activeOperations.get(operationId)?.signal?.aborted
+    ) {
+      console.log(`[${operationId}] Operation cancelled before merge started`);
 
-    // --- Logging ---
-    console.log(
-      `[${operationId}] >>> Preparing to call mergeSubtitlesWithVideo <<<`
-    );
-    console.log(`[${operationId}] Video Path: ${mergeOptions.videoPath}`);
-    console.log(
-      `[${operationId}] Subtitles Path: ${mergeOptions.subtitlesPath}`
-    ); // Should now be a path
-    console.log(`[${operationId}] Output Path: ${mergeOptions.outputPath}`);
-    console.log(`[${operationId}] Font Size: ${mergeOptions.fontSize}`);
-    console.log(`[${operationId}] Style Preset: ${mergeOptions.stylePreset}`);
-    console.log(`[${operationId}] Operation ID: ${mergeOptions.operationId}`);
-    console.log(
-      `[${operationId}] Has onProgress function: ${typeof mergeOptions.onProgress === 'function'}`
-    );
-    console.log(
-      `[${operationId}] Has registerProcess function: ${typeof mergeOptions.registerProcess === 'function'}`
-    );
-    // --- End logging ---
+      // Make sure to update UI with cancellation message
+      event.sender.send('merge-subtitles-progress', {
+        percent: 100,
+        stage: 'Merge cancelled',
+        cancelled: true,
+        operationId,
+      });
 
-    // --- CHECK DEPENDENCIES BEFORE CALL --- START ---
-    console.log(`[${operationId}] Checking dependencies before call:`);
-    console.log(
-      `[${operationId}]   typeof ffmpegService: ${typeof ffmpegService}`
-    );
-    console.log(`[${operationId}]   typeof fileManager: ${typeof fileManager}`);
-    console.log(`[${operationId}]   ffmpegService defined: ${!!ffmpegService}`);
-    console.log(`[${operationId}]   fileManager defined: ${!!fileManager}`);
-    // --- CHECK DEPENDENCIES BEFORE CALL --- END ---
+      return {
+        success: true,
+        cancelled: true,
+        operationId,
+      };
+    }
 
     // --- Execute Merge --- START ---
-    // Pass dependencies if needed by the service
     const mergeResult = await mergeSubtitlesWithVideo(
-      mergeOptions, // 1st arg: options object
-      operationId, // 2nd arg: operationId string
-      mergeOptions.onProgress, // 3rd arg: progress callback from options
-      { ffmpegService } // 4th arg: services object (only ffmpegService needed)
+      {
+        videoPath: finalOptions.videoPath,
+        subtitlesPath: tempSrtPath,
+        fontSize: finalOptions.fontSize,
+        stylePreset: finalOptions.stylePreset,
+      },
+      operationId,
+      progress => {
+        event.sender.send('merge-subtitles-progress', {
+          ...progress,
+          operationId,
+        });
+      },
+      { ffmpegService } // Pass injected dependencies
     );
     // --- Execute Merge --- END ---
 
@@ -291,6 +285,32 @@ async function handleMergeSubtitles(event, options) {
       };
     }
 
+    // Check again for cancellation after merge but before returning result
+    if (
+      global.activeOperations &&
+      global.activeOperations.get(operationId)?.signal?.aborted
+    ) {
+      console.log(`[${operationId}] Operation cancelled after merge completed`);
+      // Clean up the merged file since we won't be using it
+      if (mergeResult.outputPath && fs.existsSync(mergeResult.outputPath)) {
+        try {
+          await fs.promises.unlink(mergeResult.outputPath);
+          console.log(
+            `[${operationId}] Deleted merged file after cancellation: ${mergeResult.outputPath}`
+          );
+        } catch (err) {
+          console.warn(
+            `[${operationId}] Failed to delete merged file after cancellation: ${err}`
+          );
+        }
+      }
+      return {
+        success: true,
+        cancelled: true,
+        operationId,
+      };
+    }
+
     console.log(
       `[${operationId}] Merge successful. Output path: ${mergeResult.outputPath}`
     );
@@ -302,47 +322,54 @@ async function handleMergeSubtitles(event, options) {
     };
   } catch (error) {
     console.error(`[${operationId}] Error merging subtitles:`, error);
+
+    // Determine if this was a cancellation
+    const isCancellationError =
+      error instanceof Error &&
+      (error.name === 'AbortError' ||
+        error.message === 'Operation cancelled' ||
+        error.message.includes('cancelled'));
+
     event.sender.send('merge-subtitles-progress', {
       percent: 100,
-      stage: `Error: ${error.message || 'Unknown merge error'}`,
-      error: error.message || 'Unknown merge error',
+      stage: isCancellationError
+        ? 'Merge cancelled'
+        : `Error: ${error.message || 'Unknown merge error'}`,
+      error: isCancellationError
+        ? null
+        : error.message || 'Unknown merge error',
+      cancelled: isCancellationError,
       operationId,
     });
+
     return {
-      success: false,
-      error: error.message || String(error),
+      success: !isCancellationError, // Success is true for cancellations
+      cancelled: isCancellationError,
+      error: isCancellationError ? null : error.message || String(error),
       operationId,
     };
   } finally {
-    // Cleanup temporary video input file if created
-    if (tempVideoPath) {
-      try {
-        await fs.promises.unlink(tempVideoPath);
-        console.log(
-          `[${operationId}] Cleaned up temporary video input: ${tempVideoPath}`
-        );
-      } catch (cleanupError) {
-        console.warn(
-          `[${operationId}] Failed to cleanup temp merge input video ${tempVideoPath}:`,
-          cleanupError.message
-        );
+    // Clean up operation tracking
+    if (cancellationService) {
+      cancellationService.unregisterOperation(operationId);
+    } else if (global.activeOperations) {
+      global.activeOperations.delete(operationId);
+    }
+
+    // Clean up temporary files
+    for (const tempFile of [tempVideoPath, tempSrtPath]) {
+      if (tempFile && fs.existsSync(tempFile)) {
+        try {
+          await fs.promises.unlink(tempFile);
+          console.log(`[${operationId}] Cleaned up temp file: ${tempFile}`);
+        } catch (cleanupError) {
+          console.warn(
+            `[${operationId}] Failed to cleanup temp file ${tempFile}:`,
+            cleanupError
+          );
+        }
       }
     }
-    // Cleanup temporary SRT file if created
-    if (tempSrtPath) {
-      try {
-        await fs.promises.unlink(tempSrtPath);
-        console.log(
-          `[${operationId}] Cleaned up temporary SRT file: ${tempSrtPath}`
-        );
-      } catch (cleanupError) {
-        console.warn(
-          `[${operationId}] Failed to cleanup temp SRT file ${tempSrtPath}:`,
-          cleanupError.message
-        );
-      }
-    }
-    // NOTE: The final output file is NOT cleaned up here; it's returned to the renderer.
   }
 }
 
@@ -354,9 +381,14 @@ async function handleTranslateSubtitles(event, options) {
   // Simple cancellation setup - just create a controller
   const controller = new AbortController();
 
-  // Track operations for cancellation
-  if (!global.activeOperations) global.activeOperations = new Map();
-  global.activeOperations.set(operationId, controller);
+  // Register with cancellation service
+  if (cancellationService) {
+    cancellationService.registerOperation(operationId, controller);
+  } else {
+    // Fallback to global map if service not available
+    if (!global.activeOperations) global.activeOperations = new Map();
+    global.activeOperations.set(operationId, controller);
+  }
 
   try {
     // Validation
@@ -440,7 +472,9 @@ async function handleTranslateSubtitles(event, options) {
     };
   } finally {
     // Clean up operation tracking
-    if (global.activeOperations) {
+    if (cancellationService) {
+      cancellationService.unregisterOperation(operationId);
+    } else if (global.activeOperations) {
       global.activeOperations.delete(operationId);
     }
   }
@@ -455,57 +489,74 @@ async function handleCancelOperation(_event, operationId) {
   try {
     let cancelled = false;
 
-    // First check if it's a merge operation (FFmpeg)
-    if (operationId.startsWith('merge-')) {
-      if (!ffmpegService) {
-        throw new Error('FFmpegService is not initialized.');
+    // First try the cancellation service
+    if (cancellationService) {
+      console.log(`[Handlers] Using cancellationService for ${operationId}`);
+      // Check if the operation exists before trying to cancel
+      if (cancellationService.hasActiveOperation(operationId)) {
+        cancelled = cancellationService.cancelOperation(operationId);
+      } else {
+        console.log(
+          `[Handlers] No active operation found in cancellationService for ${operationId}`
+        );
       }
+    }
+    // Fallback to global map
+    else if (
+      global.activeOperations &&
+      global.activeOperations.has(operationId)
+    ) {
+      const controller = global.activeOperations.get(operationId);
+      console.log(`[Handlers] Using global map for ${operationId}`);
+      controller.abort();
+      global.activeOperations.delete(operationId);
+      cancelled = true;
+    }
+    // Also try the FFmpeg service directly as a last resort
+    else if (operationId.startsWith('merge-') && ffmpegService) {
       console.log(
-        `[Handlers] Forwarding cancellation to FFmpegService for ${operationId}`
+        `[Handlers] Falling back to FFmpegService for ${operationId}`
       );
       cancelled = ffmpegService.cancelOperation(operationId);
     }
-    // Handle generate or translate operations with our global map
-    else if (
-      operationId.startsWith('generate-') ||
-      operationId.startsWith('translate-')
-    ) {
-      if (!global.activeOperations) {
-        console.warn(`[Handlers] No active operations map found`);
-        return {
-          success: false,
-          error: 'No active operations manager available',
-        };
-      }
-
-      const controller = global.activeOperations.get(operationId);
-      if (controller) {
-        console.log(`[Handlers] Aborting operation ${operationId}`);
-        controller.abort();
-        global.activeOperations.delete(operationId);
-        cancelled = true;
-      } else {
-        console.warn(
-          `[Handlers] No active operation found with ID: ${operationId}`
-        );
-        cancelled = false;
-      }
-    }
-    // Unknown operation type
+    // If no operation found
     else {
       console.warn(
-        `[Handlers] Unknown operation ID prefix for cancellation: ${operationId}`
+        `[Handlers] No active operation found with ID: ${operationId}`
       );
-      return {
-        success: false,
-        error: 'Unknown operation type for cancellation',
-      };
+      cancelled = false;
     }
 
     if (cancelled) {
       console.log(
         `[Handlers] Cancellation request processed successfully for ${operationId}.`
       );
+
+      // Update the UI for all operation types
+      if (_event?.sender) {
+        if (operationId.startsWith('merge-')) {
+          _event.sender.send('merge-subtitles-progress', {
+            percent: 100,
+            stage: 'Merge cancelled',
+            cancelled: true,
+            operationId,
+          });
+        } else if (operationId.startsWith('generate-')) {
+          _event.sender.send('generate-subtitles-progress', {
+            percent: 100,
+            stage: 'Generation cancelled',
+            cancelled: true,
+            operationId,
+          });
+        } else if (operationId.startsWith('translate-')) {
+          _event.sender.send('translate-subtitles-progress', {
+            percent: 100,
+            stage: 'Translation cancelled',
+            cancelled: true,
+            operationId,
+          });
+        }
+      }
     } else {
       console.warn(
         `[Handlers] No active operation found or cancellation failed for ${operationId}.`

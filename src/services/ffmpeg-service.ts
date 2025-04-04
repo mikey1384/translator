@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises'; // Import promises version
@@ -13,6 +13,7 @@ import {
   AssStylePresetKey,
 } from '../renderer/constants/subtitle-styles';
 import { v4 as uuidv4 } from 'uuid'; // Import uuid for unique directory names
+import { cancellationService } from './cancellation-service';
 
 export class FFmpegError extends Error {
   constructor(message: string) {
@@ -25,7 +26,6 @@ export class FFmpegService {
   private ffmpegPath: string;
   private ffprobePath: string;
   private tempDir: string;
-  private activeProcesses = new Map<string, ChildProcess>();
 
   constructor() {
     this.ffmpegPath = ffmpegPath.path;
@@ -462,8 +462,8 @@ export class FFmpegService {
           return ''; // Return empty string to indicate cancellation
         }
       } catch (ffmpegError) {
-        // Check if the process was cancelled (we can tell by checking if the process still exists in activeProcesses)
-        if (!this.activeProcesses.has(operationId)) {
+        // Check if the process was cancelled (we can tell by checking if the process still exists in cancellationService)
+        if (!cancellationService.isOperationActive(operationId)) {
           console.info(
             `[${operationId}] FFmpeg process was cancelled, treating as successful cancellation.`
           );
@@ -645,7 +645,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       let isCancelling = false;
 
       if (operationId) {
-        this.activeProcesses.set(operationId, ffmpegProcess);
+        // Register process with cancellation service
+        cancellationService.registerProcess(operationId, ffmpegProcess);
         console.info(
           `[${operationId}] FFmpeg process started (PID: ${ffmpegProcess.pid})`
         );
@@ -733,8 +734,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       ffmpegProcess.on('close', (code: number | null) => {
         if (operationId) {
           // Check if this process was marked as being cancelled
-          isCancelling = !this.activeProcesses.has(operationId);
-          this.activeProcesses.delete(operationId);
+          isCancelling = !cancellationService.isOperationActive(operationId);
+          cancellationService.unregisterOperation(operationId);
           console.info(
             `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid})`
           );
@@ -765,7 +766,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       ffmpegProcess.on('error', (err: Error) => {
         if (operationId) {
-          this.activeProcesses.delete(operationId);
+          cancellationService.unregisterOperation(operationId);
           console.info(
             `[${operationId}] FFmpeg process errored (PID: ${ffmpegProcess.pid})`
           );
@@ -905,34 +906,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   }
 
   public cancelOperation(operationId: string): boolean {
-    const process = this.activeProcesses.get(operationId);
-    if (process && !process.killed) {
-      console.info(
-        `[${operationId}] Attempting to cancel FFmpeg process (PID: ${process.pid})`
-      );
-      const killed = process.kill('SIGTERM'); // Send SIGTERM first
-      if (!killed) {
-        console.warn(
-          `[${operationId}] Failed to send SIGTERM, trying SIGKILL.`
-        );
-        process.kill('SIGKILL'); // Force kill if SIGTERM failed
-      }
-      // Remove from active processes BEFORE the close event to indicate it was cancelled
-      this.activeProcesses.delete(operationId);
-      console.info(`[${operationId}] Process cancellation requested.`);
-      return true;
-    }
-    console.warn(`[${operationId}] No active process found to cancel.`);
-    return false;
+    return cancellationService.cancelOperation(operationId);
   }
 
   /**
    * Checks if a process with the given operation ID is currently active.
    * @param operationId The operation ID to check
-   * @returns True if a process with this ID is active, false otherwise
+   * @returns True if a process with this ID is active, false if cancelled, undefined if never registered
    */
-  public isActiveProcess(operationId: string): boolean {
-    return this.activeProcesses.has(operationId);
+  public isActiveProcess(operationId: string): boolean | undefined {
+    return cancellationService.isOperationActive(operationId);
   }
 
   /**

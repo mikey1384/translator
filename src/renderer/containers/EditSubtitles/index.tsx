@@ -735,12 +735,19 @@ export function EditSubtitles({
       // Setup Progress Listener
       const handleProgress = (_event: any, progress: any) => {
         if (progress?.operationId === operationId) {
-          // console.log(
-          //   `[Renderer] Received progress for ${operationId}:`,
-          //   progress
-          // ); // Remove log
           setMergeProgress(progress.percent);
           setMergeStage(progress.stage);
+
+          // Keep cancellation status visible
+          if (
+            progress.cancelled ||
+            progress.stage.includes('cancelled') ||
+            progress.stage.includes('Merge cancelled')
+          ) {
+            console.log('Detected cancellation in progress event:', progress);
+            setMergeStage(progress.stage || 'Merge cancelled');
+            setTimeout(() => setIsMergingInProgress(false), 2000);
+          }
         }
       };
 
@@ -780,7 +787,8 @@ export function EditSubtitles({
         console.log('Merge was cancelled by user');
         setMergeStage('Merge cancelled by user');
         setTimeout(() => setIsMergingInProgress(false), 2000);
-        return { success: false };
+        // No need to clean up temp files - the handler already took care of that
+        return { success: false, error: 'Operation cancelled by user' };
       }
 
       // Check for success and outputPath (not tempOutputPath)
@@ -791,8 +799,53 @@ export function EditSubtitles({
       }
 
       tempMergedFilePath = mergeResult.outputPath; // Use outputPath instead of tempOutputPath
+
+      // EXTRA CHECK: Consider empty or whitespace-only path as indication of cancellation
+      if (!tempMergedFilePath || tempMergedFilePath.trim() === '') {
+        console.log(
+          'Empty output path from merge result, treating as cancelled'
+        );
+        setMergeStage('Merge was cancelled');
+        setTimeout(() => setIsMergingInProgress(false), 2000);
+        return { success: false, error: 'Operation was cancelled' };
+      }
+
       setMergeStage('Merge complete. Select save location...');
       setMergeProgress(100); // Indicate merge part is done
+
+      // After checking mergeResult.outputPath and getting tempMergedFilePath
+      // Make sure tempMergedFilePath is valid before proceeding to save dialog
+      if (!tempMergedFilePath || tempMergedFilePath === '') {
+        console.log('No valid output path from merge result, likely cancelled');
+        setMergeStage('Operation did not complete, no file to save');
+        setTimeout(() => setIsMergingInProgress(false), 2000);
+        return { success: false, error: 'No output file was produced' };
+      }
+
+      // Final check: Make sure we haven't been cancelled while preparing to save
+      if (isMergingInProgressProp === false) {
+        console.log('Merge operation was cancelled before showing save dialog');
+        setMergeStage('Merge cancelled');
+
+        // Clean up temporary file if it exists
+        if (tempMergedFilePath) {
+          try {
+            await window.electron.deleteFile({
+              filePathToDelete: tempMergedFilePath,
+            });
+            console.log(
+              `Deleted temporary merge file after cancellation: ${tempMergedFilePath}`
+            );
+            tempMergedFilePath = null;
+          } catch (cleanupErr) {
+            console.warn(
+              `Failed to delete temp file after cancellation: ${cleanupErr}`
+            );
+          }
+        }
+
+        return { success: false, error: 'Operation was cancelled' };
+      }
 
       // Prompt User to Save
       const inputExt = videoFile.name.includes('.')
@@ -875,27 +928,27 @@ export function EditSubtitles({
       const errorMessage = error.message || 'Unknown merge error';
       console.error('Error during merge/save process:', error);
       setMergeStage(`Error: ${errorMessage}`);
+
+      // Clean up temporary file if it exists
+      if (tempMergedFilePath) {
+        try {
+          await window.electron.deleteFile({
+            filePathToDelete: tempMergedFilePath,
+          });
+          console.log(
+            `Deleted temporary merge file after error: ${tempMergedFilePath}`
+          );
+          tempMergedFilePath = null;
+        } catch (cleanupErr) {
+          console.warn(`Failed to delete temp file after error: ${cleanupErr}`);
+        }
+      }
+
       // Cleanup is now handled in finally
       setTimeout(() => setIsMergingInProgress(false), 3000);
       // Return error on failure
       return { success: false, error: errorMessage };
     } finally {
-      // Cleanup Temporary File
-      if (tempMergedFilePath) {
-        // console.log(`Cleaning up temporary file: ${tempMergedFilePath}`); // Remove log
-        try {
-          await window.electron.deleteFile({
-            filePathToDelete: tempMergedFilePath,
-          });
-          // console.log(`Successfully cleaned up: ${tempMergedFilePath}`); // Remove log
-        } catch (cleanupError: any) {
-          console.error(
-            `Failed to clean up temporary file ${tempMergedFilePath}:`,
-            cleanupError.message || cleanupError
-          );
-        }
-      }
-
       // Clean up the progress listener
       if (cleanupMergeListener) {
         cleanupMergeListener();
