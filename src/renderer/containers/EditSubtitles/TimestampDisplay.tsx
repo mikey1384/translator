@@ -1,17 +1,22 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
 import { openSubtitleWithElectron } from '../../helpers';
 import { SrtSegment } from '../../../types/interface';
+import { VideoQuality } from '../../../types/interface';
 
 interface TimestampDisplayProps {
-  onChangeVideo?: (file: File) => void;
+  onChangeVideo?: (file: File | { path: string; name: string }) => void;
+  onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
   hasSubtitles?: boolean;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onUiInteraction?: () => void;
+  isUrlLoading?: boolean;
+  urlLoadProgress?: number;
+  urlLoadStage?: string;
 }
 
 // Simple input style similar to time inputs in editor - Updated for Dark Theme
@@ -32,16 +37,91 @@ const shiftInputStyles = css`
   }
 `;
 
+// --- Style for URL Input --- START ---
+const urlInputStyles = css`
+  max-width: 35%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid ${colors.border};
+  background-color: ${colors.light};
+  color: ${colors.dark};
+  font-family: sans-serif; // Use standard font
+  font-size: 0.9rem;
+  margin-right: 5px;
+  transition: border-color 0.2s ease;
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+  }
+  &::placeholder {
+    color: ${colors.gray};
+  }
+`;
+// --- Style for URL Input --- END ---
+
+// --- Styles for Quality Select --- START ---
+const qualitySelectStyles = css`
+  padding: 6px 4px; // Slightly less padding than input
+  border-radius: 4px;
+  border: 1px solid ${colors.border};
+  background-color: ${colors.light};
+  color: ${colors.dark};
+  font-family: sans-serif;
+  font-size: 0.85rem;
+  margin-left: 5px;
+  margin-right: 5px;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+  }
+`;
+// --- Styles for Quality Select --- END ---
+
+// --- Styles for Progress Bar --- START ---
+const progressBarContainerStyles = css`
+  height: 10px;
+  background-color: ${colors.grayLight};
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 5px 0;
+  width: 100%; // Take full width of its container
+`;
+
+const progressBarStyles = (progress: number) => css`
+  height: 100%;
+  width: ${progress}%;
+  background-color: ${colors.primary};
+  transition: width 0.3s ease;
+  border-radius: 5px;
+`;
+
+const progressTextStyles = css`
+  font-size: 0.8rem;
+  color: ${colors.grayDark};
+  text-align: center;
+  width: 100%;
+  margin-top: 2px;
+`;
+// --- Styles for Progress Bar --- END ---
+
 export function TimestampDisplay({
   onChangeVideo,
+  onLoadFromUrl,
   hasSubtitles = false,
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSrtLoaded,
   onUiInteraction,
+  isUrlLoading = false,
+  urlLoadProgress = 0,
+  urlLoadStage = '',
 }: TimestampDisplayProps) {
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
+  const [urlInputValue, setUrlInputValue] = useState<string>('');
+  const [urlError, setUrlError] = useState<string>('');
+  const [selectedQuality, setSelectedQuality] = useState<VideoQuality>('mid');
 
   // Determine visibility of optional sections
   const shouldShowScrollButton = onScrollToCurrentSubtitle && hasSubtitles;
@@ -104,6 +184,30 @@ export function TimestampDisplay({
       // Optionally show an error message to the user
     }
   };
+
+  // --- Handler for Load URL Button (Updated) --- START ---
+  const handleLoadUrlClick = () => {
+    setUrlError('');
+    if (!urlInputValue.trim()) {
+      setUrlError('Please enter a valid URL.');
+      return;
+    }
+    if (
+      !urlInputValue.startsWith('http://') &&
+      !urlInputValue.startsWith('https://')
+    ) {
+      setUrlError('URL must start with http:// or https://');
+      return;
+    }
+
+    if (onLoadFromUrl) {
+      onLoadFromUrl(urlInputValue, selectedQuality);
+      onUiInteraction?.();
+    } else {
+      console.warn('onLoadFromUrl prop is not provided to TimestampDisplay');
+    }
+  };
+  // --- Handler for Load URL Button (Updated) --- END ---
 
   const handleSrtLoad = async () => {
     try {
@@ -200,6 +304,94 @@ export function TimestampDisplay({
             </div>
           </Button>
         )}
+
+        {/* --- URL Input Section (Conditional Rendering) --- START --- */}
+        {onLoadFromUrl && (
+          <div
+            className={css`
+              margin-top: 10px; // Space above URL section
+            `}
+          >
+            {isUrlLoading ? (
+              // --- Progress Display --- START ---
+              <div
+                className={css`
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  padding: 10px 5px;
+                  border: 1px solid ${colors.border};
+                  border-radius: 4px;
+                  background-color: ${colors.light};
+                `}
+              >
+                <div className={progressBarContainerStyles}>
+                  <div className={progressBarStyles(urlLoadProgress)} />
+                </div>
+                <span className={progressTextStyles}>
+                  {urlLoadStage || 'Loading...'} ({urlLoadProgress.toFixed(0)}%)
+                </span>
+              </div>
+            ) : (
+              // --- Input / Quality / Load Button --- START ---
+              <div
+                className={css`
+                  display: flex;
+                  align-items: stretch; // Align items vertically
+                  width: 100%;
+                `}
+              >
+                <input
+                  type="url"
+                  placeholder="Enter Video URL..."
+                  value={urlInputValue}
+                  onChange={e => setUrlInputValue(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleLoadUrlClick()}
+                  className={urlInputStyles}
+                  title="Enter the URL of the video to load"
+                  disabled={isUrlLoading} // Disable input while loading
+                />
+                <select
+                  value={selectedQuality}
+                  onChange={e =>
+                    setSelectedQuality(e.target.value as VideoQuality)
+                  }
+                  className={qualitySelectStyles}
+                  title="Select download quality"
+                  disabled={isUrlLoading} // Disable select while loading
+                >
+                  <option value="low">Low</option>
+                  <option value="mid">Mid</option>
+                  <option value="high">High</option>
+                </select>
+                <Button
+                  onClick={handleLoadUrlClick}
+                  variant="secondary"
+                  size="sm"
+                  title="Load video from URL"
+                  disabled={isUrlLoading} // Disable button while loading
+                >
+                  Load
+                </Button>
+              </div>
+              // --- Input / Quality / Load Button --- END ---
+            )}
+            {/* Error message display */}
+            {urlError && !isUrlLoading && (
+              <div
+                className={css`
+                  color: ${colors.danger};
+                  font-size: 0.8rem;
+                  margin-top: 4px;
+                `}
+              >
+                {urlError}
+              </div>
+            )}
+          </div>
+        )}
+        {/* --- URL Input Section (Conditional Rendering) --- END --- */}
+
         <Button
           variant="secondary"
           size="sm"

@@ -12,7 +12,7 @@ import LogoDisplay from '../components/LogoDisplay';
 import FindBar from '../components/FindBar';
 
 import { ManagementContextProvider } from '../context';
-import { SrtSegment } from '../../types/interface';
+import { SrtSegment, VideoQuality } from '../../types/interface';
 
 import { parseSrt, secondsToSrtTime } from '../helpers';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus';
@@ -120,6 +120,12 @@ function AppContent() {
   });
   // --- End Find Bar State ---
 
+  // --- State for URL Loading Progress --- START ---
+  const [isUrlLoading, setIsUrlLoading] = useState(false);
+  const [urlLoadProgressPercent, setUrlLoadProgressPercent] = useState(0);
+  const [urlLoadProgressStage, setUrlLoadProgressStage] = useState('');
+  // --- State for URL Loading Progress --- END ---
+
   // Callback for when Save As completes
   const handleSaveAsComplete = useCallback((newFilePath: string) => {
     console.log(
@@ -156,7 +162,7 @@ function AppContent() {
     (
       fileData:
         | File
-        | { name: string; path: string; size: number; type: string }
+        | { name: string; path: string /* size?: number; type?: string */ }
         | null
     ) => {
       resetSubtitleSource(); // Reset subtitles first
@@ -216,6 +222,118 @@ function AppContent() {
     [videoUrl, resetSubtitleSource, handleSetSubtitleSegments] // Dependencies
   );
   // --- UPDATED: handleSetVideoFile to store path --- END ---
+
+  // --- Function to handle loading video from URL --- START ---
+  const handleLoadFromUrl = useCallback(
+    async (url: string, quality: VideoQuality) => {
+      if (!url || !window.electron) {
+        console.error('Invalid URL or Electron API not available.');
+        // TODO: Show error to user
+        return;
+      }
+
+      console.log(
+        `[App] handleLoadFromUrl called with URL: ${url}, Quality: ${quality}`
+      );
+      // Reset relevant states
+      setIsMergingInProgress(false); // Ensure merge progress is hidden
+      setIsTranslationInProgress(false); // Ensure translation progress is hidden
+      setMergeProgress(0);
+      setMergeStage('');
+      setMergeOperationId(null);
+      setSaveError('');
+      // Reset URL loading state
+      setIsUrlLoading(true);
+      setUrlLoadProgressPercent(0);
+      setUrlLoadProgressStage('Initializing...');
+
+      // Trigger the URL processing logic (similar to GenerateSubtitles)
+      // We can potentially extract this logic into a shared hook/util later
+      // For now, call the IPC directly
+      try {
+        const result = await window.electron.processUrl({
+          url: url,
+          quality: quality, // Pass selected quality
+        });
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        if (result.videoPath && result.filename) {
+          // Read the content and create a Blob URL / File object
+          const fileContentResult = await window.electron.readFileContent(
+            result.videoPath
+          );
+          if (!fileContentResult.success || !fileContentResult.data) {
+            throw new Error(
+              fileContentResult.error ||
+                'Failed to read downloaded video content.'
+            );
+          }
+          const blob = new Blob([fileContentResult.data], {
+            type: 'video/mp4',
+          });
+          const blobUrl = URL.createObjectURL(blob);
+          const videoFileObj = new File([blob], result.filename, {
+            type: 'video/mp4',
+          });
+          (videoFileObj as any)._blobUrl = blobUrl;
+          (videoFileObj as any)._originalPath = result.videoPath;
+
+          // Call handleSetVideoFile with the new object
+          handleSetVideoFile(videoFileObj as any);
+        } else {
+          throw new Error(
+            'URL processing did not return necessary video info.'
+          );
+        }
+      } catch (err: any) {
+        console.error('[App] Error processing URL from sticky player:', err);
+        setSaveError(`Error loading URL: ${err.message || err}`);
+        setIsUrlLoading(false); // Stop loading on error
+      }
+    },
+    [handleSetVideoFile] // Dependency
+  );
+  // --- Function to handle loading video from URL --- END ---
+
+  // --- Effect for URL Loading Progress Listener --- START ---
+  useEffect(() => {
+    if (!window.electron?.onProcessUrlProgress) return;
+
+    console.log('[App] Setting up URL progress listener.');
+
+    const cleanup = window.electron.onProcessUrlProgress(progress => {
+      // Only update state if we are actually in the URL loading process
+      if (isUrlLoading) {
+        console.log('[App] URL Progress Update:', progress);
+        setUrlLoadProgressPercent(progress.percent ?? urlLoadProgressPercent);
+        setUrlLoadProgressStage(progress.stage ?? urlLoadProgressStage);
+
+        // Handle completion or error
+        if (progress.percent >= 100 || progress.error) {
+          setIsUrlLoading(false);
+          if (progress.error) {
+            // Display the error from the progress update
+            setSaveError(`Error during processing: ${progress.error}`);
+          } else {
+            // Optionally clear URL input field in GenerateSubtitles/TimestampDisplay upon success?
+            // Might need a different approach (e.g., callback)
+          }
+        }
+      }
+    });
+
+    // Cleanup function
+    return () => {
+      console.log('[App] Cleaning up URL progress listener.');
+      cleanup();
+    };
+    // Re-run if isUrlLoading changes (to attach/detach listener)
+    // Include dependent state setters to satisfy exhaustive-deps
+  }, [isUrlLoading, urlLoadProgressPercent, urlLoadProgressStage]);
+  // --- Effect for URL Loading Progress Listener --- END ---
 
   const handleSetIsPlaying = useCallback((playing: boolean) => {
     setIsPlaying(playing);
@@ -375,7 +493,7 @@ function AppContent() {
 
   return (
     <div className={pageWrapperStyles}>
-      {/* --- FindBar Render (Moved near top) --- */}
+      {videoUrl && <div style={{ height: 'CALC(35vh + 2rem)' }} />}
       <FindBar
         isVisible={isFindBarVisible}
         results={findResults}
@@ -411,12 +529,16 @@ function AppContent() {
                 subtitles={subtitleSegments}
                 onPlayerReady={handleVideoPlayerReady}
                 onChangeVideo={handleSetVideoFile}
+                onLoadFromUrl={handleLoadFromUrl}
                 onSrtLoaded={handleSetSubtitleSegments}
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
                 onTogglePlay={handleTogglePlay}
                 onShiftAllSubtitles={handleShiftAllSubtitles}
+                isUrlLoading={isUrlLoading}
+                urlLoadProgress={urlLoadProgressPercent}
+                urlLoadStage={urlLoadProgressStage}
                 isProgressBarVisible={
-                  isMergingInProgress || isTranslationInProgress
+                  isMergingInProgress || isTranslationInProgress || isUrlLoading
                 }
               />
             )}

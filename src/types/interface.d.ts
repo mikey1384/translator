@@ -15,7 +15,7 @@ import {
   TranslateSubtitlesResult,
 } from './interface'; // Make sure this path is correct
 import { AssStylePresetKey } from '../renderer/constants/subtitle-styles'; // Import the type
-import { VideoQuality } from '../services/url-processor'; // Import the type
+export type VideoQuality = 'low' | 'mid' | 'high'; // <-- Export type here
 
 // Define a reusable type for the progress event callback
 type ProgressEventCallback = (

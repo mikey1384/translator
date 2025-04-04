@@ -7,6 +7,7 @@ import { TimestampDisplay } from './TimestampDisplay';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
 import { SrtSegment } from '../../../types/interface';
+import { VideoQuality } from '../../../types/interface';
 
 const SCROLL_IGNORE_DURATION = 2000;
 
@@ -233,17 +234,25 @@ function StickyVideoPlayer({
   onTogglePlay,
   onShiftAllSubtitles,
   onUiInteraction,
+  onLoadFromUrl,
+  isUrlLoading,
+  urlLoadProgress,
+  urlLoadStage,
 }: {
   isProgressBarVisible: boolean;
   videoUrl: string;
   subtitles: SrtSegment[];
   onPlayerReady: (player: any) => void;
-  onChangeVideo?: (file: File) => void;
+  onChangeVideo?: (file: File | { path: string; name: string }) => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onScrollToCurrentSubtitle?: () => void;
   onTogglePlay?: () => void;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onUiInteraction?: () => void;
+  onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
+  isUrlLoading?: boolean;
+  urlLoadProgress?: number;
+  urlLoadStage?: string;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
@@ -744,11 +753,15 @@ function StickyVideoPlayer({
           <div className={controlsWrapperStyles(isPseudoFullscreen)}>
             <TimestampDisplay
               onChangeVideo={onChangeVideo}
-              onSrtLoaded={onSrtLoaded}
+              onLoadFromUrl={onLoadFromUrl}
               hasSubtitles={subtitles && subtitles.length > 0}
-              onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
+              onSrtLoaded={onSrtLoaded}
               onShiftAllSubtitles={onShiftAllSubtitles}
+              onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
               onUiInteraction={handleUiInteraction}
+              isUrlLoading={isUrlLoading}
+              urlLoadProgress={urlLoadProgress}
+              urlLoadStage={urlLoadStage}
             />
           </div>
         )}
