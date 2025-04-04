@@ -247,7 +247,7 @@ export function EditSubtitles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitlesProp]); // Depend on the prop
 
-  // Scroll to the start of the last reviewed batch
+  // Scroll to the start of the last reviewed batch and highlight all subtitles in the batch
   useEffect(() => {
     if (
       reviewedBatchStartIndex !== null &&
@@ -256,17 +256,49 @@ export function EditSubtitles({
     ) {
       // Ensure the index is within bounds
       if (reviewedBatchStartIndex < subtitleRefs.current.length) {
+        // Scroll to the first subtitle in the batch
         const targetElement = subtitleRefs.current[reviewedBatchStartIndex];
         if (targetElement) {
           console.log(
             `[EditSubtitles] Scrolling to reviewed index: ${reviewedBatchStartIndex}`
           );
           targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add a temporary highlight effect
-          targetElement.classList.add('highlight-subtitle');
-          setTimeout(() => {
-            targetElement.classList.remove('highlight-subtitle');
-          }, 2000); // Remove highlight after 2 seconds
+
+          // Highlight all subtitles in the batch (up to 20, which is the REVIEW_BATCH_SIZE)
+          const REVIEW_BATCH_SIZE = 20;
+          const endIndex = Math.min(
+            reviewedBatchStartIndex + REVIEW_BATCH_SIZE,
+            subtitleRefs.current.length
+          );
+
+          // First remove any existing highlights (in case this effect runs in quick succession)
+          subtitleRefs.current.forEach(element => {
+            if (element) {
+              element.classList.remove('highlight-subtitle');
+            }
+          });
+
+          // Add highlight effect to each subtitle in the batch with a slight delay between each
+          for (let i = reviewedBatchStartIndex; i < endIndex; i++) {
+            const element = subtitleRefs.current[i];
+            if (element) {
+              // Small delay for staggered effect
+              setTimeout(
+                () => {
+                  element.classList.add('highlight-subtitle');
+                },
+                (i - reviewedBatchStartIndex) * 100
+              );
+
+              // Remove highlight after animation
+              setTimeout(
+                () => {
+                  element.classList.remove('highlight-subtitle');
+                },
+                2000 + (i - reviewedBatchStartIndex) * 100
+              );
+            }
+          }
         }
       } else {
         console.warn(
@@ -731,6 +763,9 @@ export function EditSubtitles({
     let tempMergedFilePath: string | null = null; // Keep track of the temp file
     let cleanupMergeListener: (() => void) | null = null; // For listener cleanup
 
+    // Add a flag to track cancellation status from progress events
+    let wasCancelledViaProgress = false;
+
     try {
       // Setup Progress Listener
       const handleProgress = (_event: any, progress: any) => {
@@ -747,6 +782,8 @@ export function EditSubtitles({
             console.log('Detected cancellation in progress event:', progress);
             setMergeStage(progress.stage || 'Merge cancelled');
             setTimeout(() => setIsMergingInProgress(false), 2000);
+            // Set the cancellation flag to true
+            wasCancelledViaProgress = true;
           }
         }
       };
@@ -793,12 +830,14 @@ export function EditSubtitles({
 
       // Check for success and outputPath (not tempOutputPath)
       if (!mergeResult?.success || !mergeResult.outputPath) {
+        console.error('Merge process failed or no output path:', mergeResult);
         throw new Error(
           `Merge process failed: ${mergeResult?.error || 'Unknown merge error'}`
         );
       }
 
       tempMergedFilePath = mergeResult.outputPath; // Use outputPath instead of tempOutputPath
+      console.log('Successfully got merge output path:', tempMergedFilePath);
 
       // EXTRA CHECK: Consider empty or whitespace-only path as indication of cancellation
       if (!tempMergedFilePath || tempMergedFilePath.trim() === '') {
@@ -812,118 +851,121 @@ export function EditSubtitles({
 
       setMergeStage('Merge complete. Select save location...');
       setMergeProgress(100); // Indicate merge part is done
+      console.log(
+        'Merge complete, proceeding to save dialog for:',
+        tempMergedFilePath
+      );
 
-      // After checking mergeResult.outputPath and getting tempMergedFilePath
-      // Make sure tempMergedFilePath is valid before proceeding to save dialog
-      if (!tempMergedFilePath || tempMergedFilePath === '') {
+      // Check if the merge was cancelled via progress events
+      if (wasCancelledViaProgress) {
+        console.log(
+          'Merge was cancelled via progress events, skipping save dialog'
+        );
+        setMergeStage('Merge was cancelled');
+        setTimeout(() => setIsMergingInProgress(false), 2000);
+        return { success: false, error: 'Operation was cancelled' };
+      }
+
+      // Immediately show the save dialog after merge completes
+      console.log('⭐ ATTEMPTING TO DISPLAY SAVE DIALOG...');
+
+      // Ensure we remove any remaining validation before showing the save dialog
+      if (tempMergedFilePath && tempMergedFilePath.trim() !== '') {
+        try {
+          // Prompt User to Save
+          const inputExt = videoFile.name.includes('.')
+            ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
+            : '.mp4';
+          const suggestedOutputName = `video-with-subtitles${inputExt}`; // Simplified name
+
+          console.log(
+            '⭐ Showing save dialog with suggested name:',
+            suggestedOutputName,
+            'for merged file:',
+            tempMergedFilePath
+          );
+
+          const saveResult = await window.electron.saveFile({
+            content: '', // Not saving content directly, just getting path
+            defaultPath: suggestedOutputName,
+            title: 'Save Merged Video As',
+            filters: [
+              { name: 'Video Files', extensions: [inputExt.slice(1)] },
+              { name: 'All Files', extensions: ['*'] },
+            ],
+          });
+
+          console.log('Save dialog result:', saveResult);
+
+          if (saveResult.error) {
+            if (saveResult.error.includes('canceled')) {
+              console.log('Save was cancelled by user');
+              setMergeStage('Save canceled by user. Cleaning up...');
+              throw new Error('Save operation canceled by user.'); // Will trigger finally block
+            } else {
+              console.error('Save dialog error:', saveResult.error);
+              throw new Error(`Failed to get save path: ${saveResult.error}`);
+            }
+          }
+
+          if (!saveResult.filePath) {
+            console.error('No file path returned from save dialog');
+            throw new Error('No output path selected after merge.');
+          }
+
+          const finalOutputPath = saveResult.filePath;
+          console.log('User selected output path:', finalOutputPath);
+
+          // Move Temporary File to Final Location
+          // --- Add Logging --- START ---
+          console.log(`[Merge] Attempting to move file.`);
+          console.log(`[Merge] Source (temp): ${tempMergedFilePath}`);
+          console.log(
+            `[Merge] Destination (user selected): ${finalOutputPath}`
+          );
+          // --- Add Logging --- END ---
+
+          if (!tempMergedFilePath) {
+            throw new Error(
+              'Temporary merge file path is missing before move operation.'
+            );
+          }
+          if (!finalOutputPath) {
+            throw new Error(
+              'Final output path is missing before move operation (save dialog issue?).'
+            );
+          }
+
+          setMergeStage('Moving file to final destination...');
+          const moveResult = await window.electron.moveFile(
+            tempMergedFilePath,
+            finalOutputPath
+          );
+
+          console.log('Move result:', moveResult);
+
+          if (!moveResult?.success) {
+            throw new Error(
+              `Failed to move file: ${moveResult?.error || 'Unknown move error'}`
+            );
+          }
+
+          setMergeStage('File saved successfully!');
+          tempMergedFilePath = null; // Clear temp path as it's now moved
+          setTimeout(() => setIsMergingInProgress(false), 2000);
+          // Return final path on success
+          return { success: true, outputPath: finalOutputPath };
+        } catch (dialogError) {
+          console.error('Error during save dialog or file move:', dialogError);
+          throw dialogError; // Re-throw to be caught by the outer catch block
+        }
+      } else {
+        // If we get here, something went wrong with the merge result
         console.log('No valid output path from merge result, likely cancelled');
         setMergeStage('Operation did not complete, no file to save');
         setTimeout(() => setIsMergingInProgress(false), 2000);
         return { success: false, error: 'No output file was produced' };
       }
-
-      // Final check: Make sure we haven't been cancelled while preparing to save
-      if (isMergingInProgressProp === false) {
-        console.log('Merge operation was cancelled before showing save dialog');
-        setMergeStage('Merge cancelled');
-
-        // Clean up temporary file if it exists
-        if (tempMergedFilePath) {
-          try {
-            await window.electron.deleteFile({
-              filePathToDelete: tempMergedFilePath,
-            });
-            console.log(
-              `Deleted temporary merge file after cancellation: ${tempMergedFilePath}`
-            );
-            tempMergedFilePath = null;
-          } catch (cleanupErr) {
-            console.warn(
-              `Failed to delete temp file after cancellation: ${cleanupErr}`
-            );
-          }
-        }
-
-        return { success: false, error: 'Operation was cancelled' };
-      }
-
-      // Prompt User to Save
-      const inputExt = videoFile.name.includes('.')
-        ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
-        : '.mp4';
-      const suggestedOutputName = `video-with-subtitles${inputExt}`; // Simplified name
-
-      console.log(
-        'About to show save dialog with suggested name:',
-        suggestedOutputName
-      );
-
-      const saveResult = await window.electron.saveFile({
-        content: '', // Not saving content directly, just getting path
-        defaultPath: suggestedOutputName,
-        title: 'Save Merged Video As',
-        filters: [
-          { name: 'Video Files', extensions: [inputExt.slice(1)] },
-          { name: 'All Files', extensions: ['*'] },
-        ],
-      });
-
-      console.log('Save dialog result:', saveResult);
-
-      if (saveResult.error) {
-        if (saveResult.error.includes('canceled')) {
-          console.log('Save was cancelled by user');
-          setMergeStage('Save canceled by user. Cleaning up...');
-          throw new Error('Save operation canceled by user.'); // Will trigger finally block
-        } else {
-          console.error('Save dialog error:', saveResult.error);
-          throw new Error(`Failed to get save path: ${saveResult.error}`);
-        }
-      }
-
-      if (!saveResult.filePath) {
-        console.error('No file path returned from save dialog');
-        throw new Error('No output path selected after merge.');
-      }
-
-      const finalOutputPath = saveResult.filePath;
-      console.log('User selected output path:', finalOutputPath);
-
-      // Move Temporary File to Final Location
-      // --- Add Logging --- START ---
-      console.log(`[Merge] Attempting to move file.`);
-      console.log(`[Merge] Source (temp): ${tempMergedFilePath}`);
-      console.log(`[Merge] Destination (user selected): ${finalOutputPath}`);
-      // --- Add Logging --- END ---
-
-      if (!tempMergedFilePath) {
-        throw new Error(
-          'Temporary merge file path is missing before move operation.'
-        );
-      }
-      if (!finalOutputPath) {
-        throw new Error(
-          'Final output path is missing before move operation (save dialog issue?).'
-        );
-      }
-
-      setMergeStage('Moving file to final destination...');
-      const moveResult = await window.electron.moveFile(
-        tempMergedFilePath,
-        finalOutputPath
-      );
-
-      if (!moveResult?.success) {
-        throw new Error(
-          `Failed to move file: ${moveResult?.error || 'Unknown move error'}`
-        );
-      }
-
-      setMergeStage('File saved successfully!');
-      tempMergedFilePath = null; // Clear temp path as it's now moved
-      setTimeout(() => setIsMergingInProgress(false), 2000);
-      // Return final path on success
-      return { success: true, outputPath: finalOutputPath };
     } catch (error: any) {
       const errorMessage = error.message || 'Unknown merge error';
       console.error('Error during merge/save process:', error);

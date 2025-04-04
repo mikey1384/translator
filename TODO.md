@@ -1,20 +1,18 @@
 # Translator App UI/UX TODO
 
-## UI Alignment Issues
-
-- [ ] Fix vertical alignment of "Save" and "Save as text" buttons with their icons (should be centered)
-- [ ] Rename "Merge Subtitles to Video" button to just "Merge Subtitles" and add an icon
-
-## Missing Features
-
-- [ ] Restore the "Go to current" button (scrolls to the subtitle segment corresponding to the current video timestamp)
-
 ## User Experience Improvements
 
-- [ ] Add confirmation popups when canceling subtitle translation or merge processes
-- [ ] Check if the review process is working correctly (doesn't seem to improve translations much)
-- [ ] Provide more context to the LLM during the review phase compared to translation phase
-- [ ] Restore the functionality that briefly highlights reviewed parts when they arrive from the server
+- [x] Provide more context to the LLM during the review phase compared to translation phase
+- [x] Restore the functionality that briefly highlights reviewed parts when they arrive from the server
+- [x] Fix the review process by properly handling segment context to prevent repeating the same lines
+- [x] Fix video preview position to display below the progress bar during translation/merging operations
+- [x] Fix missing download popup after video merging with subtitles completes
+- [x] Prevent video player expand/shrink when using the "Scroll to current" button
+- [x] Fix shrink-then-expand behavior when scrolling up after using "Scroll to current"
+- [x] Clear video player sizing cooldowns when user scrolls counter to the last size change
+- [x] Fix video player size changing during automatic scrolling from the "Scroll to Current" button
+- [x] Prevent video player from scrolling off screen when pressing Enter in subtitle textareas
+- [ ] Fix sticky video player incorrectly expanding/shrinking when progress bar changes during merging/translating
 
 ## Progress Indicators
 

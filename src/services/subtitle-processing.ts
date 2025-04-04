@@ -311,6 +311,7 @@ export async function generateSubtitlesFromVideo(
     total?: number;
     partialResult?: string;
     error?: string;
+    batchStartIndex?: number;
   }) => void,
   services?: {
     ffmpegService: FFmpegService;
@@ -541,6 +542,7 @@ export async function generateSubtitlesFromVideo(
         startIndex: batchStart,
         endIndex: batchEnd,
         targetLang: targetLang,
+        allSegments: segmentsInProcess,
       };
 
       const reviewedBatch = await reviewTranslationBatch(
@@ -565,6 +567,7 @@ export async function generateSubtitlesFromVideo(
           partialResult: cumulativeReviewedSrt,
           current: batchEnd,
           total: segmentsInProcess.length,
+          batchStartIndex: batchStart,
         });
       }
     }
@@ -733,7 +736,7 @@ export async function mergeSubtitlesWithVideo(
     if (progressCallback) {
       progressCallback({
         percent: 100,
-        stage: 'Merge complete, ready to save',
+        stage: 'Merge complete',
       });
     }
     return { outputPath };
@@ -942,6 +945,7 @@ async function reviewTranslationBatch(
     startIndex: number;
     endIndex: number;
     targetLang: string;
+    allSegments: SrtSegment[];
   },
   signal?: AbortSignal,
   parentOperationId: string = 'review-batch'
@@ -965,22 +969,81 @@ async function reviewTranslationBatch(
     );
   }
 
-  const batchItems = batch.segments.map((block: any, idx: number) => {
-    const absoluteIndex = batch.startIndex + idx;
-    const [original, translation] = block.text.split(
-      '###TRANSLATION_MARKER###'
-    );
-    return {
-      index: absoluteIndex + 1,
-      original: original?.trim() || '',
-      translation: (translation || original || '').trim(),
-    };
-  });
+  // Get enhanced context by including segments before and after the current batch
+  const CONTEXT_WINDOW_SIZE = 5; // Number of segments to include before and after
 
-  const originalTexts = batchItems
+  // Get the full list of segments to determine the available context
+  const allSegments = batch.allSegments;
+  const totalAvailableSegments = allSegments.length;
+
+  // Determine the actual context boundaries (preventing out-of-bounds access)
+  const contextStartIndex = Math.max(0, batch.startIndex - CONTEXT_WINDOW_SIZE);
+  const contextEndIndex = Math.min(
+    batch.startIndex + batch.segments.length + CONTEXT_WINDOW_SIZE,
+    totalAvailableSegments + batch.startIndex
+  );
+
+  // Create a map of all batch items including context
+  const batchItemsWithContext = batch.segments.map(
+    (block: any, idx: number) => {
+      const absoluteIndex = batch.startIndex + idx;
+      const [original, translation] = block.text.split(
+        '###TRANSLATION_MARKER###'
+      );
+      return {
+        index: absoluteIndex + 1,
+        original: original?.trim() || '',
+        translation: (translation || original || '').trim(),
+        // Flag whether this is part of the actual batch (vs. just context)
+        isPartOfBatch: true,
+      };
+    }
+  );
+
+  // Only render the actual batch items for output
+  const originalTexts = batchItemsWithContext
     .map(item => `[${item.index}] ${item.original}`)
     .join('\n');
-  const translatedTexts = batchItems
+  const translatedTexts = batchItemsWithContext
+    .map(item => `[${item.index}] ${item.translation}`)
+    .join('\n');
+
+  // Create enhanced context with segments before and after
+  const contextBlocks = [];
+
+  // Add previous context if available
+  for (let i = contextStartIndex; i < batch.startIndex; i++) {
+    if (i >= 0 && i < allSegments.length) {
+      const [original, translation] = allSegments[i].text.split(
+        '###TRANSLATION_MARKER###'
+      );
+      contextBlocks.push({
+        index: i + 1,
+        original: original?.trim() || '',
+        translation: (translation || original || '').trim(),
+      });
+    }
+  }
+
+  // Add segments after the batch as context
+  for (let i = batch.endIndex; i < contextEndIndex; i++) {
+    if (i >= 0 && i < allSegments.length) {
+      const [original, translation] = allSegments[i].text.split(
+        '###TRANSLATION_MARKER###'
+      );
+      contextBlocks.push({
+        index: i + 1,
+        original: original?.trim() || '',
+        translation: (translation || original || '').trim(),
+      });
+    }
+  }
+
+  // Format the context for the prompt
+  const contextOriginalTexts = contextBlocks
+    .map(item => `[${item.index}] ${item.original}`)
+    .join('\n');
+  const contextTranslatedTexts = contextBlocks
     .map(item => `[${item.index}] ${item.translation}`)
     .join('\n');
 
@@ -993,7 +1056,17 @@ Review and improve each translated subtitle block below **individually**.
 - For each block, provide the improved translation. Focus on accuracy, completeness, consistency, and context based on the original text.
 - Preserve the sequence of information from the corresponding original text.
 - **CRITICAL SYNC RULE:** If a block's content (e.g., 1-2 leftover words) logically belongs to the *previous* block's translation, leave the *current* block's translation **COMPLETELY BLANK**. Do not fill it with the *next* block's content.
+- Ensure consistency in terminology and style across all blocks.
+- Look at the surrounding context to ensure your translations maintain narrative coherence.
 
+**SURROUNDING CONTEXT (DO NOT TRANSLATE THESE - FOR REFERENCE ONLY):**
+**Original Context:**
+${contextOriginalTexts}
+
+**Translated Context:**
+${contextTranslatedTexts}
+
+**BLOCKS TO REVIEW (TRANSLATE ONLY THESE):**
 **ORIGINAL TEXT (Context Only - DO NOT MODIFY):**
 ${originalTexts}
 

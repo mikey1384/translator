@@ -218,7 +218,12 @@ export function TimestampDisplay({
       {/* Scroll to Current Button */}
       {onScrollToCurrentSubtitle && hasSubtitles && (
         <Button
-          onClick={onScrollToCurrentSubtitle}
+          onClick={() => {
+            // Call onUiInteraction first to ignore upcoming scroll events
+            if (onUiInteraction) onUiInteraction();
+            // Then scroll to current subtitle
+            onScrollToCurrentSubtitle();
+          }}
           title="Scroll to current subtitle"
           size="sm"
           variant="secondary"

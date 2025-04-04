@@ -81,42 +81,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
             };
           });
 
-          setSubtitleSegments(prevSegments => {
-            if (!prevSegments || prevSegments.length === 0) {
-              console.debug(
-                `[useSubtitleManagement] Initializing segments with first partial batch. Count: ${processedSegments.length}`
-              );
-              if (safeResult.batchStartIndex !== 0) {
-                console.warn(
-                  `[useSubtitleManagement] First partial batch received, but batchStartIndex is ${safeResult.batchStartIndex}. Initializing from index 0.`
-                );
-              }
-              return processedSegments;
-            }
-
-            const updatedSegments = [...prevSegments];
-            const startIndex = safeResult.batchStartIndex ?? 0;
-
-            console.debug(
-              `[useSubtitleManagement] Merging partial results. StartIndex: ${startIndex}, Count: ${processedSegments.length}`
-            );
-
-            processedSegments.forEach((newSegData, i) => {
-              const targetIndex = startIndex + i;
-              if (targetIndex < updatedSegments.length) {
-                updatedSegments[targetIndex] = {
-                  ...updatedSegments[targetIndex],
-                  text: newSegData.text,
-                };
-              } else {
-                console.warn(
-                  `[useSubtitleManagement] Attempted to update out-of-bounds index ${targetIndex}`
-                );
-              }
-            });
-
-            return updatedSegments;
-          });
+          setSubtitleSegments(processedSegments);
         }
 
         setTranslationProgress(safeResult.percent);

@@ -51,12 +51,25 @@ function SubtitleList({
         }
 
         @keyframes highlight-pulse {
-          0%,
+          0% {
+            background-color: rgba(255, 215, 0, 0.6);
+            transform: scale(1.01);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+          }
+          30% {
+            background-color: rgba(255, 215, 0, 0.4);
+            transform: scale(1.005);
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+          }
+          70% {
+            background-color: rgba(255, 215, 0, 0.2);
+            transform: scale(1);
+            box-shadow: 0 0 3px rgba(255, 215, 0, 0.1);
+          }
           100% {
             background-color: transparent;
-          }
-          50% {
-            background-color: rgba(255, 215, 0, 0.3); // Use a theme color?
+            transform: scale(1);
+            box-shadow: none;
           }
         }
       `}`}

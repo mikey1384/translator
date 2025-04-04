@@ -23,9 +23,8 @@ interface StickyVideoPlayerProps {
 }
 
 // Threshold for scrolling up before expanding (in pixels)
-const EXPAND_SCROLL_THRESHOLD = 1000;
 // Duration to ignore scroll events after UI interaction (in milliseconds)
-const SCROLL_IGNORE_DURATION = 200;
+const SCROLL_IGNORE_DURATION = 2000; // Increased from previous value to cover smooth scrolling
 
 // --- Add Video Controls Overlay Styles --- START ---
 const videoOverlayControlsStyles = css`
@@ -275,6 +274,11 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [progressBarHeight, setProgressBarHeight] = useState(0);
+
+  // Add a state to track if we're currently auto-scrolling from "Scroll to Current" button
+  const isScrollToCurrentActive = useRef(false);
+  const scrollToCurrentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- State for Fullscreen Control Auto-Hide --- START ---
   const [showFullscreenControls, setShowFullscreenControls] = useState(true); // Initially visible
@@ -286,9 +290,21 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   const placeholderRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const isStickyActive = useRef(false);
-  const scrollUpStartPosition = useRef<number | null>(null);
   const ignoreScrollRef = useRef(false);
   const ignoreScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper function to update expansion state and log changes
+  const updateExpandedState = (newIsExpanded: boolean, reason: string) => {
+    setIsExpanded(prevIsExpanded => {
+      if (prevIsExpanded !== newIsExpanded) {
+        console.log(
+          `StickyVideo: Setting isExpanded = ${newIsExpanded} (Reason: ${reason})`
+        );
+        return newIsExpanded;
+      }
+      return prevIsExpanded; // No change
+    });
+  };
 
   // Function to handle UI interaction and set ignore flag
   const handleUiInteraction = useCallback(() => {
@@ -306,103 +322,168 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     if (onUiInteraction) onUiInteraction();
   }, [onUiInteraction]);
 
+  // Wrap the onScrollToCurrentSubtitle to track active scrolling state
+  const handleScrollToCurrentSubtitle = useCallback(() => {
+    if (!onScrollToCurrentSubtitle) return;
+
+    // --- NEW: Clear any existing UI interaction cooldowns ---
+    if (ignoreScrollTimeoutRef.current) {
+      clearTimeout(ignoreScrollTimeoutRef.current);
+      ignoreScrollTimeoutRef.current = null;
+    }
+    ignoreScrollRef.current = false; // Explicitly clear the ignore flag
+    console.log('Cleared existing cooldowns before Scroll to Current');
+    // --- END NEW ---
+
+    // Set the flag to prevent size changes during scrolling
+    isScrollToCurrentActive.current = true;
+    console.log('Scroll to Current activated, preventing size changes');
+
+    // Clear any existing timeout for the scroll-to-current itself
+    if (scrollToCurrentTimeoutRef.current) {
+      clearTimeout(scrollToCurrentTimeoutRef.current);
+    }
+
+    // Call the actual scroll function
+    onScrollToCurrentSubtitle();
+
+    // Set a timeout to reset the flag after scrolling completes
+    scrollToCurrentTimeoutRef.current = setTimeout(() => {
+      isScrollToCurrentActive.current = false;
+      scrollToCurrentTimeoutRef.current = null;
+      console.log('Scroll to Current complete, size changes enabled');
+    }, 1500); // Slightly shorter than the smooth scroll animation duration
+  }, [onScrollToCurrentSubtitle]);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (ignoreScrollTimeoutRef.current) {
         clearTimeout(ignoreScrollTimeoutRef.current);
       }
+      if (scrollToCurrentTimeoutRef.current) {
+        clearTimeout(scrollToCurrentTimeoutRef.current);
+      }
     };
   }, []);
 
   useEffect(() => {
     const calculateHeight = () => {
-      if (!playerRef.current) return;
-      const rect = playerRef.current.getBoundingClientRect();
-      if (rect.height > 0) {
-        setPlaceholderHeight(rect.height);
+      // Ensure both refs are available
+      if (!playerRef.current || !placeholderRef.current) return;
+
+      const playerRect = playerRef.current.getBoundingClientRect();
+      if (playerRect.height > 0) {
+        setPlaceholderHeight(playerRect.height);
+
+        // --- Set Initial Sticky/Expanded State ---
+        // This should only run once after the height is first determined
+        // Check if sticky state hasn't been initialized yet (using a flag or check)
+        // For simplicity, we assume this effect runs reliably once after mount to set initial state.
+        const currentScrollY = window.scrollY;
+        // Ensure offsetTop is read correctly, might need a slight delay if calculation runs too early
+        const placeholderTop = placeholderRef.current.offsetTop ?? 0;
+        const shouldInitiallyBeSticky = currentScrollY > placeholderTop;
+
+        // Set initial sticky state ref
+        isStickyActive.current = shouldInitiallyBeSticky;
+        // Always start expanded
+        updateExpandedState(true, 'Initial Load');
+        // Notify parent of initial sticky state
+        if (onStickyChange) onStickyChange(shouldInitiallyBeSticky);
+        // Log initial calculation details
+        console.log(
+          `Initial State: scrollY=${currentScrollY}, placeholderTop=${placeholderTop}, shouldBeSticky=${shouldInitiallyBeSticky}`
+        );
+        // --- End Initial State Set ---
       }
     };
 
-    calculateHeight();
+    // Use rAF to wait for layout stability before calculation
+    const rafId = requestAnimationFrame(() => {
+      calculateHeight();
+    });
+
     window.addEventListener('resize', calculateHeight);
-    if (onStickyChange) {
-      onStickyChange(true);
-    }
+
+    // Cleanup function
     return () => {
+      cancelAnimationFrame(rafId); // Cancel rAF on cleanup
       window.removeEventListener('resize', calculateHeight);
     };
-  }, [onStickyChange]);
+    // Dependency array ensures this runs once on mount and then only on resize
+  }, [onStickyChange]); // Added updateExpandedState to dependencies if it's not stable
 
   useEffect(() => {
     const handleScroll = throttle(() => {
-      // --- Check Ignore Flag ---
-      if (ignoreScrollRef.current) {
-        return; // Ignore scroll event if flag is set
-      }
-      // --- End Check Ignore Flag ---
-
       const currentScrollY = window.scrollY;
       const placeholderTop = placeholderRef.current?.offsetTop ?? 0;
-      const buffer = 30;
+      const buffer = 30; // Buffer for downward scroll before shrinking
 
-      // Disable scroll-based expand/shrink when in pseudo-fullscreen
+      // --- Update lastScrollY *before* any checks that might return early ---
+      const scrollDelta = currentScrollY - lastScrollY.current; // Positive = down, Negative = up
+      lastScrollY.current = currentScrollY; // Update immediately
+      // --- End Update ---
+
+      // 1. Check if scrolling is temporarily disabled
+      if (isScrollToCurrentActive.current || ignoreScrollRef.current) {
+        return; // Exit if auto-scrolling or in cooldown
+      }
+
+      // 2. Disable scroll-based expand/shrink when in pseudo-fullscreen
       if (isPseudoFullscreen) {
-        if (!isExpanded) setIsExpanded(true); // Ensure it's expanded in fullscreen
+        updateExpandedState(true, 'Pseudo Fullscreen Active');
+        // lastScrollY is already updated above
         return;
       }
 
+      // 3. Determine Sticky State & Apply Simplified Expand/Shrink Logic
       const shouldBeSticky = currentScrollY > placeholderTop;
 
       if (shouldBeSticky) {
+        // Handle becoming sticky (if not already)
         if (!isStickyActive.current) {
-          setIsExpanded(true);
+          updateExpandedState(true, 'Becoming Sticky');
           isStickyActive.current = true;
-          scrollUpStartPosition.current = null;
           if (onStickyChange) onStickyChange(true);
         }
 
-        if (Math.abs(currentScrollY - lastScrollY.current) > buffer) {
-          if (currentScrollY < lastScrollY.current) {
-            if (scrollUpStartPosition.current === null) {
-              scrollUpStartPosition.current = lastScrollY.current;
-            }
-            if (
-              isExpanded ||
-              (scrollUpStartPosition.current !== null &&
-                scrollUpStartPosition.current - currentScrollY >=
-                  EXPAND_SCROLL_THRESHOLD)
-            ) {
-              setIsExpanded(true);
-            }
-          } else if (currentScrollY > lastScrollY.current) {
-            setIsExpanded(false);
-            scrollUpStartPosition.current = null;
+        // --- Ultra-Simplified Expand/Shrink Logic ---
+        // Use the calculated scrollDelta from before the early return checks
+        if (scrollDelta < 0) {
+          // Equivalent to isScrollingUp
+          updateExpandedState(true, 'Scrolling Up');
+        } else {
+          // Scrolling DOWN or stopped: Shrink only if scrolled DOWN significantly
+          if (scrollDelta > buffer) {
+            // Check delta is positive (down) AND exceeds buffer
+            updateExpandedState(false, 'Scrolling Down (Buffer Exceeded)');
           }
         }
+        // --- End Simplified Logic ---
       } else {
+        // Not sticky anymore
+        // Handle becoming non-sticky (if was sticky)
         if (isStickyActive.current) {
-          setIsExpanded(true);
+          updateExpandedState(true, 'Becoming Non-Sticky');
           isStickyActive.current = false;
-          scrollUpStartPosition.current = null;
           if (onStickyChange) onStickyChange(false);
         }
       }
 
-      lastScrollY.current = currentScrollY;
-    }, 100);
+      // 4. Update last scroll position - MOVED TO TOP
+      // lastScrollY.current = currentScrollY;
+    }, 100); // Throttle interval
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     lastScrollY.current = window.scrollY;
-
-    handleScroll();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       handleScroll.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onStickyChange, isPseudoFullscreen]);
+  }, [onStickyChange, isPseudoFullscreen]); // Removed isExpanded from dependencies
 
   useEffect(() => {
     if (!nativePlayer.instance) return;
@@ -582,6 +663,64 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   }, [isPseudoFullscreen, handleActivity]);
   // --- Logic for Fullscreen Control Auto-Hide --- END ---
 
+  // Add effect to detect and measure the progress bar
+  useEffect(() => {
+    const checkProgressBar = () => {
+      // Specifically looking for the progress bars by their content
+      // This is more reliable than class names which might be hashed
+      const progressAreas = Array.from(document.querySelectorAll('div')).filter(
+        el => {
+          // Check if this element contains headers with specific text
+          return (
+            el.innerHTML.includes('Translation in Progress') ||
+            el.innerHTML.includes('Merge in Progress')
+          );
+        }
+      );
+
+      let maxHeight = 0;
+      progressAreas.forEach(el => {
+        // Find the top-most parent with fixed positioning
+        let currentEl: HTMLElement | null = el;
+        let fixedParent: HTMLElement | null = null;
+
+        while (currentEl && currentEl !== document.body) {
+          const style = window.getComputedStyle(currentEl);
+          if (style.position === 'fixed') {
+            fixedParent = currentEl;
+            break;
+          }
+          currentEl = currentEl.parentElement;
+        }
+
+        if (fixedParent) {
+          const height = fixedParent.getBoundingClientRect().height;
+          if (height > maxHeight) {
+            maxHeight = height;
+          }
+        }
+      });
+
+      setProgressBarHeight(maxHeight);
+    };
+
+    // Check initially
+    checkProgressBar();
+
+    // Set up a mutation observer to detect when progress bar appears/disappears
+    const observer = new MutationObserver(checkProgressBar);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Check periodically as well for safety
+    const intervalId = setInterval(checkProgressBar, 500);
+
+    // Clean up
+    return () => {
+      observer.disconnect();
+      clearInterval(intervalId);
+    };
+  }, []);
+
   if (!videoUrl) return null;
 
   // Calculate progress percentage for the seekbar
@@ -601,6 +740,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
         )} sticky-video-container ${isExpanded ? 'expanded' : 'shrunk'} ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
         ref={playerRef}
         data-expanded={isExpanded}
+        style={{ top: isPseudoFullscreen ? 0 : progressBarHeight }}
       >
         <div
           className={playerWrapperStyles(isPseudoFullscreen)}
@@ -741,7 +881,7 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
               onChangeVideo={onChangeVideo}
               onSrtLoaded={onSrtLoaded}
               hasSubtitles={subtitles && subtitles.length > 0}
-              onScrollToCurrentSubtitle={onScrollToCurrentSubtitle}
+              onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
               _isPlaying={isPlaying}
               _onTogglePlay={onTogglePlay}
               onShiftAllSubtitles={onShiftAllSubtitles}
