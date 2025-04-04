@@ -1,23 +1,52 @@
 import path from 'path';
 import { FFmpegService } from './ffmpeg-service';
-import { FileManager } from './file-manager';
 import { parseSrt, buildSrt } from '../renderer/helpers/subtitle-utils';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import keytar from 'keytar';
 import { AI_MODELS } from '../renderer/constants';
-import { SrtSegment } from '../types/interface';
+import {
+  GenerateSubtitlesOptions,
+  GenerateSubtitlesResult,
+  SrtSegment,
+} from '../types/interface';
 import Anthropic from '@anthropic-ai/sdk';
 import { OpenAI } from 'openai';
 import { cancellationService } from './cancellation-service';
 console.log('Imported cancellationService:', cancellationService);
 // import log from 'electron-log';
 
-import {
-  GenerateSubtitlesOptions,
-  GenerateSubtitlesResult,
-  MergeSubtitlesOptions,
-} from '../types/interface';
+import { MergeSubtitlesOptions } from '../types/interface';
+import { FileManager } from './file-manager';
+
+// Define the type for the arguments object
+interface GenerateSubtitlesArgs {
+  options: GenerateSubtitlesOptions;
+  operationId: string;
+  signal: AbortSignal; // Signal remains required
+  progressCallback?: (progress: {
+    percent: number;
+    stage: string;
+    current?: number;
+    total?: number;
+    partialResult?: string;
+    error?: string;
+    batchStartIndex?: number;
+  }) => void;
+  services?: {
+    ffmpegService: FFmpegService;
+    fileManager: FileManager;
+  };
+}
+
+// Define the type for the arguments object for translateBatch
+interface TranslateBatchArgs {
+  batch: { segments: any[]; startIndex: number; endIndex: number };
+  targetLang: string;
+  anthropicApiKey: string;
+  operationId: string;
+  signal?: AbortSignal; // Keep signal optional as before for this function
+}
 
 const KEYTAR_SERVICE_NAME = 'TranslatorApp';
 
@@ -50,6 +79,7 @@ async function generateSubtitlesFromAudio({
   inputAudioPath,
   progressCallback,
   signal,
+  operationId,
 }: {
   inputAudioPath: string;
   progressCallback?: (progress: {
@@ -60,7 +90,8 @@ async function generateSubtitlesFromAudio({
     partialResult?: string;
     error?: string;
   }) => void;
-  signal?: AbortSignal;
+  signal: AbortSignal;
+  operationId?: string;
 }): Promise<string> {
   let openai: OpenAI;
   try {
@@ -76,8 +107,6 @@ async function generateSubtitlesFromAudio({
       keyError instanceof Error ? keyError.message : String(keyError)
     );
   }
-
-  const _callId = `${Date.now()}${Math.random().toString(36).substring(2, 7)}`;
   const tempDir = path.dirname(inputAudioPath);
   const overallSrtSegments: SrtSegment[] = [];
   const createdChunkPaths: string[] = [];
@@ -104,16 +133,12 @@ async function generateSubtitlesFromAudio({
         'Could not determine valid audio duration.'
       );
     }
-    console.info(`[${_callId}] Audio duration: ${duration}s`);
     progressCallback?.({ percent: ANALYSIS_PROGRESS, stage: 'Audio analyzed' });
 
     const TARGET_CHUNK_DURATION_SECONDS = 10 * 60;
     const numChunks = Math.max(
       1,
       Math.ceil(duration / TARGET_CHUNK_DURATION_SECONDS)
-    );
-    console.info(
-      `[${_callId}] Calculated ${numChunks} chunks based on ${TARGET_CHUNK_DURATION_SECONDS}s target duration.`
     );
     progressCallback?.({
       percent: CHUNKING_PROGRESS,
@@ -134,22 +159,15 @@ async function generateSubtitlesFromAudio({
 
       const chunkPath = path.join(
         tempDir,
-        `chunk_${_callId}_${chunkIndex}.mp3`
+        `chunk_${operationId}_${chunkIndex}.mp3`
       );
       createdChunkPaths.push(chunkPath);
-
-      console.info(
-        `[${_callId}] Extracting chunk ${chunkIndex}/${numChunks} (Start: ${startTime.toFixed(3)}s, Duration: ${currentChunkDuration.toFixed(3)}s) to ${chunkPath}`
-      );
 
       await ffmpegService.extractAudioSegment(
         inputAudioPath,
         chunkPath,
         startTime,
         currentChunkDuration
-      );
-      console.info(
-        `[${_callId}] Successfully extracted chunk ${chunkIndex}: ${chunkPath}`
       );
 
       chunkProcessingPromises.push(
@@ -166,8 +184,17 @@ async function generateSubtitlesFromAudio({
           });
 
           try {
+            // --- Add explicit check before API call --- START ---
+            if (signal.aborted) {
+              console.info(
+                `[${operationId}] Transcription chunk ${chunkIndex} cancelled just before API call.`
+              );
+              throw new Error('Operation cancelled');
+            }
+            // --- Add explicit check before API call --- END ---
+
             console.info(
-              `[${_callId}] Sending chunk ${chunkIndex} to OpenAI Whisper API.`
+              `[${operationId}] Sending chunk ${chunkIndex} to OpenAI Whisper API.`
             );
             const fileStream = createFileFromPath(chunkPath);
 
@@ -177,11 +204,11 @@ async function generateSubtitlesFromAudio({
                 file: fileStream,
                 response_format: 'srt',
               },
-              { signal }
+              { signal } // Pass signal to OpenAI API
             );
 
             console.info(
-              `[${_callId}] Received transcription for chunk ${chunkIndex}.`
+              `[${operationId}] Received transcription for chunk ${chunkIndex}.`
             );
 
             const srtContent = response as unknown as string;
@@ -190,7 +217,7 @@ async function generateSubtitlesFromAudio({
               chunkSegments = parseSrt(srtContent);
             } else {
               console.warn(
-                `[${_callId}] Received unexpected non-SRT response for chunk ${chunkIndex}:`,
+                `[${operationId}] Received unexpected non-SRT response for chunk ${chunkIndex}:`,
                 response
               );
             }
@@ -212,11 +239,24 @@ async function generateSubtitlesFromAudio({
             });
 
             return chunkSegments;
-          } catch (error) {
+          } catch (error: any) {
+            // <-- Add : any type for error
             console.error(
-              `[${_callId}] Error transcribing chunk ${chunkIndex} (${chunkPath}):`,
-              error
+              `[${operationId}] Error transcribing chunk ${chunkIndex} (${chunkPath}):`,
+              error.name,
+              error.message
             );
+
+            // --- Modify error handling for cancellation --- START ---
+            if (error.name === 'AbortError' || signal.aborted) {
+              console.info(
+                `[${operationId}] Transcription chunk ${chunkIndex} detected cancellation signal/error.`
+              );
+              throw new Error('Operation cancelled'); // Ensure cancellation propagates
+            }
+            // --- Modify error handling for cancellation --- END ---
+
+            // Existing progress update for non-cancellation errors
             progressCallback?.({
               percent:
                 TRANSCRIPTION_START_PROGRESS +
@@ -227,7 +267,7 @@ async function generateSubtitlesFromAudio({
               current: chunkIndex,
               total: numChunks,
             });
-            return [];
+            return []; // Return empty for this failed chunk
           }
         })()
       );
@@ -238,17 +278,14 @@ async function generateSubtitlesFromAudio({
     results.forEach((result, index) => {
       if (result.status === 'fulfilled' && result.value.length > 0) {
         overallSrtSegments.push(...result.value);
-        console.info(
-          `[${_callId}] Added ${result.value.length} segments from chunk ${index + 1}`
-        );
       } else if (result.status === 'rejected') {
         console.error(
-          `[${_callId}] Promise for chunk ${index + 1} rejected:`,
+          `[${operationId}] Promise for chunk ${index + 1} rejected:`,
           result.reason
         );
       } else if (result.status === 'fulfilled' && result.value.length === 0) {
         console.warn(
-          `[${_callId}] Chunk ${index + 1} processing returned no segments (potentially due to an error).`
+          `[${operationId}] Chunk ${index + 1} processing returned no segments (potentially due to an error).`
         );
       }
     });
@@ -259,9 +296,6 @@ async function generateSubtitlesFromAudio({
       segment.index = index + 1;
     });
 
-    console.info(
-      `[${_callId}] Total segments processed: ${overallSrtSegments.length}`
-    );
     progressCallback?.({
       percent: TRANSCRIPTION_END_PROGRESS,
       stage: `Finalizing ${overallSrtSegments.length} subtitle segments...`,
@@ -275,7 +309,10 @@ async function generateSubtitlesFromAudio({
     });
     return finalSrtContent;
   } catch (error) {
-    console.error(`[${_callId}] Error in generateSubtitlesFromAudio:`, error);
+    console.error(
+      `[${operationId}] Error in generateSubtitlesFromAudio:`,
+      error
+    );
     progressCallback?.({
       percent: 100,
       stage: 'Error',
@@ -287,75 +324,53 @@ async function generateSubtitlesFromAudio({
           error instanceof Error ? error.message : String(error)
         );
   } finally {
-    console.info(
-      `[${_callId}] Cleaning up ${createdChunkPaths.length} audio chunks...`
-    );
     const cleanupPromises = createdChunkPaths.map(chunkPath =>
       fsp
         .unlink(chunkPath)
         .catch(err =>
-          console.warn(`[${_callId}] Failed to delete chunk ${chunkPath}:`, err)
+          console.warn(
+            `[${operationId}] Failed to delete chunk ${chunkPath}:`,
+            err
+          )
         )
     );
     await Promise.allSettled(cleanupPromises);
-    console.info(`[${_callId}] Chunk cleanup finished.`);
+    console.info(`[${operationId}] Chunk cleanup finished.`);
   }
 }
 
-export async function generateSubtitlesFromVideo(
-  options: GenerateSubtitlesOptions,
-  progressCallback?: (progress: {
-    percent: number;
-    stage: string;
-    current?: number;
-    total?: number;
-    partialResult?: string;
-    error?: string;
-    batchStartIndex?: number;
-  }) => void,
-  services?: {
-    ffmpegService: FFmpegService;
-    fileManager: FileManager;
-  },
-  signal?: AbortSignal
-): Promise<GenerateSubtitlesResult> {
-  const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  console.log(`[generateSubtitlesFromVideo] Started operation: ${operationId}`);
-
+export async function generateSubtitlesFromVideo({
+  options,
+  operationId,
+  signal,
+  progressCallback,
+  services,
+}: GenerateSubtitlesArgs): Promise<GenerateSubtitlesResult> {
+  // Basic parameter checks
   if (!options) {
     options = { targetLanguage: 'original' } as GenerateSubtitlesOptions;
   }
   if (!options.videoPath) {
     throw new SubtitleProcessingError('Video path is required');
   }
-  if (!services?.ffmpegService || !services?.fileManager) {
-    throw new SubtitleProcessingError('Required services not provided');
+  // Check if services are provided - use a default or throw if essential and missing
+  const effectiveServices = services || {
+    ffmpegService: new FFmpegService(),
+    fileManager: new FileManager(),
+  }; // Example: Create new if not provided
+  if (!effectiveServices?.ffmpegService || !effectiveServices?.fileManager) {
+    throw new SubtitleProcessingError(
+      'Required services (ffmpegService, fileManager) not provided'
+    );
   }
 
-  const { ffmpegService, fileManager } = services;
+  const { ffmpegService, fileManager } = effectiveServices; // Use the potentially defaulted services
 
-  // Register this operation with the cancellation service if a signal is provided
-  if (signal && signal.aborted === false) {
-    // Create a controller that's connected to the provided signal
-    const controller = new AbortController();
-    // Forward abort events from the input signal to our controller
-    const abortHandler = () => controller.abort();
-    signal.addEventListener('abort', abortHandler);
-
-    // Register with cancellation service
-    cancellationService.registerOperation(operationId, controller);
-
-    // Cleanup listener when done
-    setTimeout(() => {
-      signal.removeEventListener('abort', abortHandler);
-    }, 0);
-  }
-
-  let audioPath: string | null = null;
-
-  const targetLang = options.targetLanguage?.toLowerCase() || 'original';
+  // Track whether translation is needed
+  const targetLang = (options.targetLanguage || 'original').toLowerCase();
   const isTranslationNeeded = targetLang !== 'original';
 
+  // Define progress stages (approximate)
   const STAGE_AUDIO_EXTRACTION = { start: 0, end: 10 };
   const STAGE_TRANSCRIPTION = { start: 10, end: 50 };
   const STAGE_TRANSLATION = isTranslationNeeded
@@ -369,45 +384,72 @@ export async function generateSubtitlesFromVideo(
     end: 100,
   };
 
-  const scaleProgress = (
+  /**
+   * Scales a sub-progress percent to the global progress range.
+   */
+  function scaleProgress(
     percent: number,
-    stage: { start: number; end: number }
-  ) => {
+    stage: {
+      start: number;
+      end: number;
+    }
+  ) {
     const stageSpan = stage.end - stage.start;
-    const calculatedPercent = stage.start + (percent / 100) * stageSpan;
-    return Math.round(calculatedPercent);
-  };
+    return Math.round(stage.start + (percent / 100) * stageSpan);
+  }
+
+  let audioPath = null;
 
   try {
-    // Only check the signal, not the cancellation service which might not be registered yet
     if (signal?.aborted) {
       throw new Error('Operation cancelled');
     }
 
-    if (progressCallback) {
-      progressCallback({
-        percent: STAGE_AUDIO_EXTRACTION.start,
-        stage: 'Starting subtitle generation',
-      });
-    }
+    progressCallback?.({
+      percent: STAGE_AUDIO_EXTRACTION.start,
+      stage: 'Starting subtitle generation',
+    });
 
-    audioPath = await ffmpegService.extractAudio(
-      options.videoPath,
-      extractionProgress => {
-        if (progressCallback) {
-          progressCallback({
+    // --- Wrap audio extraction in try/catch and pass signal --- START ---
+    try {
+      audioPath = await ffmpegService.extractAudio(
+        options.videoPath,
+        extractionProgress => {
+          progressCallback?.({
             percent:
               STAGE_AUDIO_EXTRACTION.start +
               (extractionProgress.percent / 100) *
                 (STAGE_AUDIO_EXTRACTION.end - STAGE_AUDIO_EXTRACTION.start),
             stage: extractionProgress.stage,
           });
-        }
-      },
-      operationId
-    );
+        },
+        operationId,
+        signal // <-- Pass the signal
+      );
+    } catch (extractionError: any) {
+      if (
+        extractionError.name === 'AbortError' ||
+        (extractionError instanceof Error &&
+          extractionError.message === 'Operation cancelled') ||
+        signal.aborted
+      ) {
+        console.info(`[${operationId}] Audio extraction cancelled.`);
+        throw new Error('Operation cancelled'); // Propagate cancellation
+      } else {
+        // Handle other extraction errors
+        console.error(
+          `[${operationId}] Error during audio extraction:`,
+          extractionError
+        );
+        // You might want to customize the error message thrown here
+        throw new Error(
+          `Audio extraction failed: ${extractionError.message || extractionError}`
+        );
+      }
+    }
+    // --- Wrap audio extraction in try/catch and pass signal --- END ---
 
-    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+    // Check for cancellation
     if (
       signal?.aborted ||
       cancellationService.isOperationActive(operationId) === false
@@ -415,24 +457,24 @@ export async function generateSubtitlesFromVideo(
       throw new Error('Operation cancelled');
     }
 
+    // 2) Generate subtitles from audio (transcription)
     const subtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath,
-      progressCallback: (progress: any) => {
-        if (progressCallback) {
-          progressCallback({
-            percent: scaleProgress(progress.percent, STAGE_TRANSCRIPTION),
-            stage: progress.stage,
-            partialResult: progress.partialResult,
-            current: progress.current,
-            total: progress.total,
-            error: progress.error,
-          });
-        }
+      progressCallback: progress => {
+        progressCallback?.({
+          percent: scaleProgress(progress.percent, STAGE_TRANSCRIPTION),
+          stage: progress.stage,
+          partialResult: progress.partialResult,
+          current: progress.current,
+          total: progress.total,
+          error: progress.error,
+        });
       },
-      signal: signal,
+      signal,
+      operationId,
     });
 
-    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+    // Check for cancellation
     if (
       signal?.aborted ||
       cancellationService.isOperationActive(operationId) === false
@@ -440,18 +482,18 @@ export async function generateSubtitlesFromVideo(
       throw new Error('Operation cancelled');
     }
 
+    // If no translation is needed, finalize immediately
     if (!isTranslationNeeded) {
       await fileManager.writeTempFile(subtitlesContent, '.srt');
-      if (progressCallback) {
-        progressCallback({
-          percent: STAGE_FINALIZING.end,
-          stage: 'Transcription complete',
-          partialResult: subtitlesContent,
-        });
-      }
+      progressCallback?.({
+        percent: STAGE_FINALIZING.end,
+        stage: 'Transcription complete',
+        partialResult: subtitlesContent,
+      });
       return { subtitles: subtitlesContent };
     }
 
+    // 3) Translate in batches
     const segmentsInProcess = parseSrt(subtitlesContent);
     const totalSegments = segmentsInProcess.length;
     const TRANSLATION_BATCH_SIZE = 10;
@@ -461,9 +503,9 @@ export async function generateSubtitlesFromVideo(
       batchStart < totalSegments;
       batchStart += TRANSLATION_BATCH_SIZE
     ) {
-      // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+      // Check cancellation
       if (
-        signal?.aborted ||
+        signal.aborted ||
         cancellationService.isOperationActive(operationId) === false
       ) {
         throw new Error('Operation cancelled');
@@ -478,49 +520,45 @@ export async function generateSubtitlesFromVideo(
         batchEnd
       );
 
-      const batchToTranslate = {
-        segments: currentBatchOriginals.map(seg => ({ ...seg })),
-        startIndex: batchStart,
-        endIndex: batchEnd,
-      };
-
-      const operationIdForBatch = `${operationId}-trans-${batchStart}`;
       const anthropicApiKey = await getApiKey('anthropic');
 
-      const translatedBatch = await translateBatch(
-        batchToTranslate,
-        targetLang,
-        anthropicApiKey,
-        operationIdForBatch,
-        signal
-      );
+      const translatedBatch = await translateBatch({
+        batch: {
+          segments: currentBatchOriginals.map(seg => ({ ...seg })),
+          startIndex: batchStart,
+          endIndex: batchEnd,
+        },
+        targetLang: targetLang,
+        anthropicApiKey: anthropicApiKey,
+        operationId: `${operationId}-trans-${batchStart}`,
+        signal,
+      });
 
+      // Overwrite the segments
       for (let i = 0; i < translatedBatch.length; i++) {
         segmentsInProcess[batchStart + i] = translatedBatch[i];
       }
 
-      if (progressCallback) {
-        const overallProgressPercent = (batchEnd / totalSegments) * 100;
-        const cumulativeSrt = buildSrt(segmentsInProcess);
+      // Progress callback
+      const overallProgressPercent = (batchEnd / totalSegments) * 100;
+      const cumulativeSrt = buildSrt(segmentsInProcess);
 
-        progressCallback({
-          percent: scaleProgress(overallProgressPercent, STAGE_TRANSLATION),
-          stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(totalSegments / TRANSLATION_BATCH_SIZE)}`,
-          partialResult: cumulativeSrt,
-          current: batchEnd,
-          total: totalSegments,
-        });
-      }
+      progressCallback?.({
+        percent: scaleProgress(overallProgressPercent, STAGE_TRANSLATION),
+        stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(totalSegments / TRANSLATION_BATCH_SIZE)}`,
+        partialResult: cumulativeSrt,
+        current: batchEnd,
+        total: totalSegments,
+      });
     }
 
+    // 4) Review in batches
     const REVIEW_BATCH_SIZE = 20;
-
     for (
       let batchStart = 0;
       batchStart < segmentsInProcess.length;
       batchStart += REVIEW_BATCH_SIZE
     ) {
-      // Check specifically for aborted signal or false value from isOperationActive (not undefined)
       if (
         signal?.aborted ||
         cancellationService.isOperationActive(operationId) === false
@@ -537,42 +575,38 @@ export async function generateSubtitlesFromVideo(
         batchEnd
       );
 
-      const batchToReview = {
-        segments: currentBatchTranslated.map(seg => ({ ...seg })),
-        startIndex: batchStart,
-        endIndex: batchEnd,
-        targetLang: targetLang,
-        allSegments: segmentsInProcess,
-      };
-
       const reviewedBatch = await reviewTranslationBatch(
-        batchToReview,
+        {
+          segments: currentBatchTranslated.map(seg => ({ ...seg })),
+          startIndex: batchStart,
+          endIndex: batchEnd,
+          targetLang: targetLang,
+          allSegments: segmentsInProcess,
+        },
         signal,
-        operationId
+        `${operationId}-review-${batchStart}`
       );
 
+      // Overwrite the segments with reviewed content
       for (let i = 0; i < reviewedBatch.length; i++) {
         segmentsInProcess[batchStart + i] = reviewedBatch[i];
       }
 
-      if (progressCallback) {
-        const overallProgressPercent =
-          (batchEnd / segmentsInProcess.length) * 100;
+      // Progress callback
+      const overallProgressPercent =
+        (batchEnd / segmentsInProcess.length) * 100;
+      const cumulativeReviewedSrt = buildSrt(segmentsInProcess);
 
-        const cumulativeReviewedSrt = buildSrt(segmentsInProcess);
-
-        progressCallback({
-          percent: scaleProgress(overallProgressPercent, STAGE_REVIEW),
-          stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(segmentsInProcess.length / REVIEW_BATCH_SIZE)}`,
-          partialResult: cumulativeReviewedSrt,
-          current: batchEnd,
-          total: segmentsInProcess.length,
-          batchStartIndex: batchStart,
-        });
-      }
+      progressCallback?.({
+        percent: scaleProgress(overallProgressPercent, STAGE_REVIEW),
+        stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(segmentsInProcess.length / REVIEW_BATCH_SIZE)}`,
+        partialResult: cumulativeReviewedSrt,
+        current: batchEnd,
+        total: segmentsInProcess.length,
+        batchStartIndex: batchStart,
+      });
     }
 
-    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
     if (
       signal?.aborted ||
       cancellationService.isOperationActive(operationId) === false
@@ -580,63 +614,59 @@ export async function generateSubtitlesFromVideo(
       throw new Error('Operation cancelled');
     }
 
-    if (progressCallback) {
-      progressCallback({
-        percent: STAGE_FINALIZING.start,
-        stage: 'Finalizing subtitles',
-      });
-    }
+    // 5) Finalizing subtitles
+    progressCallback?.({
+      percent: STAGE_FINALIZING.start,
+      stage: 'Finalizing subtitles',
+    });
 
+    // Re-index segments, fill short gaps, fill any blank translations
     const indexedSegments = segmentsInProcess.map((block, idx) => ({
       ...block,
       index: idx + 1,
     }));
 
     const gapFilledSegments = extendShortSubtitleGaps(indexedSegments, 3);
-
     const finalSegments = fillBlankTranslations(gapFilledSegments);
 
     const finalSubtitlesContent = buildSrt(finalSegments);
     await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
 
-    if (progressCallback) {
-      progressCallback({
-        percent: STAGE_FINALIZING.end,
-        stage: 'Translation and review complete',
-        partialResult: finalSubtitlesContent,
-      });
-    }
+    progressCallback?.({
+      percent: STAGE_FINALIZING.end,
+      stage: 'Translation and review complete',
+      partialResult: finalSubtitlesContent,
+    });
 
     return { subtitles: finalSubtitlesContent };
   } catch (error) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
-    if (progressCallback) {
-      progressCallback({
-        percent: 100,
-        stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
-      });
-    }
+    progressCallback?.({
+      percent: 100,
+      stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
+    });
 
-    // Check specifically for aborted signal or false value from isOperationActive (not undefined)
+    // Check if operation was actually cancelled
     if (
       signal?.aborted ||
       cancellationService.isOperationActive(operationId) === false ||
       (error instanceof Error && error.message === 'Operation cancelled')
     ) {
       console.info(
-        `[${operationId}] Generation was cancelled, returning empty subtitles`
+        `[${operationId}] Generation was cancelled, returning empty subtitles.`
       );
-      return { subtitles: '' }; // Empty subtitles indicates cancellation
+      return { subtitles: '' }; // Indicate cancellation
     }
 
-    throw error; // Re-throw if it was a genuine error
+    throw error;
   } finally {
-    // Unregister from cancellation service
+    // Unregister from the cancellation service
     cancellationService.unregisterOperation(operationId);
 
+    // Cleanup temporary audio file
     if (audioPath) {
       try {
-        await fsp.unlink(audioPath);
+        await effectiveServices.fileManager.deleteFile(audioPath);
       } catch (cleanupError) {
         console.error(
           `Failed to delete temporary audio file ${audioPath}:`,
@@ -761,20 +791,21 @@ export async function mergeSubtitlesWithVideo(
   }
 }
 
-async function translateBatch(
-  batch: { segments: any[]; startIndex: number; endIndex: number },
-  targetLang: string,
-  anthropicApiKey: string,
-  _operationId: string,
-  signal?: AbortSignal
-): Promise<any[]> {
+async function translateBatch({
+  batch,
+  targetLang,
+  anthropicApiKey,
+  operationId,
+  signal,
+}: TranslateBatchArgs): Promise<any[]> {
   // Check for early cancellation using both signal and cancellationService (explicitly checking for false)
   if (
     signal?.aborted ||
-    cancellationService.isOperationActive(_operationId) === false
+    cancellationService.isOperationActive(operationId) === false
   ) {
+    // Log using the destructured operationId
     console.info(
-      `[${_operationId}] Translation batch cancelled before starting`
+      `[${operationId}] Translation batch cancelled before starting`
     );
     throw new Error('Operation cancelled');
   }
@@ -812,30 +843,41 @@ Translate EACH line individually, preserving the line order.
 `;
 
   while (retryCount < MAX_RETRIES) {
-    // Check for cancellation before each retry (explicitly checking for false)
+    // Check for cancellation before each retry attempt
     if (
       signal?.aborted ||
-      cancellationService.isOperationActive(_operationId) === false
+      cancellationService.isOperationActive(operationId) === false
     ) {
       console.info(
-        `[${_operationId}] Translation batch cancelled during retry attempt ${retryCount}`
+        `[${operationId}] Translation batch cancelled during retry check.`
       );
-      throw new Error('Operation cancelled');
+      throw new Error('Operation cancelled'); // Throw immediately if cancelled before attempt
     }
 
     try {
-      console.info(
-        `[${_operationId}] Sending translation batch to Claude API (attempt ${retryCount + 1}/${MAX_RETRIES})`
-      );
+      // --- Add explicit check before API call --- START ---
+      if (signal?.aborted) {
+        console.info(
+          `[${operationId}] Translation batch cancelled just before API call.`
+        );
+        throw new Error('Operation cancelled');
+      }
+      // --- Add explicit check before API call --- END ---
 
+      console.info(
+        `[${operationId}] Sending translation batch (Attempt ${retryCount + 1})`
+      ); // Add log
       const response = await anthropic.messages.create(
         {
           model: AI_MODELS.CLAUDE_3_7_SONNET,
           max_tokens: AI_MODELS.MAX_TOKENS,
           messages: [{ role: 'user', content: combinedPrompt }],
         } as Anthropic.MessageCreateParams,
-        { signal }
+        { signal } // Pass the signal to the API call
       );
+      console.info(
+        `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
+      ); // Add log
 
       const translationResponse = response as Anthropic.Message;
 
@@ -847,9 +889,6 @@ Translate EACH line individually, preserving the line order.
       ) {
         translation = translationResponse.content[0].text;
       } else {
-        console.warn(
-          `[${_operationId}] Translation response content was not in the expected format.`
-        );
         throw new Error('Unexpected translation response format from Claude.');
       }
 
@@ -886,38 +925,47 @@ Translate EACH line individually, preserving the line order.
         };
       });
     } catch (err: any) {
-      // Check for cancellation after an error (explicitly checking for false)
+      console.error(
+        `[${operationId}] Error during translation batch (Attempt ${retryCount + 1}):`,
+        err.name,
+        err.message
+      ); // Log error name and message
+
+      // --- Modify error handling for cancellation --- START ---
+      // Check specifically for AbortError or cancellation signal
       if (
+        err.name === 'AbortError' ||
         signal?.aborted ||
-        cancellationService.isOperationActive(_operationId) === false
+        cancellationService.isOperationActive(operationId) === false
       ) {
         console.info(
-          `[${_operationId}] Translation batch cancelled after API error`
+          `[${operationId}] Translation batch detected cancellation signal/error.`
         );
-        throw new Error('Operation cancelled');
+        throw new Error('Operation cancelled'); // Ensure cancellation propagates
       }
+      // --- Modify error handling for cancellation --- END ---
 
-      // Check if the error is due to API rate limiting or connection issues
+      // Existing retry logic for other errors
       if (
         err.message &&
         (err.message.includes('timeout') ||
           err.message.includes('rate') ||
-          err.message.includes('ECONNRESET'))
+          err.message.includes('ECONNRESET')) &&
+        retryCount < MAX_RETRIES - 1 // Check before incrementing
       ) {
         retryCount++;
         const delay = 1000 * Math.pow(2, retryCount);
         console.info(
-          `[${_operationId}] API error (${err.message}), retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`
+          `[${operationId}] Retrying translation batch in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
-
         await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
+        continue; // Continue to the next retry iteration
       }
 
-      // Handle other errors
-      console.error(`[${_operationId}] Translation error:`, err);
-
-      // Return with the original text as translation
+      // If it's another type of error or retries exhausted, fallback
+      console.error(
+        `[${operationId}] Unhandled error or retries exhausted in translateBatch. Falling back.`
+      );
       return batch.segments.map(segment => ({
         ...segment,
         text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
@@ -927,8 +975,9 @@ Translate EACH line individually, preserving the line order.
     }
   }
 
+  // This part is reached only if MAX_RETRIES is hit for retryable errors
   console.warn(
-    `[${_operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
+    `[${operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
   );
 
   return batch.segments.map(segment => ({
@@ -1085,16 +1134,21 @@ Improved translation for block 3
 `;
 
   try {
-    // Check for cancellation before API call (explicitly checking for false)
+    // --- Add explicit check before API call --- START ---
     if (
       signal?.aborted ||
       cancellationService.isOperationActive(parentOperationId) === false
     ) {
-      console.info(`[Review] Review batch cancelled before API call`);
+      console.info(
+        `[Review] Review batch (${parentOperationId}) cancelled just before API call`
+      );
       throw new Error('Operation cancelled');
     }
+    // --- Add explicit check before API call --- END ---
 
-    console.info(`[Review] Sending review batch to Claude API`);
+    console.info(
+      `[Review] Sending review batch (${parentOperationId}) to Claude API`
+    ); // Add log
 
     const response = await anthropic.messages.create(
       {
@@ -1102,8 +1156,11 @@ Improved translation for block 3
         max_tokens: AI_MODELS.MAX_TOKENS,
         messages: [{ role: 'user', content: prompt }],
       } as Anthropic.MessageCreateParams,
-      { signal }
+      { signal } // Pass signal
     );
+    console.info(
+      `[Review] Received response for review batch (${parentOperationId})`
+    ); // Add log
 
     const reviewResponse = response as Anthropic.Message;
 
@@ -1147,21 +1204,33 @@ Improved translation for block 3
         reviewedText: finalTranslation,
       };
     });
-  } catch (error) {
-    // Check for cancellation after an error (explicitly checking for false)
+  } catch (error: any) {
+    // <-- Add : any type for error
+    console.error(
+      `[Review] Error during review batch (${parentOperationId}):`,
+      error.name,
+      error.message
+    ); // Log error details
+
+    // --- Modify error handling for cancellation --- START ---
+    // Check specifically for AbortError or cancellation signal
     if (
+      error.name === 'AbortError' ||
       signal?.aborted ||
       cancellationService.isOperationActive(parentOperationId) === false
     ) {
-      console.info(`[Review] Review batch cancelled after API error`);
-      throw new Error('Operation cancelled');
+      console.info(
+        `[Review] Review batch (${parentOperationId}) detected cancellation signal/error.`
+      );
+      throw new Error('Operation cancelled'); // Ensure cancellation propagates
     }
+    // --- Modify error handling for cancellation --- END ---
 
+    // Fallback for non-cancellation errors
     console.error(
-      '[Review] Error calling Claude for translation review batch:',
-      error
+      `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}). Falling back to original batch segments.`
     );
-    return batch.segments;
+    return batch.segments; // Return original segments on other errors
   }
 }
 

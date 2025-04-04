@@ -56,7 +56,8 @@ export class FFmpegService {
   async extractAudio(
     videoPath: string,
     progressCallback?: (progress: { percent: number; stage: string }) => void,
-    operationId?: string
+    operationId?: string,
+    signal?: AbortSignal
   ): Promise<string> {
     if (!fs.existsSync(videoPath)) {
       throw new FFmpegError(`Input video file not found: ${videoPath}`);
@@ -66,6 +67,27 @@ export class FFmpegService {
       this.tempDir,
       `${path.basename(videoPath, path.extname(videoPath))}_audio.mp3`
     );
+
+    // --- Attach signal listener if provided --- START ---
+    const abortHandler = () => {
+      console.log(
+        `[extractAudio/${operationId}] Abort signal received! Attempting to cancel via service.`
+      );
+      if (operationId) {
+        cancellationService.cancelOperation(operationId);
+      }
+    };
+    if (signal) {
+      if (signal.aborted) {
+        // If already aborted before starting, throw immediately
+        console.log(
+          `[extractAudio/${operationId}] Operation already cancelled before starting extraction.`
+        );
+        throw new Error('Operation cancelled');
+      }
+      signal.addEventListener('abort', abortHandler);
+    }
+    // --- Attach signal listener if provided --- END ---
 
     try {
       // Report initial progress
@@ -187,7 +209,21 @@ export class FFmpegService {
         `[extractAudio${operationId ? `/${operationId}` : ''}] Error:`,
         error
       );
-      throw error;
+      // Check if the error is due to our explicit cancellation
+      if (error instanceof Error && error.message === 'Operation cancelled') {
+        console.info(
+          `[extractAudio/${operationId}] Caught cancellation error.`
+        );
+        throw error; // Re-throw the specific cancellation error
+      }
+      // Handle other FFmpeg errors
+      throw error; // Re-throw other errors
+    } finally {
+      // --- Remove signal listener --- START ---
+      if (signal) {
+        signal.removeEventListener('abort', abortHandler);
+      }
+      // --- Remove signal listener --- END ---
     }
   }
 
@@ -733,35 +769,39 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       ffmpegProcess.on('close', (code: number | null) => {
         if (operationId) {
+          // --- Check the wasCancelled flag set by the CancellationService --- START ---
           // Check if this process was marked as being cancelled
-          isCancelling = !cancellationService.isOperationActive(operationId);
+          isCancelling = (ffmpegProcess as any).wasCancelled === true;
+          // --- Check the wasCancelled flag set by the CancellationService --- END ---
+          // Always unregister when the process ends
           cancellationService.unregisterOperation(operationId);
           console.info(
-            `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid})`
+            `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid}) - Was Explicitly Cancelled: ${isCancelling}`
           );
         } else {
           console.info(`FFmpeg process finished (PID: ${ffmpegProcess.pid})`);
         }
 
-        // Consider success if code is 0 OR if the process was cancelled (which gives code 255)
-        if (code === 0 || (isCancelling && code === 255)) {
-          if (isCancelling && code === 255) {
-            console.info(
-              `FFmpeg process was cancelled as requested, considering as successful completion.`
-            );
-          } else {
-            console.info(`FFmpeg process exited successfully (Code: ${code})`);
-          }
+        // --- Modify logic for cancellation --- START ---
+        if (isCancelling) {
+          console.info(
+            `FFmpeg process (${ffmpegProcess.pid}) was cancelled externally via service. Rejecting promise.`
+          );
+          // Reject with a specific error for cancellation
+          reject(new Error('Operation cancelled')); // Reject with specific error
+        } else if (code === 0) {
+          console.info(`FFmpeg process exited successfully (Code: 0)`);
           resolve();
         } else {
           console.error(`FFmpeg process exited with error code ${code}.`);
-          console.error(`FFmpeg stderr output:\n${stderrOutput}`); // Log accumulated stderr on error
+          console.error(`FFmpeg stderr output:\\n${stderrOutput}`); // Log accumulated stderr on error
           reject(
             new FFmpegError(
               `FFmpeg process exited with code ${code}. Check logs for details.`
             )
           );
         }
+        // --- Modify logic for cancellation --- END ---
       });
 
       ffmpegProcess.on('error', (err: Error) => {
@@ -909,23 +949,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return cancellationService.cancelOperation(operationId);
   }
 
-  /**
-   * Checks if a process with the given operation ID is currently active.
-   * @param operationId The operation ID to check
-   * @returns True if a process with this ID is active, false if cancelled, undefined if never registered
-   */
   public isActiveProcess(operationId: string): boolean | undefined {
     return cancellationService.isOperationActive(operationId);
   }
 
-  /**
-   * Splits a large audio file into smaller chunks.
-   *
-   * @param audioPath Path to the input audio file.
-   * @param chunkDurationSeconds Desired duration of each chunk in seconds.
-   * @param operationId Optional operation ID for logging.
-   * @returns Promise<Array<{ path: string; startTime: number }>> An array of objects, each containing the path to a chunk file and its start time offset.
-   */
   async splitAudioIntoChunks(
     audioPath: string,
     chunkDurationSeconds: number = 600, // Default 10 minutes

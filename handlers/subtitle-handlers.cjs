@@ -1,6 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 const keytar = require('keytar');
+const {
+  generateSubtitlesFromVideo,
+} = require('../dist/services/subtitle-processing');
 
 // Services will be injected by the initializer
 let ffmpegService;
@@ -35,35 +38,25 @@ function initializeSubtitleHandlers(services) {
   console.info('[subtitle-handlers] Initialized.');
 }
 
-// --- Handler Implementations ---
-
 async function handleGenerateSubtitles(event, options) {
-  const operationId = `generate-${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2, 9)}`;
-
-  // Simple cancellation setup - just create a controller
+  // Create a single AbortController that we will pass down
   const controller = new AbortController();
+  const { signal } = controller;
 
-  // Register with cancellation service
-  if (cancellationService) {
-    cancellationService.registerOperation(operationId, controller);
-  } else {
-    // Fallback to global map if service not available
-    if (!global.activeOperations) global.activeOperations = new Map();
-    global.activeOperations.set(operationId, controller);
-  }
+  const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  console.log(`[handleGenerateSubtitles] Operation ID: ${operationId}`);
 
+  // Register the operation with the cancellation service
+  cancellationService?.registerOperation(operationId, {
+    signal,
+  });
+
+  // We'll store a temp path if we need to create a temp video file
   let tempVideoPath = null;
-  let finalOptions = { ...options }; // Clone options to avoid mutation
+  const finalOptions = { ...options }; // Make a shallow copy so we can safely modify
 
   try {
-    // Dynamically import the required service function
-    const {
-      generateSubtitlesFromVideo,
-    } = require('../dist/services/subtitle-processing');
-
-    // Handle Temporary Video if data is provided instead of path
+    // If video data is passed instead of a path, write it out to a temporary file
     if (options.videoFileData && options.videoFileName) {
       const safeFileName = options.videoFileName.replace(
         /[^a-zA-Z0-9_.-]/g,
@@ -75,36 +68,42 @@ async function handleGenerateSubtitles(event, options) {
       );
       const buffer = Buffer.from(options.videoFileData);
       await fs.promises.writeFile(tempVideoPath, buffer);
-      finalOptions.videoPath = tempVideoPath; // Use the temp path
-      delete finalOptions.videoFileData; // Clean up IPC data
+
+      // Use the temp path as our actual video
+      finalOptions.videoPath = tempVideoPath;
+      // Remove raw data from finalOptions to avoid confusion
+      delete finalOptions.videoFileData;
     }
 
-    // Validation
+    // Ensure we have a valid video path
     if (!finalOptions.videoPath) {
-      throw new Error('Video path is required for subtitle generation.');
+      throw new Error('Video path is required for subtitle generation');
     }
     finalOptions.videoPath = path.normalize(finalOptions.videoPath);
+
+    // Make sure the file is accessible
     await fs.promises.access(finalOptions.videoPath, fs.constants.R_OK);
 
-    // Execute Generation
-    const result = await generateSubtitlesFromVideo(
-      finalOptions,
-      progress => {
+    const result = await generateSubtitlesFromVideo({
+      options: finalOptions,
+      operationId: operationId,
+      signal: signal,
+      progressCallback: progress => {
         event.sender.send('generate-subtitles-progress', {
           ...progress,
           operationId,
         });
       },
-      { ffmpegService, fileManager }, // Pass dependencies
-      controller.signal // Pass the abort signal
-    );
+      services: { ffmpegService, fileManager },
+    });
 
-    // Check for cancellation result (empty subtitles indicates cancellation)
+    // If subtitles are empty, that indicates a cancellation
     if (result.subtitles === '') {
       console.log(`[${operationId}] Generation was cancelled.`);
       return { success: true, cancelled: true, operationId };
     }
 
+    // Otherwise return successful results
     return {
       success: true,
       subtitles: result.subtitles,
@@ -113,11 +112,11 @@ async function handleGenerateSubtitles(event, options) {
   } catch (error) {
     console.error(`[${operationId}] Error generating subtitles:`, error);
 
-    // Determine if this was a cancellation error
     const isCancellationError =
       error instanceof Error &&
       (error.name === 'AbortError' || error.message === 'Operation cancelled');
 
+    // Notify renderer of final progress
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
       stage: isCancellationError
@@ -129,25 +128,21 @@ async function handleGenerateSubtitles(event, options) {
     });
 
     return {
-      success: !isCancellationError, // Success is false only if it's a real error
+      success: !isCancellationError, // If it's a real error, success is false
       cancelled: isCancellationError,
       error: isCancellationError ? null : error.message || String(error),
       operationId,
     };
   } finally {
-    // Clean up operation tracking
-    if (cancellationService) {
-      cancellationService.unregisterOperation(operationId);
-    } else if (global.activeOperations) {
-      global.activeOperations.delete(operationId);
-    }
+    // Unregister this operation
+    cancellationService?.unregisterOperation(operationId);
 
-    // Clean up temporary file if created
+    // Clean up any temp file if created
     if (tempVideoPath && fs.existsSync(tempVideoPath)) {
       try {
         await fs.promises.unlink(tempVideoPath);
       } catch (err) {
-        console.warn(`Failed to delete temp video file: ${tempVideoPath}`);
+        console.warn(`Failed to delete temp video file: ${tempVideoPath}`, err);
       }
     }
   }
@@ -582,6 +577,6 @@ module.exports = {
   initializeSubtitleHandlers,
   handleGenerateSubtitles,
   handleMergeSubtitles,
-  handleTranslateSubtitles,
   handleCancelOperation,
+  handleTranslateSubtitles,
 };

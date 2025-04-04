@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const { ipcMain, app } = require('electron');
-const keytar = require('keytar');
 
 // --- Require and setup logging --- START ---
 const { setupLogging } = require('./logging.cjs');

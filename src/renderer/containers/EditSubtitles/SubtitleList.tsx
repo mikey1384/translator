@@ -1,6 +1,6 @@
 import React from 'react';
 import { css } from '@emotion/css';
-import SubtitleEditor from './SubtitleEditor';
+import LazySubtitleItem from './LazySubtitleItem';
 import { SrtSegment } from '../../../types/interface';
 
 interface SubtitleListProps {
@@ -81,7 +81,7 @@ function SubtitleList({
             subtitleRefs.current[index] = el;
           }}
         >
-          <SubtitleEditor
+          <LazySubtitleItem
             key={sub.index}
             sub={sub}
             index={index}
