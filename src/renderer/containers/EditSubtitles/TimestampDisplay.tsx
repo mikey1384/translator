@@ -155,28 +155,14 @@ export function TimestampDisplay({
       const filePath = result.filePaths[0];
       console.log('Selected video file path:', filePath);
 
-      // We need to create a File object to maintain compatibility with existing logic
-      // that expects a File object (even though we now prioritize the path).
-      // Electron doesn't directly give us a File object, so we might need
-      // to read the file content if the downstream logic strictly requires it,
-      // OR adjust downstream logic to prioritize the path.
-      // For now, let's try sending just the path and see if App/EditSubtitles can handle it.
-      // If not, we might need to read content here or adjust App.
-      // A simple File object can be constructed if needed:
-      // const file = new File([], path.basename(filePath)); // Placeholder content
-
-      // For now, pass an object containing the path.
-      // The receiving component (App.tsx) needs to be updated to handle this shape.
       if (onChangeVideo) {
-        // Construct a pseudo-File object or a simple object with the path
         const fileData = {
-          name: filePath.split(/[\\/]/).pop() || 'video.mp4', // Extract filename
+          name: filePath.split(/[\\/]/).pop() || 'video.mp4',
           path: filePath,
-          // We might need size later, could potentially get it via main process fs call if needed
-          size: 0, // Placeholder
-          type: '', // Placeholder - could try to infer from extension
+          size: 0,
+          type: '',
         };
-        onChangeVideo(fileData as any); // Use 'as any' for now, update type later
+        onChangeVideo(fileData as any);
         onUiInteraction?.();
       }
     } catch (error) {

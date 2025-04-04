@@ -276,6 +276,7 @@ export default function GenerateSubtitles({
     setDownloadComplete(false); // Reset download status
     setDownloadedVideoPath(null); // Reset path
     onSetVideoFile(null); // Clear previous video
+    console.log(`Processing URL: ${urlInput}`);
 
     // Clear previous listener if any
     progressCleanupRef.current?.();
@@ -298,6 +299,7 @@ export default function GenerateSubtitles({
       const result = await window.electron.processUrl({
         url: urlInput,
         quality: downloadQuality, // Pass selected quality
+        // targetLanguage, // Removed as it's not needed for download
       });
 
       // --- Handle result ---
@@ -382,6 +384,7 @@ export default function GenerateSubtitles({
     }
   }, [
     urlInput,
+    // targetLanguage, // Removed dependency
     downloadQuality, // Add dependency
     onSetVideoFile,
     progressPercent, // Keep these if needed by listener logic
@@ -716,6 +719,7 @@ export default function GenerateSubtitles({
                   display: flex;
                   align-items: center;
                   padding: 5px 0;
+                  height: 35px;
                 `}
               >
                 <label
@@ -754,7 +758,8 @@ export default function GenerateSubtitles({
                   align-items: center;
                   justify-content: center;
                   padding: 5px 0;
-                  gap: 8px; // Add gap between elements
+                  height: 35px;
+                  gap: 8px;
                 `}
               >
                 <label
