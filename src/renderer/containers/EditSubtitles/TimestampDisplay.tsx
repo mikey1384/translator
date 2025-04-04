@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
@@ -6,18 +6,12 @@ import { openSubtitleWithElectron } from '../../helpers/subtitle-utils';
 import { SrtSegment } from '../../../types/interface';
 
 interface TimestampDisplayProps {
-  _isPlaying: boolean;
-  _videoElement: HTMLVideoElement | null;
   onChangeVideo?: (file: File) => void;
   hasSubtitles?: boolean;
-  _onTogglePlay?: () => void;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onUiInteraction?: () => void;
-  _isStickyExpanded?: boolean;
-  _isPseudoFullscreen?: boolean;
-  _onTogglePseudoFullscreen?: () => void;
 }
 
 // Simple input style similar to time inputs in editor - Updated for Dark Theme
@@ -44,18 +38,12 @@ type FileChangeEvent =
   | { target: { files: FileList | { name: string; path: string }[] | null } };
 
 export function TimestampDisplay({
-  _isPlaying,
-  _videoElement,
   onChangeVideo,
   hasSubtitles = false,
-  _onTogglePlay,
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSrtLoaded,
   onUiInteraction,
-  _isStickyExpanded = true,
-  _isPseudoFullscreen = false,
-  _onTogglePseudoFullscreen,
 }: TimestampDisplayProps) {
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');

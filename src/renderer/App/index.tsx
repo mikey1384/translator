@@ -126,8 +126,6 @@ function AppContent() {
 
   const mainContentRef = useRef<HTMLDivElement>(null);
 
-  const hasScrolledToStickyRef = useRef(false);
-
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
 
   const editSubtitlesMethodsRef = useRef<{
@@ -283,7 +281,10 @@ function AppContent() {
 
   return (
     <div className={pageWrapperStyles}>
-      <div id="top-padding" style={{ height: '10px' }}></div>
+      <div
+        id="top-padding"
+        style={{ height: videoUrl ? 'CALC(35vh + 2rem)' : '10px' }}
+      ></div>
       <div className={containerStyles}>
         <div className={headerStyles}>
           {/* Left side: Logo */}
@@ -321,7 +322,6 @@ function AppContent() {
                 onPlayerReady={handleVideoPlayerReady}
                 onChangeVideo={handleSetVideoFile}
                 onSrtLoaded={handleSetSubtitleSegments}
-                onStickyChange={handleStickyChange}
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
                 onTogglePlay={handleTogglePlay}
                 onShiftAllSubtitles={handleShiftAllSubtitles}
@@ -412,20 +412,6 @@ function AppContent() {
     setVideoPlayerRef(player);
     if (player) {
       setIsPlaying(!player.paused); // Update isPlaying based on initial player state
-    }
-  }
-
-  function handleStickyChange(): void {
-    if (!hasScrolledToStickyRef.current && editSubtitlesRef.current) {
-      const stickyVideoHeight =
-        document.querySelector('.sticky-video-container')?.clientHeight || 0;
-      const offsetTop =
-        editSubtitlesRef.current.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: offsetTop - stickyVideoHeight - 20, // 20px extra space
-        behavior: 'auto',
-      });
-      hasScrolledToStickyRef.current = true;
     }
   }
 }

@@ -3,31 +3,13 @@ import { css } from '@emotion/css';
 import NativeVideoPlayer, {
   nativePlayer,
 } from '../../components/NativeVideoPlayer';
-import { SrtSegment } from '../../../types/interface';
 import { TimestampDisplay } from './TimestampDisplay';
-import throttle from 'lodash/throttle';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
+import { SrtSegment } from '../../../types/interface';
 
-interface StickyVideoPlayerProps {
-  isProgressBarVisible: boolean;
-  videoUrl: string;
-  subtitles: SrtSegment[];
-  onPlayerReady: (player: any) => void;
-  onChangeVideo?: (file: File) => void;
-  onSrtLoaded: (segments: SrtSegment[]) => void;
-  onStickyChange?: (isSticky: boolean) => void;
-  onScrollToCurrentSubtitle?: () => void;
-  onTogglePlay?: () => void;
-  onShiftAllSubtitles?: (offsetSeconds: number) => void;
-  onUiInteraction?: () => void;
-}
+const SCROLL_IGNORE_DURATION = 2000;
 
-// Threshold for scrolling up before expanding (in pixels)
-// Duration to ignore scroll events after UI interaction (in milliseconds)
-const SCROLL_IGNORE_DURATION = 2000; // Increased from previous value to cover smooth scrolling
-
-// --- Add Video Controls Overlay Styles --- START ---
 const videoOverlayControlsStyles = css`
   position: absolute;
   bottom: 0;
@@ -53,7 +35,6 @@ const videoOverlayControlsStyles = css`
   }
 `;
 
-// Add fullscreen variants of controls styles
 const fullscreenOverlayControlsStyles = css`
   ${videoOverlayControlsStyles}
   height: 100px;
@@ -105,7 +86,6 @@ const seekbarStyles = css`
   }
 `;
 
-// Add fullscreen variant for seekbar
 const fullscreenSeekbarStyles = css`
   ${seekbarStyles}
   height: 12px;
@@ -177,10 +157,7 @@ const fixedVideoContainerBaseStyles = css`
   transition: all 0.3s ease-out;
 `;
 
-const fixedVideoContainerStyles = (
-  isExpanded: boolean,
-  isPseudoFullscreen: boolean
-) => css`
+const fixedVideoContainerStyles = (isPseudoFullscreen: boolean) => css`
   ${fixedVideoContainerBaseStyles}
 
   ${isPseudoFullscreen
@@ -199,14 +176,14 @@ const fixedVideoContainerStyles = (
     flex-direction: column; /* Stack elements vertically */
   `
     : `
-    width: ${isExpanded ? 'calc(90% - 30px)' : 'calc(85% - 30px)'};
-    max-height: ${isExpanded ? '60vh' : '25vh'};
-    padding: ${isExpanded ? '15px' : '10px'};
+    width: calc(85% - 30px);
+    max-height: 35vh;
+    padding: 10px;
     border-radius: 0 0 8px 8px;
     margin-bottom: 0;
 
     @media (max-height: 700px) {
-      max-height: ${isExpanded ? '50vh' : '20vh'};
+      max-height: 30vh;
     }
   `}
 `;
@@ -221,10 +198,7 @@ const playerWrapperStyles = (isPseudoFullscreen: boolean) => css`
     : ''}/* Take full height in fullscreen */
 `;
 
-const controlsWrapperStyles = (
-  isExpanded: boolean,
-  isPseudoFullscreen: boolean
-) => css`
+const controlsWrapperStyles = (isPseudoFullscreen: boolean) => css`
   flex-shrink: 0;
   transition: background-color 0.3s ease;
   ${isPseudoFullscreen
@@ -232,9 +206,9 @@ const controlsWrapperStyles = (
     position: absolute;
     bottom: 0;
     left: 0;
-    right: 0; // Use right: 0 instead of width: 100%
+    right: 0;
     width: 100%;
-    height: 100px; /* Increase height for fullscreen controls */
+    height: 100px;
     background-color: transparent; // Default to transparent
     border-top: none; // Remove border when overlaying
     z-index: 10; // Ensure it's above the video wrapper
@@ -244,34 +218,34 @@ const controlsWrapperStyles = (
     }
   `
     : `
-    width: ${isExpanded ? '280px' : '240px'};
+    width: 240px;
     border-top: 1px solid ${colors.border}; // Keep border for non-fullscreen
   `}
 `;
 
-const placeholderStyles = (height: number) => css`
-  display: block;
-  height: ${height}px;
-  width: 100%;
-  margin-bottom: 10px;
-`;
-
-const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
-  isProgressBarVisible,
+function StickyVideoPlayer({
   videoUrl,
   subtitles,
   onPlayerReady,
   onChangeVideo,
   onSrtLoaded,
-  onStickyChange,
   onScrollToCurrentSubtitle,
   onTogglePlay,
   onShiftAllSubtitles,
   onUiInteraction,
-}) => {
-  const [placeholderHeight, setPlaceholderHeight] = useState(0);
+}: {
+  isProgressBarVisible: boolean;
+  videoUrl: string;
+  subtitles: SrtSegment[];
+  onPlayerReady: (player: any) => void;
+  onChangeVideo?: (file: File) => void;
+  onSrtLoaded: (segments: SrtSegment[]) => void;
+  onScrollToCurrentSubtitle?: () => void;
+  onTogglePlay?: () => void;
+  onShiftAllSubtitles?: (offsetSeconds: number) => void;
+  onUiInteraction?: () => void;
+}) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -289,21 +263,8 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
   const playerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  const lastScrollY = useRef(0);
-  const isStickyActive = useRef(false);
   const ignoreScrollRef = useRef(false);
   const ignoreScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Helper function to update expansion state and log changes
-  const updateExpandedState = (newIsExpanded: boolean) => {
-    setIsExpanded(prevIsExpanded => {
-      if (prevIsExpanded !== newIsExpanded) {
-        return newIsExpanded;
-      }
-      return prevIsExpanded; // No change
-    });
-  };
 
   // Function to handle UI interaction and set ignore flag
   const handleUiInteraction = useCallback(() => {
@@ -321,37 +282,30 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
     if (onUiInteraction) onUiInteraction();
   }, [onUiInteraction]);
 
-  // Wrap the onScrollToCurrentSubtitle to track active scrolling state
   const handleScrollToCurrentSubtitle = useCallback(() => {
     if (!onScrollToCurrentSubtitle) return;
 
-    // --- NEW: Clear any existing UI interaction cooldowns ---
     if (ignoreScrollTimeoutRef.current) {
       clearTimeout(ignoreScrollTimeoutRef.current);
       ignoreScrollTimeoutRef.current = null;
     }
-    ignoreScrollRef.current = false; // Explicitly clear the ignore flag
+    ignoreScrollRef.current = false;
     console.log('Cleared existing cooldowns before Scroll to Current');
-    // --- END NEW ---
 
-    // Set the flag to prevent size changes during scrolling
     isScrollToCurrentActive.current = true;
     console.log('Scroll to Current activated, preventing size changes');
 
-    // Clear any existing timeout for the scroll-to-current itself
     if (scrollToCurrentTimeoutRef.current) {
       clearTimeout(scrollToCurrentTimeoutRef.current);
     }
 
-    // Call the actual scroll function
     onScrollToCurrentSubtitle();
 
-    // Set a timeout to reset the flag after scrolling completes
     scrollToCurrentTimeoutRef.current = setTimeout(() => {
       isScrollToCurrentActive.current = false;
       scrollToCurrentTimeoutRef.current = null;
       console.log('Scroll to Current complete, size changes enabled');
-    }, 1500); // Slightly shorter than the smooth scroll animation duration
+    }, 1500);
   }, [onScrollToCurrentSubtitle]);
 
   // Cleanup timeout on unmount
@@ -365,124 +319,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
       }
     };
   }, []);
-
-  useEffect(() => {
-    const calculateHeight = () => {
-      // Ensure both refs are available
-      if (!playerRef.current || !placeholderRef.current) return;
-
-      const playerRect = playerRef.current.getBoundingClientRect();
-      if (playerRect.height > 0) {
-        setPlaceholderHeight(playerRect.height);
-
-        // --- Set Initial Sticky/Expanded State ---
-        // This should only run once after the height is first determined
-        // Check if sticky state hasn't been initialized yet (using a flag or check)
-        // For simplicity, we assume this effect runs reliably once after mount to set initial state.
-        const currentScrollY = window.scrollY;
-        // Ensure offsetTop is read correctly, might need a slight delay if calculation runs too early
-        const placeholderTop = placeholderRef.current.offsetTop ?? 0;
-        const shouldInitiallyBeSticky = currentScrollY > placeholderTop;
-
-        // Set initial sticky state ref
-        isStickyActive.current = shouldInitiallyBeSticky;
-        // Always start expanded
-        updateExpandedState(true);
-        // Notify parent of initial sticky state
-        if (onStickyChange) onStickyChange(shouldInitiallyBeSticky);
-        // Log initial calculation details
-        console.log(
-          `Initial State: scrollY=${currentScrollY}, placeholderTop=${placeholderTop}, shouldBeSticky=${shouldInitiallyBeSticky}`
-        );
-        // --- End Initial State Set ---
-      }
-    };
-
-    // Use rAF to wait for layout stability before calculation
-    const rafId = requestAnimationFrame(() => {
-      calculateHeight();
-    });
-
-    window.addEventListener('resize', calculateHeight);
-
-    // Cleanup function
-    return () => {
-      cancelAnimationFrame(rafId); // Cancel rAF on cleanup
-      window.removeEventListener('resize', calculateHeight);
-    };
-    // Dependency array ensures this runs once on mount and then only on resize
-  }, [onStickyChange]); // Added updateExpandedState to dependencies if it's not stable
-
-  useEffect(() => {
-    const handleScroll = throttle(() => {
-      const currentScrollY = window.scrollY;
-      const placeholderTop = placeholderRef.current?.offsetTop ?? 0;
-      const buffer = 30; // Buffer for downward scroll before shrinking
-
-      // --- Update lastScrollY *before* any checks that might return early ---
-      const scrollDelta = currentScrollY - lastScrollY.current; // Positive = down, Negative = up
-      lastScrollY.current = currentScrollY; // Update immediately
-      // --- End Update ---
-
-      // 1. Check if scrolling is temporarily disabled
-      if (isScrollToCurrentActive.current || ignoreScrollRef.current) {
-        return; // Exit if auto-scrolling or in cooldown
-      }
-
-      // 2. Disable scroll-based expand/shrink when in pseudo-fullscreen
-      if (isPseudoFullscreen) {
-        updateExpandedState(true);
-        // lastScrollY is already updated above
-        return;
-      }
-
-      // 3. Determine Sticky State & Apply Simplified Expand/Shrink Logic
-      const shouldBeSticky = currentScrollY > placeholderTop;
-
-      if (shouldBeSticky) {
-        // Handle becoming sticky (if not already)
-        if (!isStickyActive.current) {
-          updateExpandedState(true);
-          isStickyActive.current = true;
-          if (onStickyChange) onStickyChange(true);
-        }
-
-        // --- Ultra-Simplified Expand/Shrink Logic ---
-        // Use the calculated scrollDelta from before the early return checks
-        if (scrollDelta < 0) {
-          // Equivalent to isScrollingUp
-          updateExpandedState(true);
-        } else {
-          // Scrolling DOWN or stopped: Shrink only if scrolled DOWN significantly
-          if (scrollDelta > buffer) {
-            // Check delta is positive (down) AND exceeds buffer
-            updateExpandedState(false);
-          }
-        }
-        // --- End Simplified Logic ---
-      } else {
-        // Not sticky anymore
-        // Handle becoming non-sticky (if was sticky)
-        if (isStickyActive.current) {
-          updateExpandedState(true);
-          isStickyActive.current = false;
-          if (onStickyChange) onStickyChange(false);
-        }
-      }
-
-      // 4. Update last scroll position - MOVED TO TOP
-      // lastScrollY.current = currentScrollY;
-    }, 100); // Throttle interval
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    lastScrollY.current = window.scrollY;
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      handleScroll.cancel();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onStickyChange, isPseudoFullscreen]); // Removed isExpanded from dependencies
 
   useEffect(() => {
     if (!nativePlayer.instance) return;
@@ -728,17 +564,10 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   return (
     <div ref={containerRef}>
       <div
-        ref={placeholderRef}
-        className={placeholderStyles(placeholderHeight)}
-      />
-
-      <div
         className={`${fixedVideoContainerStyles(
-          isExpanded && !isProgressBarVisible,
           isPseudoFullscreen
-        )} sticky-video-container ${isExpanded ? 'expanded' : 'shrunk'} ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
+        )} sticky-video-container shrunk ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
         ref={playerRef}
-        data-expanded={isExpanded}
         style={{ top: isPseudoFullscreen ? 0 : progressBarHeight }}
       >
         <div
@@ -750,7 +579,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
             videoUrl={videoUrl}
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
-            isExpanded={isExpanded}
             isFullyExpanded={isPseudoFullscreen}
           />
 
@@ -872,22 +700,14 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
 
         {/* Only show side controls when not in fullscreen mode */}
         {!isPseudoFullscreen && (
-          <div
-            className={controlsWrapperStyles(isExpanded, isPseudoFullscreen)}
-          >
+          <div className={controlsWrapperStyles(isPseudoFullscreen)}>
             <TimestampDisplay
-              _videoElement={nativePlayer.instance}
               onChangeVideo={onChangeVideo}
               onSrtLoaded={onSrtLoaded}
               hasSubtitles={subtitles && subtitles.length > 0}
               onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
-              _isPlaying={isPlaying}
-              _onTogglePlay={onTogglePlay}
               onShiftAllSubtitles={onShiftAllSubtitles}
               onUiInteraction={handleUiInteraction}
-              _isStickyExpanded={isExpanded}
-              _isPseudoFullscreen={isPseudoFullscreen}
-              _onTogglePseudoFullscreen={togglePseudoFullscreen}
             />
           </div>
         )}
@@ -898,6 +718,6 @@ const StickyVideoPlayer: React.FC<StickyVideoPlayerProps> = ({
   function handlePlayerReady(player: any) {
     onPlayerReady(player);
   }
-};
+}
 
 export default StickyVideoPlayer;
