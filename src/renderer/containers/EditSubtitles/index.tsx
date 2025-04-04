@@ -780,7 +780,7 @@ export function EditSubtitles({
         console.log('Merge was cancelled by user');
         setMergeStage('Merge cancelled by user');
         setTimeout(() => setIsMergingInProgress(false), 2000);
-        return { success: false, cancelled: true };
+        return { success: false };
       }
 
       // Check for success and outputPath (not tempOutputPath)

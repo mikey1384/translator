@@ -620,12 +620,6 @@ export default function NativeVideoPlayer({
         crossOrigin="anonymous"
         controlsList="nodownload"
         disablePictureInPicture
-        onTimeUpdate={e =>
-          console.log(
-            'Time update:',
-            (e.target as HTMLVideoElement).currentTime
-          )
-        }
         onEnded={() => console.log('Video ended')}
         onError={() => setErrorMessage('Video playback error')}
       >

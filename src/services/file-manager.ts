@@ -308,4 +308,53 @@ export class FileManager {
       );
     }
   }
+
+  /**
+   * Copy a file from source to destination
+   */
+  async copyFile(sourcePath: string, destinationPath: string): Promise<void> {
+    try {
+      console.info(`Copying file from ${sourcePath} to ${destinationPath}`);
+
+      // Verify source file exists
+      try {
+        await fs.access(sourcePath);
+      } catch (error) {
+        throw new FileManagerError(
+          `Source file does not exist or is not accessible: ${sourcePath}`
+        );
+      }
+
+      // Create parent directory of destination if it doesn't exist
+      const destDir = path.dirname(destinationPath);
+      await fs.mkdir(destDir, { recursive: true });
+
+      // Copy the file
+      await fs.copyFile(sourcePath, destinationPath);
+      console.info(`File copied to ${destinationPath}`);
+    } catch (error) {
+      console.error(
+        `Error copying file from ${sourcePath} to ${destinationPath}:`,
+        error
+      );
+      throw new FileManagerError(
+        `Failed to copy file: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * Delete a file
+   */
+  async deleteFile(filePath: string): Promise<void> {
+    try {
+      await fs.unlink(filePath);
+      // Use console.info instead of log.info
+      console.info(`File ${filePath} deleted`);
+    } catch (error) {
+      // Use console.error instead of log.error
+      console.error(`Error deleting file ${filePath}:`, error);
+      throw new FileManagerError(`Error deleting file: ${error}`);
+    }
+  }
 }

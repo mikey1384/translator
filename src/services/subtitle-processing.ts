@@ -156,7 +156,7 @@ async function generateSubtitlesFromAudio({
               (TRANSCRIPTION_END_PROGRESS - TRANSCRIPTION_START_PROGRESS);
           progressCallback?.({
             percent: progressBeforeApiCall,
-            stage: `Transcribing chunk ${chunkIndex}/${numChunks}...`,
+            stage: `Sending audio chunk ${chunkIndex}/${numChunks} to AI...`,
             current: chunkIndex,
             total: numChunks,
           });
@@ -199,7 +199,7 @@ async function generateSubtitlesFromAudio({
                 (TRANSCRIPTION_END_PROGRESS - TRANSCRIPTION_START_PROGRESS);
             progressCallback?.({
               percent: progressAfterApiCall,
-              stage: `Processed chunk ${chunkIndex}/${numChunks}`,
+              stage: `Transcribed chunk ${chunkIndex}/${numChunks}`,
               current: chunkIndex,
               total: numChunks,
             });
@@ -215,7 +215,7 @@ async function generateSubtitlesFromAudio({
                 TRANSCRIPTION_START_PROGRESS +
                 ((i + 0.9) / numChunks) *
                   (TRANSCRIPTION_END_PROGRESS - TRANSCRIPTION_START_PROGRESS),
-              stage: `Error on chunk ${chunkIndex}/${numChunks}`,
+              stage: `Error transcribing chunk ${chunkIndex}/${numChunks}`,
               error: `Chunk ${chunkIndex} failed: ${error instanceof Error ? error.message : String(error)}`,
               current: chunkIndex,
               total: numChunks,
@@ -257,7 +257,7 @@ async function generateSubtitlesFromAudio({
     );
     progressCallback?.({
       percent: TRANSCRIPTION_END_PROGRESS,
-      stage: 'Finalizing subtitles...',
+      stage: `Finalizing ${overallSrtSegments.length} subtitle segments...`,
     });
 
     const finalSrtContent = buildSrt(overallSrtSegments);
@@ -354,13 +354,22 @@ export async function generateSubtitlesFromVideo(
         percent: STAGE_AUDIO_EXTRACTION.start,
         stage: 'Starting subtitle generation',
       });
-      progressCallback({
-        percent: STAGE_AUDIO_EXTRACTION.end,
-        stage: 'Extracting audio from video',
-      });
     }
 
-    audioPath = await ffmpegService.extractAudio(options.videoPath);
+    audioPath = await ffmpegService.extractAudio(
+      options.videoPath,
+      extractionProgress => {
+        if (progressCallback) {
+          progressCallback({
+            percent:
+              STAGE_AUDIO_EXTRACTION.start +
+              (extractionProgress.percent / 100) *
+                (STAGE_AUDIO_EXTRACTION.end - STAGE_AUDIO_EXTRACTION.start),
+            stage: extractionProgress.stage,
+          });
+        }
+      }
+    );
 
     const subtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath,

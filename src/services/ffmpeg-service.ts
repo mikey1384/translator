@@ -53,24 +53,132 @@ export class FFmpegService {
     return this.tempDir;
   }
 
-  async extractAudio(videoPath: string): Promise<string> {
+  async extractAudio(
+    videoPath: string,
+    progressCallback?: (progress: { percent: number; stage: string }) => void
+  ): Promise<string> {
+    if (!fs.existsSync(videoPath)) {
+      throw new FFmpegError(`Input video file not found: ${videoPath}`);
+    }
+
     const outputPath = path.join(
       this.tempDir,
       `${path.basename(videoPath, path.extname(videoPath))}_audio.mp3`
     );
 
     try {
-      await this.runFFmpeg([
-        '-i',
-        videoPath,
-        '-vn',
-        '-acodec',
-        'libmp3lame',
-        '-q:a',
-        '4', // Lower quality for faster extraction (adjust if needed)
-        '-y', // Overwrite output without asking
-        outputPath,
-      ]);
+      // Report initial progress
+      progressCallback?.({
+        percent: 1,
+        stage: 'Analyzing video file (this usually takes 10-15 seconds)...',
+      });
+
+      // First, get the video stats
+      const stats = fs.statSync(videoPath);
+      const fileSizeMB = Math.round(stats.size / (1024 * 1024));
+
+      // Get video duration
+      const duration = await this.getMediaDuration(videoPath);
+      const durationMin = Math.round(duration / 60);
+
+      // Estimate extraction time (rough heuristic - better than nothing)
+      let estimatedTimeSeconds = Math.round(duration * 0.1); // Assume 10x faster than realtime
+      if (fileSizeMB > 1000) estimatedTimeSeconds *= 1.5; // Larger files take longer
+
+      // Calculate a better progress percentage distribution
+      const ANALYSIS_END = 3;
+      const PREP_END = 5;
+      const EXTRACTION_START = 5;
+      const EXTRACTION_END = 10;
+
+      progressCallback?.({
+        percent: ANALYSIS_END,
+        stage: `Preparing audio extraction for ${fileSizeMB} MB video (${durationMin} min)...`,
+      });
+
+      // Get video metadata for optimization
+      const resolution = await this.getVideoResolution(videoPath).catch(() => ({
+        width: 1280,
+        height: 720,
+      }));
+      const isHighRes = resolution.width > 1920 || resolution.height > 1080;
+
+      progressCallback?.({
+        percent: PREP_END,
+        stage: `Starting audio extraction (estimated time: ${Math.round(estimatedTimeSeconds / 60)} min)...`,
+      });
+
+      // Optimize extraction parameters based on video size
+      const audioQuality = isHighRes ? '4' : '2'; // Lower quality for faster extraction on high-res videos
+      const audioRate = '16000'; // 16kHz is sufficient for speech recognition
+
+      // Track time to provide better estimates in future
+      const startTime = Date.now();
+
+      // Capture last progress update to avoid repeating the same percentage
+      let lastProgressPercent = EXTRACTION_START;
+
+      await this.runFFmpeg(
+        [
+          '-i',
+          videoPath,
+          '-vn', // No video
+          '-acodec',
+          'libmp3lame',
+          '-q:a',
+          audioQuality,
+          '-ar',
+          audioRate, // Audio sample rate
+          '-ac',
+          '1', // Mono audio (sufficient for transcription)
+          '-progress',
+          'pipe:1', // Output progress to stdout
+          '-y', // Overwrite output without asking
+          outputPath,
+        ],
+        undefined, // No operation ID
+        duration,
+        ffmpegProgress => {
+          // Scale FFmpeg progress to our desired range (5-10%)
+          const scaledPercent =
+            EXTRACTION_START +
+            (ffmpegProgress * (EXTRACTION_END - EXTRACTION_START)) / 100;
+
+          // Only update if progress has changed by at least 0.5%
+          if (scaledPercent - lastProgressPercent >= 0.5) {
+            lastProgressPercent = scaledPercent;
+
+            // Calculate elapsed and estimated remaining time
+            const elapsedMs = Date.now() - startTime;
+            const elapsedSec = Math.round(elapsedMs / 1000);
+
+            let timeMessage = '';
+            if (ffmpegProgress > 0) {
+              const totalEstimatedSec = Math.round(
+                elapsedSec / (ffmpegProgress / 100)
+              );
+              const remainingSec = Math.max(0, totalEstimatedSec - elapsedSec);
+
+              if (remainingSec > 60) {
+                timeMessage = ` (~ ${Math.round(remainingSec / 60)} min remaining)`;
+              } else {
+                timeMessage = ` (~ ${remainingSec} sec remaining)`;
+              }
+            }
+
+            progressCallback?.({
+              percent: Math.min(EXTRACTION_END, scaledPercent),
+              stage: `Extracting audio: ${Math.round(ffmpegProgress)}%${timeMessage}`,
+            });
+          }
+        }
+      );
+
+      // Make sure there's a final update to exactly 10% before transitioning to next stage
+      progressCallback?.({
+        percent: EXTRACTION_END,
+        stage: 'Audio extraction complete, preparing for transcription...',
+      });
 
       return outputPath;
     } catch (error) {
