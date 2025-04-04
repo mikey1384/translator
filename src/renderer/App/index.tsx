@@ -141,41 +141,52 @@ function AppContent() {
       // --- Reset subtitle source before changing video --- END ---
 
       // Clean up previous object URL if it exists
-      if (videoUrl && !videoUrl.startsWith('file://')) {
-        // Only revoke if it's an object URL, not a file:// URL
+      if (videoUrl && videoUrl.startsWith('blob:')) {
+        // Only revoke blob URLs
         URL.revokeObjectURL(videoUrl);
       }
 
-      // Special case for files with direct URL from downloaded videos
-      if (file && file._isUrlDirect && file._directUrl) {
-        // This is our special file-like object with a direct URL
-        console.log('Using direct file URL:', file._directUrl);
-        setVideoFile(file); // Keep the file-like object in state
-        setVideoUrl(file._directUrl); // Use the direct file:// URL
-        setIsPlaying(false); // Reset playback state on new video
-        // Clear subtitles when a new video (even downloaded) is set
+      // --- MODIFIED: Handle Blob-based file objects --- START ---
+      if (file && file._blobUrl) {
+        // This is our Blob-based file object from downloaded/processed video
+        console.log('Using Blob URL:', file._blobUrl);
+        setVideoFile(file); // Keep the File object in state
+        setVideoUrl(file._blobUrl); // Use the Blob URL for the player
+        setIsPlaying(false);
         handleSetSubtitleSegments([]);
         return;
       }
+      // --- MODIFIED: Handle Blob-based file objects --- END ---
 
-      // Handle standard File objects or null
+      // --- MODIFIED: Handle direct file:// URLs (if passed) --- START ---
+      // Keep this for backward compatibility or other scenarios if needed
+      if (file && file._isUrlDirect && file._directUrl) {
+        console.log('Using direct file URL (fallback):', file._directUrl);
+        setVideoFile(file);
+        setVideoUrl(file._directUrl);
+        setIsPlaying(false);
+        handleSetSubtitleSegments([]);
+        return;
+      }
+      // --- MODIFIED: Handle direct file:// URLs (if passed) --- END ---
+
+      // Handle standard File objects (from local file selection)
       setVideoFile(file);
 
-      if (file) {
+      if (file instanceof File) {
         const url = URL.createObjectURL(file);
+        console.log('Created Blob URL for local file:', url);
         setVideoUrl(url);
-        setIsPlaying(false); // Reset playback state on new video
-        // Clear subtitles for newly selected local files
+        setIsPlaying(false);
         handleSetSubtitleSegments([]);
       } else {
         // If file is null (cleared or cancelled selection)
         setVideoUrl('');
         setIsPlaying(false);
-        // Clear subtitles if video removed
         handleSetSubtitleSegments([]);
       }
     },
-    [videoUrl, resetSubtitleSource]
+    [videoUrl, resetSubtitleSource, handleSetSubtitleSegments] // Add handleSetSubtitleSegments
   );
 
   const handleSetIsPlaying = useCallback((playing: boolean) => {

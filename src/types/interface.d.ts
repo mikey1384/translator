@@ -115,6 +115,12 @@ interface ElectronAPI {
     sourcePath: string,
     destinationPath: string
   ) => Promise<{ success?: boolean; error?: string }>;
+
+  // === Add readFileContent === START ===
+  readFileContent: (
+    filePath: string
+  ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
+  // === Add readFileContent === END ===
 }
 
 declare global {

@@ -219,6 +219,13 @@ const electronAPI = {
   copyFile: (sourcePath, destinationPath) =>
     ipcRenderer.invoke('copy-file', sourcePath, destinationPath),
   // --- Expose copyFile function --- END ---
+
+  // === Add readFileContent === START ===
+  readFileContent: async filePath => {
+    console.log(`[preload] readFileContent called for path: ${filePath}`);
+    return ipcRenderer.invoke('readFileContent', filePath);
+  },
+  // === Add readFileContent === END ===
 };
 
 // Expose the API to the renderer process

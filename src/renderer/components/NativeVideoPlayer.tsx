@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../styles';
 
+// Add global type declaration for the Window object
+declare global {
+  interface Window {
+    _videoLastValidTime?: number;
+  }
+}
+
 export const nativePlayer: {
   instance: HTMLVideoElement | null;
   isReady: boolean;
@@ -21,6 +28,22 @@ export const nativePlayer: {
   play: async () => {
     if (!nativePlayer.instance) return;
     try {
+      // For file:// URLs, check if we need to restore position first
+      const isFileUrl = nativePlayer.instance.src.startsWith('file://');
+      if (
+        isFileUrl &&
+        nativePlayer.instance.currentTime === 0 &&
+        window._videoLastValidTime &&
+        window._videoLastValidTime > 0
+      ) {
+        console.log(
+          `Restoring position to ${window._videoLastValidTime} before playing`
+        );
+        nativePlayer.instance.currentTime = window._videoLastValidTime;
+        // Small delay to ensure the seek takes effect
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
       await nativePlayer.instance.play();
     } catch (error) {
       console.error('Error playing video:', error);
@@ -40,13 +63,72 @@ export const nativePlayer: {
       typeof time === 'number' && !isNaN(time) && time >= 0 ? time : 0;
 
     try {
+      // For file:// URLs, set a ref that our component can access
+      const isFileUrl = nativePlayer.instance.src.startsWith('file://');
+
+      console.log(`Seeking to ${validTime} (file URL: ${isFileUrl})`);
+
+      // Store the intended seek position for later use if needed
+      if (window._videoLastValidTime === undefined) {
+        window._videoLastValidTime = 0;
+      }
+
+      // Only store if it's a meaningful position
+      if (validTime > 0) {
+        window._videoLastValidTime = validTime;
+      }
+
+      // Directly set currentTime
       nativePlayer.instance.currentTime = validTime;
+
+      // Add a more aggressive retry mechanism for videos loaded from URLs
       setTimeout(() => {
-        if (
-          nativePlayer.instance &&
-          Math.abs(nativePlayer.instance.currentTime - validTime) > 0.5
-        ) {
+        if (!nativePlayer.instance) return;
+
+        const currentTime = nativePlayer.instance.currentTime;
+        if (Math.abs(currentTime - validTime) > 0.5) {
+          console.log(
+            `Correcting seek: Current ${currentTime}, Target ${validTime}`
+          );
           nativePlayer.instance.currentTime = validTime;
+
+          // Add a second retry with longer delay for problematic videos
+          setTimeout(() => {
+            if (!nativePlayer.instance) return;
+
+            const newTime = nativePlayer.instance.currentTime;
+            if (Math.abs(newTime - validTime) > 0.5) {
+              console.log(
+                `Second seek correction: Current ${newTime}, Target ${validTime}`
+              );
+              nativePlayer.instance.currentTime = validTime;
+
+              // For persistent problems, try an extreme measure - pause then seek then play
+              if (isFileUrl && !nativePlayer.instance.paused) {
+                console.log('Using pause-seek-play strategy for file:// URL');
+                const wasPlaying = !nativePlayer.instance.paused;
+                nativePlayer.instance.pause();
+
+                setTimeout(() => {
+                  if (!nativePlayer.instance) return;
+                  nativePlayer.instance.currentTime = validTime;
+
+                  if (wasPlaying) {
+                    setTimeout(() => {
+                      if (nativePlayer.instance) {
+                        nativePlayer.instance.play().catch(err => {
+                          console.error(
+                            'Error resuming playback after seek:',
+                            err
+                          );
+                        });
+                      }
+                    }, 50);
+                  }
+                }, 50);
+              }
+            }
+          }, 200);
         }
       }, 50);
     } catch (error) {
@@ -98,6 +180,18 @@ export default function NativeVideoPlayer({
   // Add a state to track subtitle appearance animation
   const [subtitleVisible, setSubtitleVisible] = useState(false);
 
+  // Add state and refs to track and prevent video resets
+  const [isFileUrlVideo, setIsFileUrlVideo] = useState(false);
+  const lastValidTimeRef = useRef<number>(0);
+  const isSeekingRef = useRef(false);
+  const pendingSeekRef = useRef<number | null>(null);
+  const timeUpdateCount = useRef(0);
+
+  // When video URL changes, check if it's a file:// URL
+  useEffect(() => {
+    setIsFileUrlVideo(videoUrl.startsWith('file://'));
+  }, [videoUrl]);
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -131,22 +225,237 @@ export default function NativeVideoPlayer({
       nativePlayer.isInitialized = true;
       // Call the prop callback
       onPlayerReady(videoElement);
+
+      // For file:// URLs, apply any pending seek operation that was waiting for canplay
+      if (isFileUrlVideo && pendingSeekRef.current !== null) {
+        const targetTime = pendingSeekRef.current;
+        console.log(`Applying pending seek to ${targetTime} after canPlay`);
+        videoElement.currentTime = targetTime;
+        pendingSeekRef.current = null;
+      }
+    };
+
+    // Fix for videos loaded from URL that reset to the beginning
+    const handleSeeking = () => {
+      const time = videoElement.currentTime;
+      console.log('Video seeking event at time:', time);
+      isSeekingRef.current = true;
+
+      // Store the seek target as the last valid time
+      if (time > 0) {
+        lastValidTimeRef.current = time;
+        // Reset the timeUpdateCount when a legitimate seek happens
+        timeUpdateCount.current = 0;
+      }
+    };
+
+    const handleSeeked = () => {
+      const time = videoElement.currentTime;
+      console.log('Video seeked event, now at time:', time);
+      isSeekingRef.current = false;
+
+      // Double-check the currentTime after seeked to ensure it stuck
+      if (time > 0) {
+        lastValidTimeRef.current = time;
+      } else if (isFileUrlVideo && lastValidTimeRef.current > 0) {
+        // If we ended up at 0 but had a valid time, try to restore it
+        console.log(
+          `Video reset detected after seek, restoring to ${lastValidTimeRef.current}`
+        );
+        videoElement.currentTime = lastValidTimeRef.current;
+      }
+    };
+
+    // Enhanced timeupdate handler to detect and fix resets
+    const handleTimeUpdateExtended = () => {
+      const time = videoElement.currentTime;
+
+      // For file:// URLs, detect video reset pattern
+      if (isFileUrlVideo && !isSeekingRef.current) {
+        if (time === 0 && lastValidTimeRef.current > 0) {
+          timeUpdateCount.current++;
+
+          // More aggressive correction: fix immediately for file:// URLs
+          // This prevents the visible flash of reset to beginning
+          console.log(
+            `Detected reset to 0, immediately restoring to ${lastValidTimeRef.current}`
+          );
+          videoElement.currentTime = lastValidTimeRef.current;
+
+          // If we've had multiple resets, try a more drastic approach
+          if (timeUpdateCount.current >= 3) {
+            console.log('Multiple resets detected, applying emergency fix');
+            // This forces a pause-seek-play cycle which can help with stubborn videos
+            const wasPlaying = !videoElement.paused;
+            if (wasPlaying) {
+              videoElement.pause();
+              setTimeout(() => {
+                if (!videoElement) return;
+                videoElement.currentTime = lastValidTimeRef.current;
+                videoElement.play().catch(err => {
+                  console.error('Failed to resume after emergency fix:', err);
+                });
+              }, 50);
+            } else {
+              videoElement.currentTime = lastValidTimeRef.current;
+            }
+            // Reset the counter after emergency fix
+            timeUpdateCount.current = 0;
+          }
+        } else if (time > 0) {
+          // Update the last valid time when we have a legitimate time
+          lastValidTimeRef.current = time;
+          // Only reset the counter if we've been stable for a while
+          if (timeUpdateCount.current <= 1) {
+            timeUpdateCount.current = 0;
+          } else {
+            // Gradually decrease counter instead of immediately resetting
+            timeUpdateCount.current--;
+          }
+        }
+      }
+    };
+
+    // Add more handlers to debug and fix URL video issues
+    const handlePlay = () => {
+      console.log('Video play event at time:', videoElement.currentTime);
+
+      // Restore position if we're at 0 but should be elsewhere
+      if (
+        isFileUrlVideo &&
+        videoElement.currentTime === 0 &&
+        lastValidTimeRef.current > 0
+      ) {
+        console.log(
+          `Restoring position on play to ${lastValidTimeRef.current}`
+        );
+        // Use a short timeout to ensure the play event fully processes first
+        setTimeout(() => {
+          if (!videoElement) return;
+          videoElement.currentTime = lastValidTimeRef.current;
+          console.log(
+            `Position after restoration: ${videoElement.currentTime}`
+          );
+        }, 50);
+      }
+    };
+
+    const handlePause = () => {
+      console.log('Video pause event at time:', videoElement.currentTime);
+      // Save current time as last valid when pausing
+      if (videoElement.currentTime > 0) {
+        lastValidTimeRef.current = videoElement.currentTime;
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      console.log(
+        'Video loadedmetadata event, duration:',
+        videoElement.duration
+      );
+
+      // For file:// URLs: if we were at a valid position before, restore it
+      if (
+        isFileUrlVideo &&
+        lastValidTimeRef.current > 0 &&
+        videoElement.readyState >= 2
+      ) {
+        console.log(
+          `Restoring position after metadata loaded to ${lastValidTimeRef.current}`
+        );
+        // Use setTimeout to ensure the metadata is fully processed
+        setTimeout(() => {
+          if (!videoElement) return;
+          videoElement.currentTime = lastValidTimeRef.current;
+          console.log(
+            `Position after metadata restoration: ${videoElement.currentTime}`
+          );
+        }, 100);
+      } else {
+        // For some URL-loaded videos, this is a good time to check if ready
+        if (videoElement.readyState >= 2 && !isReady) {
+          console.log('Video has metadata and is ready to play');
+          handleCanPlay();
+        }
+      }
+    };
+
+    const handleLoadedData = () => {
+      console.log(
+        'Video loadeddata event, readyState:',
+        videoElement.readyState
+      );
+
+      // Another opportunity to restore position for file:// URLs
+      if (
+        isFileUrlVideo &&
+        lastValidTimeRef.current > 0 &&
+        !isSeekingRef.current
+      ) {
+        console.log(
+          `Restoring position after data loaded to ${lastValidTimeRef.current}`
+        );
+        videoElement.currentTime = lastValidTimeRef.current;
+      }
+    };
+
+    // Add handler for stalled/waiting events
+    const handleWaiting = () => {
+      console.log(
+        'Video waiting/stalled event at time:',
+        videoElement.currentTime
+      );
+
+      // Check if we're at position 0 but should be elsewhere
+      if (
+        isFileUrlVideo &&
+        videoElement.currentTime === 0 &&
+        lastValidTimeRef.current > 0
+      ) {
+        console.log(
+          `Video stalled at beginning, restoring to ${lastValidTimeRef.current}`
+        );
+        videoElement.currentTime = lastValidTimeRef.current;
+      }
     };
 
     // Always add listeners
     videoElement.addEventListener('error', handleError);
     videoElement.addEventListener('canplay', handleCanPlay);
+    videoElement.addEventListener('seeking', handleSeeking);
+    videoElement.addEventListener('seeked', handleSeeked);
+    videoElement.addEventListener('play', handlePlay);
+    videoElement.addEventListener('pause', handlePause);
+    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+    videoElement.addEventListener('loadeddata', handleLoadedData);
+    videoElement.addEventListener('timeupdate', handleTimeUpdateExtended);
+    videoElement.addEventListener('waiting', handleWaiting);
 
     // Check if the source needs to be set/reset
     if (videoElement.src !== videoUrl) {
       const isBlob = videoUrl.startsWith('blob:');
+      const isFileUrl = videoUrl.startsWith('file://');
       let videoType = 'video/mp4';
       if (!isBlob) {
         if (videoUrl.endsWith('.webm')) videoType = 'video/webm';
         else if (videoUrl.endsWith('.ogg')) videoType = 'video/ogg';
       }
+
+      // Reset time tracking when loading a new video
+      lastValidTimeRef.current = 0;
+      timeUpdateCount.current = 0;
+      pendingSeekRef.current = null;
+
       videoElement.setAttribute('src', videoUrl);
       videoElement.setAttribute('type', videoType);
+
+      // Special handling for file:// URLs
+      if (isFileUrl) {
+        videoElement.crossOrigin = 'anonymous';
+        // Set a longer preload buffer for File URLs
+        videoElement.preload = 'auto';
+      }
+
       videoElement.load(); // Explicitly call load()
       // Reset global state until canplay fires
       nativePlayer.instance = videoElement;
@@ -169,8 +478,16 @@ export default function NativeVideoPlayer({
     return () => {
       videoElement.removeEventListener('error', handleError);
       videoElement.removeEventListener('canplay', handleCanPlay);
+      videoElement.removeEventListener('seeking', handleSeeking);
+      videoElement.removeEventListener('seeked', handleSeeked);
+      videoElement.removeEventListener('play', handlePlay);
+      videoElement.removeEventListener('pause', handlePause);
+      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      videoElement.removeEventListener('loadeddata', handleLoadedData);
+      videoElement.removeEventListener('timeupdate', handleTimeUpdateExtended);
+      videoElement.removeEventListener('waiting', handleWaiting);
     };
-  }, [videoUrl, onPlayerReady]); // Keep dependencies
+  }, [videoUrl, onPlayerReady, isFileUrlVideo]);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -299,6 +616,15 @@ export default function NativeVideoPlayer({
         autoPlay={false}
         muted={false}
         crossOrigin="anonymous"
+        controlsList="nodownload"
+        disablePictureInPicture
+        onTimeUpdate={e =>
+          console.log(
+            'Time update:',
+            (e.target as HTMLVideoElement).currentTime
+          )
+        }
+        onEnded={() => console.log('Video ended')}
         onError={() => setErrorMessage('Video playback error')}
       >
         Your browser does not support HTML5 video.

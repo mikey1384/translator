@@ -286,7 +286,7 @@ export default function GenerateSubtitles({
     setProgressStage('Initializing...');
     setDownloadComplete(false); // Reset download status
     setDownloadedVideoPath(null); // Reset path
-    onSetVideoFile(null);
+    onSetVideoFile(null); // Clear previous video
     console.log(`Processing URL: ${urlInput}`);
 
     // Clear previous listener if any
@@ -309,7 +309,7 @@ export default function GenerateSubtitles({
       // --- Call main process handler to download video ---
       const result = await window.electron.processUrl({
         url: urlInput,
-        targetLanguage,
+        targetLanguage, // Although not used for download, keep for consistency
       });
 
       // --- Handle result ---
@@ -317,40 +317,69 @@ export default function GenerateSubtitles({
         throw new Error(result.error);
       }
 
-      // When successful, we get back a path to the downloaded video file
       console.log('Video download successful:', result);
 
-      if (result.fileUrl && result.filename && result.videoPath) {
+      // --- MODIFIED: Use Blob URL Strategy --- START ---
+      if (result.videoPath && result.filename) {
         // Update progress UI
-        setProgressStage('Download complete! Setting up video...');
+        setProgressStage('Download complete! Reading video data...');
+        setProgressPercent(100); // Keep progress at 100
 
-        // --- Store download info and mark complete --- START ---
+        // Store download info for the "Save Original" button
         setDownloadComplete(true);
         setDownloadedVideoPath(result.videoPath);
-        // --- Store download info and mark complete --- END ---
 
-        const videoFileObj = {
-          name: result.filename,
-          size: result.size || 0,
-          path: result.videoPath,
-          _isUrlDirect: true,
-          _directUrl: result.fileUrl,
-        } as any;
-
-        // Set the video file in the parent component
-        console.log(
-          '[GenerateSubtitles] Calling onSetVideoFile with:',
-          videoFileObj
+        // Read the downloaded file content
+        const fileContentResult = await window.electron.readFileContent(
+          result.videoPath
         );
-        onSetVideoFile(videoFileObj);
+
+        if (!fileContentResult.success || !fileContentResult.data) {
+          throw new Error(
+            fileContentResult.error ||
+              'Failed to read downloaded video content.'
+          );
+        }
+
+        // Create a Blob from the ArrayBuffer
+        const blob = new Blob([fileContentResult.data], { type: 'video/mp4' }); // Assuming MP4, adjust if needed
+
+        // Create a Blob URL
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Create a File-like object to pass to onSetVideoFile
+        // We need name and size for display/validation, but use the Blob URL
+        const videoFileObj = new File([blob], result.filename, {
+          type: 'video/mp4',
+        });
+        // Attach the blobUrl and the original path for reference
+        (videoFileObj as any)._blobUrl = blobUrl;
+        (videoFileObj as any)._originalPath = result.videoPath;
+
+        // Update progress UI
+        setProgressStage('Setting up video...');
+
+        // Set the video file in the parent component, App will handle creating the URL
+        console.log(
+          '[GenerateSubtitles] Calling onSetVideoFile with Blob-based file object:',
+          {
+            name: videoFileObj.name,
+            size: videoFileObj.size,
+            _blobUrl: blobUrl,
+          }
+        );
+        onSetVideoFile(videoFileObj); // Pass the File object
 
         // Clear URL input since we now have a file/URL
         setUrlInput('');
       } else {
-        throw new Error('Downloaded video information is incomplete.');
+        throw new Error(
+          'Downloaded video information is incomplete (missing path or filename).'
+        );
       }
+      // --- MODIFIED: Use Blob URL Strategy --- END ---
     } catch (err: any) {
-      console.error('Error processing URL:', err);
+      console.error('Error processing URL or reading file:', err);
       setError(`Error processing URL: ${err.message || err}`);
       setProgressStage('Error'); // Update stage on error
       setProgressPercent(0); // Reset progress on error
@@ -367,8 +396,8 @@ export default function GenerateSubtitles({
     urlInput,
     targetLanguage,
     onSetVideoFile,
-    progressPercent,
-    progressStage,
+    progressPercent, // Keep these if needed by listener logic
+    progressStage, // Keep these if needed by listener logic
   ]);
 
   // --- handleGenerateSubtitles (define BEFORE useEffect that uses it) ---

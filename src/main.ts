@@ -17,12 +17,38 @@ function createWindow() {
       // sandbox: true, // default in Electron 20+
       // contextIsolation: true, // default
       // nodeIntegration: false, // default
+
+      // Add these settings to fix file:// URL video playback issues
+      webSecurity: false, // Allow loading of local resources like videos
+      allowRunningInsecureContent: true, // Allow loading content from file://
     },
   });
 
   // Load the renderer entry point using loadFile for local HTML
   const rendererPath = path.join(__dirname, 'renderer', 'index.html');
   log.info(`[src/main.ts] Loading renderer file: ${rendererPath}`);
+
+  // Configure the session to properly handle file:// URLs
+  mainWindow.webContents.session.setPermissionRequestHandler(
+    (_webContents, _permission, callback) => {
+      // Allow all permissions including media access
+      callback(true);
+    }
+  );
+
+  // Configure file protocol handling
+  mainWindow.webContents.session.protocol.registerFileProtocol(
+    'file',
+    (request, callback) => {
+      const filePath = decodeURI(request.url.replace('file://', ''));
+      try {
+        callback(filePath);
+      } catch (error) {
+        log.error(`Error with file protocol: ${error}`);
+      }
+    }
+  );
+
   mainWindow.loadFile(rendererPath);
 
   // Open the DevTools automatically if running in development

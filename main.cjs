@@ -521,6 +521,35 @@ try {
   });
   console.info('Registered generate-subtitles handler.');
 
+  // === Add readFileContent handler === START ===
+  ipcMain.handle('readFileContent', async (_event, filePath) => {
+    console.info(`[readFileContent] Received request for path: ${filePath}`);
+    if (!filePath || typeof filePath !== 'string') {
+      console.error('[readFileContent] Invalid file path received.');
+      return { success: false, error: 'Invalid file path provided.' };
+    }
+    try {
+      // Ensure the path is normalized and accessible
+      const normalizedPath = path.normalize(filePath);
+      await fs.promises.access(normalizedPath, fs.constants.R_OK);
+      console.info(`[readFileContent] Reading file: ${normalizedPath}`);
+      const buffer = await fs.promises.readFile(normalizedPath);
+      console.info(
+        `[readFileContent] Read ${buffer.length} bytes successfully.`
+      );
+      // Return buffer directly, Electron handles ArrayBuffer conversion
+      return { success: true, data: buffer };
+    } catch (error) {
+      console.error(`[readFileContent] Error reading file ${filePath}:`, error);
+      return {
+        success: false,
+        error: error.message || 'Failed to read file content.',
+      };
+    }
+  });
+  console.info('Registered readFileContent handler.');
+  // === Add readFileContent handler === END ===
+
   // === Register translate-subtitles handler (Placeholder) ===
   ipcMain.handle('translate-subtitles', async (event, options) => {
     const operationId = `translate-${Date.now()}-${Math.random()
