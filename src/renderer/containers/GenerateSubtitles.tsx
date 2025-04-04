@@ -149,11 +149,6 @@ const goToSettingsButtonStyles = css`
   }
 `;
 
-// Adjusted type for file change events from Button
-type FileChangeEvent =
-  | ChangeEvent<HTMLInputElement>
-  | { target: { files: FileList | { name: string; path: string }[] | null } };
-
 const urlInputStyles = css`
   margin-right: 8px;
   flex-grow: 1;
@@ -466,46 +461,51 @@ export default function GenerateSubtitles({
     };
   }, []);
 
-  const handleFileChange = useCallback(
-    (event: FileChangeEvent) => {
-      setError('');
-      let file: File | null = null;
+  // --- MODIFIED: Trigger Electron dialog for file selection --- START ---
+  const handleFileSelectClick = async () => {
+    setError('');
+    if (!window.electron?.openFile) {
+      console.error('Electron openFile API is not available.');
+      setError('Error: Cannot open file dialog.');
+      return;
+    }
+    try {
+      const result = await window.electron.openFile({
+        filters: [
+          {
+            name: 'Video Files',
+            extensions: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
+          },
+        ],
+        title: 'Select Video File',
+      });
 
-      if (
-        'target' in event &&
-        event.target &&
-        'files' in event.target &&
-        event.target.files
-      ) {
-        if (
-          event.target.files instanceof FileList &&
-          event.target.files.length > 0
-        ) {
-          file = event.target.files[0];
-        } else if (
-          Array.isArray(event.target.files) &&
-          event.target.files.length > 0 &&
-          'name' in event.target.files[0]
-        ) {
-          // Handle special case for file-like objects (e.g., from URL downloads)
-          // or simulated directory event (though not expected here)
-          console.log('Using file-like object:', event.target.files[0]);
-          file = event.target.files[0] as unknown as File;
-        }
+      if (result.canceled || !result.filePaths?.length) {
+        console.log('Video selection cancelled.');
+        // Don't clear existing file if selection is cancelled
+        return;
       }
 
-      if (file) {
-        onSetVideoFile(file);
-        setUrlInput('');
-      } else {
-        // If event doesn't yield a file (e.g., cancelled selection), ensure state is null
-        // Don't clear if there was already a valid file selected previously unless explicitly cleared
-        // onSetVideoFile(null); // Might want to avoid clearing if user cancels
-        console.log('No file selected or selection cancelled.');
-      }
-    },
-    [onSetVideoFile]
-  );
+      const filePath = result.filePaths[0];
+      console.log('Selected video file path via Electron:', filePath);
+
+      // Construct a pseudo-File object with the path
+      const fileData = {
+        name: filePath.split(/[\\/]/).pop() || 'video.mp4', // Extract filename
+        path: filePath,
+        size: 0, // Placeholder - size might need to be fetched if required
+        type: '', // Placeholder
+      };
+
+      onSetVideoFile(fileData as any); // Pass the object with path
+      setUrlInput(''); // Clear URL input if file is selected
+      setInputMode('file'); // Ensure mode is set to file
+    } catch (error: any) {
+      console.error('Error opening video file with Electron:', error);
+      setError(`Error selecting file: ${error.message || error}`);
+    }
+  };
+  // --- MODIFIED: Trigger Electron dialog for file selection --- END ---
 
   // --- handleSaveSubtitles (corrected) ---
   async function handleSaveSubtitles() {
@@ -732,16 +732,18 @@ export default function GenerateSubtitles({
                   1. Select Video File:{' '}
                 </label>
                 <Button
-                  asFileInput
-                  accept="video/*"
-                  onFileChange={handleFileChange}
+                  onClick={handleFileSelectClick}
                   variant="secondary"
-                  size="md"
-                  disabled={isGenerating || isProcessingUrl}
+                  className={css`
+                    width: 100%;
+                    justify-content: center;
+                    padding: 10px;
+                    margin-top: 5px;
+                  `}
                 >
                   {videoFile
                     ? `Selected: ${videoFile.name}`
-                    : 'Choose Video File'}
+                    : 'Select Video File'}
                 </Button>
               </div>
             </div>

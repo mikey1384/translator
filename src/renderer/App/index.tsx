@@ -110,6 +110,7 @@ function AppContent() {
 
   // State for save error (still needed for display, set by the hook via prop)
   const [saveError, setSaveError] = useState<string>('');
+  const [videoFilePath, setVideoFilePath] = useState<string | null>(null); // <-- Add state for file path
 
   // --- Find Bar State ---
   const [isFindBarVisible, setIsFindBarVisible] = useState(false);
@@ -150,60 +151,71 @@ function AppContent() {
     scrollToCurrentSubtitle: () => {},
   });
 
+  // --- UPDATED: handleSetVideoFile to store path --- START ---
   const handleSetVideoFile = useCallback(
-    (file: File | any | null) => {
-      // --- Reset subtitle source before changing video --- START ---
-      resetSubtitleSource();
-      // --- Reset subtitle source before changing video --- END ---
+    (
+      fileData:
+        | File
+        | { name: string; path: string; size: number; type: string }
+        | null
+    ) => {
+      resetSubtitleSource(); // Reset subtitles first
 
-      // Clean up previous object URL if it exists
+      // Clear previous blob URL if exists
       if (videoUrl && videoUrl.startsWith('blob:')) {
-        // Only revoke blob URLs
         URL.revokeObjectURL(videoUrl);
       }
 
-      // --- MODIFIED: Handle Blob-based file objects --- START ---
-      if (file && file._blobUrl) {
-        // This is our Blob-based file object from downloaded/processed video
-        console.log('Using Blob URL:', file._blobUrl);
-        setVideoFile(file); // Keep the File object in state
-        setVideoUrl(file._blobUrl); // Use the Blob URL for the player
+      if (!fileData) {
+        // If null, clear everything
+        setVideoFile(null);
+        setVideoUrl('');
+        setVideoFilePath(null);
         setIsPlaying(false);
         handleSetSubtitleSegments([]);
         return;
       }
-      // --- MODIFIED: Handle Blob-based file objects --- END ---
 
-      // --- MODIFIED: Handle direct file:// URLs (if passed) --- START ---
-      // Keep this for backward compatibility or other scenarios if needed
-      if (file && file._isUrlDirect && file._directUrl) {
-        console.log('Using direct file URL (fallback):', file._directUrl);
-        setVideoFile(file);
-        setVideoUrl(file._directUrl);
+      // Check if we received an object with a path (from Electron dialog)
+      if (typeof fileData === 'object' && 'path' in fileData && fileData.path) {
+        console.log('Received file object with path:', fileData.path);
+        setVideoFile(fileData as File); // Store the file-like object
+        setVideoFilePath(fileData.path); // << STORE THE PATH
+        // Use a file:// URL directly for the video player
+        setVideoUrl(`file://${encodeURI(fileData.path)}`);
         setIsPlaying(false);
         handleSetSubtitleSegments([]);
-        return;
-      }
-      // --- MODIFIED: Handle direct file:// URLs (if passed) --- END ---
-
-      // Handle standard File objects (from local file selection)
-      setVideoFile(file);
-
-      if (file instanceof File) {
-        const url = URL.createObjectURL(file);
-        console.log('Created Blob URL for local file:', url);
-        setVideoUrl(url);
+      } else if (fileData instanceof File) {
+        // Handle standard File object (e.g., from drag-and-drop, though ideally that also uses Electron)
+        console.log('Received standard File object:', fileData.name);
+        setVideoFile(fileData);
+        setVideoFilePath(null); // << NO PATH AVAILABLE
+        const blobUrl = URL.createObjectURL(fileData);
+        setVideoUrl(blobUrl);
+        setIsPlaying(false);
+        handleSetSubtitleSegments([]);
+      } else if (fileData && (fileData as any)._blobUrl) {
+        // Handle Blob-based object from URL processing
+        const blobFileData = fileData as any;
+        console.log('Using Blob URL:', blobFileData._blobUrl);
+        setVideoFile(blobFileData as File); // Store the File-like object
+        setVideoUrl(blobFileData._blobUrl);
+        setVideoFilePath(blobFileData._originalPath || null); // << STORE ORIGINAL PATH IF AVAILABLE
         setIsPlaying(false);
         handleSetSubtitleSegments([]);
       } else {
-        // If file is null (cleared or cancelled selection)
+        // Fallback or unexpected case
+        console.warn('handleSetVideoFile received unexpected data:', fileData);
+        setVideoFile(null);
         setVideoUrl('');
+        setVideoFilePath(null);
         setIsPlaying(false);
         handleSetSubtitleSegments([]);
       }
     },
-    [videoUrl, resetSubtitleSource, handleSetSubtitleSegments] // Add handleSetSubtitleSegments
+    [videoUrl, resetSubtitleSource, handleSetSubtitleSegments] // Dependencies
   );
+  // --- UPDATED: handleSetVideoFile to store path --- END ---
 
   const handleSetIsPlaying = useCallback((playing: boolean) => {
     setIsPlaying(playing);
@@ -427,6 +439,7 @@ function AppContent() {
                 <EditSubtitles
                   videoFile={videoFile}
                   videoUrl={videoUrl}
+                  videoFilePath={videoFilePath} // << Pass the path down
                   isPlaying={isPlaying}
                   onSetVideoFile={handleSetVideoFile}
                   onSetIsPlaying={handleSetIsPlaying}

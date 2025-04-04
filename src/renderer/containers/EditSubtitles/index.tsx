@@ -26,8 +26,7 @@ import {
 import { secondsToSrtTime } from './utils';
 import { useSubtitleNavigation } from './hooks';
 import { useSubtitleEditing } from './hooks/useSubtitleEditing';
-
-import { SrtSegment } from '../../../types/interface';
+import { SrtSegment, MergeSubtitlesOptions } from '../../../types/interface';
 import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
@@ -42,6 +41,7 @@ type FileChangeEvent =
 export interface EditSubtitlesProps {
   videoFile: File | null;
   videoUrl: string | null;
+  videoFilePath?: string | null;
   onSetVideoFile: (file: File | null) => void;
   isPlaying?: boolean;
   editingTimes?: { start: number; end: number } | null;
@@ -69,6 +69,7 @@ export interface EditSubtitlesProps {
 
 export function EditSubtitles({
   videoFile,
+  videoFilePath,
   onSetVideoFile,
   isPlaying: isPlayingProp,
   secondsToSrtTime: secondsToSrtTimeProp,
@@ -710,8 +711,8 @@ export function EditSubtitles({
   async function handleMergeVideoWithSubtitles(
     videoFile: File
   ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
-    // Define the file size limit (1GB)
-    const fileSizeLimitBytes = 3 * 1024 * 1024 * 1024; // 1 GB
+    // Define the file size limit (3GB)
+    const fileSizeLimitBytes = 3 * 1024 * 1024 * 1024;
 
     // Check file size
     if (videoFile.size > fileSizeLimitBytes) {
@@ -719,9 +720,9 @@ export function EditSubtitles({
       const fileSizeGB = (videoFile.size / (1024 * 1024 * 1024)).toFixed(2);
       const errorMessage = `Error: Video file size (${fileSizeGB} GB) exceeds the ${limitGB} GB limit. Merge aborted.`;
       console.error(errorMessage);
-      setSaveError(errorMessage); // Display error to the user
+      setSaveError(errorMessage);
       setMergeStage('Merge aborted due to file size.');
-      setIsMergingInProgress(false); // Ensure merging state is reset
+      setIsMergingInProgress(false);
       return { success: false, error: errorMessage };
     }
 
@@ -784,14 +785,41 @@ export function EditSubtitles({
       // Start Merge Process
       setMergeStage('Starting merge process...');
 
-      // Call Electron merge function
-      const mergeResult = await window.electron.mergeSubtitles({
-        videoFile: videoFile,
-        srtContent: srtContent,
-        operationId: operationId,
-        fontSize: mergeFontSize,
-        stylePreset: mergeStylePreset,
-      });
+      // --- Prepare Merge Options --- START ---
+      let mergeOptions: MergeSubtitlesOptions;
+
+      // --- MODIFIED: Prioritize videoFilePath prop --- START ---
+      if (videoFilePath) {
+        // If path prop exists, use it directly
+        console.log('[EditSubtitles] Using videoFilePath prop:', videoFilePath);
+        mergeOptions = {
+          videoPath: videoFilePath,
+          videoFileName: videoFile.name, // Still use name from File object for context
+          srtContent: srtContent,
+          operationId: operationId,
+          fontSize: mergeFontSize,
+          stylePreset: mergeStylePreset,
+        };
+      } else {
+        // If no path is available, use the buffer method (File object)
+        // The 500MB limit check is NO LONGER NEEDED here because
+        // the path should *always* be available thanks to the Electron dialog changes.
+        // If we reach here, something unexpected happened.
+        console.warn(
+          '[EditSubtitles] videoFilePath prop is missing! Falling back to sending File object. This might fail for large files.'
+        );
+        mergeOptions = {
+          videoFile: videoFile, // Send the File object
+          srtContent: srtContent,
+          operationId: operationId,
+          fontSize: mergeFontSize,
+          stylePreset: mergeStylePreset,
+        };
+      }
+      // --- MODIFIED: Prioritize videoFilePath prop --- END ---
+
+      // Call Electron merge function with prepared options
+      const mergeResult = await window.electron.mergeSubtitles(mergeOptions);
 
       console.log('Merge result received:', mergeResult);
 

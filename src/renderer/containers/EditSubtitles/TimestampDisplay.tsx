@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
@@ -32,11 +32,6 @@ const shiftInputStyles = css`
   }
 `;
 
-// Adjusted type for file change events from Button
-type FileChangeEvent =
-  | ChangeEvent<HTMLInputElement>
-  | { target: { files: FileList | { name: string; path: string }[] | null } };
-
 export function TimestampDisplay({
   onChangeVideo,
   hasSubtitles = false,
@@ -55,20 +50,58 @@ export function TimestampDisplay({
     !shouldShowScrollButton && !shouldShowShiftControls;
 
   // Handlers for video/srt buttons
-  const handleVideoChange = (event: FileChangeEvent) => {
-    let file: File | null = null;
-    if (
-      'target' in event &&
-      event.target &&
-      'files' in event.target &&
-      event.target.files instanceof FileList &&
-      event.target.files.length > 0
-    ) {
-      file = event.target.files[0];
+  const handleVideoChangeClick = async () => {
+    if (!window.electron?.openFile) {
+      console.error('Electron openFile API is not available.');
+      // Optionally show an error message to the user
+      return;
     }
-    if (file && onChangeVideo) {
-      onChangeVideo(file);
-      onUiInteraction?.();
+    try {
+      const result = await window.electron.openFile({
+        filters: [
+          {
+            name: 'Video Files',
+            extensions: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
+          },
+        ],
+        title: 'Select Video File',
+      });
+
+      if (result.canceled || !result.filePaths?.length) {
+        console.log('Video selection cancelled.');
+        return;
+      }
+
+      const filePath = result.filePaths[0];
+      console.log('Selected video file path:', filePath);
+
+      // We need to create a File object to maintain compatibility with existing logic
+      // that expects a File object (even though we now prioritize the path).
+      // Electron doesn't directly give us a File object, so we might need
+      // to read the file content if the downstream logic strictly requires it,
+      // OR adjust downstream logic to prioritize the path.
+      // For now, let's try sending just the path and see if App/EditSubtitles can handle it.
+      // If not, we might need to read content here or adjust App.
+      // A simple File object can be constructed if needed:
+      // const file = new File([], path.basename(filePath)); // Placeholder content
+
+      // For now, pass an object containing the path.
+      // The receiving component (App.tsx) needs to be updated to handle this shape.
+      if (onChangeVideo) {
+        // Construct a pseudo-File object or a simple object with the path
+        const fileData = {
+          name: filePath.split(/[\\/]/).pop() || 'video.mp4', // Extract filename
+          path: filePath,
+          // We might need size later, could potentially get it via main process fs call if needed
+          size: 0, // Placeholder
+          type: '', // Placeholder - could try to infer from extension
+        };
+        onChangeVideo(fileData as any); // Use 'as any' for now, update type later
+        onUiInteraction?.();
+      }
+    } catch (error) {
+      console.error('Error opening video file with Electron:', error);
+      // Optionally show an error message to the user
     }
   };
 
@@ -132,9 +165,7 @@ export function TimestampDisplay({
       >
         {onChangeVideo && (
           <Button
-            asFileInput
-            accept="video/*"
-            onFileChange={handleVideoChange}
+            onClick={handleVideoChangeClick}
             variant="secondary"
             size="sm"
             title="Load a different video file"
