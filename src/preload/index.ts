@@ -1,25 +1,21 @@
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
 
-console.log('[preload.cjs] Script start');
+console.log('[preload] Script start');
 
 const electronAPI = {
   // Test methods
-  ping: async () => {
-    try {
-      return await ipcRenderer.invoke('ping');
-    } catch (error) {
-      throw error;
-    }
+  ping: async (): Promise<string> => {
+    return await ipcRenderer.invoke('ping');
   },
 
   // Show a message from main process
-  showMessage: message => ipcRenderer.invoke('show-message', message),
+  showMessage: (message: string) => ipcRenderer.invoke('show-message', message),
 
   // Simple test function that returns a value immediately
   test: () => 'Electron API is working',
 
   // Subtitle generation
-  generateSubtitles: async options => {
+  generateSubtitles: async (options: any) => {
     console.log('Generate subtitles called with options:', options);
 
     // Prepare options for sending to main process
@@ -32,9 +28,9 @@ const electronAPI = {
 
       try {
         // Read the File object as an ArrayBuffer
-        const fileData = await new Promise((resolve, reject) => {
+        const fileData = await new Promise<ArrayBuffer>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
+          reader.onload = () => resolve(reader.result as ArrayBuffer);
           reader.onerror = reject;
           reader.readAsArrayBuffer(options.videoFile);
         });
@@ -56,7 +52,8 @@ const electronAPI = {
     console.log('Sending options to main process:', processedOptions);
     return ipcRenderer.invoke('generate-subtitles', processedOptions);
   },
-  onGenerateSubtitlesProgress: callback => {
+
+  onGenerateSubtitlesProgress: (callback: (progress: any) => void) => {
     try {
       if (typeof callback !== 'function') {
         console.warn(
@@ -64,7 +61,7 @@ const electronAPI = {
         );
         return;
       }
-      const listener = (event, progress) => {
+      const listener = (_event: any, progress: any) => {
         try {
           // Pass the progress object directly to the callback
           callback(progress);
@@ -94,7 +91,7 @@ const electronAPI = {
   },
 
   // Video merging
-  mergeSubtitles: async options => {
+  mergeSubtitles: async (options: any) => {
     console.log('Merge subtitles called with options:', options);
 
     // Handle File object if present
@@ -126,13 +123,13 @@ const electronAPI = {
     }
   },
 
-  onMergeSubtitlesProgress: callback => {
+  onMergeSubtitlesProgress: (callback: (event: any, progress: any) => void) => {
     try {
       if (typeof callback !== 'function') {
         console.warn('Invalid callback provided to onMergeSubtitlesProgress');
         return;
       }
-      const listener = (event, progress) => callback(event, progress);
+      const listener = (event: any, progress: any) => callback(event, progress);
       ipcRenderer.on('merge-subtitles-progress', listener);
 
       // Return cleanup function
@@ -152,11 +149,11 @@ const electronAPI = {
   },
 
   // File operations
-  saveFile: options => ipcRenderer.invoke('save-file', options),
-  openFile: options => ipcRenderer.invoke('open-file', options),
+  saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
+  openFile: (options: any) => ipcRenderer.invoke('open-file', options),
 
   // Merge cancellation
-  cancelOperation: async operationId => {
+  cancelOperation: async (operationId: string) => {
     console.log(
       `[Preload] Invoking 'cancel-operation' for operationId: ${operationId}`
     );
@@ -177,36 +174,19 @@ const electronAPI = {
   },
 
   // Move file
-  moveFile: (sourcePath, destinationPath) =>
+  moveFile: (sourcePath: string, destinationPath: string) =>
     ipcRenderer.invoke('move-file', sourcePath, destinationPath),
 
   // Delete file
-  deleteFile: options => ipcRenderer.invoke('delete-file', options),
+  deleteFile: (options: any) => ipcRenderer.invoke('delete-file', options),
 
   // === API Key Management ===
   getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
-  saveApiKey: (keyType, apiKey) =>
+  saveApiKey: (keyType: string, apiKey: string) =>
     ipcRenderer.invoke('save-api-key', { keyType, apiKey }),
 
-  // === Add Subtitle Translation ===
-  translateSubtitles: options =>
-    ipcRenderer.invoke('translate-subtitles', options),
-  onTranslateSubtitlesProgress: callback => {
-    if (!callback) {
-      ipcRenderer.removeAllListeners('translate-subtitles-progress');
-      return;
-    }
-    const listener = (event, progress) => callback(event, progress);
-    ipcRenderer.on('translate-subtitles-progress', listener);
-
-    // Return cleanup function
-    return () => {
-      ipcRenderer.removeListener('translate-subtitles-progress', listener);
-    };
-  },
-
   // === URL Processing ===
-  processUrl: async options => {
+  processUrl: async (options: any) => {
     console.log('Process URL called with options:', options);
     // Add validation if needed
     if (!options || !options.url) {
@@ -218,25 +198,26 @@ const electronAPI = {
       quality: options.quality, // Pass quality option
     });
   },
-  onProcessUrlProgress: callback => {
+
+  onProcessUrlProgress: (callback: (progress: any) => void) => {
     try {
       if (typeof callback !== 'function') {
         console.warn('Invalid callback provided to onProcessUrlProgress');
         return;
       }
-      const listener = (event, progress) => {
+      const listener = (_event: any, progress: any) => {
         try {
           callback(progress); // Pass progress data to renderer callback
         } catch (error) {
           console.error('Error in process-url-progress callback:', error);
         }
       };
-      ipcRenderer.on('process-url-progress', listener);
+      ipcRenderer.on('url-processing-progress', listener);
 
       // Return cleanup function
       return () => {
         try {
-          ipcRenderer.removeListener('process-url-progress', listener);
+          ipcRenderer.removeListener('url-processing-progress', listener);
         } catch (error) {
           console.error('Error removing process-url-progress listener:', error);
         }
@@ -246,54 +227,54 @@ const electronAPI = {
     }
   },
 
-  // --- Expose copyFile function --- START ---
-  copyFile: (sourcePath, destinationPath) =>
+  // --- Expose copyFile function ---
+  copyFile: (sourcePath: string, destinationPath: string) =>
     ipcRenderer.invoke('copy-file', sourcePath, destinationPath),
-  // --- Expose copyFile function --- END ---
 
-  // === Add readFileContent === START ===
-  readFileContent: async filePath => {
+  // === Add readFileContent ===
+  readFileContent: async (filePath: string) => {
     console.log(`[preload] readFileContent called for path: ${filePath}`);
     return ipcRenderer.invoke('readFileContent', filePath);
   },
-  // === Add readFileContent === END ===
 
   // --- Add Find-in-Page Functions ---
-  sendFindInPage: options => {
+  sendFindInPage: (options: any) => {
     ipcRenderer.send('find-in-page', options);
   },
+
   sendStopFind: () => {
     ipcRenderer.send('stop-find');
   },
-  onShowFindBar: callback => {
-    console.log('[preload.cjs] Setting up onShowFindBar listener');
+
+  onShowFindBar: (callback: () => void) => {
+    console.log('[preload] Setting up onShowFindBar listener');
     const listener = () => callback();
     ipcRenderer.on('show-find-bar', listener);
     // Return cleanup function
     return () => {
-      console.log('[preload.cjs] Cleaning up onShowFindBar listener');
+      console.log('[preload] Cleaning up onShowFindBar listener');
       ipcRenderer.removeListener('show-find-bar', listener);
     };
   },
-  onFindResults: callback => {
-    console.log('[preload.cjs] Setting up onFindResults listener');
-    const listener = (event, results) => callback(results);
+
+  onFindResults: (callback: (results: any) => void) => {
+    console.log('[preload] Setting up onFindResults listener');
+    const listener = (_event: any, results: any) => callback(results);
     ipcRenderer.on('find-results', listener);
     // Return cleanup function
     return () => {
-      console.log('[preload.cjs] Cleaning up onFindResults listener');
+      console.log('[preload] Cleaning up onFindResults listener');
       ipcRenderer.removeListener('find-results', listener);
     };
   },
-  // --- End Find-in-Page Functions ---
 };
 
 // Expose your API
 try {
   contextBridge.exposeInMainWorld('electron', electronAPI);
-  console.log('[preload.cjs] contextBridge.exposeInMainWorld succeeded');
+  console.log('[preload] contextBridge.exposeInMainWorld succeeded');
 } catch (error) {
-  console.error('[preload.cjs] Error exposing preload APIs:', error);
+  console.error('[preload] Error exposing preload APIs:', error);
 }
 
-console.log('[preload.cjs] Script end');
+console.log('[preload] Script end');

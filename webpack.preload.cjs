@@ -1,12 +1,12 @@
-const path = require("path");
+const path = require('path');
 
 module.exports = {
-  mode: "production",
-  target: "electron-preload",
-  entry: "./preload.cjs",
+  mode: 'production',
+  target: 'electron-preload',
+  entry: './src/preload/index.ts',
   output: {
-    filename: "index.js",
-    path: path.resolve(__dirname, "dist/preload"),
+    filename: 'index.js',
+    path: path.resolve(__dirname, 'dist/preload'),
   },
   module: {
     rules: [
@@ -14,13 +14,10 @@ module.exports = {
         test: /\.tsx?$/,
         use: [
           {
-            loader: "ts-loader",
+            loader: 'ts-loader',
             options: {
               transpileOnly: true,
               onlyCompileBundledFiles: true,
-              compilerOptions: {
-                module: "CommonJS",
-              },
             },
           },
         ],
@@ -29,11 +26,11 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js"],
+    extensions: ['.tsx', '.ts', '.js'],
   },
   externals: {
-    electron: "commonjs2 electron",
-    "electron-log": "commonjs2 electron-log",
+    electron: 'commonjs2 electron',
+    'electron-log': 'commonjs2 electron-log',
   },
   stats: {
     errorDetails: false,

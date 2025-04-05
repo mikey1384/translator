@@ -1,7 +1,7 @@
 import React from 'react';
 import { css } from '@emotion/css';
-import LazySubtitleItem from './LazySubtitleItem';
-import { SrtSegment } from '../../../types/interface';
+import LazySubtitleItem from './LazySubtitleItem.js';
+import { SrtSegment } from '../../../types/interface.js';
 
 interface SubtitleListProps {
   subtitles: SrtSegment[];

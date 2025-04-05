@@ -1,8 +1,8 @@
 import { useCallback, Dispatch, SetStateAction } from 'react';
-import { SrtSegment } from '../../../../types/interface';
-import { saveFileWithRetry } from '../../../helpers/electron-ipc';
-import { generateSrtContent } from '../utils';
-import { DEFAULT_FILENAME } from '../constants';
+import { SrtSegment } from '../../../../types/interface.js';
+import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
+import { generateSrtContent } from '../utils.js';
+import { DEFAULT_FILENAME } from '../constants.js';
 
 // Props for the simplified hook
 interface UseSubtitleSavingProps {

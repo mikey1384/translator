@@ -1,4 +1,4 @@
-import { SrtSegment } from '../../../types/interface';
+import { SrtSegment } from '../../../types/interface.js';
 
 export const srtTimeToSeconds = (timeString: string): number => {
   const parts = timeString.split(':');

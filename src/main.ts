@@ -1,8 +1,209 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, shell, dialog } from 'electron';
 import path from 'path';
+import { fileURLToPath } from 'url'; // Import for ESM __dirname equivalent
+import fs from 'fs/promises'; // Use promises version and import statically
 import isDev from 'electron-is-dev';
 import log from 'electron-log'; // electron-log is already configured by main.cjs
 import electronContextMenu from 'electron-context-menu'; // Import the library
+
+// ESM equivalent for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename); // This now replaces the old __dirname
+
+// === Start: Added Imports & Initialization ===
+import { SaveFileService } from './services/save-file.js'; // Add .js extension for explicit ESM import
+import { FileManager } from './services/file-manager.js'; // Add .js extension
+import { FFmpegService } from './services/ffmpeg-service.js'; // Add .js extension
+
+// Import the new TypeScript handlers
+import * as fileHandlersTS from './handlers/file-handlers.js'; // Add .js extension
+import * as apiKeyHandlersTS from './handlers/api-key-handlers.js'; // Add .js extension
+import * as subtitleHandlersTS from './handlers/subtitle-handlers.js'; // Add .js extension
+import * as urlHandlerTS from './handlers/url-handler.js'; // Add .js extension
+import * as utilityHandlersTS from './handlers/utility-handlers.js'; // Add .js extension
+
+// --- Setup Logging ---
+// Configure electron-log basics
+Object.assign(console, log.functions); // Make console.log/warn/error go through electron-log
+// File path config moved to app.whenReady()
+
+log.info('[src/main.ts] Initializing services and handlers...');
+
+// --- Request Single Instance Lock ---
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  log.info('[src/main.ts] Another instance is already running. Quitting...');
+  app.quit();
+  process.exit(0);
+}
+
+// Define a type for the services object for better type safety
+interface AppServices {
+  saveFileService: SaveFileService;
+  fileManager: FileManager;
+  ffmpegService: FFmpegService;
+}
+
+// --- Service Initialization ---
+let services: AppServices | null = null; // Initialize as null or with a default structure
+try {
+  log.info('[src/main.ts] Starting service initialization...');
+
+  // Improve native module loading diagnostics
+  if (app.isPackaged) {
+    log.info(
+      '[src/main.ts] Running in packaged mode, resolving module paths...'
+    );
+    log.info(`[src/main.ts] __dirname: ${__dirname}`);
+    log.info(`[src/main.ts] process.resourcesPath: ${process.resourcesPath}`);
+    log.info(
+      `[src/main.ts] Node integration: ${process.env.ELECTRON_NODE_INTEGRATION}`
+    );
+  }
+
+  const saveFileService = SaveFileService.getInstance();
+  log.info('[src/main.ts] SaveFileService initialized');
+
+  const fileManager = new FileManager();
+  log.info('[src/main.ts] FileManager initialized');
+
+  const ffmpegService = new FFmpegService();
+  log.info('[src/main.ts] FFmpegService initialized');
+
+  services = {
+    saveFileService,
+    fileManager,
+    ffmpegService,
+  };
+
+  log.info('[src/main.ts] Services initialized.');
+
+  // --- Initialize Handlers using imported TS modules ---
+  try {
+    log.info('[src/main.ts] Starting handler initialization...');
+    // Note: Pass only the required services for each handler module
+    fileHandlersTS.initializeFileHandlers({ fileManager, saveFileService });
+    log.info('[src/main.ts] File handlers initialized');
+
+    subtitleHandlersTS.initializeSubtitleHandlers({
+      ffmpegService,
+      fileManager,
+    });
+    log.info('[src/main.ts] Subtitle handlers initialized');
+
+    log.info('[src/main.ts] Handlers initialized.');
+
+    // --- Register IPC Handlers using imported TS modules ---
+    log.info('[src/main.ts] Registering IPC handlers...');
+
+    ipcMain.handle('ping', utilityHandlersTS.handlePing);
+    ipcMain.handle('show-message', utilityHandlersTS.handleShowMessage);
+    ipcMain.handle('save-file', fileHandlersTS.handleSaveFile);
+    ipcMain.handle('open-file', fileHandlersTS.handleOpenFile);
+    ipcMain.handle('move-file', fileHandlersTS.handleMoveFile);
+    ipcMain.handle('copy-file', fileHandlersTS.handleCopyFile);
+    ipcMain.handle('delete-file', fileHandlersTS.handleDeleteFile);
+    ipcMain.handle('readFileContent', fileHandlersTS.handleReadFileContent);
+    ipcMain.handle(
+      'get-api-key-status',
+      apiKeyHandlersTS.handleGetApiKeyStatus
+    );
+    ipcMain.handle('save-api-key', apiKeyHandlersTS.handleSaveApiKey);
+    ipcMain.handle('merge-subtitles', (event, options) => {
+      log.info(
+        `[IPC] Received 'merge-subtitles' request with options: ${JSON.stringify(options)}`
+      );
+      return subtitleHandlersTS.handleMergeSubtitles(event, options);
+    });
+    ipcMain.handle(
+      'cancel-operation',
+      subtitleHandlersTS.handleCancelOperation
+    );
+    ipcMain.handle(
+      'generate-subtitles',
+      subtitleHandlersTS.handleGenerateSubtitles
+    );
+    ipcMain.handle('process-url', urlHandlerTS.handleProcessUrl);
+
+    log.info('[src/main.ts] IPC handlers registered.');
+  } catch (handlerError: any) {
+    log.error('[src/main.ts] Error initializing handlers:', handlerError);
+    log.error('[src/main.ts] Handler error stack:', handlerError.stack);
+    throw handlerError; // Rethrow to the outer try-catch
+  }
+} catch (error) {
+  log.error(
+    '[src/main.ts] FATAL: Error initializing services or handlers:',
+    error
+  );
+  log.error('[src/main.ts] Error stack:', (error as Error).stack);
+  // Don't quit immediately - let the app show at least a basic error message
+  if (process.env.NODE_ENV !== 'development') {
+    // In production, show an error dialog before quitting
+    app.whenReady().then(() => {
+      dialog.showErrorBox(
+        'Initialization Error',
+        'The application encountered an error during startup. Please contact support.'
+      );
+      setTimeout(() => {
+        app.quit();
+        process.exit(1);
+      }, 5000); // Give time for the dialog to be seen
+    });
+  } else {
+    // In development, log but don't quit to allow debugging
+    console.error('FATAL ERROR DURING INITIALIZATION:', error);
+  }
+}
+
+// --- Cleanup Temporary Files on Quit ---
+app.on('will-quit', async () => {
+  // Ensure fileManager is initialized before trying to access tempDir
+  if (
+    services?.fileManager &&
+    typeof services.fileManager.cleanup === 'function'
+  ) {
+    log.info('[src/main.ts] App quitting, cleaning up temp directory...');
+    try {
+      await services.fileManager.cleanup(); // Use FileManager's cleanup
+      log.info('[src/main.ts] Temp directory cleanup finished.');
+    } catch (err) {
+      log.error('[src/main.ts] Error during temp directory cleanup:', err);
+    }
+  } else {
+    log.warn('[src/main.ts] FileManager not available for cleanup on quit.');
+    // Fallback cleanup logic from main.cjs if needed, but preferably use the service
+    const tempDirFallback = path.join(app.getPath('userData'), 'temp');
+    log.warn(
+      `[src/main.ts] Attempting fallback cleanup for: ${tempDirFallback}`
+    );
+    try {
+      // Remove require, use imported fs.promises
+      await fs.rm(tempDirFallback, { recursive: true, force: true });
+      log.warn(
+        `[src/main.ts] Fallback cleanup attempt finished for ${tempDirFallback}.`
+      );
+    } catch (fallbackError: any) {
+      // Type the error
+      if (fallbackError?.code !== 'ENOENT') {
+        // Check if code exists
+        log.error(`[src/main.ts] Fallback cleanup error:`, fallbackError);
+      }
+    }
+  }
+});
+
+// --- Global Error Handler ---
+process.on('uncaughtException', error => {
+  log.error('[src/main.ts] Uncaught Exception:', error);
+  // Potentially show a dialog to the user before quitting
+  if (!isDev) {
+    // Only quit automatically in production
+    app.quit();
+    process.exit(1);
+  }
+});
+// === End: Added Imports & Initialization ===
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -15,13 +216,13 @@ async function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      // __dirname in dist/main.js will be /path/to/project/dist
+      // Correct preload path relative to dist/main.js
       preload: path.join(__dirname, 'preload', 'index.js'),
       // Defaults are recommended:
       // sandbox: true, // default in Electron 20+
       contextIsolation: true, // Keep true for security
       nodeIntegration: false, // Keep false for security
-      webSecurity: false, // Required for loading local files sometimes, but use with caution
+      webSecurity: !isDev, // Slightly relax security in dev for easier debugging if needed
       allowRunningInsecureContent: false, // Keep false for security
     },
   });
@@ -57,7 +258,7 @@ async function createWindow() {
     }
   );
 
-  mainWindow.loadFile(rendererPath);
+  await mainWindow.loadFile(rendererPath);
 
   // Open the DevTools automatically if running in development
   const isRunningInDev = process.env.BUN_ENV === 'development' || isDev;
@@ -216,9 +417,29 @@ async function createWindow() {
 // App lifecycle events handled below
 // Handler initialization is done in main.cjs
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Configure file logging path now that app is ready
+  try {
+    // Use app.getPath('userData') which is more reliable
+    const logDirPath = app.getPath('userData');
+    const logFilePath = path.join(logDirPath, 'main.log'); // Log directly in userData
+
+    // Ensure the directory exists (Electron usually creates userData, but double-check)
+    try {
+      await fs.access(logDirPath);
+    } catch {
+      await fs.mkdir(logDirPath, { recursive: true });
+    }
+
+    log.transports.file.resolvePathFn = () => logFilePath;
+    log.transports.file.level = isDev ? 'debug' : 'info'; // Log more in dev
+    log.info(`[src/main.ts] Log file configured at: ${logFilePath}`);
+  } catch (error) {
+    console.error('[src/main.ts] Error configuring log file path:', error);
+  }
+
   log.info('[src/main.ts] App ready event received.');
-  createWindow();
+  await createWindow();
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
@@ -250,7 +471,3 @@ app.on('second-instance', () => {
 
 // Note: single-instance lock is handled in main.cjs
 // Note: initial logging setup is handled in main.cjs
-
-log.info(
-  '[src/main.ts] Main process TypeScript module loaded successfully by main.cjs.'
-);

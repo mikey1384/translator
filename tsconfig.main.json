@@ -1,14 +1,24 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist",
     "rootDir": "src",
-    "sourceMap": true,
-    "paths": {
-      "*": ["*"]
-    }
+    "sourceMap": true
   },
-  "include": ["src/main.ts", "src/services/**/*", "src/types/**/*"],
-  "exclude": ["node_modules", "dist", "src/renderer/**/*", "src/preload/**/*"]
+  "include": [
+    "src/main.ts",
+    "src/services/**/*",
+    "src/types/**/*",
+    "src/handlers/**/*",
+    "src/shared/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/renderer/**/*",
+    "src/preload/**/*",
+    "handlers"
+  ]
 }

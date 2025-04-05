@@ -1,11 +1,11 @@
 import React from 'react';
 import { css } from '@emotion/css';
-import Button from '../../components/Button';
-import { colors } from '../../styles';
+import Button from '../../components/Button.js';
+import { colors } from '../../styles.js';
 import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
-} from '../../constants/subtitle-styles';
+} from '../../../shared/constants/subtitle-styles.js';
 
 // Define local styles copied from EditSubtitles/index.tsx
 const mergeOptionsStyles = css`

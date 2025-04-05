@@ -1,15 +1,15 @@
 import { useState, ChangeEvent, useCallback, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
-import Button from '../components/Button';
-import ButtonGroup from '../components/ButtonGroup';
-import Section from '../components/Section';
-import { colors } from '../styles';
-import { VideoQuality } from '../../services/url-processor'; // Corrected relative path
+import Button from '../components/Button.js';
+import ButtonGroup from '../components/ButtonGroup.js';
+import Section from '../components/Section.js';
+import { colors } from '../styles.js';
+import { VideoQuality } from '../../services/url-processor.js'; // Corrected relative path
 import {
   errorMessageStyles,
   selectStyles,
   fileInputWrapperStyles,
-} from '../styles';
+} from '../styles.js';
 
 // Expanded and grouped languages
 const languageGroups = [

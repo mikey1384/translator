@@ -82,5 +82,6 @@ module.exports = {
     'bun.lockb',
     'preload.cjs',
     '*.cjs',
+    '*.mjs',
   ],
 };

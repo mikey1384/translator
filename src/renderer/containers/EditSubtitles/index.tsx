@@ -8,30 +8,30 @@ import React, {
   ChangeEvent,
 } from 'react';
 import { css } from '@emotion/css';
-import Section from '../../components/Section';
-import Button from '../../components/Button';
+import Section from '../../components/Section.js';
+import Button from '../../components/Button.js';
 
-import SubtitleList from './SubtitleList';
-import MergeControls from './MergeControls';
-import EditSubtitlesHeader from './EditSubtitlesHeader';
-import { nativePlayer } from '../../components/NativeVideoPlayer';
-import { subtitleVideoPlayer } from '../../constants';
+import SubtitleList from './SubtitleList.js';
+import MergeControls from './MergeControls.js';
+import EditSubtitlesHeader from './EditSubtitlesHeader.js';
+import { nativePlayer } from '../../components/NativeVideoPlayer.js';
+import { subtitleVideoPlayer } from '../../../shared/constants/index.js';
 
 import {
   openSubtitleWithElectron,
   buildSrt,
   fixOverlappingSegments,
-} from '../../helpers';
+} from '../../../shared/helpers/index.js';
 
-import { secondsToSrtTime } from './utils';
-import { useSubtitleNavigation } from './hooks';
-import { useSubtitleEditing } from './hooks/useSubtitleEditing';
-import { SrtSegment, MergeSubtitlesOptions } from '../../../types/interface';
+import { secondsToSrtTime } from './utils.js';
+import { useSubtitleNavigation } from './hooks.js';
+import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
+import { SrtSegment, MergeSubtitlesOptions } from '../../../types/interface.js';
 import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
-} from '../../constants/subtitle-styles';
-import { colors } from '../../styles'; // Import colors
+} from '../../../shared/constants/subtitle-styles.js';
+import { colors } from '../../styles.js'; // Import colors
 
 // Adjusted type for file change events from Button
 type FileChangeEvent =

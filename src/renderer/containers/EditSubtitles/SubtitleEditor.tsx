@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
-import Button from '../../components/Button';
-import { SrtSegment } from '../../../types/interface';
-import { colors } from '../../styles';
+import Button from '../../components/Button.js';
+import { SrtSegment } from '../../../types/interface.js';
+import { colors } from '../../styles.js';
 
 interface SubtitleEditorProps {
   sub: SrtSegment;

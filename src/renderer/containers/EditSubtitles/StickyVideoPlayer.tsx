@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { css } from '@emotion/css';
 import NativeVideoPlayer, {
   nativePlayer,
-} from '../../components/NativeVideoPlayer';
-import { TimestampDisplay } from './TimestampDisplay';
-import { colors } from '../../styles';
-import Button from '../../components/Button';
-import { SrtSegment } from '../../../types/interface';
-import { VideoQuality } from '../../../types/interface';
+} from '../../components/NativeVideoPlayer.js';
+import { TimestampDisplay } from './TimestampDisplay.js';
+import { colors } from '../../styles.js';
+import Button from '../../components/Button.js';
+import { SrtSegment } from '../../../types/interface.js';
+import { VideoQuality } from '../../../types/interface.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 

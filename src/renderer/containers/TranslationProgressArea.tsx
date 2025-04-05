@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../styles';
+import { colors } from '../styles.js';
 
 interface SubtitleProgressInfo {
   current?: number;

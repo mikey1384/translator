@@ -1,5 +1,5 @@
-import Button from '../../components/Button';
-import { buttonGradientStyles } from '../../styles';
+import Button from '../../components/Button.js';
+import { buttonGradientStyles } from '../../styles.js';
 import { css } from '@emotion/css';
 
 interface EditSubtitlesHeaderProps {

@@ -1,5 +1,5 @@
 import { Dispatch } from 'react';
-import { AppAction } from './reducer';
+import { AppAction } from './reducer.js';
 
 export default function ManagementActions(dispatch: Dispatch<AppAction>) {
   return {

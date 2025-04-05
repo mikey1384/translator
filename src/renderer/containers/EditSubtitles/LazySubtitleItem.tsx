@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { SrtSegment } from '../../../types/interface';
-import SubtitleEditor from './SubtitleEditor';
-import { useLazyLoad } from './hooks/useLazyLoad';
+import { SrtSegment } from '../../../types/interface.js';
+import SubtitleEditor from './SubtitleEditor.js';
+import { useLazyLoad } from './hooks/useLazyLoad.js';
 import { css } from '@emotion/css';
 
 interface LazySubtitleItemProps {

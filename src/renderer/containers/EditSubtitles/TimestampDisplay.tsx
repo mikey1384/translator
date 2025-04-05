@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../../styles';
-import Button from '../../components/Button';
-import { openSubtitleWithElectron } from '../../helpers';
-import { SrtSegment } from '../../../types/interface';
-import { VideoQuality } from '../../../types/interface';
+import { colors } from '../../styles.js';
+import Button from '../../components/Button.js';
+import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
+import { SrtSegment } from '../../../types/interface.js';
+import { VideoQuality } from '../../../types/interface.js';
 
 interface TimestampDisplayProps {
   onChangeVideo?: (file: File | { path: string; name: string }) => void;

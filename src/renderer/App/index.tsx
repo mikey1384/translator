@@ -1,25 +1,25 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
-import BackToTopButton from '../components/BackToTopButton';
-import SettingsPage from '../containers/SettingsPage';
-import StickyVideoPlayer from '../containers/EditSubtitles/StickyVideoPlayer';
-import { nativePlayer } from '../components/NativeVideoPlayer';
-import { EditSubtitles } from '../containers/EditSubtitles';
-import GenerateSubtitles from '../containers/GenerateSubtitles';
-import MergingProgressArea from '../containers/MergingProgressArea';
-import TranslationProgressArea from '../containers/TranslationProgressArea';
-import LogoDisplay from '../components/LogoDisplay';
-import FindBar from '../components/FindBar';
+import BackToTopButton from '../components/BackToTopButton.js';
+import SettingsPage from '../containers/SettingsPage.js';
+import StickyVideoPlayer from '../containers/EditSubtitles/StickyVideoPlayer.js';
+import { nativePlayer } from '../components/NativeVideoPlayer.js';
+import { EditSubtitles } from '../containers/EditSubtitles/index.js';
+import GenerateSubtitles from '../containers/GenerateSubtitles.js';
+import MergingProgressArea from '../containers/MergingProgressArea.js';
+import TranslationProgressArea from '../containers/TranslationProgressArea.js';
+import LogoDisplay from '../components/LogoDisplay.js';
+import FindBar from '../components/FindBar.js';
 
-import { ManagementContextProvider } from '../context';
-import { SrtSegment, VideoQuality } from '../../types/interface';
+import { ManagementContextProvider } from '../context/index.js';
+import { SrtSegment, VideoQuality } from '../../types/interface.js';
 
-import { parseSrt, secondsToSrtTime } from '../helpers';
-import { useApiKeyStatus } from './hooks/useApiKeyStatus';
-import { useSubtitleManagement } from './hooks/useSubtitleManagement';
-import { useSubtitleSaving } from '../containers/EditSubtitles/hooks/useSubtitleSaving';
+import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
+import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
+import { useSubtitleManagement } from './hooks/useSubtitleManagement.js';
+import { useSubtitleSaving } from '../containers/EditSubtitles/hooks/useSubtitleSaving.js';
 
-import { pageWrapperStyles, containerStyles, colors } from '../styles';
+import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
 
 // Define FindResults type

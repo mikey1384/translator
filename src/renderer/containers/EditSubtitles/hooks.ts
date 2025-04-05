@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { SrtSegment } from '../../../types/interface';
+import { SrtSegment } from '../../../types/interface.js';
 
 interface FocusedInput {
   index: number | null;

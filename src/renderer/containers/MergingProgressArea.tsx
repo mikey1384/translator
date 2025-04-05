@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { colors } from '../styles';
+import { colors } from '../styles.js';
 import { useState, useEffect } from 'react';
 
 interface MergingProgressAreaProps {

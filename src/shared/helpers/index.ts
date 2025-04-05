@@ -1,4 +1,4 @@
-import { SrtSegment } from '../../types/interface';
+import { SrtSegment } from '../../types/interface.js';
 
 export function parseSrt(srtString: string): SrtSegment[] {
   if (!srtString) return [];
@@ -118,29 +118,53 @@ export function buildSrt(segments: SrtSegment[]): string {
  * Convert SRT time format (00:00:00,000) to seconds
  */
 export function srtTimeToSeconds(timeString: string): number {
-  const [time, ms] = timeString.split(',');
-  const [hours, minutes, seconds] = time.split(':').map(Number);
-  return hours * 3600 + minutes * 60 + seconds + parseInt(ms, 10) / 1000;
+  if (!timeString) return 0; // Add guard for empty/undefined string
+  const parts = timeString.split(',');
+  if (parts.length !== 2) return 0; // Basic format check
+  const [time, msStr] = parts;
+  const timeParts = time.split(':');
+  if (timeParts.length !== 3) return 0; // Basic format check
+  const [hoursStr, minutesStr, secondsStr] = timeParts;
+
+  const hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
+  const seconds = parseInt(secondsStr, 10);
+  const ms = parseInt(msStr, 10);
+
+  if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || isNaN(ms)) {
+    return 0; // Return 0 if parsing fails
+  }
+
+  return hours * 3600 + minutes * 60 + seconds + ms / 1000;
 }
 
 /**
  * Convert seconds to SRT time format (00:00:00,000)
  */
 export function secondsToSrtTime(totalSeconds: number): string {
-  if (isNaN(totalSeconds)) return '00:00:00,000';
+  if (isNaN(totalSeconds) || totalSeconds < 0) return '00:00:00,000'; // Handle NaN and negative
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
   const milliseconds = Math.round((totalSeconds % 1) * 1000);
 
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-    2,
-    '0'
-  )}:${String(seconds).padStart(2, '0')},${String(milliseconds).padStart(
-    3,
-    '0'
-  )}`;
+  // Ensure milliseconds don't exceed 999 after rounding
+  const finalSeconds = milliseconds === 1000 ? seconds + 1 : seconds;
+  const finalMilliseconds = milliseconds === 1000 ? 0 : milliseconds;
+
+  // Recalculate minutes/hours if seconds wrapped around
+  const finalMinutes = finalSeconds === 60 ? minutes + 1 : minutes;
+  const finalSecondsAdjusted = finalSeconds === 60 ? 0 : finalSeconds;
+
+  const finalHours = finalMinutes === 60 ? hours + 1 : hours;
+  const finalMinutesAdjusted = finalMinutes === 60 ? 0 : finalMinutes;
+
+  return `${String(finalHours).padStart(2, '0')}:${String(
+    finalMinutesAdjusted
+  ).padStart(2, '0')}:${String(finalSecondsAdjusted).padStart(2, '0')},${String(
+    finalMilliseconds
+  ).padStart(3, '0')}`;
 }
 
 /**

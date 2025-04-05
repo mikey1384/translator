@@ -1,23 +1,22 @@
 import path from 'path';
-import { FFmpegService } from './ffmpeg-service';
-import { parseSrt, buildSrt } from '../renderer/helpers';
+import { FFmpegService } from './ffmpeg-service.js';
+import { parseSrt, buildSrt } from '../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
-import keytar from 'keytar';
-import { AI_MODELS } from '../renderer/constants';
+import * as keytar from 'keytar';
+import { AI_MODELS } from '../shared/constants/index.js';
 import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
   SrtSegment,
-} from '../types/interface';
+} from '../types/interface.js';
+import { cancellationService } from './cancellation-service.js';
+import log from 'electron-log';
+import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { OpenAI } from 'openai';
-import { cancellationService } from './cancellation-service';
-console.log('Imported cancellationService:', cancellationService);
-// import log from 'electron-log';
 
-import { MergeSubtitlesOptions } from '../types/interface';
-import { FileManager } from './file-manager';
+import { MergeSubtitlesOptions } from '../types/interface.js';
+import { FileManager } from './file-manager.js';
 
 // Define the type for the arguments object
 interface GenerateSubtitlesArgs {
@@ -515,7 +514,9 @@ export async function generateSubtitlesFromVideo({
 
       const translatedBatch = await translateBatch({
         batch: {
-          segments: currentBatchOriginals.map(seg => ({ ...seg })),
+          segments: currentBatchOriginals.map((seg: SrtSegment) => ({
+            ...seg,
+          })),
           startIndex: batchStart,
           endIndex: batchEnd,
         },
@@ -565,7 +566,9 @@ export async function generateSubtitlesFromVideo({
 
       const reviewedBatch = await reviewTranslationBatch(
         {
-          segments: currentBatchTranslated.map(seg => ({ ...seg })),
+          segments: currentBatchTranslated.map((seg: SrtSegment) => ({
+            ...seg,
+          })),
           startIndex: batchStart,
           endIndex: batchEnd,
           targetLang: targetLang,
@@ -606,10 +609,12 @@ export async function generateSubtitlesFromVideo({
     });
 
     // Re-index segments, fill short gaps, fill any blank translations
-    const indexedSegments = segmentsInProcess.map((block, idx) => ({
-      ...block,
-      index: idx + 1,
-    }));
+    const indexedSegments = segmentsInProcess.map(
+      (block: SrtSegment, idx: number) => ({
+        ...block,
+        index: idx + 1,
+      })
+    );
 
     const gapFilledSegments = extendShortSubtitleGaps(indexedSegments, 3);
     const finalSegments = fillBlankTranslations(gapFilledSegments);
@@ -669,6 +674,9 @@ export async function mergeSubtitlesWithVideo(
     ffmpegService: FFmpegService;
   }
 ): Promise<{ outputPath: string }> {
+  const { ffmpegService } = services || { ffmpegService: new FFmpegService() };
+  log.info(`[${operationId}] mergeSubtitlesWithVideo called.`); // Use log.info
+
   const inputPathForNaming = options.videoFileName || options.videoPath;
   if (!inputPathForNaming) {
     throw new SubtitleProcessingError(
@@ -685,13 +693,9 @@ export async function mergeSubtitlesWithVideo(
     throw new SubtitleProcessingError('FFmpeg service not provided');
   }
 
-  const { ffmpegService } = services;
-
   // Check explicitly for false (cancelled) and not for undefined (never registered)
   if (cancellationService.isOperationActive(operationId) === false) {
-    console.log(
-      `[${operationId}] Operation was cancelled before merge started`
-    );
+    log.info(`[${operationId}] Operation was cancelled before merge started`);
     return { outputPath: '' }; // Return empty path to indicate cancellation
   }
 
@@ -708,11 +712,14 @@ export async function mergeSubtitlesWithVideo(
     progressCallback({ percent: 25, stage: 'Processing video' });
   }
 
-  console.info(
+  log.info(
     `[${operationId}] Target temporary output path (forced MP4): ${outputPath}`
   );
 
   try {
+    log.info(
+      `[${operationId}] Calling ffmpegService.mergeSubtitles with video: ${options.videoPath}, subtitles: ${options.subtitlesPath}, output: ${outputPath}`
+    );
     const mergeResult = await ffmpegService.mergeSubtitles(
       options.videoPath!,
       options.subtitlesPath!,
@@ -729,7 +736,7 @@ export async function mergeSubtitlesWithVideo(
 
     // Check explicitly for false (cancelled) and not for undefined (never registered)
     if (cancellationService.isOperationActive(operationId) === false) {
-      console.info(`[${operationId}] Operation was cancelled during merge`);
+      log.info(`[${operationId}] Operation was cancelled during merge`);
       if (progressCallback) {
         progressCallback({ percent: 100, stage: 'Merge cancelled' });
       }
@@ -738,7 +745,7 @@ export async function mergeSubtitlesWithVideo(
 
     // Check if file exists - if empty string was returned, it means the operation was cancelled
     if (!mergeResult || mergeResult === '' || !fs.existsSync(outputPath)) {
-      console.info(
+      log.info(
         `[${operationId}] Merge operation was cancelled or failed to create output file`
       );
       if (progressCallback) {
@@ -755,7 +762,7 @@ export async function mergeSubtitlesWithVideo(
     }
     return { outputPath };
   } catch (error) {
-    console.error(`[${operationId}] Error during merge:`, error);
+    log.error(`[${operationId}] Error during merge:`, error);
     if (progressCallback) {
       progressCallback({
         percent: 100,
@@ -765,9 +772,7 @@ export async function mergeSubtitlesWithVideo(
 
     // Check explicitly for false (cancelled) and not for undefined (never registered)
     if (cancellationService.isOperationActive(operationId) === false) {
-      console.info(
-        `[${operationId}] Merge was cancelled, returning empty path`
-      );
+      log.info(`[${operationId}] Merge was cancelled, returning empty path`);
       return { outputPath: '' }; // Empty path indicates cancellation
     }
 
@@ -782,12 +787,13 @@ async function translateBatch({
   operationId,
   signal,
 }: TranslateBatchArgs): Promise<any[]> {
+  log.info(
+    `[${operationId}] Starting translation batch: ${batch.startIndex}-${batch.endIndex}`
+  );
   // Check for early cancellation using both signal and cancellationService (explicitly checking for false)
   if (signal?.aborted) {
     // Log using the destructured operationId
-    console.info(
-      `[${operationId}] Translation batch cancelled before starting`
-    );
+    log.info(`[${operationId}] Translation batch cancelled before starting`);
     throw new Error('Operation cancelled');
   }
 
@@ -826,7 +832,7 @@ Translate EACH line individually, preserving the line order.
   while (retryCount < MAX_RETRIES) {
     // Check for cancellation before each retry attempt
     if (signal?.aborted) {
-      console.info(
+      log.info(
         `[${operationId}] Translation batch cancelled during retry check.`
       );
       throw new Error('Operation cancelled'); // Throw immediately if cancelled before attempt
@@ -835,14 +841,14 @@ Translate EACH line individually, preserving the line order.
     try {
       // --- Add explicit check before API call --- START ---
       if (signal?.aborted) {
-        console.info(
+        log.info(
           `[${operationId}] Translation batch cancelled just before API call.`
         );
         throw new Error('Operation cancelled');
       }
       // --- Add explicit check before API call --- END ---
 
-      console.info(
+      log.info(
         `[${operationId}] Sending translation batch (Attempt ${retryCount + 1})`
       ); // Add log
       const response = await anthropic.messages.create(
@@ -853,7 +859,7 @@ Translate EACH line individually, preserving the line order.
         } as Anthropic.MessageCreateParams,
         { signal } // Pass the signal to the API call
       );
-      console.info(
+      log.info(
         `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
       ); // Add log
 
@@ -903,7 +909,7 @@ Translate EACH line individually, preserving the line order.
         };
       });
     } catch (err: any) {
-      console.error(
+      log.error(
         `[${operationId}] Error during translation batch (Attempt ${retryCount + 1}):`,
         err.name,
         err.message
@@ -912,7 +918,7 @@ Translate EACH line individually, preserving the line order.
       // --- Modify error handling for cancellation --- START ---
       // Check specifically for AbortError or cancellation signal
       if (err.name === 'AbortError' || signal?.aborted) {
-        console.info(
+        log.info(
           `[${operationId}] Translation batch detected cancellation signal/error.`
         );
         throw new Error('Operation cancelled'); // Ensure cancellation propagates
@@ -929,7 +935,7 @@ Translate EACH line individually, preserving the line order.
       ) {
         retryCount++;
         const delay = 1000 * Math.pow(2, retryCount);
-        console.info(
+        log.info(
           `[${operationId}] Retrying translation batch in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -937,7 +943,7 @@ Translate EACH line individually, preserving the line order.
       }
 
       // If it's another type of error or retries exhausted, fallback
-      console.error(
+      log.error(
         `[${operationId}] Unhandled error or retries exhausted in translateBatch. Falling back.`
       );
       return batch.segments.map(segment => ({
@@ -950,7 +956,7 @@ Translate EACH line individually, preserving the line order.
   }
 
   // This part is reached only if MAX_RETRIES is hit for retryable errors
-  console.warn(
+  log.warn(
     `[${operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
   );
 
@@ -973,9 +979,13 @@ async function reviewTranslationBatch(
   signal?: AbortSignal,
   parentOperationId: string = 'review-batch'
 ): Promise<any[]> {
+  const operationId = `${parentOperationId}-review-${batch.startIndex}-${batch.endIndex}`;
+  log.info(
+    `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
+  );
   // Check for early cancellation (explicitly checking for false)
   if (signal?.aborted) {
-    console.info(`[Review] Review batch cancelled before starting`);
+    log.info(`[Review] Review batch cancelled before starting`);
     throw new Error('Operation cancelled');
   }
 
@@ -1107,14 +1117,14 @@ Improved translation for block 3
   try {
     // --- Add explicit check before API call --- START ---
     if (signal?.aborted) {
-      console.info(
+      log.info(
         `[Review] Review batch (${parentOperationId}) cancelled just before API call`
       );
       throw new Error('Operation cancelled');
     }
     // --- Add explicit check before API call --- END ---
 
-    console.info(
+    log.info(
       `[Review] Sending review batch (${parentOperationId}) to Claude API`
     ); // Add log
 
@@ -1126,7 +1136,7 @@ Improved translation for block 3
       } as Anthropic.MessageCreateParams,
       { signal } // Pass signal
     );
-    console.info(
+    log.info(
       `[Review] Received response for review batch (${parentOperationId})`
     ); // Add log
 
@@ -1140,10 +1150,10 @@ Improved translation for block 3
     ) {
       reviewedContent = reviewResponse.content[0].text;
     } else {
-      console.warn(
+      log.warn(
         '[Review] Review response content was not in the expected format.'
       );
-      console.warn(
+      log.warn(
         `[Review] Translation review output format unexpected. Using original translations for this batch.`
       );
       return batch.segments;
@@ -1152,7 +1162,7 @@ Improved translation for block 3
     const reviewedLines = reviewedContent.split('\n');
 
     if (reviewedLines.length !== batch.segments.length) {
-      console.warn(
+      log.warn(
         `[Review] Translation review output line count (${reviewedLines.length}) does not match batch size (${batch.segments.length}). Using original translations for this batch.`
       );
       return batch.segments;
@@ -1174,7 +1184,7 @@ Improved translation for block 3
     });
   } catch (error: any) {
     // <-- Add : any type for error
-    console.error(
+    log.error(
       `[Review] Error during review batch (${parentOperationId}):`,
       error.name,
       error.message
@@ -1183,7 +1193,7 @@ Improved translation for block 3
     // --- Modify error handling for cancellation --- START ---
     // Check specifically for AbortError or cancellation signal
     if (error.name === 'AbortError' || signal?.aborted) {
-      console.info(
+      log.info(
         `[Review] Review batch (${parentOperationId}) detected cancellation signal/error.`
       );
       throw new Error('Operation cancelled'); // Ensure cancellation propagates
@@ -1191,7 +1201,7 @@ Improved translation for block 3
     // --- Modify error handling for cancellation --- END ---
 
     // Fallback for non-cancellation errors
-    console.error(
+    log.error(
       `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}). Falling back to original batch segments.`
     );
     return batch.segments; // Return original segments on other errors
@@ -1218,7 +1228,7 @@ function extendShortSubtitleGaps(
     const nextStartTime = Number(nextSegment.start);
 
     if (isNaN(currentEndTime) || isNaN(nextStartTime)) {
-      console.warn(
+      log.warn(
         `Invalid time encountered at index ${i}, skipping gap adjustment.`
       );
       continue;

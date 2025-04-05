@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
-import { colors, linkStyles as globalLinkStyles } from '../styles';
+import { colors, linkStyles as globalLinkStyles } from '../styles.js';
 // Assuming Button component exists
 
 // Basic Styling using @emotion/css - Dark Theme

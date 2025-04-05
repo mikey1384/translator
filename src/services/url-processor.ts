@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { FFmpegService } from './ffmpeg-service';
+import { FFmpegService } from './ffmpeg-service.js';
 import youtubeDl from 'youtube-dl-exec';
 import { exec } from 'child_process';
 import os from 'os';
@@ -9,7 +9,7 @@ import os from 'os';
 export type VideoQuality = 'low' | 'mid' | 'high';
 const qualityFormatMap: Record<VideoQuality, string> = {
   high: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-  mid: 'best[height<=720]',
+  mid: 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]',
   low: 'best[height<=480]',
 };
 
@@ -373,6 +373,7 @@ async function downloadVideoFromPlatform(
     for (const format of formatsToTry) {
       try {
         console.log(`Attempting youtube-dl-exec with format: ${format}`);
+        // @ts-ignore - The type definition seems incorrect for ESM
         await youtubeDl(url, {
           output: tempVideoPath,
           format,
