@@ -253,17 +253,22 @@ function AppContent() {
       try {
         const result = await window.electron.processUrl({
           url: url,
-          quality: quality, // Pass selected quality
+          quality: quality,
         });
+
+        console.log(
+          '[App] Received result from window.electron.processUrl:',
+          JSON.stringify(result)
+        );
 
         if (result.error) {
           throw new Error(result.error);
         }
 
-        if (result.videoPath && result.filename) {
+        if (result.filePath && result.filename) {
           // Read the content and create a Blob URL / File object
           const fileContentResult = await window.electron.readFileContent(
-            result.videoPath
+            result.filePath
           );
           if (!fileContentResult.success || !fileContentResult.data) {
             throw new Error(
@@ -279,7 +284,7 @@ function AppContent() {
             type: 'video/mp4',
           });
           (videoFileObj as any)._blobUrl = blobUrl;
-          (videoFileObj as any)._originalPath = result.videoPath;
+          (videoFileObj as any)._originalPath = result.filePath;
 
           // Call handleSetVideoFile with the new object
           handleSetVideoFile(videoFileObj as any);

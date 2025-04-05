@@ -1,4 +1,4 @@
-import { IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import { processVideoUrl, VideoQuality } from '../services/url-processor.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
@@ -29,7 +29,7 @@ interface ProcessUrlResult {
 }
 
 export async function handleProcessUrl(
-  event: IpcMainInvokeEvent,
+  _event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
   // Add highly visible debug logs
@@ -37,6 +37,7 @@ export async function handleProcessUrl(
   log.warn('[url-handler] Processing URL request');
   log.error(`[url-handler] URL TO DOWNLOAD: ${options.url}`);
 
+  const mainWindow = BrowserWindow.getAllWindows()[0];
   const operationId = options.operationId || uuidv4();
   log.info(
     `[url-handler] Starting process for URL: ${options.url}, Operation ID: ${operationId}`
@@ -49,10 +50,12 @@ export async function handleProcessUrl(
     error?: string | null;
   }) => {
     log.debug(`[url-handler][${operationId}] Sending progress:`, progressData); // Added debug log
-    event.sender.send('url-processing-progress', {
-      ...progressData,
-      operationId,
-    });
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('url-processing-progress', {
+        ...progressData,
+        operationId,
+      });
+    }
   };
 
   if (!options || typeof options.url !== 'string' || !options.url.trim()) {
@@ -105,6 +108,12 @@ export async function handleProcessUrl(
       operationId,
     };
     sendProgress({ percent: 100, stage: 'Completed' });
+
+    // --- ADD LOGGING HERE ---
+    log.info(
+      `[url-handler] processVideoUrl returned: ${JSON.stringify(result)}`
+    );
+
     return successResult;
   } catch (error: any) {
     // Enhanced error logging
