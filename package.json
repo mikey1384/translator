@@ -46,7 +46,7 @@
     },
     "mac": {
       "category": "public.app-category.utilities",
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.icns"
     },
     "win": {
       "target": [
