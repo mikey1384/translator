@@ -310,19 +310,27 @@ export default function GenerateSubtitles({
       console.log('Video download successful:', result);
 
       // --- MODIFIED: Use Blob URL Strategy --- START ---
-      if (result.videoPath && result.filename) {
-        // Update progress UI
-        setProgressStage('Download complete! Reading video data...');
-        setProgressPercent(100); // Keep progress at 100
+      // Check for either filePath (backend name) or videoPath (frontend expected name)
+      const videoPath = result.videoPath || result.filePath;
 
-        // Store download info for the "Save Original" button
-        setDownloadComplete(true);
-        setDownloadedVideoPath(result.videoPath);
-
-        // Read the downloaded file content
-        const fileContentResult = await window.electron.readFileContent(
-          result.videoPath
+      if (!videoPath || !result.filename) {
+        throw new Error(
+          'Downloaded video information is incomplete (missing path or filename).'
         );
+      }
+
+      // Update progress UI
+      setProgressStage('Download complete! Reading video data...');
+      setProgressPercent(100); // Keep progress at 100
+
+      // Store download info for the "Save Original" button
+      setDownloadComplete(true);
+      setDownloadedVideoPath(videoPath);
+
+      try {
+        // Read the downloaded file content
+        const fileContentResult =
+          await window.electron.readFileContent(videoPath);
 
         if (!fileContentResult.success || !fileContentResult.data) {
           throw new Error(
@@ -342,9 +350,10 @@ export default function GenerateSubtitles({
         const videoFileObj = new File([blob], result.filename, {
           type: 'video/mp4',
         });
+
         // Attach the blobUrl and the original path for reference
         (videoFileObj as any)._blobUrl = blobUrl;
-        (videoFileObj as any)._originalPath = result.videoPath;
+        (videoFileObj as any)._originalPath = videoPath;
 
         // Update progress UI
         setProgressStage('Setting up video...');
@@ -362,10 +371,29 @@ export default function GenerateSubtitles({
 
         // Clear URL input since we now have a file/URL
         setUrlInput('');
-      } else {
-        throw new Error(
-          'Downloaded video information is incomplete (missing path or filename).'
-        );
+      } catch (fileError) {
+        console.error('Error reading video file:', fileError);
+
+        // Fallback: If we can't load the file as blob, try to use the fileUrl directly
+        if (result.fileUrl) {
+          console.log('Using fileUrl as fallback:', result.fileUrl);
+
+          // Create a pseudo-File object with the path
+          const fileData = {
+            name: result.filename,
+            path: videoPath,
+            size: result.size || 0,
+            type: 'video/mp4',
+            fileUrl: result.fileUrl,
+          };
+
+          onSetVideoFile(fileData as any);
+          setUrlInput('');
+        } else {
+          throw new Error(
+            'Could not read video file and no fileUrl was provided as fallback'
+          );
+        }
       }
       // --- MODIFIED: Use Blob URL Strategy --- END ---
     } catch (err: any) {
@@ -461,7 +489,7 @@ export default function GenerateSubtitles({
     };
   }, []);
 
-  // --- MODIFIED: Trigger Electron dialog for file selection --- START ---
+  // --- MODIFIED: Trigger Electron dialog for file selection ---
   const handleFileSelectClick = async () => {
     setError('');
     if (!window.electron?.openFile) {
@@ -505,7 +533,7 @@ export default function GenerateSubtitles({
       setError(`Error selecting file: ${error.message || error}`);
     }
   };
-  // --- MODIFIED: Trigger Electron dialog for file selection --- END ---
+  // --- MODIFIED: Trigger Electron dialog for file selection ---
 
   // --- handleSaveSubtitles (corrected) ---
   async function handleSaveSubtitles() {

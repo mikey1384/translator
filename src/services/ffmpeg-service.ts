@@ -8,6 +8,7 @@ import log from 'electron-log';
 // import ffprobePath from '@ffprobe-installer/ffprobe'; // No longer needed
 import os from 'os';
 import nodeProcess from 'process'; // Use alias to avoid conflict with ChildProcess type
+import { createRequire } from 'module'; // <-- Import createRequire
 // Import the helper and type
 import {
   ASS_STYLE_PRESETS,
@@ -23,83 +24,6 @@ export class FFmpegError extends Error {
   }
 }
 
-// Helper function to get the correct path based on environment
-function getBinaryPath(moduleName: string, binaryName: string): string {
-  try {
-    const installerPath = path.dirname(
-      require.resolve(`${moduleName}/package.json`)
-    );
-    const relativeBinaryPath =
-      require(`${moduleName}/package.json`)._binary || binaryName;
-
-    if (app.isPackaged) {
-      // In production, binaries are unpacked relative to app.asar
-      // Go up one level from app.getAppPath() (which is usually .../app.asar)
-      // then into app.asar.unpacked, then node_modules, etc.
-      const unpackedPath = path.join(
-        app.getAppPath(),
-        '..',
-        'app.asar.unpacked',
-        'node_modules',
-        moduleName,
-        relativeBinaryPath
-      );
-      log.info(
-        `[getBinaryPath] Packaged mode: Using ${moduleName} from ${unpackedPath}`
-      );
-      if (fs.existsSync(unpackedPath)) {
-        return unpackedPath;
-      } else {
-        log.error(
-          `[getBinaryPath] Critical: ${moduleName} not found at expected unpacked path: ${unpackedPath}`
-        );
-        // Fallback attempt (might work if asarUnpack structure differs?)
-        const fallbackPath = path.join(
-          process.resourcesPath,
-          'app.asar.unpacked',
-          'node_modules',
-          moduleName,
-          relativeBinaryPath
-        );
-        log.warn(`[getBinaryPath] Trying fallback path: ${fallbackPath}`);
-        if (fs.existsSync(fallbackPath)) return fallbackPath;
-        throw new Error(
-          `Packaged ${moduleName} binary not found at ${unpackedPath} or ${fallbackPath}`
-        );
-      }
-    } else {
-      // In development, use the path directly from node_modules
-      const devPath = path.join(installerPath, relativeBinaryPath);
-      log.info(
-        `[getBinaryPath] Development mode: Using ${moduleName} from ${devPath}`
-      );
-      if (fs.existsSync(devPath)) {
-        return devPath;
-      }
-      log.error(
-        `[getBinaryPath] Critical: ${moduleName} not found at expected dev path: ${devPath}`
-      );
-      throw new Error(
-        `Development ${moduleName} binary not found at ${devPath}`
-      );
-    }
-  } catch (error: any) {
-    log.error(
-      `[getBinaryPath] Error resolving path for ${moduleName}: ${error.message}`
-    );
-    // Provide a more informative error if require.resolve fails
-    if (
-      error.code === 'MODULE_NOT_FOUND' &&
-      error.message.includes(moduleName)
-    ) {
-      throw new Error(
-        `Could not resolve package location for ${moduleName}. Is it installed?`
-      );
-    }
-    throw error; // Rethrow other errors
-  }
-}
-
 export class FFmpegService {
   private ffmpegPath: string;
   private ffprobePath: string;
@@ -108,15 +32,45 @@ export class FFmpegService {
   //   new Map();
 
   constructor() {
+    const require = createRequire(import.meta.url);
     try {
-      this.ffmpegPath = getBinaryPath('@ffmpeg-installer/ffmpeg', 'ffmpeg');
-      this.ffprobePath = getBinaryPath('@ffprobe-installer/ffprobe', 'ffprobe');
-      log.info(`FFmpeg path set to: ${this.ffmpegPath}`);
-      log.info(`FFprobe path set to: ${this.ffprobePath}`);
+      // Use the module's own path property
+      this.ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+      this.ffprobePath = require('@ffprobe-installer/ffprobe').path;
+      log.info(`FFmpeg path (from module): ${this.ffmpegPath}`);
+      log.info(`FFprobe path (from module): ${this.ffprobePath}`);
+
+      // Fix paths for packaged app - replace app.asar with app.asar.unpacked
+      if (app.isPackaged) {
+        this.ffmpegPath = this.ffmpegPath.replace(
+          'app.asar/',
+          'app.asar.unpacked/'
+        );
+        this.ffprobePath = this.ffprobePath.replace(
+          'app.asar/',
+          'app.asar.unpacked/'
+        );
+        log.info(`Adjusted FFmpeg path: ${this.ffmpegPath}`);
+        log.info(`Adjusted FFprobe path: ${this.ffprobePath}`);
+      }
+
+      // Verify paths exist
+      if (!fs.existsSync(this.ffmpegPath)) {
+        log.error(`Resolved ffmpeg path does not exist: ${this.ffmpegPath}`);
+        throw new Error(
+          `Resolved ffmpeg path check failed: ${this.ffmpegPath}`
+        );
+      }
+      if (!fs.existsSync(this.ffprobePath)) {
+        log.error(`Resolved ffprobe path does not exist: ${this.ffprobePath}`);
+        throw new Error(
+          `Resolved ffprobe path check failed: ${this.ffprobePath}`
+        );
+      }
     } catch (error: any) {
       log.error(`Failed to initialize FFmpegService paths: ${error.message}`);
-      // Set paths to null or handle error appropriately to prevent crashes later
-      this.ffmpegPath = 'ffmpeg'; // Fallback to system path if possible
+      log.error(`Error stack: ${error.stack}`); // Log stack for better debug
+      this.ffmpegPath = 'ffmpeg'; // Fallback to system path
       this.ffprobePath = 'ffprobe';
       log.warn(
         'Falling back to system paths for ffmpeg/ffprobe due to initialization error.'
@@ -539,9 +493,9 @@ export class FFmpegService {
         .replace(/:/g, '\\:');
 
       // Define the subtitle filter *without* fontdir, relying on FONTCONFIG_FILE env var
-      const subtitleFilter = `subtitles=filename='${escapedAssPath}'`;
+      const subtitleFilter = `subtitles='${escapedAssPath}':force_style='FontName=Arial,FontSize=${fontSize}'`;
       log.info(
-        `[${operationId}] Using subtitle filter: ${subtitleFilter} (relying on Fontconfig/Env)`
+        `[${operationId}] Using more direct subtitle filter: ${subtitleFilter}`
       );
       // --- Prepare FFmpeg Subtitle Filter --- END
 
@@ -569,6 +523,26 @@ export class FFmpegService {
       ];
 
       log.info(`[${operationId}] FFmpeg arguments: ${ffmpegArgs.join(' ')}`);
+
+      // Log subtitle file contents for debugging
+      try {
+        const assContent = await fsp.readFile(tempAssPath!, 'utf-8');
+        log.info(
+          `[${operationId}] Styled ASS content (first 500 chars): ${assContent.substring(0, 500)}`
+        );
+      } catch (err) {
+        log.warn(`[${operationId}] Couldn't read ASS file for logging: ${err}`);
+      }
+
+      // Verify subtitle file exists right before execution
+      if (!fs.existsSync(tempAssPath!)) {
+        log.error(
+          `[${operationId}] Critical: ASS file doesn't exist right before FFmpeg execution!`
+        );
+        throw new Error(
+          `Subtitle file missing before execution: ${tempAssPath}`
+        );
+      }
 
       progressCallback?.({ percent: 15, stage: 'Starting video encoding' });
 

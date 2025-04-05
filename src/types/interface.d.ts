@@ -41,6 +41,7 @@ interface ProcessUrlResult {
   success: boolean;
   subtitles?: string; // The generated subtitles (kept for backward compatibility)
   videoPath?: string; // Path to the downloaded video file
+  filePath?: string; // Alternative name for videoPath (for backwards compatibility)
   filename?: string; // Name of the downloaded file
   size?: number; // Size of the downloaded file in bytes
   fileUrl?: string; // Direct file:// URL to the downloaded video

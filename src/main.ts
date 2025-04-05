@@ -5,6 +5,7 @@ import fs from 'fs/promises'; // Use promises version and import statically
 import isDev from 'electron-is-dev';
 import log from 'electron-log'; // electron-log is already configured by main.cjs
 import electronContextMenu from 'electron-context-menu'; // Import the library
+import nodeProcess from 'process'; // Alias process
 
 // ESM equivalent for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +15,7 @@ const __dirname = path.dirname(__filename); // This now replaces the old __dirna
 import { SaveFileService } from './services/save-file.js'; // Add .js extension for explicit ESM import
 import { FileManager } from './services/file-manager.js'; // Add .js extension
 import { FFmpegService } from './services/ffmpeg-service.js'; // Add .js extension
+import { updateYtDlp } from './services/url-processor.js'; // Import the updateYtDlp function
 
 // Import the new TypeScript handlers
 import * as fileHandlersTS from './handlers/file-handlers.js'; // Add .js extension
@@ -34,7 +36,7 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   log.info('[src/main.ts] Another instance is already running. Quitting...');
   app.quit();
-  process.exit(0);
+  nodeProcess.exit(0);
 }
 
 // Define a type for the services object for better type safety
@@ -55,9 +57,11 @@ try {
       '[src/main.ts] Running in packaged mode, resolving module paths...'
     );
     log.info(`[src/main.ts] __dirname: ${__dirname}`);
-    log.info(`[src/main.ts] process.resourcesPath: ${process.resourcesPath}`);
     log.info(
-      `[src/main.ts] Node integration: ${process.env.ELECTRON_NODE_INTEGRATION}`
+      `[src/main.ts] process.resourcesPath: ${nodeProcess.resourcesPath}`
+    );
+    log.info(
+      `[src/main.ts] Node integration: ${nodeProcess.env.ELECTRON_NODE_INTEGRATION}`
     );
   }
 
@@ -138,7 +142,7 @@ try {
   );
   log.error('[src/main.ts] Error stack:', (error as Error).stack);
   // Don't quit immediately - let the app show at least a basic error message
-  if (process.env.NODE_ENV !== 'development') {
+  if (nodeProcess.env.NODE_ENV !== 'development') {
     // In production, show an error dialog before quitting
     app.whenReady().then(() => {
       dialog.showErrorBox(
@@ -147,7 +151,7 @@ try {
       );
       setTimeout(() => {
         app.quit();
-        process.exit(1);
+        nodeProcess.exit(1);
       }, 5000); // Give time for the dialog to be seen
     });
   } else {
@@ -194,13 +198,13 @@ app.on('will-quit', async () => {
 });
 
 // --- Global Error Handler ---
-process.on('uncaughtException', error => {
+nodeProcess.on('uncaughtException', error => {
   log.error('[src/main.ts] Uncaught Exception:', error);
   // Potentially show a dialog to the user before quitting
   if (!isDev) {
     // Only quit automatically in production
     app.quit();
-    process.exit(1);
+    nodeProcess.exit(1);
   }
 });
 // === End: Added Imports & Initialization ===
@@ -261,7 +265,7 @@ async function createWindow() {
   await mainWindow.loadFile(rendererPath);
 
   // Open the DevTools automatically if running in development
-  const isRunningInDev = process.env.BUN_ENV === 'development' || isDev;
+  const isRunningInDev = nodeProcess.env.BUN_ENV === 'development' || isDev;
   if (isRunningInDev) {
     mainWindow.webContents.openDevTools();
   }
@@ -384,7 +388,7 @@ async function createWindow() {
   ];
 
   // macOS specific menu setup
-  if (process.platform === 'darwin') {
+  if (nodeProcess.platform === 'darwin') {
     const name = app.getName();
     menuTemplate.unshift({
       label: name,
@@ -439,6 +443,22 @@ app.whenReady().then(async () => {
   }
 
   log.info('[src/main.ts] App ready event received.');
+
+  // Try to update yt-dlp in the background
+  updateYtDlp()
+    .then(updated => {
+      if (updated) {
+        log.info('[src/main.ts] yt-dlp was successfully updated');
+      } else {
+        log.warn(
+          '[src/main.ts] yt-dlp update was unsuccessful, will continue with existing version'
+        );
+      }
+    })
+    .catch(error => {
+      log.error('[src/main.ts] Error updating yt-dlp:', error);
+    });
+
   await createWindow();
 
   app.on('activate', () => {
@@ -456,7 +476,7 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   log.info('[src/main.ts] All windows closed event received.');
   // Quit when all windows are closed, except on macOS.
-  if (process.platform !== 'darwin') {
+  if (nodeProcess.platform !== 'darwin') {
     log.info('[src/main.ts] Quitting application (not macOS).');
     app.quit();
   }
