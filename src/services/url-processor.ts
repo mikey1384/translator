@@ -6,6 +6,7 @@ import log from 'electron-log';
 import { app } from 'electron';
 import { fileURLToPath } from 'url';
 import { FFmpegService } from './ffmpeg-service.js';
+import { FileManager } from './file-manager.js';
 
 export type VideoQuality = 'low' | 'mid' | 'high';
 const qualityFormatMap: Record<VideoQuality, string> = {
@@ -126,9 +127,17 @@ async function downloadVideoFromPlatform(
   url: string,
   outputDir: string,
   quality: VideoQuality,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  services?: {
+    ffmpegService: FFmpegService;
+  }
 ): Promise<{ filepath: string; info: any }> {
   log.info(`[URLProcessor] Starting download: ${url}`);
+
+  if (!services?.ffmpegService) {
+    throw new Error('FFmpegService is required for downloadVideoFromPlatform');
+  }
+  const { ffmpegService } = services;
 
   progressCallback?.({ percent: 15, stage: 'Locating yt-dlp...' });
 
@@ -197,7 +206,6 @@ async function downloadVideoFromPlatform(
     `%(title)s [%(id)s].%(ext)s` // More descriptive temporary name
   );
 
-  const ffmpegService = new FFmpegService();
   const ffmpegPath = ffmpegService.getFFmpegPath();
 
   const args = [
@@ -216,6 +224,7 @@ async function downloadVideoFromPlatform(
   ];
 
   log.info(`[URLProcessor] Executing yt-dlp: ${ytDlpPath} ${args.join(' ')}`);
+  log.info(`[URLProcessor] yt-dlp intended output directory: ${outputDir}`);
 
   progressCallback?.({ percent: 25, stage: 'Starting download...' });
 
@@ -345,6 +354,9 @@ async function downloadVideoFromPlatform(
     log.info(
       `[URLProcessor] File verified: ${finalFilepath}, Size: ${stats.size}`
     );
+    log.info(
+      `[URLProcessor] Download successful, returning filepath: ${finalFilepath}`
+    );
 
     return { filepath: finalFilepath, info: downloadInfo };
   } catch (error: any) {
@@ -373,7 +385,12 @@ async function downloadVideoFromPlatform(
 export async function processVideoUrl(
   url: string,
   quality: VideoQuality = 'high',
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  // Accept both services
+  services?: {
+    fileManager: FileManager;
+    ffmpegService: FFmpegService;
+  }
 ): Promise<{
   videoPath: string;
   filename: string;
@@ -382,8 +399,21 @@ export async function processVideoUrl(
   originalVideoPath: string;
 }> {
   log.info('[URLProcessor] processVideoUrl CALLED');
-  const ffmpegService = new FFmpegService();
-  const tempDir = ffmpegService.getTempDir();
+
+  // Use provided FileManager to get tempDir
+  if (!services?.fileManager) {
+    throw new Error('FileManager instance is required for processVideoUrl');
+  }
+  const tempDir = services.fileManager.getTempDir();
+  log.info(
+    `[URLProcessor] processVideoUrl using tempDir from FileManager: ${tempDir}`
+  );
+
+  // Use provided FFmpegService
+  if (!services?.ffmpegService) {
+    throw new Error('FFmpegService instance is required for processVideoUrl');
+  }
+  const { ffmpegService } = services; // Get ffmpegService
 
   try {
     new URL(url);
@@ -395,7 +425,9 @@ export async function processVideoUrl(
     url,
     tempDir,
     quality,
-    progressCallback
+    progressCallback,
+    // Pass down the correct ffmpegService
+    { ffmpegService } // Correctly pass the injected service
   );
   const stats = await fsp.stat(filepath);
   const filename = path.basename(filepath);

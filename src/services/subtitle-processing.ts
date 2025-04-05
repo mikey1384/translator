@@ -47,6 +47,36 @@ interface TranslateBatchArgs {
   signal?: AbortSignal; // Keep signal optional as before for this function
 }
 
+// --- Define Args interface for mergeSubtitlesWithVideo --- START ---
+interface MergeSubtitlesWithVideoArgs {
+  options: MergeSubtitlesOptions;
+  operationId: string;
+  services: {
+    ffmpegService: FFmpegService;
+  };
+  progressCallback?: (progress: { percent: number; stage: string }) => void;
+}
+// --- Define Args interface for mergeSubtitlesWithVideo --- END ---
+
+// --- Define Args interface for generateSubtitlesFromAudio --- START ---
+interface GenerateSubtitlesFromAudioArgs {
+  inputAudioPath: string;
+  progressCallback?: (progress: {
+    percent: number;
+    stage: string;
+    current?: number;
+    total?: number;
+    partialResult?: string;
+    error?: string;
+  }) => void;
+  signal: AbortSignal;
+  operationId?: string;
+  services: {
+    ffmpegService: FFmpegService;
+  };
+}
+// --- Define Args interface for generateSubtitlesFromAudio --- END ---
+
 const KEYTAR_SERVICE_NAME = 'TranslatorApp';
 
 async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
@@ -79,19 +109,8 @@ async function generateSubtitlesFromAudio({
   progressCallback,
   signal,
   operationId,
-}: {
-  inputAudioPath: string;
-  progressCallback?: (progress: {
-    percent: number;
-    stage: string;
-    current?: number;
-    total?: number;
-    partialResult?: string;
-    error?: string;
-  }) => void;
-  signal: AbortSignal;
-  operationId?: string;
-}): Promise<string> {
+  services,
+}: GenerateSubtitlesFromAudioArgs): Promise<string> {
   let openai: OpenAI;
   try {
     const openaiApiKey = await getApiKey('openai');
@@ -125,7 +144,13 @@ async function generateSubtitlesFromAudio({
 
     progressCallback?.({ percent: 0, stage: 'Analyzing audio file...' });
 
-    const ffmpegService = new FFmpegService();
+    if (!services?.ffmpegService) {
+      throw new SubtitleProcessingError(
+        'FFmpegService is required for generateSubtitlesFromAudio'
+      );
+    }
+    const { ffmpegService } = services;
+
     const duration = await ffmpegService.getMediaDuration(inputAudioPath);
     if (isNaN(duration) || duration <= 0) {
       throw new SubtitleProcessingError(
@@ -352,18 +377,20 @@ export async function generateSubtitlesFromVideo({
   if (!options.videoPath) {
     throw new SubtitleProcessingError('Video path is required');
   }
-  // Check if services are provided - use a default or throw if essential and missing
-  const effectiveServices = services || {
-    ffmpegService: new FFmpegService(),
-    fileManager: new FileManager(),
-  }; // Example: Create new if not provided
-  if (!effectiveServices?.ffmpegService || !effectiveServices?.fileManager) {
+
+  // --- Modified Service Check ---
+  // Throw an error if required services are not provided.
+  if (!services?.ffmpegService || !services?.fileManager) {
+    log.error(
+      '[subtitle-processing] generateSubtitlesFromVideo called without required services.'
+    );
     throw new SubtitleProcessingError(
-      'Required services (ffmpegService, fileManager) not provided'
+      'Required services (ffmpegService, fileManager) were not provided to generateSubtitlesFromVideo'
     );
   }
-
-  const { ffmpegService, fileManager } = effectiveServices; // Use the potentially defaulted services
+  // Use the provided services directly
+  const { ffmpegService, fileManager } = services;
+  // --- End Modified Service Check ---
 
   // Track whether translation is needed
   const targetLang = (options.targetLanguage || 'original').toLowerCase();
@@ -468,6 +495,7 @@ export async function generateSubtitlesFromVideo({
       },
       signal,
       operationId,
+      services,
     });
 
     // Check for cancellation
@@ -655,7 +683,7 @@ export async function generateSubtitlesFromVideo({
     // Cleanup temporary audio file
     if (audioPath) {
       try {
-        await effectiveServices.fileManager.deleteFile(audioPath);
+        await fileManager.deleteFile(audioPath);
       } catch (cleanupError) {
         console.error(
           `Failed to delete temporary audio file ${audioPath}:`,
@@ -666,16 +694,14 @@ export async function generateSubtitlesFromVideo({
   }
 }
 
-export async function mergeSubtitlesWithVideo(
-  options: MergeSubtitlesOptions,
-  operationId: string,
-  progressCallback?: (progress: { percent: number; stage: string }) => void,
-  services?: {
-    ffmpegService: FFmpegService;
-  }
-): Promise<{ outputPath: string }> {
-  const { ffmpegService } = services || { ffmpegService: new FFmpegService() };
-  log.info(`[${operationId}] mergeSubtitlesWithVideo called.`); // Use log.info
+export async function mergeSubtitlesWithVideo({
+  options,
+  operationId,
+  services,
+  progressCallback,
+}: MergeSubtitlesWithVideoArgs): Promise<{ outputPath: string }> {
+  const { ffmpegService } = services;
+  log.info(`[${operationId}] mergeSubtitlesWithVideo called.`);
 
   const inputPathForNaming = options.videoFileName || options.videoPath;
   if (!inputPathForNaming) {
@@ -688,9 +714,6 @@ export async function mergeSubtitlesWithVideo(
   }
   if (!options.subtitlesPath) {
     throw new SubtitleProcessingError('Subtitles path is required');
-  }
-  if (!services?.ffmpegService) {
-    throw new SubtitleProcessingError('FFmpeg service not provided');
   }
 
   // Check explicitly for false (cancelled) and not for undefined (never registered)

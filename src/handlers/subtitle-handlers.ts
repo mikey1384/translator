@@ -202,23 +202,37 @@ export async function handleMergeSubtitles(
   const controller = new AbortController();
   cancellationService.registerOperation(operationId, controller);
 
-  let tempVideoPath: string | null = null;
+  // Get fileManager to determine the correct temp dir
+  const { fileManager } = checkServicesInitialized();
+  const tempDir = fileManager.getTempDir();
+
+  let tempVideoPath: string | undefined;
   let tempSrtPath: string | null = null;
   const finalOptions = { ...options, operationId };
 
   try {
+    // Defensive check: If both path and data are somehow present, log warn and prioritize path.
+    if (finalOptions.videoPath && finalOptions.videoFileData) {
+      log.warn(
+        `[${operationId}] handleMergeSubtitles received BOTH videoPath and videoFileData! Prioritizing videoPath and removing file data properties.`
+      );
+      delete finalOptions.videoFileData;
+      delete finalOptions.videoFileName; // Also delete filename
+    }
+
     if (
       'videoFileData' in finalOptions &&
       'videoFileName' in finalOptions &&
       finalOptions.videoFileData
     ) {
-      const safeFileName = (finalOptions.videoFileName as string).replace(
-        /[^a-zA-Z0-9_.-]/g,
-        '_'
+      // This block should ONLY run if the video came from a URL (no initial videoPath)
+      log.warn(
+        `[${operationId}] Entering block to process videoFileData. This should NOT happen if videoPath was provided initially. Options keys: ${JSON.stringify(Object.keys(finalOptions))}`
       );
+      const videoExtension = path.extname(finalOptions.videoFileName || '.mp4');
       tempVideoPath = path.join(
-        ffmpegService.getTempDir(),
-        `temp_merge_video_${operationId}_${safeFileName}`
+        await fileManager.getTempDir(),
+        `temp_merge_video_${operationId}_${finalOptions.videoFileName || `file${videoExtension}`}`
       );
       const buffer = Buffer.from(finalOptions.videoFileData as ArrayBuffer);
       await fs.writeFile(tempVideoPath, buffer);
@@ -244,7 +258,12 @@ export async function handleMergeSubtitles(
       throw new Error('SRT content (string) is required for merge.');
     }
     const tempSrtFilename = `temp_merge_subtitles_${operationId}.srt`;
-    tempSrtPath = path.join(ffmpegService.getTempDir(), tempSrtFilename);
+
+    // Ensure the temp directory exists before writing to it
+    await fileManager.ensureTempDir();
+
+    // Use tempDir obtained from FileManager
+    tempSrtPath = path.join(tempDir, tempSrtFilename);
     await fs.writeFile(tempSrtPath, finalOptions.srtContent, 'utf8');
     log.info(`[${operationId}] Temporary SRT file written to: ${tempSrtPath}`);
 
@@ -271,17 +290,17 @@ export async function handleMergeSubtitles(
       });
     };
 
-    const mergeResult = await mergeSubtitlesWithVideo(
-      {
+    const mergeResult = await mergeSubtitlesWithVideo({
+      options: {
         videoPath: finalOptions.videoPath,
         subtitlesPath: tempSrtPath,
         fontSize: finalOptions.fontSize,
         stylePreset: finalOptions.stylePreset,
       },
       operationId,
+      services: { ffmpegService },
       progressCallback,
-      { ffmpegService }
-    );
+    });
 
     if (!mergeResult.outputPath) {
       log.info(

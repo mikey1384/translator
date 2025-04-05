@@ -4,9 +4,6 @@ import fs from 'fs';
 import fsp from 'fs/promises'; // Import promises version
 import { app } from 'electron';
 import log from 'electron-log';
-// import ffmpegPath from '@ffmpeg-installer/ffmpeg'; // No longer needed
-// import ffprobePath from '@ffprobe-installer/ffprobe'; // No longer needed
-import os from 'os';
 import nodeProcess from 'process'; // Use alias to avoid conflict with ChildProcess type
 import { createRequire } from 'module'; // <-- Import createRequire
 // Import the helper and type
@@ -31,7 +28,7 @@ export class FFmpegService {
   // private activeProcesses: Map<string, ChildProcessWithoutNullStreams> = // No longer needed
   //   new Map();
 
-  constructor() {
+  constructor(tempDirPath: string) {
     const require = createRequire(import.meta.url);
     try {
       // Use the module's own path property
@@ -77,26 +74,21 @@ export class FFmpegService {
       );
     }
 
-    // Determine temp directory based on OS and packaging status
-    this.tempDir = this.determineTempDir();
-    this.ensureTempDirSync();
-
-    log.info(`FFmpegService initialized. Temp dir: ${this.tempDir}`);
-  }
-
-  private determineTempDir(): string {
-    // Use app.getPath('userData')/temp in packaged apps for a standard, persistent location
-    if (app.isPackaged) {
-      const userDataTemp = path.join(app.getPath('userData'), 'temp');
-      log.info(`Packaged mode, using userData temp dir: ${userDataTemp}`);
-      return userDataTemp;
-    } else {
-      // Use OS temp dir in development
-      const osTemp = os.tmpdir();
-      log.info(`Development mode, using OS temp dir: ${osTemp}`);
-      return osTemp;
+    // Use the provided temp directory path
+    if (!tempDirPath) {
+      console.error(
+        '[FFmpegService] Critical Error: tempDirPath argument is required.'
+      );
+      throw new Error('FFmpegService requires a tempDirPath');
     }
+    this.tempDir = tempDirPath;
+    this.ensureTempDirSync(); // Ensure the provided directory exists
+
+    log.info(`FFmpegService initialized. Temp dir set to: ${this.tempDir}`);
   }
+
+  // Removed determineTempDir as path is now injected
+  // private determineTempDir(): string { ... }
 
   // Ensure sync version exists if called in constructor
   private ensureTempDirSync(): void {

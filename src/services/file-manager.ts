@@ -1,7 +1,7 @@
-import { app, dialog, BrowserWindow } from 'electron';
+import { dialog, BrowserWindow } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
+import log from 'electron-log';
 
 export class FileManagerError extends Error {
   constructor(message: string) {
@@ -13,20 +13,24 @@ export class FileManagerError extends Error {
 export class FileManager {
   private tempDir: string;
 
-  constructor() {
-    // Safely get a temp directory - use app.getPath if available, otherwise use OS temp dir
-    try {
-      this.tempDir = path.join(app.getPath('userData'), 'temp');
-    } catch (error) {
-      // Use console.warn instead of log.warn
-      console.warn(
-        'Electron app not ready, using OS temp directory as fallback'
+  constructor(tempDirPath: string) {
+    if (!tempDirPath) {
+      console.error(
+        '[FileManager] Critical Error: tempDirPath argument is required.'
       );
-      this.tempDir = path.join(os.tmpdir(), 'translator-electron-temp');
+      throw new Error('FileManager requires a tempDirPath');
     }
+    this.tempDir = tempDirPath;
+    log.info(
+      `[FileManager] Initialized. Temp directory set to: ${this.tempDir}`
+    );
+  }
 
-    // Use console.info instead of log.info
-    console.info(`FileManager initialized. Temp directory: ${this.tempDir}`);
+  /**
+   * Returns the configured temporary directory path.
+   */
+  getTempDir(): string {
+    return this.tempDir;
   }
 
   /**
@@ -35,11 +39,9 @@ export class FileManager {
   async ensureTempDir(): Promise<void> {
     try {
       await fs.mkdir(this.tempDir, { recursive: true });
-      // Use console.info instead of log.info
-      console.info(`Temp directory created at: ${this.tempDir}`);
+      log.info(`Temp directory created at: ${this.tempDir}`);
     } catch (error) {
-      // Use console.error instead of log.error
-      console.error('Failed to create temp directory:', error);
+      log.error('Failed to create temp directory:', error);
       throw new FileManagerError(`Failed to create temp directory: ${error}`);
     }
   }
@@ -49,13 +51,19 @@ export class FileManager {
    */
   async cleanup(): Promise<void> {
     try {
+      log.info(`[FileManager] Attempting to delete directory: ${this.tempDir}`);
       await fs.rm(this.tempDir, { recursive: true, force: true });
-      // Use console.info instead of log.info
-      console.info(`Successfully cleaned up temp directory: ${this.tempDir}`);
+      log.info(
+        `[FileManager] fs.rm command completed (v2) for: ${this.tempDir}`
+      );
+      log.info(`Successfully cleaned up temp directory: ${this.tempDir}`);
     } catch (error) {
-      // Use console.error instead of log.error
-      console.error(`Error cleaning up temp directory ${this.tempDir}:`, error);
-      // Don't re-throw, cleanup failure shouldn't crash the app on exit
+      log.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      log.error(
+        `[FileManager] CRITICAL ERROR cleaning up temp directory ${this.tempDir}:`,
+        error
+      );
+      log.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     }
   }
 
@@ -75,14 +83,12 @@ export class FileManager {
     try {
       const { defaultPath, filters } = options;
 
-      // Log all parameters for debugging
-      console.info('saveFile called with options:', {
+      log.info('saveFile called with options:', {
         contentLength: content?.length,
         defaultPath,
         hasFilters: Boolean(filters),
       });
 
-      // Always show a save dialog
       const window = BrowserWindow.getFocusedWindow();
       if (!window) {
         throw new FileManagerError('No focused window found');
@@ -104,13 +110,11 @@ export class FileManager {
       }
 
       await fs.writeFile(selectedPath, content, 'utf8');
-      // Use console.info instead of log.info
-      console.info(`File saved to: ${selectedPath}`);
+      log.info(`File saved to: ${selectedPath}`);
       return selectedPath;
     } catch (error: any) {
       const errorMessage = `Error saving file: ${error.message || error}`;
-      // Use console.error instead of log.error
-      console.error(errorMessage, {
+      log.error(errorMessage, {
         defaultPath: options.defaultPath,
       });
       throw new FileManagerError(errorMessage);
@@ -166,16 +170,13 @@ export class FileManager {
       });
 
       if (result.canceled || result.filePaths.length === 0) {
-        // Use console.info instead of log.info
-        console.info('File open canceled by user.');
+        log.info('File open canceled by user.');
         return { canceled: true, filePaths: [] };
       }
 
-      // Use console.info instead of log.info
-      console.info('Files selected:', result.filePaths);
+      log.info('Files selected:', result.filePaths);
 
-      // Optional: Read content for text-based subtitle files
-      const subtitleExtensions = ['.srt', '.vtt', '.ass', '.txt']; // Add other text types if needed
+      const subtitleExtensions = ['.srt', '.vtt', '.ass', '.txt'];
       const needsContentRead = result.filePaths.some(fp =>
         subtitleExtensions.includes(path.extname(fp).toLowerCase())
       );
@@ -193,26 +194,19 @@ export class FileManager {
                 try {
                   return await fs.readFile(filePath, 'utf8');
                 } catch (readError: any) {
-                  // Use console.error instead of log.error
-                  console.error(
+                  log.error(
                     `Error reading file content for ${filePath}:`,
                     readError
                   );
-                  // Return null or specific error marker if needed, instead of throwing
-                  // Throwing here would fail the whole Promise.all
                   return `Error reading file: ${readError.message}`;
                 }
               }
-              // Return empty string for non-subtitle files if mixed selection is possible
               return '';
             })
           );
-          // Use console.info instead of log.info
-          console.info('Successfully read content for subtitle files.');
+          log.info('Successfully read content for subtitle files.');
         } catch (contentError: any) {
-          // Use console.error instead of log.error
-          console.error('Error processing file contents:', contentError);
-          // Decide how to handle partial success, maybe return paths without content?
+          log.error('Error processing file contents:', contentError);
           return {
             canceled: false,
             filePaths: result.filePaths,
@@ -229,8 +223,7 @@ export class FileManager {
         fileContents: fileContents,
       };
     } catch (error: any) {
-      // Use console.error instead of log.error
-      console.error('Error opening file dialog:', error);
+      log.error('Error opening file dialog:', error);
       return {
         canceled: false,
         filePaths: [],
@@ -247,12 +240,10 @@ export class FileManager {
       const filename = `temp_${Date.now()}${extension}`;
       const filePath = path.join(this.tempDir, filename);
       await fs.writeFile(filePath, content, 'utf8');
-      // Use console.info instead of log.info
-      console.info(`Temp file written to: ${filePath}`);
+      log.info(`Temp file written to: ${filePath}`);
       return filePath;
     } catch (error) {
-      // Use console.error instead of log.error
-      console.error('Error writing temp file:', error);
+      log.error('Error writing temp file:', error);
       throw new FileManagerError(`Error writing temp file: ${error}`);
     }
   }
@@ -264,8 +255,7 @@ export class FileManager {
     try {
       return await fs.readFile(filePath, 'utf8');
     } catch (error) {
-      // Use console.error instead of log.error
-      console.error(`Error reading file ${filePath}:`, error);
+      log.error(`Error reading file ${filePath}:`, error);
       throw new FileManagerError(`Error reading file: ${error}`);
     }
   }
@@ -276,9 +266,8 @@ export class FileManager {
    */
   async moveFile(sourcePath: string, destinationPath: string): Promise<void> {
     try {
-      console.info(`Moving file from ${sourcePath} to ${destinationPath}`);
+      log.info(`Moving file from ${sourcePath} to ${destinationPath}`);
 
-      // Verify source file exists
       try {
         await fs.access(sourcePath);
       } catch (error) {
@@ -287,19 +276,16 @@ export class FileManager {
         );
       }
 
-      // Create parent directory of destination if it doesn't exist
       const destDir = path.dirname(destinationPath);
       await fs.mkdir(destDir, { recursive: true });
 
-      // Copy the file
       await fs.copyFile(sourcePath, destinationPath);
-      console.info(`File copied to ${destinationPath}`);
+      log.info(`File copied to ${destinationPath}`);
 
-      // Delete the source file
       await fs.unlink(sourcePath);
-      console.info(`Original file ${sourcePath} deleted`);
+      log.info(`Original file ${sourcePath} deleted`);
     } catch (error) {
-      console.error(
+      log.error(
         `Error moving file from ${sourcePath} to ${destinationPath}:`,
         error
       );
@@ -314,9 +300,8 @@ export class FileManager {
    */
   async copyFile(sourcePath: string, destinationPath: string): Promise<void> {
     try {
-      console.info(`Copying file from ${sourcePath} to ${destinationPath}`);
+      log.info(`Copying file from ${sourcePath} to ${destinationPath}`);
 
-      // Verify source file exists
       try {
         await fs.access(sourcePath);
       } catch (error) {
@@ -325,15 +310,13 @@ export class FileManager {
         );
       }
 
-      // Create parent directory of destination if it doesn't exist
       const destDir = path.dirname(destinationPath);
       await fs.mkdir(destDir, { recursive: true });
 
-      // Copy the file
       await fs.copyFile(sourcePath, destinationPath);
-      console.info(`File copied to ${destinationPath}`);
+      log.info(`File copied to ${destinationPath}`);
     } catch (error) {
-      console.error(
+      log.error(
         `Error copying file from ${sourcePath} to ${destinationPath}:`,
         error
       );
@@ -349,11 +332,9 @@ export class FileManager {
   async deleteFile(filePath: string): Promise<void> {
     try {
       await fs.unlink(filePath);
-      // Use console.info instead of log.info
-      console.info(`File ${filePath} deleted`);
+      log.info(`File ${filePath} deleted`);
     } catch (error) {
-      // Use console.error instead of log.error
-      console.error(`Error deleting file ${filePath}:`, error);
+      log.error(`Error deleting file ${filePath}:`, error);
       throw new FileManagerError(`Error deleting file: ${error}`);
     }
   }

@@ -2,6 +2,46 @@ import { IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import { processVideoUrl, VideoQuality } from '../services/url-processor.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
+import { FileManager } from '../services/file-manager.js';
+import { FFmpegService } from '../services/ffmpeg-service.js';
+
+// Define services structure
+interface UrlHandlerServices {
+  fileManager: FileManager;
+  ffmpegService: FFmpegService;
+}
+
+// Module-level variables
+let fileManagerInstance: FileManager | null = null;
+let ffmpegServiceInstance: FFmpegService | null = null;
+
+// Initialization function
+export function initializeUrlHandler(services: UrlHandlerServices): void {
+  if (!services || !services.fileManager || !services.ffmpegService) {
+    throw new Error(
+      '[url-handler] FileManager and FFmpegService services not provided.'
+    );
+  }
+  fileManagerInstance = services.fileManager;
+  ffmpegServiceInstance = services.ffmpegService;
+  log.info(
+    '[url-handler] Initialized with FileManager and FFmpegService (v2).'
+  );
+}
+
+// Helper to check initialization
+function checkServicesInitialized(): {
+  fileManager: FileManager;
+  ffmpegService: FFmpegService;
+} {
+  if (!fileManagerInstance || !ffmpegServiceInstance) {
+    throw new Error('[url-handler] Services not initialized (v2).');
+  }
+  return {
+    fileManager: fileManagerInstance,
+    ffmpegService: ffmpegServiceInstance,
+  };
+}
 
 // Define interfaces for clarity and type safety
 // interface UrlProgress { ... }
@@ -49,7 +89,6 @@ export async function handleProcessUrl(
     stage: string;
     error?: string | null;
   }) => {
-    log.debug(`[url-handler][${operationId}] Sending progress:`, progressData); // Added debug log
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('url-processing-progress', {
         ...progressData,
@@ -79,16 +118,22 @@ export async function handleProcessUrl(
       `[url-handler] Calling processVideoUrl for Operation ID: ${operationId}`
     );
 
-    // Call processVideoUrl with correct arguments (url, quality, progressCallback)
+    const { fileManager, ffmpegService } = checkServicesInitialized();
+
+    // Call processVideoUrl with correct arguments
     const result = await processVideoUrl(
       url,
-      options.quality, // Pass quality (defaults to 'high' in service if undefined)
-      // Add specific type annotation matching url-processor's ProgressCallback
+      options.quality,
       (progress: { percent: number; stage: string; error?: string | null }) => {
         log.info(
           `[url-handler] Progress update: ${progress.stage} - ${progress.percent}%`
         );
         sendProgress(progress);
+      },
+      // Pass services as a single object
+      {
+        fileManager,
+        ffmpegService,
       }
     );
 

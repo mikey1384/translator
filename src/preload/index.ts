@@ -45,12 +45,36 @@ const electronAPI = {
 
   // Merging subtitles
   mergeSubtitles: async (options: any) => {
-    if (options.videoFile instanceof File) {
-      const buffer = await options.videoFile.arrayBuffer();
-      options.videoFileData = buffer;
-      options.videoFileName = options.videoFile.name;
-      delete options.videoFile;
+    // Prioritize videoPath if it exists (meaning file loaded from disk)
+    if (!options.videoPath && options.videoFile instanceof File) {
+      // Only process videoFile if videoPath is NOT provided
+      try {
+        const buffer = await options.videoFile.arrayBuffer();
+        options.videoFileData = buffer;
+        options.videoFileName = options.videoFile.name;
+        options.videoPath = options.videoPath; // Keep the original path
+        // Explicitly remove videoFile and videoFileName if path is used
+        delete options.videoFile;
+        delete options.videoFileName;
+      } catch (error) {
+        console.error(
+          '[preload] Error reading videoFile for mergeSubtitles:',
+          error
+        );
+        // Decide how to handle - maybe throw or return error?
+        throw new Error('Failed to read video file for merge');
+      }
+    } else if (options.videoPath) {
+      delete options.videoFileName;
     }
+    // Always remove videoFile object if it exists, as we use path or data
+    delete options.videoFile;
+    // Log the options being sent using console.log
+    console.log(
+      '[preload] mergeSubtitles sending options keys:',
+      JSON.stringify(Object.keys(options))
+    );
+    // Send potentially modified options to main process
     return ipcRenderer.invoke('merge-subtitles', { ...options });
   },
   onMergeSubtitlesProgress: (callback: (event: any, progress: any) => void) => {
@@ -62,7 +86,7 @@ const electronAPI = {
   },
 
   // File operations
-  chooseFile: (options: any) => ipcRenderer.invoke('choose-file', options),
+  openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
   writeFile: (filePath: string, data: any) =>
     ipcRenderer.invoke('write-file', filePath, data),

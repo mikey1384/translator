@@ -490,6 +490,7 @@ export default function GenerateSubtitles({
 
   // --- MODIFIED: Trigger Electron dialog for file selection ---
   const handleFileSelectClick = async () => {
+    console.log('handleFileSelectClick CALLED at:', new Date().toISOString());
     setError('');
     if (!window.electron?.openFile) {
       console.error('Electron openFile API is not available.');

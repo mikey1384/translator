@@ -9,7 +9,7 @@
     "start": "electron dist/main.js --no-sandbox",
     "dev": "concurrently -n main,preload,renderer,electron       \"tsc -p tsconfig.main.json --watch\"       \"webpack --config webpack.preload.cjs --watch\"       \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch && cp index.html dist/renderer/\"       \"wait-on dist/main.js && electron dist/main.js --no-sandbox\"",
     "package": "npm run build && electron-builder build",
-    "clean": "rm -rf dist/*",
+    "clean": "rm -rf dist",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\"",
@@ -45,19 +45,22 @@
       "output": "release"
     },
     "mac": {
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.png"
     },
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "icon": "assets/icon.png"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "icon": "assets/icon.png"
     }
   },
   "keywords": [

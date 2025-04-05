@@ -1,0 +1,2 @@
+STARTUP: dev-main.log
+RESOLVED: /Users/mikey/Developer/translator/dev-main.log
