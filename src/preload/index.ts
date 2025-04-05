@@ -149,8 +149,57 @@ const electronAPI = {
   },
 
   // File operations
-  saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
-  openFile: (options: any) => ipcRenderer.invoke('open-file', options),
+  chooseFile: options => ipcRenderer.invoke('choose-file', options),
+  saveFile: options => ipcRenderer.invoke('save-file', options),
+  writeFile: (filePath, data) =>
+    ipcRenderer.invoke('write-file', filePath, data),
+  readFile: filePath => ipcRenderer.invoke('read-file', filePath),
+  deleteFile: filePath => ipcRenderer.invoke('delete-file', filePath),
+  getLastSaveDirectory: () => ipcRenderer.invoke('get-last-save-directory'),
+  getAppName: () => ipcRenderer.invoke('get-app-name'),
+
+  // Screenshot
+  processVideo: options => ipcRenderer.invoke('process-video', options),
+  cancelVideoProcessing: operationId =>
+    ipcRenderer.invoke('cancel-video-processing', operationId),
+  detectScenes: options => ipcRenderer.invoke('detect-scenes', options),
+  cancelSceneDetection: operationId =>
+    ipcRenderer.invoke('cancel-scene-detection', operationId),
+  extractAudio: options => ipcRenderer.invoke('extract-audio', options),
+  cancelAudioExtraction: operationId =>
+    ipcRenderer.invoke('cancel-audio-extraction', operationId),
+  convertSubtitles: options => ipcRenderer.invoke('convert-subtitles', options),
+
+  // New URL handler
+  processUrl: options => ipcRenderer.invoke('process-url', options),
+
+  // Test function
+  testDownload: url => ipcRenderer.invoke('test-download', url),
+
+  // OpenAI Connections
+  transcribeAudio: options => ipcRenderer.invoke('transcribe-audio', options),
+  cancelTranscription: operationId =>
+    ipcRenderer.invoke('cancel-transcription', operationId),
+  translateText: options => ipcRenderer.invoke('translate-text', options),
+  cancelTranslation: operationId =>
+    ipcRenderer.invoke('cancel-translation', operationId),
+
+  // Credentials
+  saveCredentials: (service, username, password) =>
+    ipcRenderer.invoke('save-credentials', service, username, password),
+  getCredentials: service => ipcRenderer.invoke('get-credentials', service),
+  deleteCredentials: service =>
+    ipcRenderer.invoke('delete-credentials', service),
+  isCredentialStored: service =>
+    ipcRenderer.invoke('is-credential-stored', service),
+
+  // Progress updates via events (one-way)
+  onProgress: callback => {
+    const progressHandler = (_, progress) => callback(progress);
+    ipcRenderer.on('conversion-progress', progressHandler);
+    return () =>
+      ipcRenderer.removeListener('conversion-progress', progressHandler);
+  },
 
   // Merge cancellation
   cancelOperation: async (operationId: string) => {
@@ -177,28 +226,12 @@ const electronAPI = {
   moveFile: (sourcePath: string, destinationPath: string) =>
     ipcRenderer.invoke('move-file', sourcePath, destinationPath),
 
-  // Delete file
-  deleteFile: (options: any) => ipcRenderer.invoke('delete-file', options),
-
   // === API Key Management ===
   getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
   saveApiKey: (keyType: string, apiKey: string) =>
     ipcRenderer.invoke('save-api-key', { keyType, apiKey }),
 
   // === URL Processing ===
-  processUrl: async (options: any) => {
-    console.log('Process URL called with options:', options);
-    // Add validation if needed
-    if (!options || !options.url) {
-      throw new Error('URL is required for processing.');
-    }
-    // Ensure quality is passed if present, otherwise main handler will default
-    return ipcRenderer.invoke('process-url', {
-      url: options.url,
-      quality: options.quality, // Pass quality option
-    });
-  },
-
   onProcessUrlProgress: (callback: (progress: any) => void) => {
     try {
       if (typeof callback !== 'function') {

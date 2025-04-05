@@ -1,11 +1,12 @@
 import { app, BrowserWindow, ipcMain, Menu, shell, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url'; // Import for ESM __dirname equivalent
-import fs from 'fs/promises'; // Use promises version and import statically
+import * as fsPromises from 'fs/promises'; // Use promises version and import statically
 import isDev from 'electron-is-dev';
 import log from 'electron-log'; // electron-log is already configured by main.cjs
 import electronContextMenu from 'electron-context-menu'; // Import the library
 import nodeProcess from 'process'; // Alias process
+import * as fsSync from 'fs';
 
 // ESM equivalent for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +24,15 @@ import * as apiKeyHandlersTS from './handlers/api-key-handlers.js'; // Add .js e
 import * as subtitleHandlersTS from './handlers/subtitle-handlers.js'; // Add .js extension
 import * as urlHandlerTS from './handlers/url-handler.js'; // Add .js extension
 import * as utilityHandlersTS from './handlers/utility-handlers.js'; // Add .js extension
+
+// Additional imports for testing
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { processVideoUrl } from './services/url-processor.js';
+import * as fs from 'fs';
+
+// Promisified exec
+const execAsync = promisify(exec);
 
 // --- Setup Logging ---
 // Configure electron-log basics
@@ -129,6 +139,102 @@ try {
     );
     ipcMain.handle('process-url', urlHandlerTS.handleProcessUrl);
 
+    // Register the test download function
+    ipcMain.handle('test-download', async (_, url) => {
+      // --- BABY STEP 2: Test processVideoUrl --- START ---
+      const handlerTimeStamp = new Date().toISOString();
+      log.error(
+        `[${handlerTimeStamp}] ====== BABY STEP 2: Handler Entered =====`
+      );
+      log.info(`[${handlerTimeStamp}] Baby Step 2: Received URL: ${url}`);
+
+      let installTestPassed = false;
+      let downloadResult = null;
+
+      try {
+        // 1. Run installation test (we know this works now, but good practice)
+        log.info(
+          `[${handlerTimeStamp}] Baby Step 2: TRYING testYtDlpInstallation...`
+        );
+        try {
+          installTestPassed = await testYtDlpInstallation();
+          log.info(
+            `[${handlerTimeStamp}] Baby Step 2: testYtDlpInstallation Result: ${installTestPassed}`
+          );
+        } catch (installError) {
+          log.error(
+            `[${handlerTimeStamp}] Baby Step 2: testYtDlpInstallation FAILED:`,
+            installError
+          );
+          // Decide if this should be fatal or just logged
+          installTestPassed = false;
+        }
+
+        // 2. Attempt the download using processVideoUrl
+        log.info(
+          `[${handlerTimeStamp}] Baby Step 2: TRYING processVideoUrl...`
+        );
+        try {
+          downloadResult = await processVideoUrl(url, 'high', progress => {
+            log.info(
+              `[${handlerTimeStamp}] Baby Step 2 Progress: ${progress.stage} - ${progress.percent}%`
+            );
+            if (progress.error) {
+              log.error(
+                `[${handlerTimeStamp}] Baby Step 2 Progress Error: ${progress.error}`
+              );
+            }
+          });
+          log.info(
+            `[${handlerTimeStamp}] Baby Step 2: processVideoUrl SUCCEEDED. Path: ${downloadResult?.videoPath}`
+          );
+        } catch (processError) {
+          log.error(
+            `[${handlerTimeStamp}] Baby Step 2: processVideoUrl FAILED:`,
+            processError
+          );
+          // Log specific details if available
+          if (processError instanceof Error) {
+            log.error(
+              `[${handlerTimeStamp}] Process Error Name: ${processError.name}`
+            );
+            log.error(
+              `[${handlerTimeStamp}] Process Error Message: ${processError.message}`
+            );
+            log.error(
+              `[${handlerTimeStamp}] Process Error Stack: ${processError.stack}`
+            );
+          } else {
+            log.error(
+              `[${handlerTimeStamp}] Process Non-Error object thrown: ${JSON.stringify(processError)}`
+            );
+          }
+          throw processError; // Rethrow to send error back to renderer
+        }
+
+        log.info(
+          `[${handlerTimeStamp}] Baby Step 2: Completed successfully. Returning result.`
+        );
+        return downloadResult; // Return the result from processVideoUrl
+      } catch (outerError) {
+        // This catches errors re-thrown from the inner blocks
+        log.error(
+          `[${handlerTimeStamp}] Baby Step 2: FAILED in OUTER CATCH block:`,
+          outerError
+        );
+        if (outerError instanceof Error) {
+          log.error(
+            `[${handlerTimeStamp}] Outer Error Name: ${outerError.name}`
+          );
+          log.error(
+            `[${handlerTimeStamp}] Outer Error Message: ${outerError.message}`
+          );
+        }
+        throw outerError; // Rethrow to send error back to renderer
+      }
+      // --- BABY STEP 2: Test processVideoUrl --- END ---
+    });
+
     log.info('[src/main.ts] IPC handlers registered.');
   } catch (handlerError: any) {
     log.error('[src/main.ts] Error initializing handlers:', handlerError);
@@ -183,7 +289,7 @@ app.on('will-quit', async () => {
     );
     try {
       // Remove require, use imported fs.promises
-      await fs.rm(tempDirFallback, { recursive: true, force: true });
+      await fsPromises.rm(tempDirFallback, { recursive: true, force: true });
       log.warn(
         `[src/main.ts] Fallback cleanup attempt finished for ${tempDirFallback}.`
       );
@@ -234,7 +340,7 @@ async function createWindow() {
   // Initialize the context menu, hiding Inspect Element
   electronContextMenu({
     window: mainWindow,
-    showInspectElement: false,
+    showInspectElement: true,
   });
 
   // Load the renderer entry point using loadFile for local HTML
@@ -426,18 +532,50 @@ app.whenReady().then(async () => {
   try {
     // Use app.getPath('userData') which is more reliable
     const logDirPath = app.getPath('userData');
-    const logFilePath = path.join(logDirPath, 'main.log'); // Log directly in userData
+    // --- MODIFIED: Use a distinct log file name ---
+    const logFilePath = path.join(logDirPath, 'ipc-handler.log');
 
     // Ensure the directory exists (Electron usually creates userData, but double-check)
     try {
-      await fs.access(logDirPath);
+      await fsPromises.access(logDirPath);
     } catch {
-      await fs.mkdir(logDirPath, { recursive: true });
+      await fsPromises.mkdir(logDirPath, { recursive: true });
     }
 
+    // --- MODIFIED: Force electron-log to use this specific path ---
     log.transports.file.resolvePathFn = () => logFilePath;
     log.transports.file.level = isDev ? 'debug' : 'info'; // Log more in dev
-    log.info(`[src/main.ts] Log file configured at: ${logFilePath}`);
+    // Force re-initialization with the new path function
+    log.transports.file.resolvePathFn; // Call it once to ensure it resolves immediately if needed internally
+    log.info(`[src/main.ts] Log file NOW CONFIGURED AT: ${logFilePath}`); // Changed log message
+
+    // Log the resolved path at startup
+    try {
+      const startupLogPath = log.transports.file.getFile().path;
+      log.info(
+        `[src/main.ts] electron-log resolved path at startup: ${startupLogPath}`
+      );
+      const debugLogPath = path.join(
+        app.getPath('userData'),
+        'direct_debug_log.txt'
+      );
+      // Clear the direct debug log at startup for clean testing
+      try {
+        fsSync.unlinkSync(debugLogPath);
+      } catch (e) {
+        /* ignore if not exists */
+      }
+      fsSync.appendFileSync(
+        debugLogPath,
+        `STARTUP: electron-log configured path = ${logFilePath}\n`
+      );
+      fsSync.appendFileSync(
+        debugLogPath,
+        `STARTUP: electron-log resolved path = ${startupLogPath}\n`
+      );
+    } catch (e) {
+      log.error('[src/main.ts] Error getting/logging startup log path:', e);
+    }
   } catch (error) {
     console.error('[src/main.ts] Error configuring log file path:', error);
   }
@@ -458,6 +596,12 @@ app.whenReady().then(async () => {
     .catch(error => {
       log.error('[src/main.ts] Error updating yt-dlp:', error);
     });
+
+  // Run test on startup in production mode
+  if (app.isPackaged) {
+    log.info('[src/main.ts] Running yt-dlp installation test on startup');
+    await testYtDlpInstallation();
+  }
 
   await createWindow();
 
@@ -491,3 +635,176 @@ app.on('second-instance', () => {
 
 // Note: single-instance lock is handled in main.cjs
 // Note: initial logging setup is handled in main.cjs
+
+// Test Functions
+async function testYtDlpInstallation() {
+  log.error('[main.ts] Testing yt-dlp installation');
+
+  try {
+    // ADDED: Check for system yt-dlp first
+    try {
+      log.info('[main.ts] Checking for system-installed yt-dlp');
+      const { stdout } = await execAsync('which yt-dlp');
+      if (stdout && stdout.trim()) {
+        const systemPath = stdout.trim();
+        log.info(`[main.ts] Found system yt-dlp at: ${systemPath}`);
+
+        // Test if it works
+        try {
+          const { stdout: versionOutput } = await execAsync(
+            `"${systemPath}" --version`
+          );
+          log.info(`[main.ts] System yt-dlp version: ${versionOutput.trim()}`);
+
+          // Create a symbolic link to the system binary in the unpacked directory if possible
+          try {
+            const resourcesPath = process.resourcesPath;
+            const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked');
+            const nodeModulesPath = path.join(unpackedPath, 'node_modules');
+            const ytdlpDir = path.join(
+              nodeModulesPath,
+              'youtube-dl-exec',
+              'bin'
+            );
+
+            // Ensure directory exists
+            if (!fs.existsSync(ytdlpDir)) {
+              await fsPromises.mkdir(ytdlpDir, { recursive: true });
+              log.info(`[main.ts] Created directory: ${ytdlpDir}`);
+            }
+
+            const targetPath = path.join(ytdlpDir, 'yt-dlp');
+
+            // Remove existing file/link if it exists
+            if (fs.existsSync(targetPath)) {
+              await fsPromises.unlink(targetPath);
+              log.info(`[main.ts] Removed existing file: ${targetPath}`);
+            }
+
+            // Create symbolic link
+            await fsPromises.symlink(systemPath, targetPath);
+            log.info(
+              `[main.ts] Created symlink from ${systemPath} to ${targetPath}`
+            );
+
+            return true;
+          } catch (linkError) {
+            log.error(
+              '[main.ts] Error creating symlink to system yt-dlp:',
+              linkError
+            );
+            // Continue with original flow, don't return yet
+          }
+        } catch (versionError) {
+          log.error(
+            '[main.ts] Error checking system yt-dlp version:',
+            versionError
+          );
+        }
+      }
+    } catch (whichError) {
+      log.info('[main.ts] No system-installed yt-dlp found');
+    }
+
+    // Check unpacked folder
+    const resourcesPath = process.resourcesPath;
+    const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked');
+    const ytdlpPath = path.join(
+      unpackedPath,
+      'node_modules',
+      'youtube-dl-exec',
+      'bin',
+      'yt-dlp'
+    );
+
+    log.info(`[main.ts] Checking if yt-dlp exists at: ${ytdlpPath}`);
+    const exists = fs.existsSync(ytdlpPath);
+    log.info(`[main.ts] yt-dlp exists: ${exists}`);
+
+    if (exists) {
+      // Check permissions
+      const stats = fs.statSync(ytdlpPath);
+      const isExecutable = (stats.mode & fs.constants.S_IXUSR) !== 0;
+      log.info(`[main.ts] yt-dlp is executable: ${isExecutable}`);
+
+      if (!isExecutable) {
+        log.info('[main.ts] Attempting to make yt-dlp executable');
+        await execAsync(`chmod +x "${ytdlpPath}"`);
+        log.info('[main.ts] chmod command executed');
+      }
+
+      // Test running yt-dlp
+      log.info('[main.ts] Testing yt-dlp execution');
+      const { stdout, stderr } = await execAsync(`"${ytdlpPath}" --version`);
+      log.info(`[main.ts] yt-dlp version: ${stdout.trim()}`);
+      if (stderr) {
+        log.warn(`[main.ts] yt-dlp stderr: ${stderr}`);
+      }
+    }
+
+    // Check other possible locations
+    try {
+      log.info('[main.ts] Checking other possible locations');
+      const dirContents = await fsPromises.readdir(unpackedPath);
+      log.info(
+        `[main.ts] Unpacked directory contents: ${dirContents.join(', ')}`
+      );
+
+      // Check node_modules directory
+      const nodeModulesPath = path.join(unpackedPath, 'node_modules');
+      if (fs.existsSync(nodeModulesPath)) {
+        const nodeModulesContents = await fsPromises.readdir(nodeModulesPath);
+        log.info(
+          `[main.ts] node_modules contents: ${nodeModulesContents.join(', ')}`
+        );
+
+        // Check youtube-dl-exec directory
+        const ytdlpDir = path.join(nodeModulesPath, 'youtube-dl-exec');
+        if (fs.existsSync(ytdlpDir)) {
+          const ytdlpDirContents = await fsPromises.readdir(ytdlpDir);
+          log.info(
+            `[main.ts] youtube-dl-exec contents: ${ytdlpDirContents.join(', ')}`
+          );
+
+          // Check bin directory
+          const binDir = path.join(ytdlpDir, 'bin');
+          if (fs.existsSync(binDir)) {
+            const binDirContents = await fsPromises.readdir(binDir);
+            log.info(`[main.ts] bin contents: ${binDirContents.join(', ')}`);
+          }
+        }
+      }
+    } catch (dirError) {
+      log.error('[main.ts] Error checking directories:', dirError);
+    }
+
+    log.info('[main.ts] yt-dlp installation test complete');
+    return true;
+  } catch (error) {
+    log.error('[main.ts] Error testing yt-dlp installation:', error);
+    return false;
+  }
+}
+
+// EXPOSING TEST FUNCTION
+// @ts-ignore - Add to global for debugging
+global.testDownload = async (url: string) => {
+  try {
+    log.info(`[main.ts] Test download called for URL: ${url}`);
+    await testYtDlpInstallation();
+
+    const result = await processVideoUrl(url, 'high', progress => {
+      log.info(
+        `[main.ts] Test download progress: ${progress.stage} - ${progress.percent}%`
+      );
+    });
+
+    log.info(
+      `[main.ts] Test download completed successfully: ${result.videoPath}`
+    );
+    return result;
+  } catch (error) {
+    log.error('[main.ts] Test download failed:', error);
+    throw error;
+  }
+};

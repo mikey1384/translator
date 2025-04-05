@@ -32,6 +32,11 @@ export async function handleProcessUrl(
   event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
+  // Add highly visible debug logs
+  log.error('[url-handler] HANDLER FUNCTION CALLED');
+  log.warn('[url-handler] Processing URL request');
+  log.error(`[url-handler] URL TO DOWNLOAD: ${options.url}`);
+
   const operationId = options.operationId || uuidv4();
   log.info(
     `[url-handler] Starting process for URL: ${options.url}, Operation ID: ${operationId}`
@@ -76,8 +81,12 @@ export async function handleProcessUrl(
       url,
       options.quality, // Pass quality (defaults to 'high' in service if undefined)
       // Add specific type annotation matching url-processor's ProgressCallback
-      (progress: { percent: number; stage: string; error?: string | null }) =>
-        sendProgress(progress)
+      (progress: { percent: number; stage: string; error?: string | null }) => {
+        log.info(
+          `[url-handler] Progress update: ${progress.stage} - ${progress.percent}%`
+        );
+        sendProgress(progress);
+      }
     );
 
     log.info(
@@ -98,14 +107,51 @@ export async function handleProcessUrl(
     sendProgress({ percent: 100, stage: 'Completed' });
     return successResult;
   } catch (error: any) {
-    // Restore the catch block
+    // Enhanced error logging
     log.error(
       `[url-handler] Error processing URL ${url} (Op ID: ${operationId}):`,
       error
     );
-    const errorMessage = error.message || 'An unknown error occurred';
-    // Use sendProgress to report error
-    sendProgress({ percent: 100, stage: 'Error', error: errorMessage });
-    return { success: false, error: errorMessage, operationId };
-  } // Restore the closing brace for try
-} // Restore the closing brace for the function
+
+    // Log detailed error information
+    log.error(`[url-handler] Error type: ${typeof error}`);
+    log.error(`[url-handler] Error message: ${error.message || 'No message'}`);
+    log.error(`[url-handler] Error stack: ${error.stack || 'No stack'}`);
+
+    // Try to get more detailed info if it's a string
+    if (typeof error === 'string') {
+      log.error(`[url-handler] Error is string: ${error}`);
+    }
+    // If it's an object, log its properties
+    else if (typeof error === 'object' && error !== null) {
+      log.error(
+        `[url-handler] Error object keys: ${Object.keys(error).join(', ')}`
+      );
+
+      // Log specific properties we're interested in
+      if (error.stderr)
+        log.error(`[url-handler] Error stderr: ${error.stderr}`);
+      if (error.stdout)
+        log.error(`[url-handler] Error stdout: ${error.stdout}`);
+      if (error.code) log.error(`[url-handler] Error code: ${error.code}`);
+    }
+
+    const errorMessage =
+      error.message ||
+      (typeof error === 'string' ? error : 'An unknown error occurred');
+    log.error(`[url-handler] Final error message to send: ${errorMessage}`);
+
+    // Use sendProgress to report error with better message
+    sendProgress({
+      percent: 0,
+      stage: 'Error',
+      error: `Download failed: ${errorMessage}. Check logs at ~/Library/Logs/translator-electron/main.log`,
+    });
+
+    return {
+      success: false,
+      error: `Download failed: ${errorMessage}. Check logs at ~/Library/Logs/translator-electron/main.log`,
+      operationId,
+    };
+  }
+}

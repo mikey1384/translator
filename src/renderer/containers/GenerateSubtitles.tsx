@@ -635,6 +635,58 @@ export default function GenerateSubtitles({
 
   return (
     <Section title="1. Select Video Source">
+      {/* SIMPLIFIED TESTING BUTTON - ALWAYS VISIBLE */}
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '15px',
+          backgroundColor: '#ccffcc', // Green background
+          border: '2px solid green',
+          borderRadius: '8px',
+          textAlign: 'center',
+        }}
+      >
+        <button
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            backgroundColor: 'green',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+          onClick={() => {
+            try {
+              console.error('CALLING SIMPLIFIED test-download FUNCTION');
+              // @ts-ignore - Test function
+              window.electron
+                ?.testDownload?.('https://www.youtube.com/watch?v=dQw4w9WgXcQ') // Test URL
+                .then(result => {
+                  console.log('SIMPLIFIED TEST RESULT:', result);
+                  setError(
+                    `SIMPLIFIED TEST SUCCESS: ${JSON.stringify(result)}`
+                  );
+                })
+                .catch(err => {
+                  console.error('SIMPLIFIED TEST ERROR:', err);
+                  setError(`SIMPLIFIED TEST ERROR: ${String(err)}`);
+                });
+            } catch (e) {
+              console.error('Error calling simplified test function:', e);
+              setError(`Error calling simplified test: ${String(e)}`);
+            }
+          }}
+        >
+          DEBUG: Call Simplified Handler
+        </button>
+        <div style={{ marginTop: '10px', fontSize: '12px' }}>
+          This button calls a handler that only logs and returns success.
+        </div>
+      </div>
+
+      {/* Remove the previous test button section */}
       {isLoadingKeyStatus && <p>Loading API Key status...</p>}
 
       {!isLoadingKeyStatus && !allKeysSet && (
