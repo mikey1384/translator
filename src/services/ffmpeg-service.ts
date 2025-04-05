@@ -3,8 +3,9 @@ import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises'; // Import promises version
 import { app } from 'electron';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-import ffprobePath from '@ffprobe-installer/ffprobe';
+import log from 'electron-log';
+// import ffmpegPath from '@ffmpeg-installer/ffmpeg'; // No longer needed
+// import ffprobePath from '@ffprobe-installer/ffprobe'; // No longer needed
 import os from 'os';
 import nodeProcess from 'process'; // Use alias to avoid conflict with ChildProcess type
 // Import the helper and type
@@ -22,35 +23,155 @@ export class FFmpegError extends Error {
   }
 }
 
+// Helper function to get the correct path based on environment
+function getBinaryPath(moduleName: string, binaryName: string): string {
+  try {
+    const installerPath = path.dirname(
+      require.resolve(`${moduleName}/package.json`)
+    );
+    const relativeBinaryPath =
+      require(`${moduleName}/package.json`)._binary || binaryName;
+
+    if (app.isPackaged) {
+      // In production, binaries are unpacked relative to app.asar
+      // Go up one level from app.getAppPath() (which is usually .../app.asar)
+      // then into app.asar.unpacked, then node_modules, etc.
+      const unpackedPath = path.join(
+        app.getAppPath(),
+        '..',
+        'app.asar.unpacked',
+        'node_modules',
+        moduleName,
+        relativeBinaryPath
+      );
+      log.info(
+        `[getBinaryPath] Packaged mode: Using ${moduleName} from ${unpackedPath}`
+      );
+      if (fs.existsSync(unpackedPath)) {
+        return unpackedPath;
+      } else {
+        log.error(
+          `[getBinaryPath] Critical: ${moduleName} not found at expected unpacked path: ${unpackedPath}`
+        );
+        // Fallback attempt (might work if asarUnpack structure differs?)
+        const fallbackPath = path.join(
+          process.resourcesPath,
+          'app.asar.unpacked',
+          'node_modules',
+          moduleName,
+          relativeBinaryPath
+        );
+        log.warn(`[getBinaryPath] Trying fallback path: ${fallbackPath}`);
+        if (fs.existsSync(fallbackPath)) return fallbackPath;
+        throw new Error(
+          `Packaged ${moduleName} binary not found at ${unpackedPath} or ${fallbackPath}`
+        );
+      }
+    } else {
+      // In development, use the path directly from node_modules
+      const devPath = path.join(installerPath, relativeBinaryPath);
+      log.info(
+        `[getBinaryPath] Development mode: Using ${moduleName} from ${devPath}`
+      );
+      if (fs.existsSync(devPath)) {
+        return devPath;
+      }
+      log.error(
+        `[getBinaryPath] Critical: ${moduleName} not found at expected dev path: ${devPath}`
+      );
+      throw new Error(
+        `Development ${moduleName} binary not found at ${devPath}`
+      );
+    }
+  } catch (error: any) {
+    log.error(
+      `[getBinaryPath] Error resolving path for ${moduleName}: ${error.message}`
+    );
+    // Provide a more informative error if require.resolve fails
+    if (
+      error.code === 'MODULE_NOT_FOUND' &&
+      error.message.includes(moduleName)
+    ) {
+      throw new Error(
+        `Could not resolve package location for ${moduleName}. Is it installed?`
+      );
+    }
+    throw error; // Rethrow other errors
+  }
+}
+
 export class FFmpegService {
   private ffmpegPath: string;
   private ffprobePath: string;
   private tempDir: string;
+  // private activeProcesses: Map<string, ChildProcessWithoutNullStreams> = // No longer needed
+  //   new Map();
 
   constructor() {
-    this.ffmpegPath = ffmpegPath.path;
-    this.ffprobePath = ffprobePath.path;
-
     try {
-      this.tempDir = path.join(app.getPath('userData'), 'temp');
-    } catch (error) {
-      console.warn(
-        'Electron app not ready, using OS temp directory as fallback'
+      this.ffmpegPath = getBinaryPath('@ffmpeg-installer/ffmpeg', 'ffmpeg');
+      this.ffprobePath = getBinaryPath('@ffprobe-installer/ffprobe', 'ffprobe');
+      log.info(`FFmpeg path set to: ${this.ffmpegPath}`);
+      log.info(`FFprobe path set to: ${this.ffprobePath}`);
+    } catch (error: any) {
+      log.error(`Failed to initialize FFmpegService paths: ${error.message}`);
+      // Set paths to null or handle error appropriately to prevent crashes later
+      this.ffmpegPath = 'ffmpeg'; // Fallback to system path if possible
+      this.ffprobePath = 'ffprobe';
+      log.warn(
+        'Falling back to system paths for ffmpeg/ffprobe due to initialization error.'
       );
-      this.tempDir = path.join(os.tmpdir(), 'translator-electron-temp');
     }
 
-    if (!fs.existsSync(this.tempDir)) {
-      fs.mkdirSync(this.tempDir, { recursive: true });
-    }
+    // Determine temp directory based on OS and packaging status
+    this.tempDir = this.determineTempDir();
+    this.ensureTempDirSync();
 
-    console.info(`FFmpeg path: ${this.ffmpegPath}`);
-    console.info(`FFprobe path: ${this.ffprobePath}`);
-    console.info(`Temp directory: ${this.tempDir}`);
+    log.info(`FFmpegService initialized. Temp dir: ${this.tempDir}`);
+  }
+
+  private determineTempDir(): string {
+    // Use app.getPath('userData')/temp in packaged apps for a standard, persistent location
+    if (app.isPackaged) {
+      const userDataTemp = path.join(app.getPath('userData'), 'temp');
+      log.info(`Packaged mode, using userData temp dir: ${userDataTemp}`);
+      return userDataTemp;
+    } else {
+      // Use OS temp dir in development
+      const osTemp = os.tmpdir();
+      log.info(`Development mode, using OS temp dir: ${osTemp}`);
+      return osTemp;
+    }
+  }
+
+  // Ensure sync version exists if called in constructor
+  private ensureTempDirSync(): void {
+    try {
+      if (!fs.existsSync(this.tempDir)) {
+        log.info(`Creating temp directory: ${this.tempDir}`);
+        fs.mkdirSync(this.tempDir, { recursive: true });
+      } else {
+        log.info(`Temp directory already exists: ${this.tempDir}`);
+      }
+    } catch (error) {
+      log.error(`Failed to ensure temp directory ${this.tempDir}:`, error);
+      // Consider throwing or handling this more gracefully
+      throw new Error(
+        `Failed to create or access temp directory: ${this.tempDir}`
+      );
+    }
   }
 
   getTempDir(): string {
     return this.tempDir;
+  }
+
+  getFFmpegPath(): string {
+    return this.ffmpegPath;
+  }
+
+  getFFprobePath(): string {
+    return this.ffprobePath;
   }
 
   async extractAudio(
@@ -70,7 +191,7 @@ export class FFmpegService {
 
     // --- Attach signal listener if provided --- START ---
     const abortHandler = () => {
-      console.log(
+      log.info(
         `[extractAudio/${operationId}] Abort signal received! Attempting to cancel via service.`
       );
       if (operationId) {
@@ -80,7 +201,7 @@ export class FFmpegService {
     if (signal) {
       if (signal.aborted) {
         // If already aborted before starting, throw immediately
-        console.log(
+        log.info(
           `[extractAudio/${operationId}] Operation already cancelled before starting extraction.`
         );
         throw new Error('Operation cancelled');
@@ -205,15 +326,13 @@ export class FFmpegService {
 
       return outputPath;
     } catch (error) {
-      console.error(
+      log.error(
         `[extractAudio${operationId ? `/${operationId}` : ''}] Error:`,
         error
       );
       // Check if the error is due to our explicit cancellation
       if (error instanceof Error && error.message === 'Operation cancelled') {
-        console.info(
-          `[extractAudio/${operationId}] Caught cancellation error.`
-        );
+        log.info(`[extractAudio/${operationId}] Caught cancellation error.`);
         throw error; // Re-throw the specific cancellation error
       }
       // Handle other FFmpeg errors
@@ -246,7 +365,7 @@ export class FFmpegService {
       });
 
       process.stderr.on('data', data => {
-        console.error(`FFprobe stderr for duration check: ${data}`);
+        log.error(`FFprobe stderr for duration check: ${data}`);
       });
 
       process.on('close', code => {
@@ -290,7 +409,7 @@ export class FFmpegService {
       });
 
       process.stderr.on('data', data => {
-        console.error(`FFprobe stderr for resolution check: ${data}`);
+        log.error(`FFprobe stderr for resolution check: ${data}`);
       });
 
       process.on('close', code => {
@@ -334,9 +453,9 @@ export class FFmpegService {
       // If validation fails, try to delete the invalid file
       try {
         await fsp.unlink(filePath);
-        console.info(`Deleted invalid output file: ${filePath}`);
+        log.info(`Deleted invalid output file: ${filePath}`);
       } catch (unlinkError) {
-        console.error(
+        log.error(
           `Failed to delete invalid output file ${filePath}:`,
           unlinkError
         );
@@ -366,20 +485,16 @@ export class FFmpegService {
     let tempAssPath: string | null = null;
 
     try {
-      console.info(
+      log.info(
         `[${operationId}] Starting subtitle merge (Font: ${fontSize}, Style: ${stylePreset})`
       );
-      console.info(`[${operationId}] Video path: ${videoPath}`);
-      console.info(
-        `[${operationId}] Original Subtitles path: ${subtitlesPath}`
-      );
-      console.info(
-        `[${operationId}] Using provided output path: ${outputPath}`
-      );
+      log.info(`[${operationId}] Video path: ${videoPath}`);
+      log.info(`[${operationId}] Original Subtitles path: ${subtitlesPath}`);
+      log.info(`[${operationId}] Using provided output path: ${outputPath}`);
 
       // Get video info early
       const duration = await this.getMediaDuration(videoPath);
-      console.info(`[${operationId}] Video duration: ${duration} seconds`);
+      log.info(`[${operationId}] Video duration: ${duration} seconds`);
 
       // --- Prepare Styled ASS --- START
       progressCallback?.({ percent: 5, stage: 'Preparing subtitle style' });
@@ -389,7 +504,7 @@ export class FFmpegService {
         stylePreset,
         operationId
       );
-      console.info(`[${operationId}] Prepared styled ASS file: ${tempAssPath}`);
+      log.info(`[${operationId}] Prepared styled ASS file: ${tempAssPath}`);
       progressCallback?.({ percent: 10, stage: 'Applying subtitle style' });
       // --- Prepare Styled ASS --- END
 
@@ -400,7 +515,7 @@ export class FFmpegService {
         isDev ? app.getAppPath() : nodeProcess.resourcesPath, // Use alias here
         relativeFontPath
       );
-      console.info(`[${operationId}] Determined fonts directory: ${fontsDir}`);
+      log.info(`[${operationId}] Determined fonts directory: ${fontsDir}`);
 
       // --- Prepare Environment for FFmpeg --- START
       const env = { ...nodeProcess.env }; // Use alias here
@@ -409,11 +524,9 @@ export class FFmpegService {
       if (nodeProcess.platform !== 'win32' && fs.existsSync(fontsConfPath)) {
         // On Linux/macOS, set FONTCONFIG_FILE if fonts.conf exists
         env.FONTCONFIG_FILE = fontsConfPath;
-        console.info(
-          `[${operationId}] Setting FONTCONFIG_FILE=${fontsConfPath}`
-        );
+        log.info(`[${operationId}] Setting FONTCONFIG_FILE=${fontsConfPath}`);
       } else if (nodeProcess.platform !== 'win32') {
-        console.warn(
+        log.warn(
           `[${operationId}] fonts.conf not found at ${fontsConfPath}, Fontconfig might not use bundled fonts.`
         );
       }
@@ -427,7 +540,7 @@ export class FFmpegService {
 
       // Define the subtitle filter *without* fontdir, relying on FONTCONFIG_FILE env var
       const subtitleFilter = `subtitles=filename='${escapedAssPath}'`;
-      console.info(
+      log.info(
         `[${operationId}] Using subtitle filter: ${subtitleFilter} (relying on Fontconfig/Env)`
       );
       // --- Prepare FFmpeg Subtitle Filter --- END
@@ -455,9 +568,7 @@ export class FFmpegService {
         outputPath,
       ];
 
-      console.info(
-        `[${operationId}] FFmpeg arguments: ${ffmpegArgs.join(' ')}`
-      );
+      log.info(`[${operationId}] FFmpeg arguments: ${ffmpegArgs.join(' ')}`);
 
       progressCallback?.({ percent: 15, stage: 'Starting video encoding' });
 
@@ -485,13 +596,13 @@ export class FFmpegService {
         // Only validate if the output file exists (it won't if cancelled)
         if (fs.existsSync(outputPath)) {
           await this.validateOutputFile(outputPath);
-          console.info(
+          log.info(
             `[${operationId}] Subtitle merge process completed successfully.`
           );
           progressCallback?.({ percent: 100, stage: 'Merge complete' });
           return outputPath;
         } else {
-          console.info(
+          log.info(
             `[${operationId}] Merge was cancelled, output file doesn't exist.`
           );
           progressCallback?.({ percent: 100, stage: 'Merge cancelled' });
@@ -500,7 +611,7 @@ export class FFmpegService {
       } catch (ffmpegError) {
         // Check if the process was cancelled (we can tell by checking if the process still exists in cancellationService)
         if (!cancellationService.isOperationActive(operationId)) {
-          console.info(
+          log.info(
             `[${operationId}] FFmpeg process was cancelled, treating as successful cancellation.`
           );
           progressCallback?.({ percent: 100, stage: 'Merge cancelled' });
@@ -511,7 +622,7 @@ export class FFmpegService {
         throw ffmpegError;
       }
     } catch (error) {
-      console.error(`[${operationId}] Error during subtitle merge:`, error);
+      log.error(`[${operationId}] Error during subtitle merge:`, error);
       progressCallback?.({ percent: 0, stage: 'Merge failed' });
       throw new FFmpegError(
         `Failed to merge subtitles: ${error instanceof Error ? error.message : String(error)}`
@@ -521,11 +632,11 @@ export class FFmpegService {
       if (tempAssPath && fs.existsSync(tempAssPath)) {
         try {
           await fsp.unlink(tempAssPath);
-          console.info(
+          log.info(
             `[${operationId}] Cleaned up temporary ASS file: ${tempAssPath}`
           );
         } catch (cleanupError) {
-          console.warn(
+          log.warn(
             `[${operationId}] Failed to clean up temporary ASS file ${tempAssPath}:`,
             cleanupError
           );
@@ -545,7 +656,7 @@ export class FFmpegService {
       this.tempDir,
       `styled_${operationId}_${Date.now()}.ass`
     );
-    console.info(
+    log.info(
       `[${operationId}] Creating temporary styled ASS at: ${tempAssPath}`
     );
 
@@ -610,7 +721,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
           // Just take the events part, the header will be replaced
           assEvents = eventsMatch[1].trim() + '\n';
         } else {
-          console.warn(
+          log.warn(
             `[${operationId}] Could not extract events from existing ASS file: ${originalSubtitlePath}`
           );
           // Optionally, try a simpler regex or proceed with empty events
@@ -624,12 +735,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       const finalAssContent = assHeader + assEvents;
       await fsp.writeFile(tempAssPath, finalAssContent, 'utf-8');
-      console.info(
+      log.info(
         `[${operationId}] Successfully wrote styled ASS file: ${tempAssPath}`
       );
       return tempAssPath;
     } catch (error) {
-      console.error(
+      log.error(
         `[${operationId}] Error preparing styled ASS file: ${error instanceof Error ? error.message : String(error)}`
       );
       // Attempt to clean up potentially partially written file
@@ -650,7 +761,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     // Match H:MM:SS.ms
     const match = timeWithDot.match(/(\d{1,2}):(\d{2}):(\d{2})\.(\d{1,3})/);
     if (!match) {
-      console.warn(`Could not parse SRT time format: ${srtTime}`);
+      log.warn(`Could not parse SRT time format: ${srtTime}`);
       return '0:00:00.00'; // Fallback
     }
     const [, hours, minutes, seconds, milliseconds] = match;
@@ -676,7 +787,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         env: env || nodeProcess.env,
         cwd: this.tempDir, // Explicitly set CWD to the temp directory
       };
-      console.log(
+      log.info(
         `[${operationId || 'ffmpeg'}] Spawning FFmpeg with: `,
         `\n  Command: ${this.ffmpegPath}`,
         `\n  Args: ${JSON.stringify(args)}`,
@@ -691,17 +802,17 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       if (operationId) {
         // Register process with cancellation service
         cancellationService.registerProcess(operationId, ffmpegProcess);
-        console.info(
+        log.info(
           `[${operationId}] FFmpeg process started (PID: ${ffmpegProcess.pid})`
         );
       } else {
-        console.info(`FFmpeg process started (PID: ${ffmpegProcess.pid})`);
+        log.info(`FFmpeg process started (PID: ${ffmpegProcess.pid})`);
       }
 
       let stderrOutput = '';
 
       ffmpegProcess.stdout.on('data', (data: Buffer) => {
-        console.info(`FFmpeg stdout: ${data.toString()}`);
+        log.info(`FFmpeg stdout: ${data.toString()}`);
       });
 
       ffmpegProcess.stderr.on('data', (data: Buffer) => {
@@ -711,7 +822,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         lines.forEach(singleLine => {
           if (singleLine.trim()) {
             // Avoid logging empty lines
-            console.log(`[FFmpeg STDERR] ${singleLine.trim()}`); // Changed to console.log
+            log.info(`[FFmpeg STDERR] ${singleLine.trim()}`); // Changed to log.info
           }
         });
         // --- CHANGED: Log every stderr line using console.log --- END ---
@@ -738,7 +849,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                   Math.max(0, (currentTime / totalDuration) * 100)
                 );
 
-                console.log(
+                log.info(
                   `[FFmpeg Progress Callback Invoked] OpID: ${operationId || 'N/A'} | CurrentTime: ${currentTime.toFixed(2)}s | TotalDuration: ${totalDuration?.toFixed(2)}s | Percent: ${progressPercent.toFixed(2)}%`
                 );
                 progressCallback(progressPercent);
@@ -763,14 +874,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                   Math.max(0, (currentTime / totalDuration) * 100)
                 );
 
-                console.log(
+                log.info(
                   `[FFmpeg Progress Callback Invoked] OpID: ${operationId || 'N/A'} | CurrentTime: ${currentTime.toFixed(2)}s | TotalDuration: ${totalDuration?.toFixed(2)}s | Percent: ${progressPercent.toFixed(2)}%`
                 );
                 progressCallback(progressPercent);
               }
             }
           } catch (e) {
-            console.warn('Failed to parse FFmpeg progress line:', e);
+            log.warn('Failed to parse FFmpeg progress line:', e);
           }
         }
       });
@@ -782,26 +893,26 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
           isCancelling = (ffmpegProcess as any).wasCancelled === true;
           // --- Check the wasCancelled flag set by the CancellationService --- END ---
           // Always unregister when the process ends
-          console.info(
+          log.info(
             `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid}) - Was Explicitly Cancelled: ${isCancelling}`
           );
         } else {
-          console.info(`FFmpeg process finished (PID: ${ffmpegProcess.pid})`);
+          log.info(`FFmpeg process finished (PID: ${ffmpegProcess.pid})`);
         }
 
         // --- Modify logic for cancellation --- START ---
         if (isCancelling) {
-          console.info(
+          log.info(
             `FFmpeg process (${ffmpegProcess.pid}) was cancelled externally via service. Rejecting promise.`
           );
           // Reject with a specific error for cancellation
           reject(new Error('Operation cancelled')); // Reject with specific error
         } else if (code === 0) {
-          console.info(`FFmpeg process exited successfully (Code: 0)`);
+          log.info(`FFmpeg process exited successfully (Code: 0)`);
           resolve();
         } else {
-          console.error(`FFmpeg process exited with error code ${code}.`);
-          console.error(`FFmpeg stderr output:\\n${stderrOutput}`); // Log accumulated stderr on error
+          log.error(`FFmpeg process exited with error code ${code}.`);
+          log.error(`FFmpeg stderr output:\\n${stderrOutput}`); // Log accumulated stderr on error
           reject(
             new FFmpegError(
               `FFmpeg process exited with code ${code}. Check logs for details.`
@@ -813,13 +924,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       ffmpegProcess.on('error', (err: Error) => {
         if (operationId) {
-          console.info(
+          log.info(
             `[${operationId}] FFmpeg process errored (PID: ${ffmpegProcess.pid})`
           );
         } else {
-          console.info(`FFmpeg process errored (PID: ${ffmpegProcess.pid})`);
+          log.info(`FFmpeg process errored (PID: ${ffmpegProcess.pid})`);
         }
-        console.error(`FFmpeg process error: ${err.message}`);
+        log.error(`FFmpeg process error: ${err.message}`);
         reject(new FFmpegError(`FFmpeg process error: ${err.message}`));
       });
     });
@@ -848,17 +959,17 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     ];
 
     try {
-      console.info(`Extracting audio segment: ${startTime}s for ${duration}s`);
+      log.info(`Extracting audio segment: ${startTime}s for ${duration}s`);
       await this.runFFmpeg(args);
       if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
         throw new FFmpegError(
           'Output audio segment is empty or was not created.'
         );
       }
-      console.info(`Successfully extracted audio segment to: ${outputPath}`);
+      log.info(`Successfully extracted audio segment to: ${outputPath}`);
       return outputPath;
     } catch (error) {
-      console.error('Error extracting audio segment:', error);
+      log.error('Error extracting audio segment:', error);
       throw new FFmpegError(`Failed to extract audio segment: ${error}`);
     }
   }
@@ -875,7 +986,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       const noiseTolerance = '-30dB'; // Noise level threshold
       const minSilenceDuration = '1.5'; // Minimum duration of silence to detect (in seconds)
 
-      console.info(
+      log.info(
         `Detecting silence in ${inputAudioPath} (tolerance: ${noiseTolerance}, min duration: ${minSilenceDuration}s)`
       );
 
@@ -913,7 +1024,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       });
 
       process.on('close', code => {
-        console.info(`Silence detection process exited with code ${code}`);
+        log.info(`Silence detection process exited with code ${code}`);
 
         // Process any remaining stderr output
         const lines = stderrOutput.split('\n');
@@ -935,7 +1046,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         silenceStarts.sort((a, b) => a - b);
         silenceEnds.sort((a, b) => a - b);
 
-        console.info(
+        log.info(
           `Silence detection found ${silenceStarts.length} starts and ${silenceEnds.length} ends.`
         );
         // log.debug('Silence Starts:', silenceStarts);
@@ -945,7 +1056,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       });
 
       process.on('error', err => {
-        console.error(`Silence detection process error: ${err.message}`);
+        log.error(`Silence detection process error: ${err.message}`);
         reject(new FFmpegError(`Silence detection failed: ${err.message}`));
       });
     });
@@ -965,14 +1076,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     operationId?: string
   ): Promise<{ path: string; startTime: number }[]> {
     const logPrefix = operationId ? `[${operationId}] ` : '';
-    console.info(`${logPrefix}Starting audio splitting for: ${audioPath}`);
+    log.info(`${logPrefix}Starting audio splitting for: ${audioPath}`);
 
     if (!fs.existsSync(audioPath)) {
       throw new FFmpegError(`Input audio file not found: ${audioPath}`);
     }
 
     const totalDuration = await this.getMediaDuration(audioPath);
-    console.info(`${logPrefix}Total audio duration: ${totalDuration} seconds.`);
+    log.info(`${logPrefix}Total audio duration: ${totalDuration} seconds.`);
 
     if (totalDuration <= 0 || isNaN(totalDuration)) {
       throw new FFmpegError(
@@ -981,18 +1092,18 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     }
 
     const numChunks = Math.ceil(totalDuration / chunkDurationSeconds);
-    console.info(
+    log.info(
       `${logPrefix}Splitting into ${numChunks} chunks of max ${chunkDurationSeconds} seconds.`
     );
 
     const chunksDir = path.join(this.tempDir, `chunks_${uuidv4()}`);
     try {
       await fsp.mkdir(chunksDir, { recursive: true });
-      console.info(
+      log.info(
         `${logPrefix}Created temporary directory for chunks: ${chunksDir}`
       );
     } catch (err) {
-      console.error(
+      log.error(
         `${logPrefix}Failed to create chunk directory: ${chunksDir}`,
         err
       );
@@ -1013,7 +1124,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
       // Ensure duration is positive
       if (currentChunkDuration <= 0) {
-        console.warn(
+        log.warn(
           `${logPrefix}Skipping chunk ${i + 1} due to zero or negative duration.`
         );
         continue;
@@ -1039,7 +1150,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       // Add a promise for running ffmpeg for this chunk
       const chunkPromise = new Promise<{ path: string; startTime: number }>(
         (resolve, reject) => {
-          console.info(
+          log.info(
             `${logPrefix}Creating chunk ${i + 1}/${numChunks}: ${chunkOutputPath} (Start: ${startTime.toFixed(3)}s, Duration: ${currentChunkDuration.toFixed(3)}s)`
           );
           const process = spawn(this.ffmpegPath, args);
@@ -1051,15 +1162,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
           process.on('close', code => {
             if (code === 0) {
-              console.info(
+              log.info(
                 `${logPrefix}Successfully created chunk ${i + 1}/${numChunks}`
               );
               resolve({ path: chunkOutputPath, startTime });
             } else {
-              console.error(
+              log.error(
                 `${logPrefix}FFmpeg failed for chunk ${i + 1}. Code: ${code}. Path: ${chunkOutputPath}`
               );
-              console.error(`${logPrefix}FFmpeg stderr: ${stderrOutput}`);
+              log.error(`${logPrefix}FFmpeg stderr: ${stderrOutput}`);
               reject(
                 new FFmpegError(
                   `FFmpeg process for chunk ${i + 1} exited with code ${code}. Stderr: ${stderrOutput.substring(0, 500)}`
@@ -1069,7 +1180,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
           });
 
           process.on('error', err => {
-            console.error(
+            log.error(
               `${logPrefix}FFmpeg spawn error for chunk ${i + 1}:`,
               err
             );
@@ -1086,21 +1197,21 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     try {
       const chunkResults = await Promise.all(chunkPromises);
-      console.info(
+      log.info(
         `${logPrefix}Successfully created all ${chunkResults.length} audio chunks.`
       );
       // We don't delete the chunksDir here, the caller (generate-subtitles handler) should do that
       return chunkResults;
     } catch (error) {
-      console.error(`${logPrefix}Error during audio chunk creation:`, error);
+      log.error(`${logPrefix}Error during audio chunk creation:`, error);
       // Attempt cleanup of the chunk directory on error
       try {
         await fsp.rm(chunksDir, { recursive: true, force: true });
-        console.info(
+        log.info(
           `${logPrefix}Cleaned up chunk directory due to error: ${chunksDir}`
         );
       } catch (cleanupError) {
-        console.error(
+        log.error(
           `${logPrefix}Failed to cleanup chunk directory after error: ${chunksDir}`,
           cleanupError
         );
