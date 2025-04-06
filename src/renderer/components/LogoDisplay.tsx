@@ -1,42 +1,32 @@
 import { css } from '@emotion/css';
 
-// Color similar to the logo text - REVERTING TO OFF-WHITE
-const logoTextColor = '#FAF0E6'; // Linen color
+const logoTextColor = '#FAF0E6';
 
-// Adjusted styles for a smaller, header-like display
 const logoContainerStyles = css`
   display: flex;
   flex-direction: column;
-  align-items: center; // Center horizontally
-  // Remove background properties for transparency
-  // background-color: #000000;
-  // padding: 5px 8px;
-  // border-radius: 4px;
+  align-items: center;
 `;
 
 const translatorTextStyles = css`
-  font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif; // Font stack
-  font-weight: 700; // Bold
-  font-size: 1.1rem; // Smaller font size
-  color: ${logoTextColor}; // Use off-white color
+  font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: ${logoTextColor};
   margin: 0;
   line-height: 1.1;
-  text-align: center; // Align text center
-  // Use a theme color if available, e.g., from your styles.ts
-  // color: colors.logoText || logoTextColor;
+  text-align: center;
 `;
 
 const bylineTextStyles = css`
-  font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif; // Font stack
-  font-weight: 500; // Medium weight
-  font-size: 0.7rem; // Smaller font size
-  color: ${logoTextColor}; // Use off-white color
+  font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  color: ${logoTextColor};
   margin: 0;
-  margin-top: 2px; // Small gap
+  margin-top: 2px;
   line-height: 1;
-  text-align: center; // Align text center
-  // Use a theme color if available
-  // color: colors.logoText || logoTextColor;
+  text-align: center;
 `;
 
 export default function LogoDisplay() {

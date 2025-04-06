@@ -9,8 +9,6 @@ import MergingProgressArea from '../containers/MergingProgressArea.js';
 import TranslationProgressArea from '../containers/TranslationProgressArea.js';
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
-
-import { ManagementContextProvider } from '../context/index.js';
 import { SrtSegment, VideoQuality } from '../../types/interface.js';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
@@ -600,9 +598,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <ManagementContextProvider>
-      <AppContent />
-    </ManagementContextProvider>
-  );
+  return <AppContent />;
 }
