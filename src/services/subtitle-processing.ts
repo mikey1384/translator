@@ -279,12 +279,31 @@ export async function extractSubtitlesFromVideo({
     });
 
     return { subtitles: finalSubtitlesContent };
-  } catch (error) {
+  } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
-    progressCallback?.({
-      percent: 100,
-      stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
-    });
+
+    // Detect if cancellation caused this error
+    const isCancel =
+      error.name === 'AbortError' ||
+      (error instanceof Error && error.message === 'Operation cancelled') ||
+      signal.aborted;
+
+    // If cancellation, set stage = "Process cancelled"
+    if (isCancel) {
+      progressCallback?.({
+        percent: 100,
+        stage: 'Process cancelled',
+      });
+      log.info(`[${operationId}] Process cancelled by user.`);
+    } else {
+      // Otherwise, it's an actual error
+      progressCallback?.({
+        percent: 100,
+        stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+
+    // Rethrow the error so upper layers know we failed/cancelled
     throw error;
   } finally {
     if (audioPath) {
@@ -1203,9 +1222,12 @@ Improved translation for block 3
     );
     if (error.name === 'AbortError' || signal?.aborted) {
       log.info(
-        `[Review] Review batch (${parentOperationId}) detected cancellation signal/error.`
+        `[Review] Review batch (${parentOperationId}) cancelled. Rethrowing.`
       );
+      // Re-throw cancellation errors so the caller can handle them
+      throw error;
     }
+    // For other errors, log and fallback to original segments
     log.error(
       `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}). Falling back to original batch segments.`
     );
