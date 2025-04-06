@@ -1,14 +1,7 @@
-import React from 'react';
 import Section from '../../components/Section.js';
 import Button from '../../components/Button.js';
 import ButtonGroup from '../../components/ButtonGroup.js';
-
-// Define segment type (can be shared)
-interface SubtitleSegment {
-  start: number;
-  end: number;
-  text: string;
-}
+import { SrtSegment } from '../../../types/interface.js';
 
 interface GenerateControlsProps {
   videoFile: File | null;
@@ -16,11 +9,11 @@ interface GenerateControlsProps {
   isGenerating: boolean;
   isProcessingUrl: boolean;
   handleGenerateSubtitles: () => void;
-  subtitleSegments: SubtitleSegment[];
+  subtitleSegments: SrtSegment[];
   handleSaveSubtitles: () => void;
 }
 
-const GenerateControls: React.FC<GenerateControlsProps> = ({
+export default function GenerateControls({
   videoFile,
   videoFilePath,
   isGenerating,
@@ -28,11 +21,10 @@ const GenerateControls: React.FC<GenerateControlsProps> = ({
   handleGenerateSubtitles,
   subtitleSegments,
   handleSaveSubtitles,
-}) => {
+}: GenerateControlsProps) {
   return (
     <Section title="3. Generate Subtitles" isSubSection>
       <ButtonGroup>
-        {/* Main Generate Button is now outside conditional inputs */}
         <Button
           onClick={handleGenerateSubtitles}
           disabled={
@@ -45,7 +37,6 @@ const GenerateControls: React.FC<GenerateControlsProps> = ({
           {isGenerating ? 'Generating...' : 'Generate Subtitles Now'}
         </Button>
 
-        {/* Save SRT button - condition unchanged */}
         {subtitleSegments && subtitleSegments.length > 0 && (
           <Button variant="secondary" onClick={handleSaveSubtitles} size="md">
             Save SRT
@@ -54,6 +45,4 @@ const GenerateControls: React.FC<GenerateControlsProps> = ({
       </ButtonGroup>
     </Section>
   );
-};
-
-export default GenerateControls;
+}

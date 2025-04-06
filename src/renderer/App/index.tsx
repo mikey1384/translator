@@ -596,7 +596,6 @@ function AppContent() {
                 isLoadingKeyStatus={isLoadingKeyStatus}
                 onNavigateToSettings={handleToggleSettings}
                 subtitleSegments={subtitleSegments}
-                secondsToSrtTime={secondsToSrtTime}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">

@@ -49,13 +49,6 @@ export function parseSrt(srtString: string): SrtSegment[] {
   return validateSubtitleTimings(segments);
 }
 
-/**
- * Validates subtitle timings and fixes any issues
- * Ensures that:
- * 1. No subtitle has end time before start time
- * 2. No subtitle has negative start time
- * 3. Subtitles don't overlap (if fixOverlaps is true)
- */
 export function validateSubtitleTimings(
   subtitles: SrtSegment[],
   fixOverlaps: boolean = true
@@ -107,9 +100,7 @@ export function buildSrt(segments: SrtSegment[]): string {
   return segments
     .map((segment, i) => {
       const index = segment.index || i + 1;
-      const startTime = secondsToSrtTime(segment.start);
-      const endTime = secondsToSrtTime(segment.end);
-      return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
+      return `${index}\n${segment.start} --> ${segment.end}\n${segment.text}`;
     })
     .join('\n\n');
 }
@@ -167,9 +158,6 @@ export function secondsToSrtTime(totalSeconds: number): string {
   ).padStart(3, '0')}`;
 }
 
-/**
- * Check for and fix overlapping segments
- */
 export function fixOverlappingSegments(segments: SrtSegment[]): SrtSegment[] {
   if (!segments || segments.length <= 1) return segments;
 

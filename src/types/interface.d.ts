@@ -161,14 +161,6 @@ export type ProgressCallback = (progress: {
   partialResult?: string;
 }) => void;
 
-export interface SubtitleSegment {
-  id: number;
-  start: string; // SRT format: "00:00:00,000"
-  end: string;
-  text: string;
-  translation?: string;
-}
-
 export interface GenerateSubtitlesOptions {
   videoPath?: string;
   videoFile?: File;
@@ -180,7 +172,7 @@ export interface GenerateSubtitlesOptions {
 
 export interface GenerateSubtitlesResult {
   subtitles: string;
-  segments?: SubtitleSegment[]; // Structured subtitle data
+  segments?: SrtSegment[]; // Structured subtitle data
   error?: string;
 }
 

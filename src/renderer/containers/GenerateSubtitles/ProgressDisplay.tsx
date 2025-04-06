@@ -1,5 +1,4 @@
 import React from 'react';
-import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import Button from '../../components/Button.js';
 
@@ -76,7 +75,7 @@ const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
     );
   }
 
-  return null; // Don't render anything if neither condition is met
+  return null;
 };
 
 export default ProgressDisplay;
