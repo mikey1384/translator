@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import BackToTopButton from '../components/BackToTopButton.js';
 import SettingsPage from '../containers/SettingsPage.js';
-import StickyVideoPlayer from '../containers/EditSubtitles/StickyVideoPlayer.js';
-import { nativePlayer } from '../components/NativeVideoPlayer.js';
+import VideoPlayer from '../components/VideoPlayer/index.js';
+import { nativePlayer } from '../components/VideoPlayer/NativeVideoPlayer.js';
 import { EditSubtitles } from '../containers/EditSubtitles/index.js';
 import GenerateSubtitles from '../containers/GenerateSubtitles/index.js';
 import MergingProgressArea from '../components/MergingProgressArea.js';
@@ -255,7 +255,7 @@ function AppContent() {
         ) : (
           <>
             {videoUrl && (
-              <StickyVideoPlayer
+              <VideoPlayer
                 videoUrl={videoUrl}
                 subtitles={subtitleSegments}
                 onPlayerReady={handleVideoPlayerReady}
@@ -590,7 +590,7 @@ function AppContent() {
         throw new Error('URL processing did not return necessary video info.');
       }
     } catch (err: any) {
-      console.error('[App] Error processing URL from sticky player:', err);
+      console.error('[App] Error processing URL from player:', err);
       setSaveError(`Error loading URL: ${err.message || err}`);
       setIsUrlLoading(false); // Stop loading on error
     }

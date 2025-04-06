@@ -13,7 +13,7 @@ import Button from '../../components/Button.js';
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
 import EditSubtitlesHeader from './EditSubtitlesHeader.js';
-import { nativePlayer } from '../../components/NativeVideoPlayer.js';
+import { nativePlayer } from '../../components/VideoPlayer/NativeVideoPlayer.js';
 import { subtitleVideoPlayer } from '../../../shared/constants/index.js';
 
 import {

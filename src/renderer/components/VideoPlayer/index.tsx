@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { css } from '@emotion/css';
-import NativeVideoPlayer, {
-  nativePlayer,
-} from '../../components/NativeVideoPlayer.js';
-import { TimestampDisplay } from './TimestampDisplay.js';
+import NativeVideoPlayer, { nativePlayer } from './NativeVideoPlayer.js';
+import { TimestampDisplay } from '../../containers/EditSubtitles/TimestampDisplay.js';
 import { colors } from '../../styles.js';
-import Button from '../../components/Button.js';
+import Button from '../Button.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { VideoQuality } from '../../../types/interface.js';
 
@@ -224,7 +222,7 @@ const controlsWrapperStyles = (isPseudoFullscreen: boolean) => css`
   `}
 `;
 
-function StickyVideoPlayer({
+export default function VideoPlayer({
   videoUrl,
   subtitles,
   onPlayerReady,
@@ -583,16 +581,12 @@ function StickyVideoPlayer({
 
         switch (e.key) {
           case 'ArrowRight':
-            // Skip forward 10 seconds
-            console.log('Seeking forward 10 seconds from StickyVideoPlayer');
             videoElement.currentTime = Math.min(currentTime + 10, duration);
             if (onUiInteraction) onUiInteraction();
             e.preventDefault();
             break;
 
           case 'ArrowLeft':
-            // Skip backward 10 seconds
-            console.log('Seeking backward 10 seconds from StickyVideoPlayer');
             videoElement.currentTime = Math.max(currentTime - 10, 0);
             if (onUiInteraction) onUiInteraction();
             e.preventDefault();
@@ -613,7 +607,7 @@ function StickyVideoPlayer({
       <div
         className={`${fixedVideoContainerStyles(
           isPseudoFullscreen
-        )} sticky-video-container shrunk ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
+        )} ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
         ref={playerRef}
         style={{ top: isPseudoFullscreen ? 0 : progressBarHeight }}
         tabIndex={0} // Make container focusable
@@ -773,5 +767,3 @@ function StickyVideoPlayer({
     onPlayerReady(player);
   }
 }
-
-export default StickyVideoPlayer;

@@ -27,7 +27,6 @@ const progressContainerStyles = css`
   right: 0;
   z-index: 1100;
   padding: 18px 24px;
-  // Apply similar background to sticky video/action bar
   background-color: rgba(30, 30, 30, 0.75); // Dark semi-transparent
   backdrop-filter: blur(12px); // Blur effect
   box-shadow: none; // Remove shadow

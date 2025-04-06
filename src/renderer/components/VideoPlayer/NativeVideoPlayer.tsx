@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../styles.js';
+import { colors } from '../../styles.js';
 
-// Add global type declaration for the Window object
 declare global {
   interface Window {
     _videoLastValidTime?: number;
