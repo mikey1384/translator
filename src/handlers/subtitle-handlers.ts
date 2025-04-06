@@ -5,22 +5,14 @@ import log from 'electron-log';
 import { FFmpegService } from '../services/ffmpeg-service.js';
 import { FileManager } from '../services/file-manager.js';
 import {
-  generateSubtitlesFromVideo,
   mergeSubtitlesWithVideo,
+  extractSubtitlesFromVideo,
 } from '../services/subtitle-processing.js';
 import {
   GenerateSubtitlesOptions,
   MergeSubtitlesOptions,
   MergeSubtitlesResult,
 } from '../types/interface.js';
-import { cancellationService } from '../services/cancellation-service.js';
-
-// Define the services structure expected by the initializer
-interface SubtitleHandlerServices {
-  ffmpegService: FFmpegService;
-  fileManager: FileManager;
-  // cancellationService is imported directly as a singleton
-}
 
 // Module-level variables to hold initialized services
 let ffmpegServiceInstance: FFmpegService | null = null;
@@ -37,18 +29,6 @@ export function initializeSubtitleHandlers(
   }
   ffmpegServiceInstance = services.ffmpegService;
   fileManagerInstance = services.fileManager;
-
-  // Log that cancellation service is available via import
-  if (cancellationService) {
-    log.info(
-      '[src/handlers/subtitle-handlers.ts] CancellationService is available via import.'
-    );
-  } else {
-    // This case should ideally not happen if the import worked
-    log.warn(
-      '[src/handlers/subtitle-handlers.ts] CancellationService singleton instance not found!'
-    );
-  }
 
   log.info('[src/handlers/subtitle-handlers.ts] Initialized!');
 }
@@ -67,22 +47,6 @@ function checkServicesInitialized(): {
   };
 }
 
-// Define progress callback types for clarity
-type GenerateProgressCallback = (progress: {
-  percent: number;
-  stage: string;
-  current?: number;
-  total?: number;
-  partialResult?: string;
-  error?: string;
-  batchStartIndex?: number;
-}) => void;
-
-type MergeProgressCallback = (progress: {
-  percent: number;
-  stage: string;
-}) => void;
-
 export async function handleGenerateSubtitles(
   event: IpcMainInvokeEvent,
   options: GenerateSubtitlesOptions
@@ -96,41 +60,29 @@ export async function handleGenerateSubtitles(
   const { ffmpegService, fileManager } = checkServicesInitialized();
   const controller = new AbortController();
   const { signal } = controller;
-  const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  log.info(`[handleGenerateSubtitles] Operation ID: ${operationId}`);
 
-  cancellationService.registerOperation(operationId, controller);
+  const operationId = `generate-${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2, 9)}`;
+
+  log.info(`[handleGenerateSubtitles] Operation ID: ${operationId}`);
 
   let tempVideoPath: string | null = null;
   const finalOptions = { ...options };
 
   try {
-    if (
-      'videoFileData' in finalOptions &&
-      'videoFileName' in finalOptions &&
-      finalOptions.videoFileData
-    ) {
-      const safeFileName = (finalOptions.videoFileName as string).replace(
-        /[^a-zA-Z0-9_.-]/g,
-        '_'
-      );
-      tempVideoPath = path.join(
-        ffmpegService.getTempDir(),
-        `temp_generate_${Date.now()}_${safeFileName}`
-      );
-      const buffer = Buffer.from(finalOptions.videoFileData as ArrayBuffer);
-      await fs.writeFile(tempVideoPath, buffer);
-      finalOptions.videoPath = tempVideoPath;
-      delete finalOptions.videoFileData;
-      delete finalOptions.videoFileName;
-    }
-
+    // -------------------- STEP 1: PREPARE VIDEO PATH --------------------
+    tempVideoPath = await maybeWriteTempVideo({
+      finalOptions,
+      ffmpegService,
+    });
     if (!finalOptions.videoPath) {
       throw new Error('Video path is required');
     }
     finalOptions.videoPath = path.normalize(finalOptions.videoPath);
-    await fs.access(finalOptions.videoPath, fs.constants.R_OK);
+    await fs.access(finalOptions.videoPath);
 
+    // -------------------- STEP 2: PROGRESS CALLBACK --------------------
     const progressCallback: GenerateProgressCallback = progress => {
       event.sender.send('generate-subtitles-progress', {
         ...progress,
@@ -138,61 +90,84 @@ export async function handleGenerateSubtitles(
       });
     };
 
-    const result = await generateSubtitlesFromVideo({
+    // -------------------- STEP 3: GENERATE SUBTITLES --------------------
+    const result = await extractSubtitlesFromVideo({
       options: finalOptions,
-      operationId: operationId,
-      signal: signal,
-      progressCallback: progressCallback,
+      operationId,
+      signal,
+      progressCallback,
       services: { ffmpegService, fileManager },
     });
 
-    if (tempVideoPath) {
-      try {
-        await fs.unlink(tempVideoPath);
-      } catch (err) {
-        log.warn(`Failed to delete temp video file: ${tempVideoPath}`, err);
-      }
-    }
+    // Attempt to remove temp file if created
+    await cleanupTempFile(tempVideoPath);
 
-    if (result.subtitles === '') {
-      log.info(`[${operationId}] Generation was cancelled.`);
-      return { success: true, cancelled: true, operationId };
-    }
+    log.info('--------------------------------');
+    log.info('result/testtesttest', result);
+    log.info('--------------------------------');
 
     return { success: true, subtitles: result.subtitles, operationId };
   } catch (error: any) {
+    // -------------------- STEP 4: ERROR HANDLING --------------------
     log.error(`[${operationId}] Error generating subtitles:`, error);
-    const isCancellationError =
-      error.name === 'AbortError' || error.message === 'Operation cancelled';
 
-    if (tempVideoPath && !isCancellationError) {
-      try {
-        await fs.unlink(tempVideoPath);
-      } catch (err) {
-        log.warn(
-          `Failed to delete temp video file after error: ${tempVideoPath}`,
-          err
-        );
-      }
+    const isCancel =
+      error.name === 'AbortError' || error.message === 'Operation cancelled';
+    if (tempVideoPath && !isCancel) {
+      await cleanupTempFile(tempVideoPath);
     }
 
+    // Notify renderer of final state
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: isCancellationError
-        ? 'Generation cancelled'
-        : `Error: ${error.message || 'Unknown error'}`,
-      error: isCancellationError ? null : error.message || String(error),
-      cancelled: isCancellationError,
+      stage: isCancel ? 'Generation cancelled' : `Error: ${error.message}`,
+      error: isCancel ? null : error.message || String(error),
+      cancelled: isCancel,
       operationId,
     });
     return {
-      success: !isCancellationError,
-      cancelled: isCancellationError,
-      error: isCancellationError ? null : error.message || String(error),
+      success: !isCancel,
+      cancelled: isCancel,
+      error: isCancel ? null : error.message || String(error),
       operationId,
     };
-  } finally {
-    cancellationService.unregisterOperation(operationId);
+  }
+
+  async function maybeWriteTempVideo({
+    finalOptions,
+    ffmpegService,
+  }: {
+    finalOptions: GenerateSubtitlesOptions;
+    ffmpegService: FFmpegService;
+  }): Promise<string | null> {
+    if (finalOptions.videoFile) {
+      const safeName = finalOptions.videoFile.name.replace(
+        /[^a-zA-Z0-9_.-]/g,
+        '_'
+      );
+      const tempVideoPath = path.join(
+        ffmpegService.getTempDir(),
+        `temp_generate_${Date.now()}_${safeName}`
+      );
+
+      const buffer = Buffer.from(await finalOptions.videoFile.arrayBuffer());
+      await fs.writeFile(tempVideoPath, buffer);
+
+      finalOptions.videoPath = tempVideoPath;
+      delete finalOptions.videoFile;
+
+      return tempVideoPath;
+    }
+    return null;
+  }
+
+  async function cleanupTempFile(tempVideoPath: string | null) {
+    if (!tempVideoPath) return;
+    try {
+      await fs.unlink(tempVideoPath);
+    } catch (err) {
+      log.warn(`Failed to delete temp video file: ${tempVideoPath}`, err);
+    }
   }
 }
 
@@ -211,9 +186,6 @@ export async function handleMergeSubtitles(
     options.operationId ||
     `merge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   log.info(`[handleMergeSubtitles] Started. Operation ID: ${operationId}`);
-
-  const controller = new AbortController();
-  cancellationService.registerOperation(operationId, controller);
 
   // Get fileManager to determine the correct temp dir
   const { fileManager } = checkServicesInitialized();
@@ -259,8 +231,13 @@ export async function handleMergeSubtitles(
       log.info(`[${operationId}] No temporary video file needed.`);
     }
 
-    if (!finalOptions.videoPath)
+    if (!finalOptions.videoPath) {
+      log.info('--------------------------------');
+      log.info('handleMergeSubtitles/testtesttest', finalOptions);
+      log.info('--------------------------------');
       throw new Error('Video path is required for merge.');
+    }
+
     finalOptions.videoPath = path.normalize(finalOptions.videoPath);
     await fs.access(finalOptions.videoPath, fs.constants.R_OK);
 
@@ -284,17 +261,6 @@ export async function handleMergeSubtitles(
     log.info(
       `[${operationId}] Preparing to call mergeSubtitlesWithVideo with video: ${finalOptions.videoPath}, srt: ${tempSrtPath}`
     );
-
-    if (cancellationService.getSignal(operationId)?.aborted) {
-      log.info(`[${operationId}] Operation cancelled before merge started`);
-      event.sender.send('merge-subtitles-progress', {
-        percent: 100,
-        stage: 'Merge cancelled',
-        cancelled: true,
-        operationId,
-      });
-      return { success: true, cancelled: true, operationId };
-    }
 
     const progressCallback: MergeProgressCallback = progress => {
       event.sender.send('merge-subtitles-progress', {
@@ -328,19 +294,6 @@ export async function handleMergeSubtitles(
       return { success: true, cancelled: true, operationId };
     }
 
-    if (cancellationService.getSignal(operationId)?.aborted) {
-      log.info(`[${operationId}] Operation cancelled after merge completed`);
-      if (mergeResult.outputPath) {
-        try {
-          await fs.unlink(mergeResult.outputPath);
-          log.info(`Deleted cancelled merge output: ${mergeResult.outputPath}`);
-        } catch (e) {
-          log.warn('Failed to delete cancelled merge output', e);
-        }
-      }
-      return { success: true, cancelled: true, operationId };
-    }
-
     log.info(
       `[${operationId}] Merge successful. Output path: ${mergeResult.outputPath}`
     );
@@ -371,7 +324,6 @@ export async function handleMergeSubtitles(
       operationId,
     };
   } finally {
-    cancellationService.unregisterOperation(operationId);
     for (const tempFile of [tempVideoPath, tempSrtPath]) {
       if (tempFile) {
         try {
@@ -382,75 +334,5 @@ export async function handleMergeSubtitles(
         }
       }
     }
-  }
-}
-
-export async function handleCancelOperation(
-  event: IpcMainInvokeEvent | null, // Make event optional
-  operationId: string
-): Promise<{ success: boolean; error?: string }> {
-  if (!operationId) {
-    return { success: false, error: 'Operation ID is required to cancel.' };
-  }
-  log.info(`[Handlers] Received cancellation request for ${operationId}`);
-
-  try {
-    let cancelled = false;
-    if (cancellationService.hasActiveOperation(operationId)) {
-      log.info(`[Handlers] Using cancellationService for ${operationId}`);
-      cancelled = cancellationService.cancelOperation(operationId);
-    } else {
-      log.info(
-        `[Handlers] No active operation found in cancellationService for ${operationId}`
-      );
-      // Optionally check ffmpegService directly as a fallback if needed
-      if (operationId.startsWith('merge-') && ffmpegServiceInstance) {
-        log.info(`[Handlers] Falling back to FFmpegService for ${operationId}`);
-        cancelled = ffmpegServiceInstance.cancelOperation(operationId);
-      }
-    }
-
-    if (cancelled) {
-      log.info(
-        `[Handlers] Cancellation request processed successfully for ${operationId}.`
-      );
-      if (event?.sender) {
-        const sender = event.sender;
-        // Determine progress channel based on operationId prefix
-        let channel = '';
-        let stage = '';
-        if (operationId.startsWith('merge-')) {
-          channel = 'merge-subtitles-progress';
-          stage = 'Merge cancelled';
-        } else if (operationId.startsWith('generate-')) {
-          channel = 'generate-subtitles-progress';
-          stage = 'Generation cancelled';
-        }
-
-        if (channel) {
-          sender.send(channel, {
-            percent: 100,
-            stage,
-            cancelled: true,
-            operationId,
-          });
-        }
-      }
-    } else {
-      log.warn(
-        `[Handlers] No active operation found or cancellation failed for ${operationId}.`
-      );
-    }
-
-    return { success: true }; // Return success even if not found, as the goal is fulfilled
-  } catch (error: any) {
-    log.error(
-      `[Handlers] Error during handleCancelOperation for ${operationId}:`,
-      error
-    );
-    return {
-      success: false,
-      error: error.message || 'Failed to cancel operation',
-    };
   }
 }

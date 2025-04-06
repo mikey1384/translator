@@ -18,12 +18,10 @@ export function parseSrt(srtString: string): SrtSegment[] {
     const indexLine = lines[0].trim();
     const timeLine = lines[1].trim();
     const textLines = lines.slice(2);
-    const text = textLines.join('\n').trim();
+    const text = textLines.join('\\n').trim();
 
     const index = parseInt(indexLine, 10);
-    const timeMatch = timeLine.match(
-      /(\d+:\d+:\d+,\d+)\s*-->\s*(\d+:\d+:\d+,\d+)/
-    );
+    const timeMatch = timeLine.match(/([\d.]+)\s*-->\s*([\d.]+)/);
 
     if (isNaN(index)) {
       return;
@@ -35,8 +33,13 @@ export function parseSrt(srtString: string): SrtSegment[] {
       // Allow empty text content, no action needed
     }
 
-    const startTime = srtTimeToSeconds(timeMatch[1]);
-    const endTime = srtTimeToSeconds(timeMatch[2]);
+    const startTime = parseFloat(timeMatch[1]);
+    const endTime = parseFloat(timeMatch[2]);
+
+    // Basic validation for parsed times
+    if (isNaN(startTime) || isNaN(endTime)) {
+      return;
+    }
 
     segments.push({
       index,
@@ -100,7 +103,9 @@ export function buildSrt(segments: SrtSegment[]): string {
   return segments
     .map((segment, i) => {
       const index = segment.index || i + 1;
-      return `${index}\n${segment.start} --> ${segment.end}\n${segment.text}`;
+      const startTimeStr = secondsToSrtTime(segment.start);
+      const endTimeStr = secondsToSrtTime(segment.end);
+      return `${index}\n${startTimeStr} --> ${endTimeStr}\n${segment.text}`;
     })
     .join('\n\n');
 }

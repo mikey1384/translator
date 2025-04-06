@@ -1,16 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 const electronAPI = {
-  // Simple test/ping
+  // ---------------------- Basic / Test Methods ----------------------
   ping: async (): Promise<string> => ipcRenderer.invoke('ping'),
   test: () => 'Electron API is working',
   showMessage: (message: string) => ipcRenderer.invoke('show-message', message),
 
-  // Subtitle generation
+  // ---------------------- Subtitle Generation ----------------------
   generateSubtitles: async (options: any) => {
     const processedOptions = { ...options };
 
-    // If a File object is present but no path, convert it to ArrayBuffer
+    console.log('[preload] generateSubtitles options:', options);
     if (options.videoFile && !options.videoPath) {
       try {
         const fileData = await new Promise<ArrayBuffer>((resolve, reject) => {
@@ -29,6 +29,7 @@ const electronAPI = {
     delete processedOptions.videoFile;
     return ipcRenderer.invoke('generate-subtitles', processedOptions);
   },
+
   onGenerateSubtitlesProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return;
     const listener = (_: any, progress: any) => {
@@ -43,40 +44,35 @@ const electronAPI = {
       ipcRenderer.removeListener('generate-subtitles-progress', listener);
   },
 
-  // Merging subtitles
+  // ---------------------- Merging Subtitles ----------------------
   mergeSubtitles: async (options: any) => {
-    // Prioritize videoPath if it exists (meaning file loaded from disk)
+    // If there's a videoFile (File) and no path, read it. Otherwise, use path.
     if (!options.videoPath && options.videoFile instanceof File) {
-      // Only process videoFile if videoPath is NOT provided
       try {
         const buffer = await options.videoFile.arrayBuffer();
         options.videoFileData = buffer;
         options.videoFileName = options.videoFile.name;
-        options.videoPath = options.videoPath; // Keep the original path
-        // Explicitly remove videoFile and videoFileName if path is used
-        delete options.videoFile;
-        delete options.videoFileName;
       } catch (error) {
         console.error(
           '[preload] Error reading videoFile for mergeSubtitles:',
           error
         );
-        // Decide how to handle - maybe throw or return error?
         throw new Error('Failed to read video file for merge');
       }
     } else if (options.videoPath) {
+      // If we have a path, remove file-based properties
       delete options.videoFileName;
     }
-    // Always remove videoFile object if it exists, as we use path or data
+    // Always remove raw File object
     delete options.videoFile;
-    // Log the options being sent using console.log
+
     console.log(
       '[preload] mergeSubtitles sending options keys:',
       JSON.stringify(Object.keys(options))
     );
-    // Send potentially modified options to main process
     return ipcRenderer.invoke('merge-subtitles', { ...options });
   },
+
   onMergeSubtitlesProgress: (callback: (event: any, progress: any) => void) => {
     if (typeof callback !== 'function') return;
     const listener = (event: any, progress: any) => callback(event, progress);
@@ -85,7 +81,7 @@ const electronAPI = {
       ipcRenderer.removeListener('merge-subtitles-progress', listener);
   },
 
-  // File operations
+  // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
   writeFile: (filePath: string, data: any) =>
@@ -95,7 +91,7 @@ const electronAPI = {
   getLastSaveDirectory: () => ipcRenderer.invoke('get-last-save-directory'),
   getAppName: () => ipcRenderer.invoke('get-app-name'),
 
-  // Video processing & screenshots
+  // ---------------------- Video Processing & Screenshots ----------------------
   processVideo: (options: any) => ipcRenderer.invoke('process-video', options),
   cancelVideoProcessing: (opId: string) =>
     ipcRenderer.invoke('cancel-video-processing', opId),
@@ -108,7 +104,7 @@ const electronAPI = {
   convertSubtitles: (options: any) =>
     ipcRenderer.invoke('convert-subtitles', options),
 
-  // URL processing
+  // ---------------------- URL Processing ----------------------
   processUrl: (options: any) => ipcRenderer.invoke('process-url', options),
   onProcessUrlProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return;
@@ -124,7 +120,7 @@ const electronAPI = {
       ipcRenderer.removeListener('url-processing-progress', listener);
   },
 
-  // OpenAI
+  // ---------------------- OpenAI / AI Connections ----------------------
   transcribeAudio: (options: any) =>
     ipcRenderer.invoke('transcribe-audio', options),
   cancelTranscription: (opId: string) =>
@@ -134,7 +130,7 @@ const electronAPI = {
   cancelTranslation: (opId: string) =>
     ipcRenderer.invoke('cancel-translation', opId),
 
-  // Credentials
+  // ---------------------- Credentials ----------------------
   saveCredentials: (service: string, username: string, password: string) =>
     ipcRenderer.invoke('save-credentials', service, username, password),
   getCredentials: (service: string) =>
@@ -144,14 +140,14 @@ const electronAPI = {
   isCredentialStored: (service: string) =>
     ipcRenderer.invoke('is-credential-stored', service),
 
-  // Additional progress events
+  // ---------------------- Additional Progress Events ----------------------
   onProgress: (callback: (progress: any) => void) => {
     const handler = (_: any, progress: any) => callback(progress);
     ipcRenderer.on('conversion-progress', handler);
     return () => ipcRenderer.removeListener('conversion-progress', handler);
   },
 
-  // Merging or canceling operation
+  // ---------------------- Cancel / Move / Copy ----------------------
   cancelOperation: async (operationId: string) => {
     try {
       return await ipcRenderer.invoke('cancel-operation', operationId);
@@ -160,23 +156,21 @@ const electronAPI = {
       throw error;
     }
   },
-
-  // Move / Copy
   moveFile: (src: string, dest: string) =>
     ipcRenderer.invoke('move-file', src, dest),
   copyFile: (src: string, dest: string) =>
     ipcRenderer.invoke('copy-file', src, dest),
 
-  // API Key
+  // ---------------------- API Key ----------------------
   getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
   saveApiKey: (keyType: string, apiKey: string) =>
     ipcRenderer.invoke('save-api-key', { keyType, apiKey }),
 
-  // Reading file contents
+  // ---------------------- Read File Content ----------------------
   readFileContent: (filePath: string) =>
     ipcRenderer.invoke('readFileContent', filePath),
 
-  // Find-in-page
+  // ---------------------- Find-in-Page ----------------------
   sendFindInPage: (opts: any) => ipcRenderer.send('find-in-page', opts),
   sendStopFind: () => ipcRenderer.send('stop-find'),
   onShowFindBar: (callback: () => void) => {

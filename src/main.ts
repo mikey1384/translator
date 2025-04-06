@@ -106,7 +106,6 @@ try {
     'generate-subtitles',
     subtitleHandlers.handleGenerateSubtitles
   );
-  ipcMain.handle('cancel-operation', subtitleHandlers.handleCancelOperation);
   // URL Processing
   ipcMain.handle('process-url', handleProcessUrl);
   log.info('[main.ts] IPC Handlers Registered.');
