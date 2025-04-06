@@ -49,7 +49,9 @@ function checkServicesInitialized(): {
 
 export async function handleGenerateSubtitles(
   event: IpcMainInvokeEvent,
-  options: GenerateSubtitlesOptions
+  options: GenerateSubtitlesOptions,
+  signal: AbortSignal,
+  operationId: string
 ): Promise<{
   success: boolean;
   subtitles?: string;
@@ -58,14 +60,8 @@ export async function handleGenerateSubtitles(
   operationId: string;
 }> {
   const { ffmpegService, fileManager } = checkServicesInitialized();
-  const controller = new AbortController();
-  const { signal } = controller;
 
-  const operationId = `generate-${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2, 9)}`;
-
-  log.info(`[handleGenerateSubtitles] Operation ID: ${operationId}`);
+  log.info(`[handleGenerateSubtitles] Starting. Operation ID: ${operationId}`);
 
   let tempVideoPath: string | null = null;
   const finalOptions = { ...options };
@@ -112,7 +108,9 @@ export async function handleGenerateSubtitles(
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
     const isCancel =
-      error.name === 'AbortError' || error.message === 'Operation cancelled';
+      error.name === 'AbortError' ||
+      error.message === 'Operation cancelled' ||
+      signal.aborted;
     if (tempVideoPath && !isCancel) {
       await cleanupTempFile(tempVideoPath);
     }

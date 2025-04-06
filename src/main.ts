@@ -36,6 +36,9 @@ import * as utilityHandlers from './handlers/utility-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
+// Map to store AbortControllers for active subtitle generation operations
+const subtitleGenerationControllers = new Map<string, AbortController>();
+
 // --- Single Instance Lock ---
 // Ensure only one instance of the app runs
 if (!app.requestSingleInstanceLock()) {
@@ -102,32 +105,124 @@ try {
   ipcMain.handle('save-api-key', apiKeyHandlers.handleSaveApiKey);
   // Subtitles
   ipcMain.handle('merge-subtitles', subtitleHandlers.handleMergeSubtitles);
-  ipcMain.handle(
-    'generate-subtitles',
-    subtitleHandlers.handleGenerateSubtitles
-  );
-  // URL Processing
-  ipcMain.handle('process-url', handleProcessUrl);
-  // Operation Cancellation
-  ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
-    if (!services?.ffmpegService) {
-      log.error(
-        '[main.ts/cancel-operation] FFmpegService not initialized when trying to cancel.'
-      );
-      throw new Error('FFmpegService not initialized');
-    }
+  ipcMain.handle('generate-subtitles', async (event, options) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    log.info(`[main.ts/generate-subtitles] Starting operation: ${operationId}`);
+    subtitleGenerationControllers.set(operationId, controller);
+
     try {
-      log.info(
-        `[main.ts/cancel-operation] Received request to cancel operation: ${operationId}`
+      // Call the handler, passing the signal and operationId
+      const result = await subtitleHandlers.handleGenerateSubtitles(
+        event,
+        options,
+        signal, // Pass the AbortSignal
+        operationId // Pass the operationId
       );
-      services.ffmpegService.cancelOperation(operationId);
-      return { success: true };
+      log.info(
+        `[main.ts/generate-subtitles] Operation ${operationId} completed.`
+      );
+      return result;
     } catch (error) {
       log.error(
-        `[main.ts/cancel-operation] Error cancelling operation ${operationId}:`,
+        `[main.ts/generate-subtitles] Error in operation ${operationId}:`,
         error
       );
-      throw error; // Re-throw the error to the renderer
+      // Re-throw the error to be caught by the renderer
+      throw error;
+    } finally {
+      // Ensure the controller is removed from the map when done
+      const deleted = subtitleGenerationControllers.delete(operationId);
+      if (deleted) {
+        log.info(
+          `[main.ts/generate-subtitles] Removed controller for ${operationId}.`
+        );
+      } else {
+        log.warn(
+          `[main.ts/generate-subtitles] Controller for ${operationId} not found for removal.`
+        );
+      }
+    }
+  });
+  // URL Processing
+  ipcMain.handle('process-url', handleProcessUrl);
+  // Operation Cancellation - Updated to handle both AbortController and FFmpeg
+  ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
+    log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
+    let cancelledViaController = false;
+    let cancelledViaFfmpeg = false;
+    let errorMessage = '';
+
+    // 1. Try cancelling via AbortController (for generate-subtitles)
+    const controller = subtitleGenerationControllers.get(operationId);
+    if (controller) {
+      try {
+        log.info(
+          `[main.ts/cancel-operation] Aborting controller for ${operationId}.`
+        );
+        controller.abort();
+        subtitleGenerationControllers.delete(operationId); // Remove immediately after aborting
+        cancelledViaController = true;
+        log.info(
+          `[main.ts/cancel-operation] Controller for ${operationId} aborted and removed.`
+        );
+      } catch (error) {
+        log.error(
+          `[main.ts/cancel-operation] Error aborting controller for ${operationId}:`,
+          error
+        );
+        errorMessage += `Controller abort failed: ${error instanceof Error ? error.message : String(error)}; `;
+      }
+    } else {
+      log.info(
+        `[main.ts/cancel-operation] No active AbortController found for ${operationId}.`
+      );
+    }
+
+    // 2. Try cancelling via FFmpegService (for merge-subtitles or direct FFmpeg ops)
+    if (services?.ffmpegService) {
+      try {
+        log.info(
+          `[main.ts/cancel-operation] Calling FFmpegService.cancelOperation for ${operationId}.`
+        );
+        services.ffmpegService.cancelOperation(operationId);
+        // Note: ffmpegService.cancelOperation is fire-and-forget, success isn't guaranteed here
+        cancelledViaFfmpeg = true; // Assume initiated
+      } catch (error) {
+        log.error(
+          `[main.ts/cancel-operation] Error calling FFmpegService.cancelOperation for ${operationId}:`,
+          error
+        );
+        errorMessage += `FFmpeg cancel failed: ${error instanceof Error ? error.message : String(error)}; `;
+      }
+    } else {
+      log.warn(
+        '[main.ts/cancel-operation] FFmpegService not available for cancellation attempt.'
+      );
+      if (!cancelledViaController) {
+        errorMessage += 'FFmpegService not available; ';
+      }
+    }
+
+    // 3. Return overall status
+    const success = cancelledViaController || cancelledViaFfmpeg;
+    if (success) {
+      log.info(
+        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController}, FFmpeg: ${cancelledViaFfmpeg})`
+      );
+      return {
+        success: true,
+        message: `Cancellation initiated for ${operationId}`,
+      };
+    } else {
+      log.error(
+        `[main.ts/cancel-operation] Failed to initiate cancellation for ${operationId}. Error(s): ${errorMessage}`
+      );
+      throw new Error(
+        `Failed to initiate cancellation for ${operationId}. ${errorMessage}`
+      );
     }
   });
   log.info('[main.ts] IPC Handlers Registered.');

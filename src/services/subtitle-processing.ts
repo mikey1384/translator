@@ -901,7 +901,7 @@ Translate EACH line individually, preserving the line order.
           max_tokens: AI_MODELS.MAX_TOKENS,
           messages: [{ role: 'user', content: combinedPrompt }],
         } as Anthropic.MessageCreateParams,
-        { signal } // Pass the signal to the API call
+        { signal }
       );
       log.info(
         `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
