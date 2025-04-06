@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../styles.js';
+import { colors } from '../../styles.js';
 
 interface SubtitleProgressInfo {
   current?: number;
@@ -19,7 +19,6 @@ interface TranslationProgressAreaProps {
   translationOperationId?: string | null;
 }
 
-// Progress area styles - Updated for Dark Theme
 const progressContainerStyles = css`
   position: fixed;
   top: 0;

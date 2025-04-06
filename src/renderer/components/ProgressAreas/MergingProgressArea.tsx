@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { colors } from '../styles.js';
+import { colors } from '../../styles.js';
 import { useState, useEffect } from 'react';
 
 interface MergingProgressAreaProps {
@@ -130,7 +130,6 @@ export default function MergingProgressArea({
   const handleCancel = async () => {
     console.log('Cancel button clicked, operationId:', operationId);
 
-    // Ask for confirmation before canceling
     if (
       !window.confirm(
         "Are you sure you want to cancel the subtitle merge process? Any progress will be lost and you'll need to start again."
