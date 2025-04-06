@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
-import Section from '../../components/Section.js';
 import { colors } from '../../styles.js';
 import { VideoQuality } from '../../../services/url-processor.js';
 import { errorMessageStyles } from '../../styles.js';
@@ -11,6 +10,7 @@ import InputModeToggle from './InputModeToggle.js';
 import LanguageSelection from './LanguageSelection.js';
 import ProgressDisplay from './ProgressDisplay.js';
 import GenerateControls from './GenerateControls.js';
+import Section from '../../components/Section.js';
 type ApiKeyStatus = {
   openai: boolean;
   anthropic: boolean;
@@ -129,27 +129,23 @@ export default function GenerateSubtitles({
             )}
 
             {videoFile && (
-              <Section title="2. Select Output Language" isSubSection>
-                <LanguageSelection
-                  targetLanguage={targetLanguage}
-                  setTargetLanguage={setTargetLanguage}
-                  isGenerating={isGenerating}
-                  showOriginalText={showOriginalText}
-                  onShowOriginalTextChange={onShowOriginalTextChange}
-                />
-              </Section>
+              <LanguageSelection
+                targetLanguage={targetLanguage}
+                setTargetLanguage={setTargetLanguage}
+                isGenerating={isGenerating}
+                showOriginalText={showOriginalText}
+                onShowOriginalTextChange={onShowOriginalTextChange}
+              />
             )}
 
             {videoFile && (
-              <Section title="3. Generate Subtitles" isSubSection>
-                <GenerateControls
-                  videoFile={videoFile}
-                  videoFilePath={videoFilePath}
-                  isGenerating={isGenerating}
-                  isProcessingUrl={isProcessingUrl}
-                  handleGenerateSubtitles={onGenerateSubtitles}
-                />
-              </Section>
+              <GenerateControls
+                videoFile={videoFile}
+                videoFilePath={videoFilePath}
+                isGenerating={isGenerating}
+                isProcessingUrl={isProcessingUrl}
+                handleGenerateSubtitles={onGenerateSubtitles}
+              />
             )}
           </>
         )}

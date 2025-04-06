@@ -436,7 +436,6 @@ function AppContent() {
   function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
   ) {
-    console.log(fileData);
     resetSubtitleSource();
 
     if (videoUrl && videoUrl.startsWith('blob:')) {
@@ -467,7 +466,6 @@ function AppContent() {
       });
       (minimalFileObject as any).path = fileData.path;
       setVideoFile(minimalFileObject as File);
-      console.log(fileData);
       setVideoFilePath(fileData.path);
       const encodedPath = encodeURI(fileData.path.replace(/\\/g, '/'));
       setVideoUrl(`file://${encodedPath}`);

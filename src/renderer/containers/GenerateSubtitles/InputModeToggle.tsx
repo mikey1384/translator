@@ -54,7 +54,6 @@ const inputModeToggleStyles = css`
     }
   }
 `;
-// --- Style Adjustments for New Layout --- END ---
 
 const InputModeToggle: React.FC<InputModeToggleProps> = ({
   inputMode,
@@ -69,14 +68,14 @@ const InputModeToggle: React.FC<InputModeToggleProps> = ({
         onClick={() => setInputMode('file')}
         disabled={isGenerating || isProcessingUrl}
       >
-        Upload File
+        From your device
       </button>
       <button
         className={inputMode === 'url' ? 'active' : ''}
         onClick={() => setInputMode('url')}
         disabled={isGenerating || isProcessingUrl}
       >
-        Enter URL
+        From the web
       </button>
     </div>
   );
