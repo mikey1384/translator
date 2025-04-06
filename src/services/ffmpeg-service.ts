@@ -173,38 +173,36 @@ export class FFmpegService {
         outputPath,
       ];
 
-      function ffmpegProgressCallback(ffmpegProgress: number) {
-        const scaledPercent =
-          EXTRACTION_START +
-          (ffmpegProgress * (EXTRACTION_END - EXTRACTION_START)) / 100;
-        if (scaledPercent - lastProgressPercent >= 0.5) {
-          lastProgressPercent = scaledPercent;
-          const elapsedMs = Date.now() - startTime;
-          const elapsedSec = Math.round(elapsedMs / 1000);
-          let timeMessage = '';
-          if (ffmpegProgress > 0) {
-            const totalEstimatedSec = Math.round(
-              elapsedSec / (ffmpegProgress / 100)
-            );
-            const remainingSec = Math.max(0, totalEstimatedSec - elapsedSec);
-            if (remainingSec > 60) {
-              timeMessage = ` (~ ${Math.round(remainingSec / 60)} min remaining)`;
-            } else {
-              timeMessage = ` (~ ${remainingSec} sec remaining)`;
-            }
-          }
-          progressCallback?.({
-            percent: Math.min(EXTRACTION_END, scaledPercent),
-            stage: `Extracting audio: ${Math.round(ffmpegProgress)}%${timeMessage}`,
-          });
-        }
-      }
-
       await this.runFFmpeg({
         args: ffmpegArgs,
         operationId,
         totalDuration: duration,
-        progressCallback: ffmpegProgressCallback,
+        progressCallback: ffmpegProgress => {
+          const scaledPercent =
+            EXTRACTION_START +
+            (ffmpegProgress * (EXTRACTION_END - EXTRACTION_START)) / 100;
+          if (scaledPercent - lastProgressPercent >= 0.5) {
+            lastProgressPercent = scaledPercent;
+            const elapsedMs = Date.now() - startTime;
+            const elapsedSec = Math.round(elapsedMs / 1000);
+            let timeMessage = '';
+            if (ffmpegProgress > 0) {
+              const totalEstimatedSec = Math.round(
+                elapsedSec / (ffmpegProgress / 100)
+              );
+              const remainingSec = Math.max(0, totalEstimatedSec - elapsedSec);
+              if (remainingSec > 60) {
+                timeMessage = ` (~ ${Math.round(remainingSec / 60)} min remaining)`;
+              } else {
+                timeMessage = ` (~ ${remainingSec} sec remaining)`;
+              }
+            }
+            progressCallback?.({
+              percent: Math.min(EXTRACTION_END, scaledPercent),
+              stage: `Extracting audio: ${Math.round(ffmpegProgress)}%${timeMessage}`,
+            });
+          }
+        },
         filePath: videoPath,
       });
 
@@ -218,6 +216,13 @@ export class FFmpegService {
       if (error instanceof Error && error.message === 'Operation cancelled') {
         log.info(`[extractAudio/${operationId}] Caught cancellation error.`);
         throw error;
+      }
+      try {
+        await fsp.unlink(outputPath);
+      } catch (cleanupError: any) {
+        log.warn(
+          `Failed to delete invalid file ${outputPath} during cleanup: ${cleanupError.message}`
+        );
       }
       throw error;
     }
@@ -316,7 +321,11 @@ export class FFmpegService {
       try {
         await fsp.unlink(filePath);
         log.info(`Deleted invalid output file: ${filePath}`);
-      } catch {}
+      } catch (cleanupError: any) {
+        log.warn(
+          `Failed to delete invalid file ${filePath} during cleanup: ${cleanupError.message}`
+        );
+      }
       throw new FFmpegError(
         `Invalid output file: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -422,9 +431,34 @@ export class FFmpegService {
       }
     } catch (error) {
       log.error(`[${operationId}] Error during subtitle merge:`, error);
+      if (tempAssPath && fs.existsSync(tempAssPath)) {
+        try {
+          await fsp.unlink(tempAssPath);
+          log.info(
+            `[${operationId}] Cleaned up temporary ASS file after error: ${tempAssPath}`
+          );
+        } catch (cleanupError: any) {
+          log.warn(
+            `[${operationId}] Failed to delete temporary ASS file ${tempAssPath} after merge error: ${cleanupError.message}`
+          );
+        }
+      }
       throw new FFmpegError(
         `Failed to merge subtitles: ${error instanceof Error ? error.message : String(error)}`
       );
+    } finally {
+      if (tempAssPath && fs.existsSync(tempAssPath)) {
+        try {
+          await fsp.unlink(tempAssPath);
+          log.info(
+            `[${operationId}] Cleaned up temporary ASS file in finally block: ${tempAssPath}`
+          );
+        } catch (cleanupError: any) {
+          log.warn(
+            `[${operationId}] Failed to delete temporary ASS file ${tempAssPath} during final cleanup: ${cleanupError.message}`
+          );
+        }
+      }
     }
   }
 
@@ -498,7 +532,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       if (fs.existsSync(tempAssPath)) {
         try {
           await fsp.unlink(tempAssPath);
-        } catch {}
+        } catch (cleanupError: any) {
+          log.warn(
+            `Failed to delete temporary ASS file ${tempAssPath} during error handling: ${cleanupError.message}`
+          );
+        }
       }
       throw error;
     }

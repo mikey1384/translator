@@ -21,7 +21,9 @@ export function parseSrt(srtString: string): SrtSegment[] {
     const text = textLines.join('\\n').trim();
 
     const index = parseInt(indexLine, 10);
-    const timeMatch = timeLine.match(/([\d.]+)\s*-->\s*([\d.]+)/);
+    const timeMatch = timeLine.match(
+      /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/
+    );
 
     if (isNaN(index)) {
       return;
@@ -33,8 +35,9 @@ export function parseSrt(srtString: string): SrtSegment[] {
       // Allow empty text content, no action needed
     }
 
-    const startTime = parseFloat(timeMatch[1]);
-    const endTime = parseFloat(timeMatch[2]);
+    // Use srtTimeToSeconds to correctly parse the time strings
+    const startTime = srtTimeToSeconds(timeMatch[1]);
+    const endTime = srtTimeToSeconds(timeMatch[2]);
 
     // Basic validation for parsed times
     if (isNaN(startTime) || isNaN(endTime)) {
@@ -49,49 +52,7 @@ export function parseSrt(srtString: string): SrtSegment[] {
     });
   });
 
-  return validateSubtitleTimings(segments);
-}
-
-export function validateSubtitleTimings(
-  subtitles: SrtSegment[],
-  fixOverlaps: boolean = true
-): SrtSegment[] {
-  if (!subtitles || subtitles.length === 0) return [];
-
-  const fixedSubtitles = subtitles.map(subtitle => {
-    const fixed = { ...subtitle };
-    if (fixed.start < 0) fixed.start = 0;
-    if (fixed.end <= fixed.start) fixed.end = fixed.start + 0.5;
-    return fixed;
-  });
-
-  if (fixOverlaps) {
-    fixedSubtitles.sort((a, b) => a.start - b.start);
-
-    for (let i = 0; i < fixedSubtitles.length - 1; i++) {
-      const current = fixedSubtitles[i];
-      const next = fixedSubtitles[i + 1];
-
-      if (current.end > next.start) {
-        const midPoint = (current.end + next.start) / 2;
-        const newCurrentEnd = Math.min(midPoint, next.start - 0.1);
-        const minCurrentEnd = current.start + 0.5;
-
-        if (newCurrentEnd >= minCurrentEnd) {
-          current.end = newCurrentEnd;
-        } else {
-          next.start = current.start + 0.5;
-          current.end = current.start + 0.4;
-        }
-      }
-    }
-
-    fixedSubtitles.forEach((subtitle, index) => {
-      subtitle.index = index + 1;
-    });
-  }
-
-  return fixedSubtitles;
+  return segments;
 }
 
 /**
@@ -116,10 +77,10 @@ export function buildSrt(segments: SrtSegment[]): string {
 export function srtTimeToSeconds(timeString: string): number {
   if (!timeString) return 0; // Add guard for empty/undefined string
   const parts = timeString.split(',');
-  if (parts.length !== 2) return 0; // Basic format check
+  if (parts.length !== 2) return 0;
   const [time, msStr] = parts;
   const timeParts = time.split(':');
-  if (timeParts.length !== 3) return 0; // Basic format check
+  if (timeParts.length !== 3) return 0;
   const [hoursStr, minutesStr, secondsStr] = timeParts;
 
   const hours = parseInt(hoursStr, 10);

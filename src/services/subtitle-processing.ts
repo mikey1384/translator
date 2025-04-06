@@ -155,12 +155,6 @@ export async function extractSubtitlesFromVideo({
       services,
     });
 
-    // --- Add Log: Raw subtitlesContent ---
-    log.debug(
-      `[${operationId}] Raw subtitlesContent from generateSubtitlesFromAudio:\\n${subtitlesContent.substring(0, 500)}...`
-    );
-    // --- End Log ---
-
     if (!isTranslationNeeded) {
       await fileManager.writeTempFile(subtitlesContent, '.srt');
       progressCallback?.({
@@ -172,13 +166,6 @@ export async function extractSubtitlesFromVideo({
     }
 
     const segmentsInProcess = parseSrt(subtitlesContent);
-    // --- Add Log: After parseSrt ---
-    log.debug(
-      `[${operationId}] Segments after parseSrt (${segmentsInProcess.length} segments):`,
-      JSON.stringify(segmentsInProcess.slice(0, 5), null, 2)
-    );
-    // --- End Log ---
-
     const totalSegments = segmentsInProcess.length;
     const TRANSLATION_BATCH_SIZE = 10;
 
@@ -223,13 +210,6 @@ export async function extractSubtitlesFromVideo({
       });
     }
 
-    // --- Add Log: After Translation Loop ---
-    log.debug(
-      `[${operationId}] Segments after translation loop (${segmentsInProcess.length} segments):`,
-      JSON.stringify(segmentsInProcess.slice(0, 5), null, 2)
-    );
-    // --- End Log ---
-
     const REVIEW_BATCH_SIZE = 20;
     for (
       let batchStart = 0;
@@ -272,13 +252,6 @@ export async function extractSubtitlesFromVideo({
       });
     }
 
-    // --- Add Log 1: After Review Loop ---
-    log.debug(
-      `[${operationId}] Segments after review loop (${segmentsInProcess.length} segments):`,
-      JSON.stringify(segmentsInProcess.slice(0, 5), null, 2) // Log first 5 segments for brevity
-    );
-    // --- End Log 1 ---
-
     progressCallback?.({
       percent: STAGE_FINALIZING.start,
       stage: 'Finalizing subtitles',
@@ -291,12 +264,10 @@ export async function extractSubtitlesFromVideo({
     const gapFilledSegments = extendShortSubtitleGaps(indexedSegments, 3);
     const finalSegments = fillBlankTranslations(gapFilledSegments);
 
-    // --- Add Log 2: After fillBlankTranslations ---
     log.debug(
       `[${operationId}] Segments after fillBlankTranslations (${finalSegments.length} segments):`,
-      JSON.stringify(finalSegments.slice(0, 5), null, 2) // Log first 5 segments for brevity
+      JSON.stringify(finalSegments.slice(0, 5), null, 2)
     );
-    // --- End Log 2 ---
 
     const finalSubtitlesContent = buildSrt(finalSegments);
 
@@ -306,10 +277,6 @@ export async function extractSubtitlesFromVideo({
       stage: 'Translation and review complete',
       partialResult: finalSubtitlesContent,
     });
-
-    log.info('--------------------------------');
-    log.info('finalSubtitlesContent/gottttt hererereer', finalSubtitlesContent);
-    log.info('--------------------------------');
 
     return { subtitles: finalSubtitlesContent };
   } catch (error) {
@@ -340,22 +307,28 @@ export async function generateSubtitlesFromAudio({
   operationId,
   services,
 }: GenerateSubtitlesFromAudioArgs): Promise<string> {
-  // --- Place your constants here so both the main and helper function can read them:
   const PROGRESS_ANALYSIS_DONE = 5;
   const PROGRESS_CHUNKING_DONE = 15;
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
-  const TARGET_CHUNK_DURATION_SEC = 600;
+  const MAX_CHUNK_SIZE_BYTES = 20 * 1024 * 1024;
+  const SILENCE_TOLERANCE_SEC = 2.0;
+  const MIN_CHUNK_DURATION_SEC = 1.0;
 
   let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
-  const createdChunks: string[] = [];
+  const chunkMetadataList: Array<{
+    path: string;
+    start: number;
+    duration: number;
+    index: number;
+  }> = [];
+  const createdChunkPaths: string[] = [];
   const tempDir = path.dirname(inputAudioPath);
 
   try {
     try {
-      // 1. Retrieve OpenAI API key
       const openaiApiKey = await getApiKey('openai');
       openai = new OpenAI({ apiKey: openaiApiKey });
     } catch (keyError) {
@@ -365,7 +338,6 @@ export async function generateSubtitlesFromAudio({
       throw new SubtitleProcessingError(message);
     }
 
-    // 2. Basic file checks
     if (!fs.existsSync(inputAudioPath)) {
       throw new SubtitleProcessingError(
         `Audio file not found: ${inputAudioPath}`
@@ -386,61 +358,190 @@ export async function generateSubtitlesFromAudio({
       );
     }
 
+    let fileSize = 0;
+    try {
+      fileSize = fs.statSync(inputAudioPath).size;
+    } catch (statError: any) {
+      throw new SubtitleProcessingError(
+        `Failed to get file stats for ${inputAudioPath}: ${statError.message}`
+      );
+    }
+
     progressCallback?.({
       percent: PROGRESS_ANALYSIS_DONE,
       stage: 'Audio analyzed',
     });
 
-    // 4. Determine how many chunks we need
-    const totalChunks = Math.max(
-      1,
-      Math.ceil(duration / TARGET_CHUNK_DURATION_SEC)
-    );
     progressCallback?.({
-      percent: PROGRESS_CHUNKING_DONE,
-      stage: `Preparing ${totalChunks} audio chunks...`,
+      percent: PROGRESS_ANALYSIS_DONE,
+      stage: 'Detecting silence boundaries...',
     });
 
-    // 5. Loop through chunks and queue transcription tasks
-    const chunkTranscriptionPromises: Promise<SrtSegment[]>[] = [];
+    const { silenceStarts: _silenceStarts = [], silenceEnds = [] } =
+      await ffmpegService.detectSilenceBoundaries(inputAudioPath);
+    log.info(
+      `[${operationId}] Detected ${silenceEnds.length} silence end boundaries.`
+    );
 
-    for (let i = 0; i < totalChunks; i++) {
-      const startTime = i * TARGET_CHUNK_DURATION_SEC;
-      const chunkDuration = Math.min(
-        TARGET_CHUNK_DURATION_SEC,
-        duration - startTime
-      );
-      if (chunkDuration <= 0) continue;
+    const bitrate =
+      fileSize > 0 && duration > 0 ? (fileSize * 8) / duration : 128000;
+    let targetChunkDurationSec = duration;
+    if (bitrate > 0) {
+      targetChunkDurationSec = (MAX_CHUNK_SIZE_BYTES * 8) / bitrate;
+    }
+    targetChunkDurationSec = Math.min(targetChunkDurationSec, 15 * 60);
 
-      const chunkIndex = i + 1;
+    log.info(
+      `[${operationId}] Calculated Bitrate: ${bitrate / 1000} kbps, Target Chunk Duration: ${targetChunkDurationSec}s`
+    );
+
+    let currentStartTime = 0;
+    let chunkIndex = 0;
+
+    progressCallback?.({
+      percent: PROGRESS_ANALYSIS_DONE + 2,
+      stage: 'Calculating audio chunks...',
+    });
+
+    while (currentStartTime < duration) {
+      if (signal?.aborted)
+        throw new Error('Operation cancelled during chunking');
+
+      let idealEndTime = currentStartTime + targetChunkDurationSec;
+      idealEndTime = Math.min(idealEndTime, duration);
+
+      let chosenEndTime = idealEndTime;
+
+      let bestSilenceEnd = Infinity;
+      for (const silenceEnd of silenceEnds) {
+        if (
+          silenceEnd > currentStartTime &&
+          silenceEnd >= idealEndTime &&
+          silenceEnd <= idealEndTime + SILENCE_TOLERANCE_SEC
+        ) {
+          if (silenceEnd < bestSilenceEnd) {
+            bestSilenceEnd = silenceEnd;
+          }
+        } else if (silenceEnd > idealEndTime + SILENCE_TOLERANCE_SEC) {
+          break;
+        }
+      }
+
+      if (bestSilenceEnd !== Infinity) {
+        chosenEndTime = bestSilenceEnd;
+        log.debug(
+          `[${operationId}] Chunk ${chunkIndex + 1}: Snapped ideal end ${idealEndTime.toFixed(2)}s to silence boundary ${chosenEndTime.toFixed(2)}s`
+        );
+      } else {
+        log.debug(
+          `[${operationId}] Chunk ${chunkIndex + 1}: No suitable silence boundary found near ${idealEndTime.toFixed(2)}s. Using ideal end.`
+        );
+      }
+
+      let actualChunkDuration = chosenEndTime - currentStartTime;
+      if (
+        actualChunkDuration < MIN_CHUNK_DURATION_SEC &&
+        chosenEndTime < duration
+      ) {
+        chosenEndTime = Math.min(
+          currentStartTime + MIN_CHUNK_DURATION_SEC,
+          duration
+        );
+        actualChunkDuration = chosenEndTime - currentStartTime;
+        log.debug(
+          `[${operationId}] Chunk ${chunkIndex + 1}: Adjusted short chunk duration. New end: ${chosenEndTime.toFixed(2)}s`
+        );
+      }
+
+      if (actualChunkDuration <= 0) {
+        log.warn(
+          `[${operationId}] Chunk ${chunkIndex + 1}: Calculated duration is <= 0 (${actualChunkDuration}). Skipping chunk.`
+        );
+        currentStartTime = Math.min(chosenEndTime + 0.1, duration);
+        continue;
+      }
+
+      const currentChunkIndex = chunkIndex + 1;
       const chunkPath = path.join(
         tempDir,
-        `chunk_${operationId}_${chunkIndex}.mp3`
+        `chunk_${operationId}_${currentChunkIndex}.mp3`
       );
-      createdChunks.push(chunkPath);
 
-      // Extract the chunk from the main audio
-      await ffmpegService.extractAudioSegment({
-        inputPath: inputAudioPath,
-        outputPath: chunkPath,
-        startTime,
-        duration: chunkDuration,
+      createdChunkPaths.push(chunkPath);
+
+      log.info(
+        `[${operationId}] Creating chunk ${currentChunkIndex}: Start ${currentStartTime.toFixed(2)}s, Duration ${actualChunkDuration.toFixed(2)}s, Path: ${chunkPath}`
+      );
+
+      try {
+        await ffmpegService.extractAudioSegment({
+          inputPath: inputAudioPath,
+          outputPath: chunkPath,
+          startTime: currentStartTime,
+          duration: actualChunkDuration,
+        });
+      } catch (extractError: any) {
+        log.error(
+          `[${operationId}] Failed to extract audio segment for chunk ${currentChunkIndex}: ${extractError.message}. Skipping chunk.`
+        );
+        createdChunkPaths.pop();
+        currentStartTime = chosenEndTime;
+        chunkIndex++;
+        continue;
+      }
+
+      chunkMetadataList.push({
+        path: chunkPath,
+        start: currentStartTime,
+        duration: actualChunkDuration,
+        index: currentChunkIndex,
       });
 
-      // 6. Push a separate transcription task for each chunk
+      const chunkingProgress = currentStartTime / duration;
+      progressCallback?.({
+        percent:
+          PROGRESS_ANALYSIS_DONE +
+          chunkingProgress * (PROGRESS_CHUNKING_DONE - PROGRESS_ANALYSIS_DONE),
+        stage: `Prepared chunk ${currentChunkIndex}...`,
+      });
+
+      currentStartTime = chosenEndTime;
+      chunkIndex++;
+    }
+
+    progressCallback?.({
+      percent: PROGRESS_CHUNKING_DONE,
+      stage: `Prepared ${chunkMetadataList.length} audio chunks. Starting transcription...`,
+    });
+
+    const chunkTranscriptionPromises: Promise<SrtSegment[]>[] = [];
+    const totalChunks = chunkMetadataList.length;
+
+    if (totalChunks === 0) {
+      log.warn(
+        `[${operationId}] No audio chunks were created. Aborting transcription.`
+      );
+      throw new SubtitleProcessingError(
+        'Audio processing resulted in zero valid chunks.'
+      );
+    }
+
+    for (const chunkMeta of chunkMetadataList) {
+      if (signal?.aborted)
+        throw new Error('Operation cancelled during transcription scheduling');
+
       const transcriptionTask = transcribeChunk({
-        i,
+        chunkIndex: chunkMeta.index,
         totalChunks,
-        chunkIndex,
-        chunkPath,
-        startTime,
+        chunkPath: chunkMeta.path,
+        startTime: chunkMeta.start,
         progressCallback,
+        signal,
       });
 
       chunkTranscriptionPromises.push(transcriptionTask);
     }
 
-    // 7. Wait for all chunk transcriptions to complete
     const results = await Promise.allSettled(chunkTranscriptionPromises);
     results.forEach((res, idx) => {
       if (res.status === 'fulfilled' && res.value.length > 0) {
@@ -457,7 +558,6 @@ export async function generateSubtitlesFromAudio({
       }
     });
 
-    // 8. Sort and re-index the final segments
     overallSegments.sort((a, b) => a.start - b.start);
     overallSegments.forEach((seg, idx) => {
       seg.index = idx + 1;
@@ -468,7 +568,6 @@ export async function generateSubtitlesFromAudio({
       stage: `Finalizing ${overallSegments.length} subtitle segments...`,
     });
 
-    // 9. Build the final SRT file content
     const finalSrtContent = buildSrt(overallSegments);
 
     progressCallback?.({
@@ -495,8 +594,10 @@ export async function generateSubtitlesFromAudio({
       error instanceof Error ? error.message : String(error)
     );
   } finally {
-    // 10. Cleanup: delete all created chunks
-    const deletionTasks = createdChunks.map(chunkPath =>
+    log.info(
+      `[${operationId}] Cleaning up ${createdChunkPaths.length} chunk files...`
+    );
+    const deletionTasks = createdChunkPaths.map(chunkPath =>
       fsp
         .unlink(chunkPath)
         .catch(err =>
@@ -511,16 +612,15 @@ export async function generateSubtitlesFromAudio({
   }
 
   async function transcribeChunk({
-    i,
-    totalChunks,
     chunkIndex,
+    totalChunks,
     chunkPath,
     startTime,
     progressCallback,
+    signal,
   }: {
-    i: number;
-    totalChunks: number;
     chunkIndex: number;
+    totalChunks: number;
     chunkPath: string;
     startTime: number;
     progressCallback?: (info: {
@@ -530,22 +630,30 @@ export async function generateSubtitlesFromAudio({
       total?: number;
       error?: string;
     }) => void;
+    signal?: AbortSignal;
   }): Promise<SrtSegment[]> {
-    const progressBeforeApiCall =
+    const basePercent =
       PROGRESS_TRANSCRIPTION_START +
-      (i / totalChunks) *
+      ((chunkIndex - 1) / totalChunks) *
         (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
 
     progressCallback?.({
-      percent: progressBeforeApiCall,
+      percent: basePercent,
       stage: `Sending audio chunk ${chunkIndex}/${totalChunks} to AI...`,
       current: chunkIndex,
       total: totalChunks,
     });
 
     try {
+      if (signal?.aborted) {
+        log.info(
+          `[${operationId}] Transcription for chunk ${chunkIndex} cancelled before API call.`
+        );
+        throw new Error('Operation cancelled');
+      }
+
       console.info(
-        `[${operationId}] Sending chunk ${chunkIndex} to OpenAI Whisper API.`
+        `[${operationId}] Sending chunk ${chunkIndex} (${(fs.statSync(chunkPath).size / (1024 * 1024)).toFixed(2)} MB) to OpenAI Whisper API.`
       );
       const fileStream = createFileFromPath(chunkPath);
       const response = await openai.audio.transcriptions.create(
@@ -561,20 +669,34 @@ export async function generateSubtitlesFromAudio({
         `[${operationId}] Received transcription for chunk ${chunkIndex}.`
       );
       const srtContent = response as unknown as string;
+
+      log.debug(
+        `[${operationId}] Raw SRT content received for chunk ${chunkIndex} (startTime: ${startTime}):\n--BEGIN RAW SRT CHUNK ${chunkIndex}--\n${srtContent}\n--END RAW SRT CHUNK ${chunkIndex}--`
+      );
+
       const segments =
         srtContent && typeof srtContent === 'string'
           ? parseSrt(srtContent)
           : [];
 
-      // Offset each chunk's timestamps by `startTime`
       segments.forEach(segment => {
-        segment.start += startTime;
-        segment.end += startTime;
+        if (
+          typeof segment.start === 'number' &&
+          typeof segment.end === 'number'
+        ) {
+          segment.start += startTime;
+          segment.end += startTime;
+        } else {
+          log.warn(
+            `[${operationId}] Chunk ${chunkIndex}: Segment found with non-numeric start/end times. Skipping offset.`,
+            segment
+          );
+        }
       });
 
       const progressAfterApiCall =
-        PROGRESS_TRANSCRIPTION_START +
-        ((i + 0.8) / totalChunks) *
+        basePercent +
+        (0.8 / totalChunks) *
           (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
 
       progressCallback?.({
@@ -592,10 +714,32 @@ export async function generateSubtitlesFromAudio({
         error.message
       );
 
+      if (
+        signal?.aborted ||
+        error.name === 'AbortError' ||
+        (error instanceof Error && error.message === 'Operation cancelled')
+      ) {
+        log.info(
+          `[${operationId}] Transcription for chunk ${chunkIndex} was cancelled.`
+        );
+        progressCallback?.({
+          percent:
+            basePercent +
+            (0.9 / totalChunks) *
+              (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START),
+          stage: `Chunk ${chunkIndex}/${totalChunks} cancelled`,
+          error: `Chunk ${chunkIndex} cancelled`,
+          current: chunkIndex,
+          total: totalChunks,
+        });
+        return [];
+      }
+
+      // Handle other errors
       progressCallback?.({
         percent:
-          PROGRESS_TRANSCRIPTION_START +
-          ((i + 0.9) / totalChunks) *
+          basePercent +
+          (0.9 / totalChunks) *
             (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START),
         stage: `Error transcribing chunk ${chunkIndex}/${totalChunks}`,
         error: `Chunk ${chunkIndex} failed: ${
@@ -662,7 +806,6 @@ export async function mergeSubtitlesWithVideo({
       progressCallback
     );
 
-    // Check if file exists - if empty string was returned, it means the operation was cancelled
     if (!mergeResult || mergeResult === '' || !fs.existsSync(outputPath)) {
       log.info(
         `[${operationId}] Merge operation was cancelled or failed to create output file`
@@ -670,7 +813,7 @@ export async function mergeSubtitlesWithVideo({
       if (progressCallback) {
         progressCallback({ percent: 100, stage: 'Merge cancelled' });
       }
-      return { outputPath: '' }; // Return empty path to indicate cancellation
+      return { outputPath: '' };
     }
 
     if (progressCallback) {
@@ -689,7 +832,7 @@ export async function mergeSubtitlesWithVideo({
       });
     }
 
-    throw error; // Re-throw if it was a genuine error
+    throw error;
   }
 }
 
@@ -739,7 +882,7 @@ Translate EACH line individually, preserving the line order.
     try {
       log.info(
         `[${operationId}] Sending translation batch (Attempt ${retryCount + 1})`
-      ); // Add log
+      );
       const response = await anthropic.messages.create(
         {
           model: AI_MODELS.CLAUDE_3_7_SONNET,
@@ -750,7 +893,7 @@ Translate EACH line individually, preserving the line order.
       );
       log.info(
         `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
-      ); // Add log
+      );
 
       const translationResponse = response as Anthropic.Message;
 
@@ -802,25 +945,20 @@ Translate EACH line individually, preserving the line order.
         `[${operationId}] Error during translation batch (Attempt ${retryCount + 1}):`,
         err.name,
         err.message
-      ); // Log error name and message
+      );
 
-      // --- Modify error handling for cancellation --- START ---
-      // Check specifically for AbortError or cancellation signal
       if (err.name === 'AbortError' || signal?.aborted) {
         log.info(
           `[${operationId}] Translation batch detected cancellation signal/error.`
         );
-        // Ensure cancellation propagates
       }
-      // --- Modify error handling for cancellation --- END ---
 
-      // Existing retry logic for other errors
       if (
         err.message &&
         (err.message.includes('timeout') ||
           err.message.includes('rate') ||
           err.message.includes('ECONNRESET')) &&
-        retryCount < MAX_RETRIES - 1 // Check before incrementing
+        retryCount < MAX_RETRIES - 1
       ) {
         retryCount++;
         const delay = 1000 * Math.pow(2, retryCount);
@@ -828,10 +966,9 @@ Translate EACH line individually, preserving the line order.
           `[${operationId}] Retrying translation batch in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
         await new Promise(resolve => setTimeout(resolve, delay));
-        continue; // Continue to the next retry iteration
+        continue;
       }
 
-      // If it's another type of error or retries exhausted, fallback
       log.error(
         `[${operationId}] Unhandled error or retries exhausted in translateBatch. Falling back.`
       );
@@ -844,7 +981,6 @@ Translate EACH line individually, preserving the line order.
     }
   }
 
-  // This part is reached only if MAX_RETRIES is hit for retryable errors
   log.warn(
     `[${operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
   );
@@ -883,21 +1019,17 @@ async function reviewTranslationBatch(
     );
   }
 
-  // Get enhanced context by including segments before and after the current batch
-  const CONTEXT_WINDOW_SIZE = 5; // Number of segments to include before and after
+  const CONTEXT_WINDOW_SIZE = 5;
 
-  // Get the full list of segments to determine the available context
   const allSegments = batch.allSegments;
   const totalAvailableSegments = allSegments.length;
 
-  // Determine the actual context boundaries (preventing out-of-bounds access)
   const contextStartIndex = Math.max(0, batch.startIndex - CONTEXT_WINDOW_SIZE);
   const contextEndIndex = Math.min(
     batch.startIndex + batch.segments.length + CONTEXT_WINDOW_SIZE,
     totalAvailableSegments + batch.startIndex
   );
 
-  // Create a map of all batch items including context
   const batchItemsWithContext = batch.segments.map(
     (block: any, idx: number) => {
       const absoluteIndex = batch.startIndex + idx;
@@ -908,13 +1040,11 @@ async function reviewTranslationBatch(
         index: absoluteIndex + 1,
         original: original?.trim() || '',
         translation: (translation || original || '').trim(),
-        // Flag whether this is part of the actual batch (vs. just context)
         isPartOfBatch: true,
       };
     }
   );
 
-  // Only render the actual batch items for output
   const originalTexts = batchItemsWithContext
     .map(item => `[${item.index}] ${item.original}`)
     .join('\n');
@@ -922,10 +1052,8 @@ async function reviewTranslationBatch(
     .map(item => `[${item.index}] ${item.translation}`)
     .join('\n');
 
-  // Create enhanced context with segments before and after
   const contextBlocks = [];
 
-  // Add previous context if available
   for (let i = contextStartIndex; i < batch.startIndex; i++) {
     if (i >= 0 && i < allSegments.length) {
       const [original, translation] = allSegments[i].text.split(
@@ -939,7 +1067,6 @@ async function reviewTranslationBatch(
     }
   }
 
-  // Add segments after the batch as context
   for (let i = batch.endIndex; i < contextEndIndex; i++) {
     if (i >= 0 && i < allSegments.length) {
       const [original, translation] = allSegments[i].text.split(
@@ -953,7 +1080,6 @@ async function reviewTranslationBatch(
     }
   }
 
-  // Format the context for the prompt
   const contextOriginalTexts = contextBlocks
     .map(item => `[${item.index}] ${item.original}`)
     .join('\n');
@@ -1001,7 +1127,7 @@ Improved translation for block 3
   try {
     log.info(
       `[Review] Sending review batch (${parentOperationId}) to Claude API`
-    ); // Add log
+    );
 
     const response = await anthropic.messages.create(
       {
@@ -1009,11 +1135,11 @@ Improved translation for block 3
         max_tokens: AI_MODELS.MAX_TOKENS,
         messages: [{ role: 'user', content: prompt }],
       } as Anthropic.MessageCreateParams,
-      { signal } // Pass signal
+      { signal }
     );
     log.info(
       `[Review] Received response for review batch (${parentOperationId})`
-    ); // Add log
+    );
 
     const reviewResponse = response as Anthropic.Message;
 
@@ -1058,32 +1184,22 @@ Improved translation for block 3
       };
     });
   } catch (error: any) {
-    // <-- Add : any type for error
     log.error(
       `[Review] Error during review batch (${parentOperationId}):`,
       error.name,
       error.message
-    ); // Log error details
-
-    // --- Modify error handling for cancellation --- START ---
-    // Check specifically for AbortError or cancellation signal
+    );
     if (error.name === 'AbortError' || signal?.aborted) {
       log.info(
         `[Review] Review batch (${parentOperationId}) detected cancellation signal/error.`
       );
-      // Ensure cancellation propagates
     }
-    // --- Modify error handling for cancellation --- END ---
-
-    // Fallback for non-cancellation errors
     log.error(
       `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}). Falling back to original batch segments.`
     );
-    return batch.segments; // Return original segments on other errors
+    return batch.segments;
   }
 }
-
-// --- Helper Functions Restored --- START ---
 
 function extendShortSubtitleGaps(
   segments: SrtSegment[],
@@ -1151,5 +1267,3 @@ function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
 
   return adjustedSegments;
 }
-
-// --- Helper Functions Restored --- END ---
