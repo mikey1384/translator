@@ -5,7 +5,7 @@ import { colors } from '../../styles.js';
 import { VideoQuality } from '../../../services/url-processor.js';
 import { errorMessageStyles } from '../../styles.js';
 import ApiKeyLock from './ApiKeyLock.js';
-import FileInputButton from '../FileInputButton.js';
+import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
 import LanguageSelection from './LanguageSelection.js';

@@ -1,20 +1,15 @@
 import React from 'react';
-import Button from '../components/Button.js';
+import Button from './Button.js';
 
-interface FileInputButtonProps {
+export default function FileInputButton({
+  children,
+  onClick,
+}: {
   children: React.ReactNode;
   onClick: () => void;
-}
-
-function FileInputButton({ children, onClick }: FileInputButtonProps) {
+}) {
   return (
-    <Button
-      // style={{ width: '10rem' }} // Remove fixed width
-      onClick={onClick}
-      variant="secondary" // Change variant back to secondary
-      size="lg" // Increase size
-    >
-      {/* Add Upload Icon */}
+    <Button onClick={onClick} variant="secondary" size="lg">
       <svg
         width="18"
         height="18"
@@ -34,5 +29,3 @@ function FileInputButton({ children, onClick }: FileInputButtonProps) {
     </Button>
   );
 }
-
-export default FileInputButton;

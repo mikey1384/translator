@@ -31,7 +31,7 @@ import {
   AssStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
-import FileInputButton from '../FileInputButton.js';
+import FileInputButton from '../../components/FileInputButton.js';
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
