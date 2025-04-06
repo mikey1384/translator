@@ -58,6 +58,7 @@ export interface EditSubtitlesProps {
   handleSaveSrt: () => Promise<void>;
   handleSaveEditedSrtAs: () => Promise<void>;
   onSrtFileLoaded: (filePath: string) => void;
+  onSelectVideoClick: () => void;
   saveError: string;
   setSaveError: Dispatch<SetStateAction<string>>;
 }
@@ -70,7 +71,7 @@ export function EditSubtitles({
   subtitles: subtitlesProp,
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
-  onSetVideoFile,
+  onSelectVideoClick,
   setMergeProgress,
   setMergeStage,
   setIsMergingInProgress,
@@ -339,44 +340,6 @@ export function EditSubtitles({
     [videoPlayerRef] // Depend on videoPlayerRef state
   );
 
-  const handleSelectVideoClick = async () => {
-    setSaveError(''); // Clear previous errors
-    if (!window.electron) {
-      setSaveError('Electron API not available.');
-      return;
-    }
-    try {
-      const result = await window.electron.openFile({
-        properties: ['openFile'],
-        filters: [
-          { name: 'Videos', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm'] },
-        ],
-      });
-
-      if (!result.canceled && result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video'; // Extract filename
-        // Call the onSetVideoFile prop passed from App.tsx
-        if (onSetVideoFile) {
-          onSetVideoFile({ path: filePath, name: fileName });
-        } else {
-          console.error('onSetVideoFile prop is missing in EditSubtitles');
-          setSaveError('Internal configuration error: Cannot set video file.');
-        }
-      } else {
-        // Handle cancellation or no file selected (optional)
-        console.log('File selection cancelled or no file chosen.');
-      }
-    } catch (err: any) {
-      console.error('Error opening file dialog:', err);
-      setSaveError(`Error selecting file: ${err.message || err}`);
-      if (onSetVideoFile) {
-        onSetVideoFile(null); // Clear video on error
-      }
-    }
-  };
-  // --- END: Electron File Dialog Handler ---
-
   return (
     <Section title="Edit Subtitles" overflowVisible>
       {/* Error display - Use saveError prop now */}
@@ -410,7 +373,7 @@ export function EditSubtitles({
                 gap: '8px',
               }}
             >
-              <FileInputButton onClick={handleSelectVideoClick}>
+              <FileInputButton onClick={onSelectVideoClick}>
                 Select Video File
               </FileInputButton>
             </div>

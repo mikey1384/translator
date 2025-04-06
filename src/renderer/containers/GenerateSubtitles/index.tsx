@@ -34,6 +34,7 @@ export default function GenerateSubtitles({
   apiKeyStatus,
   isLoadingKeyStatus,
   onNavigateToSettings,
+  onSelectVideoClick,
   subtitleSegments,
 }: {
   videoFile: File | null;
@@ -44,6 +45,7 @@ export default function GenerateSubtitles({
   apiKeyStatus: ApiKeyStatus;
   isLoadingKeyStatus: boolean;
   onNavigateToSettings: (show: boolean) => void;
+  onSelectVideoClick: () => void;
   subtitleSegments: SrtSegment[];
 }) {
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
@@ -61,41 +63,8 @@ export default function GenerateSubtitles({
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
 
   useEffect(() => {
-    // Reset errors when switching input mode
     setError('');
   }, [inputMode]);
-
-  // --- NEW: Electron File Dialog Handler ---
-  const handleSelectVideoClick = async () => {
-    setError(''); // Clear previous errors
-    if (!window.electron) {
-      setError('Electron API not available.');
-      return;
-    }
-    try {
-      const result = await window.electron.openFile({
-        properties: ['openFile'],
-        filters: [
-          { name: 'Videos', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm'] },
-        ],
-      });
-
-      if (!result.canceled && result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video'; // Extract filename
-        // Call the existing onSetVideoFile from App.tsx
-        onSetVideoFile({ path: filePath, name: fileName });
-      } else {
-        // Handle cancellation or no file selected (optional)
-        console.log('File selection cancelled or no file chosen.');
-      }
-    } catch (err: any) {
-      console.error('Error opening file dialog:', err);
-      setError(`Error selecting file: ${err.message || err}`);
-      onSetVideoFile(null); // Clear video on error
-    }
-  };
-  // --- END: Electron File Dialog Handler ---
 
   return (
     <Section title="Generate Subtitles">
@@ -139,7 +108,7 @@ export default function GenerateSubtitles({
                 >
                   1. Select Video File:{' '}
                 </label>
-                <FileInputButton onClick={handleSelectVideoClick}>
+                <FileInputButton onClick={onSelectVideoClick}>
                   {videoFile
                     ? `Selected: ${videoFile.name}`
                     : 'Select Video File'}
@@ -192,8 +161,6 @@ export default function GenerateSubtitles({
         )}
     </Section>
   );
-
-  // ---------------------- URL Processing ----------------------
 
   async function onProcessUrl() {
     if (!urlInput || !window.electron) {

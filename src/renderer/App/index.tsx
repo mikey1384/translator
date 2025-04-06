@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChangeEvent } from 'react';
-
 import BackToTopButton from '../components/BackToTopButton.js';
 import SettingsPage from '../containers/SettingsPage.js';
 import StickyVideoPlayer from '../containers/EditSubtitles/StickyVideoPlayer.js';
@@ -23,13 +21,11 @@ import { useSubtitleSaving } from '../containers/EditSubtitles/hooks/useSubtitle
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
 
-// Define FindResults type
 type FindResults = {
   matches: number;
   activeMatchOrdinal: number;
 };
 
-// --- Restore Local Style Definitions ---
 const headerRightGroupStyles = css`
   display: flex;
   align-items: center;
@@ -173,33 +169,18 @@ function AppContent() {
         if (progress.percent >= 100 || progress.error) {
           setIsUrlLoading(false);
           if (progress.error) {
-            // Display the error from the progress update
             setSaveError(`Error during processing: ${progress.error}`);
-          } else {
-            // Optionally clear URL input field in GenerateSubtitles/TimestampDisplay upon success?
-            // Might need a different approach (e.g., callback)
           }
         }
       }
     });
 
-    // Cleanup function
     return () => {
       console.log('[App] Cleaning up URL progress listener.');
       cleanup();
     };
-    // Re-run if isUrlLoading changes (to attach/detach listener)
-    // Include dependent state setters to satisfy exhaustive-deps
-  }, [
-    isUrlLoading,
-    urlLoadProgressPercent,
-    urlLoadProgressStage,
-    setSaveError,
-    setUrlLoadProgressPercent,
-    setUrlLoadProgressStage,
-  ]); // Added dependencies for exhaustive-deps
+  }, [isUrlLoading, urlLoadProgressPercent, urlLoadProgressStage]);
 
-  // Find Bar Listeners
   useEffect(() => {
     console.log('[AppContent] Find Bar useEffect running.');
     if (!window.electron) {
@@ -305,6 +286,7 @@ function AppContent() {
                 apiKeyStatus={apiKeyStatus}
                 isLoadingKeyStatus={isLoadingKeyStatus}
                 onNavigateToSettings={handleToggleSettings}
+                onSelectVideoClick={handleSelectVideoClick}
                 subtitleSegments={subtitleSegments}
               />
 
@@ -325,6 +307,7 @@ function AppContent() {
                   setMergeStage={setMergeStage}
                   setIsMergingInProgress={setIsMergingInProgress}
                   editorRef={editSubtitlesMethodsRef}
+                  onSelectVideoClick={handleSelectVideoClick}
                   onSetMergeOperationId={setMergeOperationId}
                   onSetSubtitlesDirectly={handleSetSubtitleSegments}
                   reviewedBatchStartIndex={reviewedBatchStartIndex}
@@ -371,6 +354,28 @@ function AppContent() {
       </div>
     </div>
   );
+
+  async function handleSelectVideoClick() {
+    try {
+      const result = await window.electron.openFile({
+        properties: ['openFile'],
+        filters: [
+          { name: 'Videos', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm'] },
+        ],
+      });
+
+      if (!result.canceled && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video'; // Extract filename
+        handleSetVideoFile({ path: filePath, name: fileName });
+      } else {
+        console.log('File selection cancelled or no file chosen.');
+      }
+    } catch (err: any) {
+      console.error('Error opening file dialog:', err);
+      handleSetVideoFile(null);
+    }
+  }
 
   function handleBackFromSettings() {
     setShowSettings(false);
