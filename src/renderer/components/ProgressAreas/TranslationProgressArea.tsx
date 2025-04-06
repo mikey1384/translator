@@ -165,14 +165,12 @@ export default function TranslationProgressArea({
         if (translationOperationId && window.electron?.cancelOperation) {
           setIsCancelling(true);
           try {
-            // Log before calling IPC
             console.log(
               `[TranslationProgressArea] Calling window.electron.cancelOperation for ID: ${translationOperationId}`
             );
             const result = await window.electron.cancelOperation(
               translationOperationId
             );
-            // Log IPC result
             console.log(
               `[TranslationProgressArea] IPC cancelOperation result for ${translationOperationId}:`,
               result
@@ -212,19 +210,11 @@ export default function TranslationProgressArea({
           {isCancelling ? '...' : '×'}
         </button>
       </div>
-      {/* Translation Progress */}
       {(translationProgress > 0 || translationStage) && (
         <div className={progressBlockStyles}>
           <div className={progressLabelStyles}>
             <span>
               <strong>Progress:</strong> {translationStage || 'Initializing...'}
-              {/* Remove the (current/total) display */}
-              {/* {subtitleProgress?.current && subtitleProgress?.total ? (
-                <span>
-                  {' '}
-                  ({subtitleProgress.current}/{subtitleProgress.total})
-                </span>
-              ) : null} */}
             </span>
             <span>{translationProgress.toFixed(1)}%</span>
           </div>

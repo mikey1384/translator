@@ -33,9 +33,6 @@ export class FileManager {
     return this.tempDir;
   }
 
-  /**
-   * Ensure the temporary directory exists
-   */
   async ensureTempDir(): Promise<void> {
     try {
       await fs.mkdir(this.tempDir, { recursive: true });
@@ -46,9 +43,6 @@ export class FileManager {
     }
   }
 
-  /**
-   * Clean up the temporary directory
-   */
   async cleanup(): Promise<void> {
     try {
       log.info(`[FileManager] Attempting to delete directory: ${this.tempDir}`);
