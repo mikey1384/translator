@@ -611,7 +611,6 @@ export default function NativeVideoPlayer({
     return { width, fontSize };
   }, [isExpanded, isFullyExpanded]);
 
-  // Style for the video error message
   const videoErrorStyles = css`
     position: absolute;
     top: 50%;
