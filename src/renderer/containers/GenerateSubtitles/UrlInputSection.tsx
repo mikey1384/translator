@@ -73,7 +73,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
       <input
         type="url"
         className={urlInputStyles}
-        placeholder="Enter YouTube or direct video URL"
+        placeholder="Enter video URL"
         value={urlInput}
         onChange={e => {
           setUrlInput(e.target.value);

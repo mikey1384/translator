@@ -329,7 +329,7 @@ export function TimestampDisplay({
               >
                 <input
                   type="url"
-                  placeholder="Enter Video URL..."
+                  placeholder="Enter URL..."
                   value={urlInputValue}
                   onChange={e => setUrlInputValue(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleLoadUrlClick()}
