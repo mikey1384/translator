@@ -32,6 +32,7 @@ import {
   AssStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
+import FileInputButton from '../FileInputButton.js';
 
 // Adjusted type for file change events from Button
 type FileChangeEvent =
@@ -42,9 +43,9 @@ export interface EditSubtitlesProps {
   videoFile: File | null;
   videoUrl: string | null;
   videoFilePath?: string | null;
-  onSetVideoFile: (file: File | null) => void;
   isPlaying?: boolean;
   editingTimes?: { start: number; end: number } | null;
+  onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
   onSetIsPlaying?: (isPlaying: boolean) => void;
   secondsToSrtTime?: (seconds: number) => string;
   parseSrt?: (srtString: string) => SrtSegment[];
@@ -70,12 +71,12 @@ export interface EditSubtitlesProps {
 export function EditSubtitles({
   videoFile,
   videoFilePath,
-  onSetVideoFile,
   isPlaying: isPlayingProp,
   secondsToSrtTime: secondsToSrtTimeProp,
   subtitles: subtitlesProp,
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
+  onSetVideoFile,
   setMergeProgress,
   setMergeStage,
   setIsMergingInProgress,
@@ -352,6 +353,45 @@ export function EditSubtitles({
   // const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs, notifyFileLoaded } =
   //   useSubtitleSaving(subtitlesProp, setSaveError /* pass setSaveError */);
 
+  // --- NEW: Electron File Dialog Handler ---
+  const handleSelectVideoClick = async () => {
+    setSaveError(''); // Clear previous errors
+    if (!window.electron) {
+      setSaveError('Electron API not available.');
+      return;
+    }
+    try {
+      const result = await window.electron.openFile({
+        properties: ['openFile'],
+        filters: [
+          { name: 'Videos', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm'] },
+        ],
+      });
+
+      if (!result.canceled && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video'; // Extract filename
+        // Call the onSetVideoFile prop passed from App.tsx
+        if (onSetVideoFile) {
+          onSetVideoFile({ path: filePath, name: fileName });
+        } else {
+          console.error('onSetVideoFile prop is missing in EditSubtitles');
+          setSaveError('Internal configuration error: Cannot set video file.');
+        }
+      } else {
+        // Handle cancellation or no file selected (optional)
+        console.log('File selection cancelled or no file chosen.');
+      }
+    } catch (err: any) {
+      console.error('Error opening file dialog:', err);
+      setSaveError(`Error selecting file: ${err.message || err}`);
+      if (onSetVideoFile) {
+        onSetVideoFile(null); // Clear video on error
+      }
+    }
+  };
+  // --- END: Electron File Dialog Handler ---
+
   return (
     <Section title="Edit Subtitles" overflowVisible>
       {/* Error display - Use saveError prop now */}
@@ -385,32 +425,9 @@ export function EditSubtitles({
                 gap: '8px',
               }}
             >
-              <Button
-                // style={{ width: '10rem' }} // Remove fixed width
-                asFileInput
-                accept="video/*"
-                onFileChange={handleVideoFileChangeLocal}
-                variant="secondary" // Change variant back to secondary
-                size="lg" // Increase size
-              >
-                {/* Add Upload Icon */}
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ marginRight: '8px' }}
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                Choose Video
-              </Button>
+              <FileInputButton onClick={handleSelectVideoClick}>
+                Select Video File
+              </FileInputButton>
             </div>
           )}
 
@@ -541,28 +558,6 @@ export function EditSubtitles({
       {/* --- Restore Original Fixed Action Bar --- END --- */}
     </Section>
   );
-
-  // --- Helper Functions ---
-
-  function handleVideoFileChangeLocal(event: FileChangeEvent) {
-    let file: File | null = null;
-    if (
-      'target' in event &&
-      event.target &&
-      'files' in event.target &&
-      event.target.files instanceof FileList &&
-      event.target.files.length > 0
-    ) {
-      file = event.target.files[0];
-    }
-
-    if (file) {
-      onSetVideoFile(file);
-      // No need to set URL here, App.tsx handles it
-    } else {
-      console.log('No video file selected or selection cancelled.');
-    }
-  }
 
   async function handleLoadSrtLocal() {
     setSaveError(''); // Clear save error on new load attempt

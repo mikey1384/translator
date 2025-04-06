@@ -1,6 +1,6 @@
 import React, { useRef, ChangeEvent, ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
-import { colors, breakpoints } from '../styles';
+import { colors, breakpoints } from '../styles.js';
 // import LoadingSpinner from './LoadingSpinner'; // Comment out for now
 
 // Define the button variants and sizes
@@ -212,42 +212,8 @@ const Button: React.FC<ButtonProps> = ({
   const handleButtonClick = async (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
-    // Prevent default button behavior ONLY if it's NOT acting as a file input trigger
-    // if (asFileInput) {
-    //    event.preventDefault(); // REMOVE THIS
-    // }
-
     if (isLoading || disabled) return;
-
-    const electron = window.electron as any; // Cast to bypass type error
-
-    // Handle Electron directory selection
-    if (
-      asFileInput &&
-      (directory || webkitdirectory) &&
-      electron?.showOpenDialog &&
-      onFileChange
-    ) {
-      try {
-        const result = await electron.showOpenDialog({
-          properties: ['openDirectory'],
-        });
-        if (!result.canceled && result.filePaths.length > 0) {
-          // Create a simplified object for directory path
-          const directoryPaths = result.filePaths.map((path: string) => ({
-            name: path,
-            path: path,
-          }));
-          onFileChange({
-            target: {
-              files: directoryPaths,
-            },
-          });
-        }
-      } catch (error) {
-        console.error('Error opening directory dialog:', error);
-      }
-    } else if (asFileInput && inputRef.current) {
+    if (asFileInput && inputRef.current) {
       // Trigger regular file input click
       inputRef.current.click();
     } else if (onClick) {

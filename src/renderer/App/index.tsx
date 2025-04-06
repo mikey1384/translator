@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { ChangeEvent } from 'react';
 
 import BackToTopButton from '../components/BackToTopButton.js';
 import SettingsPage from '../containers/SettingsPage.js';
@@ -70,13 +71,11 @@ const mainContentStyles = css`
   flex-grow: 1;
   position: relative;
 `;
-// --- End Restore Local Style Definitions ---
 
 function AppContent() {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const { apiKeyStatus, isLoadingKeyStatus, fetchKeyStatus } =
     useApiKeyStatus();
-
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [isMergingInProgress, setIsMergingInProgress] =
@@ -84,262 +83,80 @@ function AppContent() {
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
   const [mergeOperationId, setMergeOperationId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string>('');
+  const [videoFilePath, setVideoFilePath] = useState<string | null>(null);
+
+  const [isFindBarVisible, setIsFindBarVisible] = useState(false);
+  const [findResults, setFindResults] = useState<FindResults>({
+    matches: 0,
+    activeMatchOrdinal: 0,
+  });
+
+  const [isUrlLoading, setIsUrlLoading] = useState(false);
+  const [urlLoadProgressPercent, setUrlLoadProgressPercent] = useState(0);
+  const [urlLoadProgressStage, setUrlLoadProgressStage] = useState('');
 
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
-
-  // --- State for the original loaded SRT file path ---
   const [originalSrtFilePath, setOriginalSrtFilePath] = useState<string | null>(
     null
   );
-
   const {
     subtitleSegments,
-    handleSetSubtitleSegments, // This is the setter for the hook's state
+    handleSetSubtitleSegments,
     isTranslationInProgress,
     translationProgress,
     translationStage,
     setIsTranslationInProgress,
     isReceivingPartialResults,
     reviewedBatchStartIndex,
-    handleSubtitlesGenerated, // Use the handler from the hook
-    resetSubtitleSource, // Get the reset function
+    resetSubtitleSource,
     translationOperationId,
-  } = useSubtitleManagement(showOriginalText); // Pass showOriginalText
+  } = useSubtitleManagement(showOriginalText);
 
-  // State for save error (still needed for display, set by the hook via prop)
-  const [saveError, setSaveError] = useState<string>('');
-  const [videoFilePath, setVideoFilePath] = useState<string | null>(null); // <-- Add state for file path
-
-  // --- Find Bar State ---
-  const [isFindBarVisible, setIsFindBarVisible] = useState(false);
-  const [findResults, setFindResults] = useState<FindResults>({
-    matches: 0,
-    activeMatchOrdinal: 0,
-  });
-  // --- End Find Bar State ---
-
-  // --- State for URL Loading Progress --- START ---
-  const [isUrlLoading, setIsUrlLoading] = useState(false);
-  const [urlLoadProgressPercent, setUrlLoadProgressPercent] = useState(0);
-  const [urlLoadProgressStage, setUrlLoadProgressStage] = useState('');
-  // --- State for URL Loading Progress --- END ---
-
-  // Callback for when Save As completes
-  const handleSaveAsComplete = useCallback((newFilePath: string) => {
-    console.log(
-      '[AppContent] Save As complete, setting original path to:',
-      newFilePath
-    );
-    setOriginalSrtFilePath(newFilePath); // Update path after successful Save As
-  }, []);
-
-  // Simplified Subtitle Saving Hook Call
-  const {
-    canSaveDirectly, // This is now derived from originalSrtFilePath passed in
-    handleSaveSrt,
-    handleSaveEditedSrtAs,
-  } = useSubtitleSaving({
-    subtitles: subtitleSegments,
-    originalSrtFilePath: originalSrtFilePath, // Pass the state here
-    setSaveError: setSaveError, // Pass the setter for error display
-    onSaveAsComplete: handleSaveAsComplete, // Pass the callback
-  });
+  const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs } =
+    useSubtitleSaving({
+      subtitles: subtitleSegments,
+      originalSrtFilePath: originalSrtFilePath,
+      setSaveError: setSaveError,
+      onSaveAsComplete: handleSaveAsComplete,
+    });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
-
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
-
   const editSubtitlesMethodsRef = useRef<{
     scrollToCurrentSubtitle: () => void;
   }>({
     scrollToCurrentSubtitle: () => {},
   });
 
-  // --- UPDATED: handleSetVideoFile to store path --- START ---
-  const handleSetVideoFile = useCallback(
-    (
-      fileData:
-        | File
-        | { name: string; path: string /* size?: number; type?: string */ }
-        | null
-    ) => {
-      resetSubtitleSource(); // Reset subtitles first
+  useEffect(() => {
+    if (!window.electron?.onProcessUrlProgress) return;
 
-      // Clear previous blob URL if exists
-      if (videoUrl && videoUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(videoUrl);
-      }
+    console.log('[App] Setting up URL progress listener.');
 
-      if (!fileData) {
-        // If null, clear everything
-        setVideoFile(null);
-        setVideoUrl('');
-        setVideoFilePath(null);
-        setIsPlaying(false);
-        handleSetSubtitleSegments([]);
-        return;
-      }
+    const cleanup = window.electron.onProcessUrlProgress(progress => {
+      if (isUrlLoading) {
+        console.log('[App] URL Progress Update:', progress);
+        setUrlLoadProgressPercent(progress.percent ?? urlLoadProgressPercent);
+        setUrlLoadProgressStage(progress.stage ?? urlLoadProgressStage);
 
-      // --- REORDERED CHECKS --- START ---
-      // 1. Check specifically for the structure coming from the Electron dialog FIRST
-      if (
-        typeof fileData === 'object' &&
-        fileData !== null &&
-        !(fileData instanceof File) &&
-        'path' in fileData &&
-        fileData.path
-      ) {
-        console.log(
-          '[App.tsx handleSetVideoFile] Branch: Detected object with path (priority check).'
-        );
-        const minimalFileObject = new File([], fileData.name, {
-          type: 'video/*',
-        });
-        (minimalFileObject as any).path = fileData.path;
-        setVideoFile(minimalFileObject as File);
-        setVideoFilePath(fileData.path); // << Set the path
-        const encodedPath = encodeURI(fileData.path.replace(/\\/g, '/'));
-        setVideoUrl(`file://${encodedPath}`);
-        console.log(
-          '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
-          fileData.path
-        );
-      }
-      // 2. Check for Blob URL object (from URL downloads)
-      else if (
-        typeof fileData === 'object' &&
-        fileData !== null &&
-        (fileData as any)._blobUrl
-      ) {
-        console.log('[App.tsx handleSetVideoFile] Branch: Detected _blobUrl.');
-        const blobFileData = fileData as any;
-        setVideoFile(blobFileData as File);
-        setVideoUrl(blobFileData._blobUrl);
-        setVideoFilePath(blobFileData._originalPath || null); // Use original download path if available
-        console.log(
-          '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
-          blobFileData._originalPath || null
-        );
-      }
-      // 3. Check for standard File object (e.g., drag-and-drop)
-      else if (fileData instanceof File) {
-        console.log(
-          '[App.tsx handleSetVideoFile] Branch: Detected instanceof File.'
-        );
-        setVideoFile(fileData);
-        setVideoFilePath(null); // No reliable path available
-        console.log(
-          '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (instanceof File)'
-        );
-        const blobUrl = URL.createObjectURL(fileData);
-        setVideoUrl(blobUrl);
-      }
-      // 4. Fallback
-      else {
-        console.warn(
-          '[App.tsx handleSetVideoFile] Branch: Fallback/unexpected case.',
-          fileData
-        );
-        setVideoFile(null);
-        setVideoUrl('');
-        setVideoFilePath(null);
-        console.log(
-          '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (Fallback)'
-        );
-      }
-      // --- REORDERED CHECKS --- END ---
-
-      // Common state updates
-      setIsPlaying(false);
-      handleSetSubtitleSegments([]);
-    },
-    [videoUrl, resetSubtitleSource, handleSetSubtitleSegments] // Dependencies
-  );
-  // --- UPDATED: handleSetVideoFile to store path --- END ---
-
-  // --- Function to handle loading video from URL --- START ---
-  const handleLoadFromUrl = useCallback(
-    async (url: string, quality: VideoQuality) => {
-      if (!url || !window.electron) {
-        console.error('Invalid URL or Electron API not available.');
-        // TODO: Show error to user
-        return;
-      }
-
-      console.log(
-        `[App] handleLoadFromUrl called with URL: ${url}, Quality: ${quality}`
-      );
-      // Reset relevant states
-      setIsMergingInProgress(false); // Ensure merge progress is hidden
-      setIsTranslationInProgress(false); // Ensure translation progress is hidden
-      setMergeProgress(0);
-      setMergeStage('');
-      setMergeOperationId(null);
-      setSaveError('');
-      // Reset URL loading state
-      setIsUrlLoading(true);
-      setUrlLoadProgressPercent(0);
-      setUrlLoadProgressStage('Initializing...');
-
-      // Trigger the URL processing logic (similar to GenerateSubtitles)
-      // We can potentially extract this logic into a shared hook/util later
-      // For now, call the IPC directly
-      try {
-        const result = await window.electron.processUrl({
-          url: url,
-          quality: quality,
-        });
-
-        console.log(
-          '[App] Received result from window.electron.processUrl:',
-          JSON.stringify(result)
-        );
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        if (result.filePath && result.filename) {
-          // Read the content and create a Blob URL / File object
-          const fileContentResult = await window.electron.readFileContent(
-            result.filePath
-          );
-          if (!fileContentResult.success || !fileContentResult.data) {
-            throw new Error(
-              fileContentResult.error ||
-                'Failed to read downloaded video content.'
-            );
+        if (progress.percent >= 100 || progress.error) {
+          setIsUrlLoading(false);
+          if (progress.error) {
+            setSaveError(`Error during processing: ${progress.error}`);
           }
-          const blob = new Blob([fileContentResult.data], {
-            type: 'video/mp4',
-          });
-          const blobUrl = URL.createObjectURL(blob);
-          const videoFileObj = new File([blob], result.filename, {
-            type: 'video/mp4',
-          });
-          (videoFileObj as any)._blobUrl = blobUrl;
-          (videoFileObj as any)._originalPath = result.filePath;
-
-          // Call handleSetVideoFile with the new object
-          handleSetVideoFile(videoFileObj as any);
-        } else {
-          throw new Error(
-            'URL processing did not return necessary video info.'
-          );
         }
-      } catch (err: any) {
-        console.error('[App] Error processing URL from sticky player:', err);
-        setSaveError(`Error loading URL: ${err.message || err}`);
-        setIsUrlLoading(false); // Stop loading on error
       }
-    },
-    [handleSetVideoFile] // Dependency
-  );
-  // --- Function to handle loading video from URL --- END ---
+    });
 
-  // --- Effect for URL Loading Progress Listener --- START ---
+    return () => {
+      console.log('[App] Cleaning up URL progress listener.');
+      cleanup();
+    };
+  }, [isUrlLoading, urlLoadProgressPercent, urlLoadProgressStage]);
+
   useEffect(() => {
     if (!window.electron?.onProcessUrlProgress) return;
 
@@ -373,100 +190,16 @@ function AppContent() {
     };
     // Re-run if isUrlLoading changes (to attach/detach listener)
     // Include dependent state setters to satisfy exhaustive-deps
-  }, [isUrlLoading, urlLoadProgressPercent, urlLoadProgressStage]);
-  // --- Effect for URL Loading Progress Listener --- END ---
+  }, [
+    isUrlLoading,
+    urlLoadProgressPercent,
+    urlLoadProgressStage,
+    setSaveError,
+    setUrlLoadProgressPercent,
+    setUrlLoadProgressStage,
+  ]); // Added dependencies for exhaustive-deps
 
-  const handleSetIsPlaying = useCallback((playing: boolean) => {
-    setIsPlaying(playing);
-  }, []);
-
-  const handleSetMergeProgress = useCallback(
-    (progress: number | ((prevState: number) => number)) => {
-      setMergeProgress(progress);
-    },
-    []
-  );
-
-  const handleSetMergeStage = useCallback(
-    (stage: string | ((prevState: string) => string)) => {
-      setMergeStage(stage);
-    },
-    []
-  );
-
-  const handleSetIsMergingInProgress = useCallback(
-    (inProgress: boolean | ((prevState: boolean) => boolean)) => {
-      setIsMergingInProgress(inProgress);
-    },
-    []
-  );
-
-  const handleScrollToCurrentSubtitle = () => {
-    if (editSubtitlesMethodsRef.current) {
-      editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
-    }
-  };
-
-  const handleTogglePlay = useCallback(async () => {
-    try {
-      if (nativePlayer.instance) {
-        if (nativePlayer.isPlaying()) {
-          nativePlayer.pause();
-          setIsPlaying(false);
-        } else {
-          await nativePlayer.play();
-          setIsPlaying(true);
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling play/pause:', error);
-    }
-  }, []); // No dependencies needed if only using nativePlayer and setIsPlaying
-
-  const handleShiftAllSubtitles = useCallback(
-    (offsetSeconds: number) => {
-      // Use the setter from the hook
-      handleSetSubtitleSegments((currentSegments: SrtSegment[]) =>
-        currentSegments.map((segment: SrtSegment) => ({
-          ...segment,
-          start: Math.max(0, segment.start + offsetSeconds),
-          end: Math.max(0.01, segment.end + offsetSeconds), // Ensure end is slightly after start if start becomes 0
-        }))
-      );
-    },
-    [handleSetSubtitleSegments]
-  );
-
-  const handleToggleSettings = (show: boolean) => {
-    setShowSettings(show);
-    if (!show) {
-      fetchKeyStatus();
-    }
-  };
-
-  // Wrapper for subtitle generation completion
-  const handleGeneratedSubtitlesWrapper = useCallback(
-    (generatedSrt: string) => {
-      handleSubtitlesGenerated(generatedSrt); // Call the original handler
-      setOriginalSrtFilePath(null); // Explicitly clear save path after generation
-      console.log(
-        '[AppContent] Subtitles generated, originalSrtFilePath set to null.'
-      );
-    },
-    [handleSubtitlesGenerated]
-  ); // Removed clearSaveState dependency
-
-  // --- New Callback for SRT File Loading ---
-  const handleSrtFileLoaded = useCallback((filePath: string) => {
-    console.log(
-      '[AppContent] SRT file loaded, setting original path:',
-      filePath
-    );
-    setOriginalSrtFilePath(filePath);
-    setSaveError(''); // Clear any previous save errors on successful load
-  }, []);
-
-  // --- Find Bar Listeners ---
+  // Find Bar Listeners
   useEffect(() => {
     console.log('[AppContent] Find Bar useEffect running.');
     if (!window.electron) {
@@ -489,7 +222,6 @@ function AppContent() {
       return;
     }
 
-    console.log('[AppContent] Attempting to set up find listeners...');
     const cleanupShowListener = window.electron.onShowFindBar(() => {
       console.log('[AppContent] Show find bar triggered');
       setIsFindBarVisible(true);
@@ -509,28 +241,7 @@ function AppContent() {
       cleanupShowListener();
       cleanupResultsListener();
     };
-  }, []); // Runs once on mount
-  // --- End Find Bar Listeners ---
-
-  const handleCloseFindBar = useCallback(() => {
-    setIsFindBarVisible(false);
-    window.electron?.sendStopFind();
-  }, []);
-
-  // Callback from Header to navigate back from Settings
-  const handleBackFromSettings = () => {
-    setShowSettings(false);
-    // Optionally refetch key status when returning from settings
-    fetchKeyStatus();
-  };
-
-  // Function to handle video player readiness
-  function handleVideoPlayerReady(player: any) {
-    setVideoPlayerRef(player);
-    if (player) {
-      setIsPlaying(!player.paused); // Update isPlaying based on initial player state
-    }
-  }
+  }, [setIsFindBarVisible, setFindResults]); // Added dependencies for exhaustive-deps
 
   return (
     <div className={pageWrapperStyles}>
@@ -589,7 +300,6 @@ function AppContent() {
                 videoFile={videoFile}
                 videoFilePath={videoFilePath}
                 onSetVideoFile={handleSetVideoFile}
-                onSubtitlesGenerated={handleGeneratedSubtitlesWrapper}
                 showOriginalText={showOriginalText}
                 onShowOriginalTextChange={setShowOriginalText}
                 apiKeyStatus={apiKeyStatus}
@@ -602,18 +312,18 @@ function AppContent() {
                 <EditSubtitles
                   videoFile={videoFile}
                   videoUrl={videoUrl}
-                  videoFilePath={videoFilePath} // << Pass the path down
+                  videoFilePath={videoFilePath}
                   isPlaying={isPlaying}
                   onSetVideoFile={handleSetVideoFile}
-                  onSetIsPlaying={handleSetIsPlaying}
+                  onSetIsPlaying={setIsPlaying}
                   secondsToSrtTime={secondsToSrtTime}
                   parseSrt={parseSrt}
                   subtitles={subtitleSegments}
                   videoPlayerRef={videoPlayerRef}
                   isMergingInProgress={isMergingInProgress}
-                  setMergeProgress={handleSetMergeProgress}
-                  setMergeStage={handleSetMergeStage}
-                  setIsMergingInProgress={handleSetIsMergingInProgress}
+                  setMergeProgress={setMergeProgress}
+                  setMergeStage={setMergeStage}
+                  setIsMergingInProgress={setIsMergingInProgress}
                   editorRef={editSubtitlesMethodsRef}
                   onSetMergeOperationId={setMergeOperationId}
                   onSetSubtitlesDirectly={handleSetSubtitleSegments}
@@ -661,6 +371,230 @@ function AppContent() {
       </div>
     </div>
   );
+
+  function handleBackFromSettings() {
+    setShowSettings(false);
+    fetchKeyStatus();
+  }
+
+  function handleCloseFindBar() {
+    setIsFindBarVisible(false);
+    window.electron?.sendStopFind();
+  }
+
+  function handleScrollToCurrentSubtitle() {
+    if (editSubtitlesMethodsRef.current) {
+      editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
+    }
+  }
+
+  function handleShiftAllSubtitles(offsetSeconds: number) {
+    handleSetSubtitleSegments((currentSegments: SrtSegment[]) =>
+      currentSegments.map((segment: SrtSegment) => ({
+        ...segment,
+        start: Math.max(0, segment.start + offsetSeconds),
+        end: Math.max(0.01, segment.end + offsetSeconds),
+      }))
+    );
+  }
+
+  function handleSrtFileLoaded(filePath: string) {
+    console.log(
+      '[AppContent] SRT file loaded, setting original path:',
+      filePath
+    );
+    setOriginalSrtFilePath(filePath);
+    setSaveError('');
+  }
+
+  function handleToggleSettings(show: boolean) {
+    setShowSettings(show);
+    if (!show) {
+      fetchKeyStatus();
+    }
+  }
+
+  function handleVideoPlayerReady(player: any) {
+    setVideoPlayerRef(player);
+    if (player) {
+      setIsPlaying(!player.paused);
+    }
+  }
+
+  function handleSaveAsComplete(newFilePath: string) {
+    console.log(
+      '[AppContent] Save As complete, setting original path to:',
+      newFilePath
+    );
+    setOriginalSrtFilePath(newFilePath); // Update path after successful Save As
+  }
+
+  function handleSetVideoFile(
+    fileData: File | { name: string; path: string } | null
+  ) {
+    console.log(fileData);
+    resetSubtitleSource();
+
+    if (videoUrl && videoUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(videoUrl);
+    }
+
+    if (!fileData) {
+      setVideoFile(null);
+      setVideoUrl('');
+      setVideoFilePath(null);
+      setIsPlaying(false);
+      handleSetSubtitleSegments([]);
+      return;
+    }
+
+    if (
+      typeof fileData === 'object' &&
+      fileData !== null &&
+      !(fileData instanceof File) &&
+      'path' in fileData &&
+      fileData.path
+    ) {
+      console.log(
+        '[App.tsx handleSetVideoFile] Branch: Detected object with path (priority check).'
+      );
+      const minimalFileObject = new File([], fileData.name, {
+        type: 'video/*',
+      });
+      (minimalFileObject as any).path = fileData.path;
+      setVideoFile(minimalFileObject as File);
+      console.log(fileData);
+      setVideoFilePath(fileData.path);
+      const encodedPath = encodeURI(fileData.path.replace(/\\/g, '/'));
+      setVideoUrl(`file://${encodedPath}`);
+      console.log(
+        '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
+        fileData.path
+      );
+    } else if (
+      typeof fileData === 'object' &&
+      fileData !== null &&
+      (fileData as any)._blobUrl
+    ) {
+      console.log('[App.tsx handleSetVideoFile] Branch: Detected _blobUrl.');
+      const blobFileData = fileData as any;
+      setVideoFile(blobFileData as File);
+      setVideoUrl(blobFileData._blobUrl);
+      setVideoFilePath(blobFileData._originalPath || null);
+      console.log(
+        '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
+        blobFileData._originalPath || null
+      );
+    } else if (fileData instanceof File) {
+      console.log(
+        '[App.tsx handleSetVideoFile] Branch: Detected instanceof File.'
+      );
+      setVideoFile(fileData);
+      setVideoFilePath(fileData.path);
+      console.log(
+        '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (instanceof File)'
+      );
+      const blobUrl = URL.createObjectURL(fileData);
+      setVideoUrl(blobUrl);
+    } else {
+      console.warn(
+        '[App.tsx handleSetVideoFile] Branch: Fallback/unexpected case.',
+        fileData
+      );
+      setVideoFile(null);
+      setVideoUrl('');
+      setVideoFilePath(null);
+      console.log(
+        '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (Fallback)'
+      );
+    }
+    setIsPlaying(false);
+    handleSetSubtitleSegments([]);
+  }
+
+  async function handleTogglePlay() {
+    try {
+      if (nativePlayer.instance) {
+        if (nativePlayer.isPlaying()) {
+          nativePlayer.pause();
+          setIsPlaying(false);
+        } else {
+          await nativePlayer.play();
+          setIsPlaying(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling play/pause:', error);
+    }
+  }
+
+  async function handleLoadFromUrl(url: string, quality: VideoQuality) {
+    if (!url || !window.electron) {
+      console.error('Invalid URL or Electron API not available.');
+      return;
+    }
+
+    console.log(
+      `[App] handleLoadFromUrl called with URL: ${url}, Quality: ${quality}`
+    );
+    // Reset relevant states
+    setIsMergingInProgress(false); // Ensure merge progress is hidden
+    setIsTranslationInProgress(false); // Ensure translation progress is hidden
+    setMergeProgress(0);
+    setMergeStage('');
+    setMergeOperationId(null);
+    setSaveError('');
+    setIsUrlLoading(true);
+    setUrlLoadProgressPercent(0);
+    setUrlLoadProgressStage('Initializing...');
+
+    try {
+      const result = await window.electron.processUrl({
+        url: url,
+        quality: quality,
+      });
+
+      console.log(
+        '[App] Received result from window.electron.processUrl:',
+        JSON.stringify(result)
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      if (result.filePath && result.filename) {
+        // Read the content and create a Blob URL / File object
+        const fileContentResult = await window.electron.readFileContent(
+          result.filePath
+        );
+        if (!fileContentResult.success || !fileContentResult.data) {
+          throw new Error(
+            fileContentResult.error ||
+              'Failed to read downloaded video content.'
+          );
+        }
+        const blob = new Blob([fileContentResult.data], {
+          type: 'video/mp4',
+        });
+        const blobUrl = URL.createObjectURL(blob);
+        const videoFileObj = new File([blob], result.filename, {
+          type: 'video/mp4',
+        });
+        (videoFileObj as any)._blobUrl = blobUrl;
+        (videoFileObj as any)._originalPath = result.filePath;
+
+        // Call handleSetVideoFile with the new object
+        handleSetVideoFile(videoFileObj as any);
+      } else {
+        throw new Error('URL processing did not return necessary video info.');
+      }
+    } catch (err: any) {
+      console.error('[App] Error processing URL from sticky player:', err);
+      setSaveError(`Error loading URL: ${err.message || err}`);
+      setIsUrlLoading(false); // Stop loading on error
+    }
+  }
 }
 
 export default function App() {

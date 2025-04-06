@@ -5,7 +5,7 @@ import { colors } from '../../styles.js';
 import { VideoQuality } from '../../../services/url-processor.js';
 import { errorMessageStyles } from '../../styles.js';
 import ApiKeyLock from './ApiKeyLock.js';
-import FileInputSection from './FileInputSection.js';
+import FileInputButton from '../FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
 import LanguageSelection from './LanguageSelection.js';
@@ -38,7 +38,7 @@ export default function GenerateSubtitles({
 }: {
   videoFile: File | null;
   videoFilePath?: string | null;
-  onSetVideoFile: (file: File | any | null) => void;
+  onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
   apiKeyStatus: ApiKeyStatus;
@@ -65,8 +65,40 @@ export default function GenerateSubtitles({
     setError('');
   }, [inputMode]);
 
+  // --- NEW: Electron File Dialog Handler ---
+  const handleSelectVideoClick = async () => {
+    setError(''); // Clear previous errors
+    if (!window.electron) {
+      setError('Electron API not available.');
+      return;
+    }
+    try {
+      const result = await window.electron.openFile({
+        properties: ['openFile'],
+        filters: [
+          { name: 'Videos', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm'] },
+        ],
+      });
+
+      if (!result.canceled && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video'; // Extract filename
+        // Call the existing onSetVideoFile from App.tsx
+        onSetVideoFile({ path: filePath, name: fileName });
+      } else {
+        // Handle cancellation or no file selected (optional)
+        console.log('File selection cancelled or no file chosen.');
+      }
+    } catch (err: any) {
+      console.error('Error opening file dialog:', err);
+      setError(`Error selecting file: ${err.message || err}`);
+      onSetVideoFile(null); // Clear video on error
+    }
+  };
+  // --- END: Electron File Dialog Handler ---
+
   return (
-    <Section title="1. Select Video Source">
+    <Section title="Generate Subtitles">
       <ApiKeyLock
         apiKeyStatus={apiKeyStatus}
         isLoadingKeyStatus={isLoadingKeyStatus}
@@ -97,10 +129,21 @@ export default function GenerateSubtitles({
 
             {inputMode === 'file' && (
               <div className={inputSectionStyles}>
-                <FileInputSection
-                  videoFile={videoFile}
-                  handleFileSelectClick={handleFileSelectClick}
-                />
+                <label
+                  style={{
+                    marginRight: '12px',
+                    lineHeight: '32px',
+                    display: 'inline-block',
+                    minWidth: '220px',
+                  }}
+                >
+                  1. Select Video File:{' '}
+                </label>
+                <FileInputButton onClick={handleSelectVideoClick}>
+                  {videoFile
+                    ? `Selected: ${videoFile.name}`
+                    : 'Select Video File'}
+                </FileInputButton>
               </div>
             )}
 
@@ -277,42 +320,6 @@ export default function GenerateSubtitles({
         opts.videoFile = videoFile;
       }
       return opts;
-    }
-  }
-
-  // ---------------------- File & Subtitles Save ----------------------
-
-  async function handleFileSelectClick() {
-    setError('');
-    if (!window.electron?.openFile) {
-      setError('Error: openFile API not available.');
-      return;
-    }
-    try {
-      const result = await window.electron.openFile({
-        filters: [
-          {
-            name: 'Video Files',
-            extensions: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
-          },
-        ],
-        title: 'Select Video File',
-      });
-      if (result.canceled || !result.filePaths?.length) return;
-
-      const filePath = result.filePaths[0];
-      const fileData = {
-        name: filePath.split(/[\\/]/).pop() || 'video.mp4',
-        path: filePath,
-        size: 0,
-        type: '',
-      };
-      onSetVideoFile(fileData as any);
-      setUrlInput('');
-      setInputMode('file');
-    } catch (error: any) {
-      console.error('Error opening file:', error);
-      setError(`Error selecting file: ${error.message || error}`);
     }
   }
 

@@ -170,6 +170,13 @@ export interface GenerateSubtitlesOptions {
   multiple?: boolean;
 }
 
+export interface FileData {
+  name: string;
+  path: string;
+  size: number;
+  type: string;
+}
+
 export interface GenerateSubtitlesResult {
   subtitles: string;
   segments?: SrtSegment[]; // Structured subtitle data
