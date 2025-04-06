@@ -287,7 +287,6 @@ function AppContent() {
                 isLoadingKeyStatus={isLoadingKeyStatus}
                 onNavigateToSettings={handleToggleSettings}
                 onSelectVideoClick={handleSelectVideoClick}
-                subtitleSegments={subtitleSegments}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">

@@ -11,8 +11,6 @@ import InputModeToggle from './InputModeToggle.js';
 import LanguageSelection from './LanguageSelection.js';
 import ProgressDisplay from './ProgressDisplay.js';
 import GenerateControls from './GenerateControls.js';
-import { buildSrt } from '../../../shared/helpers/index.js';
-import { SrtSegment } from '../../../types/interface.js';
 type ApiKeyStatus = {
   openai: boolean;
   anthropic: boolean;
@@ -35,7 +33,6 @@ export default function GenerateSubtitles({
   isLoadingKeyStatus,
   onNavigateToSettings,
   onSelectVideoClick,
-  subtitleSegments,
 }: {
   videoFile: File | null;
   videoFilePath?: string | null;
@@ -46,7 +43,6 @@ export default function GenerateSubtitles({
   isLoadingKeyStatus: boolean;
   onNavigateToSettings: (show: boolean) => void;
   onSelectVideoClick: () => void;
-  subtitleSegments: SrtSegment[];
 }) {
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -152,8 +148,6 @@ export default function GenerateSubtitles({
                   isGenerating={isGenerating}
                   isProcessingUrl={isProcessingUrl}
                   handleGenerateSubtitles={onGenerateSubtitles}
-                  subtitleSegments={subtitleSegments}
-                  handleSaveSubtitles={handleSaveSubtitles}
                 />
               </Section>
             )}
@@ -287,25 +281,6 @@ export default function GenerateSubtitles({
         opts.videoFile = videoFile;
       }
       return opts;
-    }
-  }
-
-  async function handleSaveSubtitles() {
-    if (!subtitleSegments?.length || !window.electron) {
-      setError('No subtitles to save');
-      return;
-    }
-    try {
-      const srtContent = buildSrt(subtitleSegments);
-      const result = await window.electron.saveFile({
-        content: srtContent,
-        defaultPath: `subtitles_${Date.now()}.srt`,
-        filters: [{ name: 'Subtitle File', extensions: ['srt'] }],
-      });
-      if (result.error) throw new Error(result.error);
-      window.electron.showMessage(`Subtitles saved: ${result.filePath}`);
-    } catch (err: any) {
-      setError(`Error saving subtitles: ${err.message || err}`);
     }
   }
 
