@@ -1,4 +1,3 @@
-import React from 'react';
 import { colors } from '../../styles.js';
 import Button from '../../components/Button.js';
 
@@ -11,14 +10,14 @@ interface ProgressDisplayProps {
   handleSaveOriginalVideo: () => void;
 }
 
-const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
+export default function ProgressDisplay({
   isProcessingUrl,
   progressPercent,
   progressStage,
   downloadComplete,
   downloadedVideoPath,
   handleSaveOriginalVideo,
-}) => {
+}: ProgressDisplayProps) {
   if (isProcessingUrl && progressPercent > 0 && !downloadComplete) {
     return (
       <div
@@ -76,6 +75,4 @@ const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
   }
 
   return null;
-};
-
-export default ProgressDisplay;
+}
