@@ -103,7 +103,13 @@ export default function LanguageSelection({
         background-color: ${colors.light};
       `}
     >
-      <label>2. Output Language: </label>
+      <label
+        className={css`
+          margin-right: 12px;
+        `}
+      >
+        2. Output Language:
+      </label>
       <select
         value={targetLanguage}
         onChange={e => setTargetLanguage(e.target.value)}

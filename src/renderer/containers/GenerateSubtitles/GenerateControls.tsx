@@ -27,7 +27,13 @@ export default function GenerateControls({
         background-color: ${colors.light};
       `}
     >
-      <label>3. Generate Subtitles: </label>
+      <label
+        className={css`
+          margin-right: 12px;
+        `}
+      >
+        3. Generate Subtitles:
+      </label>
       <Button
         onClick={handleGenerateSubtitles}
         disabled={
