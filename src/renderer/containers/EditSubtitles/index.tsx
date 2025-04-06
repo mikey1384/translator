@@ -5,7 +5,6 @@ import React, {
   useState,
   SetStateAction,
   Dispatch,
-  ChangeEvent,
 } from 'react';
 import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
@@ -33,11 +32,6 @@ import {
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
 import FileInputButton from '../FileInputButton.js';
-
-// Adjusted type for file change events from Button
-type FileChangeEvent =
-  | ChangeEvent<HTMLInputElement>
-  | { target: { files: FileList | { name: string; path: string }[] | null } };
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
@@ -345,15 +339,6 @@ export function EditSubtitles({
     [videoPlayerRef] // Depend on videoPlayerRef state
   );
 
-  /**
-   * ------------------------------------------------------
-   * Save & Merge Functionality
-   * ------------------------------------------------------
-   */
-  // const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs, notifyFileLoaded } =
-  //   useSubtitleSaving(subtitlesProp, setSaveError /* pass setSaveError */);
-
-  // --- NEW: Electron File Dialog Handler ---
   const handleSelectVideoClick = async () => {
     setSaveError(''); // Clear previous errors
     if (!window.electron) {
