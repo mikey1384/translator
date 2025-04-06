@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors, linkStyles as globalLinkStyles } from '../styles.js';
-// Assuming Button component exists
 
-// Basic Styling using @emotion/css - Dark Theme
 const settingsPageStyles = css`
   padding: 30px;
   max-width: 700px;
   margin: 20px auto;
-  background-color: ${colors.white}; // Main dark background
+  background-color: ${colors.white};
   border-radius: 8px;
-  // box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); // Remove shadow for flat
   border: 1px solid ${colors.border};
 `;
 
 const titleStyles = css`
   font-size: 1.8em;
-  color: ${colors.dark}; // Light text
+  color: ${colors.dark};
   margin-bottom: 25px;
   border-bottom: 1px solid ${colors.border};
   padding-bottom: 15px;
@@ -25,14 +22,14 @@ const titleStyles = css`
 const sectionStyles = css`
   margin-bottom: 35px;
   padding: 20px;
-  background-color: ${colors.light}; // Secondary dark bg
+  background-color: ${colors.light};
   border: 1px solid ${colors.border};
   border-radius: 6px;
 `;
 
 const sectionTitleStyles = css`
   font-size: 1.3em;
-  color: ${colors.dark}; // Light text
+  color: ${colors.dark};
   margin-bottom: 20px;
 `;
 
@@ -40,7 +37,7 @@ const labelStyles = css`
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: ${colors.grayDark}; // Secondary light text
+  color: ${colors.grayDark};
 `;
 
 const inputStyles = css`
@@ -49,10 +46,10 @@ const inputStyles = css`
   border: 1px solid ${colors.border};
   border-radius: 4px;
   font-size: 1em;
-  box-sizing: border-box; /* Ensure padding doesn't increase width */
+  box-sizing: border-box;
   margin-bottom: 15px;
-  background-color: ${colors.grayLight}; // Surface color for inputs
-  color: ${colors.dark}; // Light text
+  background-color: ${colors.grayLight};
+  color: ${colors.dark};
   transition: border-color 0.2s ease;
 
   &:focus {
@@ -68,9 +65,9 @@ const inputStyles = css`
 
 const buttonStyles = css`
   padding: 10px 18px;
-  background-color: ${colors.primary}; // Use primary accent
+  background-color: ${colors.primary};
   color: white;
-  border: none; // Maybe a subtle border? 1px solid ${colors.primaryDark}
+  border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1em;
@@ -99,7 +96,6 @@ const statusIndicatorStyles = css`
   vertical-align: middle;
 `;
 
-// Use styles from global theme file if they exist and match
 const statusSetStyles = css`
   background-color: rgba(76, 201, 176, 0.1);
   color: ${colors.success};
@@ -143,7 +139,6 @@ const infoTextStyles = css`
   line-height: 1.4;
 `;
 
-// Define Key Status Type (can be shared or redefined if needed)
 type ApiKeyStatus = {
   openai: boolean;
   anthropic: boolean;
@@ -155,20 +150,18 @@ type SaveStatus = {
   message: string;
 } | null;
 
-// <<< Define Props Interface >>>
 interface SettingsPageProps {
   onBack: () => void;
   apiKeyStatus: ApiKeyStatus;
   isLoadingStatus: boolean;
 }
 
-// Add styles for the key status area when key is set - Dark Theme
 const keySetInfoStyles = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 15px;
-  background-color: ${colors.light}; // Use secondary dark bg
+  background-color: ${colors.light};
   border: 1px solid ${colors.border};
   border-radius: 4px;
   margin-bottom: 15px;
@@ -184,12 +177,11 @@ const keyActionButtonsStyles = css`
   gap: 8px;
 `;
 
-// Small utility button style - Dark Theme
 const utilityButtonStyles = css`
   padding: 5px 10px;
   font-size: 0.85em;
-  background-color: ${colors.grayLight}; // Surface color
-  color: ${colors.dark}; // Light text
+  background-color: ${colors.grayLight};
+  color: ${colors.dark};
   border: 1px solid ${colors.border};
   border-radius: 4px;
   cursor: pointer;
@@ -199,8 +191,8 @@ const utilityButtonStyles = css`
   box-shadow: none;
 
   &:hover {
-    background-color: ${colors.light}; // Secondary dark bg
-    border-color: ${colors.primary}; // Primary accent
+    background-color: ${colors.light};
+    border-color: ${colors.primary};
   }
   &:disabled {
     opacity: 0.6;
@@ -208,33 +200,31 @@ const utilityButtonStyles = css`
   }
 `;
 
-// Back Button - Style adjusted for Dark Theme consistency
 const backButtonStyles = css`
-  // Inherit some basic properties if needed, or define directly
-  padding: 8px 16px; // Adjust padding if necessary
+  padding: 8px 16px;
   font-size: 0.9rem;
-  background-color: ${colors.light}; // Match section background
-  color: ${colors.dark}; // Light text
-  border: 1px solid ${colors.border}; // Standard border
+  background-color: ${colors.light};
+  color: ${colors.dark};
+  border: 1px solid ${colors.border};
   border-radius: 6px;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease;
   box-shadow: none;
-  margin-bottom: 20px; // Keep margin
-  align-self: flex-start; // Keep alignment
+  margin-bottom: 20px;
+  align-self: flex-start;
 
   &:hover {
-    background-color: ${colors.light}; // Keep background same on hover
-    border-color: ${colors.primary}; // Highlight border on hover
-    color: ${colors.dark}; // Keep text color same
+    background-color: ${colors.light};
+    border-color: ${colors.primary};
+    color: ${colors.dark};
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: ${colors.grayLight}; // Slightly different disabled bg
+    background-color: ${colors.grayLight};
     border-color: ${colors.border};
     color: ${colors.gray};
   }
@@ -257,11 +247,9 @@ function SettingsPage({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // State to control editing view when key is already set
   const [isEditingOpenAI, setIsEditingOpenAI] = useState(false);
   const [isEditingAnthropic, setIsEditingAnthropic] = useState(false);
 
-  // Update local state if props change (e.g., after returning from background update)
   useEffect(() => {
     setKeyStatus(apiKeyStatus);
   }, [apiKeyStatus]);
@@ -272,12 +260,6 @@ function SettingsPage({
 
   const handleSaveKey = async (keyType: 'openai' | 'anthropic') => {
     const apiKey = keyType === 'openai' ? openaiKeyInput : anthropicKeyInput;
-    // Allow saving empty string to effectively remove key via input field
-    // if (!apiKey) {
-    //   setSaveStatus({ type: keyType, success: false, message: 'API Key cannot be empty.' });
-    //   return;
-    // }
-
     setIsSaving(true);
     setSaveStatus(null); // Clear previous status
 
@@ -291,12 +273,10 @@ function SettingsPage({
             ? `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key saved successfully!`
             : `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key removed successfully!`,
         });
-        // Update local status immediately
         setKeyStatus(prevStatus => ({
           ...prevStatus!,
-          [keyType]: !!apiKey, // Update status based on whether key is truthy
+          [keyType]: !!apiKey,
         }));
-        // Clear input and hide editing view
         if (keyType === 'openai') {
           setOpenaiKeyInput('');
           setIsEditingOpenAI(false);
@@ -323,7 +303,6 @@ function SettingsPage({
     }
   };
 
-  // Function to handle removing a key directly
   const handleRemoveKey = async (keyType: 'openai' | 'anthropic') => {
     if (
       !window.confirm(`Are you sure you want to remove the ${keyType} API key?`)
@@ -335,7 +314,6 @@ function SettingsPage({
     setSaveStatus(null);
 
     try {
-      // Call saveApiKey with an empty string
       console.log(
         `[SettingsPage] Calling saveApiKey to remove ${keyType} key...`
       );
@@ -354,7 +332,6 @@ function SettingsPage({
           success: true,
           message: `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key removed successfully!`,
         });
-        // Add log before setting state
         console.log(
           `[SettingsPage] Updating keyStatus for ${keyType} to false.`
         );
@@ -366,7 +343,6 @@ function SettingsPage({
           );
           return newState;
         });
-        // Ensure editing state is false
         if (keyType === 'openai') setIsEditingOpenAI(false);
         else setIsEditingAnthropic(false);
       } else {
@@ -430,7 +406,6 @@ function SettingsPage({
     );
   };
 
-  // Helper to render the input section or the key-set info
   const renderKeySection = (keyType: 'openai' | 'anthropic') => {
     const isSet = keyStatus ? keyStatus[keyType] : false;
     const isEditing =
@@ -456,7 +431,6 @@ function SettingsPage({
     }
 
     if (isSet && !isEditing) {
-      // Key is set, show info and Change/Remove buttons
       return (
         <div className={keySetInfoStyles}>
           <span className={keySetTextStyles}>{getName} API Key is Set</span>
@@ -487,7 +461,6 @@ function SettingsPage({
         </div>
       );
     } else {
-      // Key is not set OR user is editing it
       return (
         <>
           <label htmlFor={`${keyType}-key`} className={labelStyles}>
@@ -506,8 +479,6 @@ function SettingsPage({
             <button
               className={buttonStyles}
               onClick={() => handleSaveKey(keyType)}
-              // Disable save if input is empty AND the key wasn't already set (i.e., initial setup)
-              // Allow saving empty string if editing an existing key (to remove it)
               disabled={isSaving || (!currentInputValue && !isSet)}
             >
               {isSaving
@@ -547,12 +518,7 @@ function SettingsPage({
 
   return (
     <div className={settingsPageStyles}>
-      {/* <<< Update Back button to use specific style >>> */}
-      <button
-        className={backButtonStyles}
-        onClick={onBack}
-        disabled={isSaving} // Disable while saving either key
-      >
+      <button className={backButtonStyles} onClick={onBack} disabled={isSaving}>
         &larr; Back to Main App
       </button>
 
@@ -564,7 +530,6 @@ function SettingsPage({
         keychain and are never shared.
       </p>
 
-      {/* OpenAI Section */}
       <div className={sectionStyles}>
         <h2 className={sectionTitleStyles}>
           OpenAI (GPT models)
@@ -573,7 +538,6 @@ function SettingsPage({
         {renderKeySection('openai')}
       </div>
 
-      {/* Anthropic Section */}
       <div className={sectionStyles}>
         <h2 className={sectionTitleStyles}>
           Anthropic (Claude models)

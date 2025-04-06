@@ -5,8 +5,8 @@ import StickyVideoPlayer from '../containers/EditSubtitles/StickyVideoPlayer.js'
 import { nativePlayer } from '../components/NativeVideoPlayer.js';
 import { EditSubtitles } from '../containers/EditSubtitles/index.js';
 import GenerateSubtitles from '../containers/GenerateSubtitles/index.js';
-import MergingProgressArea from '../containers/MergingProgressArea.js';
-import TranslationProgressArea from '../containers/TranslationProgressArea.js';
+import MergingProgressArea from '../components/MergingProgressArea.js';
+import TranslationProgressArea from '../components/TranslationProgressArea.js';
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
 import { SrtSegment, VideoQuality } from '../../types/interface.js';
