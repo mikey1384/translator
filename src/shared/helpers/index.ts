@@ -18,7 +18,8 @@ export function parseSrt(srtString: string): SrtSegment[] {
     const indexLine = lines[0].trim();
     const timeLine = lines[1].trim();
     const textLines = lines.slice(2);
-    const text = textLines.join('\\n').trim();
+    let text = textLines.join('\n').trim();
+    text = text.replace(/\\n/g, '\n');
 
     const index = parseInt(indexLine, 10);
     const timeMatch = timeLine.match(
