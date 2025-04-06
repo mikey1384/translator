@@ -1,0 +1,148 @@
+import React, { ChangeEvent } from 'react';
+import { css } from '@emotion/css';
+import { colors, selectStyles } from '../../styles.js';
+import Button from '../../components/Button.js';
+import { VideoQuality } from '../../../services/url-processor.js';
+
+interface UrlInputSectionProps {
+  urlInput: string;
+  setUrlInput: (value: string) => void;
+  onSetVideoFile: (file: null) => void;
+  setError: (error: string) => void;
+  isGenerating: boolean;
+  isProcessingUrl: boolean;
+  downloadQuality: VideoQuality;
+  setDownloadQuality: (quality: VideoQuality) => void;
+  handleProcessUrl: () => void;
+}
+
+// Styles copied from index.tsx
+const inputSectionStyles = css`
+  padding: 20px;
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  background-color: ${colors.light};
+`;
+
+const urlInputStyles = css`
+  margin-right: 8px;
+  flex-grow: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid ${colors.border};
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background-color: ${colors.grayLight};
+  color: ${colors.dark};
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+  }
+
+  &::placeholder {
+    color: ${colors.gray};
+  }
+`;
+
+const UrlInputSection: React.FC<UrlInputSectionProps> = ({
+  urlInput,
+  setUrlInput,
+  onSetVideoFile,
+  setError,
+  isGenerating,
+  isProcessingUrl,
+  downloadQuality,
+  setDownloadQuality,
+  handleProcessUrl,
+}) => {
+  return (
+    <div className={inputSectionStyles}>
+      <div
+        className={css`
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 5px 0;
+          height: 35px;
+          gap: 8px;
+        `}
+      >
+        <label
+          style={{
+            marginRight: '12px',
+            lineHeight: '32px', // Match input height
+            display: 'inline-block',
+            minWidth: '100px',
+          }}
+        >
+          1. Enter URL:
+        </label>
+        <input
+          type="url"
+          className={urlInputStyles}
+          placeholder="Enter YouTube or direct video URL"
+          value={urlInput}
+          onChange={e => {
+            setUrlInput(e.target.value);
+            if (e.target.value) {
+              // If user starts typing URL, clear any selected file
+              onSetVideoFile(null);
+              setError('');
+            }
+          }}
+          disabled={isGenerating || isProcessingUrl}
+        />
+        <div
+          className={css`
+            position: relative;
+            min-width: 120px;
+          `}
+        >
+          <label
+            htmlFor="quality-select"
+            className={css`
+              /* Add screen-reader only styles if needed */
+              position: absolute;
+              width: 1px;
+              height: 1px;
+              margin: -1px;
+              padding: 0;
+              overflow: hidden;
+              clip: rect(0, 0, 0, 0);
+              border: 0;
+            `}
+          >
+            Quality
+          </label>
+          <select
+            id="quality-select"
+            value={downloadQuality}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+              setDownloadQuality(e.target.value as VideoQuality)
+            }
+            disabled={isProcessingUrl || isGenerating}
+            className={selectStyles} // Apply existing select styles
+            style={{ minWidth: '120px' }}
+          >
+            <option value="high">High</option>
+            <option value="mid">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <Button
+          onClick={handleProcessUrl}
+          disabled={!urlInput || isProcessingUrl || isGenerating}
+          isLoading={isProcessingUrl}
+          size="md"
+          variant="secondary"
+        >
+          {isProcessingUrl ? 'Processing...' : 'Process URL'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default UrlInputSection;

@@ -5,7 +5,7 @@ import SettingsPage from '../containers/SettingsPage.js';
 import StickyVideoPlayer from '../containers/EditSubtitles/StickyVideoPlayer.js';
 import { nativePlayer } from '../components/NativeVideoPlayer.js';
 import { EditSubtitles } from '../containers/EditSubtitles/index.js';
-import GenerateSubtitles from '../containers/GenerateSubtitles.js';
+import GenerateSubtitles from '../containers/GenerateSubtitles/index.js';
 import MergingProgressArea from '../containers/MergingProgressArea.js';
 import TranslationProgressArea from '../containers/TranslationProgressArea.js';
 import LogoDisplay from '../components/LogoDisplay.js';
@@ -182,42 +182,78 @@ function AppContent() {
         return;
       }
 
-      // Check if we received an object with a path (from Electron dialog)
-      if (typeof fileData === 'object' && 'path' in fileData && fileData.path) {
-        console.log('Received file object with path:', fileData.path);
-        setVideoFile(fileData as File); // Store the file-like object
-        setVideoFilePath(fileData.path); // << STORE THE PATH
-        // Use a file:// URL directly for the video player
-        setVideoUrl(`file://${encodeURI(fileData.path)}`);
-        setIsPlaying(false);
-        handleSetSubtitleSegments([]);
-      } else if (fileData instanceof File) {
-        // Handle standard File object (e.g., from drag-and-drop, though ideally that also uses Electron)
-        console.log('Received standard File object:', fileData.name);
+      // --- REORDERED CHECKS --- START ---
+      // 1. Check specifically for the structure coming from the Electron dialog FIRST
+      if (
+        typeof fileData === 'object' &&
+        fileData !== null &&
+        !(fileData instanceof File) &&
+        'path' in fileData &&
+        fileData.path
+      ) {
+        console.log(
+          '[App.tsx handleSetVideoFile] Branch: Detected object with path (priority check).'
+        );
+        const minimalFileObject = new File([], fileData.name, {
+          type: 'video/*',
+        });
+        (minimalFileObject as any).path = fileData.path;
+        setVideoFile(minimalFileObject as File);
+        setVideoFilePath(fileData.path); // << Set the path
+        const encodedPath = encodeURI(fileData.path.replace(/\\/g, '/'));
+        setVideoUrl(`file://${encodedPath}`);
+        console.log(
+          '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
+          fileData.path
+        );
+      }
+      // 2. Check for Blob URL object (from URL downloads)
+      else if (
+        typeof fileData === 'object' &&
+        fileData !== null &&
+        (fileData as any)._blobUrl
+      ) {
+        console.log('[App.tsx handleSetVideoFile] Branch: Detected _blobUrl.');
+        const blobFileData = fileData as any;
+        setVideoFile(blobFileData as File);
+        setVideoUrl(blobFileData._blobUrl);
+        setVideoFilePath(blobFileData._originalPath || null); // Use original download path if available
+        console.log(
+          '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
+          blobFileData._originalPath || null
+        );
+      }
+      // 3. Check for standard File object (e.g., drag-and-drop)
+      else if (fileData instanceof File) {
+        console.log(
+          '[App.tsx handleSetVideoFile] Branch: Detected instanceof File.'
+        );
         setVideoFile(fileData);
-        setVideoFilePath(null); // << NO PATH AVAILABLE
+        setVideoFilePath(null); // No reliable path available
+        console.log(
+          '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (instanceof File)'
+        );
         const blobUrl = URL.createObjectURL(fileData);
         setVideoUrl(blobUrl);
-        setIsPlaying(false);
-        handleSetSubtitleSegments([]);
-      } else if (fileData && (fileData as any)._blobUrl) {
-        // Handle Blob-based object from URL processing
-        const blobFileData = fileData as any;
-        console.log('Using Blob URL:', blobFileData._blobUrl);
-        setVideoFile(blobFileData as File); // Store the File-like object
-        setVideoUrl(blobFileData._blobUrl);
-        setVideoFilePath(blobFileData._originalPath || null); // << STORE ORIGINAL PATH IF AVAILABLE
-        setIsPlaying(false);
-        handleSetSubtitleSegments([]);
-      } else {
-        // Fallback or unexpected case
-        console.warn('handleSetVideoFile received unexpected data:', fileData);
+      }
+      // 4. Fallback
+      else {
+        console.warn(
+          '[App.tsx handleSetVideoFile] Branch: Fallback/unexpected case.',
+          fileData
+        );
         setVideoFile(null);
         setVideoUrl('');
         setVideoFilePath(null);
-        setIsPlaying(false);
-        handleSetSubtitleSegments([]);
+        console.log(
+          '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (Fallback)'
+        );
       }
+      // --- REORDERED CHECKS --- END ---
+
+      // Common state updates
+      setIsPlaying(false);
+      handleSetSubtitleSegments([]);
     },
     [videoUrl, resetSubtitleSource, handleSetSubtitleSegments] // Dependencies
   );
@@ -551,6 +587,7 @@ function AppContent() {
             <div ref={mainContentRef} className={mainContentStyles}>
               <GenerateSubtitles
                 videoFile={videoFile}
+                videoFilePath={videoFilePath}
                 onSetVideoFile={handleSetVideoFile}
                 onSubtitlesGenerated={handleGeneratedSubtitlesWrapper}
                 showOriginalText={showOriginalText}

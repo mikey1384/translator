@@ -146,6 +146,14 @@ export async function handleGenerateSubtitles(
       services: { ffmpegService, fileManager },
     });
 
+    if (tempVideoPath) {
+      try {
+        await fs.unlink(tempVideoPath);
+      } catch (err) {
+        log.warn(`Failed to delete temp video file: ${tempVideoPath}`, err);
+      }
+    }
+
     if (result.subtitles === '') {
       log.info(`[${operationId}] Generation was cancelled.`);
       return { success: true, cancelled: true, operationId };
@@ -156,6 +164,18 @@ export async function handleGenerateSubtitles(
     log.error(`[${operationId}] Error generating subtitles:`, error);
     const isCancellationError =
       error.name === 'AbortError' || error.message === 'Operation cancelled';
+
+    if (tempVideoPath && !isCancellationError) {
+      try {
+        await fs.unlink(tempVideoPath);
+      } catch (err) {
+        log.warn(
+          `Failed to delete temp video file after error: ${tempVideoPath}`,
+          err
+        );
+      }
+    }
+
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
       stage: isCancellationError
@@ -173,13 +193,6 @@ export async function handleGenerateSubtitles(
     };
   } finally {
     cancellationService.unregisterOperation(operationId);
-    if (tempVideoPath) {
-      try {
-        await fs.unlink(tempVideoPath);
-      } catch (err) {
-        log.warn(`Failed to delete temp video file: ${tempVideoPath}`, err);
-      }
-    }
   }
 }
 
