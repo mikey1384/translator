@@ -21,6 +21,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src/**/*", ".eslintrc.js"],
+  "include": ["src/**/*", ".eslintrc.cjs"],
   "exclude": ["node_modules", "dist", "src/tests/**/*", "src/__mocks__/**/*"]
 }
