@@ -108,6 +108,28 @@ try {
   );
   // URL Processing
   ipcMain.handle('process-url', handleProcessUrl);
+  // Operation Cancellation
+  ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
+    if (!services?.ffmpegService) {
+      log.error(
+        '[main.ts/cancel-operation] FFmpegService not initialized when trying to cancel.'
+      );
+      throw new Error('FFmpegService not initialized');
+    }
+    try {
+      log.info(
+        `[main.ts/cancel-operation] Received request to cancel operation: ${operationId}`
+      );
+      services.ffmpegService.cancelOperation(operationId);
+      return { success: true };
+    } catch (error) {
+      log.error(
+        `[main.ts/cancel-operation] Error cancelling operation ${operationId}:`,
+        error
+      );
+      throw error; // Re-throw the error to the renderer
+    }
+  });
   log.info('[main.ts] IPC Handlers Registered.');
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);

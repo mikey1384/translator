@@ -825,14 +825,26 @@ export async function mergeSubtitlesWithVideo({
     return { outputPath };
   } catch (error) {
     log.error(`[${operationId}] Error during merge:`, error);
+
+    // Check if the error indicates cancellation
+    const isCancellation =
+      error instanceof Error && error.message === 'Operation cancelled';
+
     if (progressCallback) {
       progressCallback({
         percent: 100,
-        stage: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        stage: isCancellation
+          ? 'Merge cancelled'
+          : `Error: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
 
-    throw error;
+    if (isCancellation) {
+      log.info(`[${operationId}] Merge operation was cancelled.`);
+      return { outputPath: '' };
+    } else {
+      throw error;
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises';
@@ -22,6 +22,7 @@ export class FFmpegService {
   private ffmpegPath: string;
   private ffprobePath: string;
   private tempDir: string;
+  private activeProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
   constructor(tempDirPath: string) {
     const require = createRequire(import.meta.url);
@@ -606,7 +607,23 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         `[${operationId || 'ffmpeg'}] Path check immediately before spawn: ${this.ffmpegPath}`
       );
       const ffmpegProcess = spawn(this.ffmpegPath, args, spawnOptions);
-      let isCancelling = false;
+      const processId = `FFmpeg [${operationId || 'generic'}] (PID: ${ffmpegProcess.pid})`;
+
+      // --- Store the process for cancellation ---
+      if (operationId) {
+        if (this.activeProcesses.has(operationId)) {
+          log.warn(
+            `[${processId}] Operation ID ${operationId} already exists in active processes map. Overwriting.`
+          );
+        }
+        this.activeProcesses.set(operationId, ffmpegProcess);
+        log.info(`[${processId}] Stored process for potential cancellation.`);
+      } else {
+        log.warn(
+          `[${processId}] Process started without operationId, cancellation not possible via standard mechanism.`
+        );
+      }
+      // --- End Store ---
 
       let stderrOutput = '';
 
@@ -661,36 +678,65 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         }
       });
 
-      ffmpegProcess.on('close', (code: number | null) => {
-        if (operationId) {
-          isCancelling = (ffmpegProcess as any).wasCancelled === true;
-          log.info(
-            `[${operationId}] FFmpeg process finished (PID: ${ffmpegProcess.pid}) Cancelled: ${isCancelling}`
-          );
-        } else {
-          log.info(`FFmpeg process finished (PID: ${ffmpegProcess.pid})`);
+      ffmpegProcess.on(
+        'close',
+        (code: number | null, signal: NodeJS.Signals | null) => {
+          const wasCancelled = (ffmpegProcess as any).wasCancelled === true;
+          const statusMessage = `code: ${code}, signal: ${signal}, cancelled_flag: ${wasCancelled}`;
+          log.info(`[${processId}] Process closed (${statusMessage}).`);
+
+          // --- Remove the process from the map ---
+          if (operationId) {
+            const deleted = this.activeProcesses.delete(operationId);
+            if (deleted) {
+              log.info(
+                `[${processId}] Removed process from active map on close.`
+              );
+            } else {
+              // This might happen if cancelOperation already removed it, which is fine.
+              log.warn(
+                `[${processId}] Process not found in active map during close event (might have been cancelled/removed prior).`
+              );
+            }
+          }
+          // --- End Remove ---
+
+          if (wasCancelled) {
+            log.warn(`[${processId}] Process was cancelled.`);
+            reject(new FFmpegError('Operation cancelled')); // Reject specifically for cancellation
+          } else if (code === 0) {
+            log.info(`[${processId}] Process completed successfully.`);
+            resolve();
+          } else {
+            log.error(
+              `[${processId}] Process exited abnormally (${statusMessage}). Stderr tail:`
+            );
+            const stderrLines = stderrOutput.split('\n');
+            const relevantStderr = stderrLines.slice(-20).join('\n');
+            log.error(relevantStderr);
+            reject(
+              new FFmpegError(`FFmpeg failed with ${statusMessage}. See logs.`)
+            );
+          }
         }
-        if (isCancelling) {
-          reject(new Error('Operation cancelled'));
-        } else if (code === 0) {
-          resolve();
-        } else {
-          log.error(`FFmpeg process exited with error code ${code}.`);
-          log.error(`FFmpeg stderr output:\n${stderrOutput}`);
-          reject(new FFmpegError(`FFmpeg process exited with code ${code}.`));
-        }
-      });
+      );
 
       ffmpegProcess.on('error', (err: Error) => {
+        log.error(
+          `[${processId}] Error spawning or during process execution:`,
+          err
+        );
+
+        // --- Remove the process from the map on error ---
         if (operationId) {
+          this.activeProcesses.delete(operationId);
           log.info(
-            `[${operationId}] FFmpeg process errored (PID: ${ffmpegProcess.pid})`
+            `[${processId}] Removed process from active map due to process error.`
           );
-        } else {
-          log.info(`FFmpeg process errored (PID: ${ffmpegProcess.pid})`);
         }
-        log.error(`FFmpeg process error: ${err.message}`);
-        reject(new FFmpegError(`FFmpeg process error: ${err.message}`));
+        // --- End Remove ---
+
+        reject(new FFmpegError(`Failed to run ffmpeg: ${err.message}`));
       });
     });
   }
@@ -795,5 +841,28 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         reject(new FFmpegError(`Silence detection failed: ${err.message}`));
       });
     });
+  }
+
+  public cancelOperation(operationId: string): void {
+    const process = this.activeProcesses.get(operationId);
+    if (process && !process.killed) {
+      log.info(
+        `[FFmpegService] Killing FFmpeg process for operationId=${operationId}`
+      );
+      // Set a flag to indicate cancellation before killing
+      (process as any).wasCancelled = true;
+      process.kill('SIGKILL');
+      // No need to delete here, the 'close' handler will do it.
+    } else if (process && process.killed) {
+      log.warn(
+        `[FFmpegService] Attempted to cancel already finished/killed process for operationId=${operationId}`
+      );
+      // Optionally, ensure it's removed if it somehow lingered
+      this.activeProcesses.delete(operationId);
+    } else {
+      log.warn(
+        `[FFmpegService] No active FFmpeg process found for operationId=${operationId} to cancel.`
+      );
+    }
   }
 }

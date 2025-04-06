@@ -150,6 +150,7 @@ const electronAPI = {
   // ---------------------- Cancel / Move / Copy ----------------------
   cancelOperation: async (operationId: string) => {
     try {
+      console.log('[preload] cancelOperation:', operationId);
       return await ipcRenderer.invoke('cancel-operation', operationId);
     } catch (error) {
       console.error('[preload] cancelOperation error:', error);
