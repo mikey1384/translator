@@ -16,13 +16,6 @@ type ApiKeyStatus = {
   anthropic: boolean;
 } | null;
 
-const inputSectionStyles = css`
-  padding: 20px;
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  background-color: ${colors.light};
-`;
-
 export default function GenerateSubtitles({
   videoFile,
   videoFilePath,
@@ -93,11 +86,17 @@ export default function GenerateSubtitles({
             />
 
             {inputMode === 'file' && (
-              <div className={inputSectionStyles}>
+              <div
+                className={css`
+                  padding: 13px 20px;
+                  border: 1px solid ${colors.border};
+                  border-radius: 6px;
+                  background-color: ${colors.light};
+                `}
+              >
                 <label
                   style={{
                     marginRight: '12px',
-                    lineHeight: '32px',
                     display: 'inline-block',
                     minWidth: '220px',
                   }}
@@ -113,7 +112,14 @@ export default function GenerateSubtitles({
             )}
 
             {inputMode === 'url' && (
-              <div className={inputSectionStyles}>
+              <div
+                className={css`
+                  padding: 20px;
+                  border: 1px solid ${colors.border};
+                  border-radius: 6px;
+                  background-color: ${colors.light};
+                `}
+              >
                 <UrlInputSection
                   urlInput={urlInput}
                   setUrlInput={setUrlInput}

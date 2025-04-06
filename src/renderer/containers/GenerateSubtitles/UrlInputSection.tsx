@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import { ChangeEvent } from 'react';
 import { css } from '@emotion/css';
 import { colors, selectStyles } from '../../styles.js';
 import Button from '../../components/Button.js';
@@ -38,7 +38,7 @@ const urlInputStyles = css`
   }
 `;
 
-const UrlInputSection: React.FC<UrlInputSectionProps> = ({
+function UrlInputSection({
   urlInput,
   setUrlInput,
   onSetVideoFile,
@@ -48,14 +48,13 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
   downloadQuality,
   setDownloadQuality,
   handleProcessUrl,
-}) => {
+}: UrlInputSectionProps) {
   return (
     <div
       className={css`
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 5px 0;
         height: 35px;
         gap: 8px;
       `}
@@ -133,6 +132,6 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
       </Button>
     </div>
   );
-};
+}
 
 export default UrlInputSection;

@@ -1,6 +1,6 @@
-import Section from '../../components/Section.js';
+import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
-import ButtonGroup from '../../components/ButtonGroup.js';
+import { colors } from '../../styles.js';
 
 interface GenerateControlsProps {
   videoFile: File | null;
@@ -18,20 +18,27 @@ export default function GenerateControls({
   handleGenerateSubtitles,
 }: GenerateControlsProps) {
   return (
-    <Section title="3. Generate Subtitles" isSubSection>
-      <ButtonGroup>
-        <Button
-          onClick={handleGenerateSubtitles}
-          disabled={
-            (!videoFile && !videoFilePath) || isGenerating || isProcessingUrl
-          }
-          size="md"
-          variant="primary"
-          isLoading={isGenerating}
-        >
-          {isGenerating ? 'Generating...' : 'Generate Subtitles Now'}
-        </Button>
-      </ButtonGroup>
-    </Section>
+    <div
+      className={css`
+        margin-top: 10px;
+        padding: 20px;
+        border: 1px solid ${colors.border};
+        border-radius: 6px;
+        background-color: ${colors.light};
+      `}
+    >
+      <label>3. Generate Subtitles: </label>
+      <Button
+        onClick={handleGenerateSubtitles}
+        disabled={
+          (!videoFile && !videoFilePath) || isGenerating || isProcessingUrl
+        }
+        size="md"
+        variant="primary"
+        isLoading={isGenerating}
+      >
+        {isGenerating ? 'Generating...' : 'Generate Subtitles Now'}
+      </Button>
+    </div>
   );
 }

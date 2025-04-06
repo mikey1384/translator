@@ -1,7 +1,5 @@
-import React from 'react';
 import { css } from '@emotion/css';
-import Section from '../../components/Section.js';
-import { selectStyles, fileInputWrapperStyles } from '../../styles.js';
+import { selectStyles, colors } from '../../styles.js';
 
 interface LanguageOption {
   value: string;
@@ -88,86 +86,89 @@ interface LanguageSelectionProps {
   onShowOriginalTextChange: (show: boolean) => void;
 }
 
-const LanguageSelection: React.FC<LanguageSelectionProps> = ({
+export default function LanguageSelection({
   targetLanguage,
   setTargetLanguage,
   isGenerating,
   showOriginalText,
   onShowOriginalTextChange,
-}) => {
+}: LanguageSelectionProps) {
   return (
-    <Section title="2. Select Output Language" isSubSection>
-      <div className={fileInputWrapperStyles}>
-        <label>Output Language: </label>
-        <select
-          value={targetLanguage}
-          onChange={e => setTargetLanguage(e.target.value)}
-          className={selectStyles}
-          disabled={isGenerating}
+    <div
+      className={css`
+        margin-top: 10px;
+        padding: 20px;
+        border: 1px solid ${colors.border};
+        border-radius: 6px;
+        background-color: ${colors.light};
+      `}
+    >
+      <label>2. Output Language: </label>
+      <select
+        value={targetLanguage}
+        onChange={e => setTargetLanguage(e.target.value)}
+        className={selectStyles}
+        disabled={isGenerating}
+      >
+        {baseLanguageOptions.map(lang => (
+          <option key={lang.value} value={lang.value}>
+            {lang.label}
+          </option>
+        ))}
+        {/* Render grouped options */}
+        {languageGroups.map(group => (
+          <optgroup key={group.label} label={group.label}>
+            {group.options.map(lang => (
+              <option key={lang.value} value={lang.value}>
+                {lang.label}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      {targetLanguage !== 'original' && targetLanguage !== 'english' && (
+        <div
+          className={css`
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+          `}
         >
-          {/* Render base options first */}
-          {baseLanguageOptions.map(lang => (
-            <option key={lang.value} value={lang.value}>
-              {lang.label}
-            </option>
-          ))}
-          {/* Render grouped options */}
-          {languageGroups.map(group => (
-            <optgroup key={group.label} label={group.label}>
-              {group.options.map(lang => (
-                <option key={lang.value} value={lang.value}>
-                  {lang.label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
-          <div
+          <label
             className={css`
-              margin-top: 12px;
               display: flex;
               align-items: center;
+              cursor: pointer;
+              user-select: none;
+              margin: 0;
+              line-height: 1;
             `}
           >
-            <label
+            <input
+              type="checkbox"
+              checked={showOriginalText}
+              onChange={e => onShowOriginalTextChange(e.target.checked)}
               className={css`
-                display: flex;
-                align-items: center;
-                cursor: pointer;
-                user-select: none;
-                margin: 0;
-                line-height: 1;
+                margin-right: 8px;
+                width: 16px;
+                height: 16px;
+                accent-color: #4361ee;
+                margin-top: 0;
+                margin-bottom: 0;
+                vertical-align: middle;
+              `}
+            />
+            <span
+              className={css`
+                display: inline-block;
+                vertical-align: middle;
               `}
             >
-              <input
-                type="checkbox"
-                checked={showOriginalText}
-                onChange={e => onShowOriginalTextChange(e.target.checked)}
-                className={css`
-                  margin-right: 8px;
-                  width: 16px;
-                  height: 16px;
-                  accent-color: #4361ee;
-                  margin-top: 0;
-                  margin-bottom: 0;
-                  vertical-align: middle;
-                `}
-              />
-              <span
-                className={css`
-                  display: inline-block;
-                  vertical-align: middle;
-                `}
-              >
-                Show original text
-              </span>
-            </label>
-          </div>
-        )}
-      </div>
-    </Section>
+              Show original text
+            </span>
+          </label>
+        </div>
+      )}
+    </div>
   );
-};
-
-export default LanguageSelection;
+}
