@@ -150,6 +150,40 @@ export const nativePlayer: {
   },
 };
 
+// Define SVG Icons
+interface IconProps {
+  size?: string;
+  color?: string;
+}
+
+const PlayIcon = ({ size = '64px', color = '#fff' }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M6.96817 4.2448C5.56675 3.40125 3.80317 4.48751 3.80317 6.11543V17.8846C3.80317 19.5125 5.56675 20.5987 6.96817 19.7552L17.6627 13.8706C19.039 13.0445 19.039 10.9555 17.6627 10.1294L6.96817 4.2448Z"
+      fill={color}
+    />
+  </svg>
+);
+
+const PauseIcon = ({ size = '64px', color = '#fff' }: IconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect x="6" y="4" width="4" height="16" rx="1" fill={color} />
+    <rect x="14" y="4" width="4" height="16" rx="1" fill={color} />
+  </svg>
+);
+
 interface NativeVideoPlayerProps {
   videoUrl: string;
   subtitles: {
@@ -173,6 +207,7 @@ export default function NativeVideoPlayer({
 }: NativeVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const indicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for timeout
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -188,9 +223,36 @@ export default function NativeVideoPlayer({
   const pendingSeekRef = useRef<number | null>(null);
   const timeUpdateCount = useRef(0);
 
-  // Handle click on player to focus either parent container or local container
+  // State for YouTube-like click behavior
+  const [_isPlaying, setIsPlaying] = useState(false);
+  const [showIndicator, setShowIndicator] = useState(false);
+  const [indicatorType, setIndicatorType] = useState<'play' | 'pause'>('pause');
+
+  // Updated handlePlayerClick to toggle play/pause
   const handlePlayerClick = useCallback(() => {
-    // Focus parent ref if provided, otherwise focus local container
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+
+    // Clear any existing timeout
+    if (indicatorTimeoutRef.current) {
+      clearTimeout(indicatorTimeoutRef.current);
+    }
+
+    // Toggle play/pause (indicator type set by event listeners now)
+    if (video.paused) {
+      video.play().catch(err => console.error('Play error:', err));
+    } else {
+      video.pause();
+    }
+
+    // Show ephemeral overlay (regardless of type initially, event listener sets it)
+    setShowIndicator(true);
+    // Hide again after 600ms
+    indicatorTimeoutRef.current = setTimeout(() => {
+      setShowIndicator(false);
+    }, 600);
+
+    // Keep existing focus logic
     if (parentRef?.current) {
       parentRef.current.focus();
       console.log('Video clicked, parent container focused');
@@ -391,33 +453,38 @@ export default function NativeVideoPlayer({
     };
 
     const handleLoadedMetadata = () => {
-      console.log(
-        'Video loadedmetadata event, duration:',
-        videoElement.duration
-      );
+      console.log('NativeVideoPlayer: Loaded metadata');
+      if (!videoElement) return;
 
-      // For file:// URLs: if we were at a valid position before, restore it
-      if (
-        isFileUrlVideo &&
-        lastValidTimeRef.current > 0 &&
-        videoElement.readyState >= 2
-      ) {
+      // Reset internal state when new metadata loaded
+      lastValidTimeRef.current = 0;
+      isSeekingRef.current = false;
+      pendingSeekRef.current = null;
+      timeUpdateCount.current = 0;
+
+      // Set initial playing state based on video
+      setIsPlaying(!videoElement.paused);
+
+      if (!isReady) {
         console.log(
-          `Restoring position after metadata loaded to ${lastValidTimeRef.current}`
+          'NativeVideoPlayer: Ready state triggered by loadedmetadata'
         );
-        // Use setTimeout to ensure the metadata is fully processed
-        setTimeout(() => {
-          if (!videoElement) return;
-          videoElement.currentTime = lastValidTimeRef.current;
+        nativePlayer.instance = videoElement;
+        nativePlayer.isReady = true;
+        nativePlayer.lastAccessed = Date.now();
+        onPlayerReady(videoElement);
+        isReady = true;
+      }
+
+      // Special handling for file URLs after metadata
+      if (isFileUrlVideo) {
+        const storedTime = window._videoLastValidTime;
+        if (storedTime && storedTime > 0 && videoElement.currentTime === 0) {
           console.log(
-            `Position after metadata restoration: ${videoElement.currentTime}`
+            `NativeVideoPlayer: Restoring file video position to ${storedTime} on loadedmetadata`
           );
-        }, 100);
-      } else {
-        // For some URL-loaded videos, this is a good time to check if ready
-        if (videoElement.readyState >= 2 && !isReady) {
-          console.log('Video has metadata and is ready to play');
-          handleCanPlay();
+          videoElement.currentTime = storedTime;
+          lastValidTimeRef.current = storedTime; // Update ref as well
         }
       }
     };
@@ -625,6 +692,38 @@ export default function NativeVideoPlayer({
     z-index: 10;
   `;
 
+  // Effect to sync isPlaying state and indicator type with video events
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onPlay = () => {
+      console.log('Video play event');
+      setIsPlaying(true);
+      setIndicatorType('play'); // Set indicator type on play
+    };
+    const onPause = () => {
+      console.log('Video pause event');
+      setIsPlaying(false);
+      setIndicatorType('pause'); // Set indicator type on pause
+    };
+
+    video.addEventListener('play', onPlay);
+    video.addEventListener('pause', onPause);
+
+    // Initial check
+    setIsPlaying(!video.paused);
+
+    return () => {
+      video.removeEventListener('play', onPlay);
+      video.removeEventListener('pause', onPause);
+      // Clear timeout on unmount
+      if (indicatorTimeoutRef.current) {
+        clearTimeout(indicatorTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -718,6 +817,56 @@ export default function NativeVideoPlayer({
           }}
         >
           {activeSubtitle}
+        </div>
+      )}
+
+      {/* Ephemeral Play/Pause Icon Overlay */}
+      {showIndicator && (
+        <div
+          className={css`
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: fadeOut 0.6s forwards ease-out;
+            pointer-events: none; // Don't block clicks on video
+            color: rgba(255, 255, 255, 0.8); // White with some transparency
+            background-color: rgba(
+              0,
+              0,
+              0,
+              0.5
+            ); // Dark semi-transparent background
+            border-radius: 50%; // Circular background
+            padding: 15px; // Padding around the icon
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+            @keyframes fadeOut {
+              0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.05); // Slight pop
+              }
+              70% {
+                // Hold opacity a bit longer
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+              }
+              100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.95);
+                visibility: hidden;
+              }
+            }
+          `}
+        >
+          {indicatorType === 'pause' ? (
+            <PauseIcon size="48px" />
+          ) : (
+            <PlayIcon size="48px" />
+          )}
         </div>
       )}
 
