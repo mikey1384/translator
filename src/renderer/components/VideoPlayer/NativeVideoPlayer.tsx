@@ -675,7 +675,7 @@ export default function NativeVideoPlayer({
         <div
           className={css`
             position: absolute;
-            bottom: ${isFullyExpanded ? '120px' : '10px'};
+            bottom: ${isFullyExpanded ? '50px' : '10px'};
             left: 50%;
             transform: translateX(-50%)
               ${subtitleVisible ? 'translateY(0)' : 'translateY(10px)'};

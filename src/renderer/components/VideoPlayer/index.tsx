@@ -44,7 +44,7 @@ const fullscreenOverlayControlsStyles = css`
     rgba(0, 0, 0, 0.7) 30%,
     transparent 100%
   );
-  bottom: 20px;
+  bottom: 0;
 `;
 
 const seekbarStyles = css`
