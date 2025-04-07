@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { css } from '@emotion/css';
 import NativeVideoPlayer, { nativePlayer } from './NativeVideoPlayer.js';
-import { TimestampDisplay } from '../../containers/EditSubtitles/TimestampDisplay.js';
+import SideMenu from './SideMenu.js';
 import { colors } from '../../styles.js';
 import Button from '../Button.js';
 import { SrtSegment } from '../../../types/interface.js';
@@ -745,7 +745,7 @@ export default function VideoPlayer({
         {/* Only show side controls when not in fullscreen mode */}
         {!isPseudoFullscreen && (
           <div className={controlsWrapperStyles(isPseudoFullscreen)}>
-            <TimestampDisplay
+            <SideMenu
               onChangeVideo={onChangeVideo}
               onLoadFromUrl={onLoadFromUrl}
               hasSubtitles={subtitles && subtitles.length > 0}

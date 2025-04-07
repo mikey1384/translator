@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import Button from '../../components/Button.js';
+import Button from '../Button.js';
 import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { VideoQuality } from '../../../types/interface.js';
 
-interface TimestampDisplayProps {
+interface SideMenuProps {
   onChangeVideo?: (file: File | { path: string; name: string }) => void;
   onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
   hasSubtitles?: boolean;
@@ -105,7 +105,7 @@ const progressTextStyles = css`
 `;
 // --- Styles for Progress Bar --- END ---
 
-export function TimestampDisplay({
+export default function SideMenu({
   onChangeVideo,
   onLoadFromUrl,
   hasSubtitles = false,
@@ -116,7 +116,7 @@ export function TimestampDisplay({
   isUrlLoading = false,
   urlLoadProgress = 0,
   urlLoadStage = '',
-}: TimestampDisplayProps) {
+}: SideMenuProps) {
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
   const [urlInputValue, setUrlInputValue] = useState<string>('');

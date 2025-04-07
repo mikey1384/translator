@@ -50,10 +50,25 @@ export default function GenerateSubtitles({
   );
   const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('mid');
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
+  const [didDownloadFromUrl, setDidDownloadFromUrl] = useState<boolean>(false);
 
   useEffect(() => {
     setError('');
+    if (inputMode === 'file') {
+      setDidDownloadFromUrl(false);
+    }
   }, [inputMode]);
+
+  useEffect(() => {
+    if (videoFile) {
+      const isLocalFileSelection =
+        !(videoFile instanceof File) || !(videoFile as any)._originalPath;
+
+      if (isLocalFileSelection) {
+        setInputMode('file');
+      }
+    }
+  }, [videoFile]);
 
   return (
     <Section title="Generate Subtitles">
@@ -75,7 +90,9 @@ export default function GenerateSubtitles({
               progressStage={progressStage}
               downloadComplete={downloadComplete}
               downloadedVideoPath={downloadedVideoPath}
-              handleSaveOriginalVideo={handleSaveOriginalVideo}
+              onSaveOriginalVideo={handleSaveOriginalVideo}
+              inputMode={inputMode}
+              didDownloadFromUrl={didDownloadFromUrl}
             />
 
             <InputModeToggle
@@ -196,6 +213,7 @@ export default function GenerateSubtitles({
     setDownloadComplete(false);
     setDownloadedVideoPath(null);
     onSetVideoFile(null);
+    setDidDownloadFromUrl(false);
   }
 
   function updateUrlProgress(progress: any) {
@@ -212,6 +230,7 @@ export default function GenerateSubtitles({
     setProgressPercent(100);
     setDownloadComplete(true);
     setDownloadedVideoPath(videoPath);
+    setDidDownloadFromUrl(true);
 
     try {
       const fileContentResult =

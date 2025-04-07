@@ -7,7 +7,9 @@ interface ProgressDisplayProps {
   progressStage: string;
   downloadComplete: boolean;
   downloadedVideoPath: string | null;
-  handleSaveOriginalVideo: () => void;
+  onSaveOriginalVideo: () => void;
+  inputMode: 'file' | 'url';
+  didDownloadFromUrl: boolean;
 }
 
 export default function ProgressDisplay({
@@ -16,7 +18,8 @@ export default function ProgressDisplay({
   progressStage,
   downloadComplete,
   downloadedVideoPath,
-  handleSaveOriginalVideo,
+  onSaveOriginalVideo,
+  didDownloadFromUrl,
 }: ProgressDisplayProps) {
   if (isProcessingUrl && progressPercent > 0 && !downloadComplete) {
     return (
@@ -59,13 +62,13 @@ export default function ProgressDisplay({
     );
   }
 
-  if (downloadComplete && downloadedVideoPath) {
+  if (didDownloadFromUrl && downloadComplete && downloadedVideoPath) {
     return (
       <div style={{ marginBottom: '15px', textAlign: 'center' }}>
         <Button
           variant="success"
           size="sm"
-          onClick={handleSaveOriginalVideo}
+          onClick={onSaveOriginalVideo}
           title={`Save the downloaded file: ${downloadedVideoPath}`}
         >
           Save Original Video
