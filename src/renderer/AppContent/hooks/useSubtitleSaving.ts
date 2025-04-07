@@ -1,18 +1,20 @@
 import { useCallback, Dispatch, SetStateAction } from 'react';
-import { SrtSegment } from '../../../../types/interface.js';
-import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
-import { generateSrtContent } from '../../../../shared/helpers/index.js';
-import { DEFAULT_FILENAME } from '../../../../shared/constants/index.js';
+import { SrtSegment } from '../../../types/interface.js';
+import { saveFileWithRetry } from '../../../shared/helpers/electron-ipc.js';
+import { generateSrtContent } from '../../../shared/helpers/index.js';
+import { DEFAULT_FILENAME } from '../../../shared/constants/index.js';
 
+// Props for the simplified hook
 interface UseSubtitleSavingProps {
   subtitles: SrtSegment[] | undefined;
-  originalSrtFilePath: string | null;
-  setSaveError: Dispatch<SetStateAction<string>>;
-  onSaveAsComplete: (newFilePath: string) => void;
+  originalSrtFilePath: string | null; // Path from parent state
+  setSaveError: Dispatch<SetStateAction<string>>; // Keep error reporting
+  onSaveAsComplete: (newFilePath: string) => void; // Callback for parent
 }
 
+// Return type for the simplified hook
 interface UseSubtitleSavingReturn {
-  canSaveDirectly: boolean;
+  canSaveDirectly: boolean; // Derived directly from originalSrtFilePath
   handleSaveSrt: () => Promise<void>;
   handleSaveEditedSrtAs: () => Promise<void>;
 }

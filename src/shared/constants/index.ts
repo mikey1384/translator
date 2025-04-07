@@ -45,3 +45,6 @@ export const languages = [
   { code: 'ar', name: 'Arabic' },
   { code: 'hi', name: 'Hindi' },
 ];
+
+export const DEBOUNCE_DELAY_MS = 300;
+export const DEFAULT_FILENAME = 'edited_subtitles.srt';

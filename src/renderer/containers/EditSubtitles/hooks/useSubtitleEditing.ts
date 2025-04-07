@@ -8,9 +8,9 @@ import {
 } from 'react';
 import { debounce } from 'lodash';
 import { SrtSegment } from '../../../../types/interface.js';
-import { srtTimeToSeconds } from '../utils.js';
+import { srtTimeToSeconds } from '../../../../shared/helpers/index.js';
 import { useRestoreFocus } from './useRestoreFocus.js';
-import { DEBOUNCE_DELAY_MS } from '../constants.js';
+import { DEBOUNCE_DELAY_MS } from '../../../../shared/constants/index.js';
 
 // Define the hook's return type for clarity
 interface UseSubtitleEditingReturn {

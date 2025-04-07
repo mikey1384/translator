@@ -22,7 +22,7 @@ import {
   fixOverlappingSegments,
 } from '../../../shared/helpers/index.js';
 
-import { secondsToSrtTime } from './utils.js';
+import { secondsToSrtTime } from '../../../shared/helpers/index.js';
 import { useSubtitleNavigation } from './hooks.js';
 import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
 import { SrtSegment, MergeSubtitlesOptions } from '../../../types/interface.js';

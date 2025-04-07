@@ -195,3 +195,26 @@ export async function openSubtitleWithElectron(): Promise<{
     return { error: `Failed to open subtitle file: ${message}` };
   }
 }
+
+export const validateSubtitleTimings = (
+  subtitles: SrtSegment[]
+): SrtSegment[] => {
+  if (!subtitles || subtitles.length === 0) return [];
+  return subtitles.map(subtitle => {
+    const fixed = { ...subtitle };
+    if (fixed.start < 0) fixed.start = 0;
+    if (fixed.end <= fixed.start) fixed.end = fixed.start + 0.5;
+    return fixed;
+  });
+};
+
+export const generateSrtContent = (segments: SrtSegment[]): string => {
+  return segments
+    .map((segment, i) => {
+      const index = i + 1;
+      const startTime = secondsToSrtTime(segment.start);
+      const endTime = secondsToSrtTime(segment.end);
+      return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
+    })
+    .join('\n\n');
+};
