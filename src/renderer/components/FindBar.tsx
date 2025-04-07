@@ -1,11 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../styles';
-
-// Simple icon components (replace with actual icons if you have an icon library)
-const UpArrow = () => <span style={{ verticalAlign: 'middle' }}>↑</span>;
-const DownArrow = () => <span style={{ verticalAlign: 'middle' }}>↓</span>;
-const CloseIcon = () => <span style={{ verticalAlign: 'middle' }}>✕</span>;
+import { colors } from '../styles.js';
 
 const findBarStyles = css`
   position: fixed;
@@ -82,145 +77,118 @@ const closeButtonStyles = css`
 
 interface FindBarProps {
   isVisible: boolean;
-  results: {
-    matches: number;
-    activeMatchOrdinal: number;
-  };
+  searchText: string;
+  onSearchTextChange: (val: string) => void;
+  matchCount: number;
+  activeMatchIndex: number;
+  onFindNext: () => void;
+  onFindPrev: () => void;
   onClose: () => void;
+  onReplaceAll?: (searchText: string, replaceText: string) => void;
 }
 
-const FindBar: React.FC<FindBarProps> = ({ isVisible, results, onClose }) => {
-  const [searchText, setSearchText] = useState('');
+export default function FindBar(props: FindBarProps) {
+  const {
+    isVisible,
+    searchText,
+    onSearchTextChange,
+    matchCount,
+    activeMatchIndex,
+    onFindNext,
+    onFindPrev,
+    onClose,
+    onReplaceAll,
+  } = props;
+
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to store debounce timeout
+  const [replaceText, setReplaceText] = useState('');
 
   useEffect(() => {
     if (isVisible) {
       inputRef.current?.focus();
-    } else {
-      // Clear timeout if component becomes hidden
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
     }
   }, [isVisible]);
 
-  useEffect(() => {
-    // Debounce the find request
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    // Set a new timeout only if the bar is visible
-    if (isVisible && window.electron) {
-      debounceTimeoutRef.current = setTimeout(() => {
-        console.log(`[FindBar] Debounced search for: "${searchText}"`);
-        window.electron.sendFindInPage({ text: searchText });
-      }, 300); // 300ms debounce delay
-    }
-
-    // Cleanup function to clear timeout if component unmounts or searchText changes again
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, [searchText, isVisible]); // Effect runs when searchText or visibility changes
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value);
+    onSearchTextChange(e.target.value);
   };
-
-  const handleFindNext = useCallback(() => {
-    if (window.electron && searchText) {
-      window.electron.sendFindInPage({
-        text: searchText,
-        findNext: true,
-        forward: true,
-      });
-    }
-  }, [searchText]);
-
-  const handleFindPrev = useCallback(() => {
-    if (window.electron && searchText) {
-      window.electron.sendFindInPage({
-        text: searchText,
-        findNext: true,
-        forward: false,
-      });
-    }
-  }, [searchText]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (e.shiftKey) {
-        handleFindPrev();
+        onFindPrev();
       } else {
-        handleFindNext();
+        onFindNext();
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      handleClose();
+      onClose();
     }
-  };
-
-  const handleClose = () => {
-    if (window.electron) {
-      window.electron.sendStopFind();
-    }
-    onClose();
   };
 
   if (!isVisible) {
     return null;
   }
 
-  const hasMatches = results.matches > 0;
+  const hasMatches = matchCount > 0;
+  const showMatchInfo =
+    searchText.length > 0
+      ? `${activeMatchIndex + 1} of ${matchCount}`
+      : '0 of 0';
 
   return (
     <div className={findBarStyles}>
       <input
         ref={inputRef}
         type="text"
-        placeholder="Find in page..."
+        placeholder="Find in subtitles..."
         value={searchText}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         className={inputStyles}
       />
-      <span className={matchCountStyles}>
-        {searchText.length === 0
-          ? ''
-          : hasMatches
-            ? `${results.activeMatchOrdinal} of ${results.matches}`
-            : '0 of 0'}
-      </span>
+      <input
+        type="text"
+        placeholder="Replace with..."
+        value={replaceText}
+        onChange={e => setReplaceText(e.target.value)}
+        className={`${inputStyles} ${css`
+          min-width: 120px;
+        `}`}
+      />
+      <span className={matchCountStyles}>{showMatchInfo}</span>
       <button
         className={buttonStyles}
-        onClick={handleFindNext}
+        onClick={onFindNext}
         disabled={!hasMatches}
         title="Next Match (Enter)"
       >
-        <DownArrow />
+        <span style={{ verticalAlign: 'middle' }}>↓</span>
       </button>
       <button
         className={buttonStyles}
-        onClick={handleFindPrev}
+        onClick={onFindPrev}
         disabled={!hasMatches}
         title="Previous Match (Shift+Enter)"
       >
-        <UpArrow />
+        <span style={{ verticalAlign: 'middle' }}>↑</span>
+      </button>
+      <button
+        className={buttonStyles}
+        onClick={() => onReplaceAll?.(searchText, replaceText)}
+        disabled={!searchText || !replaceText || !onReplaceAll}
+        title="Replace All Occurrences"
+      >
+        Replace All
       </button>
       <button
         className={closeButtonStyles}
-        onClick={handleClose}
+        onClick={onClose}
         title="Close (Esc)"
       >
-        <CloseIcon />
+        <span style={{ verticalAlign: 'middle' }}>✕</span>
       </button>
     </div>
   );
-};
-
-export default FindBar;
+}

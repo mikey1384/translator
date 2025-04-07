@@ -50,7 +50,10 @@ export interface EditSubtitlesProps {
   setMergeStage: React.Dispatch<React.SetStateAction<string>>;
   setIsMergingInProgress: React.Dispatch<React.SetStateAction<boolean>>;
   onSetMergeOperationId: Dispatch<SetStateAction<string | null>>;
-  editorRef?: React.RefObject<{ scrollToCurrentSubtitle: () => void }>;
+  editorRef?: React.RefObject<{
+    scrollToCurrentSubtitle: () => void;
+    scrollToSubtitleIndex: (index: number) => void;
+  }>;
   onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
   subtitleSourceId?: number;
@@ -61,6 +64,7 @@ export interface EditSubtitlesProps {
   onSelectVideoClick: () => void;
   saveError: string;
   setSaveError: Dispatch<SetStateAction<string>>;
+  searchText?: string;
 }
 
 export function EditSubtitles({
@@ -85,6 +89,7 @@ export function EditSubtitles({
   onSrtFileLoaded,
   saveError,
   setSaveError,
+  searchText,
 }: EditSubtitlesProps) {
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
@@ -308,12 +313,45 @@ export function EditSubtitles({
     videoPlayerRef
   );
 
+  // --- NEW: Function to scroll to and highlight a specific subtitle index --- START ---
+  const scrollToSubtitleIndex = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < subtitleRefs.current.length) {
+        const targetElement = subtitleRefs.current[index];
+        if (targetElement) {
+          console.log(`[EditSubtitles] Scrolling to specific index: ${index}`);
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Remove existing highlights first
+          targetElement.classList.remove('highlight-subtitle');
+
+          // Add highlight effect
+          targetElement.classList.add('highlight-subtitle');
+
+          // Remove highlight after animation (e.g., 2 seconds)
+          setTimeout(() => {
+            targetElement.classList.remove('highlight-subtitle');
+          }, 2000);
+        }
+      } else {
+        console.warn(`[EditSubtitles] Invalid index for scrolling: ${index}`);
+      }
+    },
+    [subtitleRefs] // Dependency: subtitleRefs
+  );
+  // --- NEW: Function to scroll to and highlight a specific subtitle index --- END ---
+
   // If an external editorRef is provided, expose `scrollToCurrentSubtitle`
+  // -- MODIFIED: Also expose scrollToSubtitleIndex --
   useEffect(() => {
     if (editorRef?.current) {
+      // Assign the existing scroll function
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
+      // Assign the new scroll-to-index function
+      editorRef.current.scrollToSubtitleIndex = scrollToSubtitleIndex;
     }
-  }, [editorRef, scrollToCurrentSubtitle]);
+    // Add scrollToSubtitleIndex to dependencies
+  }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
   // --- NEW Seek Handler ---
   const seekPlayerToTime = useCallback(
@@ -456,6 +494,7 @@ export function EditSubtitles({
               onPlaySubtitle={handlePlaySubtitle} // Use the correct prop name
               onShiftSubtitle={handleShiftSubtitle} // Use the correct prop name
               isShiftingDisabled={isShiftingDisabled}
+              searchText={searchText || ''}
             />
           </div>
         </>

@@ -22,6 +22,7 @@ interface SubtitleEditorProps {
   onPlaySubtitle: (startTime: number, endTime: number) => void;
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
+  searchText?: string;
 }
 
 // -- Updated Styles for Dark Theme --
@@ -141,6 +142,7 @@ export default function SubtitleEditor({
   onPlaySubtitle,
   onShiftSubtitle,
   isShiftingDisabled,
+  searchText,
 }: SubtitleEditorProps) {
   // --- Text Splitting Logic ---
   let originalText = '';
@@ -179,6 +181,29 @@ export default function SubtitleEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sub.text]);
   // --- Effect to Sync Local State with Prop Changes --- END ---
+
+  // --- NEW: Highlight Function --- START ---
+  function highlightMatches(text: string, query: string): string {
+    if (!query || query.trim() === '') return text; // Return text if query is empty
+    try {
+      // Escape special regex characters in the query
+      const escaped = query.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
+      const regex = new RegExp(escaped, 'gi'); // 'g' for global, 'i' for case-insensitive
+      // Wrap matches in <mark> tags
+      return text.replace(regex, match => `<mark>${match}</mark>`);
+    } catch (error) {
+      console.error('Error creating regex for highlighting:', error);
+      return text; // Return original text on error
+    }
+  }
+  // --- NEW: Highlight Function --- END ---
+
+  // --- NEW: Memoized Highlighted HTML --- START ---
+  const highlightedHtml = React.useMemo(() => {
+    // Use the current LOCAL text value for highlighting
+    return highlightMatches(currentTextValue, searchText || '');
+  }, [currentTextValue, searchText]); // Dependencies: local text value and search query
+  // --- NEW: Memoized Highlighted HTML --- END ---
 
   // --- Update handleTextChange ---
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -291,6 +316,32 @@ export default function SubtitleEditor({
           </Button>
         </div>
       </div>
+
+      {/* --- NEW: Read-only Highlight Preview --- START --- */}
+      {searchText && searchText.trim() !== '' && (
+        <div
+          className={css`
+            background-color: ${colors.grayLight}; /* Match textarea background */
+            border: 1px solid transparent; /* Match textarea border (or make subtle) */
+            padding: 8px; /* Match textarea padding */
+            border-radius: 4px; /* Match textarea radius */
+            margin-bottom: 5px; /* Add some space */
+            font-family: monospace; /* Match textarea font */
+            font-size: inherit; /* Match textarea font size */
+            line-height: 1.4; /* Match textarea line height */
+            white-space: pre-wrap; /* Preserve whitespace like textarea */
+            color: ${colors.dark}; /* Match textarea text color */
+            mark {
+              background-color: yellow; /* Standard highlight color */
+              color: black; /* Ensure text is readable on highlight */
+              padding: 0.1em; /* Optional small padding */
+              border-radius: 2px;
+            }
+          `}
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        />
+      )}
+      {/* --- NEW: Read-only Highlight Preview --- END --- */}
 
       {/* Text Area */}
       <textarea

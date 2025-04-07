@@ -21,6 +21,7 @@ interface SubtitleListProps {
   onPlaySubtitle: (startTime: number, endTime: number) => void;
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
+  searchText: string;
 }
 
 function SubtitleList({
@@ -37,6 +38,7 @@ function SubtitleList({
   onPlaySubtitle,
   onShiftSubtitle,
   isShiftingDisabled,
+  searchText,
 }: SubtitleListProps) {
   return (
     <div
@@ -96,6 +98,7 @@ function SubtitleList({
             onPlaySubtitle={onPlaySubtitle}
             onShiftSubtitle={onShiftSubtitle}
             isShiftingDisabled={isShiftingDisabled}
+            searchText={searchText}
           />
         </div>
       ))}

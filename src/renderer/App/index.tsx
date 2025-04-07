@@ -19,11 +19,6 @@ import { useSubtitleSaving } from '../containers/EditSubtitles/hooks/useSubtitle
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
 
-type FindResults = {
-  matches: number;
-  activeMatchOrdinal: number;
-};
-
 const headerRightGroupStyles = css`
   display: flex;
   align-items: center;
@@ -81,10 +76,9 @@ function AppContent() {
   const [videoFilePath, setVideoFilePath] = useState<string | null>(null);
 
   const [isFindBarVisible, setIsFindBarVisible] = useState(false);
-  const [findResults, setFindResults] = useState<FindResults>({
-    matches: 0,
-    activeMatchOrdinal: 0,
-  });
+  const [searchText, setSearchText] = useState('');
+  const [matchedIndices, setMatchedIndices] = useState<number[]>([]);
+  const [activeMatchIndex, setActiveMatchIndex] = useState<number>(0);
 
   const [isUrlLoading, setIsUrlLoading] = useState(false);
   const [urlLoadProgressPercent, setUrlLoadProgressPercent] = useState(0);
@@ -121,8 +115,10 @@ function AppContent() {
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
   const editSubtitlesMethodsRef = useRef<{
     scrollToCurrentSubtitle: () => void;
+    scrollToSubtitleIndex: (index: number) => void;
   }>({
     scrollToCurrentSubtitle: () => {},
+    scrollToSubtitleIndex: (_index: number) => {},
   });
 
   useEffect(() => {
@@ -152,83 +148,59 @@ function AppContent() {
   }, [isUrlLoading, urlLoadProgressPercent, urlLoadProgressStage]);
 
   useEffect(() => {
-    if (!window.electron?.onProcessUrlProgress) return;
+    if (!searchText) {
+      setMatchedIndices([]);
+      setActiveMatchIndex(0);
+      return;
+    }
 
-    console.log('[App] Setting up URL progress listener.');
+    const lowerSearch = searchText.toLowerCase();
+    const newMatches = subtitleSegments
+      .map((seg, idx) =>
+        seg.text.toLowerCase().includes(lowerSearch) ? idx : -1
+      )
+      .filter(idx => idx !== -1);
 
-    const cleanup = window.electron.onProcessUrlProgress(progress => {
-      // Only update state if we are actually in the URL loading process
-      if (isUrlLoading) {
-        console.log('[App] URL Progress Update:', progress);
-        setUrlLoadProgressPercent(progress.percent ?? urlLoadProgressPercent);
-        setUrlLoadProgressStage(progress.stage ?? urlLoadProgressStage);
-
-        // Handle completion or error
-        if (progress.percent >= 100 || progress.error) {
-          setIsUrlLoading(false);
-          if (progress.error) {
-            setSaveError(`Error during processing: ${progress.error}`);
-          }
-        }
-      }
-    });
-
-    return () => {
-      console.log('[App] Cleaning up URL progress listener.');
-      cleanup();
-    };
-  }, [isUrlLoading, urlLoadProgressPercent, urlLoadProgressStage]);
+    setMatchedIndices(newMatches);
+    setActiveMatchIndex(0);
+  }, [searchText, subtitleSegments]);
 
   useEffect(() => {
-    console.log('[AppContent] Find Bar useEffect running.');
-    if (!window.electron) {
-      console.error('[AppContent] window.electron is NOT defined!');
-      return;
+    if (matchedIndices.length > 0 && isFindBarVisible) {
+      const subIndex = matchedIndices[activeMatchIndex];
+      editSubtitlesMethodsRef.current?.scrollToSubtitleIndex(subIndex);
     }
+  }, [activeMatchIndex, matchedIndices, isFindBarVisible]);
 
-    console.log('[AppContent] Checking preload functions:', {
-      onShowFindBarExists: typeof window.electron.onShowFindBar === 'function',
-      onFindResultsExists: typeof window.electron.onFindResults === 'function',
-    });
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'f' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        console.log('[AppContent] Cmd/Ctrl+F detected, showing FindBar.');
+        setIsFindBarVisible(true);
+      }
+    };
 
-    if (
-      typeof window.electron.onShowFindBar !== 'function' ||
-      typeof window.electron.onFindResults !== 'function'
-    ) {
-      console.error(
-        '[AppContent] Required find functions NOT available on window.electron!'
-      );
-      return;
-    }
-
-    const cleanupShowListener = window.electron.onShowFindBar(() => {
-      console.log('[AppContent] Show find bar triggered');
-      setIsFindBarVisible(true);
-    });
-
-    const cleanupResultsListener = window.electron.onFindResults(results => {
-      console.log('[AppContent] Find results received:', results);
-      setFindResults({
-        matches: results.matches,
-        activeMatchOrdinal: results.activeMatchOrdinal,
-      });
-    });
-    console.log('[AppContent] Find listeners potentially set up.');
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      console.log('[AppContent] Cleaning up find listeners.');
-      cleanupShowListener();
-      cleanupResultsListener();
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [setIsFindBarVisible, setFindResults]); // Added dependencies for exhaustive-deps
+  }, [isFindBarVisible]);
 
   return (
     <div className={pageWrapperStyles}>
       {videoUrl && <div style={{ height: 'CALC(35vh + 2rem)' }} />}
       <FindBar
         isVisible={isFindBarVisible}
-        results={findResults}
+        searchText={searchText}
+        onSearchTextChange={setSearchText}
+        matchCount={matchedIndices.length}
+        activeMatchIndex={activeMatchIndex}
+        onFindNext={handleFindNext}
+        onFindPrev={handleFindPrev}
         onClose={handleCloseFindBar}
+        onReplaceAll={handleReplaceAll}
       />
       <div className={containerStyles}>
         <div className={headerStyles}>
@@ -314,6 +286,7 @@ function AppContent() {
                   onSrtFileLoaded={handleSrtFileLoaded}
                   saveError={saveError}
                   setSaveError={setSaveError}
+                  searchText={searchText}
                 />
               </div>
             </div>
@@ -381,7 +354,7 @@ function AppContent() {
 
   function handleCloseFindBar() {
     setIsFindBarVisible(false);
-    window.electron?.sendStopFind();
+    setSearchText('');
   }
 
   function handleScrollToCurrentSubtitle() {
@@ -594,6 +567,50 @@ function AppContent() {
       setSaveError(`Error loading URL: ${err.message || err}`);
       setIsUrlLoading(false); // Stop loading on error
     }
+  }
+
+  function handleFindNext() {
+    if (matchedIndices.length === 0) return;
+    setActiveMatchIndex(prev => (prev + 1) % matchedIndices.length);
+  }
+
+  function handleFindPrev() {
+    if (matchedIndices.length === 0) return;
+    setActiveMatchIndex(
+      prev => (prev - 1 + matchedIndices.length) % matchedIndices.length
+    );
+  }
+
+  function handleReplaceAll(findText: string, replaceWithText: string) {
+    if (!findText || !replaceWithText) {
+      console.warn(
+        '[AppContent] Replace All requires both find and replace text.'
+      );
+      return;
+    }
+
+    console.log(
+      `[AppContent] Replacing "${findText}" with "${replaceWithText}"`
+    );
+
+    handleSetSubtitleSegments(currentSegments => {
+      try {
+        const escapedFindText = findText.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
+        const regex = new RegExp(escapedFindText, 'gi');
+
+        return currentSegments.map(segment => ({
+          ...segment,
+          text: segment.text.replace(regex, replaceWithText),
+        }));
+      } catch (error) {
+        console.error('Error during Replace All regex operation:', error);
+        setSaveError(`Error during replacement: ${error}`);
+        return currentSegments;
+      }
+    });
+
+    setMatchedIndices([]);
+    setActiveMatchIndex(0);
   }
 }
 

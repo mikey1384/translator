@@ -23,6 +23,7 @@ interface LazySubtitleItemProps {
   onPlaySubtitle: (startTime: number, endTime: number) => void;
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
+  searchText: string;
 }
 
 function LazySubtitleItem({
@@ -39,6 +40,7 @@ function LazySubtitleItem({
   onPlaySubtitle,
   onShiftSubtitle,
   isShiftingDisabled,
+  searchText,
 }: LazySubtitleItemProps) {
   const [ComponentRef, inView] = useInView();
 
@@ -83,6 +85,7 @@ function LazySubtitleItem({
             onPlaySubtitle={onPlaySubtitle}
             onShiftSubtitle={onShiftSubtitle}
             isShiftingDisabled={isShiftingDisabled}
+            searchText={searchText}
           />
         </div>
       ) : (
