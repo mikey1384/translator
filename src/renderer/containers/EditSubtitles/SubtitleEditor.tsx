@@ -3,6 +3,7 @@ import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { colors } from '../../styles.js';
+import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
 
 interface SubtitleEditorProps {
   sub: SrtSegment;
@@ -62,26 +63,6 @@ const timeInputStyles = css`
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-  }
-`;
-
-const textInputStyles = css`
-  width: 100%;
-  min-height: 60px;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid ${colors.border};
-  background-color: ${colors.grayLight};
-  color: ${colors.dark};
-  resize: vertical;
-  font-family: monospace;
-  font-size: inherit;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-    // box-shadow: none; // No focus shadow
   }
 `;
 
@@ -182,37 +163,13 @@ export default function SubtitleEditor({
   }, [sub.text]);
   // --- Effect to Sync Local State with Prop Changes --- END ---
 
-  // --- NEW: Highlight Function --- START ---
-  function highlightMatches(text: string, query: string): string {
-    if (!query || query.trim() === '') return text; // Return text if query is empty
-    try {
-      // Escape special regex characters in the query
-      const escaped = query.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
-      const regex = new RegExp(escaped, 'gi'); // 'g' for global, 'i' for case-insensitive
-      // Wrap matches in <mark> tags
-      return text.replace(regex, match => `<mark>${match}</mark>`);
-    } catch (error) {
-      console.error('Error creating regex for highlighting:', error);
-      return text; // Return original text on error
-    }
-  }
-  // --- NEW: Highlight Function --- END ---
-
-  // --- NEW: Memoized Highlighted HTML --- START ---
-  const highlightedHtml = React.useMemo(() => {
-    // Use the current LOCAL text value for highlighting
-    return highlightMatches(currentTextValue, searchText || '');
-  }, [currentTextValue, searchText]); // Dependencies: local text value and search query
-  // --- NEW: Memoized Highlighted HTML --- END ---
-
-  // --- Update handleTextChange ---
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
+  // --- Update handleTextChange to accept string directly --- START ---
+  const handleTextChange = (newValue: string) => {
     setCurrentTextValue(newValue); // Update local state immediately
     // Directly call the prop which is handled (debounced) by useSubtitleEditing hook
-    // The hook will handle combining with originalText if needed.
     onEditSubtitle(index, 'text', newValue);
   };
+  // --- Update handleTextChange --- END ---
 
   const handleTimeChange = (field: 'start' | 'end', value: string) => {
     onEditSubtitle(index, field, value); // Update immediately for visual feedback
@@ -317,45 +274,20 @@ export default function SubtitleEditor({
         </div>
       </div>
 
-      {/* --- NEW: Read-only Highlight Preview --- START --- */}
-      {searchText && searchText.trim() !== '' && (
-        <div
-          className={css`
-            background-color: ${colors.grayLight}; /* Match textarea background */
-            border: 1px solid transparent; /* Match textarea border (or make subtle) */
-            padding: 8px; /* Match textarea padding */
-            border-radius: 4px; /* Match textarea radius */
-            margin-bottom: 5px; /* Add some space */
-            font-family: monospace; /* Match textarea font */
-            font-size: inherit; /* Match textarea font size */
-            line-height: 1.4; /* Match textarea line height */
-            white-space: pre-wrap; /* Preserve whitespace like textarea */
-            color: ${colors.dark}; /* Match textarea text color */
-            mark {
-              background-color: yellow; /* Standard highlight color */
-              color: black; /* Ensure text is readable on highlight */
-              padding: 0.1em; /* Optional small padding */
-              border-radius: 2px;
-            }
-          `}
-          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-        />
-      )}
-      {/* --- NEW: Read-only Highlight Preview --- END --- */}
-
-      {/* Text Area */}
-      <textarea
-        className={textInputStyles}
-        value={currentTextValue}
-        onChange={handleTextChange}
-        placeholder="Enter subtitle text..."
-        data-testid={`subtitle-text-${index}`}
-      />
-
       {/* Original Text Display (Conditional) */}
       {hasMarker && originalText && (
         <div className={originalTextStyles}>Original: {originalText}</div>
       )}
+
+      {/* --- Replace Textarea with HighlightedTextarea --- START --- */}
+      <HighlightedTextarea
+        value={currentTextValue}
+        searchTerm={searchText || ''}
+        onChange={handleTextChange}
+        rows={4} // Adjust rows as needed
+        placeholder="Subtitle text"
+      />
+      {/* --- Replace Textarea with HighlightedTextarea --- END --- */}
 
       {/* Bottom Row: Time Inputs, Shift Controls - Now all grouped */}
       <div className={bottomRowStyles}>
