@@ -24,6 +24,7 @@ interface LazySubtitleItemProps {
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
   searchText: string;
+  forcedIndex: number | null;
 }
 
 function LazySubtitleItem({
@@ -41,6 +42,7 @@ function LazySubtitleItem({
   onShiftSubtitle,
   isShiftingDisabled,
   searchText,
+  forcedIndex,
 }: LazySubtitleItemProps) {
   const [ComponentRef, inView] = useInView();
 
@@ -48,6 +50,9 @@ function LazySubtitleItem({
   const [isVisible, setIsVisible] = useState(false);
   const [placeholderHeight, setPlaceholderHeight] = useState(150); // Default height
   const itemRef = useRef<HTMLDivElement>(null);
+
+  // Determine if this specific item should bypass lazy loading
+  const shouldForceRender = forcedIndex === index;
 
   // Use our lazy loading hook
   useLazyLoad({
@@ -58,7 +63,8 @@ function LazySubtitleItem({
     delay: 500, // Keep rendered for 500ms after scrolling away
   });
 
-  const shouldRender = isVisible || inView;
+  // Render if forced, OR if lazy logic determines visibility
+  const shouldRender = shouldForceRender || isVisible || inView;
 
   return (
     <div
@@ -69,7 +75,7 @@ function LazySubtitleItem({
       `}
     >
       {shouldRender ? (
-        <div ref={itemRef}>
+        <div ref={itemRef} className="subtitle-editor-content-wrapper">
           <SubtitleEditor
             key={sub.index}
             sub={sub}

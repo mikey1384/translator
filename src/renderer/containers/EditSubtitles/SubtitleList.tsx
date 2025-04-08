@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { RefObject } from 'react';
 import { css } from '@emotion/css';
 import LazySubtitleItem from './LazySubtitleItem.js';
 import { SrtSegment } from '../../../types/interface.js';
 
-interface SubtitleListProps {
+export interface SubtitleListProps {
   subtitles: SrtSegment[];
-  subtitleRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+  subtitleRefs: RefObject<(HTMLDivElement | null)[]>;
   editingTimes: Record<string, string>;
   isPlaying: boolean;
   secondsToSrtTime: (seconds: number) => string;
@@ -22,6 +22,7 @@ interface SubtitleListProps {
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
   searchText: string;
+  forcedIndex: number | null;
 }
 
 function SubtitleList({
@@ -39,6 +40,7 @@ function SubtitleList({
   onShiftSubtitle,
   isShiftingDisabled,
   searchText,
+  forcedIndex,
 }: SubtitleListProps) {
   return (
     <div
@@ -80,8 +82,14 @@ function SubtitleList({
         <div
           key={`${sub.index}-${sub.start}-${sub.end}`}
           ref={el => {
-            subtitleRefs.current[index] = el;
+            if (subtitleRefs && subtitleRefs.current) {
+              subtitleRefs.current[index] = el;
+            }
           }}
+          id={`subtitle-item-${index}`}
+          className={css`
+            scroll-margin-top: 10px;
+          `}
         >
           <LazySubtitleItem
             key={sub.index}
@@ -99,6 +107,7 @@ function SubtitleList({
             onShiftSubtitle={onShiftSubtitle}
             isShiftingDisabled={isShiftingDisabled}
             searchText={searchText}
+            forcedIndex={forcedIndex}
           />
         </div>
       ))}

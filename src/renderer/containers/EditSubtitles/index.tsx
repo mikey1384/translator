@@ -105,6 +105,7 @@ export function EditSubtitles({
   const [mergeStylePreset, setMergeStylePreset] =
     useState<AssStylePresetKey>('Default');
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
+  const [forcedIndex, setForcedIndex] = useState<number | null>(null);
   const playTimeoutRef = useRef<number | null>(null);
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
@@ -319,33 +320,50 @@ export function EditSubtitles({
     videoPlayerRef
   );
 
-  // --- NEW: Function to scroll to and highlight a specific subtitle index --- START ---
+  // --- Function to scroll to and highlight a specific subtitle index --- START ---
   const scrollToSubtitleIndex = useCallback(
     (index: number) => {
       if (index >= 0 && index < subtitleRefs.current.length) {
-        const targetElement = subtitleRefs.current[index];
-        if (targetElement) {
-          console.log(`[EditSubtitles] Scrolling to specific index: ${index}`);
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        console.log(`[EditSubtitles] Requesting scroll to index: ${index}`);
 
-          // Remove existing highlights first
-          targetElement.classList.remove('highlight-subtitle');
+        // Step 1: Set the index to be force-rendered
+        setForcedIndex(index);
 
-          // Add highlight effect
-          targetElement.classList.add('highlight-subtitle');
+        // Step 2: Wait for React to render the forced item, then scroll
+        setTimeout(() => {
+          const targetElement = subtitleRefs.current[index];
+          if (targetElement) {
+            console.log(
+              `[EditSubtitles] Executing scrollIntoView for forced index: ${index}`
+            );
+            targetElement.scrollIntoView({
+              behavior: 'instant',
+              block: 'center',
+            });
 
-          // Remove highlight after animation (e.g., 2 seconds)
-          setTimeout(() => {
-            targetElement.classList.remove('highlight-subtitle');
-          }, 2000);
-        }
+            // Highlight logic (can potentially run slightly delayed too)
+            targetElement.classList.remove('highlight-subtitle'); // Remove any previous
+            targetElement.classList.add('highlight-subtitle');
+            setTimeout(() => {
+              targetElement.classList.remove('highlight-subtitle');
+              // Reset forcedIndex after scroll/highlight animation
+              setForcedIndex(null);
+            }, 2000);
+          } else {
+            console.warn(
+              `[EditSubtitles] Target element for index ${index} not found after forced render.`
+            );
+            // If element still not found, reset forcedIndex
+            setForcedIndex(null);
+          }
+        }, 100); // Changed delay to 100ms
       } else {
         console.warn(`[EditSubtitles] Invalid index for scrolling: ${index}`);
       }
     },
-    [subtitleRefs] // Dependency: subtitleRefs
+    [subtitleRefs, setForcedIndex] // Added setForcedIndex to dependencies
   );
-  // --- NEW: Function to scroll to and highlight a specific subtitle index --- END ---
+  // --- Function to scroll to and highlight a specific subtitle index --- END ---
 
   // If an external editorRef is provided, expose `scrollToCurrentSubtitle`
   // -- MODIFIED: Also expose scrollToSubtitleIndex --
@@ -496,6 +514,7 @@ export function EditSubtitles({
               onShiftSubtitle={handleShiftSubtitle} // Use the correct prop name
               isShiftingDisabled={isShiftingDisabled}
               searchText={searchText || ''}
+              forcedIndex={forcedIndex} // <-- Pass forcedIndex down
             />
           </div>
         </>

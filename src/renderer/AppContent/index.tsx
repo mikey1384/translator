@@ -431,7 +431,11 @@ function AppContent() {
       `[AppContent] Replacing "${findText}" with "${replaceWithText}"`
     );
 
-    replaceAll(subtitleSegments);
+    // Capture the result of the replacement
+    const updatedSegments = replaceAll(subtitleSegments);
+    // Update the state with the new segments
+    handleSetSubtitleSegments(updatedSegments);
+
     setMatchedIndices([]);
     setActiveMatchIndex(0);
 

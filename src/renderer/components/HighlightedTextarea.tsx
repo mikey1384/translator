@@ -29,11 +29,9 @@ function getHighlightedHtml(text: string, searchTerm: string): string {
     .replace(/\n/g, '<br/>')
     .replace(
       regex,
+      // Keep the mark tag generation on a single line to avoid extra whitespace
       match =>
-        // Use template literal for styles, improved readability
-        `<mark style="background: yellow; color: black; border-radius: 3px; padding: 0 2px;">
-          ${match.trim()} 
-         </mark>` // Trim whitespace around match inside mark
+        `<mark style="background: yellow; color: black; border-radius: 3px; padding: 0 2px;">${match.trim()}</mark>`
     );
 }
 
@@ -95,9 +93,9 @@ export function HighlightedTextarea({
     left: 0;
     height: 100%;
     pointer-events: none;
-    /* Show unmatched text in a subtle color */
-    color: #555; // Changed from transparent
-    border: 1px solid transparent;
+    /* Show text in the desired color (e.g., white for dark theme) */
+    color: #fff; // Changed from #BBB to the primary text color
+    border: 1px solid transparent; // Overlay shouldn't have its own border
     z-index: 1;
   `;
 
@@ -106,8 +104,9 @@ export function HighlightedTextarea({
     position: relative;
     background: transparent;
     resize: none;
-    border: 1px solid #ccc;
-    color: #000; // Ensure textarea text color is distinct
+    border: 1px solid #555; // Keep the border for the interactive element
+    color: transparent; // Make the actual textarea text invisible
+    caret-color: #fff; // Ensure the caret is visible on dark background
     z-index: 2;
   `;
 
