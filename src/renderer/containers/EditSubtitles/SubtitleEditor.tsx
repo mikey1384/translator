@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { SrtSegment } from '../../../types/interface.js';
