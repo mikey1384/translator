@@ -87,19 +87,17 @@ interface FindBarProps {
   onReplaceAll?: (searchText: string, replaceText: string) => void;
 }
 
-export default function FindBar(props: FindBarProps) {
-  const {
-    isVisible,
-    searchText,
-    onSearchTextChange,
-    matchCount,
-    activeMatchIndex,
-    onFindNext,
-    onFindPrev,
-    onClose,
-    onReplaceAll,
-  } = props;
-
+export default function FindBar({
+  isVisible,
+  searchText,
+  onSearchTextChange,
+  matchCount,
+  activeMatchIndex,
+  onFindNext,
+  onFindPrev,
+  onClose,
+  onReplaceAll,
+}: FindBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [replaceText, setReplaceText] = useState('');
 

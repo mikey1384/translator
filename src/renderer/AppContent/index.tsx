@@ -12,12 +12,13 @@ import { SrtSegment } from '../../types/interface.js';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
-import { useSubtitleManagement } from './hooks/useSubtitleManagement.js';
-import { useSubtitleSaving } from './hooks/useSubtitleSaving.js';
+import { useSubtitleState } from './hooks/subtitles/useSubtitleState.js';
+import { useSubtitleActions } from './hooks/subtitles/useSubtitleActions.js';
 import { useVideoState } from './hooks/video/useVideoState.js';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
+import { useVideoActions } from './hooks/video/useVideoActions.js';
 
 const headerRightGroupStyles = css`
   display: flex;
@@ -77,16 +78,16 @@ function AppContent() {
 
   const {
     subtitleSegments,
-    handleSetSubtitleSegments,
     isTranslationInProgress,
     translationProgress,
     translationStage,
     isReceivingPartialResults,
     reviewedBatchStartIndex,
-    resetSubtitleSource,
     translationOperationId,
     setIsTranslationInProgress,
-  } = useSubtitleManagement(showOriginalText);
+    setSubtitleSegments,
+    setSubtitleSourceId,
+  } = useSubtitleState(showOriginalText);
 
   const {
     videoFile,
@@ -101,30 +102,59 @@ function AppContent() {
     saveError,
     setIsPlaying,
     setIsMergingInProgress,
-    handleVideoPlayerReady,
-    handleSaveAsComplete,
-    handleSrtFileLoaded,
+    setIsUrlLoading,
+    setUrlLoadProgressPercent,
+    setUrlLoadProgressStage,
+    setVideoFile,
+    setVideoUrl,
+    setVideoFilePath,
+    setVideoPlayerRef,
+    setOriginalSrtFilePath,
     setSaveError,
     videoPlayerRef,
-    handleSetVideoFile,
-    handleLoadFromUrl,
-    handleTogglePlay,
-  } = useVideoState({
-    setMergeOperationId,
-    setMergeStage,
-    setMergeProgress,
-    setIsTranslationInProgress,
-    resetSubtitleSource,
+  } = useVideoState();
+
+  const {
+    handleSaveSrt,
+    handleSaveEditedSrtAs,
     handleSetSubtitleSegments,
+    resetSubtitleSource,
+  } = useSubtitleActions({
+    subtitles: subtitleSegments,
+    originalSrtFilePath: originalSrtFilePath,
+    setSaveError,
+    onSaveAsComplete: handleSaveAsComplete,
+    setSubtitleSegments,
+    setSubtitleSourceId,
   });
 
-  const { canSaveDirectly, handleSaveSrt, handleSaveEditedSrtAs } =
-    useSubtitleSaving({
-      subtitles: subtitleSegments,
-      originalSrtFilePath: originalSrtFilePath,
-      setSaveError: setSaveError,
-      onSaveAsComplete: handleSaveAsComplete,
-    });
+  const {
+    handleLoadFromUrl,
+    handleSetVideoFile,
+    handleSrtFileLoaded,
+    handleTogglePlay,
+    handleVideoPlayerReady,
+  } = useVideoActions({
+    resetSubtitleSource,
+    setIsUrlLoading,
+    setUrlLoadProgressPercent,
+    setUrlLoadProgressStage,
+    setVideoFile,
+    setVideoUrl,
+    setVideoFilePath,
+    setIsPlaying,
+    setIsMergingInProgress,
+    setIsTranslationInProgress,
+    setMergeProgress,
+    setMergeStage,
+    setMergeOperationId,
+    setOriginalSrtFilePath,
+    setSaveError,
+    setVideoPlayerRef,
+    videoUrl,
+    handleSetSubtitleSegments,
+    onReset: handleResetVideo,
+  });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
@@ -269,7 +299,7 @@ function AppContent() {
                   onSetMergeOperationId={setMergeOperationId}
                   onSetSubtitlesDirectly={handleSetSubtitleSegments}
                   reviewedBatchStartIndex={reviewedBatchStartIndex}
-                  canSaveDirectly={canSaveDirectly}
+                  canSaveDirectly={!!originalSrtFilePath}
                   handleSaveSrt={handleSaveSrt}
                   handleSaveEditedSrtAs={handleSaveEditedSrtAs}
                   onSrtFileLoaded={handleSrtFileLoaded}
@@ -314,6 +344,14 @@ function AppContent() {
     </div>
   );
 
+  function handleSaveAsComplete(newFilePath: string) {
+    console.log(
+      '[AppContent] Save As complete, setting original path to:',
+      newFilePath
+    );
+    setOriginalSrtFilePath(newFilePath);
+  }
+
   async function handleSelectVideoClick() {
     try {
       const result = await window.electron.openFile({
@@ -325,7 +363,7 @@ function AppContent() {
 
       if (!result.canceled && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
-        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video'; // Extract filename
+        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video';
         handleSetVideoFile({ path: filePath, name: fileName });
       } else {
         console.log('File selection cancelled or no file chosen.');
@@ -393,12 +431,16 @@ function AppContent() {
       `[AppContent] Replacing "${findText}" with "${replaceWithText}"`
     );
 
-    handleSetSubtitleSegments(currentSegments => {
+    replaceAll(subtitleSegments);
+    setMatchedIndices([]);
+    setActiveMatchIndex(0);
+
+    function replaceAll(currentSegments: SrtSegment[]) {
       try {
         const escapedFindText = findText.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
         const regex = new RegExp(escapedFindText, 'gi');
 
-        return currentSegments.map(segment => ({
+        return currentSegments.map((segment: SrtSegment) => ({
           ...segment,
           text: segment.text.replace(regex, replaceWithText),
         }));
@@ -407,10 +449,15 @@ function AppContent() {
         setSaveError(`Error during replacement: ${error}`);
         return currentSegments;
       }
-    });
+    }
+  }
 
-    setMatchedIndices([]);
-    setActiveMatchIndex(0);
+  function handleResetVideo() {
+    setVideoFile(null);
+    setVideoUrl('');
+    setVideoFilePath(null);
+    setIsPlaying(false);
+    handleSetSubtitleSegments([]);
   }
 }
 

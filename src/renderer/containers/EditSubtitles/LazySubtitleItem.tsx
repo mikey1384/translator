@@ -71,7 +71,7 @@ function LazySubtitleItem({
       {shouldRender ? (
         <div ref={itemRef}>
           <SubtitleEditor
-            key={`${sub.index}-${sub.start}-${sub.end}`}
+            key={sub.index}
             sub={sub}
             index={index}
             editingTimes={editingTimes}

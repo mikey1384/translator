@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { SrtSegment } from '../../../types/interface.js';
+import { useState, useEffect, useRef } from 'react';
+import { SrtSegment } from '../../../../types/interface.js';
 import {
   parseSrt,
   fixOverlappingSegments,
-} from '../../../shared/helpers/index.js';
+} from '../../../../shared/helpers/index.js';
 
-export function useSubtitleManagement(showOriginalText: boolean) {
+export function useSubtitleState(showOriginalText: boolean) {
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
   const [isTranslationInProgress, setIsTranslationInProgress] =
     useState<boolean>(false);
@@ -22,20 +22,10 @@ export function useSubtitleManagement(showOriginalText: boolean) {
   >(null);
 
   const handlePartialResultRef = useRef<any>(null);
+  useEffect(() => {
+    handlePartialResultRef.current = handlePartialResult;
 
-  const handleSetSubtitleSegments = useCallback(
-    (segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])) => {
-      setSubtitleSegments(segments);
-      setSubtitleSourceId(prevId => prevId + 1);
-      console.info(
-        `[useSubtitleManagement] Segments set externally, incremented source ID.`
-      );
-    },
-    []
-  );
-
-  const handlePartialResult = useCallback(
-    (result: {
+    function handlePartialResult(result: {
       partialResult?: string;
       percent?: number;
       stage?: string;
@@ -43,7 +33,7 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       total?: number;
       batchStartIndex?: number;
       operationId?: string;
-    }) => {
+    }) {
       try {
         const safeResult = {
           partialResult: result?.partialResult || '',
@@ -103,32 +93,10 @@ export function useSubtitleManagement(showOriginalText: boolean) {
           error
         );
       }
-    },
-    [
-      showOriginalText,
-      setSubtitleSegments,
-      setIsTranslationInProgress,
-      setTranslationProgress,
-      setTranslationStage,
-      setIsReceivingPartialResults,
-      setReviewedBatchStartIndex,
-      setTranslationOperationId,
-    ]
-  );
+    }
+  }, [showOriginalText]);
 
-  // Effect to keep the ref updated with the latest callback
   useEffect(() => {
-    handlePartialResultRef.current = handlePartialResult;
-  }, [handlePartialResult]);
-
-  // Effect to set up IPC listeners - runs only once
-  useEffect(() => {
-    const handleProgressUpdate = (progress: any) => {
-      if (handlePartialResultRef.current) {
-        handlePartialResultRef.current(progress || {});
-      }
-    };
-
     let cleanupGenerate: (() => void) | null = null;
     let cleanupTranslate: (() => void) | null = null;
 
@@ -153,9 +121,15 @@ export function useSubtitleManagement(showOriginalText: boolean) {
       cleanupGenerate?.();
       cleanupTranslate?.();
     };
-  }, []); // Empty dependency array - runs only once
 
-  const handleSubtitlesGenerated = useCallback((generatedSubtitles: string) => {
+    function handleProgressUpdate(progress: any) {
+      if (handlePartialResultRef.current) {
+        handlePartialResultRef.current(progress || {});
+      }
+    }
+  }, []);
+
+  function handleSubtitlesGenerated(generatedSubtitles: string) {
     try {
       const segments = parseSrt(generatedSubtitles);
       const fixedSegments = fixOverlappingSegments(segments);
@@ -166,19 +140,12 @@ export function useSubtitleManagement(showOriginalText: boolean) {
         err
       );
     }
-  }, []);
-
-  const resetSubtitleSource = useCallback(() => {
-    setSubtitleSegments([]);
-    setSubtitleSourceId(prevId => prevId + 1);
-    console.info(
-      `[useSubtitleManagement] Subtitle source reset explicitly, incremented source ID.`
-    );
-  }, []);
+  }
 
   return {
+    setSubtitleSegments,
+    setSubtitleSourceId,
     subtitleSegments,
-    handleSetSubtitleSegments,
     isTranslationInProgress,
     translationProgress,
     translationStage,
@@ -187,7 +154,6 @@ export function useSubtitleManagement(showOriginalText: boolean) {
     reviewedBatchStartIndex,
     subtitleSourceId,
     handleSubtitlesGenerated,
-    resetSubtitleSource,
     translationOperationId,
   };
 }

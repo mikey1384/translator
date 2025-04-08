@@ -13,7 +13,13 @@ import Button from '../../components/Button.js';
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
 import EditSubtitlesHeader from './EditSubtitlesHeader.js';
-import { nativePlayer } from '../../components/VideoPlayer/NativeVideoPlayer.js';
+import {
+  nativeSeek,
+  nativePause,
+  nativePlay,
+  nativeGetCurrentTime,
+  getNativePlayerInstance,
+} from '../../native-player.js';
 import { subtitleVideoPlayer } from '../../../shared/constants/index.js';
 
 import {
@@ -362,14 +368,9 @@ export function EditSubtitles({
         } catch (error) {
           console.error('Error seeking player via ref:', error);
         }
-      } else if (
-        nativePlayer &&
-        nativePlayer.instance &&
-        typeof nativePlayer.seek === 'function'
-      ) {
-        // Fallback just in case, though should prioritize ref
+      } else {
         try {
-          nativePlayer.seek(time);
+          nativeSeek(time);
         } catch (error) {
           console.error('Error seeking player via global nativePlayer:', error);
         }
@@ -582,7 +583,7 @@ export function EditSubtitles({
 
     if (isPlayingState) {
       try {
-        nativePlayer.pause();
+        nativePause();
       } catch (err) {
         // console.error('Error pausing player:', err);
       }
@@ -595,46 +596,44 @@ export function EditSubtitles({
       const validEndTime = isNaN(endTime) ? validStartTime + 3 : endTime;
 
       let currentPosition = 0;
-      if (nativePlayer.instance) {
-        currentPosition = nativePlayer.instance.currentTime;
+      const playerInstance = getNativePlayerInstance();
+      if (playerInstance) {
+        currentPosition = playerInstance.currentTime;
       } else {
-        currentPosition = nativePlayer.getCurrentTime();
+        currentPosition = nativeGetCurrentTime();
       }
 
       if (currentPosition >= validStartTime && currentPosition < validEndTime) {
         playFromCurrentPosition(currentPosition, validEndTime);
       } else {
-        if (nativePlayer.instance) {
-          const trackElement = nativePlayer.instance.querySelector('track');
+        if (playerInstance) {
+          const trackElement = playerInstance.querySelector('track');
           if (trackElement && trackElement.track) {
             const oldMode = trackElement.track.mode;
             trackElement.track.mode = 'hidden';
 
-            nativePlayer.instance.currentTime = validStartTime;
+            playerInstance.currentTime = validStartTime;
 
             setTimeout(() => {
               trackElement.track.mode = oldMode;
               playFromCurrentPosition(
-                nativePlayer.instance!.currentTime,
+                playerInstance!.currentTime,
                 validEndTime
               );
             }, 200);
           } else {
-            nativePlayer.instance.currentTime = validStartTime;
+            playerInstance.currentTime = validStartTime;
             setTimeout(() => {
               playFromCurrentPosition(
-                nativePlayer.instance!.currentTime,
+                playerInstance!.currentTime,
                 validEndTime
               );
             }, 200);
           }
         } else {
-          nativePlayer.seek(validStartTime);
+          nativeSeek(validStartTime);
           setTimeout(() => {
-            playFromCurrentPosition(
-              nativePlayer.getCurrentTime(),
-              validEndTime
-            );
+            playFromCurrentPosition(nativeGetCurrentTime(), validEndTime);
           }, 200);
         }
       }
@@ -647,19 +646,19 @@ export function EditSubtitles({
   function playFromCurrentPosition(startTime: number, endTime: number) {
     let actualTime = startTime;
     try {
-      if (nativePlayer.instance) {
-        actualTime = nativePlayer.instance.currentTime;
+      const playerInstance = getNativePlayerInstance();
+      if (playerInstance) {
+        actualTime = playerInstance.currentTime;
       } else {
-        actualTime = nativePlayer.getCurrentTime();
+        actualTime = nativeGetCurrentTime();
       }
     } catch (err) {
       // console.error('Error retrieving current time:', err);
     }
 
     try {
-      const playPromise = nativePlayer.instance
-        ? nativePlayer.instance.play()
-        : nativePlayer.play();
+      const playerInstance = getNativePlayerInstance();
+      const playPromise = playerInstance ? playerInstance.play() : nativePlay();
       playPromise
         .then(() => {
           setIsPlayingState(true);
@@ -668,10 +667,11 @@ export function EditSubtitles({
           if (durationMs > 0) {
             playTimeoutRef.current = window.setTimeout(() => {
               try {
-                if (nativePlayer.instance) {
-                  nativePlayer.instance.pause();
+                const playerInstance = getNativePlayerInstance();
+                if (playerInstance) {
+                  playerInstance.pause();
                 } else {
-                  nativePlayer.pause();
+                  nativePause();
                 }
               } catch (err) {
                 // console.error('Error pausing after snippet playback:', err);
@@ -681,7 +681,7 @@ export function EditSubtitles({
             }, durationMs);
           }
         })
-        .catch(_error => {
+        .catch((_error: any) => {
           // console.error('Error starting playback:', _error);
           setIsPlayingState(false);
         });
@@ -717,7 +717,7 @@ export function EditSubtitles({
       }
 
       try {
-        nativePlayer.seek(newStart);
+        nativeSeek(newStart);
       } catch (seekError) {
         // console.error('Error seeking after shiftSubtitle:', seekError);
       }

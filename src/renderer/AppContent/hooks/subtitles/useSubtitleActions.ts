@@ -1,44 +1,40 @@
-import { useCallback, Dispatch, SetStateAction } from 'react';
-import { SrtSegment } from '../../../types/interface.js';
-import { saveFileWithRetry } from '../../../shared/helpers/electron-ipc.js';
-import { generateSrtContent } from '../../../shared/helpers/index.js';
-import { DEFAULT_FILENAME } from '../../../shared/constants/index.js';
+import { Dispatch, SetStateAction } from 'react';
+import { SrtSegment } from '../../../../types/interface.js';
+import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
+import { generateSrtContent } from '../../../../shared/helpers/index.js';
+import { DEFAULT_FILENAME } from '../../../../shared/constants/index.js';
 
-// Props for the simplified hook
-interface UseSubtitleSavingProps {
-  subtitles: SrtSegment[] | undefined;
-  originalSrtFilePath: string | null; // Path from parent state
-  setSaveError: Dispatch<SetStateAction<string>>; // Keep error reporting
-  onSaveAsComplete: (newFilePath: string) => void; // Callback for parent
-}
-
-// Return type for the simplified hook
-interface UseSubtitleSavingReturn {
-  canSaveDirectly: boolean; // Derived directly from originalSrtFilePath
-  handleSaveSrt: () => Promise<void>;
-  handleSaveEditedSrtAs: () => Promise<void>;
-}
-
-export function useSubtitleSaving({
+export function useSubtitleActions({
   subtitles,
   originalSrtFilePath,
+  setSubtitleSegments,
+  setSubtitleSourceId,
   setSaveError,
   onSaveAsComplete,
-}: UseSubtitleSavingProps): UseSubtitleSavingReturn {
-  // Determine if direct saving is possible based on the prop
-  const canSaveDirectly = !!originalSrtFilePath;
-
-  // Save As (triggers Save As dialog)
-  const handleSaveEditedSrtAs = useCallback(async () => {
+}: {
+  subtitles: SrtSegment[];
+  originalSrtFilePath: string | null;
+  setSubtitleSegments: Dispatch<SetStateAction<SrtSegment[]>>;
+  setSubtitleSourceId: Dispatch<SetStateAction<number>>;
+  setSaveError: Dispatch<SetStateAction<string>>;
+  onSaveAsComplete: (newFilePath: string) => void;
+}): {
+  handleSaveSrt: () => Promise<void>;
+  handleSaveEditedSrtAs: () => Promise<void>;
+  handleSetSubtitleSegments: (
+    segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])
+  ) => void;
+  resetSubtitleSource: () => void;
+} {
+  async function handleSaveEditedSrtAs(): Promise<void> {
     if (!subtitles || subtitles.length === 0) {
       setSaveError('No subtitle content to save.');
       return;
     }
 
     try {
-      let suggestedName = originalSrtFilePath || DEFAULT_FILENAME; // Use original path as suggestion if available
+      let suggestedName = originalSrtFilePath || DEFAULT_FILENAME;
 
-      // Ensure .srt extension
       if (!suggestedName.toLowerCase().endsWith('.srt')) {
         const nameWithoutExt = suggestedName.includes('.')
           ? suggestedName.substring(0, suggestedName.lastIndexOf('.'))
@@ -53,14 +49,14 @@ export function useSubtitleSaving({
         defaultPath: suggestedName,
         filters: [{ name: 'SRT Files', extensions: ['srt'] }],
         content: srtContent,
-        forceDialog: true, // Always force dialog for Save As
+        forceDialog: true,
       };
 
       console.log(
         '[useSubtitleSaving] Attempting Save As with options:',
         saveOptions
       );
-      setSaveError(''); // Clear previous errors
+      setSaveError('');
       const result = await saveFileWithRetry(saveOptions);
       console.log('[useSubtitleSaving] Result from Save As:', result);
 
@@ -68,29 +64,28 @@ export function useSubtitleSaving({
         console.log(
           `[useSubtitleSaving] File saved via Save As: ${result.filePath}`
         );
-        onSaveAsComplete(result.filePath); // Notify parent about the new path
-        alert(`File saved successfully to:\\n${result.filePath}`);
-      } else if (result.error && !result.error.includes('canceled')) {
+        onSaveAsComplete(result.filePath);
+        alert(`File saved successfully to:\n${result.filePath}`);
+      } else if (result?.error && !result.error.includes('canceled')) {
         setSaveError(`Save As failed: ${result.error}`);
       } else {
-        setSaveError(''); // Clear error if cancelled
+        setSaveError('');
       }
     } catch (error: any) {
       const message = error.message || String(error);
       setSaveError(`Error during Save As: ${message}`);
       console.error(`[useSubtitleSaving] Error during Save As: ${message}`);
     }
-  }, [subtitles, originalSrtFilePath, setSaveError, onSaveAsComplete]);
+  }
 
-  // Save (uses originalSrtFilePath or redirects to Save As)
-  const handleSaveSrt = useCallback(async () => {
+  async function handleSaveSrt(): Promise<void> {
     console.log('[useSubtitleSaving] Attempting to save...');
 
     if (!originalSrtFilePath) {
       console.warn(
         '[useSubtitleSaving] No original path. Redirecting to Save As...'
       );
-      await handleSaveEditedSrtAs(); // Redirect if no path
+      await handleSaveEditedSrtAs();
       return;
     }
 
@@ -100,12 +95,12 @@ export function useSubtitleSaving({
     }
 
     try {
-      setSaveError(''); // Clear previous errors
+      setSaveError('');
       const srtContent = generateSrtContent(subtitles);
 
       const saveOptions = {
         content: srtContent,
-        filePath: originalSrtFilePath, // Save directly to the known path
+        filePath: originalSrtFilePath,
       };
 
       console.log(
@@ -118,7 +113,7 @@ export function useSubtitleSaving({
           `[useSubtitleSaving] File saved successfully to: ${result.filePath}`
         );
         alert('File saved successfully!');
-      } else if (result.error) {
+      } else if (result?.error) {
         setSaveError(`Save failed: ${result.error}`);
         console.error(`[useSubtitleSaving] Save failed: ${result.error}`);
       }
@@ -127,11 +122,30 @@ export function useSubtitleSaving({
       setSaveError(`Error saving SRT file: ${message}`);
       console.error(`[useSubtitleSaving] Error during direct save: ${message}`);
     }
-  }, [subtitles, originalSrtFilePath, setSaveError, handleSaveEditedSrtAs]);
+  }
+
+  function handleSetSubtitleSegments(
+    segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])
+  ): void {
+    setSubtitleSegments(segments);
+    setSubtitleSourceId((prevId: number) => prevId + 1);
+    console.info(
+      `[useSubtitleManagement] Segments set externally, incremented source ID.`
+    );
+  }
+
+  function resetSubtitleSource() {
+    setSubtitleSegments([]);
+    setSubtitleSourceId(prevId => prevId + 1);
+    console.info(
+      `[useSubtitleManagement] Subtitle source reset explicitly, incremented source ID.`
+    );
+  }
 
   return {
-    canSaveDirectly,
     handleSaveSrt,
     handleSaveEditedSrtAs,
+    handleSetSubtitleSegments,
+    resetSubtitleSource,
   };
 }
