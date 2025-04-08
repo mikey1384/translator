@@ -14,7 +14,7 @@ import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
 import { useSubtitleManagement } from './hooks/useSubtitleManagement.js';
 import { useSubtitleSaving } from './hooks/useSubtitleSaving.js';
-import { useVideoState } from './hooks/useVideoState.js';
+import { useVideoState } from './hooks/video/useVideoState.js';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';

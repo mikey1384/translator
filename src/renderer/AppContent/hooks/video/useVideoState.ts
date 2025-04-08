@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { SrtSegment, VideoQuality } from '../../../types/interface.js';
-import { nativePlayer } from '../../components/VideoPlayer/NativeVideoPlayer.js';
+import { SrtSegment, VideoQuality } from '../../../../types/interface.js';
+import {
+  nativePlay,
+  nativePause,
+  nativeIsPlaying,
+} from '../../../native-player.js';
 
 interface UseVideoLoaderProps {
   setMergeOperationId: (value: string | null) => void;
@@ -127,14 +131,12 @@ export function useVideoState({
 
   async function handleTogglePlay() {
     try {
-      if (nativePlayer.instance) {
-        if (nativePlayer.isPlaying()) {
-          nativePlayer.pause();
-          setIsPlaying(false);
-        } else {
-          await nativePlayer.play();
-          setIsPlaying(true);
-        }
+      if (nativeIsPlaying()) {
+        nativePause();
+        setIsPlaying(false);
+      } else {
+        await nativePlay();
+        setIsPlaying(true);
       }
     } catch (error) {
       console.error('Error toggling play/pause:', error);

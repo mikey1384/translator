@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { css } from '@emotion/css';
-import NativeVideoPlayer, { nativePlayer } from './NativeVideoPlayer.js';
+import NativeVideoPlayer from './NativeVideoPlayer.js';
 import SideMenu from './SideMenu.js';
 import { colors } from '../../styles.js';
 import Button from '../Button.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { VideoQuality } from '../../../types/interface.js';
+import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 
@@ -328,9 +329,9 @@ export default function VideoPlayer({
   }, []);
 
   useEffect(() => {
-    if (!nativePlayer.instance) return;
+    const videoElement = getNativePlayerInstance();
+    if (!videoElement) return;
 
-    const videoElement = nativePlayer.instance;
     const updatePlayState = () => setIsPlaying(!videoElement.paused);
 
     videoElement.addEventListener('play', updatePlayState);
@@ -391,9 +392,8 @@ export default function VideoPlayer({
 
   // Add effects for tracking video time and playing status
   useEffect(() => {
-    if (!nativePlayer.instance) return;
-
-    const videoElement = nativePlayer.instance;
+    const videoElement = getNativePlayerInstance();
+    if (!videoElement) return;
 
     // Update state when video time changes
     const handleTimeUpdate = () => {
@@ -433,11 +433,10 @@ export default function VideoPlayer({
   // Add handlers for the overlay controls
   const handleSeek = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (nativePlayer.instance) {
-        const seekTime = parseFloat(e.target.value);
-        nativePlayer.instance.currentTime = seekTime;
-        if (onUiInteraction) onUiInteraction();
-      }
+      const seekTime = parseFloat(e.target.value);
+      // Use the imported nativeSeek function
+      nativeSeek(seekTime);
+      if (onUiInteraction) onUiInteraction();
     },
     [onUiInteraction]
   );
@@ -574,20 +573,22 @@ export default function VideoPlayer({
       }
 
       // Handle arrow keys for seeking if player is ready
-      if (nativePlayer.instance) {
-        const videoElement = nativePlayer.instance;
+      const videoElement = getNativePlayerInstance();
+      if (videoElement) {
         const currentTime = videoElement.currentTime;
         const duration = videoElement.duration || 0;
 
         switch (e.key) {
           case 'ArrowRight':
-            videoElement.currentTime = Math.min(currentTime + 10, duration);
+            // Use nativeSeek for consistency
+            nativeSeek(Math.min(currentTime + 10, duration));
             if (onUiInteraction) onUiInteraction();
             e.preventDefault();
             break;
 
           case 'ArrowLeft':
-            videoElement.currentTime = Math.max(currentTime - 10, 0);
+            // Use nativeSeek for consistency
+            nativeSeek(Math.max(currentTime - 10, 0));
             if (onUiInteraction) onUiInteraction();
             e.preventDefault();
             break;

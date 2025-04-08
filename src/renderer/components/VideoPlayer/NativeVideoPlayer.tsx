@@ -1,154 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
+import {
+  setNativePlayerInstance,
+  getNativePlayerInstance,
+} from '../../native-player.js';
 
 declare global {
   interface Window {
     _videoLastValidTime?: number;
   }
 }
-
-export const nativePlayer: {
-  instance: HTMLVideoElement | null;
-  isReady: boolean;
-  lastAccessed: number;
-  isInitialized: boolean;
-  play: () => Promise<void>;
-  pause: () => void;
-  seek: (time: number) => void;
-  getCurrentTime: () => number;
-  isPlaying: () => boolean;
-} = {
-  instance: null,
-  isReady: false,
-  lastAccessed: 0,
-  isInitialized: false,
-
-  play: async () => {
-    if (!nativePlayer.instance) return;
-    try {
-      // For file:// URLs, check if we need to restore position first
-      const isFileUrl = nativePlayer.instance.src.startsWith('file://');
-      if (
-        isFileUrl &&
-        nativePlayer.instance.currentTime === 0 &&
-        window._videoLastValidTime &&
-        window._videoLastValidTime > 0
-      ) {
-        console.log(
-          `Restoring position to ${window._videoLastValidTime} before playing`
-        );
-        nativePlayer.instance.currentTime = window._videoLastValidTime;
-        // Small delay to ensure the seek takes effect
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-
-      await nativePlayer.instance.play();
-    } catch (error) {
-      console.error('Error playing video:', error);
-      throw error;
-    }
-  },
-
-  pause: () => {
-    if (!nativePlayer.instance) return;
-    nativePlayer.instance.pause();
-  },
-
-  seek: (time: number) => {
-    if (!nativePlayer.instance) return;
-
-    const validTime =
-      typeof time === 'number' && !isNaN(time) && time >= 0 ? time : 0;
-
-    try {
-      // For file:// URLs, set a ref that our component can access
-      const isFileUrl = nativePlayer.instance.src.startsWith('file://');
-
-      console.log(`Seeking to ${validTime} (file URL: ${isFileUrl})`);
-
-      // Store the intended seek position for later use if needed
-      if (window._videoLastValidTime === undefined) {
-        window._videoLastValidTime = 0;
-      }
-
-      // Only store if it's a meaningful position
-      if (validTime > 0) {
-        window._videoLastValidTime = validTime;
-      }
-
-      // Directly set currentTime
-      nativePlayer.instance.currentTime = validTime;
-
-      // Add a more aggressive retry mechanism for videos loaded from URLs
-      setTimeout(() => {
-        if (!nativePlayer.instance) return;
-
-        const currentTime = nativePlayer.instance.currentTime;
-        if (Math.abs(currentTime - validTime) > 0.5) {
-          console.log(
-            `Correcting seek: Current ${currentTime}, Target ${validTime}`
-          );
-          nativePlayer.instance.currentTime = validTime;
-
-          // Add a second retry with longer delay for problematic videos
-          setTimeout(() => {
-            if (!nativePlayer.instance) return;
-
-            const newTime = nativePlayer.instance.currentTime;
-            if (Math.abs(newTime - validTime) > 0.5) {
-              console.log(
-                `Second seek correction: Current ${newTime}, Target ${validTime}`
-              );
-              nativePlayer.instance.currentTime = validTime;
-
-              // For persistent problems, try an extreme measure - pause then seek then play
-              if (isFileUrl && !nativePlayer.instance.paused) {
-                console.log('Using pause-seek-play strategy for file:// URL');
-                const wasPlaying = !nativePlayer.instance.paused;
-                nativePlayer.instance.pause();
-
-                setTimeout(() => {
-                  if (!nativePlayer.instance) return;
-                  nativePlayer.instance.currentTime = validTime;
-
-                  if (wasPlaying) {
-                    setTimeout(() => {
-                      if (nativePlayer.instance) {
-                        nativePlayer.instance.play().catch(err => {
-                          console.error(
-                            'Error resuming playback after seek:',
-                            err
-                          );
-                        });
-                      }
-                    }, 50);
-                  }
-                }, 50);
-              }
-            }
-          }, 200);
-        }
-      }, 50);
-    } catch (error) {
-      console.error('Error during seek operation:', error);
-    }
-  },
-
-  getCurrentTime: () => {
-    if (!nativePlayer.instance) {
-      return 0;
-    }
-    return nativePlayer.instance.currentTime;
-  },
-
-  isPlaying: () => {
-    if (!nativePlayer.instance) {
-      return false;
-    }
-    return !nativePlayer.instance.paused;
-  },
-};
 
 // Define SVG Icons
 interface IconProps {
@@ -312,8 +174,13 @@ export default function NativeVideoPlayer({
         setErrorMessage('Unknown video error');
       }
       // Ensure player isn't marked as ready globally on error
-      if (nativePlayer.instance === videoElement) {
-        nativePlayer.isReady = false;
+      if (getNativePlayerInstance() === videoElement) {
+        // Cannot directly set isReady, use setNativePlayerInstance if needed
+        // For now, just logging or handling the error state is typical
+        console.error(
+          'Native player error encountered, associated instance:',
+          videoElement
+        );
       }
     };
 
@@ -321,12 +188,14 @@ export default function NativeVideoPlayer({
       if (isReady) return; // Prevent multiple calls if event fires again
       isReady = true;
       // Update global state as well
-      if (nativePlayer.instance !== videoElement) {
-        nativePlayer.instance = videoElement;
+      if (getNativePlayerInstance() !== videoElement) {
+        setNativePlayerInstance(videoElement); // Use the setter function
       }
-      nativePlayer.isReady = true;
-      nativePlayer.lastAccessed = Date.now();
-      nativePlayer.isInitialized = true;
+      // Cannot directly set isReady/isInitialized here, managed by setNativePlayerInstance
+      // nativePlayer.isReady = true; // Remove direct access
+      // nativePlayer.lastAccessed = Date.now(); // Remove direct access (done internally)
+      // nativePlayer.isInitialized = true; // Remove direct access
+      console.log('Native player is now ready.');
       // Call the prop callback
       onPlayerReady(videoElement);
 
@@ -469,9 +338,13 @@ export default function NativeVideoPlayer({
         console.log(
           'NativeVideoPlayer: Ready state triggered by loadedmetadata'
         );
-        nativePlayer.instance = videoElement;
-        nativePlayer.isReady = true;
-        nativePlayer.lastAccessed = Date.now();
+        // Use the setter function to update the instance
+        if (getNativePlayerInstance() !== videoElement) {
+          setNativePlayerInstance(videoElement);
+        }
+        // nativePlayer.instance = videoElement; // Removed direct access
+        // nativePlayer.isReady = true; // Removed direct access (managed internally)
+        // nativePlayer.lastAccessed = Date.now(); // Removed direct access (managed internally)
         onPlayerReady(videoElement);
         isReady = true;
       }
@@ -567,9 +440,11 @@ export default function NativeVideoPlayer({
 
       videoElement.load(); // Explicitly call load()
       // Reset global state until canplay fires
-      nativePlayer.instance = videoElement;
-      nativePlayer.isReady = false;
-      nativePlayer.isInitialized = true; // Mark as initialized even if not ready
+      // Use the setter function, it handles readiness and initialization state
+      setNativePlayerInstance(videoElement);
+      // nativePlayer.instance = videoElement; // Removed direct access
+      // nativePlayer.isReady = false; // Removed direct access (managed internally by setNativePlayerInstance)
+      // nativePlayer.isInitialized = true; // Removed direct access (managed internally by setNativePlayerInstance)
     } else {
       // If src is the same, check if it can play already, maybe it loaded quickly
       if (videoElement.readyState >= 3) {
@@ -577,8 +452,8 @@ export default function NativeVideoPlayer({
         handleCanPlay(); // Manually trigger if already playable
       }
       // Ensure global instance is set if src matches but instance was lost
-      else if (nativePlayer.instance !== videoElement) {
-        nativePlayer.instance = videoElement;
+      else if (getNativePlayerInstance() !== videoElement) {
+        setNativePlayerInstance(videoElement);
         // Don't set isReady true here, wait for canplay
       }
     }
