@@ -51,7 +51,7 @@
       "entitlements": "entitlements.mac.plist",
       "entitlementsInherit": "entitlements.mac.inherit.plist",
       "gatekeeperAssess": false,
-      "notarize": true
+      "notarize": false
     },
     "afterSign": "electron-notarize.cjs",
     "win": {
@@ -92,7 +92,7 @@
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.1.2",
     "electron": "^35.0.0",
-    "electron-builder": "^25.1.8",
+    "electron-builder": "^26.0.12",
     "electron-is-dev": "^3.0.1",
     "electron-rebuild": "^3.2.9",
     "electron-reloader": "^1.2.3",
