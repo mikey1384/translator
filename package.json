@@ -49,8 +49,11 @@
       "icon": "assets/icon.icns",
       "hardenedRuntime": true,
       "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.inherit.plist"
+      "entitlementsInherit": "entitlements.mac.inherit.plist",
+      "gatekeeperAssess": false,
+      "notarize": true
     },
+    "afterSign": "electron-notarize.js",
     "win": {
       "target": [
         "nsis"
@@ -75,6 +78,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@electron/notarize": "^3.0.1",
     "@jest/globals": "^29.7.0",
     "@types/bun": "latest",
     "@types/electron-is-dev": "^1.1.3",
