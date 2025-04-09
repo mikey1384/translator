@@ -1,6 +1,6 @@
-import * as keytar from 'keytar';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
+import { getApiKey, saveApiKey } from '../services/secure-store.js';
 
 // Define interfaces for API key status and results
 interface ApiKeyStatus {
@@ -24,21 +24,18 @@ interface SaveApiKeyResult {
   error?: string;
 }
 
-// Restore the service name
-const SERVICE_NAME = 'TranslatorApp';
-
 export async function handleGetApiKeyStatus(
   _event: IpcMainInvokeEvent
 ): Promise<ApiKeyResult> {
   log.info('[api-key-handler] Received get-api-key-status request');
   try {
-    // Restore actual keytar calls
+    // Use secure-store instead of keytar
     const status: ApiKeyStatus = {
       openai: false,
       anthropic: false,
     };
-    const openaiKey = await keytar.getPassword(SERVICE_NAME, 'openai');
-    const anthropicKey = await keytar.getPassword(SERVICE_NAME, 'anthropic');
+    const openaiKey = await getApiKey('openai');
+    const anthropicKey = await getApiKey('anthropic');
     status.openai = !!openaiKey;
     status.anthropic = !!anthropicKey;
 
@@ -75,9 +72,9 @@ export async function handleSaveApiKey(
   }
 
   try {
-    // Restore actual keytar calls
+    // Use secure-store instead of keytar
     if (apiKey === '') {
-      await keytar.deletePassword(SERVICE_NAME, keyType);
+      await saveApiKey(keyType, '');
       log.info(`[api-key-handler] API key for ${keyType} deleted.`);
     } else {
       // Basic format check (example: OpenAI starts with sk-)
@@ -86,7 +83,7 @@ export async function handleSaveApiKey(
         return { success: false, error: 'Invalid OpenAI key format.' };
       }
       // Add similar check for Anthropic if applicable
-      await keytar.setPassword(SERVICE_NAME, keyType, apiKey);
+      await saveApiKey(keyType, apiKey);
       log.info(`[api-key-handler] API key for ${keyType} saved.`);
     }
     return { success: true };

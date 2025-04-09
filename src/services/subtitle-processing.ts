@@ -3,7 +3,7 @@ import { FFmpegService } from './ffmpeg-service.js';
 import { parseSrt, buildSrt } from '../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
-import * as keytar from 'keytar';
+import { getApiKey as getSecureApiKey } from './secure-store.js';
 import { AI_MODELS } from '../shared/constants/index.js';
 import {
   GenerateSubtitlesOptions,
@@ -15,16 +15,17 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { FileManager } from './file-manager.js';
 
-const KEYTAR_SERVICE_NAME = 'TranslatorApp';
-
 async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
-  const key = await keytar.getPassword(KEYTAR_SERVICE_NAME, keyType);
-  if (!key) {
-    throw new SubtitleProcessingError(
-      `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} API key not found. Please set it in the application settings.`
-    );
+  // Try the new secure store first
+  const key = await getSecureApiKey(keyType);
+  if (key) {
+    return key;
   }
-  return key;
+
+  // No key found
+  throw new SubtitleProcessingError(
+    `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} API key not found. Please set it in the application settings.`
+  );
 }
 
 export class SubtitleProcessingError extends Error {
