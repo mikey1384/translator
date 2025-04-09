@@ -201,9 +201,14 @@ async function downloadVideoFromPlatform(
   }
   // --- Determine Format String --- END ---
 
+  // Use a simplified, ASCII-safe temporary name pattern
+  const safeTimestamp = Date.now();
   const tempFilenamePattern = path.join(
     outputDir,
-    `%(title)s [%(id)s].%(ext)s` // More descriptive temporary name
+    `download_${safeTimestamp}_%(id)s.%(ext)s` // Simple pattern using timestamp and ID
+  );
+  log.info(
+    `[URLProcessor] Using simplified temp pattern: ${tempFilenamePattern}`
   );
 
   const ffmpegPath = ffmpegService.getFFmpegPath();
