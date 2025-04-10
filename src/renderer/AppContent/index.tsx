@@ -9,6 +9,7 @@ import TranslationProgressArea from '../components/ProgressAreas/TranslationProg
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
 import { SrtSegment } from '../../types/interface.js';
+import { VideoQuality } from '../../services/url-processor.js';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
@@ -63,6 +64,22 @@ const mainContentStyles = css`
 `;
 
 function AppContent() {
+  const [error, setError] = useState<string | null>('');
+  const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
+  const [downloadComplete, setDownloadComplete] = useState<boolean>(false);
+  const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
+    null
+  );
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [urlInput, setUrlInput] = useState<string>('');
+  const [progressStage, setProgressStage] = useState<string>('');
+  const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('mid');
+  const [didDownloadFromUrl, setDidDownloadFromUrl] = useState<boolean>(false);
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [targetLanguage, setTargetLanguage] = useState<string>('original');
+
+  const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const { apiKeyStatus, isLoadingKeyStatus, fetchKeyStatus } =
     useApiKeyStatus();
@@ -91,7 +108,6 @@ function AppContent() {
 
   const {
     videoFile,
-    videoUrl,
     videoFilePath,
     isUrlLoading,
     isPlaying,
@@ -106,12 +122,11 @@ function AppContent() {
     setUrlLoadProgressPercent,
     setUrlLoadProgressStage,
     setVideoFile,
-    setVideoUrl,
-    setVideoFilePath,
     setVideoPlayerRef,
     setOriginalSrtFilePath,
     setSaveError,
     videoPlayerRef,
+    setVideoFilePath,
   } = useVideoState();
 
   const {
@@ -165,6 +180,15 @@ function AppContent() {
     scrollToCurrentSubtitle: () => {},
     scrollToSubtitleIndex: (_index: number) => {},
   });
+
+  useEffect(() => {
+    setError('');
+    if (inputMode === 'file') {
+      setDidDownloadFromUrl(false);
+      setDownloadedVideoPath(null);
+      setVideoUrl('');
+    }
+  }, [inputMode]);
 
   useEffect(() => {
     if (!searchText) {
@@ -283,6 +307,26 @@ function AppContent() {
                 isLoadingKeyStatus={isLoadingKeyStatus}
                 onNavigateToSettings={handleToggleSettings}
                 onSelectVideoClick={handleSelectVideoClick}
+                error={error}
+                setError={setError}
+                isProcessingUrl={isProcessingUrl}
+                progressPercent={progressPercent}
+                progressStage={progressStage}
+                downloadComplete={downloadComplete}
+                downloadedVideoPath={downloadedVideoPath}
+                handleSaveOriginalVideo={handleSaveOriginalVideo}
+                didDownloadFromUrl={didDownloadFromUrl}
+                isGenerating={isGenerating}
+                urlInput={urlInput}
+                setUrlInput={setUrlInput}
+                downloadQuality={downloadQuality}
+                setDownloadQuality={setDownloadQuality}
+                onProcessUrl={onProcessUrl}
+                onGenerateSubtitles={onGenerateSubtitles}
+                inputMode={inputMode}
+                setInputMode={setInputMode}
+                targetLanguage={targetLanguage}
+                setTargetLanguage={setTargetLanguage}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">
@@ -391,6 +435,11 @@ function AppContent() {
     setSearchText('');
   }
 
+  function handleFindNext() {
+    if (matchedIndices.length === 0) return;
+    setActiveMatchIndex(prev => (prev + 1) % matchedIndices.length);
+  }
+
   function handleScrollToCurrentSubtitle() {
     if (editSubtitlesMethodsRef.current) {
       editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
@@ -414,9 +463,55 @@ function AppContent() {
     }
   }
 
-  function handleFindNext() {
-    if (matchedIndices.length === 0) return;
-    setActiveMatchIndex(prev => (prev + 1) % matchedIndices.length);
+  async function handleSaveOriginalVideo() {
+    if (!downloadedVideoPath) {
+      setError('No downloaded video path found.');
+      return;
+    }
+
+    const suggestedName = downloadedVideoPath.includes('ytdl_')
+      ? downloadedVideoPath.substring(downloadedVideoPath.indexOf('ytdl_') + 5)
+      : 'downloaded_video.mp4';
+
+    try {
+      const saveDialogResult = await window.electron.saveFile({
+        content: '',
+        defaultPath: suggestedName,
+        title: 'Save Downloaded Video As',
+        filters: [{ name: 'Video Files', extensions: ['mp4', 'mkv', 'webm'] }],
+      });
+      if (saveDialogResult.error) {
+        if (!saveDialogResult.error.includes('canceled')) {
+          throw new Error(saveDialogResult.error);
+        }
+        setError('');
+        return;
+      }
+      if (!saveDialogResult.filePath) {
+        setError('No save path selected.');
+        return;
+      }
+
+      const copyRes = await window.electron.copyFile(
+        downloadedVideoPath,
+        saveDialogResult.filePath
+      );
+      if (copyRes.error) throw new Error(copyRes.error);
+
+      window.electron.showMessage(`Video saved: ${saveDialogResult.filePath}`);
+    } catch (err: any) {
+      console.error('Error saving video:', err);
+      setError(`Error saving video: ${err.message || err}`);
+    }
+  }
+
+  function handleUrlError(err: any) {
+    console.error('Error processing URL:', err);
+    setError(`Error processing URL: ${err.message || err}`);
+    setProgressStage('Error');
+    setProgressPercent(0);
+    setDownloadComplete(false);
+    setDownloadedVideoPath(null);
   }
 
   function handleFindPrev() {
@@ -470,6 +565,130 @@ function AppContent() {
     setVideoFilePath(null);
     setIsPlaying(false);
     handleSetSubtitleSegments([]);
+  }
+
+  async function onProcessUrl() {
+    if (!urlInput || !window.electron) {
+      setError('Please enter a valid video URL');
+      return;
+    }
+    resetUrlStates();
+    const unlisten = window.electron.onProcessUrlProgress(updateUrlProgress);
+
+    try {
+      const result = await window.electron.processUrl({
+        url: urlInput,
+        quality: downloadQuality,
+      });
+      if (result.error) throw new Error(result.error);
+
+      const videoPath = result.videoPath || result.filePath;
+      if (!videoPath || !result.filename) {
+        throw new Error('Downloaded video info incomplete');
+      }
+
+      finishUrlDownload(result, videoPath);
+      setUrlInput('');
+    } catch (err: any) {
+      handleUrlError(err);
+    } finally {
+      setIsProcessingUrl(false);
+      unlisten?.();
+    }
+  }
+
+  function resetUrlStates() {
+    setError('');
+    setIsProcessingUrl(true);
+    setProgressPercent(0);
+    setDownloadComplete(false);
+    setDownloadedVideoPath(null);
+    setVideoFile(null);
+    setDidDownloadFromUrl(false);
+    setVideoUrl('');
+  }
+
+  function updateUrlProgress(progress: any) {
+    setProgressPercent(progress.percent ?? 0);
+    setProgressStage(progress.stage ?? '');
+    if (progress.error) {
+      setError(`Error during processing: ${progress.error}`);
+      setIsProcessingUrl(false);
+    }
+  }
+
+  async function finishUrlDownload(result: any, videoPath: string) {
+    setProgressStage('Download complete! Reading video data...');
+    setProgressPercent(100);
+    setDownloadComplete(true);
+    setDownloadedVideoPath(videoPath);
+    setDidDownloadFromUrl(true);
+
+    try {
+      const fileContentResult =
+        await window.electron.readFileContent(videoPath);
+      if (!fileContentResult.success || !fileContentResult.data) {
+        throw new Error(fileContentResult.error || 'Failed to read video file');
+      }
+
+      const blob = new Blob([fileContentResult.data], { type: 'video/mp4' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      setVideoUrl(blobUrl);
+
+      const videoFileObj = new File([blob], result.filename, {
+        type: 'video/mp4',
+      });
+      (videoFileObj as any)._blobUrl = blobUrl;
+      (videoFileObj as any)._originalPath = videoPath;
+
+      setProgressStage('Setting up video...');
+      setVideoFile(videoFileObj);
+    } catch (fileError) {
+      console.error('Error reading video file:', fileError);
+      if (result.fileUrl) {
+        const fallback = {
+          name: result.filename,
+          path: videoPath,
+          size: result.size || 0,
+          type: 'video/mp4',
+          fileUrl: result.fileUrl,
+        };
+        setVideoUrl(result.fileUrl);
+        setVideoFile(fallback as any);
+      } else {
+        throw new Error('Could not read video. No fallback was provided');
+      }
+    }
+  }
+
+  async function onGenerateSubtitles() {
+    if ((!videoFile && !videoFilePath) || !window.electron) {
+      setError('Please select a video file first');
+      return;
+    }
+    setError('');
+    setIsGenerating(true);
+    try {
+      const options = buildGenerateOptions();
+      const result = await window.electron.generateSubtitles(options);
+      if (result.error) throw new Error(result.error);
+    } catch (err: any) {
+      console.error('Error generating subtitles:', err);
+      setError(`Error generating subtitles: ${err.message || err}`);
+    } finally {
+      setIsGenerating(false);
+    }
+
+    function buildGenerateOptions() {
+      const opts: any = { targetLanguage, streamResults: true };
+      if (videoFilePath) {
+        opts.videoPath = videoFilePath;
+      } else if (videoFile) {
+        opts.videoFile = videoFile;
+      }
+      return opts;
+    }
   }
 }
 

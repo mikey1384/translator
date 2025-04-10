@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import { VideoQuality } from '../../../services/url-processor.js';
 import { errorMessageStyles } from '../../styles.js';
 import ApiKeyLock from './ApiKeyLock.js';
 import FileInputButton from '../../components/FileInputButton.js';
@@ -11,6 +10,8 @@ import LanguageSelection from './LanguageSelection.js';
 import ProgressDisplay from './ProgressDisplay.js';
 import GenerateControls from './GenerateControls.js';
 import Section from '../../components/Section.js';
+import { VideoQuality } from '../../../types/interface.js';
+
 type ApiKeyStatus = {
   openai: boolean;
   anthropic: boolean;
@@ -26,6 +27,26 @@ export default function GenerateSubtitles({
   isLoadingKeyStatus,
   onNavigateToSettings,
   onSelectVideoClick,
+  error,
+  setError,
+  isProcessingUrl,
+  progressPercent,
+  progressStage,
+  downloadComplete,
+  downloadedVideoPath,
+  handleSaveOriginalVideo,
+  didDownloadFromUrl,
+  isGenerating,
+  urlInput,
+  setUrlInput,
+  downloadQuality,
+  setDownloadQuality,
+  onProcessUrl,
+  onGenerateSubtitles,
+  inputMode,
+  setInputMode,
+  targetLanguage,
+  setTargetLanguage,
 }: {
   videoFile: File | null;
   videoFilePath?: string | null;
@@ -36,29 +57,27 @@ export default function GenerateSubtitles({
   isLoadingKeyStatus: boolean;
   onNavigateToSettings: (show: boolean) => void;
   onSelectVideoClick: () => void;
+  error: string | null;
+  setError: (error: string | null) => void;
+  isProcessingUrl: boolean;
+  progressPercent: number;
+  progressStage: string;
+  downloadComplete: boolean;
+  downloadedVideoPath: string | null;
+  handleSaveOriginalVideo: () => void;
+  didDownloadFromUrl: boolean;
+  isGenerating: boolean;
+  urlInput: string;
+  setUrlInput: (url: string) => void;
+  downloadQuality: VideoQuality;
+  setDownloadQuality: (quality: VideoQuality) => void;
+  onProcessUrl: () => void;
+  onGenerateSubtitles: () => void;
+  inputMode: 'file' | 'url';
+  setInputMode: (mode: 'file' | 'url') => void;
+  targetLanguage: string;
+  setTargetLanguage: (lang: string) => void;
 }) {
-  const [targetLanguage, setTargetLanguage] = useState<string>('original');
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [urlInput, setUrlInput] = useState<string>('');
-  const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
-  const [progressPercent, setProgressPercent] = useState<number>(0);
-  const [progressStage, setProgressStage] = useState<string>('');
-  const [downloadComplete, setDownloadComplete] = useState<boolean>(false);
-  const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
-    null
-  );
-  const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('mid');
-  const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
-  const [didDownloadFromUrl, setDidDownloadFromUrl] = useState<boolean>(false);
-
-  useEffect(() => {
-    setError('');
-    if (inputMode === 'file') {
-      setDidDownloadFromUrl(false);
-    }
-  }, [inputMode]);
-
   useEffect(() => {
     if (videoFile) {
       const isLocalFileSelection =
@@ -68,6 +87,7 @@ export default function GenerateSubtitles({
         setInputMode('file');
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile]);
 
   return (
@@ -174,175 +194,4 @@ export default function GenerateSubtitles({
         )}
     </Section>
   );
-
-  async function onProcessUrl() {
-    if (!urlInput || !window.electron) {
-      setError('Please enter a valid video URL');
-      return;
-    }
-    resetUrlStates();
-    const unlisten = window.electron.onProcessUrlProgress(updateUrlProgress);
-
-    try {
-      const result = await window.electron.processUrl({
-        url: urlInput,
-        quality: downloadQuality,
-      });
-      if (result.error) throw new Error(result.error);
-
-      const videoPath = result.videoPath || result.filePath;
-      if (!videoPath || !result.filename) {
-        throw new Error('Downloaded video info incomplete');
-      }
-
-      finishUrlDownload(result, videoPath);
-      setUrlInput('');
-    } catch (err: any) {
-      handleUrlError(err);
-    } finally {
-      setIsProcessingUrl(false);
-      unlisten?.();
-    }
-  }
-
-  function resetUrlStates() {
-    setError('');
-    setIsProcessingUrl(true);
-    setProgressPercent(0);
-    setDownloadComplete(false);
-    setDownloadedVideoPath(null);
-    onSetVideoFile(null);
-    setDidDownloadFromUrl(false);
-  }
-
-  function updateUrlProgress(progress: any) {
-    setProgressPercent(progress.percent ?? 0);
-    setProgressStage(progress.stage ?? '');
-    if (progress.error) {
-      setError(`Error during processing: ${progress.error}`);
-      setIsProcessingUrl(false);
-    }
-  }
-
-  async function finishUrlDownload(result: any, videoPath: string) {
-    setProgressStage('Download complete! Reading video data...');
-    setProgressPercent(100);
-    setDownloadComplete(true);
-    setDownloadedVideoPath(videoPath);
-    setDidDownloadFromUrl(true);
-
-    try {
-      const fileContentResult =
-        await window.electron.readFileContent(videoPath);
-      if (!fileContentResult.success || !fileContentResult.data) {
-        throw new Error(fileContentResult.error || 'Failed to read video file');
-      }
-
-      const blob = new Blob([fileContentResult.data], { type: 'video/mp4' });
-      const blobUrl = URL.createObjectURL(blob);
-
-      const videoFileObj = new File([blob], result.filename, {
-        type: 'video/mp4',
-      });
-      (videoFileObj as any)._blobUrl = blobUrl;
-      (videoFileObj as any)._originalPath = videoPath;
-
-      setProgressStage('Setting up video...');
-      onSetVideoFile(videoFileObj);
-    } catch (fileError) {
-      console.error('Error reading video file:', fileError);
-      if (result.fileUrl) {
-        const fallback = {
-          name: result.filename,
-          path: videoPath,
-          size: result.size || 0,
-          type: 'video/mp4',
-          fileUrl: result.fileUrl,
-        };
-        onSetVideoFile(fallback as any);
-      } else {
-        throw new Error('Could not read video. No fallback was provided');
-      }
-    }
-  }
-
-  function handleUrlError(err: any) {
-    console.error('Error processing URL:', err);
-    setError(`Error processing URL: ${err.message || err}`);
-    setProgressStage('Error');
-    setProgressPercent(0);
-    setDownloadComplete(false);
-    setDownloadedVideoPath(null);
-  }
-
-  async function onGenerateSubtitles() {
-    if ((!videoFile && !videoFilePath) || !window.electron) {
-      setError('Please select a video file first');
-      return;
-    }
-    setError('');
-    setIsGenerating(true);
-    try {
-      const options = buildGenerateOptions();
-      const result = await window.electron.generateSubtitles(options);
-      if (result.error) throw new Error(result.error);
-    } catch (err: any) {
-      console.error('Error generating subtitles:', err);
-      setError(`Error generating subtitles: ${err.message || err}`);
-    } finally {
-      setIsGenerating(false);
-    }
-
-    function buildGenerateOptions() {
-      const opts: any = { targetLanguage, streamResults: true };
-      if (videoFilePath) {
-        opts.videoPath = videoFilePath;
-      } else if (videoFile) {
-        opts.videoFile = videoFile;
-      }
-      return opts;
-    }
-  }
-
-  async function handleSaveOriginalVideo() {
-    if (!downloadedVideoPath) {
-      setError('No downloaded video path found.');
-      return;
-    }
-
-    const suggestedName = downloadedVideoPath.includes('ytdl_')
-      ? downloadedVideoPath.substring(downloadedVideoPath.indexOf('ytdl_') + 5)
-      : 'downloaded_video.mp4';
-
-    try {
-      const saveDialogResult = await window.electron.saveFile({
-        content: '',
-        defaultPath: suggestedName,
-        title: 'Save Downloaded Video As',
-        filters: [{ name: 'Video Files', extensions: ['mp4', 'mkv', 'webm'] }],
-      });
-      if (saveDialogResult.error) {
-        if (!saveDialogResult.error.includes('canceled')) {
-          throw new Error(saveDialogResult.error);
-        }
-        setError('');
-        return;
-      }
-      if (!saveDialogResult.filePath) {
-        setError('No save path selected.');
-        return;
-      }
-
-      const copyRes = await window.electron.copyFile(
-        downloadedVideoPath,
-        saveDialogResult.filePath
-      );
-      if (copyRes.error) throw new Error(copyRes.error);
-
-      window.electron.showMessage(`Video saved: ${saveDialogResult.filePath}`);
-    } catch (err: any) {
-      console.error('Error saving video:', err);
-      setError(`Error saving video: ${err.message || err}`);
-    }
-  }
 }

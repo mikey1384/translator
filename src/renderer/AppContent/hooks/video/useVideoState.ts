@@ -9,12 +9,13 @@ export function useVideoState() {
     null
   );
   const [saveError, setSaveError] = useState<string>('');
+
   const [urlLoadProgressPercent, setUrlLoadProgressPercent] = useState(0);
   const [urlLoadProgressStage, setUrlLoadProgressStage] = useState('');
+
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoFilePath, setVideoFilePath] = useState<string | null>(null);
   const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
-  const [videoUrl, setVideoUrl] = useState<string>('');
 
   return {
     isMergingInProgress,
@@ -37,7 +38,5 @@ export function useVideoState() {
     setVideoFilePath,
     videoPlayerRef,
     setVideoPlayerRef,
-    videoUrl,
-    setVideoUrl,
   };
 }
