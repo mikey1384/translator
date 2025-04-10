@@ -5,27 +5,6 @@ import { SrtSegment } from '../../../types/interface.js';
 import { colors } from '../../styles.js';
 import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
 
-interface SubtitleEditorProps {
-  sub: SrtSegment;
-  index: number;
-  editingTimes: Record<string, string>;
-  isPlaying: boolean;
-  secondsToSrtTime: (seconds: number) => string;
-  onEditSubtitle: (
-    index: number,
-    field: 'start' | 'end' | 'text',
-    value: number | string
-  ) => void;
-  onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
-  onRemoveSubtitle: (index: number) => void;
-  onInsertSubtitle: (index: number) => void;
-  onSeekToSubtitle: (startTime: number) => void;
-  onPlaySubtitle: (startTime: number, endTime: number) => void;
-  onShiftSubtitle: (index: number, shiftSeconds: number) => void;
-  isShiftingDisabled: boolean;
-  searchText?: string;
-}
-
 const timeInputStyles = css`
   width: 150px;
   padding: 6px 8px;
@@ -62,7 +41,26 @@ export default function SubtitleEditor({
   onShiftSubtitle,
   isShiftingDisabled,
   searchText,
-}: SubtitleEditorProps) {
+}: {
+  sub: SrtSegment;
+  index: number;
+  editingTimes: Record<string, string>;
+  isPlaying: boolean;
+  secondsToSrtTime: (seconds: number) => string;
+  onEditSubtitle: (
+    index: number,
+    field: 'start' | 'end' | 'text',
+    value: number | string
+  ) => void;
+  onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
+  onRemoveSubtitle: (index: number) => void;
+  onInsertSubtitle: (index: number) => void;
+  onSeekToSubtitle: (startTime: number) => void;
+  onPlaySubtitle: (startTime: number, endTime: number) => void;
+  onShiftSubtitle: (index: number, shiftSeconds: number) => void;
+  isShiftingDisabled: boolean;
+  searchText?: string;
+}) {
   let originalText = '';
   let initialEditableText = sub.text;
   const hasMarker = sub.text.includes('###TRANSLATION_MARKER###');
@@ -86,22 +84,6 @@ export default function SubtitleEditor({
       setCurrentTextValue(incomingEditableText);
     }
   }, [sub.text]);
-
-  const handleTextChange = (newValue: string) => {
-    setCurrentTextValue(newValue);
-    onEditSubtitle(index, 'text', newValue);
-  };
-
-  const handleTimeChange = (field: 'start' | 'end', value: string) => {
-    onEditSubtitle(index, field, value); // Update immediately for visual feedback
-  };
-
-  const handleApplyShift = () => {
-    const offset = parseFloat(shiftAmount);
-    if (!isNaN(offset) && offset !== 0) {
-      onShiftSubtitle(index, offset);
-    }
-  };
 
   return (
     <div
@@ -324,4 +306,20 @@ export default function SubtitleEditor({
       </div>
     </div>
   );
+
+  function handleTextChange(newValue: string) {
+    setCurrentTextValue(newValue);
+    onEditSubtitle(index, 'text', newValue);
+  }
+
+  function handleTimeChange(field: 'start' | 'end', value: string) {
+    onEditSubtitle(index, field, value);
+  }
+
+  function handleApplyShift() {
+    const offset = parseFloat(shiftAmount);
+    if (!isNaN(offset) && offset !== 0) {
+      onShiftSubtitle(index, offset);
+    }
+  }
 }

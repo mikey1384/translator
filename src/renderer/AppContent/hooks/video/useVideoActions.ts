@@ -2,7 +2,6 @@ import { nativePause, nativePlay } from '../../../native-player.js';
 import { nativeIsPlaying } from '../../../native-player.js';
 
 export function useVideoActions({
-  resetSubtitleSource,
   setVideoFile,
   setVideoUrl,
   setVideoFilePath,
@@ -12,7 +11,6 @@ export function useVideoActions({
   setVideoPlayerRef,
   videoUrl,
 }: {
-  resetSubtitleSource: () => void;
   setVideoFile: (value: File | null) => void;
   setVideoUrl: (value: string) => void;
   setVideoFilePath: (value: string | null) => void;
@@ -30,8 +28,6 @@ export function useVideoActions({
   function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
   ) {
-    resetSubtitleSource();
-
     if (videoUrl && videoUrl.startsWith('blob:')) {
       URL.revokeObjectURL(videoUrl);
     }

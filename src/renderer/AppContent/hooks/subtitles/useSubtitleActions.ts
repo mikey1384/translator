@@ -24,7 +24,6 @@ export function useSubtitleActions({
   handleSetSubtitleSegments: (
     segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])
   ) => void;
-  resetSubtitleSource: () => void;
 } {
   async function handleSaveEditedSrtAs(): Promise<void> {
     if (!subtitles || subtitles.length === 0) {
@@ -134,18 +133,9 @@ export function useSubtitleActions({
     );
   }
 
-  function resetSubtitleSource() {
-    setSubtitleSegments([]);
-    setSubtitleSourceId(prevId => prevId + 1);
-    console.info(
-      `[useSubtitleManagement] Subtitle source reset explicitly, incremented source ID.`
-    );
-  }
-
   return {
     handleSaveSrt,
     handleSaveEditedSrtAs,
     handleSetSubtitleSegments,
-    resetSubtitleSource,
   };
 }

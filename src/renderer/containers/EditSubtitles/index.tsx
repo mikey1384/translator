@@ -502,21 +502,21 @@ export function EditSubtitles({
             `}`}
           >
             <SubtitleList
-              subtitles={subtitlesProp} // Use the correct prop name
+              subtitles={subtitlesProp}
               subtitleRefs={subtitleRefs}
               editingTimes={editingTimesState}
               isPlaying={isPlayingState}
               secondsToSrtTime={secondsToSrtTimeFn}
-              onEditSubtitle={handleEditSubtitle} // Use the correct prop name
-              onTimeInputBlur={handleTimeInputBlur} // Use the correct prop name
-              onRemoveSubtitle={handleRemoveSubtitleLocal} // Use the correct prop name
-              onInsertSubtitle={handleInsertSubtitleLocal} // Use the correct prop name
-              onSeekToSubtitle={seekPlayerToTime} // Use the correct prop name
-              onPlaySubtitle={handlePlaySubtitle} // Use the correct prop name
-              onShiftSubtitle={handleShiftSubtitle} // Use the correct prop name
+              onEditSubtitle={handleEditSubtitle}
+              onTimeInputBlur={handleTimeInputBlur}
+              onRemoveSubtitle={handleRemoveSubtitleLocal}
+              onInsertSubtitle={handleInsertSubtitleLocal}
+              onSeekToSubtitle={seekPlayerToTime}
+              onPlaySubtitle={handlePlaySubtitle}
+              onShiftSubtitle={handleShiftSubtitle}
               isShiftingDisabled={isShiftingDisabled}
               searchText={searchText || ''}
-              forcedIndex={forcedIndex} // <-- Pass forcedIndex down
+              forcedIndex={forcedIndex}
             />
           </div>
         </>

@@ -124,19 +124,15 @@ function AppContent() {
     setVideoFilePath,
   } = useVideoState();
 
-  const {
-    handleSaveSrt,
-    handleSaveEditedSrtAs,
-    handleSetSubtitleSegments,
-    resetSubtitleSource,
-  } = useSubtitleActions({
-    subtitles: subtitleSegments,
-    originalSrtFilePath: originalSrtFilePath,
-    setSaveError,
-    onSaveAsComplete: handleSaveAsComplete,
-    setSubtitleSegments,
-    setSubtitleSourceId,
-  });
+  const { handleSaveSrt, handleSaveEditedSrtAs, handleSetSubtitleSegments } =
+    useSubtitleActions({
+      subtitles: subtitleSegments,
+      originalSrtFilePath: originalSrtFilePath,
+      setSaveError,
+      onSaveAsComplete: handleSaveAsComplete,
+      setSubtitleSegments,
+      setSubtitleSourceId,
+    });
 
   const {
     handleSetVideoFile,
@@ -144,7 +140,6 @@ function AppContent() {
     handleTogglePlay,
     handleVideoPlayerReady,
   } = useVideoActions({
-    resetSubtitleSource,
     setVideoFile,
     setVideoUrl,
     setVideoFilePath,
