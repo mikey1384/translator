@@ -413,7 +413,7 @@ export class FFmpegService {
           const scaledPercent = 15 + (progress * (95 - 15)) / 100;
           progressCallback?.({
             percent: Math.min(95, scaledPercent),
-            stage: `Encoding video with subtitles: ${Math.round(progress)}%`,
+            stage: `Encoding video with subtitles`,
           });
         },
         env,
