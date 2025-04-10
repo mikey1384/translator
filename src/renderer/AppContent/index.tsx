@@ -464,6 +464,7 @@ function AppContent() {
   }
 
   function handleResetVideo() {
+    setIsUrlLoading(false);
     setVideoFile(null);
     setVideoUrl('');
     setVideoFilePath(null);

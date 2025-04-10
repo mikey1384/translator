@@ -129,97 +129,6 @@ export default function SideMenu({
   const onlyTopButtonsBlockVisible =
     !shouldShowScrollButton && !shouldShowShiftControls;
 
-  // Handlers for video/srt buttons
-  const handleVideoChangeClick = async () => {
-    if (!window.electron?.openFile) {
-      console.error('Electron openFile API is not available.');
-      // Optionally show an error message to the user
-      return;
-    }
-    try {
-      const result = await window.electron.openFile({
-        filters: [
-          {
-            name: 'Video Files',
-            extensions: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
-          },
-        ],
-        title: 'Select Video File',
-      });
-
-      if (result.canceled || !result.filePaths?.length) {
-        console.log('Video selection cancelled.');
-        return;
-      }
-
-      const filePath = result.filePaths[0];
-      console.log('Selected video file path:', filePath);
-
-      if (onChangeVideo) {
-        const fileData = {
-          name: filePath.split(/[\\/]/).pop() || 'video.mp4',
-          path: filePath,
-          size: 0,
-          type: '',
-        };
-        onChangeVideo(fileData as any);
-        onUiInteraction?.();
-      }
-    } catch (error) {
-      console.error('Error opening video file with Electron:', error);
-      // Optionally show an error message to the user
-    }
-  };
-
-  // --- Handler for Load URL Button (Updated) --- START ---
-  const handleLoadUrlClick = () => {
-    setUrlError('');
-    if (!urlInputValue.trim()) {
-      setUrlError('Please enter a valid URL.');
-      return;
-    }
-    if (
-      !urlInputValue.startsWith('http://') &&
-      !urlInputValue.startsWith('https://')
-    ) {
-      setUrlError('URL must start with http:// or https://');
-      return;
-    }
-
-    if (onLoadFromUrl) {
-      onLoadFromUrl(urlInputValue, selectedQuality);
-      onUiInteraction?.();
-    } else {
-      console.warn('onLoadFromUrl prop is not provided to TimestampDisplay');
-    }
-  };
-  // --- Handler for Load URL Button (Updated) --- END ---
-
-  const handleSrtLoad = async () => {
-    try {
-      const result = await openSubtitleWithElectron();
-      if (result.segments) {
-        onSrtLoaded(result.segments);
-      } else if (result.error && !result.error.includes('canceled')) {
-        console.error('Error loading SRT:', result.error);
-        // Consider showing an error message to the user
-      }
-      onUiInteraction?.();
-    } catch (err) {
-      console.error('Failed to load SRT file:', err);
-    }
-  };
-
-  // Handler for applying the shift
-  const handleApplyShift = () => {
-    const offset = parseFloat(shiftAmount);
-    if (onShiftAllSubtitles && !isNaN(offset) && offset !== 0) {
-      onShiftAllSubtitles(offset);
-      // Optional: Reset input after applying, or leave it
-      // setShiftAmount('0');
-    }
-  };
-
   // Simplified component with only the necessary buttons
   return (
     <div
@@ -493,4 +402,86 @@ export default function SideMenu({
       )}
     </div>
   );
+
+  async function handleVideoChangeClick() {
+    if (!window.electron?.openFile) {
+      console.error('Electron openFile API is not available.');
+      return;
+    }
+    try {
+      const result = await window.electron.openFile({
+        filters: [
+          {
+            name: 'Video Files',
+            extensions: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
+          },
+        ],
+        title: 'Select Video File',
+      });
+
+      if (result.canceled || !result.filePaths?.length) {
+        console.log('Video selection cancelled.');
+        return;
+      }
+
+      const filePath = result.filePaths[0];
+      console.log('Selected video file path:', filePath);
+
+      if (onChangeVideo) {
+        const fileData = {
+          name: filePath.split(/[\\/]/).pop() || 'video.mp4',
+          path: filePath,
+          size: 0,
+          type: '',
+        };
+        onChangeVideo(fileData as any);
+        onUiInteraction?.();
+      }
+    } catch (error) {
+      console.error('Error opening video file with Electron:', error);
+    }
+  }
+
+  function handleLoadUrlClick() {
+    setUrlError('');
+    if (!urlInputValue.trim()) {
+      setUrlError('Please enter a valid URL.');
+      return;
+    }
+    if (
+      !urlInputValue.startsWith('http://') &&
+      !urlInputValue.startsWith('https://')
+    ) {
+      setUrlError('URL must start with http:// or https://');
+      return;
+    }
+
+    if (onLoadFromUrl) {
+      onLoadFromUrl(urlInputValue, selectedQuality);
+      onUiInteraction?.();
+    } else {
+      console.warn('onLoadFromUrl prop is not provided to TimestampDisplay');
+    }
+  }
+
+  async function handleSrtLoad() {
+    try {
+      const result = await openSubtitleWithElectron();
+      if (result.segments) {
+        onSrtLoaded(result.segments);
+      } else if (result.error && !result.error.includes('canceled')) {
+        console.error('Error loading SRT:', result.error);
+      }
+      onUiInteraction?.();
+    } catch (err) {
+      console.error('Failed to load SRT file:', err);
+    }
+  }
+
+  function handleApplyShift() {
+    const offset = parseFloat(shiftAmount);
+    if (onShiftAllSubtitles && !isNaN(offset) && offset !== 0) {
+      onShiftAllSubtitles(offset);
+    }
+  }
 }
