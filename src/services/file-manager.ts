@@ -26,9 +26,6 @@ export class FileManager {
     );
   }
 
-  /**
-   * Returns the configured temporary directory path.
-   */
   getTempDir(): string {
     return this.tempDir;
   }
@@ -52,12 +49,10 @@ export class FileManager {
       );
       log.info(`Successfully cleaned up temp directory: ${this.tempDir}`);
     } catch (error) {
-      log.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
       log.error(
         `[FileManager] CRITICAL ERROR cleaning up temp directory ${this.tempDir}:`,
         error
       );
-      log.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     }
   }
 
@@ -226,9 +221,6 @@ export class FileManager {
     }
   }
 
-  /**
-   * Write content to a temporary file
-   */
   async writeTempFile(content: string, extension: string): Promise<string> {
     try {
       const filename = `temp_${Date.now()}${extension}`;
@@ -320,9 +312,6 @@ export class FileManager {
     }
   }
 
-  /**
-   * Delete a file
-   */
   async deleteFile(filePath: string): Promise<void> {
     try {
       await fs.unlink(filePath);

@@ -209,7 +209,6 @@ export default function GenerateSubtitles({
     setError('');
     setIsProcessingUrl(true);
     setProgressPercent(0);
-    setProgressStage('Initializing...');
     setDownloadComplete(false);
     setDownloadedVideoPath(null);
     onSetVideoFile(null);

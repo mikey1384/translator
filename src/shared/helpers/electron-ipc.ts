@@ -177,12 +177,6 @@ export async function openFileWithRetry(options: {
   }
 }
 
-/**
- * Register listeners for real-time subtitle progress events
- * @param partialResultCallback Callback function to call when partial subtitles become available
- * @param type Type of subtitle progress events to listen for ('generate' or 'translate')
- * @returns Cleanup function to remove the event listeners
- */
 export function registerSubtitleStreamListeners(
   partialResultCallback: (result: {
     partialResult: string;
@@ -210,12 +204,9 @@ export function registerSubtitleStreamListeners(
         total: progress?.total || 0,
       };
 
-      // Always call the callback, even if partialResult is empty
-      // The UI can decide whether to update based on the content
       partialResultCallback(safeProgress);
     };
 
-    // Register only the appropriate listener
     if (type === 'generate') {
       window.electron.onGenerateSubtitlesProgress(listener);
     } else {
@@ -223,7 +214,6 @@ export function registerSubtitleStreamListeners(
     }
   }
 
-  // Return a cleanup function
   return () => {
     if (window.electron && listener) {
       if (type === 'generate') {

@@ -16,13 +16,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import { FileManager } from './file-manager.js';
 
 async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
-  // Try the new secure store first
   const key = await getSecureApiKey(keyType);
   if (key) {
     return key;
   }
 
-  // No key found
   throw new SubtitleProcessingError(
     `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} API key not found. Please set it in the application settings.`
   );

@@ -67,16 +67,13 @@ let isQuitting = false; // Flag for will-quit handler
 try {
   log.info('[main.ts] Initializing Services...');
 
-  // Determine the correct application-specific temp path
-  const appDataPath = app.getPath('appData');
-  const appNameDir = 'translator-electron'; // Use the consistent directory name
-  const correctTempPath = path.join(appDataPath, appNameDir, 'temp');
-  log.info(`[main.ts] Determined temp path for services: ${correctTempPath}`);
+  const tempPath = path.join(app.getPath('temp'), 'translator-electron');
+  log.info(`[main.ts] Determined temp path for services: ${tempPath}`);
 
   // Instantiate services, injecting the correct temp path
   const saveFileService = SaveFileService.getInstance();
-  const fileManager = new FileManager(correctTempPath);
-  const ffmpegService = new FFmpegService(correctTempPath);
+  const fileManager = new FileManager(tempPath);
+  const ffmpegService = new FFmpegService(tempPath);
 
   services = { saveFileService, fileManager, ffmpegService };
   log.info('[main.ts] Services Initialized.');
