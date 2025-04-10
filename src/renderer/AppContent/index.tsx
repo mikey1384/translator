@@ -110,18 +110,12 @@ function AppContent() {
   const {
     videoFile,
     videoFilePath,
-    isUrlLoading,
     isPlaying,
     isMergingInProgress,
-    urlLoadProgressPercent,
-    urlLoadProgressStage,
     originalSrtFilePath,
     saveError,
     setIsPlaying,
     setIsMergingInProgress,
-    setIsUrlLoading,
-    setUrlLoadProgressPercent,
-    setUrlLoadProgressStage,
     setVideoFile,
     setVideoPlayerRef,
     setOriginalSrtFilePath,
@@ -145,16 +139,12 @@ function AppContent() {
   });
 
   const {
-    handleLoadFromUrl,
     handleSetVideoFile,
     handleSrtFileLoaded,
     handleTogglePlay,
     handleVideoPlayerReady,
   } = useVideoActions({
     resetSubtitleSource,
-    setIsUrlLoading,
-    setUrlLoadProgressPercent,
-    setUrlLoadProgressStage,
     setVideoFile,
     setVideoUrl,
     setVideoFilePath,
@@ -273,16 +263,15 @@ function AppContent() {
                 subtitles={subtitleSegments}
                 onPlayerReady={handleVideoPlayerReady}
                 onSelectVideoClick={handleSelectVideoClick}
-                onLoadFromUrl={handleLoadFromUrl}
+                onProcessUrl={onProcessUrl}
                 onSrtLoaded={handleSetSubtitleSegments}
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
                 onTogglePlay={handleTogglePlay}
                 onShiftAllSubtitles={handleShiftAllSubtitles}
-                isUrlLoading={isUrlLoading}
-                urlLoadProgress={urlLoadProgressPercent}
-                urlLoadStage={urlLoadProgressStage}
+                onSetUrlInput={setUrlInput}
+                urlInput={urlInput}
                 isProgressBarVisible={
-                  isMergingInProgress || isTranslationInProgress || isUrlLoading
+                  isMergingInProgress || isTranslationInProgress
                 }
               />
             )}

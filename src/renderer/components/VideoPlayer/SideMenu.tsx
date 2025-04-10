@@ -6,119 +6,29 @@ import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { VideoQuality } from '../../../types/interface.js';
 
-// Simple input style similar to time inputs in editor - Updated for Dark Theme
-const shiftInputStyles = css`
-  width: 80px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid ${colors.border};
-  background-color: ${colors.light};
-  color: ${colors.dark};
-  font-family: monospace;
-  text-align: right;
-  margin-right: 5px;
-  transition: border-color 0.2s ease;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-  }
-`;
-
-// --- Style for URL Input --- START ---
-const urlInputStyles = css`
-  max-width: 35%;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid ${colors.border};
-  background-color: ${colors.light};
-  color: ${colors.dark};
-  font-family: sans-serif; // Use standard font
-  font-size: 0.9rem;
-  margin-right: 5px;
-  transition: border-color 0.2s ease;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-  }
-  &::placeholder {
-    color: ${colors.gray};
-  }
-`;
-// --- Style for URL Input --- END ---
-
-// --- Styles for Quality Select --- START ---
-const qualitySelectStyles = css`
-  padding: 6px 4px; // Slightly less padding than input
-  border-radius: 4px;
-  border: 1px solid ${colors.border};
-  background-color: ${colors.light};
-  color: ${colors.dark};
-  font-family: sans-serif;
-  font-size: 0.85rem;
-  margin-left: 5px;
-  margin-right: 5px;
-  cursor: pointer;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-  }
-`;
-// --- Styles for Quality Select --- END ---
-
-// --- Styles for Progress Bar --- START ---
-const progressBarContainerStyles = css`
-  height: 10px;
-  background-color: ${colors.grayLight};
-  border-radius: 5px;
-  overflow: hidden;
-  margin: 5px 0;
-  width: 100%; // Take full width of its container
-`;
-
-const progressBarStyles = (progress: number) => css`
-  height: 100%;
-  width: ${progress}%;
-  background-color: ${colors.primary};
-  transition: width 0.3s ease;
-  border-radius: 5px;
-`;
-
-const progressTextStyles = css`
-  font-size: 0.8rem;
-  color: ${colors.grayDark};
-  text-align: center;
-  width: 100%;
-  margin-top: 2px;
-`;
-// --- Styles for Progress Bar --- END ---
-
 export default function SideMenu({
-  onLoadFromUrl,
+  onProcessUrl,
   hasSubtitles = false,
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSrtLoaded,
   onSelectVideoClick,
   onUiInteraction,
-  isUrlLoading = false,
-  urlLoadProgress = 0,
-  urlLoadStage = '',
+  onSetUrlInput,
+  urlInput,
 }: {
-  onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
+  onProcessUrl: () => void;
   hasSubtitles?: boolean;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onUiInteraction?: () => void;
   onSelectVideoClick: () => void;
-  isUrlLoading?: boolean;
-  urlLoadProgress?: number;
-  urlLoadStage?: string;
+  onSetUrlInput: (url: string) => void;
+  urlInput: string;
 }) {
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
-  const [urlInputValue, setUrlInputValue] = useState<string>('');
-  const [urlError, setUrlError] = useState<string>('');
   const [selectedQuality, setSelectedQuality] = useState<VideoQuality>('mid');
 
   // Determine visibility of optional sections
@@ -196,92 +106,74 @@ export default function SideMenu({
           </div>
         </Button>
 
-        {/* --- URL Input Section (Conditional Rendering) --- START --- */}
-        {onLoadFromUrl && (
-          <div
+        <div
+          className={css`
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+          `}
+        >
+          <input
+            type="url"
+            placeholder="Enter URL..."
+            value={urlInput}
+            onChange={e => onSetUrlInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter'}
             className={css`
-              margin-top: 10px; // Space above URL section
+              max-width: 35%;
+              padding: 6px 8px;
+              border-radius: 4px;
+              border: 1px solid ${colors.border};
+              background-color: ${colors.light};
+              color: ${colors.dark};
+              font-family: sans-serif;
+              font-size: 0.9rem;
+              margin-right: 5px;
+              transition: border-color 0.2s ease;
+              &:focus {
+                outline: none;
+                border-color: ${colors.primary};
+              }
+              &::placeholder {
+                color: ${colors.gray};
+              }
             `}
+            title="Enter the URL of the video to load"
+          />
+          <select
+            value={selectedQuality}
+            onChange={e => setSelectedQuality(e.target.value as VideoQuality)}
+            className={css`
+              padding: 6px 4px; // Slightly less padding than input
+              border-radius: 4px;
+              border: 1px solid ${colors.border};
+              background-color: ${colors.light};
+              color: ${colors.dark};
+              font-family: sans-serif;
+              font-size: 0.85rem;
+              margin-left: 5px;
+              margin-right: 5px;
+              cursor: pointer;
+              &:focus {
+                outline: none;
+                border-color: ${colors.primary};
+              }
+            `}
+            title="Select download quality"
           >
-            {isUrlLoading ? (
-              // --- Progress Display --- START ---
-              <div
-                className={css`
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  padding: 10px 5px;
-                  border: 1px solid ${colors.border};
-                  border-radius: 4px;
-                  background-color: ${colors.light};
-                `}
-              >
-                <div className={progressBarContainerStyles}>
-                  <div className={progressBarStyles(urlLoadProgress)} />
-                </div>
-                <span className={progressTextStyles}>
-                  {urlLoadStage || 'Loading...'} ({urlLoadProgress.toFixed(0)}%)
-                </span>
-              </div>
-            ) : (
-              // --- Input / Quality / Load Button --- START ---
-              <div
-                className={css`
-                  display: flex;
-                  align-items: stretch; // Align items vertically
-                  width: 100%;
-                `}
-              >
-                <input
-                  type="url"
-                  placeholder="Enter URL..."
-                  value={urlInputValue}
-                  onChange={e => setUrlInputValue(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleLoadUrlClick()}
-                  className={urlInputStyles}
-                  title="Enter the URL of the video to load"
-                  disabled={isUrlLoading} // Disable input while loading
-                />
-                <select
-                  value={selectedQuality}
-                  onChange={e =>
-                    setSelectedQuality(e.target.value as VideoQuality)
-                  }
-                  className={qualitySelectStyles}
-                  title="Select download quality"
-                  disabled={isUrlLoading} // Disable select while loading
-                >
-                  <option value="low">Low</option>
-                  <option value="mid">Mid</option>
-                  <option value="high">High</option>
-                </select>
-                <Button
-                  onClick={handleLoadUrlClick}
-                  variant="secondary"
-                  size="sm"
-                  title="Load video from URL"
-                  disabled={isUrlLoading} // Disable button while loading
-                >
-                  Load
-                </Button>
-              </div>
-              // --- Input / Quality / Load Button --- END ---
-            )}
-            {/* Error message display */}
-            {urlError && !isUrlLoading && (
-              <div
-                className={css`
-                  color: ${colors.danger};
-                  font-size: 0.8rem;
-                  margin-top: 4px;
-                `}
-              >
-                {urlError}
-              </div>
-            )}
-          </div>
-        )}
-        {/* --- URL Input Section (Conditional Rendering) --- END --- */}
+            <option value="low">Low</option>
+            <option value="mid">Mid</option>
+            <option value="high">High</option>
+          </select>
+          <Button
+            onClick={onProcessUrl}
+            variant="secondary"
+            size="sm"
+            title="Load video from URL"
+          >
+            Load
+          </Button>
+        </div>
 
         <Button
           variant="secondary"
@@ -380,7 +272,22 @@ export default function SideMenu({
             onChange={e => setShiftAmount(e.target.value)}
             onBlur={handleApplyShift}
             onKeyDown={e => e.key === 'Enter' && handleApplyShift()}
-            className={shiftInputStyles}
+            className={css`
+              width: 80px;
+              padding: 6px 8px;
+              border-radius: 4px;
+              border: 1px solid ${colors.border};
+              background-color: ${colors.light};
+              color: ${colors.dark};
+              font-family: monospace;
+              text-align: right;
+              margin-right: 5px;
+              transition: border-color 0.2s ease;
+              &:focus {
+                outline: none;
+                border-color: ${colors.primary};
+              }
+            `}
             step="0.1"
             placeholder="Shift (s)"
             title="Shift all subtitles by seconds (+/-)"
@@ -398,28 +305,6 @@ export default function SideMenu({
       )}
     </div>
   );
-
-  function handleLoadUrlClick() {
-    setUrlError('');
-    if (!urlInputValue.trim()) {
-      setUrlError('Please enter a valid URL.');
-      return;
-    }
-    if (
-      !urlInputValue.startsWith('http://') &&
-      !urlInputValue.startsWith('https://')
-    ) {
-      setUrlError('URL must start with http:// or https://');
-      return;
-    }
-
-    if (onLoadFromUrl) {
-      onLoadFromUrl(urlInputValue, selectedQuality);
-      onUiInteraction?.();
-    } else {
-      console.warn('onLoadFromUrl prop is not provided to TimestampDisplay');
-    }
-  }
 
   async function handleSrtLoad() {
     try {

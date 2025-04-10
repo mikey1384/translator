@@ -1,22 +1,13 @@
-import { VideoQuality } from '../../../../types/interface.js';
 import { nativePause, nativePlay } from '../../../native-player.js';
 import { SrtSegment } from '../../../../types/interface.js';
 import { nativeIsPlaying } from '../../../native-player.js';
 
 export function useVideoActions({
   resetSubtitleSource,
-  setIsUrlLoading,
-  setUrlLoadProgressPercent,
-  setUrlLoadProgressStage,
   setVideoFile,
   setVideoUrl,
   setVideoFilePath,
   setIsPlaying,
-  setIsMergingInProgress,
-  setIsTranslationInProgress,
-  setMergeProgress,
-  setMergeStage,
-  setMergeOperationId,
   setOriginalSrtFilePath,
   setSaveError,
   setVideoPlayerRef,
@@ -24,9 +15,6 @@ export function useVideoActions({
   handleSetSubtitleSegments,
 }: {
   resetSubtitleSource: () => void;
-  setIsUrlLoading: (value: boolean) => void;
-  setUrlLoadProgressPercent: (value: number) => void;
-  setUrlLoadProgressStage: (value: string) => void;
   setVideoFile: (value: File | null) => void;
   setVideoUrl: (value: string) => void;
   setVideoFilePath: (value: string | null) => void;
@@ -42,71 +30,6 @@ export function useVideoActions({
   videoUrl: string;
   handleSetSubtitleSegments: (value: SrtSegment[]) => void;
 }) {
-  async function handleLoadFromUrl(url: string, quality: VideoQuality) {
-    if (!url || !window.electron) {
-      console.error('Invalid URL or Electron API not available.');
-      return;
-    }
-
-    console.log(
-      `[App] handleLoadFromUrl called with URL: ${url}, Quality: ${quality}`
-    );
-    setIsMergingInProgress(false);
-    setIsTranslationInProgress(false);
-    setMergeProgress(0);
-    setMergeStage('');
-    setMergeOperationId(null);
-    setSaveError('');
-    setIsUrlLoading(true);
-    setUrlLoadProgressPercent(0);
-    setUrlLoadProgressStage('Initializing...');
-
-    try {
-      const result = await window.electron.processUrl({
-        url: url,
-        quality: quality,
-      });
-
-      console.log(
-        '[App] Received result from window.electron.processUrl:',
-        JSON.stringify(result)
-      );
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.filePath && result.filename) {
-        const fileContentResult = await window.electron.readFileContent(
-          result.filePath
-        );
-        if (!fileContentResult.success || !fileContentResult.data) {
-          throw new Error(
-            fileContentResult.error ||
-              'Failed to read downloaded video content.'
-          );
-        }
-        const blob = new Blob([fileContentResult.data], {
-          type: 'video/mp4',
-        });
-        const blobUrl = URL.createObjectURL(blob);
-        const videoFileObj = new File([blob], result.filename, {
-          type: 'video/mp4',
-        });
-        (videoFileObj as any)._blobUrl = blobUrl;
-        (videoFileObj as any)._originalPath = result.filePath;
-
-        handleSetVideoFile(videoFileObj as any);
-      } else {
-        throw new Error('URL processing did not return necessary video info.');
-      }
-    } catch (err: any) {
-      console.error('[App] Error processing URL from player:', err);
-      setSaveError(`Error loading URL: ${err.message || err}`);
-      setIsUrlLoading(false); // Stop loading on error
-    }
-  }
-
   function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
   ) {
@@ -210,7 +133,6 @@ export function useVideoActions({
   }
 
   return {
-    handleLoadFromUrl,
     handleSetVideoFile,
     handleSrtFileLoaded,
     handleTogglePlay,

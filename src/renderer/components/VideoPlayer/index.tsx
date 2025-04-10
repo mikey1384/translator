@@ -5,7 +5,6 @@ import SideMenu from './SideMenu.js';
 import { colors } from '../../styles.js';
 import Button from '../Button.js';
 import { SrtSegment } from '../../../types/interface.js';
-import { VideoQuality } from '../../../types/interface.js';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
@@ -228,19 +227,20 @@ export default function VideoPlayer({
   subtitles,
   onPlayerReady,
   onSelectVideoClick,
+  onSetUrlInput,
+  urlInput,
   onSrtLoaded,
   onScrollToCurrentSubtitle,
   onTogglePlay,
   onShiftAllSubtitles,
   onUiInteraction,
-  onLoadFromUrl,
-  isUrlLoading,
-  urlLoadProgress,
-  urlLoadStage,
+  onProcessUrl,
 }: {
   isProgressBarVisible: boolean;
   videoUrl: string;
   subtitles: SrtSegment[];
+  onSetUrlInput: (url: string) => void;
+  urlInput: string;
   onPlayerReady: (player: any) => void;
   onSelectVideoClick: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
@@ -248,10 +248,7 @@ export default function VideoPlayer({
   onTogglePlay?: () => void;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onUiInteraction?: () => void;
-  onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
-  isUrlLoading?: boolean;
-  urlLoadProgress?: number;
-  urlLoadStage?: string;
+  onProcessUrl: () => void;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
@@ -746,15 +743,14 @@ export default function VideoPlayer({
         {!isPseudoFullscreen && (
           <div className={controlsWrapperStyles(isPseudoFullscreen)}>
             <SideMenu
-              onLoadFromUrl={onLoadFromUrl}
+              onProcessUrl={onProcessUrl}
               hasSubtitles={subtitles && subtitles.length > 0}
               onSrtLoaded={onSrtLoaded}
               onShiftAllSubtitles={onShiftAllSubtitles}
               onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
               onUiInteraction={handleUiInteraction}
-              isUrlLoading={isUrlLoading}
-              urlLoadProgress={urlLoadProgress}
-              urlLoadStage={urlLoadStage}
+              onSetUrlInput={onSetUrlInput}
+              urlInput={urlInput}
               onSelectVideoClick={onSelectVideoClick}
             />
           </div>
