@@ -234,7 +234,14 @@ function AppContent() {
             <LogoDisplay />
           )}
           <div className={headerRightGroupStyles}>
-            {/* Removed Settings Button here, handled by header logic */}
+            {!showSettings && (
+              <button
+                className={settingsButtonStyles}
+                onClick={() => handleToggleSettings(true)}
+              >
+                Settings
+              </button>
+            )}
           </div>
         </div>
         {showSettings ? (
