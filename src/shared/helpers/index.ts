@@ -1,4 +1,268 @@
 import { SrtSegment } from '../../types/interface.js';
+import fs from 'fs';
+import log from 'electron-log';
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { getApiKey as getSecureApiKey } from '../../services/secure-store.js';
+import { AI_MODELS } from '../constants/index.js';
+
+export class SubtitleProcessingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SubtitleProcessingError';
+  }
+}
+
+export function createFileFromPath(filePath: string): fs.ReadStream {
+  try {
+    return fs.createReadStream(filePath);
+  } catch (error) {
+    throw new SubtitleProcessingError(`Failed to create file stream: ${error}`);
+  }
+}
+
+export async function getApiKey(
+  keyType: 'openai' | 'anthropic'
+): Promise<string> {
+  const key = await getSecureApiKey(keyType);
+  if (key) {
+    return key;
+  }
+
+  throw new SubtitleProcessingError(
+    `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} API key not found. Please set it in the application settings.`
+  );
+}
+
+export async function callOpenAIChat({
+  model,
+  messages,
+  max_tokens,
+  signal,
+  operationId,
+  retryAttempts = 3,
+}: {
+  model: string;
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+  max_tokens?: number;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+}): Promise<string> {
+  let openai: OpenAI;
+  try {
+    const openaiApiKey = await getApiKey('openai');
+    openai = new OpenAI({ apiKey: openaiApiKey });
+  } catch (keyError) {
+    const message =
+      keyError instanceof Error ? keyError.message : String(keyError);
+    log.error(`[${operationId}] Failed to initialize OpenAI: ${message}`);
+    throw new SubtitleProcessingError(
+      `OpenAI initialization failed: ${message}`
+    );
+  }
+
+  let currentAttempt = 0;
+  while (currentAttempt < retryAttempts) {
+    currentAttempt++;
+    try {
+      log.info(
+        `[${operationId}] Sending request to OpenAI Chat API (Model: ${model}, Attempt: ${currentAttempt}/${retryAttempts}).`
+      );
+      const response = await openai.chat.completions.create(
+        {
+          model: model,
+          messages: messages,
+          max_tokens: max_tokens,
+        },
+        { signal }
+      );
+      log.info(`[${operationId}] Received response from OpenAI Chat API.`);
+
+      const content = response.choices[0]?.message?.content;
+      if (content) {
+        return content;
+      } else {
+        log.error(
+          `[${operationId}] Unexpected response format from OpenAI Chat API:`,
+          response
+        );
+        throw new Error('Unexpected response format from OpenAI Chat API.');
+      }
+    } catch (error: any) {
+      if (signal?.aborted || error.name === 'AbortError') {
+        log.info(`[${operationId}] OpenAI Chat API call cancelled.`);
+        throw new Error('Operation cancelled');
+      }
+
+      log.error(
+        `[${operationId}] OpenAI Chat API call failed (Attempt ${currentAttempt}/${retryAttempts}):`,
+        error.name,
+        error.message
+      );
+
+      if (
+        (error instanceof OpenAI.APIError &&
+          (error.status === 429 ||
+            error.status === 500 ||
+            error.status === 503)) ||
+        (error.message &&
+          error.message.includes('timeout') &&
+          currentAttempt < retryAttempts)
+      ) {
+        const delay = 1000 * Math.pow(2, currentAttempt);
+        log.info(
+          `[${operationId}] Retrying OpenAI Chat API call in ${delay}ms...`
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      throw new SubtitleProcessingError(
+        `OpenAI Chat API call failed: ${error.message || String(error)}`
+      );
+    }
+  }
+
+  throw new SubtitleProcessingError(
+    `OpenAI Chat API call failed after ${retryAttempts} attempts.`
+  );
+}
+
+export async function callClaudeModel({
+  model,
+  messages,
+  max_tokens,
+  signal,
+  operationId,
+  retryAttempts = 3,
+}: {
+  model: string;
+  messages: Anthropic.MessageParam[];
+  max_tokens: number;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+}): Promise<string> {
+  let anthropic: Anthropic;
+  let anthropicApiKey: string;
+  try {
+    anthropicApiKey = await getApiKey('anthropic');
+    anthropic = new Anthropic({ apiKey: anthropicApiKey });
+  } catch (keyError) {
+    const message =
+      keyError instanceof Error ? keyError.message : String(keyError);
+    log.error(`[${operationId}] Failed to initialize Anthropic: ${message}`);
+    throw new SubtitleProcessingError(
+      `Anthropic initialization failed: ${message}`
+    );
+  }
+
+  let currentAttempt = 0;
+  while (currentAttempt < retryAttempts) {
+    currentAttempt++;
+    try {
+      log.info(
+        `[${operationId}] Sending request to Claude API (Model: ${model}, Attempt: ${currentAttempt}/${retryAttempts}).`
+      );
+      const response: Anthropic.Message = await anthropic.messages.create(
+        {
+          model: model,
+          max_tokens: max_tokens,
+          messages: messages,
+        },
+        { signal }
+      );
+      log.info(`[${operationId}] Received response from Claude API.`);
+
+      if (
+        response.content &&
+        Array.isArray(response.content) &&
+        response.content.length > 0 &&
+        response.content[0].type === 'text'
+      ) {
+        return response.content[0].text;
+      } else {
+        log.error(
+          `[${operationId}] Unexpected response format from Claude:`,
+          response
+        );
+        throw new Error('Unexpected response format from Claude.');
+      }
+    } catch (error: any) {
+      if (signal?.aborted || error.name === 'AbortError') {
+        log.info(`[${operationId}] Claude API call cancelled.`);
+        throw new Error('Operation cancelled');
+      }
+
+      log.error(
+        `[${operationId}] Claude API call failed (Attempt ${currentAttempt}/${retryAttempts}):`,
+        error.name,
+        error.message
+      );
+
+      if (
+        error.message &&
+        (error.message.includes('timeout') ||
+          error.message.includes('rate') ||
+          error.message.includes('ECONNRESET')) &&
+        currentAttempt < retryAttempts
+      ) {
+        const delay = 1000 * Math.pow(2, currentAttempt);
+        log.info(`[${operationId}] Retrying Claude API call in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      throw new SubtitleProcessingError(
+        `Claude API call failed: ${error.message || String(error)}`
+      );
+    }
+  }
+
+  throw new SubtitleProcessingError(
+    `Claude API call failed after ${retryAttempts} attempts.`
+  );
+}
+
+export async function callChatModel({
+  messages,
+  max_tokens,
+  signal,
+  operationId,
+  retryAttempts = 3,
+  isUsingClaude = false,
+}: {
+  messages: any[];
+  max_tokens?: number;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+  isUsingClaude?: boolean;
+}): Promise<string> {
+  if (isUsingClaude) {
+    // This expects the messages to match Anthropic’s shape, so you might need
+    // an adapter if your messages are in OpenAI format. Or vice versa.
+    return callClaudeModel({
+      model: AI_MODELS.CLAUDE_3_7_SONNET,
+      messages,
+      max_tokens: max_tokens ?? 1000,
+      signal,
+      operationId,
+      retryAttempts,
+    });
+  } else {
+    // If using GPT, you presumably have messages in OpenAI’s Chat format
+    return callOpenAIChat({
+      model: AI_MODELS.GPT_4O,
+      messages,
+      max_tokens: max_tokens ?? 1000,
+      signal,
+      operationId,
+      retryAttempts,
+    });
+  }
+}
 
 export function parseSrt(srtString: string): SrtSegment[] {
   if (!srtString) return [];
@@ -76,7 +340,7 @@ export function buildSrt(segments: SrtSegment[]): string {
  * Convert SRT time format (00:00:00,000) to seconds
  */
 export function srtTimeToSeconds(timeString: string): number {
-  if (!timeString) return 0; // Add guard for empty/undefined string
+  if (!timeString) return 0;
   const parts = timeString.split(',');
   if (parts.length !== 2) return 0;
   const [time, msStr] = parts;
@@ -90,7 +354,7 @@ export function srtTimeToSeconds(timeString: string): number {
   const ms = parseInt(msStr, 10);
 
   if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || isNaN(ms)) {
-    return 0; // Return 0 if parsing fails
+    return 0;
   }
 
   return hours * 3600 + minutes * 60 + seconds + ms / 1000;
@@ -100,18 +364,16 @@ export function srtTimeToSeconds(timeString: string): number {
  * Convert seconds to SRT time format (00:00:00,000)
  */
 export function secondsToSrtTime(totalSeconds: number): string {
-  if (isNaN(totalSeconds) || totalSeconds < 0) return '00:00:00,000'; // Handle NaN and negative
+  if (isNaN(totalSeconds) || totalSeconds < 0) return '00:00:00,000';
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
   const milliseconds = Math.round((totalSeconds % 1) * 1000);
 
-  // Ensure milliseconds don't exceed 999 after rounding
   const finalSeconds = milliseconds === 1000 ? seconds + 1 : seconds;
   const finalMilliseconds = milliseconds === 1000 ? 0 : milliseconds;
 
-  // Recalculate minutes/hours if seconds wrapped around
   const finalMinutes = finalSeconds === 60 ? minutes + 1 : minutes;
   const finalSecondsAdjusted = finalSeconds === 60 ? 0 : finalSeconds;
 

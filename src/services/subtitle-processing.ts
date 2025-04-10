@@ -1,6 +1,6 @@
 import path from 'path';
 import { FFmpegService } from './ffmpeg-service.js';
-import { parseSrt, buildSrt } from '../shared/helpers/index.js';
+import { parseSrt, buildSrt, callChatModel } from '../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import { getApiKey as getSecureApiKey } from './secure-store.js';
@@ -9,10 +9,14 @@ import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
   SrtSegment,
-} from '../types/interface.js';
+  ProgressCallback,
+  GenerateSubtitlesFromAudioArgs,
+  MergeSubtitlesWithVideoArgs,
+  TranslateBatchArgs,
+  ReviewTranslationBatchArgs,
+} from '../types/interface.d.js';
 import log from 'electron-log';
 import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
 import { FileManager } from './file-manager.js';
 
 async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
@@ -51,7 +55,7 @@ export async function extractSubtitlesFromVideo({
   options: GenerateSubtitlesOptions;
   operationId: string;
   signal: AbortSignal;
-  progressCallback?: GenerateProgressCallback;
+  progressCallback?: ProgressCallback;
   services: {
     ffmpegService: FFmpegService;
     fileManager: FileManager;
@@ -139,7 +143,14 @@ export async function extractSubtitlesFromVideo({
 
     const subtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath || '',
-      progressCallback: p => {
+      progressCallback: (p: {
+        percent: number;
+        stage: string;
+        partialResult?: string;
+        current?: number;
+        total?: number;
+        error?: string;
+      }) => {
         progressCallback?.({
           percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
           stage: p.stage,
@@ -181,7 +192,6 @@ export async function extractSubtitlesFromVideo({
         batchStart,
         batchEnd
       );
-      const anthropicApiKey = await getApiKey('anthropic');
       const translatedBatch = await translateBatch({
         batch: {
           segments: currentBatchOriginals.map(seg => ({ ...seg })),
@@ -189,7 +199,6 @@ export async function extractSubtitlesFromVideo({
           endIndex: batchEnd,
         },
         targetLang,
-        anthropicApiKey,
         operationId: `${operationId}-trans-${batchStart}`,
         signal,
       });
@@ -869,185 +878,133 @@ export async function mergeSubtitlesWithVideo({
 async function translateBatch({
   batch,
   targetLang,
-  anthropicApiKey,
   operationId,
   signal,
 }: TranslateBatchArgs): Promise<any[]> {
   log.info(
     `[${operationId}] Starting translation batch: ${batch.startIndex}-${batch.endIndex}`
   );
-  let anthropic: Anthropic;
-  try {
-    anthropic = new Anthropic({ apiKey: anthropicApiKey });
-  } catch (keyError) {
-    throw new SubtitleProcessingError(
-      keyError instanceof Error ? keyError.message : String(keyError)
-    );
-  }
 
-  const MAX_RETRIES = 3;
-  let retryCount = 0;
-  const batchContextPrompt = batch.segments.map((segment, idx) => {
-    const absoluteIndex = batch.startIndex + idx;
-    return `Line ${absoluteIndex + 1}: ${segment.text}`;
-  });
+  const batchContextPrompt = batch.segments.map(
+    (segment: SrtSegment, idx: number) => {
+      const absoluteIndex = batch.startIndex + idx;
+      return `Line ${absoluteIndex + 1}: ${segment.text}`;
+    }
+  );
 
   const combinedPrompt = `
-You are a professional subtitle translator. Translate the following subtitles 
+You are a professional subtitle translator. Translate the following subtitles
 into natural, fluent ${targetLang}.
 
 Here are the subtitles to translate:
 ${batchContextPrompt.join('\n')}
 
-Translate EACH line individually, preserving the line order. 
-- **Never merge** multiple lines into one, and never skip or omit a line. 
+Translate EACH line individually, preserving the line order.
+- **Never merge** multiple lines into one, and never skip or omit a line.
 - If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
-- Provide exactly one translation for every line, in the same order, 
+- Provide exactly one translation for every line, in the same order,
   prefixed by "Line X:" where X is the line number.
 - If you're unsure, err on the side of literal translations.
 - For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
 `;
 
-  while (retryCount < MAX_RETRIES) {
-    try {
-      log.info(
-        `[${operationId}] Sending translation batch (Attempt ${retryCount + 1})`
-      );
-      const response = await anthropic.messages.create(
-        {
-          model: AI_MODELS.CLAUDE_3_7_SONNET,
-          max_tokens: AI_MODELS.MAX_TOKENS,
-          messages: [{ role: 'user', content: combinedPrompt }],
-        } as Anthropic.MessageCreateParams,
-        { signal }
-      );
-      log.info(
-        `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
-      );
+  try {
+    log.info(`[${operationId}] Sending translation batch via callChatModel`);
+    const translation = await callChatModel({
+      messages: [{ role: 'user', content: combinedPrompt }],
+      max_tokens: AI_MODELS.MAX_TOKENS,
+      signal,
+      operationId: `${operationId}-translate`,
+      retryAttempts: 3,
+    });
+    log.info(`[${operationId}] Received response for translation batch`);
 
-      const translationResponse = response as Anthropic.Message;
+    const translationLines = translation
+      .split('\n')
+      .filter((line: string) => line.trim() !== '');
+    const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
 
-      let translation = '';
-      if (
-        translationResponse.content &&
-        translationResponse.content.length > 0 &&
-        translationResponse.content[0].type === 'text'
-      ) {
-        translation = translationResponse.content[0].text;
-      } else {
-        throw new Error('Unexpected translation response format from Claude.');
-      }
+    let lastNonEmptyTranslation = '';
+    return batch.segments.map((segment: SrtSegment, idx: number) => {
+      const absoluteIndex = batch.startIndex + idx;
+      let translatedText = segment.text;
+      const originalSegmentText = segment.text;
 
-      const translationLines = translation
-        .split('\n')
-        .filter((line: string) => line.trim() !== '');
-      const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
-
-      let lastNonEmptyTranslation = '';
-      return batch.segments.map((segment, idx) => {
-        const absoluteIndex = batch.startIndex + idx;
-        let translatedText = segment.text;
-        const originalSegmentText = segment.text;
-
-        for (const line of translationLines) {
-          const match = line.match(lineRegex);
-          if (match && parseInt(match[1]) === absoluteIndex + 1) {
-            const potentialTranslation = match[2].trim();
-            if (potentialTranslation === originalSegmentText) {
-              translatedText = lastNonEmptyTranslation;
-            } else {
-              translatedText = potentialTranslation || lastNonEmptyTranslation;
-            }
-            lastNonEmptyTranslation = translatedText;
-            break;
+      for (const line of translationLines) {
+        const match = line.match(lineRegex);
+        if (match && parseInt(match[1]) === absoluteIndex + 1) {
+          const potentialTranslation = match[2].trim();
+          if (potentialTranslation === originalSegmentText) {
+            translatedText = lastNonEmptyTranslation;
+            log.warn(
+              `[${operationId}] AI returned original text for line ${absoluteIndex + 1}. Using last known translation: '${lastNonEmptyTranslation}'`
+            );
+          } else {
+            translatedText = potentialTranslation || lastNonEmptyTranslation;
           }
+          if (translatedText.trim() !== '') {
+            lastNonEmptyTranslation = translatedText;
+          }
+          break;
         }
-
-        return {
-          ...segment,
-          text: `${originalSegmentText}###TRANSLATION_MARKER###${translatedText}`,
-          originalText: originalSegmentText,
-          translatedText,
-        };
-      });
-    } catch (err: any) {
-      log.error(
-        `[${operationId}] Error during translation batch (Attempt ${retryCount + 1}):`,
-        err.name,
-        err.message
-      );
-
-      if (err.name === 'AbortError' || signal?.aborted) {
-        log.info(
-          `[${operationId}] Translation batch detected cancellation signal/error.`
-        );
       }
 
       if (
-        err.message &&
-        (err.message.includes('timeout') ||
-          err.message.includes('rate') ||
-          err.message.includes('ECONNRESET')) &&
-        retryCount < MAX_RETRIES - 1
+        translatedText === originalSegmentText &&
+        originalSegmentText.trim() !== ''
       ) {
-        retryCount++;
-        const delay = 1000 * Math.pow(2, retryCount);
-        log.info(
-          `[${operationId}] Retrying translation batch in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+        log.warn(
+          `[${operationId}] No specific translation found for line ${absoluteIndex + 1} ('${originalSegmentText}'). Using last known translation: '${lastNonEmptyTranslation}'`
         );
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
+        translatedText = lastNonEmptyTranslation;
       }
 
-      log.error(
-        `[${operationId}] Unhandled error or retries exhausted in translateBatch. Falling back.`
-      );
-      return batch.segments.map(segment => ({
+      return {
         ...segment,
-        text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-        originalText: segment.text,
-        translatedText: segment.text,
-      }));
+        text: `${originalSegmentText}###TRANSLATION_MARKER###${translatedText}`,
+        originalText: originalSegmentText,
+        translatedText,
+      };
+    });
+  } catch (err: any) {
+    log.error(
+      `[${operationId}] Error during translation batch via callChatModel:`,
+      err.name,
+      err.message
+    );
+
+    if (
+      err.name === 'AbortError' ||
+      err.message === 'Operation cancelled' ||
+      signal?.aborted
+    ) {
+      log.info(
+        `[${operationId}] Translation batch detected cancellation signal/error.`
+      );
+      throw err;
     }
+
+    log.error(
+      `[${operationId}] Unhandled error in translateBatch after callChatModel failed. Falling back.`
+    );
+    return batch.segments.map((segment: SrtSegment) => ({
+      ...segment,
+      text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
+      originalText: segment.text,
+      translatedText: segment.text,
+    }));
   }
-
-  log.warn(
-    `[${operationId}] Translation failed after ${MAX_RETRIES} retries, using original text`
-  );
-
-  return batch.segments.map(segment => ({
-    ...segment,
-    text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-    originalText: segment.text,
-    translatedText: segment.text,
-  }));
 }
 
 async function reviewTranslationBatch(
-  batch: {
-    segments: any[];
-    startIndex: number;
-    endIndex: number;
-    targetLang: string;
-    allSegments: SrtSegment[];
-  },
+  batch: ReviewTranslationBatchArgs,
   signal?: AbortSignal,
   parentOperationId: string = 'review-batch'
-): Promise<any[]> {
+): Promise<SrtSegment[]> {
   const operationId = `${parentOperationId}-review-${batch.startIndex}-${batch.endIndex}`;
   log.info(
     `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
   );
-
-  let anthropic: Anthropic;
-  try {
-    const anthropicApiKey = await getApiKey('anthropic');
-    anthropic = new Anthropic({ apiKey: anthropicApiKey });
-  } catch (keyError) {
-    throw new SubtitleProcessingError(
-      keyError instanceof Error ? keyError.message : String(keyError)
-    );
-  }
 
   const CONTEXT_WINDOW_SIZE = 5;
 
@@ -1057,13 +1014,13 @@ async function reviewTranslationBatch(
   const contextStartIndex = Math.max(0, batch.startIndex - CONTEXT_WINDOW_SIZE);
   const contextEndIndex = Math.min(
     batch.startIndex + batch.segments.length + CONTEXT_WINDOW_SIZE,
-    totalAvailableSegments + batch.startIndex
+    totalAvailableSegments
   );
 
   const batchItemsWithContext = batch.segments.map(
-    (block: any, idx: number) => {
+    (segment: SrtSegment, idx: number) => {
       const absoluteIndex = batch.startIndex + idx;
-      const [original, translation] = block.text.split(
+      const [original, translation] = segment.text.split(
         '###TRANSLATION_MARKER###'
       );
       return {
@@ -1156,36 +1113,24 @@ Improved translation for block 3
 
   try {
     log.info(
-      `[Review] Sending review batch (${parentOperationId}) to Claude API`
+      `[Review] Sending review batch (${parentOperationId}) via callChatModel`
     );
 
-    const response = await anthropic.messages.create(
-      {
-        model: AI_MODELS.CLAUDE_3_7_SONNET,
-        max_tokens: AI_MODELS.MAX_TOKENS,
-        messages: [{ role: 'user', content: prompt }],
-      } as Anthropic.MessageCreateParams,
-      { signal }
-    );
+    const reviewedContent = await callChatModel({
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: AI_MODELS.MAX_TOKENS,
+      signal,
+      operationId: `${operationId}-review`,
+      retryAttempts: 3,
+    });
+
     log.info(
       `[Review] Received response for review batch (${parentOperationId})`
     );
 
-    const reviewResponse = response as Anthropic.Message;
-
-    let reviewedContent = '';
-    if (
-      reviewResponse.content &&
-      reviewResponse.content.length > 0 &&
-      reviewResponse.content[0].type === 'text'
-    ) {
-      reviewedContent = reviewResponse.content[0].text;
-    } else {
+    if (!reviewedContent) {
       log.warn(
-        '[Review] Review response content was not in the expected format.'
-      );
-      log.warn(
-        `[Review] Translation review output format unexpected. Using original translations for this batch.`
+        '[Review] Review response content was empty or null. Using original translations.'
       );
       return batch.segments;
     }
@@ -1196,10 +1141,21 @@ Improved translation for block 3
       log.warn(
         `[Review] Translation review output line count (${reviewedLines.length}) does not match batch size (${batch.segments.length}). Using original translations for this batch.`
       );
-      return batch.segments;
+      return batch.segments.map((segment: SrtSegment) => {
+        const [originalText] = segment.text.split('###TRANSLATION_MARKER###');
+        const [_, originalTranslation] = segment.text.split(
+          '###TRANSLATION_MARKER###'
+        );
+        return {
+          ...segment,
+          text: `${originalText}###TRANSLATION_MARKER###${originalTranslation || originalText}`,
+          originalText: originalText,
+          reviewedText: originalTranslation || originalText,
+        };
+      });
     }
 
-    return batch.segments.map((segment, idx) => {
+    return batch.segments.map((segment: SrtSegment, idx: number) => {
       const [originalText] = segment.text.split('###TRANSLATION_MARKER###');
       const reviewedTranslation = reviewedLines[idx]?.trim() ?? '';
 
@@ -1215,20 +1171,22 @@ Improved translation for block 3
     });
   } catch (error: any) {
     log.error(
-      `[Review] Error during review batch (${parentOperationId}):`,
+      `[Review] Error during review batch (${parentOperationId}) via callChatModel:`,
       error.name,
       error.message
     );
-    if (error.name === 'AbortError' || signal?.aborted) {
+    if (
+      error.name === 'AbortError' ||
+      error.message === 'Operation cancelled' ||
+      signal?.aborted
+    ) {
       log.info(
         `[Review] Review batch (${parentOperationId}) cancelled. Rethrowing.`
       );
-      // Re-throw cancellation errors so the caller can handle them
       throw error;
     }
-    // For other errors, log and fallback to original segments
     log.error(
-      `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}). Falling back to original batch segments.`
+      `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}) after callChatModel failed. Falling back to original batch segments.`
     );
     return batch.segments;
   }
@@ -1273,7 +1231,9 @@ function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
     return segments;
   }
 
-  const adjustedSegments = segments.map(segment => ({ ...segment }));
+  const adjustedSegments = segments.map((segment: SrtSegment) => ({
+    ...segment,
+  }));
 
   for (let i = 1; i < adjustedSegments.length; i++) {
     const currentSegment = adjustedSegments[i];
