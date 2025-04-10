@@ -12,8 +12,8 @@ import {
 } from '../types/interface.js';
 import log from 'electron-log';
 import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
 import { FileManager } from './file-manager.js';
+import Anthropic from '@anthropic-ai/sdk';
 
 async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -181,7 +181,6 @@ export async function extractSubtitlesFromVideo({
         batchStart,
         batchEnd
       );
-      const anthropicApiKey = await getApiKey('anthropic');
       const translatedBatch = await translateBatch({
         batch: {
           segments: currentBatchOriginals.map(seg => ({ ...seg })),
@@ -189,7 +188,6 @@ export async function extractSubtitlesFromVideo({
           endIndex: batchEnd,
         },
         targetLang,
-        anthropicApiKey,
         operationId: `${operationId}-trans-${batchStart}`,
         signal,
       });
@@ -869,21 +867,12 @@ export async function mergeSubtitlesWithVideo({
 async function translateBatch({
   batch,
   targetLang,
-  anthropicApiKey,
   operationId,
   signal,
 }: TranslateBatchArgs): Promise<any[]> {
   log.info(
     `[${operationId}] Starting translation batch: ${batch.startIndex}-${batch.endIndex}`
   );
-  let anthropic: Anthropic;
-  try {
-    anthropic = new Anthropic({ apiKey: anthropicApiKey });
-  } catch (keyError) {
-    throw new SubtitleProcessingError(
-      keyError instanceof Error ? keyError.message : String(keyError)
-    );
-  }
 
   const MAX_RETRIES = 3;
   let retryCount = 0;
@@ -910,33 +899,18 @@ Translate EACH line individually, preserving the line order.
 
   while (retryCount < MAX_RETRIES) {
     try {
-      log.info(
-        `[${operationId}] Sending translation batch (Attempt ${retryCount + 1})`
-      );
-      const response = await anthropic.messages.create(
-        {
-          model: AI_MODELS.CLAUDE_3_7_SONNET,
-          max_tokens: AI_MODELS.MAX_TOKENS,
-          messages: [{ role: 'user', content: combinedPrompt }],
-        } as Anthropic.MessageCreateParams,
-        { signal }
-      );
+      log.info(`[${operationId}] Sending translation batch via callChatModel`);
+      const translation = await callAIModel({
+        messages: [{ role: 'user', content: combinedPrompt }],
+        max_tokens: AI_MODELS.MAX_TOKENS,
+        signal,
+        operationId: `${operationId}-translate`,
+        retryAttempts: 3,
+      });
+      log.info(`[${operationId}] Received response for translation batch`);
       log.info(
         `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
       );
-
-      const translationResponse = response as Anthropic.Message;
-
-      let translation = '';
-      if (
-        translationResponse.content &&
-        translationResponse.content.length > 0 &&
-        translationResponse.content[0].type === 'text'
-      ) {
-        translation = translationResponse.content[0].text;
-      } else {
-        throw new Error('Unexpected translation response format from Claude.');
-      }
 
       const translationLines = translation
         .split('\n')
@@ -1038,16 +1012,6 @@ async function reviewTranslationBatch(
   log.info(
     `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
   );
-
-  let anthropic: Anthropic;
-  try {
-    const anthropicApiKey = await getApiKey('anthropic');
-    anthropic = new Anthropic({ apiKey: anthropicApiKey });
-  } catch (keyError) {
-    throw new SubtitleProcessingError(
-      keyError instanceof Error ? keyError.message : String(keyError)
-    );
-  }
 
   const CONTEXT_WINDOW_SIZE = 5;
 
@@ -1159,33 +1123,17 @@ Improved translation for block 3
       `[Review] Sending review batch (${parentOperationId}) to Claude API`
     );
 
-    const response = await anthropic.messages.create(
-      {
-        model: AI_MODELS.CLAUDE_3_7_SONNET,
-        max_tokens: AI_MODELS.MAX_TOKENS,
-        messages: [{ role: 'user', content: prompt }],
-      } as Anthropic.MessageCreateParams,
-      { signal }
-    );
-    log.info(
-      `[Review] Received response for review batch (${parentOperationId})`
-    );
+    const reviewedContent = await callAIModel({
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: AI_MODELS.MAX_TOKENS,
+      signal,
+      operationId: `${operationId}-review`,
+      retryAttempts: 3,
+    });
 
-    const reviewResponse = response as Anthropic.Message;
-
-    let reviewedContent = '';
-    if (
-      reviewResponse.content &&
-      reviewResponse.content.length > 0 &&
-      reviewResponse.content[0].type === 'text'
-    ) {
-      reviewedContent = reviewResponse.content[0].text;
-    } else {
+    if (!reviewedContent) {
       log.warn(
-        '[Review] Review response content was not in the expected format.'
-      );
-      log.warn(
-        `[Review] Translation review output format unexpected. Using original translations for this batch.`
+        '[Review] Review response content was empty or null. Using original translations.'
       );
       return batch.segments;
     }
@@ -1299,4 +1247,195 @@ function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
   }
 
   return adjustedSegments;
+}
+
+export async function callOpenAIChat({
+  model,
+  messages,
+  max_tokens,
+  signal,
+  retryAttempts = 3,
+}: {
+  model: string;
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+  max_tokens?: number;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+}): Promise<string> {
+  let openai: OpenAI;
+  try {
+    const openaiApiKey = await getApiKey('openai');
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not found');
+    }
+    openai = new OpenAI({ apiKey: openaiApiKey });
+  } catch (keyError) {
+    const message =
+      keyError instanceof Error ? keyError.message : String(keyError);
+    throw new Error(`OpenAI initialization failed: ${message}`);
+  }
+
+  let currentAttempt = 0;
+  while (currentAttempt < retryAttempts) {
+    currentAttempt++;
+    try {
+      const response = await openai.chat.completions.create(
+        {
+          model: model,
+          messages: messages,
+          max_tokens: max_tokens,
+        },
+        { signal }
+      );
+      const content = response.choices[0]?.message?.content;
+      if (content) {
+        return content;
+      } else {
+        throw new Error('Unexpected response format from OpenAI Chat API.');
+      }
+    } catch (error: any) {
+      if (signal?.aborted || error.name === 'AbortError') {
+        throw new Error('Operation cancelled');
+      }
+
+      if (
+        (error instanceof OpenAI.APIError &&
+          (error.status === 429 ||
+            error.status === 500 ||
+            error.status === 503)) ||
+        (error.message &&
+          error.message.includes('timeout') &&
+          currentAttempt < retryAttempts)
+      ) {
+        const delay = 1000 * Math.pow(2, currentAttempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      throw new Error(
+        `OpenAI Chat API call failed: ${error.message || String(error)}`
+      );
+    }
+  }
+
+  throw new Error(
+    `OpenAI Chat API call failed after ${retryAttempts} attempts.`
+  );
+}
+
+export async function callClaudeModel({
+  model,
+  messages,
+  max_tokens,
+  signal,
+  retryAttempts = 3,
+}: {
+  model: string;
+  messages: Anthropic.MessageParam[];
+  max_tokens: number;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+}): Promise<string> {
+  let anthropic: Anthropic;
+  let anthropicApiKey: string | null;
+  try {
+    anthropicApiKey = await getApiKey('anthropic');
+    if (!anthropicApiKey) {
+      throw new Error('Anthropic API key not found');
+    }
+    anthropic = new Anthropic({ apiKey: anthropicApiKey });
+  } catch (keyError) {
+    const message =
+      keyError instanceof Error ? keyError.message : String(keyError);
+    throw new Error(`Anthropic initialization failed: ${message}`);
+  }
+
+  let currentAttempt = 0;
+  while (currentAttempt < retryAttempts) {
+    currentAttempt++;
+    try {
+      const response: Anthropic.Message = await anthropic.messages.create(
+        {
+          model: model,
+          max_tokens: max_tokens,
+          messages: messages,
+        },
+        { signal }
+      );
+
+      if (
+        response.content &&
+        Array.isArray(response.content) &&
+        response.content.length > 0 &&
+        response.content[0].type === 'text'
+      ) {
+        return response.content[0].text;
+      } else {
+        throw new Error('Unexpected response format from Claude.');
+      }
+    } catch (error: any) {
+      if (signal?.aborted || error.name === 'AbortError') {
+        throw new Error('Operation cancelled');
+      }
+
+      if (
+        error.message &&
+        (error.message.includes('timeout') ||
+          error.message.includes('rate') ||
+          error.message.includes('ECONNRESET')) &&
+        currentAttempt < retryAttempts
+      ) {
+        const delay = 1000 * Math.pow(2, currentAttempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      throw new Error(
+        `Claude API call failed: ${error.message || String(error)}`
+      );
+    }
+  }
+
+  throw new Error(`Claude API call failed after ${retryAttempts} attempts.`);
+}
+
+export async function callAIModel({
+  messages,
+  max_tokens,
+  signal,
+  operationId,
+  retryAttempts = 3,
+  isUsingClaude = false,
+}: {
+  messages: any[];
+  max_tokens?: number;
+  signal?: AbortSignal;
+  operationId: string;
+  retryAttempts?: number;
+  isUsingClaude?: boolean;
+}): Promise<string> {
+  if (isUsingClaude) {
+    // This expects the messages to match Anthropic’s shape, so you might need
+    // an adapter if your messages are in OpenAI format. Or vice versa.
+    return callClaudeModel({
+      model: AI_MODELS.CLAUDE_3_7_SONNET,
+      messages,
+      max_tokens: max_tokens ?? 1000,
+      signal,
+      operationId,
+      retryAttempts,
+    });
+  } else {
+    // If using GPT, you presumably have messages in OpenAI’s Chat format
+    return callOpenAIChat({
+      model: AI_MODELS.GPT_4O,
+      messages,
+      max_tokens: max_tokens ?? 1000,
+      signal,
+      operationId,
+      retryAttempts,
+    });
+  }
 }

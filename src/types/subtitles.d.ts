@@ -1,7 +1,6 @@
 interface TranslateBatchArgs {
   batch: { segments: any[]; startIndex: number; endIndex: number };
   targetLang: string;
-  anthropicApiKey: string;
   operationId: string;
   signal?: AbortSignal;
 }
