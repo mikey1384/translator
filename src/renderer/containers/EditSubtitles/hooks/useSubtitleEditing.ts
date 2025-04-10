@@ -209,11 +209,13 @@ export function useSubtitleEditing({
     debouncedTimeUpdateRef.current[debounceKey](String(value));
   }
 
-  // Clear debounce timers on unmount
   useEffect(() => {
+    const currentDebouncedTimeUpdates = debouncedTimeUpdateRef.current;
+    const currentDebouncedTextUpdates = debouncedTextUpdateRef.current;
+
     return () => {
-      Object.values(debouncedTimeUpdateRef.current).forEach(fn => fn.cancel());
-      Object.values(debouncedTextUpdateRef.current).forEach(fn => fn.cancel());
+      Object.values(currentDebouncedTimeUpdates).forEach(fn => fn.cancel());
+      Object.values(currentDebouncedTextUpdates).forEach(fn => fn.cancel());
     };
   }, []);
 
