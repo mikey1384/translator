@@ -18,65 +18,65 @@ type ApiKeyStatus = {
 } | null;
 
 export default function GenerateSubtitles({
-  videoFile,
-  videoFilePath,
-  onSetVideoFile,
-  showOriginalText,
-  onShowOriginalTextChange,
   apiKeyStatus,
-  isLoadingKeyStatus,
-  onNavigateToSettings,
-  onSelectVideoClick,
-  error,
-  setError,
-  isProcessingUrl,
-  progressPercent,
-  progressStage,
+  didDownloadFromUrl,
   downloadComplete,
   downloadedVideoPath,
-  handleSaveOriginalVideo,
-  didDownloadFromUrl,
-  isGenerating,
-  urlInput,
-  setUrlInput,
   downloadQuality,
-  setDownloadQuality,
-  onProcessUrl,
-  onGenerateSubtitles,
+  error,
   inputMode,
-  setInputMode,
+  isGenerating,
+  isLoadingKeyStatus,
+  isProcessingUrl,
+  onGenerateSubtitles,
+  onNavigateToSettings,
+  onProcessUrl,
+  onSaveOriginalVideo,
+  onSelectVideoClick,
+  onSetDownloadQuality,
+  onSetError,
+  onSetInputMode,
+  onSetTargetLanguage,
+  onSetUrlInput,
+  onSetVideoFile,
+  onShowOriginalTextChange,
+  progressPercent,
+  progressStage,
+  showOriginalText,
   targetLanguage,
-  setTargetLanguage,
+  urlInput,
+  videoFile,
+  videoFilePath,
 }: {
-  videoFile: File | null;
-  videoFilePath?: string | null;
-  onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
-  showOriginalText: boolean;
-  onShowOriginalTextChange: (show: boolean) => void;
   apiKeyStatus: ApiKeyStatus;
-  isLoadingKeyStatus: boolean;
-  onNavigateToSettings: (show: boolean) => void;
-  onSelectVideoClick: () => void;
-  error: string | null;
-  setError: (error: string | null) => void;
-  isProcessingUrl: boolean;
-  progressPercent: number;
-  progressStage: string;
+  didDownloadFromUrl: boolean;
   downloadComplete: boolean;
   downloadedVideoPath: string | null;
-  handleSaveOriginalVideo: () => void;
-  didDownloadFromUrl: boolean;
-  isGenerating: boolean;
-  urlInput: string;
-  setUrlInput: (url: string) => void;
   downloadQuality: VideoQuality;
-  setDownloadQuality: (quality: VideoQuality) => void;
-  onProcessUrl: () => void;
-  onGenerateSubtitles: () => void;
+  error: string | null;
   inputMode: 'file' | 'url';
-  setInputMode: (mode: 'file' | 'url') => void;
+  isGenerating: boolean;
+  isLoadingKeyStatus: boolean;
+  isProcessingUrl: boolean;
+  onGenerateSubtitles: () => void;
+  onNavigateToSettings: (show: boolean) => void;
+  onProcessUrl: () => void;
+  onSaveOriginalVideo: () => void;
+  onSelectVideoClick: () => void;
+  onSetDownloadQuality: (quality: VideoQuality) => void;
+  onSetError: (error: string | null) => void;
+  onSetInputMode: (mode: 'file' | 'url') => void;
+  onSetTargetLanguage: (lang: string) => void;
+  onSetUrlInput: (url: string) => void;
+  onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
+  onShowOriginalTextChange: (show: boolean) => void;
+  progressPercent: number;
+  progressStage: string;
+  showOriginalText: boolean;
   targetLanguage: string;
-  setTargetLanguage: (lang: string) => void;
+  urlInput: string;
+  videoFile: File | null;
+  videoFilePath?: string | null;
 }) {
   useEffect(() => {
     if (videoFile) {
@@ -84,11 +84,11 @@ export default function GenerateSubtitles({
         !(videoFile instanceof File) || !(videoFile as any)._originalPath;
 
       if (isLocalFileSelection) {
-        setInputMode('file');
+        onSetInputMode('file');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoFile]);
+  }, [videoFile]); // Keep dependency array minimal, onSetInputMode might cause loops if included carelessly
 
   return (
     <Section title="Generate Subtitles">
@@ -110,14 +110,14 @@ export default function GenerateSubtitles({
               progressStage={progressStage}
               downloadComplete={downloadComplete}
               downloadedVideoPath={downloadedVideoPath}
-              onSaveOriginalVideo={handleSaveOriginalVideo}
+              onSaveOriginalVideo={onSaveOriginalVideo}
               inputMode={inputMode}
               didDownloadFromUrl={didDownloadFromUrl}
             />
 
             <InputModeToggle
               inputMode={inputMode}
-              setInputMode={setInputMode}
+              setInputMode={onSetInputMode}
               isGenerating={isGenerating}
               isProcessingUrl={isProcessingUrl}
             />
@@ -159,11 +159,11 @@ export default function GenerateSubtitles({
               >
                 <UrlInputSection
                   urlInput={urlInput}
-                  setUrlInput={setUrlInput}
+                  setUrlInput={onSetUrlInput}
                   onSetVideoFile={onSetVideoFile}
-                  setError={setError}
+                  setError={onSetError}
                   downloadQuality={downloadQuality}
-                  setDownloadQuality={setDownloadQuality}
+                  setDownloadQuality={onSetDownloadQuality}
                   handleProcessUrl={onProcessUrl}
                   isProcessingUrl={isProcessingUrl}
                   isGenerating={isGenerating}
@@ -174,7 +174,7 @@ export default function GenerateSubtitles({
             {videoFile && (
               <LanguageSelection
                 targetLanguage={targetLanguage}
-                setTargetLanguage={setTargetLanguage}
+                setTargetLanguage={onSetTargetLanguage}
                 isGenerating={isGenerating}
                 showOriginalText={showOriginalText}
                 onShowOriginalTextChange={onShowOriginalTextChange}

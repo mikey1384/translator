@@ -81,8 +81,6 @@ function AppContent() {
 
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const { apiKeyStatus, isLoadingKeyStatus, fetchKeyStatus } =
-    useApiKeyStatus();
   const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
   const [mergeOperationId, setMergeOperationId] = useState<string | null>(null);
@@ -92,6 +90,9 @@ function AppContent() {
   const [matchedIndices, setMatchedIndices] = useState<number[]>([]);
   const [activeMatchIndex, setActiveMatchIndex] = useState<number>(0);
   const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
+
+  const { apiKeyStatus, isLoadingKeyStatus, fetchKeyStatus } =
+    useApiKeyStatus();
 
   const {
     subtitleSegments,
@@ -298,35 +299,35 @@ function AppContent() {
 
             <div ref={mainContentRef} className={mainContentStyles}>
               <GenerateSubtitles
-                videoFile={videoFile}
-                videoFilePath={videoFilePath}
-                onSetVideoFile={handleSetVideoFile}
-                showOriginalText={showOriginalText}
-                onShowOriginalTextChange={setShowOriginalText}
                 apiKeyStatus={apiKeyStatus}
-                isLoadingKeyStatus={isLoadingKeyStatus}
-                onNavigateToSettings={handleToggleSettings}
-                onSelectVideoClick={handleSelectVideoClick}
-                error={error}
-                setError={setError}
-                isProcessingUrl={isProcessingUrl}
-                progressPercent={progressPercent}
-                progressStage={progressStage}
+                didDownloadFromUrl={didDownloadFromUrl}
                 downloadComplete={downloadComplete}
                 downloadedVideoPath={downloadedVideoPath}
-                handleSaveOriginalVideo={handleSaveOriginalVideo}
-                didDownloadFromUrl={didDownloadFromUrl}
-                isGenerating={isGenerating}
-                urlInput={urlInput}
-                setUrlInput={setUrlInput}
                 downloadQuality={downloadQuality}
-                setDownloadQuality={setDownloadQuality}
-                onProcessUrl={onProcessUrl}
-                onGenerateSubtitles={onGenerateSubtitles}
+                error={error}
                 inputMode={inputMode}
-                setInputMode={setInputMode}
+                isGenerating={isGenerating}
+                isLoadingKeyStatus={isLoadingKeyStatus}
+                isProcessingUrl={isProcessingUrl}
+                onGenerateSubtitles={onGenerateSubtitles}
+                onNavigateToSettings={handleToggleSettings}
+                onProcessUrl={onProcessUrl}
+                onSaveOriginalVideo={handleSaveOriginalVideo}
+                onSelectVideoClick={handleSelectVideoClick}
+                onSetDownloadQuality={setDownloadQuality}
+                onSetError={setError}
+                onSetInputMode={setInputMode}
+                onSetTargetLanguage={setTargetLanguage}
+                onSetUrlInput={setUrlInput}
+                onSetVideoFile={handleSetVideoFile}
+                onShowOriginalTextChange={setShowOriginalText}
+                progressPercent={progressPercent}
+                progressStage={progressStage}
+                showOriginalText={showOriginalText}
                 targetLanguage={targetLanguage}
-                setTargetLanguage={setTargetLanguage}
+                urlInput={urlInput}
+                videoFile={videoFile}
+                videoFilePath={videoFilePath}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">
