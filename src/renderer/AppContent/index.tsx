@@ -406,6 +406,7 @@ function AppContent() {
       if (!result.canceled && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
         const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video';
+        setDownloadedVideoPath(null);
         handleSetVideoFile({ path: filePath, name: fileName });
       } else {
         console.log('File selection cancelled or no file chosen.');
