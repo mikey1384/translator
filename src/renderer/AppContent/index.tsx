@@ -169,7 +169,6 @@ function AppContent() {
     setVideoPlayerRef,
     videoUrl,
     handleSetSubtitleSegments,
-    onReset: handleResetVideo,
   });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -181,15 +180,6 @@ function AppContent() {
     scrollToCurrentSubtitle: () => {},
     scrollToSubtitleIndex: (_index: number) => {},
   });
-
-  useEffect(() => {
-    setError('');
-    if (inputMode === 'file') {
-      setDidDownloadFromUrl(false);
-      setDownloadedVideoPath(null);
-      setVideoUrl('');
-    }
-  }, [inputMode]);
 
   useEffect(() => {
     if (!searchText) {
@@ -557,15 +547,6 @@ function AppContent() {
         return currentSegments;
       }
     }
-  }
-
-  function handleResetVideo() {
-    setIsUrlLoading(false);
-    setVideoFile(null);
-    setVideoUrl('');
-    setVideoFilePath(null);
-    setIsPlaying(false);
-    handleSetSubtitleSegments([]);
   }
 
   async function onProcessUrl() {

@@ -1,13 +1,5 @@
-import React from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-
-interface InputModeToggleProps {
-  inputMode: 'file' | 'url';
-  setInputMode: (mode: 'file' | 'url') => void;
-  isGenerating: boolean;
-  isProcessingUrl: boolean;
-}
 
 // --- Style Adjustments for New Layout --- START ---
 const inputModeToggleStyles = css`
@@ -55,30 +47,35 @@ const inputModeToggleStyles = css`
   }
 `;
 
-const InputModeToggle: React.FC<InputModeToggleProps> = ({
+function InputModeToggle({
   inputMode,
-  setInputMode,
+  onSetInputMode,
   isGenerating,
   isProcessingUrl,
-}) => {
+}: {
+  inputMode: 'file' | 'url';
+  onSetInputMode: (mode: 'file' | 'url') => void;
+  isGenerating: boolean;
+  isProcessingUrl: boolean;
+}) {
   return (
     <div className={inputModeToggleStyles}>
       <button
         className={inputMode === 'file' ? 'active' : ''}
-        onClick={() => setInputMode('file')}
+        onClick={() => onSetInputMode('file')}
         disabled={isGenerating || isProcessingUrl}
       >
         From your device
       </button>
       <button
         className={inputMode === 'url' ? 'active' : ''}
-        onClick={() => setInputMode('url')}
+        onClick={() => onSetInputMode('url')}
         disabled={isGenerating || isProcessingUrl}
       >
         From the web
       </button>
     </div>
   );
-};
+}
 
 export default InputModeToggle;

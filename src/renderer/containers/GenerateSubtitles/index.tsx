@@ -88,7 +88,7 @@ export default function GenerateSubtitles({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoFile]); // Keep dependency array minimal, onSetInputMode might cause loops if included carelessly
+  }, [videoFile]);
 
   return (
     <Section title="Generate Subtitles">
@@ -117,7 +117,7 @@ export default function GenerateSubtitles({
 
             <InputModeToggle
               inputMode={inputMode}
-              setInputMode={onSetInputMode}
+              onSetInputMode={onSetInputMode}
               isGenerating={isGenerating}
               isProcessingUrl={isProcessingUrl}
             />

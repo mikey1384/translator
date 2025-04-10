@@ -22,7 +22,6 @@ export function useVideoActions({
   setVideoPlayerRef,
   videoUrl,
   handleSetSubtitleSegments,
-  onReset,
 }: {
   resetSubtitleSource: () => void;
   setIsUrlLoading: (value: boolean) => void;
@@ -42,7 +41,6 @@ export function useVideoActions({
   setVideoPlayerRef: (value: any) => void;
   videoUrl: string;
   handleSetSubtitleSegments: (value: SrtSegment[]) => void;
-  onReset: () => void;
 }) {
   async function handleLoadFromUrl(url: string, quality: VideoQuality) {
     if (!url || !window.electron) {
@@ -116,11 +114,6 @@ export function useVideoActions({
 
     if (videoUrl && videoUrl.startsWith('blob:')) {
       URL.revokeObjectURL(videoUrl);
-    }
-
-    if (!fileData) {
-      onReset();
-      return;
     }
 
     if (
