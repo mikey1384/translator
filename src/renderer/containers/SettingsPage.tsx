@@ -141,11 +141,10 @@ const infoTextStyles = css`
 
 type ApiKeyStatus = {
   openai: boolean;
-  anthropic: boolean;
 } | null;
 
 type SaveStatus = {
-  type: 'openai' | 'anthropic';
+  type: 'openai';
   success: boolean;
   message: string;
 } | null;
@@ -241,14 +240,12 @@ function SettingsPage({
   isLoadingStatus,
 }: SettingsPageProps) {
   const [openaiKeyInput, setOpenaiKeyInput] = useState('');
-  const [anthropicKeyInput, setAnthropicKeyInput] = useState('');
   const [keyStatus, setKeyStatus] = useState<ApiKeyStatus>(apiKeyStatus);
   const [loadingStatus, setLoadingStatus] = useState(isLoadingStatus);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [isEditingOpenAI, setIsEditingOpenAI] = useState(false);
-  const [isEditingAnthropic, setIsEditingAnthropic] = useState(false);
 
   useEffect(() => {
     setKeyStatus(apiKeyStatus);
@@ -258,43 +255,38 @@ function SettingsPage({
     setLoadingStatus(isLoadingStatus);
   }, [isLoadingStatus]);
 
-  const handleSaveKey = async (keyType: 'openai' | 'anthropic') => {
-    const apiKey = keyType === 'openai' ? openaiKeyInput : anthropicKeyInput;
+  const handleSaveKey = async () => {
+    const apiKey = openaiKeyInput;
     setIsSaving(true);
     setSaveStatus(null); // Clear previous status
 
     try {
-      const result = await window.electron.saveApiKey(keyType, apiKey);
+      const result = await window.electron.saveApiKey('openai', apiKey);
       if (result.success) {
         setSaveStatus({
-          type: keyType,
+          type: 'openai',
           success: true,
           message: apiKey
-            ? `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key saved successfully!`
-            : `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key removed successfully!`,
+            ? 'OpenAI key saved successfully!'
+            : 'OpenAI key removed successfully!',
         });
         setKeyStatus(prevStatus => ({
           ...prevStatus!,
-          [keyType]: !!apiKey,
+          openai: !!apiKey,
         }));
-        if (keyType === 'openai') {
-          setOpenaiKeyInput('');
-          setIsEditingOpenAI(false);
-        } else {
-          setAnthropicKeyInput('');
-          setIsEditingAnthropic(false);
-        }
+        setOpenaiKeyInput('');
+        setIsEditingOpenAI(false);
       } else {
         setSaveStatus({
-          type: keyType,
+          type: 'openai',
           success: false,
           message: result.error || 'Failed to save key.',
         });
       }
     } catch (error) {
-      console.error(`Error calling saveApiKey for ${keyType}:`, error);
+      console.error('Error calling saveApiKey for openai:', error);
       setSaveStatus({
-        type: keyType,
+        type: 'openai',
         success: false,
         message: 'An unexpected error occurred.',
       });
@@ -303,9 +295,9 @@ function SettingsPage({
     }
   };
 
-  const handleRemoveKey = async (keyType: 'openai' | 'anthropic') => {
+  const handleRemoveKey = async () => {
     if (
-      !window.confirm(`Are you sure you want to remove the ${keyType} API key?`)
+      !window.confirm('Are you sure you want to remove the OpenAI API key?')
     ) {
       return;
     }
@@ -314,61 +306,56 @@ function SettingsPage({
     setSaveStatus(null);
 
     try {
+      console.log('[SettingsPage] Calling saveApiKey to remove openai key...');
+      const result = await window.electron.saveApiKey('openai', '');
       console.log(
-        `[SettingsPage] Calling saveApiKey to remove ${keyType} key...`
-      );
-      const result = await window.electron.saveApiKey(keyType, '');
-      console.log(
-        `[SettingsPage] Result from saveApiKey for removing ${keyType}:`,
+        '[SettingsPage] Result from saveApiKey for removing openai:',
         result
       );
 
       if (result.success) {
         console.log(
-          `[SettingsPage] Key removal success for ${keyType}. Updating state...`
+          '[SettingsPage] Key removal success for openai. Updating state...'
         );
         setSaveStatus({
-          type: keyType,
+          type: 'openai',
           success: true,
-          message: `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} key removed successfully!`,
+          message: 'OpenAI key removed successfully!',
         });
-        console.log(
-          `[SettingsPage] Updating keyStatus for ${keyType} to false.`
-        );
+        console.log('[SettingsPage] Updating keyStatus for openai to false.');
         setKeyStatus(prevStatus => {
-          const newState = { ...prevStatus!, [keyType]: false };
+          const newState = { ...prevStatus!, openai: false };
           console.log(
-            `[SettingsPage] New keyStatus state (after removal):`,
+            '[SettingsPage] New keyStatus state (after removal):',
             newState
           );
           return newState;
         });
-        if (keyType === 'openai') setIsEditingOpenAI(false);
-        else setIsEditingAnthropic(false);
+        setIsEditingOpenAI(false);
       } else {
         console.error(
-          `[SettingsPage] Key removal failed for ${keyType}:`,
+          '[SettingsPage] Key removal failed for openai:',
           result.error
         );
         setSaveStatus({
-          type: keyType,
+          type: 'openai',
           success: false,
           message: result.error || 'Failed to remove key.',
         });
       }
     } catch (error) {
       console.error(
-        `[SettingsPage] Error calling saveApiKey to remove ${keyType} key:`,
+        '[SettingsPage] Error calling saveApiKey to remove openai key:',
         error
       );
       setSaveStatus({
-        type: keyType,
+        type: 'openai',
         success: false,
         message: 'An unexpected error occurred while removing the key.',
       });
     } finally {
       setIsSaving(false);
-      console.log(`[SettingsPage] Finished handleRemoveKey for ${keyType}.`);
+      console.log('[SettingsPage] Finished handleRemoveKey for openai.');
     }
   };
 
@@ -390,8 +377,8 @@ function SettingsPage({
     );
   };
 
-  const renderFeedbackMessage = (keyType: 'openai' | 'anthropic') => {
-    if (!saveStatus || saveStatus.type !== keyType) return null;
+  const renderFeedbackMessage = () => {
+    if (!saveStatus) return null;
 
     return (
       <p
@@ -406,25 +393,15 @@ function SettingsPage({
     );
   };
 
-  const renderKeySection = (keyType: 'openai' | 'anthropic') => {
-    const isSet = keyStatus ? keyStatus[keyType] : false;
-    const isEditing =
-      keyType === 'openai' ? isEditingOpenAI : isEditingAnthropic;
-    const currentInputValue =
-      keyType === 'openai' ? openaiKeyInput : anthropicKeyInput;
-    const setInputValue =
-      keyType === 'openai' ? setOpenaiKeyInput : setAnthropicKeyInput;
-    const setIsEditing =
-      keyType === 'openai' ? setIsEditingOpenAI : setIsEditingAnthropic;
-    const placeholder =
-      keyType === 'openai'
-        ? 'Enter your OpenAI key (sk-...)'
-        : 'Enter your Anthropic key (sk-ant-...)';
-    const getName = keyType === 'openai' ? 'OpenAI' : 'Anthropic';
-    const getKeyLink =
-      keyType === 'openai'
-        ? 'https://platform.openai.com/api-keys'
-        : 'https://console.anthropic.com/settings/keys';
+  const renderOpenAIKeySection = () => {
+    const isSet = keyStatus ? keyStatus.openai : false;
+    const isEditing = isEditingOpenAI;
+    const currentInputValue = openaiKeyInput;
+    const setInputValue = setOpenaiKeyInput;
+    const setIsEditing = setIsEditingOpenAI;
+    const placeholder = 'Enter your OpenAI key (sk-...)';
+    const getName = 'OpenAI';
+    const getKeyLink = 'https://platform.openai.com/api-keys';
 
     if (loadingStatus) {
       return <p>Loading key status...</p>;
@@ -452,7 +429,7 @@ function SettingsPage({
                   }
                 `}
               `}
-              onClick={() => handleRemoveKey(keyType)}
+              onClick={handleRemoveKey}
               disabled={isSaving}
             >
               Remove Key
@@ -463,11 +440,11 @@ function SettingsPage({
     } else {
       return (
         <>
-          <label htmlFor={`${keyType}-key`} className={labelStyles}>
+          <label htmlFor="openai-key" className={labelStyles}>
             {getName} API Key:
           </label>
           <input
-            id={`${keyType}-key`}
+            id="openai-key"
             type="password"
             className={inputStyles}
             value={currentInputValue}
@@ -478,7 +455,7 @@ function SettingsPage({
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button
               className={buttonStyles}
-              onClick={() => handleSaveKey(keyType)}
+              onClick={handleSaveKey}
               disabled={isSaving || (!currentInputValue && !isSet)}
             >
               {isSaving
@@ -510,7 +487,7 @@ function SettingsPage({
               Get {getName} Key
             </a>
           </div>
-          {renderFeedbackMessage(keyType)}
+          {renderFeedbackMessage()}
         </>
       );
     }
@@ -524,10 +501,10 @@ function SettingsPage({
 
       <h1 className={titleStyles}>API Key Settings</h1>
       <p className={infoTextStyles}>
-        Enter your personal API keys for OpenAI and Anthropic (Claude) below.
+        Enter your personal API key for OpenAI (GPT models) below.
         <br />
-        These keys are stored securely on your computer using the system&apos;s
-        keychain and are never shared.
+        This key is stored securely on your computer using the system&apos;s
+        keychain and is never shared.
       </p>
 
       <div className={sectionStyles}>
@@ -535,15 +512,7 @@ function SettingsPage({
           OpenAI (GPT models)
           {renderStatusIndicator(keyStatus?.openai)}
         </h2>
-        {renderKeySection('openai')}
-      </div>
-
-      <div className={sectionStyles}>
-        <h2 className={sectionTitleStyles}>
-          Anthropic (Claude models)
-          {renderStatusIndicator(keyStatus?.anthropic)}
-        </h2>
-        {renderKeySection('anthropic')}
+        {renderOpenAIKeySection()}
       </div>
     </div>
   );

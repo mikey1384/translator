@@ -5,7 +5,7 @@ import { colors } from '../../styles.js';
 // Define Key Status Type (can be shared or moved to a types file)
 type ApiKeyStatus = {
   openai: boolean;
-  anthropic: boolean;
+  // anthropic: boolean; // Removed Anthropic
 } | null;
 
 interface ApiKeyLockProps {
@@ -29,16 +29,6 @@ const lockedTitleStyles = css`
   font-weight: 600;
   color: ${colors.dark}; // Use light text color
   margin-bottom: 0.75rem;
-`;
-
-const lockedProgressStyles = css`
-  font-size: 1rem;
-  color: ${colors.grayDark}; // Use secondary light text
-  margin-bottom: 1.5rem;
-  span {
-    font-weight: bold;
-    color: ${colors.primary}; // Use primary accent color
-  }
 `;
 
 const goToSettingsButtonStyles = css`
@@ -66,11 +56,13 @@ const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
   isLoadingKeyStatus,
   onNavigateToSettings,
 }) => {
-  // Calculate key status
+  // Calculate key status - Only check for OpenAI
   const keysSetCount = apiKeyStatus
-    ? (apiKeyStatus.openai ? 1 : 0) + (apiKeyStatus.anthropic ? 1 : 0)
+    ? apiKeyStatus.openai
+      ? 1
+      : 0 // + (apiKeyStatus.anthropic ? 1 : 0) // Removed Anthropic check
     : 0;
-  const allKeysSet = keysSetCount === 2;
+  const allKeysSet = keysSetCount === 1; // Changed required count to 1
 
   if (isLoadingKeyStatus) {
     return <p>Loading API Key status...</p>;
@@ -83,9 +75,6 @@ const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
   return (
     <div className={lockedContainerStyles}>
       <div className={lockedTitleStyles}>API Key Setup Required</div>
-      <div className={lockedProgressStyles}>
-        Required Keys Set: <span>{keysSetCount}</span>/2
-      </div>
       <p
         style={{
           fontSize: '0.9rem',
@@ -93,8 +82,9 @@ const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
           marginBottom: '1rem',
         }}
       >
-        Please add your OpenAI and Anthropic API keys in the settings to enable
-        subtitle generation and translation.
+        Please add your OpenAI API key in the settings to enable subtitle
+        generation and translation. If you&apos;re unsure how to get a key,
+        check our guide. {/* Updated text and fixed apostrophe */}
       </p>
       <button
         className={goToSettingsButtonStyles}

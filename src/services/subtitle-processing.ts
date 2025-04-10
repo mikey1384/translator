@@ -1285,6 +1285,7 @@ export async function callOpenAIChat({
           model: model,
           messages: messages,
           max_tokens: max_tokens,
+          temperature: 0.1,
         },
         { signal }
       );
@@ -1361,6 +1362,7 @@ export async function callClaudeModel({
           model: model,
           max_tokens: max_tokens,
           messages: messages,
+          temperature: 0.1,
         },
         { signal }
       );
@@ -1417,8 +1419,6 @@ export async function callAIModel({
   isUsingClaude?: boolean;
 }): Promise<string> {
   if (isUsingClaude) {
-    // This expects the messages to match Anthropic’s shape, so you might need
-    // an adapter if your messages are in OpenAI format. Or vice versa.
     return callClaudeModel({
       model: AI_MODELS.CLAUDE_3_7_SONNET,
       messages,
@@ -1428,7 +1428,6 @@ export async function callAIModel({
       retryAttempts,
     });
   } else {
-    // If using GPT, you presumably have messages in OpenAI’s Chat format
     return callOpenAIChat({
       model: AI_MODELS.GPT_4O,
       messages,

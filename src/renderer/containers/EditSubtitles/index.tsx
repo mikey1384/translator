@@ -812,9 +812,6 @@ export function EditSubtitles({
       if (window.electron?.onMergeSubtitlesProgress) {
         window.electron.onMergeSubtitlesProgress(handleProgress);
         cleanupMergeListener = () => {
-          // console.log(
-          //   `[Renderer] Cleaning up merge listener for ${operationId}`
-          // ); // Remove log
           window.electron.onMergeSubtitlesProgress(null);
         };
       } else {
