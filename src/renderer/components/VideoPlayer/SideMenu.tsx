@@ -6,19 +6,6 @@ import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { VideoQuality } from '../../../types/interface.js';
 
-interface SideMenuProps {
-  onChangeVideo?: (file: File | { path: string; name: string }) => void;
-  onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
-  hasSubtitles?: boolean;
-  onShiftAllSubtitles?: (offsetSeconds: number) => void;
-  onScrollToCurrentSubtitle?: () => void;
-  onSrtLoaded: (segments: SrtSegment[]) => void;
-  onUiInteraction?: () => void;
-  isUrlLoading?: boolean;
-  urlLoadProgress?: number;
-  urlLoadStage?: string;
-}
-
 // Simple input style similar to time inputs in editor - Updated for Dark Theme
 const shiftInputStyles = css`
   width: 80px;
@@ -106,17 +93,28 @@ const progressTextStyles = css`
 // --- Styles for Progress Bar --- END ---
 
 export default function SideMenu({
-  onChangeVideo,
   onLoadFromUrl,
   hasSubtitles = false,
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSrtLoaded,
+  onSelectVideoClick,
   onUiInteraction,
   isUrlLoading = false,
   urlLoadProgress = 0,
   urlLoadStage = '',
-}: SideMenuProps) {
+}: {
+  onLoadFromUrl?: (url: string, quality: VideoQuality) => void;
+  hasSubtitles?: boolean;
+  onShiftAllSubtitles?: (offsetSeconds: number) => void;
+  onScrollToCurrentSubtitle?: () => void;
+  onSrtLoaded: (segments: SrtSegment[]) => void;
+  onUiInteraction?: () => void;
+  onSelectVideoClick: () => void;
+  isUrlLoading?: boolean;
+  urlLoadProgress?: number;
+  urlLoadStage?: string;
+}) {
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
   const [urlInputValue, setUrlInputValue] = useState<string>('');
@@ -162,43 +160,41 @@ export default function SideMenu({
           ${onlyTopButtonsBlockVisible ? 'margin-top: auto;' : ''}
         `}
       >
-        {onChangeVideo && (
-          <Button
-            onClick={handleVideoChangeClick}
-            variant="secondary"
-            size="sm"
-            title="Load a different video file"
+        <Button
+          onClick={onSelectVideoClick}
+          variant="secondary"
+          size="sm"
+          title="Load a different video file"
+          className={css`
+            width: 100%;
+            justify-content: flex-start;
+            padding: 8px 12px;
+          `}
+        >
+          <div
             className={css`
-              width: 100%;
-              justify-content: flex-start;
-              padding: 8px 12px;
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
             `}
           >
-            <div
-              className={css`
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-              `}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <span>Change Video</span>
-            </div>
-          </Button>
-        )}
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span>Change Video</span>
+          </div>
+        </Button>
 
         {/* --- URL Input Section (Conditional Rendering) --- START --- */}
         {onLoadFromUrl && (
@@ -402,45 +398,6 @@ export default function SideMenu({
       )}
     </div>
   );
-
-  async function handleVideoChangeClick() {
-    if (!window.electron?.openFile) {
-      console.error('Electron openFile API is not available.');
-      return;
-    }
-    try {
-      const result = await window.electron.openFile({
-        filters: [
-          {
-            name: 'Video Files',
-            extensions: ['mp4', 'mov', 'mkv', 'avi', 'webm'],
-          },
-        ],
-        title: 'Select Video File',
-      });
-
-      if (result.canceled || !result.filePaths?.length) {
-        console.log('Video selection cancelled.');
-        return;
-      }
-
-      const filePath = result.filePaths[0];
-      console.log('Selected video file path:', filePath);
-
-      if (onChangeVideo) {
-        const fileData = {
-          name: filePath.split(/[\\/]/).pop() || 'video.mp4',
-          path: filePath,
-          size: 0,
-          type: '',
-        };
-        onChangeVideo(fileData as any);
-        onUiInteraction?.();
-      }
-    } catch (error) {
-      console.error('Error opening video file with Electron:', error);
-    }
-  }
 
   function handleLoadUrlClick() {
     setUrlError('');

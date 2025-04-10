@@ -45,7 +45,6 @@ export interface EditSubtitlesProps {
   videoFilePath?: string | null;
   isPlaying?: boolean;
   editingTimes?: { start: number; end: number } | null;
-  onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
   onSetIsPlaying?: (isPlaying: boolean) => void;
   secondsToSrtTime?: (seconds: number) => string;
   parseSrt?: (srtString: string) => SrtSegment[];

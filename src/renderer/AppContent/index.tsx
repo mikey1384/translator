@@ -272,7 +272,7 @@ function AppContent() {
                 videoUrl={videoUrl}
                 subtitles={subtitleSegments}
                 onPlayerReady={handleVideoPlayerReady}
-                onChangeVideo={handleSetVideoFile}
+                onSelectVideoClick={handleSelectVideoClick}
                 onLoadFromUrl={handleLoadFromUrl}
                 onSrtLoaded={handleSetSubtitleSegments}
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
@@ -326,7 +326,6 @@ function AppContent() {
                   videoUrl={videoUrl}
                   videoFilePath={videoFilePath}
                   isPlaying={isPlaying}
-                  onSetVideoFile={handleSetVideoFile}
                   onSetIsPlaying={setIsPlaying}
                   secondsToSrtTime={secondsToSrtTime}
                   parseSrt={parseSrt}

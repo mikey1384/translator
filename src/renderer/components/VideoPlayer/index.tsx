@@ -227,7 +227,7 @@ export default function VideoPlayer({
   videoUrl,
   subtitles,
   onPlayerReady,
-  onChangeVideo,
+  onSelectVideoClick,
   onSrtLoaded,
   onScrollToCurrentSubtitle,
   onTogglePlay,
@@ -242,7 +242,7 @@ export default function VideoPlayer({
   videoUrl: string;
   subtitles: SrtSegment[];
   onPlayerReady: (player: any) => void;
-  onChangeVideo?: (file: File | { path: string; name: string }) => void;
+  onSelectVideoClick: () => void;
   onSrtLoaded: (segments: SrtSegment[]) => void;
   onScrollToCurrentSubtitle?: () => void;
   onTogglePlay?: () => void;
@@ -743,11 +743,9 @@ export default function VideoPlayer({
           </div>
         </div>
 
-        {/* Only show side controls when not in fullscreen mode */}
         {!isPseudoFullscreen && (
           <div className={controlsWrapperStyles(isPseudoFullscreen)}>
             <SideMenu
-              onChangeVideo={onChangeVideo}
               onLoadFromUrl={onLoadFromUrl}
               hasSubtitles={subtitles && subtitles.length > 0}
               onSrtLoaded={onSrtLoaded}
@@ -757,6 +755,7 @@ export default function VideoPlayer({
               isUrlLoading={isUrlLoading}
               urlLoadProgress={urlLoadProgress}
               urlLoadStage={urlLoadStage}
+              onSelectVideoClick={onSelectVideoClick}
             />
           </div>
         )}
