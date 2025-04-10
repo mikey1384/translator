@@ -247,7 +247,6 @@ function AppContent() {
           <SettingsPage
             apiKeyStatus={apiKeyStatus}
             isLoadingStatus={isLoadingKeyStatus}
-            onBack={handleBackFromSettings}
           />
         ) : (
           <>

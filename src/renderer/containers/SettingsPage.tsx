@@ -150,7 +150,6 @@ type SaveStatus = {
 } | null;
 
 interface SettingsPageProps {
-  onBack: () => void;
   apiKeyStatus: ApiKeyStatus;
   isLoadingStatus: boolean;
 }
@@ -199,46 +198,7 @@ const utilityButtonStyles = css`
   }
 `;
 
-const backButtonStyles = css`
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  background-color: ${colors.light};
-  color: ${colors.dark};
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-  box-shadow: none;
-  margin-bottom: 20px;
-  align-self: flex-start;
-
-  &:hover {
-    background-color: ${colors.light};
-    border-color: ${colors.primary};
-    color: ${colors.dark};
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: ${colors.grayLight};
-    border-color: ${colors.border};
-    color: ${colors.gray};
-  }
-
-  // Ensure it doesn't take full width on mobile like standard buttons might
-  @media (max-width: 768px) {
-    width: auto !important;
-  }
-`;
-
-function SettingsPage({
-  onBack,
-  apiKeyStatus,
-  isLoadingStatus,
-}: SettingsPageProps) {
+function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
   const [openaiKeyInput, setOpenaiKeyInput] = useState('');
   const [keyStatus, setKeyStatus] = useState<ApiKeyStatus>(apiKeyStatus);
   const [loadingStatus, setLoadingStatus] = useState(isLoadingStatus);
@@ -495,16 +455,28 @@ function SettingsPage({
 
   return (
     <div className={settingsPageStyles}>
-      <button className={backButtonStyles} onClick={onBack} disabled={isSaving}>
-        &larr; Back to Main App
-      </button>
-
       <h1 className={titleStyles}>API Key Settings</h1>
       <p className={infoTextStyles}>
-        Enter your personal API key for OpenAI (GPT models) below.
+        To use the translation features powered by OpenAI (like GPT models), you
+        need to provide your personal API key. This key allows the application
+        to make requests to OpenAI on your behalf.
         <br />
-        This key is stored securely on your computer using the system&apos;s
-        keychain and is never shared.
+        <br />
+        You can obtain an API key by signing up or logging into your OpenAI
+        account and navigating to the{' '}
+        <a
+          href="https://platform.openai.com/api-keys"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkStyles}
+        >
+          API keys section
+        </a>
+        .
+        <br />
+        <br />
+        Your API key is stored securely on your computer using the system&apos;s
+        keychain and is never shared externally.
       </p>
 
       <div className={sectionStyles}>

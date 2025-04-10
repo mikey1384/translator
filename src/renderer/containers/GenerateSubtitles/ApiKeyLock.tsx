@@ -2,10 +2,8 @@ import React from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 
-// Define Key Status Type (can be shared or moved to a types file)
 type ApiKeyStatus = {
   openai: boolean;
-  // anthropic: boolean; // Removed Anthropic
 } | null;
 
 interface ApiKeyLockProps {
@@ -14,7 +12,6 @@ interface ApiKeyLockProps {
   onNavigateToSettings: (show: boolean) => void;
 }
 
-// Add styles for the locked state - copied from index.tsx
 const lockedContainerStyles = css`
   padding: 2rem 1.5rem;
   border: 1px solid ${colors.border}; // Use theme border color
@@ -80,11 +77,12 @@ const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
           fontSize: '0.9rem',
           color: colors.gray,
           marginBottom: '1rem',
+          lineHeight: '1.5',
         }}
       >
-        Please add your OpenAI API key in the settings to enable subtitle
-        generation and translation. If you&apos;re unsure how to get a key,
-        check our guide. {/* Updated text and fixed apostrophe */}
+        {`To get started with subtitle generation and translation, please add your
+        OpenAI API key in the settings. Don't worry if you don't know how to get
+        one - we have a guide to help you!`}
       </p>
       <button
         className={goToSettingsButtonStyles}
