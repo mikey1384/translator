@@ -158,7 +158,6 @@ function AppContent() {
     setSaveError,
     setVideoPlayerRef,
     videoUrl,
-    handleSetSubtitleSegments,
   });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -327,7 +326,7 @@ function AppContent() {
                   editorRef={editSubtitlesMethodsRef}
                   onSelectVideoClick={handleSelectVideoClick}
                   onSetMergeOperationId={setMergeOperationId}
-                  onSetSubtitlesDirectly={handleSetSubtitleSegments}
+                  onSetSubtitleSegments={handleSetSubtitleSegments}
                   reviewedBatchStartIndex={reviewedBatchStartIndex}
                   canSaveDirectly={!!originalSrtFilePath}
                   handleSaveSrt={handleSaveSrt}

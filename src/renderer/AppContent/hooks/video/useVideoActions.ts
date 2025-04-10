@@ -1,5 +1,4 @@
 import { nativePause, nativePlay } from '../../../native-player.js';
-import { SrtSegment } from '../../../../types/interface.js';
 import { nativeIsPlaying } from '../../../native-player.js';
 
 export function useVideoActions({
@@ -12,7 +11,6 @@ export function useVideoActions({
   setSaveError,
   setVideoPlayerRef,
   videoUrl,
-  handleSetSubtitleSegments,
 }: {
   resetSubtitleSource: () => void;
   setVideoFile: (value: File | null) => void;
@@ -28,7 +26,6 @@ export function useVideoActions({
   setSaveError: (value: string) => void;
   setVideoPlayerRef: (value: any) => void;
   videoUrl: string;
-  handleSetSubtitleSegments: (value: SrtSegment[]) => void;
 }) {
   function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
@@ -99,7 +96,6 @@ export function useVideoActions({
       );
     }
     setIsPlaying(false);
-    handleSetSubtitleSegments([]);
   }
 
   function handleSrtFileLoaded(filePath: string) {

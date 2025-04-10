@@ -59,7 +59,7 @@ export interface EditSubtitlesProps {
     scrollToCurrentSubtitle: () => void;
     scrollToSubtitleIndex: (index: number) => void;
   }>;
-  onSetSubtitlesDirectly?: Dispatch<SetStateAction<SrtSegment[]>>;
+  onSetSubtitleSegments: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
   subtitleSourceId?: number;
   canSaveDirectly: boolean;
@@ -86,7 +86,7 @@ export function EditSubtitles({
   setIsMergingInProgress,
   onSetMergeOperationId,
   editorRef,
-  onSetSubtitlesDirectly,
+  onSetSubtitleSegments,
   reviewedBatchStartIndex,
   canSaveDirectly,
   handleSaveSrt,
@@ -305,7 +305,7 @@ export function EditSubtitles({
    * ------------------------------------------------------
    */
   const { editingTimesState, handleEditSubtitle, handleTimeInputBlur } =
-    useSubtitleEditing(subtitlesProp, onSetSubtitlesDirectly);
+    useSubtitleEditing(subtitlesProp, onSetSubtitleSegments);
 
   /**
    * ------------------------------------------------------
@@ -578,11 +578,11 @@ export function EditSubtitles({
         console.log('[handleLoadSrtLocal] File selection canceled.');
         setSaveError(''); // Clear error if canceled
       }
-    } else if (result.segments && result.filePath && onSetSubtitlesDirectly) {
+    } else if (result.segments && result.filePath && onSetSubtitleSegments) {
       console.log(
         `[handleLoadSrtLocal] Successfully loaded SRT: ${result.filePath}, segments count: ${result.segments.length}`
       );
-      onSetSubtitlesDirectly(result.segments); // Update segments & potentially trigger ID change in parent
+      onSetSubtitleSegments(result.segments); // Update segments & potentially trigger ID change in parent
       onSrtFileLoaded(result.filePath); // Call the new callback prop from App.tsx
       setSaveError(''); // Clear any previous errors on success
     } else {
@@ -726,8 +726,8 @@ export function EditSubtitles({
       const newEnd = newStart + duration;
 
       // Use onSetSubtitlesDirectly
-      if (onSetSubtitlesDirectly) {
-        onSetSubtitlesDirectly(current =>
+      if (onSetSubtitleSegments) {
+        onSetSubtitleSegments(current =>
           current.map((s, i) =>
             i === index ? { ...s, start: newStart, end: newEnd } : s
           )
@@ -1048,7 +1048,7 @@ export function EditSubtitles({
 
   function handleRemoveSubtitleLocal(index: number) {
     // Use onSetSubtitlesDirectly
-    if (onSetSubtitlesDirectly && subtitlesProp) {
+    if (onSetSubtitleSegments && subtitlesProp) {
       if (
         !window.confirm('Are you sure you want to remove this subtitle block?')
       )
@@ -1056,13 +1056,13 @@ export function EditSubtitles({
       const updated = (subtitlesProp || [])
         .filter((_, i) => i !== index)
         .map((sub, i) => ({ ...sub, index: i + 1 }));
-      onSetSubtitlesDirectly(updated);
+      onSetSubtitleSegments(updated);
     }
   }
 
   function handleInsertSubtitleLocal(index: number) {
     // Use onSetSubtitlesDirectly
-    if (onSetSubtitlesDirectly && subtitlesProp) {
+    if (onSetSubtitleSegments && subtitlesProp) {
       // Use subtitlesProp
       const currentSub = subtitlesProp[index];
       const nextSub =
@@ -1080,7 +1080,7 @@ export function EditSubtitles({
         newSubtitle,
         ...(subtitlesProp || []).slice(index + 1),
       ].map((sub, i) => ({ ...sub, index: i + 1 }));
-      onSetSubtitlesDirectly(updated);
+      onSetSubtitleSegments(updated);
     }
   }
 }
