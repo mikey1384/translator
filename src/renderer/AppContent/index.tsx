@@ -603,7 +603,6 @@ function AppContent() {
     setIsProcessingUrl(true);
     setProgressPercent(0);
     setDownloadComplete(false);
-    setDownloadedVideoPath(null);
     setVideoFile(null);
     setDidDownloadFromUrl(false);
     setVideoUrl('');
@@ -623,6 +622,7 @@ function AppContent() {
     setProgressPercent(100);
     setDownloadComplete(true);
     setDownloadedVideoPath(videoPath);
+    setVideoFilePath(videoPath);
     setDidDownloadFromUrl(true);
 
     try {
