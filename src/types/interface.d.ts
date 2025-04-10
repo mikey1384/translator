@@ -159,6 +159,8 @@ export type ProgressCallback = (progress: {
   current?: number;
   total?: number;
   partialResult?: string;
+  error?: string;
+  batchStartIndex?: number;
 }) => void;
 
 export interface GenerateSubtitlesOptions {
@@ -265,4 +267,48 @@ export interface CancelTranslationResult {
 export interface CancelOperationResult {
   success: boolean;
   error?: string;
+}
+
+// Add GenerateSubtitlesFromAudioArgs type
+export interface GenerateSubtitlesFromAudioArgs {
+  inputAudioPath: string;
+  progressCallback?: ProgressCallback;
+  signal?: AbortSignal;
+  operationId: string;
+  services: {
+    ffmpegService: any; // Consider importing FFmpegService type if available globally
+    fileManager: any; // Consider importing FileManager type if available globally
+  };
+}
+
+// Add MergeSubtitlesWithVideoArgs type
+export interface MergeSubtitlesWithVideoArgs {
+  options: MergeSubtitlesOptions;
+  operationId: string;
+  services: {
+    ffmpegService: any; // Consider importing FFmpegService type
+    fileManager: any; // Consider importing FileManager type
+  };
+  progressCallback?: ProgressCallback;
+}
+
+// Add TranslateBatchArgs type
+export interface TranslateBatchArgs {
+  batch: {
+    segments: SrtSegment[];
+    startIndex: number;
+    endIndex: number;
+  };
+  targetLang: string;
+  operationId: string;
+  signal?: AbortSignal;
+}
+
+// Add ReviewTranslationBatchArgs type
+export interface ReviewTranslationBatchArgs {
+  segments: SrtSegment[]; // Assuming the 'any[]' in original code corresponds to SrtSegment[]
+  startIndex: number;
+  endIndex: number;
+  targetLang: string;
+  allSegments: SrtSegment[];
 }
