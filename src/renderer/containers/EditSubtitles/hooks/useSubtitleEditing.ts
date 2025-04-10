@@ -5,22 +5,13 @@ import { srtTimeToSeconds } from '../../../../shared/helpers/index.js';
 import { useRestoreFocus } from './useRestoreFocus.js';
 import { DEBOUNCE_DELAY_MS } from '../../../../shared/constants/index.js';
 
-// Define the hook's return type for clarity
-interface UseSubtitleEditingReturn {
-  editingTimesState: Record<string, string>;
-  handleEditSubtitle: (
-    index: number,
-    field: 'start' | 'end' | 'text',
-    value: number | string
-  ) => void;
-  handleTimeInputBlur: (index: number, field: 'start' | 'end') => void;
-  // We don't need to return restoreFocus as it's used internally by the handlers
-}
-
-export function useSubtitleEditing(
-  subtitles: SrtSegment[] | undefined,
-  setSubtitles: Dispatch<SetStateAction<SrtSegment[]>> | undefined
-): UseSubtitleEditingReturn {
+export function useSubtitleEditing({
+  subtitles,
+  onSetSubtitleSegments,
+}: {
+  subtitles: SrtSegment[] | undefined;
+  onSetSubtitleSegments: Dispatch<SetStateAction<SrtSegment[]>>;
+}) {
   const [editingTimesState, setEditingTimesState] = useState<
     Record<string, string>
   >({});
@@ -46,7 +37,7 @@ export function useSubtitleEditing(
 
   // Use standard function declaration
   function handleTimeInputBlur(index: number, field: 'start' | 'end') {
-    if (!subtitles || !setSubtitles) return; // Guard against undefined props
+    if (!subtitles || !onSetSubtitleSegments) return; // Guard against undefined props
 
     const editKey = `${index}-${field}`;
     const currentEditValue = editingTimesState[editKey];
@@ -88,7 +79,7 @@ export function useSubtitleEditing(
       }
     }
 
-    setSubtitles(current =>
+    onSetSubtitleSegments(current =>
       current.map((sub, i) => {
         if (i !== index) return sub;
         return field === 'start'
@@ -110,7 +101,7 @@ export function useSubtitleEditing(
     field: 'start' | 'end' | 'text',
     value: number | string
   ) {
-    if (!subtitles || !setSubtitles) return; // Guard against undefined props
+    if (!subtitles || !onSetSubtitleSegments) return; // Guard against undefined props
 
     focusedInputRef.current = { index, field };
 
@@ -144,7 +135,7 @@ export function useSubtitleEditing(
             }
             // --- Moved Marker Logic Inside Functional Update --- END ---
 
-            setSubtitles(current => {
+            onSetSubtitleSegments(current => {
               const updatedSegments = [...current];
               if (updatedSegments[index]) {
                 // Update with the potentially combined text
@@ -197,7 +188,7 @@ export function useSubtitleEditing(
             const safeDuration = duration > 0 ? duration : 0.1;
             newEnd = numValue + safeDuration;
           }
-          setSubtitles(curr =>
+          onSetSubtitleSegments(curr =>
             curr.map((sub, i) => {
               if (i !== index) return sub;
               return { ...sub, start: numValue, end: newEnd };
@@ -206,7 +197,7 @@ export function useSubtitleEditing(
         } else {
           // Ensure end >= start when editing end time
           const finalEnd = Math.max(numValue, currentSub.start);
-          setSubtitles(curr =>
+          onSetSubtitleSegments(curr =>
             curr.map((sub, i) =>
               i === index ? { ...sub, end: finalEnd } : sub
             )

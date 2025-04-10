@@ -26,31 +26,6 @@ interface SubtitleEditorProps {
   searchText?: string;
 }
 
-// -- Updated Styles for Dark Theme --
-
-const editorContainerStyles = css`
-  background-color: ${colors.light};
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const topRowStyles = css`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-`;
-
-const indexStyles = css`
-  font-weight: bold;
-  color: ${colors.grayDark};
-  font-size: 1.1em;
-`;
-
 const timeInputStyles = css`
   width: 150px;
   padding: 6px 8px;
@@ -66,47 +41,10 @@ const timeInputStyles = css`
   }
 `;
 
-const originalTextStyles = css`
-  background-color: ${colors.grayLight};
-  border: 1px dashed ${colors.gray};
-  color: ${colors.grayDark};
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  margin-top: 8px;
-  white-space: pre-wrap;
-  font-style: italic;
-`;
-
-const bottomRowStyles = css`
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-`;
-
 const actionButtonsStyles = css`
   display: flex;
   gap: 8px;
   align-items: center;
-`;
-
-const shiftInputStyles = css`
-  width: 60px; // Smaller shift input
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid ${colors.border};
-  background-color: ${colors.grayLight};
-  color: ${colors.dark};
-  font-family: monospace;
-  text-align: right;
-  margin-left: 5px; // Keep margin if needed next to button
-  transition: border-color 0.2s ease;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-  }
 `;
 
 export default function SubtitleEditor({
@@ -125,7 +63,6 @@ export default function SubtitleEditor({
   isShiftingDisabled,
   searchText,
 }: SubtitleEditorProps) {
-  // --- Text Splitting Logic ---
   let originalText = '';
   let initialEditableText = sub.text;
   const hasMarker = sub.text.includes('###TRANSLATION_MARKER###');
@@ -135,41 +72,25 @@ export default function SubtitleEditor({
     originalText = parts[0] || '';
     initialEditableText = parts[1] || '';
   }
-  // --- End Text Splitting Logic ---
-
-  // --- Local State for Editable Text --- START ---
   const [currentTextValue, setCurrentTextValue] =
     useState<string>(initialEditableText);
-  // --- Local State for Editable Text --- END ---
-
-  // --- Local State for Shift ---
   const [shiftAmount, setShiftAmount] = useState('0');
 
-  // --- Effect to Sync Local State with Prop Changes --- START ---
   useEffect(() => {
-    // Update local state only if the prop-derived value changes
     let incomingEditableText = sub.text;
     if (sub.text.includes('###TRANSLATION_MARKER###')) {
       incomingEditableText =
         sub.text.split('###TRANSLATION_MARKER###')[1] || '';
     }
-    // Only update if the incoming prop text is different from the current local state
-    // This prevents overwriting user input unnecessarily during the debounce period
     if (incomingEditableText !== currentTextValue) {
       setCurrentTextValue(incomingEditableText);
     }
-    // Note: We only want to react to external changes to sub.text, not currentTextValue
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sub.text]);
-  // --- Effect to Sync Local State with Prop Changes --- END ---
 
-  // --- Update handleTextChange to accept string directly --- START ---
   const handleTextChange = (newValue: string) => {
-    setCurrentTextValue(newValue); // Update local state immediately
-    // Directly call the prop which is handled (debounced) by useSubtitleEditing hook
+    setCurrentTextValue(newValue);
     onEditSubtitle(index, 'text', newValue);
   };
-  // --- Update handleTextChange --- END ---
 
   const handleTimeChange = (field: 'start' | 'end', value: string) => {
     onEditSubtitle(index, field, value); // Update immediately for visual feedback
@@ -183,10 +104,34 @@ export default function SubtitleEditor({
   };
 
   return (
-    <div className={editorContainerStyles}>
-      {/* Top Row: Index, Action Buttons */}
-      <div className={topRowStyles}>
-        <span className={indexStyles}>#{sub.index}</span>
+    <div
+      className={css`
+        background-color: ${colors.light};
+        border: 1px solid ${colors.border};
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      `}
+    >
+      <div
+        className={css`
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+        `}
+      >
+        <span
+          className={css`
+            font-weight: bold;
+            color: ${colors.grayDark};
+            font-size: 1.1em;
+          `}
+        >
+          #{sub.index}
+        </span>
         <div className={actionButtonsStyles}>
           <Button
             variant="secondary"
@@ -276,7 +221,21 @@ export default function SubtitleEditor({
 
       {/* Original Text Display (Conditional) */}
       {hasMarker && originalText && (
-        <div className={originalTextStyles}>Original: {originalText}</div>
+        <div
+          className={css`
+            background-color: ${colors.grayLight};
+            border: 1px dashed ${colors.gray};
+            color: ${colors.grayDark};
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-top: 8px;
+            white-space: pre-wrap;
+            font-style: italic;
+          `}
+        >
+          Original: {originalText}
+        </div>
       )}
 
       {/* --- Replace Textarea with HighlightedTextarea --- START --- */}
@@ -290,7 +249,15 @@ export default function SubtitleEditor({
       {/* --- Replace Textarea with HighlightedTextarea --- END --- */}
 
       {/* Bottom Row: Time Inputs, Shift Controls - Now all grouped */}
-      <div className={bottomRowStyles}>
+      <div
+        className={css`
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        `}
+      >
         <div className={actionButtonsStyles}>
           <input
             type="text"
@@ -319,7 +286,22 @@ export default function SubtitleEditor({
             step="0.1"
             value={shiftAmount}
             onChange={e => setShiftAmount(e.target.value)}
-            className={shiftInputStyles}
+            className={css`
+              width: 60px; // Smaller shift input
+              padding: 6px 8px;
+              border-radius: 4px;
+              border: 1px solid ${colors.border};
+              background-color: ${colors.grayLight};
+              color: ${colors.dark};
+              font-family: monospace;
+              text-align: right;
+              margin-left: 5px; // Keep margin if needed next to button
+              transition: border-color 0.2s ease;
+              &:focus {
+                outline: none;
+                border-color: ${colors.primary};
+              }
+            `}
             aria-label={`Shift subtitle ${sub.index} by seconds`}
             disabled={isShiftingDisabled}
             data-testid={`subtitle-shift-input-${index}`}

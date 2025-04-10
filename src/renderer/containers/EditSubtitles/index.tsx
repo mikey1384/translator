@@ -305,7 +305,10 @@ export function EditSubtitles({
    * ------------------------------------------------------
    */
   const { editingTimesState, handleEditSubtitle, handleTimeInputBlur } =
-    useSubtitleEditing(subtitlesProp, onSetSubtitleSegments);
+    useSubtitleEditing({
+      subtitles: subtitlesProp,
+      onSetSubtitleSegments,
+    });
 
   /**
    * ------------------------------------------------------
