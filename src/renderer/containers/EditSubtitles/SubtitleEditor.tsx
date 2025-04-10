@@ -83,7 +83,7 @@ export default function SubtitleEditor({
     if (incomingEditableText !== currentTextValue) {
       setCurrentTextValue(incomingEditableText);
     }
-  }, [sub.text]);
+  }, [currentTextValue, sub.text]);
 
   return (
     <div
