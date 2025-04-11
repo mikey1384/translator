@@ -84,16 +84,34 @@ export default function LanguageSwitcher() {
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
 
   useEffect(() => {
-    // Update the state when the language changes
+    // Update the state when the language changes externally
     setCurrentLanguage(i18n.language);
+
+    // Log the current language for debugging
+    console.log(`[LanguageSwitcher] Current language set to: ${i18n.language}`);
   }, [i18n.language]);
 
   const handleLanguageChange = async (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const selectedLanguage = e.target.value;
-    await changeLanguage(selectedLanguage);
-    setCurrentLanguage(selectedLanguage);
+    console.log(`[LanguageSwitcher] Language selected: ${selectedLanguage}`);
+
+    try {
+      // Update state immediately for better UI feedback
+      setCurrentLanguage(selectedLanguage);
+
+      // Change the language in i18n
+      await changeLanguage(selectedLanguage);
+
+      console.log(
+        `[LanguageSwitcher] Language change completed to: ${selectedLanguage}`
+      );
+    } catch (error) {
+      console.error(`[LanguageSwitcher] Error changing language:`, error);
+      // Revert to the actual language if there was an error
+      setCurrentLanguage(i18n.language);
+    }
   };
 
   return (
@@ -111,9 +129,6 @@ export default function LanguageSwitcher() {
       >
         {baseLanguageOptions.map(lang => {
           const translatedLabel = t(lang.label);
-          console.log(
-            `[Switcher] Base lang ${lang.value} (${lang.label}) -> ${translatedLabel}`
-          );
           return (
             <option key={lang.value} value={lang.value}>
               {translatedLabel}
@@ -123,16 +138,10 @@ export default function LanguageSwitcher() {
         {/* Render grouped options */}
         {languageGroups.map(group => {
           const translatedGroupLabel = t(group.label);
-          console.log(
-            `[Switcher] Group ${group.label} -> ${translatedGroupLabel}`
-          );
           return (
             <optgroup key={group.label} label={translatedGroupLabel}>
               {group.options.map(lang => {
                 const translatedLabel = t(lang.label);
-                console.log(
-                  `[Switcher] Lang ${lang.value} (${lang.label}) -> ${translatedLabel}`
-                );
                 return (
                   <option key={lang.value} value={lang.value}>
                     {translatedLabel}

@@ -13,6 +13,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
+import Store from 'electron-store';
 
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +39,9 @@ log.info('--- [main.ts] Execution Started ---');
 
 // Map to store AbortControllers for active subtitle generation operations
 const subtitleGenerationControllers = new Map<string, AbortController>();
+
+// --- Initialize electron-store ---
+const store = new Store();
 
 // --- Single Instance Lock ---
 // Ensure only one instance of the app runs
@@ -280,6 +284,35 @@ try {
         error
       );
       return null; // Indicate failure
+    }
+  });
+
+  // --- Language Preference Handlers ---
+  ipcMain.handle('get-language-preference', async () => {
+    try {
+      const lang = store.get('app_language_preference', 'en'); // Default to 'en'
+      log.info(`[main.ts/get-language-preference] Retrieved language: ${lang}`);
+      return lang;
+    } catch (error) {
+      log.error(
+        '[main.ts/get-language-preference] Error retrieving language:',
+        error
+      );
+      return 'en'; // Fallback on error
+    }
+  });
+
+  ipcMain.handle('set-language-preference', async (_event, lang: string) => {
+    try {
+      store.set('app_language_preference', lang);
+      log.info(`[main.ts/set-language-preference] Set language to: ${lang}`);
+      return { success: true };
+    } catch (error) {
+      log.error(
+        '[main.ts/set-language-preference] Error setting language:',
+        error
+      );
+      return { success: false, error: (error as Error).message };
     }
   });
 

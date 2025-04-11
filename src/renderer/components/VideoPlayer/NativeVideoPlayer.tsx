@@ -449,7 +449,7 @@ export default function NativeVideoPlayer({
       // If src is the same, check if it can play already, maybe it loaded quickly
       if (videoElement.readyState >= 3) {
         // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
-        handleCanPlay(); // Manually trigger if already playable
+        handleCanPlay();
       }
       // Ensure global instance is set if src matches but instance was lost
       else if (getNativePlayerInstance() !== videoElement) {

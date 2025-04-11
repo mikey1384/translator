@@ -146,6 +146,12 @@ interface ElectronAPI {
 
   // === Get Locale URL ===
   getLocaleUrl: (lang: string) => Promise<string>;
+
+  // === Language Preferences ===
+  getLanguagePreference: () => Promise<string>;
+  setLanguagePreference: (
+    lang: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {

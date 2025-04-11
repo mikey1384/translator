@@ -3,7 +3,80 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 import enTranslation from './locales/en.json' assert { type: 'json' };
+import koTranslation from './locales/ko.json' assert { type: 'json' };
+import jaTranslation from './locales/ja.json' assert { type: 'json' };
+import msTranslation from './locales/ms.json' assert { type: 'json' };
+import plTranslation from './locales/pl.json' assert { type: 'json' };
+import zhCNTranslation from './locales/zh-CN.json' assert { type: 'json' };
+import zhTWTranslation from './locales/zh-TW.json' assert { type: 'json' };
+import esTranslation from './locales/es.json' assert { type: 'json' };
+import frTranslation from './locales/fr.json' assert { type: 'json' };
+import deTranslation from './locales/de.json' assert { type: 'json' };
+import itTranslation from './locales/it.json' assert { type: 'json' };
+import ptTranslation from './locales/pt.json' assert { type: 'json' };
+import ruTranslation from './locales/ru.json' assert { type: 'json' };
+import nlTranslation from './locales/nl.json' assert { type: 'json' };
+import svTranslation from './locales/sv.json' assert { type: 'json' };
+import trTranslation from './locales/tr.json' assert { type: 'json' };
+import noTranslation from './locales/no.json' assert { type: 'json' };
+import daTranslation from './locales/da.json' assert { type: 'json' };
+import fiTranslation from './locales/fi.json' assert { type: 'json' };
+import elTranslation from './locales/el.json' assert { type: 'json' };
+import csTranslation from './locales/cs.json' assert { type: 'json' };
+import huTranslation from './locales/hu.json' assert { type: 'json' };
+import roTranslation from './locales/ro.json' assert { type: 'json' };
+import ukTranslation from './locales/uk.json' assert { type: 'json' };
+import hiTranslation from './locales/hi.json' assert { type: 'json' };
+import idTranslation from './locales/id.json' assert { type: 'json' };
+import thTranslation from './locales/th.json' assert { type: 'json' };
+import tlTranslation from './locales/tl.json' assert { type: 'json' };
+import bnTranslation from './locales/bn.json' assert { type: 'json' };
+import taTranslation from './locales/ta.json' assert { type: 'json' };
+import teTranslation from './locales/te.json' assert { type: 'json' };
+import mrTranslation from './locales/mr.json' assert { type: 'json' };
+import urTranslation from './locales/ur.json' assert { type: 'json' };
+import arTranslation from './locales/ar.json' assert { type: 'json' };
+import heTranslation from './locales/he.json' assert { type: 'json' };
+import faTranslation from './locales/fa.json' assert { type: 'json' };
+import swTranslation from './locales/sw.json' assert { type: 'json' };
+import afTranslation from './locales/af.json' assert { type: 'json' };
+import viTranslation from './locales/vi.json' assert { type: 'json' };
 
+// Storage keys for Electron app
+// const LANGUAGE_PREFERENCE_KEY = 'app_language_preference'; // No longer needed here
+
+// Helper to get initial language from electron storage or localStorage fallback
+const getInitialLanguage = async (): Promise<string> => {
+  try {
+    // Prioritize Electron store via IPC
+    if (window.electron?.getLanguagePreference) {
+      const storedLang = await window.electron.getLanguagePreference();
+      if (storedLang) {
+        console.log(
+          `[i18n] Retrieved language from Electron store: ${storedLang}`
+        );
+        return storedLang;
+      }
+    }
+    // Fallback to localStorage if IPC fails or isn't available
+    const storedLangLS = localStorage.getItem('app_language_preference'); // Use old key for fallback
+    if (storedLangLS) {
+      console.log(
+        `[i18n] Retrieved language from localStorage fallback: ${storedLangLS}`
+      );
+      return storedLangLS;
+    }
+  } catch (error) {
+    console.error('[i18n] Error retrieving initial language:', error);
+  }
+
+  // Default to browser/system language or English
+  const defaultLang = navigator.language.split('-')[0] || 'en';
+  console.log(`[i18n] Using default language: ${defaultLang}`);
+  return defaultLang;
+};
+
+// This function will fetch language files when needed using file URLs from main process
 const loadLanguageAsync = async (
   lang: string
 ): Promise<Record<string, any>> => {
@@ -59,41 +132,189 @@ const loadLanguageAsync = async (
   }
 };
 
+// Asynchronously get initial language
+let initialLanguage = 'en'; // Default before async fetch
+getInitialLanguage()
+  .then(lang => {
+    initialLanguage = lang;
+    console.log(`[i18n] Setting initial language to: ${initialLanguage}`);
+    // Re-initialize or update language after fetching
+    i18n.changeLanguage(initialLanguage).catch(err => {
+      console.error(
+        `[i18n] Error setting language after initial fetch: ${err}`
+      );
+    });
+  })
+  .catch(err => {
+    console.error('[i18n] Failed to get initial language:', err);
+    // Keep default 'en'
+  });
+
 // Initialize i18next
 i18n
-  .use(LanguageDetector)
+  .use(LanguageDetector) // Still useful for initial detection before persistence kicks in
   .use(initReactI18next)
   .init({
     resources: {
       en: {
         translation: enTranslation,
       },
+      ko: {
+        translation: koTranslation,
+      },
+      ja: {
+        translation: jaTranslation,
+      },
+      ms: {
+        translation: msTranslation,
+      },
+      pl: {
+        translation: plTranslation,
+      },
+      ['zh-CN']: {
+        translation: zhCNTranslation,
+      },
+      ['zh-TW']: {
+        translation: zhTWTranslation,
+      },
+      es: {
+        translation: esTranslation,
+      },
+      fr: {
+        translation: frTranslation,
+      },
+      de: {
+        translation: deTranslation,
+      },
+      it: {
+        translation: itTranslation,
+      },
+      pt: {
+        translation: ptTranslation,
+      },
+      ru: {
+        translation: ruTranslation,
+      },
+      nl: {
+        translation: nlTranslation,
+      },
+      sv: {
+        translation: svTranslation,
+      },
+      tr: {
+        translation: trTranslation,
+      },
+      no: {
+        translation: noTranslation,
+      },
+      da: {
+        translation: daTranslation,
+      },
+      fi: {
+        translation: fiTranslation,
+      },
+      el: {
+        translation: elTranslation,
+      },
+      cs: {
+        translation: csTranslation,
+      },
+      hu: {
+        translation: huTranslation,
+      },
+      ro: {
+        translation: roTranslation,
+      },
+      uk: {
+        translation: ukTranslation,
+      },
+      hi: {
+        translation: hiTranslation,
+      },
+      id: {
+        translation: idTranslation,
+      },
+      th: {
+        translation: thTranslation,
+      },
+      tl: {
+        translation: tlTranslation,
+      },
+      bn: {
+        translation: bnTranslation,
+      },
+      ta: {
+        translation: taTranslation,
+      },
+      te: {
+        translation: teTranslation,
+      },
+      mr: {
+        translation: mrTranslation,
+      },
+      ur: {
+        translation: urTranslation,
+      },
+      ar: {
+        translation: arTranslation,
+      },
+      he: {
+        translation: heTranslation,
+      },
+      fa: {
+        translation: faTranslation,
+      },
+      sw: {
+        translation: swTranslation,
+      },
+      af: {
+        translation: afTranslation,
+      },
+      vi: {
+        translation: viTranslation,
+      },
     },
+    lng: initialLanguage, // Set initial language explicitly (will be updated async)
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development', // Enable debug only in dev
     interpolation: {
       escapeValue: false, // React already safes from XSS
     },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-    },
+    // detection: false, // Disable i18next detector, we handle it manually
     // Important for Suspense to work correctly
     react: {
       useSuspense: true,
     },
   });
 
-// Function to change language: Explicitly load bundle if needed
+// Function to change language: Use IPC to save preference
 export const changeLanguage = async (lng: string) => {
   console.log(`[i18n] changeLanguage called for: ${lng}`);
-  if (i18n.hasResourceBundle(lng, 'translation')) {
-    console.log(`[i18n] Bundle for ${lng} already exists. Changing language.`);
-    return i18n.changeLanguage(lng);
-  }
 
-  console.log(`[i18n] Bundle for ${lng} not found. Attempting to load...`);
   try {
+    // Always store the selection via IPC to electron-store
+    if (window.electron?.setLanguagePreference) {
+      await window.electron.setLanguagePreference(lng);
+      console.log(
+        `[i18n] Saved language preference via Electron store: ${lng}`
+      );
+    } else {
+      console.warn(
+        '[i18n] setLanguagePreference via IPC not available. Falling back to localStorage.'
+      );
+      // Fallback to localStorage if IPC isn't available
+      localStorage.setItem('app_language_preference', lng);
+    }
+
+    // Load bundle if needed and change language
+    if (i18n.hasResourceBundle(lng, 'translation')) {
+      console.log(
+        `[i18n] Bundle for ${lng} already exists. Changing language.`
+      );
+      return i18n.changeLanguage(lng);
+    }
+
+    console.log(`[i18n] Bundle for ${lng} not found. Attempting to load...`);
     const translations = await loadLanguageAsync(lng);
     if (
       translations &&

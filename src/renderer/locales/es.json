@@ -2,16 +2,23 @@
   "common": {
     "cancel": "Cancelar",
     "save": "Guardar",
+    "saving": "Guardando...",
     "delete": "Eliminar",
     "confirm": "Confirmar",
     "apply": "Aplicar",
     "back": "←",
     "to": "Volver a",
     "app": "Aplicación",
+    "backToApp": "Volver a la aplicación",
     "next": "Siguiente",
     "done": "Hecho",
     "loading": "Cargando...",
-    "error": "Error",
+    "error": {
+      "unexpected": "Se ha producido un error inesperado.",
+      "unexpectedRemove": "Se ha producido un error inesperado al eliminar la clave.",
+      "unexpectedSave": "Se ha producido un error inesperado al guardar.",
+      "unexpectedLoad": "Se ha producido un error inesperado al cargar."
+    },
     "success": "Éxito",
     "settings": "Configuración",
     "generate": "Generar",
@@ -25,18 +32,112 @@
     "select": "Seleccionar",
     "video": "Video",
     "selected": "Seleccionado",
-    "uiLanguage": "Idioma de la interfaz"
+    "uiLanguage": "Idioma de la interfaz",
+    "reloadPage": "Recargar página",
+    "reloadPageAria": "Recargar la página",
+    "backToTop": "Volver arriba",
+    "backToTopAria": "Volver al inicio de la página",
+    "confirmReload": "¿Estás seguro de que quieres recargar la página? Los cambios no guardados podrían perderse."
   },
   "input": {
     "fromDevice": "Desde tu dispositivo",
-    "fromWeb": "Desde la web"
+    "fromWeb": "Desde la web",
+    "downloadVideo": "Descargar video",
+    "enterVideoUrl": "Introducir URL del video",
+    "quality": "Calidad",
+    "qualityHigh": "Alta",
+    "qualityMedium": "Media",
+    "qualityLow": "Baja",
+    "downloading": "Descargando...",
+    "selectVideoFile": "Seleccionar archivo de video"
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
     "showOriginalText": "Mostrar texto original",
     "generate": "Generar subtítulos",
+    "generating": "Generando...",
+    "generateNow": "Generar subtítulos ahora",
     "translation": "Traducción",
+    "chooseSrtFile": "Elegir archivo SRT",
     "cancel_confirmation": "¿Estás seguro de que quieres cancelar el proceso de traducción de subtítulos? Se perderá todo el progreso y tendrás que empezar de nuevo."
+  },
+  "editSubtitles": {
+    "title": "Editar subtítulos",
+    "listTitle": "Subtítulos ({{count}})",
+    "item": {
+      "seek": "Buscar",
+      "seekTitle": "Buscar en el video la hora de inicio",
+      "playSnippet": "Reproducir fragmento",
+      "pauseSnippet": "Pausar fragmento",
+      "insertTitle": "Insertar un nuevo bloque de subtítulos después de este",
+      "removeTitle": "Eliminar este bloque de subtítulos",
+      "shiftPlaceholder": "Desplazar (-/+ seg)",
+      "shiftTitle": "Desplazar este subtítulo por segundos (+/-)",
+      "applyShift": "Aplicar desplazamiento",
+      "originalTextPrefix": "Original:",
+      "subtitlePlaceholder": "Texto del subtítulo",
+      "confirmRemove": "¿Estás seguro de que quieres eliminar este bloque de subtítulos? Esta acción no se puede deshacer."
+    },
+    "header": {
+      "save": "Guardar",
+      "saveAs": "Guardar como...",
+      "saveTooltip": "Guardar cambios en el archivo original",
+      "saveAsTooltip": "Guarda primero como para habilitar el guardado directo"
+    },
+    "mergeControls": {
+      "fontSizeLabel": "Tamaño de fuente:",
+      "styleLabel": "Estilo:",
+      "mergeButton": "Fusionar subtítulos",
+      "mergingButton": "Fusionando..."
+    }
+  },
+  "settings": {
+    "title": "Configuración de la clave API",
+    "description": {
+      "para1": "Para utilizar las funciones de traducción impulsadas por OpenAI (como los modelos GPT), necesitas proporcionar tu clave API personal. Esta clave permite que la aplicación realice solicitudes a OpenAI en tu nombre.",
+      "para2": {
+        "part1": "Puedes obtener una clave API registrándote o iniciando sesión en tu cuenta de OpenAI y navegando a la",
+        "link": "sección de claves API"
+      },
+      "para3": "Tu clave API se almacena de forma segura en tu ordenador utilizando el llavero del sistema y nunca se comparte externamente."
+    },
+    "openai": {
+      "sectionTitle": "OpenAI (modelos GPT)",
+      "isSet": "La clave API de OpenAI está configurada",
+      "apiKeyLabel": "Clave API de OpenAI",
+      "placeholder": "Introduce tu clave de OpenAI (sk-...)",
+      "saveSuccess": "¡Clave de OpenAI guardada con éxito!",
+      "removeSuccess": "¡Clave de OpenAI eliminada con éxito!",
+      "saveError": "Error al guardar la clave.",
+      "removeError": "Error al eliminar la clave.",
+      "confirmRemovePrompt": "¿Estás seguro de que quieres eliminar la clave API de OpenAI?"
+    },
+    "loadingStatus": "Cargando estado de la clave...",
+    "keySet": "Clave configurada",
+    "keyNotSet": "Clave no configurada",
+    "changeKey": "Cambiar clave",
+    "removeKey": "Eliminar clave",
+    "saveChanges": "Guardar cambios",
+    "saveKey": "Guardar clave de {{name}}",
+    "getKey": "Obtener clave de {{name}}"
+  },
+  "videoPlayer": {
+    "sideMenu": {
+      "changeVideo": "Cambiar video",
+      "enterUrlPlaceholder": "Introducir URL...",
+      "qualityLow": "Baja",
+      "qualityMid": "Media",
+      "qualityHigh": "Alta",
+      "load": "Cargar",
+      "loadVideoFromUrl": "Cargar video desde URL",
+      "loadSrtFile": "Cargar archivo SRT",
+      "loadDifferentSrtFile": "Cargar un archivo SRT diferente",
+      "changeSrt": "Cambiar SRT",
+      "addSrt": "Añadir SRT",
+      "scrollToCurrent": "Desplazarse al actual",
+      "shiftLabel": "Desplazar:",
+      "applyShift": "Aplicar"
+    }
   },
   "regions": {
     "eastAsia": "Asia Oriental",

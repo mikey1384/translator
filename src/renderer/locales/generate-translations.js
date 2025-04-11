@@ -109,9 +109,6 @@ const languageToIsoCode = {
   afrikaans: 'af',
 };
 
-// List of languages that have already been manually translated
-const manuallyTranslatedLanguages = ['es', 'ko']; // Spanish, Korean
-
 // English is already created, so we'll skip it
 const languagesToCreate = languages.filter(
   lang => lang.value !== 'english' && lang.value !== 'original'
@@ -145,40 +142,26 @@ languagesToCreate.forEach(lang => {
   const isoCode = languageToIsoCode[lang.value];
   const outputPath = path.join(__dirname, `${isoCode}.json`);
 
-  // Check if this is a manually translated language
-  if (manuallyTranslatedLanguages.includes(isoCode)) {
-    try {
-      // Read existing translation
-      const existingTranslation = JSON.parse(
-        fs.readFileSync(outputPath, 'utf8')
-      );
+  try {
+    // Read existing translation
+    const existingTranslation = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
 
-      // Merge new keys from English while preserving existing translations
-      const mergedTranslation = deepMerge(
-        JSON.parse(JSON.stringify(existingTranslation)),
-        enTranslation
-      );
-
-      // Write the merged translation back
-      fs.writeFileSync(outputPath, JSON.stringify(mergedTranslation, null, 2));
-      console.log(
-        `Updated translation file for ${lang.label} (${isoCode}) while preserving existing translations`
-      );
-    } catch (error) {
-      console.error(`Error updating ${isoCode}.json:`, error);
-      // Fallback to creating a new file
-      fs.writeFileSync(outputPath, JSON.stringify(enTranslation, null, 2));
-      console.log(
-        `Created new translation file for ${lang.label} (${isoCode})`
-      );
-    }
-  } else {
-    // For non-manually translated languages, just create a clean file from the template
-    fs.writeFileSync(outputPath, JSON.stringify(enTranslation, null, 2));
-    console.log(
-      `Created empty translation file for ${lang.label} (${isoCode})`
+    // Merge new keys from English while preserving existing translations
+    const mergedTranslation = deepMerge(
+      JSON.parse(JSON.stringify(existingTranslation)),
+      enTranslation
     );
+
+    // Write the merged translation back
+    fs.writeFileSync(outputPath, JSON.stringify(mergedTranslation, null, 2));
+    console.log(
+      `Updated translation file for ${lang.label} (${isoCode}) while preserving existing translations`
+    );
+  } catch (error) {
+    console.error(`Error updating ${isoCode}.json:`, error);
+    // Fallback to creating a new file
+    fs.writeFileSync(outputPath, JSON.stringify(enTranslation, null, 2));
+    console.log(`Created new translation file for ${lang.label} (${isoCode})`);
   }
 });
-
 console.log('All translation files generated successfully!');

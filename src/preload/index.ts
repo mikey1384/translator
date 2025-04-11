@@ -190,6 +190,11 @@ const electronAPI = {
 
   // ---------------------- Get Locale URL ----------------------
   getLocaleUrl: (lang: string) => ipcRenderer.invoke('get-locale-url', lang),
+
+  // ---------------------- Language Preferences ----------------------
+  getLanguagePreference: () => ipcRenderer.invoke('get-language-preference'),
+  setLanguagePreference: (lang: string) =>
+    ipcRenderer.invoke('set-language-preference', lang),
 };
 
 try {
