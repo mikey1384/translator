@@ -11,6 +11,7 @@ import ProgressDisplay from './ProgressDisplay.js';
 import GenerateControls from './GenerateControls.js';
 import Section from '../../components/Section.js';
 import { VideoQuality } from '../../../types/interface.js';
+import { useTranslation } from 'react-i18next';
 
 type ApiKeyStatus = {
   openai: boolean;
@@ -78,6 +79,8 @@ export default function GenerateSubtitles({
   videoFile: File | null;
   videoFilePath?: string | null;
 }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (videoFile) {
       const isLocalFileSelection =
@@ -91,7 +94,7 @@ export default function GenerateSubtitles({
   }, [videoFile]);
 
   return (
-    <Section title="Generate Subtitles">
+    <Section title={t('subtitles.generate')}>
       <ApiKeyLock
         apiKeyStatus={apiKeyStatus}
         isLoadingKeyStatus={isLoadingKeyStatus}
@@ -138,12 +141,12 @@ export default function GenerateSubtitles({
                     minWidth: '220px',
                   }}
                 >
-                  1. Select Video File:{' '}
+                  1. {t('input.selectVideoFile')}:
                 </label>
                 <FileInputButton onClick={onSelectVideoClick}>
                   {videoFile
-                    ? `Selected: ${videoFile.name}`
-                    : 'Select Video File'}
+                    ? `${t('common.selected')}: ${videoFile.name}`
+                    : t('input.selectVideoFile')}
                 </FileInputButton>
               </div>
             )}

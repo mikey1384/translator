@@ -9,7 +9,7 @@ import {
 } from 'electron';
 import path from 'path';
 import * as fsPromises from 'fs/promises';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
@@ -222,6 +222,38 @@ try {
       );
     }
   });
+
+  // Get App Path
+  ipcMain.handle('get-app-path', () => {
+    return app.getAppPath();
+  });
+
+  // Get Locale File URL
+  ipcMain.handle('get-locale-url', (_event, lang: string) => {
+    try {
+      const appPath = app.getAppPath();
+      // Construct path relative to the app's root in the built package
+      const localePath = path.join(
+        appPath,
+        'dist',
+        'renderer',
+        'locales',
+        `${lang}.json`
+      );
+      const localeUrl = pathToFileURL(localePath).toString();
+      log.info(
+        `[main.ts/get-locale-url] Constructed URL for ${lang}: ${localeUrl}`
+      );
+      return localeUrl;
+    } catch (error) {
+      log.error(
+        `[main.ts/get-locale-url] Error constructing URL for ${lang}:`,
+        error
+      );
+      throw error; // Re-throw the error to the renderer
+    }
+  });
+
   log.info('[main.ts] IPC Handlers Registered.');
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);

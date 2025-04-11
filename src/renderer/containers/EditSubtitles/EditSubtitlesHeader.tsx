@@ -1,6 +1,7 @@
 import Button from '../../components/Button.js';
 import { buttonGradientStyles } from '../../styles.js';
 import { css } from '@emotion/css';
+import { useTranslation } from 'react-i18next';
 
 interface EditSubtitlesHeaderProps {
   onSave: () => Promise<void>;
@@ -16,6 +17,8 @@ function EditSubtitlesHeader({
   canSaveDirectly,
   subtitlesExist,
 }: EditSubtitlesHeaderProps) {
+  const { t } = useTranslation();
+
   // If no subtitles exist, render nothing or a placeholder
   if (!subtitlesExist) {
     return null;
@@ -39,8 +42,8 @@ function EditSubtitlesHeader({
         disabled={!canSaveDirectly}
         title={
           !canSaveDirectly
-            ? 'Save As first to enable direct save'
-            : 'Save changes to original file'
+            ? t('editSubtitles.header.saveAsTooltip')
+            : t('editSubtitles.header.saveTooltip')
         }
       >
         <div
@@ -64,7 +67,7 @@ function EditSubtitlesHeader({
             <polyline points="17 21 17 13 7 13 7 21"></polyline>
             <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
-          Save
+          {t('editSubtitles.header.save')}
         </div>
       </Button>
 
@@ -91,7 +94,7 @@ function EditSubtitlesHeader({
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Save As
+          {t('editSubtitles.header.saveAs')}
         </div>
       </Button>
     </div>

@@ -184,6 +184,12 @@ const electronAPI = {
     ipcRenderer.on('find-results', listener);
     return () => ipcRenderer.removeListener('find-results', listener);
   },
+
+  // ---------------------- Get App Path ----------------------
+  getAppPath: () => ipcRenderer.invoke('get-app-path'),
+
+  // ---------------------- Get Locale URL ----------------------
+  getLocaleUrl: (lang: string) => ipcRenderer.invoke('get-locale-url', lang),
 };
 
 try {

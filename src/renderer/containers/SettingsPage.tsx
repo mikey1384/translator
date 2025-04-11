@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors, linkStyles as globalLinkStyles } from '../styles.js';
+import { useTranslation } from 'react-i18next';
 
 const settingsPageStyles = css`
   padding: 30px;
@@ -199,6 +200,7 @@ const utilityButtonStyles = css`
 `;
 
 function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
+  const { t } = useTranslation();
   const [openaiKeyInput, setOpenaiKeyInput] = useState('');
   const [keyStatus, setKeyStatus] = useState<ApiKeyStatus>(apiKeyStatus);
   const [loadingStatus, setLoadingStatus] = useState(isLoadingStatus);
@@ -227,8 +229,8 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
           type: 'openai',
           success: true,
           message: apiKey
-            ? 'OpenAI key saved successfully!'
-            : 'OpenAI key removed successfully!',
+            ? t('settings.openai.saveSuccess')
+            : t('settings.openai.removeSuccess'),
         });
         setKeyStatus(prevStatus => ({
           ...prevStatus!,
@@ -240,7 +242,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
         setSaveStatus({
           type: 'openai',
           success: false,
-          message: result.error || 'Failed to save key.',
+          message: result.error || t('settings.openai.saveError'),
         });
       }
     } catch (error) {
@@ -248,7 +250,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
       setSaveStatus({
         type: 'openai',
         success: false,
-        message: 'An unexpected error occurred.',
+        message: t('common.error.unexpected'),
       });
     } finally {
       setIsSaving(false);
@@ -256,72 +258,61 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
   };
 
   const handleRemoveKey = async () => {
-    if (
-      !window.confirm('Are you sure you want to remove the OpenAI API key?')
-    ) {
+    // Add confirmation dialog at the beginning
+    if (!window.confirm(t('settings.openai.confirmRemovePrompt'))) {
+      console.log('OpenAI key removal cancelled by user.');
       return;
     }
 
-    setIsSaving(true);
+    console.log('Attempting to remove OpenAI key...');
     setSaveStatus(null);
+    setIsSaving(true);
 
     try {
-      console.log('[SettingsPage] Calling saveApiKey to remove openai key...');
+      console.log('Calling saveApiKey to remove openai key...');
       const result = await window.electron.saveApiKey('openai', '');
-      console.log(
-        '[SettingsPage] Result from saveApiKey for removing openai:',
-        result
-      );
+      console.log('Result from saveApiKey for removing openai:', result);
 
       if (result.success) {
-        console.log(
-          '[SettingsPage] Key removal success for openai. Updating state...'
-        );
+        console.log('Key removal success for openai. Updating state...');
         setSaveStatus({
           type: 'openai',
           success: true,
-          message: 'OpenAI key removed successfully!',
+          message: t('settings.openai.removeSuccess'),
         });
-        console.log('[SettingsPage] Updating keyStatus for openai to false.');
+        console.log('Updating keyStatus for openai to false.');
         setKeyStatus(prevStatus => {
           const newState = { ...prevStatus!, openai: false };
-          console.log(
-            '[SettingsPage] New keyStatus state (after removal):',
-            newState
-          );
+          console.log('New keyStatus state (after removal):', newState);
           return newState;
         });
         setIsEditingOpenAI(false);
       } else {
-        console.error(
-          '[SettingsPage] Key removal failed for openai:',
-          result.error
-        );
+        console.error('Key removal failed for openai:', result.error);
         setSaveStatus({
           type: 'openai',
           success: false,
-          message: result.error || 'Failed to remove key.',
+          message: result.error || t('settings.openai.removeError'),
         });
       }
     } catch (error) {
-      console.error(
-        '[SettingsPage] Error calling saveApiKey to remove openai key:',
-        error
-      );
+      console.error('Error calling saveApiKey to remove openai key:', error);
       setSaveStatus({
         type: 'openai',
         success: false,
-        message: 'An unexpected error occurred while removing the key.',
+        message: t('common.error.unexpectedRemove'),
       });
     } finally {
       setIsSaving(false);
-      console.log('[SettingsPage] Finished handleRemoveKey for openai.');
+      console.log('Finished handleRemoveKey for openai.');
     }
   };
 
   const renderStatusIndicator = (isSet: boolean | undefined) => {
     if (loadingStatus)
-      return <span className={statusIndicatorStyles}>Loading...</span>;
+      return (
+        <span className={statusIndicatorStyles}>{t('common.loading')}</span>
+      );
     if (isSet === undefined) return null; // Status not yet loaded
 
     return (
@@ -332,7 +323,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
             : statusNotSetStyles}
         `}
       >
-        {isSet ? 'Key Set' : 'Key Not Set'}
+        {isSet ? t('settings.keySet') : t('settings.keyNotSet')}
       </span>
     );
   };
@@ -359,25 +350,25 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
     const currentInputValue = openaiKeyInput;
     const setInputValue = setOpenaiKeyInput;
     const setIsEditing = setIsEditingOpenAI;
-    const placeholder = 'Enter your OpenAI key (sk-...)';
+    const placeholder = t('settings.openai.placeholder');
     const getName = 'OpenAI';
     const getKeyLink = 'https://platform.openai.com/api-keys';
 
     if (loadingStatus) {
-      return <p>Loading key status...</p>;
+      return <p>{t('settings.loadingStatus')}</p>;
     }
 
     if (isSet && !isEditing) {
       return (
         <div className={keySetInfoStyles}>
-          <span className={keySetTextStyles}>{getName} API Key is Set</span>
+          <span className={keySetTextStyles}>{t('settings.openai.isSet')}</span>
           <div className={keyActionButtonsStyles}>
             <button
               className={utilityButtonStyles}
               onClick={() => setIsEditing(true)}
               disabled={isSaving}
             >
-              Change Key
+              {t('settings.changeKey')}
             </button>
             <button
               className={css`
@@ -392,7 +383,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
               onClick={handleRemoveKey}
               disabled={isSaving}
             >
-              Remove Key
+              {t('settings.removeKey')}
             </button>
           </div>
         </div>
@@ -401,7 +392,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
       return (
         <>
           <label htmlFor="openai-key" className={labelStyles}>
-            {getName} API Key:
+            {t('settings.openai.apiKeyLabel')}:
           </label>
           <input
             id="openai-key"
@@ -419,10 +410,10 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
               disabled={isSaving || (!currentInputValue && !isSet)}
             >
               {isSaving
-                ? 'Saving...'
+                ? t('common.saving')
                 : isEditing
-                  ? 'Save Changes'
-                  : `Save ${getName} Key`}
+                  ? t('settings.saveChanges')
+                  : t('settings.saveKey', { name: getName })}
             </button>
             {isEditing && (
               <button
@@ -434,7 +425,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
                 }}
                 disabled={isSaving}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             )}
             <a
@@ -444,7 +435,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
               className={linkStyles}
               style={{ marginLeft: isEditing ? '0' : 'auto' }} // Adjust margin
             >
-              Get {getName} Key
+              {t('settings.getKey', { name: getName })}
             </a>
           </div>
           {renderFeedbackMessage()}
@@ -455,33 +446,29 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
 
   return (
     <div className={settingsPageStyles}>
-      <h1 className={titleStyles}>API Key Settings</h1>
+      <h1 className={titleStyles}>{t('settings.title')}</h1>
       <p className={infoTextStyles}>
-        To use the translation features powered by OpenAI (like GPT models), you
-        need to provide your personal API key. This key allows the application
-        to make requests to OpenAI on your behalf.
+        {t('settings.description.para1')}
         <br />
         <br />
-        You can obtain an API key by signing up or logging into your OpenAI
-        account and navigating to the{' '}
+        {t('settings.description.para2.part1')}{' '}
         <a
           href="https://platform.openai.com/api-keys"
           target="_blank"
           rel="noopener noreferrer"
           className={linkStyles}
         >
-          API keys section
+          {t('settings.description.para2.link')}
         </a>
         .
         <br />
         <br />
-        Your API key is stored securely on your computer using the system&apos;s
-        keychain and is never shared externally.
+        {t('settings.description.para3')}
       </p>
 
       <div className={sectionStyles}>
         <h2 className={sectionTitleStyles}>
-          OpenAI (GPT models)
+          {t('settings.openai.sectionTitle')}
           {renderStatusIndicator(keyStatus?.openai)}
         </h2>
         {renderOpenAIKeySection()}

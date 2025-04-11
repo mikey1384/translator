@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
+import { useTranslation } from 'react-i18next';
 
 // --- Style Adjustments for New Layout --- START ---
 const inputModeToggleStyles = css`
@@ -58,6 +59,8 @@ function InputModeToggle({
   isGenerating: boolean;
   isProcessingUrl: boolean;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className={inputModeToggleStyles}>
       <button
@@ -65,14 +68,14 @@ function InputModeToggle({
         onClick={() => onSetInputMode('file')}
         disabled={isGenerating || isProcessingUrl}
       >
-        From your device
+        {t('input.fromDevice')}
       </button>
       <button
         className={inputMode === 'url' ? 'active' : ''}
         onClick={() => onSetInputMode('url')}
         disabled={isGenerating || isProcessingUrl}
       >
-        From the web
+        {t('input.fromWeb')}
       </button>
     </div>
   );

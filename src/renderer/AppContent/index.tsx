@@ -8,8 +8,10 @@ import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea
 import TranslationProgressArea from '../components/ProgressAreas/TranslationProgressArea.js';
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
+import LanguageSwitcher from '../components/UI/LanguageSwitcher.js';
 import { SrtSegment } from '../../types/interface.js';
 import { VideoQuality } from '../../services/url-processor.js';
+import { useTranslation } from 'react-i18next';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
@@ -64,6 +66,7 @@ const mainContentStyles = css`
 `;
 
 function AppContent() {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>('');
   const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
   const [progressPercent, setProgressPercent] = useState<number>(0);
@@ -227,10 +230,13 @@ function AppContent() {
               className={settingsButtonStyles}
               onClick={handleBackFromSettings}
             >
-              ← Back to App
+              {t('common.backToApp')}
             </button>
           ) : (
-            <LogoDisplay />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <LogoDisplay />
+              <LanguageSwitcher />
+            </div>
           )}
           <div className={headerRightGroupStyles}>
             {!showSettings && (
@@ -238,11 +244,12 @@ function AppContent() {
                 className={settingsButtonStyles}
                 onClick={() => handleToggleSettings(true)}
               >
-                Settings
+                {t('common.settings')}
               </button>
             )}
           </div>
         </div>
+
         {showSettings ? (
           <SettingsPage
             apiKeyStatus={apiKeyStatus}

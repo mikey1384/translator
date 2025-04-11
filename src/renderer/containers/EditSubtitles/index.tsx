@@ -9,6 +9,7 @@ import React, {
 import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
 import Button from '../../components/Button.js';
+import { useTranslation } from 'react-i18next';
 
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
@@ -96,6 +97,7 @@ export function EditSubtitles({
   setSaveError,
   searchText,
 }: EditSubtitlesProps) {
+  const { t } = useTranslation();
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
@@ -400,7 +402,7 @@ export function EditSubtitles({
   );
 
   return (
-    <Section title="Edit Subtitles" overflowVisible>
+    <Section title={t('editSubtitles.title')} overflowVisible>
       {/* Error display - Use saveError prop now */}
       {saveError && (
         <div
@@ -433,7 +435,7 @@ export function EditSubtitles({
               }}
             >
               <FileInputButton onClick={onSelectVideoClick}>
-                Select Video File
+                {t('input.selectVideoFile')}
               </FileInputButton>
             </div>
           )}
@@ -471,7 +473,7 @@ export function EditSubtitles({
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
-              Choose SRT File
+              {t('subtitles.chooseSrtFile')}
             </Button>
           </div>
         </div>
@@ -490,7 +492,9 @@ export function EditSubtitles({
               marginTop: 0,
             }}
           >
-            <h3 style={{ margin: 0 }}>Subtitles ({subtitlesProp.length})</h3>
+            <h3 style={{ margin: 0 }}>
+              {t('editSubtitles.listTitle', { count: subtitlesProp.length })}
+            </h3>
           </div>
 
           <div
@@ -1047,12 +1051,17 @@ export function EditSubtitles({
   }
 
   function handleRemoveSubtitleLocal(index: number) {
+    // Add confirmation before removing
+    if (
+      !window.confirm(
+        t('editSubtitles.item.confirmRemove') // Use translation key
+      )
+    ) {
+      return; // Stop if user cancels
+    }
+    // Actual removal logic
     // Use onSetSubtitlesDirectly
     if (onSetSubtitleSegments && subtitlesProp) {
-      if (
-        !window.confirm('Are you sure you want to remove this subtitle block?')
-      )
-        return;
       const updated = (subtitlesProp || [])
         .filter((_, i) => i !== index)
         .map((sub, i) => ({ ...sub, index: i + 1 }));

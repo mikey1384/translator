@@ -4,6 +4,7 @@ import Button from '../../components/Button.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { colors } from '../../styles.js';
 import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
+import { useTranslation } from 'react-i18next';
 
 const timeInputStyles = css`
   width: 150px;
@@ -61,6 +62,7 @@ export default function SubtitleEditor({
   isShiftingDisabled: boolean;
   searchText?: string;
 }) {
+  const { t } = useTranslation();
   let originalText = '';
   let initialEditableText = sub.text;
   const hasMarker = sub.text.includes('###TRANSLATION_MARKER###');
@@ -119,15 +121,19 @@ export default function SubtitleEditor({
             variant="secondary"
             size="sm"
             onClick={() => onSeekToSubtitle(sub.start)}
-            title="Seek video to start time"
+            title={t('editSubtitles.item.seekTitle')}
           >
-            Seek
+            {t('editSubtitles.item.seek')}
           </Button>
           <Button
             variant={isPlaying ? 'danger' : 'primary'}
             size="sm"
             onClick={() => onPlaySubtitle(sub.start, sub.end)}
-            title={isPlaying ? 'Pause snippet' : 'Play snippet'}
+            title={
+              isPlaying
+                ? t('editSubtitles.item.pauseSnippet')
+                : t('editSubtitles.item.playSnippet')
+            }
           >
             {isPlaying ? (
               <svg
@@ -155,7 +161,7 @@ export default function SubtitleEditor({
             variant="secondary"
             size="sm"
             onClick={() => onInsertSubtitle(index)}
-            title="Insert new subtitle block after this one"
+            title={t('editSubtitles.item.insertTitle')}
           >
             <svg
               width="14"
@@ -177,7 +183,7 @@ export default function SubtitleEditor({
             variant="danger"
             size="sm"
             onClick={() => onRemoveSubtitle(index)}
-            title="Remove this subtitle block"
+            title={t('editSubtitles.item.removeTitle')}
           >
             <svg
               width="14"
@@ -216,7 +222,7 @@ export default function SubtitleEditor({
             font-style: italic;
           `}
         >
-          Original: {originalText}
+          {t('editSubtitles.item.originalTextPrefix')} {originalText}
         </div>
       )}
 
@@ -226,7 +232,7 @@ export default function SubtitleEditor({
         searchTerm={searchText || ''}
         onChange={handleTextChange}
         rows={4} // Adjust rows as needed
-        placeholder="Subtitle text"
+        placeholder={t('editSubtitles.item.subtitlePlaceholder')}
       />
       {/* --- Replace Textarea with HighlightedTextarea --- END --- */}
 
@@ -268,23 +274,11 @@ export default function SubtitleEditor({
             step="0.1"
             value={shiftAmount}
             onChange={e => setShiftAmount(e.target.value)}
-            className={css`
-              width: 60px; // Smaller shift input
-              padding: 6px 8px;
-              border-radius: 4px;
-              border: 1px solid ${colors.border};
-              background-color: ${colors.grayLight};
-              color: ${colors.dark};
-              font-family: monospace;
-              text-align: right;
-              margin-left: 5px; // Keep margin if needed next to button
-              transition: border-color 0.2s ease;
-              &:focus {
-                outline: none;
-                border-color: ${colors.primary};
-              }
-            `}
-            aria-label={`Shift subtitle ${sub.index} by seconds`}
+            onBlur={handleApplyShift}
+            onKeyDown={e => e.key === 'Enter' && handleApplyShift()}
+            className={timeInputStyles}
+            placeholder={t('editSubtitles.item.shiftPlaceholder')}
+            title={t('editSubtitles.item.shiftTitle')}
             disabled={isShiftingDisabled}
             data-testid={`subtitle-shift-input-${index}`}
           />
@@ -292,15 +286,14 @@ export default function SubtitleEditor({
             variant="secondary"
             size="sm"
             onClick={handleApplyShift}
-            title="Shift this subtitle start and end times"
             disabled={
               isShiftingDisabled ||
-              isNaN(parseFloat(shiftAmount)) ||
+              !shiftAmount ||
               parseFloat(shiftAmount) === 0
             }
             data-testid={`subtitle-shift-button-${index}`}
           >
-            Shift
+            {t('editSubtitles.item.applyShift')}
           </Button>
         </div>
       </div>

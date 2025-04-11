@@ -3,6 +3,7 @@ import { css } from '@emotion/css';
 import { colors, selectStyles } from '../../styles.js';
 import Button from '../../components/Button.js';
 import { VideoQuality } from '../../../services/url-processor.js';
+import { useTranslation } from 'react-i18next';
 
 interface UrlInputSectionProps {
   urlInput: string;
@@ -49,6 +50,8 @@ function UrlInputSection({
   setDownloadQuality,
   handleProcessUrl,
 }: UrlInputSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={css`
@@ -67,12 +70,12 @@ function UrlInputSection({
           minWidth: '100px',
         }}
       >
-        1. Download Video:
+        1. {t('input.downloadVideo')}:
       </label>
       <input
         type="url"
         className={urlInputStyles}
-        placeholder="Enter video URL"
+        placeholder={t('input.enterVideoUrl')}
         value={urlInput}
         onChange={e => {
           setUrlInput(e.target.value);
@@ -104,7 +107,7 @@ function UrlInputSection({
             border: 0;
           `}
         >
-          Quality
+          {t('input.quality')}
         </label>
         <select
           id="quality-select"
@@ -116,9 +119,9 @@ function UrlInputSection({
           className={selectStyles} // Apply existing select styles
           style={{ minWidth: '120px' }}
         >
-          <option value="high">High</option>
-          <option value="mid">Medium</option>
-          <option value="low">Low</option>
+          <option value="high">{t('input.qualityHigh')}</option>
+          <option value="mid">{t('input.qualityMedium')}</option>
+          <option value="low">{t('input.qualityLow')}</option>
         </select>
       </div>
       <Button
@@ -128,7 +131,7 @@ function UrlInputSection({
         size="md"
         variant="secondary"
       >
-        {isProcessingUrl ? 'Downloading...' : 'Download'}
+        {isProcessingUrl ? t('input.downloading') : t('common.download')}
       </Button>
     </div>
   );

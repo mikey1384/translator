@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './AppContent/index.js';
+// Import i18n configuration
+import './i18n.js';
 
 let root: ReturnType<typeof createRoot> | null = null;
 
@@ -19,7 +21,9 @@ const renderApp = () => {
 
   root.render(
     <React.StrictMode>
-      <App />
+      <Suspense fallback={<div>Loading translations...</div>}>
+        <App />
+      </Suspense>
     </React.StrictMode>
   );
 };

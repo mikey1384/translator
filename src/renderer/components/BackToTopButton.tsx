@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
-import IconButton from './IconButton';
+import IconButton from './IconButton.js';
+import { useTranslation } from 'react-i18next';
 
 interface BackToTopButtonProps {
   scrollThreshold?: number;
@@ -21,6 +22,7 @@ export default function BackToTopButton({
   scrollThreshold = 300,
   onClick,
 }: BackToTopButtonProps) {
+  const { t } = useTranslation();
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
 
   useEffect(() => {
@@ -51,11 +53,7 @@ export default function BackToTopButton({
   };
 
   const handleReloadClick = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to reload the page? Any unsaved changes might be lost.'
-      )
-    ) {
+    if (window.confirm(t('common.confirmReload'))) {
       window.location.reload();
     }
   };
@@ -64,8 +62,8 @@ export default function BackToTopButton({
     <div className={buttonContainerStyles}>
       <IconButton
         onClick={handleReloadClick}
-        title="Reload Page"
-        aria-label="Reload the page"
+        title={t('common.reloadPage')}
+        aria-label={t('common.reloadPageAria')}
         size="lg"
         variant="secondary"
         icon={
@@ -90,8 +88,8 @@ export default function BackToTopButton({
       {showScrollToTopButton && (
         <IconButton
           onClick={handleBackToTopClick}
-          title="Back to Top"
-          aria-label="Scroll back to top"
+          title={t('common.backToTop')}
+          aria-label={t('common.backToTopAria')}
           size="lg"
           icon={
             <svg

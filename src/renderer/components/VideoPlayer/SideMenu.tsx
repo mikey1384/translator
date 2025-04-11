@@ -5,6 +5,7 @@ import Button from '../Button.js';
 import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { VideoQuality } from '../../../types/interface.js';
+import { useTranslation } from 'react-i18next';
 
 export default function SideMenu({
   onProcessUrl,
@@ -27,6 +28,7 @@ export default function SideMenu({
   onSetUrlInput: (url: string) => void;
   urlInput: string;
 }) {
+  const { t } = useTranslation();
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
   const [selectedQuality, setSelectedQuality] = useState<VideoQuality>('mid');
@@ -74,7 +76,7 @@ export default function SideMenu({
           onClick={onSelectVideoClick}
           variant="secondary"
           size="sm"
-          title="Load a different video file"
+          title={t('videoPlayer.sideMenu.changeVideo')}
           className={css`
             width: 100%;
             justify-content: flex-start;
@@ -102,7 +104,7 @@ export default function SideMenu({
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <span>Change Video</span>
+            <span>{t('videoPlayer.sideMenu.changeVideo')}</span>
           </div>
         </Button>
 
@@ -115,7 +117,7 @@ export default function SideMenu({
         >
           <input
             type="url"
-            placeholder="Enter URL..."
+            placeholder={t('videoPlayer.sideMenu.enterUrlPlaceholder')}
             value={urlInput}
             onChange={e => onSetUrlInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter'}
@@ -138,7 +140,7 @@ export default function SideMenu({
                 color: ${colors.gray};
               }
             `}
-            title="Enter the URL of the video to load"
+            title={t('videoPlayer.sideMenu.enterUrlPlaceholder')}
           />
           <select
             value={selectedQuality}
@@ -159,19 +161,21 @@ export default function SideMenu({
                 border-color: ${colors.primary};
               }
             `}
-            title="Select download quality"
+            title={t('input.quality')}
           >
-            <option value="low">Low</option>
-            <option value="mid">Mid</option>
-            <option value="high">High</option>
+            <option value="high">
+              {t('videoPlayer.sideMenu.qualityHigh')}
+            </option>
+            <option value="mid">{t('videoPlayer.sideMenu.qualityMid')}</option>
+            <option value="low">{t('videoPlayer.sideMenu.qualityLow')}</option>
           </select>
           <Button
             onClick={onProcessUrl}
             variant="secondary"
             size="sm"
-            title="Load video from URL"
+            title={t('videoPlayer.sideMenu.loadVideoFromUrl')}
           >
-            Load
+            {t('videoPlayer.sideMenu.load')}
           </Button>
         </div>
 
@@ -180,7 +184,9 @@ export default function SideMenu({
           size="sm"
           onClick={handleSrtLoad}
           title={
-            hasSubtitles ? 'Load a different SRT file' : 'Load an SRT file'
+            hasSubtitles
+              ? t('videoPlayer.sideMenu.loadDifferentSrtFile')
+              : t('videoPlayer.sideMenu.loadSrtFile')
           }
           className={css`
             width: 100%;
@@ -211,7 +217,11 @@ export default function SideMenu({
               <line x1="16" y1="17" x2="8" y2="17"></line>
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
-            <span>{hasSubtitles ? 'Change SRT' : 'Add SRT'}</span>
+            <span>
+              {hasSubtitles
+                ? t('videoPlayer.sideMenu.changeSrt')
+                : t('videoPlayer.sideMenu.addSrt')}
+            </span>
           </div>
         </Button>
       </div>
@@ -225,7 +235,7 @@ export default function SideMenu({
             // Then scroll to current subtitle
             onScrollToCurrentSubtitle();
           }}
-          title="Scroll to current subtitle"
+          title={t('videoPlayer.sideMenu.scrollToCurrent')}
           size="sm"
           variant="secondary"
           className={css`
@@ -251,7 +261,7 @@ export default function SideMenu({
               margin-left: 6px;
             `}
           >
-            Scroll to Current
+            {t('videoPlayer.sideMenu.scrollToCurrent')}
           </span>
         </Button>
       )}
@@ -266,41 +276,55 @@ export default function SideMenu({
             margin-top: auto; /* Push to bottom */
           `}
         >
-          <input
-            type="number"
-            value={shiftAmount}
-            onChange={e => setShiftAmount(e.target.value)}
-            onBlur={handleApplyShift}
-            onKeyDown={e => e.key === 'Enter' && handleApplyShift()}
+          <label
             className={css`
-              width: 80px;
-              padding: 6px 8px;
-              border-radius: 4px;
-              border: 1px solid ${colors.border};
-              background-color: ${colors.light};
-              color: ${colors.dark};
-              font-family: monospace;
-              text-align: right;
               margin-right: 5px;
-              transition: border-color 0.2s ease;
-              &:focus {
-                outline: none;
-                border-color: ${colors.primary};
-              }
             `}
-            step="0.1"
-            placeholder="Shift (s)"
-            title="Shift all subtitles by seconds (+/-)"
-          />
-          <Button
-            onClick={handleApplyShift}
-            size="sm"
-            variant="secondary"
-            title="Apply subtitle shift"
-            style={{ flexGrow: 1 }}
           >
-            Apply Shift
-          </Button>
+            {t('videoPlayer.sideMenu.shiftLabel')}
+          </label>
+          <div
+            className={css`
+              display: flex;
+              align-items: center;
+              width: 100%;
+            `}
+          >
+            <input
+              type="number"
+              value={shiftAmount}
+              onChange={e => setShiftAmount(e.target.value)}
+              onBlur={handleApplyShift}
+              onKeyDown={e => e.key === 'Enter' && handleApplyShift()}
+              className={css`
+                width: 80px;
+                padding: 6px 8px;
+                border-radius: 4px;
+                border: 1px solid ${colors.border};
+                background-color: ${colors.light};
+                color: ${colors.dark};
+                font-family: monospace;
+                text-align: right;
+                margin-right: 5px;
+                transition: border-color 0.2s ease;
+                &:focus {
+                  outline: none;
+                  border-color: ${colors.primary};
+                }
+              `}
+              step="0.1"
+              placeholder="Shift (s)"
+              title="Shift all subtitles by seconds (+/-)"
+            />
+            <Button
+              onClick={handleApplyShift}
+              size="sm"
+              variant="secondary"
+              disabled={!shiftAmount || parseFloat(shiftAmount) === 0}
+            >
+              {t('videoPlayer.sideMenu.applyShift')}
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
+import { useTranslation } from 'react-i18next';
 
 interface SubtitleProgressInfo {
   current?: number;
@@ -130,6 +131,7 @@ export default function TranslationProgressArea({
   onPartialResult,
   translationOperationId,
 }: TranslationProgressAreaProps) {
+  const { t } = useTranslation();
   const [isCancelling, setIsCancelling] = useState(false);
 
   // If progress is 100%, auto-close after specified delay
@@ -152,9 +154,7 @@ export default function TranslationProgressArea({
   const handleRequestClose = async () => {
     // Only show confirmation if process is not complete
     if (translationProgress < 100) {
-      const shouldClose = window.confirm(
-        "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
-      );
+      const shouldClose = window.confirm(t('subtitles.cancel_confirmation'));
       if (shouldClose) {
         // Log the ID we are about to use
         console.log(

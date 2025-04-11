@@ -1,6 +1,7 @@
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
+import { useTranslation } from 'react-i18next';
 
 interface GenerateControlsProps {
   videoFile: File | null;
@@ -17,6 +18,8 @@ export default function GenerateControls({
   isProcessingUrl,
   handleGenerateSubtitles,
 }: GenerateControlsProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={css`
@@ -32,7 +35,7 @@ export default function GenerateControls({
           margin-right: 12px;
         `}
       >
-        3. Generate Subtitles:
+        3. {t('subtitles.generate')}:
       </label>
       <Button
         onClick={handleGenerateSubtitles}
@@ -43,7 +46,7 @@ export default function GenerateControls({
         variant="primary"
         isLoading={isGenerating}
       >
-        {isGenerating ? 'Generating...' : 'Generate Subtitles Now'}
+        {isGenerating ? t('subtitles.generating') : t('subtitles.generateNow')}
       </Button>
     </div>
   );

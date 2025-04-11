@@ -6,6 +6,7 @@ import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
+import { useTranslation } from 'react-i18next';
 
 // Define local styles copied from EditSubtitles/index.tsx
 const mergeOptionsStyles = css`
@@ -80,7 +81,6 @@ interface MergeControlsProps {
   subtitlesExist: boolean;
 }
 
-// Use function declaration syntax
 function MergeControls({
   mergeFontSize,
   setMergeFontSize,
@@ -91,6 +91,8 @@ function MergeControls({
   videoFileExists,
   subtitlesExist,
 }: MergeControlsProps) {
+  const { t } = useTranslation();
+
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const stringValue = e.target.value;
     if (stringValue === '') {
@@ -117,7 +119,7 @@ function MergeControls({
     <div className={mergeOptionsStyles}>
       {/* Font Size Input */}
       <label className={fontSizeLabelStyles} htmlFor="mergeFontSizeInput">
-        Font Size:
+        {t('editSubtitles.mergeControls.fontSizeLabel')}
       </label>
       <input
         id="mergeFontSizeInput"
@@ -133,7 +135,7 @@ function MergeControls({
 
       {/* Style Preset Select */}
       <label className={fontSizeLabelStyles} htmlFor="mergeStylePresetSelect">
-        Style:
+        {t('editSubtitles.mergeControls.styleLabel')}
       </label>
       <select
         id="mergeStylePresetSelect"
@@ -179,7 +181,9 @@ function MergeControls({
             <path d="M16 17H8" />
             <path d="M10 9H8" />
           </svg>
-          {isMergingInProgress ? 'Merging...' : 'Merge Subtitles'}
+          {isMergingInProgress
+            ? t('editSubtitles.mergeControls.mergingButton')
+            : t('editSubtitles.mergeControls.mergeButton')}
         </div>
       </Button>
     </div>
