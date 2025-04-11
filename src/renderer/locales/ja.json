@@ -50,7 +50,7 @@
     "qualityLow": "低画質",
     "downloading": "ダウンロード中...",
     "selectVideoFile": "動画ファイルを選択",
-    "saveOriginalVideo": "Save Original Video"
+    "saveOriginalVideo": "元の動画を保存"
   },
   "subtitles": {
     "outputLanguage": "出力言語",
