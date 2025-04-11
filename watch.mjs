@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { spawn } from "child_process";
-import { watch, existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { spawn } from 'child_process';
+import { watch, existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 // Electron process reference
 let electronProcess = null;
@@ -15,7 +15,7 @@ const COOLDOWN_PERIOD = 2000; // 2 seconds cooldown
 // Kill the Electron process if it's running
 function killElectron() {
   if (electronProcess && !electronProcess.killed) {
-    console.log("🔄 Restarting Electron app...");
+    console.log('🔄 Restarting Electron app...');
     electronProcess.kill();
     electronProcess = null;
   }
@@ -24,12 +24,12 @@ function killElectron() {
 // Get package.json data using fs instead of require
 function getPackageJson() {
   try {
-    const packageJsonPath = join(process.cwd(), "package.json");
-    const packageJsonContent = readFileSync(packageJsonPath, "utf8");
+    const packageJsonPath = join(process.cwd(), 'package.json');
+    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
     return JSON.parse(packageJsonContent);
   } catch (error) {
-    console.error("Error reading package.json:", error);
-    return { main: "dist/main/main/index.js" }; // Default fallback
+    console.error('Error reading package.json:', error);
+    return { main: 'dist/main/main/index.js' }; // Default fallback
   }
 }
 
@@ -37,20 +37,20 @@ function getPackageJson() {
 function findElectronExecutable() {
   const possiblePaths = [
     // Local node_modules path on UNIX-like systems
-    join(process.cwd(), "node_modules", ".bin", "electron"),
+    join(process.cwd(), 'node_modules', '.bin', 'electron'),
     // Local node_modules path on Windows
-    join(process.cwd(), "node_modules", ".bin", "electron.cmd"),
+    join(process.cwd(), 'node_modules', '.bin', 'electron.cmd'),
   ];
 
   for (const path of possiblePaths) {
     if (existsSync(path)) {
-      return { command: path, args: ["."] };
+      return { command: path, args: ['.'] };
     }
   }
 
   // If no direct path is found, fall back to npx which should find electron
-  console.log("⚠️ Using npx fallback to find electron");
-  return { command: "npx", args: ["electron", "."] };
+  console.log('⚠️ Using npx fallback to find electron');
+  return { command: 'npx', args: ['electron', '.'] };
 }
 
 // Start Electron
@@ -58,20 +58,20 @@ function startElectron() {
   // Prevent multiple restarts in quick succession
   const now = Date.now();
   if (restartCooldown || now - lastRestartTime < COOLDOWN_PERIOD) {
-    console.log("⏳ Restart request during cooldown period, ignoring...");
+    console.log('⏳ Restart request during cooldown period, ignoring...');
     return;
   }
 
   restartCooldown = true;
   lastRestartTime = now;
 
-  console.log("🚀 Starting Electron app...");
-  console.log("📁 Current directory:", process.cwd());
+  console.log('🚀 Starting Electron app...');
+  console.log('📁 Current directory:', process.cwd());
 
   // Use the fs-based function instead of require
   const packageJson = getPackageJson();
   const mainPath = packageJson.main;
-  console.log("📄 Main entry point:", mainPath);
+  console.log('📄 Main entry point:', mainPath);
 
   // Check if the main file exists
   if (existsSync(mainPath)) {
@@ -83,7 +83,7 @@ function startElectron() {
   }
 
   // Check if the preload file exists
-  const preloadPath = "dist/preload/index.js";
+  const preloadPath = 'dist/preload/index.js';
   if (existsSync(preloadPath)) {
     console.log(`✅ Found preload file: ${preloadPath}`);
   } else {
@@ -97,16 +97,16 @@ function startElectron() {
   console.log(
     `✅ Using electron command: ${
       electron.command
-    } with args: ${electron.args.join(" ")}`
+    } with args: ${electron.args.join(' ')}`
   );
 
   // Use spawn to start Electron with the full path
   electronProcess = spawn(electron.command, electron.args, {
-    stdio: "inherit",
-    shell: process.platform === "win32", // Use shell on Windows to find executables
+    stdio: 'inherit',
+    shell: process.platform === 'win32', // Use shell on Windows to find executables
   });
 
-  electronProcess.on("close", (code) => {
+  electronProcess.on('close', code => {
     if (code !== 0 && code !== null) {
       console.error(`Electron process exited with code ${code}`);
     }
@@ -120,7 +120,7 @@ function startElectron() {
 
 // Watch for changes in the dist directory
 function watchDist() {
-  const distDir = join(process.cwd(), "dist");
+  const distDir = join(process.cwd(), 'dist');
   console.log(`👀 Watching for changes in ${distDir}...`);
 
   // Keep track of last file change time to prevent duplicate events
@@ -147,7 +147,7 @@ function watchDist() {
     }
 
     // Check if this file should trigger a restart
-    const shouldRestart = RESTART_PATTERNS.some((pattern) =>
+    const shouldRestart = RESTART_PATTERNS.some(pattern =>
       pattern.test(filename)
     );
 
@@ -160,7 +160,7 @@ function watchDist() {
         killElectron();
         setTimeout(startElectron, 500);
       } else {
-        console.log("⏳ Cooldown active, ignoring restart request");
+        console.log('⏳ Cooldown active, ignoring restart request');
       }
     }
   });
@@ -169,19 +169,19 @@ function watchDist() {
 // Run the TSC compiler in watch mode for main process
 function watchMainProcess() {
   console.log(
-    "🔄 Starting TypeScript compiler for main process in watch mode..."
+    '🔄 Starting TypeScript compiler for main process in watch mode...'
   );
 
   const tsc = spawn(
-    "npx",
-    ["tsc", "-p", "tsconfig.main.json", "--watch", "--preserveWatchOutput"],
+    'npx',
+    ['tsc', '-p', 'tsconfig.main.json', '--watch', '--preserveWatchOutput'],
     {
-      stdio: "inherit",
+      stdio: 'inherit',
       shell: true,
     }
   );
 
-  tsc.on("close", (code) => {
+  tsc.on('close', code => {
     if (code !== 0 && code !== null) {
       console.error(`TypeScript compiler exited with code ${code}`);
     }
@@ -190,29 +190,29 @@ function watchMainProcess() {
 
 // Run the bun build for renderer in watch mode
 function watchRendererProcess() {
-  console.log("🔄 Starting Bun bundler for renderer in watch mode...");
+  console.log('🔄 Starting Bun bundler for renderer in watch mode...');
 
   const bun = spawn(
-    "bun",
+    'bun',
     [
-      "build",
-      "./src/renderer/index.tsx",
-      "--outdir",
-      "./dist/renderer",
-      "--target",
-      "browser",
-      "--format",
-      "esm", // Change from cjs to esm
-      "--no-typecheck",
-      "--watch",
+      'build',
+      './src/renderer/index.tsx',
+      '--outdir',
+      './dist/renderer',
+      '--target',
+      'browser',
+      '--format',
+      'esm', // Change from cjs to esm
+      '--no-typecheck',
+      '--watch',
     ],
     {
-      stdio: "inherit",
+      stdio: 'inherit',
       shell: true,
     }
   );
 
-  bun.on("close", (code) => {
+  bun.on('close', code => {
     if (code !== 0 && code !== null) {
       console.error(`Bun bundler exited with code ${code}`);
     }
@@ -221,27 +221,27 @@ function watchRendererProcess() {
 
 // Run the bun build for preload in watch mode
 function watchPreloadProcess() {
-  console.log("🔄 Starting Bun bundler for preload in watch mode...");
+  console.log('🔄 Starting Bun bundler for preload in watch mode...');
 
   const bun = spawn(
-    "bun",
+    'bun',
     [
-      "build",
-      "./src/preload/index.ts",
-      "--outdir",
-      "./dist/preload",
-      "--target",
-      "node",
-      "--no-typecheck",
-      "--watch",
+      'build',
+      './src/preload.ts',
+      '--outdir',
+      './dist/preload',
+      '--target',
+      'node',
+      '--no-typecheck',
+      '--watch',
     ],
     {
-      stdio: "inherit",
+      stdio: 'inherit',
       shell: true,
     }
   );
 
-  bun.on("close", (code) => {
+  bun.on('close', code => {
     if (code !== 0 && code !== null) {
       console.error(`Bun bundler exited with code ${code}`);
     }
@@ -268,7 +268,7 @@ function start() {
   }, 1000);
 
   // Handle process termination
-  process.on("SIGINT", () => {
+  process.on('SIGINT', () => {
     killElectron();
     process.exit(0);
   });

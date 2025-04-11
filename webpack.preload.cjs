@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   mode: 'production',
   target: 'electron-preload',
-  entry: './src/preload/index.ts',
+  entry: './src/preload.ts',
   output: {
     filename: 'index.js',
     path: path.resolve(__dirname, 'dist/preload'),
