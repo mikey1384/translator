@@ -49,7 +49,8 @@
     "qualityMedium": "中画質",
     "qualityLow": "低画質",
     "downloading": "ダウンロード中...",
-    "selectVideoFile": "動画ファイルを選択"
+    "selectVideoFile": "動画ファイルを選択",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "出力言語",

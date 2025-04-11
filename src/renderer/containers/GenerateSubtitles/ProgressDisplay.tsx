@@ -1,5 +1,6 @@
 import { colors } from '../../styles.js';
 import Button from '../../components/Button.js';
+import { useTranslation } from 'react-i18next';
 
 interface ProgressDisplayProps {
   isProcessingUrl: boolean;
@@ -21,6 +22,8 @@ export default function ProgressDisplay({
   onSaveOriginalVideo,
   didDownloadFromUrl,
 }: ProgressDisplayProps) {
+  const { t } = useTranslation();
+
   if (isProcessingUrl && progressPercent > 0 && !downloadComplete) {
     return (
       <div
@@ -71,7 +74,7 @@ export default function ProgressDisplay({
           onClick={onSaveOriginalVideo}
           title={`Save the downloaded file: ${downloadedVideoPath}`}
         >
-          Save Original Video
+          {t('input.saveOriginalVideo')}
         </Button>
       </div>
     );

@@ -49,7 +49,8 @@
     "qualityMedium": "Mellan",
     "qualityLow": "Låg",
     "downloading": "Laddar ner...",
-    "selectVideoFile": "Välj videofil"
+    "selectVideoFile": "Välj videofil",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "Utmatningsspråk",

@@ -49,7 +49,8 @@
     "qualityMedium": "ปานกลาง",
     "qualityLow": "ต่ำ",
     "downloading": "กำลังดาวน์โหลด...",
-    "selectVideoFile": "เลือกไฟล์วิดีโอ"
+    "selectVideoFile": "เลือกไฟล์วิดีโอ",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",

@@ -49,7 +49,8 @@
     "qualityMedium": "Medie",
     "qualityLow": "Joasă",
     "downloading": "Se descarcă...",
-    "selectVideoFile": "Selectează Fișier Video"
+    "selectVideoFile": "Selectează Fișier Video",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "Limba de ieșire",

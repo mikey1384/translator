@@ -49,7 +49,8 @@
     "qualityMedium": "Keskitaso",
     "qualityLow": "Matala",
     "downloading": "Ladataan...",
-    "selectVideoFile": "Valitse videotiedosto"
+    "selectVideoFile": "Valitse videotiedosto",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "Tulostuskieli",

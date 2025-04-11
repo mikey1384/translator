@@ -49,7 +49,8 @@
     "qualityMedium": "Trung bình",
     "qualityLow": "Thấp",
     "downloading": "Đang tải xuống...",
-    "selectVideoFile": "Chọn Tệp Video"
+    "selectVideoFile": "Chọn Tệp Video",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",

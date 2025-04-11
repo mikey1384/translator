@@ -49,7 +49,8 @@
     "qualityMedium": "मध्यम",
     "qualityLow": "निम्न",
     "downloading": "डाउनलोड हो रहा है...",
-    "selectVideoFile": "वीडियो फ़ाइल चुनें"
+    "selectVideoFile": "वीडियो फ़ाइल चुनें",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",

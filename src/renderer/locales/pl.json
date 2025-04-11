@@ -49,7 +49,8 @@
     "qualityMedium": "Średnia",
     "qualityLow": "Niska",
     "downloading": "Pobieranie...",
-    "selectVideoFile": "Wybierz plik wideo"
+    "selectVideoFile": "Wybierz plik wideo",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "Język wyjściowy",

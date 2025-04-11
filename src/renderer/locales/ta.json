@@ -49,7 +49,8 @@
     "qualityMedium": "நடுத்தரம்",
     "qualityLow": "குறைவு",
     "downloading": "பதிவிறக்குகிறது...",
-    "selectVideoFile": "காணொளி கோப்பைத் தேர்ந்தெடுக்கவும்"
+    "selectVideoFile": "காணொளி கோப்பைத் தேர்ந்தெடுக்கவும்",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "வெளியீட்டு மொழி",

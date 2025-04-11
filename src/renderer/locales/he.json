@@ -49,7 +49,8 @@
     "qualityMedium": "בינונית",
     "qualityLow": "נמוכה",
     "downloading": "מוריד...",
-    "selectVideoFile": "בחר קובץ וידאו"
+    "selectVideoFile": "בחר קובץ וידאו",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "שפת פלט",

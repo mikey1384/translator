@@ -49,7 +49,8 @@
     "qualityMedium": "Közepes",
     "qualityLow": "Alacsony",
     "downloading": "Letöltés...",
-    "selectVideoFile": "Videófájl kiválasztása"
+    "selectVideoFile": "Videófájl kiválasztása",
+    "saveOriginalVideo": "Save Original Video"
   },
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
