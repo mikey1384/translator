@@ -229,28 +229,57 @@ try {
   });
 
   // Get Locale File URL
-  ipcMain.handle('get-locale-url', (_event, lang: string) => {
+  ipcMain.handle('get-locale-url', async (_event, lang: string) => {
     try {
-      const appPath = app.getAppPath();
-      // Construct path relative to the app's root in the built package
-      const localePath = path.join(
-        appPath,
-        'dist',
-        'renderer',
-        'locales',
-        `${lang}.json`
-      );
+      let localeDirPath: string;
+
+      if (isDev) {
+        // In dev, app.getAppPath() is usually <project_root>/dist
+        // Go up one level from app path, then to src/renderer/locales
+        localeDirPath = path.join(
+          app.getAppPath(),
+          '..',
+          'src',
+          'renderer',
+          'locales'
+        );
+        log.info(
+          `[main.ts/get-locale-url] Using dev path (relative to app path parent): ${localeDirPath}`
+        );
+      } else {
+        // In production, locales are packaged relative to the app root
+        // Assuming they are copied to dist/renderer/locales within the app resources
+        localeDirPath = path.join(
+          app.getAppPath(),
+          'dist',
+          'renderer',
+          'locales'
+        );
+        log.info(`[main.ts/get-locale-url] Using prod path: ${localeDirPath}`);
+      }
+
+      const localePath = path.join(localeDirPath, `${lang}.json`);
       const localeUrl = pathToFileURL(localePath).toString();
-      log.info(
-        `[main.ts/get-locale-url] Constructed URL for ${lang}: ${localeUrl}`
-      );
-      return localeUrl;
+
+      // Add a check to see if the file actually exists before returning
+      try {
+        await fsPromises.access(localePath, fsPromises.constants.R_OK);
+        log.info(
+          `[main.ts/get-locale-url] Found ${localePath}. Constructed URL for ${lang}: ${localeUrl}`
+        );
+        return localeUrl;
+      } catch (accessError: any) {
+        log.error(
+          `[main.ts/get-locale-url] Cannot access locale file at ${localePath}. Error: ${accessError.message}`
+        );
+        return null; // Indicate failure: file not found or not readable
+      }
     } catch (error) {
       log.error(
         `[main.ts/get-locale-url] Error constructing URL for ${lang}:`,
         error
       );
-      throw error; // Re-throw the error to the renderer
+      return null; // Indicate failure
     }
   });
 

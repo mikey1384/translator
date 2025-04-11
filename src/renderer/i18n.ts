@@ -2,18 +2,13 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import English statically as a fallback
 import enTranslation from './locales/en.json' assert { type: 'json' };
-// Preload Korean as well
-import koTranslation from './locales/ko.json' assert { type: 'json' };
 
-// This function will fetch language files when needed using file URLs from main process
 const loadLanguageAsync = async (
   lang: string
 ): Promise<Record<string, any>> => {
   let localeUrl = ''; // Define outside try block for logging
   try {
-    // Get the absolute file:// URL from the main process via preload
     localeUrl = await window.electron.getLocaleUrl(lang);
     if (!localeUrl) {
       throw new Error(
@@ -69,13 +64,9 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    // Preload English and Korean
     resources: {
       en: {
         translation: enTranslation,
-      },
-      ko: {
-        translation: koTranslation, // Add preloaded Korean
       },
     },
     fallbackLng: 'en',
