@@ -143,6 +143,9 @@ interface ElectronAPI {
       finalUpdate: boolean;
     }) => void
   ) => () => void; // Listener returns cleanup function
+
+  // === Get Locale URL ===
+  getLocaleUrl: (lang: string) => Promise<string>;
 }
 
 declare global {
