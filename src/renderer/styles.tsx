@@ -144,6 +144,7 @@ export const containerStyles = css`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   flex-grow: 1;
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
