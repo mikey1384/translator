@@ -234,30 +234,6 @@ export default function LanguageSwitcher() {
     };
   }, [isOpen]);
 
-  const handleLanguageChange = async (languageValue: string) => {
-    const selectedOption = getAllOptions().find(
-      opt => opt.value === languageValue
-    );
-
-    try {
-      // Update state immediately
-      setCurrentLanguage(languageValue);
-      setCurrentCountryCode(selectedOption?.countryCode || 'US'); // Use selected or default to US
-      setIsOpen(false);
-
-      // Change the language
-      await changeLanguage(languageValue);
-    } catch (error) {
-      console.error(`[LanguageSwitcher] Error changing language:`, error);
-      // Revert
-      setCurrentLanguage(i18n.language);
-      const revertOption = getAllOptions().find(
-        opt => opt.value === i18n.language
-      );
-      setCurrentCountryCode(revertOption?.countryCode || 'US');
-    }
-  };
-
   return (
     <div className={languageSwitcherContainer} ref={dropdownRef}>
       <div className={selectedValueStyles} onClick={() => setIsOpen(!isOpen)}>
@@ -311,4 +287,28 @@ export default function LanguageSwitcher() {
       )}
     </div>
   );
+
+  async function handleLanguageChange(languageValue: string) {
+    const selectedOption = getAllOptions().find(
+      opt => opt.value === languageValue
+    );
+
+    try {
+      // Update state immediately
+      setCurrentLanguage(languageValue);
+      setCurrentCountryCode(selectedOption?.countryCode || 'US'); // Use selected or default to US
+      setIsOpen(false);
+
+      // Change the language
+      await changeLanguage(languageValue);
+    } catch (error) {
+      console.error(`[LanguageSwitcher] Error changing language:`, error);
+      // Revert
+      setCurrentLanguage(i18n.language);
+      const revertOption = getAllOptions().find(
+        opt => opt.value === i18n.language
+      );
+      setCurrentCountryCode(revertOption?.countryCode || 'US');
+    }
+  }
 }
