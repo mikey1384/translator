@@ -90,7 +90,8 @@ export const selectStyles = css`
   -moz-appearance: none;
   box-sizing: border-box;
   vertical-align: middle;
-  width: 100%;
+  width: auto;
+  text-align: center;
   max-width: 320px;
 
   &:disabled {
