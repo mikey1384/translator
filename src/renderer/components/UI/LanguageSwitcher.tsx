@@ -4,32 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '../../i18n.js';
 import { selectStyles, colors } from '../../styles.js';
 
-// Revert CountryFlag to always render an image
-const CountryFlag = ({
-  countryCode,
-  style,
-}: {
-  countryCode: string;
-  style?: React.CSSProperties;
-}) => {
-  const url = `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/${countryCode.toLowerCase()}.svg`;
-  return (
-    <img
-      src={url}
-      alt={`${countryCode} flag`}
-      style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        ...style,
-      }}
-    />
-  );
-};
-
 interface LanguageOption {
   value: string;
   label: string;
-  countryCode: string; // ISO 3166-1 alpha-2 country code for the flag
+  countryCode: string;
 }
 
 interface LanguageGroup {
@@ -107,10 +85,9 @@ const languageGroups: LanguageGroup[] = [
 ];
 
 const baseLanguageOptions: LanguageOption[] = [
-  { value: 'en', label: 'languages.english', countryCode: 'US' }, // Use 'US' flag for English
+  { value: 'en', label: 'languages.english', countryCode: 'US' },
 ];
 
-// Styles for the custom dropdown
 const languageSwitcherContainer = css`
   margin: 10px 0;
   position: relative;
@@ -151,17 +128,14 @@ const dropdownOptionStyles = css`
   justify-content: center;
   padding: 8px;
   cursor: pointer;
-  // Base hover style for non-selected items
   &:hover {
     background-color: ${colors.grayLight};
   }
 `;
 
-// Specific style for the selected option
 const selectedOptionStyle = css`
   background-color: ${colors.primary};
-  color: white; // Ensure text color contrasts
-  // Keep the background blue even on hover
+  color: white;
   &:hover {
     background-color: ${colors.primary};
   }
@@ -187,7 +161,7 @@ const arrowStyles = css`
 
 const flagStyleObject = {
   width: '24px',
-  height: 'auto', // Maintain aspect ratio
+  height: 'auto',
   borderRadius: '2px',
 };
 
@@ -203,16 +177,14 @@ export default function LanguageSwitcher() {
     ...languageGroups.flatMap(group => group.options),
   ];
 
-  // Update the current country code when language changes
   useEffect(() => {
     const selectedOption = getAllOptions().find(
       opt => opt.value === i18n.language
     );
     setCurrentLanguage(i18n.language);
-    setCurrentCountryCode(selectedOption?.countryCode || 'US'); // Default to US if not found
+    setCurrentCountryCode(selectedOption?.countryCode || 'US');
   }, [i18n.language]);
 
-  // Effect to handle clicks outside the dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -223,12 +195,10 @@ export default function LanguageSwitcher() {
       }
     };
 
-    // Add listener only when dropdown is open
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
-    // Cleanup listener
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -243,11 +213,9 @@ export default function LanguageSwitcher() {
 
       {isOpen && (
         <div className={dropdownListStyles}>
-          {/* Base language options */}
           {baseLanguageOptions.map(lang => (
             <div
               key={lang.value}
-              // Use cx to combine base style and conditional selected style
               className={cx(
                 dropdownOptionStyles,
                 currentLanguage === lang.value && selectedOptionStyle
@@ -261,14 +229,12 @@ export default function LanguageSwitcher() {
             </div>
           ))}
 
-          {/* Grouped options */}
           {languageGroups.map(group => (
             <div key={group.label}>
               <div className={dropdownGroupLabelStyles}>{t(group.label)}</div>
               {group.options.map(lang => (
                 <div
                   key={lang.value}
-                  // Use cx to combine base style and conditional selected style
                   className={cx(
                     dropdownOptionStyles,
                     currentLanguage === lang.value && selectedOptionStyle
@@ -294,16 +260,13 @@ export default function LanguageSwitcher() {
     );
 
     try {
-      // Update state immediately
       setCurrentLanguage(languageValue);
-      setCurrentCountryCode(selectedOption?.countryCode || 'US'); // Use selected or default to US
+      setCurrentCountryCode(selectedOption?.countryCode || 'US');
       setIsOpen(false);
 
-      // Change the language
       await changeLanguage(languageValue);
     } catch (error) {
       console.error(`[LanguageSwitcher] Error changing language:`, error);
-      // Revert
       setCurrentLanguage(i18n.language);
       const revertOption = getAllOptions().find(
         opt => opt.value === i18n.language
@@ -311,4 +274,25 @@ export default function LanguageSwitcher() {
       setCurrentCountryCode(revertOption?.countryCode || 'US');
     }
   }
+}
+
+function CountryFlag({
+  countryCode,
+  style,
+}: {
+  countryCode: string;
+  style?: React.CSSProperties;
+}) {
+  const url = `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/${countryCode.toLowerCase()}.svg`;
+  return (
+    <img
+      src={url}
+      alt={`${countryCode} flag`}
+      style={{
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        ...style,
+      }}
+    />
+  );
 }
