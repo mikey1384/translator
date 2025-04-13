@@ -54,7 +54,6 @@ interface NativeVideoPlayerProps {
     text: string;
   }[];
   onPlayerReady: (player: HTMLVideoElement) => void;
-  isExpanded?: boolean;
   isFullyExpanded?: boolean;
   parentRef?: React.RefObject<HTMLDivElement | null>;
 }
@@ -63,7 +62,6 @@ export default function NativeVideoPlayer({
   videoUrl,
   subtitles,
   onPlayerReady,
-  isExpanded = false,
   isFullyExpanded = false,
   parentRef,
 }: NativeVideoPlayerProps) {
@@ -542,16 +540,13 @@ export default function NativeVideoPlayer({
     let fontSize = '18px';
     if (isFullyExpanded) {
       fontSize = '32px';
-    } else if (isExpanded) {
-      fontSize = '24px';
     }
 
     let width = '100%';
-    if (isExpanded) width = '95%';
     if (isFullyExpanded) width = '90%';
 
     return { width, fontSize };
-  }, [isExpanded, isFullyExpanded]);
+  }, [isFullyExpanded]);
 
   const videoErrorStyles = css`
     position: absolute;

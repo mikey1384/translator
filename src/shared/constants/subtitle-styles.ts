@@ -1,10 +1,3 @@
-// src/renderer/constants/subtitle-styles.ts
-
-// Defines different V4+ Style lines for ASS subtitles
-// Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-
-// Note: Fontsize will be dynamically replaced.
-// Note: Default font is set here, but can be overridden by user selection if implemented later.
 const DEFAULT_FONT = 'Noto Sans';
 
 export const ASS_STYLE_PRESETS = {
