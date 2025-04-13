@@ -1118,10 +1118,6 @@ Improved translation for block 3
 `;
 
   try {
-    log.info(
-      `[Review] Sending review batch (${parentOperationId}) to Claude API`
-    );
-
     const reviewedContent = await callAIModel({
       messages: [{ role: 'user', content: prompt }],
       max_tokens: AI_MODELS.MAX_TOKENS,
@@ -1336,7 +1332,6 @@ export async function callAIModel({
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
-  isUsingClaude?: boolean;
 }): Promise<string> {
   return callOpenAIChat({
     model: AI_MODELS.GPT_4O,
