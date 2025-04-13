@@ -186,11 +186,23 @@ async function downloadVideoFromPlatform(
 
   // --- Determine Format String --- START ---
   const isYouTube = /youtube\.com|youtu\.be/.test(url);
+  const isYouTubeShorts = /youtube\.com\/shorts\//.test(url); // Added check for Shorts
+  let effectiveQuality = quality; // Use a mutable variable for quality
+
+  // Upgrade quality for Shorts if 'low' is selected
+  if (isYouTubeShorts && quality === 'low') {
+    effectiveQuality = 'mid';
+    log.info(
+      `[URLProcessor] YouTube Shorts detected with 'low' quality, upgrading to 'mid'.`
+    );
+  }
+
   let formatString: string;
   if (isYouTube) {
-    formatString = qualityFormatMap[quality] || qualityFormatMap.high;
+    // Use effectiveQuality for format lookup
+    formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.high;
     log.info(
-      `[URLProcessor] Using YouTube format for quality '${quality}': ${formatString}`
+      `[URLProcessor] Using YouTube format for effective quality '${effectiveQuality}': ${formatString}`
     );
   } else {
     // For non-YouTube, use a more robust generic MP4 preference with fallbacks
