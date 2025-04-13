@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Thay đổi video",
+      "changeVideoAudio": "Thay đổi video / âm thanh",
       "enterUrlPlaceholder": "Nhập URL...",
       "qualityLow": "Thấp",
       "qualityMid": "Trung bình",

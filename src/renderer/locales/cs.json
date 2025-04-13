@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Změnit video",
+      "changeVideoAudio": "Změnit video / audio",
       "enterUrlPlaceholder": "Zadejte URL...",
       "qualityLow": "Nízká",
       "qualityMid": "Střední",

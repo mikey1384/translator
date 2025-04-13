@@ -175,6 +175,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "비디오 변경",
+      "changeVideoAudio": "비디오/오디오 변경",
       "enterUrlPlaceholder": "URL 입력...",
       "qualityLow": "저",
       "qualityMid": "중",

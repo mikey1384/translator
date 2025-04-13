@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Skift video",
+      "changeVideoAudio": "Skift video / lydfil",
       "enterUrlPlaceholder": "Indtast URL...",
       "qualityLow": "Lav",
       "qualityMid": "Medium",

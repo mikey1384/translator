@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Video wijzigen",
+      "changeVideoAudio": "Video / Audio wijzigen",
       "enterUrlPlaceholder": "URL invoeren...",
       "qualityLow": "Laag",
       "qualityMid": "Gemiddeld",

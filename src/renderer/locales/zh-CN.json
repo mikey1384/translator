@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "更换视频",
+      "changeVideoAudio": "更换视频/音频",
       "enterUrlPlaceholder": "输入网址...",
       "qualityLow": "低",
       "qualityMid": "中",

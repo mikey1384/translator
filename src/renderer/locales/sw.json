@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Badilisha Video",
+      "changeVideoAudio": "Badilisha Video / Audio",
       "enterUrlPlaceholder": "Ingiza URL...",
       "qualityLow": "Chini",
       "qualityMid": "Kati",

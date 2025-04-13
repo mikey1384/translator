@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Bytt video",
+      "changeVideoAudio": "Bytt video / audio",
       "enterUrlPlaceholder": "Skriv inn URL...",
       "qualityLow": "Lav",
       "qualityMid": "Medium",

@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "تغییر ویدیو",
+      "changeVideoAudio": "تغییر ویدیو / صوت",
       "enterUrlPlaceholder": "آدرس را وارد کنید...",
       "qualityLow": "پایین",
       "qualityMid": "متوسط",

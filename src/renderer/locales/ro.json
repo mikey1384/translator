@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Schimbă Video",
+      "changeVideoAudio": "Schimbă Video / Audio",
       "enterUrlPlaceholder": "Introduceți URL...",
       "qualityLow": "Joasă",
       "qualityMid": "Medie",

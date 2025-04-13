@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Baguhin ang Video",
+      "changeVideoAudio": "Baguhin ang Video / Audio",
       "enterUrlPlaceholder": "Ilagay ang URL...",
       "qualityLow": "Mababa",
       "qualityMid": "Katamtaman",

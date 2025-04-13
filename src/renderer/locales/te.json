@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "వీడియోను మార్చండి",
+      "changeVideoAudio": "వీడియో / ఆడియో మార్చండి",
       "enterUrlPlaceholder": "URL ను నమోదు చేయండి...",
       "qualityLow": "తక్కువ",
       "qualityMid": "మధ్యస్థం",

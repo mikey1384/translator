@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Vaihda video",
+      "changeVideoAudio": "Vaihda video / ääni",
       "enterUrlPlaceholder": "Syötä URL...",
       "qualityLow": "Matala",
       "qualityMid": "Keskitaso",

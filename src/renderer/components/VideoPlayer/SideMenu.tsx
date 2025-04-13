@@ -76,7 +76,7 @@ export default function SideMenu({
           onClick={onSelectVideoClick}
           variant="secondary"
           size="sm"
-          title={t('videoPlayer.sideMenu.changeVideo')}
+          title={t('videoPlayer.sideMenu.changeVideoAudio')}
           className={css`
             width: 100%;
             justify-content: flex-start;
@@ -104,7 +104,7 @@ export default function SideMenu({
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <span>{t('videoPlayer.sideMenu.changeVideo')}</span>
+            <span>{t('videoPlayer.sideMenu.changeVideoAudio')}</span>
           </div>
         </Button>
 

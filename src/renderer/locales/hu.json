@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Videó cseréje",
+      "changeVideoAudio": "Videó / hang csere",
       "enterUrlPlaceholder": "URL megadása...",
       "qualityLow": "Alacsony",
       "qualityMid": "Közepes",

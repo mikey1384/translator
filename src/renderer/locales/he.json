@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "החלף וידאו",
+      "changeVideoAudio": "החלף וידאו / שונה",
       "enterUrlPlaceholder": "הזן כתובת URL...",
       "qualityLow": "נמוכה",
       "qualityMid": "בינונית",

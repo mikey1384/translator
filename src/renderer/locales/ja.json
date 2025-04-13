@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "動画を変更",
+      "changeVideoAudio": "動画/音声を変更",
       "enterUrlPlaceholder": "URLを入力...",
       "qualityLow": "低",
       "qualityMid": "中",

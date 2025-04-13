@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Tukar Video",
+      "changeVideoAudio": "Tukar Video / Audio",
       "enterUrlPlaceholder": "Masukkan URL...",
       "qualityLow": "Rendah",
       "qualityMid": "Sederhana",

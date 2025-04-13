@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Byt video",
+      "changeVideoAudio": "Byt video / ljud",
       "enterUrlPlaceholder": "Ange URL...",
       "qualityLow": "Låg",
       "qualityMid": "Mellan",

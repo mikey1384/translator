@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "காணொளியை மாற்று",
+      "changeVideoAudio": "காணொளி / ஒலியை மாற்று",
       "enterUrlPlaceholder": "URL ஐ உள்ளிடுக...",
       "qualityLow": "குறைவு",
       "qualityMid": "நடுத்தரம்",

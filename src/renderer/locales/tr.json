@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Videoyu Değiştir",
+      "changeVideoAudio": "Video / Audio Değiştir",
       "enterUrlPlaceholder": "URL girin...",
       "qualityLow": "Düşük",
       "qualityMid": "Orta",

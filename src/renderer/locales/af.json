@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Verander Video",
+      "changeVideoAudio": "Verander Video / Audio",
       "enterUrlPlaceholder": "Voer URL in...",
       "qualityLow": "Laag",
       "qualityMid": "Medium",

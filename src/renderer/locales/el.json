@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Αλλαγή Βίντεο",
+      "changeVideoAudio": "Αλλαγή Βίντεο / Ήχου",
       "enterUrlPlaceholder": "Εισαγωγή URL...",
       "qualityLow": "Χαμηλή",
       "qualityMid": "Μεσαία",

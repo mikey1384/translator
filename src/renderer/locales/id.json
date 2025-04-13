@@ -127,6 +127,7 @@
   "videoPlayer": {
     "sideMenu": {
       "changeVideo": "Ubah Video",
+      "changeVideoAudio": "Ubah Video / Audio",
       "enterUrlPlaceholder": "Masukkan URL...",
       "qualityLow": "Rendah",
       "qualityMid": "Sedang",
