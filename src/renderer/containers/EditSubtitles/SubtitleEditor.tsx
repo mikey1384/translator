@@ -85,7 +85,8 @@ export default function SubtitleEditor({
     if (incomingEditableText !== currentTextValue) {
       setCurrentTextValue(incomingEditableText);
     }
-  }, [currentTextValue, sub.text]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sub.text]);
 
   return (
     <div
