@@ -54,11 +54,7 @@ const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
   onNavigateToSettings,
 }) => {
   // Calculate key status - Only check for OpenAI
-  const keysSetCount = apiKeyStatus
-    ? apiKeyStatus.openai
-      ? 1
-      : 0 // + (apiKeyStatus.anthropic ? 1 : 0) // Removed Anthropic check
-    : 0;
+  const keysSetCount = apiKeyStatus ? (apiKeyStatus.openai ? 1 : 0) : 0;
   const allKeysSet = keysSetCount === 1; // Changed required count to 1
 
   if (isLoadingKeyStatus) {

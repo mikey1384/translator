@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 // Define Key Status Type moved from App/index.tsx
 export type ApiKeyStatus = {
   openai: boolean;
-  anthropic: boolean;
 } | null;
 
 export function useApiKeyStatus() {
@@ -21,11 +20,11 @@ export function useApiKeyStatus() {
         setApiKeyStatus(result.status);
       } else {
         console.error('Failed to fetch key status:', result.error);
-        setApiKeyStatus({ openai: false, anthropic: false }); // Assume none set on error
+        setApiKeyStatus({ openai: false }); // Assume none set on error
       }
     } catch (error) {
       console.error('Error calling getApiKeyStatus:', error);
-      setApiKeyStatus({ openai: false, anthropic: false });
+      setApiKeyStatus({ openai: false });
     } finally {
       setIsLoadingKeyStatus(false);
       console.log('Finished fetching API key status.');

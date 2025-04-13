@@ -101,11 +101,11 @@ interface ElectronAPI {
   // === API Key Management ===
   getApiKeyStatus: () => Promise<{
     success: boolean;
-    status: { openai: boolean; anthropic: boolean };
+    status: { openai: boolean };
     error?: string;
   }>;
   saveApiKey: (
-    keyType: 'openai' | 'anthropic',
+    keyType: 'openai',
     apiKey: string
   ) => Promise<{ success: boolean; error?: string }>;
 

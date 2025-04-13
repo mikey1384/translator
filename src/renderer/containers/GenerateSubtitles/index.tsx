@@ -15,7 +15,6 @@ import { useTranslation } from 'react-i18next';
 
 type ApiKeyStatus = {
   openai: boolean;
-  anthropic: boolean;
 } | null;
 
 export default function GenerateSubtitles({
@@ -101,100 +100,98 @@ export default function GenerateSubtitles({
         onNavigateToSettings={onNavigateToSettings}
       />
 
-      {!isLoadingKeyStatus &&
-        apiKeyStatus?.openai &&
-        apiKeyStatus?.anthropic && (
-          <>
-            {error && <div className={errorMessageStyles}>{error}</div>}
+      {!isLoadingKeyStatus && apiKeyStatus?.openai && (
+        <>
+          {error && <div className={errorMessageStyles}>{error}</div>}
 
-            <ProgressDisplay
-              isProcessingUrl={isProcessingUrl}
-              progressPercent={progressPercent}
-              progressStage={progressStage}
-              downloadComplete={downloadComplete}
-              downloadedVideoPath={downloadedVideoPath}
-              onSaveOriginalVideo={onSaveOriginalVideo}
-              inputMode={inputMode}
-              didDownloadFromUrl={didDownloadFromUrl}
+          <ProgressDisplay
+            isProcessingUrl={isProcessingUrl}
+            progressPercent={progressPercent}
+            progressStage={progressStage}
+            downloadComplete={downloadComplete}
+            downloadedVideoPath={downloadedVideoPath}
+            onSaveOriginalVideo={onSaveOriginalVideo}
+            inputMode={inputMode}
+            didDownloadFromUrl={didDownloadFromUrl}
+          />
+
+          <InputModeToggle
+            inputMode={inputMode}
+            onSetInputMode={onSetInputMode}
+            isGenerating={isGenerating}
+            isProcessingUrl={isProcessingUrl}
+          />
+
+          {inputMode === 'file' && (
+            <div
+              className={css`
+                padding: 13px 20px;
+                border: 1px solid ${colors.border};
+                border-radius: 6px;
+                background-color: ${colors.light};
+              `}
+            >
+              <label
+                style={{
+                  marginRight: '12px',
+                  display: 'inline-block',
+                  minWidth: '220px',
+                }}
+              >
+                1. {t('input.selectVideoFile')}:
+              </label>
+              <FileInputButton onClick={onSelectVideoClick}>
+                {videoFile
+                  ? `${t('common.selected')}: ${videoFile.name}`
+                  : t('input.selectVideoFile')}
+              </FileInputButton>
+            </div>
+          )}
+
+          {inputMode === 'url' && (
+            <div
+              className={css`
+                padding: 20px;
+                border: 1px solid ${colors.border};
+                border-radius: 6px;
+                background-color: ${colors.light};
+              `}
+            >
+              <UrlInputSection
+                urlInput={urlInput}
+                setUrlInput={onSetUrlInput}
+                onSetVideoFile={onSetVideoFile}
+                setError={onSetError}
+                downloadQuality={downloadQuality}
+                setDownloadQuality={onSetDownloadQuality}
+                handleProcessUrl={onProcessUrl}
+                isProcessingUrl={isProcessingUrl}
+                isGenerating={isGenerating}
+              />
+            </div>
+          )}
+
+          {videoFile && (
+            <LanguageSelection
+              targetLanguage={targetLanguage}
+              setTargetLanguage={onSetTargetLanguage}
+              isGenerating={isGenerating}
+              showOriginalText={showOriginalText}
+              onShowOriginalTextChange={onShowOriginalTextChange}
             />
+          )}
 
-            <InputModeToggle
-              inputMode={inputMode}
-              onSetInputMode={onSetInputMode}
+          {videoFile && (
+            <GenerateControls
+              videoFile={videoFile}
+              videoFilePath={videoFilePath}
               isGenerating={isGenerating}
               isProcessingUrl={isProcessingUrl}
+              handleGenerateSubtitles={onGenerateSubtitles}
             />
-
-            {inputMode === 'file' && (
-              <div
-                className={css`
-                  padding: 13px 20px;
-                  border: 1px solid ${colors.border};
-                  border-radius: 6px;
-                  background-color: ${colors.light};
-                `}
-              >
-                <label
-                  style={{
-                    marginRight: '12px',
-                    display: 'inline-block',
-                    minWidth: '220px',
-                  }}
-                >
-                  1. {t('input.selectVideoFile')}:
-                </label>
-                <FileInputButton onClick={onSelectVideoClick}>
-                  {videoFile
-                    ? `${t('common.selected')}: ${videoFile.name}`
-                    : t('input.selectVideoFile')}
-                </FileInputButton>
-              </div>
-            )}
-
-            {inputMode === 'url' && (
-              <div
-                className={css`
-                  padding: 20px;
-                  border: 1px solid ${colors.border};
-                  border-radius: 6px;
-                  background-color: ${colors.light};
-                `}
-              >
-                <UrlInputSection
-                  urlInput={urlInput}
-                  setUrlInput={onSetUrlInput}
-                  onSetVideoFile={onSetVideoFile}
-                  setError={onSetError}
-                  downloadQuality={downloadQuality}
-                  setDownloadQuality={onSetDownloadQuality}
-                  handleProcessUrl={onProcessUrl}
-                  isProcessingUrl={isProcessingUrl}
-                  isGenerating={isGenerating}
-                />
-              </div>
-            )}
-
-            {videoFile && (
-              <LanguageSelection
-                targetLanguage={targetLanguage}
-                setTargetLanguage={onSetTargetLanguage}
-                isGenerating={isGenerating}
-                showOriginalText={showOriginalText}
-                onShowOriginalTextChange={onShowOriginalTextChange}
-              />
-            )}
-
-            {videoFile && (
-              <GenerateControls
-                videoFile={videoFile}
-                videoFilePath={videoFilePath}
-                isGenerating={isGenerating}
-                isProcessingUrl={isProcessingUrl}
-                handleGenerateSubtitles={onGenerateSubtitles}
-              />
-            )}
-          </>
-        )}
+          )}
+        </>
+      )}
     </Section>
   );
 }

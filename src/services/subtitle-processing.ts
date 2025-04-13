@@ -13,16 +13,15 @@ import {
 import log from 'electron-log';
 import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
-import Anthropic from '@anthropic-ai/sdk';
 
-async function getApiKey(keyType: 'openai' | 'anthropic'): Promise<string> {
+async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
   if (key) {
     return key;
   }
 
   throw new SubtitleProcessingError(
-    `${keyType === 'openai' ? 'OpenAI' : 'Anthropic'} API key not found. Please set it in the application settings.`
+    `OpenAI API key not found. Please set it in the application settings.`
   );
 }
 
@@ -1325,91 +1324,12 @@ export async function callOpenAIChat({
   );
 }
 
-export async function callClaudeModel({
-  model,
-  messages,
-  max_tokens,
-  signal,
-  retryAttempts = 3,
-}: {
-  model: string;
-  messages: Anthropic.MessageParam[];
-  max_tokens: number;
-  signal?: AbortSignal;
-  operationId: string;
-  retryAttempts?: number;
-}): Promise<string> {
-  let anthropic: Anthropic;
-  let anthropicApiKey: string | null;
-  try {
-    anthropicApiKey = await getApiKey('anthropic');
-    if (!anthropicApiKey) {
-      throw new Error('Anthropic API key not found');
-    }
-    anthropic = new Anthropic({ apiKey: anthropicApiKey });
-  } catch (keyError) {
-    const message =
-      keyError instanceof Error ? keyError.message : String(keyError);
-    throw new Error(`Anthropic initialization failed: ${message}`);
-  }
-
-  let currentAttempt = 0;
-  while (currentAttempt < retryAttempts) {
-    currentAttempt++;
-    try {
-      const response: Anthropic.Message = await anthropic.messages.create(
-        {
-          model: model,
-          max_tokens: max_tokens,
-          messages: messages,
-          temperature: 0.1,
-        },
-        { signal }
-      );
-
-      if (
-        response.content &&
-        Array.isArray(response.content) &&
-        response.content.length > 0 &&
-        response.content[0].type === 'text'
-      ) {
-        return response.content[0].text;
-      } else {
-        throw new Error('Unexpected response format from Claude.');
-      }
-    } catch (error: any) {
-      if (signal?.aborted || error.name === 'AbortError') {
-        throw new Error('Operation cancelled');
-      }
-
-      if (
-        error.message &&
-        (error.message.includes('timeout') ||
-          error.message.includes('rate') ||
-          error.message.includes('ECONNRESET')) &&
-        currentAttempt < retryAttempts
-      ) {
-        const delay = 1000 * Math.pow(2, currentAttempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-
-      throw new Error(
-        `Claude API call failed: ${error.message || String(error)}`
-      );
-    }
-  }
-
-  throw new Error(`Claude API call failed after ${retryAttempts} attempts.`);
-}
-
 export async function callAIModel({
   messages,
   max_tokens,
   signal,
   operationId,
   retryAttempts = 3,
-  isUsingClaude = false,
 }: {
   messages: any[];
   max_tokens?: number;
@@ -1418,23 +1338,12 @@ export async function callAIModel({
   retryAttempts?: number;
   isUsingClaude?: boolean;
 }): Promise<string> {
-  if (isUsingClaude) {
-    return callClaudeModel({
-      model: AI_MODELS.CLAUDE_3_7_SONNET,
-      messages,
-      max_tokens: max_tokens ?? 1000,
-      signal,
-      operationId,
-      retryAttempts,
-    });
-  } else {
-    return callOpenAIChat({
-      model: AI_MODELS.GPT_4O,
-      messages,
-      max_tokens: max_tokens ?? 1000,
-      signal,
-      operationId,
-      retryAttempts,
-    });
-  }
+  return callOpenAIChat({
+    model: AI_MODELS.GPT_4O,
+    messages,
+    max_tokens: max_tokens ?? 1000,
+    signal,
+    operationId,
+    retryAttempts,
+  });
 }

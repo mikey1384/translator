@@ -37,17 +37,9 @@ const API_KEYS_KEY = 'apiKeys';
 // Store structure in electron-store
 interface ApiKeys {
   openai?: string;
-  anthropic?: string;
 }
 
-/**
- * Gets a stored API key
- * @param keyType The type of API key ('openai' or 'anthropic')
- * @returns The API key or null if not found
- */
-export async function getApiKey(
-  keyType: 'openai' | 'anthropic'
-): Promise<string | null> {
+export async function getApiKey(keyType: 'openai'): Promise<string | null> {
   try {
     const apiKeys = secureStore.get(API_KEYS_KEY) as ApiKeys | undefined;
     return apiKeys?.[keyType] || null;
@@ -57,13 +49,8 @@ export async function getApiKey(
   }
 }
 
-/**
- * Saves an API key
- * @param keyType The type of API key ('openai' or 'anthropic')
- * @param apiKey The API key to save (pass empty string to delete)
- */
 export async function saveApiKey(
-  keyType: 'openai' | 'anthropic',
+  keyType: 'openai',
   apiKey: string
 ): Promise<void> {
   try {
@@ -88,14 +75,7 @@ export async function saveApiKey(
   }
 }
 
-/**
- * Checks if an API key exists
- * @param keyType The type of API key ('openai' or 'anthropic')
- * @returns True if the key exists, false otherwise
- */
-export async function hasApiKey(
-  keyType: 'openai' | 'anthropic'
-): Promise<boolean> {
+export async function hasApiKey(keyType: 'openai'): Promise<boolean> {
   const key = await getApiKey(keyType);
   return !!key;
 }
@@ -114,13 +94,6 @@ export async function migrateFromKeytar(
     if (openaiKey) {
       await saveApiKey('openai', openaiKey);
       log.info('[secure-store] Migrated OpenAI key from keytar');
-    }
-
-    // Try to migrate Anthropic key
-    const anthropicKey = await getKeytarPassword(keytarService, 'anthropic');
-    if (anthropicKey) {
-      await saveApiKey('anthropic', anthropicKey);
-      log.info('[secure-store] Migrated Anthropic key from keytar');
     }
   } catch (error) {
     log.error('[secure-store] Error during keytar migration:', error);

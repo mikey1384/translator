@@ -5,7 +5,6 @@ import { getApiKey, saveApiKey } from '../services/secure-store.js';
 // Define interfaces for API key status and results
 interface ApiKeyStatus {
   openai: boolean;
-  anthropic: boolean;
 }
 
 interface ApiKeyResult {
@@ -15,8 +14,8 @@ interface ApiKeyResult {
 }
 
 interface SaveApiKeyOptions {
-  keyType: 'openai' | 'anthropic';
-  apiKey: string; // Empty string means delete
+  keyType: 'openai';
+  apiKey: string;
 }
 
 interface SaveApiKeyResult {
@@ -32,12 +31,9 @@ export async function handleGetApiKeyStatus(
     // Use secure-store instead of keytar
     const status: ApiKeyStatus = {
       openai: false,
-      anthropic: false,
     };
     const openaiKey = await getApiKey('openai');
-    const anthropicKey = await getApiKey('anthropic');
     status.openai = !!openaiKey;
-    status.anthropic = !!anthropicKey;
 
     log.info('[api-key-handler] Key status retrieved', status);
     return { success: true, status };
@@ -66,7 +62,7 @@ export async function handleSaveApiKey(
   const { keyType, apiKey } = options;
 
   // Validate keyType
-  if (keyType !== 'openai' && keyType !== 'anthropic') {
+  if (keyType !== 'openai') {
     log.warn(`[api-key-handler] Invalid key type: ${keyType}`);
     return { success: false, error: 'Invalid key type specified.' };
   }
@@ -82,7 +78,6 @@ export async function handleSaveApiKey(
         log.warn('[api-key-handler] Invalid OpenAI key format detected.');
         return { success: false, error: 'Invalid OpenAI key format.' };
       }
-      // Add similar check for Anthropic if applicable
       await saveApiKey(keyType, apiKey);
       log.info(`[api-key-handler] API key for ${keyType} saved.`);
     }
