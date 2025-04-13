@@ -111,6 +111,8 @@ export function EditSubtitles({
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
 
+  const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a']; // Add more if needed
+
   useEffect(() => {
     console.log(
       '[EditSubtitles] Attempting to load settings from localStorage...'
@@ -918,10 +920,17 @@ export function EditSubtitles({
       if (tempMergedFilePath && tempMergedFilePath.trim() !== '') {
         try {
           // Prompt User to Save
-          const inputExt = videoFile.name.includes('.')
-            ? videoFile.name.substring(videoFile.name.lastIndexOf('.'))
-            : '.mp4';
-          const suggestedOutputName = `video-with-subtitles${inputExt}`; // Simplified name
+          let inputExt = '.mp4'; // Default to .mp4
+          if (videoFile.name.includes('.')) {
+            const originalExt = videoFile.name
+              .substring(videoFile.name.lastIndexOf('.'))
+              .toLowerCase();
+            if (!AUDIO_EXTENSIONS.includes(originalExt)) {
+              inputExt = originalExt; // Use original extension if it's not an audio one
+            }
+          }
+
+          const suggestedOutputName = `video-with-subtitles${inputExt}`;
 
           console.log(
             '⭐ Showing save dialog with suggested name:',

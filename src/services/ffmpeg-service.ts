@@ -865,4 +865,232 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       );
     }
   }
+
+  public async hasVideoTrack(filePath: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      if (!fs.existsSync(filePath)) {
+        return reject(new FFmpegError(`Input file not found: ${filePath}`));
+      }
+      const args = [
+        '-v',
+        'error',
+        '-select_streams',
+        'v:0', // Check for the first video stream
+        '-show_entries',
+        'stream=index',
+        '-of',
+        'csv=s=x:p=0',
+        filePath,
+      ];
+      log.info(`[hasVideoTrack] Running ffprobe with args: ${args.join(' ')}`);
+      const process = spawn(this.ffprobePath, args);
+
+      let stdout = '';
+      let stderr = '';
+
+      process.stdout.on('data', chunk => {
+        stdout += chunk.toString();
+      });
+      process.stderr.on('data', chunk => {
+        stderr += chunk.toString();
+        log.error(`[hasVideoTrack] ffprobe stderr: ${chunk.toString()}`);
+      });
+
+      process.on('close', code => {
+        if (code === 0) {
+          const hasVideo = stdout.trim().length > 0;
+          log.info(
+            `[hasVideoTrack] Probe result for ${filePath}: ${hasVideo ? 'Has video track' : 'No video track'}`
+          );
+          resolve(hasVideo);
+        } else {
+          // If ffprobe fails (e.g., corrupted file, not media), it might indicate no video.
+          // Let's resolve false but log the error.
+          log.warn(
+            `[hasVideoTrack] ffprobe exited with code ${code} for ${filePath}. Assuming no video track. Stderr: ${stderr}`
+          );
+          resolve(false); // Resolve false on error, as the goal is detection.
+        }
+      });
+
+      process.on('error', err => {
+        log.error(
+          `[hasVideoTrack] ffprobe spawn error for ${filePath}: ${err.message}`
+        );
+        reject(new FFmpegError(`ffprobe error: ${err.message}`)); // Reject on spawn error
+      });
+    });
+  }
+
+  async mergeAudioOnlyWithSubtitles({
+    audioPath,
+    subtitlesPath,
+    outputPath,
+    operationId,
+    fontSize = 40,
+    stylePreset = 'Default',
+    progressCallback,
+  }: {
+    audioPath: string;
+    subtitlesPath: string;
+    outputPath: string;
+    operationId?: string;
+    fontSize?: number;
+    stylePreset?: AssStylePresetKey;
+    progressCallback?: (progress: { percent: number; stage: string }) => void;
+  }): Promise<string> {
+    log.info(
+      `[${operationId}] mergeAudioOnlyWithSubtitles called for ${audioPath}`
+    );
+    if (!fs.existsSync(audioPath)) {
+      throw new FFmpegError(`Input audio file does not exist: ${audioPath}`);
+    }
+    if (!fs.existsSync(subtitlesPath)) {
+      throw new FFmpegError(`Subtitle file does not exist: ${subtitlesPath}`);
+    }
+
+    let tempAssPath: string | null = null;
+    const opId = operationId || `audio-merge-${Date.now()}`;
+
+    try {
+      progressCallback?.({ percent: 5, stage: 'Analyzing audio duration' });
+      const duration = await this.getMediaDuration(audioPath);
+      log.info(`[${opId}] Audio duration: ${duration} seconds`);
+
+      progressCallback?.({ percent: 10, stage: 'Preparing subtitle style' });
+      tempAssPath = await this.prepareStyledAss(
+        subtitlesPath,
+        fontSize,
+        stylePreset,
+        opId
+      );
+      log.info(`[${opId}] Prepared styled ASS: ${tempAssPath}`);
+
+      progressCallback?.({ percent: 20, stage: 'Preparing video generation' });
+      const env = { ...nodeProcess.env };
+      const escapedAssPath = tempAssPath
+        .replace(/\\/g, '/')
+        .replace(/:/g, '\\:');
+      const subtitleFilter = `subtitles='${escapedAssPath}':force_style='FontName=Arial,FontSize=${fontSize}'`;
+
+      const ffmpegArgs = [
+        '-y',
+        '-loglevel',
+        'level+verbose', // Keep verbose logging
+        // Input 1: Black video background
+        '-f',
+        'lavfi',
+        '-i',
+        `color=size=1280x720:rate=24:color=black`, // Default 720p, 24fps black background
+        // Input 2: The actual audio file
+        '-i',
+        audioPath,
+        // Video codec settings (similar to mergeSubtitles)
+        '-c:v',
+        'libx264',
+        '-preset',
+        'medium', // Balance speed and quality
+        '-crf',
+        '23', // Slightly higher CRF for potentially faster encode
+        '-pix_fmt',
+        'yuv420p',
+        // Audio codec settings (copy audio stream directly if possible, otherwise re-encode)
+        // Using -c:a copy is faster if the input audio is compatible (e.g., AAC)
+        // Fallback to AAC encoding if copy fails or isn't suitable
+        '-c:a',
+        'aac', // Safer default: re-encode to AAC
+        '-b:a',
+        '160k', // Standard audio bitrate
+        // Explicitly map streams
+        '-map',
+        '0:v:0', // Map the video stream from the color source (input 0)
+        '-map',
+        '1:a:0', // Map the audio stream from the audio file (input 1)
+        // Apply subtitles
+        '-vf',
+        subtitleFilter,
+        // Stop encoding when the shortest input (the audio) ends
+        '-shortest',
+        outputPath,
+      ];
+
+      log.info(
+        `[${opId}] FFmpeg arguments for audio-only merge: ${ffmpegArgs.join(' ')}`
+      );
+      if (!fs.existsSync(tempAssPath)) {
+        log.error(
+          `[${opId}] ASS file doesn't exist right before FFmpeg execution!`
+        );
+        throw new Error(
+          `Subtitle file missing before execution: ${tempAssPath}`
+        );
+      }
+
+      progressCallback?.({
+        percent: 30,
+        stage: 'Creating video with subtitles',
+      });
+      await this.runFFmpeg({
+        args: ffmpegArgs,
+        operationId: opId,
+        totalDuration: duration, // Use audio duration for progress
+        progressCallback: (progress: number) => {
+          // Scale progress from 30% to 95%
+          const scaledPercent = 30 + (progress * (95 - 30)) / 100;
+          progressCallback?.({
+            percent: Math.min(95, scaledPercent),
+            stage: 'Encoding audio + generating video',
+          });
+        },
+        env,
+        filePath: audioPath, // Use audio path context for runFFmpeg CWD
+      });
+
+      progressCallback?.({ percent: 98, stage: 'Validating output file' });
+      if (fs.existsSync(outputPath)) {
+        await this.validateOutputFile(outputPath);
+        log.info(`[${opId}] Audio-only subtitle merge completed successfully.`);
+        progressCallback?.({
+          percent: 100,
+          stage: 'Audio + Subtitles complete',
+        });
+        return outputPath;
+      } else {
+        log.info(`[${opId}] Merge was cancelled or failed, no output file.`);
+        // Ensure the progress reflects cancellation if that's the case (runFFmpeg should throw)
+        // If runFFmpeg didn't throw but the file is missing, report failure.
+        progressCallback?.({ percent: 100, stage: 'Merge failed (no output)' });
+        return ''; // Indicate failure or cancellation
+      }
+    } catch (error) {
+      log.error(`[${opId}] Error during audio-only subtitle merge:`, error);
+      if (tempAssPath && fs.existsSync(tempAssPath)) {
+        try {
+          await fsp.unlink(tempAssPath);
+          log.info(
+            `[${opId}] Cleaned up temporary ASS file after error: ${tempAssPath}`
+          );
+        } catch (cleanupError: any) {
+          log.warn(
+            `[${opId}] Failed to delete temporary ASS file ${tempAssPath} after merge error: ${cleanupError.message}`
+          );
+        }
+      }
+      // Re-throw the error to be handled by the caller
+      throw error; // Propagate error (could be cancellation or actual failure)
+    } finally {
+      if (tempAssPath && fs.existsSync(tempAssPath)) {
+        try {
+          await fsp.unlink(tempAssPath);
+          log.info(
+            `[${opId}] Cleaned up temporary ASS file in finally block: ${tempAssPath}`
+          );
+        } catch (cleanupError: any) {
+          log.warn(
+            `[${opId}] Failed to delete temporary ASS file ${tempAssPath} during final cleanup: ${cleanupError.message}`
+          );
+        }
+      }
+    }
+  }
 }

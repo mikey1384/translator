@@ -1,5 +1,5 @@
 import path from 'path';
-import { FFmpegService } from './ffmpeg-service.js';
+import { FFmpegService, FFmpegError } from './ffmpeg-service.js';
 import { parseSrt, buildSrt } from '../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
@@ -790,69 +790,88 @@ export async function mergeSubtitlesWithVideo({
     throw new SubtitleProcessingError('Subtitles path is required');
   }
 
-  if (progressCallback) {
-    progressCallback({ percent: 0, stage: 'Starting subtitle merging' });
-  }
+  progressCallback?.({ percent: 0, stage: 'Starting subtitle merging' });
 
   const videoExt = path.extname(inputPathForNaming);
   const baseName = path.basename(inputPathForNaming, videoExt);
   const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles.mp4`;
   const outputPath = path.join(ffmpegService.getTempDir(), tempFilename);
 
-  if (progressCallback) {
-    progressCallback({ percent: 25, stage: 'Processing video' });
+  progressCallback?.({ percent: 25, stage: 'Analyzing input file' });
+  log.info(`[${operationId}] Checking if input has a video stream...`);
+  let hasVideo: boolean;
+  try {
+    hasVideo = await ffmpegService.hasVideoTrack(options.videoPath);
+  } catch (probeError) {
+    log.error(`[${operationId}] Error probing for video track:`, probeError);
+    throw new SubtitleProcessingError(
+      `Failed to analyze input file: ${probeError instanceof Error ? probeError.message : String(probeError)}`
+    );
   }
 
   log.info(
-    `[${operationId}] Target temporary output path (forced MP4): ${outputPath}`
+    `[${operationId}] Input is ${hasVideo ? 'video' : 'audio-only'}. Output path: ${outputPath}`
   );
 
   try {
-    log.info(
-      `[${operationId}] Calling ffmpegService.mergeSubtitles with video: ${options.videoPath}, subtitles: ${options.subtitlesPath}, output: ${outputPath}`
-    );
-    const mergeResult = await ffmpegService.mergeSubtitles(
-      options.videoPath!,
-      options.subtitlesPath!,
-      outputPath,
-      operationId,
-      options.fontSize,
-      options.stylePreset,
-      progressCallback
-    );
-
-    if (!mergeResult || mergeResult === '' || !fs.existsSync(outputPath)) {
+    let mergeResultPath: string;
+    if (hasVideo) {
       log.info(
-        `[${operationId}] Merge operation was cancelled or failed to create output file`
+        `[${operationId}] Input has video. Calling standard mergeSubtitles for: ${options.videoPath}`
       );
-      if (progressCallback) {
-        progressCallback({ percent: 100, stage: 'Merge cancelled' });
-      }
+      mergeResultPath = await ffmpegService.mergeSubtitles(
+        options.videoPath!,
+        options.subtitlesPath!,
+        outputPath,
+        operationId,
+        options.fontSize,
+        options.stylePreset,
+        progressCallback
+      );
+    } else {
+      log.info(
+        `[${operationId}] Input is audio only. Calling mergeAudioOnlyWithSubtitles for: ${options.videoPath}`
+      );
+      mergeResultPath = await ffmpegService.mergeAudioOnlyWithSubtitles({
+        audioPath: options.videoPath!,
+        subtitlesPath: options.subtitlesPath!,
+        outputPath,
+        operationId,
+        fontSize: options.fontSize,
+        stylePreset: options.stylePreset,
+        progressCallback,
+      });
+    }
+
+    if (
+      !mergeResultPath ||
+      mergeResultPath === '' ||
+      !fs.existsSync(outputPath)
+    ) {
+      log.info(
+        `[${operationId}] Merge operation (video or audio) was cancelled or failed to create output file.`
+      );
+      progressCallback?.({ percent: 100, stage: 'Merge cancelled' });
       return { outputPath: '' };
     }
 
-    if (progressCallback) {
-      progressCallback({
-        percent: 100,
-        stage: 'Merge complete',
-      });
-    }
+    progressCallback?.({
+      percent: 100,
+      stage: hasVideo ? 'Merge complete' : 'Audio + Subtitles complete',
+    });
     return { outputPath };
-  } catch (error) {
-    log.error(`[${operationId}] Error during merge:`, error);
+  } catch (error: any) {
+    log.error(`[${operationId}] Error during merge process:`, error);
 
-    // Check if the error indicates cancellation
     const isCancellation =
-      error instanceof Error && error.message === 'Operation cancelled';
+      error instanceof FFmpegError && error.message === 'Operation cancelled';
 
-    if (progressCallback) {
-      progressCallback({
-        percent: 100,
-        stage: isCancellation
-          ? 'Merge cancelled'
-          : `Error: ${error instanceof Error ? error.message : String(error)}`,
-      });
-    }
+    progressCallback?.({
+      percent: 100,
+      stage: isCancellation
+        ? 'Merge cancelled'
+        : `Error: ${error instanceof Error ? error.message : String(error)}`,
+    });
 
     if (isCancellation) {
       log.info(`[${operationId}] Merge operation was cancelled.`);
@@ -1166,10 +1185,8 @@ Improved translation for block 3
       log.info(
         `[Review] Review batch (${parentOperationId}) cancelled. Rethrowing.`
       );
-      // Re-throw cancellation errors so the caller can handle them
       throw error;
     }
-    // For other errors, log and fallback to original segments
     log.error(
       `[Review] Unhandled error in reviewTranslationBatch (${parentOperationId}). Falling back to original batch segments.`
     );
