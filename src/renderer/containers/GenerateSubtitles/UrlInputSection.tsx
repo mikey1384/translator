@@ -70,7 +70,7 @@ function UrlInputSection({
           minWidth: '100px',
         }}
       >
-        1. {t('input.downloadVideo')}:
+        {t('input.downloadVideo')}:
       </label>
       <input
         type="url"

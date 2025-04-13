@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
-import { selectStyles, colors } from '../../styles.js';
+import { colors, selectStyles } from '../../styles.js';
+import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
 
 interface LanguageOption {
@@ -12,7 +13,6 @@ interface LanguageGroup {
   options: LanguageOption[];
 }
 
-// Constants copied from index.tsx
 const languageGroups: LanguageGroup[] = [
   {
     label: 'regions.eastAsia',
@@ -79,21 +79,35 @@ const baseLanguageOptions: LanguageOption[] = [
   { value: 'english', label: 'languages.english' },
 ];
 
-interface LanguageSelectionProps {
+interface GenerateSubtitlesPanelProps {
+  /** from LanguageSelection: */
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
   isGenerating: boolean;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
+
+  /** from GenerateControls: */
+  videoFile: File | null;
+  videoFilePath?: string | null;
+  isProcessingUrl: boolean;
+  handleGenerateSubtitles: () => void;
 }
 
-export default function LanguageSelection({
+/**
+ * Merged UI: language selection + generate button in a single container
+ */
+export default function GenerateSubtitlesPanel({
   targetLanguage,
   setTargetLanguage,
   isGenerating,
   showOriginalText,
   onShowOriginalTextChange,
-}: LanguageSelectionProps) {
+  videoFile,
+  videoFilePath,
+  isProcessingUrl,
+  handleGenerateSubtitles,
+}: GenerateSubtitlesPanelProps) {
   const { t } = useTranslation();
 
   return (
@@ -104,80 +118,87 @@ export default function LanguageSelection({
         border: 1px solid ${colors.border};
         border-radius: 6px;
         background-color: ${colors.light};
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        justify-content: center;
       `}
     >
-      <label
-        className={css`
-          margin-right: 12px;
-        `}
-      >
-        2. {t('subtitles.outputLanguage')}:
-      </label>
-      <select
-        value={targetLanguage}
-        onChange={e => setTargetLanguage(e.target.value)}
-        className={selectStyles}
-        disabled={isGenerating}
-      >
-        {baseLanguageOptions.map(lang => (
-          <option key={lang.value} value={lang.value}>
-            {t(lang.label)}
-          </option>
-        ))}
-        {/* Render grouped options */}
-        {languageGroups.map(group => (
-          <optgroup key={group.label} label={t(group.label)}>
-            {group.options.map(lang => (
-              <option key={lang.value} value={lang.value}>
-                {t(lang.label)}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
-      {targetLanguage !== 'original' && targetLanguage !== 'english' && (
-        <div
+      <div>
+        <label
           className={css`
-            margin-top: 12px;
-            display: flex;
-            align-items: center;
+            margin-right: 12px;
           `}
         >
-          <label
+          {t('subtitles.outputLanguage')}:
+        </label>
+        <select
+          value={targetLanguage}
+          onChange={e => setTargetLanguage(e.target.value)}
+          className={selectStyles}
+          disabled={isGenerating || isProcessingUrl}
+        >
+          {baseLanguageOptions.map(lang => (
+            <option key={lang.value} value={lang.value}>
+              {t(lang.label)}
+            </option>
+          ))}
+
+          {languageGroups.map(group => (
+            <optgroup key={group.label} label={t(group.label)}>
+              {group.options.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {t(lang.label)}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+
+        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
+          <div
             className={css`
-              display: flex;
-              align-items: center;
-              cursor: pointer;
-              user-select: none;
-              margin: 0;
-              line-height: 1;
+              margin-top: 8px;
             `}
           >
-            <input
-              type="checkbox"
-              checked={showOriginalText}
-              onChange={e => onShowOriginalTextChange(e.target.checked)}
+            <label
               className={css`
-                margin-right: 8px;
-                width: 16px;
-                height: 16px;
-                accent-color: #4361ee;
-                margin-top: 0;
-                margin-bottom: 0;
-                vertical-align: middle;
-              `}
-            />
-            <span
-              className={css`
-                display: inline-block;
-                vertical-align: middle;
+                display: inline-flex;
+                align-items: center;
+                cursor: pointer;
               `}
             >
+              <input
+                type="checkbox"
+                checked={showOriginalText}
+                onChange={e => onShowOriginalTextChange(e.target.checked)}
+                className={css`
+                  margin-right: 6px;
+                  accent-color: #4361ee;
+                `}
+              />
               {t('subtitles.showOriginalText')}
-            </span>
-          </label>
-        </div>
-      )}
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Button
+          onClick={handleGenerateSubtitles}
+          disabled={
+            (!videoFile && !videoFilePath) || isGenerating || isProcessingUrl
+          }
+          size="md"
+          variant="primary"
+          isLoading={isGenerating}
+        >
+          {isGenerating
+            ? t('subtitles.generating')
+            : t('subtitles.generateNow')}
+        </Button>
+      </div>
     </div>
   );
 }

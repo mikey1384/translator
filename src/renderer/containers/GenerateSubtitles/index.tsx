@@ -6,12 +6,11 @@ import ApiKeyLock from './ApiKeyLock.js';
 import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
-import LanguageSelection from './LanguageSelection.js';
 import ProgressDisplay from './ProgressDisplay.js';
-import GenerateControls from './GenerateControls.js';
 import Section from '../../components/Section.js';
 import { VideoQuality } from '../../../types/interface.js';
 import { useTranslation } from 'react-i18next';
+import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
 
 type ApiKeyStatus = {
   openai: boolean;
@@ -138,7 +137,7 @@ export default function GenerateSubtitles({
                   minWidth: '220px',
                 }}
               >
-                1. {t('input.selectVideoAudioFile')}:
+                {t('input.selectVideoAudioFile')}:
               </label>
               <FileInputButton onClick={onSelectVideoClick}>
                 {videoFile
@@ -172,20 +171,14 @@ export default function GenerateSubtitles({
           )}
 
           {videoFile && (
-            <LanguageSelection
+            <GenerateSubtitlesPanel
               targetLanguage={targetLanguage}
               setTargetLanguage={onSetTargetLanguage}
               isGenerating={isGenerating}
               showOriginalText={showOriginalText}
               onShowOriginalTextChange={onShowOriginalTextChange}
-            />
-          )}
-
-          {videoFile && (
-            <GenerateControls
               videoFile={videoFile}
               videoFilePath={videoFilePath}
-              isGenerating={isGenerating}
               isProcessingUrl={isProcessingUrl}
               handleGenerateSubtitles={onGenerateSubtitles}
             />
