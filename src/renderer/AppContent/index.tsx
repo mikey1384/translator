@@ -387,7 +387,21 @@ function AppContent() {
       const result = await window.electron.openFile({
         properties: ['openFile'],
         filters: [
-          { name: 'Videos', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm'] },
+          {
+            name: 'Media Files',
+            extensions: [
+              'mp4',
+              'mkv',
+              'avi',
+              'mov',
+              'webm',
+              'mp3',
+              'wav',
+              'aac',
+              'ogg',
+              'flac',
+            ],
+          },
         ],
       });
 

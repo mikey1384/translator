@@ -208,10 +208,6 @@ export function EditSubtitles({
     }
   }, [isPlayingProp]);
 
-  /**
-   *  For dynamic sub updates, attempt to keep the external
-   *  or global player in sync
-   */
   useEffect(() => {
     if (subtitlesProp && subtitlesProp.length > 0) {
       // Use the videoPlayerRef from props if available
