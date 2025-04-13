@@ -49,7 +49,9 @@
     "qualityMedium": "ปานกลาง",
     "qualityLow": "ต่ำ",
     "downloading": "กำลังดาวน์โหลด...",
+    "selectFile": "เลือกไฟล์",
     "selectVideoFile": "เลือกไฟล์วิดีโอ",
+    "selectVideoAudioFile": "เลือกไฟล์วิดีโอ / เสียง",
     "saveOriginalVideo": "บันทึกวิดีโอต้นฉบับ"
   },
   "subtitles": {

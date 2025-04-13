@@ -49,7 +49,9 @@
     "qualityMedium": "मध्यम",
     "qualityLow": "कमी",
     "downloading": "डाउनलोड करत आहे...",
+    "selectFile": "फाईल निवडा",
     "selectVideoFile": "व्हिडिओ फाईल निवडा",
+    "selectVideoAudioFile": "व्हिडिओ / ऑडिओ फाईल निवडा",
     "saveOriginalVideo": "मूल व्हिडिओ सहेजा"
   },
   "subtitles": {

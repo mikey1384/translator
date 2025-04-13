@@ -49,7 +49,9 @@
     "qualityMedium": "Střední",
     "qualityLow": "Nízká",
     "downloading": "Stahování...",
+    "selectFile": "Vybrat soubor",
     "selectVideoFile": "Vybrat video soubor",
+    "selectVideoAudioFile": "Vybrat video / audio soubor",
     "saveOriginalVideo": "Uložit původní video"
   },
   "subtitles": {

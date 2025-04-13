@@ -435,7 +435,7 @@ export function EditSubtitles({
               }}
             >
               <FileInputButton onClick={onSelectVideoClick}>
-                {t('input.selectVideoFile')}
+                {t('input.selectVideoAudioFile')}
               </FileInputButton>
             </div>
           )}

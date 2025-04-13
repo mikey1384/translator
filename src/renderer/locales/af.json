@@ -49,7 +49,9 @@
     "qualityMedium": "Medium",
     "qualityLow": "Laag",
     "downloading": "Besig om af te laai...",
+    "selectFile": "Kies Lêer",
     "selectVideoFile": "Kies Videolêer",
+    "selectVideoAudioFile": "Kies Video / Audio Lêer",
     "saveOriginalVideo": "Stoor Oorspronklike Video"
   },
   "subtitles": {

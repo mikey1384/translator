@@ -49,7 +49,9 @@
     "qualityMedium": "Medium",
     "qualityLow": "Lav",
     "downloading": "Laster ned...",
+    "selectFile": "Velg fil",
     "selectVideoFile": "Velg videofil",
+    "selectVideoAudioFile": "Velg video / audio fil",
     "saveOriginalVideo": "Lagre original video"
   },
   "subtitles": {

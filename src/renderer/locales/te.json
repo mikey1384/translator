@@ -49,7 +49,9 @@
     "qualityMedium": "మధ్యస్థం",
     "qualityLow": "తక్కువ",
     "downloading": "డౌన్‌లోడ్ అవుతోంది...",
+    "selectFile": "ఫైల్ ఎంచుకోండి",
     "selectVideoFile": "వీడియో ఫైల్‌ను ఎంచుకోండి",
+    "selectVideoAudioFile": "వీడియో / ఆడియో ఫైల్ ఎంచుకోండి",
     "saveOriginalVideo": "అసలు వీడియో సేవ్ చేయండి"
   },
   "subtitles": {

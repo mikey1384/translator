@@ -49,7 +49,9 @@
     "qualityMedium": "Gemiddeld",
     "qualityLow": "Laag",
     "downloading": "Downloaden...",
+    "selectFile": "Selecteer bestand",
     "selectVideoFile": "Selecteer videobestand",
+    "selectVideoAudioFile": "Selecteer video / audio bestand",
     "saveOriginalVideo": "Origineel videobestand opslaan"
   },
   "subtitles": {

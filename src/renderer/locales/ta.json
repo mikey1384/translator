@@ -49,7 +49,9 @@
     "qualityMedium": "நடுத்தரம்",
     "qualityLow": "குறைவு",
     "downloading": "பதிவிறக்குகிறது...",
+    "selectFile": "கோப்பைத் தேர்ந்தெடுக்கவும்",
     "selectVideoFile": "காணொளி கோப்பைத் தேர்ந்தெடுக்கவும்",
+    "selectVideoAudioFile": "காணொளி / ஒலி கோப்பைத் தேர்ந்தெடுக்கவும்",
     "saveOriginalVideo": "அசல் காணொளியை சேமி"
   },
   "subtitles": {

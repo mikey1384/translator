@@ -138,12 +138,12 @@ export default function GenerateSubtitles({
                   minWidth: '220px',
                 }}
               >
-                1. {t('input.selectVideoFile')}:
+                1. {t('input.selectVideoAudioFile')}:
               </label>
               <FileInputButton onClick={onSelectVideoClick}>
                 {videoFile
                   ? `${t('common.selected')}: ${videoFile.name}`
-                  : t('input.selectVideoFile')}
+                  : t('input.selectFile')}
               </FileInputButton>
             </div>
           )}

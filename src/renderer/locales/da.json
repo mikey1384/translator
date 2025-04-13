@@ -49,7 +49,9 @@
     "qualityMedium": "Medium",
     "qualityLow": "Lav",
     "downloading": "Downloader...",
+    "selectFile": "Vælg fil",
     "selectVideoFile": "Vælg videofil",
+    "selectVideoAudioFile": "Vælg video / lydfil",
     "saveOriginalVideo": "Gem original video"
   },
   "subtitles": {

@@ -49,7 +49,9 @@
     "qualityMedium": "درمیانہ",
     "qualityLow": "کم",
     "downloading": "ڈاؤن لوڈ ہو رہا ہے...",
+    "selectFile": "فائل منتخب کریں",
     "selectVideoFile": "ویڈیو فائل منتخب کریں",
+    "selectVideoAudioFile": "ویڈیو / آئوڈیو فائل منتخب کریں",
     "saveOriginalVideo": "اصل ویڈیو محفوظ کریں"
   },
   "subtitles": {

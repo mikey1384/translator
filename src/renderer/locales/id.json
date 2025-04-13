@@ -49,7 +49,9 @@
     "qualityMedium": "Sedang",
     "qualityLow": "Rendah",
     "downloading": "Mengunduh...",
+    "selectFile": "Pilih Berkas",
     "selectVideoFile": "Pilih Berkas Video",
+    "selectVideoAudioFile": "Pilih Berkas Video / Audio",
     "saveOriginalVideo": "Simpan Video Asli"
   },
   "subtitles": {

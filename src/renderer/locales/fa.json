@@ -49,7 +49,9 @@
     "qualityMedium": "متوسط",
     "qualityLow": "پایین",
     "downloading": "در حال دانلود...",
+    "selectFile": "انتخاب فایل",
     "selectVideoFile": "انتخاب فایل ویدیو",
+    "selectVideoAudioFile": "انتخاب فایل ویدیو / صوت",
     "saveOriginalVideo": "ذخیره ویدیو اصلی"
   },
   "subtitles": {

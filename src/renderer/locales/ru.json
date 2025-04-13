@@ -49,7 +49,9 @@
     "qualityMedium": "Среднее",
     "qualityLow": "Низкое",
     "downloading": "Скачивание...",
+    "selectFile": "Выбрать файл",
     "selectVideoFile": "Выбрать видеофайл",
+    "selectVideoAudioFile": "Выбрать видеофайл / аудиофайл",
     "saveOriginalVideo": "Сохранить оригинальное видео"
   },
   "subtitles": {

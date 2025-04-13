@@ -49,7 +49,9 @@
     "qualityMedium": "中",
     "qualityLow": "低",
     "downloading": "下載中...",
+    "selectFile": "選擇檔案",
     "selectVideoFile": "選擇影片檔案",
+    "selectVideoAudioFile": "選擇影片/音訊檔案",
     "saveOriginalVideo": "保存原始影片"
   },
   "subtitles": {

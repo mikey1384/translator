@@ -49,7 +49,9 @@
     "qualityMedium": "Orta",
     "qualityLow": "Düşük",
     "downloading": "İndiriliyor...",
+    "selectFile": "Dosya Seç",
     "selectVideoFile": "Video Dosyası Seç",
+    "selectVideoAudioFile": "Video / Ses Dosyası Seç",
     "saveOriginalVideo": "Orijinal Video Kaydet"
   },
   "subtitles": {

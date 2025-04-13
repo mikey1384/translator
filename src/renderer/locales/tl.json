@@ -49,7 +49,9 @@
     "qualityMedium": "Katamtaman",
     "qualityLow": "Mababa",
     "downloading": "Nagda-download...",
+    "selectFile": "Pumili ng File",
     "selectVideoFile": "Pumili ng Video File",
+    "selectVideoAudioFile": "Pumili ng Video / Audio File",
     "saveOriginalVideo": "I-save ang orihinal na video"
   },
   "subtitles": {

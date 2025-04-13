@@ -49,7 +49,9 @@
     "qualityMedium": "Sederhana",
     "qualityLow": "Rendah",
     "downloading": "Memuat turun...",
+    "selectFile": "Pilih Fail",
     "selectVideoFile": "Pilih Fail Video",
+    "selectVideoAudioFile": "Pilih Fail Video / Audio",
     "saveOriginalVideo": "Simpan Video Asli"
   },
   "subtitles": {

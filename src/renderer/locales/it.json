@@ -49,7 +49,9 @@
     "qualityMedium": "Media",
     "qualityLow": "Bassa",
     "downloading": "Download in corso...",
+    "selectFile": "Seleziona file",
     "selectVideoFile": "Seleziona file video",
+    "selectVideoAudioFile": "Seleziona file video / audio",
     "saveOriginalVideo": "Salva video originale"
   },
   "subtitles": {

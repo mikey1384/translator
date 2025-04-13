@@ -49,7 +49,9 @@
     "qualityMedium": "Μεσαία",
     "qualityLow": "Χαμηλή",
     "downloading": "Γίνεται λήψη...",
+    "selectFile": "Επιλογή Αρχείου",
     "selectVideoFile": "Επιλογή Αρχείου Βίντεο",
+    "selectVideoAudioFile": "Επιλογή Αρχείου Βίντεο / Ήχου",
     "saveOriginalVideo": "Αποθήκευση Αρχικού Βίντεο"
   },
   "subtitles": {

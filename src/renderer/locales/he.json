@@ -49,7 +49,9 @@
     "qualityMedium": "בינונית",
     "qualityLow": "נמוכה",
     "downloading": "מוריד...",
+    "selectFile": "בחר קובץ",
     "selectVideoFile": "בחר קובץ וידאו",
+    "selectVideoAudioFile": "בחר קובץ וידאו / שונה",
     "saveOriginalVideo": "שמור וידאו מקורי"
   },
   "subtitles": {

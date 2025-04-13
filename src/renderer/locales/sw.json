@@ -49,7 +49,9 @@
     "qualityMedium": "Wastani",
     "qualityLow": "Chini",
     "downloading": "Inapakua...",
+    "selectFile": "Chagua Faili",
     "selectVideoFile": "Chagua Faili ya Video",
+    "selectVideoAudioFile": "Chagua Faili ya Video / Audio",
     "saveOriginalVideo": "Hifadhi Video Asli"
   },
   "subtitles": {

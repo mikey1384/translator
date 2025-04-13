@@ -49,7 +49,9 @@
     "qualityMedium": "중화질",
     "qualityLow": "저화질",
     "downloading": "다운로드 중...",
+    "selectFile": "파일 선택",
     "selectVideoFile": "비디오 파일 선택",
+    "selectVideoAudioFile": "비디오/오디오 파일 선택",
     "saveOriginalVideo": "원본 비디오 저장"
   },
   "subtitles": {
