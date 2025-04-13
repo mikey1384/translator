@@ -8,7 +8,7 @@ import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea
 import TranslationProgressArea from '../components/ProgressAreas/TranslationProgressArea.js';
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
-import LanguageSwitcher from '../components/UI/LanguageSwitcher.js';
+import LanguageSwitcher from '../components/LanguageSwitcher.js';
 import { SrtSegment } from '../../types/interface.js';
 import { VideoQuality } from '../../services/url-processor.js';
 import { useTranslation } from 'react-i18next';

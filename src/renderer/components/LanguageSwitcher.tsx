@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { changeLanguage } from '../../i18n.js';
-import { selectStyles, colors } from '../../styles.js';
+import { changeLanguage } from '../i18n.js';
+import { selectStyles, colors } from '../styles.js';
 
 interface LanguageOption {
   value: string;
