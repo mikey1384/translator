@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-// TODO: Ensure this component exists and path is correct
-import StyledSubtitleDisplay from './components/StyledSubtitleDisplay.js';
 
-// --- TypeScript Definition for the Exposed Bridge ---
-// This tells TypeScript what functions are available on window.renderHostBridge
 declare global {
   interface Window {
     renderHostBridge: {
