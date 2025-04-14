@@ -124,6 +124,8 @@ export function initializeRenderWindowHandlers(): void {
               windowId: windowId,
               framePath: framePath,
               operationId: operationId,
+              width: options.videoWidth,
+              height: options.videoHeight,
             });
 
             if (!captureResult.success) {
@@ -498,8 +500,10 @@ async function captureFrameAndSave(args: {
   windowId: number;
   framePath: string;
   operationId: string;
+  width: number;
+  height: number;
 }): Promise<{ success: boolean; error?: string }> {
-  const { windowId, framePath, operationId } = args;
+  const { windowId, framePath, operationId, width, height } = args;
   const targetWindow = renderWindows.get(windowId);
 
   // log.debug(`[captureFrameAndSave ${operationId}] Capturing window ${windowId} -> ${framePath}`);
@@ -519,7 +523,10 @@ async function captureFrameAndSave(args: {
   }
 
   try {
-    const nativeImage = await targetWindow.webContents.capturePage();
+    // Define the capture rectangle
+    const captureRect = { x: 0, y: 0, width: width, height: height };
+    // Pass the rect to capturePage
+    const nativeImage = await targetWindow.webContents.capturePage(captureRect);
     if (nativeImage.isEmpty()) {
       log.warn(
         `[captureFrameAndSave ${operationId}] Captured image empty for ${framePath}. Skipping save.`
