@@ -712,126 +712,35 @@ function AppContent() {
     setIsMergingInProgress(true);
     setMergeStage('Starting PNG sequence render...');
     setMergeOperationId(options.operationId);
+    setSaveError('');
 
     try {
       const result = await subtitleRendererClient.renderSubtitles(options);
-      console.log('[AppContent] Result from subtitleRendererClient:', result);
+      console.log(
+        '[AppContent] Final result received from main process:',
+        result
+      );
 
       if (result.success && result.outputPath) {
-        const tempWebmPath = result.outputPath;
-        console.log(
-          '[AppContent] Render successful. Prompting user to save merged video from:',
-          tempWebmPath
-        );
-        setMergeStage('Render complete. Select save location...');
-
-        try {
-          const inputExt = '.webm';
-          let baseName = 'video-with-subtitles';
-
-          const originalFileName =
-            videoFile?.name || videoFilePath?.split(/[\\/]/).pop();
-          if (originalFileName) {
-            baseName =
-              originalFileName.substring(
-                0,
-                originalFileName.lastIndexOf('.')
-              ) || originalFileName;
-          }
-          const suggestedOutputName = `${baseName}-overlay${inputExt}`;
-
-          console.log(
-            '⭐ Showing save dialog with suggested name:',
-            suggestedOutputName,
-            'for merged file:',
-            tempWebmPath
-          );
-
-          const saveResult = await window.electron.saveFile({
-            content: '',
-            defaultPath: suggestedOutputName,
-            title: 'Save Subtitle Overlay Video As',
-            filters: [
-              { name: 'WebM Video', extensions: ['webm'] },
-              { name: 'All Files', extensions: ['*'] },
-            ],
-          });
-
-          console.log('Save dialog result:', saveResult);
-
-          if (saveResult.error) {
-            if (saveResult.error.includes('canceled')) {
-              console.log('Save was cancelled by user');
-              setMergeStage('Save canceled. Temporary file may remain.');
-              throw new Error('Save operation canceled by user.');
-            } else {
-              console.error('Save dialog error:', saveResult.error);
-              throw new Error(`Failed to get save path: ${saveResult.error}`);
-            }
-          }
-
-          if (!saveResult.filePath) {
-            console.error('No file path returned from save dialog');
-            throw new Error('No output path selected.');
-          }
-
-          const finalOutputPath = saveResult.filePath;
-          console.log('User selected output path:', finalOutputPath);
-
-          setMergeStage('Saving file to final destination...');
-          const moveResult = await window.electron.moveFile(
-            tempWebmPath,
-            finalOutputPath
-          );
-
-          console.log('Move result:', moveResult);
-
-          if (!moveResult?.success) {
-            throw new Error(
-              `Failed to move file: ${moveResult?.error || 'Unknown move error'}`
-            );
-          }
-
-          setMergeStage('Overlay video saved successfully!');
-          setIsMergingInProgress(false);
-          setMergeOperationId(null);
-          window.electron.showMessage(
-            `Overlay video saved: ${finalOutputPath}`
-          );
-          return { ...result, outputPath: finalOutputPath };
-        } catch (saveMoveError: any) {
-          console.error(
-            'Error during save dialog or file move:',
-            saveMoveError
-          );
-          try {
-            console.warn(
-              `Attempting to clean up temp file ${tempWebmPath} after save/move error.`
-            );
-            await window.electron.deleteFile({
-              filePathToDelete: tempWebmPath,
-            });
-          } catch (cleanupErr) {
-            console.error(
-              `Failed to clean up temp file ${tempWebmPath} after save/move error:`,
-              cleanupErr
-            );
-          }
-          throw saveMoveError;
-        }
+        // SUCCESS: Main process completed rendering AND user saved the file
+        setMergeStage('Overlay video saved successfully!');
+        setIsMergingInProgress(false);
+        setMergeOperationId(null);
+        return { success: true, outputPath: result.outputPath };
       } else {
-        throw new Error(result.error || 'Subtitle rendering process failed.');
+        throw new Error(result.error || 'Overlay generation or save failed.');
       }
     } catch (error: any) {
       const errorMessage =
         error.message || 'Client call or save process failed';
       console.error(
-        `[AppContent ${options.operationId}] Error during PNG render/save:`,
+        `[AppContent ${options.operationId}] Error during PNG render/save flow:`,
         error
       );
+      // Update UI for error state
       setIsMergingInProgress(false);
       setMergeStage(`Error: ${errorMessage.substring(0, 100)}`);
-      setSaveError(errorMessage);
+      setSaveError(errorMessage); // Set error message state
       setMergeOperationId(null);
       return { success: false, error: errorMessage };
     }
