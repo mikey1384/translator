@@ -313,14 +313,9 @@ export function initializeRenderWindowHandlers(): void {
             renderWindows.delete(windowId);
           }
         }
-        // Clean up temp directory if it exists (unless configured otherwise for debugging)
-        // const keepTempDir = false; // Set to true for debugging PNGs
-        // if (!keepTempDir) {
-        await cleanupTempDir(tempDirPath, operationId);
-        // } else {
-        //    log.warn(`[RenderWindowHandlers ${operationId}] Skipping temp directory cleanup for debugging: ${tempDirPath}`);
-        // }
-        log.info(`[RenderWindowHandlers ${operationId}] Cleanup finished.`);
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Cleanup finished (temp dir preserved for debugging).`
+        );
         // --- End Cleanup ---
       }
     }
@@ -394,18 +389,20 @@ async function createHiddenRenderWindow(
       const renderWindow = new BrowserWindow({
         width: videoWidth,
         height: videoHeight,
-        show: false, // Keep it hidden
-        frame: false,
-        transparent: true, // Allows capturing only the subtitles if background is transparent in CSS
+        // --- Make window visible for debugging ---
+        show: true, // Set to true
+        frame: true, // Add frame to move/see it
+        transparent: false, // Set to false temporarily to see background
+        // --- End visibility changes ---
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
           // SECURITY: Ensure this preload script is correctly configured and secured
-          preload: path.join(__dirname, 'preload-render-window.js'), // Preload for this specific window
+          preload: path.join(app.getAppPath(), 'preload-render-window.js'), // Or the correct bundled filename in dist/
           backgroundThrottling: false, // Keep rendering smoothly even when hidden
-          devTools: !app.isPackaged, // Enable DevTools only in development
+          devTools: true, // Explicitly set to true
         },
-        skipTaskbar: true, // Don't show in the taskbar
+        skipTaskbar: false, // Make it appear in taskbar/dock
       });
 
       const windowId = renderWindow.id;
@@ -471,6 +468,7 @@ async function createHiddenRenderWindow(
   });
 }
 
+/*
 async function cleanupTempDir(
   tempDirPath: string | null,
   operationId: string
@@ -489,6 +487,7 @@ async function cleanupTempDir(
     log.info(
       `[RenderWindowHandlers ${operationId}] Successfully removed temp directory: ${tempDirPath}`
     );
+
   } catch (error) {
     log.error(
       `[RenderWindowHandlers ${operationId}] Error removing temporary directory ${tempDirPath}:`,
@@ -497,6 +496,7 @@ async function cleanupTempDir(
     // Decide if this should throw or just be logged
   }
 }
+      */
 
 async function captureFrameAndSave(args: {
   windowId: number;

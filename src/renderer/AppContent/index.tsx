@@ -333,7 +333,6 @@ function AppContent() {
                   isMergingInProgress={isMergingInProgress}
                   setMergeProgress={setMergeProgress}
                   setMergeStage={setMergeStage}
-                  setIsMergingInProgress={setIsMergingInProgress}
                   editorRef={editSubtitlesMethodsRef}
                   onSelectVideoClick={handleSelectVideoClick}
                   onSetMergeOperationId={setMergeOperationId}

@@ -15,23 +15,19 @@ declare global {
 }
 // --- End Bridge Definition ---
 
-// --- The React Component ---
+// --- The React Component (Simplified for Debugging) ---
 function RenderHostApp() {
-  const [subtitleText, setSubtitleText] = useState('');
-  const [isVisible, setIsVisible] = useState(false); // Controls visibility based on text
+  const [subtitleText, setSubtitleText] = useState('[Waiting for text...]'); // Initial text
 
   useEffect(() => {
     console.log(
       '[RenderHostApp] Component mounted. Subscribing to subtitle updates via bridge...'
     );
 
-    // Use the bridge function exposed by the preload script to set up the listener
     const cleanupListener = window.renderHostBridge.onUpdateSubtitle(
       newText => {
-        // This callback runs whenever the main process sends an update via the preload script
-        // console.debug(`[RenderHostApp] Received text update via bridge: ${newText.substring(0, 30)}`); // Optional
+        console.log(`[RenderHostApp] Received text update: "${newText}"`); // Log received text
         setSubtitleText(newText);
-        setIsVisible(!!newText); // Show component only if there's text
       }
     );
 
@@ -39,24 +35,38 @@ function RenderHostApp() {
       '[RenderHostApp] Subscription to subtitle updates established.'
     );
 
-    // Return the cleanup function provided by the bridge
-    // This will be called when the component unmounts
     return () => {
       console.log(
         '[RenderHostApp] Component unmounting. Cleaning up subtitle update listener.'
       );
       cleanupListener();
     };
-  }, []); // Empty dependency array means this effect runs only once on mount
+  }, []);
 
-  // Render the subtitle display component
-  // isFullyExpanded={false} is likely desired for consistent capture size
+  // Render simple div with inline styles
+  // Use bright green background and large white text for easy visibility in PNGs
   return (
-    <StyledSubtitleDisplay
-      text={subtitleText}
-      isVisible={isVisible}
-      isFullyExpanded={false}
-    />
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '10%', // Position it somewhere
+        left: 0,
+        width: '100%',
+        padding: '20px',
+        backgroundColor: subtitleText ? 'rgba(0, 255, 0, 0.7)' : 'transparent', // Green background only if text exists
+        color: 'white',
+        fontSize: '40px', // Large font
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontFamily: 'sans-serif',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.8)', // Text shadow for contrast
+        visibility: subtitleText ? 'visible' : 'hidden', // Use visibility instead of opacity
+        whiteSpace: 'pre-wrap', // Handle multiple lines
+      }}
+    >
+      {subtitleText || '.'}{' '}
+      {/* Render text or a dot if empty to ensure element exists */}
+    </div>
   );
 }
 // --- End React Component ---

@@ -75,7 +75,7 @@ interface MergeControlsProps {
   setMergeFontSize: (value: number) => void;
   mergeStylePreset: AssStylePresetKey;
   setMergeStylePreset: (value: AssStylePresetKey) => void;
-  handleMergeVideoWithSubtitles: () => void; // Simplified prop just for the action
+  handleMergeVideoWithSubtitles: () => void;
   isMergingInProgress: boolean;
   videoFileExists: boolean;
   subtitlesExist: boolean;

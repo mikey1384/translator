@@ -131,14 +131,6 @@ class SubtitleRendererClient {
       }
     });
   }
-
-  // Optional: Add a cleanup method if needed when the client is no longer used
-  // cleanup() {
-  //    if (this.removeResultListener) {
-  //       this.removeResultListener();
-  //       this.removeResultListener = null;
-  //    }
-  // }
 }
 
 // Instantiate and export

@@ -317,12 +317,6 @@ try {
       return { success: false, error: (error as Error).message };
     }
   });
-
-  log.info('[main.ts] IPC Handlers Registered.');
-
-  // Add this line inside the try block in src/main.ts after other initializations
-  renderWindowHandlers.initializeRenderWindowHandlers();
-
   // Add this line inside the try block in src/main.ts after other initializations
   ipcMain.handle(
     subtitleHandlers.VIDEO_METADATA_CHANNEL,

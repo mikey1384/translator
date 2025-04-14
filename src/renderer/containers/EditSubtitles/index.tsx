@@ -51,7 +51,6 @@ export interface EditSubtitlesProps {
   isMergingInProgress?: boolean;
   setMergeProgress: React.Dispatch<React.SetStateAction<number>>;
   setMergeStage: React.Dispatch<React.SetStateAction<string>>;
-  setIsMergingInProgress: React.Dispatch<React.SetStateAction<boolean>>;
   onSetMergeOperationId: Dispatch<SetStateAction<string | null>>;
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
