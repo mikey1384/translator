@@ -409,12 +409,12 @@ function AppContent() {
               'mkv',
               'avi',
               'mov',
-              'webm',
+              'webm', // Video
               'mp3',
               'wav',
               'aac',
               'ogg',
-              'flac',
+              'flac', // Audio
             ],
           },
         ],
@@ -422,14 +422,26 @@ function AppContent() {
 
       if (!result.canceled && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
-        setDownloadedVideoPath(null);
+        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_media'; // Extract filename
+
+        setDownloadedVideoPath(null); // Reset URL download state
+
+        // --- Call BOTH state update functions ---
+        // 1. Set the File object and URL (for the player preview)
+        handleSetVideoFile({ path: filePath, name: fileName }); // Pass path and name info
+
+        // 2. Set the file path state and fetch metadata
         await handleVideoFileSelected(filePath);
+        // --- End calling both ---
       } else {
         console.log('File selection cancelled or no file chosen.');
       }
     } catch (err: any) {
       console.error('Error opening file dialog:', err);
-      handleSetVideoFile(null);
+      // Reset video state if dialog fails
+      handleSetVideoFile(null); // Use the action to properly clear state
+      setVideoFilePath(null);
+      setVideoMetadata(null);
     }
   }
 

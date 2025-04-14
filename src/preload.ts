@@ -195,6 +195,11 @@ const electronAPI = {
   getLanguagePreference: () => ipcRenderer.invoke('get-language-preference'),
   setLanguagePreference: (lang: string) =>
     ipcRenderer.invoke('set-language-preference', lang),
+
+  // === Add Video Metadata Function ===
+  getVideoMetadata: (filePath: string) =>
+    ipcRenderer.invoke('get-video-metadata', filePath),
+  // === End Video Metadata Function ===
 };
 
 try {
