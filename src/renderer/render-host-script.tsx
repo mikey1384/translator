@@ -1,59 +1,55 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import StyledSubtitleDisplay from './components/StyledSubtitleDisplay.js';
 
-declare global {
-  interface Window {
-    renderHostBridge: {
-      // Matches the function exposed in preload-render-window.ts
-      onUpdateSubtitle: (callback: (text: string) => void) => () => void;
-    };
-  }
-}
-// --- End Bridge Definition ---
-
-// --- The React Component (Simplified for Debugging) ---
-function RenderHostApp() {
-  const [currentSubtitleText, setCurrentSubtitleText] = useState('');
+const RenderHostApp: React.FC = () => {
+  const [subtitleText, setSubtitleText] = useState<string>('');
 
   useEffect(() => {
-    console.log('[RenderHostApp] Setting up bridge listener...');
-    window.renderHostBridge?.onUpdateSubtitle((text: string) => {
-      console.log(`[RenderHostApp] Received text update via bridge: "${text}"`);
-      setCurrentSubtitleText(text);
-    });
-    console.log('[RenderHostApp] Bridge listener setup complete.');
+    console.log('[RenderHostApp] Exposing window.updateSubtitle function...');
+    window.updateSubtitle = (newText: string) => {
+      setSubtitleText(newText || '');
+    };
+    console.info('[RenderHostApp] window.updateSubtitle function exposed.');
 
     return () => {
-      // Cleanup listener if needed, although window closes anyway
-      console.log('[RenderHostApp] Cleaning up...');
+      console.log(
+        '[RenderHostApp] Cleaning up window.updateSubtitle function.'
+      );
+      delete window.updateSubtitle;
     };
   }, []);
 
-  // Render simple div with inline styles
-  // Use bright green background and large white text for easy visibility in PNGs
-  return (
-    <StyledSubtitleDisplay
-      text={currentSubtitleText}
-      isVisible={!!currentSubtitleText}
-    />
-  );
-}
-// --- End React Component ---
+  useEffect(() => {
+    document.body.style.backgroundColor = 'transparent';
+    const rootElement = document.getElementById('render-host-root');
+    if (rootElement) {
+      rootElement.style.backgroundColor = 'transparent';
+    }
+  }, []);
 
-// --- React Mounting Logic ---
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  try {
-    const root = createRoot(rootElement);
-    root.render(<RenderHostApp />);
-    console.log('[RenderHostApp] RenderHostApp mounted successfully to #root.');
-  } catch (error) {
-    console.error('[RenderHostApp] Failed to render React component:', error);
-  }
+  return (
+    <div
+      style={{ backgroundColor: 'transparent', width: '100%', height: '100%' }}
+    >
+      <StyledSubtitleDisplay
+        text={subtitleText}
+        isVisible={subtitleText !== ''}
+      />
+    </div>
+  );
+};
+
+const container = document.getElementById('render-host-root');
+if (container) {
+  const root = createRoot(container);
+  root.render(
+    <React.StrictMode>
+      <RenderHostApp />
+    </React.StrictMode>
+  );
 } else {
   console.error(
-    '[RenderHostApp] Root element #root not found in render-host.html.'
+    'Could not find root element #render-host-root to mount React app.'
   );
 }
-// --- End Mounting Logic ---

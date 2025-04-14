@@ -5,27 +5,20 @@ import fs from 'fs/promises';
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import { parseSrt } from '../shared/helpers/index.js';
 import { execFile, ChildProcess } from 'child_process';
+import puppeteer, { Browser, Page } from 'puppeteer-core';
+import url from 'url';
 
 // Re-define channels used in this handler file
 const RENDER_CHANNELS = {
   REQUEST: 'render-subtitles-request',
   RESULT: 'render-subtitles-result',
 };
-const WINDOW_CHANNELS = {
-  CREATE_REQUEST: 'create-render-window-request',
-  CREATE_SUCCESS: 'create-render-window-success',
-  DESTROY_REQUEST: 'destroy-render-window-request',
-  UPDATE_SUBTITLE: 'render-window-update-subtitle',
-};
-
-// Map to store references to active hidden subtitle render windows
-const renderWindows = new Map<number, BrowserWindow>();
 
 /**
- * Initializes IPC handlers for the subtitle overlay rendering process.
+ * Initializes IPC handlers for the subtitle overlay rendering process using Puppeteer.
  */
 export function initializeRenderWindowHandlers(): void {
-  log.info('[RenderWindowHandlers] Initializing...');
+  log.info('[RenderWindowHandlers] Initializing (Puppeteer method)...');
 
   // --- Main Orchestration Handler ---
   ipcMain.on(
@@ -33,11 +26,11 @@ export function initializeRenderWindowHandlers(): void {
     async (event, options: RenderSubtitlesOptions) => {
       const { operationId } = options;
       log.info(
-        `[RenderWindowHandlers ${operationId}] Received ${RENDER_CHANNELS.REQUEST}. Orchestration starting.`
+        `[RenderWindowHandlers ${operationId}] Received ${RENDER_CHANNELS.REQUEST}. Orchestration starting (Puppeteer).`
       );
 
-      let windowId: number | null = null;
       let tempDirPath: string | null = null;
+      let browser: Browser | null = null; // Puppeteer browser instance
 
       try {
         // --- Create Temp Directory ---
@@ -50,27 +43,97 @@ export function initializeRenderWindowHandlers(): void {
         );
         // --- End Temp Directory ---
 
-        // --- Create Hidden Window ---
+        // --- Puppeteer Setup ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Attempting to create hidden window...`
+          `[RenderWindowHandlers ${operationId}] Setting up Puppeteer...`
         );
-        windowId = await createHiddenRenderWindow(
-          options.videoWidth,
-          options.videoHeight,
-          operationId
-        );
+        const hostHtmlPath = getRenderHostPath(); // Use helper
+        if (!(await fs.stat(hostHtmlPath).catch(() => false))) {
+          throw new Error(
+            `Render host HTML not found at: ${hostHtmlPath}. Check build process.`
+          );
+        }
+        const hostHtmlUrl = url.pathToFileURL(hostHtmlPath).toString();
+
         log.info(
-          `[RenderWindowHandlers ${operationId}] Hidden window created successfully with ID: ${windowId}.`
+          `[RenderWindowHandlers ${operationId}] Render host URL: ${hostHtmlUrl}`
         );
-        // --- End Hidden Window ---
+
+        // Attempting auto-detection by omitting executablePath
+        try {
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Launching Puppeteer...`
+          );
+          browser = await puppeteer.launch({
+            headless: true,
+            args: [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+            ], // Added common CI/server args
+          });
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Puppeteer browser launched.`
+          );
+        } catch (launchError: any) {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Puppeteer launch failed. Ensure a compatible Chrome/Chromium is installed OR configure executablePath. Error:`,
+            launchError
+          );
+          throw new Error(
+            `Puppeteer launch failed: ${launchError.message}. Check installation/path.`
+          );
+        }
+
+        const page: Page = await browser.newPage();
+        await page.setViewport({
+          width: options.videoWidth,
+          height: options.videoHeight,
+        });
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Puppeteer page created and viewport set.`
+        );
+
+        // Add error logging for page load issues
+        page.on('pageerror', err => {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Puppeteer Page Error: ${err.toString()}`
+          );
+        });
+        page.on('requestfailed', req => {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Puppeteer Page Request Failed: ${req.url()} - ${req.failure()?.errorText}`
+          );
+        });
+
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Navigating Puppeteer page to ${hostHtmlUrl}...`
+        );
+        await page.goto(hostHtmlUrl, { waitUntil: 'networkidle0' }); // Wait for page to load fully
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Puppeteer page navigated to host HTML.`
+        );
+
+        // Check if the updateSubtitle function exists on the page
+        const functionExists = await page.evaluate(() => {
+          // @ts-ignore
+          return typeof window.updateSubtitle === 'function';
+        });
+        if (!functionExists) {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Error: window.updateSubtitle function not found in render-host.html. Ensure it's exposed correctly in render-host-script.tsx.`
+          );
+          throw new Error('window.updateSubtitle function not found on page.');
+        }
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Found window.updateSubtitle function on page.`
+        );
+        // --- End Puppeteer Setup ---
 
         // --- Parse SRT ---
         let segments: SrtSegment[] = [];
         try {
-          // We need a parseSrt function available here.
-          // Let's assume it's imported or defined elsewhere in the main process.
-          // If not, we'll need to add it (e.g., copy from shared/helpers).
-          segments = parseSrt(options.srtContent); // Assuming parseSrtUtil is available
+          segments = parseSrt(options.srtContent);
           log.info(
             `[RenderWindowHandlers ${operationId}] Parsed ${segments.length} SRT segments.`
           );
@@ -79,94 +142,88 @@ export function initializeRenderWindowHandlers(): void {
         }
         // --- End Parse SRT ---
 
-        // --- Frame-by-Frame Render Loop ---
+        // --- Frame-by-Frame Render Loop (Puppeteer) ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Starting frame render/capture loop for window ${windowId}.`
+          `[RenderWindowHandlers ${operationId}] Starting frame render/capture loop (Puppeteer).`
         );
         const totalFrames = Math.ceil(
           options.videoDuration * options.frameRate
         );
-        const targetWindow = renderWindows.get(windowId); // Get the created window
-
-        if (!targetWindow || targetWindow.isDestroyed()) {
-          // Should not happen if window creation succeeded, but check anyway
-          throw new Error(
-            `Render window ${windowId} not found or destroyed before loop.`
-          );
-        }
 
         for (let i = 0; i < totalFrames; i++) {
-          const frameCount = i + 1; // 1-based frame count
-          const currentTime = i / options.frameRate; // Time at the start of the frame
+          const frameCount = i + 1;
+          const currentTime = i / options.frameRate;
 
-          // Determine subtitle text for this frame
           const activeSegment = segments.find(
             seg => currentTime >= seg.start && currentTime < seg.end
           );
           const subtitleText = activeSegment ? activeSegment.text : '';
 
-          // Define frame path (ensure 7 digits for FFmpeg later)
           const frameFileName = `frame_${String(frameCount).padStart(7, '0')}.png`;
           const framePath = path.join(tempDirPath, frameFileName);
 
           try {
-            // 1. Send text update to hidden window
-            // log.debug(`[RenderWindowHandlers ${operationId}] Sending text to window ${windowId}: "${subtitleText.substring(0,20)}..."`); // Optional
-            targetWindow.webContents.send(WINDOW_CHANNELS.UPDATE_SUBTITLE, {
-              text: subtitleText,
+            // 1. Update text using page.evaluate
+            await page.evaluate(text => {
+              // @ts-ignore - We checked window.updateSubtitle exists
+              window.updateSubtitle(text);
+            }, subtitleText);
+
+            // Add a small delay AFTER updating text, just in case React needs a tick to re-render
+            await new Promise(resolve => setTimeout(resolve, 10)); // Small delay for DOM update
+
+            // 2. Capture using page.screenshot (omitBackground is key!)
+            await page.screenshot({
+              path: framePath,
+              omitBackground: true,
+              // Ensure clip matches viewport size exactly
+              clip: {
+                x: 0,
+                y: 0,
+                width: options.videoWidth,
+                height: options.videoHeight,
+              },
+              type: 'png', // Explicitly set type
             });
-
-            // 2. Wait briefly for rendering (adjust delay if needed)
-            await new Promise(resolve => setTimeout(resolve, 10)); // ~1 frame at 60fps, maybe needs adjustment
-
-            // 3. Invoke the capture handler for this window
-            const captureResult = await captureFrameAndSave({
-              windowId: windowId,
-              framePath: framePath,
-              operationId: operationId,
-              width: options.videoWidth,
-              height: options.videoHeight,
-            });
-
-            if (!captureResult.success) {
-              // Capture handler already logged the error, just throw to stop the process
-              throw new Error(
-                captureResult.error || `Frame ${frameCount} capture failed.`
-              );
-            }
 
             // Log progress periodically
             if (
               frameCount % (options.frameRate * 10) === 0 ||
               frameCount === totalFrames
             ) {
-              // Log every 10s or on last frame
               log.info(
-                `[RenderWindowHandlers ${operationId}] Captured frame ${frameCount}/${totalFrames} (${Math.round((frameCount / totalFrames) * 100)}%)`
+                `[RenderWindowHandlers ${operationId}] Captured frame ${frameCount}/${totalFrames} (${Math.round((frameCount / totalFrames) * 100)}%) (Puppeteer)`
               );
             }
           } catch (frameError: any) {
             log.error(
-              `[RenderWindowHandlers ${operationId}] Error processing frame ${frameCount}:`,
+              `[RenderWindowHandlers ${operationId}] Error processing frame ${frameCount} (Puppeteer):`,
               frameError
             );
             throw new Error(
-              `Failed during frame ${frameCount} processing: ${frameError.message}`
-            ); // Propagate error
+              `Failed during frame ${frameCount} processing (Puppeteer): ${frameError.message}`
+            );
           }
         }
         log.info(
-          `[RenderWindowHandlers ${operationId}] Finished capturing ${totalFrames} PNG frames.`
+          `[RenderWindowHandlers ${operationId}] Finished capturing ${totalFrames} PNG frames (Puppeteer).`
         );
         // --- End Frame-by-Frame Render Loop ---
 
-        // --- FFmpeg Assembly ---
+        // --- Close Puppeteer Page ---
+        await page.close();
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Puppeteer page closed.`
+        );
+        // Keep browser open until finally block for safety
+
+        // --- FFmpeg Assembly (No change needed here) ---
         log.info(
           `[RenderWindowHandlers ${operationId}] Preparing for FFmpeg assembly...`
         );
         const tempOverlayVideoPath = path.join(
           tempDirPath,
-          `overlay_${operationId}.webm` // The path returned by assemblePngSequence
+          `overlay_${operationId}.webm`
         );
 
         const assemblyResult = await assemblePngSequence(
@@ -177,7 +234,6 @@ export function initializeRenderWindowHandlers(): void {
         );
 
         if (!assemblyResult.success || !assemblyResult.outputPath) {
-          // Error is logged within assemblePngSequence
           throw new Error(
             assemblyResult.error ||
               'FFmpeg assembly failed or produced no output path.'
@@ -188,99 +244,71 @@ export function initializeRenderWindowHandlers(): void {
         );
         // --- End FFmpeg Assembly ---
 
-        // assemblePngSequence now returns the path to the *temporary* overlay
+        // --- Final Merge Prep (No change needed here) ---
         const tempOverlayPath = assemblyResult.outputPath;
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Temporary overlay created at: ${tempOverlayPath}`
-        );
-
-        // --- Call the Final Merge Step (using temp overlay) --- START ---
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Initiating final merge step using temp overlay...`
-        );
-
         const originalVideoPath = options.originalVideoPath;
         if (!originalVideoPath) {
-          throw new Error(
-            'Original video path was not provided in the initial render options.'
-          );
+          throw new Error('Original video path was not provided.');
         }
+        // --- End Final Merge Prep ---
 
-        // --- Prompt User to Save FINAL MP4 --- START ---
+        // --- Prompt User to Save FINAL MP4 (No change needed here) ---
         log.info(
           `[RenderWindowHandlers ${operationId}] Prompting user to save the FINAL merged video...`
         );
-        const window =
-          BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
-        if (!window) {
+        // Try getting window differently just in case focus is lost
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (!mainWindow) {
           log.error(
-            `[RenderWindowHandlers ${operationId}] No window found for save dialog!`
+            `[RenderWindowHandlers ${operationId}] No main window found for save dialog!`
           );
-          throw new Error(
-            'No application window available to show save dialog.'
-          );
+          throw new Error('No application window available for save dialog.');
         }
 
-        // Suggest a name for the FINAL output file
         const originalFileName = path.basename(
           originalVideoPath,
           path.extname(originalVideoPath)
         );
         const suggestedFinalName = `${originalFileName}-merged.mp4`;
-
-        const finalSaveDialogResult = await dialog.showSaveDialog(window, {
+        const finalSaveDialogResult = await dialog.showSaveDialog(mainWindow, {
+          // Use mainWindow
           title: 'Save Merged Video As',
           defaultPath: suggestedFinalName,
-          filters: [
-            { name: 'MP4 Video', extensions: ['mp4'] },
-            { name: 'All Files', extensions: ['*'] },
-          ],
+          filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
         });
-
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Final save dialog returned. Cancelled: ${finalSaveDialogResult.canceled}, Path: ${finalSaveDialogResult.filePath}`
-        );
-
         if (finalSaveDialogResult.canceled || !finalSaveDialogResult.filePath) {
-          log.warn(
-            `[RenderWindowHandlers ${operationId}] User cancelled final save dialog.`
-          );
-          // Send a 'cancelled' or specific error back? Or just let cleanup handle it?
-          // For now, we'll throw an error which the catch block below will handle.
           throw new Error('User cancelled saving the final merged video.');
         }
-        const finalUserSelectedPath = finalSaveDialogResult.filePath; // Path where user wants the final MP4
-        // --- Prompt User to Save FINAL MP4 --- END ---
+        const finalUserSelectedPath = finalSaveDialogResult.filePath;
+        // --- End Prompt User ---
 
-        // --- Call the modified merge function ---
+        // --- Call Final Merge (No change needed here) ---
         log.info(
           `[RenderWindowHandlers ${operationId}] Calling mergeVideoAndOverlay. Overlay: ${tempOverlayPath}, Final Target: ${finalUserSelectedPath}`
         );
         const mergeResult = await mergeVideoAndOverlay({
           originalVideoPath: originalVideoPath,
-          overlayVideoPath: tempOverlayPath, // Use the temp overlay path
-          targetSavePath: finalUserSelectedPath, // Use the path chosen by user
+          overlayVideoPath: tempOverlayPath,
+          targetSavePath: finalUserSelectedPath,
           operationId: operationId,
         });
 
         if (!mergeResult.success) {
           throw new Error(mergeResult.error || 'Final FFmpeg merge failed.');
         }
-
         log.info(
           `[RenderWindowHandlers ${operationId}] Final merged video created at: ${mergeResult.finalOutputPath}`
         );
-        // --- Call the Final Merge Step --- END ---
+        // --- End Final Merge ---
 
         // --- Send FINAL Success Result ---
-        // Send the path to the *fully merged* video saved at the user's chosen location
         event.reply(RENDER_CHANNELS.RESULT, {
           operationId: operationId,
           success: true,
-          outputPath: mergeResult.finalOutputPath, // Send the final merged path!
+          outputPath: mergeResult.finalOutputPath,
         });
         log.info(
-          `[RenderWindowHandlers ${operationId}] Sent final success result (with final merged path) to renderer.`
+          `[RenderWindowHandlers ${operationId}] Sent final success result to renderer.`
         );
         // --- End Final Result ---
       } catch (error: any) {
@@ -288,7 +316,6 @@ export function initializeRenderWindowHandlers(): void {
           `[RenderWindowHandlers ${operationId}] Error during orchestration:`,
           error
         );
-        // Ensure we reply with failure if an error occurred anywhere above
         if (!event.sender.isDestroyed()) {
           event.reply(RENDER_CHANNELS.RESULT, {
             operationId,
@@ -300,173 +327,58 @@ export function initializeRenderWindowHandlers(): void {
             `[RenderWindowHandlers ${operationId}] Event sender destroyed before sending error reply.`
           );
         }
-        // Cleanup is handled in finally
       } finally {
         // --- Guaranteed Cleanup ---
         log.info(
           `[RenderWindowHandlers ${operationId}] Entering finally block for cleanup.`
         );
-        // Clean up window if it exists
-        if (windowId !== null) {
-          const windowToDestroy = renderWindows.get(windowId);
-          if (windowToDestroy && !windowToDestroy.isDestroyed()) {
+        // Clean up Puppeteer browser
+        if (browser) {
+          try {
             log.info(
-              `[RenderWindowHandlers ${operationId}] Cleaning up window ID ${windowId} in finally block.`
+              `[RenderWindowHandlers ${operationId}] Closing Puppeteer browser...`
             );
-            windowToDestroy.destroy();
-            renderWindows.delete(windowId);
+            await browser.close();
+            log.info(
+              `[RenderWindowHandlers ${operationId}] Puppeteer browser closed.`
+            );
+          } catch (closeError) {
+            log.warn(
+              `[RenderWindowHandlers ${operationId}] Error closing Puppeteer browser:`,
+              closeError
+            );
           }
         }
-        await cleanupTempDir(tempDirPath, operationId);
+        // Clean up temp dir
+        await cleanupTempDir(tempDirPath, operationId); // Ensure this is re-enabled if you commented it out
         log.info(`[RenderWindowHandlers ${operationId}] Cleanup finished.`);
         // --- End Cleanup ---
       }
     }
   );
 
-  // --- Add other handlers later (CREATE_WINDOW, DESTROY_WINDOW, CAPTURE_FRAME, etc.) ---
-
-  ipcMain.on(WINDOW_CHANNELS.DESTROY_REQUEST, (_event, args) => {
-    const { windowId, operationId } = args; // Expect operationId for logging
-    log.info(
-      `[RenderWindowHandlers ${operationId || 'Cleanup'}] Received request to destroy window ID: ${windowId}`
-    );
-    const windowToDestroy = renderWindows.get(windowId);
-    if (windowToDestroy && !windowToDestroy.isDestroyed()) {
-      log.info(
-        `[RenderWindowHandlers ${operationId || 'Cleanup'}] Destroying window ID: ${windowId}`
-      );
-      windowToDestroy.destroy(); // Actually destroy the window
-      renderWindows.delete(windowId); // Remove from map
-    } else {
-      log.warn(
-        `[RenderWindowHandlers ${operationId || 'Cleanup'}] Window ID ${windowId} not found or already destroyed.`
-      );
-    }
-  });
-
-  // Handler to relay subtitle text updates TO a specific hidden window
-  ipcMain.on(WINDOW_CHANNELS.UPDATE_SUBTITLE, (_event, args) => {
-    const { windowId, text, operationId } = args; // Expect operationId for logging
-    const targetWindow = renderWindows.get(windowId);
-
-    if (targetWindow && !targetWindow.isDestroyed()) {
-      // log.debug(`[RenderWindowHandlers ${operationId}] Relaying text update to window ${windowId}: "${text.substring(0, 30)}..."`); // Optional
-      // Send the text to the hidden window's renderer process using the channel its preload script listens on
-      targetWindow.webContents.send(WINDOW_CHANNELS.UPDATE_SUBTITLE, { text });
-    } else {
-      log.warn(
-        `[RenderWindowHandlers ${operationId}] Window ID ${windowId} not found or destroyed. Cannot relay text update.`
-      );
-    }
-  });
-
-  log.info('[RenderWindowHandlers] Initialization complete.');
+  log.info(
+    '[RenderWindowHandlers] Initialization complete (Puppeteer method).'
+  );
 }
 
-// --- Placeholder functions for later implementation ---
+// --- Helper function to get render-host.html path ---
+function getRenderHostPath(): string {
+  // Adjust if your build structure is different
+  // Assuming render-host.html is copied to the root of the dist folder by a build step
+  return path.join(app.getAppPath(), 'dist', 'render-host.html');
+}
+
+// --- Utility Functions (Keep as they are) ---
 
 async function createOperationTempDir(operationId: string): Promise<string> {
-  // TODO: Implement temp directory creation logic using fsPromises and app.getPath('temp')
-  log.info(
-    `[RenderWindowHandlers ${operationId}] Placeholder: Create Temp Dir`
-  );
   const tempDir = path.join(
     app.getPath('temp'),
     `subtitle-render-${operationId}`
   );
+  log.info(`[createOperationTempDir ${operationId}] Creating ${tempDir}`);
   await fs.mkdir(tempDir, { recursive: true });
   return tempDir;
-}
-
-async function createHiddenRenderWindow(
-  videoWidth: number,
-  videoHeight: number,
-  operationId: string
-): Promise<number> {
-  log.info(
-    `[createHiddenRenderWindow ${operationId}] Creating window with dimensions: ${videoWidth}x${videoHeight}`
-  );
-
-  return new Promise<number>((resolve, reject) => {
-    try {
-      const renderWindow = new BrowserWindow({
-        width: videoWidth,
-        height: videoHeight,
-        show: false,
-        frame: false,
-        transparent: true,
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          preload: path.join(app.getAppPath(), 'preload-render-window.js'),
-          backgroundThrottling: false,
-          devTools: !app.isPackaged,
-        },
-        skipTaskbar: true,
-      });
-
-      const windowId = renderWindow.id;
-      renderWindows.set(windowId, renderWindow);
-      log.info(
-        `[RenderWindowHandlers ${operationId}] Stored hidden render window ID: ${windowId}`
-      );
-
-      // Handle window closure events gracefully
-      renderWindow.on('closed', () => {
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Hidden window ID ${windowId} was closed.`
-        );
-        renderWindows.delete(windowId); // Remove from map if closed unexpectedly
-      });
-
-      // Prevent accidental closure - should only be closed via IPC
-      renderWindow.on('close', e => {
-        if (!renderWindow.isDestroyed()) {
-          log.warn(
-            `[RenderWindowHandlers ${operationId}] Attempt to close hidden window ID ${windowId} directly was prevented. Use DESTROY_REQUEST.`
-          );
-          e.preventDefault(); // Prevent closing
-        }
-      });
-
-      // Load the host HTML file for the React component
-      // TODO: Ensure 'render-host.html' exists and is correctly built/copied.
-      // Adjust the path based on your build output structure (dev vs. prod).
-      const hostHtmlPath = path.join(app.getAppPath(), 'render-host.html');
-      log.info(
-        `[RenderWindowHandlers ${operationId}] Loading render host HTML: ${hostHtmlPath}`
-      );
-
-      renderWindow
-        .loadFile(hostHtmlPath)
-        .then(() => {
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Render host HTML loaded for window ID ${windowId}.`
-          );
-          // Now that the window and its HTML are ready, resolve the promise with the ID
-          resolve(windowId);
-        })
-        .catch(err => {
-          log.error(
-            `[RenderWindowHandlers ${operationId}] Failed to load host HTML for window ID ${windowId}:`,
-            err
-          );
-          // Clean up the failed window attempt
-          if (!renderWindow.isDestroyed()) {
-            renderWindow.destroy();
-          }
-          renderWindows.delete(windowId);
-          reject(new Error(`Failed to load render-host.html: ${err.message}`));
-        });
-    } catch (error) {
-      log.error(
-        `[RenderWindowHandlers ${operationId}] Error creating hidden window:`,
-        error
-      );
-      reject(error); // Reject the promise on error
-    }
-  });
 }
 
 async function cleanupTempDir(
@@ -492,320 +404,225 @@ async function cleanupTempDir(
       `[RenderWindowHandlers ${operationId}] Error removing temporary directory ${tempDirPath}:`,
       error
     );
-    // Decide if this should throw or just be logged
   }
 }
 
-async function captureFrameAndSave(args: {
-  windowId: number;
-  framePath: string;
-  operationId: string;
-  width: number; // Target width
-  height: number; // Target height
-}): Promise<{ success: boolean; error?: string }> {
-  const { windowId, framePath, operationId, width, height } = args;
-  const targetWindow = renderWindows.get(windowId);
+// --- FFmpeg Functions (Keep as they are, ensure assemblePngSequence uses -crf 18 -b:v 0) ---
 
-  if (!targetWindow || targetWindow.isDestroyed()) {
-    log.error(
-      `[captureFrameAndSave ${operationId}] Capture failed: Target window ${windowId} not found or destroyed.`
-    );
-    return { success: false, error: `Render window ${windowId} not found.` };
-  }
-
-  if (!framePath) {
-    log.error(
-      `[captureFrameAndSave ${operationId}] Capture failed: No framePath provided.`
-    );
-    return { success: false, error: 'No framePath provided for capture.' };
-  }
-
-  try {
-    const captureRect = { x: 0, y: 0, width: width, height: height };
-    // Capture using the rect first
-    let capturedImage = await targetWindow.webContents.capturePage(captureRect);
-
-    if (capturedImage.isEmpty()) {
-      log.warn(
-        `[captureFrameAndSave ${operationId}] Captured image empty for ${framePath}. Skipping save.`
-      );
-      return { success: true };
-    }
-
-    // --- ADD THIS RESIZE CHECK --- START ---
-    const currentSize = capturedImage.getSize();
-    log.debug(
-      // Add this log to see original captured size
-      `[captureFrameAndSave ${operationId}] Initial captured image size: ${currentSize.width}x${currentSize.height}. Target: ${width}x${height}`
-    );
-
-    // Check if resizing is needed
-    if (currentSize.width !== width || currentSize.height !== height) {
-      log.warn(
-        `[captureFrameAndSave ${operationId}] Captured image dimensions differ from target. Resizing to ${width}x${height}...`
-      );
-      // Create a *new* resized image object
-      capturedImage = capturedImage.resize({
-        width: width,
-        height: height,
-        quality: 'best', // Options: 'good', 'better', 'best'
-      });
-      const resizedSize = capturedImage.getSize(); // Check size after resize
-      log.info(
-        `[captureFrameAndSave ${operationId}] Image successfully resized to: ${resizedSize.width}x${resizedSize.height}`
-      );
-    }
-    // --- ADD THIS RESIZE CHECK --- END ---
-
-    // Save the (potentially resized) image to PNG
-    const pngBuffer = capturedImage.toPNG();
-    await fs.writeFile(framePath, pngBuffer);
-
-    return { success: true };
-  } catch (error: any) {
-    log.error(
-      `[captureFrameAndSave ${operationId}] Failed to capture/resize/save frame ${framePath}:`,
-      error
-    );
-    return {
-      success: false,
-      // Provide a more specific error message
-      error: error.message || 'Frame capture, resize, or save failed',
-    };
-  }
-}
-
-/**
- * Assembles a sequence of PNG frames into a video using FFmpeg.
- * Creates a transparent WebM video using VP9 codec.
- * @param tempDirPath Directory containing frame_*.png images.
- * @param outputPath The full path for the output video file (e.g., overlay.webm).
- * @param frameRate The frame rate of the input sequence.
- * @param operationId For logging.
- * @returns Promise resolving to { success: true, outputPath: string } or rejecting on error.
- */
 async function assemblePngSequence(
   tempDirPath: string,
   outputPath: string,
   frameRate: number,
   operationId: string
 ): Promise<{ success: boolean; outputPath: string; error?: string }> {
+  log.info(
+    `[assemblePngSequence ${operationId}] Starting assembly. Input dir: ${tempDirPath}, Output: ${outputPath}`
+  );
   return new Promise((resolve, reject) => {
-    const ffmpegPath = 'ffmpeg'; // Assume ffmpeg is in PATH
-    // Pattern must match the saved frame filenames (e.g., frame_0000001.png)
+    const ffmpegPath = 'ffmpeg';
     const inputPattern = path.join(tempDirPath, 'frame_%07d.png');
 
-    // FFmpeg arguments for creating a transparent VP9 WebM video
+    // Check if input files exist (basic check)
+    // This is complex to do properly without listing dir, skip for now but consider adding later if needed
+
     const args = [
       '-framerate',
-      frameRate.toString(), // Input frame rate
+      frameRate.toString(),
       '-i',
-      inputPattern, // Input pattern
+      inputPattern,
       '-c:v',
-      'libvpx-vp9', // Codec: VP9 for WebM with alpha
+      'libvpx-vp9',
       '-pix_fmt',
-      'yuva420p', // Pixel format supporting alpha
-      '-lossless',
-      '1', // Use lossless compression for best quality
-      // '-crf', '18',                  // Constant Rate Factor (lower is better quality, ignored with lossless)
-      // '-b:v', '0',                   // Target bitrate 0 (let CRF/lossless control quality)
-      '-y', // Overwrite output file without asking
-      outputPath, // Output file path
+      'yuva420p', // Crucial for alpha
+      '-crf', // Use CRF for quality
+      '18',
+      '-b:v', // Required with CRF
+      '0',
+      '-deadline',
+      'realtime', // Can sometimes help with hanging processes
+      '-cpu-used',
+      '8', // Adjust based on system cores, might speed up vp9
+      '-y',
+      outputPath,
     ];
 
     log.info(
-      `[RenderWindowHandlers ${operationId}] Assembling PNGs with FFmpeg...`
-    );
-    log.info(
-      `[RenderWindowHandlers ${operationId}] Command: ${ffmpegPath} ${args.join(' ')}`
+      `[assemblePngSequence ${operationId}] Assembling PNGs with FFmpeg command: ${ffmpegPath} ${args.join(' ')}`
     );
 
-    let ffmpegOutput = ''; // To store stdout/stderr
+    let ffmpegOutput = '';
+    let hasSeenData = false;
+    const child: ChildProcess = execFile(ffmpegPath, args);
 
-    try {
-      const child: ChildProcess = execFile(ffmpegPath, args);
+    child.stdout?.on('data', data => {
+      hasSeenData = true;
+      ffmpegOutput += data.toString();
+    });
+    child.stderr?.on('data', data => {
+      hasSeenData = true;
+      const stderrLine = data.toString().trim();
+      if (stderrLine) {
+        // Avoid logging empty lines
+        ffmpegOutput += stderrLine + '\n';
+        log.debug(`[FFmpeg stderr ${operationId}]: ${stderrLine}`);
+      }
+    });
 
-      child.stdout?.on('data', data => {
-        ffmpegOutput += data.toString();
-      });
-      child.stderr?.on('data', data => {
-        ffmpegOutput += data.toString();
-        // Optional: log stderr in real-time for debugging progress
-        log.debug(`[FFmpeg stderr ${operationId}]: ${data.toString().trim()}`);
-      });
-
-      child.on('error', error => {
-        log.error(
-          `[RenderWindowHandlers ${operationId}] FFmpeg execution error:`,
-          error
-        );
-        log.error(
-          `[RenderWindowHandlers ${operationId}] FFmpeg output on error:\n${ffmpegOutput}`
-        );
-        reject(new Error(`FFmpeg execution failed: ${error.message}`));
-      });
-
-      child.on('close', code => {
-        log.info(
-          `[RenderWindowHandlers ${operationId}] FFmpeg process exited with code ${code}.`
-        );
-        // Optional: Log full output only on error or specific conditions
-        // log.debug(`[RenderWindowHandlers ${operationId}] Full FFmpeg output:\n${ffmpegOutput}`);
-
-        if (code === 0) {
-          log.info(
-            `[RenderWindowHandlers ${operationId}] FFmpeg assembly successful: ${outputPath}`
-          );
-          resolve({ success: true, outputPath });
-        } else {
-          log.error(
-            `[RenderWindowHandlers ${operationId}] FFmpeg assembly failed (exit code ${code}).`
-          );
-          log.error(
-            `[RenderWindowHandlers ${operationId}] FFmpeg output on failure:\n${ffmpegOutput}`
-          );
-          reject(
-            new Error(
-              `FFmpeg assembly failed with exit code ${code}. Output:\n${ffmpegOutput}`
-            )
-          );
-        }
-      });
-    } catch (execError) {
+    child.on('error', error => {
       log.error(
-        `[RenderWindowHandlers ${operationId}] Error trying to execute FFmpeg:`,
-        execError
+        `[assemblePngSequence ${operationId}] FFmpeg execution error:`,
+        error
       );
-      reject(execError); // Reject if execFile itself throws
-    }
+      log.error(
+        `[assemblePngSequence ${operationId}] FFmpeg output on error:\n${ffmpegOutput}`
+      );
+      reject(new Error(`FFmpeg execution failed: ${error.message}`));
+    });
+
+    child.on('close', code => {
+      log.info(
+        `[assemblePngSequence ${operationId}] FFmpeg process exited with code ${code}.`
+      );
+      if (code === 0 && hasSeenData) {
+        // Check hasSeenData as extra validation
+        log.info(
+          `[assemblePngSequence ${operationId}] Assembly successful: ${outputPath}`
+        );
+        resolve({ success: true, outputPath });
+      } else {
+        log.error(
+          `[assemblePngSequence ${operationId}] FFmpeg assembly failed (exit code ${code}, saw data: ${hasSeenData}).`
+        );
+        log.error(
+          `[assemblePngSequence ${operationId}] FFmpeg output on failure:\n${ffmpegOutput}`
+        );
+        reject(
+          new Error(
+            `FFmpeg assembly failed with exit code ${code}. Output:\n${ffmpegOutput}`
+          )
+        );
+      }
+    });
   });
 }
 
-// --- Define the options interface ---
 interface MergeVideoAndOverlayOptions {
   originalVideoPath: string;
-  overlayVideoPath: string; // Path to the TEMP overlay webm
-  targetSavePath: string; // Path chosen by user for FINAL mp4
+  overlayVideoPath: string;
+  targetSavePath: string;
   operationId: string;
 }
 
-/**
- * Merges the original video file with the generated subtitle overlay video.
- * @param options Options object containing paths and operationId.
- * @returns Promise resolving to { success: true, finalOutputPath: string } or rejecting on error.
- */
 async function mergeVideoAndOverlay(
   options: MergeVideoAndOverlayOptions
 ): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
-  // --- MODIFY Destructuring ---
   const { originalVideoPath, overlayVideoPath, targetSavePath, operationId } =
     options;
 
   log.info(
-    // --- MODIFY Log ---
     `[mergeVideoAndOverlay ${operationId}] Starting final merge. Original: ${originalVideoPath}, Overlay: ${overlayVideoPath}, Output: ${targetSavePath}`
   );
 
-  return new Promise((resolve, reject) => {
-    const ffmpegPath = 'ffmpeg'; // Assume ffmpeg is in PATH
+  // Add check for overlay file existence
+  if (!(await fs.stat(overlayVideoPath).catch(() => false))) {
+    throw new Error(`Overlay video file not found at: ${overlayVideoPath}`);
+  }
 
-    // Construct FFmpeg arguments for overlaying
+  return new Promise((resolve, reject) => {
+    const ffmpegPath = 'ffmpeg';
     const args = [
       '-i',
       originalVideoPath,
       '-i',
-      overlayVideoPath,
+      overlayVideoPath, // This should now have proper alpha
       '-filter_complex',
-      '[0:v][1:v]overlay=x=0:y=0:format=rgba[out]',
+      // Keep target position - assuming y=50 works if overlay is transparent
+      '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=50[out]', // Using y=50 as target position
       '-map',
-      '[out]',
+      '[out]', // Map the filtered video stream
       '-map',
-      '0:a?',
+      '0:a?', // Map audio from original video if it exists
       '-c:a',
-      'copy',
+      'copy', // Copy audio codec
       '-c:v',
-      'libx264',
+      'libx264', // Standard video codec for MP4
       '-preset',
-      'veryfast',
+      'veryfast', // Faster encoding
       '-crf',
-      '22',
-      '-y',
-      // --- MODIFY Output Path Argument ---
-      targetSavePath, // Use the path chosen by the user
+      '22', // Decent quality/size balance
+      '-y', // Overwrite output without asking
+      targetSavePath,
     ];
 
     log.info(
-      // --- MODIFY Log ---
       `[mergeVideoAndOverlay ${operationId}] Executing FFmpeg command: ${ffmpegPath} ${args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}`
     );
 
     let ffmpegOutput = '';
     let ffmpegError = '';
+    let hasSeenData = false;
+    const child: ChildProcess = execFile(ffmpegPath, args);
 
-    try {
-      const child: ChildProcess = execFile(ffmpegPath, args);
+    child.stdout?.on('data', data => {
+      hasSeenData = true;
+      ffmpegOutput += data.toString();
+      log.debug(`[FFmpeg stdout ${operationId}]: ${data.toString().trim()}`);
+    });
+    child.stderr?.on('data', data => {
+      hasSeenData = true;
+      const stderrLine = data.toString().trim();
+      if (stderrLine) {
+        ffmpegOutput += stderrLine + '\n';
+        ffmpegError += stderrLine + '\n'; // Capture stderr specifically for error reporting
+        log.debug(`[FFmpeg stderr ${operationId}]: ${stderrLine}`);
+      }
+    });
 
-      child.stdout?.on('data', data => {
-        ffmpegOutput += data.toString();
-        // Optional: log stdout in real-time
-        log.debug(`[FFmpeg stdout ${operationId}]: ${data.toString().trim()}`);
-      });
+    child.on('error', error => {
+      log.error(
+        `[mergeVideoAndOverlay ${operationId}] FFmpeg execution error:`,
+        error
+      );
+      log.error(
+        `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on error:\n${ffmpegOutput}`
+      );
+      reject(
+        new Error(
+          `FFmpeg execution failed: ${error.message}. Error output: ${ffmpegError}`
+        )
+      );
+    });
 
-      child.stderr?.on('data', data => {
-        const stderrLine = data.toString();
-        ffmpegOutput += stderrLine;
-        ffmpegError += stderrLine; // Capture stderr separately for error reporting
-        // Optional: log stderr in real-time for debugging progress
-        log.debug(`[FFmpeg stderr ${operationId}]: ${stderrLine.trim()}`);
-      });
-
-      child.on('error', error => {
+    child.on('close', code => {
+      log.info(
+        `[mergeVideoAndOverlay ${operationId}] FFmpeg process exited with code ${code}.`
+      );
+      if (code === 0 && hasSeenData) {
+        log.info(
+          `[mergeVideoAndOverlay ${operationId}] Final merge successful: ${targetSavePath}`
+        );
+        resolve({ success: true, finalOutputPath: targetSavePath });
+      } else {
         log.error(
-          `[mergeVideoAndOverlay ${operationId}] FFmpeg execution error:`,
-          error
+          `[mergeVideoAndOverlay ${operationId}] Final merge failed (exit code ${code}, saw data: ${hasSeenData}).`
         );
         log.error(
-          `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on error:\n${ffmpegOutput}`
+          `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on failure:\n${ffmpegOutput}`
         );
         reject(
           new Error(
-            `FFmpeg execution failed: ${error.message}. Output: ${ffmpegError}`
+            `Final merge failed with exit code ${code}. Error output: ${ffmpegError}`
           )
         );
-      });
-
-      child.on('close', code => {
-        log.info(
-          `[mergeVideoAndOverlay ${operationId}] FFmpeg process exited with code ${code}.`
-        );
-
-        if (code === 0) {
-          log.info(
-            // --- MODIFY Log ---
-            `[mergeVideoAndOverlay ${operationId}] Final merge successful: ${targetSavePath}`
-          );
-          // --- MODIFY Return Value ---
-          resolve({ success: true, finalOutputPath: targetSavePath }); // Return the target path
-        } else {
-          log.error(
-            `[mergeVideoAndOverlay ${operationId}] Final merge failed (exit code ${code}).`
-          );
-          log.error(
-            `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on failure:\n${ffmpegOutput}`
-          );
-          reject(
-            new Error(
-              `Final merge failed with exit code ${code}. Error output: ${ffmpegError}`
-            )
-          );
-        }
-      });
-    } catch (execError) {
-      log.error(
-        `[mergeVideoAndOverlay ${operationId}] Error trying to execute FFmpeg:`,
-        execError
-      );
-      reject(execError); // Reject if execFile itself throws
-    }
+      }
+    });
   });
+}
+
+// --- Declare window type augmentation for render-host-script ---
+// This helps TypeScript understand the function we expect on the window object
+declare global {
+  interface Window {
+    updateSubtitle?: (text: string) => void;
+  }
 }
