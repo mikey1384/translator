@@ -71,6 +71,10 @@ export interface EditSubtitlesProps {
   onStartPngRenderRequest: (
     options: RenderSubtitlesOptions
   ) => Promise<{ success: boolean; error?: string }>;
+  videoDuration?: number;
+  videoWidth?: number;
+  videoHeight?: number;
+  videoFrameRate?: number;
 }
 
 export function EditSubtitles({
@@ -95,6 +99,10 @@ export function EditSubtitles({
   setSaveError,
   searchText,
   onStartPngRenderRequest,
+  videoDuration: videoDurationProp,
+  videoWidth: videoWidthProp,
+  videoHeight: videoHeightProp,
+  videoFrameRate: videoFrameRateProp,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
@@ -782,19 +790,31 @@ export function EditSubtitles({
             `${s.index}\n${secondsToSrtTimeFn(s.start)} --> ${secondsToSrtTimeFn(s.end)}\n${s.text}\n`
         )
         .join('\n');
-      const videoDuration = videoPlayerRef?.current?.getDuration() || 0;
-      const videoWidth = videoPlayerRef?.current?.getVideoWidth() || 1280;
-      const videoHeight = videoPlayerRef?.current?.getVideoHeight() || 720;
-      const frameRate = 30; // !! Placeholder: Still need actual video frame rate !!
+      const videoDuration = videoDurationProp || 0;
+      const videoWidth = videoWidthProp || 0;
+      const videoHeight = videoHeightProp || 0;
+      const frameRate = videoFrameRateProp || 0; // Use the prop!
       const outputDir = '/placeholder/output/dir'; // Placeholder: Main process handles actual paths
+
+      console.log('[Debug Validation] srtContent length:', srtContent?.length);
+      console.log('[Debug Validation] videoDuration (prop):', videoDuration);
+      console.log('[Debug Validation] videoWidth (prop):', videoWidth);
+      console.log('[Debug Validation] videoHeight (prop):', videoHeight);
+      console.log('[Debug Validation] frameRate (prop):', frameRate); // Log frame rate too
 
       if (
         !srtContent ||
         videoDuration <= 0 ||
         videoWidth <= 0 ||
-        videoHeight <= 0
+        videoHeight <= 0 ||
+        frameRate <= 0 // Add check for frameRate
       ) {
-        throw new Error('Missing required video/subtitle data for rendering.');
+        console.error(
+          '[EditSubtitles] Validation failed! Values logged above.'
+        );
+        throw new Error(
+          'Missing required video/subtitle metadata (duration, dimensions, frame rate).'
+        );
       }
 
       // --- Create the CORRECT options object typed as RenderSubtitlesOptions ---

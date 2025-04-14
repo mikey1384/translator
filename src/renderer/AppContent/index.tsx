@@ -171,6 +171,13 @@ function AppContent() {
     scrollToSubtitleIndex: (_index: number) => {},
   });
 
+  const [videoMetadata, setVideoMetadata] = useState<{
+    duration: number;
+    width: number;
+    height: number;
+    frameRate: number;
+  } | null>(null);
+
   useEffect(() => {
     if (!searchText) {
       setMatchedIndices([]);
@@ -340,6 +347,10 @@ function AppContent() {
                   setSaveError={setSaveError}
                   searchText={searchText}
                   onStartPngRenderRequest={handleStartPngRenderFromChild}
+                  videoDuration={videoMetadata?.duration}
+                  videoWidth={videoMetadata?.width}
+                  videoHeight={videoMetadata?.height}
+                  videoFrameRate={videoMetadata?.frameRate}
                 />
               </div>
             </div>
@@ -413,7 +424,7 @@ function AppContent() {
         const filePath = result.filePaths[0];
         const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video';
         setDownloadedVideoPath(null);
-        handleSetVideoFile({ path: filePath, name: fileName });
+        await handleVideoFileSelected(filePath);
       } else {
         console.log('File selection cancelled or no file chosen.');
       }
@@ -698,6 +709,35 @@ function AppContent() {
         error
       );
       return { success: false, error: error.message || 'Client call failed' };
+    }
+  }
+
+  async function handleVideoFileSelected(filePath: string) {
+    setVideoFilePath(filePath);
+    setVideoMetadata(null);
+    if (filePath) {
+      console.log(`[AppContent] Fetching metadata for: ${filePath}`);
+      try {
+        const result = await window.electron.getVideoMetadata(filePath);
+        if (result.success && result.metadata) {
+          console.log('[AppContent] Received metadata:', result.metadata);
+          setVideoMetadata(result.metadata);
+        } else {
+          console.error(
+            '[AppContent] Failed to get video metadata:',
+            result.error
+          );
+          setError(`Failed to get video metadata: ${result.error}`);
+        }
+      } catch (error) {
+        console.error(
+          '[AppContent] Error calling getVideoMetadata IPC:',
+          error
+        );
+        setError(
+          `Error fetching video metadata: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
     }
   }
 }

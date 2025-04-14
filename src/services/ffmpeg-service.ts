@@ -10,6 +10,8 @@ import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../shared/constants/subtitle-styles.js';
+import { execFile, ChildProcess } from 'child_process';
+import { ipcMain } from 'electron';
 
 export class FFmpegError extends Error {
   constructor(message: string) {
@@ -1092,5 +1094,142 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         }
       }
     }
+  }
+
+  /**
+   * Gets video metadata using ffprobe.
+   * @param inputPath Path to the video file.
+   * @returns Promise resolving to an object with duration, width, height, frameRate.
+   */
+  async getVideoMetadata(inputPath: string): Promise<{
+    duration: number;
+    width: number;
+    height: number;
+    frameRate: number;
+  }> {
+    return new Promise((resolve, reject) => {
+      const ffprobePath = 'ffprobe'; // Assume ffprobe is in PATH
+      const args = [
+        '-v',
+        'error', // Hide informational messages, show only errors
+        '-select_streams',
+        'v:0', // Select only the first video stream
+        '-show_entries',
+        'stream=width,height,duration,r_frame_rate', // Get specific entries
+        '-of',
+        'json', // Output format as JSON
+        inputPath, // Input file
+      ];
+
+      log.info(`[FFmpegService] Getting metadata for: ${inputPath}`);
+      log.info(`[FFmpegService] Command: ${ffprobePath} ${args.join(' ')}`);
+
+      let jsonData = '';
+      let errorOutput = '';
+
+      try {
+        const child = execFile(ffprobePath, args);
+
+        child.stdout?.on('data', data => {
+          jsonData += data.toString();
+        });
+
+        child.stderr?.on('data', data => {
+          errorOutput += data.toString();
+        });
+
+        child.on('error', error => {
+          log.error(
+            `[FFmpegService] ffprobe execution error for ${inputPath}:`,
+            error
+          );
+          reject(new Error(`ffprobe execution failed: ${error.message}`));
+        });
+
+        child.on('close', code => {
+          log.info(
+            `[FFmpegService] ffprobe process for ${inputPath} exited with code ${code}.`
+          );
+          if (code === 0) {
+            try {
+              // log.debug(`[FFmpegService] ffprobe JSON output: ${jsonData}`); // Optional: log raw JSON
+              const probeData = JSON.parse(jsonData);
+              if (!probeData.streams || probeData.streams.length === 0) {
+                throw new Error('No video streams found in ffprobe output.');
+              }
+              const stream = probeData.streams[0];
+
+              // Extract data, handling potential string formats
+              const width = parseInt(stream.width, 10);
+              const height = parseInt(stream.height, 10);
+              const duration = parseFloat(stream.duration); // Duration is usually a float string
+
+              // Frame rate can be "num/den" (e.g., "30000/1001") or a single number string
+              let frameRate = 0;
+              if (
+                typeof stream.r_frame_rate === 'string' &&
+                stream.r_frame_rate.includes('/')
+              ) {
+                const parts = stream.r_frame_rate.split('/');
+                const num = parseFloat(parts[0]);
+                const den = parseFloat(parts[1]);
+                if (den !== 0) {
+                  frameRate = num / den;
+                }
+              } else {
+                frameRate = parseFloat(stream.r_frame_rate);
+              }
+
+              if (
+                isNaN(width) ||
+                isNaN(height) ||
+                isNaN(duration) ||
+                isNaN(frameRate) ||
+                frameRate <= 0
+              ) {
+                throw new Error(
+                  'Failed to parse essential metadata (width, height, duration, frameRate).'
+                );
+              }
+
+              log.info(`[FFmpegService] Metadata extracted for ${inputPath}:`, {
+                duration,
+                width,
+                height,
+                frameRate,
+              });
+              resolve({ duration, width, height, frameRate });
+            } catch (parseError: any) {
+              log.error(
+                `[FFmpegService] Error parsing ffprobe JSON output for ${inputPath}:`,
+                parseError
+              );
+              log.error(`[FFmpegService] Raw JSON: ${jsonData}`);
+              log.error(`[FFmpegService] Stderr: ${errorOutput}`);
+              reject(
+                new Error(
+                  `Failed to parse ffprobe output: ${parseError.message}`
+                )
+              );
+            }
+          } else {
+            log.error(
+              `[FFmpegService] ffprobe failed for ${inputPath} (exit code ${code}). Stderr: ${errorOutput}`
+            );
+            reject(
+              new Error(
+                `ffprobe failed with exit code ${code}. Error: ${errorOutput || 'Unknown ffprobe error'}`
+              )
+            );
+          }
+        });
+      } catch (execError) {
+        log.error(
+          `[FFmpegService] Error trying to execute ffprobe for ${inputPath}:`,
+          execError
+        );
+        reject(execError);
+      }
+    });
   }
 }

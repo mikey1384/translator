@@ -152,6 +152,18 @@ interface ElectronAPI {
   setLanguagePreference: (
     lang: string
   ) => Promise<{ success: boolean; error?: string }>;
+
+  // In src/types/interface.d.ts within ElectronAPI interface
+  getVideoMetadata: (filePath: string) => Promise<{
+    success: boolean;
+    metadata?: {
+      duration: number;
+      width: number;
+      height: number;
+      frameRate: number;
+    };
+    error?: string;
+  }>;
 }
 
 declare global {

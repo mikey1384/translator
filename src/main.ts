@@ -15,6 +15,7 @@ import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import Store from 'electron-store';
 import * as renderWindowHandlers from './handlers/render-window-handlers.js';
+import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +34,6 @@ import {
 } from './handlers/url-handler.js';
 import * as fileHandlers from './handlers/file-handlers.js';
 import * as apiKeyHandlers from './handlers/api-key-handlers.js';
-import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
@@ -322,6 +322,12 @@ try {
 
   // Add this line inside the try block in src/main.ts after other initializations
   renderWindowHandlers.initializeRenderWindowHandlers();
+
+  // Add this line inside the try block in src/main.ts after other initializations
+  ipcMain.handle(
+    subtitleHandlers.VIDEO_METADATA_CHANNEL,
+    subtitleHandlers.handleGetVideoMetadata
+  );
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   // Attempt to show error dialog only after app is ready
