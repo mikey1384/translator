@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import StyledSubtitleDisplay from './components/StyledSubtitleDisplay.js';
 
 declare global {
   interface Window {
@@ -13,56 +14,29 @@ declare global {
 
 // --- The React Component (Simplified for Debugging) ---
 function RenderHostApp() {
-  const [subtitleText, setSubtitleText] = useState('[Waiting for text...]'); // Initial text
+  const [currentSubtitleText, setCurrentSubtitleText] = useState('');
 
   useEffect(() => {
-    console.log(
-      '[RenderHostApp] Component mounted. Subscribing to subtitle updates via bridge...'
-    );
-
-    const cleanupListener = window.renderHostBridge.onUpdateSubtitle(
-      newText => {
-        console.log(`[RenderHostApp] Received text update: "${newText}"`); // Log received text
-        setSubtitleText(newText);
-      }
-    );
-
-    console.log(
-      '[RenderHostApp] Subscription to subtitle updates established.'
-    );
+    console.log('[RenderHostApp] Setting up bridge listener...');
+    window.renderHostBridge?.onUpdateSubtitle((text: string) => {
+      console.log(`[RenderHostApp] Received text update via bridge: "${text}"`);
+      setCurrentSubtitleText(text);
+    });
+    console.log('[RenderHostApp] Bridge listener setup complete.');
 
     return () => {
-      console.log(
-        '[RenderHostApp] Component unmounting. Cleaning up subtitle update listener.'
-      );
-      cleanupListener();
+      // Cleanup listener if needed, although window closes anyway
+      console.log('[RenderHostApp] Cleaning up...');
     };
   }, []);
 
   // Render simple div with inline styles
   // Use bright green background and large white text for easy visibility in PNGs
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '10%', // Position it somewhere
-        left: 0,
-        width: '100%',
-        padding: '20px',
-        backgroundColor: subtitleText ? 'rgba(0, 255, 0, 0.7)' : 'transparent', // Green background only if text exists
-        color: 'white',
-        fontSize: '40px', // Large font
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: 'sans-serif',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.8)', // Text shadow for contrast
-        visibility: subtitleText ? 'visible' : 'hidden', // Use visibility instead of opacity
-        whiteSpace: 'pre-wrap', // Handle multiple lines
-      }}
-    >
-      {subtitleText || '.'}{' '}
-      {/* Render text or a dot if empty to ensure element exists */}
-    </div>
+    <StyledSubtitleDisplay
+      text={currentSubtitleText}
+      isVisible={!!currentSubtitleText}
+    />
   );
 }
 // --- End React Component ---
@@ -72,11 +46,7 @@ const rootElement = document.getElementById('root');
 if (rootElement) {
   try {
     const root = createRoot(rootElement);
-    root.render(
-      // <React.StrictMode> // StrictMode can sometimes cause double renders in dev, consider removing if causing issues here
-      <RenderHostApp />
-      // </React.StrictMode>
-    );
+    root.render(<RenderHostApp />);
     console.log('[RenderHostApp] RenderHostApp mounted successfully to #root.');
   } catch (error) {
     console.error('[RenderHostApp] Failed to render React component:', error);

@@ -189,14 +189,21 @@ export function initializeRenderWindowHandlers(): void {
 
         let finalOutputPath: string | undefined;
         try {
+          // --- RESTORE WINDOW ARGUMENT ---
           const window =
             BrowserWindow.getFocusedWindow() ||
             BrowserWindow.getAllWindows()[0];
           if (!window) {
+            log.error(
+              `[RenderWindowHandlers ${operationId}] No window found for save dialog!`
+            );
             throw new Error(
               'No application window available to show save dialog.'
             );
           }
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Window ID for save dialog: ${window?.id}`
+          );
 
           const inputExt = '.webm'; // Output is WebM
           const baseName = 'video-with-subtitles';
@@ -207,13 +214,19 @@ export function initializeRenderWindowHandlers(): void {
           const suggestedOutputName = `${baseName}-overlay${inputExt}`;
 
           const saveDialogResult = await dialog.showSaveDialog(window, {
-            defaultPath: suggestedOutputName, // Consider using a stored last directory if you have that service here
+            // ADDED 'window' argument back
+            defaultPath: suggestedOutputName,
             title: 'Save Subtitle Overlay Video As',
             filters: [
               { name: 'WebM Video', extensions: ['webm'] },
               { name: 'All Files', extensions: ['*'] },
             ],
           });
+          // --- END RESTORE WINDOW ARGUMENT ---
+
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Save dialog returned. Cancelled: ${saveDialogResult.canceled}, Path: ${saveDialogResult.filePath}`
+          );
 
           if (saveDialogResult.canceled || !saveDialogResult.filePath) {
             log.warn(
@@ -714,9 +727,7 @@ async function mergeVideoAndOverlay(
       overlayVideoPath, // Input 1: Overlay video
       '-filter_complex',
       // Center overlay horizontally, place near bottom (adjust y offset as needed)
-      '[0:v][1:v]overlay=x=(W-w)/2:y=H-h-(H*0.05):format=auto,hwupload[out]', // using format=auto,hwupload might help performance if hw accel available
-      // Alternative positioning if the above fails:
-      // '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=main_h-overlay_h-50[out]',
+      '[0:v][1:v]overlay=x=(W-w)/2:y=H-h-(H*0.05):format=auto[out]',
       '-map',
       '[out]', // Map filtered video to output
       '-map',
