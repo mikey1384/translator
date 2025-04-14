@@ -5,6 +5,7 @@ import {
   setNativePlayerInstance,
   getNativePlayerInstance,
 } from '../../native-player.js';
+import BaseSubtitleDisplay from '../BaseSubtitleDisplay.js';
 
 declare global {
   interface Window {
@@ -536,18 +537,6 @@ export default function NativeVideoPlayer({
     setActiveSubtitle('');
   }, [subtitles]);
 
-  const subtitleStyles = useCallback(() => {
-    let fontSize = '18px';
-    if (isFullyExpanded) {
-      fontSize = '32px';
-    }
-
-    let width = '100%';
-    if (isFullyExpanded) width = '90%';
-
-    return { width, fontSize };
-  }, [isFullyExpanded]);
-
   const videoErrorStyles = css`
     position: absolute;
     top: 50%;
@@ -639,56 +628,7 @@ export default function NativeVideoPlayer({
         Your browser does not support HTML5 video.
       </video>
 
-      {activeSubtitle && (
-        <div
-          className={css`
-            position: absolute;
-            bottom: ${isFullyExpanded ? '50px' : '10px'};
-            left: 50%;
-            transform: translateX(-50%)
-              ${subtitleVisible ? 'translateY(0)' : 'translateY(10px)'};
-            background: linear-gradient(
-              to top,
-              rgba(0, 0, 0, 0.85),
-              rgba(0, 0, 0, 0.65)
-            );
-            color: white;
-            border-radius: 8px;
-            padding: ${isFullyExpanded ? '12px 18px' : '8px 14px'};
-            text-align: center;
-            font-weight: 500;
-            line-height: 1.6;
-            font-family:
-              'Inter',
-              -apple-system,
-              BlinkMacSystemFont,
-              'Segoe UI',
-              Roboto,
-              sans-serif;
-            letter-spacing: 0.01em;
-            white-space: pre-line;
-            z-index: 1000;
-            pointer-events: none;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
-            min-width: 40%;
-            max-width: ${isFullyExpanded ? '80%' : '90%'};
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-            user-select: none;
-            opacity: ${subtitleVisible ? 1 : 0};
-            transition:
-              opacity 0.25s ease,
-              transform 0.25s ease;
-            border: none;
-          `}
-          style={{
-            width: subtitleStyles().width,
-            fontSize: subtitleStyles().fontSize,
-          }}
-        >
-          {activeSubtitle}
-        </div>
-      )}
+      <BaseSubtitleDisplay text={activeSubtitle} isVisible={subtitleVisible} />
 
       {/* Ephemeral Play/Pause Icon Overlay */}
       {showIndicator && (

@@ -5,7 +5,7 @@ import fs from 'fs/promises';
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import { parseSrt } from '../shared/helpers/index.js';
 import { execFile, ChildProcess } from 'child_process';
-import puppeteer, { Browser, Page } from 'puppeteer-core';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
 
 // Re-define channels used in this handler file
@@ -86,6 +86,20 @@ export function initializeRenderWindowHandlers(): void {
         }
 
         const page: Page = await browser.newPage();
+
+        // Forward console messages from the page to the main process log
+        page.on('console', msg => {
+          const type = msg.type();
+          const text = `[Puppeteer Page Console][${type}] ${msg.text()}`;
+          if (type === 'error') {
+            log.error(text);
+          } else if (type === 'warn') {
+            log.warn(text);
+          } else {
+            log.info(text); // Log info, log, debug etc. as info
+          }
+        });
+
         await page.setViewport({
           width: options.videoWidth,
           height: options.videoHeight,
@@ -114,20 +128,25 @@ export function initializeRenderWindowHandlers(): void {
           `[RenderWindowHandlers ${operationId}] Puppeteer page navigated to host HTML.`
         );
 
-        // Check if the updateSubtitle function exists on the page
-        const functionExists = await page.evaluate(() => {
-          // @ts-ignore
-          return typeof window.updateSubtitle === 'function';
-        });
-        if (!functionExists) {
-          log.error(
-            `[RenderWindowHandlers ${operationId}] Error: window.updateSubtitle function not found in render-host.html. Ensure it's exposed correctly in render-host-script.tsx.`
-          );
-          throw new Error('window.updateSubtitle function not found on page.');
-        }
+        // Check if the updateSubtitle function exists on the page using waitForFunction
         log.info(
-          `[RenderWindowHandlers ${operationId}] Found window.updateSubtitle function on page.`
+          `[RenderWindowHandlers ${operationId}] Waiting for window.updateSubtitle function...`
         );
+        try {
+          await page.waitForFunction(
+            'typeof window.updateSubtitle === "function"',
+            { timeout: 5000 }
+          ); // Wait up to 5 seconds
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Found window.updateSubtitle function on page.`
+          );
+        } catch (waitError) {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Error: window.updateSubtitle function did not appear within timeout. Ensure it's exposed correctly in render-host-script.tsx. Error:`,
+            waitError
+          );
+          throw new Error('window.updateSubtitle function timed out.');
+        }
         // --- End Puppeteer Setup ---
 
         // --- Parse SRT ---
@@ -223,7 +242,7 @@ export function initializeRenderWindowHandlers(): void {
         );
         const tempOverlayVideoPath = path.join(
           tempDirPath,
-          `overlay_${operationId}.webm`
+          `overlay_${operationId}.mov`
         );
 
         const assemblyResult = await assemblePngSequence(
@@ -350,7 +369,7 @@ export function initializeRenderWindowHandlers(): void {
           }
         }
         // Clean up temp dir
-        await cleanupTempDir(tempDirPath, operationId); // Ensure this is re-enabled if you commented it out
+        await cleanupTempDir(tempDirPath, operationId); // <-- Add // at the beginning
         log.info(`[RenderWindowHandlers ${operationId}] Cleanup finished.`);
         // --- End Cleanup ---
       }
@@ -364,9 +383,13 @@ export function initializeRenderWindowHandlers(): void {
 
 // --- Helper function to get render-host.html path ---
 function getRenderHostPath(): string {
-  // Adjust if your build structure is different
-  // Assuming render-host.html is copied to the root of the dist folder by a build step
-  return path.join(app.getAppPath(), 'dist', 'render-host.html');
+  const basePath = app.getAppPath();
+  log.info(`[getRenderHostPath] app.getAppPath() returned: ${basePath}`);
+  // Assuming basePath already points to the correct directory (like 'dist' in dev)
+  // Just join the filename directly.
+  const correctPath = path.join(basePath, 'render-host.html');
+  log.info(`[getRenderHostPath] Constructed path: ${correctPath}`);
+  return correctPath;
 }
 
 // --- Utility Functions (Keep as they are) ---
@@ -407,8 +430,6 @@ async function cleanupTempDir(
   }
 }
 
-// --- FFmpeg Functions (Keep as they are, ensure assemblePngSequence uses -crf 18 -b:v 0) ---
-
 async function assemblePngSequence(
   tempDirPath: string,
   outputPath: string,
@@ -431,17 +452,9 @@ async function assemblePngSequence(
       '-i',
       inputPattern,
       '-c:v',
-      'libvpx-vp9',
+      'png',
       '-pix_fmt',
-      'yuva420p', // Crucial for alpha
-      '-crf', // Use CRF for quality
-      '18',
-      '-b:v', // Required with CRF
-      '0',
-      '-deadline',
-      'realtime', // Can sometimes help with hanging processes
-      '-cpu-used',
-      '8', // Adjust based on system cores, might speed up vp9
+      'rgba',
       '-y',
       outputPath,
     ];
