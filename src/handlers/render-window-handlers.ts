@@ -182,148 +182,101 @@ export function initializeRenderWindowHandlers(): void {
         );
         // --- End FFmpeg Assembly ---
 
-        // --- Prompt User to Save --- START ---
+        // assemblePngSequence now returns the path to the *temporary* overlay
+        const tempOverlayPath = assemblyResult.outputPath;
         log.info(
-          `[RenderWindowHandlers ${operationId}] Prompting user to save the overlay video...`
+          `[RenderWindowHandlers ${operationId}] Temporary overlay created at: ${tempOverlayPath}`
         );
 
-        let finalOutputPath: string | undefined;
-        try {
-          // --- RESTORE WINDOW ARGUMENT ---
-          const window =
-            BrowserWindow.getFocusedWindow() ||
-            BrowserWindow.getAllWindows()[0];
-          if (!window) {
-            log.error(
-              `[RenderWindowHandlers ${operationId}] No window found for save dialog!`
-            );
-            throw new Error(
-              'No application window available to show save dialog.'
-            );
-          }
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Window ID for save dialog: ${window?.id}`
+        // --- Call the Final Merge Step (using temp overlay) --- START ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Initiating final merge step using temp overlay...`
+        );
+
+        const originalVideoPath = options.originalVideoPath;
+        if (!originalVideoPath) {
+          throw new Error(
+            'Original video path was not provided in the initial render options.'
           );
-
-          const inputExt = '.webm'; // Output is WebM
-          const baseName = 'video-with-subtitles';
-          // Try to get a better base name (you might need to pass original filename in options)
-          // Example placeholder:
-          // const originalFileName = options.originalVideoFileName || 'video';
-          // baseName = originalFileName.substring(0, originalFileName.lastIndexOf('.')) || originalFileName;
-          const suggestedOutputName = `${baseName}-overlay${inputExt}`;
-
-          const saveDialogResult = await dialog.showSaveDialog(window, {
-            // ADDED 'window' argument back
-            defaultPath: suggestedOutputName,
-            title: 'Save Subtitle Overlay Video As',
-            filters: [
-              { name: 'WebM Video', extensions: ['webm'] },
-              { name: 'All Files', extensions: ['*'] },
-            ],
-          });
-          // --- END RESTORE WINDOW ARGUMENT ---
-
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Save dialog returned. Cancelled: ${saveDialogResult.canceled}, Path: ${saveDialogResult.filePath}`
-          );
-
-          if (saveDialogResult.canceled || !saveDialogResult.filePath) {
-            log.warn(
-              `[RenderWindowHandlers ${operationId}] User canceled save dialog.`
-            );
-            // Decide how to handle cancellation - maybe clean up and reply success=false?
-            // For now, we'll throw an error to indicate it wasn't saved.
-            throw new Error('Save operation canceled by user.');
-          }
-
-          finalOutputPath = saveDialogResult.filePath;
-          log.info(
-            `[RenderWindowHandlers ${operationId}] User selected output path: ${finalOutputPath}`
-          );
-
-          // Move the temporary file to the final location
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Moving ${tempOverlayVideoPath} to ${finalOutputPath}...`
-          );
-          await fs.rename(tempOverlayVideoPath, finalOutputPath); // Use fs.rename from fs/promises
-          log.info(
-            `[RenderWindowHandlers ${operationId}] File moved successfully.`
-          );
-
-          // --- Call the Final Merge Step --- START ---
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Initiating final merge step...`
-          );
-          // !!! IMPORTANT: We need the ORIGINAL video path here !!!
-          // It must be passed in the initial 'options' from the renderer.
-          // For now, we'll add a placeholder check.
-          // TODO: Update RenderSubtitlesOptions interface and renderer calls to include originalVideoPath.
-          const originalVideoPath = options.originalVideoPath; // ASSUMING THIS EXISTS!
-          if (!originalVideoPath) {
-            throw new Error(
-              'Original video path was not provided in the initial render options.'
-            );
-          }
-
-          // Determine the final merged output path. Let's derive it from the overlay path.
-          const finalMergedOutputPath = finalOutputPath.replace(
-            /-overlay\.webm$/,
-            '-merged.mp4'
-          ); // Example: replace suffix
-
-          const mergeResult = await mergeVideoAndOverlay({
-            originalVideoPath: originalVideoPath,
-            overlayVideoPath: finalOutputPath, // The path where the user saved the overlay
-            finalOutputPath: finalMergedOutputPath,
-            operationId: operationId,
-          });
-
-          if (!mergeResult.success) {
-            throw new Error(mergeResult.error || 'Final FFmpeg merge failed.');
-          }
-
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Final merged video created at: ${mergeResult.finalOutputPath}`
-          );
-          // --- Call the Final Merge Step --- END ---
-
-          // --- Send FINAL Success Result ---
-          // Now we send the path to the *fully merged* video
-          event.reply(RENDER_CHANNELS.RESULT, {
-            operationId: operationId,
-            success: true,
-            outputPath: mergeResult.finalOutputPath, // Send the final merged path!
-          });
-          log.info(
-            `[RenderWindowHandlers ${operationId}] Sent final success result (with final merged path) to renderer.`
-          );
-          // --- End Final Result ---
-        } catch (saveMoveError: any) {
-          log.error(
-            `[RenderWindowHandlers ${operationId}] Error during save/move:`,
-            saveMoveError
-          );
-          // Attempt to clean up the temp file if save/move fails
-          try {
-            log.warn(
-              `[RenderWindowHandlers ${operationId}] Attempting cleanup of temp file ${tempOverlayVideoPath} after save/move error.`
-            );
-            await fs.rm(tempOverlayVideoPath, { force: true }); // Use fs.rm
-          } catch (cleanupErr) {
-            log.error(
-              `[RenderWindowHandlers ${operationId}] Failed cleanup of ${tempOverlayVideoPath}:`,
-              cleanupErr
-            );
-          }
-          // Rethrow the error to be caught by the main try/catch, which sends a failure reply
-          throw saveMoveError;
         }
-        // --- Prompt User to Save --- END ---
 
-        // *** Important: Cleanup (temp dir) happens in the main finally block ***
+        // --- Prompt User to Save FINAL MP4 --- START ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Prompting user to save the FINAL merged video...`
+        );
+        const window =
+          BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+        if (!window) {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] No window found for save dialog!`
+          );
+          throw new Error(
+            'No application window available to show save dialog.'
+          );
+        }
 
-        // --- The original event.reply outside the try/catch is now inside the try block above ---
+        // Suggest a name for the FINAL output file
+        const originalFileName = path.basename(
+          originalVideoPath,
+          path.extname(originalVideoPath)
+        );
+        const suggestedFinalName = `${originalFileName}-merged.mp4`;
+
+        const finalSaveDialogResult = await dialog.showSaveDialog(window, {
+          title: 'Save Merged Video As',
+          defaultPath: suggestedFinalName,
+          filters: [
+            { name: 'MP4 Video', extensions: ['mp4'] },
+            { name: 'All Files', extensions: ['*'] },
+          ],
+        });
+
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Final save dialog returned. Cancelled: ${finalSaveDialogResult.canceled}, Path: ${finalSaveDialogResult.filePath}`
+        );
+
+        if (finalSaveDialogResult.canceled || !finalSaveDialogResult.filePath) {
+          log.warn(
+            `[RenderWindowHandlers ${operationId}] User cancelled final save dialog.`
+          );
+          // Send a 'cancelled' or specific error back? Or just let cleanup handle it?
+          // For now, we'll throw an error which the catch block below will handle.
+          throw new Error('User cancelled saving the final merged video.');
+        }
+        const finalUserSelectedPath = finalSaveDialogResult.filePath; // Path where user wants the final MP4
+        // --- Prompt User to Save FINAL MP4 --- END ---
+
+        // --- Call the modified merge function ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Calling mergeVideoAndOverlay. Overlay: ${tempOverlayPath}, Final Target: ${finalUserSelectedPath}`
+        );
+        const mergeResult = await mergeVideoAndOverlay({
+          originalVideoPath: originalVideoPath,
+          overlayVideoPath: tempOverlayPath, // Use the temp overlay path
+          targetSavePath: finalUserSelectedPath, // Use the path chosen by user
+          operationId: operationId,
+        });
+
+        if (!mergeResult.success) {
+          throw new Error(mergeResult.error || 'Final FFmpeg merge failed.');
+        }
+
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Final merged video created at: ${mergeResult.finalOutputPath}`
+        );
+        // --- Call the Final Merge Step --- END ---
+
+        // --- Send FINAL Success Result ---
+        // Send the path to the *fully merged* video saved at the user's chosen location
+        event.reply(RENDER_CHANNELS.RESULT, {
+          operationId: operationId,
+          success: true,
+          outputPath: mergeResult.finalOutputPath, // Send the final merged path!
+        });
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Sent final success result (with final merged path) to renderer.`
+        );
+        // --- End Final Result ---
       } catch (error: any) {
         log.error(
           `[RenderWindowHandlers ${operationId}] Error during orchestration:`,
@@ -695,8 +648,8 @@ async function assemblePngSequence(
 // --- Define the options interface ---
 interface MergeVideoAndOverlayOptions {
   originalVideoPath: string;
-  overlayVideoPath: string;
-  finalOutputPath: string;
+  overlayVideoPath: string; // Path to the TEMP overlay webm
+  targetSavePath: string; // Path chosen by user for FINAL mp4
   operationId: string;
 }
 
@@ -706,14 +659,15 @@ interface MergeVideoAndOverlayOptions {
  * @returns Promise resolving to { success: true, finalOutputPath: string } or rejecting on error.
  */
 async function mergeVideoAndOverlay(
-  options: MergeVideoAndOverlayOptions // Use the options object
+  options: MergeVideoAndOverlayOptions
 ): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
-  // Destructure options
-  const { originalVideoPath, overlayVideoPath, finalOutputPath, operationId } =
+  // --- MODIFY Destructuring ---
+  const { originalVideoPath, overlayVideoPath, targetSavePath, operationId } =
     options;
 
   log.info(
-    `[mergeVideoAndOverlay ${operationId}] Starting final merge. Original: ${originalVideoPath}, Overlay: ${overlayVideoPath}, Output: ${finalOutputPath}`
+    // --- MODIFY Log ---
+    `[mergeVideoAndOverlay ${operationId}] Starting final merge. Original: ${originalVideoPath}, Overlay: ${overlayVideoPath}, Output: ${targetSavePath}`
   );
 
   return new Promise((resolve, reject) => {
@@ -722,34 +676,35 @@ async function mergeVideoAndOverlay(
     // Construct FFmpeg arguments for overlaying
     const args = [
       '-i',
-      originalVideoPath, // Input 0: Original video
+      originalVideoPath,
       '-i',
-      overlayVideoPath, // Input 1: Overlay video
+      overlayVideoPath,
       '-filter_complex',
-      // Center overlay horizontally, place near bottom (adjust y offset as needed)
       '[0:v][1:v]overlay=x=(W-w)/2:y=H-h-(H*0.05):format=auto[out]',
       '-map',
-      '[out]', // Map filtered video to output
+      '[out]',
       '-map',
-      '0:a?', // Map audio from original video (if it exists)
+      '0:a?',
       '-c:a',
-      'copy', // Copy audio stream without re-encoding
+      'copy',
       '-c:v',
-      'libx264', // Video codec (H.264 is widely compatible)
+      'libx264',
       '-preset',
-      'veryfast', // Encoding speed/compression trade-off
+      'veryfast',
       '-crf',
-      '22', // Constant Rate Factor (quality, lower is better, 18-28 is common)
-      '-y', // Overwrite output file without asking
-      finalOutputPath, // Final output file path
+      '22',
+      '-y',
+      // --- MODIFY Output Path Argument ---
+      targetSavePath, // Use the path chosen by the user
     ];
 
     log.info(
-      `[mergeVideoAndOverlay ${operationId}] Executing FFmpeg command: ${ffmpegPath} ${args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}` // Log command safely
+      // --- MODIFY Log ---
+      `[mergeVideoAndOverlay ${operationId}] Executing FFmpeg command: ${ffmpegPath} ${args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}`
     );
 
-    let ffmpegOutput = ''; // To store stdout/stderr
-    let ffmpegError = ''; // Specifically for stderr
+    let ffmpegOutput = '';
+    let ffmpegError = '';
 
     try {
       const child: ChildProcess = execFile(ffmpegPath, args);
@@ -790,9 +745,11 @@ async function mergeVideoAndOverlay(
 
         if (code === 0) {
           log.info(
-            `[mergeVideoAndOverlay ${operationId}] Final merge successful: ${finalOutputPath}`
+            // --- MODIFY Log ---
+            `[mergeVideoAndOverlay ${operationId}] Final merge successful: ${targetSavePath}`
           );
-          resolve({ success: true, finalOutputPath });
+          // --- MODIFY Return Value ---
+          resolve({ success: true, finalOutputPath: targetSavePath }); // Return the target path
         } else {
           log.error(
             `[mergeVideoAndOverlay ${operationId}] Final merge failed (exit code ${code}).`
