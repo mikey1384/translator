@@ -23,16 +23,12 @@ import {
 } from '../../native-player.js';
 import { subtitleVideoPlayer } from '../../../shared/constants/index.js';
 
-import {
-  openSubtitleWithElectron,
-  buildSrt,
-  fixOverlappingSegments,
-} from '../../../shared/helpers/index.js';
+import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 
 import { secondsToSrtTime } from '../../../shared/helpers/index.js';
 import { useSubtitleNavigation } from './hooks.js';
 import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
-import { SrtSegment, MergeSubtitlesOptions } from '../../../types/interface.js';
+import { SrtSegment } from '../../../types/interface.js';
 import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
@@ -86,9 +82,7 @@ export function EditSubtitles({
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
   onSelectVideoClick,
-  setMergeProgress,
   setMergeStage,
-  setIsMergingInProgress,
   onSetMergeOperationId,
   editorRef,
   onSetSubtitleSegments,
@@ -115,8 +109,6 @@ export function EditSubtitles({
   const playTimeoutRef = useRef<number | null>(null);
   const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
   const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
-
-  const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a']; // Add more if needed
 
   useEffect(() => {
     console.log(
@@ -404,37 +396,6 @@ export function EditSubtitles({
     [videoPlayerRef] // Depend on videoPlayerRef state
   );
 
-  // Add this function inside the EditSubtitles component
-  async function testClientCallSimply() {
-    console.log(
-      '[EditSubtitles] Test button clicked. Calling ON_START_PNG_RENDER_REQUEST prop...'
-    );
-    const dummyOptions: RenderSubtitlesOptions = {
-      operationId: 'test-prop-render',
-      srtContent: '1\n00:00:01,000 --> 00:00:03,000\nTest via Prop\n',
-      outputDir: '/test/dir/prop',
-      videoDuration: 6,
-      videoWidth: 110,
-      videoHeight: 60,
-      frameRate: 11,
-    };
-    try {
-      // --- Call the PROP function instead of the client ---
-      const result = await onStartPngRenderRequest(dummyOptions);
-      // --- End PROP call ---
-
-      console.log(
-        '[EditSubtitles] Immediate result from onStartPngRenderRequest prop:',
-        result
-      );
-    } catch (error) {
-      console.error(
-        '[EditSubtitles] Error calling onStartPngRenderRequest prop:',
-        error
-      );
-    }
-  }
-
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
       {/* Error display - Use saveError prop now */}
@@ -593,9 +554,7 @@ export function EditSubtitles({
             setMergeFontSize={setMergeFontSize}
             mergeStylePreset={mergeStylePreset}
             setMergeStylePreset={setMergeStylePreset}
-            handleMergeVideoWithSubtitles={() =>
-              handleMergeVideoWithSubtitles(videoFile!)
-            }
+            handleMergeVideoWithSubtitles={handleMergeVideoWithSubtitles}
             isMergingInProgress={isMergingInProgressProp || false}
             videoFileExists={!!videoFile} // Ensure correct prop passed
             subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)} // Ensure correct prop passed
@@ -603,9 +562,6 @@ export function EditSubtitles({
         </div>
       )}
       {/* --- Restore Original Fixed Action Bar --- END --- */}
-
-      {/* Add this button somewhere in the JSX of EditSubtitles */}
-      <button onClick={testClientCallSimply}>Test Client Call (Minimal)</button>
     </Section>
   );
 
@@ -793,305 +749,109 @@ export function EditSubtitles({
     }
   }
 
-  async function handleMergeVideoWithSubtitles(
-    videoFile: File
-  ): Promise<{ success: boolean; outputPath?: string; error?: string }> {
-    // Define the file size limit (3GB)
-    const fileSizeLimitBytes = 3 * 1024 * 1024 * 1024;
+  async function handleMergeVideoWithSubtitles(): Promise<void> {
+    console.log(
+      '[EditSubtitles] handleMergeVideoWithSubtitles triggered (New PNG Sequence Method).'
+    );
+    setSaveError(''); // Clear previous errors
 
-    // Check file size
-    if (videoFile.size > fileSizeLimitBytes) {
-      const limitGB = fileSizeLimitBytes / (1024 * 1024 * 1024);
-      const fileSizeGB = (videoFile.size / (1024 * 1024 * 1024)).toFixed(2);
-      const errorMessage = `Error: Video file size (${fileSizeGB} GB) exceeds the ${limitGB} GB limit. Merge aborted.`;
-      console.error(errorMessage);
-      setSaveError(errorMessage);
-      setMergeStage('Merge aborted due to file size.');
-      setIsMergingInProgress(false);
-      return { success: false, error: errorMessage };
+    // --- Initial Checks (Keep existing checks) ---
+    if (!videoFilePath && !videoFile) {
+      const msg = 'No video loaded to merge subtitles with.';
+      console.error(`[EditSubtitles] ${msg}`);
+      setSaveError(msg);
+      return;
     }
+    if (!subtitlesProp || subtitlesProp.length === 0) {
+      const msg = 'No subtitles loaded to merge.';
+      console.error(`[EditSubtitles] ${msg}`);
+      setSaveError(msg);
+      return;
+    }
+    setMergeStage('Starting render...'); // Update progress stage
 
-    // Generate operationId here
-    const operationId = `merge-${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2, 9)}`;
-
-    setIsMergingInProgress(true);
-    // --- Set the operation ID in parent state --- START ---
-    onSetMergeOperationId(operationId);
-    // --- Set the operation ID in parent state --- END ---
-    setMergeProgress(0);
-    setMergeStage('Preparing subtitle file...');
-    let tempMergedFilePath: string | null = null; // Keep track of the temp file
-    let cleanupMergeListener: (() => void) | null = null; // For listener cleanup
-
-    // Add a flag to track cancellation status from progress events
-    let wasCancelledViaProgress = false;
+    const operationId = `render-${Date.now()}`;
+    onSetMergeOperationId(operationId); // Set operation ID if needed by UI
 
     try {
-      // Setup Progress Listener
-      const handleProgress = (_event: any, progress: any) => {
-        if (progress?.operationId === operationId) {
-          setMergeProgress(progress.percent);
-          setMergeStage(progress.stage);
+      // --- Gather required options for PNG Sequence Render ---
+      // !!! IMPORTANT: Ensure these values are correctly retrieved !!!
+      const srtContent = subtitlesProp
+        ?.map(
+          s =>
+            `${s.index}\n${secondsToSrtTimeFn(s.start)} --> ${secondsToSrtTimeFn(s.end)}\n${s.text}\n`
+        )
+        .join('\n');
+      const videoDuration = videoPlayerRef?.current?.getDuration() || 0;
+      const videoWidth = videoPlayerRef?.current?.getVideoWidth() || 1280;
+      const videoHeight = videoPlayerRef?.current?.getVideoHeight() || 720;
+      const frameRate = 30; // !! Placeholder: Still need actual video frame rate !!
+      const outputDir = '/placeholder/output/dir'; // Placeholder: Main process handles actual paths
 
-          // Keep cancellation status visible
-          if (
-            progress.cancelled ||
-            progress.stage.includes('cancelled') ||
-            progress.stage.includes('Merge cancelled')
-          ) {
-            console.log('Detected cancellation in progress event:', progress);
-            setMergeStage(progress.stage || 'Merge cancelled');
-            setTimeout(() => setIsMergingInProgress(false), 2000);
-            // Set the cancellation flag to true
-            wasCancelledViaProgress = true;
-          }
-        }
+      if (
+        !srtContent ||
+        videoDuration <= 0 ||
+        videoWidth <= 0 ||
+        videoHeight <= 0
+      ) {
+        throw new Error('Missing required video/subtitle data for rendering.');
+      }
+
+      // --- Create the CORRECT options object typed as RenderSubtitlesOptions ---
+      const renderOptions: RenderSubtitlesOptions = {
+        operationId,
+        srtContent,
+        outputDir, // Primarily for signalling intent
+        videoDuration,
+        videoWidth,
+        videoHeight,
+        frameRate,
+        // Pass style info if needed by the hidden window's rendering eventually
+        // fontSize, stylePreset, ...
       };
+      // --- End Creating Options ---
 
-      if (window.electron?.onMergeSubtitlesProgress) {
-        window.electron.onMergeSubtitlesProgress(handleProgress);
-        cleanupMergeListener = () => {
-          window.electron.onMergeSubtitlesProgress(null);
-        };
-      } else {
-        console.warn(
-          '[Renderer] window.electron.onMergeSubtitlesProgress not available'
-        );
-      }
-
-      // Use subtitlesProp
-      const srtContent = buildSrt(fixOverlappingSegments(subtitlesProp || []));
-
-      // Start Merge Process
-      setMergeStage('Starting merge process...');
-
-      // --- Prepare Merge Options --- START ---
-      let mergeOptions: MergeSubtitlesOptions;
-
-      // --- MODIFIED: Prioritize videoFilePath prop --- START ---
-      if (videoFilePath) {
-        // If path prop exists, use it directly
-        console.log('[EditSubtitles] Using videoFilePath prop:', videoFilePath);
-        mergeOptions = {
-          videoPath: videoFilePath,
-          videoFileName: videoFile.name, // Still use name from File object for context
-          srtContent: srtContent,
-          operationId: operationId,
-          fontSize: mergeFontSize,
-          stylePreset: mergeStylePreset,
-        };
-      } else {
-        // If no path is available, use the buffer method (File object)
-        // The 500MB limit check is NO LONGER NEEDED here because
-        // the path should *always* be available thanks to the Electron dialog changes.
-        // If we reach here, something unexpected happened.
-        console.warn(
-          '[EditSubtitles] videoFilePath prop is missing! Falling back to sending File object. This might fail for large files.'
-        );
-        mergeOptions = {
-          videoFile: videoFile, // Send the File object
-          srtContent: srtContent,
-          operationId: operationId,
-          fontSize: mergeFontSize,
-          stylePreset: mergeStylePreset,
-        };
-      }
-      // --- MODIFIED: Prioritize videoFilePath prop --- END ---
-
-      // Call Electron merge function with prepared options
-      const mergeResult = await window.electron.mergeSubtitles(mergeOptions);
-
-      console.log('Merge result received:', mergeResult);
-
-      // Check for cancellation
-      if (mergeResult?.cancelled) {
-        console.log('Merge was cancelled by user');
-        setMergeStage('Merge cancelled by user');
-        setTimeout(() => setIsMergingInProgress(false), 2000);
-        // No need to clean up temp files - the handler already took care of that
-        return { success: false, error: 'Operation cancelled by user' };
-      }
-
-      // Check for success and outputPath (not tempOutputPath)
-      if (!mergeResult?.success || !mergeResult.outputPath) {
-        console.error('Merge process failed or no output path:', mergeResult);
-        throw new Error(
-          `Merge process failed: ${mergeResult?.error || 'Unknown merge error'}`
-        );
-      }
-
-      tempMergedFilePath = mergeResult.outputPath; // Use outputPath instead of tempOutputPath
-      console.log('Successfully got merge output path:', tempMergedFilePath);
-
-      // EXTRA CHECK: Consider empty or whitespace-only path as indication of cancellation
-      if (!tempMergedFilePath || tempMergedFilePath.trim() === '') {
-        console.log(
-          'Empty output path from merge result, treating as cancelled'
-        );
-        setMergeStage('Merge was cancelled');
-        setTimeout(() => setIsMergingInProgress(false), 2000);
-        return { success: false, error: 'Operation was cancelled' };
-      }
-
-      setMergeStage('Merge complete. Select save location...');
-      setMergeProgress(100); // Indicate merge part is done
+      // --- Call the PROP function passed down from AppContent ---
       console.log(
-        'Merge complete, proceeding to save dialog for:',
-        tempMergedFilePath
+        `[EditSubtitles ${operationId}] Calling onStartPngRenderRequest prop with options:`,
+        renderOptions
       );
+      setMergeStage('Initializing render process via parent...'); // Update stage
 
-      // Check if the merge was cancelled via progress events
-      if (wasCancelledViaProgress) {
+      // Pass the correctly typed options object
+      const startResult = await onStartPngRenderRequest(renderOptions);
+      // --- End PROP call ---
+
+      if (startResult.success) {
         console.log(
-          'Merge was cancelled via progress events, skipping save dialog'
+          `[EditSubtitles ${operationId}] Render process initiation request sent successfully via prop.`
         );
-        setMergeStage('Merge was cancelled');
-        setTimeout(() => setIsMergingInProgress(false), 2000);
-        return { success: false, error: 'Operation was cancelled' };
-      }
-
-      // Immediately show the save dialog after merge completes
-      console.log('⭐ ATTEMPTING TO DISPLAY SAVE DIALOG...');
-
-      // Ensure we remove any remaining validation before showing the save dialog
-      if (tempMergedFilePath && tempMergedFilePath.trim() !== '') {
-        try {
-          // Prompt User to Save
-          let inputExt = '.mp4'; // Default to .mp4
-          if (videoFile.name.includes('.')) {
-            const originalExt = videoFile.name
-              .substring(videoFile.name.lastIndexOf('.'))
-              .toLowerCase();
-            if (!AUDIO_EXTENSIONS.includes(originalExt)) {
-              inputExt = originalExt; // Use original extension if it's not an audio one
-            }
-          }
-
-          const suggestedOutputName = `video-with-subtitles${inputExt}`;
-
-          console.log(
-            '⭐ Showing save dialog with suggested name:',
-            suggestedOutputName,
-            'for merged file:',
-            tempMergedFilePath
-          );
-
-          const saveResult = await window.electron.saveFile({
-            content: '', // Not saving content directly, just getting path
-            defaultPath: suggestedOutputName,
-            title: 'Save Merged Video As',
-            filters: [
-              { name: 'Video Files', extensions: [inputExt.slice(1)] },
-              { name: 'All Files', extensions: ['*'] },
-            ],
-          });
-
-          console.log('Save dialog result:', saveResult);
-
-          if (saveResult.error) {
-            if (saveResult.error.includes('canceled')) {
-              console.log('Save was cancelled by user');
-              setMergeStage('Save canceled by user. Cleaning up...');
-              throw new Error('Save operation canceled by user.'); // Will trigger finally block
-            } else {
-              console.error('Save dialog error:', saveResult.error);
-              throw new Error(`Failed to get save path: ${saveResult.error}`);
-            }
-          }
-
-          if (!saveResult.filePath) {
-            console.error('No file path returned from save dialog');
-            throw new Error('No output path selected after merge.');
-          }
-
-          const finalOutputPath = saveResult.filePath;
-          console.log('User selected output path:', finalOutputPath);
-
-          // Move Temporary File to Final Location
-          // --- Add Logging --- START ---
-          console.log(`[Merge] Attempting to move file.`);
-          console.log(`[Merge] Source (temp): ${tempMergedFilePath}`);
-          console.log(
-            `[Merge] Destination (user selected): ${finalOutputPath}`
-          );
-          // --- Add Logging --- END ---
-
-          if (!tempMergedFilePath) {
-            throw new Error(
-              'Temporary merge file path is missing before move operation.'
-            );
-          }
-          if (!finalOutputPath) {
-            throw new Error(
-              'Final output path is missing before move operation (save dialog issue?).'
-            );
-          }
-
-          setMergeStage('Moving file to final destination...');
-          const moveResult = await window.electron.moveFile(
-            tempMergedFilePath,
-            finalOutputPath
-          );
-
-          console.log('Move result:', moveResult);
-
-          if (!moveResult?.success) {
-            throw new Error(
-              `Failed to move file: ${moveResult?.error || 'Unknown move error'}`
-            );
-          }
-
-          setMergeStage('File saved successfully!');
-          tempMergedFilePath = null; // Clear temp path as it's now moved
-          setTimeout(() => setIsMergingInProgress(false), 2000);
-          // Return final path on success
-          return { success: true, outputPath: finalOutputPath };
-        } catch (dialogError) {
-          console.error('Error during save dialog or file move:', dialogError);
-          throw dialogError; // Re-throw to be caught by the outer catch block
-        }
+        setMergeStage('Render request sent. Waiting for main process...');
+        // The UI now waits for the final result via the client's IPC listener.
+        // Do NOT assume completion or look for outputPath here.
       } else {
-        // If we get here, something went wrong with the merge result
-        console.log('No valid output path from merge result, likely cancelled');
-        setMergeStage('Operation did not complete, no file to save');
-        setTimeout(() => setIsMergingInProgress(false), 2000);
-        return { success: false, error: 'No output file was produced' };
+        // The initial request failed to send
+        throw new Error(
+          startResult.error ||
+            'Failed to send render initiation request via prop.'
+        );
       }
+
+      // --- Remove all the OLD logic that checked startResult.cancelled/outputPath ---
+      // if (startResult?.cancelled) { ... }                   // REMOVE
+      // if (!startResult?.success || !startResult.outputPath) { ... } // REMOVE
+      // tempMergedFilePath = startResult.outputPath;        // REMOVE
+      // ... logic involving tempMergedFilePath ...           // REMOVE
+      // ... logic involving save dialog ...                  // REMOVE (for now, needs to happen after successful RESULT IPC)
+      // --- End Removal ---
     } catch (error: any) {
-      const errorMessage = error.message || 'Unknown merge error';
-      console.error('Error during merge/save process:', error);
-      setMergeStage(`Error: ${errorMessage}`);
-
-      // Clean up temporary file if it exists
-      if (tempMergedFilePath) {
-        try {
-          await window.electron.deleteFile({
-            filePathToDelete: tempMergedFilePath,
-          });
-          console.log(
-            `Deleted temporary merge file after error: ${tempMergedFilePath}`
-          );
-          tempMergedFilePath = null;
-        } catch (cleanupErr) {
-          console.warn(`Failed to delete temp file after error: ${cleanupErr}`);
-        }
-      }
-
-      // Cleanup is now handled in finally
-      setTimeout(() => setIsMergingInProgress(false), 3000);
-      // Return error on failure
-      return { success: false, error: errorMessage };
-    } finally {
-      // Clean up the progress listener
-      if (cleanupMergeListener) {
-        cleanupMergeListener();
-      }
-      // --- Clear the operation ID in parent state --- START ---
-      onSetMergeOperationId(null);
-      // --- Clear the operation ID in parent state --- END ---
+      const errorMessage = `Error during subtitle rendering process initiation: ${error.message || error}`;
+      console.error(`[EditSubtitles ${operationId}] ${errorMessage}`);
+      setSaveError(errorMessage);
+      setMergeStage('Error');
+      onSetMergeOperationId(null); // Clear operation ID
     }
+    // NOTE: Do NOT set isMergingInProgressProp to false here in the success path
   }
 
   function handleRemoveSubtitleLocal(index: number) {
