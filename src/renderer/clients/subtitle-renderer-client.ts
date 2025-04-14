@@ -24,17 +24,6 @@ export const CAPTURE_CHANNELS = {
   // Results for invoke calls are handled via Promise resolution/rejection
 };
 
-// Channels for file/directory operations needed by the client
-// Let's reuse existing file handler channels if possible, or define specific ones if needed.
-// For now, we'll assume the main process handles temp dir creation internally when needed.
-
-// Interface for the result expected by the main window
-interface RenderResult {
-  success: boolean;
-  outputPath?: string; // Path to the generated final video (or temp overlay)
-  error?: string;
-}
-
 // Basic class structure (will be filled in later)
 class SubtitleRendererClient {
   private isRendering: boolean = false;
