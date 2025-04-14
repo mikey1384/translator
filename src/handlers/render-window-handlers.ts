@@ -3,7 +3,8 @@ import log from 'electron-log';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url'; // For __dirname in ES modules
-import { RenderSubtitlesOptions } from '../types/interface.js';
+import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
+import { parseSrt } from '../shared/helpers/index.js';
 
 // --- ES Module __dirname Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -40,14 +41,14 @@ export function initializeRenderWindowHandlers(): void {
       );
 
       let windowId: number | null = null;
-      let tempDirPath: string | null = null; // Keep track of temp dir path
+      let tempDirPath: string | null = null;
 
       try {
         // --- Create Temp Directory ---
         log.info(
           `[RenderWindowHandlers ${operationId}] Creating temporary directory...`
         );
-        tempDirPath = await createOperationTempDir(operationId); // Now called
+        tempDirPath = await createOperationTempDir(operationId);
         log.info(
           `[RenderWindowHandlers ${operationId}] Temporary directory created: ${tempDirPath}`
         );
@@ -63,27 +64,140 @@ export function initializeRenderWindowHandlers(): void {
         );
         // --- End Hidden Window ---
 
-        // --- !!! TEMPORARY IMMEDIATE RESPONSE !!! ---
+        // --- Parse SRT ---
+        let segments: SrtSegment[] = [];
+        try {
+          // We need a parseSrt function available here.
+          // Let's assume it's imported or defined elsewhere in the main process.
+          // If not, we'll need to add it (e.g., copy from shared/helpers).
+          segments = parseSrt(options.srtContent); // Assuming parseSrtUtil is available
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Parsed ${segments.length} SRT segments.`
+          );
+        } catch (parseError: any) {
+          throw new Error(`Failed to parse SRT content: ${parseError.message}`);
+        }
+        // --- End Parse SRT ---
+
+        // --- Frame-by-Frame Render Loop ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Starting frame render/capture loop for window ${windowId}.`
+        );
+        const totalFrames = Math.ceil(
+          options.videoDuration * options.frameRate
+        );
+        const targetWindow = renderWindows.get(windowId); // Get the created window
+
+        if (!targetWindow || targetWindow.isDestroyed()) {
+          // Should not happen if window creation succeeded, but check anyway
+          throw new Error(
+            `Render window ${windowId} not found or destroyed before loop.`
+          );
+        }
+
+        for (let i = 0; i < totalFrames; i++) {
+          const frameCount = i + 1; // 1-based frame count
+          const currentTime = i / options.frameRate; // Time at the start of the frame
+
+          // Determine subtitle text for this frame
+          const activeSegment = segments.find(
+            seg => currentTime >= seg.start && currentTime < seg.end
+          );
+          const subtitleText = activeSegment ? activeSegment.text : '';
+
+          // Define frame path (ensure 7 digits for FFmpeg later)
+          const frameFileName = `frame_${String(frameCount).padStart(7, '0')}.png`;
+          const framePath = path.join(tempDirPath, frameFileName);
+
+          try {
+            // 1. Send text update to hidden window
+            // log.debug(`[RenderWindowHandlers ${operationId}] Sending text to window ${windowId}: "${subtitleText.substring(0,20)}..."`); // Optional
+            targetWindow.webContents.send(WINDOW_CHANNELS.UPDATE_SUBTITLE, {
+              text: subtitleText,
+            });
+
+            // 2. Wait briefly for rendering (adjust delay if needed)
+            await new Promise(resolve => setTimeout(resolve, 10)); // ~1 frame at 60fps, maybe needs adjustment
+
+            // 3. Invoke the capture handler for this window
+            const captureResult = await captureFrameAndSave({
+              windowId: windowId,
+              framePath: framePath,
+              operationId: operationId,
+            });
+
+            if (!captureResult.success) {
+              // Capture handler already logged the error, just throw to stop the process
+              throw new Error(
+                captureResult.error || `Frame ${frameCount} capture failed.`
+              );
+            }
+
+            // Log progress periodically
+            if (
+              frameCount % (options.frameRate * 10) === 0 ||
+              frameCount === totalFrames
+            ) {
+              // Log every 10s or on last frame
+              log.info(
+                `[RenderWindowHandlers ${operationId}] Captured frame ${frameCount}/${totalFrames} (${Math.round((frameCount / totalFrames) * 100)}%)`
+              );
+            }
+          } catch (frameError: any) {
+            log.error(
+              `[RenderWindowHandlers ${operationId}] Error processing frame ${frameCount}:`,
+              frameError
+            );
+            throw new Error(
+              `Failed during frame ${frameCount} processing: ${frameError.message}`
+            ); // Propagate error
+          }
+        }
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Finished capturing ${totalFrames} PNG frames.`
+        );
+        // --- End Frame-by-Frame Render Loop ---
+
+        // --- TODO: Next Step - FFmpeg Assembly ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] PNG sequence captured. Next step: FFmpeg assembly (Not implemented).`
+        );
+        // const assemblyResult = await assemblePngsWithFfmpeg(tempDirPath, options.frameRate, operationId /* ... other params ... */);
+        // if (!assemblyResult.success) throw new Error(...)
+        // const finalOutputPath = assemblyResult.outputPath; // Path to the temporary overlay video
+        // --- End FFmpeg Assembly ---
+
+        // --- Send *Temporary* Success Result ---
+        // Replace this later with the result after FFmpeg assembly/overlay
         log.warn(
-          `[RenderWindowHandlers ${operationId}] Functionality beyond setup not yet implemented. Sending placeholder failure.`
+          `[RenderWindowHandlers ${operationId}] Sending temporary success result (FFmpeg not implemented).`
         );
         event.reply(RENDER_CHANNELS.RESULT, {
           operationId: operationId,
-          success: false,
-          error:
-            'Render overlay functionality not yet implemented in main process (setup complete).',
+          success: true,
+          outputPath: tempDirPath, // Send back temp dir path for now (debugging)
+          error: 'FFmpeg assembly step not yet implemented.',
         });
-        // --- End Temporary Response ---
+        // --- End Temporary Result ---
+
+        // *** Important: Cleanup moved to finally block ***
       } catch (error: any) {
         log.error(
-          `[RenderWindowHandlers ${operationId}] Error during orchestration (setup phase):`,
+          `[RenderWindowHandlers ${operationId}] Error during orchestration:`,
           error
         );
-        event.reply(RENDER_CHANNELS.RESULT, {
-          operationId,
-          success: false,
-          error: error.message || 'Setup failed',
-        });
+        // Ensure we reply with failure if an error occurred anywhere above
+        if (!event.sender.isDestroyed()) {
+          event.reply(RENDER_CHANNELS.RESULT, {
+            operationId,
+            success: false,
+            error: error.message || 'Unknown orchestration error',
+          });
+        } else {
+          log.warn(
+            `[RenderWindowHandlers ${operationId}] Event sender destroyed before sending error reply.`
+          );
+        }
         // Cleanup is handled in finally
       } finally {
         // --- Guaranteed Cleanup ---
@@ -101,8 +215,13 @@ export function initializeRenderWindowHandlers(): void {
             renderWindows.delete(windowId);
           }
         }
-        // Clean up temp directory if it exists
+        // Clean up temp directory if it exists (unless configured otherwise for debugging)
+        // const keepTempDir = false; // Set to true for debugging PNGs
+        // if (!keepTempDir) {
         await cleanupTempDir(tempDirPath, operationId);
+        // } else {
+        //    log.warn(`[RenderWindowHandlers ${operationId}] Skipping temp directory cleanup for debugging: ${tempDirPath}`);
+        // }
         log.info(`[RenderWindowHandlers ${operationId}] Cleanup finished.`);
         // --- End Cleanup ---
       }
@@ -282,5 +401,53 @@ async function cleanupTempDir(
       error
     );
     // Decide if this should throw or just be logged
+  }
+}
+
+async function captureFrameAndSave(args: {
+  windowId: number;
+  framePath: string;
+  operationId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const { windowId, framePath, operationId } = args;
+  const targetWindow = renderWindows.get(windowId);
+
+  // log.debug(`[captureFrameAndSave ${operationId}] Capturing window ${windowId} -> ${framePath}`);
+
+  if (!targetWindow || targetWindow.isDestroyed()) {
+    log.error(
+      `[captureFrameAndSave ${operationId}] Capture failed: Target window ${windowId} not found or destroyed.`
+    );
+    return { success: false, error: `Render window ${windowId} not found.` };
+  }
+
+  if (!framePath) {
+    log.error(
+      `[captureFrameAndSave ${operationId}] Capture failed: No framePath provided.`
+    );
+    return { success: false, error: 'No framePath provided for capture.' };
+  }
+
+  try {
+    const nativeImage = await targetWindow.webContents.capturePage();
+    if (nativeImage.isEmpty()) {
+      log.warn(
+        `[captureFrameAndSave ${operationId}] Captured image empty for ${framePath}. Skipping save.`
+      );
+      return { success: true }; // Nothing to save is not an error here
+    }
+    const pngBuffer = nativeImage.toPNG();
+    await fs.writeFile(framePath, pngBuffer);
+    // log.debug(`[captureFrameAndSave ${operationId}] Saved frame ${framePath}`);
+    return { success: true };
+  } catch (error: any) {
+    log.error(
+      `[captureFrameAndSave ${operationId}] Failed to capture or save frame ${framePath}:`,
+      error
+    );
+    return {
+      success: false,
+      error: error.message || 'Frame capture/save failed',
+    };
   }
 }
