@@ -349,11 +349,12 @@ export interface ReviewTranslationBatchArgs {
 }
 
 export interface RenderSubtitlesOptions {
-  operationId: string; // Unique ID for tracking
-  srtContent: string; // The content of the .srt file
-  outputDir: string; // Base directory for output (temp files might go in subdirectory)
-  videoDuration: number; // Duration of the source video in seconds
-  videoWidth: number; // Width of the video frame
-  videoHeight: number; // Height of the video frame
-  frameRate: number; // Frame rate of the source video
+  operationId: string;
+  srtContent: string;
+  outputDir: string;
+  videoDuration: number;
+  videoWidth: number;
+  videoHeight: number;
+  frameRate: number;
+  originalVideoPath?: string;
 }

@@ -69,7 +69,7 @@ export interface EditSubtitlesProps {
   searchText?: string;
   onStartPngRenderRequest: (
     options: RenderSubtitlesOptions
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; outputPath?: string }>;
   videoDuration?: number;
   videoWidth?: number;
   videoHeight?: number;
@@ -762,9 +762,11 @@ export function EditSubtitles({
     );
     setSaveError(''); // Clear previous errors
 
-    // --- Initial Checks (Keep existing checks) ---
-    if (!videoFilePath && !videoFile) {
-      const msg = 'No video loaded to merge subtitles with.';
+    // --- UPDATED Initial Checks ---
+    // For PNG sequence method, we NEED the file path
+    if (!videoFilePath) {
+      // Require videoFilePath for this method
+      const msg = 'Cannot merge: Original video file path is missing.';
       console.error(`[EditSubtitles] ${msg}`);
       setSaveError(msg);
       return;
@@ -775,102 +777,96 @@ export function EditSubtitles({
       setSaveError(msg);
       return;
     }
-    setMergeStage('Starting render...'); // Update progress stage
+    // Add checks for other required props if needed (duration, width, height, frameRate)
+    if (
+      !videoDurationProp ||
+      videoDurationProp <= 0 ||
+      !videoWidthProp ||
+      videoWidthProp <= 0 ||
+      !videoHeightProp ||
+      videoHeightProp <= 0 ||
+      !videoFrameRateProp ||
+      videoFrameRateProp <= 0
+    ) {
+      const missing = [
+        !videoDurationProp ? 'duration' : null,
+        !videoWidthProp ? 'width' : null,
+        !videoHeightProp ? 'height' : null,
+        !videoFrameRateProp ? 'frame rate' : null,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      const msg = `Cannot merge: Missing required video metadata (${missing}).`;
+      console.error(`[EditSubtitles] ${msg}`);
+      setSaveError(msg);
+      return;
+    }
+    // --- End UPDATED Checks ---
 
+    setMergeStage('Starting render...'); // Update progress stage
     const operationId = `render-${Date.now()}`;
     onSetMergeOperationId(operationId); // Set operation ID if needed by UI
 
     try {
-      // --- Gather required options for PNG Sequence Render ---
-      // !!! IMPORTANT: Ensure these values are correctly retrieved !!!
+      // --- Gather required options ---
       const srtContent = subtitlesProp
         ?.map(
           s =>
             `${s.index}\n${secondsToSrtTimeFn(s.start)} --> ${secondsToSrtTimeFn(s.end)}\n${s.text}\n`
         )
         .join('\n');
-      const videoDuration = videoDurationProp || 0;
-      const videoWidth = videoWidthProp || 0;
-      const videoHeight = videoHeightProp || 0;
-      const frameRate = videoFrameRateProp || 0; // Use the prop!
-      const outputDir = '/placeholder/output/dir'; // Placeholder: Main process handles actual paths
+      const videoDuration = videoDurationProp; // Already checked above
+      const videoWidth = videoWidthProp;
+      const videoHeight = videoHeightProp;
+      const frameRate = videoFrameRateProp;
+      const outputDir = '/placeholder/output/dir'; // Still a placeholder
 
-      console.log('[Debug Validation] srtContent length:', srtContent?.length);
-      console.log('[Debug Validation] videoDuration (prop):', videoDuration);
-      console.log('[Debug Validation] videoWidth (prop):', videoWidth);
-      console.log('[Debug Validation] videoHeight (prop):', videoHeight);
-      console.log('[Debug Validation] frameRate (prop):', frameRate); // Log frame rate too
-
-      if (
-        !srtContent ||
-        videoDuration <= 0 ||
-        videoWidth <= 0 ||
-        videoHeight <= 0 ||
-        frameRate <= 0 // Add check for frameRate
-      ) {
-        console.error(
-          '[EditSubtitles] Validation failed! Values logged above.'
-        );
-        throw new Error(
-          'Missing required video/subtitle metadata (duration, dimensions, frame rate).'
-        );
+      // Should not happen if validation above passed, but check srtContent just in case
+      if (!srtContent) {
+        throw new Error('Failed to build SRT content string.');
       }
 
-      // --- Create the CORRECT options object typed as RenderSubtitlesOptions ---
+      // --- Create the CORRECT options object ---
       const renderOptions: RenderSubtitlesOptions = {
         operationId,
         srtContent,
-        outputDir, // Primarily for signalling intent
+        outputDir,
         videoDuration,
         videoWidth,
         videoHeight,
         frameRate,
-        // Pass style info if needed by the hidden window's rendering eventually
-        // fontSize, stylePreset, ...
+        originalVideoPath: videoFilePath,
       };
       // --- End Creating Options ---
 
-      // --- Call the PROP function passed down from AppContent ---
       console.log(
         `[EditSubtitles ${operationId}] Calling onStartPngRenderRequest prop with options:`,
-        renderOptions
+        renderOptions // Verify this log includes originalVideoPath
       );
-      setMergeStage('Initializing render process via parent...'); // Update stage
+      setMergeStage('Initializing render process via parent...');
 
-      // Pass the correctly typed options object
-      const startResult = await onStartPngRenderRequest(renderOptions);
-      // --- End PROP call ---
+      // Pass options to parent (AppContent), which now handles the full flow including save
+      const finalResult = await onStartPngRenderRequest(renderOptions);
 
-      if (startResult.success) {
-        console.log(
-          `[EditSubtitles ${operationId}] Render process initiation request sent successfully via prop.`
-        );
-        setMergeStage('Render request sent. Waiting for main process...');
-        // The UI now waits for the final result via the client's IPC listener.
-        // Do NOT assume completion or look for outputPath here.
-      } else {
-        // The initial request failed to send
+      // The result from the parent now indicates final success/failure AFTER save attempt
+      if (!finalResult.success) {
         throw new Error(
-          startResult.error ||
-            'Failed to send render initiation request via prop.'
+          finalResult.error ||
+            'Render process failed (received from AppContent).'
         );
       }
 
-      // --- Remove all the OLD logic that checked startResult.cancelled/outputPath ---
-      // if (startResult?.cancelled) { ... }                   // REMOVE
-      // if (!startResult?.success || !startResult.outputPath) { ... } // REMOVE
-      // tempMergedFilePath = startResult.outputPath;        // REMOVE
-      // ... logic involving tempMergedFilePath ...           // REMOVE
-      // ... logic involving save dialog ...                  // REMOVE (for now, needs to happen after successful RESULT IPC)
-      // --- End Removal ---
+      // Success is handled by UI updates in AppContent based on finalResult
+      console.log(
+        `[EditSubtitles ${operationId}] Render and save process completed successfully (handled by parent). Final Path: ${finalResult.outputPath}`
+      );
     } catch (error: any) {
-      const errorMessage = `Error during subtitle rendering process initiation: ${error.message || error}`;
+      const errorMessage = `Error during subtitle rendering process: ${error.message || error}`;
       console.error(`[EditSubtitles ${operationId}] ${errorMessage}`);
       setSaveError(errorMessage);
       setMergeStage('Error');
-      onSetMergeOperationId(null); // Clear operation ID
+      onSetMergeOperationId(null);
     }
-    // NOTE: Do NOT set isMergingInProgressProp to false here in the success path
   }
 
   function handleRemoveSubtitleLocal(index: number) {

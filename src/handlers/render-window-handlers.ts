@@ -238,15 +238,52 @@ export function initializeRenderWindowHandlers(): void {
             `[RenderWindowHandlers ${operationId}] File moved successfully.`
           );
 
+          // --- Call the Final Merge Step --- START ---
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Initiating final merge step...`
+          );
+          // !!! IMPORTANT: We need the ORIGINAL video path here !!!
+          // It must be passed in the initial 'options' from the renderer.
+          // For now, we'll add a placeholder check.
+          // TODO: Update RenderSubtitlesOptions interface and renderer calls to include originalVideoPath.
+          const originalVideoPath = options.originalVideoPath; // ASSUMING THIS EXISTS!
+          if (!originalVideoPath) {
+            throw new Error(
+              'Original video path was not provided in the initial render options.'
+            );
+          }
+
+          // Determine the final merged output path. Let's derive it from the overlay path.
+          const finalMergedOutputPath = finalOutputPath.replace(
+            /-overlay\.webm$/,
+            '-merged.mp4'
+          ); // Example: replace suffix
+
+          const mergeResult = await mergeVideoAndOverlay({
+            originalVideoPath: originalVideoPath,
+            overlayVideoPath: finalOutputPath, // The path where the user saved the overlay
+            finalOutputPath: finalMergedOutputPath,
+            operationId: operationId,
+          });
+
+          if (!mergeResult.success) {
+            throw new Error(mergeResult.error || 'Final FFmpeg merge failed.');
+          }
+
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Final merged video created at: ${mergeResult.finalOutputPath}`
+          );
+          // --- Call the Final Merge Step --- END ---
+
           // --- Send FINAL Success Result ---
-          // Now we send the *final* path where the user saved the file
+          // Now we send the path to the *fully merged* video
           event.reply(RENDER_CHANNELS.RESULT, {
             operationId: operationId,
             success: true,
-            outputPath: finalOutputPath, // Send the final path!
+            outputPath: mergeResult.finalOutputPath, // Send the final merged path!
           });
           log.info(
-            `[RenderWindowHandlers ${operationId}] Sent final success result (with final path) to renderer.`
+            `[RenderWindowHandlers ${operationId}] Sent final success result (with final merged path) to renderer.`
           );
           // --- End Final Result ---
         } catch (saveMoveError: any) {
@@ -635,6 +672,133 @@ async function assemblePngSequence(
     } catch (execError) {
       log.error(
         `[RenderWindowHandlers ${operationId}] Error trying to execute FFmpeg:`,
+        execError
+      );
+      reject(execError); // Reject if execFile itself throws
+    }
+  });
+}
+
+// --- Define the options interface ---
+interface MergeVideoAndOverlayOptions {
+  originalVideoPath: string;
+  overlayVideoPath: string;
+  finalOutputPath: string;
+  operationId: string;
+}
+
+/**
+ * Merges the original video file with the generated subtitle overlay video.
+ * @param options Options object containing paths and operationId.
+ * @returns Promise resolving to { success: true, finalOutputPath: string } or rejecting on error.
+ */
+async function mergeVideoAndOverlay(
+  options: MergeVideoAndOverlayOptions // Use the options object
+): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
+  // Destructure options
+  const { originalVideoPath, overlayVideoPath, finalOutputPath, operationId } =
+    options;
+
+  log.info(
+    `[mergeVideoAndOverlay ${operationId}] Starting final merge. Original: ${originalVideoPath}, Overlay: ${overlayVideoPath}, Output: ${finalOutputPath}`
+  );
+
+  return new Promise((resolve, reject) => {
+    const ffmpegPath = 'ffmpeg'; // Assume ffmpeg is in PATH
+
+    // Construct FFmpeg arguments for overlaying
+    const args = [
+      '-i',
+      originalVideoPath, // Input 0: Original video
+      '-i',
+      overlayVideoPath, // Input 1: Overlay video
+      '-filter_complex',
+      // Center overlay horizontally, place near bottom (adjust y offset as needed)
+      '[0:v][1:v]overlay=x=(W-w)/2:y=H-h-(H*0.05):format=auto,hwupload[out]', // using format=auto,hwupload might help performance if hw accel available
+      // Alternative positioning if the above fails:
+      // '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=main_h-overlay_h-50[out]',
+      '-map',
+      '[out]', // Map filtered video to output
+      '-map',
+      '0:a?', // Map audio from original video (if it exists)
+      '-c:a',
+      'copy', // Copy audio stream without re-encoding
+      '-c:v',
+      'libx264', // Video codec (H.264 is widely compatible)
+      '-preset',
+      'veryfast', // Encoding speed/compression trade-off
+      '-crf',
+      '22', // Constant Rate Factor (quality, lower is better, 18-28 is common)
+      '-y', // Overwrite output file without asking
+      finalOutputPath, // Final output file path
+    ];
+
+    log.info(
+      `[mergeVideoAndOverlay ${operationId}] Executing FFmpeg command: ${ffmpegPath} ${args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}` // Log command safely
+    );
+
+    let ffmpegOutput = ''; // To store stdout/stderr
+    let ffmpegError = ''; // Specifically for stderr
+
+    try {
+      const child: ChildProcess = execFile(ffmpegPath, args);
+
+      child.stdout?.on('data', data => {
+        ffmpegOutput += data.toString();
+        // Optional: log stdout in real-time
+        log.debug(`[FFmpeg stdout ${operationId}]: ${data.toString().trim()}`);
+      });
+
+      child.stderr?.on('data', data => {
+        const stderrLine = data.toString();
+        ffmpegOutput += stderrLine;
+        ffmpegError += stderrLine; // Capture stderr separately for error reporting
+        // Optional: log stderr in real-time for debugging progress
+        log.debug(`[FFmpeg stderr ${operationId}]: ${stderrLine.trim()}`);
+      });
+
+      child.on('error', error => {
+        log.error(
+          `[mergeVideoAndOverlay ${operationId}] FFmpeg execution error:`,
+          error
+        );
+        log.error(
+          `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on error:\n${ffmpegOutput}`
+        );
+        reject(
+          new Error(
+            `FFmpeg execution failed: ${error.message}. Output: ${ffmpegError}`
+          )
+        );
+      });
+
+      child.on('close', code => {
+        log.info(
+          `[mergeVideoAndOverlay ${operationId}] FFmpeg process exited with code ${code}.`
+        );
+
+        if (code === 0) {
+          log.info(
+            `[mergeVideoAndOverlay ${operationId}] Final merge successful: ${finalOutputPath}`
+          );
+          resolve({ success: true, finalOutputPath });
+        } else {
+          log.error(
+            `[mergeVideoAndOverlay ${operationId}] Final merge failed (exit code ${code}).`
+          );
+          log.error(
+            `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on failure:\n${ffmpegOutput}`
+          );
+          reject(
+            new Error(
+              `Final merge failed with exit code ${code}. Error output: ${ffmpegError}`
+            )
+          );
+        }
+      });
+    } catch (execError) {
+      log.error(
+        `[mergeVideoAndOverlay ${operationId}] Error trying to execute FFmpeg:`,
         execError
       );
       reject(execError); // Reject if execFile itself throws
