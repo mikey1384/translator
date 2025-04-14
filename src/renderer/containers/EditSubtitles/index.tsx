@@ -39,6 +39,7 @@ import {
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
 import FileInputButton from '../../components/FileInputButton.js';
+import { RenderSubtitlesOptions } from '../../../types/interface.js';
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
@@ -71,6 +72,9 @@ export interface EditSubtitlesProps {
   saveError: string;
   setSaveError: Dispatch<SetStateAction<string>>;
   searchText?: string;
+  onStartPngRenderRequest: (
+    options: RenderSubtitlesOptions
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function EditSubtitles({
@@ -96,6 +100,7 @@ export function EditSubtitles({
   saveError,
   setSaveError,
   searchText,
+  onStartPngRenderRequest,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
@@ -399,6 +404,37 @@ export function EditSubtitles({
     [videoPlayerRef] // Depend on videoPlayerRef state
   );
 
+  // Add this function inside the EditSubtitles component
+  async function testClientCallSimply() {
+    console.log(
+      '[EditSubtitles] Test button clicked. Calling ON_START_PNG_RENDER_REQUEST prop...'
+    );
+    const dummyOptions: RenderSubtitlesOptions = {
+      operationId: 'test-prop-render',
+      srtContent: '1\n00:00:01,000 --> 00:00:03,000\nTest via Prop\n',
+      outputDir: '/test/dir/prop',
+      videoDuration: 6,
+      videoWidth: 110,
+      videoHeight: 60,
+      frameRate: 11,
+    };
+    try {
+      // --- Call the PROP function instead of the client ---
+      const result = await onStartPngRenderRequest(dummyOptions);
+      // --- End PROP call ---
+
+      console.log(
+        '[EditSubtitles] Immediate result from onStartPngRenderRequest prop:',
+        result
+      );
+    } catch (error) {
+      console.error(
+        '[EditSubtitles] Error calling onStartPngRenderRequest prop:',
+        error
+      );
+    }
+  }
+
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
       {/* Error display - Use saveError prop now */}
@@ -567,6 +603,9 @@ export function EditSubtitles({
         </div>
       )}
       {/* --- Restore Original Fixed Action Bar --- END --- */}
+
+      {/* Add this button somewhere in the JSX of EditSubtitles */}
+      <button onClick={testClientCallSimply}>Test Client Call (Minimal)</button>
     </Section>
   );
 

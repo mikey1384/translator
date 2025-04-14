@@ -22,6 +22,9 @@ import { useVideoState } from './hooks/video/useVideoState.js';
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
 import { useVideoActions } from './hooks/video/useVideoActions.js';
+import subtitleRendererClient, {
+  RenderSubtitlesOptions,
+} from '../clients/subtitle-renderer-client.js';
 
 const headerRightGroupStyles = css`
   display: flex;
@@ -336,6 +339,7 @@ function AppContent() {
                   saveError={saveError}
                   setSaveError={setSaveError}
                   searchText={searchText}
+                  onStartPngRenderRequest={handleStartPngRenderFromChild}
                 />
               </div>
             </div>
@@ -673,6 +677,27 @@ function AppContent() {
         opts.videoFile = videoFile;
       }
       return opts;
+    }
+  }
+
+  async function handleStartPngRenderFromChild(
+    options: RenderSubtitlesOptions
+  ): Promise<{ success: boolean; error?: string }> {
+    console.log(
+      '[AppContent] Received render request from child component:',
+      options
+    );
+    try {
+      const result =
+        await subtitleRendererClient.startOverlayRenderProcess(options);
+      console.log('[AppContent] Result from subtitleRendererClient:', result);
+      return result;
+    } catch (error: any) {
+      console.error(
+        '[AppContent] Error calling subtitleRendererClient:',
+        error
+      );
+      return { success: false, error: error.message || 'Client call failed' };
     }
   }
 }

@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron'; // Import for potential use later
+// No static import of ipcRenderer here
 import { RenderSubtitlesOptions } from '../../types/interface.js'; // Adjust path if necessary
 
 // Channels for the main renderer client triggering the process
@@ -39,33 +39,45 @@ class SubtitleRendererClient {
   private currentOperationId: string | null = null;
 
   constructor() {
-    console.log('[SubtitleRendererClient] Initializing client...');
-    this.setupIpcListeners();
+    console.log(
+      '[SubtitleRendererClient] Initializing client (using dynamic import)...'
+    );
+    this.setupIpcListeners(); // Call setup, it will dynamically import
   }
 
-  private setupIpcListeners(): void {
-    // Listener for the *final* result from the main process
-    ipcRenderer.on(
-      RENDER_CHANNELS.RESULT,
-      (_event, result: RenderResult & { operationId: string }) => {
-        if (result.operationId === this.currentOperationId) {
-          console.log(
-            `[SubtitleRendererClient ${this.currentOperationId}] Received final render result:`,
-            result
-          );
-          // Handle the result (e.g., update UI, show message)
-          this.isRendering = false;
-          this.currentOperationId = null;
-        } else {
-          console.warn(
-            `[SubtitleRendererClient] Received result for unexpected operation ID: ${result.operationId}`
-          );
+  // Use dynamic import inside the listener setup
+  private async setupIpcListeners(): Promise<void> {
+    try {
+      // Dynamically import ipcRenderer only when needed
+      const { ipcRenderer } = await import('electron');
+
+      // Listener for the *final* result from the main process
+      ipcRenderer.on(
+        RENDER_CHANNELS.RESULT,
+        (_event, result: RenderResult & { operationId: string }) => {
+          if (result.operationId === this.currentOperationId) {
+            console.log(
+              `[SubtitleRendererClient ${this.currentOperationId}] Received final render result:`,
+              result
+            );
+            this.isRendering = false;
+            this.currentOperationId = null;
+          } else {
+            console.warn(
+              `[SubtitleRendererClient] Received result for unexpected operation ID: ${result.operationId}`
+            );
+          }
         }
-      }
-    );
-    console.log(
-      `[SubtitleRendererClient] Listening for final results on ${RENDER_CHANNELS.RESULT}`
-    );
+      );
+      console.log(
+        `[SubtitleRendererClient] Dynamically imported ipcRenderer and listening for final results on ${RENDER_CHANNELS.RESULT}`
+      );
+    } catch (error) {
+      console.error(
+        '[SubtitleRendererClient] Failed to dynamically import electron for listener setup:',
+        error
+      );
+    }
   }
 
   // Main method called by the UI (e.g., EditSubtitles component)
@@ -99,22 +111,24 @@ class SubtitleRendererClient {
     this.isRendering = true;
     this.currentOperationId = options.operationId; // Store the operation ID
     console.log(
-      `[SubtitleRendererClient ${this.currentOperationId}] Starting overlay render process with options:`,
+      `[SubtitleRendererClient ${this.currentOperationId}] Starting overlay render process:`,
       options
     );
 
     try {
-      // Send the initial request to the main process to kick things off
-      // The main process will handle creating the temp dir, window, etc.
+      // Dynamically import ipcRenderer only when needed
+      const { ipcRenderer } = await import('electron');
+
+      // Send the initial request to the main process
       ipcRenderer.send(RENDER_CHANNELS.REQUEST, options);
       console.log(
-        `[SubtitleRendererClient ${this.currentOperationId}] Sent ${RENDER_CHANNELS.REQUEST} to main process.`
+        `[SubtitleRendererClient ${this.currentOperationId}] Dynamically imported ipcRenderer and sent ${RENDER_CHANNELS.REQUEST} to main process.`
       );
-      // Indicate that the process *started* successfully. The actual result comes via RENDER_CHANNELS.RESULT listener.
+      // Indicate that the process *started* successfully.
       return { success: true };
     } catch (error: any) {
       console.error(
-        `[SubtitleRendererClient ${this.currentOperationId}] Error sending initial render request:`,
+        `[SubtitleRendererClient ${this.currentOperationId}] Error during dynamic import or sending request:`,
         error
       );
       this.isRendering = false; // Reset state on error
