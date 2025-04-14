@@ -54,7 +54,11 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Attempting to create hidden window...`
         );
-        windowId = await createHiddenRenderWindow(options);
+        windowId = await createHiddenRenderWindow(
+          options.videoWidth,
+          options.videoHeight,
+          operationId
+        );
         log.info(
           `[RenderWindowHandlers ${operationId}] Hidden window created successfully with ID: ${windowId}.`
         );
@@ -374,11 +378,12 @@ async function createOperationTempDir(operationId: string): Promise<string> {
 }
 
 async function createHiddenRenderWindow(
-  options: RenderSubtitlesOptions
+  videoWidth: number,
+  videoHeight: number,
+  operationId: string
 ): Promise<number> {
-  const { operationId, videoWidth, videoHeight } = options;
   log.info(
-    `[RenderWindowHandlers ${operationId}] Creating hidden window (${videoWidth}x${videoHeight}).`
+    `[createHiddenRenderWindow ${operationId}] Creating window with dimensions: ${videoWidth}x${videoHeight}`
   );
 
   return new Promise<number>((resolve, reject) => {
@@ -386,19 +391,17 @@ async function createHiddenRenderWindow(
       const renderWindow = new BrowserWindow({
         width: videoWidth,
         height: videoHeight,
-        // --- Revert to hidden state ---
-        show: false, // Back to false
-        frame: false, // Back to false
-        transparent: true, // Back to true (important for overlay)
-        // --- End revert ---
+        show: false,
+        frame: false,
+        transparent: true,
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
-          preload: path.join(app.getAppPath(), 'preload-render-window.js'), // Keep corrected path
+          preload: path.join(app.getAppPath(), 'preload-render-window.js'),
           backgroundThrottling: false,
-          devTools: !app.isPackaged, // Revert to conditional DevTools
+          devTools: !app.isPackaged,
         },
-        skipTaskbar: true, // Keep true
+        skipTaskbar: true,
       });
 
       const windowId = renderWindow.id;
