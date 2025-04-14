@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, app } from 'electron';
+import { ipcMain, BrowserWindow, app, dialog } from 'electron';
 import log from 'electron-log';
 import path from 'path';
 import fs from 'fs/promises';
@@ -163,10 +163,9 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Preparing for FFmpeg assembly...`
         );
-        // Define the output path for the temporary overlay video (inside the temp dir)
         const tempOverlayVideoPath = path.join(
           tempDirPath,
-          `overlay_${operationId}.webm`
+          `overlay_${operationId}.webm` // The path returned by assemblePngSequence
         );
 
         const assemblyResult = await assemblePngSequence(
@@ -176,28 +175,110 @@ export function initializeRenderWindowHandlers(): void {
           operationId
         );
 
-        if (!assemblyResult.success) {
+        if (!assemblyResult.success || !assemblyResult.outputPath) {
           // Error is logged within assemblePngSequence
-          throw new Error(assemblyResult.error || 'FFmpeg assembly failed.');
+          throw new Error(
+            assemblyResult.error ||
+              'FFmpeg assembly failed or produced no output path.'
+          );
         }
         log.info(
-          `[RenderWindowHandlers ${operationId}] FFmpeg assembly successful. Overlay video: ${assemblyResult.outputPath}`
+          `[RenderWindowHandlers ${operationId}] FFmpeg assembly successful. Temporary overlay video: ${tempOverlayVideoPath}`
         );
         // --- End FFmpeg Assembly ---
 
-        // --- Send FINAL Success Result ---
-        // Now we send the path to the generated temporary overlay video
-        event.reply(RENDER_CHANNELS.RESULT, {
-          operationId: operationId,
-          success: true,
-          outputPath: assemblyResult.outputPath, // The actual path to the overlay video
-        });
+        // --- Prompt User to Save --- START ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Sent final success result to renderer.`
+          `[RenderWindowHandlers ${operationId}] Prompting user to save the overlay video...`
         );
-        // --- End Final Result ---
 
-        // *** Important: Cleanup moved to finally block ***
+        let finalOutputPath: string | undefined;
+        try {
+          const window =
+            BrowserWindow.getFocusedWindow() ||
+            BrowserWindow.getAllWindows()[0];
+          if (!window) {
+            throw new Error(
+              'No application window available to show save dialog.'
+            );
+          }
+
+          const inputExt = '.webm'; // Output is WebM
+          const baseName = 'video-with-subtitles';
+          // Try to get a better base name (you might need to pass original filename in options)
+          // Example placeholder:
+          // const originalFileName = options.originalVideoFileName || 'video';
+          // baseName = originalFileName.substring(0, originalFileName.lastIndexOf('.')) || originalFileName;
+          const suggestedOutputName = `${baseName}-overlay${inputExt}`;
+
+          const saveDialogResult = await dialog.showSaveDialog(window, {
+            defaultPath: suggestedOutputName, // Consider using a stored last directory if you have that service here
+            title: 'Save Subtitle Overlay Video As',
+            filters: [
+              { name: 'WebM Video', extensions: ['webm'] },
+              { name: 'All Files', extensions: ['*'] },
+            ],
+          });
+
+          if (saveDialogResult.canceled || !saveDialogResult.filePath) {
+            log.warn(
+              `[RenderWindowHandlers ${operationId}] User canceled save dialog.`
+            );
+            // Decide how to handle cancellation - maybe clean up and reply success=false?
+            // For now, we'll throw an error to indicate it wasn't saved.
+            throw new Error('Save operation canceled by user.');
+          }
+
+          finalOutputPath = saveDialogResult.filePath;
+          log.info(
+            `[RenderWindowHandlers ${operationId}] User selected output path: ${finalOutputPath}`
+          );
+
+          // Move the temporary file to the final location
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Moving ${tempOverlayVideoPath} to ${finalOutputPath}...`
+          );
+          await fs.rename(tempOverlayVideoPath, finalOutputPath); // Use fs.rename from fs/promises
+          log.info(
+            `[RenderWindowHandlers ${operationId}] File moved successfully.`
+          );
+
+          // --- Send FINAL Success Result ---
+          // Now we send the *final* path where the user saved the file
+          event.reply(RENDER_CHANNELS.RESULT, {
+            operationId: operationId,
+            success: true,
+            outputPath: finalOutputPath, // Send the final path!
+          });
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Sent final success result (with final path) to renderer.`
+          );
+          // --- End Final Result ---
+        } catch (saveMoveError: any) {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Error during save/move:`,
+            saveMoveError
+          );
+          // Attempt to clean up the temp file if save/move fails
+          try {
+            log.warn(
+              `[RenderWindowHandlers ${operationId}] Attempting cleanup of temp file ${tempOverlayVideoPath} after save/move error.`
+            );
+            await fs.rm(tempOverlayVideoPath, { force: true }); // Use fs.rm
+          } catch (cleanupErr) {
+            log.error(
+              `[RenderWindowHandlers ${operationId}] Failed cleanup of ${tempOverlayVideoPath}:`,
+              cleanupErr
+            );
+          }
+          // Rethrow the error to be caught by the main try/catch, which sends a failure reply
+          throw saveMoveError;
+        }
+        // --- Prompt User to Save --- END ---
+
+        // *** Important: Cleanup (temp dir) happens in the main finally block ***
+
+        // --- The original event.reply outside the try/catch is now inside the try block above ---
       } catch (error: any) {
         log.error(
           `[RenderWindowHandlers ${operationId}] Error during orchestration:`,
