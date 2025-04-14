@@ -1,7 +1,4 @@
-import {
-  RenderSubtitlesOptions,
-  ExposedRenderResult,
-} from '../../types/interface.js'; // Import types
+import { RenderSubtitlesOptions } from '../../types/interface.js'; // Import types
 
 // Add this type definition
 type PngRenderResult = {
