@@ -716,7 +716,7 @@ async function mergeVideoAndOverlay(
       '-i',
       overlayVideoPath,
       '-filter_complex',
-      '[0:v][1:v]overlay=x=(W-w)/2:y=H-h-(H*0.05):format=auto[out]',
+      '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=main_h-overlay_h-50[out]',
       '-map',
       '[out]',
       '-map',
