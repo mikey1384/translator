@@ -1,4 +1,4 @@
-// No static import of ipcRenderer here
+import { ipcRenderer } from 'electron';
 import { RenderSubtitlesOptions } from '../../types/interface.js'; // Adjust path if necessary
 
 // Channels for the main renderer client triggering the process
@@ -116,16 +116,25 @@ class SubtitleRendererClient {
     );
 
     try {
-      // Dynamically import ipcRenderer only when needed
-      const { ipcRenderer } = await import('electron');
-
-      // Send the initial request to the main process
-      ipcRenderer.send(RENDER_CHANNELS.REQUEST, options);
-      console.log(
-        `[SubtitleRendererClient ${this.currentOperationId}] Dynamically imported ipcRenderer and sent ${RENDER_CHANNELS.REQUEST} to main process.`
-      );
-      // Indicate that the process *started* successfully.
-      return { success: true };
+      // Explicitly check if ipcRenderer exists on the imported module
+      if (ipcRenderer && ipcRenderer) {
+        // Send the initial request using the imported object
+        ipcRenderer.send(RENDER_CHANNELS.REQUEST, options); // Use ipcRenderer
+        console.log(
+          `[SubtitleRendererClient ${this.currentOperationId}] Dynamically imported electron module and sent ${RENDER_CHANNELS.REQUEST} via ipcRenderer.`
+        );
+        // Indicate that the process *started* successfully.
+        return { success: true };
+      } else {
+        // Log the whole imported object for debugging if ipcRenderer is missing
+        console.error(
+          '[SubtitleRendererClient] Dynamically imported electron module does NOT contain ipcRenderer. Module content:',
+          ipcRenderer
+        );
+        throw new Error(
+          'Dynamically imported electron module is missing ipcRenderer property.'
+        );
+      }
     } catch (error: any) {
       console.error(
         `[SubtitleRendererClient ${this.currentOperationId}] Error during dynamic import or sending request:`,

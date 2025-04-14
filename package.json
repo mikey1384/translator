@@ -5,9 +5,9 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "rm -rf dist/* && tsc -p tsconfig.main.json && webpack --config webpack.preload.cjs && bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck && cp index.html dist/renderer/ && mkdir -p dist/renderer/locales && cp -r src/renderer/locales/*.json dist/renderer/locales/",
+    "build": "rm -rf dist/* && tsc -p tsconfig.main.json && webpack --config webpack.preload.cjs && bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --external electron --no-typecheck && cp index.html dist/renderer/ && mkdir -p dist/renderer/locales && cp -r src/renderer/locales/*.json dist/renderer/locales/",
     "start": "electron dist/main.js --no-sandbox",
-    "dev": "concurrently -n main,preload,renderer,electron       \"tsc -p tsconfig.main.json --watch\"       \"webpack --config webpack.preload.cjs --watch\"       \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --no-typecheck --watch && cp index.html dist/renderer/ && mkdir -p dist/renderer/locales && cp -r src/renderer/locales/*.json dist/renderer/locales/\"       \"wait-on dist/main.js && electron dist/main.js --no-sandbox\"",
+    "dev": "concurrently -n main,preload,renderer,electron       \"tsc -p tsconfig.main.json --watch\"       \"webpack --config webpack.preload.cjs --watch\"       \"bun build ./src/renderer/index.tsx --outdir ./dist/renderer --target browser --external electron --no-typecheck --watch && cp index.html dist/renderer/ && mkdir -p dist/renderer/locales && cp -r src/renderer/locales/*.json dist/renderer/locales/\"       \"wait-on dist/main.js && electron dist/main.js --no-sandbox\"",
     "package": "npm run build && electron-builder build",
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
