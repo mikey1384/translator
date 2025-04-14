@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron';
 import { RenderSubtitlesOptions } from '../../types/interface.js'; // Adjust path if necessary
 
 // Channels for the main renderer client triggering the process
@@ -84,6 +83,7 @@ class SubtitleRendererClient {
   async startOverlayRenderProcess(
     options: RenderSubtitlesOptions
   ): Promise<{ success: boolean; error?: string }> {
+    const { ipcRenderer } = await import('electron');
     if (this.isRendering) {
       console.warn(
         '[SubtitleRendererClient] Render process already in progress.'
