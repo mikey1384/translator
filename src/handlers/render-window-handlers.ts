@@ -308,9 +308,8 @@ export function initializeRenderWindowHandlers(): void {
             renderWindows.delete(windowId);
           }
         }
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Cleanup finished (temp dir preserved for debugging).`
-        );
+        await cleanupTempDir(tempDirPath, operationId);
+        log.info(`[RenderWindowHandlers ${operationId}] Cleanup finished.`);
         // --- End Cleanup ---
       }
     }
@@ -384,20 +383,19 @@ async function createHiddenRenderWindow(
       const renderWindow = new BrowserWindow({
         width: videoWidth,
         height: videoHeight,
-        // --- Make window visible for debugging ---
-        show: true, // Set to true
-        frame: true, // Add frame to move/see it
-        transparent: false, // Set to false temporarily to see background
-        // --- End visibility changes ---
+        // --- Revert to hidden state ---
+        show: false, // Back to false
+        frame: false, // Back to false
+        transparent: true, // Back to true (important for overlay)
+        // --- End revert ---
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
-          // SECURITY: Ensure this preload script is correctly configured and secured
-          preload: path.join(app.getAppPath(), 'preload-render-window.js'), // Or the correct bundled filename in dist/
-          backgroundThrottling: false, // Keep rendering smoothly even when hidden
-          devTools: true, // Explicitly set to true
+          preload: path.join(app.getAppPath(), 'preload-render-window.js'), // Keep corrected path
+          backgroundThrottling: false,
+          devTools: !app.isPackaged, // Revert to conditional DevTools
         },
-        skipTaskbar: false, // Make it appear in taskbar/dock
+        skipTaskbar: true, // Keep true
       });
 
       const windowId = renderWindow.id;
@@ -463,7 +461,6 @@ async function createHiddenRenderWindow(
   });
 }
 
-/*
 async function cleanupTempDir(
   tempDirPath: string | null,
   operationId: string
@@ -482,7 +479,6 @@ async function cleanupTempDir(
     log.info(
       `[RenderWindowHandlers ${operationId}] Successfully removed temp directory: ${tempDirPath}`
     );
-
   } catch (error) {
     log.error(
       `[RenderWindowHandlers ${operationId}] Error removing temporary directory ${tempDirPath}:`,
@@ -491,7 +487,6 @@ async function cleanupTempDir(
     // Decide if this should throw or just be logged
   }
 }
-      */
 
 async function captureFrameAndSave(args: {
   windowId: number;
