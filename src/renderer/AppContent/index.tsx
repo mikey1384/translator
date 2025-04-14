@@ -710,8 +710,7 @@ function AppContent() {
       options
     );
     try {
-      const result =
-        await subtitleRendererClient.startOverlayRenderProcess(options);
+      const result = await subtitleRendererClient.renderSubtitles(options);
       console.log('[AppContent] Result from subtitleRendererClient:', result);
       return result;
     } catch (error: any) {

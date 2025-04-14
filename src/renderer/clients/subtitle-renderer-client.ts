@@ -3,6 +3,14 @@ import {
   ExposedRenderResult,
 } from '../../types/interface.js'; // Import types
 
+// Add this type definition
+type PngRenderResult = {
+  operationId: string;
+  success: boolean;
+  outputPath?: string; // Optional: path to the final overlay video on success
+  error?: string; // Optional: error message on failure
+};
+
 // Channels for the main renderer client triggering the process
 export const RENDER_CHANNELS = {
   REQUEST: 'render-subtitles-request', // Main Window -> Main Process
@@ -26,9 +34,11 @@ export const CAPTURE_CHANNELS = {
 
 // Basic class structure (will be filled in later)
 class SubtitleRendererClient {
-  private isRendering: boolean = false;
-  private currentOperationId: string | null = null;
   private removeResultListener: (() => void) | null = null; // Store cleanup function
+  private renderPromises = new Map<
+    string,
+    { resolve: (result: PngRenderResult) => void; reject: (error: any) => void }
+  >();
 
   constructor() {
     console.log(
@@ -51,9 +61,35 @@ class SubtitleRendererClient {
 
       // Use the exposed function from preload
       this.removeResultListener = window.electron.onPngRenderResult(
-        (result: ExposedRenderResult) => {
-          // Ensure the callback is bound correctly or defined elsewhere if needed
-          this.handleRenderResult(result);
+        (result: PngRenderResult) => {
+          const { operationId, success, error, outputPath } = result;
+          console.info(`[Preload] Received PngRenderResult:`, result); // Log the raw result
+
+          // Find the corresponding promise callbacks
+          const promiseCallbacks = this.renderPromises.get(operationId);
+
+          if (promiseCallbacks) {
+            if (success) {
+              console.info(
+                `[SubtitleRendererClient ${operationId}] Received SUCCESS result from main.`
+              );
+              promiseCallbacks.resolve({ operationId, success, outputPath }); // Resolve the promise
+            } else {
+              console.error(
+                `[SubtitleRendererClient ${operationId}] Received FAILURE result from main:`,
+                error
+              );
+              promiseCallbacks.reject(
+                new Error(error || 'Unknown rendering error from main process')
+              ); // Reject the promise
+            }
+            // Clean up the stored promise
+            this.renderPromises.delete(operationId);
+          } else {
+            console.warn(
+              `[SubtitleRendererClient] Received result for unknown or already completed operation ID: ${operationId}`
+            );
+          }
         }
       );
     } catch (error) {
@@ -65,87 +101,38 @@ class SubtitleRendererClient {
     }
   }
 
-  // Handler for the result received via the bridge
-  private handleRenderResult(result: ExposedRenderResult): void {
-    if (result.operationId === this.currentOperationId) {
-      console.log(
-        `[SubtitleRendererClient ${this.currentOperationId}] Received final render result via bridge:`,
-        result
-      );
-
-      // TODO: Add UI logic here based on result
-      // e.g., show success/error message, clear progress bar
-      if (result.success) {
-        // Handle success - maybe show message with result.outputPath
-      } else if (result.cancelled) {
-        // Handle cancellation
-      } else {
-        // Handle error - show result.error
-      }
-
-      this.isRendering = false;
-      this.currentOperationId = null;
-    } else {
-      console.warn(
-        `[SubtitleRendererClient] Received result for unexpected operation ID via bridge: ${result.operationId}`
-      );
-    }
-  }
-
   // Main method called by the UI
-  async startOverlayRenderProcess(
+  async renderSubtitles(
     options: RenderSubtitlesOptions
-  ): Promise<{ success: boolean; error?: string }> {
-    if (this.isRendering) {
-      console.warn(
-        '[SubtitleRendererClient] Render process already in progress.'
-      );
-      return { success: false, error: 'Renderer busy' };
-    }
-    if (
-      !options ||
-      !options.operationId ||
-      !options.srtContent ||
-      !options.outputDir ||
-      !options.videoDuration ||
-      !options.videoWidth ||
-      !options.videoHeight ||
-      !options.frameRate
-    ) {
-      console.error(
-        '[SubtitleRendererClient] Invalid options provided for rendering.',
-        options
-      );
-      return { success: false, error: 'Invalid options for rendering' };
-    }
-
-    this.isRendering = true;
-    this.currentOperationId = options.operationId;
+  ): Promise<PngRenderResult> {
+    const { operationId } = options;
     console.log(
-      `[SubtitleRendererClient ${this.currentOperationId}] Starting overlay render process via bridge:`,
+      `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,
       options
     );
 
-    try {
-      // Call the exposed function from preload to send the request
-      window.electron.sendPngRenderRequest(options);
-      console.log(
-        `[SubtitleRendererClient ${this.currentOperationId}] Sent request via window.electron.sendPngRenderRequest.`
-      );
-      // Return success indicating the request was *sent*
-      return { success: true };
-    } catch (error: any) {
-      console.error(
-        `[SubtitleRendererClient ${this.currentOperationId}] Error calling sendPngRenderRequest via bridge:`,
-        error
-      );
-      this.isRendering = false;
-      this.currentOperationId = null;
-      return {
-        success: false,
-        error: error.message || 'Failed to send render request via bridge',
-      };
-    }
+    // Return a new Promise
+    return new Promise((resolve, reject) => {
+      // Store the resolve/reject functions
+      this.renderPromises.set(operationId, { resolve, reject });
+
+      try {
+        // Send the request via the preload bridge
+        window.electron.sendPngRenderRequest(options);
+        console.log(
+          `[SubtitleRendererClient ${operationId}] Sent request via window.electron.sendPngRenderRequest.`
+        );
+        // DO NOT resolve or return anything else here - wait for the listener
+      } catch (error) {
+        console.error(
+          `[SubtitleRendererClient ${operationId}] Error sending request via bridge:`,
+          error
+        );
+        // If sending fails immediately, remove from map and reject
+        this.renderPromises.delete(operationId);
+        reject(error); // Reject the promise
+      }
+    });
   }
 
   // Optional: Add a cleanup method if needed when the client is no longer used
