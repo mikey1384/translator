@@ -500,13 +500,11 @@ async function captureFrameAndSave(args: {
   windowId: number;
   framePath: string;
   operationId: string;
-  width: number;
-  height: number;
+  width: number; // Target width
+  height: number; // Target height
 }): Promise<{ success: boolean; error?: string }> {
   const { windowId, framePath, operationId, width, height } = args;
   const targetWindow = renderWindows.get(windowId);
-
-  // log.debug(`[captureFrameAndSave ${operationId}] Capturing window ${windowId} -> ${framePath}`);
 
   if (!targetWindow || targetWindow.isDestroyed()) {
     log.error(
@@ -523,28 +521,56 @@ async function captureFrameAndSave(args: {
   }
 
   try {
-    // Define the capture rectangle
     const captureRect = { x: 0, y: 0, width: width, height: height };
-    // Pass the rect to capturePage
-    const nativeImage = await targetWindow.webContents.capturePage(captureRect);
-    if (nativeImage.isEmpty()) {
+    // Capture using the rect first
+    let capturedImage = await targetWindow.webContents.capturePage(captureRect);
+
+    if (capturedImage.isEmpty()) {
       log.warn(
         `[captureFrameAndSave ${operationId}] Captured image empty for ${framePath}. Skipping save.`
       );
-      return { success: true }; // Nothing to save is not an error here
+      return { success: true };
     }
-    const pngBuffer = nativeImage.toPNG();
+
+    // --- ADD THIS RESIZE CHECK --- START ---
+    const currentSize = capturedImage.getSize();
+    log.debug(
+      // Add this log to see original captured size
+      `[captureFrameAndSave ${operationId}] Initial captured image size: ${currentSize.width}x${currentSize.height}. Target: ${width}x${height}`
+    );
+
+    // Check if resizing is needed
+    if (currentSize.width !== width || currentSize.height !== height) {
+      log.warn(
+        `[captureFrameAndSave ${operationId}] Captured image dimensions differ from target. Resizing to ${width}x${height}...`
+      );
+      // Create a *new* resized image object
+      capturedImage = capturedImage.resize({
+        width: width,
+        height: height,
+        quality: 'best', // Options: 'good', 'better', 'best'
+      });
+      const resizedSize = capturedImage.getSize(); // Check size after resize
+      log.info(
+        `[captureFrameAndSave ${operationId}] Image successfully resized to: ${resizedSize.width}x${resizedSize.height}`
+      );
+    }
+    // --- ADD THIS RESIZE CHECK --- END ---
+
+    // Save the (potentially resized) image to PNG
+    const pngBuffer = capturedImage.toPNG();
     await fs.writeFile(framePath, pngBuffer);
-    // log.debug(`[captureFrameAndSave ${operationId}] Saved frame ${framePath}`);
+
     return { success: true };
   } catch (error: any) {
     log.error(
-      `[captureFrameAndSave ${operationId}] Failed to capture or save frame ${framePath}:`,
+      `[captureFrameAndSave ${operationId}] Failed to capture/resize/save frame ${framePath}:`,
       error
     );
     return {
       success: false,
-      error: error.message || 'Frame capture/save failed',
+      // Provide a more specific error message
+      error: error.message || 'Frame capture, resize, or save failed',
     };
   }
 }
