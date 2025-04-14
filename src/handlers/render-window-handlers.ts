@@ -2,14 +2,9 @@ import { ipcMain, BrowserWindow, app, dialog } from 'electron';
 import log from 'electron-log';
 import path from 'path';
 import fs from 'fs/promises';
-import { fileURLToPath } from 'url'; // For __dirname in ES modules
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import { parseSrt } from '../shared/helpers/index.js';
 import { execFile, ChildProcess } from 'child_process';
-
-// --- ES Module __dirname Setup ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Re-define channels used in this handler file
 const RENDER_CHANNELS = {
