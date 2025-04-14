@@ -130,6 +130,22 @@ export function initializeRenderWindowHandlers(): void {
     }
   });
 
+  // Handler to relay subtitle text updates TO a specific hidden window
+  ipcMain.on(WINDOW_CHANNELS.UPDATE_SUBTITLE, (_event, args) => {
+    const { windowId, text, operationId } = args; // Expect operationId for logging
+    const targetWindow = renderWindows.get(windowId);
+
+    if (targetWindow && !targetWindow.isDestroyed()) {
+      // log.debug(`[RenderWindowHandlers ${operationId}] Relaying text update to window ${windowId}: "${text.substring(0, 30)}..."`); // Optional
+      // Send the text to the hidden window's renderer process using the channel its preload script listens on
+      targetWindow.webContents.send(WINDOW_CHANNELS.UPDATE_SUBTITLE, { text });
+    } else {
+      log.warn(
+        `[RenderWindowHandlers ${operationId}] Window ID ${windowId} not found or destroyed. Cannot relay text update.`
+      );
+    }
+  });
+
   log.info('[RenderWindowHandlers] Initialization complete.');
 }
 
