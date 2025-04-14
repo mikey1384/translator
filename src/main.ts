@@ -14,6 +14,7 @@ import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import Store from 'electron-store';
+import * as renderWindowHandlers from './handlers/render-window-handlers.js';
 
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -87,6 +88,7 @@ try {
   fileHandlers.initializeFileHandlers({ fileManager, saveFileService });
   subtitleHandlers.initializeSubtitleHandlers({ ffmpegService, fileManager });
   initializeUrlHandler({ fileManager, ffmpegService }); // Pass both services
+  renderWindowHandlers.initializeRenderWindowHandlers();
   log.info('[main.ts] Handlers Initialized.');
 
   // --- IPC Handlers Registration ---
@@ -317,6 +319,9 @@ try {
   });
 
   log.info('[main.ts] IPC Handlers Registered.');
+
+  // Add this line inside the try block in src/main.ts after other initializations
+  renderWindowHandlers.initializeRenderWindowHandlers();
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   // Attempt to show error dialog only after app is ready
