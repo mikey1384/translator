@@ -10,8 +10,7 @@ import {
   ASS_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../shared/constants/subtitle-styles.js';
-import { execFile, ChildProcess } from 'child_process';
-import { ipcMain } from 'electron';
+import { execFile } from 'child_process';
 
 export class FFmpegError extends Error {
   constructor(message: string) {

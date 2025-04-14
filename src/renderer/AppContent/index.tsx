@@ -422,7 +422,6 @@ function AppContent() {
 
       if (!result.canceled && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
-        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_video';
         setDownloadedVideoPath(null);
         await handleVideoFileSelected(filePath);
       } else {
