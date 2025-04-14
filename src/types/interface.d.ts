@@ -61,6 +61,15 @@ type UrlProgressCallback = (progress: {
 }) => void;
 // --- Add types for URL Processing --- END ---
 
+interface ExposedRenderResult {
+  // Add this interface if not already defined globally
+  success: boolean;
+  outputPath?: string;
+  error?: string;
+  cancelled?: boolean;
+  operationId: string;
+}
+
 interface ElectronAPI {
   ping: () => Promise<string>;
   saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
@@ -164,6 +173,11 @@ interface ElectronAPI {
     };
     error?: string;
   }>;
+
+  sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
+  onPngRenderResult: (
+    callback: (result: ExposedRenderResult) => void
+  ) => () => void; // Listener returns cleanup fn
 }
 
 declare global {

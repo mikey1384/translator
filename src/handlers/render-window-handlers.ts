@@ -354,11 +354,7 @@ async function createHiddenRenderWindow(
       // Load the host HTML file for the React component
       // TODO: Ensure 'render-host.html' exists and is correctly built/copied.
       // Adjust the path based on your build output structure (dev vs. prod).
-      const hostHtmlPath = path.join(
-        app.getAppPath(),
-        'dist',
-        'render-host.html'
-      );
+      const hostHtmlPath = path.join(app.getAppPath(), 'render-host.html');
       log.info(
         `[RenderWindowHandlers ${operationId}] Loading render host HTML: ${hostHtmlPath}`
       );

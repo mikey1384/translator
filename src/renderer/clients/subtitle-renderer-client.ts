@@ -1,4 +1,7 @@
-import { RenderSubtitlesOptions } from '../../types/interface.js'; // Adjust path if necessary
+import {
+  RenderSubtitlesOptions,
+  ExposedRenderResult,
+} from '../../types/interface.js'; // Import types
 
 // Channels for the main renderer client triggering the process
 export const RENDER_CHANNELS = {
@@ -36,61 +39,80 @@ interface RenderResult {
 class SubtitleRendererClient {
   private isRendering: boolean = false;
   private currentOperationId: string | null = null;
+  private removeResultListener: (() => void) | null = null; // Store cleanup function
 
   constructor() {
     console.log(
-      '[SubtitleRendererClient] Initializing client (using dynamic import)...'
+      '[SubtitleRendererClient] Initializing client (using preload bridge ONLY)...'
     );
-    this.setupIpcListeners(); // Call setup, it will dynamically import
+    this.setupIpcListenersViaBridge();
   }
 
-  // Use dynamic import inside the listener setup
-  private async setupIpcListeners(): Promise<void> {
+  // Setup listener via the preload bridge
+  private setupIpcListenersViaBridge(): void {
+    console.log(
+      '[SubtitleRendererClient] Setting up result listener via window.electron.onPngRenderResult'
+    );
     try {
-      // Dynamically import ipcRenderer only when needed
-      const { ipcRenderer } = await import('electron');
+      // Remove previous listener if exists (safety measure)
+      if (this.removeResultListener) {
+        this.removeResultListener();
+        this.removeResultListener = null;
+      }
 
-      // Listener for the *final* result from the main process
-      ipcRenderer.on(
-        RENDER_CHANNELS.RESULT,
-        (_event, result: RenderResult & { operationId: string }) => {
-          if (result.operationId === this.currentOperationId) {
-            console.log(
-              `[SubtitleRendererClient ${this.currentOperationId}] Received final render result:`,
-              result
-            );
-            this.isRendering = false;
-            this.currentOperationId = null;
-          } else {
-            console.warn(
-              `[SubtitleRendererClient] Received result for unexpected operation ID: ${result.operationId}`
-            );
-          }
+      // Use the exposed function from preload
+      this.removeResultListener = window.electron.onPngRenderResult(
+        (result: ExposedRenderResult) => {
+          // Ensure the callback is bound correctly or defined elsewhere if needed
+          this.handleRenderResult(result);
         }
-      );
-      console.log(
-        `[SubtitleRendererClient] Dynamically imported ipcRenderer and listening for final results on ${RENDER_CHANNELS.RESULT}`
       );
     } catch (error) {
       console.error(
-        '[SubtitleRendererClient] Failed to dynamically import electron for listener setup:',
+        '[SubtitleRendererClient] Failed to set up listener via preload bridge:',
         error
+      );
+      // Maybe show an error to the user?
+    }
+  }
+
+  // Handler for the result received via the bridge
+  private handleRenderResult(result: ExposedRenderResult): void {
+    if (result.operationId === this.currentOperationId) {
+      console.log(
+        `[SubtitleRendererClient ${this.currentOperationId}] Received final render result via bridge:`,
+        result
+      );
+
+      // TODO: Add UI logic here based on result
+      // e.g., show success/error message, clear progress bar
+      if (result.success) {
+        // Handle success - maybe show message with result.outputPath
+      } else if (result.cancelled) {
+        // Handle cancellation
+      } else {
+        // Handle error - show result.error
+      }
+
+      this.isRendering = false;
+      this.currentOperationId = null;
+    } else {
+      console.warn(
+        `[SubtitleRendererClient] Received result for unexpected operation ID via bridge: ${result.operationId}`
       );
     }
   }
 
-  // Main method called by the UI (e.g., EditSubtitles component)
+  // Main method called by the UI
   async startOverlayRenderProcess(
     options: RenderSubtitlesOptions
   ): Promise<{ success: boolean; error?: string }> {
-    const { ipcRenderer } = await import('electron');
     if (this.isRendering) {
       console.warn(
         '[SubtitleRendererClient] Render process already in progress.'
       );
       return { success: false, error: 'Renderer busy' };
     }
-
     if (
       !options ||
       !options.operationId ||
@@ -109,45 +131,41 @@ class SubtitleRendererClient {
     }
 
     this.isRendering = true;
-    this.currentOperationId = options.operationId; // Store the operation ID
+    this.currentOperationId = options.operationId;
     console.log(
-      `[SubtitleRendererClient ${this.currentOperationId}] Starting overlay render process:`,
+      `[SubtitleRendererClient ${this.currentOperationId}] Starting overlay render process via bridge:`,
       options
     );
 
     try {
-      // Explicitly check if ipcRenderer exists on the imported module
-      if (ipcRenderer && ipcRenderer) {
-        // Send the initial request using the imported object
-        ipcRenderer.send(RENDER_CHANNELS.REQUEST, options); // Use ipcRenderer
-        console.log(
-          `[SubtitleRendererClient ${this.currentOperationId}] Dynamically imported electron module and sent ${RENDER_CHANNELS.REQUEST} via ipcRenderer.`
-        );
-        // Indicate that the process *started* successfully.
-        return { success: true };
-      } else {
-        // Log the whole imported object for debugging if ipcRenderer is missing
-        console.error(
-          '[SubtitleRendererClient] Dynamically imported electron module does NOT contain ipcRenderer. Module content:',
-          ipcRenderer
-        );
-        throw new Error(
-          'Dynamically imported electron module is missing ipcRenderer property.'
-        );
-      }
+      // Call the exposed function from preload to send the request
+      window.electron.sendPngRenderRequest(options);
+      console.log(
+        `[SubtitleRendererClient ${this.currentOperationId}] Sent request via window.electron.sendPngRenderRequest.`
+      );
+      // Return success indicating the request was *sent*
+      return { success: true };
     } catch (error: any) {
       console.error(
-        `[SubtitleRendererClient ${this.currentOperationId}] Error during dynamic import or sending request:`,
+        `[SubtitleRendererClient ${this.currentOperationId}] Error calling sendPngRenderRequest via bridge:`,
         error
       );
-      this.isRendering = false; // Reset state on error
+      this.isRendering = false;
       this.currentOperationId = null;
       return {
         success: false,
-        error: error.message || 'Failed to send render request',
+        error: error.message || 'Failed to send render request via bridge',
       };
     }
   }
+
+  // Optional: Add a cleanup method if needed when the client is no longer used
+  // cleanup() {
+  //    if (this.removeResultListener) {
+  //       this.removeResultListener();
+  //       this.removeResultListener = null;
+  //    }
+  // }
 }
 
 // Instantiate and export

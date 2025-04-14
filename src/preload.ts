@@ -1,4 +1,8 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import {
+  ExposedRenderResult,
+  RenderSubtitlesOptions,
+} from './types/interface.js';
 
 const electronAPI = {
   // ---------------------- Basic / Test Methods ----------------------
@@ -200,6 +204,44 @@ const electronAPI = {
   getVideoMetadata: (filePath: string) =>
     ipcRenderer.invoke('get-video-metadata', filePath),
   // === End Video Metadata Function ===
+
+  // === Add functions for PNG Sequence Rendering ===
+
+  /**
+   * Sends the initial request to start the PNG sequence render process.
+   */
+  sendPngRenderRequest: (options: RenderSubtitlesOptions): void => {
+    try {
+      console.log('[Preload] Sending PngRenderRequest:', options);
+      ipcRenderer.send('render-subtitles-request', options);
+    } catch (error) {
+      console.error('[Preload] Error sending PngRenderRequest:', error);
+    }
+  },
+
+  /**
+   * Sets up a listener for the final result of the PNG sequence render process.
+   * Returns a cleanup function to remove the listener.
+   */
+  onPngRenderResult: (
+    callback: (result: ExposedRenderResult) => void
+  ): (() => void) => {
+    const handler = (_event: IpcRendererEvent, result: ExposedRenderResult) => {
+      console.log('[Preload] Received PngRenderResult:', result);
+      callback(result);
+    };
+
+    console.log(`[Preload] Adding listener for render-subtitles-result`);
+    ipcRenderer.on('render-subtitles-result', handler);
+
+    // Return cleanup function
+    return () => {
+      console.log(`[Preload] Removing listener for render-subtitles-result`);
+      ipcRenderer.removeListener('render-subtitles-result', handler);
+    };
+  },
+
+  // === End Add ===
 };
 
 try {

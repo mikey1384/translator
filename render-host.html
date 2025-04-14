@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Security Note: Set Content-Security-Policy as needed -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self'"> -->
+    <title>Subtitle Render Host</title>
+    <style>
+      /* Basic reset and transparent background */
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevent scrollbars */
+        background-color: transparent; /* Important for transparent capture */
+        color: white; /* Default text color, can be overridden by component */
+        font-family: sans-serif; /* Basic font */
+      }
+      /* Ensure root takes full space */
+      #root {
+        width: 100%;
+        height: 100%;
+        display: flex; /* Optional: useful for centering/styling */
+        justify-content: center; /* Optional: example styling */
+        align-items: center; /* Optional: example styling */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- IMPORTANT: This src path assumes your build script outputs -->
+    <!-- the compiled render-host-script.tsx as render-host-script.js -->
+    <!-- into the same directory as this HTML file (e.g., dist/) -->
+    <script type="module" src="./render-host-script.js"></script>
+  </body>
+</html>
