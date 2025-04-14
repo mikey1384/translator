@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url'; // For __dirname in ES modules
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import { parseSrt } from '../shared/helpers/index.js';
+import { execFile, ChildProcess } from 'child_process';
 
 // --- ES Module __dirname Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -158,27 +159,43 @@ export function initializeRenderWindowHandlers(): void {
         );
         // --- End Frame-by-Frame Render Loop ---
 
-        // --- TODO: Next Step - FFmpeg Assembly ---
+        // --- FFmpeg Assembly ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] PNG sequence captured. Next step: FFmpeg assembly (Not implemented).`
+          `[RenderWindowHandlers ${operationId}] Preparing for FFmpeg assembly...`
         );
-        // const assemblyResult = await assemblePngsWithFfmpeg(tempDirPath, options.frameRate, operationId /* ... other params ... */);
-        // if (!assemblyResult.success) throw new Error(...)
-        // const finalOutputPath = assemblyResult.outputPath; // Path to the temporary overlay video
+        // Define the output path for the temporary overlay video (inside the temp dir)
+        const tempOverlayVideoPath = path.join(
+          tempDirPath,
+          `overlay_${operationId}.webm`
+        );
+
+        const assemblyResult = await assemblePngSequence(
+          tempDirPath,
+          tempOverlayVideoPath,
+          options.frameRate,
+          operationId
+        );
+
+        if (!assemblyResult.success) {
+          // Error is logged within assemblePngSequence
+          throw new Error(assemblyResult.error || 'FFmpeg assembly failed.');
+        }
+        log.info(
+          `[RenderWindowHandlers ${operationId}] FFmpeg assembly successful. Overlay video: ${assemblyResult.outputPath}`
+        );
         // --- End FFmpeg Assembly ---
 
-        // --- Send *Temporary* Success Result ---
-        // Replace this later with the result after FFmpeg assembly/overlay
-        log.warn(
-          `[RenderWindowHandlers ${operationId}] Sending temporary success result (FFmpeg not implemented).`
-        );
+        // --- Send FINAL Success Result ---
+        // Now we send the path to the generated temporary overlay video
         event.reply(RENDER_CHANNELS.RESULT, {
           operationId: operationId,
           success: true,
-          outputPath: tempDirPath, // Send back temp dir path for now (debugging)
-          error: 'FFmpeg assembly step not yet implemented.',
+          outputPath: assemblyResult.outputPath, // The actual path to the overlay video
         });
-        // --- End Temporary Result ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Sent final success result to renderer.`
+        );
+        // --- End Final Result ---
 
         // *** Important: Cleanup moved to finally block ***
       } catch (error: any) {
@@ -450,4 +467,110 @@ async function captureFrameAndSave(args: {
       error: error.message || 'Frame capture/save failed',
     };
   }
+}
+
+/**
+ * Assembles a sequence of PNG frames into a video using FFmpeg.
+ * Creates a transparent WebM video using VP9 codec.
+ * @param tempDirPath Directory containing frame_*.png images.
+ * @param outputPath The full path for the output video file (e.g., overlay.webm).
+ * @param frameRate The frame rate of the input sequence.
+ * @param operationId For logging.
+ * @returns Promise resolving to { success: true, outputPath: string } or rejecting on error.
+ */
+async function assemblePngSequence(
+  tempDirPath: string,
+  outputPath: string,
+  frameRate: number,
+  operationId: string
+): Promise<{ success: boolean; outputPath: string; error?: string }> {
+  return new Promise((resolve, reject) => {
+    const ffmpegPath = 'ffmpeg'; // Assume ffmpeg is in PATH
+    // Pattern must match the saved frame filenames (e.g., frame_0000001.png)
+    const inputPattern = path.join(tempDirPath, 'frame_%07d.png');
+
+    // FFmpeg arguments for creating a transparent VP9 WebM video
+    const args = [
+      '-framerate',
+      frameRate.toString(), // Input frame rate
+      '-i',
+      inputPattern, // Input pattern
+      '-c:v',
+      'libvpx-vp9', // Codec: VP9 for WebM with alpha
+      '-pix_fmt',
+      'yuva420p', // Pixel format supporting alpha
+      '-lossless',
+      '1', // Use lossless compression for best quality
+      // '-crf', '18',                  // Constant Rate Factor (lower is better quality, ignored with lossless)
+      // '-b:v', '0',                   // Target bitrate 0 (let CRF/lossless control quality)
+      '-y', // Overwrite output file without asking
+      outputPath, // Output file path
+    ];
+
+    log.info(
+      `[RenderWindowHandlers ${operationId}] Assembling PNGs with FFmpeg...`
+    );
+    log.info(
+      `[RenderWindowHandlers ${operationId}] Command: ${ffmpegPath} ${args.join(' ')}`
+    );
+
+    let ffmpegOutput = ''; // To store stdout/stderr
+
+    try {
+      const child: ChildProcess = execFile(ffmpegPath, args);
+
+      child.stdout?.on('data', data => {
+        ffmpegOutput += data.toString();
+      });
+      child.stderr?.on('data', data => {
+        ffmpegOutput += data.toString();
+        // Optional: log stderr in real-time for debugging progress
+        log.debug(`[FFmpeg stderr ${operationId}]: ${data.toString().trim()}`);
+      });
+
+      child.on('error', error => {
+        log.error(
+          `[RenderWindowHandlers ${operationId}] FFmpeg execution error:`,
+          error
+        );
+        log.error(
+          `[RenderWindowHandlers ${operationId}] FFmpeg output on error:\n${ffmpegOutput}`
+        );
+        reject(new Error(`FFmpeg execution failed: ${error.message}`));
+      });
+
+      child.on('close', code => {
+        log.info(
+          `[RenderWindowHandlers ${operationId}] FFmpeg process exited with code ${code}.`
+        );
+        // Optional: Log full output only on error or specific conditions
+        // log.debug(`[RenderWindowHandlers ${operationId}] Full FFmpeg output:\n${ffmpegOutput}`);
+
+        if (code === 0) {
+          log.info(
+            `[RenderWindowHandlers ${operationId}] FFmpeg assembly successful: ${outputPath}`
+          );
+          resolve({ success: true, outputPath });
+        } else {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] FFmpeg assembly failed (exit code ${code}).`
+          );
+          log.error(
+            `[RenderWindowHandlers ${operationId}] FFmpeg output on failure:\n${ffmpegOutput}`
+          );
+          reject(
+            new Error(
+              `FFmpeg assembly failed with exit code ${code}. Output:\n${ffmpegOutput}`
+            )
+          );
+        }
+      });
+    } catch (execError) {
+      log.error(
+        `[RenderWindowHandlers ${operationId}] Error trying to execute FFmpeg:`,
+        execError
+      );
+      reject(execError); // Reject if execFile itself throws
+    }
+  });
 }
