@@ -3,10 +3,14 @@ const path = require('path');
 module.exports = {
   mode: 'production',
   target: 'electron-preload',
-  entry: './src/preload.ts',
+  entry: {
+    'preload/index': './src/preload.ts',
+    'preload-render-window': './src/preload-render-window.ts',
+  },
   output: {
-    filename: 'index.js',
-    path: path.resolve(__dirname, 'dist/preload'),
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'commonjs2',
   },
   module: {
     rules: [
