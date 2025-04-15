@@ -168,6 +168,7 @@ export function initializeRenderWindowHandlers(): void {
         const totalFrames = Math.ceil(
           options.videoDuration * options.frameRate
         );
+        const PUPPETEER_STAGE_PERCENT = 90;
 
         for (let i = 0; i < totalFrames; i++) {
           const frameCount = i + 1;
@@ -205,15 +206,22 @@ export function initializeRenderWindowHandlers(): void {
               type: 'png', // Explicitly set type
             });
 
-            // Log progress periodically
+            // --- ADD PROGRESS REPORTING ---
+            const frameProgress =
+              (frameCount / totalFrames) * PUPPETEER_STAGE_PERCENT;
             if (
-              frameCount % (options.frameRate * 10) === 0 ||
+              frameCount % options.frameRate === 0 ||
               frameCount === totalFrames
             ) {
-              log.info(
-                `[RenderWindowHandlers ${operationId}] Captured frame ${frameCount}/${totalFrames} (${Math.round((frameCount / totalFrames) * 100)}%) (Puppeteer)`
-              );
+              // Send every second or on last frame
+              event.sender.send('merge-subtitles-progress', {
+                // Use existing channel
+                operationId: operationId,
+                percent: Math.round(frameProgress),
+                stage: `Rendering frame ${frameCount}/${totalFrames}`,
+              });
             }
+            // --- END PROGRESS REPORTING ---
           } catch (frameError: any) {
             log.error(
               `[RenderWindowHandlers ${operationId}] Error processing frame ${frameCount} (Puppeteer):`,
@@ -227,6 +235,12 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Finished capturing ${totalFrames} PNG frames (Puppeteer).`
         );
+        // Report completion of this stage
+        event.sender.send('merge-subtitles-progress', {
+          operationId: operationId,
+          percent: PUPPETEER_STAGE_PERCENT,
+          stage: 'Assembling PNG sequence...', // Set stage for next step
+        });
         // --- End Frame-by-Frame Render Loop ---
 
         // --- Close Puppeteer Page ---
@@ -263,19 +277,55 @@ export function initializeRenderWindowHandlers(): void {
         );
         // --- End FFmpeg Assembly ---
 
-        // --- Final Merge Prep (No change needed here) ---
+        // --- Prepare for Final Merge (New Flow) ---
         const tempOverlayPath = assemblyResult.outputPath;
         const originalVideoPath = options.originalVideoPath;
         if (!originalVideoPath) {
           throw new Error('Original video path was not provided.');
         }
-        // --- End Final Merge Prep ---
 
-        // --- Prompt User to Save FINAL MP4 (No change needed here) ---
+        // Define path for the TEMPORARY merged output
+        const finalTempMergedPath = path.join(
+          tempDirPath,
+          `final_temp_${operationId}.mp4`
+        );
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Preparing final merge into temporary path: ${finalTempMergedPath}`
+        );
+
+        // Report progress before final merge
+        event.sender.send('merge-subtitles-progress', {
+          operationId: operationId,
+          percent: 95, // Or adjust based on how long assembly takes
+          stage: 'Merging video and overlay...',
+        });
+        // --- End Preparation ---
+
+        // --- Call Final Merge into TEMPORARY File ---
+        const mergeResult = await mergeVideoAndOverlay({
+          originalVideoPath: originalVideoPath,
+          overlayVideoPath: tempOverlayPath,
+          targetSavePath: finalTempMergedPath, // Merge to temp path first
+          operationId: operationId,
+          // TODO: Pass event.sender or a callback for progress reporting here later
+        });
+
+        if (!mergeResult.success || !mergeResult.finalOutputPath) {
+          // Use finalOutputPath which now points to the temp merged file
+          throw new Error(
+            mergeResult.error ||
+              'Final FFmpeg merge into temporary file failed.'
+          );
+        }
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Final merge into temporary file successful: ${mergeResult.finalOutputPath}`
+        );
+        // --- End Final Merge ---
+
+        // --- Prompt User to Save the COMPLETED Temporary File ---
         log.info(
           `[RenderWindowHandlers ${operationId}] Prompting user to save the FINAL merged video...`
         );
-        // Try getting window differently just in case focus is lost
         const mainWindow = BrowserWindow.getAllWindows()[0];
         if (!mainWindow) {
           log.error(
@@ -289,42 +339,71 @@ export function initializeRenderWindowHandlers(): void {
           path.extname(originalVideoPath)
         );
         const suggestedFinalName = `${originalFileName}-merged.mp4`;
+
         const finalSaveDialogResult = await dialog.showSaveDialog(mainWindow, {
-          // Use mainWindow
           title: 'Save Merged Video As',
           defaultPath: suggestedFinalName,
           filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
         });
+
         if (finalSaveDialogResult.canceled || !finalSaveDialogResult.filePath) {
-          throw new Error('User cancelled saving the final merged video.');
+          log.warn(
+            `[RenderWindowHandlers ${operationId}] User cancelled saving the final merged video. Cleaning up temporary merged file.`
+          );
+          // Don't treat cancellation as a hard error, but clean up the temp merged file.
+          await fs
+            .unlink(mergeResult.finalOutputPath)
+            .catch(err =>
+              log.error(`Failed to clean up temp merged file on cancel: ${err}`)
+            );
+          // Send a specific "cancelled" result or just success=false without error?
+          // Let's send success=false and a specific message.
+          event.reply(RENDER_CHANNELS.RESULT, {
+            operationId: operationId,
+            success: false, // Indicate not fully successful completion
+            error: 'Save cancelled by user.',
+          });
+          return; // Stop execution here if user cancelled save
         }
+
         const finalUserSelectedPath = finalSaveDialogResult.filePath;
+        log.info(
+          `[RenderWindowHandlers ${operationId}] User selected final save path: ${finalUserSelectedPath}`
+        );
         // --- End Prompt User ---
 
-        // --- Call Final Merge (No change needed here) ---
+        // --- Move Temporary Merged File to Final Location ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Calling mergeVideoAndOverlay. Overlay: ${tempOverlayPath}, Final Target: ${finalUserSelectedPath}`
+          `[RenderWindowHandlers ${operationId}] Moving temporary merged file ${mergeResult.finalOutputPath} to ${finalUserSelectedPath}`
         );
-        const mergeResult = await mergeVideoAndOverlay({
-          originalVideoPath: originalVideoPath,
-          overlayVideoPath: tempOverlayPath,
-          targetSavePath: finalUserSelectedPath,
-          operationId: operationId,
-        });
-
-        if (!mergeResult.success) {
-          throw new Error(mergeResult.error || 'Final FFmpeg merge failed.');
+        try {
+          await fs.rename(mergeResult.finalOutputPath, finalUserSelectedPath);
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Successfully moved merged file.`
+          );
+        } catch (moveError: any) {
+          log.error(
+            `[RenderWindowHandlers ${operationId}] Error moving temp file to final destination:`,
+            moveError
+          );
+          // Attempt to copy as fallback? Or just report error? Let's report error.
+          throw new Error(
+            `Failed to move merged video to final destination: ${moveError.message}`
+          );
         }
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Final merged video created at: ${mergeResult.finalOutputPath}`
-        );
-        // --- End Final Merge ---
+        // --- End Move File ---
 
         // --- Send FINAL Success Result ---
+        event.sender.send('merge-subtitles-progress', {
+          // Final progress update
+          operationId: operationId,
+          percent: 100,
+          stage: 'Merge complete!',
+        });
         event.reply(RENDER_CHANNELS.RESULT, {
           operationId: operationId,
           success: true,
-          outputPath: mergeResult.finalOutputPath,
+          outputPath: finalUserSelectedPath, // Report the final user path
         });
         log.info(
           `[RenderWindowHandlers ${operationId}] Sent final success result to renderer.`
@@ -383,12 +462,20 @@ export function initializeRenderWindowHandlers(): void {
 
 // --- Helper function to get render-host.html path ---
 function getRenderHostPath(): string {
-  const basePath = app.getAppPath();
-  log.info(`[getRenderHostPath] app.getAppPath() returned: ${basePath}`);
-  // Assuming basePath already points to the correct directory (like 'dist' in dev)
-  // Just join the filename directly.
-  const correctPath = path.join(basePath, 'render-host.html');
-  log.info(`[getRenderHostPath] Constructed path: ${correctPath}`);
+  const appPath = app.getAppPath();
+  let correctPath: string;
+
+  if (app.isPackaged) {
+    correctPath = path.join(appPath, 'dist', 'render-host.html');
+    log.info(`[getRenderHostPath] Packaged mode path: ${correctPath}`);
+  } else {
+    // In development, appPath might be 'dist/main'. Go up one level to 'dist'.
+    correctPath = path.join(appPath, '..', 'render-host.html'); // Go up from dist/main to dist
+    log.info(
+      `[getRenderHostPath] Development mode path (relative to appPath parent): ${correctPath}`
+    );
+  }
+
   return correctPath;
 }
 
