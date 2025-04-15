@@ -198,6 +198,7 @@ function BaseSubtitleDisplay({
     const element = subtitleRef.current;
     // Check if element exists and text is present
     if (element && text) {
+      const hasExplicitNewline = text.includes('\n');
       let hasWrapped = false; // Default to false
       try {
         // 1. Get container's available width and computed styles
@@ -247,8 +248,13 @@ function BaseSubtitleDisplay({
         );
         // Keep hasWrapped false on error
       } finally {
-        // 7. Update the state based on the final hasWrapped value
-        setIsMultiLine(hasWrapped);
+        // 7. Update state if EITHER explicit newline OR wrapping occurred
+        const finalIsMultiLine = hasExplicitNewline || hasWrapped;
+        // Log the final decision
+        console.log(
+          `[BaseSubtitleDisplay Effect] HasExplicitNewline: ${hasExplicitNewline}, HasWrapped: ${hasWrapped}, Final isMultiLine: ${finalIsMultiLine}`
+        );
+        setIsMultiLine(finalIsMultiLine);
       }
     }
     // Always clear if no text or element
