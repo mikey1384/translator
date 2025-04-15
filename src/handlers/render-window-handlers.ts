@@ -7,6 +7,7 @@ import { parseSrt } from '../shared/helpers/index.js';
 import { execFile, ChildProcess } from 'child_process';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
+import os from 'os';
 
 // Re-define channels used in this handler file
 const RENDER_CHANNELS = {
@@ -161,122 +162,220 @@ export function initializeRenderWindowHandlers(): void {
         }
         // --- End Parse SRT ---
 
-        // --- Frame-by-Frame Render Loop (Puppeteer) ---
+        // --- Generate Timestamped Events ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Starting frame render/capture loop (Puppeteer).`
+          `[RenderWindowHandlers ${operationId}] Generating subtitle change events...`
         );
-        const totalFrames = Math.ceil(
-          options.videoDuration * options.frameRate
+        const events: Array<{ time: number; text: string }> = [];
+        events.push({ time: 0, text: '' }); // Start with blank
+
+        segments.forEach(seg => {
+          // Event for text appearing
+          // Ensure start time is not negative
+          const startTime = Math.max(0, seg.start);
+          events.push({ time: startTime, text: seg.text });
+
+          // Event for text disappearing
+          // Ensure end time is not negative and slightly after start if equal
+          const endTime = Math.max(startTime + 0.001, seg.end);
+          events.push({ time: endTime, text: '' });
+        });
+
+        // Add final blank event at the very end
+        events.push({ time: options.videoDuration, text: '' });
+
+        // Sort events by time, and remove duplicates (same time, same text)
+        events.sort((a, b) => a.time - b.time);
+
+        const uniqueEvents: Array<{ time: number; text: string }> = [];
+        if (events.length > 0) {
+          uniqueEvents.push(events[0]);
+          for (let i = 1; i < events.length; i++) {
+            // Keep if time is different OR if time is same but text is different
+            if (
+              events[i].time > events[i - 1].time ||
+              events[i].text !== events[i - 1].text
+            ) {
+              // Also skip if time is negligibly different and text is same (handles tiny overlaps)
+              if (
+                !(
+                  events[i].time - events[i - 1].time < 0.01 &&
+                  events[i].text === events[i - 1].text
+                )
+              ) {
+                uniqueEvents.push(events[i]);
+              }
+            }
+          }
+        }
+        // Ensure the last event goes exactly to video duration
+        if (uniqueEvents.length > 0) {
+          const lastEvent = uniqueEvents[uniqueEvents.length - 1];
+          if (lastEvent.time < options.videoDuration && lastEvent.text === '') {
+            // If the last event is blank and before the end, extend it
+            lastEvent.time = options.videoDuration;
+          } else if (
+            lastEvent.time < options.videoDuration &&
+            lastEvent.text !== ''
+          ) {
+            // If the last event has text and ends before duration, add a blank event
+            uniqueEvents.push({ time: options.videoDuration, text: '' });
+          } else if (lastEvent.time > options.videoDuration) {
+            // If the last event somehow goes past duration, cap it
+            lastEvent.time = options.videoDuration;
+          }
+        }
+
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Created ${uniqueEvents.length} unique subtitle state events.`
         );
-        const PUPPETEER_STAGE_PERCENT = 90;
+        // --- End Generate Events ---
 
-        for (let i = 0; i < totalFrames; i++) {
-          const frameCount = i + 1;
-          const currentTime = i / options.frameRate;
+        // --- Generate State PNGs (Puppeteer) ---
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Starting state PNG generation loop...`
+        );
+        const statePngs: Array<{ path: string; duration: number }> = [];
+        const TOTAL_EVENTS = uniqueEvents.length;
+        const PUPPETEER_STAGE_PERCENT = 10; // Allocate ~10% of progress to this stage
 
-          const activeSegment = segments.find(
-            seg => currentTime >= seg.start && currentTime < seg.end
-          );
-          const subtitleText = activeSegment ? activeSegment.text : '';
+        for (let i = 0; i < TOTAL_EVENTS; i++) {
+          const currentEvent = uniqueEvents[i];
+          const nextEventTime =
+            i + 1 < TOTAL_EVENTS
+              ? uniqueEvents[i + 1].time
+              : options.videoDuration;
+          const stateDuration = Math.max(
+            0.001,
+            nextEventTime - currentEvent.time
+          ); // Ensure positive duration
+          const subtitleText = currentEvent.text;
 
-          const frameFileName = `frame_${String(frameCount).padStart(7, '0')}.png`;
-          const framePath = path.join(tempDirPath, frameFileName);
+          // Ensure duration doesn't make time exceed videoDuration
+          if (
+            currentEvent.time + stateDuration >
+            options.videoDuration + 0.01
+          ) {
+            // Add tolerance
+            log.warn(
+              `[RenderWindowHandlers ${operationId}] State ${i} duration adjusted to fit video duration.`
+            );
+            // Recalculate duration based on video end time
+            // stateDuration = Math.max(0.001, options.videoDuration - currentEvent.time);
+            // Let's simply skip rendering if start time is already past duration
+            if (currentEvent.time >= options.videoDuration) {
+              log.warn(
+                `[RenderWindowHandlers ${operationId}] State ${i} starts at or after video duration, skipping.`
+              );
+              continue;
+            }
+          }
+
+          if (stateDuration <= 0) {
+            log.warn(
+              `[RenderWindowHandlers ${operationId}] Skipping event ${i} due to zero or negative duration (${stateDuration}). Time: ${currentEvent.time}, Text: "${subtitleText}"`
+            );
+            continue;
+          }
+
+          const statePngFileName = `state_${String(i).padStart(5, '0')}.png`;
+          const statePngPath = path.join(tempDirPath, statePngFileName);
 
           try {
-            // 1. Update text using page.evaluate
+            // 1. Update text
             await page.evaluate(text => {
-              // @ts-ignore - We checked window.updateSubtitle exists
+              // @ts-ignore
               window.updateSubtitle(text);
             }, subtitleText);
 
-            // Add a small delay AFTER updating text, just in case React needs a tick to re-render
-            await new Promise(resolve => setTimeout(resolve, 10)); // Small delay for DOM update
+            // Optional small delay
+            await new Promise(resolve => setTimeout(resolve, 5));
 
-            // 2. Capture using page.screenshot (omitBackground is key!)
+            // 2. Capture ONE screenshot for this state
             await page.screenshot({
-              path: framePath,
+              path: statePngPath,
               omitBackground: true,
-              // Ensure clip matches viewport size exactly
               clip: {
                 x: 0,
                 y: 0,
                 width: options.videoWidth,
                 height: options.videoHeight,
               },
-              type: 'png', // Explicitly set type
+              type: 'png',
             });
 
+            // 3. Store path and duration
+            statePngs.push({ path: statePngPath, duration: stateDuration });
+
             // --- ADD PROGRESS REPORTING ---
-            const frameProgress =
-              (frameCount / totalFrames) * PUPPETEER_STAGE_PERCENT;
-            if (
-              frameCount % options.frameRate === 0 ||
-              frameCount === totalFrames
-            ) {
-              // Send every second or on last frame
+            const stateProgress =
+              ((i + 1) / TOTAL_EVENTS) * PUPPETEER_STAGE_PERCENT;
+            // Report progress less frequently now, maybe every 10 states or 5%
+            if ((i + 1) % 10 === 0 || i === TOTAL_EVENTS - 1) {
               event.sender.send('merge-subtitles-progress', {
-                // Use existing channel
                 operationId: operationId,
-                percent: Math.round(frameProgress),
-                stage: `Rendering frame ${frameCount}/${totalFrames}`,
+                percent: Math.round(stateProgress),
+                stage: `Rendering subtitle state ${i + 1}/${TOTAL_EVENTS}`,
               });
             }
             // --- END PROGRESS REPORTING ---
-          } catch (frameError: any) {
+          } catch (stateError: any) {
             log.error(
-              `[RenderWindowHandlers ${operationId}] Error processing frame ${frameCount} (Puppeteer):`,
-              frameError
+              `[RenderWindowHandlers ${operationId}] Error processing state ${i} (Time: ${currentEvent.time}, Text: "${subtitleText}"):`,
+              stateError
             );
             throw new Error(
-              `Failed during frame ${frameCount} processing (Puppeteer): ${frameError.message}`
+              `Failed during state ${i} processing: ${stateError.message}`
             );
           }
         }
         log.info(
-          `[RenderWindowHandlers ${operationId}] Finished capturing ${totalFrames} PNG frames (Puppeteer).`
+          `[RenderWindowHandlers ${operationId}] Finished capturing ${statePngs.length} state PNGs.`
         );
+
         // Report completion of this stage
         event.sender.send('merge-subtitles-progress', {
           operationId: operationId,
           percent: PUPPETEER_STAGE_PERCENT,
-          stage: 'Assembling PNG sequence...', // Set stage for next step
+          stage: 'Assembling subtitle overlay video...', // Updated stage message
         });
-        // --- End Frame-by-Frame Render Loop ---
+        // --- End Generate State PNGs ---
 
         // --- Close Puppeteer Page ---
         await page.close();
         log.info(
           `[RenderWindowHandlers ${operationId}] Puppeteer page closed.`
         );
-        // Keep browser open until finally block for safety
+        // --- End Close Page ---
 
-        // --- FFmpeg Assembly (No change needed here) ---
+        // --- FFmpeg Assembly (This part needs modification next) ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Preparing for FFmpeg assembly...`
+          `[RenderWindowHandlers ${operationId}] Preparing for FFmpeg assembly (Optimized)...`
         );
         const tempOverlayVideoPath = path.join(
           tempDirPath,
           `overlay_${operationId}.mov`
-        );
+        ); // Keep MOV for potential alpha
 
-        const assemblyResult = await assemblePngSequence(
-          tempDirPath,
+        // TODO: Modify assembleClipsFromStates call to pass statePngs and use new logic
+        const assemblyResult = await assembleClipsFromStates(
+          statePngs,
           tempOverlayVideoPath,
-          options.frameRate,
+          options.frameRate, // Still need frame rate for intermediate clips
           operationId
         );
 
         if (!assemblyResult.success || !assemblyResult.outputPath) {
           throw new Error(
-            assemblyResult.error ||
-              'FFmpeg assembly failed or produced no output path.'
+            assemblyResult.error || 'Optimized FFmpeg assembly failed.'
           );
         }
         log.info(
-          `[RenderWindowHandlers ${operationId}] FFmpeg assembly successful. Temporary overlay video: ${tempOverlayVideoPath}`
+          `[RenderWindowHandlers ${operationId}] Optimized FFmpeg assembly successful. Temporary overlay video: ${tempOverlayVideoPath}`
         );
         // --- End FFmpeg Assembly ---
 
+        // --- The rest of the logic (Final Merge, Save Dialog, Move) remains the same ---
         // --- Prepare for Final Merge (New Flow) ---
         const tempOverlayPath = assemblyResult.outputPath;
         const originalVideoPath = options.originalVideoPath;
@@ -517,93 +616,259 @@ async function cleanupTempDir(
   }
 }
 
-async function assemblePngSequence(
-  tempDirPath: string,
+async function assembleClipsFromStates(
+  statePngs: Array<{ path: string; duration: number }>,
   outputPath: string,
   frameRate: number,
   operationId: string
 ): Promise<{ success: boolean; outputPath: string; error?: string }> {
   log.info(
-    `[assemblePngSequence ${operationId}] Starting assembly. Input dir: ${tempDirPath}, Output: ${outputPath}`
+    `[assembleClipsFromStates ${operationId}] Starting assembly from ${statePngs.length} state PNGs...`
   );
-  return new Promise((resolve, reject) => {
-    const ffmpegPath = 'ffmpeg';
-    const inputPattern = path.join(tempDirPath, 'frame_%07d.png');
+  const tempDirPath = path.dirname(statePngs[0].path); // Get temp dir from one of the pngs
+  const concatListPath = path.join(
+    tempDirPath,
+    `concat_list_${operationId}.txt`
+  );
+  let concatContent = '';
+  const ffmpegPath = 'ffmpeg'; // Assume in PATH or use helper if needed
+  let clipPathsToCleanup: string[] = []; // <-- DECLARE HERE (initially empty)
 
-    // Check if input files exist (basic check)
-    // This is complex to do properly without listing dir, skip for now but consider adding later if needed
+  try {
+    // --- Step 1: Create individual clips from each state PNG (Parallelized) ---
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Generating ${statePngs.length} intermediate video clips in parallel...`
+    );
+    const clipPromises: Promise<void>[] = []; // Store promises that signal task completion
+    const MAX_CONCURRENT_FFMPEG = Math.max(
+      1,
+      Math.min(8, os.cpus().length - 1)
+    ); // Limit concurrency (e.g., 8 or num CPU cores - 1)
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Max concurrent FFmpeg processes: ${MAX_CONCURRENT_FFMPEG}`
+    );
+    let currentlyRunning = 0;
+    let launchedCount = 0;
+    const results: { index: number; path: string | null; error?: Error }[] = []; // Store results with index
 
-    const args = [
-      '-framerate',
-      frameRate.toString(),
-      '-i',
-      inputPattern,
-      '-c:v',
-      'png',
-      '-pix_fmt',
-      'rgba',
-      '-y',
-      outputPath,
-    ];
+    const runClipTask = (index: number): Promise<void> => {
+      const state = statePngs[index];
+      const clipOutputPath = path.join(
+        tempDirPath,
+        `clip_${String(index).padStart(5, '0')}.mov`
+      );
+      const clipArgs = [
+        '-loop',
+        '1',
+        '-i',
+        state.path,
+        '-c:v',
+        'prores_ks',
+        '-profile:v',
+        '4444',
+        '-pix_fmt',
+        'yuva444p10le',
+        '-r',
+        frameRate.toString(),
+        '-t',
+        state.duration.toFixed(4),
+        '-y',
+        clipOutputPath,
+      ];
+
+      currentlyRunning++;
+      log.debug(
+        `[assembleClipsFromStates ${operationId}] [${currentlyRunning}/${MAX_CONCURRENT_FFMPEG}] Starting clip ${index} generation.`
+      );
+
+      return new Promise<void>(resolveTask => {
+        // Outer promise resolves when this task slot is free
+        const clipPromise = new Promise<void>((resolveClip, rejectClip) => {
+          // Inner promise resolves/rejects with clip outcome
+          const clipProcess = execFile(ffmpegPath, clipArgs);
+          let clipStderr = '';
+          clipProcess.stderr?.on(
+            'data',
+            data => (clipStderr += data.toString())
+          );
+          clipProcess.on('error', err =>
+            rejectClip(
+              new Error(
+                `FFmpeg clip ${index} error: ${err.message}\nStderr: ${clipStderr}`
+              )
+            )
+          );
+          clipProcess.on('close', code => {
+            if (code === 0) {
+              resolveClip(); // Resolve inner promise with path
+            } else {
+              rejectClip(
+                new Error(
+                  `FFmpeg clip ${index} exited with code ${code}\nStderr: ${clipStderr}`
+                )
+              );
+            }
+          });
+        });
+
+        clipPromise
+          .then(() => {
+            results.push({ index: index, path: clipOutputPath });
+          })
+          .catch(error => {
+            results.push({ index: index, path: null, error: error });
+            log.error(
+              `[assembleClipsFromStates ${operationId}] Failed to generate clip ${index}:`,
+              error
+            );
+            // Decide if you want to throw/stop everything on single clip failure, or just log and continue
+          })
+          .finally(() => {
+            currentlyRunning--;
+            log.debug(
+              `[assembleClipsFromStates ${operationId}] [${currentlyRunning}/${MAX_CONCURRENT_FFMPEG}] Finished clip ${index} generation.`
+            );
+            resolveTask(); // Resolve outer promise to free up the slot
+          });
+      });
+    };
+
+    // Launch tasks with concurrency limit
+    while (launchedCount < statePngs.length) {
+      while (
+        currentlyRunning < MAX_CONCURRENT_FFMPEG &&
+        launchedCount < statePngs.length
+      ) {
+        clipPromises.push(runClipTask(launchedCount));
+        launchedCount++;
+      }
+      // Wait for at least one task to complete before launching more
+      await Promise.race(clipPromises.slice(-MAX_CONCURRENT_FFMPEG)); // Wait for any of the currently running ones
+    }
+
+    // Wait for all remaining tasks to complete
+    await Promise.all(clipPromises);
+
+    // --- Process results ---
+    results.sort((a, b) => a.index - b.index); // Ensure results are in original order
+    const successfulClips = results.filter(r => r.path !== null) as {
+      index: number;
+      path: string;
+    }[];
+    const failedCount = statePngs.length - successfulClips.length;
+
+    if (failedCount > 0) {
+      log.warn(
+        `[assembleClipsFromStates ${operationId}] ${failedCount} clip(s) failed to generate. Proceeding with successful ones.`
+      );
+      // Decide if this should be a fatal error. Let's proceed for now.
+      if (successfulClips.length === 0) {
+        throw new Error('All intermediate clips failed to generate.');
+      }
+    }
+
+    // Store successful paths for cleanup
+    clipPathsToCleanup = successfulClips.map(clip => clip.path);
 
     log.info(
-      `[assemblePngSequence ${operationId}] Assembling PNGs with FFmpeg command: ${ffmpegPath} ${args.join(' ')}`
+      `[assembleClipsFromStates ${operationId}] Successfully generated ${successfulClips.length} intermediate clips (out of ${statePngs.length}).`
     );
 
-    let ffmpegOutput = '';
-    let hasSeenData = false;
-    const child: ChildProcess = execFile(ffmpegPath, args);
+    // --- Step 2: Create concat list file (uses successful clips) ---
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Writing concat list file: ${concatListPath}`
+    );
+    concatContent = successfulClips
+      .map(clip => `file '${path.relative(tempDirPath, clip.path)}'`)
+      .join('\n');
+    await fs.writeFile(concatListPath, concatContent, 'utf8');
 
-    child.stdout?.on('data', data => {
-      hasSeenData = true;
-      ffmpegOutput += data.toString();
-    });
-    child.stderr?.on('data', data => {
-      hasSeenData = true;
-      const stderrLine = data.toString().trim();
-      if (stderrLine) {
-        // Avoid logging empty lines
-        ffmpegOutput += stderrLine + '\n';
-        log.debug(`[FFmpeg stderr ${operationId}]: ${stderrLine}`);
-      }
-    });
+    // --- Step 3: Concatenate clips into final overlay video ---
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Concatenating clips into final overlay: ${outputPath}`
+    );
+    const concatArgs = [
+      '-f',
+      'concat', // Use the concat demuxer
+      '-safe',
+      '0', // Allow relative paths in concat list
+      '-i',
+      concatListPath, // Input concat list file
+      '-c',
+      'copy', // Copy codecs (should be ProRes 4444 already)
+      '-y', // Overwrite output
+      outputPath, // Final output path (.mov)
+    ];
 
-    child.on('error', error => {
-      log.error(
-        `[assemblePngSequence ${operationId}] FFmpeg execution error:`,
-        error
+    await new Promise<void>((resolveConcat, rejectConcat) => {
+      log.debug(
+        `[assembleClipsFromStates ${operationId}] Running concat command: ${ffmpegPath} ${concatArgs.join(' ')}`
       );
-      log.error(
-        `[assemblePngSequence ${operationId}] FFmpeg output on error:\n${ffmpegOutput}`
+      const concatProcess = execFile(ffmpegPath, concatArgs);
+      let concatStderr = '';
+      concatProcess.stderr?.on(
+        'data',
+        data => (concatStderr += data.toString())
       );
-      reject(new Error(`FFmpeg execution failed: ${error.message}`));
-    });
-
-    child.on('close', code => {
-      log.info(
-        `[assemblePngSequence ${operationId}] FFmpeg process exited with code ${code}.`
-      );
-      if (code === 0 && hasSeenData) {
-        // Check hasSeenData as extra validation
-        log.info(
-          `[assemblePngSequence ${operationId}] Assembly successful: ${outputPath}`
-        );
-        resolve({ success: true, outputPath });
-      } else {
-        log.error(
-          `[assemblePngSequence ${operationId}] FFmpeg assembly failed (exit code ${code}, saw data: ${hasSeenData}).`
-        );
-        log.error(
-          `[assemblePngSequence ${operationId}] FFmpeg output on failure:\n${ffmpegOutput}`
-        );
-        reject(
+      concatProcess.on('error', err =>
+        rejectConcat(
           new Error(
-            `FFmpeg assembly failed with exit code ${code}. Output:\n${ffmpegOutput}`
+            `FFmpeg concat error: ${err.message}\nStderr: ${concatStderr}`
           )
-        );
-      }
+        )
+      );
+      concatProcess.on('close', code => {
+        if (code === 0) {
+          resolveConcat();
+        } else {
+          rejectConcat(
+            new Error(
+              `FFmpeg concat exited with code ${code}\nStderr: ${concatStderr}`
+            )
+          );
+        }
+      });
     });
-  });
+
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Concatenation successful. Final overlay: ${outputPath}`
+    );
+    return { success: true, outputPath };
+  } catch (error: any) {
+    log.error(
+      `[assembleClipsFromStates ${operationId}] Assembly failed:`,
+      error
+    );
+    return {
+      success: false,
+      outputPath: '',
+      error: error.message || 'Unknown assembly error',
+    };
+  } finally {
+    // --- Step 4: Cleanup intermediate clips and concat list ---
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Cleaning up intermediate files...`
+    );
+    const cleanupPromises = [];
+    for (const clipPath of clipPathsToCleanup) {
+      cleanupPromises.push(
+        fs
+          .unlink(clipPath)
+          .catch(err => log.warn(`Failed to delete clip ${clipPath}: ${err}`))
+      );
+    }
+    cleanupPromises.push(
+      fs
+        .unlink(concatListPath)
+        .catch(err =>
+          log.warn(`Failed to delete concat list ${concatListPath}: ${err}`)
+        )
+    );
+    await Promise.allSettled(cleanupPromises);
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Intermediate file cleanup finished.`
+    );
+  }
 }
 
 interface MergeVideoAndOverlayOptions {
