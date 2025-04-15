@@ -623,8 +623,8 @@ export default function VideoPlayer({
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
             isFullyExpanded={isPseudoFullscreen}
-            parentRef={playerRef} // Pass the parent ref
-            fontSize={mergeFontSize}
+            parentRef={playerRef}
+            baseFontSize={mergeFontSize}
           />
 
           {/* Modified Video Controls Overlay to work in both modes */}

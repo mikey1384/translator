@@ -57,7 +57,7 @@ interface NativeVideoPlayerProps {
   onPlayerReady: (player: HTMLVideoElement) => void;
   isFullyExpanded?: boolean;
   parentRef?: React.RefObject<HTMLDivElement | null>;
-  fontSize: number;
+  baseFontSize: number;
 }
 
 export default function NativeVideoPlayer({
@@ -66,7 +66,7 @@ export default function NativeVideoPlayer({
   onPlayerReady,
   isFullyExpanded = false,
   parentRef,
-  fontSize,
+  baseFontSize,
 }: NativeVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -90,6 +90,9 @@ export default function NativeVideoPlayer({
   const [_isPlaying, setIsPlaying] = useState(false);
   const [showIndicator, setShowIndicator] = useState(false);
   const [indicatorType, setIndicatorType] = useState<'play' | 'pause'>('pause');
+
+  const [nativeHeight, setNativeHeight] = useState<number>(0);
+  const [displayHeight, setDisplayHeight] = useState<number>(0);
 
   // Updated handlePlayerClick to toggle play/pause
   const handlePlayerClick = useCallback(() => {
@@ -585,6 +588,81 @@ export default function NativeVideoPlayer({
     };
   }, []);
 
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const handleMetadata = () => {
+      if (videoElement.videoHeight > 0) {
+        console.log('Native video height:', videoElement.videoHeight);
+        setNativeHeight(videoElement.videoHeight);
+      }
+      // Also set initial display height
+      if (videoElement.clientHeight > 0) {
+        console.log('Initial display height:', videoElement.clientHeight);
+        setDisplayHeight(videoElement.clientHeight);
+      }
+    };
+
+    videoElement.addEventListener('loadedmetadata', handleMetadata);
+    // Call once in case metadata is already loaded
+    if (videoElement.readyState >= 1) {
+      // HAVE_METADATA
+      handleMetadata();
+    }
+
+    return () => {
+      videoElement.removeEventListener('loadedmetadata', handleMetadata);
+    };
+    // Add dependencies that signal video source change or readiness
+  }, [videoUrl]); // Re-run if video source changes
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        if (entry.target === videoElement) {
+          const newHeight = Math.round(entry.contentRect.height);
+          if (newHeight > 0) {
+            // Optional: Add console log for debugging size changes
+            // console.log('Video display height changed:', newHeight);
+            setDisplayHeight(newHeight);
+          }
+        }
+      }
+    });
+
+    resizeObserver.observe(videoElement);
+
+    // Set initial height one more time after observing
+    if (videoElement.clientHeight > 0 && displayHeight === 0) {
+      setDisplayHeight(videoElement.clientHeight);
+    }
+
+    return () => {
+      resizeObserver.unobserve(videoElement);
+      resizeObserver.disconnect();
+    };
+  }, [displayHeight]); // Re-run if videoRef changes (though unlikely)
+
+  // Calculate the effective display font size
+  const calculateDisplayFontSize = () => {
+    const safeBaseSize = Math.max(10, baseFontSize || 24); // Use baseFontSize prop
+
+    if (nativeHeight > 0 && displayHeight > 0) {
+      const scaleFactor = displayHeight / nativeHeight;
+      // Apply scale factor, ensuring a minimum size
+      return Math.max(10, Math.round(safeBaseSize * scaleFactor));
+    }
+    // Fallback if dimensions aren't ready or video has no height (audio?)
+    // Use base size, potentially scaled slightly if fullscreen as a simple fallback
+    return isFullyExpanded ? Math.round(safeBaseSize * 1.2) : safeBaseSize;
+  };
+
+  const effectiveDisplayFontSize = calculateDisplayFontSize();
+
   return (
     <div
       ref={containerRef}
@@ -633,7 +711,7 @@ export default function NativeVideoPlayer({
       <BaseSubtitleDisplay
         text={activeSubtitle}
         isVisible={subtitleVisible}
-        fontSize={fontSize}
+        displayFontSize={effectiveDisplayFontSize}
         isFullScreen={isFullyExpanded}
       />
 

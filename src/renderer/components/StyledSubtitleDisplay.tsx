@@ -5,7 +5,7 @@ import BaseSubtitleDisplay from './BaseSubtitleDisplay.js'; // Import the shared
 interface StyledSubtitleDisplayProps {
   text: string;
   isVisible: boolean; // Keep isVisible prop
-  fontSize: number; // <-- ADD THIS
+  baseFontSize?: number; // <-- Renamed
   // No need for isFullyExpanded here unless BaseSubtitleDisplay uses it
 }
 
@@ -13,14 +13,13 @@ interface StyledSubtitleDisplayProps {
 function StyledSubtitleDisplay({
   text,
   isVisible,
-  fontSize,
+  baseFontSize,
 }: StyledSubtitleDisplayProps): React.ReactElement {
-  // Render the base component, passing the props through
   return (
     <BaseSubtitleDisplay
       text={text}
       isVisible={isVisible}
-      fontSize={fontSize}
+      displayFontSize={baseFontSize}
       isFullScreen={false}
     />
   );
