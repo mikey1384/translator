@@ -157,10 +157,10 @@ const fixedVideoContainerBaseStyles = css`
   transition: all 0.3s ease-out;
 `;
 
-const fixedVideoContainerStyles = (isPseudoFullscreen: boolean) => css`
+const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
   ${fixedVideoContainerBaseStyles}
 
-  ${isPseudoFullscreen
+  ${isFullScreen
     ? `
     top: 0;
     left: 0;
@@ -176,7 +176,7 @@ const fixedVideoContainerStyles = (isPseudoFullscreen: boolean) => css`
     flex-direction: column; /* Stack elements vertically */
   `
     : `
-    width: calc(85% - 30px);
+    width: calc(95% - 30px);
     max-height: 35vh;
     padding: 10px;
     border-radius: 0 0 8px 8px;
@@ -188,20 +188,18 @@ const fixedVideoContainerStyles = (isPseudoFullscreen: boolean) => css`
   `}
 `;
 
-const playerWrapperStyles = (isPseudoFullscreen: boolean) => css`
+const playerWrapperStyles = (isFullScreen: boolean) => css`
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 0;
   position: relative;
-  ${isPseudoFullscreen
-    ? 'height: 100%;'
-    : ''}/* Take full height in fullscreen */
+  ${isFullScreen ? 'height: 100%;' : ''}/* Take full height in fullscreen */
 `;
 
-const controlsWrapperStyles = (isPseudoFullscreen: boolean) => css`
+const controlsWrapperStyles = (isFullScreen: boolean) => css`
   flex-shrink: 0;
   transition: background-color 0.3s ease;
-  ${isPseudoFullscreen
+  ${isFullScreen
     ? `
     position: absolute;
     bottom: 0;
@@ -256,7 +254,7 @@ export default function VideoPlayer({
   mergeStylePreset: SubtitleStylePresetKey;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -347,25 +345,24 @@ export default function VideoPlayer({
     };
   }, []);
 
-  // --- New: Toggle Pseudo Fullscreen Function ---
-  const togglePseudoFullscreen = useCallback(() => {
-    setIsPseudoFullscreen(prev => !prev);
+  const toggleFullscreen = useCallback(() => {
+    setIsFullScreen(prev => !prev);
     // Optionally, pause/play video or trigger other actions
     // If entering fullscreen, might want to hide scrollbars
-    if (!isPseudoFullscreen) {
+    if (!isFullScreen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     // Recalculate layout or trigger re-render if necessary
     window.dispatchEvent(new Event('resize'));
-  }, [isPseudoFullscreen]);
+  }, [isFullScreen]);
 
   // --- New: Handle Escape key to exit pseudo-fullscreen ---
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isPseudoFullscreen) {
-        togglePseudoFullscreen();
+      if (event.key === 'Escape' && isFullScreen) {
+        toggleFullscreen();
       }
     };
 
@@ -373,11 +370,11 @@ export default function VideoPlayer({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       // Ensure body overflow is reset if component unmounts while fullscreen
-      if (isPseudoFullscreen) {
+      if (isFullScreen) {
         document.body.style.overflow = '';
       }
     };
-  }, [isPseudoFullscreen, togglePseudoFullscreen]);
+  }, [isFullScreen, toggleFullscreen]);
 
   // Add utility function to format time for the progress bar
   const formatTime = useCallback((seconds: number): string => {
@@ -460,7 +457,7 @@ export default function VideoPlayer({
 
   // --- Logic for Fullscreen Control Auto-Hide --- START ---
   const handleActivity = useCallback(() => {
-    if (!isPseudoFullscreen) return; // Only run in fullscreen
+    if (!isFullScreen) return; // Only run in fullscreen
 
     setShowFullscreenControls(true);
 
@@ -473,7 +470,7 @@ export default function VideoPlayer({
     activityTimeoutRef.current = setTimeout(() => {
       setShowFullscreenControls(false);
     }, 3000); // Hide after 3 seconds
-  }, [isPseudoFullscreen]);
+  }, [isFullScreen]);
 
   // Effect to attach/detach listeners and clean up timeout
   useEffect(() => {
@@ -481,7 +478,7 @@ export default function VideoPlayer({
       '.native-video-player-wrapper'
     ); // Target the inner wrapper
 
-    if (isPseudoFullscreen && playerWrapper) {
+    if (isFullScreen && playerWrapper) {
       // Initially show controls and start timer
       handleActivity();
 
@@ -503,7 +500,7 @@ export default function VideoPlayer({
         clearTimeout(activityTimeoutRef.current);
       }
     }
-  }, [isPseudoFullscreen, handleActivity]);
+  }, [isFullScreen, handleActivity]);
   // --- Logic for Fullscreen Control Auto-Hide --- END ---
 
   // Add effect to detect and measure the progress bar
@@ -568,8 +565,8 @@ export default function VideoPlayer({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       // Handle escape key for fullscreen toggle
-      if (e.key === 'Escape' && isPseudoFullscreen) {
-        togglePseudoFullscreen();
+      if (e.key === 'Escape' && isFullScreen) {
+        toggleFullscreen();
         e.preventDefault();
         return;
       }
@@ -597,7 +594,7 @@ export default function VideoPlayer({
         }
       }
     },
-    [isPseudoFullscreen, togglePseudoFullscreen, onUiInteraction]
+    [isFullScreen, toggleFullscreen, onUiInteraction]
   );
 
   if (!videoUrl) return null;
@@ -608,16 +605,14 @@ export default function VideoPlayer({
   return (
     <div ref={containerRef}>
       <div
-        className={`${fixedVideoContainerStyles(
-          isPseudoFullscreen
-        )} ${isPseudoFullscreen ? 'pseudo-fullscreen' : ''}`}
+        className={`${fixedVideoContainerStyles(isFullScreen)}`}
         ref={playerRef}
-        style={{ top: isPseudoFullscreen ? 0 : progressBarHeight }}
+        style={{ top: isFullScreen ? 0 : progressBarHeight }}
         tabIndex={0} // Make container focusable
         onKeyDown={handleKeyDown} // Handle keyboard events at this level
       >
         <div
-          className={playerWrapperStyles(isPseudoFullscreen)}
+          className={playerWrapperStyles(isFullScreen)}
           onMouseEnter={handlePlayerWrapperHover}
           onMouseLeave={handlePlayerWrapperLeave}
         >
@@ -625,7 +620,7 @@ export default function VideoPlayer({
             videoUrl={videoUrl}
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
-            isFullyExpanded={isPseudoFullscreen}
+            isFullyExpanded={isFullScreen}
             parentRef={playerRef}
             baseFontSize={mergeFontSize}
             stylePreset={mergeStylePreset}
@@ -634,12 +629,12 @@ export default function VideoPlayer({
           {/* Modified Video Controls Overlay to work in both modes */}
           <div
             className={
-              isPseudoFullscreen
+              isFullScreen
                 ? fullscreenOverlayControlsStyles
                 : videoOverlayControlsStyles
             }
             style={{
-              opacity: isPseudoFullscreen
+              opacity: isFullScreen
                 ? showFullscreenControls
                   ? 1
                   : 0
@@ -653,9 +648,7 @@ export default function VideoPlayer({
               variant="primary"
               size="sm"
               className={
-                isPseudoFullscreen
-                  ? fullscreenButtonStyles
-                  : transparentButtonStyles
+                isFullScreen ? fullscreenButtonStyles : transparentButtonStyles
               }
             >
               {isPlaying ? (
@@ -679,9 +672,7 @@ export default function VideoPlayer({
 
             <span
               className={
-                isPseudoFullscreen
-                  ? fullscreenTimeDisplayStyles
-                  : timeDisplayStyles
+                isFullScreen ? fullscreenTimeDisplayStyles : timeDisplayStyles
               }
             >
               {formatTime(currentTime)}
@@ -696,7 +687,7 @@ export default function VideoPlayer({
                 onChange={handleSeek}
                 step="0.1"
                 className={
-                  isPseudoFullscreen ? fullscreenSeekbarStyles : seekbarStyles
+                  isFullScreen ? fullscreenSeekbarStyles : seekbarStyles
                 }
                 style={{ '--seek-before-width': `${progressPercent}%` } as any}
               />
@@ -704,9 +695,7 @@ export default function VideoPlayer({
 
             <span
               className={
-                isPseudoFullscreen
-                  ? fullscreenTimeDisplayStyles
-                  : timeDisplayStyles
+                isFullScreen ? fullscreenTimeDisplayStyles : timeDisplayStyles
               }
             >
               {formatTime(duration)}
@@ -714,19 +703,15 @@ export default function VideoPlayer({
 
             {/* Add Fullscreen Button */}
             <Button
-              onClick={togglePseudoFullscreen}
+              onClick={toggleFullscreen}
               variant="secondary"
               size="sm"
               className={
-                isPseudoFullscreen
-                  ? fullscreenButtonStyles
-                  : transparentButtonStyles
+                isFullScreen ? fullscreenButtonStyles : transparentButtonStyles
               }
-              title={
-                isPseudoFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'
-              }
+              title={isFullScreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
             >
-              {isPseudoFullscreen ? (
+              {isFullScreen ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
@@ -747,8 +732,8 @@ export default function VideoPlayer({
           </div>
         </div>
 
-        {!isPseudoFullscreen && (
-          <div className={controlsWrapperStyles(isPseudoFullscreen)}>
+        {!isFullScreen && (
+          <div className={controlsWrapperStyles(isFullScreen)}>
             <SideMenu
               onProcessUrl={onProcessUrl}
               hasSubtitles={subtitles && subtitles.length > 0}

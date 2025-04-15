@@ -138,7 +138,6 @@ export const fileInputWrapperStyles = css`
 
 // Container Styles - No theme change needed usually
 export const containerStyles = css`
-  max-width: 90%;
   width: 100%;
   margin: 0 auto;
   padding: 1.5rem;

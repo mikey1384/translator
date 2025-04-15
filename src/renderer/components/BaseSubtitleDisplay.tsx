@@ -41,6 +41,12 @@ function getSubtitleStyles({
   const shadowRgba = assColorToRgba(style.backColor); // BackColor used for shadow/box
   // --- END DEFINE COLORS ---
 
+  // --- Positioning Variables ---
+  const position: 'fixed' | 'absolute' = 'fixed';
+  const bottom = '5%';
+  const maxWidth = '100%'; // Default for fixed (parent limits width)
+  // --- End Positioning Variables ---
+
   // --- DETAILED STYLE LOGIC ---
   let textShadow = 'none';
   let backgroundColor = 'transparent'; // Default to transparent
@@ -83,13 +89,13 @@ function getSubtitleStyles({
   // --- END DETAILED LOGIC ---
 
   return css`
-    position: fixed;
-    bottom: ${isFullScreen ? '8%' : '5%'};
-    left: 50%;
-    transform: translateX(-50%);
-    padding: ${containerPadding}; // <-- Use dynamic padding
-    background-color: ${backgroundColor}; // <-- Use calculated background
-    color: ${primaryRgba}; // <-- Use calculated color
+    position: ${position};
+    bottom: ${bottom};
+    left: ${isFullScreen ? '5%' : '50%'};
+    right: ${isFullScreen ? '5%' : undefined};
+    padding: ${containerPadding};
+    background-color: ${backgroundColor};
+    color: ${primaryRgba};
     font-family:
       'Noto Sans',
       'Inter',
@@ -102,8 +108,8 @@ function getSubtitleStyles({
       'Noto Sans SC',
       sans-serif;
     font-size: ${finalFontSize}px;
-    font-weight: ${style.isBold ? 'bold' : '500'}; // <-- Use bold flag
-    text-shadow: ${textShadow}; // <-- Apply calculated text shadow
+    font-weight: ${style.isBold ? 'bold' : '500'};
+    text-shadow: ${textShadow};
     text-align: center;
     border-radius: 5px;
     opacity: 0;
@@ -114,20 +120,24 @@ function getSubtitleStyles({
       color 0.2s linear,
       text-shadow 0.2s linear,
       background-color 0.2s linear,
-      box-shadow 0.2s linear;
-    max-width: 80%;
+      box-shadow 0.2s linear,
+      left 0.3s ease-out,
+      max-width 0.3s ease-out;
+    max-width: ${maxWidth};
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
+    ${!isFullScreen ? 'transform: translateX(-50%);' : ''}
+    ${isFullScreen ? 'margin: 0 auto;' : ''}
 
     &.visible {
       opacity: 1;
     }
 
-    line-height: 1.6;
+    line-height: 1.35;
     letter-spacing: 0.01em;
     user-select: none;
-    box-shadow: ${boxShadowValue}; // <-- Use dynamic box shadow value
+    box-shadow: ${boxShadowValue};
     border: none;
   `;
 }
@@ -183,7 +193,7 @@ function BaseSubtitleDisplay({
                     display: 'inline', // Ensures background wraps with text
                     boxDecorationBreak: 'clone', // Standard property
                     WebkitBoxDecorationBreak: 'clone', // For Safari compatibility
-                    lineHeight: '1.8', // Slightly increase line-height for better spacing with background
+                    lineHeight: '1.35',
                   }}
                 >
                   {line /* Render the actual line of text */}
