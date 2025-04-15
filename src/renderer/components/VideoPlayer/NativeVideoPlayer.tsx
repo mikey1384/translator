@@ -6,6 +6,7 @@ import {
   getNativePlayerInstance,
 } from '../../native-player.js';
 import BaseSubtitleDisplay from '../BaseSubtitleDisplay.js';
+import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 
 declare global {
   interface Window {
@@ -58,6 +59,7 @@ interface NativeVideoPlayerProps {
   isFullyExpanded?: boolean;
   parentRef?: React.RefObject<HTMLDivElement | null>;
   baseFontSize: number;
+  stylePreset: SubtitleStylePresetKey;
 }
 
 export default function NativeVideoPlayer({
@@ -67,6 +69,7 @@ export default function NativeVideoPlayer({
   isFullyExpanded = false,
   parentRef,
   baseFontSize,
+  stylePreset,
 }: NativeVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -713,6 +716,7 @@ export default function NativeVideoPlayer({
         isVisible={subtitleVisible}
         displayFontSize={effectiveDisplayFontSize}
         isFullScreen={isFullyExpanded}
+        stylePreset={stylePreset}
       />
 
       {/* Ephemeral Play/Pause Icon Overlay */}

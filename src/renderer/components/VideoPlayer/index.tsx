@@ -6,6 +6,7 @@ import { colors } from '../../styles.js';
 import Button from '../Button.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
+import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 
@@ -236,6 +237,7 @@ export default function VideoPlayer({
   onUiInteraction,
   onProcessUrl,
   mergeFontSize,
+  mergeStylePreset,
 }: {
   isProgressBarVisible: boolean;
   videoUrl: string;
@@ -251,6 +253,7 @@ export default function VideoPlayer({
   onUiInteraction?: () => void;
   onProcessUrl: () => void;
   mergeFontSize: number;
+  mergeStylePreset: SubtitleStylePresetKey;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
@@ -625,6 +628,7 @@ export default function VideoPlayer({
             isFullyExpanded={isPseudoFullscreen}
             parentRef={playerRef}
             baseFontSize={mergeFontSize}
+            stylePreset={mergeStylePreset}
           />
 
           {/* Modified Video Controls Overlay to work in both modes */}

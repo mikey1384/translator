@@ -289,6 +289,7 @@ function AppContent() {
                   isMergingInProgress || isTranslationInProgress
                 }
                 mergeFontSize={mergeFontSize}
+                mergeStylePreset={mergeStylePreset}
               />
             )}
 
