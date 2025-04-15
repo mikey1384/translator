@@ -130,7 +130,7 @@ export async function handleProcessUrl(
         );
         sendProgress(progress);
       },
-      // Pass services as a single object
+      operationId,
       {
         fileManager,
         ffmpegService,

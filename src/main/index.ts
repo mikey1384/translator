@@ -14,8 +14,9 @@ import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import Store from 'electron-store';
-import * as renderWindowHandlers from './handlers/render-window-handlers.js';
-import * as subtitleHandlers from './handlers/subtitle-handlers.js';
+import * as renderWindowHandlers from '../handlers/render-window-handlers.js';
+import * as subtitleHandlers from '../handlers/subtitle-handlers.js';
+import { execa } from 'execa';
 
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -25,21 +26,23 @@ const __dirname = path.dirname(__filename);
 const isDev = !app.isPackaged;
 
 // --- Services & Handlers Imports ---
-import { FFmpegService } from './services/ffmpeg-service.js';
-import { SaveFileService } from './services/save-file.js';
-import { FileManager } from './services/file-manager.js';
+import { FFmpegService } from '../services/ffmpeg-service.js';
+import { SaveFileService } from '../services/save-file.js';
+import { FileManager } from '../services/file-manager.js';
 import {
   handleProcessUrl,
   initializeUrlHandler,
-} from './handlers/url-handler.js';
-import * as fileHandlers from './handlers/file-handlers.js';
-import * as apiKeyHandlers from './handlers/api-key-handlers.js';
-import * as utilityHandlers from './handlers/utility-handlers.js';
+} from '../handlers/url-handler.js';
+import * as fileHandlers from '../handlers/file-handlers.js';
+import * as apiKeyHandlers from '../handlers/api-key-handlers.js';
+import * as utilityHandlers from '../handlers/utility-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
 // Map to store AbortControllers for active subtitle generation operations
 const subtitleGenerationControllers = new Map<string, AbortController>();
+// *** CHANGE the type here for active yt-dlp download processes ***
+const downloadProcesses = new Map<string, ReturnType<typeof execa>>();
 
 // --- Initialize electron-store ---
 const store = new Store();
@@ -156,6 +159,7 @@ try {
     log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
     let cancelledViaController = false;
     let cancelledViaFfmpeg = false;
+    let cancelledViaDownload = false;
     let errorMessage = '';
 
     // 1. Try cancelling via AbortController (for generate-subtitles)
@@ -184,7 +188,39 @@ try {
       );
     }
 
-    // 2. Try cancelling via FFmpegService (for merge-subtitles or direct FFmpeg ops)
+    // 2. Try cancelling via Download Process Map
+    const downloadProcess = downloadProcesses.get(operationId);
+    if (downloadProcess && !downloadProcess.killed) {
+      try {
+        log.info(
+          `[main.ts/cancel-operation] Killing download process for ${operationId}.`
+        );
+        downloadProcess.kill();
+        downloadProcesses.delete(operationId);
+        cancelledViaDownload = true;
+        log.info(
+          `[main.ts/cancel-operation] Download process for ${operationId} killed and removed.`
+        );
+      } catch (error) {
+        log.error(
+          `[main.ts/cancel-operation] Error killing download process ${operationId}:`,
+          error
+        );
+        errorMessage += `Download process kill failed: ${error instanceof Error ? error.message : String(error)}; `;
+        downloadProcesses.delete(operationId);
+      }
+    } else if (downloadProcess && downloadProcess.killed) {
+      log.info(
+        `[main.ts/cancel-operation] Download process ${operationId} was already killed. Removing from map.`
+      );
+      downloadProcesses.delete(operationId);
+    } else {
+      log.info(
+        `[main.ts/cancel-operation] No active Download Process found for ${operationId}.`
+      );
+    }
+
+    // 3. Try cancelling via FFmpegService (for merge-subtitles or direct FFmpeg ops)
     if (services?.ffmpegService) {
       try {
         log.info(
@@ -209,11 +245,12 @@ try {
       }
     }
 
-    // 3. Return overall status
-    const success = cancelledViaController || cancelledViaFfmpeg;
+    // 4. Return overall status
+    const success =
+      cancelledViaController || cancelledViaFfmpeg || cancelledViaDownload;
     if (success) {
       log.info(
-        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController}, FFmpeg: ${cancelledViaFfmpeg})`
+        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController}, FFmpeg: ${cancelledViaFfmpeg}, Download: ${cancelledViaDownload})`
       );
       return {
         success: true,
@@ -224,7 +261,7 @@ try {
         `[main.ts/cancel-operation] Failed to initiate cancellation for ${operationId}. Error(s): ${errorMessage}`
       );
       throw new Error(
-        `Failed to initiate cancellation for ${operationId}. ${errorMessage}`
+        `Failed to find active operation to cancel for ID ${operationId}. ${errorMessage}`
       );
     }
   });

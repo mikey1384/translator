@@ -7,6 +7,10 @@ import { app } from 'electron';
 import { fileURLToPath } from 'url';
 import { FFmpegService } from './ffmpeg-service.js';
 import { FileManager } from './file-manager.js';
+import {
+  downloadProcesses,
+  type DownloadProcessType,
+} from '../main/active-processes.js';
 
 export type VideoQuality = 'low' | 'mid' | 'high';
 const qualityFormatMap: Record<VideoQuality, string> = {
@@ -127,12 +131,13 @@ async function downloadVideoFromPlatform(
   url: string,
   outputDir: string,
   quality: VideoQuality,
-  progressCallback?: ProgressCallback,
+  progressCallback: ProgressCallback | undefined,
+  operationId: string,
   services?: {
     ffmpegService: FFmpegService;
   }
 ): Promise<{ filepath: string; info: any }> {
-  log.info(`[URLProcessor] Starting download: ${url}`);
+  log.info(`[URLProcessor] Starting download: ${url} (Op ID: ${operationId})`);
 
   if (!services?.ffmpegService) {
     throw new Error('FFmpegService is required for downloadVideoFromPlatform');
@@ -240,7 +245,9 @@ async function downloadVideoFromPlatform(
     ffmpegPath,
   ];
 
-  log.info(`[URLProcessor] Executing yt-dlp: ${ytDlpPath} ${args.join(' ')}`);
+  log.info(
+    `[URLProcessor] Executing yt-dlp: ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
+  );
   log.info(`[URLProcessor] yt-dlp intended output directory: ${outputDir}`);
 
   progressCallback?.({ percent: 25, stage: 'Starting download...' });
@@ -250,64 +257,98 @@ async function downloadVideoFromPlatform(
   let finalFilepath: string | null = null;
   let downloadInfo: any = null;
 
-  const subprocess = execa(ytDlpPath, args, {
-    windowsHide: true,
-    encoding: 'utf8',
-    // buffer: false, // Disable automatic buffering to handle stream manually
-    all: true, // Capture both stdout and stderr in 'all' stream
-  });
-
-  // --- Stream Processing ---
-  if (subprocess.all) {
-    subprocess.all.on('data', (chunk: Buffer) => {
-      const chunkString = chunk.toString();
-      stdoutBuffer += chunkString;
-
-      // Process lines
-      let newlineIndex;
-      while ((newlineIndex = stdoutBuffer.indexOf('\n')) >= 0) {
-        const line = stdoutBuffer.substring(0, newlineIndex).trim();
-        stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
-
-        if (line.startsWith('{') && line.endsWith('}')) {
-          // Assume this is the final JSON output
-          finalJsonOutput = line;
-          log.info('[URLProcessor] Received potential JSON output.');
-          // Try parsing immediately to validate
-          try {
-            downloadInfo = JSON.parse(finalJsonOutput);
-            finalFilepath = downloadInfo?._filename;
-            log.info(
-              `[URLProcessor] Parsed final filename from JSON: ${finalFilepath}`
-            );
-          } catch (jsonError) {
-            log.warn(
-              `[URLProcessor] Failed to parse line as JSON immediately: ${line}`,
-              jsonError
-            );
-            finalJsonOutput = ''; // Reset if parsing failed
-            downloadInfo = null;
-            finalFilepath = null;
-          }
-        } else if (line.startsWith('[download]')) {
-          const progressMatch = line.match(/([\d.]+)%/);
-          if (progressMatch && progressMatch[1]) {
-            const downloadPercent = parseFloat(progressMatch[1]);
-            const overallPercent = 25 + downloadPercent * 0.65;
-            progressCallback?.({
-              percent: Math.min(90, overallPercent),
-              stage: 'Downloading video...',
-            });
-          }
-        }
-      }
-    });
-  } else {
-    log.error('[URLProcessor] Failed to access subprocess output stream.');
-    throw new Error('Could not access yt-dlp output stream.');
-  }
+  let subprocess: DownloadProcessType | null = null;
 
   try {
+    subprocess = execa(ytDlpPath, args, {
+      windowsHide: true,
+      encoding: 'utf8',
+      all: true,
+    });
+
+    if (subprocess) {
+      downloadProcesses.set(operationId, subprocess);
+      log.info(`[URLProcessor] Added download process ${operationId} to map.`);
+
+      subprocess.on('error', (err: any) => {
+        log.error(
+          `[URLProcessor] Subprocess ${operationId} emitted error:`,
+          err
+        );
+        if (downloadProcesses.has(operationId)) {
+          downloadProcesses.delete(operationId);
+          log.info(
+            `[URLProcessor] Removed download process ${operationId} from map due to subprocess error event.`
+          );
+        }
+      });
+      subprocess.on('exit', (code: number, signal: string) => {
+        log.info(
+          `[URLProcessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
+        );
+        if (downloadProcesses.has(operationId)) {
+          downloadProcesses.delete(operationId);
+          log.info(
+            `[URLProcessor] Removed download process ${operationId} from map due to subprocess exit event.`
+          );
+        }
+      });
+    } else {
+      throw new Error('Failed to start download subprocess.');
+    }
+
+    // --- Stream Processing ---
+    if (subprocess.all) {
+      subprocess.all.on('data', (chunk: Buffer) => {
+        const chunkString = chunk.toString();
+        stdoutBuffer += chunkString;
+
+        // Process lines
+        let newlineIndex;
+        while ((newlineIndex = stdoutBuffer.indexOf('\n')) >= 0) {
+          const line = stdoutBuffer.substring(0, newlineIndex).trim();
+          stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
+
+          if (line.startsWith('{') && line.endsWith('}')) {
+            // Assume this is the final JSON output
+            finalJsonOutput = line;
+            log.info('[URLProcessor] Received potential JSON output.');
+            // Try parsing immediately to validate
+            try {
+              downloadInfo = JSON.parse(finalJsonOutput);
+              finalFilepath = downloadInfo?._filename;
+              log.info(
+                `[URLProcessor] Parsed final filename from JSON: ${finalFilepath}`
+              );
+            } catch (jsonError) {
+              log.warn(
+                `[URLProcessor] Failed to parse line as JSON immediately: ${line}`,
+                jsonError
+              );
+              finalJsonOutput = ''; // Reset if parsing failed
+              downloadInfo = null;
+              finalFilepath = null;
+            }
+          } else if (line.startsWith('[download]')) {
+            const progressMatch = line.match(/([\d.]+)%/);
+            if (progressMatch && progressMatch[1]) {
+              const downloadPercent = parseFloat(progressMatch[1]);
+              const overallPercent = 25 + downloadPercent * 0.65;
+              progressCallback?.({
+                percent: Math.min(90, overallPercent),
+                stage: 'Downloading video...',
+              });
+            }
+          }
+        }
+      });
+    } else {
+      log.error(
+        `[URLProcessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
+      );
+      throw new Error('Could not access yt-dlp output stream.');
+    }
+
     // Wait for the process to finish
     const result = await subprocess;
 
@@ -377,7 +418,18 @@ async function downloadVideoFromPlatform(
 
     return { filepath: finalFilepath, info: downloadInfo };
   } catch (error: any) {
-    log.error('[URLProcessor] Download execution error:', error);
+    log.error(
+      `[URLProcessor] Download execution error (Op ID: ${operationId}):`,
+      error
+    );
+
+    if (error.killed) {
+      log.info(
+        `[URLProcessor] Download process ${operationId} was killed (likely cancelled).`
+      );
+      throw new Error(`Download cancelled for ${operationId}`);
+    }
+
     // Log stderr if available from execa error object
     if (error.stderr) {
       log.error('[URLProcessor] yt-dlp STDERR:', error.stderr);
@@ -395,6 +447,17 @@ async function downloadVideoFromPlatform(
       error: error.shortMessage || error.message || String(error),
     });
     throw error; // Re-throw the error
+  } finally {
+    if (downloadProcesses.has(operationId)) {
+      downloadProcesses.delete(operationId);
+      log.info(
+        `[URLProcessor] Removed download process ${operationId} from map in finally block.`
+      );
+    } else {
+      log.warn(
+        `[URLProcessor] Process ${operationId} not found in map during finally block (already removed or never added?).`
+      );
+    }
   }
 }
 
@@ -402,8 +465,8 @@ async function downloadVideoFromPlatform(
 export async function processVideoUrl(
   url: string,
   quality: VideoQuality = 'high',
-  progressCallback?: ProgressCallback,
-  // Accept both services
+  progressCallback: ProgressCallback | undefined,
+  operationId: string,
   services?: {
     fileManager: FileManager;
     ffmpegService: FFmpegService;
@@ -415,7 +478,7 @@ export async function processVideoUrl(
   fileUrl: string;
   originalVideoPath: string;
 }> {
-  log.info('[URLProcessor] processVideoUrl CALLED');
+  log.info(`[URLProcessor] processVideoUrl CALLED (Op ID: ${operationId})`);
 
   // Use provided FileManager to get tempDir
   if (!services?.fileManager) {
@@ -443,8 +506,8 @@ export async function processVideoUrl(
     tempDir,
     quality,
     progressCallback,
-    // Pass down the correct ffmpegService
-    { ffmpegService } // Correctly pass the injected service
+    operationId,
+    { ffmpegService }
   );
   const stats = await fsp.stat(filepath);
   const filename = path.basename(filepath);
