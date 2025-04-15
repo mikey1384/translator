@@ -365,22 +365,13 @@ function AppContent() {
               </div>
             </div>
 
-            {isTranslationInProgress && (
-              <TranslationProgressArea
-                translationProgress={translationProgress}
-                translationStage={translationStage}
-                onClose={() => setIsTranslationInProgress(false)}
-                subtitleProgress={
-                  isReceivingPartialResults
-                    ? {
-                        current: translationProgress,
-                        total: 100,
-                      }
-                    : undefined
-                }
-                translationOperationId={translationOperationId}
-              />
-            )}
+            <TranslationProgressArea
+              isTranslationInProgress={isTranslationInProgress}
+              translationProgress={translationProgress}
+              translationStage={translationStage}
+              onSetIsTranslationInProgress={setIsTranslationInProgress}
+              translationOperationId={translationOperationId}
+            />
 
             {isMergingInProgress && (
               <MergingProgressArea
@@ -388,7 +379,7 @@ function AppContent() {
                 mergeStage={mergeStage}
                 onSetIsMergingInProgress={setIsMergingInProgress}
                 operationId={mergeOperationId}
-                onCancelComplete={() => {}}
+                isMergingInProgress={isMergingInProgress}
               />
             )}
 
