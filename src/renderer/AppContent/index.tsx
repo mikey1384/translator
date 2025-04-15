@@ -12,6 +12,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher.js';
 import { SrtSegment } from '../../types/interface.js';
 import { VideoQuality } from '../../services/url-processor.js';
 import { useTranslation } from 'react-i18next';
+import ProgressArea from '../components/ProgressAreas/ProgressArea.js';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
@@ -69,18 +70,18 @@ const mainContentStyles = css`
   position: relative;
 `;
 
+const DOWNLOAD_PROGRESS_COLOR = colors.primary; // Or another color
+
 function AppContent() {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>('');
   const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
-  const [progressPercent, setProgressPercent] = useState<number>(0);
   const [downloadComplete, setDownloadComplete] = useState<boolean>(false);
   const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
     null
   );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [urlInput, setUrlInput] = useState<string>('');
-  const [progressStage, setProgressStage] = useState<string>('');
   const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('mid');
   const [didDownloadFromUrl, setDidDownloadFromUrl] = useState<boolean>(false);
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -182,6 +183,15 @@ function AppContent() {
   const [mergeStylePreset, setMergeStylePreset] =
     useState<SubtitleStylePresetKey>('Default'); // Default style
 
+  const [downloadOperationId, setDownloadOperationId] = useState<string | null>(
+    null
+  );
+
+  const [downloadProgressPercent, setDownloadProgressPercent] =
+    useState<number>(0);
+  const [downloadProgressStage, setDownloadProgressStage] =
+    useState<string>('');
+
   useEffect(() => {
     if (!searchText) {
       setMatchedIndices([]);
@@ -222,6 +232,34 @@ function AppContent() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isFindBarVisible]);
+
+  useEffect(() => {
+    const unlisten = window.electron.onProcessUrlProgress((progress: any) => {
+      const currentPercent = progress.percent ?? 0;
+      const currentStage = progress.stage ?? '';
+      const error = progress.error ?? null;
+
+      // *** Update specific download state ***
+      setDownloadProgressPercent(currentPercent);
+      setDownloadProgressStage(currentStage);
+      // *** End update ***
+
+      if (error) {
+        console.error('Error during download progress:', error);
+        setError(`Error during download: ${error}`);
+        // Update stage to show error, let auto-close handle hiding
+        setDownloadProgressStage(`Error: ${error}`); // Use specific state
+        setDownloadProgressPercent(100); // Trigger auto-close on error
+        setIsProcessingUrl(true); // Keep visible until auto-close
+        setDownloadOperationId(null); // Clear ID on error
+      } else if (currentPercent >= 100) {
+        // Optionally set a specific "complete" stage if needed
+        // setDownloadProgressStage("Download Complete");
+        // The ProgressArea auto-close will handle hiding it based on percent
+      }
+    });
+    return unlisten; // Cleanup listener
+  }, []); // Keep empty dependency array
 
   return (
     <div className={pageWrapperStyles}>
@@ -316,8 +354,6 @@ function AppContent() {
                 onSetUrlInput={setUrlInput}
                 onSetVideoFile={handleSetVideoFile}
                 onShowOriginalTextChange={setShowOriginalText}
-                progressPercent={progressPercent}
-                progressStage={progressStage}
                 showOriginalText={showOriginalText}
                 targetLanguage={targetLanguage}
                 urlInput={urlInput}
@@ -364,14 +400,36 @@ function AppContent() {
               </div>
             </div>
 
-            <TranslationProgressArea
-              isTranslationInProgress={isTranslationInProgress}
-              translationProgress={translationProgress}
-              translationStage={translationStage}
-              onSetIsTranslationInProgress={setIsTranslationInProgress}
-              translationOperationId={translationOperationId}
+            {/* --- Render ProgressArea for Download --- */}
+            <ProgressArea
+              isVisible={
+                isProcessingUrl &&
+                downloadProgressPercent > 0 &&
+                !downloadComplete
+              } // Use new state var
+              title="Download in Progress"
+              progress={downloadProgressPercent} // Use new state var
+              stage={downloadProgressStage} // Use new state var
+              progressBarColor={
+                downloadProgressStage.toLowerCase().includes('error') // Use new state var
+                  ? colors.danger
+                  : DOWNLOAD_PROGRESS_COLOR
+              }
+              operationId={downloadOperationId}
+              isCancelling={false} // Still assuming false for now
+              onCancel={handleCancelDownload}
+              onClose={() => {
+                setIsProcessingUrl(false);
+                setDownloadOperationId(null);
+                // Reset download-specific state
+                setDownloadProgressPercent(0);
+                setDownloadProgressStage('');
+              }}
+              autoCloseDelay={4000}
             />
+            {/* --- End Render ProgressArea for Download --- */}
 
+            {/* Conditionally render other progress areas */}
             {isMergingInProgress && (
               <MergingProgressArea
                 mergeProgress={mergeProgress}
@@ -381,6 +439,14 @@ function AppContent() {
                 isMergingInProgress={isMergingInProgress}
               />
             )}
+
+            <TranslationProgressArea
+              isTranslationInProgress={isTranslationInProgress}
+              translationProgress={translationProgress}
+              translationStage={translationStage}
+              onSetIsTranslationInProgress={setIsTranslationInProgress}
+              translationOperationId={translationOperationId}
+            />
 
             <BackToTopButton />
           </>
@@ -528,10 +594,13 @@ function AppContent() {
   function handleUrlError(err: any) {
     console.error('Error processing URL:', err);
     setError(`Error processing URL: ${err.message || err}`);
-    setProgressStage('Error');
-    setProgressPercent(0);
     setDownloadComplete(false);
     setDownloadedVideoPath(null);
+    setDownloadOperationId(null);
+    // *** Update specific download state for error ***
+    setDownloadProgressStage(`Error: ${err.message || err}`);
+    setDownloadProgressPercent(100); // Trigger auto-close
+    setIsProcessingUrl(true); // Keep visible until auto-close
   }
 
   function handleFindPrev() {
@@ -584,7 +653,8 @@ function AppContent() {
       return;
     }
     resetUrlStates();
-    const unlisten = window.electron.onProcessUrlProgress(updateUrlProgress);
+    const newDownloadId = `download-${Date.now()}`;
+    setDownloadOperationId(newDownloadId);
 
     try {
       const result = await window.electron.processUrl({
@@ -604,32 +674,20 @@ function AppContent() {
       handleUrlError(err);
     } finally {
       setIsProcessingUrl(false);
-      unlisten?.();
     }
   }
 
   function resetUrlStates() {
     setError('');
     setIsProcessingUrl(true);
-    setProgressPercent(0);
     setDownloadComplete(false);
-    setVideoFile(null);
-    setDidDownloadFromUrl(false);
-    setVideoUrl('');
-  }
-
-  function updateUrlProgress(progress: any) {
-    setProgressPercent(progress.percent ?? 0);
-    setProgressStage(progress.stage ?? '');
-    if (progress.error) {
-      setError(`Error during processing: ${progress.error}`);
-      setIsProcessingUrl(false);
-    }
+    // *** Add resets ***
+    setDownloadProgressPercent(0);
+    setDownloadProgressStage('');
+    setDownloadOperationId(null);
   }
 
   async function finishUrlDownload(result: any, videoPath: string) {
-    setProgressStage('Download complete! Reading video data...');
-    setProgressPercent(100);
     setDownloadComplete(true);
     setDownloadedVideoPath(videoPath);
     setVideoFilePath(videoPath);
@@ -653,7 +711,6 @@ function AppContent() {
       (videoFileObj as any)._blobUrl = blobUrl;
       (videoFileObj as any)._originalPath = videoPath;
 
-      setProgressStage('Setting up video...');
       setVideoFile(videoFileObj);
     } catch (fileError) {
       console.error('Error reading video file:', fileError);
@@ -772,6 +829,38 @@ function AppContent() {
           `Error fetching video metadata: ${error instanceof Error ? error.message : String(error)}`
         );
       }
+    }
+  }
+
+  async function handleCancelDownload(operationId: string) {
+    console.log(
+      `[AppContent] handleCancelDownload called for ID: ${operationId}`
+    );
+    if (!operationId) {
+      console.warn(
+        '[AppContent] Cannot cancel download: operationId is missing.'
+      );
+      setIsProcessingUrl(false); // Hide progress
+      return;
+    }
+    try {
+      // Call the main process cancellation function
+      await window.electron.cancelOperation(operationId);
+      console.log(
+        `[AppContent] Cancel request sent for download operation ${operationId}.`
+      );
+    } catch (error) {
+      console.error(
+        `[AppContent] Error sending cancel request for download ${operationId}:`,
+        error
+      );
+    } finally {
+      // Hide the progress bar after attempting cancellation
+      setIsProcessingUrl(false);
+      setDownloadOperationId(null); // Clear the ID
+      // *** Add resets ***
+      setDownloadProgressPercent(0);
+      setDownloadProgressStage('');
     }
   }
 }

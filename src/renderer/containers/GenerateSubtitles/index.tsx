@@ -6,11 +6,11 @@ import ApiKeyLock from './ApiKeyLock.js';
 import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
-import ProgressDisplay from './ProgressDisplay.js';
 import Section from '../../components/Section.js';
 import { VideoQuality } from '../../../types/interface.js';
 import { useTranslation } from 'react-i18next';
 import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
+import ProgressDisplay from './ProgressDisplay.js';
 
 type ApiKeyStatus = {
   openai: boolean;
@@ -39,8 +39,6 @@ export default function GenerateSubtitles({
   onSetUrlInput,
   onSetVideoFile,
   onShowOriginalTextChange,
-  progressPercent,
-  progressStage,
   showOriginalText,
   targetLanguage,
   urlInput,
@@ -69,8 +67,6 @@ export default function GenerateSubtitles({
   onSetUrlInput: (url: string) => void;
   onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
   onShowOriginalTextChange: (show: boolean) => void;
-  progressPercent: number;
-  progressStage: string;
   showOriginalText: boolean;
   targetLanguage: string;
   urlInput: string;
@@ -104,9 +100,6 @@ export default function GenerateSubtitles({
           {error && <div className={errorMessageStyles}>{error}</div>}
 
           <ProgressDisplay
-            isProcessingUrl={isProcessingUrl}
-            progressPercent={progressPercent}
-            progressStage={progressStage}
             downloadComplete={downloadComplete}
             downloadedVideoPath={downloadedVideoPath}
             onSaveOriginalVideo={onSaveOriginalVideo}
