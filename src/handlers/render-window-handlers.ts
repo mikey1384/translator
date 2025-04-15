@@ -7,6 +7,7 @@ import { parseSrt } from '../shared/helpers/index.js';
 import { execFile, ChildProcess } from 'child_process';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
+import { spawn } from 'child_process';
 
 // Re-define channels used in this handler file
 const RENDER_CHANNELS = {
@@ -634,245 +635,179 @@ async function cleanupTempDir(
 
 async function assembleClipsFromStates(
   statePngs: Array<{ path: string; duration: number }>,
-  outputPath: string,
+  outputPath: string, // Final overlay path (e.g., overlay.mov)
   frameRate: number,
   operationId: string,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback // Accept the callback
 ): Promise<{ success: boolean; outputPath: string; error?: string }> {
   log.info(
-    `[assembleClipsFromStates ${operationId}] Starting assembly from ${statePngs.length} state PNGs...`
+    `[assembleClipsFromStates ${operationId}] Starting assembly using concat demuxer from ${statePngs.length} state PNGs...`
   );
+
+  if (statePngs.length === 0) {
+    log.warn(
+      `[assembleClipsFromStates ${operationId}] No state PNGs provided. Skipping assembly.`
+    );
+    // Report minimal progress and return success but empty path?
+    progressCallback?.({
+      percent: 95,
+      stage: 'No states to assemble',
+      operationId,
+    });
+    return { success: true, outputPath: '' };
+  }
+
   const tempDirPath = path.dirname(statePngs[0].path);
   const concatListPath = path.join(
     tempDirPath,
     `concat_list_${operationId}.txt`
   );
-  let concatContent = '';
-  const ffmpegPath = 'ffmpeg';
-  let clipPathsToCleanup: string[] = [];
+  const ffmpegPath = 'ffmpeg'; // Assume in PATH
 
-  // Define progress range for this assembly stage
-  const ASSEMBLY_START_PERCENT = 10; // Starts after puppeteer's 10%
-  const ASSEMBLY_END_PERCENT = 95; // Ends before final merge's 95%
+  // Define progress range for this stage (FFmpeg encoding)
+  const ASSEMBLY_START_PERCENT = 10; // Starts after puppeteer
+  const ASSEMBLY_END_PERCENT = 95; // Ends before final merge
   const ASSEMBLY_PROGRESS_RANGE = ASSEMBLY_END_PERCENT - ASSEMBLY_START_PERCENT;
 
   try {
-    log.info(
-      `[assembleClipsFromStates ${operationId}] Generating ${statePngs.length} intermediate video clips in parallel...`
-    );
-    const clipPromises: Promise<void>[] = [];
-    const MAX_CONCURRENT_FFMPEG = 4; // Keep concurrency low for stability
-    log.info(
-      `[assembleClipsFromStates ${operationId}] Max concurrent FFmpeg processes: ${MAX_CONCURRENT_FFMPEG}`
-    );
-
-    let currentlyRunning = 0;
-    let launchedCount = 0;
-    let completedClipCount = 0; // <-- Track completed clips
-    let lastReportedPercent = ASSEMBLY_START_PERCENT; // <-- Track last report
-
-    const results: { index: number; path: string | null; error?: Error }[] = [];
-
-    const runClipTask = (index: number): Promise<void> => {
-      const state = statePngs[index];
-      const clipOutputPath = path.join(
-        tempDirPath,
-        `clip_${String(index).padStart(5, '0')}.mov`
-      );
-      const clipArgs = [
-        '-loop',
-        '1',
-        '-i',
-        state.path,
-        '-c:v',
-        'prores_ks',
-        '-profile:v',
-        '4444',
-        '-pix_fmt',
-        'yuva444p10le',
-        '-r',
-        frameRate.toString(),
-        '-t',
-        state.duration.toFixed(4),
-        '-y',
-        clipOutputPath,
-      ];
-
-      currentlyRunning++;
-      log.debug(
-        `[assembleClipsFromStates ${operationId}] [${currentlyRunning}/${MAX_CONCURRENT_FFMPEG}] Starting clip ${index} generation.`
-      );
-
-      return new Promise<void>(resolveTask => {
-        const clipPromise = new Promise<void>((resolveClip, rejectClip) => {
-          const clipProcess = execFile(ffmpegPath, clipArgs);
-          let clipStderr = '';
-          clipProcess.stderr?.on(
-            'data',
-            data => (clipStderr += data.toString())
-          );
-          clipProcess.on('error', err =>
-            rejectClip(
-              new Error(
-                `FFmpeg clip ${index} error: ${err.message}\nStderr: ${clipStderr}`
-              )
-            )
-          );
-          clipProcess.on('close', code => {
-            if (code === 0) {
-              resolveClip();
-            } else {
-              rejectClip(
-                new Error(
-                  `FFmpeg clip ${index} exited with code ${code}\nStderr: ${clipStderr}`
-                )
-              );
-            }
-          });
-        });
-
-        clipPromise
-          .then(() => {
-            results.push({ index: index, path: clipOutputPath });
-          })
-          .catch(error => {
-            results.push({ index: index, path: null, error: error });
-            log.error(
-              `[assembleClipsFromStates ${operationId}] Failed to generate clip ${index}:`,
-              error
-            );
-          })
-          .finally(() => {
-            currentlyRunning--;
-            completedClipCount++; // <-- Increment completed count
-
-            // --- Calculate and Report Progress ---
-            if (progressCallback && statePngs.length > 0) {
-              const currentAssemblyProgress =
-                completedClipCount / statePngs.length; // Progress within this stage (0 to 1)
-              const overallPercent = Math.round(
-                ASSEMBLY_START_PERCENT +
-                  currentAssemblyProgress * ASSEMBLY_PROGRESS_RANGE
-              );
-
-              // Report somewhat frequently, but not necessarily every single clip
-              if (
-                overallPercent > lastReportedPercent ||
-                completedClipCount === statePngs.length
-              ) {
-                lastReportedPercent = overallPercent;
-                progressCallback({
-                  // <-- Use the callback
-                  operationId: operationId,
-                  percent: Math.min(ASSEMBLY_END_PERCENT, overallPercent), // Cap at end percent
-                  stage: `Assembling overlay... (${completedClipCount}/${statePngs.length} clips)`,
-                });
-              }
-            }
-            // --- End Progress Reporting ---
-
-            log.debug(
-              `[assembleClipsFromStates ${operationId}] [${currentlyRunning}/${MAX_CONCURRENT_FFMPEG}] Finished clip ${index} generation.`
-            );
-            resolveTask();
-          });
-      });
-    };
-
-    // Launch tasks with concurrency limit
-    while (launchedCount < statePngs.length) {
-      while (
-        currentlyRunning < MAX_CONCURRENT_FFMPEG &&
-        launchedCount < statePngs.length
-      ) {
-        clipPromises.push(runClipTask(launchedCount));
-        launchedCount++;
-      }
-      await Promise.race(clipPromises.slice(-MAX_CONCURRENT_FFMPEG));
-    }
-    await Promise.all(clipPromises);
-
-    // --- Process results ---
-    results.sort((a, b) => a.index - b.index); // Ensure results are in original order
-    const successfulClips = results.filter(r => r.path !== null) as {
-      index: number;
-      path: string;
-    }[];
-    const failedCount = statePngs.length - successfulClips.length;
-
-    if (failedCount > 0) {
-      log.warn(
-        `[assembleClipsFromStates ${operationId}] ${failedCount} clip(s) failed to generate. Proceeding with successful ones.`
-      );
-      // Decide if this should be a fatal error. Let's proceed for now.
-      if (successfulClips.length === 0) {
-        throw new Error('All intermediate clips failed to generate.');
-      }
-    }
-
-    // Store successful paths for cleanup
-    clipPathsToCleanup = successfulClips.map(clip => clip.path);
-
-    log.info(
-      `[assembleClipsFromStates ${operationId}] Successfully generated ${successfulClips.length} intermediate clips (out of ${statePngs.length}).`
-    );
-
-    // --- Step 2: Create concat list file (uses successful clips) ---
+    // --- Step 1: Create the concat list file with durations ---
     log.info(
       `[assembleClipsFromStates ${operationId}] Writing concat list file: ${concatListPath}`
     );
-    concatContent = successfulClips
-      .map(clip => `file '${path.relative(tempDirPath, clip.path)}'`)
-      .join('\n');
-    await fs.writeFile(concatListPath, concatContent, 'utf8');
+    let concatContent = 'ffconcat version 1.0\n\n'; // Required header
+    for (const state of statePngs) {
+      // IMPORTANT: Paths in concat list need correct escaping/quoting if they contain special chars.
+      // Using relative paths and ensuring no problematic chars in temp names is safest.
+      // Normalizing separators for cross-platform compatibility.
+      const relativePath = path
+        .relative(tempDirPath, state.path)
+        .replace(/\\/g, '/');
+      concatContent += `file '${relativePath}'\n`;
+      concatContent += `duration ${state.duration.toFixed(6)}\n\n`; // Specify duration for the preceding file
+    }
+    // Add the last file again with zero duration to ensure total duration is met?
+    // Or rely on the final segment duration. Let's test without first.
+    // const lastState = statePngs[statePngs.length - 1];
+    // const lastRelativePath = path.relative(tempDirPath, lastState.path).replace(/\\/g, '/');
+    // concatContent += `file '${lastRelativePath}'\n`;
 
-    // --- Step 3: Concatenate clips into final overlay video ---
-    // Report 95% just before starting the final concat of this stage
-    progressCallback?.({
-      // <-- Use callback
-      operationId: operationId,
-      percent: ASSEMBLY_END_PERCENT, // 95%
-      stage: 'Finalizing overlay video...',
-    });
+    await fs.writeFile(concatListPath, concatContent, 'utf8');
+    log.info(`[assembleClipsFromStates ${operationId}] Concat list generated.`);
+    // log.debug(`[assembleClipsFromStates ${operationId}] Concat list content:\n${concatContent.substring(0, 500)}...`); // Log part of the list if needed
+
+    // --- Step 2: Run FFmpeg using the concat demuxer ---
     log.info(
-      `[assembleClipsFromStates ${operationId}] Concatenating clips into final overlay: ${outputPath}`
+      `[assembleClipsFromStates ${operationId}] Assembling overlay video: ${outputPath}`
     );
+
+    // Calculate total duration for progress reporting
+    const totalConcatDuration = statePngs.reduce(
+      (sum, state) => sum + state.duration,
+      0
+    );
+    log.info(
+      `[assembleClipsFromStates ${operationId}] Calculated total duration for concat: ${totalConcatDuration.toFixed(3)}s`
+    );
+
     const concatArgs = [
       '-f',
-      'concat',
+      'concat', // Input format: concat demuxer
       '-safe',
-      '0',
+      '0', // Allow relative paths
       '-i',
-      concatListPath,
-      '-c',
-      'copy',
-      '-y',
-      outputPath,
+      concatListPath, // Input concat list file
+      '-c:v',
+      'prores_ks', // Use ProRes codec for alpha support
+      '-profile:v',
+      '4444', // ProRes 4444 profile for alpha
+      '-pix_fmt',
+      'yuva444p10le', // Pixel format supporting alpha
+      '-r',
+      frameRate.toString(), // Ensure consistent frame rate
+      // '-vf', `fps=${frameRate}`, // Force constant frame rate if needed
+      '-progress',
+      'pipe:1', // Enable progress reporting to pipe 1 (stdout)
+      '-y', // Overwrite output
+      outputPath, // Final output path (.mov)
     ];
+
+    // Use spawn instead of execFile to handle streams better, especially progress
     await new Promise<void>((resolveConcat, rejectConcat) => {
       log.debug(
         `[assembleClipsFromStates ${operationId}] Running concat command: ${ffmpegPath} ${concatArgs.join(' ')}`
       );
-      const concatProcess = execFile(ffmpegPath, concatArgs);
-      let concatStderr = '';
-      concatProcess.stderr?.on(
-        'data',
-        data => (concatStderr += data.toString())
-      );
-      concatProcess.on('error', err =>
+      const concatProcess = spawn(ffmpegPath, concatArgs, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }); // Pipe stdout (progress) and stderr
+
+      let stdoutData = '';
+      let stderrData = '';
+      let lastProgressReportTime = 0;
+      const progressUpdateInterval = 500; // Update every 500ms
+
+      concatProcess.stdout.on('data', (data: Buffer) => {
+        stdoutData += data.toString();
+        // Parse progress from stdout (lines like 'frame=xx', 'fps=xx', 'out_time_ms=xx')
+        const lines = stdoutData.split('\n');
+        stdoutData = lines.pop() || ''; // Keep the last partial line
+
+        lines.forEach(line => {
+          if (line.startsWith('out_time_ms=')) {
+            const timeMs = parseInt(line.split('=')[1], 10);
+            if (!isNaN(timeMs) && totalConcatDuration > 0) {
+              const currentTime = timeMs / 1_000_000; // Convert microseconds to seconds
+              const currentProgress = (currentTime / totalConcatDuration) * 100;
+              const overallPercent = Math.round(
+                ASSEMBLY_START_PERCENT +
+                  (currentProgress * ASSEMBLY_PROGRESS_RANGE) / 100
+              );
+
+              const now = Date.now();
+              if (
+                now - lastProgressReportTime > progressUpdateInterval ||
+                overallPercent >= ASSEMBLY_END_PERCENT
+              ) {
+                lastProgressReportTime = now;
+                progressCallback?.({
+                  operationId,
+                  percent: Math.min(ASSEMBLY_END_PERCENT, overallPercent),
+                  stage: `Assembling overlay video... (${Math.round(currentProgress)}%)`,
+                });
+              }
+            }
+          }
+        });
+      });
+
+      concatProcess.stderr.on('data', (data: Buffer) => {
+        stderrData += data.toString();
+        // Log stderr lines for debugging if needed
+        // log.debug(`[FFmpeg Concat Stderr ${operationId}] ${data.toString().trim()}`);
+      });
+
+      concatProcess.on('error', err => {
+        stderrData = stderrData.slice(-1024); // Limit stderr on error
         rejectConcat(
           new Error(
-            `FFmpeg concat error: ${err.message}\nStderr: ${concatStderr}`
+            `FFmpeg concat spawn error: ${err.message}\nStderr (Last 1KB): ${stderrData}`
           )
-        )
-      );
+        );
+      });
+
       concatProcess.on('close', code => {
         if (code === 0) {
+          // Send final progress for this stage
+          progressCallback?.({
+            operationId,
+            percent: ASSEMBLY_END_PERCENT,
+            stage: 'Overlay assembly complete',
+          });
           resolveConcat();
         } else {
+          stderrData = stderrData.slice(-1024); // Limit stderr on error
           rejectConcat(
             new Error(
-              `FFmpeg concat exited with code ${code}\nStderr: ${concatStderr}`
+              `FFmpeg concat exited with code ${code}\nStderr (Last 1KB): ${stderrData}`
             )
           );
         }
@@ -888,34 +823,33 @@ async function assembleClipsFromStates(
       `[assembleClipsFromStates ${operationId}] Assembly failed:`,
       error
     );
+    progressCallback?.({
+      // Report error via progress
+      operationId,
+      percent: ASSEMBLY_END_PERCENT, // Indicate stage failure
+      stage: 'Assembly failed',
+      error: error.message || 'Unknown assembly error',
+    });
     return {
       success: false,
       outputPath: '',
       error: error.message || 'Unknown assembly error',
     };
   } finally {
-    // --- Step 4: Cleanup intermediate clips and concat list ---
+    // --- Step 3: Cleanup concat list ---
     log.info(
-      `[assembleClipsFromStates ${operationId}] Cleaning up intermediate files...`
+      `[assembleClipsFromStates ${operationId}] Cleaning up concat list file...`
     );
-    const cleanupPromises = [];
-    for (const clipPath of clipPathsToCleanup) {
-      cleanupPromises.push(
-        fs
-          .unlink(clipPath)
-          .catch(err => log.warn(`Failed to delete clip ${clipPath}: ${err}`))
-      );
-    }
-    cleanupPromises.push(
-      fs
-        .unlink(concatListPath)
-        .catch(err =>
-          log.warn(`Failed to delete concat list ${concatListPath}: ${err}`)
-        )
-    );
-    await Promise.allSettled(cleanupPromises);
+    await fs.unlink(concatListPath).catch(err => {
+      if (err.code !== 'ENOENT') {
+        log.warn(
+          `Failed to delete concat list ${concatListPath}: ${err.message}`
+        );
+      }
+    });
+    // NOTE: The state PNGs are cleaned up by the main handler's finally block using cleanupTempDir
     log.info(
-      `[assembleClipsFromStates ${operationId}] Intermediate file cleanup finished.`
+      `[assembleClipsFromStates ${operationId}] Concat list cleanup finished.`
     );
   }
 }
