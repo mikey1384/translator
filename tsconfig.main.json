@@ -8,7 +8,7 @@
     "sourceMap": true
   },
   "include": [
-    "src/main.ts",
+    "src/main/index.ts",
     "src/services/**/*",
     "src/types/**/*",
     "src/handlers/**/*",

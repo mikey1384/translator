@@ -16,8 +16,10 @@ import nodeProcess from 'process';
 import Store from 'electron-store';
 import * as renderWindowHandlers from '../handlers/render-window-handlers.js';
 import * as subtitleHandlers from '../handlers/subtitle-handlers.js';
-import { execa } from 'execa';
-
+import {
+  getDownloadProcess,
+  removeDownloadProcess,
+} from './active-processes.js';
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,8 +43,6 @@ log.info('--- [main.ts] Execution Started ---');
 
 // Map to store AbortControllers for active subtitle generation operations
 const subtitleGenerationControllers = new Map<string, AbortController>();
-// *** CHANGE the type here for active yt-dlp download processes ***
-const downloadProcesses = new Map<string, ReturnType<typeof execa>>();
 
 // --- Initialize electron-store ---
 const store = new Store();
@@ -189,14 +189,14 @@ try {
     }
 
     // 2. Try cancelling via Download Process Map
-    const downloadProcess = downloadProcesses.get(operationId);
+    const downloadProcess = getDownloadProcess(operationId);
     if (downloadProcess && !downloadProcess.killed) {
       try {
         log.info(
           `[main.ts/cancel-operation] Killing download process for ${operationId}.`
         );
         downloadProcess.kill();
-        downloadProcesses.delete(operationId);
+        removeDownloadProcess(operationId);
         cancelledViaDownload = true;
         log.info(
           `[main.ts/cancel-operation] Download process for ${operationId} killed and removed.`
@@ -207,13 +207,13 @@ try {
           error
         );
         errorMessage += `Download process kill failed: ${error instanceof Error ? error.message : String(error)}; `;
-        downloadProcesses.delete(operationId);
+        removeDownloadProcess(operationId);
       }
     } else if (downloadProcess && downloadProcess.killed) {
       log.info(
         `[main.ts/cancel-operation] Download process ${operationId} was already killed. Removing from map.`
       );
-      downloadProcesses.delete(operationId);
+      removeDownloadProcess(operationId);
     } else {
       log.info(
         `[main.ts/cancel-operation] No active Download Process found for ${operationId}.`
@@ -465,7 +465,7 @@ async function createWindow() {
       webSecurity: !isDev, // Disable only in dev if necessary, but prefer keeping it true
       allowRunningInsecureContent: false,
       // Preload script:
-      preload: path.join(__dirname, 'preload', 'index.js'), // Correct path using __dirname
+      preload: path.join(__dirname, '../preload/index.js'), // Added ../
     },
   });
 
@@ -476,7 +476,7 @@ async function createWindow() {
   });
 
   // Load Renderer HTML
-  const rendererPath = path.join(__dirname, 'renderer', 'index.html');
+  const rendererPath = path.join(__dirname, '../renderer/index.html');
   log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
   try {
     await mainWindow.loadFile(rendererPath);

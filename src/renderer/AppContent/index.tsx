@@ -656,11 +656,22 @@ function AppContent() {
     const newDownloadId = `download-${Date.now()}`;
     setDownloadOperationId(newDownloadId);
 
+    // *** ADD LOGGING HERE ***
+    const optionsToSend = {
+      url: urlInput,
+      quality: downloadQuality,
+      operationId: newDownloadId, // Include the generated ID
+    };
+    console.log(
+      '[AppContent] Calling window.electron.processUrl with options:',
+      JSON.stringify(optionsToSend)
+    );
+    // *** END LOGGING ***
+
     try {
-      const result = await window.electron.processUrl({
-        url: urlInput,
-        quality: downloadQuality,
-      });
+      // Pass the prepared options object
+      const result = await window.electron.processUrl(optionsToSend); // Use the logged object
+
       if (result.error) throw new Error(result.error);
 
       const videoPath = result.videoPath || result.filePath;
@@ -673,7 +684,10 @@ function AppContent() {
     } catch (err: any) {
       handleUrlError(err);
     } finally {
-      setIsProcessingUrl(false);
+      // The finally block that set isProcessingUrl=false might need adjustment
+      // depending on how completion is now handled by ProgressArea auto-close.
+      // Let's leave it for now.
+      // setIsProcessingUrl(false);
     }
   }
 

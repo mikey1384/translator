@@ -8,7 +8,9 @@ import { fileURLToPath } from 'url';
 import { FFmpegService } from './ffmpeg-service.js';
 import { FileManager } from './file-manager.js';
 import {
-  downloadProcesses,
+  addDownloadProcess,
+  removeDownloadProcess,
+  hasDownloadProcess,
   type DownloadProcessType,
 } from '../main/active-processes.js';
 
@@ -267,7 +269,7 @@ async function downloadVideoFromPlatform(
     });
 
     if (subprocess) {
-      downloadProcesses.set(operationId, subprocess);
+      addDownloadProcess(operationId, subprocess);
       log.info(`[URLProcessor] Added download process ${operationId} to map.`);
 
       subprocess.on('error', (err: any) => {
@@ -275,8 +277,8 @@ async function downloadVideoFromPlatform(
           `[URLProcessor] Subprocess ${operationId} emitted error:`,
           err
         );
-        if (downloadProcesses.has(operationId)) {
-          downloadProcesses.delete(operationId);
+        if (hasDownloadProcess(operationId)) {
+          removeDownloadProcess(operationId);
           log.info(
             `[URLProcessor] Removed download process ${operationId} from map due to subprocess error event.`
           );
@@ -286,8 +288,8 @@ async function downloadVideoFromPlatform(
         log.info(
           `[URLProcessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
         );
-        if (downloadProcesses.has(operationId)) {
-          downloadProcesses.delete(operationId);
+        if (hasDownloadProcess(operationId)) {
+          removeDownloadProcess(operationId);
           log.info(
             `[URLProcessor] Removed download process ${operationId} from map due to subprocess exit event.`
           );
@@ -448,8 +450,8 @@ async function downloadVideoFromPlatform(
     });
     throw error; // Re-throw the error
   } finally {
-    if (downloadProcesses.has(operationId)) {
-      downloadProcesses.delete(operationId);
+    if (hasDownloadProcess(operationId)) {
+      removeDownloadProcess(operationId);
       log.info(
         `[URLProcessor] Removed download process ${operationId} from map in finally block.`
       );

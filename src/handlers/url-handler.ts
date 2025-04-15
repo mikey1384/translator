@@ -76,11 +76,14 @@ export async function handleProcessUrl(
   log.error('[url-handler] HANDLER FUNCTION CALLED');
   log.warn('[url-handler] Processing URL request');
   log.error(`[url-handler] URL TO DOWNLOAD: ${options.url}`);
+  log.error(
+    `[url-handler] Received options.operationId: ${options.operationId} (Type: ${typeof options.operationId})`
+  );
 
   const mainWindow = BrowserWindow.getAllWindows()[0];
   const operationId = options.operationId || uuidv4();
   log.info(
-    `[url-handler] Starting process for URL: ${options.url}, Operation ID: ${operationId}`
+    `[url-handler] Starting process for URL: ${options.url}, Effective Operation ID used: ${operationId}`
   );
 
   // Use the specific inline type matching the service's callback definition
