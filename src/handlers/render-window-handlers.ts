@@ -7,13 +7,21 @@ import { parseSrt } from '../shared/helpers/index.js';
 import { execFile, ChildProcess } from 'child_process';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
-import os from 'os';
 
 // Re-define channels used in this handler file
 const RENDER_CHANNELS = {
   REQUEST: 'render-subtitles-request',
   RESULT: 'render-subtitles-result',
 };
+
+type ProgressData = {
+  percent: number;
+  stage: string;
+  error?: string | null;
+  cancelled?: boolean;
+  operationId: string;
+};
+type ProgressCallback = (data: Partial<ProgressData>) => void;
 
 /**
  * Initializes IPC handlers for the subtitle overlay rendering process using Puppeteer.
@@ -357,12 +365,20 @@ export function initializeRenderWindowHandlers(): void {
           `overlay_${operationId}.mov`
         ); // Keep MOV for potential alpha
 
-        // TODO: Modify assembleClipsFromStates call to pass statePngs and use new logic
+        // Define the callback function here
+        const assemblyProgressCallback: ProgressCallback = progressData => {
+          event.sender.send('merge-subtitles-progress', {
+            operationId: operationId, // Ensure operationId is included
+            ...progressData, // Spread the received progress data (percent, stage)
+          });
+        };
+
         const assemblyResult = await assembleClipsFromStates(
           statePngs,
           tempOverlayVideoPath,
-          options.frameRate, // Still need frame rate for intermediate clips
-          operationId
+          options.frameRate,
+          operationId,
+          assemblyProgressCallback // <-- PASS the callback here
         );
 
         if (!assemblyResult.success || !assemblyResult.outputPath) {
@@ -620,33 +636,42 @@ async function assembleClipsFromStates(
   statePngs: Array<{ path: string; duration: number }>,
   outputPath: string,
   frameRate: number,
-  operationId: string
+  operationId: string,
+  progressCallback?: ProgressCallback
 ): Promise<{ success: boolean; outputPath: string; error?: string }> {
   log.info(
     `[assembleClipsFromStates ${operationId}] Starting assembly from ${statePngs.length} state PNGs...`
   );
-  const tempDirPath = path.dirname(statePngs[0].path); // Get temp dir from one of the pngs
+  const tempDirPath = path.dirname(statePngs[0].path);
   const concatListPath = path.join(
     tempDirPath,
     `concat_list_${operationId}.txt`
   );
   let concatContent = '';
-  const ffmpegPath = 'ffmpeg'; // Assume in PATH or use helper if needed
-  let clipPathsToCleanup: string[] = []; // <-- DECLARE HERE (initially empty)
+  const ffmpegPath = 'ffmpeg';
+  let clipPathsToCleanup: string[] = [];
+
+  // Define progress range for this assembly stage
+  const ASSEMBLY_START_PERCENT = 10; // Starts after puppeteer's 10%
+  const ASSEMBLY_END_PERCENT = 95; // Ends before final merge's 95%
+  const ASSEMBLY_PROGRESS_RANGE = ASSEMBLY_END_PERCENT - ASSEMBLY_START_PERCENT;
 
   try {
-    // --- Step 1: Create individual clips from each state PNG (Parallelized) ---
     log.info(
       `[assembleClipsFromStates ${operationId}] Generating ${statePngs.length} intermediate video clips in parallel...`
     );
-    const clipPromises: Promise<void>[] = []; // Store promises that signal task completion
-    const MAX_CONCURRENT_FFMPEG = 4; // Limit concurrency to a fixed lower number
+    const clipPromises: Promise<void>[] = [];
+    const MAX_CONCURRENT_FFMPEG = 4; // Keep concurrency low for stability
     log.info(
       `[assembleClipsFromStates ${operationId}] Max concurrent FFmpeg processes: ${MAX_CONCURRENT_FFMPEG}`
     );
+
     let currentlyRunning = 0;
     let launchedCount = 0;
-    const results: { index: number; path: string | null; error?: Error }[] = []; // Store results with index
+    let completedClipCount = 0; // <-- Track completed clips
+    let lastReportedPercent = ASSEMBLY_START_PERCENT; // <-- Track last report
+
+    const results: { index: number; path: string | null; error?: Error }[] = [];
 
     const runClipTask = (index: number): Promise<void> => {
       const state = statePngs[index];
@@ -679,9 +704,7 @@ async function assembleClipsFromStates(
       );
 
       return new Promise<void>(resolveTask => {
-        // Outer promise resolves when this task slot is free
         const clipPromise = new Promise<void>((resolveClip, rejectClip) => {
-          // Inner promise resolves/rejects with clip outcome
           const clipProcess = execFile(ffmpegPath, clipArgs);
           let clipStderr = '';
           clipProcess.stderr?.on(
@@ -697,7 +720,7 @@ async function assembleClipsFromStates(
           );
           clipProcess.on('close', code => {
             if (code === 0) {
-              resolveClip(); // Resolve inner promise with path
+              resolveClip();
             } else {
               rejectClip(
                 new Error(
@@ -718,14 +741,40 @@ async function assembleClipsFromStates(
               `[assembleClipsFromStates ${operationId}] Failed to generate clip ${index}:`,
               error
             );
-            // Decide if you want to throw/stop everything on single clip failure, or just log and continue
           })
           .finally(() => {
             currentlyRunning--;
+            completedClipCount++; // <-- Increment completed count
+
+            // --- Calculate and Report Progress ---
+            if (progressCallback && statePngs.length > 0) {
+              const currentAssemblyProgress =
+                completedClipCount / statePngs.length; // Progress within this stage (0 to 1)
+              const overallPercent = Math.round(
+                ASSEMBLY_START_PERCENT +
+                  currentAssemblyProgress * ASSEMBLY_PROGRESS_RANGE
+              );
+
+              // Report somewhat frequently, but not necessarily every single clip
+              if (
+                overallPercent > lastReportedPercent ||
+                completedClipCount === statePngs.length
+              ) {
+                lastReportedPercent = overallPercent;
+                progressCallback({
+                  // <-- Use the callback
+                  operationId: operationId,
+                  percent: Math.min(ASSEMBLY_END_PERCENT, overallPercent), // Cap at end percent
+                  stage: `Assembling overlay... (${completedClipCount}/${statePngs.length} clips)`,
+                });
+              }
+            }
+            // --- End Progress Reporting ---
+
             log.debug(
               `[assembleClipsFromStates ${operationId}] [${currentlyRunning}/${MAX_CONCURRENT_FFMPEG}] Finished clip ${index} generation.`
             );
-            resolveTask(); // Resolve outer promise to free up the slot
+            resolveTask();
           });
       });
     };
@@ -739,11 +788,8 @@ async function assembleClipsFromStates(
         clipPromises.push(runClipTask(launchedCount));
         launchedCount++;
       }
-      // Wait for at least one task to complete before launching more
-      await Promise.race(clipPromises.slice(-MAX_CONCURRENT_FFMPEG)); // Wait for any of the currently running ones
+      await Promise.race(clipPromises.slice(-MAX_CONCURRENT_FFMPEG));
     }
-
-    // Wait for all remaining tasks to complete
     await Promise.all(clipPromises);
 
     // --- Process results ---
@@ -781,22 +827,28 @@ async function assembleClipsFromStates(
     await fs.writeFile(concatListPath, concatContent, 'utf8');
 
     // --- Step 3: Concatenate clips into final overlay video ---
+    // Report 95% just before starting the final concat of this stage
+    progressCallback?.({
+      // <-- Use callback
+      operationId: operationId,
+      percent: ASSEMBLY_END_PERCENT, // 95%
+      stage: 'Finalizing overlay video...',
+    });
     log.info(
       `[assembleClipsFromStates ${operationId}] Concatenating clips into final overlay: ${outputPath}`
     );
     const concatArgs = [
       '-f',
-      'concat', // Use the concat demuxer
+      'concat',
       '-safe',
-      '0', // Allow relative paths in concat list
+      '0',
       '-i',
-      concatListPath, // Input concat list file
+      concatListPath,
       '-c',
-      'copy', // Copy codecs (should be ProRes 4444 already)
-      '-y', // Overwrite output
-      outputPath, // Final output path (.mov)
+      'copy',
+      '-y',
+      outputPath,
     ];
-
     await new Promise<void>((resolveConcat, rejectConcat) => {
       log.debug(
         `[assembleClipsFromStates ${operationId}] Running concat command: ${ffmpegPath} ${concatArgs.join(' ')}`
