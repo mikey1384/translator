@@ -28,6 +28,21 @@ import subtitleRendererClient, {
 } from '../clients/subtitle-renderer-client.js';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
 
+// Add this interface definition
+interface ElectronProcessUrlResult {
+  success: boolean;
+  message?: string;
+  filePath?: string;
+  videoPath?: string;
+  filename?: string;
+  size?: number;
+  fileUrl?: string;
+  originalVideoPath?: string;
+  error?: string;
+  operationId: string; // It's required in the backend type
+  cancelled?: boolean; // Include the optional cancelled property
+}
+
 const headerRightGroupStyles = css`
   display: flex;
   align-items: center;
@@ -670,10 +685,27 @@ function AppContent() {
 
     try {
       // Pass the prepared options object
-      const result = await window.electron.processUrl(optionsToSend); // Use the logged object
+      const result = (await window.electron.processUrl(
+        optionsToSend
+      )) as ElectronProcessUrlResult;
 
-      if (result.error) throw new Error(result.error);
+      // *** Check for cancellation FIRST ***
+      if (result.cancelled) {
+        console.log('[AppContent] Download operation was cancelled.');
+        // Just reset state, don't show error
+        resetUrlStates(); // Call reset to clear progress etc.
+        setIsProcessingUrl(false); // Explicitly hide progress area if reset doesn't
+        setDownloadOperationId(null);
+        return; // Stop processing here
+      }
+      // *** End cancellation check ***
 
+      // Original error check
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Original success path
       const videoPath = result.videoPath || result.filePath;
       if (!videoPath || !result.filename) {
         throw new Error('Downloaded video info incomplete');
@@ -682,11 +714,11 @@ function AppContent() {
       finishUrlDownload(result, videoPath);
       setUrlInput('');
     } catch (err: any) {
+      // Catch block remains the same - handleUrlError handles actual errors
       handleUrlError(err);
     } finally {
-      // The finally block that set isProcessingUrl=false might need adjustment
-      // depending on how completion is now handled by ProgressArea auto-close.
-      // Let's leave it for now.
+      // The finally block might need adjustment depending on how ProgressArea auto-close works.
+      // Let's keep it commented out for now as resetUrlStates() is called on cancel/error.
       // setIsProcessingUrl(false);
     }
   }

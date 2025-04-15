@@ -66,6 +66,7 @@ interface ProcessUrlResult {
   originalVideoPath?: string; // Provided by processVideoUrl
   error?: string;
   operationId: string;
+  cancelled?: boolean;
 }
 
 export async function handleProcessUrl(
@@ -164,13 +165,37 @@ export async function handleProcessUrl(
 
     return successResult;
   } catch (error: any) {
-    // Enhanced error logging
     log.error(
-      `[url-handler] Error processing URL ${url} (Op ID: ${operationId}):`,
+      `[url-handler] Error processing URL for Op ID ${operationId}:`,
       error
     );
+    log.warn(
+      `[url-handler] Caught error message during cancel check: "${error?.message}"`
+    );
+    log.warn(
+      `[url-handler] Checking error properties. killed: ${error?.killed}, isTerminated: ${error?.isTerminated}, isCanceled: ${error?.isCanceled}`
+    );
 
-    // Log detailed error information
+    // Check for cancellation using the 'isTerminated' property
+    if (error.isTerminated === true) {
+      log.info(
+        `[url-handler] Operation ${operationId} was cancelled (isTerminated=true).`
+      );
+      // Send a final "cancelled" progress update with NO error message
+      sendProgress({
+        percent: 100,
+        stage: 'Download cancelled',
+        error: null,
+      });
+      // Return the object indicating cancellation
+      return { cancelled: true, success: false, operationId };
+    }
+
+    // Handle ALL OTHER (non-cancellation) errors
+    log.error(
+      `[url-handler] Handling non-termination error for Op ID ${operationId}`
+    );
+    // Enhanced error logging
     log.error(`[url-handler] Error type: ${typeof error}`);
     log.error(`[url-handler] Error message: ${error.message || 'No message'}`);
     log.error(`[url-handler] Error stack: ${error.stack || 'No stack'}`);
@@ -193,21 +218,24 @@ export async function handleProcessUrl(
       if (error.code) log.error(`[url-handler] Error code: ${error.code}`);
     }
 
-    const errorMessage =
+    const rawErrorMessage =
       error.message ||
       (typeof error === 'string' ? error : 'An unknown error occurred');
-    log.error(`[url-handler] Final error message to send: ${errorMessage}`);
 
-    // Use sendProgress to report error with better message
+    // Send a generic, user-friendly error progress update
     sendProgress({
-      percent: 0,
+      percent: 0, // Indicate failure
       stage: 'Error',
-      error: `Download failed: ${errorMessage}. Check logs at ~/Library/Logs/translator-electron/main.log`,
+      // Use a cleaner error message for the UI progress listener
+      error: 'Download failed. Please check logs for details.',
     });
 
+    // Return the standard error object for the main promise result
     return {
       success: false,
-      error: `Download failed: ${errorMessage}. Check logs at ~/Library/Logs/translator-electron/main.log`,
+      // Include the raw error here if needed for debugging later,
+      // but the UI primarily reacts to the progress update error.
+      error: `Download failed: ${rawErrorMessage}. Check logs at ~/Library/Logs/translator-electron/main.log`,
       operationId,
     };
   }

@@ -425,14 +425,19 @@ async function downloadVideoFromPlatform(
       error
     );
 
+    // *** CHECK FOR CANCELLATION FIRST ***
     if (error.killed) {
       log.info(
         `[URLProcessor] Download process ${operationId} was killed (likely cancelled).`
       );
-      throw new Error(`Download cancelled for ${operationId}`);
+      throw error;
     }
+    // *** END CANCELLATION CHECK ***
 
-    // Log stderr if available from execa error object
+    // If it wasn't killed, it's a real error. NOW log details and send failure progress.
+    log.error(
+      `[URLProcessor] Handling non-cancellation error for Op ID ${operationId}`
+    );
     if (error.stderr) {
       log.error('[URLProcessor] yt-dlp STDERR:', error.stderr);
     }
@@ -443,12 +448,7 @@ async function downloadVideoFromPlatform(
       log.error('[URLProcessor] yt-dlp ALL on error:', error.all);
     }
 
-    progressCallback?.({
-      percent: 0,
-      stage: 'Download failed',
-      error: error.shortMessage || error.message || String(error),
-    });
-    throw error; // Re-throw the error
+    throw error; // Re-throw the original error
   } finally {
     if (hasDownloadProcess(operationId)) {
       removeDownloadProcess(operationId);
