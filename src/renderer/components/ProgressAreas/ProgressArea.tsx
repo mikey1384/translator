@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import { useTranslation } from 'react-i18next';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -84,10 +83,6 @@ const progressLabelStyles = css`
   font-weight: 500;
   font-size: 0.95rem;
   color: ${colors.dark};
-
-  strong {
-    color: ${colors.grayDark};
-  }
 `;
 
 const closeButtonStyles = css`
@@ -116,8 +111,6 @@ export default function ProgressArea({
   onClose,
   autoCloseDelay = 4000,
 }: ProgressAreaProps) {
-  const { t } = useTranslation();
-
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
     if (isVisible && progress >= 100) {
@@ -130,9 +123,6 @@ export default function ProgressArea({
 
   const handleCloseOrCancelClick = async () => {
     if (progress < 100) {
-      if (!window.confirm(t('common.cancel_confirmation'))) {
-        return;
-      }
       if (!operationId) {
         console.warn(
           `[ProgressArea] Cannot trigger cancel for "${title}": operationId is missing.`
@@ -166,17 +156,14 @@ export default function ProgressArea({
           className={closeButtonStyles}
           onClick={handleCloseOrCancelClick}
           disabled={isCancelling}
-          aria-label={t('common.cancel_process_aria')}
+          aria-label="Close or cancel process"
         >
           {isCancelling ? '...' : '×'}
         </button>
       </div>
       <div className={progressBlockStyles}>
         <div className={progressLabelStyles}>
-          <span>
-            <strong>{t('common.progressLabel')}:</strong>{' '}
-            {stage || t('common.initializing')}
-          </span>
+          <span>{stage}</span>
           {progress > 0 && <span>{progress.toFixed(1)}%</span>}
         </div>
         <div className={progressBarContainerStyles}>
