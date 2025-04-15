@@ -162,7 +162,6 @@ interface ElectronAPI {
     lang: string
   ) => Promise<{ success: boolean; error?: string }>;
 
-  // In src/types/interface.d.ts within ElectronAPI interface
   getVideoMetadata: (filePath: string) => Promise<{
     success: boolean;
     metadata?: {

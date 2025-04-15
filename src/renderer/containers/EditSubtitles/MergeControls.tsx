@@ -3,7 +3,7 @@ import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
 import {
-  ASS_STYLE_PRESETS,
+  SUBTITLE_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { useTranslation } from 'react-i18next';
@@ -144,11 +144,13 @@ function MergeControls({
         onChange={e => setMergeStylePreset(e.target.value as AssStylePresetKey)}
         disabled={isMergingInProgress}
       >
-        {(Object.keys(ASS_STYLE_PRESETS) as AssStylePresetKey[]).map(key => (
-          <option key={key} value={key}>
-            {key}
-          </option>
-        ))}
+        {(Object.keys(SUBTITLE_STYLE_PRESETS) as AssStylePresetKey[]).map(
+          key => (
+            <option key={key} value={key}>
+              {key}
+            </option>
+          )
+        )}
       </select>
 
       {/* Merge Button */}

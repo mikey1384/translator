@@ -178,6 +178,8 @@ function AppContent() {
     frameRate: number;
   } | null>(null);
 
+  const [mergeFontSize, setMergeFontSize] = useState<number>(24); // Default size
+
   useEffect(() => {
     if (!searchText) {
       setMatchedIndices([]);
@@ -283,6 +285,7 @@ function AppContent() {
                 isProgressBarVisible={
                   isMergingInProgress || isTranslationInProgress
                 }
+                mergeFontSize={mergeFontSize}
               />
             )}
 
@@ -350,6 +353,8 @@ function AppContent() {
                   videoWidth={videoMetadata?.width}
                   videoHeight={videoMetadata?.height}
                   videoFrameRate={videoMetadata?.frameRate}
+                  mergeFontSize={mergeFontSize}
+                  setMergeFontSize={setMergeFontSize}
                 />
               </div>
             </div>

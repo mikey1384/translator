@@ -30,7 +30,7 @@ import { useSubtitleNavigation } from './hooks.js';
 import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
 import { SrtSegment } from '../../../types/interface.js';
 import {
-  ASS_STYLE_PRESETS,
+  SUBTITLE_STYLE_PRESETS,
   AssStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
@@ -74,6 +74,8 @@ export interface EditSubtitlesProps {
   videoWidth?: number;
   videoHeight?: number;
   videoFrameRate?: number;
+  mergeFontSize: number;
+  setMergeFontSize: (value: number) => void;
 }
 
 export function EditSubtitles({
@@ -102,13 +104,14 @@ export function EditSubtitles({
   videoWidth: videoWidthProp,
   videoHeight: videoHeightProp,
   videoFrameRate: videoFrameRateProp,
+  mergeFontSize,
+  setMergeFontSize,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  const [mergeFontSize, setMergeFontSize] = useState<number>(40);
   const [mergeStylePreset, setMergeStylePreset] =
     useState<AssStylePresetKey>('Default');
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
@@ -141,7 +144,7 @@ export function EditSubtitles({
       console.log('[EditSubtitles] Loaded savedStylePreset:', savedStylePreset);
       if (
         savedStylePreset &&
-        Object.keys(ASS_STYLE_PRESETS).includes(savedStylePreset)
+        Object.keys(SUBTITLE_STYLE_PRESETS).includes(savedStylePreset)
       ) {
         console.log(
           `[EditSubtitles] Applying saved style preset: ${savedStylePreset}`
@@ -162,7 +165,7 @@ export function EditSubtitles({
       // Ensure loading state is set to false after attempting to load
       console.log('[EditSubtitles] Finished loading settings attempt.');
       setIsLoadingSettings(false);
-    }
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array ensures this runs only once on mount
 
   // Save mergeFontSize to localStorage whenever it changes
