@@ -4,10 +4,10 @@ import path from 'path';
 import fs from 'fs/promises';
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import { parseSrt } from '../shared/helpers/index.js';
-import { execFile, ChildProcess } from 'child_process';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
 import { spawn } from 'child_process';
+import os from 'os';
 
 // Re-define channels used in this handler file
 const RENDER_CHANNELS = {
@@ -171,73 +171,138 @@ export function initializeRenderWindowHandlers(): void {
         }
         // --- End Parse SRT ---
 
-        // --- Generate Timestamped Events ---
+        // --- Generate Timestamped Events (Using Milliseconds) ---
         log.info(
-          `[RenderWindowHandlers ${operationId}] Generating subtitle change events...`
+          `[RenderWindowHandlers ${operationId}] Generating subtitle change events (using milliseconds)...`
         );
-        const events: Array<{ time: number; text: string }> = [];
-        events.push({ time: 0, text: '' }); // Start with blank
+        const eventsMs: Array<{ timeMs: number; text: string }> = [];
+        const videoDurationMs = Math.round(options.videoDuration * 1000);
+        const MIN_DURATION_MS = 1; // Minimum duration for a state in ms
+
+        eventsMs.push({ timeMs: 0, text: '' }); // Start with blank at time 0
 
         segments.forEach(seg => {
-          // Event for text appearing
-          // Ensure start time is not negative
-          const startTime = Math.max(0, seg.start);
-          events.push({ time: startTime, text: seg.text });
+          // Use Math.round for potentially better centering than floor/ceil
+          const startMs = Math.max(0, Math.round(seg.start * 1000));
+          const endMs = Math.max(
+            startMs + MIN_DURATION_MS,
+            Math.round(seg.end * 1000)
+          );
 
-          // Event for text disappearing
-          // Ensure end time is not negative and slightly after start if equal
-          const endTime = Math.max(startTime + 0.001, seg.end);
-          events.push({ time: endTime, text: '' });
+          // Add event for text appearing
+          eventsMs.push({ timeMs: startMs, text: seg.text });
+          // Add event for text disappearing
+          eventsMs.push({ timeMs: endMs, text: '' });
         });
 
-        // Add final blank event at the very end
-        events.push({ time: options.videoDuration, text: '' });
+        // Ensure an event exists exactly at the end, setting it to blank
+        // Check if the last event already covers the end time
+        const lastKnownEvent = eventsMs.reduce(
+          (latest, current) =>
+            current.timeMs > latest.timeMs ? current : latest,
+          { timeMs: 0, text: '' }
+        );
+        if (lastKnownEvent.timeMs < videoDurationMs) {
+          eventsMs.push({ timeMs: videoDurationMs, text: '' });
+        } else if (lastKnownEvent.timeMs > videoDurationMs) {
+          // If the last event overshoots (e.g., SRT slightly longer than video), cap it
+          lastKnownEvent.timeMs = videoDurationMs;
+        }
 
-        // Sort events by time, and remove duplicates (same time, same text)
-        events.sort((a, b) => a.time - b.time);
+        // Sort events strictly by time
+        eventsMs.sort((a, b) => a.timeMs - b.timeMs);
 
-        const uniqueEvents: Array<{ time: number; text: string }> = [];
-        if (events.length > 0) {
-          uniqueEvents.push(events[0]);
-          for (let i = 1; i < events.length; i++) {
-            // Keep if time is different OR if time is same but text is different
-            if (
-              events[i].time > events[i - 1].time ||
-              events[i].text !== events[i - 1].text
-            ) {
-              // Also skip if time is negligibly different and text is same (handles tiny overlaps)
+        // Filter events: Remove duplicates, merge consecutive identical states, remove negligible durations
+        const uniqueEventsMs: Array<{ timeMs: number; text: string }> = [];
+        if (eventsMs.length > 0) {
+          uniqueEventsMs.push(eventsMs[0]); // Always add the first event (usually time 0, blank)
+
+          for (let i = 1; i < eventsMs.length; i++) {
+            const prevEvent = uniqueEventsMs[uniqueEventsMs.length - 1];
+            const currentEvent = eventsMs[i];
+
+            // Calculate time difference in ms
+            const timeDiffMs = currentEvent.timeMs - prevEvent.timeMs;
+
+            // If the text is the same as the previous unique event...
+            if (currentEvent.text === prevEvent.text) {
+              // ...just continue, effectively extending the duration of the previous state.
+              // We don't add the current event because the state hasn't changed.
+              continue;
+            }
+
+            // If the text is different, but the time difference is negligible (or zero/negative)...
+            if (timeDiffMs < MIN_DURATION_MS) {
+              // Overwrite the *previous* event's text with the *current* event's text.
+              // This handles rapid state changes by keeping the *last* state at that near-identical time.
+              // Exception: Don't overwrite the very first event at time 0 if it's blank.
               if (
-                !(
-                  events[i].time - events[i - 1].time < 0.01 &&
-                  events[i].text === events[i - 1].text
-                )
+                uniqueEventsMs.length > 1 ||
+                prevEvent.timeMs !== 0 ||
+                prevEvent.text !== ''
               ) {
-                uniqueEvents.push(events[i]);
+                prevEvent.text = currentEvent.text;
+                log.debug(
+                  `[RenderWindowHandlers ${operationId}] Merged negligible duration state at ${currentEvent.timeMs}ms with text: "${currentEvent.text}"`
+                );
+                continue; // Skip adding the current event as we modified the previous one
+              }
+            }
+
+            // If text is different and time difference is significant, add the new event
+            uniqueEventsMs.push(currentEvent);
+          }
+        }
+
+        // Final pass: Ensure the very last event timestamp is exactly videoDurationMs
+        if (uniqueEventsMs.length > 0) {
+          const finalEvent = uniqueEventsMs[uniqueEventsMs.length - 1];
+          if (finalEvent.timeMs < videoDurationMs) {
+            // If the last unique state ends before the video, extend it OR add a final blank? Add blank.
+            if (finalEvent.text !== '') {
+              uniqueEventsMs.push({ timeMs: videoDurationMs, text: '' });
+            } else {
+              // If the last state IS blank but ends early, just extend its time marker? No, the duration calculation handles this.
+              // Let's ensure there IS an event marker *at* videoDurationMs
+              uniqueEventsMs.push({ timeMs: videoDurationMs, text: '' }); // Add again, filtering below should handle
+            }
+          } else if (finalEvent.timeMs > videoDurationMs) {
+            finalEvent.timeMs = videoDurationMs; // Cap it
+          }
+          // Refilter JUST IN CASE adding the final event created a duplicate time/text entry
+          const finalFilteredEvents: Array<{ timeMs: number; text: string }> =
+            [];
+          if (uniqueEventsMs.length > 0) {
+            finalFilteredEvents.push(uniqueEventsMs[0]);
+            for (let i = 1; i < uniqueEventsMs.length; i++) {
+              if (
+                uniqueEventsMs[i].timeMs >
+                  finalFilteredEvents[finalFilteredEvents.length - 1].timeMs ||
+                uniqueEventsMs[i].text !==
+                  finalFilteredEvents[finalFilteredEvents.length - 1].text
+              ) {
+                // Make sure we don't add events past duration now
+                if (uniqueEventsMs[i].timeMs <= videoDurationMs) {
+                  finalFilteredEvents.push(uniqueEventsMs[i]);
+                }
               }
             }
           }
-        }
-        // Ensure the last event goes exactly to video duration
-        if (uniqueEvents.length > 0) {
-          const lastEvent = uniqueEvents[uniqueEvents.length - 1];
-          if (lastEvent.time < options.videoDuration && lastEvent.text === '') {
-            // If the last event is blank and before the end, extend it
-            lastEvent.time = options.videoDuration;
-          } else if (
-            lastEvent.time < options.videoDuration &&
-            lastEvent.text !== ''
-          ) {
-            // If the last event has text and ends before duration, add a blank event
-            uniqueEvents.push({ time: options.videoDuration, text: '' });
-          } else if (lastEvent.time > options.videoDuration) {
-            // If the last event somehow goes past duration, cap it
-            lastEvent.time = options.videoDuration;
-          }
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Created ${finalFilteredEvents.length} unique subtitle state events (ms).`
+          );
+          // Replace uniqueEventsMs with the finally filtered list
+          uniqueEventsMs.splice(
+            0,
+            uniqueEventsMs.length,
+            ...finalFilteredEvents
+          );
+        } else {
+          log.warn(
+            `[RenderWindowHandlers ${operationId}] No unique events generated.`
+          );
         }
 
-        log.info(
-          `[RenderWindowHandlers ${operationId}] Created ${uniqueEvents.length} unique subtitle state events.`
-        );
         // --- End Generate Events ---
 
         // --- Generate State PNGs (Puppeteer) ---
@@ -245,47 +310,46 @@ export function initializeRenderWindowHandlers(): void {
           `[RenderWindowHandlers ${operationId}] Starting state PNG generation loop...`
         );
         const statePngs: Array<{ path: string; duration: number }> = [];
-        const TOTAL_EVENTS = uniqueEvents.length;
+        const TOTAL_EVENTS = uniqueEventsMs.length;
         const PUPPETEER_STAGE_PERCENT = 10; // Allocate ~10% of progress to this stage
+        const frameDurationSec = 1 / options.frameRate; // Calculate frame duration
 
+        // Iterate using uniqueEventsMs
         for (let i = 0; i < TOTAL_EVENTS; i++) {
-          const currentEvent = uniqueEvents[i];
-          const nextEventTime =
+          const currentEvent = uniqueEventsMs[i];
+          // Determine time of the *next* distinct state change in ms
+          const nextEventTimeMs =
             i + 1 < TOTAL_EVENTS
-              ? uniqueEvents[i + 1].time
-              : options.videoDuration;
-          const stateDuration = Math.max(
-            0.001,
-            nextEventTime - currentEvent.time
-          ); // Ensure positive duration
+              ? uniqueEventsMs[i + 1].timeMs
+              : videoDurationMs; // Use videoDurationMs
+
+          // Calculate duration for the CURRENT state's PNG in milliseconds
+          const stateDurationMs = nextEventTimeMs - currentEvent.timeMs;
           const subtitleText = currentEvent.text;
 
-          // Ensure duration doesn't make time exceed videoDuration
+          // Skip if duration is too short or event is beyond video duration
           if (
-            currentEvent.time + stateDuration >
-            options.videoDuration + 0.01
+            stateDurationMs < MIN_DURATION_MS ||
+            currentEvent.timeMs >= videoDurationMs
           ) {
-            // Add tolerance
             log.warn(
-              `[RenderWindowHandlers ${operationId}] State ${i} duration adjusted to fit video duration.`
-            );
-            // Recalculate duration based on video end time
-            // stateDuration = Math.max(0.001, options.videoDuration - currentEvent.time);
-            // Let's simply skip rendering if start time is already past duration
-            if (currentEvent.time >= options.videoDuration) {
-              log.warn(
-                `[RenderWindowHandlers ${operationId}] State ${i} starts at or after video duration, skipping.`
-              );
-              continue;
-            }
-          }
-
-          if (stateDuration <= 0) {
-            log.warn(
-              `[RenderWindowHandlers ${operationId}] Skipping event ${i} due to zero or negative duration (${stateDuration}). Time: ${currentEvent.time}, Text: "${subtitleText}"`
+              `[RenderWindowHandlers ${operationId}] Skipping event ${i} due to zero/neg duration (${stateDurationMs}ms) or start time past video duration (${currentEvent.timeMs}ms >= ${videoDurationMs}ms). Text: "${subtitleText}"`
             );
             continue;
           }
+
+          // --- Calculate Duration in Seconds (with Optional Frame Snapping) ---
+          const stateDurationSec = stateDurationMs / 1000.0;
+
+          // ** Optional: Snap to frame boundaries **
+          const frameCount = Math.round(stateDurationSec / frameDurationSec);
+          const snappedDurationSec = Math.max(
+            frameDurationSec,
+            frameCount * frameDurationSec
+          ); // Ensure at least one frame duration
+          // Use snappedDurationSec if implementing frame snapping, otherwise use stateDurationSec
+          const durationToUse = snappedDurationSec; // CHANGE TO stateDurationSec if NOT snapping
+          // --- End Duration Calculation ---
 
           const statePngFileName = `state_${String(i).padStart(5, '0')}.png`;
           const statePngPath = path.join(tempDirPath, statePngFileName);
@@ -297,8 +361,8 @@ export function initializeRenderWindowHandlers(): void {
               window.updateSubtitle(text);
             }, subtitleText);
 
-            // Optional small delay
-            await new Promise(resolve => setTimeout(resolve, 5));
+            // Optional small delay (Can often be removed)
+            // await new Promise(resolve => setTimeout(resolve, 5));
 
             // 2. Capture ONE screenshot for this state
             await page.screenshot({
@@ -313,13 +377,12 @@ export function initializeRenderWindowHandlers(): void {
               type: 'png',
             });
 
-            // 3. Store path and duration
-            statePngs.push({ path: statePngPath, duration: stateDuration });
+            // 3. Store path and duration (Use the calculated duration in seconds)
+            statePngs.push({ path: statePngPath, duration: durationToUse }); // <-- Use durationToUse
 
-            // --- ADD PROGRESS REPORTING ---
+            // --- PROGRESS REPORTING ---
             const stateProgress =
               ((i + 1) / TOTAL_EVENTS) * PUPPETEER_STAGE_PERCENT;
-            // Report progress less frequently now, maybe every 10 states or 5%
             if ((i + 1) % 10 === 0 || i === TOTAL_EVENTS - 1) {
               event.sender.send('merge-subtitles-progress', {
                 operationId: operationId,
@@ -330,7 +393,7 @@ export function initializeRenderWindowHandlers(): void {
             // --- END PROGRESS REPORTING ---
           } catch (stateError: any) {
             log.error(
-              `[RenderWindowHandlers ${operationId}] Error processing state ${i} (Time: ${currentEvent.time}, Text: "${subtitleText}"):`,
+              `[RenderWindowHandlers ${operationId}] Error processing state ${i} (Time: ${currentEvent.timeMs}ms, Text: "${subtitleText}"):`,
               stateError
             );
             throw new Error(
@@ -341,12 +404,13 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Finished capturing ${statePngs.length} state PNGs.`
         );
+        // --- End Generate State PNGs ---
 
         // Report completion of this stage
         event.sender.send('merge-subtitles-progress', {
           operationId: operationId,
           percent: PUPPETEER_STAGE_PERCENT,
-          stage: 'Assembling subtitle overlay video...', // Updated stage message
+          stage: 'Assembling subtitle overlay video...',
         });
         // --- End Generate State PNGs ---
 
@@ -412,18 +476,27 @@ export function initializeRenderWindowHandlers(): void {
         // Report progress before final merge
         event.sender.send('merge-subtitles-progress', {
           operationId: operationId,
-          percent: 95, // Or adjust based on how long assembly takes
+          percent: 40,
           stage: 'Merging video and overlay...',
         });
         // --- End Preparation ---
 
         // --- Call Final Merge into TEMPORARY File ---
+        // Define the callback for this specific stage
+        const mergeProgressCallback: ProgressCallback = progressData => {
+          event.sender.send('merge-subtitles-progress', {
+            operationId: operationId,
+            ...progressData, // Spread received data (percent, stage, error)
+          });
+        };
+
         const mergeResult = await mergeVideoAndOverlay({
           originalVideoPath: originalVideoPath,
           overlayVideoPath: tempOverlayPath,
-          targetSavePath: finalTempMergedPath, // Merge to temp path first
+          targetSavePath: finalTempMergedPath,
           operationId: operationId,
-          // TODO: Pass event.sender or a callback for progress reporting here later
+          videoDuration: options.videoDuration, // <-- Pass video duration
+          progressCallback: mergeProgressCallback, // <-- Pass the callback
         });
 
         if (!mergeResult.success || !mergeResult.finalOutputPath) {
@@ -666,7 +739,7 @@ async function assembleClipsFromStates(
 
   // Define progress range for this stage (FFmpeg encoding)
   const ASSEMBLY_START_PERCENT = 10; // Starts after puppeteer
-  const ASSEMBLY_END_PERCENT = 95; // Ends before final merge
+  const ASSEMBLY_END_PERCENT = 40; // <-- CHANGED FROM 95 to 40
   const ASSEMBLY_PROGRESS_RANGE = ASSEMBLY_END_PERCENT - ASSEMBLY_START_PERCENT;
 
   try {
@@ -685,11 +758,17 @@ async function assembleClipsFromStates(
       concatContent += `file '${relativePath}'\n`;
       concatContent += `duration ${state.duration.toFixed(6)}\n\n`; // Specify duration for the preceding file
     }
-    // Add the last file again with zero duration to ensure total duration is met?
-    // Or rely on the final segment duration. Let's test without first.
-    // const lastState = statePngs[statePngs.length - 1];
-    // const lastRelativePath = path.relative(tempDirPath, lastState.path).replace(/\\/g, '/');
-    // concatContent += `file '${lastRelativePath}'\n`;
+    // Add the last file again without duration to potentially help ffmpeg hold the frame
+    if (statePngs.length > 0) {
+      const lastState = statePngs[statePngs.length - 1];
+      const lastRelativePath = path
+        .relative(tempDirPath, lastState.path)
+        .replace(/\\/g, '/');
+      concatContent += `\nfile '${lastRelativePath}'\n`;
+      log.debug(
+        `[assembleClipsFromStates ${operationId}] Added final frame hold entry.`
+      );
+    }
 
     await fs.writeFile(concatListPath, concatContent, 'utf8');
     log.info(`[assembleClipsFromStates ${operationId}] Concat list generated.`);
@@ -859,107 +938,196 @@ interface MergeVideoAndOverlayOptions {
   overlayVideoPath: string;
   targetSavePath: string;
   operationId: string;
+  videoDuration: number;
+  progressCallback?: ProgressCallback;
 }
 
 async function mergeVideoAndOverlay(
   options: MergeVideoAndOverlayOptions
 ): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
-  const { originalVideoPath, overlayVideoPath, targetSavePath, operationId } =
-    options;
+  const {
+    originalVideoPath,
+    overlayVideoPath,
+    targetSavePath,
+    operationId,
+    videoDuration,
+    progressCallback,
+  } = options;
 
   log.info(
-    `[mergeVideoAndOverlay ${operationId}] Starting final merge. Original: ${originalVideoPath}, Overlay: ${overlayVideoPath}, Output: ${targetSavePath}`
+    `[mergeVideoAndOverlay ${operationId}] Starting final merge. Duration: ${videoDuration}s. Output: ${targetSavePath}`
   );
+
+  // Define progress range for this stage
+  const MERGE_START_PERCENT = 40; // Starts after assembly
+  const MERGE_END_PERCENT = 100; // Ends at completion
+  const MERGE_PROGRESS_RANGE = MERGE_END_PERCENT - MERGE_START_PERCENT;
 
   // Add check for overlay file existence
   if (!(await fs.stat(overlayVideoPath).catch(() => false))) {
+    // Report failure via callback?
+    progressCallback?.({
+      operationId,
+      percent: MERGE_START_PERCENT, // Indicate failure at start of stage
+      stage: 'Merge failed: Overlay file missing',
+      error: `Overlay video file not found at: ${overlayVideoPath}`,
+    });
+    // Throw error to stop the process
     throw new Error(`Overlay video file not found at: ${overlayVideoPath}`);
   }
 
+  // Use spawn for better stream handling and progress
   return new Promise((resolve, reject) => {
     const ffmpegPath = 'ffmpeg';
+    let videoCodec = 'libx264'; // Default to software encoder
+    const outputPixFmtArgs: string[] = []; // Arguments for output pixel format, if needed
+
+    if (os.platform() === 'darwin') {
+      log.info(
+        `[mergeVideoAndOverlay ${operationId}] macOS detected, attempting to use VideoToolbox hardware acceleration.`
+      );
+      videoCodec = 'h264_videotoolbox';
+      // Hardware encoders for H.264 typically require yuv420p for MP4 compatibility
+      outputPixFmtArgs.push('-pix_fmt', 'yuv420p');
+      // Note: VideoToolbox might have different quality/speed controls (-b:v, -profile, etc.)
+      // We'll keep preset/crf for now; ffmpeg might ignore them or adapt. Testing needed.
+    } else {
+      log.info(
+        `[mergeVideoAndOverlay ${operationId}] Non-macOS platform (${os.platform()}), using software encoder libx264.`
+      );
+      // libx264 is generally good at choosing appropriate pix_fmt, no explicit args needed here usually.
+    }
+
     const args = [
       '-i',
       originalVideoPath,
       '-i',
-      overlayVideoPath, // This should now have proper alpha
+      overlayVideoPath,
       '-filter_complex',
-      // Keep target position - assuming y=50 works if overlay is transparent
-      '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=50[out]', // Using y=50 as target position
+      '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=50[out]',
       '-map',
-      '[out]', // Map the filtered video stream
+      '[out]',
       '-map',
-      '0:a?', // Map audio from original video if it exists
+      '0:a?',
       '-c:a',
-      'copy', // Copy audio codec
+      'copy',
       '-c:v',
-      'libx264', // Standard video codec for MP4
+      videoCodec,
+      ...outputPixFmtArgs,
       '-preset',
-      'veryfast', // Faster encoding
+      'veryfast',
       '-crf',
-      '22', // Decent quality/size balance
-      '-y', // Overwrite output without asking
+      '22',
+      '-progress',
+      'pipe:1', // <-- Add progress reporting to stdout
+      '-y',
       targetSavePath,
     ];
 
     log.info(
-      `[mergeVideoAndOverlay ${operationId}] Executing FFmpeg command: ${ffmpegPath} ${args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}`
+      `[mergeVideoAndOverlay ${operationId}] Spawning FFmpeg command: ${ffmpegPath} ${args.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}`
     );
 
-    let ffmpegOutput = '';
-    let ffmpegError = '';
-    let hasSeenData = false;
-    const child: ChildProcess = execFile(ffmpegPath, args);
-
-    child.stdout?.on('data', data => {
-      hasSeenData = true;
-      ffmpegOutput += data.toString();
-      log.debug(`[FFmpeg stdout ${operationId}]: ${data.toString().trim()}`);
-    });
-    child.stderr?.on('data', data => {
-      hasSeenData = true;
-      const stderrLine = data.toString().trim();
-      if (stderrLine) {
-        ffmpegOutput += stderrLine + '\n';
-        ffmpegError += stderrLine + '\n'; // Capture stderr specifically for error reporting
-        log.debug(`[FFmpeg stderr ${operationId}]: ${stderrLine}`);
-      }
+    const mergeProcess = spawn(ffmpegPath, args, {
+      stdio: ['ignore', 'pipe', 'pipe'], // Pipe stdout (progress) and stderr
     });
 
-    child.on('error', error => {
+    let stdoutData = '';
+    let stderrData = '';
+    let lastProgressReportTime = 0;
+    const progressUpdateInterval = 500; // ms
+
+    mergeProcess.stdout.on('data', (data: Buffer) => {
+      stdoutData += data.toString();
+      // Parse progress from stdout
+      const lines = stdoutData.split('\n');
+      stdoutData = lines.pop() || ''; // Keep partial line
+
+      lines.forEach(line => {
+        // Prefer out_time_ms for accuracy if available
+        if (line.startsWith('out_time_ms=')) {
+          const timeMs = parseInt(line.split('=')[1], 10);
+          if (!isNaN(timeMs) && videoDuration > 0) {
+            const currentTime = timeMs / 1_000_000; // Convert microseconds to seconds
+            const currentProgress = (currentTime / videoDuration) * 100;
+            const overallPercent = Math.round(
+              MERGE_START_PERCENT +
+                (currentProgress * MERGE_PROGRESS_RANGE) / 100
+            );
+
+            const now = Date.now();
+            if (
+              now - lastProgressReportTime > progressUpdateInterval ||
+              overallPercent >= MERGE_END_PERCENT - 1
+            ) {
+              // Update near end
+              lastProgressReportTime = now;
+              progressCallback?.({
+                operationId,
+                percent: Math.min(MERGE_END_PERCENT - 1, overallPercent), // Don't report 100% until done
+                stage: `Merging video... (${Math.round(currentProgress)}%)`,
+              });
+            }
+          }
+        } else if (line.startsWith('frame=')) {
+          // Fallback using frame number if out_time_ms isn't present (less accurate for progress %)
+          // Requires knowing total frames, which we don't easily have here.
+          // Could estimate based on frame rate, but let's rely on out_time_ms for now.
+        }
+      });
+    });
+
+    mergeProcess.stderr.on('data', (data: Buffer) => {
+      stderrData += data.toString();
+      // log.debug(`[FFmpeg Merge Stderr ${operationId}] ${data.toString().trim()}`);
+    });
+
+    mergeProcess.on('error', err => {
+      stderrData = stderrData.slice(-1024); // Limit stderr capture on error
       log.error(
-        `[mergeVideoAndOverlay ${operationId}] FFmpeg execution error:`,
-        error
+        `[mergeVideoAndOverlay ${operationId}] FFmpeg spawn error:`,
+        err
       );
-      log.error(
-        `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on error:\n${ffmpegOutput}`
-      );
+      progressCallback?.({
+        operationId,
+        percent: MERGE_START_PERCENT,
+        stage: 'Merge failed (spawn error)',
+        error: err.message,
+      });
       reject(
         new Error(
-          `FFmpeg execution failed: ${error.message}. Error output: ${ffmpegError}`
+          `FFmpeg spawn error: ${err.message}\nStderr (Last 1KB): ${stderrData}`
         )
       );
     });
 
-    child.on('close', code => {
+    mergeProcess.on('close', code => {
       log.info(
         `[mergeVideoAndOverlay ${operationId}] FFmpeg process exited with code ${code}.`
       );
-      if (code === 0 && hasSeenData) {
+      if (code === 0) {
+        // Final progress report happens outside after success/save dialog
         log.info(
           `[mergeVideoAndOverlay ${operationId}] Final merge successful: ${targetSavePath}`
         );
         resolve({ success: true, finalOutputPath: targetSavePath });
       } else {
+        stderrData = stderrData.slice(-1024); // Limit stderr capture on error
         log.error(
-          `[mergeVideoAndOverlay ${operationId}] Final merge failed (exit code ${code}, saw data: ${hasSeenData}).`
+          `[mergeVideoAndOverlay ${operationId}] Final merge failed (exit code ${code}).`
         );
         log.error(
-          `[mergeVideoAndOverlay ${operationId}] FFmpeg full output on failure:\n${ffmpegOutput}`
+          `[mergeVideoAndOverlay ${operationId}] FFmpeg full stderr on failure (Last 1KB):\n${stderrData}`
         );
+        progressCallback?.({
+          operationId,
+          percent: MERGE_END_PERCENT,
+          stage: 'Merge failed',
+          error: `FFmpeg exited with code ${code}`,
+        });
         reject(
           new Error(
-            `Final merge failed with exit code ${code}. Error output: ${ffmpegError}`
+            `Final merge failed with exit code ${code}.\nStderr (Last 1KB): ${stderrData}`
           )
         );
       }
