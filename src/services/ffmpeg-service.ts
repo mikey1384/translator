@@ -115,7 +115,7 @@ export class FFmpegService {
 
     const outputPath = path.join(
       this.tempDir,
-      `${path.basename(videoPath, path.extname(videoPath))}_audio.mp3`
+      `${path.basename(videoPath, path.extname(videoPath))}_audio.wav`
     );
 
     try {
@@ -138,16 +138,10 @@ export class FFmpegService {
         percent: ANALYSIS_END,
         stage: `Preparing audio extraction for ${fileSizeMB} MB video (${durationMin} min)...`,
       });
-      const resolution = await this.getVideoResolution(videoPath).catch(() => ({
-        width: 1280,
-        height: 720,
-      }));
-      const isHighRes = resolution.width > 1920 || resolution.height > 1080;
       progressCallback?.({
         percent: PREP_END,
         stage: `Starting audio extraction (est. ${Math.round(estimatedTimeSeconds / 60)} min)...`,
       });
-      const audioQuality = isHighRes ? '4' : '2';
       const audioRate = '16000';
       const startTime = Date.now();
       let lastProgressPercent = EXTRACTION_START;
@@ -157,9 +151,7 @@ export class FFmpegService {
         videoPath,
         '-vn',
         '-acodec',
-        'libmp3lame',
-        '-q:a',
-        audioQuality,
+        'pcm_s16le',
         '-ar',
         audioRate,
         '-ac',
@@ -533,10 +525,8 @@ export class FFmpegService {
       '-t',
       duration.toString(),
       '-vn',
-      '-acodec',
-      'libmp3lame',
-      '-q:a',
-      '5',
+      '-c:a',
+      'copy',
       outputPath,
     ];
     try {

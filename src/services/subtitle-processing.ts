@@ -326,7 +326,7 @@ export async function generateSubtitlesFromAudio({
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
-  const MAX_CHUNK_SIZE_BYTES = 3 * 1024 * 1024; // Reduced target size to ~1MB
+  const MAX_CHUNK_SIZE_BYTES = 0.5 * 1024 * 1024;
   const SILENCE_TOLERANCE_SEC = 2.0;
   const MIN_CHUNK_DURATION_SEC = 1.0;
 
@@ -478,7 +478,7 @@ export async function generateSubtitlesFromAudio({
       const currentChunkIndex = chunkIndex + 1;
       const chunkPath = path.join(
         tempDir,
-        `chunk_${operationId}_${currentChunkIndex}.mp3`
+        `chunk_${operationId}_${currentChunkIndex}.wav`
       );
 
       createdChunkPaths.push(chunkPath);
