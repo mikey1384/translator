@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import {
   SUBTITLE_STYLE_PRESETS,
@@ -26,10 +26,12 @@ function getSubtitleStyles({
   displayFontSize,
   isFullScreen,
   stylePreset = 'Default',
+  isMultiLine,
 }: {
   displayFontSize?: number;
   isFullScreen?: boolean;
   stylePreset?: SubtitleStylePresetKey;
+  isMultiLine: boolean;
 }) {
   const style =
     SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
@@ -43,7 +45,18 @@ function getSubtitleStyles({
 
   // --- Positioning Variables ---
   const position: 'fixed' | 'absolute' = 'fixed';
-  const bottomValue = isFullScreen ? '12%' : '5%'; // Fullscreen 12%, Docked 5% for ALL styles
+
+  // --- Adjust Bottom Position ---
+  let bottomValue: string;
+  console.log('isMultiLine', isMultiLine);
+  if (isMultiLine) {
+    // Multi-line LineBox
+    bottomValue = isFullScreen ? '5%' : '2.5%';
+  } else {
+    // Single-line LineBox
+    bottomValue = isFullScreen ? '10%' : '5%';
+  }
+  // --- End Adjust Bottom Position ---
 
   const maxWidth = '100%';
   const right: string | number | undefined = isFullScreen ? '5%' : undefined; // Keep this conditional right
@@ -90,6 +103,32 @@ function getSubtitleStyles({
   }
   // --- END DETAILED LOGIC ---
 
+  // --- Define Transition ---
+  let transitionValue = `
+    opacity 0.2s ease-in-out,
+    font-size 0.1s linear,
+    color 0.2s linear,
+    text-shadow 0.2s linear,
+    background-color 0.2s linear,
+    box-shadow 0.2s linear,
+    left 0.3s ease-out,
+    max-width 0.3s ease-out
+  `; // Default transition including opacity
+
+  if (stylePreset === 'LineBox') {
+    // Remove opacity transition for LineBox
+    transitionValue = `
+      font-size 0.1s linear,
+      color 0.2s linear,
+      text-shadow 0.2s linear,
+      background-color 0.2s linear,
+      box-shadow 0.2s linear,
+      left 0.3s ease-out,
+      max-width 0.3s ease-out
+    `;
+  }
+  // --- End Define Transition ---
+
   return css`
     position: ${position};
     bottom: ${bottomValue};
@@ -115,16 +154,7 @@ function getSubtitleStyles({
     text-align: center;
     border-radius: 5px;
     opacity: 0;
-    transition:
-      opacity 0.2s ease-in-out,
-      bottom 0.3s ease-out,
-      font-size 0.1s linear,
-      color 0.2s linear,
-      text-shadow 0.2s linear,
-      background-color 0.2s linear,
-      box-shadow 0.2s linear,
-      left 0.3s ease-out,
-      max-width 0.3s ease-out;
+    transition: ${transitionValue};
     max-width: ${maxWidth};
     pointer-events: none;
     white-space: pre-wrap;
@@ -161,14 +191,80 @@ function BaseSubtitleDisplay({
   isFullScreen,
   stylePreset,
 }: BaseSubtitleDisplayProps): React.ReactElement {
+  const subtitleRef = useRef<HTMLDivElement>(null);
+  const [isMultiLine, setIsMultiLine] = useState(false);
+
+  useEffect(() => {
+    const element = subtitleRef.current;
+    // Check if element exists and text is present
+    if (element && text) {
+      let hasWrapped = false; // Default to false
+      try {
+        // 1. Get container's available width and computed styles
+        const containerWidth = element.clientWidth;
+        const computedStyle = window.getComputedStyle(element);
+        const fontSize = computedStyle.fontSize;
+        const fontFamily = computedStyle.fontFamily;
+        const fontWeight = computedStyle.fontWeight;
+        const letterSpacing = computedStyle.letterSpacing;
+
+        // Ensure we have necessary info for measurement
+        if (containerWidth > 0 && fontSize && fontFamily) {
+          // 2. Create a temporary, invisible span for measurement
+          const tempSpan = document.createElement('span');
+
+          // 3. Apply the same font styles + force no wrapping
+          tempSpan.style.fontFamily = fontFamily;
+          tempSpan.style.fontSize = fontSize;
+          tempSpan.style.fontWeight = fontWeight;
+          tempSpan.style.letterSpacing = letterSpacing;
+          tempSpan.style.whiteSpace = 'nowrap'; // Prevent wrapping in the temp span
+          tempSpan.style.visibility = 'hidden'; // Make it invisible
+          tempSpan.style.position = 'absolute'; // Don't affect layout
+
+          // 4. Set its content to the subtitle text (replace newlines with spaces)
+          tempSpan.textContent = text.replace(/\n/g, ' ');
+
+          // 5. Add to DOM, measure width, remove immediately
+          document.body.appendChild(tempSpan);
+          const textIntrinsicWidth = tempSpan.scrollWidth;
+          document.body.removeChild(tempSpan);
+
+          // 6. Compare: does the text's natural width exceed the container's width?
+          // Add a small tolerance (e.g., 1px) for rounding
+          hasWrapped = textIntrinsicWidth > containerWidth + 1;
+          // --- End Logs ---
+        } else {
+          // Log if container width isn't ready
+          console.log(
+            '[BaseSubtitleDisplay Effect] Container width or styles not ready for measurement.'
+          );
+        }
+      } catch (e) {
+        console.error(
+          '[BaseSubtitleDisplay Effect] Error during width measurement:',
+          e
+        );
+        // Keep hasWrapped false on error
+      } finally {
+        // 7. Update the state based on the final hasWrapped value
+        setIsMultiLine(hasWrapped);
+      }
+    }
+    // Always clear if no text or element
+    else if (!text) {
+      setIsMultiLine(false);
+    }
+  }, [text, displayFontSize, isFullScreen, stylePreset]); // Keep dependencies
+
   const dynamicStyles = getSubtitleStyles({
     displayFontSize,
     isFullScreen,
     stylePreset,
+    isMultiLine,
   });
   const combinedClassName = `${dynamicStyles} ${isVisible ? 'visible' : ''}`;
 
-  // Get the style object to access colors for LineBox spans
   const style =
     SUBTITLE_STYLE_PRESETS[stylePreset || 'Default'] ||
     SUBTITLE_STYLE_PRESETS.Default;
@@ -176,11 +272,11 @@ function BaseSubtitleDisplay({
 
   // Basic check to avoid rendering empty divs, though CSS handles opacity
   if (!text && !isVisible) {
-    return <></>; // Render nothing if no text and not forced visible
+    return <></>; // Early return is now AFTER useEffect
   }
 
   return (
-    <div className={combinedClassName}>
+    <div ref={subtitleRef} className={combinedClassName}>
       {
         stylePreset === 'LineBox'
           ? // --- Render for LineBox ---

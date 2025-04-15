@@ -2,10 +2,7 @@ import React from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
-import {
-  SUBTITLE_STYLE_PRESETS,
-  SubtitleStylePresetKey,
-} from '../../../shared/constants/subtitle-styles.js';
+import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 import { useTranslation } from 'react-i18next';
 
 // Define local styles copied from EditSubtitles/index.tsx
