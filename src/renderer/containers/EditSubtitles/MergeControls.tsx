@@ -4,7 +4,7 @@ import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
 import {
   SUBTITLE_STYLE_PRESETS,
-  AssStylePresetKey,
+  SubtitleStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { useTranslation } from 'react-i18next';
 
@@ -73,8 +73,8 @@ const mergeButtonStyle = css`
 interface MergeControlsProps {
   mergeFontSize: number;
   setMergeFontSize: (value: number) => void;
-  mergeStylePreset: AssStylePresetKey;
-  setMergeStylePreset: (value: AssStylePresetKey) => void;
+  mergeStylePreset: SubtitleStylePresetKey;
+  setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
   handleMergeVideoWithSubtitles: () => void;
   isMergingInProgress: boolean;
   videoFileExists: boolean;
@@ -141,10 +141,12 @@ function MergeControls({
         id="mergeStylePresetSelect"
         className={styleSelectStyles}
         value={mergeStylePreset}
-        onChange={e => setMergeStylePreset(e.target.value as AssStylePresetKey)}
+        onChange={e =>
+          setMergeStylePreset(e.target.value as SubtitleStylePresetKey)
+        }
         disabled={isMergingInProgress}
       >
-        {(Object.keys(SUBTITLE_STYLE_PRESETS) as AssStylePresetKey[]).map(
+        {(Object.keys(SUBTITLE_STYLE_PRESETS) as SubtitleStylePresetKey[]).map(
           key => (
             <option key={key} value={key}>
               {key}

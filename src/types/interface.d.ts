@@ -14,7 +14,7 @@ import {
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
 } from './interface'; // Make sure this path is correct
-import { AssStylePresetKey } from '../renderer/constants/subtitle-styles'; // Import the type
+import { SubtitleStylePresetKey } from '../renderer/constants/subtitle-styles'; // Import the type
 export type VideoQuality = 'low' | 'mid' | 'high'; // <-- Export type here
 
 // Define a reusable type for the progress event callback
@@ -229,7 +229,7 @@ export interface MergeSubtitlesOptions {
   videoFileData?: ArrayBuffer;
   operationId?: string;
   fontSize?: number;
-  stylePreset?: AssStylePresetKey; // Add style preset key
+  stylePreset?: SubtitleStylePresetKey; // Add style preset key
 }
 
 export interface MergeSubtitlesResult {

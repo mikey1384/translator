@@ -25,6 +25,7 @@ import { useVideoActions } from './hooks/video/useVideoActions.js';
 import subtitleRendererClient, {
   RenderSubtitlesOptions,
 } from '../clients/subtitle-renderer-client.js';
+import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
 
 const headerRightGroupStyles = css`
   display: flex;
@@ -179,6 +180,8 @@ function AppContent() {
   } | null>(null);
 
   const [mergeFontSize, setMergeFontSize] = useState<number>(24); // Default size
+  const [mergeStylePreset, setMergeStylePreset] =
+    useState<SubtitleStylePresetKey>('Default'); // Default style
 
   useEffect(() => {
     if (!searchText) {
@@ -355,6 +358,8 @@ function AppContent() {
                   videoFrameRate={videoMetadata?.frameRate}
                   mergeFontSize={mergeFontSize}
                   setMergeFontSize={setMergeFontSize}
+                  mergeStylePreset={mergeStylePreset}
+                  setMergeStylePreset={setMergeStylePreset}
                 />
               </div>
             </div>

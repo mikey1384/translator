@@ -131,11 +131,11 @@ export const SUBTITLE_STYLE_PRESETS: Record<string, SubtitleStyle> = {
   },
 };
 
-export type AssStylePresetKey = keyof typeof SUBTITLE_STYLE_PRESETS;
+export type SubtitleStylePresetKey = keyof typeof SUBTITLE_STYLE_PRESETS;
 
 // Helper function to get the style line with font size replaced
 export function getAssStyleLine(
-  presetKey: AssStylePresetKey,
+  presetKey: SubtitleStylePresetKey,
   fontSize: number
 ): string {
   const style =

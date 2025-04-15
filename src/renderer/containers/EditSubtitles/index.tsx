@@ -31,7 +31,7 @@ import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
 import { SrtSegment } from '../../../types/interface.js';
 import {
   SUBTITLE_STYLE_PRESETS,
-  AssStylePresetKey,
+  SubtitleStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
 import FileInputButton from '../../components/FileInputButton.js';
@@ -76,6 +76,8 @@ export interface EditSubtitlesProps {
   videoFrameRate?: number;
   mergeFontSize: number;
   setMergeFontSize: (value: number) => void;
+  mergeStylePreset: SubtitleStylePresetKey;
+  setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
 }
 
 export function EditSubtitles({
@@ -106,14 +108,14 @@ export function EditSubtitles({
   videoFrameRate: videoFrameRateProp,
   mergeFontSize,
   setMergeFontSize,
+  mergeStylePreset,
+  setMergeStylePreset,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isPlayingState, setIsPlayingState] = useState<boolean>(
     isPlayingProp || false
   );
   const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
-  const [mergeStylePreset, setMergeStylePreset] =
-    useState<AssStylePresetKey>('Default');
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
   const [forcedIndex, setForcedIndex] = useState<number | null>(null);
   const playTimeoutRef = useRef<number | null>(null);
@@ -149,7 +151,7 @@ export function EditSubtitles({
         console.log(
           `[EditSubtitles] Applying saved style preset: ${savedStylePreset}`
         );
-        setMergeStylePreset(savedStylePreset as AssStylePresetKey);
+        setMergeStylePreset(savedStylePreset as SubtitleStylePresetKey);
       } else if (savedStylePreset) {
         console.warn(
           '[EditSubtitles] Invalid saved style preset ignored:',
