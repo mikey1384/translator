@@ -329,3 +329,25 @@ export async function handleMergeSubtitles(
     }
   }
 }
+
+export const VIDEO_METADATA_CHANNEL = 'get-video-metadata';
+
+export async function handleGetVideoMetadata(_event: any, filePath: string) {
+  if (!ffmpegServiceInstance) {
+    log.error('[getVideoMetadata] FFmpegService not initialized.');
+    return { success: false, error: 'FFmpegService not available.' };
+  }
+  try {
+    const metadata = await ffmpegServiceInstance.getVideoMetadata(filePath);
+    return { success: true, metadata };
+  } catch (error: any) {
+    log.error(
+      `[getVideoMetadata] Error getting metadata for ${filePath}:`,
+      error
+    );
+    return {
+      success: false,
+      error: error.message || 'Failed to get video metadata.',
+    };
+  }
+}
