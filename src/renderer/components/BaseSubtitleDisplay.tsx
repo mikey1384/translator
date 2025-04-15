@@ -43,8 +43,10 @@ function getSubtitleStyles({
 
   // --- Positioning Variables ---
   const position: 'fixed' | 'absolute' = 'fixed';
-  const bottom = '5%';
-  const maxWidth = '100%'; // Default for fixed (parent limits width)
+  const bottomValue = isFullScreen ? '12%' : '5%'; // Fullscreen 12%, Docked 5% for ALL styles
+
+  const maxWidth = '100%';
+  const right: string | number | undefined = isFullScreen ? '5%' : undefined; // Keep this conditional right
   // --- End Positioning Variables ---
 
   // --- DETAILED STYLE LOGIC ---
@@ -57,7 +59,7 @@ function getSubtitleStyles({
     // Specific logic for LineBox - container has no background/shadow/padding
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
-    containerPadding = '0'; // No padding for the container itself
+    containerPadding = '0 0 10px 0'; // Add 10px bottom padding ONLY
     textShadow = 'none'; // Keep text shadow none for LineBox
   } else if (style.borderStyle === 1) {
     // Outline + Shadow
@@ -90,9 +92,9 @@ function getSubtitleStyles({
 
   return css`
     position: ${position};
-    bottom: ${bottom};
+    bottom: ${bottomValue};
     left: ${isFullScreen ? '5%' : '50%'};
-    right: ${isFullScreen ? '5%' : undefined};
+    right: ${right};
     padding: ${containerPadding};
     background-color: ${backgroundColor};
     color: ${primaryRgba};
