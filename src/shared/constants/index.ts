@@ -2,7 +2,7 @@
 
 // AI Model Constants
 export const AI_MODELS = {
-  GPT_4O: 'gpt-4o-2024-11-20',
+  GPT: 'gpt-4.1',
   CLAUDE_3_7_SONNET: 'claude-3-7-sonnet-20250219',
   MAX_TOKENS: 4000,
   WHISPER: { id: 'whisper-1' },

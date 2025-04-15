@@ -260,7 +260,7 @@ export function EditSubtitles({
           targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
           // Highlight all subtitles in the batch (up to 20, which is the REVIEW_BATCH_SIZE)
-          const REVIEW_BATCH_SIZE = 20;
+          const REVIEW_BATCH_SIZE = 50;
           const endIndex = Math.min(
             reviewedBatchStartIndex + REVIEW_BATCH_SIZE,
             subtitleRefs.current.length

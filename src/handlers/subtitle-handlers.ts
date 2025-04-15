@@ -95,12 +95,7 @@ export async function handleGenerateSubtitles(
       services: { ffmpegService, fileManager },
     });
 
-    // Attempt to remove temp file if created
     await cleanupTempFile(tempVideoPath);
-
-    log.info('--------------------------------');
-    log.info('result/testtesttest', result);
-    log.info('--------------------------------');
 
     return { success: true, subtitles: result.subtitles, operationId };
   } catch (error: any) {

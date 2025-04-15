@@ -206,7 +206,7 @@ export async function extractSubtitlesFromVideo({
       });
     }
 
-    const REVIEW_BATCH_SIZE = 20;
+    const REVIEW_BATCH_SIZE = 50;
     for (
       let batchStart = 0;
       batchStart < segmentsInProcess.length;
@@ -226,7 +226,6 @@ export async function extractSubtitlesFromVideo({
           startIndex: batchStart,
           endIndex: batchEnd,
           targetLang,
-          allSegments: segmentsInProcess,
         },
         signal,
         `${operationId}-review-${batchStart}`
@@ -1021,7 +1020,6 @@ async function reviewTranslationBatch(
     startIndex: number;
     endIndex: number;
     targetLang: string;
-    allSegments: SrtSegment[];
   },
   signal?: AbortSignal,
   parentOperationId: string = 'review-batch'
@@ -1029,17 +1027,6 @@ async function reviewTranslationBatch(
   const operationId = `${parentOperationId}-review-${batch.startIndex}-${batch.endIndex}`;
   log.info(
     `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
-  );
-
-  const CONTEXT_WINDOW_SIZE = 5;
-
-  const allSegments = batch.allSegments;
-  const totalAvailableSegments = allSegments.length;
-
-  const contextStartIndex = Math.max(0, batch.startIndex - CONTEXT_WINDOW_SIZE);
-  const contextEndIndex = Math.min(
-    batch.startIndex + batch.segments.length + CONTEXT_WINDOW_SIZE,
-    totalAvailableSegments + batch.startIndex
   );
 
   const batchItemsWithContext = batch.segments.map(
@@ -1064,76 +1051,40 @@ async function reviewTranslationBatch(
     .map(item => `[${item.index}] ${item.translation}`)
     .join('\n');
 
-  const contextBlocks = [];
-
-  for (let i = contextStartIndex; i < batch.startIndex; i++) {
-    if (i >= 0 && i < allSegments.length) {
-      const [original, translation] = allSegments[i].text.split(
-        '###TRANSLATION_MARKER###'
-      );
-      contextBlocks.push({
-        index: i + 1,
-        original: original?.trim() || '',
-        translation: (translation || original || '').trim(),
-      });
-    }
-  }
-
-  for (let i = batch.endIndex; i < contextEndIndex; i++) {
-    if (i >= 0 && i < allSegments.length) {
-      const [original, translation] = allSegments[i].text.split(
-        '###TRANSLATION_MARKER###'
-      );
-      contextBlocks.push({
-        index: i + 1,
-        original: original?.trim() || '',
-        translation: (translation || original || '').trim(),
-      });
-    }
-  }
-
-  const contextOriginalTexts = contextBlocks
-    .map(item => `[${item.index}] ${item.original}`)
-    .join('\n');
-  const contextTranslatedTexts = contextBlocks
-    .map(item => `[${item.index}] ${item.translation}`)
-    .join('\n');
-
   const prompt = `
-You are a professional subtitle translator and reviewer for ${batch.targetLang}.
-Review and improve each translated subtitle block below **individually**.
+You are a professional subtitle reviewer for ${batch.targetLang}.
+Your task is to review and improve the provided batch of translated subtitles based on their original counterparts.
 
-**RULES:**
-- Maintain the original order. **NEVER** merge or split blocks.
-- For each block, provide the improved translation. Focus on accuracy, completeness, consistency, and context based on the original text.
-- Preserve the sequence of information from the corresponding original text.
-- **CRITICAL SYNC RULE:** If a block's content (e.g., 1-2 leftover words) logically belongs to the *previous* block's translation, leave the *current* block's translation **COMPLETELY BLANK**. Do not fill it with the *next* block's content.
-- Ensure consistency in terminology and style across all blocks.
-- Look at the surrounding context to ensure your translations maintain narrative coherence.
+**Input:**
+You will receive ${batch.segments.length} pairs of original and translated subtitles, prefixed with their line number (e.g., "[index] Original Text").
 
-**SURROUNDING CONTEXT (DO NOT TRANSLATE THESE - FOR REFERENCE ONLY):**
-**Original Context:**
-${contextOriginalTexts}
-
-**Translated Context:**
-${contextTranslatedTexts}
-
-**BLOCKS TO REVIEW (TRANSLATE ONLY THESE):**
-**ORIGINAL TEXT (Context Only - DO NOT MODIFY):**
+**Original Texts:**
 ${originalTexts}
 
-**TRANSLATION TO REVIEW & IMPROVE:**
+**Translations to Review:**
 ${translatedTexts}
 
+**Instructions:**
+1.  **Review Individually:** Review each translation line-by-line against its corresponding original text.
+2.  **Improve:** Correct any errors in translation, grammar, or style. Ensure the translation is natural and fluent in ${batch.targetLang}.
+3.  **Maintain Order & Structure:** Do **NOT** merge, split, or reorder lines.
+4.  **Synchronization Rule:** If a translated line's content (often short leftover phrases) clearly belongs to the *previous* line's translation, output a **COMPLETELY BLANK** line for the current translation. Do *not* pull content from the *next* line.
+5.  **Consistency:** Ensure consistent terminology and style throughout the batch.
+
 **Output Format:**
-- Return **ONLY** the improved translation text for each block, one per line, in the **exact same order** as the input.
+- **Prefix EVERY line** you output with the exact delimiter \`@@SUB_LINE@@\` (including blank lines required by the Synchronization Rule).
+- Provide **ONLY** the reviewed and improved translation text for **each** line in the batch.
+- Output one reviewed translation per line, in the **exact same order** as the input batch.
+- **DO NOT add extra blank lines between translations.** Only output a blank line if the Synchronization Rule explicitly requires it.
 - **DO NOT** include the "[index]" prefixes in your output.
-- If a line should be blank (per the SYNC RULE), output an empty line.
+- If a line's translation should be blank according to the Synchronization Rule, output an empty line (prefixed with \`@@SUB_LINE@@\`).
 
-Example Output (for 3 blocks):
-Improved translation for block 1
+**Example (if Input Batch had 3 lines):**
+@@SUB_LINE@@Improved translation for line 1
+@@SUB_LINE@@
+@@SUB_LINE@@Improved translation for line 3
 
-Improved translation for block 3
+Now, provide the reviewed translations for the ${batch.segments.length} lines above, ensuring each line starts with \`@@SUB_LINE @@\`:
 `;
 
   try {
@@ -1152,18 +1103,104 @@ Improved translation for block 3
       return batch.segments;
     }
 
-    const reviewedLines = reviewedContent.split('\n');
+    // Split by delimiter. Result will have an empty string at the start if content begins with the delimiter.
+    const splitByDelimiter = reviewedContent.split('@@SUB_LINE@@');
+    // Filter out potential empty first element and any trailing empty strings from final delimiter.
+    let parsedLines = splitByDelimiter.filter(
+      (line, index) => index > 0 || line.trim() !== ''
+    );
 
-    if (reviewedLines.length !== batch.segments.length) {
+    if (parsedLines.length !== batch.segments.length) {
       log.warn(
-        `[Review] Translation review output line count (${reviewedLines.length}) does not match batch size (${batch.segments.length}). Using original translations for this batch.`
+        `[Review Correction] Initial review output line count (${parsedLines.length}) does not match batch size (${batch.segments.length}). Expected ${batch.segments.length}. Attempting correction.`
       );
-      return batch.segments;
-    }
+      log.info('--- Faulty Review Output ---');
+      log.info(reviewedContent); // Log the faulty content for debugging
+      log.info('--- End Faulty Review Output ---');
+
+      // Construct the correction prompt
+      const correctionPrompt = `
+You previously reviewed a batch of ${batch.segments.length} subtitles.
+Your goal was to provide exactly ${batch.segments.length} lines of reviewed text, one for each original line.
+However, your last response contained ${parsedLines.length} lines.
+
+Please correct your previous output to strictly match the required ${batch.segments.length} lines.
+
+**Original Texts (for reference):**
+${originalTexts}
+
+**Your Previous (Incorrect Line Count) Output:**
+${reviewedContent}
+
+**Correction Instructions:**
+1.  Analyze your previous output and the original texts.
+2.  Adjust your reviewed translations so that you output **exactly** ${batch.segments.length} lines.
+3.  Strictly follow the Synchronization Rule: If a line's content belongs to the previous line, output a BLANK line for the current line.
+4.  **Remove the unnecessary blank lines you added between translations in your previous output.** Only keep blank lines required by the Synchronization Rule.
+
+**Output Format:**
+- **Prefix EVERY line** you output with the exact delimiter \`@@SUB_LINE@@\` (including blank lines required by the Synchronization Rule).
+- Return **ONLY** the corrected reviewed translation text.
+- Output exactly ${batch.segments.length} lines, one per original segment, in the correct order.
+- **DO NOT add extra blank lines between translations.** Only output a blank line if the Synchronization Rule explicitly requires it.
+- Do NOT include "[index]" prefixes.
+- Use blank lines where required by the Synchronization Rule (prefixed with \`@@SUB_LINE@@\`).
+
+Now, provide the corrected reviewed translations with exactly ${batch.segments.length} lines, ensuring each line starts with \`@@SUB_LINE@@\`:
+`;
+
+      try {
+        log.info(`[Review Correction] Sending correction request to AI.`);
+        const correctedReviewedContent = await callAIModel({
+          messages: [{ role: 'user', content: correctionPrompt }],
+          max_tokens: AI_MODELS.MAX_TOKENS, // Keep same token limit
+          signal,
+          operationId: `${operationId}-review-correction`,
+          retryAttempts: 1, // Maybe fewer retries for correction? Or keep 3? Let's start with 1.
+        });
+
+        if (!correctedReviewedContent) {
+          log.warn(
+            `[Review Correction] Correction attempt returned empty content. Falling back to original batch.`
+          );
+          return batch.segments;
+        }
+
+        // *** CRITICAL: Check the count AGAIN ***
+        if (
+          correctedReviewedContent.split('@@SUB_LINE@@').length !==
+          batch.segments.length
+        ) {
+          log.error(
+            `[Review Correction] Correction attempt FAILED. Output line count (${correctedReviewedContent.split('@@SUB_LINE@@').length}) still does not match batch size (${batch.segments.length}). Falling back to original batch.`
+          );
+          log.info('--- Failed Correction Output ---');
+          log.info(correctedReviewedContent);
+          log.info('--- End Failed Correction Output ---');
+          return batch.segments; // Fallback after failed correction
+        }
+
+        // SUCCESS! Use the corrected lines
+        log.info(
+          `[Review Correction] Correction successful. Using corrected review.`
+        );
+        parsedLines = correctedReviewedContent.split('@@SUB_LINE@@');
+      } catch (correctionError: any) {
+        log.error(
+          `[Review Correction] Error during correction API call:`,
+          correctionError.name,
+          correctionError.message
+        );
+        log.error(
+          `[Review Correction] Falling back to original batch due to correction error.`
+        );
+        return batch.segments; // Fallback on correction error
+      }
+    } // End of the correction block
 
     return batch.segments.map((segment, idx) => {
       const [originalText] = segment.text.split('###TRANSLATION_MARKER###');
-      const reviewedTranslation = reviewedLines[idx]?.trim() ?? '';
+      const reviewedTranslation = parsedLines[idx]?.trim() ?? ''; // Uses potentially updated parsedLines
 
       const finalTranslation =
         reviewedTranslation === '' ? '' : reviewedTranslation;
@@ -1177,7 +1214,7 @@ Improved translation for block 3
     });
   } catch (error: any) {
     log.error(
-      `[Review] Error during review batch (${parentOperationId}):`,
+      `[Review] Error during initial review batch (${parentOperationId}):`, // Updated log message slightly
       error.name,
       error.message
     );
@@ -1351,7 +1388,7 @@ export async function callAIModel({
   retryAttempts?: number;
 }): Promise<string> {
   return callOpenAIChat({
-    model: AI_MODELS.GPT_4O,
+    model: AI_MODELS.GPT,
     messages,
     max_tokens: max_tokens ?? 1000,
     signal,

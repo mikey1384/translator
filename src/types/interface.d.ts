@@ -345,7 +345,6 @@ export interface ReviewTranslationBatchArgs {
   startIndex: number;
   endIndex: number;
   targetLang: string;
-  allSegments: SrtSegment[];
 }
 
 export interface RenderSubtitlesOptions {

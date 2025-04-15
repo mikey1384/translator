@@ -1,5 +1,10 @@
 interface TranslateBatchArgs {
-  batch: { segments: any[]; startIndex: number; endIndex: number };
+  batch: {
+    segments: any[];
+    startIndex: number;
+    endIndex: number;
+    targetLang?: string;
+  };
   targetLang: string;
   operationId: string;
   signal?: AbortSignal;
