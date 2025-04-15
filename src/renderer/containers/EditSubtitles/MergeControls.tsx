@@ -115,6 +115,13 @@ function MergeControls({
     }
   };
 
+  const stylePresetOrder: SubtitleStylePresetKey[] = [
+    'Default',
+    'Classic',
+    'Boxed',
+    'LineBox',
+  ];
+
   return (
     <div className={mergeOptionsStyles}>
       {/* Font Size Input */}
@@ -146,13 +153,11 @@ function MergeControls({
         }
         disabled={isMergingInProgress}
       >
-        {(Object.keys(SUBTITLE_STYLE_PRESETS) as SubtitleStylePresetKey[]).map(
-          key => (
-            <option key={key} value={key}>
-              {key}
-            </option>
-          )
-        )}
+        {stylePresetOrder.map(key => (
+          <option key={key} value={key}>
+            {key}
+          </option>
+        ))}
       </select>
 
       {/* Merge Button */}

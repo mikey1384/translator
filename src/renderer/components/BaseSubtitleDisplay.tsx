@@ -44,13 +44,21 @@ function getSubtitleStyles({
   // --- DETAILED STYLE LOGIC ---
   let textShadow = 'none';
   let backgroundColor = 'transparent'; // Default to transparent
+  let boxShadowValue = 'none'; // <-- Initialize box shadow variable
+  let containerPadding = '10px 20px'; // Default padding
 
-  if (style.borderStyle === 1) {
+  if (stylePreset === 'LineBox') {
+    // Specific logic for LineBox - container has no background/shadow/padding
+    backgroundColor = 'transparent';
+    boxShadowValue = 'none';
+    containerPadding = '0'; // No padding for the container itself
+    textShadow = 'none'; // Keep text shadow none for LineBox
+  } else if (style.borderStyle === 1) {
     // Outline + Shadow
     backgroundColor = 'transparent'; // Explicitly set transparent background
+    boxShadowValue = 'none'; // <-- No box shadow for outline styles
     // Simulate outline with tight shadow, then add actual shadow
     const outlineSize = Math.max(0.1, style.outlineSize); // Ensure outline isn't 0
-    const shadowDepth = style.shadowDepth;
     textShadow = `
       ${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
       -${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
@@ -59,13 +67,13 @@ function getSubtitleStyles({
       ${outlineSize}px 0px 0 ${outlineRgba},
       -${outlineSize}px 0px 0 ${outlineRgba},
       0px ${outlineSize}px 0 ${outlineRgba},
-      0px -${outlineSize}px 0 ${outlineRgba},
-      ${shadowDepth}px ${shadowDepth}px 3px ${shadowRgba}
+      0px -${outlineSize}px 0 ${outlineRgba}
     `;
   } else if (style.borderStyle === 3 || style.borderStyle === 4) {
     // Boxed styles
     // Use backColor for the background box
     backgroundColor = shadowRgba; // Using shadow color for box background
+    boxShadowValue = '0 4px 16px rgba(0, 0, 0, 0.4)'; // <-- Apply box shadow for boxed styles
     // Optionally add a subtle text-shadow for just outline if style 4?
     textShadow =
       style.borderStyle === 4 && style.outlineSize > 0
@@ -79,7 +87,7 @@ function getSubtitleStyles({
     bottom: ${isFullScreen ? '8%' : '5%'};
     left: 50%;
     transform: translateX(-50%);
-    padding: 10px 20px;
+    padding: ${containerPadding}; // <-- Use dynamic padding
     background-color: ${backgroundColor}; // <-- Use calculated background
     color: ${primaryRgba}; // <-- Use calculated color
     font-family:
@@ -105,7 +113,8 @@ function getSubtitleStyles({
       font-size 0.1s linear,
       color 0.2s linear,
       text-shadow 0.2s linear,
-      background-color 0.2s linear;
+      background-color 0.2s linear,
+      box-shadow 0.2s linear;
     max-width: 80%;
     pointer-events: none;
     white-space: pre-wrap;
@@ -118,7 +127,7 @@ function getSubtitleStyles({
     line-height: 1.6;
     letter-spacing: 0.01em;
     user-select: none;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: ${boxShadowValue}; // <-- Use dynamic box shadow value
     border: none;
   `;
 }
@@ -147,12 +156,47 @@ function BaseSubtitleDisplay({
   });
   const combinedClassName = `${dynamicStyles} ${isVisible ? 'visible' : ''}`;
 
+  // Get the style object to access colors for LineBox spans
+  const style =
+    SUBTITLE_STYLE_PRESETS[stylePreset || 'Default'] ||
+    SUBTITLE_STYLE_PRESETS.Default;
+  const lineBoxBgColor = assColorToRgba(style.backColor);
+
   // Basic check to avoid rendering empty divs, though CSS handles opacity
   if (!text && !isVisible) {
     return <></>; // Render nothing if no text and not forced visible
   }
 
-  return <div className={combinedClassName}>{text}</div>;
+  return (
+    <div className={combinedClassName}>
+      {
+        stylePreset === 'LineBox'
+          ? // --- Render for LineBox ---
+            text.split('\n').map((line, index, arr) => (
+              // Use React.Fragment to avoid extra divs and provide keys
+              <React.Fragment key={index}>
+                <span
+                  style={{
+                    backgroundColor: lineBoxBgColor, // Apply the background color
+                    padding: '1px 6px', // Small padding around each line
+                    // Crucial for applying background correctly to wrapped lines:
+                    display: 'inline', // Ensures background wraps with text
+                    boxDecorationBreak: 'clone', // Standard property
+                    WebkitBoxDecorationBreak: 'clone', // For Safari compatibility
+                    lineHeight: '1.8', // Slightly increase line-height for better spacing with background
+                  }}
+                >
+                  {line /* Render the actual line of text */}
+                </span>
+                {/* Add a <br /> tag between lines, but not after the last one */}
+                {index < arr.length - 1 && <br />}
+              </React.Fragment>
+            ))
+          : // --- Render for other styles (Default, Boxed, Classic) ---
+            text // Render text directly, newlines handled by `white-space: pre-wrap`
+      }
+    </div>
+  );
 }
 
 export default BaseSubtitleDisplay;

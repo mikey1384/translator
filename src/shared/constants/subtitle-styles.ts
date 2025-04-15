@@ -104,15 +104,15 @@ export const SUBTITLE_STYLE_PRESETS: Record<string, SubtitleStyle> = {
     marginVertical: 15,
     encoding: 1,
   },
-  Clean: {
-    name: 'Clean',
+  LineBox: {
+    name: 'LineBox',
     fontName: DEFAULT_FONT,
     fontSizePlaceholder: '%FONTSIZE%',
     primaryColor: '&H00FFFFFF', // White
     secondaryColor: '&H000000FF',
-    outlineColor: '&H00FFFFFF', // White (Outline color doesn't matter much with BorderStyle 3 and 0 outline)
-    backColor: '&H00000000', // Opaque Black (Used as backing)
-    isBold: true, // Let's try bold for clean
+    outlineColor: '&H00FFFFFF',
+    backColor: '&H33000000', // Semi-transparent black
+    isBold: true,
     isItalic: false,
     isUnderline: false,
     isStrikeout: false,
@@ -120,8 +120,8 @@ export const SUBTITLE_STYLE_PRESETS: Record<string, SubtitleStyle> = {
     scaleY: 100,
     spacing: 0,
     angle: 0,
-    borderStyle: 3, // Use Style 3 for opaque background box (no outline)
-    outlineSize: 0.5, // Minimal outline/padding for the box
+    borderStyle: 3, // Keep as opaque box concept
+    outlineSize: 0,
     shadowDepth: 0, // No shadow offset needed for box
     alignment: 2, // BottomCenter
     marginLeft: 10,
