@@ -448,7 +448,67 @@ async function downloadVideoFromPlatform(
       log.error('[URLProcessor] yt-dlp ALL on error:', error.all);
     }
 
-    throw error; // Re-throw the original error
+    // Handle ALL OTHER (non-cancellation) errors
+    log.error(
+      `[URLProcessor] Handling non-termination error for Op ID ${operationId}`
+    );
+
+    // --- Start User-Friendly Error Mapping ---
+    let userFriendlyErrorMessage =
+      'Download failed. Please check the URL/connection or contact support at mikey@stage5society.com'; // <-- UPDATED fallback
+    const rawErrorMessage =
+      error.message || (typeof error === 'string' ? error : 'Unknown error');
+    const stderrContent = error.stderr || '';
+
+    const combinedErrorText =
+      `${rawErrorMessage}\n${stderrContent}`.toLowerCase();
+
+    // Check for common patterns (keep existing checks)
+    if (combinedErrorText.includes('unsupported url')) {
+      userFriendlyErrorMessage = 'This website or URL is not supported.';
+    } else if (combinedErrorText.includes('video unavailable')) {
+      userFriendlyErrorMessage = 'This video is unavailable.';
+    } else if (combinedErrorText.includes('this video is private')) {
+      userFriendlyErrorMessage = 'This video is private.';
+    } else if (combinedErrorText.includes('http error 404')) {
+      userFriendlyErrorMessage = 'Video not found at this URL (404 Error).';
+    } else if (combinedErrorText.includes('invalid url')) {
+      userFriendlyErrorMessage = 'The URL format appears invalid.';
+    } else if (
+      combinedErrorText.includes('name or service not known') ||
+      combinedErrorText.includes('temporary failure in name resolution') ||
+      combinedErrorText.includes('network is unreachable')
+    ) {
+      userFriendlyErrorMessage =
+        'Network error. Please check your internet connection.';
+    } else if (combinedErrorText.includes('unable to download video data')) {
+      userFriendlyErrorMessage =
+        'Failed to download video data. The video might be region-locked or require login.';
+    }
+    // You can add more 'else if' conditions here for other specific errors
+
+    log.info(
+      `[URLProcessor] Determined user-friendly error: "${userFriendlyErrorMessage}"`
+    );
+    // --- End User-Friendly Error Mapping ---
+
+    // Enhanced error logging (Keep this if you want detailed logs)
+    log.error(`[URLProcessor] Error type: ${typeof error}`);
+    log.error(`[URLProcessor] Raw error message: ${rawErrorMessage}`);
+    if (error.stderr)
+      log.error(`[URLProcessor] Error stderr: ${stderrContent}`);
+    if (error.stack) log.error(`[URLProcessor] Error stack: ${error.stack}`);
+    progressCallback?.({
+      percent: 0, // Indicate failure
+      stage: 'Error',
+      error: userFriendlyErrorMessage, // Use the mapped message (now with email fallback)
+    });
+
+    // Return the standard error object for the main promise result
+    // (Keep the detailed message here for potential debugging/logging later)
+    throw new Error(
+      `Download failed: ${rawErrorMessage}. Check logs or contact support at mikey@stage5society.com`
+    );
   } finally {
     if (hasDownloadProcess(operationId)) {
       removeDownloadProcess(operationId);
