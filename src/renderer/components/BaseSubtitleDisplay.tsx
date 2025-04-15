@@ -48,7 +48,6 @@ function getSubtitleStyles({
 
   // --- Adjust Bottom Position ---
   let bottomValue: string;
-  console.log('isMultiLine', isMultiLine);
   if (isMultiLine) {
     // Multi-line LineBox
     bottomValue = isFullScreen ? '5%' : '2.5%';
