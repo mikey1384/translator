@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { colors } from '../../styles.js';
-import { useTranslation } from 'react-i18next';
 import ProgressArea from './ProgressArea.js';
 
 interface SubtitleProgressInfo {
@@ -32,8 +31,6 @@ export default function TranslationProgressArea({
   translationOperationId,
 }: TranslationProgressAreaProps) {
   const [isCancelling, setIsCancelling] = useState(false);
-
-  const { t } = useTranslation();
 
   const handleTranslationCancel = async (idToCancel: string) => {
     try {
