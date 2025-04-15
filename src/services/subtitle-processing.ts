@@ -329,6 +329,7 @@ export async function generateSubtitlesFromAudio({
   const MAX_CHUNK_SIZE_BYTES = 0.5 * 1024 * 1024;
   const SILENCE_TOLERANCE_SEC = 2.0;
   const MIN_CHUNK_DURATION_SEC = 1.0;
+  const CONCURRENT_TRANSCRIPTIONS = 5; // Limit to 5 concurrent Whisper requests
 
   let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
@@ -528,54 +529,90 @@ export async function generateSubtitlesFromAudio({
       stage: `Prepared ${chunkMetadataList.length} audio chunks. Starting transcription...`,
     });
 
-    const chunkTranscriptionPromises: Promise<SrtSegment[]>[] = [];
+    // --- Batch Processing Logic ---
+    let completedChunks = 0;
     const totalChunks = chunkMetadataList.length;
+    let currentIndex = 0;
 
-    if (totalChunks === 0) {
-      log.warn(
-        `[${operationId}] No audio chunks were created. Aborting transcription.`
+    while (currentIndex < totalChunks) {
+      if (signal?.aborted) throw new Error('Operation cancelled');
+
+      const batchEndIndex = Math.min(
+        currentIndex + CONCURRENT_TRANSCRIPTIONS,
+        totalChunks
       );
-      throw new SubtitleProcessingError(
-        'Audio processing resulted in zero valid chunks.'
+      const currentBatchMetadata = chunkMetadataList.slice(
+        currentIndex,
+        batchEndIndex
       );
-    }
-
-    for (const chunkMeta of chunkMetadataList) {
-      if (signal?.aborted)
-        throw new Error('Operation cancelled during transcription scheduling');
-
-      const transcriptionTask = transcribeChunk({
-        chunkIndex: chunkMeta.index,
-        totalChunks,
-        chunkPath: chunkMeta.path,
-        startTime: chunkMeta.start,
-        progressCallback,
-        signal,
+      const batchPromises = currentBatchMetadata.map(chunkMeta => {
+        if (!operationId) {
+          throw new Error(
+            'Internal error: operationId is missing for transcribeChunk'
+          );
+        }
+        return transcribeChunk({
+          chunkIndex: chunkMeta.index,
+          chunkPath: chunkMeta.path,
+          startTime: chunkMeta.start,
+          signal,
+          openai,
+          operationId,
+        });
       });
 
-      chunkTranscriptionPromises.push(transcriptionTask);
+      log.info(
+        `[${operationId}] Processing transcription batch: Chunks ${currentIndex + 1}-${batchEndIndex} of ${totalChunks}`
+      );
+      const batchResults = await Promise.allSettled(batchPromises);
+
+      // Process results and update progress *after* batch completion
+      batchResults.forEach((res, batchIdx) => {
+        completedChunks++; // Increment for each settled promise in the batch
+        const chunkMeta = currentBatchMetadata[batchIdx]; // Get corresponding metadata
+        if (res.status === 'fulfilled' && res.value.length > 0) {
+          overallSegments.push(...res.value);
+          log.info(
+            `[${operationId}] Successfully transcribed chunk ${chunkMeta.index}. Total completed: ${completedChunks}/${totalChunks}`
+          );
+        } else if (res.status === 'rejected') {
+          console.error(
+            `[${operationId}] Chunk ${chunkMeta.index} transcription failed:`,
+            res.reason
+          );
+          // Still count as "completed" for progress bar, but log error
+        } else {
+          // Fulfilled but empty or other issues
+          console.warn(
+            `[${operationId}] Chunk ${chunkMeta.index} returned no segments or was empty. Total completed: ${completedChunks}/${totalChunks}`
+          );
+          // Still count as "completed"
+        }
+      });
+
+      // Calculate and report progress based on completed count
+      const currentProgressPercent = (completedChunks / totalChunks) * 100;
+      const scaledProgress = Math.round(
+        PROGRESS_TRANSCRIPTION_START +
+          (currentProgressPercent / 100) *
+            (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START)
+      );
+
+      progressCallback?.({
+        percent: scaledProgress,
+        stage: `Transcribing... (${completedChunks}/${totalChunks} chunks complete)`,
+        current: completedChunks,
+        total: totalChunks,
+        // Optionally include partial result by sorting and building SRT if needed frequently
+        // partialResult: buildSrt(overallSegments.slice().sort((a, b) => a.start - b.start))
+      });
+
+      currentIndex = batchEndIndex; // Move to the next batch
     }
+    // --- End Batch Processing Logic ---
 
-    const results = await Promise.allSettled(chunkTranscriptionPromises);
-    results.forEach((res, idx) => {
-      if (res.status === 'fulfilled' && res.value.length > 0) {
-        overallSegments.push(...res.value);
-      } else if (res.status === 'rejected') {
-        console.error(
-          `[${operationId}] Chunk ${idx + 1} transcription failed:`,
-          res.reason
-        );
-      } else if (res.status === 'fulfilled' && res.value.length === 0) {
-        console.warn(
-          `[${operationId}] Chunk ${idx + 1} returned no segments (error or empty).`
-        );
-      }
-    });
-
+    // Ensure sorting happens after all batches are done
     overallSegments.sort((a, b) => a.start - b.start);
-    overallSegments.forEach((seg, idx) => {
-      seg.index = idx + 1;
-    });
 
     progressCallback?.({
       percent: PROGRESS_TRANSCRIPTION_END,
@@ -627,37 +664,19 @@ export async function generateSubtitlesFromAudio({
 
   async function transcribeChunk({
     chunkIndex,
-    totalChunks,
     chunkPath,
     startTime,
-    progressCallback,
     signal,
+    openai,
+    operationId,
   }: {
     chunkIndex: number;
-    totalChunks: number;
     chunkPath: string;
     startTime: number;
-    progressCallback?: (info: {
-      percent: number;
-      stage: string;
-      current?: number;
-      total?: number;
-      error?: string;
-    }) => void;
     signal?: AbortSignal;
+    openai: OpenAI;
+    operationId: string;
   }): Promise<SrtSegment[]> {
-    const basePercent =
-      PROGRESS_TRANSCRIPTION_START +
-      ((chunkIndex - 1) / totalChunks) *
-        (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
-
-    progressCallback?.({
-      percent: basePercent,
-      stage: `Sending audio chunk ${chunkIndex}/${totalChunks} to AI...`,
-      current: chunkIndex,
-      total: totalChunks,
-    });
-
     try {
       if (signal?.aborted) {
         log.info(
@@ -708,18 +727,6 @@ export async function generateSubtitlesFromAudio({
         }
       });
 
-      const progressAfterApiCall =
-        basePercent +
-        (0.8 / totalChunks) *
-          (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
-
-      progressCallback?.({
-        percent: progressAfterApiCall,
-        stage: `Transcribed chunk ${chunkIndex}/${totalChunks}`,
-        current: chunkIndex,
-        total: totalChunks,
-      });
-
       return segments;
     } catch (error: any) {
       console.error(
@@ -736,32 +743,10 @@ export async function generateSubtitlesFromAudio({
         log.info(
           `[${operationId}] Transcription for chunk ${chunkIndex} was cancelled.`
         );
-        progressCallback?.({
-          percent:
-            basePercent +
-            (0.9 / totalChunks) *
-              (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START),
-          stage: `Chunk ${chunkIndex}/${totalChunks} cancelled`,
-          error: `Chunk ${chunkIndex} cancelled`,
-          current: chunkIndex,
-          total: totalChunks,
-        });
         return [];
       }
 
       // Handle other errors
-      progressCallback?.({
-        percent:
-          basePercent +
-          (0.9 / totalChunks) *
-            (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START),
-        stage: `Error transcribing chunk ${chunkIndex}/${totalChunks}`,
-        error: `Chunk ${chunkIndex} failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-        current: chunkIndex,
-        total: totalChunks,
-      });
       return [];
     }
   }
