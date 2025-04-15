@@ -640,10 +640,7 @@ async function assembleClipsFromStates(
       `[assembleClipsFromStates ${operationId}] Generating ${statePngs.length} intermediate video clips in parallel...`
     );
     const clipPromises: Promise<void>[] = []; // Store promises that signal task completion
-    const MAX_CONCURRENT_FFMPEG = Math.max(
-      1,
-      Math.min(8, os.cpus().length - 1)
-    ); // Limit concurrency (e.g., 8 or num CPU cores - 1)
+    const MAX_CONCURRENT_FFMPEG = 4; // Limit concurrency to a fixed lower number
     log.info(
       `[assembleClipsFromStates ${operationId}] Max concurrent FFmpeg processes: ${MAX_CONCURRENT_FFMPEG}`
     );
