@@ -342,6 +342,8 @@ function AppContent() {
                 }
                 mergeFontSize={mergeFontSize}
                 mergeStylePreset={mergeStylePreset}
+                downloadQuality={downloadQuality}
+                onSetDownloadQuality={setDownloadQuality}
               />
             )}
 

@@ -7,6 +7,7 @@ import Button from '../Button.js';
 import { SrtSegment } from '../../../types/interface.js';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
+import { VideoQuality } from '../../../types/interface.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 
@@ -236,6 +237,8 @@ export default function VideoPlayer({
   onProcessUrl,
   mergeFontSize,
   mergeStylePreset,
+  downloadQuality,
+  onSetDownloadQuality,
 }: {
   isProgressBarVisible: boolean;
   videoUrl: string;
@@ -252,6 +255,8 @@ export default function VideoPlayer({
   onProcessUrl: () => void;
   mergeFontSize: number;
   mergeStylePreset: SubtitleStylePresetKey;
+  downloadQuality: VideoQuality;
+  onSetDownloadQuality: (quality: VideoQuality) => void;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -744,6 +749,8 @@ export default function VideoPlayer({
               onSetUrlInput={onSetUrlInput}
               urlInput={urlInput}
               onSelectVideoClick={onSelectVideoClick}
+              downloadQuality={downloadQuality}
+              onSetDownloadQuality={onSetDownloadQuality}
             />
           </div>
         )}

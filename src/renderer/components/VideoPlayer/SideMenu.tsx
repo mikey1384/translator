@@ -13,10 +13,12 @@ export default function SideMenu({
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSrtLoaded,
-  onSelectVideoClick,
   onUiInteraction,
+  onSelectVideoClick,
   onSetUrlInput,
   urlInput,
+  downloadQuality,
+  onSetDownloadQuality,
 }: {
   onProcessUrl: () => void;
   hasSubtitles?: boolean;
@@ -27,11 +29,12 @@ export default function SideMenu({
   onSelectVideoClick: () => void;
   onSetUrlInput: (url: string) => void;
   urlInput: string;
+  downloadQuality: VideoQuality;
+  onSetDownloadQuality: (quality: VideoQuality) => void;
 }) {
   const { t } = useTranslation();
   // State for the shift input field
   const [shiftAmount, setShiftAmount] = useState<string>('0');
-  const [selectedQuality, setSelectedQuality] = useState<VideoQuality>('mid');
 
   // Determine visibility of optional sections
   const shouldShowScrollButton = onScrollToCurrentSubtitle && hasSubtitles;
@@ -143,8 +146,8 @@ export default function SideMenu({
             title={t('videoPlayer.sideMenu.enterUrlPlaceholder')}
           />
           <select
-            value={selectedQuality}
-            onChange={e => setSelectedQuality(e.target.value as VideoQuality)}
+            value={downloadQuality}
+            onChange={e => onSetDownloadQuality(e.target.value as VideoQuality)}
             className={css`
               padding: 6px 4px; // Slightly less padding than input
               border-radius: 4px;
