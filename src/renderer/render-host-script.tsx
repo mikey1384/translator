@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import StyledSubtitleDisplay from './components/StyledSubtitleDisplay.js';
 
-const RenderHostApp: React.FC = () => {
+function RenderHostApp() {
   console.log('[RenderHostApp] Component function executing...');
 
   const [subtitleText, setSubtitleText] = useState<string>('');
@@ -42,7 +42,7 @@ const RenderHostApp: React.FC = () => {
       />
     </div>
   );
-};
+}
 
 const container = document.getElementById('render-host-root');
 if (container) {
