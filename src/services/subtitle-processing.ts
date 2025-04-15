@@ -326,7 +326,7 @@ export async function generateSubtitlesFromAudio({
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
-  const MAX_CHUNK_SIZE_BYTES = 20 * 1024 * 1024;
+  const MAX_CHUNK_SIZE_BYTES = 3 * 1024 * 1024; // Reduced target size to ~1MB
   const SILENCE_TOLERANCE_SEC = 2.0;
   const MIN_CHUNK_DURATION_SEC = 1.0;
 
