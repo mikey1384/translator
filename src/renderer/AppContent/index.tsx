@@ -106,7 +106,6 @@ function AppContent() {
     isTranslationInProgress,
     translationProgress,
     translationStage,
-    isReceivingPartialResults,
     reviewedBatchStartIndex,
     translationOperationId,
     setIsTranslationInProgress,
