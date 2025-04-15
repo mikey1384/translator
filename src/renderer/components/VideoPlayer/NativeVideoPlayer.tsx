@@ -57,6 +57,7 @@ interface NativeVideoPlayerProps {
   onPlayerReady: (player: HTMLVideoElement) => void;
   isFullyExpanded?: boolean;
   parentRef?: React.RefObject<HTMLDivElement | null>;
+  fontSize: number;
 }
 
 export default function NativeVideoPlayer({
@@ -65,6 +66,7 @@ export default function NativeVideoPlayer({
   onPlayerReady,
   isFullyExpanded = false,
   parentRef,
+  fontSize,
 }: NativeVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -628,7 +630,12 @@ export default function NativeVideoPlayer({
         Your browser does not support HTML5 video.
       </video>
 
-      <BaseSubtitleDisplay text={activeSubtitle} isVisible={subtitleVisible} />
+      <BaseSubtitleDisplay
+        text={activeSubtitle}
+        isVisible={subtitleVisible}
+        fontSize={fontSize}
+        isFullScreen={isFullyExpanded}
+      />
 
       {/* Ephemeral Play/Pause Icon Overlay */}
       {showIndicator && (

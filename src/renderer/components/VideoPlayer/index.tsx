@@ -235,6 +235,7 @@ export default function VideoPlayer({
   onShiftAllSubtitles,
   onUiInteraction,
   onProcessUrl,
+  mergeFontSize,
 }: {
   isProgressBarVisible: boolean;
   videoUrl: string;
@@ -249,6 +250,7 @@ export default function VideoPlayer({
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onUiInteraction?: () => void;
   onProcessUrl: () => void;
+  mergeFontSize: number;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
@@ -622,6 +624,7 @@ export default function VideoPlayer({
             onPlayerReady={handlePlayerReady}
             isFullyExpanded={isPseudoFullscreen}
             parentRef={playerRef} // Pass the parent ref
+            fontSize={mergeFontSize}
           />
 
           {/* Modified Video Controls Overlay to work in both modes */}

@@ -457,7 +457,6 @@ export function EditSubtitles({
               size="lg" // Increase size
               onClick={handleLoadSrtLocal}
             >
-              {/* Add File Icon */}
               <svg
                 width="18"
                 height="18"
