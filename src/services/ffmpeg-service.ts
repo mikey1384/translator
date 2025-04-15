@@ -549,8 +549,8 @@ export class FFmpegService {
     return new Promise((resolve, reject) => {
       const silenceStarts: number[] = [];
       const silenceEnds: number[] = [];
-      const noiseTolerance = '-30dB';
-      const minSilenceDuration = '1.5';
+      const noiseTolerance = '-35dB';
+      const minSilenceDuration = '0.5';
       const process = spawn(this.ffmpegPath, [
         '-i',
         inputAudioPath,

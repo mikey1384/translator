@@ -326,10 +326,10 @@ export async function generateSubtitlesFromAudio({
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
-  const MAX_CHUNK_SIZE_BYTES = 0.5 * 1024 * 1024;
-  const SILENCE_TOLERANCE_SEC = 2.0;
+  const MAX_CHUNK_SIZE_BYTES = 0.3 * 1024 * 1024;
+  const SILENCE_TOLERANCE_SEC = 0.5;
   const MIN_CHUNK_DURATION_SEC = 1.0;
-  const CONCURRENT_TRANSCRIPTIONS = 5; // Limit to 5 concurrent Whisper requests
+  const CONCURRENT_TRANSCRIPTIONS = 30;
 
   let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
@@ -1038,7 +1038,7 @@ async function reviewTranslationBatch(
 
   const prompt = `
 You are a professional subtitle reviewer for ${batch.targetLang}.
-Your task is to review and improve the provided batch of translated subtitles based on their original counterparts.
+Your task is to review and improve the provided batch of translated subtitles based on their original counterparts, focusing *only* on translation accuracy, natural phrasing, grammar, and style.
 
 **Input:**
 You will receive ${batch.segments.length} pairs of original and translated subtitles, prefixed with their line number (e.g., "[index] Original Text").
@@ -1049,27 +1049,22 @@ ${originalTexts}
 **Translations to Review:**
 ${translatedTexts}
 
-**Instructions:**
+**Strict Instructions:**
 1.  **Review Individually:** Review each translation line-by-line against its corresponding original text.
-2.  **Improve:** Correct any errors in translation, grammar, or style. Ensure the translation is natural and fluent in ${batch.targetLang}.
-3.  **Maintain Order & Structure:** Do **NOT** merge, split, or reorder lines.
-4.  **Synchronization Rule:** If a translated line's content (often short leftover phrases) clearly belongs to the *previous* line's translation, output a **COMPLETELY BLANK** line for the current translation. Do *not* pull content from the *next* line.
+2.  **Improve Wording & Style ONLY:** Correct errors in translation, grammar, or style. Ensure the translation is natural and fluent in ${batch.targetLang}.
+3.  **DO NOT CHANGE STRUCTURE:** You MUST **NOT** merge multiple lines into one, split a line into multiple lines, or reorder lines. Maintain the exact one-to-one correspondence.
+4.  **Synchronization Rule (Handling Leftovers):** If a translated line's content (often short phrases like one or two words) clearly belongs linguistically to the *previous* line's translation and makes no sense on its own, output a **COMPLETELY BLANK** line for the current translation's review. Do *not* pull content from the *next* line to fill it.
 5.  **Consistency:** Ensure consistent terminology and style throughout the batch.
 
 **Output Format:**
 - **Prefix EVERY line** you output with the exact delimiter \`@@SUB_LINE@@\` (including blank lines required by the Synchronization Rule).
-- Provide **ONLY** the reviewed and improved translation text for **each** line in the batch.
-- Output one reviewed translation per line, in the **exact same order** as the input batch.
+- Provide **ONLY** the reviewed and improved translation text for **each** line in the batch, respecting the structure.
+- Output exactly one reviewed translation per line, in the **exact same order** as the input batch.
 - **DO NOT add extra blank lines between translations.** Only output a blank line if the Synchronization Rule explicitly requires it.
 - **DO NOT** include the "[index]" prefixes in your output.
-- If a line's translation should be blank according to the Synchronization Rule, output an empty line (prefixed with \`@@SUB_LINE@@\`).
+- If a line's translation should be blank according to the Synchronization Rule, output ONLY the prefix \`@@SUB_LINE@@\` followed by a newline.
 
-**Example (if Input Batch had 3 lines):**
-@@SUB_LINE@@Improved translation for line 1
-@@SUB_LINE@@
-@@SUB_LINE@@Improved translation for line 3
-
-Now, provide the reviewed translations for the ${batch.segments.length} lines above, ensuring each line starts with \`@@SUB_LINE @@\`:
+Now, provide the reviewed translations for the ${batch.segments.length} lines above, adhering strictly to all instructions and ensuring each line starts with \`@@SUB_LINE@@\`:
 `;
 
   try {
@@ -1091,109 +1086,39 @@ Now, provide the reviewed translations for the ${batch.segments.length} lines ab
     // Split by delimiter. Result will have an empty string at the start if content begins with the delimiter.
     const splitByDelimiter = reviewedContent.split('@@SUB_LINE@@');
     // Filter out potential empty first element and any trailing empty strings from final delimiter.
-    let parsedLines = splitByDelimiter.filter(
+    const parsedLines = splitByDelimiter.filter(
       (line, index) => index > 0 || line.trim() !== ''
     );
 
+    // Check if the number of parsed lines matches the expected batch size
     if (parsedLines.length !== batch.segments.length) {
       log.warn(
-        `[Review Correction] Initial review output line count (${parsedLines.length}) does not match batch size (${batch.segments.length}). Expected ${batch.segments.length}. Attempting correction.`
+        `[Review Fallback] Review output line count (${parsedLines.length}) does not match batch size (${batch.segments.length}). Expected ${batch.segments.length}. Falling back to original translations for this batch.`
       );
       log.info('--- Faulty Review Output ---');
       log.info(reviewedContent); // Log the faulty content for debugging
       log.info('--- End Faulty Review Output ---');
+      // Return the original, unreviewed segments for this batch
+      return batch.segments;
+    }
 
-      // Construct the correction prompt
-      const correctionPrompt = `
-You previously reviewed a batch of ${batch.segments.length} subtitles.
-Your goal was to provide exactly ${batch.segments.length} lines of reviewed text, one for each original line.
-However, your last response contained ${parsedLines.length} lines.
-
-Please correct your previous output to strictly match the required ${batch.segments.length} lines.
-
-**Original Texts (for reference):**
-${originalTexts}
-
-**Your Previous (Incorrect Line Count) Output:**
-${reviewedContent}
-
-**Correction Instructions:**
-1.  Analyze your previous output and the original texts.
-2.  Adjust your reviewed translations so that you output **exactly** ${batch.segments.length} lines.
-3.  Strictly follow the Synchronization Rule: If a line's content belongs to the previous line, output a BLANK line for the current line.
-4.  **Remove the unnecessary blank lines you added between translations in your previous output.** Only keep blank lines required by the Synchronization Rule.
-
-**Output Format:**
-- **Prefix EVERY line** you output with the exact delimiter \`@@SUB_LINE@@\` (including blank lines required by the Synchronization Rule).
-- Return **ONLY** the corrected reviewed translation text.
-- Output exactly ${batch.segments.length} lines, one per original segment, in the correct order.
-- **DO NOT add extra blank lines between translations.** Only output a blank line if the Synchronization Rule explicitly requires it.
-- Do NOT include "[index]" prefixes.
-- Use blank lines where required by the Synchronization Rule (prefixed with \`@@SUB_LINE@@\`).
-
-Now, provide the corrected reviewed translations with exactly ${batch.segments.length} lines, ensuring each line starts with \`@@SUB_LINE@@\`:
-`;
-
-      try {
-        log.info(`[Review Correction] Sending correction request to AI.`);
-        const correctedReviewedContent = await callAIModel({
-          messages: [{ role: 'user', content: correctionPrompt }],
-          max_tokens: AI_MODELS.MAX_TOKENS, // Keep same token limit
-          signal,
-          operationId: `${operationId}-review-correction`,
-          retryAttempts: 1, // Maybe fewer retries for correction? Or keep 3? Let's start with 1.
-        });
-
-        if (!correctedReviewedContent) {
-          log.warn(
-            `[Review Correction] Correction attempt returned empty content. Falling back to original batch.`
-          );
-          return batch.segments;
-        }
-
-        // *** CRITICAL: Check the count AGAIN ***
-        if (
-          correctedReviewedContent.split('@@SUB_LINE@@').length !==
-          batch.segments.length
-        ) {
-          log.error(
-            `[Review Correction] Correction attempt FAILED. Output line count (${correctedReviewedContent.split('@@SUB_LINE@@').length}) still does not match batch size (${batch.segments.length}). Falling back to original batch.`
-          );
-          log.info('--- Failed Correction Output ---');
-          log.info(correctedReviewedContent);
-          log.info('--- End Failed Correction Output ---');
-          return batch.segments; // Fallback after failed correction
-        }
-
-        // SUCCESS! Use the corrected lines
-        log.info(
-          `[Review Correction] Correction successful. Using corrected review.`
-        );
-        parsedLines = correctedReviewedContent.split('@@SUB_LINE@@');
-      } catch (correctionError: any) {
-        log.error(
-          `[Review Correction] Error during correction API call:`,
-          correctionError.name,
-          correctionError.message
-        );
-        log.error(
-          `[Review Correction] Falling back to original batch due to correction error.`
-        );
-        return batch.segments; // Fallback on correction error
-      }
-    } // End of the correction block
-
+    // If the line count is correct, proceed to map the results
+    log.info(
+      `[Review] Successfully parsed ${parsedLines.length} reviewed lines.`
+    );
     return batch.segments.map((segment, idx) => {
       const [originalText] = segment.text.split('###TRANSLATION_MARKER###');
-      const reviewedTranslation = parsedLines[idx]?.trim() ?? ''; // Uses potentially updated parsedLines
+      // IMPORTANT: Ensure trimming happens correctly here if needed based on AI output habits
+      const reviewedTranslation = parsedLines[idx]?.trim() ?? '';
 
-      const finalTranslation =
-        reviewedTranslation === '' ? '' : reviewedTranslation;
+      // Keep blank if the review explicitly returned blank, otherwise use the review.
+      const finalTranslation = reviewedTranslation; // Simplified
 
       return {
         ...segment,
         text: `${originalText}###TRANSLATION_MARKER###${finalTranslation}`,
         originalText: originalText,
+        // Keep a record of the reviewed text if needed, adjust property name if desired
         reviewedText: finalTranslation,
       };
     });
