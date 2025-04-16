@@ -207,6 +207,8 @@ function AppContent() {
   const [downloadProgressStage, setDownloadProgressStage] =
     useState<string>('');
 
+  const isInitialMount = useRef(true); // Ref to track initial mount
+
   useEffect(() => {
     if (!searchText) {
       setMatchedIndices([]);
@@ -332,6 +334,65 @@ function AppContent() {
       unlisten();
     };
   }, [mergeProgress, mergeStage]); // Add dependencies if needed, but likely just need it once
+
+  useEffect(() => {
+    // Load the saved target language when the component mounts
+    const loadSavedLanguage = async () => {
+      try {
+        // Use the correct function exposed via preload
+        const savedLanguage = await window.electron.getSubtitleTargetLanguage();
+        if (savedLanguage && typeof savedLanguage === 'string') {
+          console.log(
+            `[AppContent] Loaded subtitle target language: ${savedLanguage}`
+          );
+          setTargetLanguage(savedLanguage);
+        } else {
+          console.log(
+            '[AppContent] No subtitle target language saved, using default.'
+          );
+        }
+      } catch (error) {
+        console.error(
+          '[AppContent] Error loading subtitle target language:',
+          error
+        );
+      }
+    };
+    loadSavedLanguage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Save the target language whenever it changes (except for the initial default load)
+    const saveLanguage = async () => {
+      console.log(
+        `[AppContent] Saving subtitle target language: ${targetLanguage}`
+      );
+      try {
+        // Use the correct function exposed via preload
+        await window.electron.setSubtitleTargetLanguage(targetLanguage);
+      } catch (error) {
+        console.error(
+          '[AppContent] Error saving subtitle target language:',
+          error
+        );
+      }
+    };
+
+    // --- ADD THIS CHECK ---
+    // Only save after the initial mount/load cycle is complete
+    if (!isInitialMount.current) {
+      // --- END ADD ---
+      if (targetLanguage) {
+        saveLanguage();
+      }
+      // --- ADD THIS CHECK ---
+    } else {
+      // On the initial mount, set the ref to false for subsequent renders
+      isInitialMount.current = false;
+    }
+    // --- END ADD ---
+  }, [targetLanguage]);
 
   return (
     <div className={pageWrapperStyles}>

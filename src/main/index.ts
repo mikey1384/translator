@@ -45,7 +45,20 @@ log.info('--- [main.ts] Execution Started ---');
 const subtitleGenerationControllers = new Map<string, AbortController>();
 
 // --- Initialize electron-store ---
-const store = new Store();
+const settingsStore = new Store({ name: 'app-settings' });
+log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
+
+// --- ADD THIS TEST ---
+try {
+  settingsStore.set('startupTestKey', `testValue_${Date.now()}`);
+  log.info('[Main Process] Successfully set startupTestKey in settingsStore.');
+} catch (error) {
+  log.error(
+    '[Main Process] FAILED to set startupTestKey in settingsStore:',
+    error
+  );
+}
+// --- END TEST ---
 
 // --- Single Instance Lock ---
 // Ensure only one instance of the app runs
@@ -329,12 +342,14 @@ try {
   // --- Language Preference Handlers ---
   ipcMain.handle('get-language-preference', async () => {
     try {
-      const lang = store.get('app_language_preference', 'en'); // Default to 'en'
-      log.info(`[main.ts/get-language-preference] Retrieved language: ${lang}`);
+      const lang = settingsStore.get('app_language_preference', 'en');
+      log.info(
+        `[main.ts/get-language-preference] Retrieved UI language: ${lang}`
+      );
       return lang;
     } catch (error) {
       log.error(
-        '[main.ts/get-language-preference] Error retrieving language:',
+        '[main.ts/get-language-preference] Error retrieving UI language:',
         error
       );
       return 'en'; // Fallback on error
@@ -343,17 +358,64 @@ try {
 
   ipcMain.handle('set-language-preference', async (_event, lang: string) => {
     try {
-      store.set('app_language_preference', lang);
-      log.info(`[main.ts/set-language-preference] Set language to: ${lang}`);
+      settingsStore.set('app_language_preference', lang);
+      log.info(`[main.ts/set-language-preference] Set UI language to: ${lang}`);
       return { success: true };
     } catch (error) {
       log.error(
-        '[main.ts/set-language-preference] Error setting language:',
+        '[main.ts/set-language-preference] Error setting UI language:',
         error
       );
       return { success: false, error: (error as Error).message };
     }
   });
+
+  // --- Subtitle Target Language Preference Handlers ---
+  ipcMain.handle('get-subtitle-target-language', async () => {
+    try {
+      // Use a DIFFERENT key for this setting
+      const lang = settingsStore.get('subtitleTargetLanguage', 'original'); // Default to 'original'
+      log.info(
+        `[main.ts/get-subtitle-target-language] Retrieved subtitle target language: ${lang}`
+      );
+      return lang;
+    } catch (error) {
+      log.error(
+        '[main.ts/get-subtitle-target-language] Error retrieving subtitle target language:',
+        error
+      );
+      return 'original'; // Fallback on error
+    }
+  });
+
+  ipcMain.handle(
+    'set-subtitle-target-language',
+    async (_event, lang: string) => {
+      try {
+        if (typeof lang === 'string') {
+          settingsStore.set('subtitleTargetLanguage', lang);
+          log.info(
+            `[main.ts/set-subtitle-target-language] Set subtitle target language to: ${lang}`
+          );
+          return { success: true };
+        } else {
+          log.warn(
+            '[main.ts] Invalid type received for set-subtitle-target-language:',
+            lang
+          );
+          return { success: false, error: 'Invalid language type received' };
+        }
+      } catch (error) {
+        log.error(
+          '[main.ts/set-subtitle-target-language] Error setting subtitle target language:',
+          error
+        );
+        return { success: false, error: (error as Error).message };
+      }
+    }
+  );
+  // --- End Subtitle Target Language Handlers ---
+
   // Add this line inside the try block in src/main.ts after other initializations
   ipcMain.handle(
     subtitleHandlers.VIDEO_METADATA_CHANNEL,

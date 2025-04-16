@@ -200,6 +200,13 @@ const electronAPI = {
   setLanguagePreference: (lang: string) =>
     ipcRenderer.invoke('set-language-preference', lang),
 
+  // --- ADD THESE LINES for Subtitle Target Language ---
+  getSubtitleTargetLanguage: (): Promise<string> =>
+    ipcRenderer.invoke('get-subtitle-target-language'),
+  setSubtitleTargetLanguage: (lang: string): Promise<void> =>
+    ipcRenderer.invoke('set-subtitle-target-language', lang),
+  // --- END ADD ---
+
   // === Add Video Metadata Function ===
   getVideoMetadata: (filePath: string) =>
     ipcRenderer.invoke('get-video-metadata', filePath),

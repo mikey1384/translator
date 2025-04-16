@@ -162,6 +162,13 @@ interface ElectronAPI {
     lang: string
   ) => Promise<{ success: boolean; error?: string }>;
 
+  // --- ADD THESE LINES for Subtitle Target Language ---
+  getSubtitleTargetLanguage: () => Promise<string>; // Main handler provides default 'original'
+  setSubtitleTargetLanguage: (
+    lang: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  // --- END ADD ---
+
   getVideoMetadata: (filePath: string) => Promise<{
     success: boolean;
     metadata?: {
