@@ -123,7 +123,11 @@ export default function SideMenu({
             placeholder={t('videoPlayer.sideMenu.enterUrlPlaceholder')}
             value={urlInput}
             onChange={e => onSetUrlInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter'}
+            onKeyDown={e => {
+              if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.stopPropagation();
+              }
+            }}
             className={css`
               max-width: 35%;
               padding: 6px 8px;
