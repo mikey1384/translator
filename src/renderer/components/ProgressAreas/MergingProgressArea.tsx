@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { colors } from '../../styles.js';
-import { useTranslation } from 'react-i18next';
 import ProgressArea from './ProgressArea.js';
 
 interface MergingProgressAreaProps {
@@ -22,7 +21,6 @@ export default function MergingProgressArea({
   operationId,
   autoCloseDelay = 5000,
 }: MergingProgressAreaProps) {
-  const { t } = useTranslation();
   const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
@@ -32,7 +30,11 @@ export default function MergingProgressArea({
   const handleCancel = async () => {
     console.log('Cancel button clicked, operationId:', operationId);
 
-    if (!window.confirm(t('editSubtitles.mergeControls.cancel_confirmation'))) {
+    if (
+      !window.confirm(
+        "Are you sure you want to cancel the merge process? Any progress will be lost and you'll need to start again."
+      )
+    ) {
       return;
     }
 
@@ -74,7 +76,7 @@ export default function MergingProgressArea({
   return (
     <ProgressArea
       isVisible={isMergingInProgress}
-      title={t('mergeProgress.title', 'Merge in Progress')}
+      title="Merge in Progress"
       progress={mergeProgress}
       stage={mergeStage}
       progressBarColor={
