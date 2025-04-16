@@ -75,7 +75,7 @@ export const useSubtitleNavigation = (
     }
 
     // 4. Scroll to the found index
-    const el = subtitleRefs.current[currentSubtitleIndex];
+    const el = subtitleRefs?.current[currentSubtitleIndex];
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.classList.add('highlight-subtitle');

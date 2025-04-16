@@ -194,7 +194,7 @@ function BaseSubtitleDisplay({
   const [isMultiLine, setIsMultiLine] = useState(false);
 
   useEffect(() => {
-    const element = subtitleRef.current;
+    const element = subtitleRef?.current;
     // Check if element exists and text is present
     if (element && text) {
       const hasExplicitNewline = text.includes('\n');

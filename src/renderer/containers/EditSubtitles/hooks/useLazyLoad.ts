@@ -23,8 +23,8 @@ export function useLazyLoad({
         onSetIsVisible?.(false);
       }, delay);
     } else {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
+      if (timerRef?.current) {
+        clearTimeout(timerRef?.current);
       }
       onSetIsVisible?.(true);
     }
@@ -41,8 +41,8 @@ export function useLazyLoad({
 
     const resizeObserver = new ResizeObserver(handleResize);
 
-    if (itemRef.current) {
-      resizeObserver.observe(itemRef.current);
+    if (itemRef?.current) {
+      resizeObserver.observe(itemRef?.current);
     }
 
     return () => {
@@ -55,8 +55,8 @@ export function useLazyLoad({
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
+      if (timerRef?.current) {
+        clearTimeout(timerRef?.current);
       }
     };
   }, []);

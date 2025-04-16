@@ -255,9 +255,9 @@ export function EditSubtitles({
       reviewedBatchStartIndex >= 0
     ) {
       // Ensure the index is within bounds
-      if (reviewedBatchStartIndex < subtitleRefs.current.length) {
+      if (reviewedBatchStartIndex < subtitleRefs?.current.length) {
         // Scroll to the first subtitle in the batch
-        const targetElement = subtitleRefs.current[reviewedBatchStartIndex];
+        const targetElement = subtitleRefs?.current[reviewedBatchStartIndex];
         if (targetElement) {
           console.log(
             `[EditSubtitles] Scrolling to reviewed index: ${reviewedBatchStartIndex}`
@@ -268,11 +268,11 @@ export function EditSubtitles({
           const REVIEW_BATCH_SIZE = 50;
           const endIndex = Math.min(
             reviewedBatchStartIndex + REVIEW_BATCH_SIZE,
-            subtitleRefs.current.length
+            subtitleRefs?.current.length
           );
 
           // First remove any existing highlights (in case this effect runs in quick succession)
-          subtitleRefs.current.forEach(element => {
+          subtitleRefs?.current.forEach(element => {
             if (element) {
               element.classList.remove('highlight-subtitle');
             }
@@ -280,7 +280,7 @@ export function EditSubtitles({
 
           // Add highlight effect to each subtitle in the batch with a slight delay between each
           for (let i = reviewedBatchStartIndex; i < endIndex; i++) {
-            const element = subtitleRefs.current[i];
+            const element = subtitleRefs?.current[i];
             if (element) {
               // Small delay for staggered effect
               setTimeout(
@@ -334,7 +334,7 @@ export function EditSubtitles({
   // --- Function to scroll to and highlight a specific subtitle index --- START ---
   const scrollToSubtitleIndex = useCallback(
     (index: number) => {
-      if (index >= 0 && index < subtitleRefs.current.length) {
+      if (index >= 0 && index < subtitleRefs?.current.length) {
         console.log(`[EditSubtitles] Requesting scroll to index: ${index}`);
 
         // Step 1: Set the index to be force-rendered
@@ -342,7 +342,7 @@ export function EditSubtitles({
 
         // Step 2: Wait for React to render the forced item, then scroll
         setTimeout(() => {
-          const targetElement = subtitleRefs.current[index];
+          const targetElement = subtitleRefs?.current[index];
           if (targetElement) {
             console.log(
               `[EditSubtitles] Executing scrollIntoView for forced index: ${index}`
@@ -605,8 +605,8 @@ export function EditSubtitles({
   }
 
   function handlePlaySubtitle(startTime: number, endTime: number) {
-    if (playTimeoutRef.current) {
-      window.clearTimeout(playTimeoutRef.current);
+    if (playTimeoutRef?.current) {
+      window.clearTimeout(playTimeoutRef?.current);
       playTimeoutRef.current = null;
     }
 
@@ -645,18 +645,12 @@ export function EditSubtitles({
 
             setTimeout(() => {
               trackElement.track.mode = oldMode;
-              playFromCurrentPosition(
-                playerInstance!.currentTime,
-                validEndTime
-              );
+              playFromCurrentPosition(playerInstance.currentTime, validEndTime);
             }, 200);
           } else {
             playerInstance.currentTime = validStartTime;
             setTimeout(() => {
-              playFromCurrentPosition(
-                playerInstance!.currentTime,
-                validEndTime
-              );
+              playFromCurrentPosition(playerInstance.currentTime, validEndTime);
             }, 200);
           }
         } else {

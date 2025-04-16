@@ -184,6 +184,12 @@ interface ElectronAPI {
   onPngRenderResult: (
     callback: (result: ExposedRenderResult) => void
   ) => () => void; // Listener returns cleanup fn
+  saveVideoPlaybackPosition: (
+    filePath: string,
+    position: number
+  ) => Promise<void>;
+  getVideoPlaybackPosition: (filePath: string) => Promise<number | null>;
+  // --- END ADD ---
 }
 
 declare global {

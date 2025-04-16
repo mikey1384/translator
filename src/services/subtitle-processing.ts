@@ -143,7 +143,7 @@ export async function extractSubtitlesFromVideo({
           percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
           stage: p.stage,
           partialResult: p.partialResult,
-          current: p.current,
+          current: p?.current,
           total: p.total,
           error: p.error,
         });

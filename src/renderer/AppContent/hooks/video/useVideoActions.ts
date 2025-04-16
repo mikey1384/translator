@@ -1,5 +1,6 @@
 import { nativePause, nativePlay } from '../../../native-player.js';
 import { nativeIsPlaying } from '../../../native-player.js';
+import { useCallback } from 'react';
 
 export function useVideoActions({
   setVideoFile,
@@ -110,12 +111,62 @@ export function useVideoActions({
     }
   }
 
-  function handleVideoPlayerReady(player: any) {
-    setVideoPlayerRef(player);
-    if (player) {
-      setIsPlaying(!player.paused);
-    }
-  }
+  const handleVideoPlayerReady = useCallback(
+    async (player: HTMLVideoElement, currentVideoFilePath: string | null) => {
+      console.log('[VideoActions] Video player ready.');
+      setVideoPlayerRef(player);
+
+      if (currentVideoFilePath && player) {
+        console.log(
+          `[VideoActions] Checking saved position for: ${currentVideoFilePath}`
+        );
+        try {
+          const savedPosition =
+            await window.electron.getVideoPlaybackPosition(
+              currentVideoFilePath
+            );
+          if (savedPosition !== null && player.seekable.length > 0) {
+            const seekableEnd =
+              player.seekable.length > 0
+                ? player.seekable.end(player.seekable.length - 1)
+                : 0;
+            const seekableStart =
+              player.seekable.length > 0 ? player.seekable.start(0) : 0;
+
+            if (
+              savedPosition >= seekableStart &&
+              savedPosition <= seekableEnd
+            ) {
+              console.log(
+                `[VideoActions] Resuming playback at ${savedPosition.toFixed(2)}s`
+              );
+              player.currentTime = savedPosition;
+            } else {
+              console.warn(
+                `[VideoActions] Saved position ${savedPosition} is outside seekable range [${seekableStart}, ${seekableEnd}]. Not seeking.`
+              );
+            }
+          } else if (savedPosition !== null) {
+            console.warn(
+              '[VideoActions] Video is not seekable yet, cannot apply saved position.'
+            );
+          } else {
+            console.log('[VideoActions] No saved position found.');
+          }
+        } catch (error) {
+          console.error(
+            '[VideoActions] Error retrieving saved position:',
+            error
+          );
+        }
+      } else {
+        console.log(
+          '[VideoActions] No video file path available, cannot check saved position.'
+        );
+      }
+    },
+    [setVideoPlayerRef]
+  );
 
   return {
     handleSetVideoFile,

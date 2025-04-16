@@ -45,7 +45,15 @@ log.info('--- [main.ts] Execution Started ---');
 const subtitleGenerationControllers = new Map<string, AbortController>();
 
 // --- Initialize electron-store ---
-const settingsStore = new Store({ name: 'app-settings' });
+const settingsStore = new Store({
+  name: 'app-settings',
+  defaults: {
+    app_language_preference: 'en',
+    subtitleTargetLanguage: 'original',
+    apiKey: null,
+    videoPlaybackPositions: {},
+  },
+});
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
 // --- ADD THIS TEST ---
@@ -421,6 +429,72 @@ try {
     subtitleHandlers.VIDEO_METADATA_CHANNEL,
     subtitleHandlers.handleGetVideoMetadata
   );
+
+  // --- Add these handlers ---
+  ipcMain.handle(
+    'save-video-playback-position',
+    (_event, filePath: string, position: number) => {
+      if (!filePath || typeof position !== 'number' || position < 0) {
+        log.warn(
+          `[main.ts] Invalid attempt to save playback position: Path=${filePath}, Position=${position}`
+        );
+        return; // Don't save invalid data
+      }
+      try {
+        // Directly use settingsStore here
+        const currentPositions = settingsStore.get(
+          'videoPlaybackPositions',
+          {}
+        ) as { [key: string]: number };
+        const updatedPositions = {
+          ...currentPositions,
+          [filePath]: position,
+        };
+        settingsStore.set('videoPlaybackPositions', updatedPositions);
+        // log.debug(`[main.ts] Saved playback position for ${filePath}: ${position}s`); // Optional: Add if needed, can be noisy
+      } catch (error) {
+        log.error(
+          `[main.ts] Error saving playback position for ${filePath}:`,
+          error
+        );
+        // Decide if you want to throw or just log
+      }
+    }
+  );
+
+  ipcMain.handle(
+    'get-video-playback-position',
+    async (_event, filePath: string): Promise<number | null> => {
+      if (!filePath) {
+        log.warn(
+          `[main.ts] Invalid attempt to get playback position: Path is empty`
+        );
+        return null;
+      }
+      try {
+        // Directly use settingsStore here
+        const positions = settingsStore.get('videoPlaybackPositions', {}) as {
+          [key: string]: number;
+        };
+        const position = positions[filePath];
+        if (typeof position === 'number' && position >= 0) {
+          log.info(
+            `[main.ts] Retrieved playback position for ${filePath}: ${position}s`
+          );
+          return position;
+        }
+        log.info(`[main.ts] No valid playback position found for ${filePath}`);
+        return null;
+      } catch (error) {
+        log.error(
+          `[main.ts] Error getting playback position for ${filePath}:`,
+          error
+        );
+        return null; // Return null on error
+      }
+    }
+  );
+  // --- End Add Handlers ---
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   // Attempt to show error dialog only after app is ready

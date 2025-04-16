@@ -249,6 +249,16 @@ const electronAPI = {
   },
 
   // === End Add ===
+
+  // --- ADD THESE MAPPINGS ---
+  saveVideoPlaybackPosition: (
+    filePath: string,
+    position: number
+  ): Promise<void> =>
+    ipcRenderer.invoke('save-video-playback-position', filePath, position),
+  getVideoPlaybackPosition: (filePath: string): Promise<number | null> =>
+    ipcRenderer.invoke('get-video-playback-position', filePath),
+  // --- END ADD MAPPINGS ---
 };
 
 try {

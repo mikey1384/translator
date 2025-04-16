@@ -123,8 +123,8 @@ export function useSubtitleState(showOriginalText: boolean) {
     };
 
     function handleProgressUpdate(progress: any) {
-      if (handlePartialResultRef.current) {
-        handlePartialResultRef.current(progress || {});
+      if (handlePartialResultRef?.current) {
+        handlePartialResultRef?.current(progress || {});
       }
     }
   }, []);

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import BackToTopButton from '../components/BackToTopButton.js';
 import SettingsPage from '../containers/SettingsPage.js';
 import VideoPlayer from '../components/VideoPlayer/index.js';
@@ -18,7 +18,6 @@ import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
 import { useSubtitleState } from './hooks/subtitles/useSubtitleState.js';
 import { useSubtitleActions } from './hooks/subtitles/useSubtitleActions.js';
-import { useVideoState } from './hooks/video/useVideoState.js';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
@@ -87,6 +86,42 @@ const mainContentStyles = css`
 
 const DOWNLOAD_PROGRESS_COLOR = colors.primary; // Or another color
 
+// --- Helper Function ---
+const throttle = <T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): T & { cancel: () => void } => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let lastArgs: Parameters<T> | null = null;
+  let trailingCallScheduled = false;
+
+  const throttled = (...args: Parameters<T>) => {
+    lastArgs = args;
+
+    if (!timeoutId) {
+      func(...lastArgs);
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+        if (trailingCallScheduled && lastArgs) {
+          throttled(...lastArgs); // Trigger trailing call
+          trailingCallScheduled = false;
+        }
+      }, delay);
+    } else {
+      trailingCallScheduled = true; // Schedule a trailing call
+    }
+  };
+
+  throttled.cancel = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = null;
+    trailingCallScheduled = false;
+  };
+
+  return throttled as T & { cancel: () => void };
+};
+// --- End Helper Function ---
+
 function AppContent() {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>('');
@@ -129,22 +164,71 @@ function AppContent() {
     setSubtitleSourceId,
   } = useSubtitleState(showOriginalText);
 
-  const {
-    videoFile,
+  const [isMergingInProgress, setIsMergingInProgress] =
+    useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [originalSrtFilePath, setOriginalSrtFilePath] = useState<string | null>(
+    null
+  );
+  const [saveError, setSaveError] = useState<string>('');
+
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoFilePath, setVideoFilePath] = useState<string | null>(null);
+  const [videoPlayerRef, setVideoPlayerRef] = useState<any>(null);
+
+  // Function to save position immediately
+  const saveCurrentPositionImmediately = useCallback(
+    async (filePathToSave: string | null, player: HTMLVideoElement | null) => {
+      if (filePathToSave && player && player.duration > 0) {
+        // Only save if path and player exist, and duration is known
+        const position = player.currentTime;
+        if (position >= 0) {
+          // console.log(`[AppContent] Saving position immediately for ${filePathToSave}: ${position}`);
+          await window.electron.saveVideoPlaybackPosition(
+            filePathToSave,
+            position
+          );
+        }
+      }
+    },
+    []
+  );
+
+  const SAVE_INTERVAL = 5000; // Save every 5 seconds during playback
+  const saveCurrentPositionThrottled = useRef(
+    throttle(
+      (filePathToSave: string | null, player: HTMLVideoElement | null) => {
+        saveCurrentPositionImmediately(filePathToSave, player);
+      },
+      SAVE_INTERVAL
+    )
+  ).current;
+
+  useEffect(() => {
+    // When videoFilePath changes, save the position of the *previous* path
+    const previousPath = previousVideoPathRef?.current;
+    const currentPlayer = videoPlayerRef?.current;
+
+    if (previousPath && previousPath !== videoFilePath && currentPlayer) {
+      // console.log(`[AppContent] Video path changed from ${previousPath}. Saving its position.`);
+      // We need the player ref from the state hook, *assuming* it hasn't been cleared yet.
+      // This might be slightly racy, but likely okay.
+      saveCurrentPositionImmediately(previousPath, currentPlayer);
+    }
+
+    // Update the ref to the new path for the next change
+    previousVideoPathRef.current = videoFilePath;
+
+    // Cleanup the throttle timer if the component unmounts while throttled
+    return () => {
+      saveCurrentPositionThrottled.cancel();
+    };
+  }, [
     videoFilePath,
-    isPlaying,
-    isMergingInProgress,
-    originalSrtFilePath,
-    saveError,
-    setIsPlaying,
-    setIsMergingInProgress,
-    setVideoFile,
-    setVideoPlayerRef,
-    setOriginalSrtFilePath,
-    setSaveError,
+    saveCurrentPositionImmediately,
+    saveCurrentPositionThrottled,
     videoPlayerRef,
-    setVideoFilePath,
-  } = useVideoState();
+  ]);
 
   const { handleSaveSrt, handleSaveEditedSrtAs, handleSetSubtitleSegments } =
     useSubtitleActions({
@@ -208,6 +292,7 @@ function AppContent() {
     useState<string>('');
 
   const isInitialMount = useRef(true); // Ref to track initial mount
+  const previousVideoPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!searchText) {
@@ -230,7 +315,7 @@ function AppContent() {
   useEffect(() => {
     if (matchedIndices.length > 0 && isFindBarVisible) {
       const subIndex = matchedIndices[activeMatchIndex];
-      editSubtitlesMethodsRef.current?.scrollToSubtitleIndex(subIndex);
+      editSubtitlesMethodsRef?.current?.scrollToSubtitleIndex(subIndex);
     }
   }, [activeMatchIndex, matchedIndices, isFindBarVisible]);
 
@@ -381,7 +466,7 @@ function AppContent() {
 
     // --- ADD THIS CHECK ---
     // Only save after the initial mount/load cycle is complete
-    if (!isInitialMount.current) {
+    if (!isInitialMount?.current) {
       // --- END ADD ---
       if (targetLanguage) {
         saveLanguage();
@@ -404,7 +489,7 @@ function AppContent() {
         console.log(
           '[AppContent] Window became visible. Checking video sync...'
         );
-        const video = videoPlayerRef.current;
+        const video = videoPlayerRef?.current;
         if (!video.paused) {
           // Attempt to nudge the player to resync
           const currentTime = video.currentTime;
@@ -427,6 +512,97 @@ function AppContent() {
       console.log('[AppContent] Removed visibilitychange listener.');
     };
   }, [videoPlayerRef]); // Depend on the ref object itself
+
+  // --- Try YET ANOTHER modification to the player event listener hook ---
+  useEffect(() => {
+    const currentPath = videoFilePath; // Capture path early
+
+    // 1. Check if we even have a path. If not, cancel timer and exit.
+    if (!currentPath) {
+      saveCurrentPositionThrottled.cancel();
+      return;
+    }
+
+    // 2. Now that we have a path, check if the player ref is ready.
+    const player = videoPlayerRef?.current; // Access the ref *after* confirming path
+    if (!player) {
+      console.log(
+        `[AppContent] Player ref not available yet for: ${currentPath}. Listener setup deferred.`
+      );
+      saveCurrentPositionThrottled.cancel(); // Still cancel timer if player isn't ready
+      return; // Exit if player ref is null
+    }
+
+    // 3. If we have both path AND player, proceed with listener setup.
+    const handleTimeUpdate = () => {
+      // Inside listener, re-check ref
+      const currentPlayer = videoPlayerRef?.current;
+      if (currentPlayer) {
+        saveCurrentPositionThrottled(currentPath, currentPlayer);
+      }
+    };
+
+    const handlePause = () => {
+      // Inside listener, re-check ref
+      const currentPlayer = videoPlayerRef?.current;
+      if (currentPlayer) {
+        saveCurrentPositionImmediately(currentPath, currentPlayer);
+      }
+    };
+
+    console.log(
+      `[AppContent] Attaching playback listeners for: ${currentPath}`
+    );
+    player.addEventListener('timeupdate', handleTimeUpdate);
+    player.addEventListener('pause', handlePause);
+
+    // 4. Cleanup function (remains largely the same, safety checks are good)
+    return () => {
+      console.log(
+        `[AppContent] Detaching playback listeners for: ${currentPath}`
+      );
+      // Use the 'player' captured at setup time to remove listeners
+      // Ensure 'player' (the value from when the effect ran) is valid before removing
+      if (player) {
+        try {
+          player.removeEventListener('timeupdate', handleTimeUpdate);
+          player.removeEventListener('pause', handlePause);
+        } catch (removeError) {
+          console.warn(
+            `[AppContent] Error removing listener during cleanup:`,
+            removeError
+          );
+        }
+      }
+
+      // Save final position - check ref again *at cleanup time*
+      const latestPlayer = videoPlayerRef?.current; // Check current ref value
+      if (currentPath && latestPlayer) {
+        console.log(
+          `[AppContent] Cleanup: Saving final position for ${currentPath}`
+        );
+        try {
+          saveCurrentPositionImmediately(currentPath, latestPlayer);
+        } catch (saveError) {
+          console.warn(
+            `[AppContent] Error saving position during cleanup:`,
+            saveError
+          );
+        }
+      } else {
+        console.log(
+          `[AppContent] Cleanup: Player/Path invalid, not saving final position.`
+        );
+      }
+      saveCurrentPositionThrottled.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    videoFilePath,
+    saveCurrentPositionThrottled,
+    saveCurrentPositionImmediately,
+  ]);
+  // --- End modification ---
 
   return (
     <div className={pageWrapperStyles}>
@@ -480,7 +656,9 @@ function AppContent() {
               <VideoPlayer
                 videoUrl={videoUrl}
                 subtitles={subtitleSegments}
-                onPlayerReady={handleVideoPlayerReady}
+                onPlayerReady={player =>
+                  handleVideoPlayerReady(player, videoFilePath)
+                }
                 onSelectVideoClick={handleSelectVideoClick}
                 onProcessUrl={onProcessUrl}
                 onSrtLoaded={handleSetSubtitleSegments}
@@ -696,8 +874,8 @@ function AppContent() {
   }
 
   function handleScrollToCurrentSubtitle() {
-    if (editSubtitlesMethodsRef.current) {
-      editSubtitlesMethodsRef.current.scrollToCurrentSubtitle();
+    if (editSubtitlesMethodsRef?.current) {
+      editSubtitlesMethodsRef?.current.scrollToCurrentSubtitle();
     }
   }
 

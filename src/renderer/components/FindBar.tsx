@@ -103,7 +103,7 @@ export default function FindBar({
 
   useEffect(() => {
     if (isVisible) {
-      inputRef.current?.focus();
+      inputRef?.current?.focus();
     }
   }, [isVisible]);
 

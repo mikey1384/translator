@@ -62,9 +62,9 @@ export function HighlightedTextarea({
 
   // Keep highlight layer scrolled to match the textarea
   const handleScroll = useCallback(() => {
-    if (!highlightRef.current || !textareaRef.current) return;
-    highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-    highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (!highlightRef?.current || !textareaRef?.current) return;
+    highlightRef.current.scrollTop = textareaRef?.current.scrollTop;
+    highlightRef.current.scrollLeft = textareaRef?.current.scrollLeft;
   }, []);
 
   // Removed useEffect for manual event listener - relying on onScroll prop

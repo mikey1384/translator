@@ -213,9 +213,9 @@ const Button: React.FC<ButtonProps> = ({
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     if (isLoading || disabled) return;
-    if (asFileInput && inputRef.current) {
+    if (asFileInput && inputRef?.current) {
       // Trigger regular file input click
-      inputRef.current.click();
+      inputRef?.current.click();
     } else if (onClick) {
       // Standard button click
       onClick(event);
@@ -226,7 +226,7 @@ const Button: React.FC<ButtonProps> = ({
     if (onFileChange) {
       onFileChange(event);
       // Reset input value to allow selecting the same file again
-      if (inputRef.current) {
+      if (inputRef?.current) {
         inputRef.current.value = '';
       }
     }

@@ -283,8 +283,8 @@ export default function VideoPlayer({
   const handleUiInteraction = useCallback(() => {
     ignoreScrollRef.current = true;
     // Clear any existing timeout
-    if (ignoreScrollTimeoutRef.current) {
-      clearTimeout(ignoreScrollTimeoutRef.current);
+    if (ignoreScrollTimeoutRef?.current) {
+      clearTimeout(ignoreScrollTimeoutRef?.current);
     }
     // Set a new timeout to reset the flag
     ignoreScrollTimeoutRef.current = setTimeout(() => {
@@ -298,8 +298,8 @@ export default function VideoPlayer({
   const handleScrollToCurrentSubtitle = useCallback(() => {
     if (!onScrollToCurrentSubtitle) return;
 
-    if (ignoreScrollTimeoutRef.current) {
-      clearTimeout(ignoreScrollTimeoutRef.current);
+    if (ignoreScrollTimeoutRef?.current) {
+      clearTimeout(ignoreScrollTimeoutRef?.current);
       ignoreScrollTimeoutRef.current = null;
     }
     ignoreScrollRef.current = false;
@@ -308,8 +308,8 @@ export default function VideoPlayer({
     isScrollToCurrentActive.current = true;
     console.log('Scroll to Current activated, preventing size changes');
 
-    if (scrollToCurrentTimeoutRef.current) {
-      clearTimeout(scrollToCurrentTimeoutRef.current);
+    if (scrollToCurrentTimeoutRef?.current) {
+      clearTimeout(scrollToCurrentTimeoutRef?.current);
     }
 
     onScrollToCurrentSubtitle();
@@ -324,11 +324,11 @@ export default function VideoPlayer({
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      if (ignoreScrollTimeoutRef.current) {
-        clearTimeout(ignoreScrollTimeoutRef.current);
+      if (ignoreScrollTimeoutRef?.current) {
+        clearTimeout(ignoreScrollTimeoutRef?.current);
       }
-      if (scrollToCurrentTimeoutRef.current) {
-        clearTimeout(scrollToCurrentTimeoutRef.current);
+      if (scrollToCurrentTimeoutRef?.current) {
+        clearTimeout(scrollToCurrentTimeoutRef?.current);
       }
     };
   }, []);
@@ -467,8 +467,8 @@ export default function VideoPlayer({
     setShowFullscreenControls(true);
 
     // Clear existing timeout
-    if (activityTimeoutRef.current) {
-      clearTimeout(activityTimeoutRef.current);
+    if (activityTimeoutRef?.current) {
+      clearTimeout(activityTimeoutRef?.current);
     }
 
     // Set new timeout to hide controls
@@ -479,7 +479,7 @@ export default function VideoPlayer({
 
   // Effect to attach/detach listeners and clean up timeout
   useEffect(() => {
-    const playerWrapper = playerRef.current?.querySelector(
+    const playerWrapper = playerRef?.current?.querySelector(
       '.native-video-player-wrapper'
     ); // Target the inner wrapper
 
@@ -493,16 +493,16 @@ export default function VideoPlayer({
       return () => {
         playerWrapper.removeEventListener('mousemove', handleActivity);
         playerWrapper.removeEventListener('mouseleave', handleActivity);
-        if (activityTimeoutRef.current) {
-          clearTimeout(activityTimeoutRef.current);
+        if (activityTimeoutRef?.current) {
+          clearTimeout(activityTimeoutRef?.current);
         }
       };
     } else {
       // Ensure controls are shown when not in fullscreen
       setShowFullscreenControls(true);
       // Clear timeout if exiting fullscreen
-      if (activityTimeoutRef.current) {
-        clearTimeout(activityTimeoutRef.current);
+      if (activityTimeoutRef?.current) {
+        clearTimeout(activityTimeoutRef?.current);
       }
     }
   }, [isFullScreen, handleActivity]);

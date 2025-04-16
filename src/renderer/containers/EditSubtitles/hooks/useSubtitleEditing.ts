@@ -108,7 +108,7 @@ export function useSubtitleEditing({
     if (field === 'text') {
       // --- Restore Debounce Logic --- START ---
       const debounceTextKey = `${index}-text`;
-      if (!debouncedTextUpdateRef.current[debounceTextKey]) {
+      if (!debouncedTextUpdateRef?.current[debounceTextKey]) {
         debouncedTextUpdateRef.current[debounceTextKey] = debounce(
           (newTextValue: string) => {
             // --- Moved Marker Logic Inside Functional Update --- START ---
@@ -151,7 +151,7 @@ export function useSubtitleEditing({
         );
       }
       // Pass only the editable part to the debounced function
-      debouncedTextUpdateRef.current[debounceTextKey](value as string);
+      debouncedTextUpdateRef?.current[debounceTextKey](value as string);
       // --- Restore Debounce Logic --- END ---
 
       return;
@@ -163,7 +163,7 @@ export function useSubtitleEditing({
     }));
 
     const debounceKey = `${index}-${field}`;
-    if (!debouncedTimeUpdateRef.current[debounceKey]) {
+    if (!debouncedTimeUpdateRef?.current[debounceKey]) {
       debouncedTimeUpdateRef.current[debounceKey] = debounce((val: string) => {
         let numValue: number;
         if (val.includes(':')) {
@@ -206,12 +206,12 @@ export function useSubtitleEditing({
       }, DEBOUNCE_DELAY_MS);
     }
 
-    debouncedTimeUpdateRef.current[debounceKey](String(value));
+    debouncedTimeUpdateRef?.current[debounceKey](String(value));
   }
 
   useEffect(() => {
-    const currentDebouncedTimeUpdates = debouncedTimeUpdateRef.current;
-    const currentDebouncedTextUpdates = debouncedTextUpdateRef.current;
+    const currentDebouncedTimeUpdates = debouncedTimeUpdateRef?.current;
+    const currentDebouncedTextUpdates = debouncedTextUpdateRef?.current;
 
     return () => {
       Object.values(currentDebouncedTimeUpdates).forEach(fn => fn.cancel());

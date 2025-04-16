@@ -13,9 +13,9 @@ interface FocusRef {
 export function useRestoreFocus(focusRef: RefObject<FocusRef>) {
   const restoreFocus = useCallback(() => {
     if (
-      focusRef.current &&
-      focusRef.current.index !== null &&
-      focusRef.current.field
+      focusRef?.current &&
+      focusRef?.current.index !== null &&
+      focusRef?.current.field
     ) {
       const { index, field } = focusRef.current;
       // Construct the ID of the element to focus
@@ -46,10 +46,6 @@ export function useRestoreFocus(focusRef: RefObject<FocusRef>) {
           `[useRestoreFocus] Element with ID ${elementId} not found.`
         );
       }
-
-      // Clear the ref after attempting to restore focus
-      // focusRef.current = { index: null, field: null };
-      // Keep the ref set for potential retries or debounced updates
     }
   }, [focusRef]);
 

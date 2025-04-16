@@ -82,7 +82,7 @@ function SubtitleList({
         <div
           key={`${sub.index}-${sub.start}-${sub.end}`}
           ref={el => {
-            if (subtitleRefs && subtitleRefs.current) {
+            if (subtitleRefs && subtitleRefs?.current) {
               subtitleRefs.current[index] = el;
             }
           }}

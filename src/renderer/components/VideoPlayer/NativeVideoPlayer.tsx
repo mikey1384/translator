@@ -99,12 +99,12 @@ export default function NativeVideoPlayer({
 
   // Updated handlePlayerClick to toggle play/pause
   const handlePlayerClick = useCallback(() => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
+    if (!videoRef?.current) return;
+    const video = videoRef?.current;
 
     // Clear any existing timeout
-    if (indicatorTimeoutRef.current) {
-      clearTimeout(indicatorTimeoutRef.current);
+    if (indicatorTimeoutRef?.current) {
+      clearTimeout(indicatorTimeoutRef?.current);
     }
 
     // Toggle play/pause (indicator type set by event listeners now)
@@ -123,10 +123,10 @@ export default function NativeVideoPlayer({
 
     // Keep existing focus logic
     if (parentRef?.current) {
-      parentRef.current.focus();
+      parentRef?.current.focus();
       console.log('Video clicked, parent container focused');
-    } else if (containerRef.current) {
-      containerRef.current.focus();
+    } else if (containerRef?.current) {
+      containerRef?.current.focus();
       console.log('Video clicked, local container focused');
     }
   }, [parentRef]);
@@ -136,9 +136,9 @@ export default function NativeVideoPlayer({
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       console.log('Video container keydown:', event.key);
 
-      if (!videoRef.current) return;
+      if (!videoRef?.current) return;
 
-      const videoElement = videoRef.current;
+      const videoElement = videoRef?.current;
       const currentTime = videoElement.currentTime;
       const duration = videoElement.duration || 0;
 
@@ -166,7 +166,7 @@ export default function NativeVideoPlayer({
   }, [videoUrl]);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
+    const videoElement = videoRef?.current;
     if (!videoElement) return;
 
     // Flag to track if the player is ready in this effect run
@@ -207,8 +207,8 @@ export default function NativeVideoPlayer({
       onPlayerReady(videoElement);
 
       // For file:// URLs, apply any pending seek operation that was waiting for canplay
-      if (isFileUrlVideo && pendingSeekRef.current !== null) {
-        const targetTime = pendingSeekRef.current;
+      if (isFileUrlVideo && pendingSeekRef?.current !== null) {
+        const targetTime = pendingSeekRef?.current;
         console.log(`Applying pending seek to ${targetTime} after canPlay`);
         videoElement.currentTime = targetTime;
         pendingSeekRef.current = null;
@@ -237,12 +237,12 @@ export default function NativeVideoPlayer({
       // Double-check the currentTime after seeked to ensure it stuck
       if (time > 0) {
         lastValidTimeRef.current = time;
-      } else if (isFileUrlVideo && lastValidTimeRef.current > 0) {
+      } else if (isFileUrlVideo && lastValidTimeRef?.current > 0) {
         // If we ended up at 0 but had a valid time, try to restore it
         console.log(
-          `Video reset detected after seek, restoring to ${lastValidTimeRef.current}`
+          `Video reset detected after seek, restoring to ${lastValidTimeRef?.current}`
         );
-        videoElement.currentTime = lastValidTimeRef.current;
+        videoElement.currentTime = lastValidTimeRef?.current;
       }
     };
 
@@ -251,19 +251,19 @@ export default function NativeVideoPlayer({
       const time = videoElement.currentTime;
 
       // For file:// URLs, detect video reset pattern
-      if (isFileUrlVideo && !isSeekingRef.current) {
-        if (time === 0 && lastValidTimeRef.current > 0) {
+      if (isFileUrlVideo && !isSeekingRef?.current) {
+        if (time === 0 && lastValidTimeRef?.current > 0) {
           timeUpdateCount.current++;
 
           // More aggressive correction: fix immediately for file:// URLs
           // This prevents the visible flash of reset to beginning
           console.log(
-            `Detected reset to 0, immediately restoring to ${lastValidTimeRef.current}`
+            `Detected reset to 0, immediately restoring to ${lastValidTimeRef?.current}`
           );
-          videoElement.currentTime = lastValidTimeRef.current;
+          videoElement.currentTime = lastValidTimeRef?.current;
 
           // If we've had multiple resets, try a more drastic approach
-          if (timeUpdateCount.current >= 3) {
+          if (timeUpdateCount?.current >= 3) {
             console.log('Multiple resets detected, applying emergency fix');
             // This forces a pause-seek-play cycle which can help with stubborn videos
             const wasPlaying = !videoElement.paused;
@@ -271,13 +271,13 @@ export default function NativeVideoPlayer({
               videoElement.pause();
               setTimeout(() => {
                 if (!videoElement) return;
-                videoElement.currentTime = lastValidTimeRef.current;
+                videoElement.currentTime = lastValidTimeRef?.current;
                 videoElement.play().catch(err => {
                   console.error('Failed to resume after emergency fix:', err);
                 });
               }, 50);
             } else {
-              videoElement.currentTime = lastValidTimeRef.current;
+              videoElement.currentTime = lastValidTimeRef?.current;
             }
             // Reset the counter after emergency fix
             timeUpdateCount.current = 0;
@@ -304,15 +304,15 @@ export default function NativeVideoPlayer({
       if (
         isFileUrlVideo &&
         videoElement.currentTime === 0 &&
-        lastValidTimeRef.current > 0
+        lastValidTimeRef?.current > 0
       ) {
         console.log(
-          `Restoring position on play to ${lastValidTimeRef.current}`
+          `Restoring position on play to ${lastValidTimeRef?.current}`
         );
         // Use a short timeout to ensure the play event fully processes first
         setTimeout(() => {
           if (!videoElement) return;
-          videoElement.currentTime = lastValidTimeRef.current;
+          videoElement.currentTime = lastValidTimeRef?.current;
           console.log(
             `Position after restoration: ${videoElement.currentTime}`
           );
@@ -378,13 +378,13 @@ export default function NativeVideoPlayer({
       // Another opportunity to restore position for file:// URLs
       if (
         isFileUrlVideo &&
-        lastValidTimeRef.current > 0 &&
-        !isSeekingRef.current
+        lastValidTimeRef?.current > 0 &&
+        !isSeekingRef?.current
       ) {
         console.log(
-          `Restoring position after data loaded to ${lastValidTimeRef.current}`
+          `Restoring position after data loaded to ${lastValidTimeRef?.current}`
         );
-        videoElement.currentTime = lastValidTimeRef.current;
+        videoElement.currentTime = lastValidTimeRef?.current;
       }
     };
 
@@ -399,12 +399,12 @@ export default function NativeVideoPlayer({
       if (
         isFileUrlVideo &&
         videoElement.currentTime === 0 &&
-        lastValidTimeRef.current > 0
+        lastValidTimeRef?.current > 0
       ) {
         console.log(
-          `Video stalled at beginning, restoring to ${lastValidTimeRef.current}`
+          `Video stalled at beginning, restoring to ${lastValidTimeRef?.current}`
         );
-        videoElement.currentTime = lastValidTimeRef.current;
+        videoElement.currentTime = lastValidTimeRef?.current;
       }
     };
 
@@ -481,7 +481,7 @@ export default function NativeVideoPlayer({
   }, [videoUrl, onPlayerReady, isFileUrlVideo]);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
+    const videoElement = videoRef?.current;
     if (!videoElement) return;
 
     videoElement.addEventListener('timeupdate', handleTimeUpdate);
@@ -561,7 +561,7 @@ export default function NativeVideoPlayer({
 
   // Effect to sync isPlaying state and indicator type with video events
   useEffect(() => {
-    const video = videoRef.current;
+    const video = videoRef?.current;
     if (!video) return;
 
     const onPlay = () => {
@@ -585,14 +585,14 @@ export default function NativeVideoPlayer({
       video.removeEventListener('play', onPlay);
       video.removeEventListener('pause', onPause);
       // Clear timeout on unmount
-      if (indicatorTimeoutRef.current) {
-        clearTimeout(indicatorTimeoutRef.current);
+      if (indicatorTimeoutRef?.current) {
+        clearTimeout(indicatorTimeoutRef?.current);
       }
     };
   }, []);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
+    const videoElement = videoRef?.current;
     if (!videoElement) return;
 
     const handleMetadata = () => {
@@ -621,7 +621,7 @@ export default function NativeVideoPlayer({
   }, [videoUrl]); // Re-run if video source changes
 
   useEffect(() => {
-    const videoElement = videoRef.current;
+    const videoElement = videoRef?.current;
     if (!videoElement) return;
 
     const resizeObserver = new ResizeObserver(entries => {
