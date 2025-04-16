@@ -394,6 +394,40 @@ function AppContent() {
     // --- END ADD ---
   }, [targetLanguage]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      console.log(
+        '[AppContent] Document visibility changed to:',
+        document.visibilityState
+      );
+      if (document.visibilityState === 'visible' && videoPlayerRef?.current) {
+        console.log(
+          '[AppContent] Window became visible. Checking video sync...'
+        );
+        const video = videoPlayerRef.current;
+        if (!video.paused) {
+          // Attempt to nudge the player to resync
+          const currentTime = video.currentTime;
+          console.log(
+            `[AppContent] Nudging player. Current time: ${currentTime}`
+          );
+          video.currentTime = currentTime; // Setting time to itself can force a sync
+        } else {
+          console.log('[AppContent] Video is paused, no nudge needed.');
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    console.log('[AppContent] Added visibilitychange listener.');
+
+    // Cleanup listener on unmount
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      console.log('[AppContent] Removed visibilitychange listener.');
+    };
+  }, [videoPlayerRef]); // Depend on the ref object itself
+
   return (
     <div className={pageWrapperStyles}>
       {videoUrl && <div style={{ height: 'CALC(35vh + 2rem)' }} />}
