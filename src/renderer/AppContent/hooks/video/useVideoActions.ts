@@ -74,9 +74,6 @@ export function useVideoActions({
       );
       setVideoFile(fileData);
       setVideoFilePath(fileData.path);
-      console.log(
-        '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (instanceof File)'
-      );
       const blobUrl = URL.createObjectURL(fileData);
       setVideoUrl(blobUrl);
     } else {
@@ -86,10 +83,6 @@ export function useVideoActions({
       );
       setVideoFile(null);
       setVideoUrl('');
-      setVideoFilePath(null);
-      console.log(
-        '[App.tsx handleSetVideoFile] Setting videoFilePath to: null (Fallback)'
-      );
     }
     setIsPlaying(false);
   }

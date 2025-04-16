@@ -769,16 +769,12 @@ function AppContent() {
       if (!videoPath || !result.filename) {
         throw new Error('Downloaded video info incomplete');
       }
-
       finishUrlDownload(result, videoPath);
       setUrlInput('');
+      setIsProcessingUrl(false);
     } catch (err: any) {
       // Catch block remains the same - handleUrlError handles actual errors
       handleUrlError(err);
-    } finally {
-      // The finally block might need adjustment depending on how ProgressArea auto-close works.
-      // Let's keep it commented out for now as resetUrlStates() is called on cancel/error.
-      // setIsProcessingUrl(false);
     }
   }
 
@@ -818,7 +814,6 @@ function AppContent() {
 
       setVideoFile(videoFileObj);
     } catch (fileError) {
-      console.error('Error reading video file:', fileError);
       if (result.fileUrl) {
         const fallback = {
           name: result.filename,
