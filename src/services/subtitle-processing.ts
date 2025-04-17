@@ -13,6 +13,9 @@ import {
 import log from 'electron-log';
 import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
+import { spawn } from 'child_process';
+import { once } from 'events';
+import Vad from 'webrtcvad';
 
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -151,6 +154,7 @@ export async function extractSubtitlesFromVideo({
       signal,
       operationId,
       services,
+      options: options,
     });
 
     if (!isTranslationNeeded) {
@@ -320,15 +324,15 @@ export async function generateSubtitlesFromAudio({
   signal,
   operationId,
   services,
-}: GenerateSubtitlesFromAudioArgs): Promise<string> {
+  options,
+}: GenerateSubtitlesFromAudioArgs & {
+  options?: GenerateSubtitlesOptions;
+}): Promise<string> {
   const PROGRESS_ANALYSIS_DONE = 5;
   const PROGRESS_CHUNKING_DONE = 15;
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
-  const MAX_CHUNK_SIZE_BYTES = 0.3 * 1024 * 1024;
-  const SILENCE_TOLERANCE_SEC = 0.5;
-  const MIN_CHUNK_DURATION_SEC = 1.0;
   const CONCURRENT_TRANSCRIPTIONS = 30;
 
   let openai: OpenAI;
@@ -373,15 +377,6 @@ export async function generateSubtitlesFromAudio({
       );
     }
 
-    let fileSize = 0;
-    try {
-      fileSize = fs.statSync(inputAudioPath).size;
-    } catch (statError: any) {
-      throw new SubtitleProcessingError(
-        `Failed to get file stats for ${inputAudioPath}: ${statError.message}`
-      );
-    }
-
     progressCallback?.({
       percent: PROGRESS_ANALYSIS_DONE,
       stage: 'Audio analyzed',
@@ -392,25 +387,13 @@ export async function generateSubtitlesFromAudio({
       stage: 'Detecting silence boundaries...',
     });
 
-    const { silenceStarts: _silenceStarts = [], silenceEnds = [] } =
-      await ffmpegService.detectSilenceBoundaries(inputAudioPath);
-    log.info(
-      `[${operationId}] Detected ${silenceEnds.length} silence end boundaries.`
-    );
+    const rawIntervals = await detectSpeechIntervals({
+      inputPath: inputAudioPath,
+    });
+    const speechIntervals = normalizeSpeechIntervals({
+      intervals: rawIntervals,
+    });
 
-    const bitrate =
-      fileSize > 0 && duration > 0 ? (fileSize * 8) / duration : 128000;
-    let targetChunkDurationSec = duration;
-    if (bitrate > 0) {
-      targetChunkDurationSec = (MAX_CHUNK_SIZE_BYTES * 8) / bitrate;
-    }
-    targetChunkDurationSec = Math.min(targetChunkDurationSec, 15 * 60);
-
-    log.info(
-      `[${operationId}] Calculated Bitrate: ${bitrate / 1000} kbps, Target Chunk Duration: ${targetChunkDurationSec}s`
-    );
-
-    let currentStartTime = 0;
     let chunkIndex = 0;
 
     progressCallback?.({
@@ -418,110 +401,41 @@ export async function generateSubtitlesFromAudio({
       stage: 'Calculating audio chunks...',
     });
 
-    while (currentStartTime < duration) {
-      if (signal?.aborted)
-        throw new Error('Operation cancelled during chunking');
+    for (const interval of speechIntervals) {
+      const subChunks = chunkSpeechInterval({ interval, duration });
+      for (const c of subChunks) {
+        chunkIndex++; // Increment index first
+        const outPath = path.join(
+          tempDir,
+          `chunk_${operationId}_${chunkIndex}.wav` // Use updated index
+        );
 
-      let idealEndTime = currentStartTime + targetChunkDurationSec;
-      idealEndTime = Math.min(idealEndTime, duration);
-
-      let chosenEndTime = idealEndTime;
-
-      let bestSilenceEnd = Infinity;
-      for (const silenceEnd of silenceEnds) {
-        if (
-          silenceEnd > currentStartTime &&
-          silenceEnd >= idealEndTime &&
-          silenceEnd <= idealEndTime + SILENCE_TOLERANCE_SEC
-        ) {
-          if (silenceEnd < bestSilenceEnd) {
-            bestSilenceEnd = silenceEnd;
-          }
-        } else if (silenceEnd > idealEndTime + SILENCE_TOLERANCE_SEC) {
-          break;
+        try {
+          await ffmpegService.extractAudioSegment({
+            inputPath: inputAudioPath,
+            outputPath: outPath,
+            startTime: c.start,
+            // Calculate duration for ffmpeg based on chunk end/start
+            duration: c.end - c.start,
+            operationId: `${operationId}-chunk-${chunkIndex}`, // Unique ID per chunk op
+          });
+          createdChunkPaths.push(outPath); // Add to cleanup list *after* successful creation
+        } catch (chunkError) {
+          log.error(
+            `[${operationId}] Failed to extract audio chunk ${chunkIndex} (${c.start}-${c.end}s):`,
+            chunkError
+          );
+          // Decide how to handle: skip chunk, throw error? For now, just log and continue.
+          continue; // Skip adding metadata if chunk creation failed
         }
-      }
 
-      if (bestSilenceEnd !== Infinity) {
-        chosenEndTime = bestSilenceEnd;
-        log.debug(
-          `[${operationId}] Chunk ${chunkIndex + 1}: Snapped ideal end ${idealEndTime.toFixed(2)}s to silence boundary ${chosenEndTime.toFixed(2)}s`
-        );
-      } else {
-        log.debug(
-          `[${operationId}] Chunk ${chunkIndex + 1}: No suitable silence boundary found near ${idealEndTime.toFixed(2)}s. Using ideal end.`
-        );
-      }
-
-      let actualChunkDuration = chosenEndTime - currentStartTime;
-      if (
-        actualChunkDuration < MIN_CHUNK_DURATION_SEC &&
-        chosenEndTime < duration
-      ) {
-        chosenEndTime = Math.min(
-          currentStartTime + MIN_CHUNK_DURATION_SEC,
-          duration
-        );
-        actualChunkDuration = chosenEndTime - currentStartTime;
-        log.debug(
-          `[${operationId}] Chunk ${chunkIndex + 1}: Adjusted short chunk duration. New end: ${chosenEndTime.toFixed(2)}s`
-        );
-      }
-
-      if (actualChunkDuration <= 0) {
-        log.warn(
-          `[${operationId}] Chunk ${chunkIndex + 1}: Calculated duration is <= 0 (${actualChunkDuration}). Skipping chunk.`
-        );
-        currentStartTime = Math.min(chosenEndTime + 0.1, duration);
-        continue;
-      }
-
-      const currentChunkIndex = chunkIndex + 1;
-      const chunkPath = path.join(
-        tempDir,
-        `chunk_${operationId}_${currentChunkIndex}.wav`
-      );
-
-      createdChunkPaths.push(chunkPath);
-
-      log.info(
-        `[${operationId}] Creating chunk ${currentChunkIndex}: Start ${currentStartTime.toFixed(2)}s, Duration ${actualChunkDuration.toFixed(2)}s, Path: ${chunkPath}`
-      );
-
-      try {
-        await ffmpegService.extractAudioSegment({
-          inputPath: inputAudioPath,
-          outputPath: chunkPath,
-          startTime: currentStartTime,
-          duration: actualChunkDuration,
+        chunkMetadataList.push({
+          path: outPath, // Use the defined outPath
+          start: c.start,
+          duration: c.end - c.start, // Duration of the segment *within* the original audio
+          index: chunkIndex, // Use the correct index
         });
-      } catch (extractError: any) {
-        log.error(
-          `[${operationId}] Failed to extract audio segment for chunk ${currentChunkIndex}: ${extractError.message}. Skipping chunk.`
-        );
-        createdChunkPaths.pop();
-        currentStartTime = chosenEndTime;
-        chunkIndex++;
-        continue;
       }
-
-      chunkMetadataList.push({
-        path: chunkPath,
-        start: currentStartTime,
-        duration: actualChunkDuration,
-        index: currentChunkIndex,
-      });
-
-      const chunkingProgress = currentStartTime / duration;
-      progressCallback?.({
-        percent:
-          PROGRESS_ANALYSIS_DONE +
-          chunkingProgress * (PROGRESS_CHUNKING_DONE - PROGRESS_ANALYSIS_DONE),
-        stage: `Prepared chunk ${currentChunkIndex}...`,
-      });
-
-      currentStartTime = chosenEndTime;
-      chunkIndex++;
     }
 
     progressCallback?.({
@@ -558,6 +472,8 @@ export async function generateSubtitlesFromAudio({
           signal,
           openai,
           operationId,
+          chunkDuration: chunkMeta.duration,
+          options,
         });
       });
 
@@ -669,6 +585,8 @@ export async function generateSubtitlesFromAudio({
     signal,
     openai,
     operationId,
+    chunkDuration,
+    options,
   }: {
     chunkIndex: number;
     chunkPath: string;
@@ -676,6 +594,8 @@ export async function generateSubtitlesFromAudio({
     signal?: AbortSignal;
     openai: OpenAI;
     operationId: string;
+    chunkDuration: number;
+    options?: GenerateSubtitlesOptions;
   }): Promise<SrtSegment[]> {
     try {
       if (signal?.aborted) {
@@ -694,6 +614,8 @@ export async function generateSubtitlesFromAudio({
           model: AI_MODELS.WHISPER.id,
           file: fileStream,
           response_format: 'srt',
+          temperature: 0,
+          language: options?.sourceLang,
         },
         { signal }
       );
@@ -707,27 +629,34 @@ export async function generateSubtitlesFromAudio({
         `[${operationId}] Raw SRT content received for chunk ${chunkIndex} (startTime: ${startTime}):\n--BEGIN RAW SRT CHUNK ${chunkIndex}--\n${srtContent}\n--END RAW SRT CHUNK ${chunkIndex}--`
       );
 
-      const segments =
-        srtContent && typeof srtContent === 'string'
-          ? parseSrt(srtContent)
-          : [];
-
-      segments.forEach(segment => {
+      const rawSegments = parseSrt(srtContent);
+      const segments = rawSegments.map(segment => {
         if (
           typeof segment.start === 'number' &&
           typeof segment.end === 'number'
         ) {
-          segment.start += startTime;
-          segment.end += startTime;
+          segment.start = Math.max(0, segment.start + startTime - OVERLAP_SEC);
+          segment.end = Math.max(
+            segment.start,
+            segment.end + startTime - OVERLAP_SEC
+          );
         } else {
           log.warn(
             `[${operationId}] Chunk ${chunkIndex}: Segment found with non-numeric start/end times. Skipping offset.`,
             segment
           );
         }
+        return segment;
       });
 
-      return segments;
+      const filteredSegments = segments.filter(segment => {
+        const withinHeadOverlap = segment.start < startTime + OVERLAP_SEC;
+        const withinTailOverlap =
+          segment.end >= startTime + chunkDuration - OVERLAP_SEC;
+        return !(withinHeadOverlap || withinTailOverlap);
+      });
+
+      return filteredSegments;
     } catch (error: any) {
       console.error(
         `[${operationId}] Error transcribing chunk ${chunkIndex}:`,
@@ -1305,4 +1234,155 @@ export async function callAIModel({
     operationId,
     retryAttempts,
   });
+}
+
+/** Decode to 16‑kHz mono signed‑16‑bit PCM */
+async function decodeToPcmBuffer({
+  inputPath,
+}: {
+  inputPath: string;
+}): Promise<Buffer> {
+  const ffmpeg = spawn('ffmpeg', [
+    '-i',
+    inputPath,
+    '-f',
+    's16le',
+    '-ac',
+    '1',
+    '-ar',
+    '16000',
+    '-',
+  ]);
+  const chunks: Buffer[] = [];
+  ffmpeg.stdout.on('data', b => chunks.push(b));
+  await once(ffmpeg, 'close');
+  return Buffer.concat(chunks);
+}
+
+export async function detectSpeechIntervals({
+  inputPath,
+  vadMode = 3, // 0–3 (3 = most aggressive)
+  frameMs = 30, // WebRTC supports 10/20/30 ms
+}: {
+  inputPath: string;
+  vadMode?: 0 | 1 | 2 | 3;
+  frameMs?: 10 | 20 | 30;
+}): Promise<Array<{ start: number; end: number }>> {
+  const pcm = await decodeToPcmBuffer({ inputPath });
+  const sampleRate = 16_000;
+  const bytesPerFrame = ((sampleRate * frameMs) / 1000) * 2; // 16‑bit mono
+  const vad = new Vad(sampleRate, vadMode);
+
+  const intervals: Array<{ start: number; end: number }> = [];
+  let speechOpen = false,
+    segStart = 0;
+
+  for (let i = 0; i + bytesPerFrame <= pcm.length; i += bytesPerFrame) {
+    const frame = pcm.subarray(i, i + bytesPerFrame);
+    const t = (i / bytesPerFrame) * (frameMs / 1000); // seconds
+    const isSpeech = vad.process(frame);
+
+    if (isSpeech && !speechOpen) {
+      segStart = t;
+      speechOpen = true;
+    }
+    if (!isSpeech && speechOpen) {
+      intervals.push({ start: segStart, end: t });
+      speechOpen = false;
+    }
+  }
+  if (speechOpen)
+    intervals.push({ start: segStart, end: pcm.length / 2 / sampleRate }); // flush
+  return intervals;
+}
+
+export function normalizeSpeechIntervals({
+  intervals,
+  minGapSec = 0.2,
+  minDurSec = 0.5,
+}: {
+  intervals: Array<{ start: number; end: number }>;
+  minGapSec?: number;
+  minDurSec?: number;
+}) {
+  intervals.sort((a, b) => a.start - b.start);
+  const merged: typeof intervals = [];
+  for (const cur of intervals) {
+    const last = merged.at(-1);
+    if (last && cur.start - last.end < minGapSec) last.end = cur.end;
+    else merged.push({ ...cur });
+  }
+  return merged.filter(i => i.end - i.start >= minDurSec);
+}
+
+const OVERLAP_SEC = 0.5;
+const MAX_SPEECH_SEC = 30;
+
+export function chunkSpeechInterval({
+  interval,
+  duration,
+}: {
+  interval: { start: number; end: number };
+  duration: number;
+}): Array<{ start: number; end: number }> {
+  const span = interval.end - interval.start;
+  if (span <= MAX_SPEECH_SEC) {
+    return [
+      {
+        start: Math.max(0, interval.start - OVERLAP_SEC),
+        end: Math.min(duration, interval.end + OVERLAP_SEC),
+      },
+    ];
+  }
+  // recursively split at mid‑point (cheap), or call a stronger‑pause finder
+  const mid = (interval.start + interval.end) / 2;
+  return [
+    ...chunkSpeechInterval({
+      interval: { start: interval.start, end: mid },
+      duration,
+    }),
+    ...chunkSpeechInterval({
+      interval: { start: mid, end: interval.end },
+      duration,
+    }),
+  ];
+}
+
+export function pruneSegments({
+  segments,
+  rmsByTime, // map { second → rms }
+  rmsThreshold = 0.015,
+  minDurSec = 0.2,
+  minWords = 2,
+}: {
+  segments: SrtSegment[];
+  rmsByTime: (t: number) => number; // helper that gives RMS at arbitrary time
+  rmsThreshold?: number;
+  minDurSec?: number;
+  minWords?: number;
+}) {
+  return segments.filter(seg => {
+    const dur = seg.end - seg.start;
+    const wordCount = seg.text.trim().split(/\s+/).length;
+    const rms = rmsByTime((seg.start + seg.end) / 2);
+    return dur >= minDurSec && wordCount >= minWords && rms >= rmsThreshold;
+  });
+}
+
+export function mergeCloseSegments({
+  segments,
+  maxGap = 0.2,
+}: {
+  segments: SrtSegment[];
+  maxGap?: number;
+}) {
+  const out: SrtSegment[] = [];
+  for (const cur of segments) {
+    const prev = out.at(-1);
+    if (prev && cur.start - prev.end < maxGap) {
+      prev.end = cur.end;
+      prev.text = `${prev.text} ${cur.text}`.trim();
+    } else out.push({ ...cur });
+  }
+  return out;
 }

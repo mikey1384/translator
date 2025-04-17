@@ -97,6 +97,8 @@ export default function NativeVideoPlayer({
   const [nativeHeight, setNativeHeight] = useState<number>(0);
   const [displayHeight, setDisplayHeight] = useState<number>(0);
 
+  const onReadyCalledRef = useRef<boolean>(false);
+
   // Updated handlePlayerClick to toggle play/pause
   const handlePlayerClick = useCallback(() => {
     if (!videoRef?.current) return;
@@ -169,8 +171,8 @@ export default function NativeVideoPlayer({
     const videoElement = videoRef?.current;
     if (!videoElement) return;
 
-    // Flag to track if the player is ready in this effect run
-    let isReady = false;
+    // Reset the flag when the video URL changes
+    onReadyCalledRef.current = false;
 
     const handleError = (_e: Event) => {
       if (videoElement.error) {
@@ -192,8 +194,8 @@ export default function NativeVideoPlayer({
     };
 
     const handleCanPlay = () => {
-      if (isReady) return; // Prevent multiple calls if event fires again
-      isReady = true;
+      if (onReadyCalledRef.current) return;
+      onReadyCalledRef.current = true;
       // Update global state as well
       if (getNativePlayerInstance() !== videoElement) {
         setNativePlayerInstance(videoElement); // Use the setter function
@@ -202,9 +204,8 @@ export default function NativeVideoPlayer({
       // nativePlayer.isReady = true; // Remove direct access
       // nativePlayer.lastAccessed = Date.now(); // Remove direct access (done internally)
       // nativePlayer.isInitialized = true; // Remove direct access
-      console.log('Native player is now ready.');
-      // Call the prop callback
-      onPlayerReady(videoElement);
+      console.log('Native player is now ready (via canplay).');
+      onPlayerReady(videoElement); // Call the prop callback
 
       // For file:// URLs, apply any pending seek operation that was waiting for canplay
       if (isFileUrlVideo && pendingSeekRef?.current !== null) {
@@ -341,19 +342,15 @@ export default function NativeVideoPlayer({
       // Set initial playing state based on video
       setIsPlaying(!videoElement.paused);
 
-      if (!isReady) {
+      if (!onReadyCalledRef.current) {
+        onReadyCalledRef.current = true;
         console.log(
           'NativeVideoPlayer: Ready state triggered by loadedmetadata'
         );
-        // Use the setter function to update the instance
         if (getNativePlayerInstance() !== videoElement) {
           setNativePlayerInstance(videoElement);
         }
-        // nativePlayer.instance = videoElement; // Removed direct access
-        // nativePlayer.isReady = true; // Removed direct access (managed internally)
-        // nativePlayer.lastAccessed = Date.now(); // Removed direct access (managed internally)
         onPlayerReady(videoElement);
-        isReady = true;
       }
 
       // Special handling for file URLs after metadata

@@ -217,6 +217,7 @@ export interface GenerateSubtitlesOptions {
   streamResults?: boolean; // Whether to stream partial results
   filters?: { name: string; extensions: string[] }[];
   multiple?: boolean;
+  sourceLang?: string; // Optional string property
 }
 
 export interface FileData {

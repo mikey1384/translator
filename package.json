@@ -143,6 +143,7 @@
     "react-i18next": "^15.4.1",
     "react-intersection-observer": "^9.16.0",
     "uuid": "^11.1.0",
+    "webrtcvad": "^1.0.1",
     "youtube-dl-exec": "^3.0.20"
   },
   "trustedDependencies": [
