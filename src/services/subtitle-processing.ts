@@ -338,20 +338,12 @@ export async function generateSubtitlesFromAudio({
   services,
 }: GenerateSubtitlesFromAudioArgs): Promise<string> {
   const PROGRESS_ANALYSIS_DONE = 5;
-  const PROGRESS_CHUNKING_DONE = 15;
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
 
   let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
-  const chunkMetadataList: Array<{
-    path: string;
-    start: number;
-    duration: number;
-    index: number;
-  }> = [];
-  const createdChunkPaths: string[] = [];
   const createdWindowFilePaths: string[] = []; // For combined wav/txt files
   const tempDir = path.dirname(inputAudioPath);
 
@@ -393,155 +385,118 @@ export async function generateSubtitlesFromAudio({
 
     progressCallback?.({
       percent: PROGRESS_ANALYSIS_DONE,
-      stage: 'Detecting silence boundaries...',
+      stage: 'Calculating transcription windows...',
     });
 
-    const rawIntervals = await detectSpeechIntervals({
-      inputPath: inputAudioPath,
-    });
-    const speechIntervals = normalizeSpeechIntervals({
-      intervals: rawIntervals,
-      minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC, // Use constant
-    });
-    log.info(
-      `[${operationId}] VAD found ${rawIntervals.length} raw intervals, normalized to ${speechIntervals.length} speech intervals.`
-    );
+    // --- Generate Fixed Overlapping Windows ---
+    const fixedWindows: Array<{
+      start: number;
+      duration: number;
+      index: number;
+    }> = [];
+    const windowSizeSec = MIN_CONTEXT_SEC; // Use the constant
+    const stepSec = windowSizeSec - CHUNK_OVERLAP_SEC; // How much to advance start time each step
+    let windowIndex = 0;
 
-    let chunkIndex = 0;
+    for (
+      let currentStart = 0;
+      currentStart < duration;
+      currentStart += stepSec
+    ) {
+      windowIndex++;
+      const currentEnd = Math.min(currentStart + windowSizeSec, duration);
+      const currentDuration = currentEnd - currentStart;
 
-    progressCallback?.({
-      percent: PROGRESS_ANALYSIS_DONE + 2,
-      stage: 'Calculating audio chunks...',
-    });
+      // Optional: Skip windows that are too short (e.g., less than overlap)
+      if (currentDuration < CHUNK_OVERLAP_SEC && currentStart !== 0) {
+        // Allow first window even if short
+        log.debug(`Skipping very short final window fragment ${windowIndex}`);
+        continue;
+      }
 
-    for (const interval of speechIntervals) {
-      const subChunks = chunkSpeechInterval({ interval, duration });
-      for (const c of subChunks) {
-        chunkIndex++; // Increment index first
-        const outPath = path.join(
-          tempDir,
-          `chunk_${operationId}_${chunkIndex}.wav` // Use updated index
-        );
-
-        try {
-          await ffmpegService.extractAudioSegment({
-            inputPath: inputAudioPath,
-            outputPath: outPath,
-            startTime: c.start,
-            // Calculate duration for ffmpeg based on chunk end/start
-            duration: c.end - c.start,
-            operationId: `${operationId}-chunk-${chunkIndex}`, // Unique ID per chunk op
-          });
-          createdChunkPaths.push(outPath); // Add to cleanup list *after* successful creation
-        } catch (chunkError) {
-          log.error(
-            `[${operationId}] Failed to extract audio chunk ${chunkIndex} (${c.start}-${c.end}s):`,
-            chunkError
-          );
-          // Decide how to handle: skip chunk, throw error? For now, just log and continue.
-          continue; // Skip adding metadata if chunk creation failed
-        }
-
-        chunkMetadataList.push({
-          path: outPath, // Use the defined outPath
-          start: c.start,
-          duration: c.end - c.start, // Duration of the segment *within* the original audio
-          index: chunkIndex, // Use the correct index
-        });
+      fixedWindows.push({
+        start: currentStart,
+        duration: currentDuration,
+        index: windowIndex,
+      });
+      // Ensure the loop terminates even if stepSec is zero or negative (shouldn't happen with valid constants)
+      if (stepSec <= 0) {
+        log.error('Window step size is zero or negative, breaking loop.');
+        break;
       }
     }
     log.info(
-      `[${operationId}] Created ${chunkMetadataList.length} chunk metadata entries.`
+      `[${operationId}] Created ${fixedWindows.length} fixed transcription windows covering ${duration.toFixed(2)}s.`
     );
+    // --- End Fixed Window Generation ---
 
-    progressCallback?.({
-      percent: PROGRESS_CHUNKING_DONE,
-      stage: `Prepared ${chunkMetadataList.length} audio chunks. Starting transcription...`,
-    });
-
-    log.info(
-      `Grouping ${chunkMetadataList.length} chunks into windows of at least ${MIN_CONTEXT_SEC}s...`
-    );
-    const windows = groupIntoContextWindows(chunkMetadataList, MIN_CONTEXT_SEC);
-    log.info(`Created ${windows.length} transcription windows.`);
-
-    // --- Batch Processing Logic ---
+    // --- Transcription Window Processing Logic --- (Starts below)
     let completedWindows = 0;
-    const totalWindows = windows.length;
+    // IMPORTANT: Update totalWindows calculation
+    const totalWindows = fixedWindows.length;
 
-    for (let i = 0; i < windows.length; i++) {
+    // IMPORTANT: Modify the loop to use 'fixedWindows'
+    for (let i = 0; i < fixedWindows.length; i++) {
       if (signal?.aborted) throw new Error('Operation cancelled');
 
-      const currentWindow = windows[i];
-      if (currentWindow.length === 0) continue; // Should not happen with grouping logic, but safe check
-
-      const windowIndex = i + 1;
+      // IMPORTANT: Use the fixedWindow object directly
+      const currentWindow = fixedWindows[i];
+      const windowLogIndex = currentWindow.index; // Use index from object
       const combinedPath = path.join(
         tempDir,
-        `window_${windowIndex}_${operationId}.wav`
+        `window_${windowLogIndex}_${operationId}.wav` // Use windowLogIndex
       );
 
       createdWindowFilePaths.push(combinedPath); // Track for cleanup
 
       try {
-        // 1. Calculate window boundaries (including silence)
-        const firstChunk = currentWindow[0];
-        const lastChunk = currentWindow[currentWindow.length - 1];
-
-        // Add overlap, clamped to 0 and total audio duration
-        const windowStart = Math.max(0, firstChunk.start - CHUNK_OVERLAP_SEC);
-        const windowEnd = Math.min(
-          duration, // 'duration' is the total audio duration from earlier
-          lastChunk.start + lastChunk.duration + CHUNK_OVERLAP_SEC
-        );
-        const windowDur = windowEnd - windowStart;
+        const windowStart = currentWindow.start;
+        const windowDur = currentWindow.duration;
 
         if (windowDur <= 0) {
           log.warn(
-            `[${operationId}] Calculated window ${windowIndex} has zero or negative duration (${windowDur}s), skipping.`
+            `[${operationId}] Window ${windowLogIndex} has zero or negative duration (${windowDur}s), skipping.`
           );
           continue; // Skip this window
         }
 
         log.debug(
-          `[${operationId}] Extracting continuous window ${windowIndex}: ${windowStart.toFixed(2)}s - ${windowEnd.toFixed(2)}s (Duration: ${windowDur.toFixed(2)}s)`
+          `[${operationId}] Extracting window ${windowLogIndex}: ${windowStart.toFixed(2)}s (Duration: ${windowDur.toFixed(2)}s)`
         );
 
-        // 2. Extract the single continuous audio segment for the window
+        // 2. Extract the single continuous audio segment for the window (Keep this part)
         await ffmpegService.extractAudioSegment({
-          inputPath: inputAudioPath, // Use the original full audio path
-          outputPath: combinedPath, // Output path for the window's audio
+          inputPath: inputAudioPath,
+          outputPath: combinedPath,
           startTime: windowStart,
           duration: windowDur,
-          operationId: `${operationId}-window-${windowIndex}`, // Unique ID
+          operationId: `${operationId}-window-${windowLogIndex}`,
         });
 
-        // 3. Transcribe the extracted window (This part should already be below)
-        // Make sure the startTime and chunkDuration passed to transcribeChunk are updated:
-
+        // 3. Transcribe the extracted window (Keep this part, ensure args are correct)
         const windowSegments = await transcribeChunk({
-          chunkIndex: windowIndex,
+          chunkIndex: windowLogIndex, // Use windowLogIndex
           chunkPath: combinedPath,
-          startTime: windowStart, // Pass the calculated windowStart
+          startTime: windowStart, // Use windowStart from object
           signal,
           openai,
           operationId: operationId as string,
-          chunkDuration: windowDur, // Pass the calculated windowDur
+          chunkDuration: windowDur, // Use windowDur from object
         });
 
         if (windowSegments.length > 0) {
           overallSegments.push(...windowSegments);
           log.info(
-            `[${operationId}] Successfully transcribed window ${windowIndex}. Added ${windowSegments.length} segments.`
+            `[${operationId}] Successfully transcribed window ${windowLogIndex}. Added ${windowSegments.length} segments.`
           );
         } else {
           console.warn(
-            `[${operationId}] Window ${windowIndex} returned no segments.`
+            `[${operationId}] Window ${windowLogIndex} returned no segments.`
           );
         }
       } catch (windowError) {
         console.error(
-          `[${operationId}] Error processing window ${windowIndex}:`,
+          `[${operationId}] Error processing window ${windowLogIndex}:`,
           windowError
         );
         // Optionally re-throw or just log and continue
@@ -563,11 +518,40 @@ export async function generateSubtitlesFromAudio({
           total: totalWindows,
         });
       }
-    }
-    // --- End Transcription Window Processing Logic ---
+    } // --- End of Window Processing Loop ---
 
     // Ensure sorting happens after all batches are done
     overallSegments.sort((a, b) => a.start - b.start);
+
+    // --- Add Post-Transcription VAD Filtering ---
+    log.info(
+      `[${operationId}] Performing post-transcription VAD filtering on ${overallSegments.length} segments...`
+    );
+    const postVadRawIntervals = await detectSpeechIntervals({
+      inputPath: inputAudioPath,
+    });
+    const postVadSpeechIntervals = normalizeSpeechIntervals({
+      intervals: postVadRawIntervals,
+      minGapSec: VAD_NORMALIZATION_MIN_GAP_SEC, // Use existing constants
+      minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC,
+    });
+    log.info(
+      `[${operationId}] Post-VAD found ${postVadSpeechIntervals.length} speech intervals.`
+    );
+    const vadFilteredSegments = overallSegments.filter(seg =>
+      isSpeech({
+        seg,
+        postVadSpeechIntervals,
+      })
+    );
+    log.info(
+      `[${operationId}] Filtered ${overallSegments.length} segments down to ${vadFilteredSegments.length} based on VAD.`
+    );
+
+    // Replace overallSegments with the filtered list
+    overallSegments.length = 0; // Clear the array
+    overallSegments.push(...vadFilteredSegments); // Add filtered segments back
+    // --- End Post-Transcription VAD Filtering ---
 
     // --- Add Pruning Step ---
     log.info(
@@ -617,8 +601,7 @@ export async function generateSubtitlesFromAudio({
   } finally {
     // Combine original chunk paths and window file paths for cleanup
     const allTempFilesToDelete = [
-      ...createdChunkPaths,
-      ...createdWindowFilePaths,
+      ...createdWindowFilePaths, // Only window files remain
     ];
     log.info(
       `[${operationId}] Cleaning up ${allTempFilesToDelete.length} temporary files (chunks, windows, lists)...`
@@ -633,6 +616,18 @@ export async function generateSubtitlesFromAudio({
     );
     await Promise.allSettled(deletionTasks);
     console.info(`[${operationId}] Finished cleaning up temporary files.`);
+  }
+
+  function isSpeech({
+    seg,
+    postVadSpeechIntervals,
+  }: {
+    seg: SrtSegment;
+    postVadSpeechIntervals: Array<{ start: number; end: number }>;
+  }): boolean {
+    // use midpoint of the subtitle block
+    const mid = (seg.start + seg.end) / 2;
+    return postVadSpeechIntervals.some(iv => mid >= iv.start && mid <= iv.end);
   }
 }
 
@@ -688,41 +683,51 @@ async function transcribeChunk({
     );
 
     const rawSegments = parseSrt(srtContent);
-    const segments = rawSegments.map(segment => {
-      if (
-        typeof segment.start === 'number' &&
-        typeof segment.end === 'number'
-      ) {
-        // Convert segment time (relative to chunk start) to absolute time
-        const absoluteStart = segment.start + startTime;
-        const absoluteEnd = segment.end + startTime;
 
-        segment.start = absoluteStart;
-        segment.end = Math.max(absoluteStart, absoluteEnd); // Ensure end >= start
-      } else {
-        log.warn(
-          `[${operationId}] Chunk ${chunkIndex}: Segment found with non-numeric start/end times. Skipping offset.`,
-          segment
-        );
-      }
-      return segment;
-    });
+    // Map to new objects with absolute timestamps and filter in one step
+    const absoluteSegments = rawSegments
+      .map(segment => {
+        // Default to invalid times if parsing failed
+        let absoluteStart = -1;
+        let absoluteEnd = -1;
 
-    const filteredSegments = segments.filter(segment => {
-      // Define the start and end of the "central" non-overlapped region
-      const centralRegionStart = startTime;
-      const centralRegionEnd = startTime + chunkDuration;
+        if (
+          typeof segment.start === 'number' &&
+          typeof segment.end === 'number'
+        ) {
+          // Calculate absolute time relative to the original audio
+          absoluteStart = segment.start + startTime;
+          absoluteEnd = segment.end + startTime;
+          // Ensure end >= start
+          absoluteEnd = Math.max(absoluteStart, absoluteEnd);
+        } else {
+          log.warn(
+            `[${operationId}] Chunk ${chunkIndex}: Segment ${segment.index} found with non-numeric start/end times. Discarding.`,
+            segment
+          );
+        }
 
-      // Keep the segment if it overlaps with the central region at all.
-      // This means the segment's end must be after the central region starts,
-      // AND the segment's start must be before the central region ends.
-      const overlapsCentralRegion =
-        segment.end > centralRegionStart && segment.start < centralRegionEnd;
+        // Return a new object conforming to SrtSegment (or null if times invalid)
+        return absoluteStart !== -1
+          ? {
+              index: segment.index,
+              start: absoluteStart,
+              end: absoluteEnd,
+              text: segment.text,
+            }
+          : null;
+      })
+      .filter((seg): seg is SrtSegment => seg !== null); // Filter out nulls and type guard
 
-      return overlapsCentralRegion; // Keep if overlaps or if chunk is too short to have a central region
-    });
+    // Optional: Add logging to see what segments are produced *before* VAD filtering
+    log.debug(
+      `[${operationId}] Chunk ${chunkIndex}: Produced ${absoluteSegments.length} segments with absolute timestamps before VAD filtering.`
+    );
 
-    return filteredSegments;
+    // Return the segments with correct absolute timestamps.
+    // The overlap filtering suggested earlier can be done AFTER the VAD filtering if needed,
+    // or we can rely on the VAD filtering + final pruneSegments. Let's skip overlap filtering for now.
+    return absoluteSegments;
   } catch (error: any) {
     console.error(
       `[${operationId}] Error transcribing chunk ${chunkIndex}:`,
@@ -1462,77 +1467,4 @@ export function mergeCloseSegments({
     } else out.push({ ...cur });
   }
   return out;
-}
-
-/** Calculates the RMS (Root Mean Square) of a 16-bit signed PCM buffer */
-function calculatePcmRms(pcm: Buffer): number {
-  if (pcm.length === 0) {
-    return 0;
-  }
-  let sumOfSquares = 0;
-  // Process 16-bit samples (2 bytes each)
-  for (let i = 0; i < pcm.length; i += 2) {
-    // Read signed 16-bit integer in little-endian format
-    const sample = pcm.readInt16LE(i);
-    // Normalize sample to range [-1.0, 1.0] (approximately)
-    const normalizedSample = sample / 32768.0;
-    sumOfSquares += normalizedSample * normalizedSample;
-  }
-  // Calculate mean square and then RMS
-  const meanSquare = sumOfSquares / (pcm.length / 2);
-  return Math.sqrt(meanSquare);
-}
-
-/**
- * Groups chunks into windows ensuring each window's duration meets MIN_CONTEXT_SEC.
- */
-function groupIntoContextWindows(
-  chunks: Array<{ path: string; start: number; duration: number }>,
-  minContextSec: number
-): Array<typeof chunks> {
-  const groups: Array<typeof chunks> = [];
-  if (chunks.length === 0) {
-    return groups;
-  }
-
-  let currentGroup: typeof chunks = [];
-  let currentGroupDuration = 0;
-
-  for (const chunk of chunks) {
-    currentGroup.push(chunk);
-    currentGroupDuration += chunk.duration;
-
-    // If adding the current chunk meets or exceeds the minimum context, finalize the group
-    if (currentGroupDuration >= minContextSec) {
-      groups.push(currentGroup);
-      // Reset for the next group
-      currentGroup = [];
-      currentGroupDuration = 0;
-    }
-  }
-
-  // Handle any remaining chunks in the buffer
-  if (currentGroup.length > 0) {
-    // If there's a previous group, append the remaining buffer to it
-    if (groups.length > 0) {
-      const lastGroup = groups[groups.length - 1];
-      // Add only if the last group itself isn't already large enough
-      // (avoids making the last group excessively large if the remainder is tiny)
-      const lastGroupDuration = lastGroup.reduce(
-        (sum, c) => sum + c.duration,
-        0
-      );
-      if (lastGroupDuration < minContextSec * 1.5) {
-        // Heuristic: don't append to already large groups
-        lastGroup.push(...currentGroup);
-      } else {
-        groups.push(currentGroup); // Create a final, potentially short group
-      }
-    } else {
-      // If this is the only group (total duration < minContextSec), just add it
-      groups.push(currentGroup);
-    }
-  }
-
-  return groups;
 }
