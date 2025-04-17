@@ -19,6 +19,17 @@ import * as webrtcvadPackage from 'webrtcvad';
 
 const Vad = webrtcvadPackage.default.default;
 
+// --- Configuration Constants ---
+const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // Min gap between speech intervals to merge
+const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.75; // Min duration for a VAD-detected speech interval
+const CHUNK_OVERLAP_SEC = 0.5; // Overlap added to start/end of chunks
+const CHUNK_MAX_SPEECH_SEC = 60; // Max duration of a single speech chunk before splitting
+const PRUNING_RMS_THRESHOLD = 0.015; // RMS threshold for pruning (if RMS check is enabled)
+const PRUNING_MIN_DURATION_SEC = 0.2; // Min duration for a final pruned segment
+const PRUNING_MIN_WORDS = 1; // Min words for a final pruned segment
+const MIN_CONTEXT_SEC = 30; // Target minimum context window for Whisper
+// --- End Configuration Constants ---
+
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
   if (key) {
@@ -156,7 +167,6 @@ export async function extractSubtitlesFromVideo({
       signal,
       operationId,
       services,
-      options: options,
     });
 
     if (!isTranslationNeeded) {
@@ -270,16 +280,16 @@ export async function extractSubtitlesFromVideo({
       JSON.stringify(finalSegments.slice(0, 5), null, 2)
     );
 
-    const finalSubtitlesContent = buildSrt(finalSegments);
+    const finalSrtContent = buildSrt(finalSegments);
 
-    await fileManager.writeTempFile(finalSubtitlesContent, '.srt');
+    await fileManager.writeTempFile(finalSrtContent, '.srt');
     progressCallback?.({
       percent: STAGE_FINALIZING.end,
       stage: 'Translation and review complete',
-      partialResult: finalSubtitlesContent,
+      partialResult: finalSrtContent,
     });
 
-    return { subtitles: finalSubtitlesContent };
+    return { subtitles: finalSrtContent };
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 
@@ -326,16 +336,12 @@ export async function generateSubtitlesFromAudio({
   signal,
   operationId,
   services,
-  options,
-}: GenerateSubtitlesFromAudioArgs & {
-  options?: GenerateSubtitlesOptions;
-}): Promise<string> {
+}: GenerateSubtitlesFromAudioArgs): Promise<string> {
   const PROGRESS_ANALYSIS_DONE = 5;
   const PROGRESS_CHUNKING_DONE = 15;
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
   const PROGRESS_FINALIZING = 100;
-  const CONCURRENT_TRANSCRIPTIONS = 30;
 
   let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
@@ -346,6 +352,7 @@ export async function generateSubtitlesFromAudio({
     index: number;
   }> = [];
   const createdChunkPaths: string[] = [];
+  const createdWindowFilePaths: string[] = []; // For combined wav/txt files
   const tempDir = path.dirname(inputAudioPath);
 
   try {
@@ -394,6 +401,7 @@ export async function generateSubtitlesFromAudio({
     });
     const speechIntervals = normalizeSpeechIntervals({
       intervals: rawIntervals,
+      minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC, // Use constant
     });
     log.info(
       `[${operationId}] VAD found ${rawIntervals.length} raw intervals, normalized to ${speechIntervals.length} speech intervals.`
@@ -451,102 +459,164 @@ export async function generateSubtitlesFromAudio({
       stage: `Prepared ${chunkMetadataList.length} audio chunks. Starting transcription...`,
     });
 
-    // --- Batch Processing Logic ---
-    let completedChunks = 0;
-    const totalChunks = chunkMetadataList.length;
-    let currentIndex = 0;
+    log.info(
+      `Grouping ${chunkMetadataList.length} chunks into windows of at least ${MIN_CONTEXT_SEC}s...`
+    );
+    const windows = groupIntoContextWindows(chunkMetadataList, MIN_CONTEXT_SEC);
+    log.info(`Created ${windows.length} transcription windows.`);
 
-    while (currentIndex < totalChunks) {
+    // --- Batch Processing Logic ---
+    let completedWindows = 0;
+    const totalWindows = windows.length;
+
+    for (let i = 0; i < windows.length; i++) {
       if (signal?.aborted) throw new Error('Operation cancelled');
 
-      const batchEndIndex = Math.min(
-        currentIndex + CONCURRENT_TRANSCRIPTIONS,
-        totalChunks
+      const currentWindow = windows[i];
+      if (currentWindow.length === 0) continue; // Should not happen with grouping logic, but safe check
+
+      const windowIndex = i + 1;
+      const combinedPath = path.join(
+        tempDir,
+        `window_${windowIndex}_${operationId}.wav`
       );
-      const currentBatchMetadata = chunkMetadataList.slice(
-        currentIndex,
-        batchEndIndex
-      );
-      log.info(
-        `[${operationId}] Starting transcription batch. Index: ${currentIndex}, Batch Size: ${currentBatchMetadata.length}, Total Chunks: ${totalChunks}`
-      );
-      const batchPromises = currentBatchMetadata.map(chunkMeta => {
-        if (!operationId) {
-          throw new Error(
-            'Internal error: operationId is missing for transcribeChunk'
+      const listFilePath = `${combinedPath}.txt`; // Temp file for ffmpeg concat list
+
+      createdWindowFilePaths.push(combinedPath); // Track for cleanup
+      createdWindowFilePaths.push(listFilePath); // Track for cleanup
+
+      try {
+        // 1. Create the concat list file
+        const concatListContent = currentWindow
+          .map(c => `file '${c.path.replace(/'/g, "'\\''")}'`)
+          .join('\n'); // Basic escaping for paths
+        await fsp.writeFile(listFilePath, concatListContent);
+
+        // 2. Run ffmpeg concat demuxer
+        log.debug(
+          `[${operationId}] Concatenating ${currentWindow.length} chunks for window ${windowIndex}...`
+        );
+        const ffmpegConcat = spawn(ffmpegService.getFFmpegPath(), [
+          '-f',
+          'concat',
+          '-safe',
+          '0', // Allow unsafe file paths (relative paths in list)
+          '-i',
+          listFilePath,
+          '-c',
+          'copy', // Just copy streams, no re-encoding
+          combinedPath,
+        ]);
+
+        let ffmpegErrorOutput = '';
+        ffmpegConcat.stderr.on('data', data => {
+          ffmpegErrorOutput += data.toString();
+        });
+
+        const closePromise = once(ffmpegConcat, 'close');
+        const [exitCode] = (await closePromise) as [
+          number | null,
+          NodeJS.Signals | null,
+        ]; // Type assertion needed for TS
+
+        if (exitCode !== 0) {
+          log.error(
+            `[${operationId}] FFmpeg concat failed for window ${windowIndex}. Exit code: ${exitCode}. Error: ${ffmpegErrorOutput}`
           );
+          // Decide how to handle: skip window, throw error? Let's skip for now.
+          completedWindows++; // Still count as "processed" for progress
+          continue;
         }
-        return transcribeChunk({
-          chunkIndex: chunkMeta.index,
-          chunkPath: chunkMeta.path,
-          startTime: chunkMeta.start,
+        log.debug(
+          `[${operationId}] Concatenation complete for window ${windowIndex}: ${combinedPath}`
+        );
+
+        // 3. Transcribe the combined window
+        const totalStart = currentWindow[0].start; // Start time is the start of the first chunk
+        const totalDuration = currentWindow.reduce(
+          (sum, c) => sum + c.duration,
+          0
+        );
+
+        // Note: Using transcribeChunk directly. Its internal filtering will now apply
+        // to the start/end of the combined window based on CHUNK_OVERLAP_SEC.
+        const windowSegments = await transcribeChunk({
+          chunkIndex: windowIndex, // Use window index for logging clarity
+          chunkPath: combinedPath,
+          startTime: totalStart,
           signal,
           openai,
-          operationId,
-          chunkDuration: chunkMeta.duration,
-          options,
+          operationId: operationId as string,
+          chunkDuration: totalDuration,
         });
-      });
 
-      log.info(
-        `[${operationId}] Processing transcription batch: Chunks ${currentIndex + 1}-${batchEndIndex} of ${totalChunks}`
-      );
-      const batchResults = await Promise.allSettled(batchPromises);
-
-      // Process results and update progress *after* batch completion
-      batchResults.forEach((res, batchIdx) => {
-        completedChunks++; // Increment for each settled promise in the batch
-        const chunkMeta = currentBatchMetadata[batchIdx]; // Get corresponding metadata
-        if (res.status === 'fulfilled' && res.value.length > 0) {
-          overallSegments.push(...res.value);
+        if (windowSegments.length > 0) {
+          // Adjust timestamps before adding to the main list
+          const adjustedSegments = windowSegments.map(seg => ({
+            ...seg,
+            start: seg.start + totalStart,
+            end: seg.end + totalStart,
+          }));
+          overallSegments.push(...adjustedSegments);
           log.info(
-            `[${operationId}] Successfully transcribed chunk ${chunkMeta.index}. Total completed: ${completedChunks}/${totalChunks}`
+            `[${operationId}] Successfully transcribed window ${windowIndex}. Added ${adjustedSegments.length} adjusted segments.`
           );
-        } else if (res.status === 'rejected') {
-          console.error(
-            `[${operationId}] Chunk ${chunkMeta.index} transcription failed:`,
-            res.reason
-          );
-          // Still count as "completed" for progress bar, but log error
         } else {
-          // Fulfilled but empty or other issues
           console.warn(
-            `[${operationId}] Chunk ${chunkMeta.index} returned no segments or was empty. Total completed: ${completedChunks}/${totalChunks}`
+            `[${operationId}] Window ${windowIndex} returned no segments.`
           );
-          // Still count as "completed"
         }
-      });
+      } catch (windowError) {
+        console.error(
+          `[${operationId}] Error processing window ${windowIndex}:`,
+          windowError
+        );
+        // Optionally re-throw or just log and continue
+      } finally {
+        completedWindows++; // Increment progress counter
 
-      // Calculate and report progress based on completed count
-      const currentProgressPercent = (completedChunks / totalChunks) * 100;
-      const scaledProgress = Math.round(
-        PROGRESS_TRANSCRIPTION_START +
-          (currentProgressPercent / 100) *
-            (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START)
-      );
+        // Update progress callback based on windows
+        const currentProgressPercent = (completedWindows / totalWindows) * 100;
+        const scaledProgress = Math.round(
+          PROGRESS_TRANSCRIPTION_START +
+            (currentProgressPercent / 100) *
+              (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START)
+        );
 
-      progressCallback?.({
-        percent: scaledProgress,
-        stage: `Transcribing... (${completedChunks}/${totalChunks} chunks complete)`,
-        current: completedChunks,
-        total: totalChunks,
-        // Optionally include partial result by sorting and building SRT if needed frequently
-        // partialResult: buildSrt(overallSegments.slice().sort((a, b) => a.start - b.start))
-      });
-
-      currentIndex = batchEndIndex; // Move to the next batch
+        progressCallback?.({
+          percent: scaledProgress,
+          stage: `Transcribing... (${completedWindows}/${totalWindows} windows complete)`,
+          current: completedWindows,
+          total: totalWindows,
+        });
+      }
     }
-    // --- End Batch Processing Logic ---
+    // --- End Transcription Window Processing Logic ---
 
     // Ensure sorting happens after all batches are done
     overallSegments.sort((a, b) => a.start - b.start);
 
+    // --- Add Pruning Step ---
+    log.info(
+      `[${operationId}] Pruning ${overallSegments.length} segments before finalization...`
+    );
+    const prunedSegments = pruneSegments({
+      segments: overallSegments,
+      minDurSec: PRUNING_MIN_DURATION_SEC, // Use constant
+      minWords: PRUNING_MIN_WORDS, // Use constant
+    });
+    log.info(
+      `[${operationId}] Pruned down to ${prunedSegments.length} segments.`
+    );
+    // --- End Pruning Step ---
+
     progressCallback?.({
       percent: PROGRESS_TRANSCRIPTION_END,
-      stage: `Finalizing ${overallSegments.length} subtitle segments...`,
+      stage: `Finalizing ${prunedSegments.length} subtitle segments...`,
     });
 
-    const finalSrtContent = buildSrt(overallSegments);
+    // Use prunedSegments for the final output
+    const finalSrtContent = buildSrt(prunedSegments);
 
     progressCallback?.({
       percent: PROGRESS_FINALIZING,
@@ -572,134 +642,134 @@ export async function generateSubtitlesFromAudio({
       error instanceof Error ? error.message : String(error)
     );
   } finally {
+    // Combine original chunk paths and window file paths for cleanup
+    const allTempFilesToDelete = [
+      ...createdChunkPaths,
+      ...createdWindowFilePaths,
+    ];
     log.info(
-      `[${operationId}] Cleaning up ${createdChunkPaths.length} chunk files...`
+      `[${operationId}] Cleaning up ${allTempFilesToDelete.length} temporary files (chunks, windows, lists)...`
     );
-    const deletionTasks = createdChunkPaths.map(chunkPath =>
-      fsp
-        .unlink(chunkPath)
-        .catch(err =>
-          console.warn(
-            `[${operationId}] Failed to delete chunk ${chunkPath}:`,
-            err
-          )
+    const deletionTasks = allTempFilesToDelete.map(filePath =>
+      fsp.unlink(filePath).catch(err =>
+        console.warn(
+          `[${operationId}] Failed to delete temp file ${filePath}:`,
+          err?.message || err // Log error message if available
         )
+      )
     );
     await Promise.allSettled(deletionTasks);
-    console.info(`[${operationId}] Finished cleaning up chunk files.`);
+    console.info(`[${operationId}] Finished cleaning up temporary files.`);
   }
+}
 
-  async function transcribeChunk({
-    chunkIndex,
-    chunkPath,
-    startTime,
-    signal,
-    openai,
-    operationId,
-    chunkDuration,
-    options,
-  }: {
-    chunkIndex: number;
-    chunkPath: string;
-    startTime: number;
-    signal?: AbortSignal;
-    openai: OpenAI;
-    operationId: string;
-    chunkDuration: number;
-    options?: GenerateSubtitlesOptions;
-  }): Promise<SrtSegment[]> {
-    try {
-      if (signal?.aborted) {
-        log.info(
-          `[${operationId}] Transcription for chunk ${chunkIndex} cancelled before API call.`
-        );
-        throw new Error('Operation cancelled');
-      }
-
-      console.info(
-        `[${operationId}] Sending chunk ${chunkIndex} (${(fs.statSync(chunkPath).size / (1024 * 1024)).toFixed(2)} MB) to OpenAI Whisper API.`
+async function transcribeChunk({
+  chunkIndex,
+  chunkPath,
+  startTime,
+  signal,
+  openai,
+  operationId,
+  chunkDuration,
+  options,
+}: {
+  chunkIndex: number;
+  chunkPath: string;
+  startTime: number;
+  signal?: AbortSignal;
+  openai: OpenAI;
+  operationId: string;
+  chunkDuration: number;
+  options?: GenerateSubtitlesOptions;
+}): Promise<SrtSegment[]> {
+  try {
+    if (signal?.aborted) {
+      log.info(
+        `[${operationId}] Transcription for chunk ${chunkIndex} cancelled before API call.`
       );
-      const fileStream = createFileFromPath(chunkPath);
-      const response = await openai.audio.transcriptions.create(
-        {
-          model: AI_MODELS.WHISPER.id,
-          file: fileStream,
-          response_format: 'srt',
-          temperature: 0,
-          language: options?.sourceLang,
-        },
-        { signal }
-      );
+      throw new Error('Operation cancelled');
+    }
 
-      console.info(
-        `[${operationId}] Received transcription for chunk ${chunkIndex}.`
-      );
-      const srtContent = response as unknown as string;
+    console.info(
+      `[${operationId}] Sending chunk ${chunkIndex} (${(fs.statSync(chunkPath).size / (1024 * 1024)).toFixed(2)} MB) to OpenAI Whisper API.`
+    );
+    const fileStream = createFileFromPath(chunkPath);
+    const response = await openai.audio.transcriptions.create(
+      {
+        model: AI_MODELS.WHISPER.id,
+        file: fileStream,
+        response_format: 'srt',
+        temperature: 0,
+        language: options?.sourceLang,
+      },
+      { signal }
+    );
 
-      log.debug(
-        `[${operationId}] Raw SRT content received for chunk ${chunkIndex} (startTime: ${startTime}):\n--BEGIN RAW SRT CHUNK ${chunkIndex}--\n${srtContent}\n--END RAW SRT CHUNK ${chunkIndex}--`
-      );
+    console.info(
+      `[${operationId}] Received transcription for chunk ${chunkIndex}.`
+    );
+    const srtContent = response as unknown as string;
 
-      const rawSegments = parseSrt(srtContent);
-      const segments = rawSegments.map(segment => {
-        if (
-          typeof segment.start === 'number' &&
-          typeof segment.end === 'number'
-        ) {
-          // Convert segment time (relative to chunk start) to absolute time
-          const absoluteStart = segment.start + startTime;
-          const absoluteEnd = segment.end + startTime;
+    log.debug(
+      `[${operationId}] Raw SRT content received for chunk ${chunkIndex} (startTime: ${startTime}):\n--BEGIN RAW SRT CHUNK ${chunkIndex}--\n${srtContent}\n--END RAW SRT CHUNK ${chunkIndex}--`
+    );
 
-          segment.start = absoluteStart;
-          segment.end = Math.max(absoluteStart, absoluteEnd); // Ensure end >= start
-        } else {
-          log.warn(
-            `[${operationId}] Chunk ${chunkIndex}: Segment found with non-numeric start/end times. Skipping offset.`,
-            segment
-          );
-        }
-        return segment;
-      });
-
-      const filteredSegments = segments.filter(segment => {
-        // Define the start and end of the "central" non-overlapped region
-        const centralRegionStart = startTime + OVERLAP_SEC;
-        const centralRegionEnd = startTime + chunkDuration - OVERLAP_SEC;
-
-        // Keep the segment if it overlaps with the central region at all.
-        // This means the segment's end must be after the central region starts,
-        // AND the segment's start must be before the central region ends.
-        const overlapsCentralRegion =
-          segment.end > centralRegionStart && segment.start < centralRegionEnd;
-
-        // Also handle edge case where chunkDuration is less than 2 * OVERLAP_SEC
-        const isChunkVeryShort = chunkDuration < 2 * OVERLAP_SEC;
-
-        return overlapsCentralRegion || isChunkVeryShort; // Keep if overlaps or if chunk is too short to have a central region
-      });
-
-      return filteredSegments;
-    } catch (error: any) {
-      console.error(
-        `[${operationId}] Error transcribing chunk ${chunkIndex}:`,
-        error.name,
-        error.message
-      );
-
+    const rawSegments = parseSrt(srtContent);
+    const segments = rawSegments.map(segment => {
       if (
-        signal?.aborted ||
-        error.name === 'AbortError' ||
-        (error instanceof Error && error.message === 'Operation cancelled')
+        typeof segment.start === 'number' &&
+        typeof segment.end === 'number'
       ) {
-        log.info(
-          `[${operationId}] Transcription for chunk ${chunkIndex} was cancelled.`
-        );
-        return [];
-      }
+        // Convert segment time (relative to chunk start) to absolute time
+        const absoluteStart = segment.start + startTime;
+        const absoluteEnd = segment.end + startTime;
 
-      // Handle other errors
+        segment.start = absoluteStart;
+        segment.end = Math.max(absoluteStart, absoluteEnd); // Ensure end >= start
+      } else {
+        log.warn(
+          `[${operationId}] Chunk ${chunkIndex}: Segment found with non-numeric start/end times. Skipping offset.`,
+          segment
+        );
+      }
+      return segment;
+    });
+
+    const filteredSegments = segments.filter(segment => {
+      // Define the start and end of the "central" non-overlapped region
+      const centralRegionStart = startTime;
+      const centralRegionEnd = startTime + chunkDuration;
+
+      // Keep the segment if it overlaps with the central region at all.
+      // This means the segment's end must be after the central region starts,
+      // AND the segment's start must be before the central region ends.
+      const overlapsCentralRegion =
+        segment.end > centralRegionStart && segment.start < centralRegionEnd;
+
+      return overlapsCentralRegion; // Keep if overlaps or if chunk is too short to have a central region
+    });
+
+    return filteredSegments;
+  } catch (error: any) {
+    console.error(
+      `[${operationId}] Error transcribing chunk ${chunkIndex}:`,
+      error.name,
+      error.message
+    );
+
+    if (
+      signal?.aborted ||
+      error.name === 'AbortError' ||
+      (error instanceof Error && error.message === 'Operation cancelled')
+    ) {
+      log.info(
+        `[${operationId}] Transcription for chunk ${chunkIndex} was cancelled.`
+      );
       return [];
     }
+
+    // Handle other errors
+    return [];
   }
 }
 
@@ -1320,8 +1390,8 @@ export async function detectSpeechIntervals({
 
 export function normalizeSpeechIntervals({
   intervals,
-  minGapSec = 0.2,
-  minDurSec = 0.5,
+  minGapSec = VAD_NORMALIZATION_MIN_GAP_SEC, // Use constant as default
+  minDurSec = VAD_NORMALIZATION_MIN_DURATION_SEC, // Use constant as default
 }: {
   intervals: Array<{ start: number; end: number }>;
   minGapSec?: number;
@@ -1337,9 +1407,6 @@ export function normalizeSpeechIntervals({
   return merged.filter(i => i.end - i.start >= minDurSec);
 }
 
-const OVERLAP_SEC = 0.5;
-const MAX_SPEECH_SEC = 30;
-
 export function chunkSpeechInterval({
   interval,
   duration,
@@ -1348,11 +1415,12 @@ export function chunkSpeechInterval({
   duration: number;
 }): Array<{ start: number; end: number }> {
   const span = interval.end - interval.start;
-  if (span <= MAX_SPEECH_SEC) {
+  if (span <= CHUNK_MAX_SPEECH_SEC) {
+    // Use constant
     return [
       {
-        start: Math.max(0, interval.start - OVERLAP_SEC),
-        end: Math.min(duration, interval.end + OVERLAP_SEC),
+        start: Math.max(0, interval.start - CHUNK_OVERLAP_SEC), // Use constant
+        end: Math.min(duration, interval.end + CHUNK_OVERLAP_SEC), // Use constant
       },
     ];
   }
@@ -1372,13 +1440,13 @@ export function chunkSpeechInterval({
 
 export function pruneSegments({
   segments,
-  rmsByTime, // map { second → rms }
-  rmsThreshold = 0.015,
-  minDurSec = 0.2,
-  minWords = 2,
+  rmsByTime, // Optional function to get RMS
+  rmsThreshold = PRUNING_RMS_THRESHOLD, // Use constant as default
+  minDurSec = PRUNING_MIN_DURATION_SEC, // Use constant as default
+  minWords = PRUNING_MIN_WORDS, // Use constant as default
 }: {
   segments: SrtSegment[];
-  rmsByTime: (t: number) => number; // helper that gives RMS at arbitrary time
+  rmsByTime?: (t: number) => number; // Made optional
   rmsThreshold?: number;
   minDurSec?: number;
   minWords?: number;
@@ -1386,8 +1454,22 @@ export function pruneSegments({
   return segments.filter(seg => {
     const dur = seg.end - seg.start;
     const wordCount = seg.text.trim().split(/\s+/).length;
-    const rms = rmsByTime((seg.start + seg.end) / 2);
-    return dur >= minDurSec && wordCount >= minWords && rms >= rmsThreshold;
+
+    // Basic duration and word count check
+    const meetsBasicCriteria = dur >= minDurSec && wordCount >= minWords;
+    if (!meetsBasicCriteria) {
+      return false; // Fail fast if basic criteria aren't met
+    }
+
+    // Optional RMS check
+    if (rmsByTime && typeof rmsThreshold === 'number') {
+      const rms = rmsByTime((seg.start + seg.end) / 2);
+      // If RMS check is enabled, it must also pass
+      return rms >= rmsThreshold;
+    }
+
+    // If RMS check is not enabled, just return the basic criteria result
+    return true;
   });
 }
 
@@ -1407,4 +1489,77 @@ export function mergeCloseSegments({
     } else out.push({ ...cur });
   }
   return out;
+}
+
+/** Calculates the RMS (Root Mean Square) of a 16-bit signed PCM buffer */
+function calculatePcmRms(pcm: Buffer): number {
+  if (pcm.length === 0) {
+    return 0;
+  }
+  let sumOfSquares = 0;
+  // Process 16-bit samples (2 bytes each)
+  for (let i = 0; i < pcm.length; i += 2) {
+    // Read signed 16-bit integer in little-endian format
+    const sample = pcm.readInt16LE(i);
+    // Normalize sample to range [-1.0, 1.0] (approximately)
+    const normalizedSample = sample / 32768.0;
+    sumOfSquares += normalizedSample * normalizedSample;
+  }
+  // Calculate mean square and then RMS
+  const meanSquare = sumOfSquares / (pcm.length / 2);
+  return Math.sqrt(meanSquare);
+}
+
+/**
+ * Groups chunks into windows ensuring each window's duration meets MIN_CONTEXT_SEC.
+ */
+function groupIntoContextWindows(
+  chunks: Array<{ path: string; start: number; duration: number }>,
+  minContextSec: number
+): Array<typeof chunks> {
+  const groups: Array<typeof chunks> = [];
+  if (chunks.length === 0) {
+    return groups;
+  }
+
+  let currentGroup: typeof chunks = [];
+  let currentGroupDuration = 0;
+
+  for (const chunk of chunks) {
+    currentGroup.push(chunk);
+    currentGroupDuration += chunk.duration;
+
+    // If adding the current chunk meets or exceeds the minimum context, finalize the group
+    if (currentGroupDuration >= minContextSec) {
+      groups.push(currentGroup);
+      // Reset for the next group
+      currentGroup = [];
+      currentGroupDuration = 0;
+    }
+  }
+
+  // Handle any remaining chunks in the buffer
+  if (currentGroup.length > 0) {
+    // If there's a previous group, append the remaining buffer to it
+    if (groups.length > 0) {
+      const lastGroup = groups[groups.length - 1];
+      // Add only if the last group itself isn't already large enough
+      // (avoids making the last group excessively large if the remainder is tiny)
+      const lastGroupDuration = lastGroup.reduce(
+        (sum, c) => sum + c.duration,
+        0
+      );
+      if (lastGroupDuration < minContextSec * 1.5) {
+        // Heuristic: don't append to already large groups
+        lastGroup.push(...currentGroup);
+      } else {
+        groups.push(currentGroup); // Create a final, potentially short group
+      }
+    } else {
+      // If this is the only group (total duration < minContextSec), just add it
+      groups.push(currentGroup);
+    }
+  }
+
+  return groups;
 }
