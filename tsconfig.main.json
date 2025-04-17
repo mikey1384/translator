@@ -5,7 +5,8 @@
     "moduleResolution": "NodeNext",
     "outDir": "dist",
     "rootDir": "src",
-    "sourceMap": true
+    "sourceMap": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/main/index.ts",

@@ -15,7 +15,9 @@ import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
 import { spawn } from 'child_process';
 import { once } from 'events';
-import Vad from 'webrtcvad';
+import * as webrtcvadPackage from 'webrtcvad';
+
+const Vad = webrtcvadPackage.default.default;
 
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -393,6 +395,9 @@ export async function generateSubtitlesFromAudio({
     const speechIntervals = normalizeSpeechIntervals({
       intervals: rawIntervals,
     });
+    log.info(
+      `[${operationId}] VAD found ${rawIntervals.length} raw intervals, normalized to ${speechIntervals.length} speech intervals.`
+    );
 
     let chunkIndex = 0;
 
@@ -437,6 +442,9 @@ export async function generateSubtitlesFromAudio({
         });
       }
     }
+    log.info(
+      `[${operationId}] Created ${chunkMetadataList.length} chunk metadata entries.`
+    );
 
     progressCallback?.({
       percent: PROGRESS_CHUNKING_DONE,
@@ -458,6 +466,9 @@ export async function generateSubtitlesFromAudio({
       const currentBatchMetadata = chunkMetadataList.slice(
         currentIndex,
         batchEndIndex
+      );
+      log.info(
+        `[${operationId}] Starting transcription batch. Index: ${currentIndex}, Batch Size: ${currentBatchMetadata.length}, Total Chunks: ${totalChunks}`
       );
       const batchPromises = currentBatchMetadata.map(chunkMeta => {
         if (!operationId) {
@@ -635,11 +646,12 @@ export async function generateSubtitlesFromAudio({
           typeof segment.start === 'number' &&
           typeof segment.end === 'number'
         ) {
-          segment.start = Math.max(0, segment.start + startTime - OVERLAP_SEC);
-          segment.end = Math.max(
-            segment.start,
-            segment.end + startTime - OVERLAP_SEC
-          );
+          // Convert segment time (relative to chunk start) to absolute time
+          const absoluteStart = segment.start + startTime;
+          const absoluteEnd = segment.end + startTime;
+
+          segment.start = absoluteStart;
+          segment.end = Math.max(absoluteStart, absoluteEnd); // Ensure end >= start
         } else {
           log.warn(
             `[${operationId}] Chunk ${chunkIndex}: Segment found with non-numeric start/end times. Skipping offset.`,
@@ -650,10 +662,20 @@ export async function generateSubtitlesFromAudio({
       });
 
       const filteredSegments = segments.filter(segment => {
-        const withinHeadOverlap = segment.start < startTime + OVERLAP_SEC;
-        const withinTailOverlap =
-          segment.end >= startTime + chunkDuration - OVERLAP_SEC;
-        return !(withinHeadOverlap || withinTailOverlap);
+        // Define the start and end of the "central" non-overlapped region
+        const centralRegionStart = startTime + OVERLAP_SEC;
+        const centralRegionEnd = startTime + chunkDuration - OVERLAP_SEC;
+
+        // Keep the segment if it overlaps with the central region at all.
+        // This means the segment's end must be after the central region starts,
+        // AND the segment's start must be before the central region ends.
+        const overlapsCentralRegion =
+          segment.end > centralRegionStart && segment.start < centralRegionEnd;
+
+        // Also handle edge case where chunkDuration is less than 2 * OVERLAP_SEC
+        const isChunkVeryShort = chunkDuration < 2 * OVERLAP_SEC;
+
+        return overlapsCentralRegion || isChunkVeryShort; // Keep if overlaps or if chunk is too short to have a central region
       });
 
       return filteredSegments;
