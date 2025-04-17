@@ -480,86 +480,59 @@ export async function generateSubtitlesFromAudio({
         tempDir,
         `window_${windowIndex}_${operationId}.wav`
       );
-      const listFilePath = `${combinedPath}.txt`; // Temp file for ffmpeg concat list
 
       createdWindowFilePaths.push(combinedPath); // Track for cleanup
-      createdWindowFilePaths.push(listFilePath); // Track for cleanup
 
       try {
-        // 1. Create the concat list file
-        const concatListContent = currentWindow
-          .map(c => `file '${c.path.replace(/'/g, "'\\''")}'`)
-          .join('\n'); // Basic escaping for paths
-        await fsp.writeFile(listFilePath, concatListContent);
+        // 1. Calculate window boundaries (including silence)
+        const firstChunk = currentWindow[0];
+        const lastChunk = currentWindow[currentWindow.length - 1];
 
-        // 2. Run ffmpeg concat demuxer
-        log.debug(
-          `[${operationId}] Concatenating ${currentWindow.length} chunks for window ${windowIndex}...`
+        // Add overlap, clamped to 0 and total audio duration
+        const windowStart = Math.max(0, firstChunk.start - CHUNK_OVERLAP_SEC);
+        const windowEnd = Math.min(
+          duration, // 'duration' is the total audio duration from earlier
+          lastChunk.start + lastChunk.duration + CHUNK_OVERLAP_SEC
         );
-        const ffmpegConcat = spawn(ffmpegService.getFFmpegPath(), [
-          '-f',
-          'concat',
-          '-safe',
-          '0', // Allow unsafe file paths (relative paths in list)
-          '-i',
-          listFilePath,
-          '-c',
-          'copy', // Just copy streams, no re-encoding
-          combinedPath,
-        ]);
+        const windowDur = windowEnd - windowStart;
 
-        let ffmpegErrorOutput = '';
-        ffmpegConcat.stderr.on('data', data => {
-          ffmpegErrorOutput += data.toString();
+        if (windowDur <= 0) {
+          log.warn(
+            `[${operationId}] Calculated window ${windowIndex} has zero or negative duration (${windowDur}s), skipping.`
+          );
+          continue; // Skip this window
+        }
+
+        log.debug(
+          `[${operationId}] Extracting continuous window ${windowIndex}: ${windowStart.toFixed(2)}s - ${windowEnd.toFixed(2)}s (Duration: ${windowDur.toFixed(2)}s)`
+        );
+
+        // 2. Extract the single continuous audio segment for the window
+        await ffmpegService.extractAudioSegment({
+          inputPath: inputAudioPath, // Use the original full audio path
+          outputPath: combinedPath, // Output path for the window's audio
+          startTime: windowStart,
+          duration: windowDur,
+          operationId: `${operationId}-window-${windowIndex}`, // Unique ID
         });
 
-        const closePromise = once(ffmpegConcat, 'close');
-        const [exitCode] = (await closePromise) as [
-          number | null,
-          NodeJS.Signals | null,
-        ]; // Type assertion needed for TS
+        // 3. Transcribe the extracted window (This part should already be below)
+        // Make sure the startTime and chunkDuration passed to transcribeChunk are updated:
 
-        if (exitCode !== 0) {
-          log.error(
-            `[${operationId}] FFmpeg concat failed for window ${windowIndex}. Exit code: ${exitCode}. Error: ${ffmpegErrorOutput}`
-          );
-          // Decide how to handle: skip window, throw error? Let's skip for now.
-          completedWindows++; // Still count as "processed" for progress
-          continue;
-        }
-        log.debug(
-          `[${operationId}] Concatenation complete for window ${windowIndex}: ${combinedPath}`
-        );
-
-        // 3. Transcribe the combined window
-        const totalStart = currentWindow[0].start; // Start time is the start of the first chunk
-        const totalDuration = currentWindow.reduce(
-          (sum, c) => sum + c.duration,
-          0
-        );
-
-        // Note: Using transcribeChunk directly. Its internal filtering will now apply
-        // to the start/end of the combined window based on CHUNK_OVERLAP_SEC.
         const windowSegments = await transcribeChunk({
-          chunkIndex: windowIndex, // Use window index for logging clarity
+          chunkIndex: windowIndex,
           chunkPath: combinedPath,
-          startTime: totalStart,
+          startTime: windowStart, // Pass the calculated windowStart
           signal,
           openai,
           operationId: operationId as string,
-          chunkDuration: totalDuration,
+          chunkDuration: windowDur, // Pass the calculated windowDur
         });
 
         if (windowSegments.length > 0) {
-          // Adjust timestamps before adding to the main list
-          const adjustedSegments = windowSegments.map(seg => ({
-            ...seg,
-            start: seg.start + totalStart,
-            end: seg.end + totalStart,
-          }));
-          overallSegments.push(...adjustedSegments);
+          overallSegments.push(...windowSegments);
           log.info(
-            `[${operationId}] Successfully transcribed window ${windowIndex}. Added ${adjustedSegments.length} adjusted segments.`
+            `[${operationId}] Successfully transcribed window ${windowIndex}. Added ${windowSegments.length} segments.`
           );
         } else {
           console.warn(
