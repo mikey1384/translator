@@ -660,7 +660,7 @@ async function transcribeChunk({
     // Filter based on Whisper's confidence and map to SrtSegment
     const srtSegments: SrtSegment[] = segments
       .filter(s => {
-        const isSpeech = s.no_speech_prob < 0.6 && s.avg_logprob > -1.0;
+        const isSpeech = s.no_speech_prob < 0.8 && s.avg_logprob > -2.0;
         if (!isSpeech) {
           log.debug(
             `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(2)}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
