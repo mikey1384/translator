@@ -385,11 +385,6 @@ export async function generateSubtitlesFromAudio({
       stage: 'Audio analyzed',
     });
 
-    progressCallback?.({
-      percent: PROGRESS_ANALYSIS_DONE,
-      stage: 'Detecting initial speech boundaries...',
-    });
-
     // --- Detect Initial Intervals ---
     const rawIntervals = await detectSpeechIntervals({
       inputPath: inputAudioPath,
