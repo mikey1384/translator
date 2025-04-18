@@ -26,11 +26,12 @@ const MERGE_GAP_SEC = 0.3; // Max gap between VAD intervals to merge into a spee
 const PAD_SEC = 0.2; // Padding added around speech chunks
 const MAX_CHUNK_DURATION_SEC = 60; // Max duration for a speech chunk before splitting
 
-const PRUNING_MIN_DURATION_SEC = 0.2; // Min duration for a final pruned segment
+const PRUNING_MIN_DURATION_SEC = 0.1; // Min duration for a final pruned segment (Relaxed)
 const PRUNING_MIN_WORDS = 1; // Min words for a final pruned segment
 
 // --- Concurrency Setting ---
-const CONCURRENCY = 10; // Number of chunks to process in parallel
+const TRANSCRIPTION_BATCH_SIZE = 50; // Number of chunks to process in parallel
+const USE_WHISPER_GATE = true; // Master switch for Whisper's confidence filtering
 
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -543,12 +544,15 @@ export async function generateSubtitlesFromAudio({
     for (
       let batchStart = 0;
       batchStart < totalChunks;
-      batchStart += CONCURRENCY
+      batchStart += TRANSCRIPTION_BATCH_SIZE
     ) {
-      const batchEnd = Math.min(batchStart + CONCURRENCY, totalChunks);
+      const batchEnd = Math.min(
+        batchStart + TRANSCRIPTION_BATCH_SIZE,
+        totalChunks
+      );
       const batch = finalChunkMetadata.slice(batchStart, batchEnd);
       log.info(
-        `[${operationId}] Processing transcription batch ${Math.ceil(batchEnd / CONCURRENCY)}/${Math.ceil(totalChunks / CONCURRENCY)} (Chunks ${batchStart + 1}-${batchEnd})`
+        `[${operationId}] Processing transcription batch ${Math.ceil(batchEnd / TRANSCRIPTION_BATCH_SIZE)}/${Math.ceil(totalChunks / TRANSCRIPTION_BATCH_SIZE)} (Chunks ${batchStart + 1}-${batchEnd})`
       );
 
       const promises = batch.map(meta =>
@@ -689,34 +693,47 @@ export async function generateSubtitlesFromAudio({
 
     // --- Add Post-Transcription VAD Filtering ---
     log.info(
-      `[${operationId}] Performing post-transcription VAD filtering on ${overallSegments.length} segments...`
+      `[${operationId}] Performing post-transcription filtering on ${overallSegments.length} segments...`
     );
-    const postVadRawIntervals = await detectSpeechIntervals({
-      inputPath: inputAudioPath,
-    });
-    const postVadSpeechIntervals = normalizeSpeechIntervals({
-      intervals: postVadRawIntervals,
-      minGapSec: VAD_NORMALIZATION_MIN_GAP_SEC, // Use existing constants
-      minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC,
-    });
-    log.info(
-      `[${operationId}] Post-VAD found ${postVadSpeechIntervals.length} speech intervals.`
-    );
-    const vadFilteredSegments = overallSegments.filter(seg =>
-      hasSufficientSpeech({
-        seg,
-        postVadSpeechIntervals,
-        minIoU: 0.25,
-      })
-    );
-    log.info(
-      `[${operationId}] Filtered ${overallSegments.length} segments down to ${vadFilteredSegments.length} based on VAD.`
-    );
+
+    let filteredSegmentsAfterTranscription: SrtSegment[];
+
+    if (USE_WHISPER_GATE) {
+      log.info(
+        `[${operationId}] Skipping IoU VAD filtering because USE_WHISPER_GATE is true.`
+      );
+      filteredSegmentsAfterTranscription = [...overallSegments]; // Use segments as-is (already filtered by Whisper)
+    } else {
+      log.info(
+        `[${operationId}] Applying IoU VAD filtering (USE_WHISPER_GATE is false).`
+      );
+      const postVadRawIntervals = await detectSpeechIntervals({
+        inputPath: inputAudioPath,
+      });
+      const postVadSpeechIntervals = normalizeSpeechIntervals({
+        intervals: postVadRawIntervals,
+        minGapSec: VAD_NORMALIZATION_MIN_GAP_SEC, // Use existing constants
+        minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC,
+      });
+      log.info(
+        `[${operationId}] Post-VAD found ${postVadSpeechIntervals.length} speech intervals for IoU check.`
+      );
+      filteredSegmentsAfterTranscription = overallSegments.filter(seg =>
+        hasSufficientSpeech({
+          seg,
+          postVadSpeechIntervals,
+          minIoU: 0.25, // Keep the 0.25 threshold for when this filter IS used
+        })
+      );
+      log.info(
+        `[${operationId}] IoU VAD filtering reduced ${overallSegments.length} segments down to ${filteredSegmentsAfterTranscription.length}.`
+      );
+    }
 
     // Replace overallSegments with the filtered list
     overallSegments.length = 0; // Clear the array
-    overallSegments.push(...vadFilteredSegments); // Add filtered segments back
-    // --- End Post-Transcription VAD Filtering ---
+    overallSegments.push(...filteredSegmentsAfterTranscription); // Add filtered segments back
+    // --- End Post-Transcription Filtering ---
 
     // --- Add Pruning Step ---
     log.info(
@@ -849,7 +866,7 @@ async function transcribeChunk({
       {
         model: AI_MODELS.WHISPER.id,
         file: fileStream,
-        response_format: 'srt',
+        response_format: 'verbose_json',
         temperature: 0,
         language: options?.sourceLang,
       },
@@ -859,57 +876,75 @@ async function transcribeChunk({
     console.info(
       `[${operationId}] Received transcription for chunk ${chunkIndex}.`
     );
-    const srtContent = response as unknown as string;
+
+    // Define an interface for the verbose_json segment structure
+    interface WhisperSegment {
+      id: number; // Whisper segment ID (0-based)
+      seek: number; // Seek offset in the chunk audio (seconds)
+      start: number; // Segment start time relative to chunk audio (seconds)
+      end: number; // Segment end time relative to chunk audio (seconds)
+      text: string;
+      tokens: number[]; // Token IDs
+      temperature: number;
+      avg_logprob: number;
+      compression_ratio: number;
+      no_speech_prob: number;
+    }
+
+    // Cast the response (ensure it matches the expected structure)
+    const verboseResponse = response as unknown as {
+      text: string; // Full transcript text
+      segments: WhisperSegment[];
+      language: string;
+    };
+
+    if (!verboseResponse || !Array.isArray(verboseResponse.segments)) {
+      log.warn(
+        `[${operationId}] Chunk ${chunkIndex}: Invalid verbose_json response structure. Discarding.`
+      );
+      return [];
+    }
 
     log.debug(
-      `[${operationId}] Raw SRT content received for chunk ${chunkIndex} (startTime: ${startTime}):\n--BEGIN RAW SRT CHUNK ${chunkIndex}--\n${srtContent}\n--END RAW SRT CHUNK ${chunkIndex}--`
+      `[${operationId}] Raw verbose_json received for chunk ${chunkIndex} (startTime: ${startTime}): Found ${verboseResponse.segments.length} segments.`
     );
 
-    const rawSegments = parseSrt(srtContent);
+    // Filter segments based on confidence scores (conditionally)
+    const speechSegments = verboseResponse.segments.filter(seg => {
+      if (!USE_WHISPER_GATE) {
+        return true; // Skip filtering if the gate is off
+      }
+      // --- Apply Whisper gate filtering ---
+      const isSpeech = seg.no_speech_prob < 0.6 && seg.avg_logprob > -1.0;
+      if (!isSpeech) {
+        log.debug(
+          `[${operationId}] Chunk ${chunkIndex}: Filtering out segment ${seg.id} via Whisper Gate (no_speech_prob: ${seg.no_speech_prob.toFixed(2)}, avg_logprob: ${seg.avg_logprob.toFixed(2)}) Text: "${seg.text.trim()}"`
+        );
+      }
+      return isSpeech;
+      // --- End Whisper gate filtering ---
+    });
 
-    // Map to new objects with absolute timestamps and filter in one step
-    const absoluteSegments = rawSegments
-      .map(segment => {
-        // Default to invalid times if parsing failed
-        let absoluteStart = -1;
-        let absoluteEnd = -1;
+    // Map filtered segments to SrtSegment format with absolute timestamps
+    const absoluteSegments = speechSegments.map((segment, index) => {
+      // Calculate absolute time relative to the original audio
+      const absoluteStart = segment.start + startTime;
+      let absoluteEnd = segment.end + startTime;
+      // Ensure end >= start
+      absoluteEnd = Math.max(absoluteStart, absoluteEnd);
 
-        if (
-          typeof segment.start === 'number' &&
-          typeof segment.end === 'number'
-        ) {
-          // Calculate absolute time relative to the original audio
-          absoluteStart = segment.start + startTime;
-          absoluteEnd = segment.end + startTime;
-          // Ensure end >= start
-          absoluteEnd = Math.max(absoluteStart, absoluteEnd);
-        } else {
-          log.warn(
-            `[${operationId}] Chunk ${chunkIndex}: Segment ${segment.index} found with non-numeric start/end times. Discarding.`,
-            segment
-          );
-        }
+      return {
+        index: index + 1, // Re-index based on the filtered list
+        start: absoluteStart,
+        end: absoluteEnd,
+        text: segment.text.trim(), // Trim whitespace
+      };
+    });
 
-        // Return a new object conforming to SrtSegment (or null if times invalid)
-        return absoluteStart !== -1
-          ? {
-              index: segment.index,
-              start: absoluteStart,
-              end: absoluteEnd,
-              text: segment.text,
-            }
-          : null;
-      })
-      .filter((seg): seg is SrtSegment => seg !== null); // Filter out nulls and type guard
-
-    // Optional: Add logging to see what segments are produced *before* VAD filtering
     log.debug(
-      `[${operationId}] Chunk ${chunkIndex}: Produced ${absoluteSegments.length} segments with absolute timestamps before VAD filtering.`
+      `[${operationId}] Chunk ${chunkIndex}: Produced ${absoluteSegments.length} segments after confidence filtering.`
     );
 
-    // Return the segments with correct absolute timestamps.
-    // The overlap filtering suggested earlier can be done AFTER the VAD filtering if needed,
-    // or we can rely on the VAD filtering + final pruneSegments. Let's skip overlap filtering for now.
     return absoluteSegments;
   } catch (error: any) {
     console.error(
