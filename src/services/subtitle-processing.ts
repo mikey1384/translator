@@ -27,8 +27,10 @@ const CHUNK_MAX_SPEECH_SEC = 60; // Max duration of a single speech chunk before
 const PRUNING_RMS_THRESHOLD = 0.015; // RMS threshold for pruning (if RMS check is enabled)
 const PRUNING_MIN_DURATION_SEC = 0.2; // Min duration for a final pruned segment
 const PRUNING_MIN_WORDS = 1; // Min words for a final pruned segment
-const MIN_CONTEXT_SEC = 30; // Target minimum context window for Whisper
-// --- End Configuration Constants ---
+const LONG_SILENCE_SEC = 20; // Threshold to treat silence as a hard break
+
+// --- Concurrency Setting ---
+const CONCURRENCY = 10; // Number of chunks to process in parallel
 
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -385,140 +387,231 @@ export async function generateSubtitlesFromAudio({
 
     progressCallback?.({
       percent: PROGRESS_ANALYSIS_DONE,
-      stage: 'Calculating transcription windows...',
+      stage: 'Detecting initial speech boundaries...',
     });
 
-    // --- Generate Fixed Overlapping Windows ---
-    const fixedWindows: Array<{
+    // --- Detect Initial Intervals ---
+    const rawIntervals = await detectSpeechIntervals({
+      inputPath: inputAudioPath,
+    });
+    // Use normalization defaults from constants
+    const speechIntervals = normalizeSpeechIntervals({
+      intervals: rawIntervals,
+    });
+    log.info(
+      `[${operationId}] Initial VAD found ${rawIntervals.length} raw intervals, normalized to ${speechIntervals.length} speech intervals.`
+    );
+    // --- End Detect Initial Intervals ---
+
+    progressCallback?.({
+      percent: PROGRESS_ANALYSIS_DONE + 5, // Slightly advance progress
+      stage: 'Calculating audio chunk metadata...',
+    });
+
+    // --- Generate Chunk Metadata (Respecting Long Silences) ---
+    const allChunkMetadata: Array<{
       start: number;
       duration: number;
       index: number;
     }> = [];
-    const windowSizeSec = MIN_CONTEXT_SEC; // Use the constant
-    const stepSec = windowSizeSec - CHUNK_OVERLAP_SEC; // How much to advance start time each step
-    let windowIndex = 0;
+    let chunkIndex = 0;
+    let currentSceneIntervals: Array<{ start: number; end: number }> = [];
 
-    for (
-      let currentStart = 0;
-      currentStart < duration;
-      currentStart += stepSec
-    ) {
-      windowIndex++;
-      const currentEnd = Math.min(currentStart + windowSizeSec, duration);
-      const currentDuration = currentEnd - currentStart;
+    log.info(
+      `[${operationId}] Grouping ${speechIntervals.length} VAD intervals into scenes separated by >= ${LONG_SILENCE_SEC}s silence...`
+    );
 
-      // Optional: Skip windows that are too short (e.g., less than overlap)
-      if (currentDuration < CHUNK_OVERLAP_SEC && currentStart !== 0) {
-        // Allow first window even if short
-        log.debug(`Skipping very short final window fragment ${windowIndex}`);
-        continue;
+    for (let i = 0; i < speechIntervals.length; i++) {
+      const currentInterval = speechIntervals[i];
+      currentSceneIntervals.push(currentInterval); // Add to current scene
+
+      const isLastInterval = i === speechIntervals.length - 1;
+      let isLongGapNext = false;
+      if (!isLastInterval) {
+        const nextInterval = speechIntervals[i + 1];
+        isLongGapNext =
+          nextInterval.start - currentInterval.end > LONG_SILENCE_SEC;
       }
 
-      fixedWindows.push({
-        start: currentStart,
-        duration: currentDuration,
-        index: windowIndex,
-      });
-      // Ensure the loop terminates even if stepSec is zero or negative (shouldn't happen with valid constants)
-      if (stepSec <= 0) {
-        log.error('Window step size is zero or negative, breaking loop.');
-        break;
+      // If it's the last interval OR there's a long gap after this one, process the current scene
+      if (isLastInterval || isLongGapNext) {
+        log.debug(
+          `[${operationId}] Processing scene ending with interval ${i} (${currentInterval.start.toFixed(2)}-${currentInterval.end.toFixed(2)}s). Contains ${currentSceneIntervals.length} VAD intervals.`
+        );
+
+        // Process all intervals collected in the current scene
+        for (const sceneInterval of currentSceneIntervals) {
+          // Apply the original chunking logic (max size, overlap) to *this* interval
+          const subChunks = chunkSpeechInterval({
+            interval: sceneInterval,
+            duration,
+          });
+          for (const c of subChunks) {
+            chunkIndex++;
+            allChunkMetadata.push({
+              start: c.start, // Absolute start time
+              duration: c.end - c.start, // Chunk duration
+              index: chunkIndex,
+            });
+          }
+        }
+        // Reset for the next scene
+        currentSceneIntervals = [];
       }
     }
     log.info(
-      `[${operationId}] Created ${fixedWindows.length} fixed transcription windows covering ${duration.toFixed(2)}s.`
+      `[${operationId}] Calculated metadata for ${allChunkMetadata.length} chunks, respecting long silences.`
     );
-    // --- End Fixed Window Generation ---
+    // --- End Generate Chunk Metadata ---
 
-    // --- Transcription Window Processing Logic --- (Starts below)
-    let completedWindows = 0;
-    // IMPORTANT: Update totalWindows calculation
-    const totalWindows = fixedWindows.length;
+    // --- Concurrent Transcription Window Processing ---
+    progressCallback?.({
+      percent: PROGRESS_TRANSCRIPTION_START,
+      stage: `Starting transcription for ${allChunkMetadata.length} chunks...`,
+    });
 
-    // IMPORTANT: Modify the loop to use 'fixedWindows'
-    for (let i = 0; i < fixedWindows.length; i++) {
-      if (signal?.aborted) throw new Error('Operation cancelled');
+    const totalChunks = allChunkMetadata.length;
+    let completedChunks = 0;
+    const resultsSegments: SrtSegment[] = [];
 
-      // IMPORTANT: Use the fixedWindow object directly
-      const currentWindow = fixedWindows[i];
-      const windowLogIndex = currentWindow.index; // Use index from object
-      const combinedPath = path.join(
-        tempDir,
-        `window_${windowLogIndex}_${operationId}.wav` // Use windowLogIndex
+    // Check for cancellation before starting the loop
+    if (signal?.aborted) throw new Error('Operation cancelled');
+
+    for (
+      let batchStart = 0;
+      batchStart < totalChunks;
+      batchStart += CONCURRENCY
+    ) {
+      const batchEnd = Math.min(batchStart + CONCURRENCY, totalChunks);
+      const batch = allChunkMetadata.slice(batchStart, batchEnd);
+      log.info(
+        `[${operationId}] Processing transcription batch ${Math.ceil(batchEnd / CONCURRENCY)}/${Math.ceil(totalChunks / CONCURRENCY)} (Chunks ${batchStart + 1}-${batchEnd})`
       );
 
-      createdWindowFilePaths.push(combinedPath); // Track for cleanup
+      const promises = batch.map(meta =>
+        (async () => {
+          if (signal?.aborted) throw new Error('Operation cancelled'); // Check within promise too
 
-      try {
-        const windowStart = currentWindow.start;
-        const windowDur = currentWindow.duration;
-
-        if (windowDur <= 0) {
-          log.warn(
-            `[${operationId}] Window ${windowLogIndex} has zero or negative duration (${windowDur}s), skipping.`
+          const { index: chunkIndex, start, duration: chunkDur } = meta; // Renamed duration to chunkDur
+          const chunkAudioPath = path.join(
+            tempDir,
+            `chunk_${chunkIndex}_${operationId}.wav`
           );
-          continue; // Skip this window
+          createdWindowFilePaths.push(chunkAudioPath); // Track for cleanup
+
+          try {
+            if (chunkDur <= 0) {
+              log.warn(
+                `[${operationId}] Chunk ${chunkIndex} has zero or negative duration (${chunkDur}s), skipping.`
+              );
+              return []; // Skip invalid chunks
+            }
+
+            log.debug(
+              `[${operationId}] Extracting chunk ${chunkIndex}: ${start.toFixed(2)}s (Duration: ${chunkDur.toFixed(2)}s)`
+            );
+
+            // 1. Extract the audio segment for THIS chunk
+            await ffmpegService.extractAudioSegment({
+              inputPath: inputAudioPath,
+              outputPath: chunkAudioPath,
+              startTime: start,
+              duration: chunkDur, // Use chunkDur here
+              operationId: `${operationId}-extract-chunk-${chunkIndex}`,
+              // Pass signal for potential cancellation during extraction
+              signal: signal,
+            });
+
+            // Check signal again after extraction
+            if (signal?.aborted) throw new Error('Operation cancelled');
+
+            // 2. Transcribe THIS chunk
+            const windowSegments = await transcribeChunk({
+              chunkIndex,
+              chunkPath: chunkAudioPath,
+              startTime: start,
+              signal,
+              openai,
+              operationId: operationId as string,
+            });
+
+            if (windowSegments.length > 0) {
+              log.info(
+                `[${operationId}] Successfully transcribed chunk ${chunkIndex}. Added ${windowSegments.length} segments.`
+              );
+            } else {
+              log.warn(
+                `[${operationId}] Chunk ${chunkIndex} returned no segments post-transcription.`
+              );
+            }
+            return windowSegments; // Return segments (can be empty)
+          } catch (chunkError: any) {
+            // Don't re-throw cancellation errors, just return empty
+            if (
+              chunkError instanceof Error &&
+              chunkError.message === 'Operation cancelled'
+            ) {
+              log.info(
+                `[${operationId}] Chunk ${chunkIndex} processing cancelled.`
+              );
+              return [];
+            }
+            // Log other errors
+            console.error(
+              `[${operationId}] Error processing chunk ${chunkIndex}:`,
+              chunkError?.message || chunkError
+            );
+            // Optionally report error via progress callback
+            progressCallback?.({
+              percent: -1, // Indicate error maybe?
+              stage: `Error in chunk ${chunkIndex}`,
+              error: chunkError?.message || String(chunkError),
+            });
+            return []; // Return empty array on error to not break Promise.all
+          } finally {
+            // Optional: Cleanup individual chunk file immediately after use?
+            // Or keep the bulk cleanup at the end. Current logic keeps bulk cleanup.
+            // await fsp.unlink(chunkAudioPath).catch(err => log.warn(`Failed to delete chunk ${chunkIndex} immediately: ${err}`));
+          }
+        })()
+      ); // End of async IIFE
+
+      // Await all promises in the current batch
+      // Promise.allSettled might be safer if you want to guarantee progress update even if one promise unexpectedly throws (despite inner catch)
+      const batchResults = await Promise.all(promises);
+
+      // Aggregate segments from successful results
+      batchResults.forEach(winSegs => {
+        if (Array.isArray(winSegs)) {
+          // Ensure it's an array (handles errors returning [])
+          resultsSegments.push(...winSegs);
         }
+      });
+      completedChunks += batch.length; // Increment by actual batch size processed
 
-        log.debug(
-          `[${operationId}] Extracting window ${windowLogIndex}: ${windowStart.toFixed(2)}s (Duration: ${windowDur.toFixed(2)}s)`
-        );
+      // Update progress after batch completion
+      const currentProgressPercent = (completedChunks / totalChunks) * 100;
+      const scaledProgress = Math.round(
+        PROGRESS_TRANSCRIPTION_START +
+          (currentProgressPercent / 100) *
+            (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START)
+      );
+      progressCallback?.({
+        percent: scaledProgress,
+        stage: `Transcribing... (${completedChunks}/${totalChunks} chunks processed)`,
+        current: completedChunks,
+        total: totalChunks,
+        partialResult: buildSrt(
+          resultsSegments.slice().sort((a, b) => a.start - b.start)
+        ), // Show intermediate results maybe?
+      });
 
-        // 2. Extract the single continuous audio segment for the window (Keep this part)
-        await ffmpegService.extractAudioSegment({
-          inputPath: inputAudioPath,
-          outputPath: combinedPath,
-          startTime: windowStart,
-          duration: windowDur,
-          operationId: `${operationId}-window-${windowLogIndex}`,
-        });
+      // Check for cancellation between batches
+      if (signal?.aborted) throw new Error('Operation cancelled');
+    } // --- End of Batch Processing Loop ---
 
-        // 3. Transcribe the extracted window (Keep this part, ensure args are correct)
-        const windowSegments = await transcribeChunk({
-          chunkIndex: windowLogIndex, // Use windowLogIndex
-          chunkPath: combinedPath,
-          startTime: windowStart, // Use windowStart from object
-          signal,
-          openai,
-          operationId: operationId as string,
-          chunkDuration: windowDur, // Use windowDur from object
-        });
-
-        if (windowSegments.length > 0) {
-          overallSegments.push(...windowSegments);
-          log.info(
-            `[${operationId}] Successfully transcribed window ${windowLogIndex}. Added ${windowSegments.length} segments.`
-          );
-        } else {
-          console.warn(
-            `[${operationId}] Window ${windowLogIndex} returned no segments.`
-          );
-        }
-      } catch (windowError) {
-        console.error(
-          `[${operationId}] Error processing window ${windowLogIndex}:`,
-          windowError
-        );
-        // Optionally re-throw or just log and continue
-      } finally {
-        completedWindows++; // Increment progress counter
-
-        // Update progress callback based on windows
-        const currentProgressPercent = (completedWindows / totalWindows) * 100;
-        const scaledProgress = Math.round(
-          PROGRESS_TRANSCRIPTION_START +
-            (currentProgressPercent / 100) *
-              (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START)
-        );
-
-        progressCallback?.({
-          percent: scaledProgress,
-          stage: `Transcribing... (${completedWindows}/${totalWindows} windows complete)`,
-          current: completedWindows,
-          total: totalWindows,
-        });
-      }
-    } // --- End of Window Processing Loop ---
+    // Push all aggregated segments into the main array
+    overallSegments.push(...resultsSegments);
 
     // Ensure sorting happens after all batches are done
     overallSegments.sort((a, b) => a.start - b.start);
@@ -638,7 +731,6 @@ async function transcribeChunk({
   signal,
   openai,
   operationId,
-  chunkDuration,
   options,
 }: {
   chunkIndex: number;
@@ -647,7 +739,6 @@ async function transcribeChunk({
   signal?: AbortSignal;
   openai: OpenAI;
   operationId: string;
-  chunkDuration: number;
   options?: GenerateSubtitlesOptions;
 }): Promise<SrtSegment[]> {
   try {

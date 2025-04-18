@@ -18,6 +18,9 @@ interface GenerateSubtitlesFromAudioArgs {
   services: {
     ffmpegService: FFmpegService;
   };
+  options?: {
+    targetLang?: string;
+  };
 }
 
 interface MergeProgressCallback {
