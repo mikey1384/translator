@@ -14,20 +14,20 @@ import log from 'electron-log';
 import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
 import { spawn } from 'child_process';
-import { once } from 'events';
 import * as webrtcvadPackage from 'webrtcvad';
 
 const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // Min gap between speech intervals to merge
-const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.75; // Min duration for a VAD-detected speech interval
-const CHUNK_OVERLAP_SEC = 0.5; // Overlap added to start/end of chunks
-const CHUNK_MAX_SPEECH_SEC = 60; // Max duration of a single speech chunk before splitting
-const PRUNING_RMS_THRESHOLD = 0.015; // RMS threshold for pruning (if RMS check is enabled)
+const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
+
+const MERGE_GAP_SEC = 0.3; // Max gap between VAD intervals to merge into a speech block
+const PAD_SEC = 0.2; // Padding added around speech chunks
+const MAX_CHUNK_DURATION_SEC = 60; // Max duration for a speech chunk before splitting
+
 const PRUNING_MIN_DURATION_SEC = 0.2; // Min duration for a final pruned segment
 const PRUNING_MIN_WORDS = 1; // Min words for a final pruned segment
-const LONG_SILENCE_SEC = 20; // Threshold to treat silence as a hard break
 
 // --- Concurrency Setting ---
 const CONCURRENCY = 10; // Number of chunks to process in parallel
@@ -408,69 +408,132 @@ export async function generateSubtitlesFromAudio({
       stage: 'Calculating audio chunk metadata...',
     });
 
-    // --- Generate Chunk Metadata (Respecting Long Silences) ---
-    const allChunkMetadata: Array<{
+    // --- Generate Chunk Metadata (Silence-Based) ---
+    progressCallback?.({
+      percent: PROGRESS_ANALYSIS_DONE + 5, // Keep existing progress steps
+      stage: 'Merging adjacent speech intervals...',
+    });
+
+    // 1. Get Raw Intervals (you already have this from the detectSpeechIntervals call)
+    // const rawIntervals = await detectSpeechIntervals(...)
+
+    // 2. Merge adjacent raw intervals into larger speech blocks
+    const speechBlocks = mergeAdjacentIntervals(speechIntervals, MERGE_GAP_SEC);
+    log.info(
+      `[${operationId}] Merged ${rawIntervals.length} raw VAD intervals into ${speechBlocks.length} speech blocks (Merge Gap: ${MERGE_GAP_SEC}s).`
+    );
+
+    // 3. Split any speech blocks longer than MAX_CHUNK_DURATION_SEC
+    const splitSpeechBlocks = speechBlocks.flatMap(block =>
+      splitLongInterval(block, rawIntervals, MAX_CHUNK_DURATION_SEC)
+    );
+    log.info(
+      `[${operationId}] Split long blocks into ${splitSpeechBlocks.length} final speech segments (Max Duration: ${MAX_CHUNK_DURATION_SEC}s).`
+    );
+
+    // 4. Pad speech chunks and clamp to audio boundaries
+    const paddedSpeechChunks = splitSpeechBlocks
+      .map(block => ({
+        start: Math.max(0, block.start - PAD_SEC),
+        end: Math.min(duration, block.end + PAD_SEC), // 'duration' is the total audio duration from getMediaDuration
+        isSilence: false,
+      }))
+      .sort((a, b) => a.start - b.start); // Sort by start time
+
+    log.info(
+      `[${operationId}] Padded ${paddedSpeechChunks.length} speech segments (Pad: ${PAD_SEC}s).`
+    );
+
+    // 5. Create the final chunk list, inserting silence chunks to fill gaps
+    progressCallback?.({
+      percent: PROGRESS_ANALYSIS_DONE + 10,
+      stage: 'Identifying silence gaps...',
+    });
+
+    const finalChunkMetadata: Array<{
       start: number;
-      duration: number;
+      end: number;
+      isSilence: boolean;
       index: number;
     }> = [];
-    let chunkIndex = 0;
-    let currentSceneIntervals: Array<{ start: number; end: number }> = [];
+    let cursor = 0;
+    let chunkIndex = 0; // Use a separate index for the final list
 
-    log.info(
-      `[${operationId}] Grouping ${speechIntervals.length} VAD intervals into scenes separated by >= ${LONG_SILENCE_SEC}s silence...`
-    );
-
-    for (let i = 0; i < speechIntervals.length; i++) {
-      const currentInterval = speechIntervals[i];
-      currentSceneIntervals.push(currentInterval); // Add to current scene
-
-      const isLastInterval = i === speechIntervals.length - 1;
-      let isLongGapNext = false;
-      if (!isLastInterval) {
-        const nextInterval = speechIntervals[i + 1];
-        isLongGapNext =
-          nextInterval.start - currentInterval.end > LONG_SILENCE_SEC;
-      }
-
-      // If it's the last interval OR there's a long gap after this one, process the current scene
-      if (isLastInterval || isLongGapNext) {
-        log.debug(
-          `[${operationId}] Processing scene ending with interval ${i} (${currentInterval.start.toFixed(2)}-${currentInterval.end.toFixed(2)}s). Contains ${currentSceneIntervals.length} VAD intervals.`
+    for (const speechChunk of paddedSpeechChunks) {
+      // Ensure start/end times are valid
+      if (speechChunk.start < cursor) {
+        log.warn(
+          `[${operationId}] Overlapping speech chunk detected. Adjusting start from ${speechChunk.start.toFixed(2)} to ${cursor.toFixed(2)}.`
         );
-
-        // Process all intervals collected in the current scene
-        for (const sceneInterval of currentSceneIntervals) {
-          // Apply the original chunking logic (max size, overlap) to *this* interval
-          const subChunks = chunkSpeechInterval({
-            interval: sceneInterval,
-            duration,
-          });
-          for (const c of subChunks) {
-            chunkIndex++;
-            allChunkMetadata.push({
-              start: c.start, // Absolute start time
-              duration: c.end - c.start, // Chunk duration
-              index: chunkIndex,
-            });
-          }
-        }
-        // Reset for the next scene
-        currentSceneIntervals = [];
+        speechChunk.start = cursor; // Prevent overlap by clamping start
       }
+
+      // Prevent zero or negative duration chunks after adjustment
+      if (speechChunk.end <= speechChunk.start) {
+        log.warn(
+          `[${operationId}] Skipping zero/negative duration speech chunk after padding/overlap adjustment: ${speechChunk.start.toFixed(2)}-${speechChunk.end.toFixed(2)}`
+        );
+        continue; // Skip this invalid chunk
+      }
+
+      // Add silence chunk if there's a gap before this speech chunk
+      if (speechChunk.start > cursor) {
+        chunkIndex++;
+        finalChunkMetadata.push({
+          start: cursor,
+          end: speechChunk.start,
+          isSilence: true,
+          index: chunkIndex,
+        });
+      }
+
+      // Add the speech chunk itself
+      chunkIndex++;
+      finalChunkMetadata.push({
+        start: speechChunk.start,
+        end: speechChunk.end,
+        isSilence: false,
+        index: chunkIndex,
+      });
+
+      // Update cursor to the end of the current speech chunk
+      cursor = speechChunk.end;
     }
+
+    // Add final silence chunk if needed
+    if (cursor < duration) {
+      chunkIndex++;
+      finalChunkMetadata.push({
+        start: cursor,
+        end: duration,
+        isSilence: true,
+        index: chunkIndex,
+      });
+    }
+
     log.info(
-      `[${operationId}] Calculated metadata for ${allChunkMetadata.length} chunks, respecting long silences.`
+      `[${operationId}] Generated ${finalChunkMetadata.length} total chunks (speech and silence) covering full duration.`
     );
-    // --- End Generate Chunk Metadata ---
+
+    // --- Add requested logging for the first 10 chunks ---
+    log.info(`[${operationId}] First 10 generated chunks:`);
+    finalChunkMetadata.slice(0, 10).forEach(chunk => {
+      const duration = chunk.end - chunk.start;
+      log.info(
+        `  Chunk ${chunk.index}: start=${chunk.start.toFixed(2)}, end=${chunk.end.toFixed(2)}, duration=${duration.toFixed(2)}s, isSilence=${chunk.isSilence}`
+      );
+    });
+    // --- End Logging ---
+
+    // --- End New Chunk Metadata Generation ---
 
     // --- Concurrent Transcription Window Processing ---
     progressCallback?.({
       percent: PROGRESS_TRANSCRIPTION_START,
-      stage: `Starting transcription for ${allChunkMetadata.length} chunks...`,
+      stage: `Starting transcription for ${finalChunkMetadata.length} chunks...`,
     });
 
-    const totalChunks = allChunkMetadata.length;
+    const totalChunks = finalChunkMetadata.length;
     let completedChunks = 0;
     const resultsSegments: SrtSegment[] = [];
 
@@ -483,7 +546,7 @@ export async function generateSubtitlesFromAudio({
       batchStart += CONCURRENCY
     ) {
       const batchEnd = Math.min(batchStart + CONCURRENCY, totalChunks);
-      const batch = allChunkMetadata.slice(batchStart, batchEnd);
+      const batch = finalChunkMetadata.slice(batchStart, batchEnd);
       log.info(
         `[${operationId}] Processing transcription batch ${Math.ceil(batchEnd / CONCURRENCY)}/${Math.ceil(totalChunks / CONCURRENCY)} (Chunks ${batchStart + 1}-${batchEnd})`
       );
@@ -492,7 +555,7 @@ export async function generateSubtitlesFromAudio({
         (async () => {
           if (signal?.aborted) throw new Error('Operation cancelled'); // Check within promise too
 
-          const { index: chunkIndex, start, duration: chunkDur } = meta; // Renamed duration to chunkDur
+          const { index: chunkIndex, start, end, isSilence } = meta;
           const chunkAudioPath = path.join(
             tempDir,
             `chunk_${chunkIndex}_${operationId}.wav`
@@ -500,15 +563,22 @@ export async function generateSubtitlesFromAudio({
           createdWindowFilePaths.push(chunkAudioPath); // Track for cleanup
 
           try {
-            if (chunkDur <= 0) {
-              log.warn(
-                `[${operationId}] Chunk ${chunkIndex} has zero or negative duration (${chunkDur}s), skipping.`
+            if (isSilence) {
+              log.debug(
+                `[${operationId}] Skipping transcription for silence chunk ${chunkIndex}.`
               );
-              return []; // Skip invalid chunks
+              return []; // Return empty array for silence chunks
+            }
+
+            if (end <= start) {
+              log.warn(
+                `[${operationId}] Skipping zero/negative duration speech chunk: ${start.toFixed(2)}-${end.toFixed(2)}`
+              );
+              return []; // Skip this invalid chunk
             }
 
             log.debug(
-              `[${operationId}] Extracting chunk ${chunkIndex}: ${start.toFixed(2)}s (Duration: ${chunkDur.toFixed(2)}s)`
+              `[${operationId}] Extracting chunk ${chunkIndex}: ${start.toFixed(2)}s (Duration: ${end - start})`
             );
 
             // 1. Extract the audio segment for THIS chunk
@@ -516,7 +586,7 @@ export async function generateSubtitlesFromAudio({
               inputPath: inputAudioPath,
               outputPath: chunkAudioPath,
               startTime: start,
-              duration: chunkDur, // Use chunkDur here
+              duration: end - start,
               operationId: `${operationId}-extract-chunk-${chunkIndex}`,
               // Pass signal for potential cancellation during extraction
               signal: signal,
@@ -533,6 +603,7 @@ export async function generateSubtitlesFromAudio({
               signal,
               openai,
               operationId: operationId as string,
+              isSilence,
             });
 
             if (windowSegments.length > 0) {
@@ -632,9 +703,10 @@ export async function generateSubtitlesFromAudio({
       `[${operationId}] Post-VAD found ${postVadSpeechIntervals.length} speech intervals.`
     );
     const vadFilteredSegments = overallSegments.filter(seg =>
-      isSpeech({
+      hasSufficientSpeech({
         seg,
         postVadSpeechIntervals,
+        minIoU: 0.25,
       })
     );
     log.info(
@@ -711,16 +783,27 @@ export async function generateSubtitlesFromAudio({
     console.info(`[${operationId}] Finished cleaning up temporary files.`);
   }
 
-  function isSpeech({
+  function hasSufficientSpeech({
     seg,
     postVadSpeechIntervals,
+    minIoU = 0.25,
   }: {
     seg: SrtSegment;
     postVadSpeechIntervals: Array<{ start: number; end: number }>;
+    minIoU?: number;
   }): boolean {
-    // use midpoint of the subtitle block
-    const mid = (seg.start + seg.end) / 2;
-    return postVadSpeechIntervals.some(iv => mid >= iv.start && mid <= iv.end);
+    const segmentDuration = seg.end - seg.start;
+    if (segmentDuration <= 0) {
+      return false;
+    }
+
+    const overlapDuration = calculateOverlapDuration(
+      seg,
+      postVadSpeechIntervals
+    );
+    const iouApproximation = overlapDuration / segmentDuration;
+
+    return iouApproximation >= minIoU;
   }
 }
 
@@ -731,6 +814,7 @@ async function transcribeChunk({
   signal,
   openai,
   operationId,
+  isSilence,
   options,
 }: {
   chunkIndex: number;
@@ -739,6 +823,7 @@ async function transcribeChunk({
   signal?: AbortSignal;
   openai: OpenAI;
   operationId: string;
+  isSilence: boolean;
   options?: GenerateSubtitlesOptions;
 }): Promise<SrtSegment[]> {
   try {
@@ -747,6 +832,13 @@ async function transcribeChunk({
         `[${operationId}] Transcription for chunk ${chunkIndex} cancelled before API call.`
       );
       throw new Error('Operation cancelled');
+    }
+
+    if (isSilence) {
+      log.debug(
+        `[${operationId}] Skipping transcription for silence chunk ${chunkIndex}.`
+      );
+      return []; // Return empty array for silence chunks
     }
 
     console.info(
@@ -1397,64 +1489,125 @@ export async function callAIModel({
   });
 }
 
-/** Decode to 16‑kHz mono signed‑16‑bit PCM */
-async function decodeToPcmBuffer({
-  inputPath,
-}: {
-  inputPath: string;
-}): Promise<Buffer> {
-  const ffmpeg = spawn('ffmpeg', [
-    '-i',
-    inputPath,
-    '-f',
-    's16le',
-    '-ac',
-    '1',
-    '-ar',
-    '16000',
-    '-',
-  ]);
-  const chunks: Buffer[] = [];
-  ffmpeg.stdout.on('data', b => chunks.push(b));
-  await once(ffmpeg, 'close');
-  return Buffer.concat(chunks);
-}
-
 export async function detectSpeechIntervals({
   inputPath,
   vadMode = 3, // 0–3 (3 = most aggressive)
   frameMs = 30, // WebRTC supports 10/20/30 ms
+  // Add operationId for logging
+  operationId = 'vad-process',
 }: {
   inputPath: string;
   vadMode?: 0 | 1 | 2 | 3;
   frameMs?: 10 | 20 | 30;
+  operationId?: string;
 }): Promise<Array<{ start: number; end: number }>> {
-  const pcm = await decodeToPcmBuffer({ inputPath });
-  const sampleRate = 16_000;
-  const bytesPerFrame = ((sampleRate * frameMs) / 1000) * 2; // 16‑bit mono
-  const vad = new Vad(sampleRate, vadMode);
+  return new Promise((resolve, reject) => {
+    log.info(`[${operationId}] Starting streamed VAD for: ${inputPath}`);
+    const sampleRate = 16_000;
+    const bytesPerSample = 2; // 16-bit
+    const frameSizeSamples = (sampleRate * frameMs) / 1000;
+    const bytesPerFrame = frameSizeSamples * bytesPerSample; // 16‑bit mono
 
-  const intervals: Array<{ start: number; end: number }> = [];
-  let speechOpen = false,
-    segStart = 0;
+    const vad = new Vad(sampleRate, vadMode);
+    const intervals: Array<{ start: number; end: number }> = [];
+    let speechOpen = false;
+    let segStart = 0;
+    let currentFrameIndex = 0;
+    let leftoverBuffer = Buffer.alloc(0);
 
-  for (let i = 0; i + bytesPerFrame <= pcm.length; i += bytesPerFrame) {
-    const frame = pcm.subarray(i, i + bytesPerFrame);
-    const t = (i / bytesPerFrame) * (frameMs / 1000); // seconds
-    const isSpeech = vad.process(frame);
+    const ffmpeg = spawn('ffmpeg', [
+      '-i',
+      inputPath,
+      '-f',
+      's16le', // Signed 16-bit Little Endian PCM
+      '-ac',
+      '1', // Mono
+      '-ar',
+      String(sampleRate), // Target sample rate
+      '-loglevel',
+      'error', // Reduce ffmpeg noise
+      '-', // Output to stdout
+    ]);
 
-    if (isSpeech && !speechOpen) {
-      segStart = t;
-      speechOpen = true;
-    }
-    if (!isSpeech && speechOpen) {
-      intervals.push({ start: segStart, end: t });
-      speechOpen = false;
-    }
-  }
-  if (speechOpen)
-    intervals.push({ start: segStart, end: pcm.length / 2 / sampleRate }); // flush
-  return intervals;
+    ffmpeg.stdout.on('data', (chunk: Buffer) => {
+      // Combine leftover data from previous chunk with the new chunk
+      const currentBuffer = Buffer.concat([leftoverBuffer, chunk]);
+      let offset = 0;
+
+      // Process as many full frames as possible from the current buffer
+      while (offset + bytesPerFrame <= currentBuffer.length) {
+        const frame = currentBuffer.subarray(offset, offset + bytesPerFrame);
+        const t = currentFrameIndex * (frameMs / 1000); // Frame start time in seconds
+
+        try {
+          const isSpeech = vad.process(frame);
+
+          if (isSpeech && !speechOpen) {
+            segStart = t;
+            speechOpen = true;
+          }
+          if (!isSpeech && speechOpen) {
+            intervals.push({ start: segStart, end: t });
+            speechOpen = false;
+          }
+        } catch (vadError) {
+          log.error(
+            `[${operationId}] VAD process error on frame ${currentFrameIndex}`,
+            vadError
+          );
+          // Decide if you want to stop or continue
+        }
+
+        offset += bytesPerFrame;
+        currentFrameIndex++;
+      }
+
+      // Keep any remaining incomplete frame data for the next chunk
+      leftoverBuffer = currentBuffer.subarray(offset);
+    });
+
+    ffmpeg.stderr.on('data', (data: Buffer) => {
+      log.error(`[${operationId}] ffmpeg stderr: ${data.toString()}`);
+    });
+
+    ffmpeg.on('close', code => {
+      log.info(`[${operationId}] ffmpeg process exited with code ${code}`);
+      if (speechOpen) {
+        // Flush the last segment if speech was open at the end
+        const endTime = currentFrameIndex * (frameMs / 1000);
+        intervals.push({ start: segStart, end: endTime });
+        speechOpen = false; // Reset state
+      }
+      if (code !== 0 && code !== null) {
+        // Allow null code for graceful exit/cancel
+        // Check if the intervals array is empty, might indicate early failure
+        if (intervals.length === 0 && leftoverBuffer.length === 0) {
+          log.error(
+            `[${operationId}] FFmpeg exited abnormally (code ${code}) before processing any frames. Check input file/FFmpeg installation.`
+          );
+          return reject(
+            new Error(
+              `FFmpeg process failed with code ${code}. No VAD intervals generated.`
+            )
+          );
+        } else {
+          log.warn(
+            `[${operationId}] FFmpeg process exited with code ${code}, but some intervals may have been processed.`
+          );
+          // Continue with potentially partial results
+        }
+      }
+      log.info(
+        `[${operationId}] Finished streamed VAD. Found ${intervals.length} raw intervals.`
+      );
+      resolve(intervals);
+    });
+
+    ffmpeg.on('error', err => {
+      log.error(`[${operationId}] Failed to start ffmpeg process:`, err);
+      reject(new Error(`Failed to start ffmpeg: ${err.message}`));
+    });
+  });
 }
 
 export function normalizeSpeechIntervals({
@@ -1484,12 +1637,12 @@ export function chunkSpeechInterval({
   duration: number;
 }): Array<{ start: number; end: number }> {
   const span = interval.end - interval.start;
-  if (span <= CHUNK_MAX_SPEECH_SEC) {
+  if (span <= MAX_CHUNK_DURATION_SEC) {
     // Use constant
     return [
       {
-        start: Math.max(0, interval.start - CHUNK_OVERLAP_SEC), // Use constant
-        end: Math.min(duration, interval.end + CHUNK_OVERLAP_SEC), // Use constant
+        start: Math.max(0, interval.start),
+        end: Math.min(duration, interval.end),
       },
     ];
   }
@@ -1509,36 +1662,30 @@ export function chunkSpeechInterval({
 
 export function pruneSegments({
   segments,
-  rmsByTime, // Optional function to get RMS
-  rmsThreshold = PRUNING_RMS_THRESHOLD, // Use constant as default
   minDurSec = PRUNING_MIN_DURATION_SEC, // Use constant as default
   minWords = PRUNING_MIN_WORDS, // Use constant as default
 }: {
   segments: SrtSegment[];
-  rmsByTime?: (t: number) => number; // Made optional
-  rmsThreshold?: number;
   minDurSec?: number;
   minWords?: number;
 }) {
   return segments.filter(seg => {
     const dur = seg.end - seg.start;
-    const wordCount = seg.text.trim().split(/\s+/).length;
+    // Handle potential NaN or infinite values from bad timestamps
+    if (!Number.isFinite(dur) || dur < 0) {
+      log.warn(`Pruning segment ${seg.index} due to invalid duration: ${dur}`);
+      return false;
+    }
+
+    const wordCount = seg.text.trim().split(/\s+/).filter(Boolean).length; // Ensure empty strings aren't counted
 
     // Basic duration and word count check
     const meetsBasicCriteria = dur >= minDurSec && wordCount >= minWords;
-    if (!meetsBasicCriteria) {
-      return false; // Fail fast if basic criteria aren't met
-    }
-
-    // Optional RMS check
-    if (rmsByTime && typeof rmsThreshold === 'number') {
-      const rms = rmsByTime((seg.start + seg.end) / 2);
-      // If RMS check is enabled, it must also pass
-      return rms >= rmsThreshold;
-    }
-
-    // If RMS check is not enabled, just return the basic criteria result
-    return true;
+    // Log why something is pruned (optional but helpful)
+    // if (!meetsBasicCriteria) {
+    //   log.debug(`Pruning segment ${seg.index}: duration=${dur.toFixed(2)}s (min=${minDurSec}), words=${wordCount} (min=${minWords})`);
+    // }
+    return meetsBasicCriteria;
   });
 }
 
@@ -1558,4 +1705,131 @@ export function mergeCloseSegments({
     } else out.push({ ...cur });
   }
   return out;
+}
+
+function calculateOverlapDuration(
+  segment: { start: number; end: number },
+  intervals: Array<{ start: number; end: number }>
+): number {
+  let totalOverlap = 0;
+  for (const interval of intervals) {
+    const overlapStart = Math.max(segment.start, interval.start);
+    const overlapEnd = Math.min(segment.end, interval.end);
+    const duration = overlapEnd - overlapStart;
+    if (duration > 0) {
+      totalOverlap += duration;
+    }
+  }
+  return totalOverlap;
+}
+
+function mergeAdjacentIntervals(
+  intervals: Array<{ start: number; end: number }>,
+  maxGapSec: number
+): Array<{ start: number; end: number }> {
+  if (!intervals || intervals.length === 0) {
+    return [];
+  }
+  intervals.sort((a, b) => a.start - b.start);
+  const merged: typeof intervals = [];
+  merged.push({ ...intervals[0] }); // Start with the first interval
+
+  for (let i = 1; i < intervals.length; i++) {
+    const current = intervals[i];
+    const last = merged[merged.length - 1];
+
+    if (current.start - last.end < maxGapSec) {
+      // Merge if gap is small enough
+      last.end = Math.max(last.end, current.end);
+    } else {
+      // Otherwise, start a new merged interval
+      merged.push({ ...current });
+    }
+  }
+  return merged;
+}
+
+function splitLongInterval(
+  interval: { start: number; end: number },
+  rawIntervals: ReadonlyArray<{ start: number; end: number }>, // Use readonly for safety
+  maxDuration: number
+): Array<{ start: number; end: number }> {
+  const duration = interval.end - interval.start;
+  if (duration <= maxDuration) {
+    return [interval];
+  }
+
+  // Find raw intervals fully contained within the current interval
+  const relevantRawIntervals = rawIntervals.filter(
+    raw => raw.start >= interval.start && raw.end <= interval.end
+  );
+
+  if (relevantRawIntervals.length < 2) {
+    // Cannot find internal silence, split at midpoint (fallback)
+    const midPoint = interval.start + duration / 2;
+    // Avoid zero-duration splits if possible, adjust slightly
+    const splitPoint =
+      midPoint > interval.start && midPoint < interval.end
+        ? midPoint
+        : interval.start + maxDuration;
+    if (splitPoint <= interval.start || splitPoint >= interval.end) {
+      // Fallback failed, return original interval to prevent infinite loop
+      console.warn(
+        `Could not split interval ${interval.start}-${interval.end}, keeping original.`
+      );
+      return [interval];
+    }
+
+    return [
+      ...splitLongInterval(
+        { start: interval.start, end: splitPoint },
+        rawIntervals,
+        maxDuration
+      ),
+      ...splitLongInterval(
+        { start: splitPoint, end: interval.end },
+        rawIntervals,
+        maxDuration
+      ),
+    ];
+  }
+
+  // Find the largest gap between relevant raw intervals
+  let largestGap = 0;
+  let splitPoint = interval.start + duration / 2; // Default split point if no gap found
+
+  for (let i = 0; i < relevantRawIntervals.length - 1; i++) {
+    const gap = relevantRawIntervals[i + 1].start - relevantRawIntervals[i].end;
+    if (gap > largestGap) {
+      largestGap = gap;
+      // Split in the middle of the largest gap
+      splitPoint = relevantRawIntervals[i].end + gap / 2;
+    }
+  }
+
+  // Ensure splitPoint is valid and within bounds
+  if (splitPoint <= interval.start || splitPoint >= interval.end) {
+    // If splitPoint calculation failed or resulted in boundary, use midpoint fallback
+    splitPoint = interval.start + duration / 2;
+    if (splitPoint <= interval.start || splitPoint >= interval.end) {
+      console.warn(
+        `Could not find valid split point for interval ${interval.start}-${interval.end}, keeping original.`
+      );
+      return [interval];
+    }
+  }
+
+  // Recursively split
+  return [
+    ...splitLongInterval(
+      { start: interval.start, end: splitPoint },
+      rawIntervals,
+      maxDuration
+    ),
+    ...splitLongInterval(
+      { start: splitPoint, end: interval.end },
+      rawIntervals,
+      maxDuration
+    ),
+  ];
 }
