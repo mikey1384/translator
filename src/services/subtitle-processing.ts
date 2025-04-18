@@ -26,12 +26,11 @@ const MERGE_GAP_SEC = 0.3; // Max gap between VAD intervals to merge into a spee
 const PAD_SEC = 0.2; // Padding added around speech chunks
 const MAX_CHUNK_DURATION_SEC = 60; // Max duration for a speech chunk before splitting
 
-const PRUNING_MIN_DURATION_SEC = 0.1; // Min duration for a final pruned segment (Relaxed)
+const PRUNING_MIN_DURATION_SEC = 0.2; // Min duration for a final pruned segment
 const PRUNING_MIN_WORDS = 1; // Min words for a final pruned segment
 
 // --- Concurrency Setting ---
 const TRANSCRIPTION_BATCH_SIZE = 50; // Number of chunks to process in parallel
-const USE_WHISPER_GATE = true; // Master switch for Whisper's confidence filtering
 
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -693,47 +692,34 @@ export async function generateSubtitlesFromAudio({
 
     // --- Add Post-Transcription VAD Filtering ---
     log.info(
-      `[${operationId}] Performing post-transcription filtering on ${overallSegments.length} segments...`
+      `[${operationId}] Performing post-transcription VAD filtering on ${overallSegments.length} segments...`
     );
-
-    let filteredSegmentsAfterTranscription: SrtSegment[];
-
-    if (USE_WHISPER_GATE) {
-      log.info(
-        `[${operationId}] Skipping IoU VAD filtering because USE_WHISPER_GATE is true.`
-      );
-      filteredSegmentsAfterTranscription = [...overallSegments]; // Use segments as-is (already filtered by Whisper)
-    } else {
-      log.info(
-        `[${operationId}] Applying IoU VAD filtering (USE_WHISPER_GATE is false).`
-      );
-      const postVadRawIntervals = await detectSpeechIntervals({
-        inputPath: inputAudioPath,
-      });
-      const postVadSpeechIntervals = normalizeSpeechIntervals({
-        intervals: postVadRawIntervals,
-        minGapSec: VAD_NORMALIZATION_MIN_GAP_SEC, // Use existing constants
-        minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC,
-      });
-      log.info(
-        `[${operationId}] Post-VAD found ${postVadSpeechIntervals.length} speech intervals for IoU check.`
-      );
-      filteredSegmentsAfterTranscription = overallSegments.filter(seg =>
-        hasSufficientSpeech({
-          seg,
-          postVadSpeechIntervals,
-          minIoU: 0.25, // Keep the 0.25 threshold for when this filter IS used
-        })
-      );
-      log.info(
-        `[${operationId}] IoU VAD filtering reduced ${overallSegments.length} segments down to ${filteredSegmentsAfterTranscription.length}.`
-      );
-    }
+    const postVadRawIntervals = await detectSpeechIntervals({
+      inputPath: inputAudioPath,
+    });
+    const postVadSpeechIntervals = normalizeSpeechIntervals({
+      intervals: postVadRawIntervals,
+      minGapSec: VAD_NORMALIZATION_MIN_GAP_SEC, // Use existing constants
+      minDurSec: VAD_NORMALIZATION_MIN_DURATION_SEC,
+    });
+    log.info(
+      `[${operationId}] Post-VAD found ${postVadSpeechIntervals.length} speech intervals.`
+    );
+    const vadFilteredSegments = overallSegments.filter(seg =>
+      hasSufficientSpeech({
+        seg,
+        postVadSpeechIntervals,
+        minIoU: 0.25,
+      })
+    );
+    log.info(
+      `[${operationId}] Filtered ${overallSegments.length} segments down to ${vadFilteredSegments.length} based on VAD.`
+    );
 
     // Replace overallSegments with the filtered list
     overallSegments.length = 0; // Clear the array
-    overallSegments.push(...filteredSegmentsAfterTranscription); // Add filtered segments back
-    // --- End Post-Transcription Filtering ---
+    overallSegments.push(...vadFilteredSegments); // Add filtered segments back
+    // --- End Post-Transcription VAD Filtering ---
 
     // --- Add Pruning Step ---
     log.info(
@@ -909,20 +895,15 @@ async function transcribeChunk({
       `[${operationId}] Raw verbose_json received for chunk ${chunkIndex} (startTime: ${startTime}): Found ${verboseResponse.segments.length} segments.`
     );
 
-    // Filter segments based on confidence scores (conditionally)
+    // Filter segments based on confidence scores
     const speechSegments = verboseResponse.segments.filter(seg => {
-      if (!USE_WHISPER_GATE) {
-        return true; // Skip filtering if the gate is off
-      }
-      // --- Apply Whisper gate filtering ---
       const isSpeech = seg.no_speech_prob < 0.6 && seg.avg_logprob > -1.0;
       if (!isSpeech) {
         log.debug(
-          `[${operationId}] Chunk ${chunkIndex}: Filtering out segment ${seg.id} via Whisper Gate (no_speech_prob: ${seg.no_speech_prob.toFixed(2)}, avg_logprob: ${seg.avg_logprob.toFixed(2)}) Text: "${seg.text.trim()}"`
+          `[${operationId}] Chunk ${chunkIndex}: Filtering out segment ${seg.id} (no_speech_prob: ${seg.no_speech_prob.toFixed(2)}, avg_logprob: ${seg.avg_logprob.toFixed(2)}) Text: "${seg.text.trim()}"`
         );
       }
       return isSpeech;
-      // --- End Whisper gate filtering ---
     });
 
     // Map filtered segments to SrtSegment format with absolute timestamps
