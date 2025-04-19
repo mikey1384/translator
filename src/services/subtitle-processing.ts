@@ -24,7 +24,7 @@ const VAD_NORMALIZATION_MIN_DURATION_SEC = 0; // 0 ⇒ keep even 1‑frame blips
 
 const MERGE_GAP_SEC = 0.3; // after merge, join blocks if < 300 ms apart
 const PAD_SEC = 0.5; // pad chunks on both sides (safer)
-const MAX_CHUNK_DURATION_SEC = 60; // split blocks longer than this
+const MAX_CHUNK_DURATION_SEC = 30; // split blocks longer than this
 
 // --- Concurrency Setting ---
 const TRANSCRIPTION_BATCH_SIZE = 50; // chunks in parallel
