@@ -65,7 +65,7 @@ export default function TranslationProgressArea({
     <ProgressArea
       isCancelling={isCancelling}
       isVisible={isTranslationInProgress}
-      title="Translation in Progress'"
+      title="Translation in Progress"
       progress={translationProgress}
       stage={translationStage}
       progressBarColor={TRANSLATION_PROGRESS_COLOR}
