@@ -224,10 +224,9 @@ export async function handleProcessUrl(
 
     // Send a generic, user-friendly error progress update
     sendProgress({
-      percent: 0, // Indicate failure
+      percent: 0,
       stage: 'Error',
-      // Use a cleaner error message for the UI progress listener
-      error: 'Download failed. Please check logs for details.',
+      error: 'Download failed...',
     });
 
     // Return the standard error object for the main promise result
@@ -235,7 +234,7 @@ export async function handleProcessUrl(
       success: false,
       // Include the raw error here if needed for debugging later,
       // but the UI primarily reacts to the progress update error.
-      error: `Download failed: ${rawErrorMessage}. Check logs at ~/Library/Logs/translator-electron/main.log`,
+      error: `Download failed: ${rawErrorMessage}.`,
       operationId,
     };
   }

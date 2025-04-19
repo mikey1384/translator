@@ -30,13 +30,13 @@ type ProgressCallback = (info: {
 // --- Progress Constants ---
 const PROGRESS = {
   WARMUP_START: 0,
-  WARMUP_END: 10, // 0-10 %
+  WARMUP_END: 10,
 
   DL1_START: 10,
-  DL1_END: 70, // +60 %
+  DL1_END: 40,
 
-  FINAL_START: 70,
-  FINAL_END: 100, // +30 %
+  FINAL_START: 40,
+  FINAL_END: 100,
 } as const;
 // --- End Progress Constants ---
 
@@ -387,14 +387,13 @@ async function downloadVideoFromPlatform(
               const displayPercent = Math.min(
                 PROGRESS.FINAL_END - 1,
                 Math.max(PROGRESS.WARMUP_END, overall)
-              ); // Clamp between WARMUP_END and FINAL_END-1
+              );
 
               progressCallback?.({
                 percent: displayPercent,
-                stage:
-                  phase === 'dl1' ? 'Downloading...' : 'Processing (mux)...', // Refined stage label
+                stage: 'Downloading...',
               });
-              lastPct = pct; // Update last reported percentage
+              lastPct = pct;
             }
           } else if (
             line.startsWith(outputDir) &&
