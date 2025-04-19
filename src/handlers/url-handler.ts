@@ -127,7 +127,7 @@ export async function handleProcessUrl(
     // Call processVideoUrl with correct arguments
     const result = await processVideoUrl(
       url,
-      options.quality,
+      options.quality || 'mid',
       (progress: { percent: number; stage: string; error?: string | null }) => {
         log.info(
           `[url-handler] Progress update: ${progress.stage} - ${progress.percent}%`

@@ -262,11 +262,12 @@ async function downloadVideoFromPlatform(
     tempFilenamePattern,
     '--format',
     formatString,
-    '--progress', // Request progress updates
-    '--newline', // Ensure progress is on new lines
+    '--progress',
+    '--newline',
     '--no-check-certificates',
     '--no-warnings',
-    '--print-json', // Still print JSON at the end
+    '--print',
+    'after_move:%(filepath)s',
     '--ffmpeg-location',
     ffmpegPath,
   ];
@@ -395,6 +396,14 @@ async function downloadVideoFromPlatform(
               });
               lastPct = pct; // Update last reported percentage
             }
+          } else if (
+            line.startsWith(outputDir) &&
+            line.match(/\.(mp4|mkv|webm|m4a)$/i)
+          ) {
+            finalFilepath = line.trim();
+            log.info(
+              `[URLProcessor] Got final filepath from --print: ${finalFilepath}`
+            );
           }
         }
       });
@@ -480,11 +489,12 @@ async function downloadVideoFromPlatform(
     );
 
     // *** CHECK FOR CANCELLATION FIRST ***
-    if (error.killed) {
+    if (error.killed || error.signal === 'SIGTERM') {
       log.info(
-        `[URLProcessor] Download process ${operationId} was killed (likely cancelled).`
+        `[URLProcessor] Download process ${operationId} was killed/terminated (likely cancelled).`
       );
-      throw error;
+      // Throw a clean error for cancellations, preventing large stdout propagation
+      throw new Error('Download cancelled by user');
     }
     // *** END CANCELLATION CHECK ***
 
@@ -577,10 +587,9 @@ async function downloadVideoFromPlatform(
   }
 }
 
-// High-level function to process a URL
 export async function processVideoUrl(
   url: string,
-  quality: VideoQuality = 'high',
+  quality: VideoQuality,
   progressCallback: ProgressCallback | undefined,
   operationId: string,
   services?: {
