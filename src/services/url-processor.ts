@@ -27,6 +27,19 @@ type ProgressCallback = (info: {
   error?: string | null;
 }) => void;
 
+// --- Progress Constants ---
+const PROGRESS = {
+  WARMUP_START: 0,
+  WARMUP_END: 10, // 0-10 %
+
+  DL1_START: 10,
+  DL1_END: 70, // +60 %
+
+  FINAL_START: 70,
+  FINAL_END: 100, // +30 %
+} as const;
+// --- End Progress Constants ---
+
 log.info('[URLProcessor] MODULE LOADED');
 
 // Locate the yt-dlp binary in dev/production modes
@@ -146,7 +159,10 @@ async function downloadVideoFromPlatform(
   }
   const { ffmpegService } = services;
 
-  progressCallback?.({ percent: 15, stage: 'Locating yt-dlp...' });
+  progressCallback?.({
+    percent: PROGRESS.WARMUP_START,
+    stage: 'Locating yt-dlp...',
+  });
 
   const ytDlpPath = await findYtDlpBinary();
   if (!ytDlpPath) {
@@ -158,6 +174,11 @@ async function downloadVideoFromPlatform(
     throw new Error('yt-dlp binary not found.');
   }
   log.info(`[URLProcessor] Found yt-dlp at: ${ytDlpPath}`);
+
+  progressCallback?.({
+    percent: PROGRESS.WARMUP_START + 3,
+    stage: 'Making binary executable…',
+  });
 
   try {
     fs.accessSync(ytDlpPath, fs.constants.X_OK);
@@ -173,7 +194,10 @@ async function downloadVideoFromPlatform(
     }
   }
 
-  progressCallback?.({ percent: 20, stage: 'Preparing output directory...' });
+  progressCallback?.({
+    percent: PROGRESS.WARMUP_START + 7,
+    stage: 'Preparing output directory…',
+  });
 
   try {
     await fsp.mkdir(outputDir, { recursive: true });
@@ -252,14 +276,20 @@ async function downloadVideoFromPlatform(
   );
   log.info(`[URLProcessor] yt-dlp intended output directory: ${outputDir}`);
 
-  progressCallback?.({ percent: 25, stage: 'Starting download...' });
+  progressCallback?.({
+    percent: PROGRESS.WARMUP_END,
+    stage: 'Starting download...',
+  });
 
   let finalJsonOutput = '';
   let stdoutBuffer = '';
   let finalFilepath: string | null = null;
   let downloadInfo: any = null;
+  let didAutoLift = false;
 
   let subprocess: DownloadProcessType | null = null;
+  let phase: 'dl1' | 'dl2' = 'dl1'; // Track download phase
+  let lastPct = 0; // Track last reported percentage outside subprocess
 
   try {
     subprocess = execa(ytDlpPath, args, {
@@ -334,12 +364,36 @@ async function downloadVideoFromPlatform(
           } else if (line.startsWith('[download]')) {
             const progressMatch = line.match(/([\d.]+)%/);
             if (progressMatch && progressMatch[1]) {
-              const downloadPercent = parseFloat(progressMatch[1]);
-              const overallPercent = 25 + downloadPercent * 0.65;
+              const pct = parseFloat(progressMatch[1]);
+
+              // Phase detection using external lastPct
+              if (pct < 1 && phase === 'dl1' && lastPct > 90 && !didAutoLift) {
+                // Detect reset near 0 after potentially hitting 100
+                phase = 'dl2';
+                didAutoLift = true;
+                log.info(
+                  `[URLProcessor] Phase transition detected: dl1 -> dl2 (Op ID: ${operationId})`
+                );
+              }
+
+              const overall =
+                phase === 'dl1'
+                  ? PROGRESS.DL1_START +
+                    (pct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100
+                  : PROGRESS.FINAL_START +
+                    (pct * (PROGRESS.FINAL_END - PROGRESS.FINAL_START)) / 100;
+
+              const displayPercent = Math.min(
+                PROGRESS.FINAL_END - 1,
+                Math.max(PROGRESS.WARMUP_END, overall)
+              ); // Clamp between WARMUP_END and FINAL_END-1
+
               progressCallback?.({
-                percent: Math.min(90, overallPercent),
-                stage: 'Downloading video...',
+                percent: displayPercent,
+                stage:
+                  phase === 'dl1' ? 'Downloading...' : 'Processing (mux)...', // Refined stage label
               });
+              lastPct = pct; // Update last reported percentage
             }
           }
         }
@@ -394,7 +448,7 @@ async function downloadVideoFromPlatform(
     log.info(`[URLProcessor] Final file path determined: ${finalFilepath}`);
 
     progressCallback?.({
-      percent: 95,
+      percent: PROGRESS.FINAL_END - 5, // Use constant
       stage: 'Download complete, verifying...',
     });
 
@@ -573,7 +627,10 @@ export async function processVideoUrl(
   );
   const stats = await fsp.stat(filepath);
   const filename = path.basename(filepath);
-  progressCallback?.({ percent: 100, stage: 'URL processing complete' });
+  progressCallback?.({
+    percent: PROGRESS.FINAL_END,
+    stage: 'Download complete',
+  }); // Use constant
 
   return {
     videoPath: filepath,
