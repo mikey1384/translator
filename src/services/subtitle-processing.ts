@@ -22,12 +22,12 @@ const Vad = webrtcvadPackage.default.default;
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // merge intervals closer than this
 const VAD_NORMALIZATION_MIN_DURATION_SEC = 0; // 0 ⇒ keep even 1‑frame blips
 
-const MERGE_GAP_SEC = 0.3; // after merge, join blocks if < 300 ms apart
-const PAD_SEC = 0.5; // pad chunks on both sides (safer)
-const MAX_CHUNK_DURATION_SEC = 30; // split blocks longer than this
+const MERGE_GAP_SEC = 0.3;
+const PAD_SEC = 0;
+const MIN_CHUNK_DURATION_SEC = 1;
 
 // --- Concurrency Setting ---
-const TRANSCRIPTION_BATCH_SIZE = 50; // chunks in parallel
+const TRANSCRIPTION_BATCH_SIZE = 50;
 
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
@@ -376,54 +376,52 @@ export async function generateSubtitlesFromAudio({
     const raw = await detectSpeechIntervals({ inputPath: inputAudioPath });
     const cleaned = normalizeSpeechIntervals({ intervals: raw }); // Uses new default minDurSec=0
     const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC);
-    const split = merged.flatMap(i =>
-      splitLongInterval(i, raw, MAX_CHUNK_DURATION_SEC)
-    );
 
-    // 2. Build **continuous** chunk list (speech + silence) ------------------
+    // 2. Build continuous chunks (≥ MIN_CHUNK_DURATION_SEC, cut on silence)
     const chunks: { start: number; end: number; index: number }[] = [];
-    let cursor = 0,
-      idx = 0;
-    // Sort VAD blocks first to ensure correct order when adding gaps
-    split.sort((a, b) => a.start - b.start);
+    merged.sort((a, b) => a.start - b.start); // make sure they're ordered
 
-    for (const blk of split) {
-      // Pad the VAD block boundaries
+    let idx = 0;
+    let chunkStart: number | null = null;
+    let chunkEnd = 0;
+
+    for (const blk of merged) {
       const s = Math.max(0, blk.start - PAD_SEC);
       const e = Math.min(duration, blk.end + PAD_SEC);
 
-      // Ensure padded chunk has valid duration
+      // Ensure padded chunk has valid duration before considering it
       if (e <= s) {
         log.warn(
           `[${operationId}] Skipping zero/negative duration VAD block after padding: ${s.toFixed(2)}-${e.toFixed(2)}`
         );
-        continue;
+        continue; // Skip this block entirely if it has no valid duration
       }
 
-      // Add silence chunk if there's a gap before this padded block
-      if (s > cursor) {
-        // Ensure the gap itself has valid duration
-        if (s > cursor) {
-          // Check ensures gap end > gap start
-          chunks.push({ start: cursor, end: s, index: ++idx }); // gap
-        } else {
-          log.warn(
-            `[${operationId}] Skipping zero/negative duration gap chunk: ${cursor.toFixed(2)}-${s.toFixed(2)}`
-          );
-        }
-      }
+      if (chunkStart === null) chunkStart = s; // start a new chunk
+      chunkEnd = e; // always extend to current block end
 
-      // Add the (potentially padded) VAD block as a chunk
-      chunks.push({ start: s, end: e, index: ++idx }); // speech block chunk
-      cursor = e; // Update cursor to the end of the added chunk
+      // Close the chunk as soon as it is long enough
+      if (chunkEnd - chunkStart >= MIN_CHUNK_DURATION_SEC) {
+        chunks.push({ start: chunkStart, end: chunkEnd, index: ++idx });
+        chunkStart = null; // next block will start a new chunk
+      }
     }
-    // Add final silence chunk if needed
-    if (cursor < duration) {
-      chunks.push({ start: cursor, end: duration, index: ++idx }); // final gap
+
+    // Flush tail-end that never reached 5 min (last chunk of the file)
+    if (chunkStart !== null) {
+      // Ensure the final chunk has a valid duration before adding
+      if (chunkEnd > chunkStart) {
+        chunks.push({ start: chunkStart, end: chunkEnd, index: ++idx });
+      } else {
+        log.warn(
+          `[${operationId}] Skipping final chunk due to zero/negative duration: ${chunkStart.toFixed(2)}-${chunkEnd.toFixed(2)}`
+        );
+      }
     }
 
     log.info(
-      `[${operationId}] VAD processing generated ${chunks.length} chunks (including silence).`
+      `[${operationId}] VAD grouping produced ${chunks.length} chunk(s) ` +
+        `(≥${MIN_CHUNK_DURATION_SEC}s, cut only on silence).`
     );
     progressCallback?.({
       percent: PROGRESS_ANALYSIS_DONE,
@@ -1418,16 +1416,6 @@ export function chunkSpeechInterval({
   interval: { start: number; end: number };
   duration: number;
 }): Array<{ start: number; end: number }> {
-  const span = interval.end - interval.start;
-  if (span <= MAX_CHUNK_DURATION_SEC) {
-    // Use constant
-    return [
-      {
-        start: Math.max(0, interval.start),
-        end: Math.min(duration, interval.end),
-      },
-    ];
-  }
   // recursively split at mid‑point (cheap), or call a stronger‑pause finder
   const mid = (interval.start + interval.end) / 2;
   return [
@@ -1466,89 +1454,4 @@ function mergeAdjacentIntervals(
     }
   }
   return merged;
-}
-
-function splitLongInterval(
-  interval: { start: number; end: number },
-  rawIntervals: ReadonlyArray<{ start: number; end: number }>, // Use readonly for safety
-  maxDuration: number
-): Array<{ start: number; end: number }> {
-  const duration = interval.end - interval.start;
-  if (duration <= maxDuration) {
-    return [interval];
-  }
-
-  // Find raw intervals fully contained within the current interval
-  const relevantRawIntervals = rawIntervals.filter(
-    raw => raw.start >= interval.start && raw.end <= interval.end
-  );
-
-  if (relevantRawIntervals.length < 2) {
-    // Cannot find internal silence, split at midpoint (fallback)
-    const midPoint = interval.start + duration / 2;
-    // Avoid zero-duration splits if possible, adjust slightly
-    const splitPoint =
-      midPoint > interval.start && midPoint < interval.end
-        ? midPoint
-        : interval.start + maxDuration;
-    if (splitPoint <= interval.start || splitPoint >= interval.end) {
-      // Fallback failed, return original interval to prevent infinite loop
-      console.warn(
-        `Could not split interval ${interval.start}-${interval.end}, keeping original.`
-      );
-      return [interval];
-    }
-
-    return [
-      ...splitLongInterval(
-        { start: interval.start, end: splitPoint },
-        rawIntervals,
-        maxDuration
-      ),
-      ...splitLongInterval(
-        { start: splitPoint, end: interval.end },
-        rawIntervals,
-        maxDuration
-      ),
-    ];
-  }
-
-  // Find the largest gap between relevant raw intervals
-  let largestGap = 0;
-  let splitPoint = interval.start + duration / 2; // Default split point if no gap found
-
-  for (let i = 0; i < relevantRawIntervals.length - 1; i++) {
-    const gap = relevantRawIntervals[i + 1].start - relevantRawIntervals[i].end;
-    if (gap > largestGap) {
-      largestGap = gap;
-      // Split in the middle of the largest gap
-      splitPoint = relevantRawIntervals[i].end + gap / 2;
-    }
-  }
-
-  // Ensure splitPoint is valid and within bounds
-  if (splitPoint <= interval.start || splitPoint >= interval.end) {
-    // If splitPoint calculation failed or resulted in boundary, use midpoint fallback
-    splitPoint = interval.start + duration / 2;
-    if (splitPoint <= interval.start || splitPoint >= interval.end) {
-      console.warn(
-        `Could not find valid split point for interval ${interval.start}-${interval.end}, keeping original.`
-      );
-      return [interval];
-    }
-  }
-
-  // Recursively split
-  return [
-    ...splitLongInterval(
-      { start: interval.start, end: splitPoint },
-      rawIntervals,
-      maxDuration
-    ),
-    ...splitLongInterval(
-      { start: splitPoint, end: interval.end },
-      rawIntervals,
-      maxDuration
-    ),
-  ];
 }
