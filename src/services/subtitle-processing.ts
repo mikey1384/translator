@@ -19,18 +19,12 @@ import * as webrtcvadPackage from 'webrtcvad';
 const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
-const HARD_LIMIT = 15;
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // merge intervals closer than this
 const VAD_NORMALIZATION_MIN_DURATION_SEC = 0; // 0 ⇒ keep even 1‑frame blips
 
 const MERGE_GAP_SEC = 0.3; // after merge, join blocks if < 300 ms apart
-const PAD_SEC = 0.1; // pad chunks on both sides (safer)
-const MAX_CHUNK_DURATION_SEC = 40; // split blocks longer than this
-// How long a silence must be for us to consider it a "good" break
-const MIN_SPLIT_GAP_SEC = 0.25;
-// When several gaps are long enough, prefer the one whose midpoint is
-// closest to the ideal split (half‑way through the parent interval)
-const SPLIT_BALANCE_BIAS = 0.5; // 0 = only gap length matters, 1 = only balance matters
+const PAD_SEC = 0.5; // pad chunks on both sides (safer)
+const MAX_CHUNK_DURATION_SEC = 30; // split blocks longer than this
 
 // --- Concurrency Setting ---
 const TRANSCRIPTION_BATCH_SIZE = 50; // chunks in parallel
@@ -382,7 +376,9 @@ export async function generateSubtitlesFromAudio({
     const raw = await detectSpeechIntervals({ inputPath: inputAudioPath });
     const cleaned = normalizeSpeechIntervals({ intervals: raw }); // Uses new default minDurSec=0
     const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC);
-    const split = merged.flatMap(i => splitLongInterval(i, raw, HARD_LIMIT));
+    const split = merged.flatMap(i =>
+      splitLongInterval(i, raw, MAX_CHUNK_DURATION_SEC)
+    );
 
     // 2. Build **continuous** chunk list (speech + silence) ------------------
     const chunks: { start: number; end: number; index: number }[] = [];
@@ -1472,82 +1468,85 @@ function mergeAdjacentIntervals(
   return merged;
 }
 
-/**
- * Pick the best gap (chunk of silence) inside `interval` to split on.
- * Returns `null` if no gap ≥ MIN_SPLIT_GAP_SEC exists.
- */
-function chooseBestSplitPoint(
-  interval: { start: number; end: number },
-  raw: ReadonlyArray<{ start: number; end: number }>
-): number | null {
-  const midIdeal = (interval.start + interval.end) / 2;
-
-  // Build a list of silences that live entirely inside `interval`
-  const gaps: { mid: number; len: number }[] = [];
-  let cursor = interval.start;
-
-  for (const seg of raw) {
-    if (seg.end <= cursor || seg.start >= interval.end) continue; // outside
-    if (seg.start > cursor) {
-      const gapStart = Math.max(cursor, interval.start);
-      const gapEnd = Math.min(seg.start, interval.end);
-      const len = gapEnd - gapStart;
-      if (len >= MIN_SPLIT_GAP_SEC)
-        gaps.push({ mid: (gapStart + gapEnd) / 2, len });
-    }
-    cursor = Math.max(cursor, seg.end);
-  }
-  if (cursor < interval.end) {
-    const len = interval.end - cursor;
-    if (len >= MIN_SPLIT_GAP_SEC)
-      gaps.push({ mid: (cursor + interval.end) / 2, len });
-  }
-  if (!gaps.length) return null;
-
-  // Score by length & closeness to the ideal centre
-  return gaps
-    .map(g => {
-      const balancePenalty = Math.abs(g.mid - midIdeal);
-      const score =
-        (1 - SPLIT_BALANCE_BIAS) * g.len - SPLIT_BALANCE_BIAS * balancePenalty; // bigger is better
-      return { ...g, score };
-    })
-    .sort((a, b) => b.score - a.score)[0].mid;
-}
-
 function splitLongInterval(
   interval: { start: number; end: number },
   rawIntervals: ReadonlyArray<{ start: number; end: number }>, // Use readonly for safety
   maxDuration: number
 ): Array<{ start: number; end: number }> {
-  const dur = interval.end - interval.start;
-  if (dur <= maxDuration) return [interval];
-
-  // 🆕 try a smart split
-  const best = chooseBestSplitPoint(interval, rawIntervals);
-
-  // If no decent gap, fall back to naïve midpoint
-  const splitAt =
-    best !== null && best > interval.start && best < interval.end
-      ? best
-      : interval.start + dur / 2;
-
-  // Safety guard – avoid zero/negative spans
-  if (splitAt <= interval.start + 0.01 || splitAt >= interval.end - 0.01) {
-    console.warn(
-      `Could not find safe split for ${interval.start}-${interval.end}, using original.`
-    );
+  const duration = interval.end - interval.start;
+  if (duration <= maxDuration) {
     return [interval];
   }
 
+  // Find raw intervals fully contained within the current interval
+  const relevantRawIntervals = rawIntervals.filter(
+    raw => raw.start >= interval.start && raw.end <= interval.end
+  );
+
+  if (relevantRawIntervals.length < 2) {
+    // Cannot find internal silence, split at midpoint (fallback)
+    const midPoint = interval.start + duration / 2;
+    // Avoid zero-duration splits if possible, adjust slightly
+    const splitPoint =
+      midPoint > interval.start && midPoint < interval.end
+        ? midPoint
+        : interval.start + maxDuration;
+    if (splitPoint <= interval.start || splitPoint >= interval.end) {
+      // Fallback failed, return original interval to prevent infinite loop
+      console.warn(
+        `Could not split interval ${interval.start}-${interval.end}, keeping original.`
+      );
+      return [interval];
+    }
+
+    return [
+      ...splitLongInterval(
+        { start: interval.start, end: splitPoint },
+        rawIntervals,
+        maxDuration
+      ),
+      ...splitLongInterval(
+        { start: splitPoint, end: interval.end },
+        rawIntervals,
+        maxDuration
+      ),
+    ];
+  }
+
+  // Find the largest gap between relevant raw intervals
+  let largestGap = 0;
+  let splitPoint = interval.start + duration / 2; // Default split point if no gap found
+
+  for (let i = 0; i < relevantRawIntervals.length - 1; i++) {
+    const gap = relevantRawIntervals[i + 1].start - relevantRawIntervals[i].end;
+    if (gap > largestGap) {
+      largestGap = gap;
+      // Split in the middle of the largest gap
+      splitPoint = relevantRawIntervals[i].end + gap / 2;
+    }
+  }
+
+  // Ensure splitPoint is valid and within bounds
+  if (splitPoint <= interval.start || splitPoint >= interval.end) {
+    // If splitPoint calculation failed or resulted in boundary, use midpoint fallback
+    splitPoint = interval.start + duration / 2;
+    if (splitPoint <= interval.start || splitPoint >= interval.end) {
+      console.warn(
+        `Could not find valid split point for interval ${interval.start}-${interval.end}, keeping original.`
+      );
+      return [interval];
+    }
+  }
+
+  // Recursively split
   return [
     ...splitLongInterval(
-      { start: interval.start, end: splitAt },
+      { start: interval.start, end: splitPoint },
       rawIntervals,
       maxDuration
     ),
     ...splitLongInterval(
-      { start: splitAt, end: interval.end },
+      { start: splitPoint, end: interval.end },
       rawIntervals,
       maxDuration
     ),
