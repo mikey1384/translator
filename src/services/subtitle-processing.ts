@@ -25,6 +25,7 @@ const VAD_NORMALIZATION_MIN_DURATION_SEC = 0; // 0 ⇒ keep even 1‑frame blips
 const MERGE_GAP_SEC = 0.3;
 const PAD_SEC = 0;
 const MIN_CHUNK_DURATION_SEC = 1;
+const SUBTITLE_GAP_THRESHOLD = 3;
 
 // --- Concurrency Setting ---
 const TRANSCRIPTION_BATCH_SIZE = 50;
@@ -146,13 +147,15 @@ export async function extractSubtitlesFromVideo({
       }
     }
 
-    const subtitlesContent = await generateSubtitlesFromAudio({
+    // Step 1: Get initial subtitle content (string)
+    const rawSubtitlesContent = await generateSubtitlesFromAudio({
       inputAudioPath: audioPath || '',
       progressCallback: p => {
         progressCallback?.({
           percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
           stage: p.stage,
-          partialResult: p.partialResult,
+          // Only show partialResult *if* no translation needed, otherwise wait for processed result
+          partialResult: !isTranslationNeeded ? p.partialResult : undefined,
           current: p?.current,
           total: p.total,
           error: p.error,
@@ -163,123 +166,161 @@ export async function extractSubtitlesFromVideo({
       services,
     });
 
+    let processedSegments: SrtSegment[]; // Variable to hold segments after initial processing
+
+    // Step 2: Process based on whether translation is needed
     if (!isTranslationNeeded) {
-      await fileManager.writeTempFile(subtitlesContent, '.srt');
+      // Just parse the raw content if no translation
+      processedSegments = parseSrt(rawSubtitlesContent);
       progressCallback?.({
-        percent: STAGE_FINALIZING.end,
-        stage: 'Transcription complete',
-        partialResult: subtitlesContent,
+        percent: STAGE_FINALIZING.start, // Move completion % later
+        stage: 'Transcription complete, preparing final SRT',
+        partialResult: rawSubtitlesContent, // Show the raw SRT here
       });
-      return { subtitles: subtitlesContent };
-    }
+    } else {
+      // Translation needed - run translation and review logic
+      const segmentsInProcess = parseSrt(rawSubtitlesContent); // Start with parsed segments
+      const totalSegments = segmentsInProcess.length;
+      const TRANSLATION_BATCH_SIZE = 10;
 
-    const segmentsInProcess = parseSrt(subtitlesContent);
-    const totalSegments = segmentsInProcess.length;
-    const TRANSLATION_BATCH_SIZE = 10;
-
-    for (
-      let batchStart = 0;
-      batchStart < totalSegments;
-      batchStart += TRANSLATION_BATCH_SIZE
-    ) {
-      const batchEnd = Math.min(
-        batchStart + TRANSLATION_BATCH_SIZE,
-        totalSegments
-      );
-      const currentBatchOriginals = segmentsInProcess.slice(
-        batchStart,
-        batchEnd
-      );
-      const translatedBatch = await translateBatch({
-        batch: {
-          segments: currentBatchOriginals.map(seg => ({ ...seg })),
-          startIndex: batchStart,
-          endIndex: batchEnd,
-        },
-        targetLang,
-        operationId,
-        signal,
-      });
-      for (let i = 0; i < translatedBatch.length; i++) {
-        segmentsInProcess[batchStart + i] = translatedBatch[i];
-      }
-      const overallProgress = (batchEnd / totalSegments) * 100;
-      const cumulativeSrt = buildSrt(segmentsInProcess);
-      progressCallback?.({
-        percent: scaleProgress(overallProgress, STAGE_TRANSLATION),
-        stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(
-          totalSegments / TRANSLATION_BATCH_SIZE
-        )}`,
-        partialResult: cumulativeSrt,
-        current: batchEnd,
-        total: totalSegments,
-      });
-    }
-
-    const REVIEW_BATCH_SIZE = 50;
-    for (
-      let batchStart = 0;
-      batchStart < segmentsInProcess.length;
-      batchStart += REVIEW_BATCH_SIZE
-    ) {
-      const batchEnd = Math.min(
-        batchStart + REVIEW_BATCH_SIZE,
-        segmentsInProcess.length
-      );
-      const currentBatchTranslated = segmentsInProcess.slice(
-        batchStart,
-        batchEnd
-      );
-      const reviewedBatch = await reviewTranslationBatch({
-        batch: {
-          segments: currentBatchTranslated.map(seg => ({ ...seg })),
-          startIndex: batchStart,
-          endIndex: batchEnd,
+      // --- Translation Loop ---
+      for (
+        let batchStart = 0;
+        batchStart < totalSegments;
+        batchStart += TRANSLATION_BATCH_SIZE
+      ) {
+        const batchEnd = Math.min(
+          batchStart + TRANSLATION_BATCH_SIZE,
+          totalSegments
+        );
+        const currentBatchOriginals = segmentsInProcess.slice(
+          batchStart,
+          batchEnd
+        );
+        const translatedBatch = await translateBatch({
+          batch: {
+            segments: currentBatchOriginals.map(seg => ({ ...seg })),
+            startIndex: batchStart,
+            endIndex: batchEnd,
+          },
           targetLang,
-        },
-        operationId,
-        signal,
-      });
-      for (let i = 0; i < reviewedBatch.length; i++) {
-        segmentsInProcess[batchStart + i] = reviewedBatch[i];
+          operationId,
+          signal,
+        });
+        for (let i = 0; i < translatedBatch.length; i++) {
+          segmentsInProcess[batchStart + i] = translatedBatch[i];
+        }
+        const overallProgress = (batchEnd / totalSegments) * 100;
+        progressCallback?.({
+          percent: scaleProgress(overallProgress, STAGE_TRANSLATION),
+          stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(
+            totalSegments / TRANSLATION_BATCH_SIZE
+          )}`,
+          // Do not show partial result during translation, wait for review
+          partialResult: undefined, // Clear partial result here
+          current: batchEnd,
+          total: totalSegments,
+        });
       }
-      const overallProgress = (batchEnd / segmentsInProcess.length) * 100;
-      const cumulativeReviewedSrt = buildSrt(segmentsInProcess);
-      progressCallback?.({
-        percent: scaleProgress(overallProgress, STAGE_REVIEW),
-        stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
-          segmentsInProcess.length / REVIEW_BATCH_SIZE
-        )}`,
-        partialResult: cumulativeReviewedSrt,
-        current: batchEnd,
-        total: segmentsInProcess.length,
-        batchStartIndex: batchStart,
-      });
+
+      // --- Review Loop ---
+      const REVIEW_BATCH_SIZE = 50;
+      for (
+        let batchStart = 0;
+        batchStart < segmentsInProcess.length;
+        batchStart += REVIEW_BATCH_SIZE
+      ) {
+        const batchEnd = Math.min(
+          batchStart + REVIEW_BATCH_SIZE,
+          segmentsInProcess.length
+        );
+        const currentBatchTranslated = segmentsInProcess.slice(
+          batchStart,
+          batchEnd
+        );
+        const reviewedBatch = await reviewTranslationBatch({
+          batch: {
+            segments: currentBatchTranslated.map(seg => ({ ...seg })),
+            startIndex: batchStart,
+            endIndex: batchEnd,
+            targetLang,
+          },
+          operationId,
+          signal,
+        });
+        for (let i = 0; i < reviewedBatch.length; i++) {
+          segmentsInProcess[batchStart + i] = reviewedBatch[i];
+        }
+        const overallProgress = (batchEnd / segmentsInProcess.length) * 100;
+        progressCallback?.({
+          percent: scaleProgress(overallProgress, STAGE_REVIEW),
+          stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
+            segmentsInProcess.length / REVIEW_BATCH_SIZE
+          )}`,
+          // Show cumulative reviewed SRT here if desired
+          partialResult: buildSrt(segmentsInProcess),
+          current: batchEnd,
+          total: segmentsInProcess.length,
+          batchStartIndex: batchStart,
+        });
+      }
+      // After loops, segmentsInProcess contains the translated/reviewed segments
+      processedSegments = segmentsInProcess;
     }
+
+    // --- Post-Processing Steps (Applied to EITHER original or translated segments) ---
 
     progressCallback?.({
-      percent: STAGE_FINALIZING.start,
-      stage: 'Finalizing subtitles',
+      percent: STAGE_FINALIZING.start, // Or adjust percentage as needed
+      stage: 'Applying final adjustments',
     });
 
-    const indexedSegments = segmentsInProcess.map((block, idx) => ({
+    // Step 3: Indexing (Common step)
+    const indexedSegments = processedSegments.map((block, idx) => ({
       ...block,
       index: idx + 1,
+      // --- Ensure start/end are numbers EARLY ---
+      start: Number(block.start),
+      end: Number(block.end),
+      // --- End Change ---
     }));
-    const gapFilledSegments = extendShortSubtitleGaps(indexedSegments, 3);
-    const finalSegments = fillBlankTranslations(gapFilledSegments);
 
+    // --- ADD LOG BEFORE CALL ---
     log.debug(
-      `[${operationId}] Segments after fillBlankTranslations (${finalSegments.length} segments):`,
-      JSON.stringify(finalSegments.slice(0, 5), null, 2)
+      `[${operationId}] Segments BEFORE calling extendShortSubtitleGaps (indices 25-27):`,
+      JSON.stringify(indexedSegments.slice(25, 28), null, 2)
+    );
+    // --- END ADD LOG ---
+
+    // Step 4: Apply Gap Filling (IN-PLACE)
+    extendShortSubtitleGaps(indexedSegments, SUBTITLE_GAP_THRESHOLD);
+
+    // Log the state of indexedSegments *after* the in-place modification
+    log.debug(
+      `[${operationId}] Segments AFTER IN-PLACE gap fill, BEFORE blank fill (indices 25-27):`,
+      JSON.stringify(indexedSegments.slice(25, 28), null, 2)
     );
 
+    // Step 5: Apply Blank Filling (Pass the mutated array)
+    const finalSegments = fillBlankTranslations(indexedSegments);
+
+    // Keep our previous log
+    log.debug(
+      `[${operationId}] Segments BEFORE buildSrt (indices 25-27):`,
+      JSON.stringify(finalSegments.slice(25, 28), null, 2)
+    );
+
+    // Step 6: Build Final SRT
     const finalSrtContent = buildSrt(finalSegments);
 
-    await fileManager.writeTempFile(finalSrtContent, '.srt');
+    // --- Final Steps ---
+    await fileManager.writeTempFile(finalSrtContent, '.srt'); // Write the final version
+    log.info(
+      `[${operationId}] FINAL SRT CONTENT being returned:\n${finalSrtContent}`
+    ); // Log the actual final string
     progressCallback?.({
       percent: 100,
-      stage: 'Transcription complete!',
+      stage: 'Processing complete!',
     });
 
     return { subtitles: finalSrtContent };
@@ -532,7 +573,16 @@ export async function generateSubtitlesFromAudio({
       `[${operationId}] Transcription complete. Generated ${overallSegments.length} final segments.`
     );
     progressCallback?.({ percent: 100, stage: 'Transcription complete!' });
-    return buildSrt(overallSegments);
+    // Re-index the sorted segments before building the partial SRT
+    const sortedSegments = overallSegments
+      .slice()
+      .sort((a, b) => a.start - b.start);
+    const reIndexedPartialSegments = sortedSegments.map((seg, idx) => ({
+      ...seg,
+      index: idx + 1, // Assign correct sequential index
+    }));
+    const partialResult = buildSrt(reIndexedPartialSegments); // Build SRT with correct indices
+    return partialResult;
   } catch (error: any) {
     // Standard error handling, similar to previous version
     console.error(
@@ -1093,33 +1143,59 @@ function extendShortSubtitleGaps(
   threshold: number = 3
 ): SrtSegment[] {
   if (!segments || segments.length < 2) {
-    return segments;
+    return segments; // Return original if no adjustments possible
   }
 
-  const adjustedSegments = segments.map(segment => ({ ...segment }));
+  log.debug(
+    `[extendShortSubtitleGaps IN-PLACE] Input segments (first 5): ${JSON.stringify(segments.slice(0, 5), null, 2)}`
+  );
 
-  for (let i = 0; i < adjustedSegments.length - 1; i++) {
-    const currentSegment = adjustedSegments[i];
-    const nextSegment = adjustedSegments[i + 1];
+  // Iterate through the segments array directly
+  // Loop up to length - 1 because we access i and i + 1
+  for (let i = 0; i < segments.length - 1; i++) {
+    // Read directly from the input/mutating array
+    const currentSegment = segments[i];
+    const nextSegment = segments[i + 1];
 
     const currentEndTime = Number(currentSegment.end);
     const nextStartTime = Number(nextSegment.start);
 
+    log.debug(
+      `[GapCheck IN-PLACE Index ${i}] Current End: ${currentEndTime.toFixed(4)}, Next Start: ${nextStartTime.toFixed(4)}`
+    );
+
     if (isNaN(currentEndTime) || isNaN(nextStartTime)) {
       log.warn(
-        `Invalid time encountered at index ${i}, skipping gap adjustment.`
+        `[GapCheck IN-PLACE Index ${i}] Invalid time encountered, skipping gap adjustment.`
       );
       continue;
     }
 
     const gap = nextStartTime - currentEndTime;
+    const localThreshold = threshold;
 
-    if (gap > 0 && gap < threshold) {
-      currentSegment.end = nextStartTime;
+    log.debug(
+      `[GapCheck IN-PLACE Index ${i}] Gap: ${gap.toFixed(4)}, Threshold: ${localThreshold}, Condition (gap > 0 && gap < threshold): ${gap > 0 && gap < localThreshold}`
+    );
+
+    if (gap > 0 && gap < localThreshold) {
+      log.info(
+        `[GapCheck IN-PLACE Index ${i}] ADJUSTING end time for segment at index ${i} from ${currentEndTime.toFixed(4)} to ${nextStartTime.toFixed(4)}.`
+      );
+      // --- Apply the change DIRECTLY to the segment in the input array ---
+      currentSegment.end = nextStartTime; // Modify the .end property of the object at index i
+      // --- End Change ---
+    } else {
+      log.debug(`[GapCheck IN-PLACE Index ${i}] NO adjustment needed.`);
     }
   }
 
-  return adjustedSegments;
+  log.debug(
+    `[extendShortSubtitleGaps IN-PLACE] Output segments (first 5): ${JSON.stringify(segments.slice(0, 5), null, 2)}`
+  );
+
+  // Return the mutated array
+  return segments;
 }
 
 function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
@@ -1301,7 +1377,7 @@ export async function detectSpeechIntervals({
       // Process as many full frames as possible from the current buffer
       while (offset + bytesPerFrame <= currentBuffer.length) {
         const frame = currentBuffer.subarray(offset, offset + bytesPerFrame);
-        const t = currentFrameIndex * (frameMs / 1000); // Frame start time in seconds
+        const t = currentFrameIndex * (frameMs / 1000);
 
         try {
           const isSpeech = vad.process(frame);

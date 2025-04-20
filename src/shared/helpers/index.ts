@@ -48,10 +48,6 @@ export function parseSrt(srtString: string): SrtSegment[] {
     if (!timeMatch) {
       return;
     }
-    if (text === '') {
-      // Allow empty text content, no action needed
-    }
-
     // Use srtTimeToSeconds to correctly parse the time strings
     const startTime = srtTimeToSeconds(timeMatch[1]);
     const endTime = srtTimeToSeconds(timeMatch[2]);
@@ -121,7 +117,7 @@ export function secondsToSrtTime(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
-  const milliseconds = Math.round((totalSeconds % 1) * 1000);
+  const milliseconds = Math.floor((totalSeconds % 1) * 1000);
 
   const finalSeconds = milliseconds === 1000 ? seconds + 1 : seconds;
   const finalMilliseconds = milliseconds === 1000 ? 0 : milliseconds;

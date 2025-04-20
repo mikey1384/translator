@@ -1244,7 +1244,54 @@ function AppContent() {
     try {
       const options = buildGenerateOptions();
       const result = await window.electron.generateSubtitles(options);
-      if (result.error) throw new Error(result.error);
+
+      // Check for errors first
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // If no error, process the final subtitles
+      if (result.subtitles) {
+        try {
+          const finalSegments = parseSrt(result.subtitles);
+
+          // --- ADD LOGGING HERE (Before handleSetSubtitleSegments) ---
+          console.log(
+            '[Frontend State Update] Data BEFORE setting state (Segment 27):',
+            JSON.stringify(
+              finalSegments.find(s => s.index === 27),
+              null,
+              2
+            )
+          );
+          // --- END LOGGING ---
+
+          console.log(
+            '[Frontend State Update] Data BEFORE setting state (Segment 27):',
+            JSON.stringify(
+              finalSegments.find(s => s.index === 27),
+              null,
+              2
+            ),
+            `Timestamp: ${Date.now()}` // Add timestamp
+          );
+          handleSetSubtitleSegments(finalSegments);
+        } catch (parseError) {
+          console.error(
+            '[AppContent] Error parsing final subtitles string:',
+            parseError
+          );
+          setError(
+            `Error processing final subtitles: ${parseError instanceof Error ? parseError.message : String(parseError)}`
+          );
+        }
+      } else {
+        // This case shouldn't happen if there's no error, but handle it just in case
+        console.warn(
+          '[AppContent] Subtitle generation finished without error, but no final subtitles data was returned.'
+        );
+        // setError('Subtitle generation finished, but final data was missing.');
+      }
     } catch (err: any) {
       console.error('Error generating subtitles:', err);
       setError(`Error generating subtitles: ${err.message || err}`);
@@ -1266,10 +1313,6 @@ function AppContent() {
   async function handleStartPngRenderFromChild(
     options: RenderSubtitlesOptions
   ): Promise<{ success: boolean; error?: string; outputPath?: string }> {
-    console.log(
-      '[AppContent] Received render request from child component:',
-      options
-    );
     setIsMergingInProgress(true);
     setMergeStage('Starting PNG sequence render...');
     setMergeOperationId(options.operationId);
@@ -1277,10 +1320,6 @@ function AppContent() {
 
     try {
       const result = await subtitleRendererClient.renderSubtitles(options);
-      console.log(
-        '[AppContent] Final result received from main process:',
-        result
-      );
 
       if (result.success && result.outputPath) {
         // SUCCESS: Main process completed rendering AND user saved the file
@@ -1311,11 +1350,9 @@ function AppContent() {
     setVideoFilePath(filePath);
     setVideoMetadata(null);
     if (filePath) {
-      console.log(`[AppContent] Fetching metadata for: ${filePath}`);
       try {
         const result = await window.electron.getVideoMetadata(filePath);
         if (result.success && result.metadata) {
-          console.log('[AppContent] Received metadata:', result.metadata);
           setVideoMetadata(result.metadata);
         } else {
           console.error(
@@ -1337,9 +1374,6 @@ function AppContent() {
   }
 
   async function handleCancelDownload(operationId: string) {
-    console.log(
-      `[AppContent] handleCancelDownload called for ID: ${operationId}`
-    );
     if (!operationId) {
       console.warn(
         '[AppContent] Cannot cancel download: operationId is missing.'
@@ -1350,9 +1384,6 @@ function AppContent() {
     try {
       // Call the main process cancellation function
       await window.electron.cancelOperation(operationId);
-      console.log(
-        `[AppContent] Cancel request sent for download operation ${operationId}.`
-      );
     } catch (error) {
       console.error(
         `[AppContent] Error sending cancel request for download ${operationId}:`,

@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react';
+import { RefObject } from 'react';
 import { css } from '@emotion/css';
 import LazySubtitleItem from './LazySubtitleItem.js';
 import { SrtSegment } from '../../../types/interface.js';
@@ -80,7 +80,7 @@ function SubtitleList({
     >
       {subtitles.map((sub, index) => (
         <div
-          key={`${sub.index}-${sub.start}-${sub.end}`}
+          key={`${sub.index}-${sub.start}-${sub.text.slice(0, 10)}`}
           ref={el => {
             if (subtitleRefs && subtitleRefs?.current) {
               subtitleRefs.current[index] = el;
@@ -92,7 +92,6 @@ function SubtitleList({
           `}
         >
           <LazySubtitleItem
-            key={sub.index}
             sub={sub}
             index={index}
             editingTimes={editingTimes}

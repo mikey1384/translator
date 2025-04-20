@@ -51,7 +51,8 @@ export function useSubtitleState(showOriginalText: boolean) {
 
         if (
           safeResult.partialResult &&
-          safeResult.partialResult.trim().length > 0
+          safeResult.partialResult.trim().length > 0 &&
+          safeResult.percent < 99
         ) {
           setIsReceivingPartialResults(true);
           const parsedSegments = parseSrt(safeResult.partialResult);
@@ -73,8 +74,11 @@ export function useSubtitleState(showOriginalText: boolean) {
               text: processedText,
             };
           });
-
           setSubtitleSegments(processedSegments);
+        } else if (safeResult.partialResult && safeResult.percent >= 99) {
+          console.log(
+            `[useSubtitleState handlePartialResult] Progress >= 99% (${safeResult.percent}%), IGNORING partialResult.`
+          );
         }
 
         setTranslationProgress(safeResult.percent);
@@ -83,7 +87,6 @@ export function useSubtitleState(showOriginalText: boolean) {
           setIsTranslationInProgress(true);
         }
 
-        // Track the operation ID for cancellation
         if (safeResult.operationId) {
           setTranslationOperationId(safeResult.operationId);
         }
