@@ -51,8 +51,7 @@ export function useSubtitleState(showOriginalText: boolean) {
 
         if (
           safeResult.partialResult &&
-          safeResult.partialResult.trim().length > 0 &&
-          safeResult.percent < 99
+          safeResult.partialResult.trim().length > 0
         ) {
           setIsReceivingPartialResults(true);
           const parsedSegments = parseSrt(safeResult.partialResult);
@@ -75,10 +74,6 @@ export function useSubtitleState(showOriginalText: boolean) {
             };
           });
           setSubtitleSegments(processedSegments);
-        } else if (safeResult.partialResult && safeResult.percent >= 99) {
-          console.log(
-            `[useSubtitleState handlePartialResult] Progress >= 99% (${safeResult.percent}%), IGNORING partialResult.`
-          );
         }
 
         setTranslationProgress(safeResult.percent);
@@ -134,8 +129,27 @@ export function useSubtitleState(showOriginalText: boolean) {
 
   function handleSubtitlesGenerated(generatedSubtitles: string) {
     try {
-      const segments = parseSrt(generatedSubtitles);
-      const fixedSegments = fixOverlappingSegments(segments);
+      const parsedSegments = parseSrt(generatedSubtitles);
+      const processedSegments = parsedSegments.map((segment: any) => {
+        let processedText = segment.text;
+        if (segment.text.includes('###TRANSLATION_MARKER###')) {
+          if (showOriginalText) {
+            processedText = segment.text.replace(
+              '###TRANSLATION_MARKER###',
+              '\n'
+            );
+          } else {
+            const parts = segment.text.split('###TRANSLATION_MARKER###');
+            processedText = parts[1] ? parts[1].trim() : '';
+          }
+        }
+        return {
+          ...segment,
+          text: processedText,
+        };
+      });
+
+      const fixedSegments = fixOverlappingSegments(processedSegments);
       setSubtitleSegments(fixedSegments);
     } catch (err) {
       console.error(

@@ -154,8 +154,7 @@ export async function extractSubtitlesFromVideo({
         progressCallback?.({
           percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
           stage: p.stage,
-          // Only show partialResult *if* no translation needed, otherwise wait for processed result
-          partialResult: !isTranslationNeeded ? p.partialResult : undefined,
+          partialResult: p.partialResult,
           current: p?.current,
           total: p.total,
           error: p.error,
@@ -216,8 +215,7 @@ export async function extractSubtitlesFromVideo({
           stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(
             totalSegments / TRANSLATION_BATCH_SIZE
           )}`,
-          // Do not show partial result during translation, wait for review
-          partialResult: undefined, // Clear partial result here
+          partialResult: buildSrt(segmentsInProcess),
           current: batchEnd,
           total: totalSegments,
         });
@@ -318,10 +316,16 @@ export async function extractSubtitlesFromVideo({
     log.info(
       `[${operationId}] FINAL SRT CONTENT being returned:\n${finalSrtContent}`
     ); // Log the actual final string
+
+    // --- ADDED: Send final result through progress callback for consistency ---
     progressCallback?.({
       percent: 100,
       stage: 'Processing complete!',
+      partialResult: finalSrtContent, // Send the final SRT string
+      current: finalSegments.length, // Use length of the final segments array
+      total: finalSegments.length,
     });
+    // --- END ADDED ---
 
     return { subtitles: finalSrtContent };
   } catch (error: any) {
@@ -555,14 +559,18 @@ export async function generateSubtitlesFromAudio({
         PROGRESS_TRANSCRIPTION_START +
         (done / chunks.length) *
           (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
+      const intermediateSrt = buildSrt(
+        overallSegments.slice().sort((a, b) => a.start - b.start)
+      );
+      log.debug(
+        `[Transcription Loop] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
+      );
       progressCallback?.({
         percent: Math.round(p),
         stage: `Transcribed ${done}/${chunks.length} chunks`,
         current: done,
         total: chunks.length,
-        partialResult: buildSrt(
-          overallSegments.slice().sort((a, b) => a.start - b.start)
-        ), // provide intermediate result
+        partialResult: intermediateSrt,
       });
 
       if (signal?.aborted) throw new Error('Cancelled'); // Check between batches
