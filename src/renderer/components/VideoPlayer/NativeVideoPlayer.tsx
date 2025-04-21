@@ -196,18 +196,12 @@ export default function NativeVideoPlayer({
     const handleCanPlay = () => {
       if (onReadyCalledRef.current) return;
       onReadyCalledRef.current = true;
-      // Update global state as well
       if (getNativePlayerInstance() !== videoElement) {
         setNativePlayerInstance(videoElement); // Use the setter function
       }
-      // Cannot directly set isReady/isInitialized here, managed by setNativePlayerInstance
-      // nativePlayer.isReady = true; // Remove direct access
-      // nativePlayer.lastAccessed = Date.now(); // Remove direct access (done internally)
-      // nativePlayer.isInitialized = true; // Remove direct access
       console.log('Native player is now ready (via canplay).');
       onPlayerReady(videoElement); // Call the prop callback
 
-      // For file:// URLs, apply any pending seek operation that was waiting for canplay
       if (isFileUrlVideo && pendingSeekRef?.current !== null) {
         const targetTime = pendingSeekRef?.current;
         console.log(`Applying pending seek to ${targetTime} after canPlay`);
@@ -297,7 +291,6 @@ export default function NativeVideoPlayer({
       }
     };
 
-    // Add more handlers to debug and fix URL video issues
     const handlePlay = () => {
       console.log('Video play event at time:', videoElement.currentTime);
 
@@ -442,13 +435,8 @@ export default function NativeVideoPlayer({
         videoElement.preload = 'auto';
       }
 
-      videoElement.load(); // Explicitly call load()
-      // Reset global state until canplay fires
-      // Use the setter function, it handles readiness and initialization state
+      videoElement.load();
       setNativePlayerInstance(videoElement);
-      // nativePlayer.instance = videoElement; // Removed direct access
-      // nativePlayer.isReady = false; // Removed direct access (managed internally by setNativePlayerInstance)
-      // nativePlayer.isInitialized = true; // Removed direct access (managed internally by setNativePlayerInstance)
     } else {
       // If src is the same, check if it can play already, maybe it loaded quickly
       if (videoElement.readyState >= 3) {
@@ -626,8 +614,6 @@ export default function NativeVideoPlayer({
         if (entry.target === videoElement) {
           const newHeight = Math.round(entry.contentRect.height);
           if (newHeight > 0) {
-            // Optional: Add console log for debugging size changes
-            // console.log('Video display height changed:', newHeight);
             setDisplayHeight(newHeight);
           }
         }
@@ -653,11 +639,8 @@ export default function NativeVideoPlayer({
 
     if (nativeHeight > 0 && displayHeight > 0) {
       const scaleFactor = displayHeight / nativeHeight;
-      // Apply scale factor, ensuring a minimum size
       return Math.max(10, Math.round(safeBaseSize * scaleFactor));
     }
-    // Fallback if dimensions aren't ready or video has no height (audio?)
-    // Use base size, potentially scaled slightly if fullscreen as a simple fallback
     return isFullyExpanded ? Math.round(safeBaseSize * 1.2) : safeBaseSize;
   };
 

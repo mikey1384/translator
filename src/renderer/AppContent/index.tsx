@@ -518,20 +518,47 @@ function AppContent() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      // Check readiness flag *before* getting player
       if (document.visibilityState === 'visible' && isVideoPlayerReady) {
-        const video = getNativePlayerInstance(); // Get player here
+        const video = getNativePlayerInstance();
         console.log(
           '[AppContent] Window became visible. Checking video sync...'
         );
         if (video && !video.paused) {
-          // Check if video is valid
-          // Attempt to nudge the player to resync
           const currentTime = video.currentTime;
           console.log(
-            `[AppContent] Nudging player. Current time: ${currentTime}`
+            `[AppContent] Nudging player & track. Current time: ${currentTime}`
           );
-          video.currentTime = currentTime; // Setting time to itself can force a sync
+
+          // Find the active text track
+          let activeTrack: TextTrack | null = null;
+          for (let i = 0; i < video.textTracks.length; i++) {
+            if (video.textTracks[i].mode === 'showing') {
+              activeTrack = video.textTracks[i];
+              break;
+            }
+          }
+
+          if (activeTrack) {
+            // Store original mode and disable the track
+            const originalMode = activeTrack.mode;
+            activeTrack.mode = 'hidden'; // Or 'disabled'
+
+            // Nudge the video time
+            video.currentTime = currentTime;
+
+            // After a tiny delay, restore the track mode
+            // This delay allows the browser to process the mode change
+            setTimeout(() => {
+              if (activeTrack) {
+                // Check again in case something changed rapidly
+                activeTrack.mode = originalMode;
+                console.log('[AppContent] Restored track mode.');
+              }
+            }, 10); // 10ms delay is usually sufficient
+          } else {
+            // If no active track, just nudge the video time as before
+            video.currentTime = currentTime;
+          }
         } else {
           console.log(
             '[AppContent] Video is paused or player invalid, no nudge needed.'
@@ -543,12 +570,10 @@ function AppContent() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     console.log('[AppContent] Added visibilitychange listener.');
 
-    // Cleanup listener on unmount
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       console.log('[AppContent] Removed visibilitychange listener.');
     };
-    // Depend on the readiness flag
   }, [isVideoPlayerReady]);
 
   // --- Try YET ANOTHER modification to the player event listener hook ---

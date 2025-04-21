@@ -352,8 +352,6 @@ export default function VideoPlayer({
 
   const toggleFullscreen = useCallback(() => {
     setIsFullScreen(prev => !prev);
-    // Optionally, pause/play video or trigger other actions
-    // If entering fullscreen, might want to hide scrollbars
     if (!isFullScreen) {
       document.body.style.overflow = 'hidden';
     } else {
