@@ -156,7 +156,7 @@ export default function GenerateSubtitlesPanel({
           ))}
         </select>
 
-        {targetLanguage !== 'original' && targetLanguage !== 'english' && (
+        {targetLanguage !== 'original' && (
           <div
             className={css`
               margin-top: 8px;
