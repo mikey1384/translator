@@ -1090,12 +1090,8 @@ Now, provide the reviewed translations for the ${batch.segments.length} lines ab
       return batch.segments;
     }
 
-    // Split by delimiter. Result will have an empty string at the start if content begins with the delimiter.
     const splitByDelimiter = reviewedContent.split('@@SUB_LINE@@');
-    // Filter out potential empty first element and any trailing empty strings from final delimiter.
-    const parsedLines = splitByDelimiter.filter(
-      (line, index) => index > 0 || line.trim() !== ''
-    );
+    const parsedLines = splitByDelimiter.slice(1);
 
     // Check if the number of parsed lines matches the expected batch size
     if (parsedLines.length !== batch.segments.length) {
@@ -1212,29 +1208,37 @@ function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
   }
 
   const adjustedSegments = segments.map(segment => ({ ...segment }));
+  let lastGoodTranslation = ''; // Track the last non-blank translation
 
-  for (let i = 1; i < adjustedSegments.length; i++) {
-    const currentSegment = adjustedSegments[i];
-    const prevSegment = adjustedSegments[i - 1];
-
+  for (const currentSegment of adjustedSegments) {
     const currentParts = currentSegment.text.split('###TRANSLATION_MARKER###');
-    const currentHasMarker = currentParts.length > 1;
     const currentOriginal = currentParts[0] || '';
-    const currentTranslation = currentParts[1] || '';
-    const isCurrentBlank =
-      currentHasMarker &&
-      currentOriginal.trim() !== '' &&
-      currentTranslation.trim() === '';
+    const currentTranslation = currentParts[1] || ''; // Default to blank if no marker/translation
 
-    if (isCurrentBlank) {
-      const prevParts = prevSegment.text.split('###TRANSLATION_MARKER###');
-      const prevTranslation = prevParts[1] || '';
+    // Check if the current translation is effectively blank
+    if (currentTranslation.trim() !== '') {
+      // Not blank: update lastGoodTranslation and continue
+      lastGoodTranslation = currentTranslation.trim();
+      continue;
+    }
 
-      if (prevTranslation.trim() !== '') {
-        currentSegment.text = `${currentOriginal}###TRANSLATION_MARKER###${prevTranslation}`;
-      }
+    if (lastGoodTranslation) {
+      currentSegment.text = `${currentOriginal}###TRANSLATION_MARKER###${lastGoodTranslation}`;
     }
   }
+
+  const remainingBlanks = adjustedSegments.filter(
+    s =>
+      s.text.endsWith('###TRANSLATION_MARKER###') ||
+      s.text.split('###TRANSLATION_MARKER###')[1]?.trim() === ''
+  ).length;
+  if (remainingBlanks > 0) {
+    // Only log if there are blanks
+    log.debug(
+      `[fillBlankTranslations] Found ${remainingBlanks} segments still blank after processing.`
+    );
+  }
+  // --- END CHANGE 3 ---
 
   return adjustedSegments;
 }
