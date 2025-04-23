@@ -757,8 +757,7 @@ function AppContent() {
     };
 
     loadAndSeek();
-    // This effect runs ONLY when the file path changes OR the player becomes ready
-  }, [videoFilePath, isVideoPlayerReady]); // Dependencies: path and readiness flag
+  }, [videoFilePath, isVideoPlayerReady]);
 
   return (
     <div className={pageWrapperStyles}>
@@ -978,12 +977,12 @@ function AppContent() {
               'mkv',
               'avi',
               'mov',
-              'webm', // Video
+              'webm',
               'mp3',
               'wav',
               'aac',
               'ogg',
-              'flac', // Audio
+              'flac',
             ],
           },
         ],
