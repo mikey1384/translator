@@ -1270,36 +1270,13 @@ function AppContent() {
       const options = buildGenerateOptions();
       const result = await window.electron.generateSubtitles(options);
 
-      // Check for errors first
       if (result.error) {
         throw new Error(result.error);
       }
 
-      // If no error, process the final subtitles
       if (result.subtitles) {
         try {
           const finalSegments = parseSrt(result.subtitles);
-
-          // --- ADD LOGGING HERE (Before handleSetSubtitleSegments) ---
-          console.log(
-            '[Frontend State Update] Data BEFORE setting state (Segment 27):',
-            JSON.stringify(
-              finalSegments.find(s => s.index === 27),
-              null,
-              2
-            )
-          );
-          // --- END LOGGING ---
-
-          console.log(
-            '[Frontend State Update] Data BEFORE setting state (Segment 27):',
-            JSON.stringify(
-              finalSegments.find(s => s.index === 27),
-              null,
-              2
-            ),
-            `Timestamp: ${Date.now()}` // Add timestamp
-          );
           handleSetSubtitleSegments(finalSegments);
         } catch (parseError) {
           console.error(
@@ -1311,11 +1288,9 @@ function AppContent() {
           );
         }
       } else {
-        // This case shouldn't happen if there's no error, but handle it just in case
-        console.warn(
-          '[AppContent] Subtitle generation finished without error, but no final subtitles data was returned.'
+        setError(
+          'No subtitles were generated. If this was unexpected, please check your internet connection.'
         );
-        // setError('Subtitle generation finished, but final data was missing.');
       }
     } catch (err: any) {
       console.error('Error generating subtitles:', err);
@@ -1347,7 +1322,6 @@ function AppContent() {
       const result = await subtitleRendererClient.renderSubtitles(options);
 
       if (result.success && result.outputPath) {
-        // SUCCESS: Main process completed rendering AND user saved the file
         setMergeStage('Overlay video saved successfully!');
         setIsMergingInProgress(false);
         setMergeOperationId(null);
