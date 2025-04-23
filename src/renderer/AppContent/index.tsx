@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from 'react';
 import BackToTopButton from '../components/BackToTopButton.js';
 import SettingsPage from '../containers/SettingsPage.js';
 import VideoPlayer from '../components/VideoPlayer/index.js';
@@ -757,6 +763,11 @@ function AppContent() {
 
     loadAndSeek();
   }, [videoFilePath, isVideoPlayerReady]);
+
+  useLayoutEffect(() => {
+    if (!videoUrl) return;
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }));
+  }, [videoUrl]);
 
   return (
     <div className={pageWrapperStyles}>
