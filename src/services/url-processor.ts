@@ -258,6 +258,7 @@ async function downloadVideoFromPlatform(
 
   const args = [
     url,
+    '--no-playlist',
     '--output',
     tempFilenamePattern,
     '--format',
