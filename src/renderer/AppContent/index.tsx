@@ -177,7 +177,6 @@ function AppContent() {
   const [videoFilePath, setVideoFilePath] = useState<string | null>(null);
   const [isVideoPlayerReady, setIsVideoPlayerReady] = useState<boolean>(false);
 
-  // Function to save position immediately
   const saveCurrentPositionImmediately = useCallback(
     async (filePathToSave: string | null, player: HTMLVideoElement | null) => {
       // --- DETAILED LOGGING ---
@@ -1185,14 +1184,11 @@ function AppContent() {
         setDownloadOperationId(null);
         return; // Stop processing here
       }
-      // *** End cancellation check ***
 
-      // Original error check
       if (result.error) {
         throw new Error(result.error);
       }
 
-      // Original success path
       const videoPath = result.videoPath || result.filePath;
       if (!videoPath || !result.filename) {
         throw new Error('Downloaded video info incomplete');
@@ -1201,7 +1197,6 @@ function AppContent() {
       setUrlInput('');
       setIsProcessingUrl(false);
     } catch (err: any) {
-      // Catch block remains the same - handleUrlError handles actual errors
       handleUrlError(err);
     }
   }
@@ -1210,7 +1205,6 @@ function AppContent() {
     setError('');
     setIsProcessingUrl(true);
     setDownloadComplete(false);
-    // *** Add resets ***
     setDownloadProgressPercent(0);
     setDownloadProgressStage('');
     setDownloadOperationId(null);
@@ -1376,11 +1370,10 @@ function AppContent() {
       console.warn(
         '[AppContent] Cannot cancel download: operationId is missing.'
       );
-      setIsProcessingUrl(false); // Hide progress
+      setIsProcessingUrl(false);
       return;
     }
     try {
-      // Call the main process cancellation function
       await window.electron.cancelOperation(operationId);
     } catch (error) {
       console.error(
@@ -1388,10 +1381,8 @@ function AppContent() {
         error
       );
     } finally {
-      // Hide the progress bar after attempting cancellation
       setIsProcessingUrl(false);
-      setDownloadOperationId(null); // Clear the ID
-      // *** Add resets ***
+      setDownloadOperationId(null);
       setDownloadProgressPercent(0);
       setDownloadProgressStage('');
     }
