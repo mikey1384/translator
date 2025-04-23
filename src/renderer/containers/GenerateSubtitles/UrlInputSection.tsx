@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 interface UrlInputSectionProps {
   urlInput: string;
   setUrlInput: (value: string) => void;
-  onSetVideoFile: (file: null) => void;
   setError: (error: string) => void;
   isGenerating: boolean;
   isProcessingUrl: boolean;
@@ -42,7 +41,6 @@ const urlInputStyles = css`
 function UrlInputSection({
   urlInput,
   setUrlInput,
-  onSetVideoFile,
   setError,
   isGenerating,
   isProcessingUrl,
@@ -79,11 +77,7 @@ function UrlInputSection({
         value={urlInput}
         onChange={e => {
           setUrlInput(e.target.value);
-          if (e.target.value) {
-            // If user starts typing URL, clear any selected file
-            onSetVideoFile(null);
-            setError('');
-          }
+          setError('');
         }}
         disabled={isGenerating || isProcessingUrl}
       />

@@ -152,7 +152,6 @@ export default function GenerateSubtitles({
               <UrlInputSection
                 urlInput={urlInput}
                 setUrlInput={onSetUrlInput}
-                onSetVideoFile={onSetVideoFile}
                 setError={onSetError}
                 downloadQuality={downloadQuality}
                 setDownloadQuality={onSetDownloadQuality}
