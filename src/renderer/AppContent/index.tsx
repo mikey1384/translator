@@ -406,63 +406,6 @@ function AppContent() {
   }, []); // Keep empty dependency array
 
   useEffect(() => {
-    // Make sure window.electron exists
-    if (!window.electron?.onMergeSubtitlesProgress) {
-      console.warn(
-        '[AppContent] Merge progress listener setup failed: electron API not ready.'
-      );
-      return;
-    }
-
-    console.log('[AppContent] Setting up merge progress listener...');
-
-    const unlisten = window.electron.onMergeSubtitlesProgress(
-      (_event: any, progress: any) => {
-        // Log the received progress data
-        // console.log('[AppContent] Received merge progress:', progress);
-
-        // Extract progress details (use defaults if properties are missing)
-        const currentPercent = progress.percent ?? mergeProgress; // Keep current if undefined
-        const currentStage = progress.stage ?? mergeStage; // Keep current if undefined
-        const error = progress.error ?? null;
-        const cancelled = progress.cancelled ?? false;
-        const opId = progress.operationId ?? null; // Keep track of the operation ID
-
-        // Update state variables
-        setMergeProgress(currentPercent);
-        setMergeStage(currentStage);
-        setMergeOperationId(opId); // Ensure operation ID is updated
-
-        // Handle error state specifically
-        if (error) {
-          console.error('[AppContent] Error during merge progress:', error);
-          // Update stage to show error, keep progress bar visible until auto-close
-          setMergeStage(`Error: ${error}`);
-          setMergeProgress(100); // Trigger auto-close on error
-          // Note: isMergingInProgress will be set to false by ProgressArea's onClose via handleClose
-        } else if (cancelled) {
-          console.log(
-            '[AppContent] Merge operation cancelled via progress update.'
-          );
-          // Update stage and trigger auto-close
-          setMergeStage('Merge cancelled');
-          setMergeProgress(100);
-          // Note: isMergingInProgress will be set to false by ProgressArea's onClose via handleClose
-        } else if (currentPercent >= 100) {
-          // Completion handled by ProgressArea auto-close
-          console.log('[AppContent] Merge progress reached 100% or more.');
-        }
-      }
-    );
-
-    // Cleanup function to remove the listener when the component unmounts
-    return () => {
-      console.log('[AppContent] Cleaning up merge progress listener.');
-      unlisten();
-    };
-  }, [mergeProgress, mergeStage]); // Add dependencies if needed, but likely just need it once
-
-  useEffect(() => {
     // Load the saved target language when the component mounts
     const loadSavedLanguage = async () => {
       try {

@@ -23,10 +23,6 @@ interface GenerateSubtitlesFromAudioArgs {
   };
 }
 
-interface MergeProgressCallback {
-  (progress: MergeProgress);
-}
-
 interface GenerateProgressCallback {
   (progress: {
     percent: number;
@@ -37,15 +33,6 @@ interface GenerateProgressCallback {
     error?: string;
     batchStartIndex?: number;
   });
-}
-
-interface MergeSubtitlesWithVideoArgs {
-  options: MergeSubtitlesOptions;
-  operationId: string;
-  services: {
-    ffmpegService: FFmpegService;
-  };
-  progressCallback?: MergeProgressCallback;
 }
 
 interface SubtitleHandlerServices {

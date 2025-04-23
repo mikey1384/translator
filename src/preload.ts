@@ -47,44 +47,6 @@ const electronAPI = {
     return () =>
       ipcRenderer.removeListener('generate-subtitles-progress', listener);
   },
-
-  // ---------------------- Merging Subtitles ----------------------
-  mergeSubtitles: async (options: any) => {
-    // If there's a videoFile (File) and no path, read it. Otherwise, use path.
-    if (!options.videoPath && options.videoFile instanceof File) {
-      try {
-        const buffer = await options.videoFile.arrayBuffer();
-        options.videoFileData = buffer;
-        options.videoFileName = options.videoFile.name;
-      } catch (error) {
-        console.error(
-          '[preload] Error reading videoFile for mergeSubtitles:',
-          error
-        );
-        throw new Error('Failed to read video file for merge');
-      }
-    } else if (options.videoPath) {
-      // If we have a path, remove file-based properties
-      delete options.videoFileName;
-    }
-    // Always remove raw File object
-    delete options.videoFile;
-
-    console.log(
-      '[preload] mergeSubtitles sending options keys:',
-      JSON.stringify(Object.keys(options))
-    );
-    return ipcRenderer.invoke('merge-subtitles', { ...options });
-  },
-
-  onMergeSubtitlesProgress: (callback: (event: any, progress: any) => void) => {
-    if (typeof callback !== 'function') return;
-    const listener = (event: any, progress: any) => callback(event, progress);
-    ipcRenderer.on('merge-subtitles-progress', listener);
-    return () =>
-      ipcRenderer.removeListener('merge-subtitles-progress', listener);
-  },
-
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),

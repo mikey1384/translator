@@ -1,5 +1,5 @@
 import path from 'path';
-import { FFmpegService, FFmpegError } from './ffmpeg-service.js';
+import { FFmpegService } from './ffmpeg-service.js';
 import { parseSrt, buildSrt } from '../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
@@ -757,120 +757,6 @@ async function transcribeChunk({
       );
       // Consider if specific API errors (like 429 rate limit) need retry logic here or rely on higher level retries
       return []; // Return empty on other errors as well
-    }
-  }
-}
-
-export async function mergeSubtitlesWithVideo({
-  options,
-  operationId,
-  services,
-  progressCallback,
-}: MergeSubtitlesWithVideoArgs): Promise<{ outputPath: string }> {
-  const { ffmpegService } = services;
-  log.info(`[${operationId}] mergeSubtitlesWithVideo called.`);
-
-  const inputPathForNaming = options.videoFileName || options.videoPath;
-  if (!inputPathForNaming) {
-    throw new SubtitleProcessingError(
-      'Either videoFileName or videoPath is required for naming output.'
-    );
-  }
-  if (!options.videoPath) {
-    throw new SubtitleProcessingError('Video path is required for merging');
-  }
-  if (!options.subtitlesPath) {
-    throw new SubtitleProcessingError('Subtitles path is required');
-  }
-
-  progressCallback?.({ percent: 0, stage: 'Starting subtitle merging' });
-
-  const videoExt = path.extname(inputPathForNaming);
-  const baseName = path.basename(inputPathForNaming, videoExt);
-  const tempFilename = `temp_merge_${Date.now()}_${baseName}_with_subtitles.mp4`;
-  const outputPath = path.join(ffmpegService.getTempDir(), tempFilename);
-
-  progressCallback?.({ percent: 25, stage: 'Analyzing input file' });
-  log.info(`[${operationId}] Checking if input has a video stream...`);
-  let hasVideo: boolean;
-  try {
-    hasVideo = await ffmpegService.hasVideoTrack(options.videoPath);
-  } catch (probeError) {
-    log.error(`[${operationId}] Error probing for video track:`, probeError);
-    throw new SubtitleProcessingError(
-      `Failed to analyze input file: ${probeError instanceof Error ? probeError.message : String(probeError)}`
-    );
-  }
-
-  log.info(
-    `[${operationId}] Input is ${hasVideo ? 'video' : 'audio-only'}. Output path: ${outputPath}`
-  );
-
-  try {
-    let mergeResultPath: string;
-    if (hasVideo) {
-      log.info(
-        `[${operationId}] Input has video. Calling standard mergeSubtitles for: ${options.videoPath}`
-      );
-      mergeResultPath = await ffmpegService.mergeSubtitles(
-        options.videoPath!,
-        options.subtitlesPath!,
-        outputPath,
-        operationId,
-        options.fontSize,
-        options.stylePreset,
-        progressCallback
-      );
-    } else {
-      log.info(
-        `[${operationId}] Input is audio only. Calling mergeAudioOnlyWithSubtitles for: ${options.videoPath}`
-      );
-      mergeResultPath = await ffmpegService.mergeAudioOnlyWithSubtitles({
-        audioPath: options.videoPath!,
-        subtitlesPath: options.subtitlesPath!,
-        outputPath,
-        operationId,
-        fontSize: options.fontSize,
-        stylePreset: options.stylePreset,
-        progressCallback,
-      });
-    }
-
-    if (
-      !mergeResultPath ||
-      mergeResultPath === '' ||
-      !fs.existsSync(outputPath)
-    ) {
-      log.info(
-        `[${operationId}] Merge operation (video or audio) was cancelled or failed to create output file.`
-      );
-      progressCallback?.({ percent: 100, stage: 'Merge cancelled' });
-      return { outputPath: '' };
-    }
-
-    progressCallback?.({
-      percent: 100,
-      stage: hasVideo ? 'Merge complete' : 'Audio + Subtitles complete',
-    });
-    return { outputPath };
-  } catch (error: any) {
-    log.error(`[${operationId}] Error during merge process:`, error);
-
-    const isCancellation =
-      error instanceof FFmpegError && error.message === 'Operation cancelled';
-
-    progressCallback?.({
-      percent: 100,
-      stage: isCancellation
-        ? 'Merge cancelled'
-        : `Error: ${error instanceof Error ? error.message : String(error)}`,
-    });
-
-    if (isCancellation) {
-      log.info(`[${operationId}] Merge operation was cancelled.`);
-      return { outputPath: '' };
-    } else {
-      throw error;
     }
   }
 }

@@ -2,15 +2,12 @@ import { IpcRenderer } from 'electron';
 import {
   GenerateSubtitlesOptions,
   GenerateSubtitlesResult,
-  MergeSubtitlesOptions,
-  MergeSubtitlesResult,
   SaveFileOptions,
   SaveFileResult,
   OpenFileOptions,
   OpenFileResult,
   DeleteFileOptions,
   DeleteFileResult,
-  CancelMergeResult,
   TranslateSubtitlesOptions,
   TranslateSubtitlesResult,
 } from './interface'; // Make sure this path is correct
@@ -74,18 +71,11 @@ interface ElectronAPI {
   ping: () => Promise<string>;
   saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
   openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
-  mergeSubtitles: (
-    options: MergeSubtitlesOptions
-  ) => Promise<MergeSubtitlesResult>;
-  onMergeSubtitlesProgress: (
-    callback: ProgressEventCallback | null
-  ) => () => void;
   moveFile: (
     sourcePath: string,
     destinationPath: string
   ) => Promise<{ success?: boolean; error?: string }>;
   deleteFile: (options: DeleteFileOptions) => Promise<DeleteFileResult>;
-  cancelMerge: (operationId: string) => Promise<CancelMergeResult>;
 
   // === Add generateSubtitles and its progress listener ===
   generateSubtitles: (
@@ -233,27 +223,6 @@ export interface GenerateSubtitlesResult {
   error?: string;
 }
 
-export interface MergeSubtitlesOptions {
-  videoPath?: string;
-  subtitlesPath?: string;
-  outputPath?: string;
-  videoFile?: File;
-  srtContent?: string;
-  videoFileName?: string;
-  videoFileData?: ArrayBuffer;
-  operationId?: string;
-  fontSize?: number;
-  stylePreset?: SubtitleStylePresetKey; // Add style preset key
-}
-
-export interface MergeSubtitlesResult {
-  success: boolean;
-  outputPath?: string;
-  cancelled?: boolean;
-  error?: string;
-  operationId?: string;
-}
-
 export interface SaveFileOptions {
   content: string;
   defaultPath?: string;
@@ -301,11 +270,6 @@ export interface TranslateSubtitlesResult {
   error?: string;
 }
 
-export interface CancelMergeResult {
-  success: boolean;
-  error?: string;
-}
-
 export interface CancelTranslationResult {
   success: boolean;
   error?: string;
@@ -327,17 +291,6 @@ export interface GenerateSubtitlesFromAudioArgs {
     ffmpegService: any; // Consider importing FFmpegService type if available globally
     fileManager: any; // Consider importing FileManager type if available globally
   };
-}
-
-// Add MergeSubtitlesWithVideoArgs type
-export interface MergeSubtitlesWithVideoArgs {
-  options: MergeSubtitlesOptions;
-  operationId: string;
-  services: {
-    ffmpegService: any; // Consider importing FFmpegService type
-    fileManager: any; // Consider importing FileManager type
-  };
-  progressCallback?: ProgressCallback;
 }
 
 // Add TranslateBatchArgs type

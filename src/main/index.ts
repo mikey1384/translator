@@ -130,8 +130,6 @@ try {
   // API Keys
   ipcMain.handle('get-api-key-status', apiKeyHandlers.handleGetApiKeyStatus);
   ipcMain.handle('save-api-key', apiKeyHandlers.handleSaveApiKey);
-  // Subtitles
-  ipcMain.handle('merge-subtitles', subtitleHandlers.handleMergeSubtitles);
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const controller = new AbortController();
     const { signal } = controller;
@@ -179,7 +177,6 @@ try {
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
     log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
     let cancelledViaController = false;
-    let cancelledViaFfmpeg = false;
     let cancelledViaDownload = false;
     let errorMessage = '';
 
@@ -241,37 +238,11 @@ try {
       );
     }
 
-    // 3. Try cancelling via FFmpegService (for merge-subtitles or direct FFmpeg ops)
-    if (services?.ffmpegService) {
-      try {
-        log.info(
-          `[main.ts/cancel-operation] Calling FFmpegService.cancelOperation for ${operationId}.`
-        );
-        services.ffmpegService.cancelOperation(operationId);
-        // Note: ffmpegService.cancelOperation is fire-and-forget, success isn't guaranteed here
-        cancelledViaFfmpeg = true; // Assume initiated
-      } catch (error) {
-        log.error(
-          `[main.ts/cancel-operation] Error calling FFmpegService.cancelOperation for ${operationId}:`,
-          error
-        );
-        errorMessage += `FFmpeg cancel failed: ${error instanceof Error ? error.message : String(error)}; `;
-      }
-    } else {
-      log.warn(
-        '[main.ts/cancel-operation] FFmpegService not available for cancellation attempt.'
-      );
-      if (!cancelledViaController) {
-        errorMessage += 'FFmpegService not available; ';
-      }
-    }
-
     // 4. Return overall status
-    const success =
-      cancelledViaController || cancelledViaFfmpeg || cancelledViaDownload;
+    const success = cancelledViaController || cancelledViaDownload;
     if (success) {
       log.info(
-        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController}, FFmpeg: ${cancelledViaFfmpeg}, Download: ${cancelledViaDownload})`
+        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController} Download: ${cancelledViaDownload})`
       );
       return {
         success: true,
@@ -422,13 +393,8 @@ try {
       }
     }
   );
-  // --- End Subtitle Target Language Handlers ---
 
-  // Add this line inside the try block in src/main.ts after other initializations
-  ipcMain.handle(
-    subtitleHandlers.VIDEO_METADATA_CHANNEL,
-    subtitleHandlers.handleGetVideoMetadata
-  );
+  ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
   // --- Add these handlers ---
   ipcMain.handle(
