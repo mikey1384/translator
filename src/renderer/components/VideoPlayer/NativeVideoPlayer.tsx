@@ -210,18 +210,12 @@ export default function NativeVideoPlayer({
       }
     };
 
-    // Fix for videos loaded from URL that reset to the beginning
     const handleSeeking = () => {
       const time = videoElement.currentTime;
-      console.log('Video seeking event at time:', time);
       isSeekingRef.current = true;
 
-      // Store the seek target as the last valid time
-      if (time > 0) {
-        lastValidTimeRef.current = time;
-        // Reset the timeUpdateCount when a legitimate seek happens
-        timeUpdateCount.current = 0;
-      }
+      lastValidTimeRef.current = time;
+      timeUpdateCount.current = 0;
     };
 
     const handleSeeked = () => {
