@@ -862,7 +862,6 @@ function AppContent() {
                 onSetInputMode={setInputMode}
                 onSetTargetLanguage={setTargetLanguage}
                 onSetUrlInput={setUrlInput}
-                onSetVideoFile={handleSetVideoFile}
                 onShowOriginalTextChange={setShowOriginalText}
                 showOriginalText={showOriginalText}
                 targetLanguage={targetLanguage}

@@ -37,7 +37,6 @@ export default function GenerateSubtitles({
   onSetInputMode,
   onSetTargetLanguage,
   onSetUrlInput,
-  onSetVideoFile,
   onShowOriginalTextChange,
   showOriginalText,
   targetLanguage,
@@ -65,7 +64,6 @@ export default function GenerateSubtitles({
   onSetInputMode: (mode: 'file' | 'url') => void;
   onSetTargetLanguage: (lang: string) => void;
   onSetUrlInput: (url: string) => void;
-  onSetVideoFile: (file: File | { name: string; path: string } | null) => void;
   onShowOriginalTextChange: (show: boolean) => void;
   showOriginalText: boolean;
   targetLanguage: string;
