@@ -1126,6 +1126,7 @@ function AppContent() {
     setDownloadedVideoPath(videoPath);
     setVideoFilePath(videoPath);
     setDidDownloadFromUrl(true);
+    await handleVideoFileSelected(videoPath);
 
     try {
       const fileContentResult =

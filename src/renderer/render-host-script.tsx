@@ -1,4 +1,7 @@
-import { getSubtitleStyles } from '../shared/helpers/subtitle-style-util.js';
+import {
+  getSubtitleStyles,
+  assColorToRgba,
+} from '../shared/helpers/subtitle-style-util.js';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
@@ -6,12 +9,20 @@ import {
 
 function applyPresetStyles(
   el: HTMLElement | null,
-  { fontSizePx = 24, stylePreset = 'Default', isMultiLine = false } = {}
+  {
+    fontSizePx = 24,
+    stylePreset = 'Default',
+    isMultiLine = false,
+  }: {
+    fontSizePx?: number;
+    stylePreset?: SubtitleStylePresetKey;
+    isMultiLine?: boolean;
+  } = {}
 ) {
   if (!el) return;
   const dynamicClass = getSubtitleStyles({
     displayFontSize: fontSizePx,
-    isFullScreen: false, // renderer is always full-res canvas
+    isFullScreen: false, // your headless renderer might treat the canvas as always full-screen
     stylePreset,
     isMultiLine,
   });
@@ -19,25 +30,15 @@ function applyPresetStyles(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// The rest is unchanged; your existing export functions remain the same
+// The rest is mostly unchanged; we just updated applySubtitlePreset and updateSubtitle
 // ─────────────────────────────────────────────────────────────────────
 
 export function applySubtitlePreset(preset: SubtitleStylePresetKey) {
   console.log('[applySubtitlePreset] Applying preset:', preset);
-  if (SUBTITLE_STYLE_PRESETS[preset]) {
-    const el = document.getElementById('subtitle');
-    const currentFont =
-      Number(
-        getComputedStyle(document.documentElement)
-          .getPropertyValue('--subtitle-font-size')
-          .replace('px', '')
-      ) || 24;
-
-    applyPresetStyles(el, {
-      fontSizePx: currentFont,
-      stylePreset: preset,
-      isMultiLine: el?.innerText.includes('\n') ?? false,
-    });
+  const el = document.getElementById('subtitle');
+  if (el && SUBTITLE_STYLE_PRESETS[preset]) {
+    // Forward the preset so we don't fall back to "Default"
+    applyPresetStyles(el, { stylePreset: preset });
   } else {
     console.warn(`Preset key "${preset}" not found.`);
   }
@@ -65,7 +66,7 @@ function initializeSubtitleDisplay() {
       subtitleEl.style.width = '90%';
       rootElement.appendChild(subtitleEl);
     }
-    // Apply default preset styles
+    // Apply default preset on init
     applyPresetStyles(subtitleEl);
   } else {
     console.error('Could not find root element #render-host-root.');
@@ -87,13 +88,57 @@ function initializeSubtitleDisplay() {
 
   // Expose these functions globally if needed
   // @ts-ignore
-  window.updateSubtitle = (text, opts = {}) => {
+  window.updateSubtitle = (
+    text: string,
+    opts: { stylePreset?: SubtitleStylePresetKey; fontSizePx?: number } = {}
+  ) => {
     const el = document.getElementById('subtitle');
     if (!el) return;
-    el.innerText = text;
+
+    const { stylePreset = 'Default', fontSizePx } = opts;
     const isMultiLine = text.includes('\n');
-    applyPresetStyles(el, { ...opts, isMultiLine });
+
+    /* ---------- render text ---------- */
+    if (stylePreset === 'LineBox') {
+      // replicate the editor's per-line <span> backgrounds
+      const bg = assColorToRgba(
+        SUBTITLE_STYLE_PRESETS.LineBox.backColor || '&H00000000'
+      );
+      const esc = (s: string) =>
+        s
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .trim();
+
+      const html = text
+        .split('\n')
+        .map(
+          line =>
+            `<span style="background-color:${bg};padding:1px 6px;display:inline-block;margin:2px 0;` +
+            `box-decoration-break:clone;-webkit-box-decoration-break:clone;line-height:1.35;">` +
+            `${esc(line)}` +
+            `</span>`
+        )
+        // ⚠ no newline/space before or after <br/>!
+        .join('<br/>');
+      el.innerHTML = html;
+    } else {
+      // For non-LineBox presets, we can just set textContent
+      el.textContent = text;
+    }
+
+    /* ---------- apply styles ---------- */
+    applyPresetStyles(el, { fontSizePx, stylePreset, isMultiLine });
+
+    // ---- Keep the fix for "opacity:0" → "opacity:1" ----
+    if (text.trim()) {
+      el.classList.add('visible'); // show subtitle if there's content
+    } else {
+      el.classList.remove('visible'); // hide if empty
+    }
   };
+
   // @ts-ignore
   window.applySubtitlePreset = applySubtitlePreset;
 
