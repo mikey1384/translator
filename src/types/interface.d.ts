@@ -326,4 +326,6 @@ export interface RenderSubtitlesOptions {
   videoHeight: number;
   frameRate: number;
   originalVideoPath?: string;
+  fontSizePx?: number;
+  stylePreset?: SubtitleStylePresetKey;
 }

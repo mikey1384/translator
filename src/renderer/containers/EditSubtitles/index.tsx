@@ -828,6 +828,8 @@ export function EditSubtitles({
         videoHeight,
         frameRate,
         originalVideoPath: videoFilePath,
+        fontSizePx: mergeFontSize,
+        stylePreset: mergeStylePreset,
       };
       // --- End Creating Options ---
 

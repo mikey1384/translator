@@ -1,177 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { css } from '@emotion/css';
+import {
+  assColorToRgba,
+  getSubtitleStyles,
+} from '../../shared/helpers/subtitle-style-util.js';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
 } from '../../shared/constants/subtitle-styles.js';
-
-// Helper to convert ASS &HAABBGGRR to rgba()
-function assColorToRgba(assColor: string): string {
-  if (!assColor || !assColor.startsWith('&H')) {
-    return 'rgba(255, 255, 255, 1)'; // Default white
-  }
-  const hex = assColor.substring(2);
-  // Ensure hex string has correct length (e.g., for &H000000)
-  const paddedHex = hex.padStart(8, '0');
-  const alpha = parseInt(paddedHex.substring(0, 2), 16);
-  const blue = parseInt(paddedHex.substring(2, 4), 16);
-  const green = parseInt(paddedHex.substring(4, 6), 16);
-  const red = parseInt(paddedHex.substring(6, 8), 16);
-  const cssAlpha = ((255 - alpha) / 255).toFixed(2);
-  return `rgba(${red}, ${green}, ${blue}, ${cssAlpha})`;
-}
-
-// Define the shared styles here
-function getSubtitleStyles({
-  displayFontSize,
-  isFullScreen,
-  stylePreset = 'Default',
-  isMultiLine,
-}: {
-  displayFontSize?: number;
-  isFullScreen?: boolean;
-  stylePreset?: SubtitleStylePresetKey;
-  isMultiLine: boolean;
-}) {
-  const style =
-    SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
-
-  const finalFontSize = Math.max(10, displayFontSize || 20);
-  // --- DEFINE COLORS ---
-  const primaryRgba = assColorToRgba(style.primaryColor);
-  const outlineRgba = assColorToRgba(style.outlineColor);
-  const shadowRgba = assColorToRgba(style.backColor); // BackColor used for shadow/box
-  // --- END DEFINE COLORS ---
-
-  // --- Positioning Variables ---
-  const position: 'fixed' | 'absolute' = 'fixed';
-
-  // --- Adjust Bottom Position ---
-  let bottomValue: string;
-  if (isMultiLine) {
-    // Multi-line LineBox
-    bottomValue = isFullScreen ? '5%' : '2.5%';
-  } else {
-    // Single-line LineBox
-    bottomValue = isFullScreen ? '10%' : '5%';
-  }
-  // --- End Adjust Bottom Position ---
-
-  const maxWidth = '100%';
-  const right: string | number | undefined = isFullScreen ? '5%' : undefined; // Keep this conditional right
-  // --- End Positioning Variables ---
-
-  // --- DETAILED STYLE LOGIC ---
-  let textShadow = 'none';
-  let backgroundColor = 'transparent'; // Default to transparent
-  let boxShadowValue = 'none'; // <-- Initialize box shadow variable
-  let containerPadding = '10px 20px'; // Default padding
-
-  if (stylePreset === 'LineBox') {
-    // Specific logic for LineBox - container has no background/shadow/padding
-    backgroundColor = 'transparent';
-    boxShadowValue = 'none';
-    containerPadding = '0 0 10px 0'; // Add 10px bottom padding ONLY
-    textShadow = 'none'; // Keep text shadow none for LineBox
-  } else if (style.borderStyle === 1) {
-    // Outline + Shadow
-    backgroundColor = 'transparent'; // Explicitly set transparent background
-    boxShadowValue = 'none'; // <-- No box shadow for outline styles
-    // Simulate outline with tight shadow, then add actual shadow
-    const outlineSize = Math.max(0.1, style.outlineSize); // Ensure outline isn't 0
-    textShadow = `
-      ${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
-      -${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
-      ${outlineSize}px -${outlineSize}px 0 ${outlineRgba},
-      -${outlineSize}px -${outlineSize}px 0 ${outlineRgba},
-      ${outlineSize}px 0px 0 ${outlineRgba},
-      -${outlineSize}px 0px 0 ${outlineRgba},
-      0px ${outlineSize}px 0 ${outlineRgba},
-      0px -${outlineSize}px 0 ${outlineRgba}
-    `;
-  } else if (style.borderStyle === 3 || style.borderStyle === 4) {
-    // Boxed styles
-    // Use backColor for the background box
-    backgroundColor = shadowRgba; // Using shadow color for box background
-    boxShadowValue = '0 4px 16px rgba(0, 0, 0, 0.4)'; // <-- Apply box shadow for boxed styles
-    // Optionally add a subtle text-shadow for just outline if style 4?
-    textShadow =
-      style.borderStyle === 4 && style.outlineSize > 0
-        ? `0 0 ${style.outlineSize}px ${outlineRgba}` // Simple glow outline for box style 4
-        : 'none';
-  }
-  // --- END DETAILED LOGIC ---
-
-  // --- Define Transition ---
-  let transitionValue = `
-    opacity 0.2s ease-in-out,
-    font-size 0.1s linear,
-    color 0.2s linear,
-    text-shadow 0.2s linear,
-    background-color 0.2s linear,
-    box-shadow 0.2s linear,
-    left 0.3s ease-out,
-    max-width 0.3s ease-out
-  `; // Default transition including opacity
-
-  if (stylePreset === 'LineBox') {
-    // Remove opacity transition for LineBox
-    transitionValue = `
-      font-size 0.1s linear,
-      color 0.2s linear,
-      text-shadow 0.2s linear,
-      background-color 0.2s linear,
-      box-shadow 0.2s linear,
-      left 0.3s ease-out,
-      max-width 0.3s ease-out
-    `;
-  }
-  // --- End Define Transition ---
-
-  return css`
-    position: ${position};
-    bottom: ${bottomValue};
-    left: ${isFullScreen ? '5%' : '50%'};
-    right: ${right};
-    padding: ${containerPadding};
-    background-color: ${backgroundColor};
-    color: ${primaryRgba};
-    font-family:
-      'Noto Sans',
-      'Inter',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      Roboto,
-      'PingFang SC',
-      'Microsoft YaHei',
-      'Noto Sans SC',
-      sans-serif;
-    font-size: ${finalFontSize}px;
-    font-weight: ${style.isBold ? 'bold' : '500'};
-    text-shadow: ${textShadow};
-    text-align: center;
-    border-radius: 5px;
-    opacity: 0;
-    transition: ${transitionValue};
-    max-width: ${maxWidth};
-    pointer-events: none;
-    white-space: pre-wrap;
-    z-index: 1000;
-    ${!isFullScreen ? 'transform: translateX(-50%);' : ''}
-    ${isFullScreen ? 'margin: 0 auto;' : ''}
-
-    &.visible {
-      opacity: 1;
-    }
-
-    line-height: 1.35;
-    letter-spacing: 0.01em;
-    user-select: none;
-    box-shadow: ${boxShadowValue};
-    border: none;
-  `;
-}
 
 // Props for the base component
 interface BaseSubtitleDisplayProps {
@@ -265,7 +100,7 @@ function BaseSubtitleDisplay({
   const dynamicStyles = getSubtitleStyles({
     displayFontSize,
     isFullScreen,
-    stylePreset,
+    stylePreset: stylePreset as SubtitleStylePresetKey,
     isMultiLine,
   });
   const combinedClassName = `${dynamicStyles} ${isVisible ? 'visible' : ''}`;

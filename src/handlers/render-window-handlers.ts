@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import { parseSrt } from '../shared/helpers/index.js';
+import { getAssetsPath } from '../shared/helpers/paths.js';
+import { pathToFileURL } from 'url';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
 import { spawn, ChildProcess } from 'child_process';
@@ -14,6 +16,8 @@ const activeRenderJobs = new Map<
   string,
   { browser?: Browser; processes: ChildProcess[] }
 >();
+
+const fontRegular = pathToFileURL(getAssetsPath('NotoSans-Regular.ttf')).href;
 
 export function getActiveRenderJob(id: string) {
   return activeRenderJobs.get(id);
@@ -93,6 +97,8 @@ export function initializeRenderWindowHandlers(): void {
               '--no-sandbox',
               '--disable-setuid-sandbox',
               '--disable-dev-shm-usage',
+              '--allow-file-access-from-files',
+              '--disable-web-security',
             ],
           });
           log.info(
@@ -152,7 +158,25 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Navigating Puppeteer page to ${hostHtmlUrl}...`
         );
-        await page.goto(hostHtmlUrl, { waitUntil: 'networkidle0' }); // Wait for page to load fully
+        await page.goto(hostHtmlUrl, { waitUntil: 'networkidle0' });
+        if (options.fontSizePx) {
+          await page.addStyleTag({
+            content: `
+              @font-face {
+                font-family: "Noto Sans";
+                src: url("${fontRegular}") format("truetype");
+                font-weight: normal;
+              }
+            `,
+          });
+          await page.evaluate(() => document.fonts.ready);
+        }
+        if (options.stylePreset) {
+          await page.evaluate(preset => {
+            // @ts-ignore
+            window.applySubtitlePreset?.(preset);
+          }, options.stylePreset);
+        }
         log.info(
           `[RenderWindowHandlers ${operationId}] Puppeteer page navigated to host HTML.`
         );
@@ -340,10 +364,20 @@ export function initializeRenderWindowHandlers(): void {
 
           try {
             // 1. Update text
-            await page.evaluate(text => {
-              // @ts-ignore
-              window.updateSubtitle(text);
-            }, subtitleText);
+            await page.evaluate(
+              ({ txt, fontSize, preset }) => {
+                // @ts-ignore
+                window.updateSubtitle(txt, {
+                  fontSizePx: fontSize,
+                  stylePreset: preset,
+                });
+              },
+              {
+                txt: subtitleText,
+                fontSize: options.fontSizePx,
+                preset: options.stylePreset,
+              }
+            );
 
             // 2. Capture screenshot
             await page.screenshot({
@@ -927,7 +961,7 @@ async function mergeVideoAndOverlay(
       '-i',
       overlayVideoPath,
       '-filter_complex',
-      '[0:v][1:v]overlay=x=(main_w-overlay_w)/2:y=50[out]',
+      '[0:v][1:v]overlay=format=auto[out]',
       '-map',
       '[out]',
       '-map',
