@@ -81,7 +81,11 @@ interface ElectronAPI {
   generateSubtitles: (
     options: GenerateSubtitlesOptions
   ) => Promise<GenerateSubtitlesResult>;
+
   onGenerateSubtitlesProgress: (
+    callback: ProgressEventCallback | null
+  ) => () => void;
+  onMergeSubtitlesProgress: (
     callback: ProgressEventCallback | null
   ) => () => void;
 

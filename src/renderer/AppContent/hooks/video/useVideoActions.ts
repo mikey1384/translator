@@ -16,11 +16,6 @@ export function useVideoActions({
   setVideoUrl: (value: string) => void;
   setVideoFilePath: (value: string | null) => void;
   setIsPlaying: (value: boolean) => void;
-  setIsMergingInProgress: (value: boolean) => void;
-  setIsTranslationInProgress: (value: boolean) => void;
-  setMergeProgress: (value: number) => void;
-  setMergeStage: (value: string) => void;
-  setMergeOperationId: (value: string | null) => void;
   setOriginalSrtFilePath: (value: string) => void;
   setSaveError: (value: string) => void;
   setIsVideoPlayerReady: (value: boolean) => void;

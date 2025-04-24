@@ -146,8 +146,8 @@ function AppContent() {
 
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeStage, setMergeStage] = useState('');
+  const [mergeProgress, setMergeProgress] = useState(0);
   const [mergeOperationId, setMergeOperationId] = useState<string | null>(null);
 
   const [isFindBarVisible, setIsFindBarVisible] = useState(false);
@@ -292,11 +292,6 @@ function AppContent() {
     setVideoUrl,
     setVideoFilePath,
     setIsPlaying,
-    setIsMergingInProgress,
-    setIsTranslationInProgress,
-    setMergeProgress,
-    setMergeStage,
-    setMergeOperationId,
     setOriginalSrtFilePath,
     setSaveError,
     setIsVideoPlayerReady,
@@ -524,136 +519,68 @@ function AppContent() {
     };
   }, [isVideoPlayerReady]);
 
-  // --- Try YET ANOTHER modification to the player event listener hook ---
-  useEffect(() => {
-    const currentPath = videoFilePath; // Capture path early
+  const handleTimeUpdate = useCallback(() => {
+    const now = new Date().toLocaleTimeString();
+    const currentPlayer = getNativePlayerInstance();
+    console.log(`[${now}] [HANDLE_TIMEUPDATE] Fired for:`, currentPlayer);
 
-    // 1. Check if we even have a path. If not, cancel timer and exit.
+    if (videoFilePath && currentPlayer) {
+      saveCurrentPositionThrottled(videoFilePath, currentPlayer);
+    }
+  }, [videoFilePath, saveCurrentPositionThrottled]);
+
+  const handlePause = useCallback(() => {
+    const now = new Date().toLocaleTimeString();
+    const currentPlayer = getNativePlayerInstance();
+    console.log(`[${now}] [HANDLE_PAUSE] Fired for:`, currentPlayer);
+
+    if (videoFilePath && currentPlayer) {
+      saveCurrentPositionThrottled.cancel?.();
+      saveCurrentPositionImmediately(videoFilePath, currentPlayer);
+    }
+  }, [
+    videoFilePath,
+    saveCurrentPositionThrottled,
+    saveCurrentPositionImmediately,
+  ]);
+
+  useEffect(() => {
+    const currentPath = videoFilePath;
     if (!currentPath) {
-      if (saveCurrentPositionThrottled?.cancel)
-        saveCurrentPositionThrottled.cancel();
+      saveCurrentPositionThrottled.cancel?.();
+      return;
+    }
+    if (!isVideoPlayerReady) {
+      console.log(`[AppContent] Player not ready for: ${currentPath}`);
+      saveCurrentPositionThrottled.cancel?.();
       return;
     }
 
-    // 2. Check the readiness flag first
-    if (!isVideoPlayerReady) {
-      console.log(
-        `[AppContent] Player not ready yet for: ${currentPath}. Listener setup deferred.`
-      );
-      if (saveCurrentPositionThrottled?.cancel)
-        saveCurrentPositionThrottled.cancel();
-      return; // Exit if player not ready
-    }
-
-    // 3. Player is ready, get the instance
     const player = getNativePlayerInstance();
     if (!player) {
-      // Should not happen if isVideoPlayerReady is true, but safety check
-      console.error(
-        '[AppContent] isVideoPlayerReady is true, but getNativePlayerInstance returned null!'
-      );
-      if (saveCurrentPositionThrottled?.cancel)
-        saveCurrentPositionThrottled.cancel();
+      console.error('[AppContent] Player is null despite readiness.');
+      saveCurrentPositionThrottled.cancel?.();
       return;
     }
 
-    // 4. If we have both path AND player, proceed with listener setup.
-    const handleTimeUpdate = () => {
-      const now = new Date().toLocaleTimeString();
-      const currentPlayer = getNativePlayerInstance();
-      // --- Add Logging ---
-      console.log(
-        `[${now}] [HANDLE_TIMEUPDATE] Fired. Path: ${currentPath}, Player instance:`,
-        currentPlayer
-      ); // Log the actual player object
-      // --- End Logging ---
-      if (currentPath && currentPlayer) {
-        saveCurrentPositionThrottled(currentPath, currentPlayer);
-      } else {
-        // --- Add Logging ---
-        console.log(
-          `[${now}] [HANDLE_TIMEUPDATE] SKIPPED SAVE. Path: ${currentPath}, Player valid: ${!!currentPlayer}`
-        );
-        // --- End Logging ---
-      }
-    };
-
-    const handlePause = () => {
-      const now = new Date().toLocaleTimeString();
-      const currentPlayer = getNativePlayerInstance();
-      console.log(
-        `[${now}] [HANDLE_PAUSE] Fired. Path: ${currentPath}, Player instance:`,
-        currentPlayer
-      );
-      if (currentPath && currentPlayer) {
-        // --- Cancel pending throttle BEFORE immediate save ---
-        if (saveCurrentPositionThrottled?.cancel) {
-          saveCurrentPositionThrottled.cancel();
-          console.log(`[${now}] [HANDLE_PAUSE] Canceled throttled save.`);
-        }
-        // --- End cancel ---
-        saveCurrentPositionImmediately(currentPath, currentPlayer); // Call immediate save
-      } else {
-        console.log(
-          `[${now}] [HANDLE_PAUSE] SKIPPED SAVE. Path: ${currentPath}, Player valid: ${!!currentPlayer}`
-        );
-      }
-    };
-
-    console.log(
-      `[AppContent] Attaching playback listeners for: ${currentPath}`
-    );
+    // Now attach fresh listeners
     player.addEventListener('timeupdate', handleTimeUpdate);
     player.addEventListener('pause', handlePause);
+    console.log(`[AppContent] Attached playback listeners for: ${currentPath}`);
 
-    // 5. Cleanup function
+    // Cleanup function → remove the listeners we just added
     return () => {
-      console.log(
-        `[AppContent] Detaching playback listeners for: ${currentPath}`
-      );
-      // Use the 'player' captured at setup time for removal
-      // This specific instance needs to be used for removeEventListener
-      if (player) {
-        try {
-          player.removeEventListener('timeupdate', handleTimeUpdate);
-          player.removeEventListener('pause', handlePause);
-        } catch (removeError) {
-          console.warn(
-            `[AppContent] Error removing listener during cleanup:`,
-            removeError
-          );
-        }
-      }
-
-      // Save final position - check path and get fresh instance *at cleanup time*
-      const latestPlayer = getNativePlayerInstance(); // Check current instance value
-      if (currentPath && latestPlayer) {
-        console.log(
-          `[AppContent] Cleanup: Saving final position for ${currentPath}`
-        );
-        try {
-          saveCurrentPositionImmediately(currentPath, latestPlayer);
-        } catch (saveError) {
-          console.warn(
-            `[AppContent] Error saving position during cleanup:`,
-            saveError
-          );
-        }
-      } else {
-        console.log(
-          `[AppContent] Cleanup: Player/Path invalid, not saving final position.`
-        );
-      }
-      // Cancel any pending throttled saves
-      if (saveCurrentPositionThrottled?.cancel) {
-        saveCurrentPositionThrottled.cancel();
-      }
+      console.log(`[AppContent] Detaching listeners for: ${currentPath}`);
+      player.removeEventListener('timeupdate', handleTimeUpdate);
+      player.removeEventListener('pause', handlePause);
     };
   }, [
     videoFilePath,
-    isVideoPlayerReady, // Use flag instead of ref
-    saveCurrentPositionThrottled, // Keep throttled func ref in deps
-    saveCurrentPositionImmediately, // Keep immediate func ref in deps
+    isVideoPlayerReady,
+    handleTimeUpdate,
+    handlePause,
+    saveCurrentPositionThrottled,
+    saveCurrentPositionImmediately,
   ]);
 
   // Effect to load position and seek ONCE when video becomes ready
@@ -706,6 +633,41 @@ function AppContent() {
 
     loadAndSeek();
   }, [videoFilePath, isVideoPlayerReady]);
+
+  useEffect(() => {
+    if (!previousVideoPathRef.current) {
+      previousVideoPathRef.current = videoFilePath;
+      return;
+    }
+
+    saveCurrentPositionThrottled.cancel?.();
+
+    const oldPlayer = getNativePlayerInstance();
+    if (oldPlayer) {
+      oldPlayer.removeEventListener('timeupdate', handleTimeUpdate);
+      oldPlayer.removeEventListener('pause', handlePause);
+      console.log(
+        `[AppContent] Removed event listeners for old file path: ${previousVideoPathRef.current}`
+      );
+    }
+
+    previousVideoPathRef.current = videoFilePath;
+  }, [
+    videoFilePath,
+    handleTimeUpdate,
+    handlePause,
+    saveCurrentPositionThrottled,
+  ]);
+
+  useEffect(() => {
+    const remove = window.electron.onMergeSubtitlesProgress(
+      ({ percent = 0, stage = '' }) => {
+        setMergeProgress(percent);
+        setMergeStage(stage);
+      }
+    );
+    return remove; // tidy up on unmount
+  }, []);
 
   useLayoutEffect(() => {
     if (!videoUrl) return;
@@ -816,18 +778,14 @@ function AppContent() {
               <div ref={editSubtitlesRef} id="edit-subtitles-section">
                 <EditSubtitles
                   videoFile={videoFile}
-                  videoUrl={videoUrl}
                   videoFilePath={videoFilePath}
                   isPlaying={isPlaying}
-                  onSetIsPlaying={setIsPlaying}
                   secondsToSrtTime={secondsToSrtTime}
-                  parseSrt={parseSrt}
                   subtitles={subtitleSegments}
                   videoPlayerRef={
                     isVideoPlayerReady ? getNativePlayerInstance() : null
                   }
                   isMergingInProgress={isMergingInProgress}
-                  setMergeProgress={setMergeProgress}
                   setMergeStage={setMergeStage}
                   editorRef={editSubtitlesMethodsRef}
                   onSelectVideoClick={handleSelectVideoClick}

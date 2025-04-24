@@ -20,6 +20,9 @@ import {
   getDownloadProcess,
   removeDownloadProcess,
 } from './active-processes.js';
+
+import { getActiveRenderJob } from '../handlers/render-window-handlers.js';
+
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,27 +59,12 @@ const settingsStore = new Store({
 });
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
-// --- ADD THIS TEST ---
-try {
-  settingsStore.set('startupTestKey', `testValue_${Date.now()}`);
-  log.info('[Main Process] Successfully set startupTestKey in settingsStore.');
-} catch (error) {
-  log.error(
-    '[Main Process] FAILED to set startupTestKey in settingsStore:',
-    error
-  );
-}
-// --- END TEST ---
-
-// --- Single Instance Lock ---
-// Ensure only one instance of the app runs
 if (!app.requestSingleInstanceLock()) {
   log.info('[main.ts] Another instance detected. Quitting this instance.');
   app.quit();
   nodeProcess.exit(0);
 }
 app.on('second-instance', () => {
-  // Someone tried to run a second instance, we should focus our window.
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
@@ -107,11 +95,11 @@ try {
   services = { saveFileService, fileManager, ffmpegService };
   log.info('[main.ts] Services Initialized.');
 
-  // Initialize Handlers, passing required services
+  // Initialize Handlers
   log.info('[main.ts] Initializing Handlers...');
   fileHandlers.initializeFileHandlers({ fileManager, saveFileService });
   subtitleHandlers.initializeSubtitleHandlers({ ffmpegService, fileManager });
-  initializeUrlHandler({ fileManager, ffmpegService }); // Pass both services
+  initializeUrlHandler({ fileManager, ffmpegService });
   renderWindowHandlers.initializeRenderWindowHandlers();
   log.info('[main.ts] Handlers Initialized.');
 
@@ -122,7 +110,7 @@ try {
   ipcMain.handle('show-message', utilityHandlers.handleShowMessage);
   // File Operations
   ipcMain.handle('save-file', fileHandlers.handleSaveFile);
-  ipcMain.handle('open-file', fileHandlers.handleOpenFile); // Registered handler
+  ipcMain.handle('open-file', fileHandlers.handleOpenFile);
   ipcMain.handle('move-file', fileHandlers.handleMoveFile);
   ipcMain.handle('copy-file', fileHandlers.handleCopyFile);
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
@@ -130,21 +118,23 @@ try {
   // API Keys
   ipcMain.handle('get-api-key-status', apiKeyHandlers.handleGetApiKeyStatus);
   ipcMain.handle('save-api-key', apiKeyHandlers.handleSaveApiKey);
+
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const controller = new AbortController();
     const { signal } = controller;
-    const operationId = `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const operationId = `generate-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
 
     log.info(`[main.ts/generate-subtitles] Starting operation: ${operationId}`);
     subtitleGenerationControllers.set(operationId, controller);
 
     try {
-      // Call the handler, passing the signal and operationId
       const result = await subtitleHandlers.handleGenerateSubtitles(
         event,
         options,
-        signal, // Pass the AbortSignal
-        operationId // Pass the operationId
+        signal,
+        operationId
       );
       log.info(
         `[main.ts/generate-subtitles] Operation ${operationId} completed.`
@@ -155,10 +145,8 @@ try {
         `[main.ts/generate-subtitles] Error in operation ${operationId}:`,
         error
       );
-      // Re-throw the error to be caught by the renderer
       throw error;
     } finally {
-      // Ensure the controller is removed from the map when done
       const deleted = subtitleGenerationControllers.delete(operationId);
       if (deleted) {
         log.info(
@@ -171,16 +159,17 @@ try {
       }
     }
   });
+
   // URL Processing
   ipcMain.handle('process-url', handleProcessUrl);
-  // Operation Cancellation - Updated to handle both AbortController and FFmpeg
+
+  // Operation Cancellation - Updated
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
     log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
     let cancelledViaController = false;
     let cancelledViaDownload = false;
     let errorMessage = '';
 
-    // 1. Try cancelling via AbortController (for generate-subtitles)
     const controller = subtitleGenerationControllers.get(operationId);
     if (controller) {
       try {
@@ -188,7 +177,7 @@ try {
           `[main.ts/cancel-operation] Aborting controller for ${operationId}.`
         );
         controller.abort();
-        subtitleGenerationControllers.delete(operationId); // Remove immediately after aborting
+        subtitleGenerationControllers.delete(operationId);
         cancelledViaController = true;
         log.info(
           `[main.ts/cancel-operation] Controller for ${operationId} aborted and removed.`
@@ -198,7 +187,9 @@ try {
           `[main.ts/cancel-operation] Error aborting controller for ${operationId}:`,
           error
         );
-        errorMessage += `Controller abort failed: ${error instanceof Error ? error.message : String(error)}; `;
+        errorMessage += `Controller abort failed: ${
+          error instanceof Error ? error.message : String(error)
+        }; `;
       }
     } else {
       log.info(
@@ -224,12 +215,14 @@ try {
           `[main.ts/cancel-operation] Error killing download process ${operationId}:`,
           error
         );
-        errorMessage += `Download process kill failed: ${error instanceof Error ? error.message : String(error)}; `;
+        errorMessage += `Download process kill failed: ${
+          error instanceof Error ? error.message : String(error)
+        }; `;
         removeDownloadProcess(operationId);
       }
     } else if (downloadProcess && downloadProcess.killed) {
       log.info(
-        `[main.ts/cancel-operation] Download process ${operationId} was already killed. Removing from map.`
+        `[main.ts/cancel-operation] Download process ${operationId} already killed. Removing from map.`
       );
       removeDownloadProcess(operationId);
     } else {
@@ -238,11 +231,42 @@ try {
       );
     }
 
-    // 4. Return overall status
+    // --- new block for merge jobs -----------------
+    if (operationId.startsWith('render-')) {
+      const job = getActiveRenderJob(operationId);
+      if (job) {
+        // Kill any FFmpeg processes
+        job.processes.forEach(proc => {
+          try {
+            proc.kill('SIGINT');
+          } catch {
+            /* ignore */
+          }
+        });
+        // Close Puppeteer browser if present
+        try {
+          await job.browser?.close();
+        } catch {
+          /* ignore */
+        }
+
+        log.info(
+          `[main.ts/cancel-operation] Render job ${operationId} cancelled.`
+        );
+        return {
+          success: true,
+          message: `Render job ${operationId} cancelled`,
+        };
+      }
+      // If no job found, it will fall through to the final throw below
+    }
+    // ----------------------------------------------
+
+    // 4. Return overall status if we already canceled something
     const success = cancelledViaController || cancelledViaDownload;
     if (success) {
       log.info(
-        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController} Download: ${cancelledViaDownload})`
+        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController}, Download: ${cancelledViaDownload})`
       );
       return {
         success: true,
@@ -250,10 +274,11 @@ try {
       };
     } else {
       log.error(
-        `[main.ts/cancel-operation] Failed to initiate cancellation for ${operationId}. Error(s): ${errorMessage}`
+        `[main.ts/cancel-operation] Failed to find operation to cancel for ${operationId}. Errors: ${errorMessage}`
       );
+      // If we get here, it means we didn't find any matching operation (controller, download, or render)
       throw new Error(
-        `Failed to find active operation to cancel for ID ${operationId}. ${errorMessage}`
+        `No active operation ${operationId} to cancel. ${errorMessage}`
       );
     }
   });
@@ -269,8 +294,6 @@ try {
       let localeDirPath: string;
 
       if (isDev) {
-        // In dev, app.getAppPath() is usually <project_root>/dist
-        // Go up one level from app path, then to src/renderer/locales
         localeDirPath = path.join(
           app.getAppPath(),
           '..',
@@ -282,8 +305,6 @@ try {
           `[main.ts/get-locale-url] Using dev path (relative to app path parent): ${localeDirPath}`
         );
       } else {
-        // In production, locales are packaged relative to the app root
-        // Assuming they are copied to dist/renderer/locales within the app resources
         localeDirPath = path.join(
           app.getAppPath(),
           'dist',
@@ -296,25 +317,21 @@ try {
       const localePath = path.join(localeDirPath, `${lang}.json`);
       const localeUrl = pathToFileURL(localePath).toString();
 
-      // Add a check to see if the file actually exists before returning
       try {
         await fsPromises.access(localePath, fsPromises.constants.R_OK);
         log.info(
-          `[main.ts/get-locale-url] Found ${localePath}. Constructed URL for ${lang}: ${localeUrl}`
+          `[main.ts/get-locale-url] Found ${localePath}. URL for ${lang}: ${localeUrl}`
         );
         return localeUrl;
       } catch (accessError: any) {
         log.error(
           `[main.ts/get-locale-url] Cannot access locale file at ${localePath}. Error: ${accessError.message}`
         );
-        return null; // Indicate failure: file not found or not readable
+        return null;
       }
     } catch (error) {
-      log.error(
-        `[main.ts/get-locale-url] Error constructing URL for ${lang}:`,
-        error
-      );
-      return null; // Indicate failure
+      log.error(`[main.ts/get-locale-url] Error constructing URL:`, error);
+      return null;
     }
   });
 
@@ -331,7 +348,7 @@ try {
         '[main.ts/get-language-preference] Error retrieving UI language:',
         error
       );
-      return 'en'; // Fallback on error
+      return 'en';
     }
   });
 
@@ -352,18 +369,15 @@ try {
   // --- Subtitle Target Language Preference Handlers ---
   ipcMain.handle('get-subtitle-target-language', async () => {
     try {
-      // Use a DIFFERENT key for this setting
-      const lang = settingsStore.get('subtitleTargetLanguage', 'original'); // Default to 'original'
-      log.info(
-        `[main.ts/get-subtitle-target-language] Retrieved subtitle target language: ${lang}`
-      );
+      const lang = settingsStore.get('subtitleTargetLanguage', 'original');
+      log.info(`[main.ts/get-subtitle-target-language] Retrieved: ${lang}`);
       return lang;
     } catch (error) {
       log.error(
-        '[main.ts/get-subtitle-target-language] Error retrieving subtitle target language:',
+        '[main.ts/get-subtitle-target-language] Error retrieving:',
         error
       );
-      return 'original'; // Fallback on error
+      return 'original';
     }
   });
 
@@ -373,9 +387,7 @@ try {
       try {
         if (typeof lang === 'string') {
           settingsStore.set('subtitleTargetLanguage', lang);
-          log.info(
-            `[main.ts/set-subtitle-target-language] Set subtitle target language to: ${lang}`
-          );
+          log.info(`[main.ts/set-subtitle-target-language] Set to: ${lang}`);
           return { success: true };
         } else {
           log.warn(
@@ -386,7 +398,7 @@ try {
         }
       } catch (error) {
         log.error(
-          '[main.ts/set-subtitle-target-language] Error setting subtitle target language:',
+          '[main.ts/set-subtitle-target-language] Error setting language:',
           error
         );
         return { success: false, error: (error as Error).message };
@@ -396,7 +408,7 @@ try {
 
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
-  // --- Add these handlers ---
+  // Save/Load video playback position
   ipcMain.handle(
     'save-video-playback-position',
     (_event, filePath: string, position: number) => {
@@ -404,10 +416,9 @@ try {
         log.warn(
           `[main.ts] Invalid attempt to save playback position: Path=${filePath}, Position=${position}`
         );
-        return; // Don't save invalid data
+        return;
       }
       try {
-        // Directly use settingsStore here
         const currentPositions = settingsStore.get(
           'videoPlaybackPositions',
           {}
@@ -417,13 +428,11 @@ try {
           [filePath]: position,
         };
         settingsStore.set('videoPlaybackPositions', updatedPositions);
-        // log.debug(`[main.ts] Saved playback position for ${filePath}: ${position}s`); // Optional: Add if needed, can be noisy
       } catch (error) {
         log.error(
           `[main.ts] Error saving playback position for ${filePath}:`,
           error
         );
-        // Decide if you want to throw or just log
       }
     }
   );
@@ -433,12 +442,11 @@ try {
     async (_event, filePath: string): Promise<number | null> => {
       if (!filePath) {
         log.warn(
-          `[main.ts] Invalid attempt to get playback position: Path is empty`
+          '[main.ts] Invalid attempt to get playback position: empty path'
         );
         return null;
       }
       try {
-        // Directly use settingsStore here
         const positions = settingsStore.get('videoPlaybackPositions', {}) as {
           [key: string]: number;
         };
@@ -456,54 +464,45 @@ try {
           `[main.ts] Error getting playback position for ${filePath}:`,
           error
         );
-        return null; // Return null on error
+        return null;
       }
     }
   );
-  // --- End Add Handlers ---
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
-  // Attempt to show error dialog only after app is ready
   app
     .whenReady()
     .then(() => {
       dialog.showErrorBox(
         'Initialization Error',
-        `Failed to initialize application components. Please check logs. Error: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to initialize. Check logs. Error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
-      // Give user time to see message before quitting
       setTimeout(() => {
         app.quit();
         nodeProcess.exit(1);
       }, 5000);
     })
     .catch(readyErr => {
-      // If whenReady itself fails, log to console and exit
-      console.error(
-        'FATAL: Error during app.whenReady after setup failure:',
-        readyErr
-      );
+      console.error('FATAL: Error during app.whenReady after setup:', readyErr);
       nodeProcess.exit(1);
     });
 }
 
-// --- App Event Handler: will-quit (Handles Cleanup) ---
+// --- App Event Handler: will-quit ---
 app.on('will-quit', async event => {
   log.info(`[main.ts] 'will-quit' event triggered. isQuitting: ${isQuitting}`);
-
-  // Prevent loop if triggered by our own app.quit() call
   if (isQuitting) {
     return;
   }
-
-  // Set flag and prevent immediate exit to allow cleanup
   isQuitting = true;
   event.preventDefault();
 
   log.info('[main.ts] Starting cleanup before quitting...');
   try {
     if (services?.fileManager?.cleanup) {
-      log.info('[main.ts] Attempting cleanup via FileManager...');
+      log.info('[main.ts] Attempting FileManager cleanup...');
       await services.fileManager.cleanup();
       log.info('[main.ts] FileManager cleanup finished.');
     } else {
@@ -512,122 +511,92 @@ app.on('will-quit', async event => {
   } catch (err) {
     log.error('[main.ts] Error during cleanup:', err);
   } finally {
-    // Allow the app to quit now that cleanup is done (or failed)
-    log.info('[main.ts] Cleanup finished. Quitting app manually.');
+    log.info('[main.ts] Cleanup finished. Quitting app now.');
     app.quit();
   }
 });
 
-// --- App Event Handler: window-all-closed ---
 app.on('window-all-closed', () => {
   log.info('[main.ts] All windows closed.');
-  // Quit the app on Windows & Linux. Keep running on macOS (standard behavior).
   if (nodeProcess.platform !== 'darwin') {
     log.info('[main.ts] Quitting app (non-macOS).');
-    app.quit(); // This will trigger 'will-quit'
+    app.quit();
   }
 });
 
-// --- App Event Handler: activate (macOS) ---
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    log.info("[main.ts] 'activate' event: No windows open, creating new one.");
+    log.info("[main.ts] 'activate': No windows open, creating new one.");
     createWindow().catch(err =>
       log.error('[main.ts] Error recreating window on activate:', err)
     );
   }
 });
 
-// --- Uncaught Exception Handler ---
 nodeProcess.on('uncaughtException', error => {
   log.error('[main.ts] UNCAUGHT EXCEPTION:', error);
-  // Consider showing a dialog before quitting in production
   if (!isDev) {
     dialog.showErrorBox(
       'Unhandled Error',
-      `An unexpected error occurred: ${error.message}\nThe application will now quit.`
+      `Unexpected error: ${error.message}\nApp will now quit.`
     );
     app.quit();
     nodeProcess.exit(1);
   }
 });
 
-// --- Main Window Creation Function ---
+// --- Window Creation ---
 async function createWindow() {
   log.info('[main.ts] Creating main window...');
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      // Security recommendations:
-      contextIsolation: true, // Keep true (default)
-      nodeIntegration: false, // Keep false (default)
-      webSecurity: !isDev, // Disable only in dev if necessary, but prefer keeping it true
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: !isDev,
       allowRunningInsecureContent: false,
-      // Preload script:
-      preload: path.join(__dirname, '../preload/index.js'), // Added ../
+      preload: path.join(__dirname, '../preload/index.js'),
     },
   });
 
-  // Context Menu Setup
   electronContextMenu({
     window: mainWindow,
-    showInspectElement: isDev, // Only show "Inspect Element" in development
+    showInspectElement: isDev,
   });
 
-  // Load Renderer HTML
   const rendererPath = path.join(__dirname, '../renderer/index.html');
   log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
   try {
     await mainWindow.loadFile(rendererPath);
     log.info('[main.ts] Renderer loaded successfully.');
   } catch (loadError: any) {
-    log.error('[main.ts] Error loading renderer HTML:', loadError);
-    // Handle error (e.g., show dialog, quit)
+    log.error('[main.ts] Error loading renderer:', loadError);
     dialog.showErrorBox(
       'Load Error',
-      `Failed to load application UI: ${loadError.message}`
+      `Failed to load UI: ${loadError.message}`
     );
     app.quit();
     return;
   }
 
-  // Protocol Registration (Example - adjust if needed)
-  // Ensure this doesn't interfere with loading the main file
-  // mainWindow.webContents.session.protocol.registerFileProtocol(
-  //   'file',
-  //   (request, callback) => {
-  //     try {
-  //        const filePath = decodeURI(request.url.replace('file:///', '/')); // Adjust for platform if needed
-  //        callback(filePath);
-  //     } catch (error) {
-  //        log.error('File protocol error:', error);
-  //        callback({ error: -6 /* FILE_NOT_FOUND */ } as any);
-  //     }
-  //   }
-  // );
-
-  // Open DevTools in development
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
 
-  // Window Event: Closed
   mainWindow.on('closed', () => {
     log.info('[main.ts] Main window closed.');
-    mainWindow = null; // Dereference the window object
+    mainWindow = null;
   });
 
-  // --- Find-in-Page IPC ---
+  // Find-in-Page IPC
   let currentFindText = '';
   ipcMain.on(
     'find-in-page',
     (_event, { text, findNext, forward, matchCase }) => {
       if (!mainWindow) return;
       if (text && text.length > 0) {
-        if (text !== currentFindText) currentFindText = text; // Update search text
+        if (text !== currentFindText) currentFindText = text;
         mainWindow.webContents.findInPage(text, {
           findNext: !!findNext,
           forward: forward === undefined ? true : forward,
@@ -648,7 +617,6 @@ async function createWindow() {
   });
 
   mainWindow.webContents.on('found-in-page', (_event, result) => {
-    // Send results back to renderer for display
     mainWindow?.webContents.send('find-results', {
       matches: result.matches,
       activeMatchOrdinal: result.activeMatchOrdinal,
@@ -656,14 +624,11 @@ async function createWindow() {
     });
   });
 
-  // --- Application Menu ---
-  createApplicationMenu(); // Call function to set up menu
-} // End createWindow()
+  createApplicationMenu();
+}
 
-// --- Application Menu Setup Function ---
 function createApplicationMenu() {
   const template: MenuItemConstructorOptions[] = [
-    // { role: 'appMenu' } // Standard macOS app menu
     ...((nodeProcess.platform === 'darwin'
       ? [
           {
@@ -682,7 +647,6 @@ function createApplicationMenu() {
           },
         ]
       : []) as MenuItemConstructorOptions[]),
-    // { role: 'fileMenu' } // Standard File menu
     {
       label: 'File',
       submenu: [
@@ -691,7 +655,6 @@ function createApplicationMenu() {
           : { role: 'quit' },
       ],
     },
-    // { role: 'editMenu' } // Standard Edit menu
     {
       label: 'Edit',
       submenu: [
@@ -725,7 +688,6 @@ function createApplicationMenu() {
         },
       ],
     },
-    // { role: 'viewMenu' } // Standard View menu
     {
       label: 'View',
       submenu: [
@@ -742,7 +704,6 @@ function createApplicationMenu() {
         { role: 'togglefullscreen' },
       ],
     },
-    // { role: 'windowMenu' } // Standard Window menu
     {
       label: 'Window',
       submenu: [
@@ -764,7 +725,7 @@ function createApplicationMenu() {
         {
           label: 'Learn More (Example)',
           click: async () => {
-            await shell.openExternal('https://github.com/your-repo'); // Replace with actual URL
+            await shell.openExternal('https://github.com/your-repo');
           },
         },
       ],
@@ -776,32 +737,22 @@ function createApplicationMenu() {
   log.info('[main.ts] Application menu created.');
 }
 
-// --- yt-dlp Installation Test (Optional - Keep if needed) ---
 async function testYtDlpInstallation() {
-  // Implement the check logic here if required, similar to the original file
-  // Ensure paths are correctly resolved for packaged apps (app.asar.unpacked)
   log.warn(
-    '[main.ts] testYtDlpInstallation function needs implementation if required.'
+    '[main.ts] testYtDlpInstallation function is a placeholder (implement if needed).'
   );
   return true;
 }
 
-// --- App Ready Handler ---
 app
   .whenReady()
   .then(async () => {
     log.info('[main.ts] App is ready.');
-
-    // --- Configure Logging ---
     try {
-      // Use app.getPath('logs') for production logs for standard location
       const logDirPath = isDev ? '.' : app.getPath('logs');
-      // Ensure the consistent app name ('translator-electron') is reflected if needed
-      // Note: electron-log might handle subdirectories based on app name automatically
       const logFileName = isDev ? 'dev-main.log' : 'main.log';
       const logFilePath = path.join(logDirPath, logFileName);
 
-      // Ensure log directory exists
       try {
         await fsPromises.mkdir(logDirPath, { recursive: true });
       } catch (mkdirError: any) {
@@ -810,17 +761,14 @@ app
             `[main.ts] Failed to ensure log directory ${logDirPath}:`,
             mkdirError
           );
-          // Continue, logging might still work to default location
         }
       }
 
-      // Configure electron-log file transport
       log.transports.file.resolvePathFn = () => logFilePath;
       log.transports.file.level = isDev ? 'debug' : 'info';
-      log.transports.console.level = isDev ? 'debug' : 'info'; // Also configure console
+      log.transports.console.level = isDev ? 'debug' : 'info';
 
-      // Log config info AFTER setting it up
-      const resolvedLogPath = log.transports.file.getFile().path; // Get path after setting resolvePathFn
+      const resolvedLogPath = log.transports.file.getFile().path;
       log.info(
         `[main.ts] Logging Mode: ${isDev ? 'Development' : 'Production'}`
       );
@@ -831,44 +779,37 @@ app
       console.error('[main.ts] Error configuring logging:', error);
     }
 
-    // --- Startup Cleanup ---
     log.info('[main.ts] Performing startup cleanup...');
     if (services?.fileManager?.cleanup) {
       try {
         await services.fileManager.cleanup();
-        log.info('[main.ts] Startup cleanup finished successfully.');
+        log.info('[main.ts] Startup cleanup finished.');
       } catch (cleanupError) {
         log.error('[main.ts] Error during startup cleanup:', cleanupError);
-        // Decide if this is critical - maybe show error?
       }
     } else {
-      log.warn(
-        '[main.ts] FileManager service not available for startup cleanup.'
-      );
+      log.warn('[main.ts] FileManager service not available for cleanup.');
     }
 
-    // --- Test yt-dlp (Optional) ---
     if (app.isPackaged) {
       log.info('[main.ts] Checking yt-dlp installation...');
-      await testYtDlpInstallation(); // Implement this function if needed
+      await testYtDlpInstallation();
     }
 
-    // --- Create Main Window ---
     await createWindow().then(() => {
-      log.info('[main.ts] Main window created successfully.');
+      log.info('[main.ts] Main window created.');
       if (isDev) {
         mainWindow?.webContents.on('devtools-opened', () => {
-          // ... existing code ...
+          // Additional dev logic if desired
         });
       }
     });
   })
   .catch(error => {
     log.error('[main.ts] Error during app.whenReady:', error);
-    // Handle critical startup error
     dialog.showErrorBox(
       'Application Error',
-      `Failed to start the application: ${error.message}`
+      `Failed to start: ${error.message}`
     );
     app.quit();
     nodeProcess.exit(1);

@@ -39,17 +39,12 @@ import { RenderSubtitlesOptions } from '../../../types/interface.js';
 
 export interface EditSubtitlesProps {
   videoFile: File | null;
-  videoUrl: string | null;
   videoFilePath?: string | null;
   isPlaying?: boolean;
-  editingTimes?: { start: number; end: number } | null;
-  onSetIsPlaying?: (isPlaying: boolean) => void;
   secondsToSrtTime?: (seconds: number) => string;
-  parseSrt?: (srtString: string) => SrtSegment[];
   subtitles?: SrtSegment[];
   videoPlayerRef?: any;
   isMergingInProgress?: boolean;
-  setMergeProgress: React.Dispatch<React.SetStateAction<number>>;
   setMergeStage: React.Dispatch<React.SetStateAction<string>>;
   onSetMergeOperationId: Dispatch<SetStateAction<string | null>>;
   editorRef?: React.RefObject<{
@@ -58,7 +53,6 @@ export interface EditSubtitlesProps {
   }>;
   onSetSubtitleSegments: Dispatch<SetStateAction<SrtSegment[]>>;
   reviewedBatchStartIndex?: number | null;
-  subtitleSourceId?: number;
   canSaveDirectly: boolean;
   handleSaveSrt: () => Promise<void>;
   handleSaveEditedSrtAs: () => Promise<void>;
@@ -214,7 +208,7 @@ export function EditSubtitles({
 
   // Keep local isPlayingState in sync
   useEffect(() => {
-    if (typeof isPlayingProp !== 'undefined') {
+    if (isPlayingProp !== undefined) {
       setIsPlayingState(isPlayingProp);
     }
   }, [isPlayingProp]);

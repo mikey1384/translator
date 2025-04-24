@@ -47,6 +47,14 @@ const electronAPI = {
     return () =>
       ipcRenderer.removeListener('generate-subtitles-progress', listener);
   },
+
+  onMergeSubtitlesProgress: (cb: (p: any) => void) => {
+    const handler = (_: any, progress: any) => cb(progress);
+    ipcRenderer.on('merge-subtitles-progress', handler);
+    return () =>
+      ipcRenderer.removeListener('merge-subtitles-progress', handler);
+  },
+
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
