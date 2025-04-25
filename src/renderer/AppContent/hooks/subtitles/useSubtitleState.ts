@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { SrtSegment } from '../../../../types/interface.js';
-import {
-  parseSrt,
-  fixOverlappingSegments,
-} from '../../../../shared/helpers/index.js';
+import { parseSrt } from '../../../../shared/helpers/index.js';
 
 export function useSubtitleState(showOriginalText: boolean) {
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
@@ -127,38 +124,6 @@ export function useSubtitleState(showOriginalText: boolean) {
     }
   }, []);
 
-  function handleSubtitlesGenerated(generatedSubtitles: string) {
-    try {
-      const parsedSegments = parseSrt(generatedSubtitles);
-      const processedSegments = parsedSegments.map((segment: any) => {
-        let processedText = segment.text;
-        if (segment.text.includes('###TRANSLATION_MARKER###')) {
-          if (showOriginalText) {
-            processedText = segment.text.replace(
-              '###TRANSLATION_MARKER###',
-              '\n'
-            );
-          } else {
-            const parts = segment.text.split('###TRANSLATION_MARKER###');
-            processedText = parts[1] ? parts[1].trim() : '';
-          }
-        }
-        return {
-          ...segment,
-          text: processedText,
-        };
-      });
-
-      const fixedSegments = fixOverlappingSegments(processedSegments);
-      setSubtitleSegments(fixedSegments);
-    } catch (err) {
-      console.error(
-        '[useSubtitleManagement] Error parsing generated subtitles:',
-        err
-      );
-    }
-  }
-
   return {
     setSubtitleSegments,
     setSubtitleSourceId,
@@ -170,7 +135,6 @@ export function useSubtitleState(showOriginalText: boolean) {
     isReceivingPartialResults,
     reviewedBatchStartIndex,
     subtitleSourceId,
-    handleSubtitlesGenerated,
     translationOperationId,
   };
 }
