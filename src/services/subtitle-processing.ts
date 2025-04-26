@@ -25,6 +25,8 @@ const PRE_PAD_SEC = 0.05;
 const POST_PAD_SEC = 0;
 const MERGE_GAP_SEC = 0.3;
 const MAX_SPEECHLESS_SEC = 8;
+const NO_SPEECH_PROB_THRESHOLD = 0.95;
+const AVG_LOGPROB_THRESHOLD = -3;
 
 const MIN_CHUNK_DURATION_SEC = 1;
 const SUBTITLE_GAP_THRESHOLD = 3;
@@ -758,7 +760,9 @@ async function transcribeChunk({
     // Filter based on Whisper's confidence and map to SrtSegment
     const srtSegments: SrtSegment[] = segments
       .filter(s => {
-        const isSpeech = s.no_speech_prob < 0.95 && s.avg_logprob > -1.5;
+        const isSpeech =
+          s.no_speech_prob < NO_SPEECH_PROB_THRESHOLD &&
+          s.avg_logprob > AVG_LOGPROB_THRESHOLD;
         if (!isSpeech) {
           log.debug(
             `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(2)}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
