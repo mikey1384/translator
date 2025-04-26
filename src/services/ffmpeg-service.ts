@@ -518,20 +518,41 @@ export class FFmpegService {
   }): Promise<string> {
     const args = [
       '-y',
-      '-i',
-      inputPath,
       '-ss',
       startTime.toString(),
       '-t',
       duration.toString(),
+      '-i',
+      inputPath,
       '-vn',
+
+      // optional NR / gate (unchanged)
+      '-af',
+      'afftdn=nf=-25,agate=threshold=-30dB',
+
+      // resample to 16 kHz mono
+      '-ar',
+      '16000',
+      '-ac',
+      '1',
+
+      /* ---------- encode as MP3 ---------- */
       '-c:a',
-      'copy',
-      outputPath,
+      'libmp3lame', // MP3 codec
+      '-b:a',
+      '96k', // or: -q:a 5  (VBR quality 5 ≈ 120 kbps stereo ≈ 60 kbps mono)
+      '-f',
+      'mp3', // container = mp3 (raw)
+
+      outputPath, // must end in “.mp3”
     ];
+
     try {
-      log.info(`Extracting audio segment: ${startTime}s for ${duration}s`);
+      log.info(
+        `[FFmpeg] Extracting segment ${startTime}s – ${startTime + duration}s`
+      );
       await this.runFFmpeg({ args, operationId, filePath: inputPath });
+
       if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
         throw new FFmpegError('Output audio segment is empty or missing.');
       }

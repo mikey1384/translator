@@ -20,12 +20,15 @@ const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // merge intervals closer than this
-const VAD_NORMALIZATION_MIN_DURATION_SEC = 0; // 0 ⇒ keep even 1‑frame blips
-
+const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.25; // 0 ⇒ keep even 1‑frame blips
+const PRE_PAD_SEC = 0.15;
+const POST_PAD_SEC = 0;
 const MERGE_GAP_SEC = 0.3;
-const PAD_SEC = 0;
+const MAX_SPEECHLESS_SEC = 8;
+
 const MIN_CHUNK_DURATION_SEC = 1;
 const SUBTITLE_GAP_THRESHOLD = 3;
+const GAP_SEC = 3;
 
 // --- Concurrency Setting ---
 const TRANSCRIPTION_BATCH_SIZE = 50;
@@ -377,7 +380,26 @@ export async function generateSubtitlesFromAudio({
   signal,
   operationId,
   services,
-}: GenerateSubtitlesFromAudioArgs): Promise<string> {
+}: {
+  inputAudioPath: string;
+  progressCallback?: (info: any) => void;
+  signal?: AbortSignal;
+  operationId?: string;
+  services?: {
+    ffmpegService?: {
+      getMediaDuration: (p: string) => Promise<number>;
+      extractAudioSegment: (opts: {
+        inputPath: string;
+        outputPath: string;
+        startTime: number;
+        duration: number;
+        operationId?: string;
+        signal?: AbortSignal;
+      }) => Promise<string>;
+    };
+  };
+}): Promise<string> {
+  // progress constants
   const PROGRESS_ANALYSIS_DONE = 5;
   const PROGRESS_TRANSCRIPTION_START = 20;
   const PROGRESS_TRANSCRIPTION_END = 95;
@@ -388,18 +410,15 @@ export async function generateSubtitlesFromAudio({
   const createdChunkPaths: string[] = [];
 
   try {
-    // Init OpenAI -------------------------------------------------------------
-    const openaiApiKey = await getApiKey('openai'); // Get key first
+    const openaiApiKey = await getApiKey('openai');
     openai = new OpenAI({ apiKey: openaiApiKey });
 
     if (!services?.ffmpegService) {
-      // Check service dependency
       throw new SubtitleProcessingError('FFmpegService is required.');
     }
     const { ffmpegService } = services;
 
     if (!fs.existsSync(inputAudioPath)) {
-      // Check input file exists
       throw new SubtitleProcessingError(
         `Audio file not found: ${inputAudioPath}`
       );
@@ -407,139 +426,148 @@ export async function generateSubtitlesFromAudio({
 
     const duration = await ffmpegService.getMediaDuration(inputAudioPath);
     if (isNaN(duration) || duration <= 0) {
-      // Check valid duration
       throw new SubtitleProcessingError(
         'Unable to determine valid audio duration.'
       );
     }
 
-    // 1. Run VAD to get boundary points --------------------------------------
+    // -------------------------------------------------------------------------
+    // 2. VAD + chunking
+    // -------------------------------------------------------------------------
     progressCallback?.({
       percent: 0,
       stage: 'Analyzing audio for chunk boundaries...',
     });
+
+    // detect + normalize + merge
     const raw = await detectSpeechIntervals({ inputPath: inputAudioPath });
-    const cleaned = normalizeSpeechIntervals({ intervals: raw }); // Uses new default minDurSec=0
-    const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC);
+    const cleaned = normalizeSpeechIntervals({ intervals: raw });
+    const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC).flatMap(iv =>
+      iv.end - iv.start > MAX_SPEECHLESS_SEC
+        ? chunkSpeechInterval({ interval: iv, duration: MAX_SPEECHLESS_SEC })
+        : [iv]
+    );
 
-    // 2. Build continuous chunks (≥ MIN_CHUNK_DURATION_SEC, cut on silence)
-    const chunks: { start: number; end: number; index: number }[] = [];
-    merged.sort((a, b) => a.start - b.start); // make sure they're ordered
-
+    // build minimum-length chunks, applying pre-/post-padding
     let idx = 0;
     let chunkStart: number | null = null;
-    let chunkEnd = 0;
+    let currEnd = 0;
+
+    const chunks: Array<{ start: number; end: number; index: number }> = [];
+    merged.sort((a, b) => a.start - b.start);
 
     for (const blk of merged) {
-      const s = Math.max(0, blk.start - PAD_SEC);
-      const e = Math.min(duration, blk.end + PAD_SEC);
+      const s = Math.max(0, blk.start - PRE_PAD_SEC);
+      const e = Math.min(duration, blk.end + POST_PAD_SEC);
 
-      // Ensure padded chunk has valid duration before considering it
       if (e <= s) {
         log.warn(
           `[${operationId}] Skipping zero/negative duration VAD block after padding: ${s.toFixed(2)}-${e.toFixed(2)}`
         );
-        continue; // Skip this block entirely if it has no valid duration
+        continue;
       }
 
-      if (chunkStart === null) chunkStart = s; // start a new chunk
-      chunkEnd = e; // always extend to current block end
+      if (chunkStart === null) {
+        chunkStart = s;
+      }
+      currEnd = e;
 
-      // Close the chunk as soon as it is long enough
-      if (chunkEnd - chunkStart >= MIN_CHUNK_DURATION_SEC) {
-        chunks.push({ start: chunkStart, end: chunkEnd, index: ++idx });
-        chunkStart = null; // next block will start a new chunk
+      // If chunk reaches min length, push it
+      if (currEnd - chunkStart >= MIN_CHUNK_DURATION_SEC) {
+        chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
+        chunkStart = null;
       }
     }
 
-    // Flush tail-end that never reached 5 min (last chunk of the file)
+    // flush tail-end if leftover
     if (chunkStart !== null) {
-      // Ensure the final chunk has a valid duration before adding
-      if (chunkEnd > chunkStart) {
-        chunks.push({ start: chunkStart, end: chunkEnd, index: ++idx });
+      if (currEnd > chunkStart) {
+        chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
       } else {
         log.warn(
-          `[${operationId}] Skipping final chunk due to zero/negative duration: ${chunkStart.toFixed(2)}-${chunkEnd.toFixed(2)}`
+          `[${operationId}] Skipping final chunk due to zero/negative duration: ${chunkStart.toFixed(2)}-${currEnd.toFixed(2)}`
         );
       }
     }
 
     log.info(
-      `[${operationId}] VAD grouping produced ${chunks.length} chunk(s) ` +
-        `(≥${MIN_CHUNK_DURATION_SEC}s, cut only on silence).`
+      `[${operationId}] VAD grouping produced ${chunks.length} chunk(s) (≥${MIN_CHUNK_DURATION_SEC}s).`
     );
     progressCallback?.({
       percent: PROGRESS_ANALYSIS_DONE,
       stage: `Chunked audio into ${chunks.length} parts`,
     });
 
-    // 3. Parallel transcription ---------------------------------------------
+    // -------------------------------------------------------------------------
+    // 3. Parallel transcription
+    // -------------------------------------------------------------------------
     progressCallback?.({
       percent: PROGRESS_TRANSCRIPTION_START,
       stage: `Starting transcription of ${chunks.length} chunks...`,
     });
+
     let done = 0;
+
     for (let b = 0; b < chunks.length; b += TRANSCRIPTION_BATCH_SIZE) {
       const slice = chunks.slice(b, b + TRANSCRIPTION_BATCH_SIZE);
+
       log.info(
-        `[${operationId}] Processing transcription batch ${Math.ceil((b + slice.length) / TRANSCRIPTION_BATCH_SIZE)}/${Math.ceil(chunks.length / TRANSCRIPTION_BATCH_SIZE)} (Chunks ${b + 1}-${b + slice.length})`
+        `[${operationId}] Processing transcription batch ${Math.ceil((b + slice.length) / TRANSCRIPTION_BATCH_SIZE)}/` +
+          `${Math.ceil(chunks.length / TRANSCRIPTION_BATCH_SIZE)} (Chunks ${b + 1}-${b + slice.length})`
       );
 
       const segArraysPromises = slice.map(async meta => {
         if (signal?.aborted) throw new Error('Cancelled');
 
-        // Ensure chunk has positive duration before processing
         if (meta.end <= meta.start) {
           log.warn(
             `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
           );
-          return []; // Return empty array for invalid chunks
+          return [];
         }
 
-        const wav = path.join(
+        // Create a temp chunk
+        const mp3Path = path.join(
           tempDir,
-          `chunk_${meta.index}_${operationId}.wav`
+          `chunk_${meta.index}_${operationId}.mp3`
         );
-        createdChunkPaths.push(wav);
+        createdChunkPaths.push(mp3Path);
 
         try {
           await ffmpegService.extractAudioSegment({
             inputPath: inputAudioPath,
-            outputPath: wav,
+            outputPath: mp3Path,
             startTime: meta.start,
             duration: meta.end - meta.start,
             operationId,
             signal,
           });
 
-          if (signal?.aborted) throw new Error('Cancelled'); // Check after potentially long step
+          if (signal?.aborted) throw new Error('Cancelled');
 
-          return transcribeChunk({
-            // Call the updated transcribeChunk
+          // Now transcribe that chunk (implementation not shown here)
+          const segs = await transcribeChunk({
             chunkIndex: meta.index,
-            chunkPath: wav,
-            startTime: meta.start, // Pass start time for offsetting Whisper results
+            chunkPath: mp3Path,
+            startTime: meta.start,
             signal,
             openai,
             operationId: operationId as string,
           });
+          return segs;
         } catch (chunkError: any) {
-          if (
-            chunkError instanceof Error &&
-            chunkError.message === 'Cancelled'
-          ) {
+          if (chunkError?.message === 'Cancelled') {
             log.info(
               `[${operationId}] Chunk ${meta.index} processing cancelled.`
             );
-            return []; // Do not re-throw cancellation
+            return [];
           }
           log.error(
             `[${operationId}] Error processing chunk ${meta.index}:`,
             chunkError?.message || chunkError
           );
-          // Report error via progress but return empty array to allow Promise.all to finish
           progressCallback?.({
-            percent: -1, // Indicate error maybe?
+            percent: -1,
             stage: `Error in chunk ${meta.index}`,
             error: chunkError?.message || String(chunkError),
           });
@@ -547,23 +575,24 @@ export async function generateSubtitlesFromAudio({
         }
       });
 
-      // Await all promises in the current batch
+      // gather all segments from this batch
       const segArrays = await Promise.all(segArraysPromises);
-
-      // Aggregate segments, flatten the array of arrays
       segArrays.flat().forEach(s => overallSegments.push(s));
 
-      // Update progress
+      // intermediate progress
       done += slice.length;
       const p =
         PROGRESS_TRANSCRIPTION_START +
         (done / chunks.length) *
           (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
+
+      // build partial SRT
       const intermediateSrt = buildSrt(
         overallSegments.slice().sort((a, b) => a.start - b.start)
       );
       log.debug(
-        `[Transcription Loop] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
+        `[Transcription Loop] Built intermediateSrt (first 100 chars): ` +
+          `"${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
       );
       progressCallback?.({
         percent: Math.round(p),
@@ -573,33 +602,46 @@ export async function generateSubtitlesFromAudio({
         partialResult: intermediateSrt,
       });
 
-      if (signal?.aborted) throw new Error('Cancelled'); // Check between batches
+      if (signal?.aborted) throw new Error('Cancelled');
     }
 
-    overallSegments.sort((a, b) => a.start - b.start); // Final sort after all chunks processed
+    overallSegments.sort((a, b) => a.start - b.start);
+
+    const anchors: SrtSegment[] = [];
+    let tmpIdx = 0;
+    for (let i = 1; i < overallSegments.length; i++) {
+      const gap = overallSegments[i].start - overallSegments[i - 1].end;
+      if (gap > GAP_SEC) {
+        anchors.push({
+          index: ++tmpIdx,
+          start: overallSegments[i - 1].end,
+          end: overallSegments[i - 1].end + 0.5, // half-second blank
+          text: '', // or '♪' if you'd like a visible note
+        });
+      }
+    }
+    overallSegments.push(...anchors);
+    overallSegments.sort((a, b) => a.start - b.start);
+
     log.info(
       `[${operationId}] Transcription complete. Generated ${overallSegments.length} final segments.`
     );
     progressCallback?.({ percent: 100, stage: 'Transcription complete!' });
-    // Re-index the sorted segments before building the partial SRT
-    const sortedSegments = overallSegments
-      .slice()
-      .sort((a, b) => a.start - b.start);
-    const reIndexedPartialSegments = sortedSegments.map((seg, idx) => ({
+
+    // re-index
+    const reIndexed = overallSegments.map((seg, i) => ({
       ...seg,
-      index: idx + 1, // Assign correct sequential index
+      index: i + 1,
     }));
-    const partialResult = buildSrt(reIndexedPartialSegments); // Build SRT with correct indices
-    return partialResult;
+    return buildSrt(reIndexed);
   } catch (error: any) {
-    // Standard error handling, similar to previous version
     console.error(
       `[${operationId}] Error in generateSubtitlesFromAudio:`,
       error?.message || error
     );
     const isCancel =
       error.name === 'AbortError' ||
-      (error instanceof Error && error.message === 'Cancelled') || // Adjusted check
+      error.message === 'Cancelled' ||
       signal?.aborted;
 
     progressCallback?.({
@@ -610,21 +652,21 @@ export async function generateSubtitlesFromAudio({
       error: !isCancel ? error?.message || String(error) : undefined,
     });
 
-    // Rethrow specific error types or wrap generic ones
     if (error instanceof SubtitleProcessingError || isCancel) {
       throw error;
     } else {
-      throw new SubtitleProcessingError(error?.message || String(error)); // Ensure string conversion
+      throw new SubtitleProcessingError(error?.message || String(error));
     }
   } finally {
-    // Cleanup temporary chunk files
+    // -------------------------------------------------------------------------
+    // 10. Clean-up section
+    // -------------------------------------------------------------------------
     log.info(
       `[${operationId}] Cleaning up ${createdChunkPaths.length} temporary chunk files...`
     );
     await Promise.allSettled(
       createdChunkPaths.map(p =>
         fsp.unlink(p).catch(err => {
-          // Log specific unlink errors if needed, but don't fail the whole process
           log.warn(
             `[${operationId}] Failed to delete temp chunk file ${p}:`,
             err?.message || err
@@ -681,7 +723,7 @@ async function transcribeChunk({
         file: fileStream,
         response_format: 'verbose_json',
         temperature: 0,
-        // language: options?.sourceLang // If needed, add options back to signature
+        prompt: '',
       },
       { signal } // Pass signal for cancellation during API call
     );
@@ -716,7 +758,7 @@ async function transcribeChunk({
     // Filter based on Whisper's confidence and map to SrtSegment
     const srtSegments: SrtSegment[] = segments
       .filter(s => {
-        const isSpeech = s.no_speech_prob < 0.8 && s.avg_logprob > -2.0;
+        const isSpeech = s.no_speech_prob < 0.6 && s.avg_logprob > -1.5;
         if (!isSpeech) {
           log.debug(
             `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(2)}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
@@ -1230,7 +1272,7 @@ export async function callAIModel({
 
 export async function detectSpeechIntervals({
   inputPath,
-  vadMode = 1, // 0–3 (3 = most aggressive)
+  vadMode = 3, // 0–3 (3 = most aggressive)
   frameMs = 30,
   operationId = '',
 }: {
@@ -1383,14 +1425,17 @@ export function normalizeSpeechIntervals({
   return merged.filter(i => i.end - i.start >= minDurSec);
 }
 
-export function chunkSpeechInterval({
+function chunkSpeechInterval({
   interval,
   duration,
 }: {
   interval: { start: number; end: number };
   duration: number;
 }): Array<{ start: number; end: number }> {
-  // recursively split at mid‑point (cheap), or call a stronger‑pause finder
+  if (interval.end - interval.start <= duration) {
+    return [interval];
+  }
+
   const mid = (interval.start + interval.end) / 2;
   return [
     ...chunkSpeechInterval({
