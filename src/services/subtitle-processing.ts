@@ -21,7 +21,7 @@ const Vad = webrtcvadPackage.default.default;
 // --- Configuration Constants ---
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // merge intervals closer than this
 const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.25; // 0 ⇒ keep even 1‑frame blips
-const PRE_PAD_SEC = 0.15;
+const PRE_PAD_SEC = 0.05;
 const POST_PAD_SEC = 0;
 const MERGE_GAP_SEC = 0.3;
 const MAX_SPEECHLESS_SEC = 8;
@@ -758,7 +758,7 @@ async function transcribeChunk({
     // Filter based on Whisper's confidence and map to SrtSegment
     const srtSegments: SrtSegment[] = segments
       .filter(s => {
-        const isSpeech = s.no_speech_prob < 0.6 && s.avg_logprob > -1.5;
+        const isSpeech = s.no_speech_prob < 0.9 && s.avg_logprob > -1.5;
         if (!isSpeech) {
           log.debug(
             `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(2)}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
