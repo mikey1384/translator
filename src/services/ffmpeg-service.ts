@@ -372,6 +372,30 @@ export class FFmpegService {
         `[${operationId || 'ffmpeg'}] Path check immediately before spawn: ${this.ffmpegPath}`
       );
       const ffmpegProcess = spawn(this.ffmpegPath, args, spawnOptions);
+      (ffmpegProcess as any).wasCancelled = false; // flag
+
+      if (signal) {
+        const onAbort = () => {
+          if (!ffmpegProcess.killed) {
+            (ffmpegProcess as any).wasCancelled = true;
+            try {
+              const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
+              ffmpegProcess.kill(sig);
+            } catch {
+              /* already exited */
+            }
+            progressCallback?.(0); // optional
+          }
+        };
+
+        signal.aborted
+          ? onAbort()
+          : signal.addEventListener('abort', onAbort, { once: true });
+
+        const cleanupAbort = () => signal.removeEventListener('abort', onAbort);
+        ffmpegProcess.once('close', cleanupAbort);
+        ffmpegProcess.once('error', cleanupAbort);
+      }
       const processId = `FFmpeg [${operationId || 'generic'}] (PID: ${ffmpegProcess.pid})`;
 
       // --- Store the process for cancellation ---
