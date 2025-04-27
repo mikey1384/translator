@@ -156,6 +156,11 @@ const fixedVideoContainerBaseStyles = css`
   gap: 15px;
   overflow: visible;
   transition: all 0.3s ease-out;
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
 `;
 
 const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
@@ -297,6 +302,19 @@ export default function VideoPlayer({
     if (onUiInteraction) onUiInteraction();
   }, [onUiInteraction]);
 
+  // focus helper -------------------------------------------------------------
+  const focusPlayerWrapper = () => {
+    const wrapper = playerRef.current?.querySelector<HTMLDivElement>(
+      '.native-video-player-wrapper'
+    );
+    wrapper?.focus();
+  };
+
+  // keep focus even after state-driven re-renders
+  useEffect(() => {
+    focusPlayerWrapper();
+  }, [isFullScreen]);
+
   const handleScrollToCurrentSubtitle = useCallback(() => {
     if (!onScrollToCurrentSubtitle) return;
 
@@ -353,15 +371,18 @@ export default function VideoPlayer({
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    setIsFullScreen(prev => !prev);
-    if (!isFullScreen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    // Recalculate layout or trigger re-render if necessary
-    window.dispatchEvent(new Event('resize'));
-  }, [isFullScreen]);
+    setIsFullScreen(prev => {
+      const next = !prev;
+      if (next) {
+        document.body.style.overflow = 'hidden';
+        setTimeout(focusPlayerWrapper, 0);
+      } else {
+        document.body.style.overflow = '';
+      }
+      window.dispatchEvent(new Event('resize'));
+      return next;
+    });
+  }, []);
 
   // --- New: Handle Escape key to exit pseudo-fullscreen ---
   useEffect(() => {
@@ -481,7 +502,7 @@ export default function VideoPlayer({
   useEffect(() => {
     const playerWrapper = playerRef?.current?.querySelector(
       '.native-video-player-wrapper'
-    ); // Target the inner wrapper
+    );
 
     if (isFullScreen && playerWrapper) {
       // Initially show controls and start timer

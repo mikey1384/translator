@@ -665,6 +665,11 @@ export default function NativeVideoPlayer({
           overflow: hidden;
           transform: translateZ(0);
           will-change: transform;
+          &:focus,
+          &:focus-visible {
+            outline: none;
+            box-shadow: none;
+          }
         ` + ' native-video-player-wrapper'
       }
       tabIndex={-1} /* Make container focusable to capture keyboard events */
@@ -673,6 +678,13 @@ export default function NativeVideoPlayer({
       <video
         ref={videoRef}
         tabIndex={0}
+        className={css`
+          &:focus,
+          &:focus-visible {
+            outline: none;
+            box-shadow: none;
+          }
+        `}
         style={{
           width: '100%',
           height: '100%',
