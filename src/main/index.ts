@@ -235,10 +235,10 @@ try {
     if (operationId.startsWith('render-')) {
       const job = getActiveRenderJob(operationId);
       if (job) {
-        // Kill any FFmpeg processes
         job.processes.forEach(proc => {
           try {
-            proc.kill('SIGINT');
+            const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
+            proc.kill(sig);
           } catch {
             /* ignore */
           }
