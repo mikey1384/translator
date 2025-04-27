@@ -1157,9 +1157,7 @@ function extendShortSubtitleGaps(
       log.info(
         `[GapCheck IN-PLACE Index ${i}] ADJUSTING end time for segment at index ${i} from ${currentEndTime.toFixed(4)} to ${nextStartTime.toFixed(4)}.`
       );
-      // --- Apply the change DIRECTLY to the segment in the input array ---
-      currentSegment.end = nextStartTime; // Modify the .end property of the object at index i
-      // --- End Change ---
+      currentSegment.end = nextStartTime;
     } else {
       log.debug(`[GapCheck IN-PLACE Index ${i}] NO adjustment needed.`);
     }
@@ -1169,49 +1167,41 @@ function extendShortSubtitleGaps(
     `[extendShortSubtitleGaps IN-PLACE] Output segments (first 5): ${JSON.stringify(segments.slice(0, 5), null, 2)}`
   );
 
-  // Return the mutated array
   return segments;
 }
 
-function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
-  if (!segments || segments.length < 2) {
-    return segments;
-  }
+function fillBlankTranslations(
+  segments: SrtSegment[],
+  carryThreshold: number = SUBTITLE_GAP_THRESHOLD
+): SrtSegment[] {
+  if (segments.length < 2) return segments;
 
-  const adjustedSegments = segments.map(segment => ({ ...segment }));
-  let lastGoodTranslation = ''; // Track the last non-blank translation
+  let lastGoodIdx = -1; // remember index of last good line
+  const out = segments.map((seg, idx) => {
+    const [orig, trans = ''] = seg.text.split('###TRANSLATION_MARKER###');
 
-  for (const currentSegment of adjustedSegments) {
-    const currentParts = currentSegment.text.split('###TRANSLATION_MARKER###');
-    const currentOriginal = currentParts[0] || '';
-    const currentTranslation = currentParts[1] || ''; // Default to blank if no marker/translation
-
-    // Check if the current translation is effectively blank
-    if (currentTranslation.trim() !== '') {
-      // Not blank: update lastGoodTranslation and continue
-      lastGoodTranslation = currentTranslation.trim();
-      continue;
+    if (trans.trim() !== '') {
+      lastGoodIdx = idx;
+      return seg;
     }
 
-    if (lastGoodTranslation) {
-      currentSegment.text = `${currentOriginal}###TRANSLATION_MARKER###${lastGoodTranslation}`;
+    if (
+      lastGoodIdx >= 0 &&
+      seg.start - segments[lastGoodIdx].end <= carryThreshold
+    ) {
+      const carry = segments[lastGoodIdx].text.split(
+        '###TRANSLATION_MARKER###'
+      )[1]!; // previous translation
+      return {
+        ...seg,
+        text: `${orig}###TRANSLATION_MARKER###${carry}`,
+      };
     }
-  }
 
-  const remainingBlanks = adjustedSegments.filter(
-    s =>
-      s.text.endsWith('###TRANSLATION_MARKER###') ||
-      s.text.split('###TRANSLATION_MARKER###')[1]?.trim() === ''
-  ).length;
-  if (remainingBlanks > 0) {
-    // Only log if there are blanks
-    log.debug(
-      `[fillBlankTranslations] Found ${remainingBlanks} segments still blank after processing.`
-    );
-  }
-  // --- END CHANGE 3 ---
+    return seg;
+  });
 
-  return adjustedSegments;
+  return out;
 }
 
 export async function callOpenAIChat({
