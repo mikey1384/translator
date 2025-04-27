@@ -724,7 +724,6 @@ async function transcribeChunk({
   signal,
   openai,
   operationId,
-  // NEW: Additional param for context prompt
   promptContext,
 }: {
   chunkIndex: number;
