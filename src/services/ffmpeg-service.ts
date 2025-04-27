@@ -327,6 +327,7 @@ export class FFmpegService {
     progressCallback,
     env,
     filePath,
+    signal,
   }: {
     args: string[];
     operationId?: string;
@@ -334,9 +335,11 @@ export class FFmpegService {
     progressCallback?: (progress: number) => void;
     env?: NodeJS.ProcessEnv;
     filePath?: string;
+    signal?: AbortSignal;
   }): Promise<void> {
-    // Ensure the base temporary directory exists right before spawning
-    // This guards against it being deleted after service initialization.
+    if (signal?.aborted) {
+      throw new FFmpegError('Operation aborted');
+    }
     try {
       if (!fs.existsSync(this.tempDir)) {
         log.info(
@@ -503,19 +506,16 @@ export class FFmpegService {
     });
   }
 
-  async extractAudioSegment({
-    inputPath,
-    outputPath,
-    startTime,
-    duration,
-    operationId,
-  }: {
+  async extractAudioSegment(opts: {
     inputPath: string;
     outputPath: string;
     startTime: number;
     duration: number;
     operationId?: string;
+    signal?: AbortSignal;
   }): Promise<string> {
+    const { inputPath, outputPath, startTime, duration, operationId, signal } =
+      opts;
     const args = [
       '-y',
       '-ss',
@@ -525,42 +525,26 @@ export class FFmpegService {
       '-i',
       inputPath,
       '-vn',
-
-      // optional NR / gate (unchanged)
       '-af',
       'afftdn=nf=-25,agate=threshold=-30dB',
-
-      // resample to 16 kHz mono
       '-ar',
       '16000',
       '-ac',
       '1',
-
-      /* ---------- encode as MP3 ---------- */
       '-c:a',
-      'libmp3lame', // MP3 codec
+      'libmp3lame',
       '-b:a',
-      '96k', // or: -q:a 5  (VBR quality 5 ≈ 120 kbps stereo ≈ 60 kbps mono)
+      '64k',
       '-f',
-      'mp3', // container = mp3 (raw)
-
-      outputPath, // must end in “.mp3”
+      'mp3',
+      outputPath,
     ];
 
-    try {
-      log.info(
-        `[FFmpeg] Extracting segment ${startTime}s – ${startTime + duration}s`
-      );
-      await this.runFFmpeg({ args, operationId, filePath: inputPath });
-
-      if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
-        throw new FFmpegError('Output audio segment is empty or missing.');
-      }
-      return outputPath;
-    } catch (error) {
-      log.error('Error extracting audio segment:', error);
-      throw new FFmpegError(`Failed to extract audio segment: ${error}`);
+    await this.runFFmpeg({ args, operationId, filePath: inputPath, signal });
+    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+      throw new FFmpegError('Output audio segment is empty or missing.');
     }
+    return outputPath;
   }
 
   async detectSilenceBoundaries(inputAudioPath: string): Promise<{

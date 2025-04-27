@@ -27,6 +27,7 @@ const MERGE_GAP_SEC = 0.3;
 const MAX_SPEECHLESS_SEC = 8;
 const NO_SPEECH_PROB_THRESHOLD = 0.95;
 const AVG_LOGPROB_THRESHOLD = -3;
+const MAX_PROMPT_CHARS = 600;
 
 const MIN_CHUNK_DURATION_SEC = 1;
 const SUBTITLE_GAP_THRESHOLD = 3;
@@ -441,7 +442,6 @@ export async function generateSubtitlesFromAudio({
       stage: 'Analyzing audio for chunk boundaries...',
     });
 
-    // detect + normalize + merge
     const raw = await detectSpeechIntervals({ inputPath: inputAudioPath });
     const cleaned = normalizeSpeechIntervals({ intervals: raw });
     const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC).flatMap(iv =>
@@ -450,7 +450,6 @@ export async function generateSubtitlesFromAudio({
         : [iv]
     );
 
-    // build minimum-length chunks, applying pre-/post-padding
     let idx = 0;
     let chunkStart: number | null = null;
     let currEnd = 0;
@@ -464,7 +463,9 @@ export async function generateSubtitlesFromAudio({
 
       if (e <= s) {
         log.warn(
-          `[${operationId}] Skipping zero/negative duration VAD block after padding: ${s.toFixed(2)}-${e.toFixed(2)}`
+          `[${operationId}] Skipping zero/negative duration VAD block after padding: ${s.toFixed(
+            2
+          )}-${e.toFixed(2)}`
         );
         continue;
       }
@@ -487,7 +488,9 @@ export async function generateSubtitlesFromAudio({
         chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
       } else {
         log.warn(
-          `[${operationId}] Skipping final chunk due to zero/negative duration: ${chunkStart.toFixed(2)}-${currEnd.toFixed(2)}`
+          `[${operationId}] Skipping final chunk due to zero/negative duration: ${chunkStart.toFixed(
+            2
+          )}-${currEnd.toFixed(2)}`
         );
       }
     }
@@ -501,29 +504,39 @@ export async function generateSubtitlesFromAudio({
     });
 
     // -------------------------------------------------------------------------
-    // 3. Parallel transcription
+    // 3. Parallel transcription, batch by batch
     // -------------------------------------------------------------------------
     progressCallback?.({
       percent: PROGRESS_TRANSCRIPTION_START,
       stage: `Starting transcription of ${chunks.length} chunks...`,
     });
 
-    let done = 0;
+    // NEW: Rolling context string for each batch
+    let batchContext = '';
 
+    let done = 0;
     for (let b = 0; b < chunks.length; b += TRANSCRIPTION_BATCH_SIZE) {
       const slice = chunks.slice(b, b + TRANSCRIPTION_BATCH_SIZE);
 
       log.info(
-        `[${operationId}] Processing transcription batch ${Math.ceil((b + slice.length) / TRANSCRIPTION_BATCH_SIZE)}/` +
-          `${Math.ceil(chunks.length / TRANSCRIPTION_BATCH_SIZE)} (Chunks ${b + 1}-${b + slice.length})`
+        `[${operationId}] Processing transcription batch ${Math.ceil(
+          (b + slice.length) / TRANSCRIPTION_BATCH_SIZE
+        )}/${Math.ceil(chunks.length / TRANSCRIPTION_BATCH_SIZE)} (Chunks ${
+          b + 1
+        }-${b + slice.length})`
       );
+
+      // Build a prompt for THIS batch from the previous batch's transcript
+      const promptForSlice = buildPrompt(batchContext);
 
       const segArraysPromises = slice.map(async meta => {
         if (signal?.aborted) throw new Error('Cancelled');
 
         if (meta.end <= meta.start) {
           log.warn(
-            `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
+            `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(
+              2
+            )}-${meta.end.toFixed(2)}`
           );
           return [];
         }
@@ -547,7 +560,7 @@ export async function generateSubtitlesFromAudio({
 
           if (signal?.aborted) throw new Error('Cancelled');
 
-          // Now transcribe that chunk (implementation not shown here)
+          // Pass the batch-level prompt
           const segs = await transcribeChunk({
             chunkIndex: meta.index,
             chunkPath: mp3Path,
@@ -555,6 +568,7 @@ export async function generateSubtitlesFromAudio({
             signal,
             openai,
             operationId: operationId as string,
+            promptContext: promptForSlice,
           });
           return segs;
         } catch (chunkError: any) {
@@ -579,7 +593,25 @@ export async function generateSubtitlesFromAudio({
 
       // gather all segments from this batch
       const segArrays = await Promise.all(segArraysPromises);
-      segArrays.flat().forEach(s => overallSegments.push(s));
+      const thisBatchSegments = segArrays
+        .flat()
+        .sort((a, b) => a.start - b.start);
+      for (let i = 1; i < thisBatchSegments.length; ++i) {
+        if (thisBatchSegments[i].text === thisBatchSegments[i - 1].text) {
+          thisBatchSegments[i].text = ''; // or drop segment altogether
+        }
+      }
+
+      // Merge them into the global store
+      overallSegments.push(...thisBatchSegments);
+
+      // ---------------------------------------------------------
+      // AFTER we know all transcripts for this slice, update
+      // batchContext so the NEXT loop iteration can use it
+      // ---------------------------------------------------------
+      const orderedText = thisBatchSegments.map(s => s.text).join(' ');
+      batchContext += ' ' + orderedText;
+      batchContext = buildPrompt(batchContext);
 
       // intermediate progress
       done += slice.length;
@@ -588,13 +620,14 @@ export async function generateSubtitlesFromAudio({
         (done / chunks.length) *
           (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
 
-      // build partial SRT
       const intermediateSrt = buildSrt(
         overallSegments.slice().sort((a, b) => a.start - b.start)
       );
       log.debug(
-        `[Transcription Loop] Built intermediateSrt (first 100 chars): ` +
-          `"${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
+        `[Transcription Loop] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(
+          0,
+          100
+        )}", Percent: ${Math.round(p)}`
       );
       progressCallback?.({
         percent: Math.round(p),
@@ -609,6 +642,7 @@ export async function generateSubtitlesFromAudio({
 
     overallSegments.sort((a, b) => a.start - b.start);
 
+    // optional "anchor" silence segments
     const anchors: SrtSegment[] = [];
     let tmpIdx = 0;
     for (let i = 1; i < overallSegments.length; i++) {
@@ -617,8 +651,8 @@ export async function generateSubtitlesFromAudio({
         anchors.push({
           index: ++tmpIdx,
           start: overallSegments[i - 1].end,
-          end: overallSegments[i - 1].end + 0.5, // half-second blank
-          text: '', // or '♪' if you'd like a visible note
+          end: overallSegments[i - 1].end + 0.5,
+          text: '',
         });
       }
     }
@@ -660,9 +694,6 @@ export async function generateSubtitlesFromAudio({
       throw new SubtitleProcessingError(error?.message || String(error));
     }
   } finally {
-    // -------------------------------------------------------------------------
-    // 10. Clean-up section
-    // -------------------------------------------------------------------------
     log.info(
       `[${operationId}] Cleaning up ${createdChunkPaths.length} temporary chunk files...`
     );
@@ -678,6 +709,12 @@ export async function generateSubtitlesFromAudio({
     );
     log.info(`[${operationId}] Finished cleaning up temporary chunk files.`);
   }
+
+  function buildPrompt(history: string) {
+    return history.length <= MAX_PROMPT_CHARS
+      ? history
+      : history.slice(-MAX_PROMPT_CHARS);
+  }
 }
 
 async function transcribeChunk({
@@ -687,6 +724,8 @@ async function transcribeChunk({
   signal,
   openai,
   operationId,
+  // NEW: Additional param for context prompt
+  promptContext,
 }: {
   chunkIndex: number;
   chunkPath: string;
@@ -694,13 +733,13 @@ async function transcribeChunk({
   signal?: AbortSignal;
   openai: OpenAI;
   operationId: string;
+  promptContext?: string; // ← NEW
 }): Promise<SrtSegment[]> {
-  // Check for cancellation signal before proceeding
   if (signal?.aborted) {
     log.info(
       `[${operationId}] Transcription for chunk ${chunkIndex} cancelled before API call.`
     );
-    throw new Error('Cancelled'); // Use 'Cancelled' to match other checks
+    throw new Error('Cancelled');
   }
 
   let fileStream: fs.ReadStream;
@@ -711,30 +750,33 @@ async function transcribeChunk({
       `[${operationId}] Failed to create read stream for chunk ${chunkIndex} (${chunkPath}):`,
       streamError?.message || streamError
     );
-    return []; // Cannot proceed without stream
+    return [];
   }
 
   try {
     log.debug(
-      `[${operationId}] Sending chunk ${chunkIndex} (${(fs.statSync(chunkPath).size / (1024 * 1024)).toFixed(2)} MB) to Whisper API.`
+      `[${operationId}] Sending chunk ${chunkIndex} (${(
+        fs.statSync(chunkPath).size /
+        (1024 * 1024)
+      ).toFixed(2)} MB) to Whisper API.`
     );
 
+    // Pass the batch context to the prompt
     const res = await openai.audio.transcriptions.create(
       {
         model: AI_MODELS.WHISPER.id,
         file: fileStream,
         response_format: 'verbose_json',
         temperature: 0,
-        prompt: '',
+        prompt: promptContext ?? '', // ← NEW
       },
-      { signal } // Pass signal for cancellation during API call
+      { signal }
     );
 
     log.debug(
       `[${operationId}] Received transcription response for chunk ${chunkIndex}.`
     );
 
-    // Define simpler type for expected segment structure
     type WhisperSegment = {
       start: number;
       end: number;
@@ -743,9 +785,7 @@ async function transcribeChunk({
       no_speech_prob: number;
     };
 
-    // Safely cast and access segments
     const segments = (res as any)?.segments as WhisperSegment[] | undefined;
-
     if (!Array.isArray(segments)) {
       log.warn(
         `[${operationId}] Chunk ${chunkIndex}: Invalid or missing segments in Whisper response.`
@@ -757,7 +797,6 @@ async function transcribeChunk({
       `[${operationId}] Chunk ${chunkIndex}: Received ${segments.length} raw segments from Whisper.`
     );
 
-    // Filter based on Whisper's confidence and map to SrtSegment
     const srtSegments: SrtSegment[] = segments
       .filter(s => {
         const isSpeech =
@@ -765,16 +804,18 @@ async function transcribeChunk({
           s.avg_logprob > AVG_LOGPROB_THRESHOLD;
         if (!isSpeech) {
           log.debug(
-            `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(2)}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
+            `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(
+              2
+            )}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
           );
         }
         return isSpeech;
       })
       .map((s, i) => {
         const absoluteStart = s.start + startTime;
-        const absoluteEnd = Math.max(s.end + startTime, absoluteStart); // Ensure end >= start
+        const absoluteEnd = Math.max(s.end + startTime, absoluteStart);
         return {
-          index: i + 1, // Re-index after filtering
+          index: i + 1,
           start: absoluteStart,
           end: absoluteEnd,
           text: s.text.trim(),
@@ -782,11 +823,12 @@ async function transcribeChunk({
       });
 
     log.debug(
-      `[${operationId}] Chunk ${chunkIndex}: Produced ${srtSegments.length} segments after confidence filtering.`
+      `[${operationId}] Chunk ${chunkIndex}: Produced ${
+        srtSegments.length
+      } segments after confidence filtering.`
     );
     return srtSegments;
   } catch (error: any) {
-    // Handle API errors, including cancellations
     if (
       error.name === 'AbortError' ||
       (error instanceof Error && error.message === 'Cancelled') ||
@@ -795,18 +837,16 @@ async function transcribeChunk({
       log.info(
         `[${operationId}] Transcription for chunk ${chunkIndex} was cancelled.`
       );
-      return []; // Don't re-throw cancellation, allow batch to continue
+      return [];
     } else {
       log.error(
         `[${operationId}] Error transcribing chunk ${chunkIndex}:`,
         error?.message || error
       );
-      // Consider if specific API errors (like 429 rate limit) need retry logic here or rely on higher level retries
-      return []; // Return empty on other errors as well
+      return [];
     }
   }
 }
-
 async function translateBatch({
   batch,
   targetLang,
