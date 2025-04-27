@@ -49,6 +49,7 @@ const PauseIcon = ({ size = '64px', color = '#fff' }: IconProps) => (
 );
 
 interface NativeVideoPlayerProps {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   videoUrl: string;
   subtitles: {
     start: number | string;
@@ -63,6 +64,7 @@ interface NativeVideoPlayerProps {
 }
 
 export default function NativeVideoPlayer({
+  videoRef,
   videoUrl,
   subtitles,
   onPlayerReady,
@@ -71,7 +73,6 @@ export default function NativeVideoPlayer({
   baseFontSize,
   stylePreset,
 }: NativeVideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for timeout
 
@@ -131,35 +132,45 @@ export default function NativeVideoPlayer({
       containerRef?.current.focus();
       console.log('Video clicked, local container focused');
     }
-  }, [parentRef]);
+  }, [parentRef, videoRef]);
 
-  // Keyboard event handler for video seeking
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      console.log('Video container keydown:', event.key);
+      if (!videoRef.current) return;
 
-      if (!videoRef?.current) return;
-
-      const videoElement = videoRef?.current;
-      const currentTime = videoElement.currentTime;
-      const duration = videoElement.duration || 0;
+      const video = videoRef.current;
+      const time = video.currentTime;
+      const duration = video.duration || 0;
 
       switch (event.key) {
-        case 'ArrowRight':
-          // Skip forward 10 seconds
-          console.log('Skipping forward 10 seconds');
-          videoElement.currentTime = Math.min(currentTime + 10, duration);
-          event.preventDefault();
-          break;
         case 'ArrowLeft':
-          // Skip backward 10 seconds
-          console.log('Skipping backward 10 seconds');
-          videoElement.currentTime = Math.max(currentTime - 10, 0);
-          event.preventDefault();
+          video.currentTime = Math.max(time - 10, 0);
           break;
+
+        case 'ArrowRight':
+          video.currentTime = Math.min(time + 10, duration);
+          break;
+
+        /* SPACE  ── play / pause */
+        case ' ':
+        case 'Space':
+        case 'Spacebar': // legacy
+          if (video.paused) {
+            video.play().catch(console.error);
+          } else {
+            video.pause();
+          }
+          break;
+
+        default:
+          return; // we don’t care → let it bubble
       }
+
+      /* ← we handled it: block further handling */
+      event.preventDefault(); // stops page-scroll
+      event.stopPropagation(); // stops the “expand” shortcut above us
     },
-    []
+    [videoRef]
   );
 
   // When video URL changes, check if it's a file:// URL
@@ -457,7 +468,7 @@ export default function NativeVideoPlayer({
       videoElement.removeEventListener('timeupdate', handleTimeUpdateExtended);
       videoElement.removeEventListener('waiting', handleWaiting);
     };
-  }, [videoUrl, onPlayerReady, isFileUrlVideo]);
+  }, [videoUrl, onPlayerReady, isFileUrlVideo, videoRef]);
 
   useEffect(() => {
     const videoElement = videoRef?.current;
@@ -504,7 +515,7 @@ export default function NativeVideoPlayer({
         }
       }
     }
-  }, [subtitles, activeSubtitle]);
+  }, [subtitles, activeSubtitle, videoRef]);
 
   useEffect(() => {
     // Handle subtitle visibility with small delay for smooth appearance
@@ -568,7 +579,7 @@ export default function NativeVideoPlayer({
         clearTimeout(indicatorTimeoutRef?.current);
       }
     };
-  }, []);
+  }, [videoRef]);
 
   useEffect(() => {
     const videoElement = videoRef?.current;
@@ -597,7 +608,7 @@ export default function NativeVideoPlayer({
       videoElement.removeEventListener('loadedmetadata', handleMetadata);
     };
     // Add dependencies that signal video source change or readiness
-  }, [videoUrl]); // Re-run if video source changes
+  }, [videoUrl, videoRef]); // Re-run if video source changes
 
   useEffect(() => {
     const videoElement = videoRef?.current;
@@ -625,7 +636,7 @@ export default function NativeVideoPlayer({
       resizeObserver.unobserve(videoElement);
       resizeObserver.disconnect();
     };
-  }, [displayHeight]); // Re-run if videoRef changes (though unlikely)
+  }, [displayHeight, videoRef]); // Re-run if videoRef changes (though unlikely)
 
   // Calculate the effective display font size
   const calculateDisplayFontSize = () => {
@@ -661,6 +672,7 @@ export default function NativeVideoPlayer({
     >
       <video
         ref={videoRef}
+        tabIndex={0}
         style={{
           width: '100%',
           height: '100%',
@@ -678,7 +690,10 @@ export default function NativeVideoPlayer({
         crossOrigin="anonymous"
         controlsList="nodownload"
         disablePictureInPicture
-        onClick={handlePlayerClick}
+        onClick={e => {
+          handlePlayerClick();
+          (e.currentTarget as HTMLVideoElement).focus();
+        }}
         onEnded={() => console.log('Video ended')}
         onError={() => setErrorMessage('Video playback error')}
       >

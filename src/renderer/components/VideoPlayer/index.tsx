@@ -239,6 +239,7 @@ export default function VideoPlayer({
   mergeStylePreset,
   downloadQuality,
   onSetDownloadQuality,
+  videoRef,
 }: {
   isProgressBarVisible: boolean;
   videoUrl: string;
@@ -257,6 +258,7 @@ export default function VideoPlayer({
   mergeStylePreset: SubtitleStylePresetKey;
   downloadQuality: VideoQuality;
   onSetDownloadQuality: (quality: VideoQuality) => void;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -620,6 +622,7 @@ export default function VideoPlayer({
           onMouseLeave={handlePlayerWrapperLeave}
         >
           <NativeVideoPlayer
+            videoRef={videoRef}
             videoUrl={videoUrl}
             subtitles={subtitles}
             onPlayerReady={handlePlayerReady}
@@ -706,7 +709,10 @@ export default function VideoPlayer({
 
             {/* Add Fullscreen Button */}
             <Button
-              onClick={toggleFullscreen}
+              onClick={() => {
+                toggleFullscreen();
+                playerRef.current?.focus();
+              }}
               variant="secondary"
               size="sm"
               className={

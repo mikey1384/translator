@@ -182,6 +182,7 @@ function AppContent() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoFilePath, setVideoFilePath] = useState<string | null>(null);
   const [isVideoPlayerReady, setIsVideoPlayerReady] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const saveCurrentPositionImmediately = useCallback(
     async (filePathToSave: string | null, player: HTMLVideoElement | null) => {
@@ -724,6 +725,7 @@ function AppContent() {
           <>
             {videoUrl && (
               <VideoPlayer
+                videoRef={videoRef}
                 videoUrl={videoUrl}
                 subtitles={subtitleSegments}
                 onPlayerReady={handleVideoPlayerReady}
