@@ -1194,6 +1194,9 @@ function AppContent() {
             `Error processing final subtitles: ${parseError instanceof Error ? parseError.message : String(parseError)}`
           );
         }
+      } else if (result.cancelled) {
+        setIsGenerating(false);
+        return;
       } else {
         setError(
           'No subtitles were generated. This could be due to a language not being supported, audio quality, internet connection issues, or the video being too short.'

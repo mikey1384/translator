@@ -114,7 +114,6 @@ export async function handleGenerateSubtitles(
     return {
       success: !isCancel,
       cancelled: isCancel,
-      error: isCancel ? null : error.message || String(error),
       operationId,
     };
   }
