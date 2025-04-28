@@ -318,6 +318,7 @@ export interface ReviewTranslationBatchArgs {
 }
 
 export interface RenderSubtitlesOptions {
+  fontSizePx: number;
   operationId: string;
   srtContent: string;
   outputDir: string;
