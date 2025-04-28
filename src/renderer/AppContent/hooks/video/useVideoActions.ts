@@ -1,7 +1,14 @@
-import { nativePause, nativePlay } from '../../../native-player.js';
-import { nativeIsPlaying } from '../../../native-player.js';
 import { useCallback } from 'react';
+import {
+  nativePause,
+  nativePlay,
+  nativeIsPlaying,
+} from '../../../native-player.js';
 
+/**
+ * Extra prop: setIsAudioOnly – lets the parent know whether
+ * the loaded media has a video track or not
+ */
 export function useVideoActions({
   setVideoFile,
   setVideoUrl,
@@ -10,6 +17,7 @@ export function useVideoActions({
   setOriginalSrtFilePath,
   setSaveError,
   setIsVideoPlayerReady,
+  setIsAudioOnly, // <-- [NEW]
   videoUrl,
 }: {
   setVideoFile: (value: File | null) => void;
@@ -19,77 +27,109 @@ export function useVideoActions({
   setOriginalSrtFilePath: (value: string) => void;
   setSaveError: (value: string) => void;
   setIsVideoPlayerReady: (value: boolean) => void;
+  setIsAudioOnly: (value: boolean) => void; // <-- [NEW]
   videoUrl: string;
 }) {
-  function handleSetVideoFile(
+  /**
+   * -------------------------------------------------------------
+   * 1. Helper – run ffprobe in the main-process and update state
+   * -------------------------------------------------------------
+   */
+  async function analyseFile(path: string) {
+    try {
+      // (Assumes window.electron.hasVideoTrack is defined in preload)
+      const hasVideo = await window.electron.hasVideoTrack(path);
+      setIsAudioOnly(!hasVideo); // If no video track => isAudioOnly = true
+    } catch (err) {
+      console.error('[useVideoActions] hasVideoTrack probe failed:', err);
+      // Fall back: treat as if it has video
+      setIsAudioOnly(false);
+    }
+  }
+
+  /**
+   * -------------------------------------------------------------
+   * 2. Main setter – handleSetVideoFile
+   * -------------------------------------------------------------
+   */
+  async function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
   ) {
     setIsVideoPlayerReady(false);
 
+    // Revoke any old blob URL to avoid memory leaks
     if (videoUrl && videoUrl.startsWith('blob:')) {
       URL.revokeObjectURL(videoUrl);
     }
 
+    // ---------- (A) object with explicit .path ----------
     if (
+      fileData &&
       typeof fileData === 'object' &&
-      fileData !== null &&
       !(fileData instanceof File) &&
       'path' in fileData &&
       fileData.path
     ) {
-      console.log(
-        '[App.tsx handleSetVideoFile] Branch: Detected object with path (priority check).'
-      );
-      const minimalFileObject = new File([], fileData.name, {
-        type: 'video/*',
-      });
-      (minimalFileObject as any).path = fileData.path;
-      setVideoFile(minimalFileObject as File);
+      const minimalFileObj = new File([], fileData.name, { type: 'video/*' });
+      (minimalFileObj as any).path = fileData.path;
+
+      setVideoFile(minimalFileObj as File);
       setVideoFilePath(fileData.path);
+
       const encodedPath = encodeURI(fileData.path.replace(/\\/g, '/'));
       setVideoUrl(`file://${encodedPath}`);
-      console.log(
-        '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
-        fileData.path
-      );
-    } else if (
+
+      // [NEW] check if audio-only
+      await analyseFile(fileData.path);
+    }
+
+    // ---------- (B) “fake” File object from a blob or URL download ----------
+    else if (
+      fileData &&
       typeof fileData === 'object' &&
-      fileData !== null &&
       (fileData as any)._blobUrl
     ) {
-      console.log('[App.tsx handleSetVideoFile] Branch: Detected _blobUrl.');
       const blobFileData = fileData as any;
+
       setVideoFile(blobFileData as File);
       setVideoUrl(blobFileData._blobUrl);
       setVideoFilePath(blobFileData._originalPath || null);
-      console.log(
-        '[App.tsx handleSetVideoFile] Setting videoFilePath to:',
-        blobFileData._originalPath || null
-      );
-    } else if (fileData instanceof File) {
-      console.log(
-        '[App.tsx handleSetVideoFile] Branch: Detected instanceof File.'
-      );
+
+      if (blobFileData._originalPath) {
+        await analyseFile(blobFileData._originalPath);
+      }
+    }
+
+    // ---------- (C) genuine File object from user’s machine ----------
+    else if (fileData instanceof File) {
       setVideoFile(fileData);
       setVideoFilePath(fileData.path);
+
       const blobUrl = URL.createObjectURL(fileData);
       setVideoUrl(blobUrl);
-    } else {
-      console.warn(
-        '[App.tsx handleSetVideoFile] Branch: Fallback/unexpected case.',
-        fileData
-      );
+
+      // [NEW] check if audio-only
+      await analyseFile(fileData.path);
+    }
+
+    // ---------- (D) fallback / nothing ----------
+    else {
+      console.warn('[useVideoActions] Unexpected fileData:', fileData);
       setVideoFile(null);
       setVideoUrl('');
+      setIsAudioOnly(false); // fallback to “not audio-only”
     }
+
+    // Always reset playback to paused
     setIsPlaying(false);
   }
 
+  /**
+   * -------------------------------------------------------------
+   * 3. Misc helpers
+   * -------------------------------------------------------------
+   */
   function handleSrtFileLoaded(filePath: string) {
-    console.log(
-      '[AppContent] SRT file loaded, setting original path:',
-      filePath
-    );
     setOriginalSrtFilePath(filePath);
     setSaveError('');
   }
@@ -103,16 +143,20 @@ export function useVideoActions({
         await nativePlay();
         setIsPlaying(true);
       }
-    } catch (error) {
-      console.error('Error toggling play/pause:', error);
+    } catch (err) {
+      console.error('[useVideoActions] toggle play/pause error:', err);
     }
   }
 
   const handleVideoPlayerReady = useCallback(() => {
-    console.log('[VideoActions] Signaling Video player ready.');
     setIsVideoPlayerReady(true);
   }, [setIsVideoPlayerReady]);
 
+  /**
+   * -------------------------------------------------------------
+   * 4. Expose these functions
+   * -------------------------------------------------------------
+   */
   return {
     handleSetVideoFile,
     handleSrtFileLoaded,

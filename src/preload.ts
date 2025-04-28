@@ -180,7 +180,8 @@ const electronAPI = {
   // === Add Video Metadata Function ===
   getVideoMetadata: (filePath: string) =>
     ipcRenderer.invoke('get-video-metadata', filePath),
-  // === End Video Metadata Function ===
+  hasVideoTrack: (filePath: string): Promise<boolean> =>
+    ipcRenderer.invoke('has-video-track', filePath),
 
   // === Add functions for PNG Sequence Rendering ===
 

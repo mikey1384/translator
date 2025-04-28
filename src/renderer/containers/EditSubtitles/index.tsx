@@ -38,6 +38,7 @@ import FileInputButton from '../../components/FileInputButton.js';
 import { RenderSubtitlesOptions } from '../../../types/interface.js';
 
 export interface EditSubtitlesProps {
+  isAudioOnly: boolean;
   videoFile: File | null;
   videoFilePath?: string | null;
   isPlaying?: boolean;
@@ -75,6 +76,7 @@ export interface EditSubtitlesProps {
 }
 
 export function EditSubtitles({
+  isAudioOnly,
   videoFile,
   videoFilePath,
   isPlaying: isPlayingProp,
@@ -561,12 +563,11 @@ export function EditSubtitles({
             setMergeStylePreset={setMergeStylePreset}
             handleMergeVideoWithSubtitles={handleMergeVideoWithSubtitles}
             isMergingInProgress={isMergingInProgressProp || false}
-            videoFileExists={!!videoFile} // Ensure correct prop passed
+            videoFileExists={!!videoFile}
             subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)} // Ensure correct prop passed
           />
         </div>
       )}
-      {/* --- Restore Original Fixed Action Bar --- END --- */}
     </Section>
   );
 
@@ -769,31 +770,31 @@ export function EditSubtitles({
       setSaveError(msg);
       return;
     }
-    // Add checks for other required props if needed (duration, width, height, frameRate)
-    if (
-      !videoDurationProp ||
-      videoDurationProp <= 0 ||
-      !videoWidthProp ||
-      videoWidthProp <= 0 ||
-      !videoHeightProp ||
-      videoHeightProp <= 0 ||
-      !videoFrameRateProp ||
-      videoFrameRateProp <= 0
-    ) {
-      const missing = [
-        !videoDurationProp ? 'duration' : null,
-        !videoWidthProp ? 'width' : null,
-        !videoHeightProp ? 'height' : null,
-        !videoFrameRateProp ? 'frame rate' : null,
-      ]
-        .filter(Boolean)
-        .join(', ');
-      const msg = `Cannot merge: Missing required video metadata (${missing}).`;
-      console.error(`[EditSubtitles] ${msg}`);
-      setSaveError(msg);
-      return;
+    if (!isAudioOnly) {
+      if (
+        !videoDurationProp ||
+        videoDurationProp <= 0 ||
+        !videoWidthProp ||
+        videoWidthProp <= 0 ||
+        !videoHeightProp ||
+        videoHeightProp <= 0 ||
+        !videoFrameRateProp ||
+        videoFrameRateProp <= 0
+      ) {
+        const missing = [
+          !videoDurationProp ? 'duration' : null,
+          !videoWidthProp ? 'width' : null,
+          !videoHeightProp ? 'height' : null,
+          !videoFrameRateProp ? 'frame rate' : null,
+        ]
+          .filter(Boolean)
+          .join(', ');
+        const msg = `Cannot merge: Missing required video metadata (${missing}).`;
+        console.error(`[EditSubtitles] ${msg}`);
+        setSaveError(msg);
+        return;
+      }
     }
-    // --- End UPDATED Checks ---
 
     setMergeStage('Starting render...'); // Update progress stage
     const operationId = `render-${Date.now()}`;
@@ -807,16 +808,18 @@ export function EditSubtitles({
             `${s.index}\n${secondsToSrtTimeFn(s.start)} --> ${secondsToSrtTimeFn(s.end)}\n${s.text}\n`
         )
         .join('\n');
-      const videoDuration = videoDurationProp; // Already checked above
-      const videoWidth = videoWidthProp;
-      const videoHeight = videoHeightProp;
-      const frameRate = videoFrameRateProp;
+      const videoDuration = videoDurationProp ?? 0; // Already checked above
+      const videoWidth = isAudioOnly ? 1280 : (videoWidthProp ?? 1280);
+      const videoHeight = isAudioOnly ? 720 : (videoHeightProp ?? 720);
+      const frameRate = isAudioOnly ? 30 : (videoFrameRateProp ?? 30);
       const outputDir = '/placeholder/output/dir'; // Still a placeholder
 
       // Should not happen if validation above passed, but check srtContent just in case
       if (!srtContent) {
         throw new Error('Failed to build SRT content string.');
       }
+
+      const overlayMode = isAudioOnly ? 'blackVideo' : 'overlayOnVideo';
 
       // --- Create the CORRECT options object ---
       const renderOptions: RenderSubtitlesOptions = {
@@ -830,6 +833,7 @@ export function EditSubtitles({
         originalVideoPath: videoFilePath,
         fontSizePx: mergeFontSize,
         stylePreset: mergeStylePreset,
+        overlayMode,
       };
       // --- End Creating Options ---
 

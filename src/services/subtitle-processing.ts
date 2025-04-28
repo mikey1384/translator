@@ -19,8 +19,8 @@ import * as webrtcvadPackage from 'webrtcvad';
 const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
-const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2; // merge intervals closer than this
-const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.25; // 0 ⇒ keep even 1‑frame blips
+const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2;
+const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.05;
 const PRE_PAD_SEC = 0.05;
 const POST_PAD_SEC = 0;
 const MERGE_GAP_SEC = 0.3;

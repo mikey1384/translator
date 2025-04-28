@@ -91,7 +91,6 @@ try {
   const saveFileService = SaveFileService.getInstance();
   const fileManager = new FileManager(tempPath);
   const ffmpegService = new FFmpegService(tempPath);
-
   services = { saveFileService, fileManager, ffmpegService };
   log.info('[main.ts] Services Initialized.');
 
@@ -106,6 +105,15 @@ try {
   // --- IPC Handlers Registration ---
   log.info('[main.ts] Registering IPC Handlers...');
   // Utility
+  ipcMain.handle('has-video-track', async (_evt, filePath: string) => {
+    try {
+      return await services!.ffmpegService.hasVideoTrack(filePath);
+    } catch (err: any) {
+      log.error('[main] has-video-track error:', err);
+      return { success: false, error: err?.message ?? String(err) };
+    }
+  });
+
   ipcMain.handle('ping', utilityHandlers.handlePing);
   ipcMain.handle('show-message', utilityHandlers.handleShowMessage);
   // File Operations

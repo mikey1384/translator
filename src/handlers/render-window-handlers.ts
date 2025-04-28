@@ -3,6 +3,7 @@ import log from 'electron-log';
 import path from 'path';
 import fs from 'fs/promises';
 import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
+import { FFmpegService } from '../services/ffmpeg-service.js';
 import { parseSrt } from '../shared/helpers/index.js';
 import { getAssetsPath } from '../shared/helpers/paths.js';
 import { pathToFileURL } from 'url';
@@ -465,6 +466,36 @@ export function initializeRenderWindowHandlers(): void {
           assemblyProgressCallback
         );
 
+        const originalVideoPath = options.originalVideoPath;
+        if (!originalVideoPath) {
+          throw new Error('Original video path was not provided.');
+        }
+
+        // [ADDED] Decide which "video" to feed into the final merge
+        let videoForMerge = originalVideoPath;
+        if (options.overlayMode === 'blackVideo') {
+          const ffmpegService = new FFmpegService(app.getPath('temp')); // or your DI/injection
+          const blackVidPath = path.join(
+            tempDirPath,
+            `black_${operationId}.mp4`
+          );
+
+          log.info(
+            `[RenderWindowHandlers ${operationId}] Creating silent black video at: ${blackVidPath}`
+          );
+
+          // Create a black video with the desired resolution and duration
+          await ffmpegService.makeBlackVideo({
+            out: blackVidPath,
+            w: options.videoWidth,
+            h: options.videoHeight,
+            fps: options.frameRate,
+            dur: options.videoDuration,
+          });
+
+          videoForMerge = blackVidPath;
+        }
+
         if (!assemblyResult.success || !assemblyResult.outputPath) {
           throw new Error(
             assemblyResult.error || 'Optimized FFmpeg assembly failed.'
@@ -473,13 +504,6 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Optimized FFmpeg assembly successful: ${tempOverlayVideoPath}`
         );
-
-        // --- The rest of the logic (Final Merge, Save Dialog, Move) remains the same ---
-        const tempOverlayPath = assemblyResult.outputPath;
-        const originalVideoPath = options.originalVideoPath;
-        if (!originalVideoPath) {
-          throw new Error('Original video path was not provided.');
-        }
 
         const finalTempMergedPath = path.join(
           tempDirPath,
@@ -503,11 +527,13 @@ export function initializeRenderWindowHandlers(): void {
         };
 
         const mergeResult = await mergeVideoAndOverlay({
-          originalVideoPath: originalVideoPath,
-          overlayVideoPath: tempOverlayPath,
+          baseVideoPath: videoForMerge,
+          originalMediaPath: originalVideoPath,
+          overlayVideoPath: tempOverlayVideoPath,
           targetSavePath: finalTempMergedPath,
           operationId: operationId,
           videoDuration: options.videoDuration,
+          overlayMode: options.overlayMode ?? 'overlayOnVideo', // <-- [ADDED]
           progressCallback: mergeProgressCallback,
         });
 
@@ -900,9 +926,11 @@ async function assembleClipsFromStates(
 }
 
 interface MergeVideoAndOverlayOptions {
-  originalVideoPath: string;
+  baseVideoPath: string;
+  originalMediaPath: string;
   overlayVideoPath: string;
   targetSavePath: string;
+  overlayMode: 'overlayOnVideo' | 'blackVideo';
   operationId: string;
   videoDuration: number;
   progressCallback?: ProgressCallback;
@@ -912,9 +940,11 @@ async function mergeVideoAndOverlay(
   options: MergeVideoAndOverlayOptions
 ): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
   const {
-    originalVideoPath,
+    baseVideoPath,
+    originalMediaPath,
     overlayVideoPath,
     targetSavePath,
+    overlayMode,
     operationId,
     videoDuration,
     progressCallback,
@@ -924,10 +954,12 @@ async function mergeVideoAndOverlay(
     `[mergeVideoAndOverlay ${operationId}] Starting final merge. Duration: ${videoDuration}s.`
   );
 
+  // same progress-range code as before, if you have it:
   const MERGE_START_PERCENT = 40;
   const MERGE_END_PERCENT = 100;
   const MERGE_PROGRESS_RANGE = MERGE_END_PERCENT - MERGE_START_PERCENT;
 
+  // ensure overlay exists, etc...
   if (!(await fs.stat(overlayVideoPath).catch(() => false))) {
     progressCallback?.({
       operationId,
@@ -938,58 +970,93 @@ async function mergeVideoAndOverlay(
     throw new Error(`Overlay file not found: ${overlayVideoPath}`);
   }
 
+  // Decide which FFmpeg arguments to use based on overlayMode
+  // ---------------------------------------------------------
+  let videoCodec = 'libx264';
+  const outputPixFmtArgs: string[] = [];
+
+  if (os.platform() === 'darwin') {
+    log.info(
+      `[mergeVideoAndOverlay ${operationId}] macOS detected, using h264_videotoolbox.`
+    );
+    videoCodec = 'h264_videotoolbox';
+    outputPixFmtArgs.push('-pix_fmt', 'yuv420p');
+  } else {
+    log.info(
+      `[mergeVideoAndOverlay ${operationId}] Using software encoder libx264.`
+    );
+  }
+
+  // [CHANGED] Two different sets of inputs/filter mappings:
+  const ffmpegArgs =
+    overlayMode === 'overlayOnVideo'
+      ? [
+          // "overlayOnVideo" → burn alpha overlay on top of the real video
+          '-i',
+          baseVideoPath, // real video w/ audio
+          '-i',
+          overlayVideoPath, // alpha overlay
+          '-filter_complex',
+          '[0:v][1:v]overlay=format=auto[out]',
+          '-map',
+          '[out]',
+          '-map',
+          '0:a?', // copy audio from the real file
+          '-c:a',
+          'copy',
+          '-c:v',
+          videoCodec,
+          ...outputPixFmtArgs,
+          '-preset',
+          'veryfast',
+          '-crf',
+          '22',
+          '-progress',
+          'pipe:1',
+          '-y',
+          targetSavePath,
+        ]
+      : [
+          // "blackVideo" → burn alpha overlay on top of silent black video,
+          // then inject original audio from the real file
+          '-i',
+          baseVideoPath, // black video (silent)
+          '-i',
+          overlayVideoPath, // alpha overlay
+          '-i',
+          originalMediaPath, // real file for audio
+          '-filter_complex',
+          '[0:v][1:v]overlay=format=auto[out]',
+          '-map',
+          '[out]',
+          '-map',
+          '2:a', // i.e. "third input" is the real file audio
+          '-c:a',
+          'copy',
+          '-c:v',
+          videoCodec,
+          ...outputPixFmtArgs,
+          '-preset',
+          'veryfast',
+          '-crf',
+          '22',
+          '-progress',
+          'pipe:1',
+          '-y',
+          targetSavePath,
+        ];
+
+  log.info(
+    `[mergeVideoAndOverlay ${operationId}] FFmpeg command: ffmpeg ${ffmpegArgs.join(' ')}`
+  );
+
   return new Promise((resolve, reject) => {
     const ffmpegPath = 'ffmpeg';
-    let videoCodec = 'libx264';
-    const outputPixFmtArgs: string[] = [];
-
-    if (os.platform() === 'darwin') {
-      log.info(
-        `[mergeVideoAndOverlay ${operationId}] macOS detected, using h264_videotoolbox.`
-      );
-      videoCodec = 'h264_videotoolbox';
-      outputPixFmtArgs.push('-pix_fmt', 'yuv420p');
-    } else {
-      log.info(
-        `[mergeVideoAndOverlay ${operationId}] Using software encoder libx264.`
-      );
-    }
-
-    const args = [
-      '-i',
-      originalVideoPath,
-      '-i',
-      overlayVideoPath,
-      '-filter_complex',
-      '[0:v][1:v]overlay=format=auto[out]',
-      '-map',
-      '[out]',
-      '-map',
-      '0:a?',
-      '-c:a',
-      'copy',
-      '-c:v',
-      videoCodec,
-      ...outputPixFmtArgs,
-      '-preset',
-      'veryfast',
-      '-crf',
-      '22',
-      '-progress',
-      'pipe:1',
-      '-y',
-      targetSavePath,
-    ];
-
-    log.info(
-      `[mergeVideoAndOverlay ${operationId}] FFmpeg command: ${ffmpegPath} ${args.join(' ')}`
-    );
-
-    const mergeProcess = spawn(ffmpegPath, args, {
+    const mergeProcess = spawn(ffmpegPath, ffmpegArgs, {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    // O3 suggestion: track this FFmpeg process
+    // track the process in activeRenderJobs, as you do
     activeRenderJobs.get(operationId)?.processes.push(mergeProcess);
 
     let stdoutData = '';
@@ -1034,7 +1101,7 @@ async function mergeVideoAndOverlay(
     });
 
     mergeProcess.on('error', err => {
-      stderrData = stderrData.slice(-1024);
+      stderrData = stderrData.slice(-1024); // last 1KB
       log.error(
         `[mergeVideoAndOverlay ${operationId}] FFmpeg spawn error:`,
         err

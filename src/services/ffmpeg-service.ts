@@ -253,46 +253,6 @@ export class FFmpegService {
     });
   }
 
-  async getVideoResolution(
-    filePath: string
-  ): Promise<{ width: number; height: number }> {
-    return new Promise((resolve, reject) => {
-      const process = spawn(this.ffprobePath, [
-        '-v',
-        'error',
-        '-select_streams',
-        'v:0',
-        '-show_entries',
-        'stream=width,height',
-        '-of',
-        'csv=s=x:p=0',
-        filePath,
-      ]);
-      let output = '';
-      process.stdout.on('data', data => {
-        output += data.toString();
-      });
-      process.stderr.on('data', data => {
-        log.error(`FFprobe stderr for resolution check: ${data}`);
-      });
-      process.on('close', code => {
-        if (code === 0) {
-          const [width, height] = output.trim().split('x').map(Number);
-          if (!isNaN(width) && !isNaN(height)) {
-            resolve({ width, height });
-          } else {
-            reject(new FFmpegError('Could not parse video resolution'));
-          }
-        } else {
-          reject(new FFmpegError(`FFprobe exited with code ${code}`));
-        }
-      });
-      process.on('error', err => {
-        reject(new FFmpegError(`FFprobe error: ${err.message}`));
-      });
-    });
-  }
-
   async validateOutputFile(filePath: string): Promise<void> {
     if (!fs.existsSync(filePath)) {
       throw new FFmpegError(`Output file was not created: ${filePath}`);
@@ -718,128 +678,106 @@ export class FFmpegService {
     frameRate: number;
   }> {
     return new Promise((resolve, reject) => {
-      const ffprobePath = 'ffprobe'; // Assume ffprobe is in PATH
       const args = [
         '-v',
-        'error', // Hide informational messages, show only errors
-        '-select_streams',
-        'v:0', // Select only the first video stream
+        'error',
         '-show_entries',
-        'stream=width,height,duration,r_frame_rate', // Get specific entries
+        'stream=index,codec_type,width,height,r_frame_rate:format=duration',
         '-of',
-        'json', // Output format as JSON
-        inputPath, // Input file
+        'json',
+        inputPath,
       ];
 
-      log.info(`[FFmpegService] Getting metadata for: ${inputPath}`);
-      log.info(`[FFmpegService] Command: ${ffprobePath} ${args.join(' ')}`);
+      const child = execFile(this.ffprobePath, args);
+      let json = '',
+        stderr = '';
 
-      let jsonData = '';
-      let errorOutput = '';
+      child.stdout?.on('data', d => (json += d));
+      child.stderr?.on('data', d => (stderr += d));
 
-      try {
-        const child = execFile(ffprobePath, args);
+      child.on('error', err =>
+        reject(new FFmpegError(`ffprobe exec error: ${err.message}`))
+      );
 
-        child.stdout?.on('data', data => {
-          jsonData += data.toString();
-        });
-
-        child.stderr?.on('data', data => {
-          errorOutput += data.toString();
-        });
-
-        child.on('error', error => {
-          log.error(
-            `[FFmpegService] ffprobe execution error for ${inputPath}:`,
-            error
+      child.on('close', code => {
+        if (code !== 0) {
+          return reject(
+            new FFmpegError(
+              `ffprobe exited with ${code}. ${stderr || 'no stderr'}`
+            )
           );
-          reject(new Error(`ffprobe execution failed: ${error.message}`));
-        });
+        }
 
-        child.on('close', code => {
-          log.info(
-            `[FFmpegService] ffprobe process for ${inputPath} exited with code ${code}.`
-          );
-          if (code === 0) {
-            try {
-              // log.debug(`[FFmpegService] ffprobe JSON output: ${jsonData}`); // Optional: log raw JSON
-              const probeData = JSON.parse(jsonData);
-              if (!probeData.streams || probeData.streams.length === 0) {
-                throw new Error('No video streams found in ffprobe output.');
-              }
-              const stream = probeData.streams[0];
+        try {
+          const data = JSON.parse(json);
+          const streams = data.streams ?? [];
 
-              // Extract data, handling potential string formats
-              const width = parseInt(stream.width, 10);
-              const height = parseInt(stream.height, 10);
-              const duration = parseFloat(stream.duration); // Duration is usually a float string
+          // first video stream if it exists, else first stream (audio)
+          const v =
+            streams.find((s: any) => s.codec_type === 'video') ||
+            streams[0] ||
+            {};
 
-              // Frame rate can be "num/den" (e.g., "30000/1001") or a single number string
-              let frameRate = 0;
-              if (
-                typeof stream.r_frame_rate === 'string' &&
-                stream.r_frame_rate.includes('/')
-              ) {
-                const parts = stream.r_frame_rate.split('/');
-                const num = parseFloat(parts[0]);
-                const den = parseFloat(parts[1]);
-                if (den !== 0) {
-                  frameRate = num / den;
-                }
-              } else {
-                frameRate = parseFloat(stream.r_frame_rate);
-              }
+          const width = Number(v.width ?? 0) || 0;
+          const height = Number(v.height ?? 0) || 0;
 
-              if (
-                isNaN(width) ||
-                isNaN(height) ||
-                isNaN(duration) ||
-                isNaN(frameRate) ||
-                frameRate <= 0
-              ) {
-                throw new Error(
-                  'Failed to parse essential metadata (width, height, duration, frameRate).'
-                );
-              }
-
-              log.info(`[FFmpegService] Metadata extracted for ${inputPath}:`, {
-                duration,
-                width,
-                height,
-                frameRate,
-              });
-              resolve({ duration, width, height, frameRate });
-            } catch (parseError: any) {
-              log.error(
-                `[FFmpegService] Error parsing ffprobe JSON output for ${inputPath}:`,
-                parseError
-              );
-              log.error(`[FFmpegService] Raw JSON: ${jsonData}`);
-              log.error(`[FFmpegService] Stderr: ${errorOutput}`);
-              reject(
-                new Error(
-                  `Failed to parse ffprobe output: ${parseError.message}`
-                )
-              );
-            }
-          } else {
-            log.error(
-              `[FFmpegService] ffprobe failed for ${inputPath} (exit code ${code}). Stderr: ${errorOutput}`
-            );
-            reject(
-              new Error(
-                `ffprobe failed with exit code ${code}. Error: ${errorOutput || 'Unknown ffprobe error'}`
-              )
-            );
+          let frameRate = 0;
+          if (typeof v.r_frame_rate === 'string') {
+            const [num, den] = v.r_frame_rate.split('/');
+            frameRate = den && Number(den) ? Number(num) / Number(den) : 0;
           }
-        });
-      } catch (execError) {
-        log.error(
-          `[FFmpegService] Error trying to execute ffprobe for ${inputPath}:`,
-          execError
-        );
-        reject(execError);
-      }
+
+          const duration =
+            parseFloat(v.duration ?? data.format?.duration ?? '0') || 0;
+
+          if (!duration)
+            throw new Error('duration not found in ffprobe output');
+
+          resolve({ duration, width, height, frameRate });
+        } catch (err: any) {
+          reject(
+            new FFmpegError(`Failed to parse ffprobe output: ${err.message}`)
+          );
+        }
+      });
+    });
+  }
+
+  async makeBlackVideo({
+    out,
+    w,
+    h,
+    fps,
+    dur,
+  }: {
+    out: string;
+    w: number;
+    h: number;
+    fps: number;
+    dur: number;
+  }) {
+    await this.runFFmpeg({
+      args: [
+        '-f',
+        'lavfi',
+        '-i',
+        `color=c=black:s=${w}x${h}:r=${fps}`,
+        '-t',
+        String(dur),
+
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '22',
+
+        '-pix_fmt',
+        'yuv420p',
+        '-an',
+        out,
+      ],
+      operationId: 'makeBlackVideo',
     });
   }
 }

@@ -136,6 +136,3 @@ class SubtitleRendererClient {
 // Instantiate and export
 const subtitleRendererClient = new SubtitleRendererClient();
 export default subtitleRendererClient;
-
-// Export types needed by consumers of this client
-export type { RenderSubtitlesOptions };

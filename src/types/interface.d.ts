@@ -68,6 +68,7 @@ interface ExposedRenderResult {
 }
 
 interface ElectronAPI {
+  hasVideoTrack: (filePath: string) => Promise<boolean>;
   ping: () => Promise<string>;
   saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
   openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
@@ -327,6 +328,6 @@ export interface RenderSubtitlesOptions {
   videoHeight: number;
   frameRate: number;
   originalVideoPath?: string;
-  fontSizePx?: number;
+  overlayMode?: 'overlayOnVideo' | 'blackVideo';
   stylePreset?: SubtitleStylePresetKey;
 }

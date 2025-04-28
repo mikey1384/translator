@@ -18,6 +18,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher.js';
 import { SrtSegment } from '../../types/interface.js';
 import { VideoQuality } from '../../services/url-processor.js';
 import { useTranslation } from 'react-i18next';
+import { RenderSubtitlesOptions } from '../../types/interface.js';
 import ProgressArea from '../components/ProgressAreas/ProgressArea.js';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
@@ -28,9 +29,7 @@ import { useSubtitleActions } from './hooks/subtitles/useSubtitleActions.js';
 import { pageWrapperStyles, containerStyles, colors } from '../styles.js';
 import { css } from '@emotion/css';
 import { useVideoActions } from './hooks/video/useVideoActions.js';
-import subtitleRendererClient, {
-  RenderSubtitlesOptions,
-} from '../clients/subtitle-renderer-client.js';
+import subtitleRendererClient from '../clients/subtitle-renderer-client.js';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
 import { getNativePlayerInstance } from '../native-player.js';
 
@@ -45,8 +44,8 @@ interface ElectronProcessUrlResult {
   fileUrl?: string;
   originalVideoPath?: string;
   error?: string;
-  operationId: string; // It's required in the backend type
-  cancelled?: boolean; // Include the optional cancelled property
+  operationId: string;
+  cancelled?: boolean;
 }
 
 const headerRightGroupStyles = css`
@@ -143,6 +142,7 @@ function AppContent() {
   const [didDownloadFromUrl, setDidDownloadFromUrl] = useState<boolean>(false);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState<string>('original');
+  const [isAudioOnly, setIsAudioOnly] = useState(false);
 
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -293,6 +293,7 @@ function AppContent() {
     setVideoUrl,
     setVideoFilePath,
     setIsPlaying,
+    setIsAudioOnly,
     setOriginalSrtFilePath,
     setSaveError,
     setIsVideoPlayerReady,
@@ -779,6 +780,7 @@ function AppContent() {
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">
                 <EditSubtitles
+                  isAudioOnly={isAudioOnly}
                   videoFile={videoFile}
                   videoFilePath={videoFilePath}
                   isPlaying={isPlaying}
@@ -908,7 +910,7 @@ function AppContent() {
 
         // --- Call BOTH state update functions ---
         // 1. Set the File object and URL (for the player preview)
-        handleSetVideoFile({ path: filePath, name: fileName }); // Pass path and name info
+        await handleSetVideoFile({ path: filePath, name: fileName }); // Pass path and name info
 
         // 2. Set the file path state and fetch metadata
         await handleVideoFileSelected(filePath);
@@ -1260,15 +1262,17 @@ function AppContent() {
     setVideoMetadata(null);
     if (filePath) {
       try {
-        const result = await window.electron.getVideoMetadata(filePath);
-        if (result.success && result.metadata) {
-          setVideoMetadata(result.metadata);
-        } else {
-          console.error(
-            '[AppContent] Failed to get video metadata:',
-            result.error
-          );
-          setError(`Failed to get video metadata: ${result.error}`);
+        if (!isAudioOnly) {
+          const result = await window.electron.getVideoMetadata(filePath);
+          if (result.success && result.metadata) {
+            setVideoMetadata(result.metadata);
+          } else {
+            console.error(
+              '[AppContent] Failed to get video metadata:',
+              result.error
+            );
+            setError(`Failed to get video metadata: ${result.error}`);
+          }
         }
       } catch (error) {
         console.error(
