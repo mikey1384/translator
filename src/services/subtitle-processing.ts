@@ -29,7 +29,8 @@ const NO_SPEECH_PROB_THRESHOLD = 0.7;
 const AVG_LOGPROB_THRESHOLD = -4.5;
 const MAX_PROMPT_CHARS = 600;
 
-const MIN_CHUNK_DURATION_SEC = 10;
+const MIN_CHUNK_DURATION_SEC = 8;
+const MAX_CHUNK_DURATION_SEC = 15;
 const SUBTITLE_GAP_THRESHOLD = 5;
 const GAP_SEC = 3;
 
@@ -531,8 +532,7 @@ export async function generateSubtitlesFromAudio({
       }
       currEnd = e;
 
-      // If chunk reaches min length, push it
-      if (currEnd - chunkStart >= MIN_CHUNK_DURATION_SEC) {
+      if (currEnd - chunkStart >= MAX_CHUNK_DURATION_SEC) {
         chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
         chunkStart = null;
       }
@@ -920,24 +920,9 @@ async function translateBatch({
     return `Line ${absoluteIndex + 1}: ${segment.text}`;
   });
 
-  const beforeContext = batch.contextBefore
-    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
-    .join('\n');
-  const afterContext = batch.contextAfter
-    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
-    .join('\n');
-
   const combinedPrompt = `
 You are a professional subtitle translator. Translate the following subtitles
 into natural, fluent ${targetLang}.
-
-────────────────────
-⚠️  Surrounding context – DO NOT translate, use only to disambiguate
-Before:
-${beforeContext || '(none)'}
-After:
-${afterContext || '(none)'}
-────────────────────
 
 Here are the subtitles to translate:
 ${batchContextPrompt.join('\n')}
