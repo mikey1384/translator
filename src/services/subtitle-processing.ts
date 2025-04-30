@@ -36,6 +36,34 @@ const GAP_SEC = 3;
 // --- Concurrency Setting ---
 const TRANSCRIPTION_BATCH_SIZE = 50;
 
+// --------------------------------------------------------------------------
+// ★ NEW – review/polish constants (put just after TRANSCRIPTION_BATCH_SIZE)
+const REVIEW_BATCH_SIZE = 50;
+const REVIEW_OVERLAP_CTX = 8;
+const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
+
+type ReviewBatch = {
+  segments: SrtSegment[];
+  startIndex: number;
+  endIndex: number;
+  targetLang: string;
+  contextBefore: SrtSegment[];
+  contextAfter: SrtSegment[];
+};
+
+type TranslateBatchArgs = {
+  batch: {
+    segments: SrtSegment[];
+    startIndex: number;
+    endIndex: number;
+    contextBefore: SrtSegment[];
+    contextAfter: SrtSegment[];
+  };
+  targetLang: string;
+  operationId: string;
+  signal?: AbortSignal;
+};
+
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
   if (key) return key;
@@ -202,11 +230,22 @@ export async function extractSubtitlesFromVideo({
           batchStart,
           batchEnd
         );
+        const contextBefore = segmentsInProcess.slice(
+          Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
+          batchStart
+        );
+        const contextAfter = segmentsInProcess.slice(
+          batchEnd,
+          Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
+        );
+
         const translatedBatch = await translateBatch({
           batch: {
             segments: currentBatchOriginals.map(seg => ({ ...seg })),
             startIndex: batchStart,
             endIndex: batchEnd,
+            contextBefore,
+            contextAfter,
           },
           targetLang,
           operationId,
@@ -227,47 +266,65 @@ export async function extractSubtitlesFromVideo({
         });
       }
 
-      // --- Review Loop ---
-      const REVIEW_BATCH_SIZE = 50;
       for (
         let batchStart = 0;
         batchStart < segmentsInProcess.length;
-        batchStart += REVIEW_BATCH_SIZE
+        batchStart += REVIEW_STEP
       ) {
         const batchEnd = Math.min(
           batchStart + REVIEW_BATCH_SIZE,
           segmentsInProcess.length
         );
-        const currentBatchTranslated = segmentsInProcess.slice(
-          batchStart,
-          batchEnd
+
+        const reviewSlice = segmentsInProcess.slice(batchStart, batchEnd);
+        const contextBefore = segmentsInProcess.slice(
+          Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
+          batchStart
         );
-        const reviewedBatch = await reviewTranslationBatch({
+        const contextAfter = segmentsInProcess.slice(
+          batchEnd,
+          Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
+        );
+
+        const reviewed = await reviewTranslationBatch({
           batch: {
-            segments: currentBatchTranslated.map(seg => ({ ...seg })),
+            segments: reviewSlice,
             startIndex: batchStart,
             endIndex: batchEnd,
             targetLang,
+            contextBefore,
+            contextAfter,
           },
           operationId,
           signal,
         });
-        for (let i = 0; i < reviewedBatch.length; i++) {
-          segmentsInProcess[batchStart + i] = reviewedBatch[i];
+
+        // overwrite slice – newest version wins for overlaps
+        for (let i = 0; i < reviewed.length; i++) {
+          const globalIdx = batchStart + i;
+          if (
+            !segmentsInProcess[globalIdx].reviewedInBatch ||
+            segmentsInProcess[globalIdx].reviewedInBatch < batchStart
+          ) {
+            segmentsInProcess[globalIdx] = {
+              ...reviewed[i],
+              reviewedInBatch: batchStart,
+            };
+          }
         }
-        const overallProgress = (batchEnd / segmentsInProcess.length) * 100;
+
+        const overall = (batchEnd / segmentsInProcess.length) * 100;
         progressCallback?.({
-          percent: scaleProgress(overallProgress, STAGE_REVIEW),
+          percent: scaleProgress(overall, STAGE_REVIEW),
           stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
             segmentsInProcess.length / REVIEW_BATCH_SIZE
           )}`,
-          // Show cumulative reviewed SRT here if desired
           partialResult: buildSrt(segmentsInProcess),
           current: batchEnd,
           total: segmentsInProcess.length,
-          batchStartIndex: batchStart,
         });
       }
+
       // After loops, segmentsInProcess contains the translated/reviewed segments
       processedSegments = segmentsInProcess;
     }
@@ -314,7 +371,6 @@ export async function extractSubtitlesFromVideo({
       JSON.stringify(finalSegments.slice(25, 28), null, 2)
     );
 
-    // Step 6: Build Final SRT
     const finalSrtContent = buildSrt(finalSegments);
 
     // --- Final Steps ---
@@ -327,11 +383,10 @@ export async function extractSubtitlesFromVideo({
     progressCallback?.({
       percent: 100,
       stage: 'Processing complete!',
-      partialResult: finalSrtContent, // Send the final SRT string
-      current: finalSegments.length, // Use length of the final segments array
+      partialResult: finalSrtContent,
+      current: finalSegments.length,
       total: finalSegments.length,
     });
-    // --- END ADDED ---
 
     return { subtitles: finalSrtContent };
   } catch (error: any) {
@@ -846,6 +901,7 @@ async function transcribeChunk({
     }
   }
 }
+
 async function translateBatch({
   batch,
   targetLang,
@@ -863,14 +919,29 @@ async function translateBatch({
     return `Line ${absoluteIndex + 1}: ${segment.text}`;
   });
 
+  const beforeContext = batch.contextBefore
+    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
+    .join('\n');
+  const afterContext = batch.contextAfter
+    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
+    .join('\n');
+
   const combinedPrompt = `
-You are a professional subtitle translator. Translate the following subtitles 
+You are a professional subtitle translator. Translate the following subtitles
 into natural, fluent ${targetLang}.
+
+────────────────────
+⚠️  Surrounding context – DO NOT translate, use only to disambiguate
+Before:
+${beforeContext || '(none)'}
+After:
+${afterContext || '(none)'}
+────────────────────
 
 Here are the subtitles to translate:
 ${batchContextPrompt.join('\n')}
 
-Translate EACH line individually, preserving the line order. 
+Translate EACH line individually, preserving the line order.
 - **Never merge** multiple lines into one, and never skip or omit a line. 
 - If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
 - Provide exactly one translation for every line, in the same order, 
@@ -984,7 +1055,7 @@ async function reviewTranslationBatch({
   operationId,
   signal,
 }: {
-  batch: any;
+  batch: ReviewBatch;
   operationId: string;
   signal?: AbortSignal;
 }): Promise<any[]> {
@@ -1014,17 +1085,27 @@ async function reviewTranslationBatch({
     .map((item: any) => `[${item.index}] ${item.translation}`)
     .join('\n');
 
+  const beforeContext = batch.contextBefore
+    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
+    .join('\n');
+  const afterContext = batch.contextAfter
+    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
+    .join('\n');
+
   const prompt = `
 You are a professional subtitle reviewer for ${batch.targetLang}.
 Your task is to review and improve the provided batch of translated subtitles based on their original counterparts, focusing *only* on translation accuracy, natural phrasing, grammar, and style.
 
-**Input:**
-You will receive ${batch.segments.length} pairs of original and translated subtitles, prefixed with their line number (e.g., "[index] Original Text").
+--- Surrounding context (may help with pronouns, jokes, carries) ---
+${beforeContext}
 
-**Original Texts:**
+--- Batch to review (original vs. translation) ---
 ${originalTexts}
 
-**Translations to Review:**
+--- Following context ---
+${afterContext}
+
+--- Translations to review ---
 ${translatedTexts}
 
 **Strict Instructions:**

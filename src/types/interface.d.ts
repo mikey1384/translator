@@ -254,6 +254,8 @@ export interface SrtSegment {
   text: string;
   originalText?: string;
   translatedText?: string;
+  reviewedText?: string;
+  reviewedInBatch?: number;
 }
 
 export interface OpenFileResult {
