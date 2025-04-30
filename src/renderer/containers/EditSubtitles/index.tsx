@@ -62,6 +62,7 @@ export interface EditSubtitlesProps {
   saveError: string;
   setSaveError: Dispatch<SetStateAction<string>>;
   searchText?: string;
+  showOriginalText: boolean;
   onStartPngRenderRequest: (
     options: RenderSubtitlesOptions
   ) => Promise<{ success: boolean; error?: string; outputPath?: string }>;
@@ -86,6 +87,7 @@ export function EditSubtitles({
   isMergingInProgress: isMergingInProgressProp,
   onSelectVideoClick,
   setMergeStage,
+  showOriginalText,
   onSetMergeOperationId,
   editorRef,
   onSetSubtitleSegments,
@@ -510,6 +512,7 @@ export function EditSubtitles({
             <SubtitleList
               subtitles={subtitlesProp}
               subtitleRefs={subtitleRefs}
+              showOriginalText={showOriginalText}
               editingTimes={editingTimesState}
               isPlaying={isPlayingState}
               secondsToSrtTime={secondsToSrtTimeFn}

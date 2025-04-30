@@ -1094,37 +1094,38 @@ async function reviewTranslationBatch({
     .join('\n');
 
   const prompt = `
-You are a professional subtitle reviewer for ${batch.targetLang}.
-Your task is to review and improve the provided batch of translated subtitles based on their original counterparts, focusing *only* on translation accuracy, natural phrasing, grammar, and style.
+You are an **assertive subtitle editor** working into ${batch.targetLang}.  
+Your goal: every line must read like it was **originally written** in ${batch.targetLang} by a native speaker.
 
---- Surrounding context (may help with pronouns, jokes, carries) ---
+══════════ Context (may help with pronouns, jokes, carries) ══════════
 ${beforeContext}
 
---- Batch to review (original vs. translation) ---
+══════════ Parallel batch to review (source ⇄ draft) ══════════
 ${originalTexts}
 
---- Following context ---
+══════════ Following context ══════════
 ${afterContext}
 
---- Translations to review ---
+══════════ Draft translations to edit ══════════
 ${translatedTexts}
 
-**Strict Instructions:**
-1.  **Review Individually:** Review each translation line-by-line against its corresponding original text.
-2.  **Improve Wording & Style ONLY:** Correct errors in translation, grammar, or style. Ensure the translation is natural and fluent in ${batch.targetLang}.
-3.  **DO NOT CHANGE STRUCTURE:** You MUST **NOT** merge multiple lines into one, split a line into multiple lines, or reorder lines. Maintain the exact one-to-one correspondence.
-4.  **Synchronization Rule (Handling Leftovers):** If a translated line's content (often short phrases like one or two words) clearly belongs linguistically to the *previous* line's translation and makes no sense on its own, output a **COMPLETELY BLANK** line for the current translation's review. Do *not* pull content from the *next* line to fill it.
-5.  **Consistency:** Ensure consistent terminology and style throughout the batch.
+******************** HOW TO EDIT ********************
+1. **Line-by-line**: keep the *count* and *order* of lines exactly the same.
+2. **Be bold**: rewrite the whole line if that makes it idiomatic, natural, or grammatical.  
+   • You may change word choice, syntax, tone, register.  
+   • **You may NOT merge, split, reorder, add, or delete lines.**
+3. **Synchronization rule** (“leftovers”):  
+   If a line's content clearly belongs with the previous line and is meaningless alone, return a **completely blank** review line (just the prefix).
+4. **Terminology & style** must stay consistent inside this batch.
+5. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
+   If the draft already meets that bar, you may leave it unchanged.
 
-**Output Format:**
-- **Prefix EVERY line** you output with the exact delimiter \`@@SUB_LINE@@\` (including blank lines required by the Synchronization Rule).
-- Provide **ONLY** the reviewed and improved translation text for **each** line in the batch, respecting the structure.
-- Output exactly one reviewed translation per line, in the **exact same order** as the input batch.
-- **DO NOT add extra blank lines between translations.** Only output a blank line if the Synchronization Rule explicitly requires it.
-- **DO NOT** include the "[index]" prefixes in your output.
-- If a line's translation should be blank according to the Synchronization Rule, output ONLY the prefix \`@@SUB_LINE@@\` followed by a newline.
+******************** OUTPUT ********************
+• Output **one line per input line**.  
+• **Prefix every line** with \`@@SUB_LINE@@\` (even blank ones).  
+• No extra commentary, no blank lines except those required by rule 3.
 
-Now, provide the reviewed translations for the ${batch.segments.length} lines above, adhering strictly to all instructions and ensuring each line starts with \`@@SUB_LINE@@\`:
+Now provide the reviewed translations for the ${batch.segments.length} lines above:
 `;
 
   try {

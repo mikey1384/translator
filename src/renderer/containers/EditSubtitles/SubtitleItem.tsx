@@ -5,7 +5,7 @@ import SubtitleEditor from './SubtitleEditor.js';
 import { useLazyLoad } from './hooks/useLazyLoad.js';
 import { css } from '@emotion/css';
 
-interface LazySubtitleItemProps {
+interface SubtitleItemProps {
   sub: SrtSegment;
   index: number;
   editingTimes: Record<string, string>;
@@ -24,10 +24,11 @@ interface LazySubtitleItemProps {
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
   searchText: string;
+  showOriginalText: boolean;
   forcedIndex: number | null;
 }
 
-function LazySubtitleItem({
+function SubtitleItem({
   sub,
   index,
   editingTimes,
@@ -43,7 +44,8 @@ function LazySubtitleItem({
   isShiftingDisabled,
   searchText,
   forcedIndex,
-}: LazySubtitleItemProps) {
+  showOriginalText,
+}: SubtitleItemProps) {
   const [ComponentRef, inView] = useInView();
 
   // State to control visibility after scrolling away
@@ -89,6 +91,7 @@ function LazySubtitleItem({
             onSeekToSubtitle={onSeekToSubtitle}
             onPlaySubtitle={onPlaySubtitle}
             onShiftSubtitle={onShiftSubtitle}
+            showOriginalText={showOriginalText}
             isShiftingDisabled={isShiftingDisabled}
             searchText={searchText}
           />
@@ -108,4 +111,4 @@ function LazySubtitleItem({
   );
 }
 
-export default LazySubtitleItem;
+export default SubtitleItem;

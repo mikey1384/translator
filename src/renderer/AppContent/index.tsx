@@ -803,6 +803,7 @@ function AppContent() {
                   saveError={saveError}
                   setSaveError={setSaveError}
                   searchText={searchText}
+                  showOriginalText={showOriginalText}
                   onStartPngRenderRequest={handleStartPngRenderFromChild}
                   videoDuration={videoMetadata?.duration}
                   videoWidth={videoMetadata?.width}

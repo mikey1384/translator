@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { SrtSegment } from '../../../types/interface.js';
@@ -61,32 +61,10 @@ export default function SubtitleEditor({
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
   searchText?: string;
+  showOriginalText: boolean;
 }) {
   const { t } = useTranslation();
-  let originalText = '';
-  let initialEditableText = sub.text;
-  const hasMarker = sub.text.includes('###TRANSLATION_MARKER###');
-
-  if (hasMarker) {
-    const parts = sub.text.split('###TRANSLATION_MARKER###');
-    originalText = parts[0] || '';
-    initialEditableText = parts[1] || '';
-  }
-  const [currentTextValue, setCurrentTextValue] =
-    useState<string>(initialEditableText);
   const [shiftAmount, setShiftAmount] = useState('0');
-
-  useEffect(() => {
-    let incomingEditableText = sub.text;
-    if (sub.text.includes('###TRANSLATION_MARKER###')) {
-      incomingEditableText =
-        sub.text.split('###TRANSLATION_MARKER###')[1] || '';
-    }
-    if (incomingEditableText !== currentTextValue) {
-      setCurrentTextValue(incomingEditableText);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sub.text]);
 
   return (
     <div
@@ -208,28 +186,9 @@ export default function SubtitleEditor({
         </div>
       </div>
 
-      {/* Original Text Display (Conditional) */}
-      {hasMarker && originalText && (
-        <div
-          className={css`
-            background-color: ${colors.grayLight};
-            border: 1px dashed ${colors.gray};
-            color: ${colors.grayDark};
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            margin-top: 8px;
-            white-space: pre-wrap;
-            font-style: italic;
-          `}
-        >
-          {t('editSubtitles.item.originalTextPrefix')} {originalText}
-        </div>
-      )}
-
       {/* --- Replace Textarea with HighlightedTextarea --- START --- */}
       <HighlightedTextarea
-        value={currentTextValue}
+        value={sub.text}
         searchTerm={searchText || ''}
         onChange={handleTextChange}
         rows={4} // Adjust rows as needed
@@ -302,7 +261,6 @@ export default function SubtitleEditor({
   );
 
   function handleTextChange(newValue: string) {
-    setCurrentTextValue(newValue);
     onEditSubtitle(index, 'text', newValue);
   }
 

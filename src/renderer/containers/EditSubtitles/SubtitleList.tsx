@@ -1,10 +1,11 @@
 import { RefObject } from 'react';
 import { css } from '@emotion/css';
-import LazySubtitleItem from './LazySubtitleItem.js';
+import SubtitleItem from './SubtitleItem.js';
 import { SrtSegment } from '../../../types/interface.js';
 
 export interface SubtitleListProps {
   subtitles: SrtSegment[];
+  showOriginalText: boolean;
   subtitleRefs: RefObject<(HTMLDivElement | null)[]>;
   editingTimes: Record<string, string>;
   isPlaying: boolean;
@@ -28,6 +29,7 @@ export interface SubtitleListProps {
 function SubtitleList({
   subtitles,
   subtitleRefs,
+  showOriginalText,
   editingTimes,
   isPlaying,
   secondsToSrtTime,
@@ -91,12 +93,13 @@ function SubtitleList({
             scroll-margin-top: 10px;
           `}
         >
-          <LazySubtitleItem
+          <SubtitleItem
             sub={sub}
             index={index}
             editingTimes={editingTimes}
             isPlaying={isPlaying}
             secondsToSrtTime={secondsToSrtTime}
+            showOriginalText={showOriginalText}
             onEditSubtitle={onEditSubtitle}
             onTimeInputBlur={onTimeInputBlur}
             onRemoveSubtitle={onRemoveSubtitle}
