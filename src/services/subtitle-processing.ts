@@ -19,18 +19,18 @@ import * as webrtcvadPackage from 'webrtcvad';
 const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
-const VAD_NORMALIZATION_MIN_GAP_SEC = 0.2;
-const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.05;
-const PRE_PAD_SEC = 0.05;
-const POST_PAD_SEC = 0;
-const MERGE_GAP_SEC = 0.3;
-const MAX_SPEECHLESS_SEC = 8;
-const NO_SPEECH_PROB_THRESHOLD = 0.95;
-const AVG_LOGPROB_THRESHOLD = -3;
+const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
+const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
+const PRE_PAD_SEC = 0.1;
+const POST_PAD_SEC = 0.15;
+const MERGE_GAP_SEC = 0.5;
+const MAX_SPEECHLESS_SEC = 15;
+const NO_SPEECH_PROB_THRESHOLD = 0.7;
+const AVG_LOGPROB_THRESHOLD = -4.5;
 const MAX_PROMPT_CHARS = 600;
 
-const MIN_CHUNK_DURATION_SEC = 1;
-const SUBTITLE_GAP_THRESHOLD = 3;
+const MIN_CHUNK_DURATION_SEC = 10;
+const SUBTITLE_GAP_THRESHOLD = 5;
 const GAP_SEC = 3;
 
 // --- Concurrency Setting ---
@@ -297,7 +297,7 @@ export async function extractSubtitlesFromVideo({
     // --- END ADD LOG ---
 
     // Step 4: Apply Gap Filling (IN-PLACE)
-    extendShortSubtitleGaps(indexedSegments, SUBTITLE_GAP_THRESHOLD);
+    extendShortSubtitleGaps(indexedSegments);
 
     // Log the state of indexedSegments *after* the in-place modification
     log.debug(
@@ -1115,7 +1115,7 @@ Now, provide the reviewed translations for the ${batch.segments.length} lines ab
 
 function extendShortSubtitleGaps(
   segments: SrtSegment[],
-  threshold: number = 3
+  threshold: number = 5
 ): SrtSegment[] {
   if (!segments || segments.length < 2) {
     return segments; // Return original if no adjustments possible
@@ -1125,10 +1125,7 @@ function extendShortSubtitleGaps(
     `[extendShortSubtitleGaps IN-PLACE] Input segments (first 5): ${JSON.stringify(segments.slice(0, 5), null, 2)}`
   );
 
-  // Iterate through the segments array directly
-  // Loop up to length - 1 because we access i and i + 1
   for (let i = 0; i < segments.length - 1; i++) {
-    // Read directly from the input/mutating array
     const currentSegment = segments[i];
     const nextSegment = segments[i + 1];
 
@@ -1305,7 +1302,7 @@ export async function callAIModel({
 
 export async function detectSpeechIntervals({
   inputPath,
-  vadMode = 3, // 0–3 (3 = most aggressive)
+  vadMode = 2,
   frameMs = 30,
   operationId = '',
 }: {
@@ -1436,25 +1433,20 @@ export function normalizeSpeechIntervals({
 
   intervals.sort((a, b) => a.start - b.start);
   const merged: typeof intervals = [];
-  // Initialize with the first interval
   if (intervals[0]) {
     merged.push({ ...intervals[0] });
   }
 
   for (let i = 1; i < intervals.length; i++) {
     const cur = intervals[i];
-    const last = merged.at(-1); // Use .at(-1) for safety
+    const last = merged.at(-1);
 
-    // Ensure last interval exists before attempting merge logic
     if (last && cur.start - last.end < minGapSec) {
-      // Merge: extend the end time of the last interval
-      last.end = Math.max(last.end, cur.end); // Ensure end time covers both
+      last.end = Math.max(last.end, cur.end);
     } else {
-      // No merge: add the current interval as a new one
       merged.push({ ...cur });
     }
   }
-  // Filter based on minimum duration AFTER merging
   return merged.filter(i => i.end - i.start >= minDurSec);
 }
 
@@ -1491,7 +1483,7 @@ function mergeAdjacentIntervals(
   }
   intervals.sort((a, b) => a.start - b.start);
   const merged: typeof intervals = [];
-  merged.push({ ...intervals[0] }); // Start with the first interval
+  merged.push({ ...intervals[0] });
 
   for (let i = 1; i < intervals.length; i++) {
     const current = intervals[i];
@@ -1501,7 +1493,6 @@ function mergeAdjacentIntervals(
       // Merge if gap is small enough
       last.end = Math.max(last.end, current.end);
     } else {
-      // Otherwise, start a new merged interval
       merged.push({ ...current });
     }
   }
