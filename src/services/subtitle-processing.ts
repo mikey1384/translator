@@ -322,6 +322,7 @@ export async function extractSubtitlesFromVideo({
           partialResult: buildSrt(segmentsInProcess),
           current: batchEnd,
           total: segmentsInProcess.length,
+          batchStartIndex: batchStart,
         });
       }
 
