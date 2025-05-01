@@ -511,6 +511,7 @@ export default function NativeVideoPlayer({
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitles, activeSubtitle, videoRef]);
 
   useEffect(() => {
