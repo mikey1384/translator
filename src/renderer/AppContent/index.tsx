@@ -1185,6 +1185,7 @@ function AppContent() {
     }
     setError('');
     setIsGenerating(true);
+    handleSrtFileLoaded(null);
     try {
       const options = buildGenerateOptions();
       const result = await window.electron.generateSubtitles(options);
@@ -1194,6 +1195,7 @@ function AppContent() {
       }
 
       if (result.subtitles) {
+        handleSrtFileLoaded(null);
         setOriginalSrtFilePath(null);
         try {
           const finalSegments = parseSrt(result.subtitles);
