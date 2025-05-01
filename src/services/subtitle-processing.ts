@@ -204,7 +204,7 @@ export async function extractSubtitlesFromVideo({
 
     // Step 2: Process based on whether translation is needed
     if (!isTranslationNeeded) {
-      processedSegments = fuseOrphans(parseSrt(rawSubtitlesContent));
+      processedSegments = parseSrt(rawSubtitlesContent);
       progressCallback?.({
         percent: STAGE_FINALIZING.start,
         stage: 'Transcription complete, preparing final SRT',
@@ -212,7 +212,7 @@ export async function extractSubtitlesFromVideo({
       });
     } else {
       // Translation needed - run translation and review logic
-      const segmentsInProcess = fuseOrphans(parseSrt(rawSubtitlesContent)); // Start with parsed segments
+      const segmentsInProcess = parseSrt(rawSubtitlesContent); // Do not fuse orphans here
       const totalSegments = segmentsInProcess.length;
       const TRANSLATION_BATCH_SIZE = 10;
 
@@ -396,12 +396,11 @@ export async function extractSubtitlesFromVideo({
     }
     finalSegments.push(...anchors);
     finalSegments.sort((a, b) => a.start - b.start);
-    // --- Fuse orphans before returning or passing to SRT ---
-    const fusedSegments = fuseOrphans(finalSegments);
-    const reIndexed = fusedSegments.map((seg, i) => ({
-      ...seg,
-      index: i + 1,
-    }));
+
+    /* --- NEW: Fuse orphans before SRT build --- */
+    const fused = fuseOrphans(finalSegments);
+    const reIndexed = fused.map((seg, i) => ({ ...seg, index: i + 1 }));
+
     const finalSrtContent = buildSrt({
       segments: reIndexed,
       mode: 'dual',
@@ -740,17 +739,16 @@ export async function generateSubtitlesFromAudio({
     overallSegments.push(...anchors);
     overallSegments.sort((a, b) => a.start - b.start);
 
+    /* --- NEW: Fuse orphans before SRT build --- */
+    const fused = fuseOrphans(overallSegments);
+    const reIndexed = fused.map((seg, i) => ({ ...seg, index: i + 1 }));
+
     log.info(
-      `[${operationId}] Transcription complete. Generated ${overallSegments.length} final segments.`
+      `[${operationId}] Transcription complete. Generated ${reIndexed.length} final segments.`
     );
     progressCallback?.({ percent: 100, stage: 'Transcription complete!' });
 
-    // --- Fuse orphans before returning or passing to SRT ---
-    const fusedSegments = fuseOrphans(overallSegments);
-    const reIndexed = fusedSegments.map((seg, i) => ({
-      ...seg,
-      index: i + 1,
-    }));
+    // --- Return SRT with raw segments (no orphan-fusing here) ---
     return buildSrt({
       segments: reIndexed,
       mode: 'dual',
@@ -1173,8 +1171,9 @@ ${translatedTexts}
 2. **Be bold**: rewrite the whole line if that makes it idiomatic, natural, or grammatical.  
    • You may change word choice, syntax, tone, register.  
    • **You may NOT merge, split, reorder, add, or delete lines.**
-3. **Synchronization rule** (“leftovers”):  
-   If a line's content clearly belongs with the previous line and is meaningless alone, return a **completely blank** review line (just the prefix).
+3. **Synchronization rule** (“leftovers”):
+   • If a line has only **1–2 leftover words**, ERASE that line completely (just output @@SUB_LINE@@).  
+   • NEVER repeat the same words in two consecutive lines.
 4. **Terminology & style** must stay consistent inside this batch.
 5. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
    If the draft already meets that bar, you may leave it unchanged.
@@ -1564,7 +1563,7 @@ function mergeAdjacentIntervals(
 }
 
 function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
-  const MIN_WORDS = 3;
+  const MIN_WORDS = 2;
   const fused: SrtSegment[] = [];
   for (const s of segments) {
     const w = s.original.trim().split(/\s+/).length;
