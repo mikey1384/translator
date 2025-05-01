@@ -136,6 +136,7 @@
     "node-fetch": "^2.7.0",
     "node-machine-id": "^1.1.12",
     "openai": "^4.86.2",
+    "p-limit": "^6.2.0",
     "path-browserify": "^1.0.1",
     "react": "^19.0.0",
     "react-country-flag": "^3.1.0",

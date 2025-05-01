@@ -15,6 +15,7 @@ import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
 import { spawn } from 'child_process';
 import * as webrtcvadPackage from 'webrtcvad';
+import pLimit from 'p-limit';
 
 const Vad = webrtcvadPackage.default.default;
 
@@ -31,7 +32,7 @@ const MAX_PROMPT_CHARS = 600;
 
 const MIN_CHUNK_DURATION_SEC = 8;
 const MAX_CHUNK_DURATION_SEC = 15;
-const SUBTITLE_GAP_THRESHOLD = 1;
+const SUBTITLE_GAP_THRESHOLD = 5;
 const GAP_SEC = 3;
 
 // --- Concurrency Setting ---
@@ -200,23 +201,37 @@ export async function extractSubtitlesFromVideo({
       services,
     });
 
-    let processedSegments: SrtSegment[]; // Variable to hold segments after initial processing
+    // --- CHANGED: No bulk scrub needed now ---
+    let processedSegments = parseSrt(rawSubtitlesContent);
 
     // Step 2: Process based on whether translation is needed
     if (!isTranslationNeeded) {
-      processedSegments = parseSrt(rawSubtitlesContent);
       progressCallback?.({
         percent: STAGE_FINALIZING.start,
         stage: 'Transcription complete, preparing final SRT',
-        partialResult: rawSubtitlesContent,
+        partialResult: buildSrt({
+          segments: processedSegments,
+          mode: 'dual',
+        }),
       });
     } else {
       // Translation needed - run translation and review logic
-      const segmentsInProcess = parseSrt(rawSubtitlesContent); // Do not fuse orphans here
+      const segmentsInProcess = fuseOrphans(processedSegments).map(
+        (seg, i) => ({ ...seg, index: i + 1 })
+      );
       const totalSegments = segmentsInProcess.length;
       const TRANSLATION_BATCH_SIZE = 10;
 
-      // --- Translation Loop ---
+      const CONCURRENT_TRANSLATIONS = Math.min(
+        4,
+        Number(process.env.MAX_OPENAI_PARALLEL || 4)
+      );
+      const limit = pLimit(CONCURRENT_TRANSLATIONS);
+
+      const batchPromises = [];
+
+      let batchesDone = 0;
+
       for (
         let batchStart = 0;
         batchStart < totalSegments;
@@ -239,35 +254,52 @@ export async function extractSubtitlesFromVideo({
           Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
         );
 
-        const translatedBatch = await translateBatch({
-          batch: {
-            segments: currentBatchOriginals.map(seg => ({ ...seg })),
-            startIndex: batchStart,
-            endIndex: batchEnd,
-            contextBefore,
-            contextAfter,
-          },
-          targetLang,
-          operationId,
-          signal,
-        });
-        for (let i = 0; i < translatedBatch.length; i++) {
-          segmentsInProcess[batchStart + i] = translatedBatch[i];
-        }
-        const overallProgress = (batchEnd / totalSegments) * 100;
-        progressCallback?.({
-          percent: scaleProgress(overallProgress, STAGE_TRANSLATION),
-          stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(
-            totalSegments / TRANSLATION_BATCH_SIZE
-          )}`,
-          partialResult: buildSrt({
-            segments: segmentsInProcess,
-            mode: 'dual',
-          }),
-          current: batchEnd,
-          total: totalSegments,
-        });
+        const promise = limit(() =>
+          translateBatch({
+            batch: {
+              segments: currentBatchOriginals.map(seg => ({ ...seg })),
+              startIndex: batchStart,
+              endIndex: batchEnd,
+              contextBefore,
+              contextAfter,
+            },
+            targetLang,
+            operationId,
+            signal,
+          }).then(translatedBatch => {
+            for (let i = 0; i < translatedBatch.length; i++) {
+              segmentsInProcess[batchStart + i] = translatedBatch[i];
+            }
+          })
+        )
+          .catch(err => {
+            log.error(`[${operationId}] translate batch failed`, err);
+          })
+          .finally(() => {
+            batchesDone++;
+            const doneSoFar = Math.min(
+              batchesDone * TRANSLATION_BATCH_SIZE,
+              totalSegments
+            );
+            progressCallback?.({
+              percent: scaleProgress(
+                (doneSoFar / totalSegments) * 100,
+                STAGE_TRANSLATION
+              ),
+              stage: `Translating ${doneSoFar}/${totalSegments}`,
+              partialResult: buildSrt({
+                segments: segmentsInProcess,
+                mode: 'dual',
+              }),
+              current: doneSoFar,
+              total: totalSegments,
+            });
+          });
+
+        batchPromises.push(promise);
       }
+
+      await Promise.all(batchPromises);
 
       for (
         let batchStart = 0;
@@ -361,7 +393,10 @@ export async function extractSubtitlesFromVideo({
     // --- END ADD LOG ---
 
     // Step 4: Apply Gap Filling (IN-PLACE)
-    extendShortSubtitleGaps(indexedSegments, SUBTITLE_GAP_THRESHOLD);
+    extendShortSubtitleGaps({
+      segments: indexedSegments,
+      threshold: SUBTITLE_GAP_THRESHOLD,
+    });
 
     // Log the state of indexedSegments *after* the in-place modification
     log.debug(
@@ -654,9 +689,10 @@ export async function generateSubtitlesFromAudio({
             startTime: meta.start,
             signal,
             openai,
-            operationId: operationId as string,
+            operationId: operationId ?? '',
             promptContext: promptForSlice,
           });
+
           return segs;
         } catch (chunkError: any) {
           if (chunkError?.message === 'Cancelled') {
@@ -711,7 +747,7 @@ export async function generateSubtitlesFromAudio({
       );
       progressCallback?.({
         percent: Math.round(p),
-        stage: `Transcribed ${done}/${chunks.length} chunks`,
+        stage: `Transcribed & scrubbed ${done}/${chunks.length} chunks`, // (Optional) show progress while scrubbing
         current: done,
         total: chunks.length,
         partialResult: intermediateSrt,
@@ -967,7 +1003,13 @@ async function transcribeChunk({
       }
     }
 
-    return srtSegments;
+    // Always scrub hallucinations before returning
+    const cleanSegs = await scrubHallucinationsBatch({
+      segments: srtSegments,
+      operationId: operationId ?? '',
+      signal,
+    });
+    return cleanSegs;
   } catch (error: any) {
     if (
       error.name === 'AbortError' ||
@@ -1015,7 +1057,7 @@ ${batchContextPrompt.join('\n')}
 Translate EACH line individually, preserving the line order.
 - Try not to merge lines, but if a line is obviously a leftover (1-2 words that belong to the previous sentence), you may leave it BLANK and include its meaning in the previous line.
 - Never skip or omit a line.
-- If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
+- You may leave a line blank only if that entire thought (not just a few repeated words) is already in the previous line.
 - Provide exactly one translation for every line, in the same order, 
   prefixed by "Line X:" where X is the line number.
 - If you're unsure, err on the side of literal translations.
@@ -1171,16 +1213,15 @@ ${translatedTexts}
 2. **Be bold**: rewrite the whole line if that makes it idiomatic, natural, or grammatical.  
    • You may change word choice, syntax, tone, register.  
    • **You may NOT merge, split, reorder, add, or delete lines.**
-3. **Synchronization rule** (“leftovers”):
-   • If a line has only **1–2 leftover words**, ERASE that line completely (just output @@SUB_LINE@@).  
-   • NEVER repeat the same words in two consecutive lines.
-4. **Terminology & style** must stay consistent inside this batch.
-5. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
+3. **Terminology & style** must stay consistent inside this batch.
+4. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
    If the draft already meets that bar, you may leave it unchanged.
 
 ******************** OUTPUT ********************
-• Output **one line per input line**.  
-• **Prefix every line** with \`@@SUB_LINE@@\` (even blank ones).  
+• Output **one line per input line**.
+• **Prefix every line** with \`@@SUB_LINE@@ <ABS_INDEX>:\` (even blank ones).
+  For example: \`@@SUB_LINE@@ 123: 이것은 번역입니다\`
+  (A blank line is: \`@@SUB_LINE@@ 124:  \`)
 • No extra commentary, no blank lines except those required by rule 3.
 
 Now provide the reviewed translations for the ${batch.segments.length} lines above:
@@ -1202,29 +1243,43 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
       return batch.segments;
     }
 
-    const splitByDelimiter = reviewedContent.split('@@SUB_LINE@@');
-    const parsedLines = splitByDelimiter.slice(1);
+    const lines = reviewedContent.split('@@SUB_LINE@@').slice(1);
 
-    // Check if the number of parsed lines matches the expected batch size
-    if (parsedLines.length !== batch.segments.length) {
+    const map = new Map<number, string>();
+    const lineRE = /^\s*(\d+)\s*:\s*([\s\S]*)$/;
+
+    for (const raw of lines) {
+      const m = raw.match(lineRE);
+      if (!m) continue;
+      const id = Number(m[1]);
+      const txt = (m[2] ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
+      map.set(id, txt);
+    }
+
+    // Optional: reject batches that look fishy
+    const ids = [...map.keys()];
+    const hasDupes = ids.length !== new Set(ids).size;
+    if (hasDupes || map.size / batch.segments.length < 0.9) {
       log.warn(
-        `[Review Fallback] Review output line count (${parsedLines.length}) does not match batch size (${batch.segments.length}). Expected ${batch.segments.length}. Falling back to original translations for this batch.`
+        `[Review] Duplicate or missing IDs in review batch – falling back.`
       );
-      log.info('--- Faulty Review Output ---');
-      log.info(reviewedContent); // Log the faulty content for debugging
-      log.info('--- End Faulty Review Output ---');
-      // Return the original, unreviewed segments for this batch
       return batch.segments;
     }
 
-    // If the line count is correct, proceed to map the results
-    log.info(
-      `[Review] Successfully parsed ${parsedLines.length} reviewed lines.`
-    );
-    return batch.segments.map((seg, idx) => ({
+    const reviewedSegments = batch.segments.map(seg => ({
       ...seg,
-      translation: (parsedLines[idx] ?? '').trim(), // may be ''
+      translation: map.has(seg.index)
+        ? map.get(seg.index)!
+        : (seg.translation ?? seg.original),
     }));
+
+    reviewedSegments.forEach((s, i, arr) => {
+      if (!s.translation?.trim() && arr[i].original.trim().length > 0) {
+        log.debug(`[SYNC-CHECK] Blank at #${s.index}: "${arr[i].original}"`);
+      }
+    });
+
+    return reviewedSegments;
   } catch (error: any) {
     log.error(
       `[Review] Error during initial review batch (${operationId}):`, // Updated log message slightly
@@ -1242,10 +1297,13 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
   }
 }
 
-function extendShortSubtitleGaps(
-  segments: SrtSegment[],
-  threshold = SUBTITLE_GAP_THRESHOLD // now 1 s
-): SrtSegment[] {
+function extendShortSubtitleGaps({
+  segments,
+  threshold = SUBTITLE_GAP_THRESHOLD,
+}: {
+  segments: SrtSegment[];
+  threshold?: number;
+}): SrtSegment[] {
   if (!segments || segments.length < 2) return segments;
 
   for (let i = 0; i < segments.length - 1; i++) {
@@ -1254,7 +1312,7 @@ function extendShortSubtitleGaps(
     const gap = nextStart - currentEnd;
 
     if (gap > 0 && gap < threshold) {
-      segments[i + 1].start = currentEnd;
+      segments[i].end = nextStart;
     }
   }
   return segments;
@@ -1563,7 +1621,7 @@ function mergeAdjacentIntervals(
 }
 
 function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
-  const MIN_WORDS = 2;
+  const MIN_WORDS = 4;
   const fused: SrtSegment[] = [];
   for (const s of segments) {
     const w = s.original.trim().split(/\s+/).length;
@@ -1578,4 +1636,85 @@ function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
   }
   // re-index
   return fused.map((s, i) => ({ ...s, index: i + 1 }));
+}
+
+async function scrubHallucinationsBatch({
+  segments,
+  operationId,
+  signal,
+}: {
+  segments: SrtSegment[];
+  operationId: string;
+  signal?: AbortSignal;
+}): Promise<SrtSegment[]> {
+  /* ───────────────────────── 1. PROMPT ───────────────────────── */
+  const systemPrompt = String.raw`
+You are a subtitle noise-filter.
+
+TASK
+────
+For every caption decide whether to
+  • clean  – remove emoji / ★★★★ / ░░░ / “please subscribe”, etc.
+  • delete – if it is only noise (no real words).
+
+OUTPUT  (exactly one line per input, same order)
+  @@LINE@@ <index>: <clean text>
+If the caption should be deleted output nothing after the colon.
+
+EXAMPLES
+────────
+input  → 17: ★★★★★★★★★★
+output → @@LINE@@ 17:
+
+input  → 18: Thanks for watching!!! 👍👍👍
+output → @@LINE@@ 18: Thanks for watching!
+`;
+
+  const userPayload = segments
+    .map(s => `${s.index}: ${s.original.replace(/\s+/g, ' ').trim()}`)
+    .join('\n');
+
+  const raw = await callAIModel({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPayload },
+    ],
+    max_tokens: 4096,
+    operationId,
+    signal,
+  });
+
+  /* ──────────────────── 2. PARSE MODEL RESPONSE ─────────────────── */
+  const lineRE = /^@@LINE@@\s+(\d+)\s*:\s*(.*)$/;
+  const modelMap = new Map<number, string>(); // index → cleaned-or-blank
+  raw.split('\n').forEach(row => {
+    const m = row.match(lineRE);
+    if (m) modelMap.set(Number(m[1]), (m[2] ?? '').trim());
+  });
+
+  /* ───────────────────── 3. LOCAL NOISE STRIPPER ─────────────────── */
+  const stripNoise = (txt: string): string =>
+    txt
+      // collapse ★★★ / !!! / --- / ░░░ …
+      .replace(/([\p{P}\p{S}])\1{2,}/gu, '$1')
+      // drop single emoji / dingbats
+      .replace(/\p{Extended_Pictographic}/gu, '')
+      // tidy whitespace
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+  /* ─────────────────── 4. BUILD CLEAN ARRAY & LOG ────────────────── */
+  const cleanedSegments: SrtSegment[] = [];
+
+  segments.forEach(seg => {
+    let out = modelMap.has(seg.index) ? modelMap.get(seg.index)! : seg.original;
+    out = stripNoise(out);
+
+    if (out !== '') {
+      cleanedSegments.push({ ...seg, original: out });
+    }
+    // else: deleted → don’t push
+  });
+
+  return cleanedSegments;
 }
