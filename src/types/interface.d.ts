@@ -222,12 +222,6 @@ export interface FileData {
   type: string;
 }
 
-export interface GenerateSubtitlesResult {
-  subtitles: string;
-  segments?: SrtSegment[]; // Structured subtitle data
-  error?: string;
-}
-
 export interface SaveFileOptions {
   content: string;
   defaultPath?: string;

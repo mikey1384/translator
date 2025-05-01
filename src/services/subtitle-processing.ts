@@ -1,15 +1,11 @@
 import path from 'path';
 import { FFmpegService } from './ffmpeg-service.js';
-import { parseSrt, buildSrt } from '../shared/helpers/index.js';
+import { buildSrt } from '../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import { getApiKey as getSecureApiKey } from './secure-store.js';
 import { AI_MODELS } from '../shared/constants/index.js';
-import {
-  GenerateSubtitlesOptions,
-  GenerateSubtitlesResult,
-  SrtSegment,
-} from '../types/interface.js';
+import { GenerateSubtitlesOptions, SrtSegment } from '../types/interface.js';
 import log from 'electron-log';
 import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
@@ -66,6 +62,14 @@ type TranslateBatchArgs = {
   signal?: AbortSignal;
 };
 
+// Add after imports or type section
+export type GenerateSubtitlesFullResult = {
+  subtitles: string;
+  segments: SrtSegment[];
+  speechIntervals: Array<{ start: number; end: number }>;
+  error?: string;
+};
+
 async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
   if (key) return key;
@@ -102,7 +106,7 @@ export async function extractSubtitlesFromVideo({
     ffmpegService: FFmpegService;
     fileManager: FileManager;
   };
-}): Promise<GenerateSubtitlesResult> {
+}): Promise<GenerateSubtitlesFullResult> {
   if (!options) {
     options = { targetLanguage: 'original' } as GenerateSubtitlesOptions;
   }
@@ -184,25 +188,25 @@ export async function extractSubtitlesFromVideo({
     }
 
     // Step 1: Get initial subtitle content (string)
-    const rawSubtitlesContent = await generateSubtitlesFromAudio({
-      inputAudioPath: audioPath || '',
-      progressCallback: p => {
-        progressCallback?.({
-          percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
-          stage: p.stage,
-          partialResult: p.partialResult,
-          current: p?.current,
-          total: p.total,
-          error: p.error,
-        });
-      },
-      signal,
-      operationId,
-      services,
-    });
+    const { segments: firstPassSegments, speechIntervals } =
+      await generateSubtitlesFromAudio({
+        inputAudioPath: audioPath || '',
+        progressCallback: p => {
+          progressCallback?.({
+            percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
+            stage: p.stage,
+            partialResult: p.partialResult,
+            current: p?.current,
+            total: p.total,
+            error: p.error,
+          });
+        },
+        signal,
+        operationId,
+        services,
+      });
 
-    // --- CHANGED: No bulk scrub needed now ---
-    let processedSegments = parseSrt(rawSubtitlesContent);
+    let processedSegments = firstPassSegments;
 
     // Step 2: Process based on whether translation is needed
     if (!isTranslationNeeded) {
@@ -456,7 +460,11 @@ export async function extractSubtitlesFromVideo({
       total: finalSegments.length,
     });
 
-    return { subtitles: finalSrtContent };
+    return {
+      subtitles: finalSrtContent,
+      segments: reIndexed,
+      speechIntervals: speechIntervals,
+    };
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 
@@ -524,7 +532,11 @@ export async function generateSubtitlesFromAudio({
       }) => Promise<string>;
     };
   };
-}): Promise<string> {
+}): Promise<{
+  segments: SrtSegment[];
+  speechIntervals: Array<{ start: number; end: number }>;
+  srt: string;
+}> {
   // progress constants
   const PROGRESS_ANALYSIS_DONE = 5;
   const PROGRESS_TRANSCRIPTION_START = 20;
@@ -676,7 +688,7 @@ export async function generateSubtitlesFromAudio({
             outputPath: mp3Path,
             startTime: meta.start,
             duration: meta.end - meta.start,
-            operationId,
+            operationId: operationId ?? '',
             signal,
           });
 
@@ -775,20 +787,71 @@ export async function generateSubtitlesFromAudio({
     overallSegments.push(...anchors);
     overallSegments.sort((a, b) => a.start - b.start);
 
-    /* --- NEW: Fuse orphans before SRT build --- */
-    const fused = fuseOrphans(overallSegments);
-    const reIndexed = fused.map((seg, i) => ({ ...seg, index: i + 1 }));
+    // REPAIR PASS – find large holes (≥5s) in speech intervals that have no captions
+    const MISSING_GAP_SEC = 5; // tweak as desired
+    const repairGaps = findCaptionGaps(
+      merged,
+      overallSegments,
+      MISSING_GAP_SEC
+    );
 
     log.info(
-      `[${operationId}] Transcription complete. Generated ${reIndexed.length} final segments.`
+      `[${operationId}] Found ${repairGaps.length} big gap(s) in speech. Attempting to fill...`
     );
-    progressCallback?.({ percent: 100, stage: 'Transcription complete!' });
 
-    // --- Return SRT with raw segments (no orphan-fusing here) ---
-    return buildSrt({
-      segments: reIndexed,
-      mode: 'dual',
-    });
+    for (let i = 0; i < repairGaps.length; i++) {
+      if (signal?.aborted) break; // Respect cancellation
+
+      const gap = repairGaps[i];
+      const gapIndex = i + 1;
+
+      // Build a short context prompt from neighboring captions
+      const promptCtx = buildContextPrompt(overallSegments, gap);
+
+      // Create a temp file for this gap
+      const repairPath = path.join(
+        tempDir,
+        `repair_gap_${gapIndex}_${operationId}.mp3`
+      );
+      createdChunkPaths.push(repairPath); // so it's cleaned up later
+
+      // Extract that audio segment from the big audio
+      await ffmpegService.extractAudioSegment({
+        inputPath: inputAudioPath,
+        outputPath: repairPath,
+        startTime: gap.start,
+        duration: gap.end - gap.start,
+        operationId: operationId ?? '',
+        signal,
+      });
+
+      // Transcribe the gap using your existing transcribeChunk helper
+      const newSegs = await transcribeChunk({
+        chunkIndex: 10_000 + gapIndex, // just an arbitrary high index
+        chunkPath: repairPath,
+        startTime: gap.start,
+        signal,
+        openai,
+        operationId: operationId ?? '',
+        promptContext: promptCtx, // we pass the mini context here
+      });
+
+      // Add them to the main array
+      overallSegments.push(...newSegs);
+    }
+
+    // After the loop, re-sort
+    overallSegments.sort((a, b) => a.start - b.start);
+
+    // Build final SRT
+    const finalSrt = buildSrt({ segments: overallSegments, mode: 'dual' });
+
+    // Return segments, intervals, and SRT
+    return {
+      segments: overallSegments,
+      speechIntervals: merged.slice(),
+      srt: finalSrt,
+    };
   } catch (error: any) {
     console.error(
       `[${operationId}] Error in generateSubtitlesFromAudio:`,
@@ -1362,7 +1425,7 @@ export async function callOpenAIChat({
         },
         { signal }
       );
-      const content = response.choices[0]?.message?.content;
+      const content = response.choices[0]?.message?.content ?? '';
       if (content) {
         return content;
       } else {
@@ -1654,7 +1717,7 @@ You are a subtitle noise-filter.
 TASK
 ────
 For every caption decide whether to
-  • clean  – remove emoji / ★★★★ / ░░░ / “please subscribe”, etc.
+  • clean  – remove emoji / ★★★★ / ░░░ / "please subscribe", etc.
   • delete – if it is only noise (no real words).
 
 OUTPUT  (exactly one line per input, same order)
@@ -1713,8 +1776,77 @@ output → @@LINE@@ 18: Thanks for watching!
     if (out !== '') {
       cleanedSegments.push({ ...seg, original: out });
     }
-    // else: deleted → don’t push
+    // else: deleted → don't push
   });
 
   return cleanedSegments;
+}
+
+/**
+ * Find sub-intervals within `speech` that have no existing caption coverage
+ * for a minimum duration (5 seconds by default).
+ */
+function findCaptionGaps(
+  speech: Array<{ start: number; end: number }>,
+  captions: SrtSegment[],
+  minGapSec = 5
+) {
+  // Convert captions into "covered" intervals
+  const covered = captions.map(c => ({ start: c.start, end: c.end }));
+
+  const gaps: Array<{ start: number; end: number }> = [];
+
+  for (const iv of speech) {
+    let cursor = iv.start;
+
+    // For each caption that overlaps with this speech interval:
+    //   if there's a chunk of speech from 'cursor' to caption.start ≥ minGapSec
+    //   that's a missing gap -> push it
+    for (const c of covered.filter(c => c.end > iv.start && c.start < iv.end)) {
+      if (c.start - cursor >= minGapSec) {
+        gaps.push({ start: cursor, end: c.start });
+      }
+      cursor = Math.max(cursor, c.end);
+    }
+
+    // Tail end leftover
+    if (iv.end - cursor >= minGapSec) {
+      gaps.push({ start: cursor, end: iv.end });
+    }
+  }
+
+  return gaps;
+}
+
+/**
+ * Build a short "before ... after" prompt for Whisper, to give context about
+ * the missing gap. We take up to 3 lines before + 3 lines after, each truncated
+ * to ~40 words to avoid huge prompts.
+ */
+function buildContextPrompt(
+  allSegments: SrtSegment[],
+  gap: { start: number; end: number },
+  wordsPerSide = 40
+) {
+  // lines that end before gap
+  const beforeText = allSegments
+    .filter(s => s.end <= gap.start)
+    .slice(-3) // last 3 lines
+    .map(s => s.original)
+    .join(' ')
+    .split(/\s+/)
+    .slice(-wordsPerSide)
+    .join(' ');
+
+  // lines that start after gap
+  const afterText = allSegments
+    .filter(s => s.start >= gap.end)
+    .slice(0, 3) // next 3 lines
+    .map(s => s.original)
+    .join(' ')
+    .split(/\s+/)
+    .slice(0, wordsPerSide)
+    .join(' ');
+
+  return `Context before:\n${beforeText}\n\n(You are continuing the same speaker)\n\nContext after:\n${afterText}\n\nTranscript:`;
 }
