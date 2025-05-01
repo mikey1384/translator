@@ -25,10 +25,15 @@ const MAX_SPEECHLESS_SEC = 15;
 const NO_SPEECH_PROB_THRESHOLD = 0.7;
 const AVG_LOGPROB_THRESHOLD = -4.5;
 const MAX_PROMPT_CHARS = 600;
+const SUBTITLE_GAP_THRESHOLD = 5;
+const MAX_GAP_TO_FUSE = 0.3;
+
+const MISSING_GAP_SEC = 10;
+const REPAIR_PROGRESS_START = 90;
+const REPAIR_PROGRESS_END = 100;
 
 const MIN_CHUNK_DURATION_SEC = 8;
 const MAX_CHUNK_DURATION_SEC = 15;
-const SUBTITLE_GAP_THRESHOLD = 5;
 const GAP_SEC = 3;
 
 // --- Concurrency Setting ---
@@ -437,8 +442,7 @@ export async function extractSubtitlesFromVideo({
     finalSegments.sort((a, b) => a.start - b.start);
 
     /* --- NEW: Fuse orphans before SRT build --- */
-    const fused = fuseOrphans(finalSegments);
-    const reIndexed = fused.map((seg, i) => ({ ...seg, index: i + 1 }));
+    const reIndexed = finalSegments.map((seg, i) => ({ ...seg, index: i + 1 }));
 
     const finalSrtContent = buildSrt({
       segments: reIndexed,
@@ -788,7 +792,6 @@ export async function generateSubtitlesFromAudio({
     overallSegments.sort((a, b) => a.start - b.start);
 
     // REPAIR PASS – find large holes (≥5s) in speech intervals that have no captions
-    const MISSING_GAP_SEC = 5; // tweak as desired
     const repairGaps = findCaptionGaps(
       merged,
       overallSegments,
@@ -799,6 +802,23 @@ export async function generateSubtitlesFromAudio({
       `[${operationId}] Found ${repairGaps.length} big gap(s) in speech. Attempting to fill...`
     );
 
+    // Early return if no repair gaps
+    if (repairGaps.length === 0) {
+      const finalSrt = buildSrt({ segments: overallSegments, mode: 'dual' });
+      return {
+        segments: overallSegments,
+        speechIntervals: merged.slice(),
+        srt: finalSrt,
+      };
+    }
+
+    if (repairGaps.length > 0) {
+      progressCallback?.({
+        percent: REPAIR_PROGRESS_START,
+        stage: `Repairing missing captions 0 / ${repairGaps.length}`,
+      });
+    }
+    let lastPct = -1;
     for (let i = 0; i < repairGaps.length; i++) {
       if (signal?.aborted) break; // Respect cancellation
 
@@ -838,6 +858,27 @@ export async function generateSubtitlesFromAudio({
 
       // Add them to the main array
       overallSegments.push(...newSegs);
+
+      // --- Emit progress for this repair ---
+      const pct =
+        REPAIR_PROGRESS_START +
+        ((i + 1) / repairGaps.length) *
+          (REPAIR_PROGRESS_END - REPAIR_PROGRESS_START);
+      if (Math.round(pct) !== lastPct) {
+        progressCallback?.({
+          percent: Math.round(pct),
+          stage: `Repairing missing captions ${i + 1} / ${repairGaps.length}`,
+          current: i + 1,
+          total: repairGaps.length,
+        });
+        lastPct = Math.round(pct);
+      }
+    }
+    if (repairGaps.length > 0) {
+      progressCallback?.({
+        percent: REPAIR_PROGRESS_END,
+        stage: 'Gap-repair pass complete',
+      });
     }
 
     // After the loop, re-sort
@@ -1118,8 +1159,8 @@ Here are the subtitles to translate:
 ${batchContextPrompt.join('\n')}
 
 Translate EACH line individually, preserving the line order.
-- Try not to merge lines, but if a line is obviously a leftover (1-2 words that belong to the previous sentence), you may leave it BLANK and include its meaning in the previous line.
-- Never skip or omit a line.
+- Never skip, omit, or merge lines.
+- Always finish translating the given line and do NOT defer to the next line.
 - You may leave a line blank only if that entire thought (not just a few repeated words) is already in the previous line.
 - Provide exactly one translation for every line, in the same order, 
   prefixed by "Line X:" where X is the line number.
@@ -1273,12 +1314,11 @@ ${translatedTexts}
 
 ******************** HOW TO EDIT ********************
 1. **Line-by-line**: keep the *count* and *order* of lines exactly the same.
-2. **Be bold**: rewrite the whole line if that makes it idiomatic, natural, or grammatical.  
-   • You may change word choice, syntax, tone, register.  
-   • **You may NOT merge, split, reorder, add, or delete lines.**
+2. **Be bold**: You may change word choice, syntax, tone, register.
 3. **Terminology & style** must stay consistent inside this batch.
 4. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
    If the draft already meets that bar, you may leave it unchanged.
+5. **You may NOT merge, split, reorder, add, or delete lines.**
 
 ******************** OUTPUT ********************
 • Output **one line per input line**.
@@ -1684,20 +1724,32 @@ function mergeAdjacentIntervals(
 }
 
 function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
-  const MIN_WORDS = 4;
+  const MIN_WORDS = 4; // fewer than this = “orphan”
+
+  if (!segments.length) return [];
+
   const fused: SrtSegment[] = [];
-  for (const s of segments) {
-    const w = s.original.trim().split(/\s+/).length;
-    if (w < MIN_WORDS && fused.length) {
-      // expand previous caption
+
+  for (const seg of segments) {
+    const wordCount = seg.original.trim().split(/\s+/).length;
+
+    if (wordCount < MIN_WORDS && fused.length) {
       const prev = fused[fused.length - 1];
-      prev.end = s.end; // stretch timing
-      prev.original += ' ' + s.original; // append text
-    } else {
-      fused.push({ ...s });
+      const gap = seg.start - prev.end;
+
+      if (gap < MAX_GAP_TO_FUSE) {
+        // → just a hiccup in the waveform: stretch timing & append text
+        prev.end = seg.end;
+        prev.original = `${prev.original} ${seg.original}`.trim();
+        continue; // don’t push a new caption
+      }
     }
+
+    // normal case – keep caption as is
+    fused.push({ ...seg });
   }
-  // re-index
+
+  // re-index before returning
   return fused.map((s, i) => ({ ...s, index: i + 1 }));
 }
 
@@ -1710,19 +1762,30 @@ async function scrubHallucinationsBatch({
   operationId: string;
   signal?: AbortSignal;
 }): Promise<SrtSegment[]> {
+  const videoLen = segments.at(-1)?.end ?? 0;
+  const SYSTEM_HEADER = `
+VIDEO_LENGTH_SEC = ${Math.round(videoLen)}
+An outro is only valid if caption.start_sec > 0.9 * VIDEO_LENGTH_SEC.
+`;
   /* ───────────────────────── 1. PROMPT ───────────────────────── */
   const systemPrompt = String.raw`
 You are a subtitle noise-filter.
 
+${SYSTEM_HEADER}
+
 TASK
 ────
 For every caption decide whether to
-  • clean  – remove emoji / ★★★★ / ░░░ / "please subscribe", etc.
+  • clean  – remove emoji / ★★★★ / ░░░ / premature "please subscribe", "see you in the next video" etc.
   • delete – if it is only noise (no real words).
 
 OUTPUT  (exactly one line per input, same order)
   @@LINE@@ <index>: <clean text>
 If the caption should be deleted output nothing after the colon.
+
+1. Use common sense - if the caption says something like "please subscribe" or "see you in the next video" etc when video is still far from the end, it's probably a hallucination and should be deleted.
+2. If the caption is spammy, it's probably a hallucination and should be deleted.
+3. Why would a subtitle have any emojis or other non-text characters?
 
 EXAMPLES
 ────────
@@ -1734,7 +1797,7 @@ output → @@LINE@@ 18: Thanks for watching!
 `;
 
   const userPayload = segments
-    .map(s => `${s.index}: ${s.original.replace(/\s+/g, ' ').trim()}`)
+    .map(s => `${s.index} @ ${s.start.toFixed(1)}: ${s.original.trim()}`)
     .join('\n');
 
   const raw = await callAIModel({
