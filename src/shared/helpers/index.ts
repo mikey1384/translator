@@ -17,76 +17,80 @@ export function createFileFromPath(filePath: string): fs.ReadStream {
 }
 
 export function parseSrt(srtString: string): SrtSegment[] {
-  if (!srtString) return [];
+  if (!srtString?.trim()) return [];
 
-  const segments: SrtSegment[] = [];
+  const out: SrtSegment[] = [];
+
   const blocks = srtString
     .trim()
     .split(/\r?\n\r?\n/)
-    .filter(block => block.trim() !== '');
+    .filter(Boolean);
 
-  blocks.forEach((block, _blockIndex) => {
+  blocks.forEach((block, fallbackIdx) => {
     const lines = block.trim().split(/\r?\n/);
-    if (lines.length < 3) {
-      return;
-    }
+    if (lines.length < 3) return;
 
-    const indexLine = lines[0].trim();
-    const timeLine = lines[1].trim();
-    const textLines = lines.slice(2);
-    let text = textLines.join('\n').trim();
-    text = text.replace(/\\n/g, '\n');
-
-    const index = parseInt(indexLine, 10);
-    const timeMatch = timeLine.match(
+    /* header */
+    const index = Number(lines[0].trim()) || fallbackIdx + 1;
+    const timeMatch = lines[1].match(
       /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/
     );
+    if (!timeMatch) return;
 
-    if (isNaN(index)) {
-      return;
-    }
-    if (!timeMatch) {
-      return;
-    }
-    // Use srtTimeToSeconds to correctly parse the time strings
-    const startTime = srtTimeToSeconds(timeMatch[1]);
-    const endTime = srtTimeToSeconds(timeMatch[2]);
+    const start = srtTimeToSeconds(timeMatch[1]);
+    const end = srtTimeToSeconds(timeMatch[2]);
+    if (isNaN(start) || isNaN(end)) return;
 
-    // Basic validation for parsed times
-    if (isNaN(startTime) || isNaN(endTime)) {
-      return;
-    }
+    const textLines = lines.slice(2).map(l => l.replace(/\\n/g, '\n').trim());
+    const original = textLines[0] ?? '';
+    const translation = textLines.length === 2 ? textLines[1] : undefined;
 
-    segments.push({
-      index,
-      start: startTime,
-      end: endTime,
-      text,
-    });
+    out.push({ index, start, end, original, translation });
   });
 
-  return segments;
+  return out;
 }
 
-/**
- * Build SRT content from segments
- */
-export function buildSrt(segments: SrtSegment[]): string {
-  if (segments.length === 0) return '';
+export function buildSrt({
+  segments,
+  mode = 'dual',
+}: {
+  segments: SrtSegment[];
+  mode?: 'original' | 'translation' | 'dual';
+}): string {
+  if (!segments?.length) return '';
 
   return segments
-    .map((segment, i) => {
-      const index = segment.index || i + 1;
-      const startTimeStr = secondsToSrtTime(segment.start);
-      const endTimeStr = secondsToSrtTime(segment.end);
-      return `${index}\n${startTimeStr} --> ${endTimeStr}\n${segment.text}`;
+    .map((seg, i) => {
+      const idx = seg.index ?? i + 1;
+      const start = secondsToSrtTime(seg.start);
+      const end = secondsToSrtTime(seg.end);
+      const cue = cueText(seg, mode);
+
+      return `${idx}\n${start} --> ${end}\n${cue}`;
     })
     .join('\n\n');
 }
 
-/**
- * Convert SRT time format (00:00:00,000) to seconds
- */
+export function cueText(
+  seg: SrtSegment,
+  mode: 'original' | 'translation' | 'dual'
+): string {
+  const hasTrans = !!seg.translation && seg.translation.trim() !== '';
+
+  switch (mode) {
+    case 'original':
+      return seg.original;
+
+    case 'translation':
+      return hasTrans ? seg.translation! : '';
+
+    case 'dual':
+    default:
+      return hasTrans ? `${seg.original}\n${seg.translation}` : seg.original;
+  }
+}
+
 export function srtTimeToSeconds(timeString: string): number {
   if (!timeString) return 0;
   const parts = timeString.split(',');
@@ -216,15 +220,4 @@ export const validateSubtitleTimings = (
     if (fixed.end <= fixed.start) fixed.end = fixed.start + 0.5;
     return fixed;
   });
-};
-
-export const generateSrtContent = (segments: SrtSegment[]): string => {
-  return segments
-    .map((segment, i) => {
-      const index = i + 1;
-      const startTime = secondsToSrtTime(segment.start);
-      const endTime = secondsToSrtTime(segment.end);
-      return `${index}\n${startTime} --> ${endTime}\n${segment.text}`;
-    })
-    .join('\n\n');
 };

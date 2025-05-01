@@ -261,7 +261,10 @@ export async function extractSubtitlesFromVideo({
           stage: `Translating batch ${Math.ceil(batchEnd / TRANSLATION_BATCH_SIZE)} of ${Math.ceil(
             totalSegments / TRANSLATION_BATCH_SIZE
           )}`,
-          partialResult: buildSrt(segmentsInProcess),
+          partialResult: buildSrt({
+            segments: segmentsInProcess,
+            mode: 'dual',
+          }),
           current: batchEnd,
           total: totalSegments,
         });
@@ -320,7 +323,10 @@ export async function extractSubtitlesFromVideo({
           stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
             segmentsInProcess.length / REVIEW_BATCH_SIZE
           )}`,
-          partialResult: buildSrt(segmentsInProcess),
+          partialResult: buildSrt({
+            segments: segmentsInProcess,
+            mode: 'dual',
+          }),
           current: batchEnd,
           total: segmentsInProcess.length,
           batchStartIndex: batchStart,
@@ -373,7 +379,10 @@ export async function extractSubtitlesFromVideo({
       JSON.stringify(finalSegments.slice(25, 28), null, 2)
     );
 
-    const finalSrtContent = buildSrt(finalSegments);
+    const finalSrtContent = buildSrt({
+      segments: finalSegments,
+      mode: 'dual',
+    });
 
     // --- Final Steps ---
     await fileManager.writeTempFile(finalSrtContent, '.srt'); // Write the final version
@@ -653,19 +662,17 @@ export async function generateSubtitlesFromAudio({
         .flat()
         .sort((a, b) => a.start - b.start);
       for (let i = 1; i < thisBatchSegments.length; ++i) {
-        if (thisBatchSegments[i].text === thisBatchSegments[i - 1].text) {
-          thisBatchSegments[i].text = ''; // or drop segment altogether
+        if (
+          thisBatchSegments[i].original === thisBatchSegments[i - 1].original
+        ) {
+          thisBatchSegments[i].original = ''; // or drop segment altogether
         }
       }
 
       // Merge them into the global store
       overallSegments.push(...thisBatchSegments);
 
-      // ---------------------------------------------------------
-      // AFTER we know all transcripts for this slice, update
-      // batchContext so the NEXT loop iteration can use it
-      // ---------------------------------------------------------
-      const orderedText = thisBatchSegments.map(s => s.text).join(' ');
+      const orderedText = thisBatchSegments.map(s => s.original).join(' ');
       batchContext += ' ' + orderedText;
       batchContext = buildPrompt(batchContext);
 
@@ -676,9 +683,11 @@ export async function generateSubtitlesFromAudio({
         (done / chunks.length) *
           (PROGRESS_TRANSCRIPTION_END - PROGRESS_TRANSCRIPTION_START);
 
-      const intermediateSrt = buildSrt(
-        overallSegments.slice().sort((a, b) => a.start - b.start)
-      );
+      const intermediateSrt = buildSrt({
+        segments: overallSegments.slice().sort((a, b) => a.start - b.start),
+        mode: 'dual',
+      });
+
       log.debug(
         `[Transcription Loop] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(
           0,
@@ -708,7 +717,7 @@ export async function generateSubtitlesFromAudio({
           index: ++tmpIdx,
           start: overallSegments[i - 1].end,
           end: overallSegments[i - 1].end + 0.5,
-          text: '',
+          original: '',
         });
       }
     }
@@ -720,12 +729,14 @@ export async function generateSubtitlesFromAudio({
     );
     progressCallback?.({ percent: 100, stage: 'Transcription complete!' });
 
-    // re-index
     const reIndexed = overallSegments.map((seg, i) => ({
       ...seg,
       index: i + 1,
     }));
-    return buildSrt(reIndexed);
+    return buildSrt({
+      segments: reIndexed,
+      mode: 'dual',
+    });
   } catch (error: any) {
     console.error(
       `[${operationId}] Error in generateSubtitlesFromAudio:`,
@@ -873,7 +884,7 @@ async function transcribeChunk({
           index: i + 1,
           start: absoluteStart,
           end: absoluteEnd,
-          text: s.text.trim(),
+          original: s.text.trim(),
         };
       });
 
@@ -917,7 +928,7 @@ async function translateBatch({
   let retryCount = 0;
   const batchContextPrompt = batch.segments.map((segment, idx) => {
     const absoluteIndex = batch.startIndex + idx;
-    return `Line ${absoluteIndex + 1}: ${segment.text}`;
+    return `Line ${absoluteIndex + 1}: ${segment.original}`;
   });
 
   const combinedPrompt = `
@@ -959,8 +970,8 @@ Translate EACH line individually, preserving the line order.
       let lastNonEmptyTranslation = '';
       return batch.segments.map((segment, idx) => {
         const absoluteIndex = batch.startIndex + idx;
-        let translatedText = segment.text;
-        const originalSegmentText = segment.text;
+        let translatedText = segment.translation ?? '';
+        const originalSegmentText = segment.original;
 
         for (const line of translationLines) {
           const match = line.match(lineRegex);
@@ -978,9 +989,7 @@ Translate EACH line individually, preserving the line order.
 
         return {
           ...segment,
-          text: `${originalSegmentText}###TRANSLATION_MARKER###${translatedText}`,
-          originalText: originalSegmentText,
-          translatedText,
+          translation: translatedText,
         };
       });
     } catch (err: any) {
@@ -1017,9 +1026,7 @@ Translate EACH line individually, preserving the line order.
       );
       return batch.segments.map(segment => ({
         ...segment,
-        text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-        originalText: segment.text,
-        translatedText: segment.text,
+        translation: segment.original,
       }));
     }
   }
@@ -1030,9 +1037,7 @@ Translate EACH line individually, preserving the line order.
 
   return batch.segments.map(segment => ({
     ...segment,
-    text: `${segment.text}###TRANSLATION_MARKER###${segment.text}`,
-    originalText: segment.text,
-    translatedText: segment.text,
+    translation: segment.original,
   }));
 }
 
@@ -1049,33 +1054,25 @@ async function reviewTranslationBatch({
     `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
   );
 
-  const batchItemsWithContext = batch.segments.map(
-    (block: any, idx: number) => {
-      const absoluteIndex = batch.startIndex + idx;
-      const [original, translation] = block.text.split(
-        '###TRANSLATION_MARKER###'
-      );
-      return {
-        index: absoluteIndex + 1,
-        original: original?.trim() || '',
-        translation: (translation || original || '').trim(),
-        isPartOfBatch: true,
-      };
-    }
-  );
+  const batchItemsWithContext = batch.segments.map((seg, idx) => ({
+    index: batch.startIndex + idx + 1,
+    original: seg.original.trim(),
+    translation: (seg.translation ?? seg.original).trim(),
+    isPartOfBatch: true,
+  }));
 
   const originalTexts = batchItemsWithContext
-    .map((item: any) => `[${item.index}] ${item.original}`)
+    .map(i => `[${i.index}] ${i.original}`)
     .join('\n');
   const translatedTexts = batchItemsWithContext
-    .map((item: any) => `[${item.index}] ${item.translation}`)
+    .map(i => `[${i.index}] ${i.translation}`)
     .join('\n');
 
   const beforeContext = batch.contextBefore
-    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
+    .map(seg => `[${seg.index}] ${seg.original}`) // seg.original, no “text”
     .join('\n');
   const afterContext = batch.contextAfter
-    .map(seg => `[${seg.index}] ${seg.originalText ?? seg.text}`)
+    .map(seg => `[${seg.index}] ${seg.original}`)
     .join('\n');
 
   const prompt = `
@@ -1148,22 +1145,10 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
     log.info(
       `[Review] Successfully parsed ${parsedLines.length} reviewed lines.`
     );
-    return batch.segments.map((segment: any, idx: number) => {
-      const [originalText] = segment.text.split('###TRANSLATION_MARKER###');
-      // IMPORTANT: Ensure trimming happens correctly here if needed based on AI output habits
-      const reviewedTranslation = parsedLines[idx]?.trim() ?? '';
-
-      // Keep blank if the review explicitly returned blank, otherwise use the review.
-      const finalTranslation = reviewedTranslation; // Simplified
-
-      return {
-        ...segment,
-        text: `${originalText}###TRANSLATION_MARKER###${finalTranslation}`,
-        originalText: originalText,
-        // Keep a record of the reviewed text if needed, adjust property name if desired
-        reviewedText: finalTranslation,
-      };
-    });
+    return batch.segments.map((seg, idx) => ({
+      ...seg,
+      translation: (parsedLines[idx] ?? '').trim(), // may be ''
+    }));
   } catch (error: any) {
     log.error(
       `[Review] Error during initial review batch (${operationId}):`, // Updated log message slightly
@@ -1237,15 +1222,12 @@ function extendShortSubtitleGaps(
 
 function fillBlankTranslations(
   segments: SrtSegment[],
-  carryThreshold: number = SUBTITLE_GAP_THRESHOLD
+  carryThreshold = SUBTITLE_GAP_THRESHOLD
 ): SrtSegment[] {
-  if (segments.length < 2) return segments;
+  let lastGoodIdx = -1;
 
-  let lastGoodIdx = -1; // remember index of last good line
-  const out = segments.map((seg, idx) => {
-    const [orig, trans = ''] = seg.text.split('###TRANSLATION_MARKER###');
-
-    if (trans.trim() !== '') {
+  return segments.map((seg, idx) => {
+    if ((seg.translation ?? '').trim() !== '') {
       lastGoodIdx = idx;
       return seg;
     }
@@ -1254,19 +1236,13 @@ function fillBlankTranslations(
       lastGoodIdx >= 0 &&
       seg.start - segments[lastGoodIdx].end <= carryThreshold
     ) {
-      const carry = segments[lastGoodIdx].text.split(
-        '###TRANSLATION_MARKER###'
-      )[1]!; // previous translation
       return {
         ...seg,
-        text: `${orig}###TRANSLATION_MARKER###${carry}`,
+        translation: segments[lastGoodIdx].translation, // carry-over
       };
     }
-
     return seg;
   });
-
-  return out;
 }
 
 export async function callOpenAIChat({

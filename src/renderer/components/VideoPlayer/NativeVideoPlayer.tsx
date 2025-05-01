@@ -6,8 +6,9 @@ import {
   getNativePlayerInstance,
 } from '../../native-player.js';
 import BaseSubtitleDisplay from '../BaseSubtitleDisplay.js';
+import { SrtSegment } from '../../../types/interface.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
-
+import { cueText } from '../../../shared/helpers/index.js';
 declare global {
   interface Window {
     _videoLastValidTime?: number;
@@ -51,16 +52,13 @@ const PauseIcon = ({ size = '64px', color = '#fff' }: IconProps) => (
 interface NativeVideoPlayerProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   videoUrl: string;
-  subtitles: {
-    start: number | string;
-    end: number | string;
-    text: string;
-  }[];
+  subtitles: SrtSegment[];
   onPlayerReady: (player: HTMLVideoElement) => void;
   isFullyExpanded?: boolean;
   parentRef?: React.RefObject<HTMLDivElement | null>;
   baseFontSize: number;
   stylePreset: SubtitleStylePresetKey;
+  showOriginalText: boolean;
 }
 
 export default function NativeVideoPlayer({
@@ -71,6 +69,7 @@ export default function NativeVideoPlayer({
   isFullyExpanded = false,
   parentRef,
   baseFontSize,
+  showOriginalText,
   stylePreset,
 }: NativeVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -487,17 +486,14 @@ export default function NativeVideoPlayer({
       if (subtitles && subtitles.length > 0) {
         let newSubtitle = '';
         for (const segment of subtitles) {
-          const start =
-            typeof segment.start === 'number'
-              ? segment.start
-              : parseFloat(String(segment.start));
-          const end =
-            typeof segment.end === 'number'
-              ? segment.end
-              : parseFloat(String(segment.end));
-
-          if (newCurrentTime >= start && newCurrentTime <= end) {
-            newSubtitle = segment.text;
+          if (
+            newCurrentTime >= Number(segment.start) &&
+            newCurrentTime <= Number(segment.end)
+          ) {
+            newSubtitle = cueText(
+              segment,
+              showOriginalText ? 'dual' : 'translation'
+            );
             break;
           }
         }

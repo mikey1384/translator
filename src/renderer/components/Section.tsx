@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
-import { sectionStyles } from '../styles';
-import { colors } from '../styles';
+import { sectionStyles } from '../styles.js';
+import { colors } from '../styles.js';
 
 interface SectionProps {
   children: ReactNode;

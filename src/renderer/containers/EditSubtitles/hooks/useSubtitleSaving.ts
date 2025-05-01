@@ -1,7 +1,7 @@
 import { useCallback, Dispatch, SetStateAction } from 'react';
 import { SrtSegment } from '../../../../types/interface.js';
 import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
-import { generateSrtContent } from '../../../../shared/helpers/index.js';
+import { buildSrt } from '../../../../shared/helpers/index.js';
 import { DEFAULT_FILENAME } from '../../../../shared/constants/index.js';
 
 interface UseSubtitleSavingProps {
@@ -44,7 +44,9 @@ export function useSubtitleSaving({
         suggestedName = `${nameWithoutExt}.srt`;
       }
 
-      const srtContent = generateSrtContent(subtitles);
+      const srtContent = buildSrt({
+        segments: subtitles,
+      });
 
       const saveOptions = {
         title: 'Save SRT File As',
@@ -98,8 +100,10 @@ export function useSubtitleSaving({
     }
 
     try {
-      setSaveError(''); // Clear previous errors
-      const srtContent = generateSrtContent(subtitles);
+      setSaveError('');
+      const srtContent = buildSrt({
+        segments: subtitles,
+      });
 
       const saveOptions = {
         content: srtContent,

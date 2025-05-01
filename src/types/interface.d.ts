@@ -247,14 +247,19 @@ export interface OpenFileOptions {
   multiple?: boolean;
 }
 
+export type EditField = 'start' | 'end' | 'original' | 'translation';
+export type EditArgs = {
+  index: number;
+  field: EditField;
+  value: number | string;
+};
+
 export interface SrtSegment {
   index: number;
   start: number;
   end: number;
-  text: string;
-  originalText?: string;
-  translatedText?: string;
-  reviewedText?: string;
+  original: string;
+  translation?: string;
   reviewedInBatch?: number;
 }
 
@@ -332,4 +337,5 @@ export interface RenderSubtitlesOptions {
   originalVideoPath?: string;
   overlayMode?: 'overlayOnVideo' | 'blackVideo';
   stylePreset?: SubtitleStylePresetKey;
+  outputMode?: 'original' | 'translation' | 'dual';
 }

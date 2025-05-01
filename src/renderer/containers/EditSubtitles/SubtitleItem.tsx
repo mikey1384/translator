@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment, EditArgs } from '../../../types/interface.js';
 import SubtitleEditor from './SubtitleEditor.js';
 import { useLazyLoad } from './hooks/useLazyLoad.js';
 import { css } from '@emotion/css';
@@ -11,11 +11,7 @@ interface SubtitleItemProps {
   editingTimes: Record<string, string>;
   isPlaying: boolean;
   secondsToSrtTime: (seconds: number) => string;
-  onEditSubtitle: (
-    index: number,
-    field: 'start' | 'end' | 'text',
-    value: number | string
-  ) => void;
+  onEditSubtitle: (args: EditArgs) => void;
   onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
   onRemoveSubtitle: (index: number) => void;
   onInsertSubtitle: (index: number) => void;
@@ -24,7 +20,6 @@ interface SubtitleItemProps {
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
   searchText: string;
-  showOriginalText: boolean;
   forcedIndex: number | null;
 }
 
@@ -44,7 +39,6 @@ function SubtitleItem({
   isShiftingDisabled,
   searchText,
   forcedIndex,
-  showOriginalText,
 }: SubtitleItemProps) {
   const [ComponentRef, inView] = useInView();
 
@@ -91,7 +85,6 @@ function SubtitleItem({
             onSeekToSubtitle={onSeekToSubtitle}
             onPlaySubtitle={onPlaySubtitle}
             onShiftSubtitle={onShiftSubtitle}
-            showOriginalText={showOriginalText}
             isShiftingDisabled={isShiftingDisabled}
             searchText={searchText}
           />

@@ -169,7 +169,7 @@ function AppContent() {
     setIsTranslationInProgress,
     setSubtitleSegments,
     setSubtitleSourceId,
-  } = useSubtitleState(showOriginalText);
+  } = useSubtitleState();
 
   const [isMergingInProgress, setIsMergingInProgress] =
     useState<boolean>(false);
@@ -342,13 +342,18 @@ function AppContent() {
 
     const lowerSearch = searchText.toLowerCase();
     const newMatches = subtitleSegments
-      .map((seg, idx) =>
-        seg.text.toLowerCase().includes(lowerSearch) ? idx : -1
-      )
+      .map((seg, idx) => {
+        const haystack = showOriginalText
+          ? `${seg.original}\n${seg.translation ?? ''}`
+          : (seg.translation ?? seg.original);
+
+        return haystack.toLowerCase().includes(lowerSearch) ? idx : -1;
+      })
       .filter(idx => idx !== -1);
 
     setMatchedIndices(newMatches);
     setActiveMatchIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText, subtitleSegments]);
 
   useEffect(() => {
@@ -803,7 +808,6 @@ function AppContent() {
                   saveError={saveError}
                   setSaveError={setSaveError}
                   searchText={searchText}
-                  showOriginalText={showOriginalText}
                   onStartPngRenderRequest={handleStartPngRenderFromChild}
                   videoDuration={videoMetadata?.duration}
                   videoWidth={videoMetadata?.width}
@@ -1052,9 +1056,9 @@ function AppContent() {
         const escapedFindText = findText.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
         const regex = new RegExp(escapedFindText, 'gi');
 
-        return currentSegments.map((segment: SrtSegment) => ({
-          ...segment,
-          text: segment.text.replace(regex, replaceWithText),
+        return currentSegments.map(seg => ({
+          ...seg,
+          translation: (seg.translation ?? '').replace(regex, replaceWithText),
         }));
       } catch (error) {
         console.error('Error during Replace All regex operation:', error);

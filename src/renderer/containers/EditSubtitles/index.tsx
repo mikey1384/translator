@@ -23,7 +23,10 @@ import {
 } from '../../native-player.js';
 import { subtitleVideoPlayer } from '../../../shared/constants/index.js';
 
-import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
+import {
+  buildSrt,
+  openSubtitleWithElectron,
+} from '../../../shared/helpers/index.js';
 
 import { secondsToSrtTime } from '../../../shared/helpers/index.js';
 import { useSubtitleNavigation } from './hooks.js';
@@ -62,7 +65,6 @@ export interface EditSubtitlesProps {
   saveError: string;
   setSaveError: Dispatch<SetStateAction<string>>;
   searchText?: string;
-  showOriginalText: boolean;
   onStartPngRenderRequest: (
     options: RenderSubtitlesOptions
   ) => Promise<{ success: boolean; error?: string; outputPath?: string }>;
@@ -87,7 +89,6 @@ export function EditSubtitles({
   isMergingInProgress: isMergingInProgressProp,
   onSelectVideoClick,
   setMergeStage,
-  showOriginalText,
   onSetMergeOperationId,
   editorRef,
   onSetSubtitleSegments,
@@ -162,15 +163,12 @@ export function EditSubtitles({
         error
       );
     } finally {
-      // Ensure loading state is set to false after attempting to load
       console.log('[EditSubtitles] Finished loading settings attempt.');
       setIsLoadingSettings(false);
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
-  // Save mergeFontSize to localStorage whenever it changes
   useEffect(() => {
-    // Only save if initial loading is complete
     if (!isLoadingSettings) {
       console.log(
         `[EditSubtitles] Attempting to save mergeFontSize: ${mergeFontSize}`
@@ -512,7 +510,6 @@ export function EditSubtitles({
             <SubtitleList
               subtitles={subtitlesProp}
               subtitleRefs={subtitleRefs}
-              showOriginalText={showOriginalText}
               editingTimes={editingTimesState}
               isPlaying={isPlayingState}
               secondsToSrtTime={secondsToSrtTimeFn}
@@ -804,13 +801,10 @@ export function EditSubtitles({
     onSetMergeOperationId(operationId); // Set operation ID if needed by UI
 
     try {
-      // --- Gather required options ---
-      const srtContent = subtitlesProp
-        ?.map(
-          s =>
-            `${s.index}\n${secondsToSrtTimeFn(s.start)} --> ${secondsToSrtTimeFn(s.end)}\n${s.text}\n`
-        )
-        .join('\n');
+      const srtContent = buildSrt({
+        segments: subtitlesProp,
+        mode: 'dual',
+      });
       const videoDuration = videoDurationProp ?? 0; // Already checked above
       const videoWidth = isAudioOnly ? 1280 : (videoWidthProp ?? 1280);
       const videoHeight = isAudioOnly ? 720 : (videoHeightProp ?? 720);
@@ -871,16 +865,9 @@ export function EditSubtitles({
   }
 
   function handleRemoveSubtitleLocal(index: number) {
-    // Add confirmation before removing
-    if (
-      !window.confirm(
-        t('editSubtitles.item.confirmRemove') // Use translation key
-      )
-    ) {
-      return; // Stop if user cancels
+    if (!window.confirm(t('editSubtitles.item.confirmRemove'))) {
+      return;
     }
-    // Actual removal logic
-    // Use onSetSubtitlesDirectly
     if (onSetSubtitleSegments && subtitlesProp) {
       const updated = (subtitlesProp || [])
         .filter((_, i) => i !== index)
@@ -890,26 +877,26 @@ export function EditSubtitles({
   }
 
   function handleInsertSubtitleLocal(index: number) {
-    // Use onSetSubtitlesDirectly
-    if (onSetSubtitleSegments && subtitlesProp) {
-      // Use subtitlesProp
-      const currentSub = subtitlesProp[index];
-      const nextSub =
-        index < subtitlesProp.length - 1 ? subtitlesProp[index + 1] : null;
-      const newStart = currentSub.end;
-      const newEnd = nextSub ? nextSub.start : currentSub.end + 2;
-      const newSubtitle = {
-        index: index + 2, // This will be fixed by map below
-        start: newStart,
-        end: newEnd,
-        text: '',
-      };
-      const updated = [
-        ...(subtitlesProp || []).slice(0, index + 1),
-        newSubtitle,
-        ...(subtitlesProp || []).slice(index + 1),
-      ].map((sub, i) => ({ ...sub, index: i + 1 }));
-      onSetSubtitleSegments(updated);
-    }
+    if (!onSetSubtitleSegments || !subtitlesProp) return;
+
+    const curr = subtitlesProp[index];
+    const next =
+      index < subtitlesProp.length - 1 ? subtitlesProp[index + 1] : null;
+
+    const newSubtitle: SrtSegment = {
+      index: index + 2,
+      start: curr.end,
+      end: next ? next.start : curr.end + 2,
+      original: '',
+      translation: '',
+    };
+
+    const updated = [
+      ...subtitlesProp.slice(0, index + 1),
+      newSubtitle,
+      ...subtitlesProp.slice(index + 1),
+    ].map((s, i) => ({ ...s, index: i + 1 }));
+
+    onSetSubtitleSegments(updated);
   }
 }

@@ -9,6 +9,7 @@ import { getAssetsPath } from '../shared/helpers/paths.js';
 import { pathToFileURL } from 'url';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
+import { cueText } from '../shared/helpers/index.js';
 import { spawn, ChildProcess } from 'child_process';
 import os from 'os';
 
@@ -233,7 +234,12 @@ export function initializeRenderWindowHandlers(): void {
           );
 
           // Add event for text appearing
-          eventsMs.push({ timeMs: startMs, text: seg.text });
+          const subtitleText = cueText(
+            seg,
+            options.outputMode ?? 'dual' // default keeps previous behaviour
+          );
+
+          eventsMs.push({ timeMs: startMs, text: subtitleText });
           // Add event for text disappearing
           eventsMs.push({ timeMs: endMs, text: '' });
         });

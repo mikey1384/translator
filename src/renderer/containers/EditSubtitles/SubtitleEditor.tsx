@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment, EditArgs } from '../../../types/interface.js';
 import { colors } from '../../styles.js';
 import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
 import { useTranslation } from 'react-i18next';
@@ -48,11 +48,7 @@ export default function SubtitleEditor({
   editingTimes: Record<string, string>;
   isPlaying: boolean;
   secondsToSrtTime: (seconds: number) => string;
-  onEditSubtitle: (
-    index: number,
-    field: 'start' | 'end' | 'text',
-    value: number | string
-  ) => void;
+  onEditSubtitle: ({ index, field, value }: EditArgs) => void;
   onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
   onRemoveSubtitle: (index: number) => void;
   onInsertSubtitle: (index: number) => void;
@@ -61,7 +57,6 @@ export default function SubtitleEditor({
   onShiftSubtitle: (index: number, shiftSeconds: number) => void;
   isShiftingDisabled: boolean;
   searchText?: string;
-  showOriginalText: boolean;
 }) {
   const { t } = useTranslation();
   const [shiftAmount, setShiftAmount] = useState('0');
@@ -188,15 +183,22 @@ export default function SubtitleEditor({
 
       {/* --- Replace Textarea with HighlightedTextarea --- START --- */}
       <HighlightedTextarea
-        value={sub.text}
+        value={sub.original}
         searchTerm={searchText || ''}
-        onChange={handleTextChange}
-        rows={4} // Adjust rows as needed
+        onChange={v => onEditSubtitle({ index, field: 'original', value: v })}
+        rows={4}
         placeholder={t('editSubtitles.item.subtitlePlaceholder')}
       />
-      {/* --- Replace Textarea with HighlightedTextarea --- END --- */}
+      <HighlightedTextarea
+        value={sub.translation ?? ''}
+        searchTerm={searchText || ''}
+        onChange={v =>
+          onEditSubtitle({ index, field: 'translation', value: v })
+        }
+        rows={4}
+        placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+      />
 
-      {/* Bottom Row: Time Inputs, Shift Controls - Now all grouped */}
       <div
         className={css`
           display: flex;
@@ -260,12 +262,8 @@ export default function SubtitleEditor({
     </div>
   );
 
-  function handleTextChange(newValue: string) {
-    onEditSubtitle(index, 'text', newValue);
-  }
-
   function handleTimeChange(field: 'start' | 'end', value: string) {
-    onEditSubtitle(index, field, value);
+    onEditSubtitle({ index, field, value });
   }
 
   function handleApplyShift() {

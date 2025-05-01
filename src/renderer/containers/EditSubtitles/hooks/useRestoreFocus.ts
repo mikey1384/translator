@@ -1,9 +1,10 @@
 import { useCallback, RefObject } from 'react';
+import { EditField } from '../../../../types/interface.js';
 
 // Define the type for the ref object that holds focus information
 interface FocusRef {
   index: number | null;
-  field: 'start' | 'end' | 'text' | null;
+  field: EditField | null;
 }
 
 /**

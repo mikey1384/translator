@@ -1,9 +1,15 @@
 import { useState, useRef, Dispatch, SetStateAction, useEffect } from 'react';
 import { debounce } from 'lodash';
-import { SrtSegment } from '../../../../types/interface.js';
+import { EditField, SrtSegment } from '../../../../types/interface.js';
 import { srtTimeToSeconds } from '../../../../shared/helpers/index.js';
 import { useRestoreFocus } from './useRestoreFocus.js';
 import { DEBOUNCE_DELAY_MS } from '../../../../shared/constants/index.js';
+
+type EditArgs = {
+  index: number;
+  field: EditField;
+  value: number | string;
+};
 
 export function useSubtitleEditing({
   subtitles,
@@ -27,7 +33,7 @@ export function useSubtitleEditing({
   // Used to restore focus after editing
   const focusedInputRef = useRef<{
     index: number | null;
-    field: 'start' | 'end' | 'text' | null;
+    field: EditField | null;
   }>({ index: null, field: null });
 
   // Internal focus restoration logic is handled by useRestoreFocus
@@ -96,64 +102,28 @@ export function useSubtitleEditing({
   }
 
   // Use standard function declaration
-  function handleEditSubtitle(
-    index: number,
-    field: 'start' | 'end' | 'text',
-    value: number | string
-  ) {
+  function handleEditSubtitle({ index, field, value }: EditArgs) {
     if (!subtitles || !onSetSubtitleSegments) return; // Guard against undefined props
 
     focusedInputRef.current = { index, field };
 
-    if (field === 'text') {
-      // --- Restore Debounce Logic --- START ---
-      const debounceTextKey = `${index}-text`;
-      if (!debouncedTextUpdateRef?.current[debounceTextKey]) {
+    if (field === 'original' || field === 'translation') {
+      // Debounce-set the *translation* field
+      const debounceTextKey = `${index}-${field}`;
+
+      if (!debouncedTextUpdateRef.current[debounceTextKey]) {
         debouncedTextUpdateRef.current[debounceTextKey] = debounce(
-          (newTextValue: string) => {
-            // --- Moved Marker Logic Inside Functional Update --- START ---
-            const currentSegments = subtitles || [];
-            if (index < 0 || index >= currentSegments.length) {
-              // Should not happen, but safety check
-              console.warn(
-                `[useSubtitleEditing] Debounced update: Invalid index ${index}`
-              );
-              return; // Return unchanged state
-            }
-            const currentSub = currentSegments[index];
-            const currentHasMarker = currentSub.text.includes(
-              '###TRANSLATION_MARKER###'
-            );
-            const originalTextPart = currentHasMarker
-              ? currentSub.text.split('###TRANSLATION_MARKER###')[0] || ''
-              : '';
-
-            let combinedText = newTextValue;
-            if (currentHasMarker) {
-              combinedText =
-                originalTextPart + '###TRANSLATION_MARKER###' + newTextValue;
-            }
-            // --- Moved Marker Logic Inside Functional Update --- END ---
-
-            onSetSubtitleSegments(current => {
-              const updatedSegments = [...current];
-              if (updatedSegments[index]) {
-                // Update with the potentially combined text
-                updatedSegments[index] = {
-                  ...updatedSegments[index],
-                  text: combinedText, // Use the combined text
-                };
-              }
-              return updatedSegments;
+          (newValue: string) => {
+            onSetSubtitleSegments(curr => {
+              const out = [...curr];
+              if (out[index]) out[index] = { ...out[index], [field]: newValue };
+              return out;
             });
           },
           DEBOUNCE_DELAY_MS
         );
       }
-      // Pass only the editable part to the debounced function
-      debouncedTextUpdateRef?.current[debounceTextKey](value as string);
-      // --- Restore Debounce Logic --- END ---
-
+      debouncedTextUpdateRef.current[debounceTextKey](value as string);
       return;
     }
 

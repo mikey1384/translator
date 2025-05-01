@@ -1,6 +1,6 @@
 import React, { ButtonHTMLAttributes } from 'react';
 import { css, cx } from '@emotion/css';
-import { colors } from '../styles';
+import { colors } from '../styles.js';
 
 // Define the button variants and sizes
 type IconButtonVariant = 'primary' | 'secondary' | 'transparent';

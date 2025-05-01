@@ -1,8 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { SrtSegment } from '../../../../types/interface.js';
 import { parseSrt } from '../../../../shared/helpers/index.js';
 
-export function useSubtitleState(showOriginalText: boolean) {
+type ProgressMsg = {
+  partialResult?: string;
+  percent?: number;
+  stage?: string;
+  current?: number;
+  total?: number;
+  batchStartIndex?: number;
+  operationId?: string;
+};
+
+export function useSubtitleState() {
   const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
   const [isTranslationInProgress, setIsTranslationInProgress] =
     useState<boolean>(false);
@@ -18,78 +28,38 @@ export function useSubtitleState(showOriginalText: boolean) {
     string | null
   >(null);
 
-  const handlePartialResultRef = useRef<any>(null);
+  const handlePartialResultRef = useRef<null | ((p: ProgressMsg) => void)>(
+    null
+  );
+
+  const handlePartialResult = useCallback((result: ProgressMsg = {}) => {
+    const {
+      partialResult = '',
+      percent = 0,
+      stage = 'Processing',
+      batchStartIndex,
+      operationId,
+    } = result;
+
+    if (batchStartIndex !== undefined)
+      setReviewedBatchStartIndex(batchStartIndex);
+
+    if (partialResult.trim()) {
+      setIsReceivingPartialResults(true);
+      const parsed = parseSrt(partialResult);
+      setSubtitleSegments(parsed);
+    }
+
+    setTranslationProgress(percent);
+    setTranslationStage(stage);
+    if (operationId) setTranslationOperationId(operationId);
+
+    setIsTranslationInProgress(percent < 100);
+  }, []);
+
   useEffect(() => {
     handlePartialResultRef.current = handlePartialResult;
-
-    function handlePartialResult(result: {
-      partialResult?: string;
-      percent?: number;
-      stage?: string;
-      current?: number;
-      total?: number;
-      batchStartIndex?: number;
-      operationId?: string;
-    }) {
-      try {
-        const safeResult = {
-          partialResult: result?.partialResult || '',
-          percent: result?.percent || 0,
-          stage: result?.stage || 'Processing',
-          current: result?.current || 0,
-          total: result?.total || 100,
-          batchStartIndex: result?.batchStartIndex,
-          operationId: result?.operationId,
-        };
-
-        if (safeResult.batchStartIndex !== undefined) {
-          setReviewedBatchStartIndex(safeResult.batchStartIndex);
-        }
-
-        if (
-          safeResult.partialResult &&
-          safeResult.partialResult.trim().length > 0
-        ) {
-          setIsReceivingPartialResults(true);
-          const parsedSegments = parseSrt(safeResult.partialResult);
-          const processedSegments = parsedSegments.map((segment: any) => {
-            let processedText = segment.text;
-            if (segment.text.includes('###TRANSLATION_MARKER###')) {
-              if (showOriginalText) {
-                processedText = segment.text.replace(
-                  '###TRANSLATION_MARKER###',
-                  '\n'
-                );
-              } else {
-                const parts = segment.text.split('###TRANSLATION_MARKER###');
-                processedText = parts[1] ? parts[1].trim() : '';
-              }
-            }
-            return {
-              ...segment,
-              text: processedText,
-            };
-          });
-          setSubtitleSegments(processedSegments);
-        }
-
-        setTranslationProgress(safeResult.percent);
-        setTranslationStage(safeResult.stage);
-        if (safeResult.percent < 100) {
-          setIsTranslationInProgress(true);
-        }
-
-        if (safeResult.operationId) {
-          setTranslationOperationId(safeResult.operationId);
-        }
-      } catch (error) {
-        console.error(
-          '[useSubtitleManagement] Error handling partial result:',
-          error
-        );
-      }
-    }
-  }, [showOriginalText]);
+  }, [handlePartialResult]);
 
   useEffect(() => {
     let cleanupGenerate: (() => void) | null = null;

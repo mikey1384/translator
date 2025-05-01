@@ -1,20 +1,15 @@
 import { RefObject } from 'react';
 import { css } from '@emotion/css';
 import SubtitleItem from './SubtitleItem.js';
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment, EditArgs } from '../../../types/interface.js';
 
 export interface SubtitleListProps {
   subtitles: SrtSegment[];
-  showOriginalText: boolean;
   subtitleRefs: RefObject<(HTMLDivElement | null)[]>;
   editingTimes: Record<string, string>;
   isPlaying: boolean;
   secondsToSrtTime: (seconds: number) => string;
-  onEditSubtitle: (
-    index: number,
-    field: 'start' | 'end' | 'text',
-    value: number | string
-  ) => void;
+  onEditSubtitle: (args: EditArgs) => void;
   onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
   onRemoveSubtitle: (index: number) => void;
   onInsertSubtitle: (index: number) => void;
@@ -29,7 +24,6 @@ export interface SubtitleListProps {
 function SubtitleList({
   subtitles,
   subtitleRefs,
-  showOriginalText,
   editingTimes,
   isPlaying,
   secondsToSrtTime,
@@ -82,7 +76,7 @@ function SubtitleList({
     >
       {subtitles.map((sub, index) => (
         <div
-          key={`${sub.index}-${sub.start}-${sub.text.slice(0, 10)}`}
+          key={`${sub.index}-${sub.start}-${sub.original.slice(0, 10)}`}
           ref={el => {
             if (subtitleRefs && subtitleRefs?.current) {
               subtitleRefs.current[index] = el;
@@ -99,7 +93,6 @@ function SubtitleList({
             editingTimes={editingTimes}
             isPlaying={isPlaying}
             secondsToSrtTime={secondsToSrtTime}
-            showOriginalText={showOriginalText}
             onEditSubtitle={onEditSubtitle}
             onTimeInputBlur={onTimeInputBlur}
             onRemoveSubtitle={onRemoveSubtitle}
