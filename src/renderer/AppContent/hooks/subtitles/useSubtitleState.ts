@@ -49,7 +49,6 @@ export function useSubtitleState() {
       const parsed = parseSrt(partialResult);
       setSubtitleSegments(parsed);
     }
-
     setTranslationProgress(percent);
     setTranslationStage(stage);
     if (operationId) setTranslationOperationId(operationId);

@@ -284,22 +284,19 @@ function AppContent() {
       showOriginalText,
     });
 
-  const {
-    handleSetVideoFile,
-    handleSrtFileLoaded,
-    handleTogglePlay,
-    handleVideoPlayerReady,
-  } = useVideoActions({
-    setVideoFile,
-    setVideoUrl,
-    setVideoFilePath,
-    setIsPlaying,
-    setIsAudioOnly,
-    setOriginalSrtFilePath,
-    setSaveError,
-    setIsVideoPlayerReady,
-    videoUrl,
-  });
+  const { handleSetVideoFile, handleTogglePlay, handleVideoPlayerReady } =
+    useVideoActions({
+      setVideoFile,
+      setVideoUrl,
+      setVideoFilePath,
+      setIsPlaying,
+      setIsAudioOnly,
+      setOriginalSrtFilePath,
+      setSaveError,
+      setIsVideoPlayerReady,
+      videoUrl,
+      onSrtFileLoaded: handleSrtFileLoaded,
+    });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
@@ -738,11 +735,12 @@ function AppContent() {
                 onPlayerReady={handleVideoPlayerReady}
                 onSelectVideoClick={handleSelectVideoClick}
                 onProcessUrl={onProcessUrl}
-                onSrtLoaded={handleSetSubtitleSegments}
                 onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
                 onTogglePlay={handleTogglePlay}
                 onShiftAllSubtitles={handleShiftAllSubtitles}
                 onSetUrlInput={setUrlInput}
+                onSetSubtitleSegments={handleSetSubtitleSegments}
+                onSrtFileLoaded={handleSrtFileLoaded}
                 urlInput={urlInput}
                 isProgressBarVisible={
                   isMergingInProgress || isTranslationInProgress
@@ -1070,6 +1068,11 @@ function AppContent() {
     }
   }
 
+  function handleSrtFileLoaded(filePath: string | null) {
+    setOriginalSrtFilePath(filePath);
+    setSaveError('');
+  }
+
   async function onProcessUrl() {
     if (!urlInput || !window.electron) {
       setError('Please enter a valid video URL');
@@ -1191,6 +1194,7 @@ function AppContent() {
       }
 
       if (result.subtitles) {
+        setOriginalSrtFilePath(null);
         try {
           const finalSegments = parseSrt(result.subtitles);
           handleSetSubtitleSegments(finalSegments);

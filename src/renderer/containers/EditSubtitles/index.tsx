@@ -572,7 +572,7 @@ export function EditSubtitles({
   );
 
   async function handleLoadSrtLocal() {
-    setSaveError(''); // Clear save error on new load attempt
+    setSaveError('');
     console.log('Attempting to load SRT file via Electron...');
     const result = await openSubtitleWithElectron();
 
@@ -588,8 +588,8 @@ export function EditSubtitles({
       console.log(
         `[handleLoadSrtLocal] Successfully loaded SRT: ${result.filePath}, segments count: ${result.segments.length}`
       );
-      onSetSubtitleSegments(result.segments); // Update segments & potentially trigger ID change in parent
-      onSrtFileLoaded(result.filePath); // Call the new callback prop from App.tsx
+      onSetSubtitleSegments(result.segments);
+      onSrtFileLoaded(result.filePath);
       setSaveError(''); // Clear any previous errors on success
     } else {
       console.warn('[handleLoadSrtLocal] Unexpected result:', result);

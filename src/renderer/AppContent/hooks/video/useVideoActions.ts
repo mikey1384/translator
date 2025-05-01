@@ -14,12 +14,12 @@ export function useVideoActions({
   setVideoUrl,
   setVideoFilePath,
   setIsPlaying,
-  setOriginalSrtFilePath,
-  setSaveError,
+  onSrtFileLoaded,
   setIsVideoPlayerReady,
-  setIsAudioOnly, // <-- [NEW]
+  setIsAudioOnly,
   videoUrl,
 }: {
+  onSrtFileLoaded: (filePath: string | null) => void;
   setVideoFile: (value: File | null) => void;
   setVideoUrl: (value: string) => void;
   setVideoFilePath: (value: string | null) => void;
@@ -55,6 +55,7 @@ export function useVideoActions({
   async function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
   ) {
+    onSrtFileLoaded(null);
     setIsVideoPlayerReady(false);
 
     // Revoke any old blob URL to avoid memory leaks
@@ -124,16 +125,6 @@ export function useVideoActions({
     setIsPlaying(false);
   }
 
-  /**
-   * -------------------------------------------------------------
-   * 3. Misc helpers
-   * -------------------------------------------------------------
-   */
-  function handleSrtFileLoaded(filePath: string) {
-    setOriginalSrtFilePath(filePath);
-    setSaveError('');
-  }
-
   async function handleTogglePlay() {
     try {
       if (nativeIsPlaying()) {
@@ -159,7 +150,6 @@ export function useVideoActions({
    */
   return {
     handleSetVideoFile,
-    handleSrtFileLoaded,
     handleTogglePlay,
     handleVideoPlayerReady,
   };

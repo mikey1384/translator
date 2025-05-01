@@ -3,8 +3,7 @@ import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import Button from '../Button.js';
 import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
-import { SrtSegment } from '../../../types/interface.js';
-import { VideoQuality } from '../../../types/interface.js';
+import { SrtSegment, VideoQuality } from '../../../types/interface.js';
 import { useTranslation } from 'react-i18next';
 
 export default function SideMenu({
@@ -12,25 +11,27 @@ export default function SideMenu({
   hasSubtitles = false,
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
-  onSrtLoaded,
   onUiInteraction,
   onSelectVideoClick,
   onSetUrlInput,
   urlInput,
   downloadQuality,
   onSetDownloadQuality,
+  onSetSubtitleSegments,
+  onSrtFileLoaded,
 }: {
   onProcessUrl: () => void;
   hasSubtitles?: boolean;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
-  onSrtLoaded: (segments: SrtSegment[]) => void;
   onUiInteraction?: () => void;
   onSelectVideoClick: () => void;
   onSetUrlInput: (url: string) => void;
   urlInput: string;
   downloadQuality: VideoQuality;
   onSetDownloadQuality: (quality: VideoQuality) => void;
+  onSrtFileLoaded: (filePath: string | null) => void;
+  onSetSubtitleSegments: (segments: SrtSegment[]) => void;
 }) {
   const { t } = useTranslation();
   // State for the shift input field
@@ -340,8 +341,9 @@ export default function SideMenu({
   async function handleSrtLoad() {
     try {
       const result = await openSubtitleWithElectron();
-      if (result.segments) {
-        onSrtLoaded(result.segments);
+      if (result.filePath && result.segments) {
+        onSrtFileLoaded(result.filePath);
+        onSetSubtitleSegments(result.segments);
       } else if (result.error && !result.error.includes('canceled')) {
         console.error('Error loading SRT:', result.error);
       }

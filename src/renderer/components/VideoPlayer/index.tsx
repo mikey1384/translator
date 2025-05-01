@@ -234,12 +234,13 @@ export default function VideoPlayer({
   onSelectVideoClick,
   onSetUrlInput,
   urlInput,
-  onSrtLoaded,
   onScrollToCurrentSubtitle,
   onTogglePlay,
   onShiftAllSubtitles,
   onUiInteraction,
   onProcessUrl,
+  onSetSubtitleSegments,
+  onSrtFileLoaded,
   mergeFontSize,
   mergeStylePreset,
   downloadQuality,
@@ -254,12 +255,13 @@ export default function VideoPlayer({
   urlInput: string;
   onPlayerReady: (player: any) => void;
   onSelectVideoClick: () => void;
-  onSrtLoaded: (segments: SrtSegment[]) => void;
+  onSetSubtitleSegments: (segments: SrtSegment[]) => void;
   onScrollToCurrentSubtitle?: () => void;
   onTogglePlay?: () => void;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onUiInteraction?: () => void;
   onProcessUrl: () => void;
+  onSrtFileLoaded: (filePath: string | null) => void;
   mergeFontSize: number;
   mergeStylePreset: SubtitleStylePresetKey;
   downloadQuality: VideoQuality;
@@ -770,7 +772,6 @@ export default function VideoPlayer({
             <SideMenu
               onProcessUrl={onProcessUrl}
               hasSubtitles={subtitles && subtitles.length > 0}
-              onSrtLoaded={onSrtLoaded}
               onShiftAllSubtitles={onShiftAllSubtitles}
               onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
               onUiInteraction={handleUiInteraction}
@@ -779,6 +780,8 @@ export default function VideoPlayer({
               onSelectVideoClick={onSelectVideoClick}
               downloadQuality={downloadQuality}
               onSetDownloadQuality={onSetDownloadQuality}
+              onSrtFileLoaded={onSrtFileLoaded}
+              onSetSubtitleSegments={onSetSubtitleSegments}
             />
           </div>
         )}

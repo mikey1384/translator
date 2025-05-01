@@ -80,10 +80,10 @@ export function cueText(
 
   switch (mode) {
     case 'original':
-      return seg.original;
+      return seg.original || seg.translation || '';
 
     case 'translation':
-      return hasTrans ? seg.translation! : '';
+      return hasTrans ? seg.translation! : seg.original;
 
     case 'dual':
     default:

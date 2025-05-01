@@ -156,32 +156,30 @@ export default function GenerateSubtitlesPanel({
           ))}
         </select>
 
-        {targetLanguage !== 'original' && (
-          <div
+        <div
+          className={css`
+            margin-top: 8px;
+          `}
+        >
+          <label
             className={css`
-              margin-top: 8px;
+              display: inline-flex;
+              align-items: center;
+              cursor: pointer;
             `}
           >
-            <label
+            <input
+              type="checkbox"
+              checked={showOriginalText || targetLanguage === 'original'}
+              onChange={e => onShowOriginalTextChange(e.target.checked)}
               className={css`
-                display: inline-flex;
-                align-items: center;
-                cursor: pointer;
+                margin-right: 6px;
+                accent-color: #4361ee;
               `}
-            >
-              <input
-                type="checkbox"
-                checked={showOriginalText}
-                onChange={e => onShowOriginalTextChange(e.target.checked)}
-                className={css`
-                  margin-right: 6px;
-                  accent-color: #4361ee;
-                `}
-              />
-              {t('subtitles.showOriginalText')}
-            </label>
-          </div>
-        )}
+            />
+            {t('subtitles.showOriginalText')}
+          </label>
+        </div>
       </div>
 
       <div>
