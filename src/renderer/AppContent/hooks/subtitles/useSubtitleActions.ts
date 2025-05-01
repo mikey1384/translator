@@ -11,6 +11,7 @@ export function useSubtitleActions({
   setSubtitleSourceId,
   setSaveError,
   onSaveAsComplete,
+  showOriginalText,
 }: {
   subtitles: SrtSegment[];
   originalSrtFilePath: string | null;
@@ -18,6 +19,7 @@ export function useSubtitleActions({
   setSubtitleSourceId: Dispatch<SetStateAction<number>>;
   setSaveError: Dispatch<SetStateAction<string>>;
   onSaveAsComplete: (newFilePath: string) => void;
+  showOriginalText: boolean;
 }): {
   handleSaveSrt: () => Promise<void>;
   handleSaveEditedSrtAs: () => Promise<void>;
@@ -43,6 +45,7 @@ export function useSubtitleActions({
 
       const srtContent = buildSrt({
         segments: subtitles,
+        mode: showOriginalText ? 'dual' : 'translation',
       });
 
       const saveOptions = {
@@ -99,6 +102,7 @@ export function useSubtitleActions({
       setSaveError('');
       const srtContent = buildSrt({
         segments: subtitles,
+        mode: showOriginalText ? 'dual' : 'translation',
       });
 
       const saveOptions = {

@@ -281,6 +281,7 @@ function AppContent() {
       onSaveAsComplete: handleSaveAsComplete,
       setSubtitleSegments,
       setSubtitleSourceId,
+      showOriginalText,
     });
 
   const {
