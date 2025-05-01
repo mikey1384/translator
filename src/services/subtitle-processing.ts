@@ -747,7 +747,7 @@ export async function generateSubtitlesFromAudio({
       );
       progressCallback?.({
         percent: Math.round(p),
-        stage: `Transcribed & scrubbed ${done}/${chunks.length} chunks`, // (Optional) show progress while scrubbing
+        stage: `Transcribed & scrubbed ${done}/${chunks.length} chunks`,
         current: done,
         total: chunks.length,
         partialResult: intermediateSrt,
