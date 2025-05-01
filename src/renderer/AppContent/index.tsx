@@ -750,6 +750,7 @@ function AppContent() {
                 mergeStylePreset={mergeStylePreset}
                 downloadQuality={downloadQuality}
                 onSetDownloadQuality={setDownloadQuality}
+                showOriginalText={showOriginalText}
               />
             )}
 

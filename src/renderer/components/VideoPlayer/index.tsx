@@ -244,6 +244,7 @@ export default function VideoPlayer({
   mergeStylePreset,
   downloadQuality,
   onSetDownloadQuality,
+  showOriginalText,
   videoRef,
 }: {
   isProgressBarVisible: boolean;
@@ -263,6 +264,7 @@ export default function VideoPlayer({
   mergeStylePreset: SubtitleStylePresetKey;
   downloadQuality: VideoQuality;
   onSetDownloadQuality: (quality: VideoQuality) => void;
+  showOriginalText: boolean;
   videoRef: React.RefObject<HTMLVideoElement | null>;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -643,6 +645,7 @@ export default function VideoPlayer({
           onMouseLeave={handlePlayerWrapperLeave}
         >
           <NativeVideoPlayer
+            showOriginalText={showOriginalText}
             videoRef={videoRef}
             videoUrl={videoUrl}
             subtitles={subtitles}
