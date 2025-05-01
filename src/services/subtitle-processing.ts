@@ -31,7 +31,7 @@ const MAX_PROMPT_CHARS = 600;
 
 const MIN_CHUNK_DURATION_SEC = 8;
 const MAX_CHUNK_DURATION_SEC = 15;
-const SUBTITLE_GAP_THRESHOLD = 5;
+const SUBTITLE_GAP_THRESHOLD = 1;
 const GAP_SEC = 3;
 
 // --- Concurrency Setting ---
@@ -204,16 +204,15 @@ export async function extractSubtitlesFromVideo({
 
     // Step 2: Process based on whether translation is needed
     if (!isTranslationNeeded) {
-      // Just parse the raw content if no translation
-      processedSegments = parseSrt(rawSubtitlesContent);
+      processedSegments = fuseOrphans(parseSrt(rawSubtitlesContent));
       progressCallback?.({
-        percent: STAGE_FINALIZING.start, // Move completion % later
+        percent: STAGE_FINALIZING.start,
         stage: 'Transcription complete, preparing final SRT',
-        partialResult: rawSubtitlesContent, // Show the raw SRT here
+        partialResult: rawSubtitlesContent,
       });
     } else {
       // Translation needed - run translation and review logic
-      const segmentsInProcess = parseSrt(rawSubtitlesContent); // Start with parsed segments
+      const segmentsInProcess = fuseOrphans(parseSrt(rawSubtitlesContent)); // Start with parsed segments
       const totalSegments = segmentsInProcess.length;
       const TRANSLATION_BATCH_SIZE = 10;
 
@@ -362,7 +361,7 @@ export async function extractSubtitlesFromVideo({
     // --- END ADD LOG ---
 
     // Step 4: Apply Gap Filling (IN-PLACE)
-    extendShortSubtitleGaps(indexedSegments);
+    extendShortSubtitleGaps(indexedSegments, SUBTITLE_GAP_THRESHOLD);
 
     // Log the state of indexedSegments *after* the in-place modification
     log.debug(
@@ -379,8 +378,32 @@ export async function extractSubtitlesFromVideo({
       JSON.stringify(finalSegments.slice(25, 28), null, 2)
     );
 
+    // After all segments are collected and sorted:
+    finalSegments.sort((a, b) => a.start - b.start);
+    // optional "anchor" silence segments
+    const anchors: SrtSegment[] = [];
+    let tmpIdx = 0;
+    for (let i = 1; i < finalSegments.length; i++) {
+      const gap = finalSegments[i].start - finalSegments[i - 1].end;
+      if (gap > GAP_SEC) {
+        anchors.push({
+          index: ++tmpIdx,
+          start: finalSegments[i - 1].end,
+          end: finalSegments[i - 1].end + 0.5,
+          original: '',
+        });
+      }
+    }
+    finalSegments.push(...anchors);
+    finalSegments.sort((a, b) => a.start - b.start);
+    // --- Fuse orphans before returning or passing to SRT ---
+    const fusedSegments = fuseOrphans(finalSegments);
+    const reIndexed = fusedSegments.map((seg, i) => ({
+      ...seg,
+      index: i + 1,
+    }));
     const finalSrtContent = buildSrt({
-      segments: finalSegments,
+      segments: reIndexed,
       mode: 'dual',
     });
 
@@ -661,13 +684,6 @@ export async function generateSubtitlesFromAudio({
       const thisBatchSegments = segArrays
         .flat()
         .sort((a, b) => a.start - b.start);
-      for (let i = 1; i < thisBatchSegments.length; ++i) {
-        if (
-          thisBatchSegments[i].original === thisBatchSegments[i - 1].original
-        ) {
-          thisBatchSegments[i].original = ''; // or drop segment altogether
-        }
-      }
 
       // Merge them into the global store
       overallSegments.push(...thisBatchSegments);
@@ -729,7 +745,9 @@ export async function generateSubtitlesFromAudio({
     );
     progressCallback?.({ percent: 100, stage: 'Transcription complete!' });
 
-    const reIndexed = overallSegments.map((seg, i) => ({
+    // --- Fuse orphans before returning or passing to SRT ---
+    const fusedSegments = fuseOrphans(overallSegments);
+    const reIndexed = fusedSegments.map((seg, i) => ({
       ...seg,
       index: i + 1,
     }));
@@ -799,7 +817,7 @@ async function transcribeChunk({
   signal?: AbortSignal;
   openai: OpenAI;
   operationId: string;
-  promptContext?: string; // ← NEW
+  promptContext?: string;
 }): Promise<SrtSegment[]> {
   if (signal?.aborted) {
     log.info(
@@ -819,6 +837,19 @@ async function transcribeChunk({
     return [];
   }
 
+  // Helper: is a word inside a valid segment?
+  function isWordInValidSegment(
+    word: any,
+    validSegments: Array<{ start: number; end: number }>,
+    startTime: number
+  ) {
+    // If no valid segments, accept all words (fallback)
+    if (!validSegments.length) return true;
+    const wStart = word.start + startTime;
+    const wEnd = word.end + startTime;
+    return validSegments.some(seg => wStart >= seg.start && wEnd <= seg.end);
+  }
+
   try {
     log.debug(
       `[${operationId}] Sending chunk ${chunkIndex} (${(
@@ -827,14 +858,15 @@ async function transcribeChunk({
       ).toFixed(2)} MB) to Whisper API.`
     );
 
-    // Pass the batch context to the prompt
+    // Request word-level and segment-level timestamps
     const res = await openai.audio.transcriptions.create(
       {
         model: AI_MODELS.WHISPER.id,
         file: fileStream,
         response_format: 'verbose_json',
         temperature: 0,
-        prompt: promptContext ?? '', // ← NEW
+        prompt: promptContext ?? '',
+        timestamp_granularities: ['word', 'segment'],
       },
       { signal }
     );
@@ -843,56 +875,100 @@ async function transcribeChunk({
       `[${operationId}] Received transcription response for chunk ${chunkIndex}.`
     );
 
-    type WhisperSegment = {
-      start: number;
-      end: number;
-      text: string;
-      avg_logprob: number;
-      no_speech_prob: number;
-    };
-
-    const segments = (res as any)?.segments as WhisperSegment[] | undefined;
-    if (!Array.isArray(segments)) {
+    // Parse segments and words arrays
+    const segments = (res as any)?.segments as Array<any> | undefined;
+    const words = (res as any)?.words as Array<any> | undefined;
+    if (!Array.isArray(words) || words.length === 0) {
       log.warn(
-        `[${operationId}] Chunk ${chunkIndex}: Invalid or missing segments in Whisper response.`
+        `[${operationId}] Chunk ${chunkIndex}: No word-level timestamps in Whisper response.`
       );
       return [];
     }
 
-    log.debug(
-      `[${operationId}] Chunk ${chunkIndex}: Received ${segments.length} raw segments from Whisper.`
-    );
-
-    const srtSegments: SrtSegment[] = segments
-      .filter(s => {
-        const isSpeech =
-          s.no_speech_prob < NO_SPEECH_PROB_THRESHOLD &&
-          s.avg_logprob > AVG_LOGPROB_THRESHOLD;
-        if (!isSpeech) {
-          log.debug(
-            `[${operationId}] Chunk ${chunkIndex}: Filtering out segment (no_speech_prob: ${s.no_speech_prob.toFixed(
-              2
-            )}, avg_logprob: ${s.avg_logprob.toFixed(2)}) Text: "${s.text.trim()}"`
-          );
+    // Filter valid segments by speech probability and logprob
+    const validSegments: Array<{ start: number; end: number }> = [];
+    if (Array.isArray(segments)) {
+      for (const seg of segments) {
+        if (
+          seg.no_speech_prob < NO_SPEECH_PROB_THRESHOLD &&
+          seg.avg_logprob > AVG_LOGPROB_THRESHOLD
+        ) {
+          validSegments.push({
+            start: seg.start + startTime,
+            end: seg.end + startTime,
+          });
         }
-        return isSpeech;
-      })
-      .map((s, i) => {
-        const absoluteStart = s.start + startTime;
-        const absoluteEnd = Math.max(s.end + startTime, absoluteStart);
-        return {
-          index: i + 1,
-          start: absoluteStart,
-          end: absoluteEnd,
-          original: s.text.trim(),
-        };
-      });
+      }
+    }
 
-    log.debug(
-      `[${operationId}] Chunk ${chunkIndex}: Produced ${
-        srtSegments.length
-      } segments after confidence filtering.`
-    );
+    // Group words into captions: ≤8s, ideally 6–12 words, break at segment boundaries
+    const MAX_SEG_LEN = 8; // seconds
+    const MAX_WORDS = 12;
+    const MIN_WORDS = 3; // NEW – avoid 1- or 2-word orphans
+    const srtSegments: SrtSegment[] = [];
+    let currentWords: any[] = [];
+    let groupStart = null;
+    let groupEnd = null;
+    let segIdx = 1;
+
+    // Build a set of segment end times for easy lookup
+    const segmentEnds = new Set<number>();
+    if (Array.isArray(segments)) {
+      for (const seg of segments) {
+        segmentEnds.add(Number((seg.end + startTime).toFixed(3)));
+      }
+    }
+
+    for (let i = 0; i < words.length; ++i) {
+      const w = words[i];
+      if (!isWordInValidSegment(w, validSegments, startTime)) continue;
+      const wStart = w.start + startTime;
+      const wEnd = w.end + startTime;
+      if (currentWords.length === 0) {
+        groupStart = wStart;
+      }
+      currentWords.push(w);
+      groupEnd = wEnd;
+      const isSegmentEnd = segmentEnds.has(Number(wEnd.toFixed(3)));
+      const isLastWord = i === words.length - 1;
+      const groupDuration = groupEnd - groupStart;
+      const groupWordCount = currentWords.length;
+      // decide if we *could* break here
+      const hardBoundary = isSegmentEnd || isLastWord;
+      const sizeBoundary =
+        groupDuration >= MAX_SEG_LEN || groupWordCount >= MAX_WORDS;
+      // *** DON'T commit if the fragment would be too short ***
+      const shouldBreak = hardBoundary || sizeBoundary;
+      if (shouldBreak) {
+        if (groupWordCount < MIN_WORDS && !hardBoundary) {
+          // keep accumulating – we don't want a tiny tail like "use"
+          continue;
+        }
+        // Join words, attach punctuation to previous word (Unicode-aware)
+        let text = '';
+        for (let j = 0; j < currentWords.length; ++j) {
+          const word = currentWords[j].word;
+          const isPunctuation = /^[\p{P}$+<=>^`|~]/u.test(word);
+          if (j > 0 && !isPunctuation) {
+            text += ' ';
+          }
+          text += word;
+        }
+        srtSegments.push({
+          index: segIdx++,
+          start: groupStart,
+          end: groupEnd,
+          original: text.trim(),
+        });
+        // Prepare for next group
+        if (!isLastWord) {
+          groupStart = null;
+          groupEnd = null;
+          currentWords = [];
+        }
+      }
+    }
+
     return srtSegments;
   } catch (error: any) {
     if (
@@ -939,7 +1015,8 @@ Here are the subtitles to translate:
 ${batchContextPrompt.join('\n')}
 
 Translate EACH line individually, preserving the line order.
-- **Never merge** multiple lines into one, and never skip or omit a line. 
+- Try not to merge lines, but if a line is obviously a leftover (1-2 words that belong to the previous sentence), you may leave it BLANK and include its meaning in the previous line.
+- Never skip or omit a line.
 - If a line's content was already translated in the previous line, LEAVE IT BLANK. WHEN THERE ARE LIKE 1~2 WORDS THAT ARE LEFT OVERS FROM THE PREVIOUS SENTENCE, THEN THIS IS ALMOST ALWAYS THE CASE. DO NOT ATTEMPT TO FILL UP THE BLANK WITH THE NEXT TRANSLATION. AVOID SYNCHRONIZATION ISSUES AT ALL COSTS.
 - Provide exactly one translation for every line, in the same order, 
   prefixed by "Line X:" where X is the line number.
@@ -1069,7 +1146,7 @@ async function reviewTranslationBatch({
     .join('\n');
 
   const beforeContext = batch.contextBefore
-    .map(seg => `[${seg.index}] ${seg.original}`) // seg.original, no “text”
+    .map(seg => `[${seg.index}] ${seg.original}`)
     .join('\n');
   const afterContext = batch.contextAfter
     .map(seg => `[${seg.index}] ${seg.original}`)
@@ -1168,81 +1245,24 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
 
 function extendShortSubtitleGaps(
   segments: SrtSegment[],
-  threshold: number = 5
+  threshold = SUBTITLE_GAP_THRESHOLD // now 1 s
 ): SrtSegment[] {
-  if (!segments || segments.length < 2) {
-    return segments; // Return original if no adjustments possible
-  }
-
-  log.debug(
-    `[extendShortSubtitleGaps IN-PLACE] Input segments (first 5): ${JSON.stringify(segments.slice(0, 5), null, 2)}`
-  );
+  if (!segments || segments.length < 2) return segments;
 
   for (let i = 0; i < segments.length - 1; i++) {
-    const currentSegment = segments[i];
-    const nextSegment = segments[i + 1];
+    const currentEnd = Number(segments[i].end);
+    const nextStart = Number(segments[i + 1].start);
+    const gap = nextStart - currentEnd;
 
-    const currentEndTime = Number(currentSegment.end);
-    const nextStartTime = Number(nextSegment.start);
-
-    log.debug(
-      `[GapCheck IN-PLACE Index ${i}] Current End: ${currentEndTime.toFixed(4)}, Next Start: ${nextStartTime.toFixed(4)}`
-    );
-
-    if (isNaN(currentEndTime) || isNaN(nextStartTime)) {
-      log.warn(
-        `[GapCheck IN-PLACE Index ${i}] Invalid time encountered, skipping gap adjustment.`
-      );
-      continue;
-    }
-
-    const gap = nextStartTime - currentEndTime;
-    const localThreshold = threshold;
-
-    log.debug(
-      `[GapCheck IN-PLACE Index ${i}] Gap: ${gap.toFixed(4)}, Threshold: ${localThreshold}, Condition (gap > 0 && gap < threshold): ${gap > 0 && gap < localThreshold}`
-    );
-
-    if (gap > 0 && gap < localThreshold) {
-      log.info(
-        `[GapCheck IN-PLACE Index ${i}] ADJUSTING end time for segment at index ${i} from ${currentEndTime.toFixed(4)} to ${nextStartTime.toFixed(4)}.`
-      );
-      currentSegment.end = nextStartTime;
-    } else {
-      log.debug(`[GapCheck IN-PLACE Index ${i}] NO adjustment needed.`);
+    if (gap > 0 && gap < threshold) {
+      segments[i + 1].start = currentEnd;
     }
   }
-
-  log.debug(
-    `[extendShortSubtitleGaps IN-PLACE] Output segments (first 5): ${JSON.stringify(segments.slice(0, 5), null, 2)}`
-  );
-
   return segments;
 }
 
-function fillBlankTranslations(
-  segments: SrtSegment[],
-  carryThreshold = SUBTITLE_GAP_THRESHOLD
-): SrtSegment[] {
-  let lastGoodIdx = -1;
-
-  return segments.map((seg, idx) => {
-    if ((seg.translation ?? '').trim() !== '') {
-      lastGoodIdx = idx;
-      return seg;
-    }
-
-    if (
-      lastGoodIdx >= 0 &&
-      seg.start - segments[lastGoodIdx].end <= carryThreshold
-    ) {
-      return {
-        ...seg,
-        translation: segments[lastGoodIdx].translation, // carry-over
-      };
-    }
-    return seg;
-  });
+function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
+  return segments; // blanks stay blank, no carry-over
 }
 
 export async function callOpenAIChat({
@@ -1541,4 +1561,22 @@ function mergeAdjacentIntervals(
     }
   }
   return merged;
+}
+
+function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
+  const MIN_WORDS = 3;
+  const fused: SrtSegment[] = [];
+  for (const s of segments) {
+    const w = s.original.trim().split(/\s+/).length;
+    if (w < MIN_WORDS && fused.length) {
+      // expand previous caption
+      const prev = fused[fused.length - 1];
+      prev.end = s.end; // stretch timing
+      prev.original += ' ' + s.original; // append text
+    } else {
+      fused.push({ ...s });
+    }
+  }
+  // re-index
+  return fused.map((s, i) => ({ ...s, index: i + 1 }));
 }
