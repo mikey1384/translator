@@ -2,10 +2,10 @@ import path from 'path';
 import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
-import { FFmpegService } from '../services/ffmpeg-service.js';
-import { FileManager } from '../services/file-manager.js';
-import { extractSubtitlesFromVideo } from '../services/subtitle-processing.js';
-import { GenerateSubtitlesOptions } from '../types/interface.js';
+import { FFmpegService } from '../../services/ffmpeg-service.js';
+import { FileManager } from '../../services/file-manager.js';
+import { extractSubtitlesFromVideo } from '../../services/subtitle-processing.js';
+import { GenerateSubtitlesOptions } from '../../shared/types/interface.js';
 
 // Module-level variables to hold initialized services
 let ffmpegServiceInstance: FFmpegService | null = null;

@@ -1,0 +1,20 @@
+{
+  "name": "@app/renderer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/index.tsx --outdir dist --target browser --external electron",
+    "watch": "bun build src/index.tsx --outdir dist --watch --target browser --external electron"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@emotion/react": "^11.11.4"
+  },
+  "devDependencies": {
+    "typescript": "workspace:^",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

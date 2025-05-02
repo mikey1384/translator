@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import {
   ExposedRenderResult,
   RenderSubtitlesOptions,
-} from './types/interface.js';
+} from '../shared/types/interface.js';
 
 const electronAPI = {
   // ---------------------- Basic / Test Methods ----------------------

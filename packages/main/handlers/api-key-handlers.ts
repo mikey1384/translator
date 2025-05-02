@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
-import { getApiKey, saveApiKey } from '../services/secure-store.js';
+import { getApiKey, saveApiKey } from '../../services/secure-store.js';
 
 // Define interfaces for API key status and results
 interface ApiKeyStatus {

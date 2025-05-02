@@ -1,15 +1,16 @@
-import { ipcMain, BrowserWindow, app, dialog } from 'electron';
-import log from 'electron-log';
 import path from 'path';
 import fs from 'fs/promises';
-import { RenderSubtitlesOptions, SrtSegment } from '../types/interface.js';
-import { FFmpegService } from '../services/ffmpeg-service.js';
-import { parseSrt } from '../shared/helpers/index.js';
-import { getAssetsPath } from '../shared/helpers/paths.js';
+import {
+  RenderSubtitlesOptions,
+  SrtSegment,
+} from '../../shared/types/interface.js';
+import { FFmpegService } from '../../services/ffmpeg-service.js';
+import { parseSrt } from '../../shared/helpers/index.js';
+import { getAssetsPath } from '../../shared/helpers/paths.js';
 import { pathToFileURL } from 'url';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import url from 'url';
-import { cueText } from '../shared/helpers/index.js';
+import { cueText } from '../../shared/helpers/index.js';
 import { spawn, ChildProcess } from 'child_process';
 import os from 'os';
 
