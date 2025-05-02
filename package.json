@@ -13,9 +13,9 @@
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,scss}\"",
     "postinstall": "if [ \"$CI\" = \"true\" ]; then bunx electron-rebuild -w webrtcvad -f; fi",
-    "build": "bunx rimraf packages/*/dist && bunx concurrently \"bun run --cwd packages/main build\" \"bun run --cwd packages/preload build\" \"bun run --cwd packages/renderer build\"",
+    "build": "bunx rimraf packages/*/dist && bunx concurrently \"bun run --cwd packages/main build\" \"bun run --cwd packages/preload build\" \"bun run --cwd packages/renderer build\" && cd packages/renderer && bun build ./render-host-script.tsx --outfile ../../render-host-script.js --target browser --external electron --no-typecheck && cd ../..",
     "start": "bun run --cwd packages/main start",
-    "dev": "bunx concurrently -n main,preload,renderer \"bun run --cwd packages/main build:watch\" \"bun run --cwd packages/preload dev\" \"bun run --cwd packages/renderer dev\" \"wait-on packages/main/dist/main/index.js packages/main/dist/preload/preload.cjs packages/renderer/dist/index.js && bun run --cwd packages/main start\"",
+    "dev": "bunx concurrently -n main,preload,renderer,hostRenderer,electron \"bun run --cwd packages/main build:watch\" \"bun run --cwd packages/preload dev\" \"bun run --cwd packages/renderer dev\" \"cd packages/renderer && bun build ./render-host-script.tsx --outfile ../../render-host-script.js --target browser --external electron --no-typecheck --watch\" \"wait-on packages/main/dist/main/index.js packages/main/dist/preload/preload.cjs packages/renderer/dist/index.js render-host-script.js && bun run --cwd packages/main start\"",
     "package": "bun run build && electron-builder build --config electron-builder.config.js"
   },
   "devDependencies": {
