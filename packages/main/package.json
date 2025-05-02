@@ -13,8 +13,5 @@
     "electron": "^35.0.0",
     "electron-log": "^5.3.2"
   },
-  "devDependencies": {
-    "typescript": "workspace:^",
-    "@types/node": "workspace:^"
-  }
+  "devDependencies": {}
 }
