@@ -16,13 +16,20 @@
     "clean": "bunx rimraf dist release"
   },
   "devDependencies": {
-    "typescript": "^5.8.2",
+    "@types/node": "^20.11.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.6",
-    "@types/node": "^20.11.0",
     "ts-node": "^10.9.2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "typescript": "^5.8.2"
   }
 }
