@@ -227,7 +227,7 @@ function watchPreloadProcess() {
     'bun',
     [
       'build',
-      './src/preload.ts',
+      './packages/preload/preload.ts',
       '--outdir',
       './dist/preload',
       '--target',

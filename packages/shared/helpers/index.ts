@@ -1,18 +1,9 @@
 import { SrtSegment } from '@shared-types/app';
-import fs from 'fs';
 
 export class SubtitleProcessingError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'SubtitleProcessingError';
-  }
-}
-
-export function createFileFromPath(filePath: string): fs.ReadStream {
-  try {
-    return fs.createReadStream(filePath);
-  } catch (error) {
-    throw new SubtitleProcessingError(`Failed to create file stream: ${error}`);
   }
 }
 

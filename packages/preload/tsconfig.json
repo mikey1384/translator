@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "types": ["electron"]
+    "outDir": "../main/dist/preload",
+    "types": ["electron"],
+    "module": "CommonJS"
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

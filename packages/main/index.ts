@@ -569,7 +569,8 @@ async function createWindow() {
       nodeIntegration: false,
       webSecurity: !isDev,
       allowRunningInsecureContent: false,
-      preload: path.join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      preload: path.join(__dirname, '../preload/preload.cjs'),
     },
   });
 
@@ -578,7 +579,17 @@ async function createWindow() {
     showInspectElement: isDev,
   });
 
-  const rendererPath = path.join(__dirname, '../renderer/index.html');
+  const rendererPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    '..',
+    'packages',
+    'renderer',
+    'dist',
+    'index.html'
+  );
   log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
   try {
     await mainWindow.loadFile(rendererPath);

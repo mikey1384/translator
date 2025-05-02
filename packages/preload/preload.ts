@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ExposedRenderResult, RenderSubtitlesOptions } from '@shared-types/app';
+import { promises as fs } from 'fs';
 
 const electronAPI = {
   // ---------------------- Basic / Test Methods ----------------------
@@ -235,3 +236,8 @@ try {
 } catch (error) {
   console.error('[preload] exposeInMainWorld error:', error);
 }
+
+contextBridge.exposeInMainWorld('fileApi', {
+  readText: (p: string) => fs.readFile(p, 'utf8'),
+  writeText: (p: string, data: string) => fs.writeFile(p, data, 'utf8'),
+});

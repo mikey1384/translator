@@ -1,20 +1,20 @@
 {
   "name": "@app/renderer",
-  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.tsx --outdir dist --target browser --external electron",
-    "watch": "bun build src/index.tsx --outdir dist --watch --target browser --external electron"
+    "build": "mkdir -p dist &&               bunx esbuild ./index.tsx                    --bundle                    --format=esm                    --platform=browser                    --target=es2022                    --external:electron                    --outfile=dist/index.js &&               bun run copy-static",
+    "dev": "bunx concurrently -n esbuild,static -c cyan,green                 \"bunx esbuild ./index.tsx                      --bundle                      --format=esm                      --platform=browser                      --target=es2022                      --external:electron                      --outfile=dist/index.js                      --watch\"                 \"bun run copy-static --watch\"",
+    "copy-static": "mkdir -p dist && cp -f ../../index.html dist/ && cp -R ../../assets dist/"
   },
   "dependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@emotion/react": "^11.11.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "typescript": "^5.8.2",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react-dom": "^19.0.0",
+    "concurrently": "^9.1.2"
   }
 }

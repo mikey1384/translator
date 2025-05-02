@@ -7,15 +7,18 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "bun run --parallel --filter @app/* build",
-    "dev": "bun run --filter @app/main dev",
-    "start": "bun run --filter @app/main start",
+    "dev": "concurrently -n main,renderer,preload,electron -c blue,green,magenta,cyan \"bun run --filter @app/main dev\" \"bun run --filter @app/renderer dev\" \"bun run --filter @app/preload dev\" \"bunx electron packages/main\"",
+    "build": "bun run --filter @app/* build",
+    "start": "bun run build && bunx electron packages/main",
+    "clean": "bunx rimraf packages/*/dist release",
+    "clean:deep": "bunx rimraf node_modules bun.lockb && bun install",
     "lint": "eslint . --ext .ts,.tsx,.js",
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,scss}\"",
-    "clean": "bunx rimraf dist release"
+    "postinstall": "if [ \"$CI\" = \"true\" ]; then bunx electron-rebuild -w webrtcvad -f; fi"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
     "@emotion/css": "^11.13.5",
     "@types/i18next": "^13.0.0",
     "@types/lodash": "^4.17.16",
@@ -25,6 +28,7 @@
     "@types/react-i18next": "^8.1.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
+    "concurrently": "^9.1.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
@@ -46,5 +50,15 @@
     "node-machine-id": "^1.1.12",
     "openai": "^4.96.2",
     "webrtcvad": "^1.0.1"
-  }
+  },
+  "trustedDependencies": [
+    "@ffmpeg-installer/darwin-arm64",
+    "@ffmpeg-installer/ffmpeg",
+    "@ffprobe-installer/darwin-arm64",
+    "@ffprobe-installer/ffprobe",
+    "electron",
+    "keytar",
+    "puppeteer",
+    "webrtcvad"
+  ]
 }
