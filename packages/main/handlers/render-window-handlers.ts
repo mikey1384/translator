@@ -689,10 +689,10 @@ function getRenderHostPath(): string {
   let correctPath: string;
 
   if (app.isPackaged) {
-    correctPath = path.join(appPath, 'dist', 'render-host.html');
+    correctPath = path.join(appPath, 'render-host.html');
     log.info(`[getRenderHostPath] Packaged mode path: ${correctPath}`);
   } else {
-    correctPath = path.join(appPath, '..', 'render-host.html');
+    correctPath = path.join(appPath, '..', '..', 'render-host.html');
     log.info(
       `[getRenderHostPath] Development mode path (relative to appPath parent): ${correctPath}`
     );

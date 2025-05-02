@@ -7,10 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n main,renderer,preload,electron -c blue,green,magenta,cyan \"bun run --filter @app/main dev\" \"bun run --filter @app/renderer dev\" \"bun run --filter @app/preload dev\" \"bunx electron packages/main\"",
-    "build": "bun run --filter @app/* build",
-    "start": "bun run build && bunx electron packages/main",
-    "clean": "bunx rimraf packages/*/dist release",
+    "build:render-host": "bunx esbuild packages/renderer/render-host-script.tsx --bundle --platform=browser --format=esm --outfile=render-host-script.js",
+    "dev": "concurrently -n main,renderer,preload,render-host,electron -c blue,green,magenta,yellow,cyan \"bun run --filter @app/main dev\" \"bun run --filter @app/renderer dev\" \"bun run --filter @app/preload dev\" \"bunx esbuild packages/renderer/render-host-script.tsx --bundle --platform=browser --format=esm --outfile=render-host-script.js --watch\" \"bunx electron packages/main/dist\"",
+    "build": "bun run build:render-host && cp render-host.html render-host-script.js packages/main/dist/ && bun run --filter @app/* build",
+    "start": "bun run build && bunx electron packages/main/dist",
+    "clean": "bunx rimraf packages/*/dist release render-host-script.js render-host.html",
     "clean:deep": "bunx rimraf node_modules bun.lockb && bun install",
     "lint": "eslint . --ext .ts,.tsx,.js",
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix",
@@ -30,6 +31,7 @@
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "concurrently": "^9.1.2",
+    "esbuild": "^0.25.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
