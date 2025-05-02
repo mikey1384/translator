@@ -82,38 +82,26 @@ declare module 'node-machine-id' {
   export default pkg;
 }
 
-// Type definitions for webrtcvad
 declare module 'webrtcvad' {
-  /**
-   * Voice Activity Detection modes
-   * 0 = Quality mode - least aggressive
-   * 1 = Low bitrate mode
-   * 2 = Aggressive mode
-   * 3 = Very aggressive mode
-   */
-  export type VadMode = 0 | 1 | 2 | 3;
-
-  class Vad {
-    /**
-     * Creates a new Vad instance
-     * @param sampleRate The sample rate of the audio (usually 16000, 32000, etc)
-     * @param mode The mode to use (0-3), default 2
-     */
-    constructor(sampleRate: number, mode?: VadMode);
-
-    /**
-     * Set the mode
-     * @param mode The mode to use (0-3)
-     */
-    setMode(mode: VadMode): void;
-
-    /**
-     * Process a chunk of PCM audio data
-     * @param audioFrame PCM audio data buffer
-     * @returns Boolean indicating whether voice was detected
-     */
-    process(audioFrame: Buffer): boolean;
+  // 1. Define the actual class constructor type
+  class VadClass {
+    constructor(sampleRate: 8000 | 16000 | 32000 | 48000, level: 0 | 1 | 2 | 3);
+    process(audio: Buffer): boolean;
   }
 
-  export default Vad;
+  // 2. Define the shape of the inner default object seen in the log
+  interface InnerDefault {
+    __esModule: true;
+    default: typeof VadClass; // The *inner* default holds the class
+  }
+
+  // 3. Define the shape of the outer module object (what we import)
+  interface VadModule {
+    __esModule: true;
+    default: InnerDefault; // The *outer* default holds the inner object
+  }
+
+  // 4. Export the shape of the entire module using 'export ='
+  const moduleExport: VadModule;
+  export = moduleExport;
 }

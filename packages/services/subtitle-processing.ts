@@ -14,8 +14,10 @@ import log from 'electron-log';
 import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
 import { spawn } from 'child_process';
-import Vad from 'webrtcvad';
+import * as webrtcvadPackage from 'webrtcvad';
 import pLimit from 'p-limit';
+
+const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
