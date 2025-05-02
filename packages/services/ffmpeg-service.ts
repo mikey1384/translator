@@ -348,9 +348,9 @@ export class FFmpegService {
           }
         };
 
-        signal.aborted
+        void (signal.aborted
           ? onAbort()
-          : signal.addEventListener('abort', onAbort, { once: true });
+          : signal.addEventListener('abort', onAbort, { once: true }));
 
         const cleanupAbort = () => signal.removeEventListener('abort', onAbort);
         ffmpegProcess.once('close', cleanupAbort);
