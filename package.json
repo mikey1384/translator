@@ -47,13 +47,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@types/which": "^3.0.4",
-    "electron-store": "^10.0.1",
-    "node-machine-id": "^1.1.12",
-    "openai": "^4.96.2",
-    "webrtcvad": "^1.0.1",
-    "which": "^5.0.0",
-    "youtube-dl-exec": "^3.0.20"
+    "@types/which": "^3.0.4"
   },
   "trustedDependencies": [
     "@ffmpeg-installer/darwin-arm64",

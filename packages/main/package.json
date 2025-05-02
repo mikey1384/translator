@@ -19,10 +19,13 @@
     "execa": "^9.5.2",
     "keytar": "^7.9.0",
     "puppeteer": "^24.7.2",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "electron-store": "^10.0.1",
+    "node-machine-id": "^1.1.12",
+    "openai": "^4.96.2",
+    "webrtcvad": "^1.0.1",
+    "which": "^5.0.0",
+    "youtube-dl-exec": "^3.0.20"
   },
-  "devDependencies": {
-    "typescript": "^5.8.2",
-    "@types/node": "^20.11.0"
-  }
+  "devDependencies": {}
 }
