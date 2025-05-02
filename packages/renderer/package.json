@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist &&               bunx esbuild ./index.tsx                    --bundle                    --format=esm                    --platform=browser                    --target=es2022                    --external:electron                    --outfile=dist/index.js &&               bun run copy-static",
-    "dev": "bunx concurrently -n esbuild,static -c cyan,green                 \"bunx esbuild ./index.tsx                      --bundle                      --format=esm                      --platform=browser                      --target=es2022                      --external:electron                      --outfile=dist/index.js                      --watch\"                 \"bun run copy-static --watch\"",
+    "dev": "bunx concurrently -n esbuild,static -c cyan,green                 \"bunx esbuild ./index.tsx                      --bundle                      --format=esm                      --platform=browser                      --target=es2022                      --external:electron                      --outfile=dist/index.js                      --watch\"                 \"bunx chokidar '../../index.html' '../../assets/**/*' -c 'bun run copy-static' --initial\"",
     "copy-static": "mkdir -p dist && cp -f ../../index.html dist/ && cp -R ../../assets dist/"
   },
   "dependencies": {
