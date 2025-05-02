@@ -15,10 +15,9 @@ import TranslationProgressArea from '../components/ProgressAreas/TranslationProg
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
 import LanguageSwitcher from '../components/LanguageSwitcher.js';
-import { SrtSegment } from '../../types/interface.js';
 import { VideoQuality } from '../../services/url-processor.js';
 import { useTranslation } from 'react-i18next';
-import { RenderSubtitlesOptions } from '../../types/interface.js';
+import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import ProgressArea from '../components/ProgressAreas/ProgressArea.js';
 
 import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
@@ -1161,7 +1160,7 @@ function AppContent() {
       (videoFileObj as any)._originalPath = videoPath;
 
       setVideoFile(videoFileObj);
-    } catch (fileError) {
+    } catch (error) {
       if (result.fileUrl) {
         const fallback = {
           name: result.filename,

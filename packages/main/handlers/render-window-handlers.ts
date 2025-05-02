@@ -1,9 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {
-  RenderSubtitlesOptions,
-  SrtSegment,
-} from '../../shared/types/interface.js';
+import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { FFmpegService } from '../../services/ffmpeg-service.js';
 import { parseSrt } from '../../shared/helpers/index.js';
 import { getAssetsPath } from '../../shared/helpers/paths.js';
@@ -13,6 +10,8 @@ import url from 'url';
 import { cueText } from '../../shared/helpers/index.js';
 import { spawn, ChildProcess } from 'child_process';
 import os from 'os';
+import { app, ipcMain, BrowserWindow, dialog } from 'electron';
+import log from 'electron-log';
 
 // O3 Suggestion: Track active render jobs
 const activeRenderJobs = new Map<
@@ -176,7 +175,7 @@ export function initializeRenderWindowHandlers(): void {
         }
         if (options.stylePreset) {
           await page.evaluate(preset => {
-            // @ts-ignore
+            // @ts-expect-error
             window.applySubtitlePreset?.(preset);
           }, options.stylePreset);
         }
@@ -374,7 +373,7 @@ export function initializeRenderWindowHandlers(): void {
             // 1. Update text
             await page.evaluate(
               ({ txt, fontSize, preset }) => {
-                // @ts-ignore
+                // @ts-expect-error
                 window.updateSubtitle(txt, {
                   fontSizePx: fontSize,
                   stylePreset: preset,

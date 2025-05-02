@@ -4,10 +4,9 @@ import NativeVideoPlayer from './NativeVideoPlayer.js';
 import SideMenu from './SideMenu.js';
 import { colors } from '../../styles.js';
 import Button from '../Button.js';
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
-import { VideoQuality } from '../../../types/interface.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 

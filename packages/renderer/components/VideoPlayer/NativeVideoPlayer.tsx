@@ -6,7 +6,7 @@ import {
   getNativePlayerInstance,
 } from '../../native-player.js';
 import BaseSubtitleDisplay from '../BaseSubtitleDisplay.js';
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment } from '@shared-types/app';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 import { cueText } from '../../../shared/helpers/index.js';
 declare global {

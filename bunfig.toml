@@ -1,0 +1,6 @@
+[run]
+tsconfig = "tsconfig.json"
+
+[define]
+"@shared/*"       = "./packages/shared/*"
+"@shared-types/*" = "./packages/shared/types/*"

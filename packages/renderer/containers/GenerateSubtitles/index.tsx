@@ -7,7 +7,7 @@ import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
 import Section from '../../components/Section.js';
-import { VideoQuality } from '../../../types/interface.js';
+import { VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
 import ProgressDisplay from './ProgressDisplay.js';

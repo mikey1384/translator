@@ -1,15 +1,24 @@
 {
   "compilerOptions": {
     "target": "es2022",
+    "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@shared/*": ["packages/shared/*"],
+      "@shared-types/*": ["packages/shared/types/*"]
+    },
+    "types": ["node"]
   },
-  "include": ["packages/**/*.ts", "packages/**/*.tsx"],
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "packages/shared/types/**/*.d.ts"
+  ],
   "exclude": ["**/dist/**", "**/node_modules/**"]
 }

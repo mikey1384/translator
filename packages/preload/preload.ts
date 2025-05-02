@@ -1,8 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import {
-  ExposedRenderResult,
-  RenderSubtitlesOptions,
-} from '../shared/types/interface.js';
+import { ExposedRenderResult, RenderSubtitlesOptions } from '@shared-types/app';
 
 const electronAPI = {
   // ---------------------- Basic / Test Methods ----------------------

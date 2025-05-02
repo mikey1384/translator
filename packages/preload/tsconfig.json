@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "jsx": "react-jsx",
-    "lib": ["dom", "es2022"],
     "types": ["electron"]
-  }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
 }

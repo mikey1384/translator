@@ -5,7 +5,11 @@ import log from 'electron-log';
 import { FFmpegService } from '../../services/ffmpeg-service.js';
 import { FileManager } from '../../services/file-manager.js';
 import { extractSubtitlesFromVideo } from '../../services/subtitle-processing.js';
-import { GenerateSubtitlesOptions } from '../../shared/types/interface.js';
+import {
+  GenerateProgressCallback,
+  GenerateSubtitlesOptions,
+  SubtitleHandlerServices,
+} from '@shared-types/app';
 
 // Module-level variables to hold initialized services
 let ffmpegServiceInstance: FFmpegService | null = null;

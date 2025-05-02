@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SrtSegment } from '../../../../types/interface.js';
+import { SrtSegment } from '@shared-types/app';
 import { parseSrt } from '../../../../shared/helpers/index.js';
 
 type ProgressMsg = {

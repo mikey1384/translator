@@ -14,14 +14,14 @@ import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import Store from 'electron-store';
-import * as renderWindowHandlers from '../handlers/render-window-handlers.js';
-import * as subtitleHandlers from '../handlers/subtitle-handlers.js';
+import * as renderWindowHandlers from './handlers/render-window-handlers.js';
+import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import {
   getDownloadProcess,
   removeDownloadProcess,
 } from './active-processes.js';
 
-import { getActiveRenderJob } from '../handlers/render-window-handlers.js';
+import { getActiveRenderJob } from './handlers/render-window-handlers.js';
 
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -37,10 +37,10 @@ import { FileManager } from '../services/file-manager.js';
 import {
   handleProcessUrl,
   initializeUrlHandler,
-} from '../handlers/url-handler.js';
-import * as fileHandlers from '../handlers/file-handlers.js';
-import * as apiKeyHandlers from '../handlers/api-key-handlers.js';
-import * as utilityHandlers from '../handlers/utility-handlers.js';
+} from './handlers/url-handler.js';
+import * as fileHandlers from './handlers/file-handlers.js';
+import * as apiKeyHandlers from './handlers/api-key-handlers.js';
+import * as utilityHandlers from './handlers/utility-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -48,7 +48,12 @@ log.info('--- [main.ts] Execution Started ---');
 const subtitleGenerationControllers = new Map<string, AbortController>();
 
 // --- Initialize electron-store ---
-const settingsStore = new Store({
+const settingsStore = new Store<{
+  app_language_preference: string;
+  subtitleTargetLanguage: string;
+  apiKey: string | null;
+  videoPlaybackPositions: Record<string, number>;
+}>({
   name: 'app-settings',
   defaults: {
     app_language_preference: 'en',

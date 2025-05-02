@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { SrtSegment, EditArgs } from '../../../types/interface.js';
+import { SrtSegment, EditArgs } from '@shared-types/app';
 import SubtitleEditor from './SubtitleEditor.js';
 import { useLazyLoad } from './hooks/useLazyLoad.js';
 import { css } from '@emotion/css';

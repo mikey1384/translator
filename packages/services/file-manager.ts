@@ -228,9 +228,9 @@ export class FileManager {
       await fs.writeFile(filePath, content, 'utf8');
       log.info(`Temp file written to: ${filePath}`);
       return filePath;
-    } catch (error) {
-      log.error('Error writing temp file:', error);
-      throw new FileManagerError(`Error writing temp file: ${error}`);
+    } catch {
+      log.error('Error writing temp file.');
+      throw new FileManagerError('Error writing temp file.');
     }
   }
 
@@ -240,9 +240,9 @@ export class FileManager {
   async readFile(filePath: string): Promise<string> {
     try {
       return await fs.readFile(filePath, 'utf8');
-    } catch (error) {
-      log.error(`Error reading file ${filePath}:`, error);
-      throw new FileManagerError(`Error reading file: ${error}`);
+    } catch {
+      log.error(`Error reading file ${filePath}.`);
+      throw new FileManagerError('Error reading file.');
     }
   }
 

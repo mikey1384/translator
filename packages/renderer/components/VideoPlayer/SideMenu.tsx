@@ -3,7 +3,7 @@ import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import Button from '../Button.js';
 import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
-import { SrtSegment, VideoQuality } from '../../../types/interface.js';
+import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 
 export default function SideMenu({

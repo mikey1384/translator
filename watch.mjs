@@ -174,7 +174,7 @@ function watchMainProcess() {
 
   const tsc = spawn(
     'npx',
-    ['tsc', '-p', 'tsconfig.main.json', '--watch', '--preserveWatchOutput'],
+    ['tsc', '-p', 'tsconfig.base.json', '--watch', '--preserveWatchOutput'],
     {
       stdio: 'inherit',
       shell: true,

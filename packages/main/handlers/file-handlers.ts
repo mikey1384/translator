@@ -1,12 +1,9 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
-import { FileManager } from '../../services/file-manager.js'; // Add .js
-import { SaveFileService, SaveFileOptions } from '../../services/save-file.js'; // Add .js
-import {
-  OpenFileResult,
-  OpenFileOptions,
-} from '../../shared/types/interface.js'; // Add .js
+import { FileManager } from '../../services/file-manager.js';
+import { SaveFileService, SaveFileOptions } from '../../services/save-file.js';
+import { OpenFileResult, OpenFileOptions } from '@shared-types/app';
 
 // Define the services structure expected by the initializer
 interface FileHandlerServices {

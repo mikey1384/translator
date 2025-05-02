@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
-import { SrtSegment } from '../../../../types/interface.js';
+import { SrtSegment } from '@shared-types/app';
 import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { DEFAULT_FILENAME } from '../../../../shared/constants/index.js';

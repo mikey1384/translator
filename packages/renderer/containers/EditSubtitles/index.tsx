@@ -31,14 +31,13 @@ import {
 import { secondsToSrtTime } from '../../../shared/helpers/index.js';
 import { useSubtitleNavigation } from './hooks.js';
 import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
-import { SrtSegment } from '../../../types/interface.js';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
 import { colors } from '../../styles.js'; // Import colors
 import FileInputButton from '../../components/FileInputButton.js';
-import { RenderSubtitlesOptions } from '../../../types/interface.js';
+import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 
 export interface EditSubtitlesProps {
   isAudioOnly: boolean;
@@ -222,7 +221,7 @@ export function EditSubtitles({
         try {
           const currentTime = videoPlayerRef.currentTime();
           videoPlayerRef.currentTime(currentTime);
-        } catch (e) {
+        } catch {
           // console.warn('Error updating player time via videoPlayerRef:', e);
         }
       }
@@ -235,7 +234,7 @@ export function EditSubtitles({
         try {
           const currentTime = subtitleVideoPlayer.instance.currentTime();
           subtitleVideoPlayer.instance.currentTime(currentTime);
-        } catch (e) {
+        } catch {
           // console.warn('Error updating global player time:', e);
         }
       }
@@ -608,7 +607,7 @@ export function EditSubtitles({
     if (isPlayingState) {
       try {
         nativePause();
-      } catch (err) {
+      } catch {
         // console.error('Error pausing player:', err);
       }
       setIsPlayingState(false);
@@ -655,7 +654,7 @@ export function EditSubtitles({
           }, 200);
         }
       }
-    } catch (err) {
+    } catch {
       // console.error('Error during subtitle playback:', err);
       setIsPlayingState(false);
     }
@@ -670,7 +669,7 @@ export function EditSubtitles({
       } else {
         actualTime = nativeGetCurrentTime();
       }
-    } catch (err) {
+    } catch {
       // console.error('Error retrieving current time:', err);
     }
 
@@ -691,7 +690,7 @@ export function EditSubtitles({
                 } else {
                   nativePause();
                 }
-              } catch (err) {
+              } catch {
                 // console.error('Error pausing after snippet playback:', err);
               }
               setIsPlayingState(false);
@@ -703,7 +702,7 @@ export function EditSubtitles({
           // console.error('Error starting playback:', _error);
           setIsPlayingState(false);
         });
-    } catch (err) {
+    } catch {
       // console.error('Unexpected error in playFromCurrentPosition:', err);
       setIsPlayingState(false);
     }
@@ -736,14 +735,14 @@ export function EditSubtitles({
 
       try {
         nativeSeek(newStart);
-      } catch (seekError) {
+      } catch {
         // console.error('Error seeking after shiftSubtitle:', seekError);
       }
 
       setTimeout(() => {
         setIsShiftingDisabled(false);
       }, 100);
-    } catch (err) {
+    } catch {
       // console.error('Error shifting subtitle:', err);
       setIsShiftingDisabled(false);
     }

@@ -1,7 +1,7 @@
 import { RefObject } from 'react';
 import { css } from '@emotion/css';
 import SubtitleItem from './SubtitleItem.js';
-import { SrtSegment, EditArgs } from '../../../types/interface.js';
+import { SrtSegment, EditArgs } from '@shared-types/app';
 
 export interface SubtitleListProps {
   subtitles: SrtSegment[];

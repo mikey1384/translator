@@ -1,6 +1,6 @@
 import { useState, useRef, Dispatch, SetStateAction, useEffect } from 'react';
 import { debounce } from 'lodash';
-import { EditField, SrtSegment } from '../../../../types/interface.js';
+import { EditField, SrtSegment } from '@shared-types/app';
 import { srtTimeToSeconds } from '../../../../shared/helpers/index.js';
 import { useRestoreFocus } from './useRestoreFocus.js';
 import { DEBOUNCE_DELAY_MS } from '../../../../shared/constants/index.js';

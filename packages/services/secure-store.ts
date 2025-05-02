@@ -4,8 +4,10 @@ const { machineIdSync } = pkg;
 import crypto from 'crypto';
 import log from 'electron-log';
 
-// Generate a deterministic encryption key based on machine ID
-// This ensures the key is unique per device but remains the same across app restarts
+interface ApiKeys {
+  openai?: string;
+}
+
 function generateEncryptionKey(): string {
   try {
     // Get a unique machine ID
@@ -26,18 +28,14 @@ function generateEncryptionKey(): string {
 }
 
 // Create secure store with encryption
-const secureStore = new Store({
+const secureStore = new Store<{
+  apiKeys?: ApiKeys;
+}>({
   name: 'secure-store', // Creates secure-store.json in app's user data folder
   encryptionKey: generateEncryptionKey(),
 });
 
-// Constants
 const API_KEYS_KEY = 'apiKeys';
-
-// Store structure in electron-store
-interface ApiKeys {
-  openai?: string;
-}
 
 export async function getApiKey(keyType: 'openai'): Promise<string | null> {
   try {
@@ -54,7 +52,7 @@ export async function saveApiKey(
   apiKey: string
 ): Promise<void> {
   try {
-    const apiKeys = (secureStore.get(API_KEYS_KEY) as ApiKeys) || {};
+    const apiKeys = secureStore.get(API_KEYS_KEY) || {};
 
     if (apiKey === '') {
       // Delete the key

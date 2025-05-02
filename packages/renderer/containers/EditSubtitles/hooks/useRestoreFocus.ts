@@ -1,5 +1,5 @@
 import { useCallback, RefObject } from 'react';
-import { EditField } from '../../../../types/interface.js';
+import { EditField } from '@shared-types/app';
 
 // Define the type for the ref object that holds focus information
 interface FocusRef {

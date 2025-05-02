@@ -13,5 +13,8 @@
     "@emotion/react": "^11.11.4"
   },
   "devDependencies": {
+    "typescript": "^5.8.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   }
 }

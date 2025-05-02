@@ -88,7 +88,7 @@ function initializeSubtitleDisplay() {
   }
 
   // Expose these functions globally if needed
-  // @ts-ignore
+  // @ts-expect-error
   window.updateSubtitle = (
     text: string,
     opts: { stylePreset?: SubtitleStylePresetKey; fontSizePx?: number } = {}
@@ -140,7 +140,7 @@ function initializeSubtitleDisplay() {
     }
   };
 
-  // @ts-ignore
+  // @ts-expect-error
   window.applySubtitlePreset = applySubtitlePreset;
 
   console.log(

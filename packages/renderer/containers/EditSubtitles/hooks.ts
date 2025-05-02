@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment } from '@shared-types/app';
 
 interface FocusedInput {
   index: number | null;
@@ -49,7 +49,7 @@ export const useSubtitleNavigation = (
     ) {
       try {
         currentTime = playerInstance.currentTime();
-      } catch (e) {
+      } catch {
         // Error handling for currentTime function call can be added here if needed
       }
     } else {

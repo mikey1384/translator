@@ -1,4 +1,4 @@
-import { SrtSegment } from '../../types/interface.js';
+import { SrtSegment } from '@shared-types/app';
 import fs from 'fs';
 
 export class SubtitleProcessingError extends Error {

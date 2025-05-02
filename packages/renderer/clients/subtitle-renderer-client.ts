@@ -1,4 +1,4 @@
-import { RenderSubtitlesOptions } from '../../types/interface.js'; // Import types
+import { RenderSubtitlesOptions } from '@shared-types/app'; // Import types
 
 // Add this type definition
 type PngRenderResult = {

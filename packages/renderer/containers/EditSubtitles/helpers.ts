@@ -1,4 +1,4 @@
-import { SrtSegment } from '../../../types/interface.js';
+import { SrtSegment } from '@shared-types/app';
 
 export const processSrtContent = (
   srtContent: string,
@@ -20,7 +20,7 @@ export const processSrtContent = (
       return;
     }
     setSubtitlesState(parsed);
-  } catch (error) {
+  } catch {
     onSetError('Invalid SRT file');
   }
 };

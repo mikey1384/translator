@@ -5,15 +5,17 @@ import fs from 'fs';
 import fsp from 'fs/promises';
 import { getApiKey as getSecureApiKey } from './secure-store.js';
 import { AI_MODELS } from '../shared/constants/index.js';
-import { GenerateSubtitlesOptions, SrtSegment } from '../types/interface.js';
+import {
+  GenerateSubtitlesOptions,
+  GenerateProgressCallback,
+  SrtSegment,
+} from '@shared-types/app';
 import log from 'electron-log';
 import OpenAI from 'openai';
 import { FileManager } from './file-manager.js';
 import { spawn } from 'child_process';
-import * as webrtcvadPackage from 'webrtcvad';
+import Vad from 'webrtcvad';
 import pLimit from 'p-limit';
-
-const Vad = webrtcvadPackage.default.default;
 
 // --- Configuration Constants ---
 const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;

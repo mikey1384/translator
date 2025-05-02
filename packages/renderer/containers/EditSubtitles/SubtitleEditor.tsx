@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
-import { SrtSegment, EditArgs } from '../../../types/interface.js';
+import { SrtSegment, EditArgs } from '@shared-types/app';
 import { colors } from '../../styles.js';
 import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
 import { useTranslation } from 'react-i18next';
