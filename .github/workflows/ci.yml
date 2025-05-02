@@ -1,0 +1,58 @@
+name: CI (bun)
+
+on:
+  push:
+    branches: [main, 'dev/**']
+  pull_request:
+    branches: [main, 'dev/**']
+
+jobs:
+  build:
+    # Pick the OSs you really care about right now
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # add 'windows-latest', 'macos-latest' later
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # 1. Checkout code
+      - uses: actions/checkout@v4
+
+      # 2. Install Bun (lightweight drop-in)
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      # 3. Cache Bun's global store (makes subsequent runs faster)
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          # Windows stores bun cache here:
+          path: |
+            ~/.bun/install/cache
+            C:\Users\runneradmin\.bun\install\cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      # 4. Install dependencies (monorepo aware – bun sees the workspaces)
+      - name: Install deps
+        run: bun install --frozen-lockfile
+        shell: bash # important for windows
+
+      # 5. Lint (fails the build if ESLint errors)
+      - name: ESLint check
+        run: bun run lint
+        shell: bash
+
+      # 6. Build (tsc / bun build etc.)
+      - name: Build packages
+        run: bun run build
+        shell: bash
+
+      # --- (Optional) Tests ---
+      - name: Unit tests
+        if: ${{ hashFiles('tests/**/*') != '' }}
+        run: bun test
+        shell: bash
