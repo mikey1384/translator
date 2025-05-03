@@ -30,10 +30,6 @@ function applyPresetStyles(
   el.style.fontSize = fontSizePx + 'px';
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// The rest is mostly unchanged; we just updated applySubtitlePreset and updateSubtitle
-// ─────────────────────────────────────────────────────────────────────
-
 export function applySubtitlePreset(preset: SubtitleStylePresetKey) {
   console.log('[applySubtitlePreset] Applying preset:', preset);
   const el = document.getElementById('subtitle');
@@ -120,18 +116,14 @@ function initializeSubtitleDisplay() {
             `${esc(line)}` +
             `</span>`
         )
-        // ⚠ no newline/space before or after <br/>!
         .join('<br/>');
       el.innerHTML = html;
     } else {
-      // For non-LineBox presets, we can just set textContent
       el.textContent = text;
     }
 
-    /* ---------- apply styles ---------- */
     applyPresetStyles(el, { fontSizePx, stylePreset, isMultiLine });
 
-    // ---- Keep the fix for "opacity:0" → "opacity:1" ----
     if (text.trim()) {
       el.classList.add('visible'); // show subtitle if there's content
     } else {
