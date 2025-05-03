@@ -99,12 +99,19 @@ export async function assembleClipsFromStates({
               lastProgressReportTime = now;
               progressCallback?.({
                 percent: Math.min(ASSEMBLY_END_PERCENT, overallPercent),
-                stage: `Assembling overlay video... (${Math.round(
-                  currentProgress
+                stage: `Assembling overlay video... (${Math.min(
+                  100,
+                  Math.round(currentProgress)
                 )}%)`,
               });
             }
           }
+        }
+        if (/progress=end/.test(line)) {
+          progressCallback?.({
+            percent: ASSEMBLY_END_PERCENT,
+            stage: 'Overlay assembly complete',
+          });
         }
       });
     });

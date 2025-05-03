@@ -2,6 +2,12 @@ import os from 'os';
 import { spawn, ChildProcess } from 'child_process';
 import log from 'electron-log';
 
+/* [ADDED] Progress-bar bands for the merge stage */
+const VIDEO_START = 40; // bar begins here when merge starts
+const FINAL_START = 90; // leave the last 10 % for trailer/audio work
+const FINAL_END = 100; // completion
+const VIDEO_RANGE = FINAL_START - VIDEO_START; // 50 points
+
 type Progress = (d: { percent: number; stage: string; error?: string }) => void;
 
 export interface MergeVideoAndOverlayOptions {
@@ -88,30 +94,50 @@ export async function mergeVideoAndOverlay(
     const ff = spawn('ffmpeg', ffArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
     registerProcess?.(ff);
 
-    const START = 40;
-    const END = 100;
-    const RANGE = END - START;
+    // [ADDED] Log stderr for diagnostics, ensuring the pipe is drained
+    ff.stderr.setEncoding('utf8');
+    ff.stderr.on('data', (data: string) => {
+      log.debug(`[ffmpeg-merge ${opts.operationId} stderr] ${data.trim()}`);
+    });
 
+    ff.stdout.setEncoding('utf8'); // Ensure stdout encoding is set
     ff.stdout.on('data', (buf: Buffer) => {
-      const m = /out_time_ms=(\d+)/.exec(buf.toString());
-      if (!m) return;
-      const pct = Math.min(
-        END - 1,
-        START + (parseInt(m[1], 10) / (videoDuration * 1e6)) * RANGE
-      );
-      progressCallback?.({
-        percent: Math.round(pct),
-        stage: `Merging video…`,
-      });
+      const txt = buf.toString();
+
+      // ── 1) update bar while video frames are still encoding ─────────────
+      const m = /out_time_ms=(\d+)/.exec(txt);
+      if (m) {
+        const frac = Math.min(parseInt(m[1], 10) / (videoDuration * 1e6), 1); // 0 → 1
+        const pct = VIDEO_START + frac * VIDEO_RANGE; // 40 → 90
+        progressCallback?.({
+          percent: Math.round(pct),
+          stage: 'Encoding video…',
+        });
+      }
+
+      // ── 2) update stage when ffmpeg signals progress=end ───────────────
+      //    We don't jump to 100% here, only on 'close' event
+      if (/progress=end/.test(txt)) {
+        progressCallback?.({
+          percent: FINAL_START, // Stay at 90% (or VIDEO_START + VIDEO_RANGE)
+          stage: 'Finalising container…',
+        });
+      }
     });
 
     ff.once('close', code => {
       if (code === 0) {
-        progressCallback?.({ percent: 99, stage: 'Muxing complete' });
+        // Force final 100% update ONLY on successful close
+        progressCallback?.({ percent: FINAL_END, stage: 'Merge complete!' });
         resolve({ success: true, finalOutputPath: targetSavePath });
       } else {
         const err = `ffmpeg merge exited with ${code}`;
-        progressCallback?.({ percent: 99, stage: 'Merge failed', error: err });
+        log.error(`[ffmpeg-merge ${opts.operationId}] ${err}`); // Log error
+        progressCallback?.({
+          percent: VIDEO_START, // Revert progress on error
+          stage: 'Merge failed',
+          error: err,
+        });
         reject({ success: false, finalOutputPath: '', error: err });
       }
     });
