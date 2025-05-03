@@ -115,7 +115,7 @@ function initializeSubtitleDisplay() {
         .split('\n')
         .map(
           line =>
-            `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.55;white-space:pre-wrap;` +
+            `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` +
             `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
             `${esc(line)}` +
             `</span>`

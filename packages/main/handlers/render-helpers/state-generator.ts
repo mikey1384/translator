@@ -8,7 +8,7 @@ export async function generateStatePngs({
   tempDirPath,
   videoWidth,
   videoHeight,
-  frameRate,
+  fps,
   fontSizePx,
   stylePreset,
   operationId,
@@ -19,7 +19,7 @@ export async function generateStatePngs({
   tempDirPath: string;
   videoWidth: number;
   videoHeight: number;
-  frameRate: number;
+  fps: number;
   fontSizePx?: number;
   stylePreset?: unknown;
   operationId: string;
@@ -28,7 +28,6 @@ export async function generateStatePngs({
   const pngs: Array<{ path: string; duration: number }> = [];
   const total = events.length;
   const STAGE_PERCENT = 10;
-  const frameDur = 1 / frameRate;
 
   for (let i = 0; i < total; i++) {
     const ev = events[i];
@@ -38,18 +37,17 @@ export async function generateStatePngs({
     const durMs = nextTime - ev.timeMs;
     if (durMs < 1) continue;
 
-    const baseDuration = Math.max(
-      frameDur,
-      Math.ceil(durMs / 1000 / frameDur) * frameDur
-    );
+    const frames = Math.max(1, Math.round((durMs / 1000) * fps));
+    const duration = frames / fps;
+
     const file = path.join(
       tempDirPath,
       `state_${String(i).padStart(5, '0')}.png`
     );
 
-    let durationToUse = baseDuration;
+    let durationToUse = duration;
     if (i === 0 && ev.text) {
-      durationToUse = Math.max(baseDuration, 2 * frameDur);
+      durationToUse = Math.max(duration, 2 / fps);
     }
 
     await page.evaluate(

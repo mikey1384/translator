@@ -34,6 +34,7 @@ import { generateSubtitleEvents } from './render-helpers/srt-parser.js';
 import { generateStatePngs } from './render-helpers/state-generator.js';
 import { assembleClipsFromStates } from './render-helpers/ffmpeg-assembly.js';
 import { mergeVideoAndOverlay } from './render-helpers/ffmpeg-merge.js';
+import { probeFps } from './render-helpers/ffprobe-utils.js';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /* IPC bootstrap                                                             */
@@ -105,6 +106,16 @@ export function initializeRenderWindowHandlers(): void {
           );
         }
 
+        // [ADDED] Get accurate frame rate before generating states
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Probing FPS for ${options.originalVideoPath}...`
+        );
+        const realFps = await probeFps(options.originalVideoPath);
+        log.info(
+          `[RenderWindowHandlers ${operationId}] Detected real FPS: ${realFps}`
+        );
+        options.frameRate = realFps;
+
         const uniqueEventsMs = generateSubtitleEvents({
           srtContent: options.srtContent,
           outputMode: (options.outputMode ?? 'dual') as 'dual' | 'single',
@@ -120,7 +131,7 @@ export function initializeRenderWindowHandlers(): void {
           tempDirPath,
           videoWidth: options.videoWidth,
           videoHeight: options.videoHeight,
-          frameRate: options.frameRate,
+          fps: realFps,
           fontSizePx: options.fontSizePx,
           stylePreset: options.stylePreset,
           progress: sendProgress,
@@ -141,7 +152,7 @@ export function initializeRenderWindowHandlers(): void {
         await assembleClipsFromStates({
           statePngs,
           outputPath: overlayMovPath,
-          frameRate: options.frameRate,
+          frameRate: realFps,
           operationId,
           progressCallback: sendProgress,
           registerProcess,
@@ -156,7 +167,7 @@ export function initializeRenderWindowHandlers(): void {
             out: videoForMerge,
             w: options.videoWidth,
             h: options.videoHeight,
-            fps: options.frameRate,
+            fps: realFps,
             dur: options.videoDuration,
           });
         }
