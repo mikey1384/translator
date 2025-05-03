@@ -1,9 +1,6 @@
 import log from 'electron-log';
-import { parseSrt } from '../../../shared/helpers/index.js';
-import { cueText } from '../../../shared/helpers/index.js';
-import type { SrtSegment } from '@shared-types/app';
+import { parseSrt, cueText } from '../../../shared/helpers/index.js';
 
-// Define the type locally based on cueText signature
 type CueTextMode = 'original' | 'translation' | 'dual';
 
 export function generateSubtitleEvents({
@@ -13,44 +10,89 @@ export function generateSubtitleEvents({
   operationId,
 }: {
   srtContent: string;
-  // Note: Input accepts 'single' for convenience, mapped internally to 'original' for cueText
   outputMode: 'dual' | 'single';
   videoDuration: number;
   operationId: string;
 }): Array<{ timeMs: number; text: string }> {
-  const segments: SrtSegment[] = parseSrt(srtContent);
-  log.info(`[srt-parser ${operationId}] parsed ${segments.length} SRT cues`);
-
-  const events: Array<{ timeMs: number; text: string }> = [
-    { timeMs: 0, text: '' },
-  ];
   const ms = (sec: number) => Math.round(sec * 1000);
-  const MIN_MS = 1;
 
-  segments.forEach(s => {
-    const start = Math.max(0, ms(s.start));
-    const end = Math.max(start + MIN_MS, ms(s.end));
-    // Map 'single' to 'original' for cueText
+  /* ── 1. Parse SRT and generate merged segments ───────────────────── */
+  interface Interval {
+    start: number;
+    end: number;
+    text: string;
+  }
+  const mergedSegments: Interval[] = [];
+  const parsedSrt = parseSrt(srtContent);
+  log.info(
+    `[srt-parser ${operationId}] parsed ${parsedSrt.length} raw SRT cues`
+  );
+
+  for (const s of parsedSrt) {
+    const start = ms(s.start);
+    const end = ms(s.end);
     const cueOutputMode: CueTextMode =
       outputMode === 'single' ? 'original' : outputMode;
     const text = cueText(s, cueOutputMode);
-    events.push({ timeMs: start, text });
-    events.push({ timeMs: end, text: '' });
+
+    const clampedEnd = Math.min(end, ms(videoDuration));
+    if (start >= clampedEnd) {
+      log.warn(
+        `[srt-parser ${operationId}] Skipping segment with zero/negative duration or past video duration: ${JSON.stringify(s)}`
+      );
+      continue;
+    }
+
+    const last = mergedSegments.at(-1);
+
+    if (last && last.text === text && start <= last.end) {
+      last.end = Math.max(last.end, clampedEnd);
+    } else {
+      const adjustedStart = last && start < last.end ? last.end : start;
+      if (adjustedStart < clampedEnd) {
+        mergedSegments.push({ start: adjustedStart, end: clampedEnd, text });
+      } else {
+        log.warn(
+          `[srt-parser ${operationId}] Skipping segment after start time adjustment due to overlap: ${JSON.stringify(s)}`
+        );
+      }
+    }
+  }
+  log.info(
+    `[srt-parser ${operationId}] created ${mergedSegments.length} merged segments`
+  );
+
+  /* ── 2. Convert merged segments to [time,text] change-list ──────── */
+  const events: Array<{ timeMs: number; text: string }> = [
+    { timeMs: 0, text: '' },
+  ];
+  mergedSegments.forEach(seg => {
+    if (seg.start === 0) {
+      events[0].text = seg.text;
+    } else {
+      events.push({ timeMs: seg.start, text: seg.text });
+    }
+    events.push({ timeMs: seg.end, text: '' });
   });
 
-  /* ensure trailing blank exactly at duration */
+  /* Ensure trailing blank at exact video duration */
   const durationMs = ms(videoDuration);
   events.push({ timeMs: durationMs, text: '' });
 
-  /* dedupe / sort */
   events.sort((a, b) => a.timeMs - b.timeMs);
-
-  const uniq: typeof events = [];
+  const final: typeof events = [];
   for (const e of events) {
-    const prev = uniq[uniq.length - 1];
-    if (!prev || e.text !== prev.text) uniq.push(e);
+    if (
+      !final.length ||
+      final.at(-1)!.timeMs !== e.timeMs ||
+      final.at(-1)!.text !== e.text
+    ) {
+      final.push(e);
+    }
   }
 
-  log.info(`[srt-parser ${operationId}] ${uniq.length} unique events`);
-  return uniq;
+  log.info(
+    `[srt-parser ${operationId}] ${final.length} unique events generated`
+  );
+  return final;
 }

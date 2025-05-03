@@ -147,9 +147,6 @@ export function initializeRenderWindowHandlers(): void {
           registerProcess,
         });
 
-        // [ADDED] Send progress update after assembly
-        sendProgress({ percent: 40, stage: 'Merging video and overlay...' }); // Assuming assembly took up to 40%
-
         /* ─── 6. Optional black-video stub for "overlay only" mode ────── */
         let videoForMerge = options.originalVideoPath;
         if (options.overlayMode === 'blackVideo') {

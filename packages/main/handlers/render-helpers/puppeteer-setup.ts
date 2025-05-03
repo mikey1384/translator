@@ -73,5 +73,17 @@ export async function initPuppeteer({
   });
 
   log.info(`[Puppeteer:${operationId}] ready`);
+
+  await page.addStyleTag({
+    content: `
+      #subtitle,
+      #subtitle.visible {
+        transition: none !important;
+        opacity: 1   !important;
+        transform: translateX(-50%) !important;
+      }
+    `,
+  });
+
   return { browser, page };
 }

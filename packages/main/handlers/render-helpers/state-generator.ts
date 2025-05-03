@@ -32,19 +32,25 @@ export async function generateStatePngs({
 
   for (let i = 0; i < total; i++) {
     const ev = events[i];
+
     const nextTime =
       i + 1 < total ? events[i + 1].timeMs : events[total - 1].timeMs;
     const durMs = nextTime - ev.timeMs;
     if (durMs < 1) continue;
 
-    const duration = Math.max(
+    const baseDuration = Math.max(
       frameDur,
-      Math.round(durMs / 1000 / frameDur) * frameDur
+      Math.ceil(durMs / 1000 / frameDur) * frameDur
     );
     const file = path.join(
       tempDirPath,
       `state_${String(i).padStart(5, '0')}.png`
     );
+
+    let durationToUse = baseDuration;
+    if (i === 0 && ev.text) {
+      durationToUse = Math.max(baseDuration, 2 * frameDur);
+    }
 
     await page.evaluate(
       ({ txt, size, preset }) => {
@@ -61,7 +67,7 @@ export async function generateStatePngs({
       type: 'png',
     });
 
-    pngs.push({ path: file, duration });
+    pngs.push({ path: file, duration: durationToUse });
     const pct = Math.round(((i + 1) / total) * STAGE_PERCENT);
     if (i < 50 || (i + 1) % 10 === 0 || i === total - 1) {
       progress({

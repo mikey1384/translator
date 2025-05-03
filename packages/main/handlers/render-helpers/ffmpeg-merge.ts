@@ -1,6 +1,5 @@
 import os from 'os';
-import { spawn } from 'child_process';
-import { ChildProcess } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import log from 'electron-log';
 
 type Progress = (d: { percent: number; stage: string; error?: string }) => void;
