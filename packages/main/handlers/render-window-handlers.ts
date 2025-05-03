@@ -13,7 +13,6 @@ import os from 'os';
 import { app, ipcMain, BrowserWindow, dialog } from 'electron';
 import log from 'electron-log';
 
-// O3 Suggestion: Track active render jobs
 const activeRenderJobs = new Map<
   string,
   { browser?: Browser; processes: ChildProcess[] }
@@ -689,7 +688,7 @@ function getRenderHostPath(): string {
   let correctPath: string;
 
   if (app.isPackaged) {
-    correctPath = path.join(appPath, 'render-host.html');
+    correctPath = path.join(appPath, 'dist', 'render-host.html');
     log.info(`[getRenderHostPath] Packaged mode path: ${correctPath}`);
   } else {
     correctPath = path.join(appPath, '..', '..', 'render-host.html');
