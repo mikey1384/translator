@@ -107,17 +107,21 @@ function initializeSubtitleDisplay() {
           .replace(/>/g, '&gt;')
           .trim();
 
-      const html = text
-        .split('\n')
-        .map(
-          line =>
-            `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` +
-            `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
-            `${esc(line)}` +
-            `</span>`
-        )
-        .join('<br/>');
-      el.innerHTML = html;
+      if (text.trim()) {
+        const html = text
+          .split('\n')
+          .map(
+            line =>
+              `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` +
+              `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
+              `${esc(line)}` +
+              `</span>`
+          )
+          .join('<br/>');
+        el.innerHTML = html;
+      } else {
+        el.innerHTML = '';
+      }
     } else {
       el.textContent = text;
     }
