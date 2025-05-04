@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { spawn, ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
 import { app, ipcMain, BrowserWindow, dialog } from 'electron';
 import log from 'electron-log';
 import { pathToFileURL } from 'url';
@@ -8,6 +8,16 @@ import { pathToFileURL } from 'url';
 import { RenderSubtitlesOptions } from '@shared-types/app';
 import { FFmpegService } from '../../services/ffmpeg-service.js';
 import { getAssetsPath } from '../../shared/helpers/paths.js';
+
+import {
+  createOperationTempDir,
+  cleanupTempDir,
+} from './render-helpers/temp-utils.js';
+import { initPuppeteer } from './render-helpers/puppeteer-setup.js';
+import { generateSubtitleEvents } from './render-helpers/srt-parser.js';
+import { generateStatePngs } from './render-helpers/state-generator.js';
+import { directMerge } from './render-helpers/ffmpeg-direct-merge.js';
+import { probeFps } from './render-helpers/ffprobe-utils.js';
 
 const activeRenderJobs = new Map<
   string,
@@ -22,23 +32,6 @@ const RENDER_CHANNELS = {
   RESULT: 'render-subtitles-result',
 } as const;
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* Helper imports (new files)                                                */
-/* ────────────────────────────────────────────────────────────────────────── */
-import {
-  createOperationTempDir,
-  cleanupTempDir,
-} from './render-helpers/temp-utils.js';
-import { initPuppeteer } from './render-helpers/puppeteer-setup.js';
-import { generateSubtitleEvents } from './render-helpers/srt-parser.js';
-import { generateStatePngs } from './render-helpers/state-generator.js';
-// import { assembleClipsFromStates } from './render-helpers/ffmpeg-assembly.js'; // [REMOVED]
-import { directMerge } from './render-helpers/ffmpeg-direct-merge.js';
-import { probeFps } from './render-helpers/ffprobe-utils.js';
-
-/* ────────────────────────────────────────────────────────────────────────── */
-/* NEW HELPER for direct merge                                                */
-/* ────────────────────────────────────────────────────────────────────────── */
 async function writeConcat({
   frames,
   listPath,
@@ -48,14 +41,13 @@ async function writeConcat({
 }) {
   let out = 'ffconcat version 1.0\n\n';
   for (const f of frames) {
-    // Ensure paths are relative to the directory containing the list file
     const relativePath = path
       .relative(path.dirname(listPath), f.path)
       .replace(/\\/g, '/');
     out += `file '${relativePath}'\n`;
     out += `duration ${f.duration.toFixed(6)}\n\n`;
   }
-  // concat spec: repeat last frame once
+
   if (frames.length > 0) {
     const lastRelativePath = path
       .relative(path.dirname(listPath), frames.at(-1)!.path)
@@ -108,7 +100,6 @@ export function initializeRenderWindowHandlers(): void {
         }
       };
 
-      // Helper to add processes to the active job
       const registerProcess = (p: ChildProcess) => {
         activeRenderJobs.get(operationId)?.processes.push(p);
       };
@@ -168,14 +159,11 @@ export function initializeRenderWindowHandlers(): void {
         });
         await page.close(); // page no longer needed
 
-        // [ADDED] Send progress update after PNG generation
         sendProgress({
           percent: 10,
           stage: 'Assembling subtitle overlay video...',
         }); // Assuming 10% for Puppeteer/PNG stage
 
-        /* ─── 5. [REPLACED] Write PNG concat list instead of MOV overlay ── */
-        // const overlayMovPath = path.join(tempDirPath, `overlay_${operationId}.mov`); // OLD
         const concatListPath = path.join(
           tempDirPath,
           `pngs_${operationId}.txt`
@@ -183,20 +171,6 @@ export function initializeRenderWindowHandlers(): void {
         await writeConcat({ frames: statePngs, listPath: concatListPath });
         sendProgress({ percent: 40, stage: 'Overlay concat ready' }); // Update progress stage
 
-        /* [REMOVED] Call to assembleClipsFromStates */
-        // await assembleClipsFromStates({
-        //   statePngs,
-        //   outputPath: overlayMovPath,
-        //   frameRate: options.frameRate,
-        //   operationId,
-        //   progressCallback: sendProgress,
-        //   registerProcess,
-        // });
-
-        // [REMOVED] Progress update after assembly
-        // sendProgress({ percent: 40, stage: 'Merging video and overlay...' }); // Assuming assembly took up to 40%
-
-        /* ─── 6. Optional black-video stub for "overlay only" mode ────── */
         let videoForMerge = options.originalVideoPath;
         if (options.overlayMode === 'blackVideo') {
           const ffmpegSvc = new FFmpegService(app.getPath('temp'));
