@@ -32,9 +32,39 @@ import {
 import { initPuppeteer } from './render-helpers/puppeteer-setup.js';
 import { generateSubtitleEvents } from './render-helpers/srt-parser.js';
 import { generateStatePngs } from './render-helpers/state-generator.js';
-import { assembleClipsFromStates } from './render-helpers/ffmpeg-assembly.js';
-import { mergeVideoAndOverlay } from './render-helpers/ffmpeg-merge.js';
+// import { assembleClipsFromStates } from './render-helpers/ffmpeg-assembly.js'; // [REMOVED]
+import { directMerge } from './render-helpers/ffmpeg-direct-merge.js';
 import { probeFps } from './render-helpers/ffprobe-utils.js';
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* NEW HELPER for direct merge                                                */
+/* ────────────────────────────────────────────────────────────────────────── */
+async function writeConcat({
+  frames,
+  listPath,
+}: {
+  frames: Array<{ path: string; duration: number }>;
+  listPath: string;
+}) {
+  let out = 'ffconcat version 1.0\n\n';
+  for (const f of frames) {
+    // Ensure paths are relative to the directory containing the list file
+    const relativePath = path
+      .relative(path.dirname(listPath), f.path)
+      .replace(/\\/g, '/');
+    out += `file '${relativePath}'\n`;
+    out += `duration ${f.duration.toFixed(6)}\n\n`;
+  }
+  // concat spec: repeat last frame once
+  if (frames.length > 0) {
+    const lastRelativePath = path
+      .relative(path.dirname(listPath), frames.at(-1)!.path)
+      .replace(/\\/g, '/');
+    out += `file '${lastRelativePath}'\n`;
+  }
+  await fs.writeFile(listPath, out, 'utf8');
+  log.info(`[writeConcat] Wrote PNG concat list to ${listPath}`);
+}
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /* IPC bootstrap                                                             */
@@ -144,19 +174,27 @@ export function initializeRenderWindowHandlers(): void {
           stage: 'Assembling subtitle overlay video...',
         }); // Assuming 10% for Puppeteer/PNG stage
 
-        /* ─── 5. Assemble PNGs ➜ alpha-MOV overlay ───────────────────── */
-        const overlayMovPath = path.join(
+        /* ─── 5. [REPLACED] Write PNG concat list instead of MOV overlay ── */
+        // const overlayMovPath = path.join(tempDirPath, `overlay_${operationId}.mov`); // OLD
+        const concatListPath = path.join(
           tempDirPath,
-          `overlay_${operationId}.mov`
+          `pngs_${operationId}.txt`
         );
-        await assembleClipsFromStates({
-          statePngs,
-          outputPath: overlayMovPath,
-          frameRate: realFps,
-          operationId,
-          progressCallback: sendProgress,
-          registerProcess,
-        });
+        await writeConcat({ frames: statePngs, listPath: concatListPath });
+        sendProgress({ percent: 40, stage: 'Overlay concat ready' }); // Update progress stage
+
+        /* [REMOVED] Call to assembleClipsFromStates */
+        // await assembleClipsFromStates({
+        //   statePngs,
+        //   outputPath: overlayMovPath,
+        //   frameRate: options.frameRate,
+        //   operationId,
+        //   progressCallback: sendProgress,
+        //   registerProcess,
+        // });
+
+        // [REMOVED] Progress update after assembly
+        // sendProgress({ percent: 40, stage: 'Merging video and overlay...' }); // Assuming assembly took up to 40%
 
         /* ─── 6. Optional black-video stub for "overlay only" mode ────── */
         let videoForMerge = options.originalVideoPath;
@@ -172,18 +210,18 @@ export function initializeRenderWindowHandlers(): void {
           });
         }
 
-        /* ─── 7. Burn overlay onto base video ─────────────────────────── */
+        /* ─── 7. [REPLACED] Burn overlay directly onto base video ──────── */
         const tempMerged = path.join(tempDirPath, `merged_${operationId}.mp4`);
-        await mergeVideoAndOverlay({
-          baseVideoPath: videoForMerge,
-          originalMediaPath: options.originalVideoPath,
-          overlayVideoPath: overlayMovPath,
-          targetSavePath: tempMerged,
-          overlayMode: options.overlayMode ?? 'overlayOnVideo',
-          operationId,
+        await directMerge({
+          concatListPath, // Path to the PNG concat list
+          baseVideoPath: videoForMerge, // Base video (original or black)
+          outputSavePath: tempMerged, // Temp output path
+          videoWidth: options.videoWidth,
+          videoHeight: options.videoHeight,
           videoDuration: options.videoDuration,
-          progressCallback: sendProgress,
-          registerProcess,
+          operationId,
+          progressCallback: sendProgress, // Reuse the progress callback
+          registerProcess, // Reuse the process registration callback
         });
 
         /* ─── 8. Ask user where to save result ────────────────────────── */
