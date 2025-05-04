@@ -1728,7 +1728,7 @@ function mergeAdjacentIntervals(
 }
 
 function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
-  const MIN_WORDS = 4; // fewer than this = “orphan”
+  const MIN_WORDS = 4;
 
   if (!segments.length) return [];
 
@@ -1745,7 +1745,7 @@ function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
         // → just a hiccup in the waveform: stretch timing & append text
         prev.end = seg.end;
         prev.original = `${prev.original} ${seg.original}`.trim();
-        continue; // don’t push a new caption
+        continue;
       }
     }
 
@@ -1770,8 +1770,10 @@ async function scrubHallucinationsBatch({
   const SYSTEM_HEADER = `
 VIDEO_LENGTH_SEC = ${Math.round(videoLen)}
 An outro is only valid if caption.start_sec > 0.9 * VIDEO_LENGTH_SEC.
+*** DO NOT delete ordinary punctuation.  
+The following characters are ALWAYS allowed and never count as noise:  
+. , ? ! … : ; " ' - – — ( ) [ ] { }
 `;
-  /* ───────────────────────── 1. PROMPT ───────────────────────── */
   const systemPrompt = String.raw`
 You are a subtitle noise-filter.
 
@@ -1823,15 +1825,16 @@ output → @@LINE@@ 18: Thanks for watching!
   });
 
   /* ───────────────────── 3. LOCAL NOISE STRIPPER ─────────────────── */
-  const stripNoise = (txt: string): string =>
-    txt
-      // collapse ★★★ / !!! / --- / ░░░ …
-      .replace(/([\p{P}\p{S}])\1{2,}/gu, '$1')
-      // drop single emoji / dingbats
-      .replace(/\p{Extended_Pictographic}/gu, '')
-      // tidy whitespace
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+  const stripNoise = (txt: string): string => {
+    // 1️⃣ zap standalone emoji
+    txt = txt.replace(/\p{Extended_Pictographic}/gu, '');
+
+    // 2️⃣ collapse repeated punctuation **only if** not common sentence punctuation
+    txt = txt.replace(/([^\w\s.,'"])\1{2,}/gu, '$1'); // Exclude common punctuation from repetition collapse
+
+    // 3️⃣ tidy whitespace
+    return txt.replace(/\s{2,}/g, ' ').trim();
+  };
 
   /* ─────────────────── 4. BUILD CLEAN ARRAY & LOG ────────────────── */
   const cleanedSegments: SrtSegment[] = [];
@@ -1843,16 +1846,11 @@ output → @@LINE@@ 18: Thanks for watching!
     if (out !== '') {
       cleanedSegments.push({ ...seg, original: out });
     }
-    // else: deleted → don't push
   });
 
   return cleanedSegments;
 }
 
-/**
- * Find sub-intervals within `speech` that have no existing caption coverage
- * for a minimum duration (5 seconds by default).
- */
 function findCaptionGaps(
   speech: Array<{ start: number; end: number }>,
   captions: SrtSegment[],
