@@ -182,6 +182,7 @@ export default function SideMenu({
             variant="secondary"
             size="sm"
             title={t('videoPlayer.sideMenu.loadVideoFromUrl')}
+            disabled={!urlInput.trim()}
           >
             {t('videoPlayer.sideMenu.load')}
           </Button>
