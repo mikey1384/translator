@@ -16,6 +16,7 @@ import { FileManager } from './file-manager.js';
 import { spawn } from 'child_process';
 import * as webrtcvadPackage from 'webrtcvad';
 import pLimit from 'p-limit';
+import crypto from 'crypto';
 
 const Vad = webrtcvadPackage.default.default;
 
@@ -435,6 +436,7 @@ export async function extractSubtitlesFromVideo({
       const gap = finalSegments[i].start - finalSegments[i - 1].end;
       if (gap > GAP_SEC) {
         anchors.push({
+          id: crypto.randomUUID(),
           index: ++tmpIdx,
           start: finalSegments[i - 1].end,
           end: finalSegments[i - 1].end + 0.5,
@@ -785,6 +787,7 @@ export async function generateSubtitlesFromAudio({
       const gap = overallSegments[i].start - overallSegments[i - 1].end;
       if (gap > GAP_SEC) {
         anchors.push({
+          id: crypto.randomUUID(),
           index: ++tmpIdx,
           start: overallSegments[i - 1].end,
           end: overallSegments[i - 1].end + 0.5,
@@ -1097,6 +1100,7 @@ async function transcribeChunk({
           text += word;
         }
         srtSegments.push({
+          id: crypto.randomUUID(),
           index: segIdx++,
           start: groupStart,
           end: groupEnd,

@@ -17,7 +17,6 @@ export function useVideoActions({
   setVideoFile,
   setVideoUrl,
   setVideoFilePath,
-  setIsPlaying,
   onSrtFileLoaded,
   setIsVideoPlayerReady,
   setIsAudioOnly,
@@ -27,7 +26,6 @@ export function useVideoActions({
   setVideoFile: (value: File | null) => void;
   setVideoUrl: (value: string) => void;
   setVideoFilePath: (value: string | null) => void;
-  setIsPlaying: (value: boolean) => void;
   setIsVideoPlayerReady: (value: boolean) => void;
   setIsAudioOnly: (value: boolean) => void;
   videoUrl?: string;
@@ -49,8 +47,7 @@ export function useVideoActions({
     setVideoFile(null);
     setVideoUrl('');
     setIsAudioOnly(false);
-    setIsPlaying(false);
-  }, [setVideoFile, setVideoUrl, setIsAudioOnly, setIsPlaying]);
+  }, [setVideoFile, setVideoUrl, setIsAudioOnly]);
 
   async function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
@@ -109,18 +106,14 @@ export function useVideoActions({
       console.warn('[useVideoActions] Unexpected fileData:', fileData);
       reset();
     }
-
-    setIsPlaying(false);
   }
 
   async function handleTogglePlay() {
     try {
       if (nativeIsPlaying()) {
         nativePause();
-        setIsPlaying(false);
       } else {
         await nativePlay();
-        setIsPlaying(true);
       }
     } catch (err) {
       console.error('[useVideoActions] toggle play/pause error:', err);

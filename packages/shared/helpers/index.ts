@@ -1,5 +1,4 @@
 import { SrtSegment } from '@shared-types/app';
-import { openFile } from './electron-ipc';
 
 export function srtStringToSeconds(raw: string): number {
   const m = raw.match(/(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
@@ -179,6 +178,7 @@ export async function openSubtitleWithElectron(): Promise<{
   error?: string;
 }> {
   try {
+    const { openFile } = await import('./electron-ipc');
     const result = await openFile({
       filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
       title: 'Open Subtitle File',

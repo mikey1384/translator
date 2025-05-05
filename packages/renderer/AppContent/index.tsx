@@ -164,7 +164,6 @@ function AppContent() {
 
   const [isMergingInProgress, setIsMergingInProgress] =
     useState<boolean>(false);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [originalSrtFilePath, setOriginalSrtFilePath] = useState<string | null>(
     null
   );
@@ -267,7 +266,6 @@ function AppContent() {
     setVideoFile,
     setVideoUrl,
     setVideoFilePath,
-    setIsPlaying,
     setIsAudioOnly,
     setIsVideoPlayerReady,
     videoUrl,
@@ -745,8 +743,6 @@ function AppContent() {
                   isAudioOnly={isAudioOnly}
                   videoFile={videoFile}
                   videoFilePath={videoFilePath}
-                  isPlaying={isPlaying}
-                  secondsToSrtTime={secondsToSrtTime}
                   subtitles={subtitleSegments}
                   videoPlayerRef={
                     isVideoPlayerReady ? getNativePlayerInstance() : null

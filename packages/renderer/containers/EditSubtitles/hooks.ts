@@ -7,7 +7,7 @@ interface FocusedInput {
 }
 
 export const useRestoreFocus = (
-  focusedInputRef: React.MutableRefObject<FocusedInput>
+  focusedInputRef: React.RefObject<FocusedInput>
 ) => {
   return useCallback(() => {
     const { index, field } = focusedInputRef.current;
@@ -26,7 +26,7 @@ export const useRestoreFocus = (
 
 export const useSubtitleNavigation = (
   subtitles: SrtSegment[],
-  subtitleRefs: React.MutableRefObject<(HTMLElement | null)[]>,
+  subtitleRefs: React.RefObject<Record<string, HTMLElement | null>>,
   videoPlayerRef: any
 ) => {
   const scrollToCurrentSubtitle = useCallback(() => {
@@ -75,7 +75,7 @@ export const useSubtitleNavigation = (
     }
 
     // 4. Scroll to the found index
-    const el = subtitleRefs?.current[currentSubtitleIndex];
+    const el = subtitleRefs.current[subtitles[currentSubtitleIndex].id];
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       el.classList.add('highlight-subtitle');

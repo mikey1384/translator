@@ -14,13 +14,6 @@ import { useTranslation } from 'react-i18next';
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
 import EditSubtitlesHeader from './EditSubtitlesHeader.js';
-import {
-  nativeSeek,
-  nativePause,
-  nativePlay,
-  nativeGetCurrentTime,
-  getNativePlayerInstance,
-} from '../../native-player.js';
 import { subtitleVideoPlayer } from '../../../shared/constants/index.js';
 
 import {
@@ -28,9 +21,7 @@ import {
   openSubtitleWithElectron,
 } from '../../../shared/helpers/index.js';
 
-import { secondsToSrtTime } from '../../../shared/helpers/index.js';
 import { useSubtitleNavigation } from './hooks.js';
-import { useSubtitleEditing } from './hooks/useSubtitleEditing.js';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
@@ -43,8 +34,6 @@ export interface EditSubtitlesProps {
   isAudioOnly: boolean;
   videoFile: File | null;
   videoFilePath?: string | null;
-  isPlaying?: boolean;
-  secondsToSrtTime?: (seconds: number) => string;
   subtitles?: SrtSegment[];
   videoPlayerRef?: any;
   isMergingInProgress?: boolean;
@@ -81,8 +70,6 @@ export function EditSubtitles({
   isAudioOnly,
   videoFile,
   videoFilePath,
-  isPlaying: isPlayingProp,
-  secondsToSrtTime: secondsToSrtTimeProp,
   subtitles: subtitlesProp,
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
@@ -110,15 +97,9 @@ export function EditSubtitles({
   setMergeStylePreset,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
-  const [isPlayingState, setIsPlayingState] = useState<boolean>(
-    isPlayingProp || false
-  );
-  const [isShiftingDisabled, setIsShiftingDisabled] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
   const [forcedIndex, setForcedIndex] = useState<number | null>(null);
-  const playTimeoutRef = useRef<number | null>(null);
-  const subtitleRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const secondsToSrtTimeFn = secondsToSrtTimeProp || secondsToSrtTime;
+  const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     console.log(
@@ -184,11 +165,9 @@ export function EditSubtitles({
         );
       }
     }
-  }, [mergeFontSize, isLoadingSettings]); // Add isLoadingSettings dependency
+  }, [mergeFontSize, isLoadingSettings]);
 
-  // Save mergeStylePreset to localStorage whenever it changes
   useEffect(() => {
-    // Only save if initial loading is complete
     if (!isLoadingSettings) {
       console.log(
         `[EditSubtitles] Attempting to save mergeStylePreset: ${mergeStylePreset}`
@@ -205,14 +184,7 @@ export function EditSubtitles({
         );
       }
     }
-  }, [mergeStylePreset, isLoadingSettings]); // Add isLoadingSettings dependency
-
-  // Keep local isPlayingState in sync
-  useEffect(() => {
-    if (isPlayingProp !== undefined) {
-      setIsPlayingState(isPlayingProp);
-    }
-  }, [isPlayingProp]);
+  }, [mergeStylePreset, isLoadingSettings]);
 
   useEffect(() => {
     if (subtitlesProp && subtitlesProp.length > 0) {
@@ -242,7 +214,7 @@ export function EditSubtitles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitlesProp]); // Depend on the prop
 
-  // Scroll to the start of the last reviewed batch and highlight all subtitles in the batch
+  // --- Effect to scroll to and highlight the reviewed batch --- START ---
   useEffect(() => {
     if (
       reviewedBatchStartIndex !== null &&
@@ -250,24 +222,25 @@ export function EditSubtitles({
       reviewedBatchStartIndex >= 0
     ) {
       // Ensure the index is within bounds
-      if (reviewedBatchStartIndex < subtitleRefs?.current.length) {
+      if (subtitlesProp && reviewedBatchStartIndex < subtitlesProp.length) {
         // Scroll to the first subtitle in the batch
-        const targetElement = subtitleRefs?.current[reviewedBatchStartIndex];
+        const targetSubtitle = subtitlesProp[reviewedBatchStartIndex];
+        const targetElement = subtitleRefs?.current[targetSubtitle.id];
         if (targetElement) {
           console.log(
             `[EditSubtitles] Scrolling to reviewed index: ${reviewedBatchStartIndex}`
           );
           targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-          // Highlight all subtitles in the batch (up to 20, which is the REVIEW_BATCH_SIZE)
+          // Highlight all subtitles in the batch (up to 50, which is the REVIEW_BATCH_SIZE)
           const REVIEW_BATCH_SIZE = 50;
           const endIndex = Math.min(
             reviewedBatchStartIndex + REVIEW_BATCH_SIZE,
-            subtitleRefs?.current.length
+            subtitlesProp.length
           );
 
           // First remove any existing highlights (in case this effect runs in quick succession)
-          subtitleRefs?.current.forEach(element => {
+          Object.values(subtitleRefs?.current || {}).forEach(element => {
             if (element) {
               element.classList.remove('highlight-subtitle');
             }
@@ -275,7 +248,8 @@ export function EditSubtitles({
 
           // Add highlight effect to each subtitle in the batch with a slight delay between each
           for (let i = reviewedBatchStartIndex; i < endIndex; i++) {
-            const element = subtitleRefs?.current[i];
+            const subtitle = subtitlesProp[i];
+            const element = subtitleRefs?.current[subtitle.id];
             if (element) {
               // Small delay for staggered effect
               setTimeout(
@@ -301,43 +275,24 @@ export function EditSubtitles({
         );
       }
     }
-  }, [reviewedBatchStartIndex]); // Trigger only when this index changes
+  }, [reviewedBatchStartIndex, subtitlesProp]); // Trigger when index or subtitles change
 
-  /**
-   * ------------------------------------------------------
-   * Subtitle Editing Logic
-   * ------------------------------------------------------
-   */
-  const { editingTimesState, handleEditSubtitle, handleTimeInputBlur } =
-    useSubtitleEditing({
-      subtitles: subtitlesProp,
-      onSetSubtitleSegments,
-    });
-
-  /**
-   * ------------------------------------------------------
-   * Navigation: highlight or scroll to current subtitle
-   * ------------------------------------------------------
-   */
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
-    // Use subtitlesProp
     subtitlesProp || [],
     subtitleRefs,
     videoPlayerRef
   );
 
-  // --- Function to scroll to and highlight a specific subtitle index --- START ---
   const scrollToSubtitleIndex = useCallback(
     (index: number) => {
-      if (index >= 0 && index < subtitleRefs?.current.length) {
+      if (subtitlesProp && index >= 0 && index < subtitlesProp.length) {
         console.log(`[EditSubtitles] Requesting scroll to index: ${index}`);
 
-        // Step 1: Set the index to be force-rendered
         setForcedIndex(index);
 
-        // Step 2: Wait for React to render the forced item, then scroll
         setTimeout(() => {
-          const targetElement = subtitleRefs?.current[index];
+          const targetSubtitle = subtitlesProp[index];
+          const targetElement = subtitleRefs?.current[targetSubtitle.id];
           if (targetElement) {
             console.log(
               `[EditSubtitles] Executing scrollIntoView for forced index: ${index}`
@@ -367,45 +322,18 @@ export function EditSubtitles({
         console.warn(`[EditSubtitles] Invalid index for scrolling: ${index}`);
       }
     },
-    [subtitleRefs, setForcedIndex] // Added setForcedIndex to dependencies
+    [subtitleRefs, setForcedIndex, subtitlesProp] // Added subtitlesProp to dependencies
   );
-  // --- Function to scroll to and highlight a specific subtitle index --- END ---
 
-  // If an external editorRef is provided, expose `scrollToCurrentSubtitle`
-  // -- MODIFIED: Also expose scrollToSubtitleIndex --
   useEffect(() => {
     if (editorRef?.current) {
-      // Assign the existing scroll function
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
-      // Assign the new scroll-to-index function
       editorRef.current.scrollToSubtitleIndex = scrollToSubtitleIndex;
     }
-    // Add scrollToSubtitleIndex to dependencies
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
-
-  // --- NEW Seek Handler ---
-  const seekPlayerToTime = useCallback(
-    (time: number) => {
-      if (videoPlayerRef && typeof videoPlayerRef.seek === 'function') {
-        try {
-          videoPlayerRef.seek(time);
-        } catch (error) {
-          console.error('Error seeking player via ref:', error);
-        }
-      } else {
-        try {
-          nativeSeek(time);
-        } catch (error) {
-          console.error('Error seeking player via global nativePlayer:', error);
-        }
-      }
-    },
-    [videoPlayerRef] // Depend on videoPlayerRef state
-  );
 
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
-      {/* Error display - Use saveError prop now */}
       {saveError && (
         <div
           className={css`
@@ -422,7 +350,6 @@ export function EditSubtitles({
         </div>
       )}
 
-      {/* --- Restore Original Conditional Load Buttons --- START --- */}
       {(!videoFile ||
         (videoFile && (!subtitlesProp || subtitlesProp.length === 0))) && (
         <div style={{ marginTop: 30 }}>
@@ -451,12 +378,7 @@ export function EditSubtitles({
               gap: '8px',
             }}
           >
-            <Button
-              // style={{ width: '10rem' }} // Remove fixed width
-              variant="secondary" // Change variant back to secondary
-              size="lg" // Increase size
-              onClick={handleLoadSrtLocal}
-            >
+            <Button variant="secondary" size="lg" onClick={handleLoadSrtLocal}>
               <svg
                 width="18"
                 height="18"
@@ -479,9 +401,6 @@ export function EditSubtitles({
           </div>
         </div>
       )}
-      {/* --- Restore Original Conditional Load Buttons --- END --- */}
-
-      {/* --- Restore Original Subtitle List Section --- START --- */}
       {subtitlesProp && subtitlesProp.length > 0 && (
         <>
           <div
@@ -507,21 +426,15 @@ export function EditSubtitles({
             `}`}
           >
             <SubtitleList
-              subtitles={subtitlesProp}
               subtitleRefs={subtitleRefs}
-              editingTimes={editingTimesState}
-              isPlaying={isPlayingState}
-              secondsToSrtTime={secondsToSrtTimeFn}
-              onEditSubtitle={handleEditSubtitle}
-              onTimeInputBlur={handleTimeInputBlur}
-              onRemoveSubtitle={handleRemoveSubtitleLocal}
-              onInsertSubtitle={handleInsertSubtitleLocal}
-              onSeekToSubtitle={seekPlayerToTime}
-              onPlaySubtitle={handlePlaySubtitle}
-              onShiftSubtitle={handleShiftSubtitle}
-              isShiftingDisabled={isShiftingDisabled}
               searchText={searchText || ''}
-              forcedIndex={forcedIndex}
+              forcedId={
+                forcedIndex !== null &&
+                subtitlesProp &&
+                subtitlesProp[forcedIndex]
+                  ? subtitlesProp[forcedIndex].id
+                  : null
+              }
             />
           </div>
         </>
@@ -598,166 +511,13 @@ export function EditSubtitles({
     }
   }
 
-  function handlePlaySubtitle(startTime: number, endTime: number) {
-    if (playTimeoutRef?.current) {
-      window.clearTimeout(playTimeoutRef?.current);
-      playTimeoutRef.current = null;
-    }
-
-    if (isPlayingState) {
-      try {
-        nativePause();
-      } catch {
-        // console.error('Error pausing player:', err);
-      }
-      setIsPlayingState(false);
-      return;
-    }
-
-    try {
-      const validStartTime = isNaN(startTime) ? 0 : startTime;
-      const validEndTime = isNaN(endTime) ? validStartTime + 3 : endTime;
-
-      let currentPosition = 0;
-      const playerInstance = getNativePlayerInstance();
-      if (playerInstance) {
-        currentPosition = playerInstance.currentTime;
-      } else {
-        currentPosition = nativeGetCurrentTime();
-      }
-
-      if (currentPosition >= validStartTime && currentPosition < validEndTime) {
-        playFromCurrentPosition(currentPosition, validEndTime);
-      } else {
-        if (playerInstance) {
-          const trackElement = playerInstance.querySelector('track');
-          if (trackElement && trackElement.track) {
-            const oldMode = trackElement.track.mode;
-            trackElement.track.mode = 'hidden';
-
-            playerInstance.currentTime = validStartTime;
-
-            setTimeout(() => {
-              trackElement.track.mode = oldMode;
-              playFromCurrentPosition(playerInstance.currentTime, validEndTime);
-            }, 200);
-          } else {
-            playerInstance.currentTime = validStartTime;
-            setTimeout(() => {
-              playFromCurrentPosition(playerInstance.currentTime, validEndTime);
-            }, 200);
-          }
-        } else {
-          nativeSeek(validStartTime);
-          setTimeout(() => {
-            playFromCurrentPosition(nativeGetCurrentTime(), validEndTime);
-          }, 200);
-        }
-      }
-    } catch {
-      // console.error('Error during subtitle playback:', err);
-      setIsPlayingState(false);
-    }
-  }
-
-  function playFromCurrentPosition(startTime: number, endTime: number) {
-    let actualTime = startTime;
-    try {
-      const playerInstance = getNativePlayerInstance();
-      if (playerInstance) {
-        actualTime = playerInstance.currentTime;
-      } else {
-        actualTime = nativeGetCurrentTime();
-      }
-    } catch {
-      // console.error('Error retrieving current time:', err);
-    }
-
-    try {
-      const playerInstance = getNativePlayerInstance();
-      const playPromise = playerInstance ? playerInstance.play() : nativePlay();
-      playPromise
-        .then(() => {
-          setIsPlayingState(true);
-
-          const durationMs = (endTime - actualTime) * 1000;
-          if (durationMs > 0) {
-            playTimeoutRef.current = window.setTimeout(() => {
-              try {
-                const playerInstance = getNativePlayerInstance();
-                if (playerInstance) {
-                  playerInstance.pause();
-                } else {
-                  nativePause();
-                }
-              } catch {
-                // console.error('Error pausing after snippet playback:', err);
-              }
-              setIsPlayingState(false);
-              playTimeoutRef.current = null;
-            }, durationMs);
-          }
-        })
-        .catch((_error: any) => {
-          // console.error('Error starting playback:', _error);
-          setIsPlayingState(false);
-        });
-    } catch {
-      // console.error('Unexpected error in playFromCurrentPosition:', err);
-      setIsPlayingState(false);
-    }
-  }
-
-  function handleShiftSubtitle(index: number, shiftSeconds: number) {
-    if (isShiftingDisabled) return;
-
-    setIsShiftingDisabled(true);
-    try {
-      // Use subtitlesProp
-      const sub = subtitlesProp ? subtitlesProp[index] : null;
-      if (!sub) {
-        // console.error(`No subtitle found at index ${index}`);
-        setIsShiftingDisabled(false);
-        return;
-      }
-      const newStart = Math.max(0, sub.start + shiftSeconds);
-      const duration = sub.end - sub.start;
-      const newEnd = newStart + duration;
-
-      // Use onSetSubtitlesDirectly
-      if (onSetSubtitleSegments) {
-        onSetSubtitleSegments(current =>
-          current.map((s, i) =>
-            i === index ? { ...s, start: newStart, end: newEnd } : s
-          )
-        );
-      }
-
-      try {
-        nativeSeek(newStart);
-      } catch {
-        // console.error('Error seeking after shiftSubtitle:', seekError);
-      }
-
-      setTimeout(() => {
-        setIsShiftingDisabled(false);
-      }, 100);
-    } catch {
-      // console.error('Error shifting subtitle:', err);
-      setIsShiftingDisabled(false);
-    }
-  }
-
   async function handleMergeVideoWithSubtitles(): Promise<void> {
     console.log(
       '[EditSubtitles] handleMergeVideoWithSubtitles triggered (New PNG Sequence Method).'
     );
-    setSaveError(''); // Clear previous errors
+    setSaveError('');
 
-    // --- UPDATED Initial Checks ---
-    // For PNG sequence method, we NEED the file path
     if (!videoFilePath) {
-      // Require videoFilePath for this method
       const msg = 'Cannot merge: Original video file path is missing.';
       console.error(`[EditSubtitles] ${msg}`);
       setSaveError(msg);
@@ -861,41 +621,5 @@ export function EditSubtitles({
       setMergeStage('Error');
       onSetMergeOperationId(null);
     }
-  }
-
-  function handleRemoveSubtitleLocal(index: number) {
-    if (!window.confirm(t('editSubtitles.item.confirmRemove'))) {
-      return;
-    }
-    if (onSetSubtitleSegments && subtitlesProp) {
-      const updated = (subtitlesProp || [])
-        .filter((_, i) => i !== index)
-        .map((sub, i) => ({ ...sub, index: i + 1 }));
-      onSetSubtitleSegments(updated);
-    }
-  }
-
-  function handleInsertSubtitleLocal(index: number) {
-    if (!onSetSubtitleSegments || !subtitlesProp) return;
-
-    const curr = subtitlesProp[index];
-    const next =
-      index < subtitlesProp.length - 1 ? subtitlesProp[index + 1] : null;
-
-    const newSubtitle: SrtSegment = {
-      index: index + 2,
-      start: curr.end,
-      end: next ? next.start : curr.end + 2,
-      original: '',
-      translation: '',
-    };
-
-    const updated = [
-      ...subtitlesProp.slice(0, index + 1),
-      newSubtitle,
-      ...subtitlesProp.slice(index + 1),
-    ].map((s, i) => ({ ...s, index: i + 1 }));
-
-    onSetSubtitleSegments(updated);
   }
 }
