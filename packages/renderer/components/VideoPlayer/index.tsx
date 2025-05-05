@@ -530,13 +530,9 @@ export default function VideoPlayer({
       }
     }
   }, [isFullScreen, handleActivity]);
-  // --- Logic for Fullscreen Control Auto-Hide --- END ---
 
-  // Add effect to detect and measure the progress bar
   useEffect(() => {
     const checkProgressBar = () => {
-      // Specifically looking for the progress bars by their content
-      // This is more reliable than class names which might be hashed
       const progressAreas = Array.from(document.querySelectorAll('div')).filter(
         el => {
           // Check if this element contains headers with specific text
@@ -634,7 +630,7 @@ export default function VideoPlayer({
   return (
     <div ref={containerRef}>
       <div
-        className={`${fixedVideoContainerStyles(isFullScreen)}`}
+        className={`fixed-video-container ${fixedVideoContainerStyles(isFullScreen)}`}
         ref={playerRef}
         style={{ top: isFullScreen ? 0 : progressBarHeight }}
         tabIndex={0} // Make container focusable

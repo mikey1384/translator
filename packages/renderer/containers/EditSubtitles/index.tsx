@@ -26,10 +26,11 @@ import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
 } from '../../../shared/constants/subtitle-styles.js';
-import { colors } from '../../styles.js'; // Import colors
+import { colors } from '../../styles.js';
 import FileInputButton from '../../components/FileInputButton.js';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { useSubStore } from '../../state/subtitle-store';
+import { scrollPrecisely } from './hooks';
 
 export interface EditSubtitlesProps {
   isAudioOnly: boolean;
@@ -189,7 +190,6 @@ export function EditSubtitles({
 
   useEffect(() => {
     if (subtitlesProp && subtitlesProp.length > 0) {
-      // Use the videoPlayerRef from props if available
       if (videoPlayerRef && typeof videoPlayerRef.currentTime === 'function') {
         try {
           const currentTime = videoPlayerRef.currentTime();
@@ -197,9 +197,7 @@ export function EditSubtitles({
         } catch {
           // console.warn('Error updating player time via videoPlayerRef:', e);
         }
-      }
-      // Otherwise use the global reference from subtitleVideoPlayer
-      else if (
+      } else if (
         subtitleVideoPlayer &&
         subtitleVideoPlayer.instance &&
         typeof subtitleVideoPlayer.instance.currentTime === 'function'
@@ -213,18 +211,15 @@ export function EditSubtitles({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtitlesProp]); // Depend on the prop
+  }, [subtitlesProp]);
 
-  // --- Effect to scroll to and highlight the reviewed batch --- START ---
   useEffect(() => {
     if (
       reviewedBatchStartIndex !== null &&
       reviewedBatchStartIndex !== undefined &&
       reviewedBatchStartIndex >= 0
     ) {
-      // Ensure the index is within bounds
       if (subtitlesProp && reviewedBatchStartIndex < subtitlesProp.length) {
-        // Scroll to the first subtitle in the batch
         const targetSubtitle = subtitlesProp[reviewedBatchStartIndex];
         const targetElement = subtitleRefs?.current[targetSubtitle.id];
         if (targetElement) {
@@ -233,26 +228,22 @@ export function EditSubtitles({
           );
           targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-          // Highlight all subtitles in the batch (up to 50, which is the REVIEW_BATCH_SIZE)
           const REVIEW_BATCH_SIZE = 50;
           const endIndex = Math.min(
             reviewedBatchStartIndex + REVIEW_BATCH_SIZE,
             subtitlesProp.length
           );
 
-          // First remove any existing highlights (in case this effect runs in quick succession)
           Object.values(subtitleRefs?.current || {}).forEach(element => {
             if (element) {
               element.classList.remove('highlight-subtitle');
             }
           });
 
-          // Add highlight effect to each subtitle in the batch with a slight delay between each
           for (let i = reviewedBatchStartIndex; i < endIndex; i++) {
             const subtitle = subtitlesProp[i];
             const element = subtitleRefs?.current[subtitle.id];
             if (element) {
-              // Small delay for staggered effect
               setTimeout(
                 () => {
                   element.classList.add('highlight-subtitle');
@@ -260,7 +251,6 @@ export function EditSubtitles({
                 (i - reviewedBatchStartIndex) * 100
               );
 
-              // Remove highlight after animation
               setTimeout(
                 () => {
                   element.classList.remove('highlight-subtitle');
@@ -276,12 +266,15 @@ export function EditSubtitles({
         );
       }
     }
-  }, [reviewedBatchStartIndex, subtitlesProp]); // Trigger when index or subtitles change
+  }, [reviewedBatchStartIndex, subtitlesProp]);
+
+  const activePlayer =
+    videoPlayerRef ?? (subtitleVideoPlayer?.instance || undefined);
 
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
     subtitlesProp || [],
     subtitleRefs,
-    videoPlayerRef
+    activePlayer
   );
 
   const scrollToSubtitleIndex = useCallback(
@@ -296,28 +289,26 @@ export function EditSubtitles({
             console.log(
               `[EditSubtitles] Executing scrollIntoView for forced index: ${index}`
             );
-            targetElement.scrollIntoView({
-              behavior: 'instant',
-              block: 'center',
-            });
+            scrollPrecisely(targetElement);
 
-            // Highlight logic (can potentially run slightly delayed too)
-            targetElement.classList.remove('highlight-subtitle'); // Remove any previous
-            targetElement.classList.add('highlight-subtitle');
-            setTimeout(() => {
+            requestAnimationFrame(() => {
               targetElement.classList.remove('highlight-subtitle');
-            }, 2000);
+              targetElement.classList.add('highlight-subtitle');
+              setTimeout(() => {
+                targetElement.classList.remove('highlight-subtitle');
+              }, 2000);
+            });
           } else {
             console.warn(
               `[EditSubtitles] Target element for index ${index} not found after forced render.`
             );
           }
-        }, 100); // Changed delay to 100ms
+        }, 100);
       } else {
         console.warn(`[EditSubtitles] Invalid index for scrolling: ${index}`);
       }
     },
-    [subtitleRefs, subtitlesProp] // Added subtitlesProp to dependencies
+    [subtitleRefs, subtitlesProp]
   );
 
   useEffect(() => {
@@ -429,7 +420,10 @@ export function EditSubtitles({
               margin-bottom: 80px;
             `}`}
           >
-            <SubtitleList searchText={searchText || ''} />
+            <SubtitleList
+              subtitleRefs={subtitleRefs}
+              searchText={searchText || ''}
+            />
           </div>
         </>
       )}
@@ -467,7 +461,7 @@ export function EditSubtitles({
             handleMergeVideoWithSubtitles={handleMergeVideoWithSubtitles}
             isMergingInProgress={isMergingInProgressProp || false}
             videoFileExists={!!videoFile}
-            subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)} // Ensure correct prop passed
+            subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)}
           />
         </div>
       )}
@@ -481,11 +475,11 @@ export function EditSubtitles({
 
     if (result.error) {
       if (!result.error.includes('canceled')) {
-        setSaveError(`Error loading SRT: ${result.error}`); // Use setSaveError
+        setSaveError(`Error loading SRT: ${result.error}`);
         console.error('[handleLoadSrtLocal] Error:', result.error);
       } else {
         console.log('[handleLoadSrtLocal] File selection canceled.');
-        setSaveError(''); // Clear error if canceled
+        setSaveError('');
       }
     } else if (result.segments && result.filePath && onSetSubtitleSegments) {
       console.log(
@@ -493,12 +487,12 @@ export function EditSubtitles({
       );
       onSetSubtitleSegments(result.segments);
       onSrtFileLoaded(result.filePath);
-      setSaveError(''); // Clear any previous errors on success
+      setSaveError('');
     } else {
       console.warn('[handleLoadSrtLocal] Unexpected result:', result);
       setSaveError(
         'Failed to load SRT file: Unexpected result from file dialog.'
-      ); // Use setSaveError
+      );
     }
   }
 
@@ -546,29 +540,27 @@ export function EditSubtitles({
       }
     }
 
-    setMergeStage('Starting render...'); // Update progress stage
+    setMergeStage('Starting render...');
     const operationId = `render-${Date.now()}`;
-    onSetMergeOperationId(operationId); // Set operation ID if needed by UI
+    onSetMergeOperationId(operationId);
 
     try {
       const srtContent = buildSrt({
         segments: subtitlesProp,
         mode: 'dual',
       });
-      const videoDuration = videoDurationProp ?? 0; // Already checked above
+      const videoDuration = videoDurationProp ?? 0;
       const videoWidth = isAudioOnly ? 1280 : (videoWidthProp ?? 1280);
       const videoHeight = isAudioOnly ? 720 : (videoHeightProp ?? 720);
       const frameRate = isAudioOnly ? 30 : (videoFrameRateProp ?? 30);
-      const outputDir = '/placeholder/output/dir'; // Still a placeholder
+      const outputDir = '/placeholder/output/dir';
 
-      // Should not happen if validation above passed, but check srtContent just in case
       if (!srtContent) {
         throw new Error('Failed to build SRT content string.');
       }
 
       const overlayMode = isAudioOnly ? 'blackVideo' : 'overlayOnVideo';
 
-      // --- Create the CORRECT options object ---
       const renderOptions: RenderSubtitlesOptions = {
         operationId,
         srtContent,
@@ -582,18 +574,15 @@ export function EditSubtitles({
         stylePreset: mergeStylePreset,
         overlayMode,
       };
-      // --- End Creating Options ---
 
       console.log(
         `[EditSubtitles ${operationId}] Calling onStartPngRenderRequest prop with options:`,
-        renderOptions // Verify this log includes originalVideoPath
+        renderOptions
       );
       setMergeStage('Initializing render process via parent...');
 
-      // Pass options to parent (AppContent), which now handles the full flow including save
       const finalResult = await onStartPngRenderRequest(renderOptions);
 
-      // The result from the parent now indicates final success/failure AFTER save attempt
       if (!finalResult.success) {
         throw new Error(
           finalResult.error ||
@@ -601,7 +590,6 @@ export function EditSubtitles({
         );
       }
 
-      // Success is handled by UI updates in AppContent based on finalResult
       console.log(
         `[EditSubtitles ${operationId}] Render and save process completed successfully (handled by parent). Final Path: ${finalResult.outputPath}`
       );

@@ -1,23 +1,27 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, RefObject } from 'react';
 import { css } from '@emotion/css';
 import SubtitleItem from './SubtitleItem.js';
 import { useSubStore } from '../../state/subtitle-store';
 
 interface Props {
   searchText?: string;
+  subtitleRefs: RefObject<Record<string, HTMLDivElement | null>>;
 }
 
-export default function SubtitleList({ searchText = '' }: Props) {
+export default function SubtitleList({ searchText = '', subtitleRefs }: Props) {
   const { order } = useSubStore(s => ({ order: s.order })); // IDs only
-  const refs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const setRowRef = useMemo(() => {
     const map: Record<string, (el: HTMLDivElement | null) => void> = {};
     order.forEach(id => {
-      map[id] = el => (refs.current[id] = el);
+      map[id] = el => {
+        if (subtitleRefs.current) {
+          subtitleRefs.current[id] = el;
+        }
+      };
     });
     return map;
-  }, [order]);
+  }, [order, subtitleRefs]);
 
   return (
     <div
