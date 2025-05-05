@@ -99,7 +99,6 @@ export function EditSubtitles({
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
-  const [forcedIndex, setForcedIndex] = useState<number | null>(null);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const loadSubtitlesIntoStore = useSubStore(s => s.load);
 
@@ -290,8 +289,6 @@ export function EditSubtitles({
       if (subtitlesProp && index >= 0 && index < subtitlesProp.length) {
         console.log(`[EditSubtitles] Requesting scroll to index: ${index}`);
 
-        setForcedIndex(index);
-
         setTimeout(() => {
           const targetSubtitle = subtitlesProp[index];
           const targetElement = subtitleRefs?.current[targetSubtitle.id];
@@ -309,22 +306,18 @@ export function EditSubtitles({
             targetElement.classList.add('highlight-subtitle');
             setTimeout(() => {
               targetElement.classList.remove('highlight-subtitle');
-              // Reset forcedIndex after scroll/highlight animation
-              setForcedIndex(null);
             }, 2000);
           } else {
             console.warn(
               `[EditSubtitles] Target element for index ${index} not found after forced render.`
             );
-            // If element still not found, reset forcedIndex
-            setForcedIndex(null);
           }
         }, 100); // Changed delay to 100ms
       } else {
         console.warn(`[EditSubtitles] Invalid index for scrolling: ${index}`);
       }
     },
-    [subtitleRefs, setForcedIndex, subtitlesProp] // Added subtitlesProp to dependencies
+    [subtitleRefs, subtitlesProp] // Added subtitlesProp to dependencies
   );
 
   useEffect(() => {

@@ -1,48 +1,41 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
+import { css } from '@emotion/css';
 import SubtitleItem from './SubtitleItem.js';
 import { useSubStore } from '../../state/subtitle-store';
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
-import { shallow } from 'zustand/shallow';
 
 interface Props {
   searchText?: string;
 }
 
-function SubtitleList({ searchText }: Props) {
-  const { order, segments } = useSubStore(
-    s => ({ order: s.order, segments: s.segments }),
-    shallow
-  );
-  const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
+export default function SubtitleList({ searchText = '' }: Props) {
+  const { order } = useSubStore(s => ({ order: s.order })); // IDs only
+  const refs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const setRowRef = useMemo(() => {
+    const map: Record<string, (el: HTMLDivElement | null) => void> = {};
+    order.forEach(id => {
+      map[id] = el => (refs.current[id] = el);
+    });
+    return map;
+  }, [order]);
 
   return (
-    <List
-      height={window.innerHeight - 120}
-      itemCount={order.length}
-      itemSize={190}
-      width="100%"
-      overscanCount={4}
+    <div
+      className={css`
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding-bottom: 90px;
+      `}
     >
-      {({ index, style }: ListChildComponentProps) => {
-        const id = order[index];
-        const sub = segments[id];
-        if (!sub) return null;
-        return (
-          <div
-            key={sub.id}
-            style={style}
-            ref={(el: HTMLDivElement | null) => {
-              if (subtitleRefs.current) {
-                subtitleRefs.current[sub.id] = el;
-              }
-            }}
-          >
-            <SubtitleItem id={sub.id} searchText={searchText} />
-          </div>
-        );
-      }}
-    </List>
+      {order.map(id => (
+        <SubtitleItem
+          key={id}
+          id={id}
+          searchText={searchText}
+          ref={setRowRef[id]} // Pass stable ref setter
+        />
+      ))}
+    </div>
   );
 }
-
-export default SubtitleList;
