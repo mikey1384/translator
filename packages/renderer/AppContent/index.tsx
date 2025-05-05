@@ -1160,7 +1160,7 @@ function AppContent() {
       (videoFileObj as any)._originalPath = videoPath;
 
       setVideoFile(videoFileObj);
-    } catch (error) {
+    } catch {
       if (result.fileUrl) {
         const fallback = {
           name: result.filename,
