@@ -11,7 +11,8 @@
     "jsx": "react-jsx",
     "paths": {
       "@shared/*": ["packages/shared/*"],
-      "@shared-types/*": ["packages/shared/types/*"]
+      "@shared-types/*": ["packages/shared/types/*"],
+      "@ipc/*": ["packages/renderer/ipc/*"]
     },
     "types": ["node"]
   },
