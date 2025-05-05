@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
-import { SrtSegment, EditArgs } from '@shared-types/app';
 import { colors } from '../../styles.js';
 import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
 import { useTranslation } from 'react-i18next';
+import { useSubtitleRow } from '../../state/subtitle-store';
+import { secondsToSrtTime, srtStringToSeconds } from '../../../shared/helpers';
 
 const timeInputStyles = css`
   width: 150px;
@@ -27,39 +28,34 @@ const actionButtonsStyles = css`
   align-items: center;
 `;
 
-export default function SubtitleEditor({
-  sub,
-  index,
-  editingTimes,
-  isPlaying,
-  secondsToSrtTime,
-  onEditSubtitle,
-  onTimeInputBlur,
-  onRemoveSubtitle,
-  onInsertSubtitle,
-  onSeekToSubtitle,
-  onPlaySubtitle,
-  onShiftSubtitle,
-  isShiftingDisabled,
-  searchText,
-}: {
-  sub: SrtSegment;
-  index: number;
-  editingTimes: Record<string, string>;
-  isPlaying: boolean;
-  secondsToSrtTime: (seconds: number) => string;
-  onEditSubtitle: ({ index, field, value }: EditArgs) => void;
-  onTimeInputBlur: (index: number, field: 'start' | 'end') => void;
-  onRemoveSubtitle: (index: number) => void;
-  onInsertSubtitle: (index: number) => void;
-  onSeekToSubtitle: (startTime: number) => void;
-  onPlaySubtitle: (startTime: number, endTime: number) => void;
-  onShiftSubtitle: (index: number, shiftSeconds: number) => void;
-  isShiftingDisabled: boolean;
+interface SubtitleEditorProps {
+  id: string;
   searchText?: string;
-}) {
+}
+
+export default function SubtitleEditor({
+  id,
+  searchText,
+}: SubtitleEditorProps) {
   const { t } = useTranslation();
+  const { subtitle, isPlaying, actions } = useSubtitleRow(id);
   const [shiftAmount, setShiftAmount] = useState('0');
+
+  if (!subtitle) {
+    return null;
+  }
+
+  const handleTimeChange = (field: 'start' | 'end', value: string) => {
+    actions.update({ [field]: srtStringToSeconds(value) });
+  };
+
+  const handleApplyShift = () => {
+    const secs = Number(shiftAmount);
+    if (Number.isFinite(secs) && secs !== 0) {
+      actions.shift(secs);
+      setShiftAmount('0');
+    }
+  };
 
   return (
     <div
@@ -88,13 +84,13 @@ export default function SubtitleEditor({
             font-size: 1.1em;
           `}
         >
-          #{sub.index}
+          #{subtitle.index}
         </span>
         <div className={actionButtonsStyles}>
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => onSeekToSubtitle(sub.start)}
+            onClick={() => actions.seek()}
             title={t('editSubtitles.item.seekTitle')}
           >
             {t('editSubtitles.item.seek')}
@@ -102,7 +98,7 @@ export default function SubtitleEditor({
           <Button
             variant={isPlaying ? 'danger' : 'primary'}
             size="sm"
-            onClick={() => onPlaySubtitle(sub.start, sub.end)}
+            onClick={() => (isPlaying ? actions.pause() : actions.play())}
             title={
               isPlaying
                 ? t('editSubtitles.item.pauseSnippet')
@@ -134,7 +130,7 @@ export default function SubtitleEditor({
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => onInsertSubtitle(index)}
+            onClick={() => actions.insertAfter()}
             title={t('editSubtitles.item.insertTitle')}
           >
             <svg
@@ -156,7 +152,7 @@ export default function SubtitleEditor({
           <Button
             variant="danger"
             size="sm"
-            onClick={() => onRemoveSubtitle(index)}
+            onClick={() => actions.remove()}
             title={t('editSubtitles.item.removeTitle')}
           >
             <svg
@@ -183,18 +179,16 @@ export default function SubtitleEditor({
 
       {/* --- Replace Textarea with HighlightedTextarea --- START --- */}
       <HighlightedTextarea
-        value={sub.original}
+        value={subtitle.original}
         searchTerm={searchText || ''}
-        onChange={v => onEditSubtitle({ index, field: 'original', value: v })}
+        onChange={v => actions.update({ original: v })}
         rows={4}
         placeholder={t('editSubtitles.item.subtitlePlaceholder')}
       />
       <HighlightedTextarea
-        value={sub.translation ?? ''}
+        value={subtitle.translation ?? ''}
         searchTerm={searchText || ''}
-        onChange={v =>
-          onEditSubtitle({ index, field: 'translation', value: v })
-        }
+        onChange={v => actions.update({ translation: v })}
         rows={4}
         placeholder={t('editSubtitles.item.subtitlePlaceholder')}
       />
@@ -211,24 +205,20 @@ export default function SubtitleEditor({
         <div className={actionButtonsStyles}>
           <input
             type="text"
-            value={
-              editingTimes[`${index}-start`] ?? secondsToSrtTime(sub.start)
-            }
+            value={secondsToSrtTime(subtitle.start)}
             onChange={e => handleTimeChange('start', e.target.value)}
-            onBlur={() => onTimeInputBlur(index, 'start')}
             className={timeInputStyles}
-            aria-label={`Start time for subtitle ${sub.index}`}
-            data-testid={`subtitle-start-${index}`}
+            aria-label={`Start time for subtitle ${id}`}
+            data-testid={`subtitle-start-${id}`}
           />
           <span>→</span>
           <input
             type="text"
-            value={editingTimes[`${index}-end`] ?? secondsToSrtTime(sub.end)}
+            value={secondsToSrtTime(subtitle.end)}
             onChange={e => handleTimeChange('end', e.target.value)}
-            onBlur={() => onTimeInputBlur(index, 'end')}
             className={timeInputStyles}
-            aria-label={`End time for subtitle ${sub.index}`}
-            data-testid={`subtitle-end-${index}`}
+            aria-label={`End time for subtitle ${id}`}
+            data-testid={`subtitle-end-${id}`}
           />
           <span style={{ marginLeft: '8px', color: colors.gray }}>|</span>
           <input
@@ -236,24 +226,17 @@ export default function SubtitleEditor({
             step="0.1"
             value={shiftAmount}
             onChange={e => setShiftAmount(e.target.value)}
-            onBlur={handleApplyShift}
-            onKeyDown={e => e.key === 'Enter' && handleApplyShift()}
             className={timeInputStyles}
             placeholder={t('editSubtitles.item.shiftPlaceholder')}
             title={t('editSubtitles.item.shiftTitle')}
-            disabled={isShiftingDisabled}
-            data-testid={`subtitle-shift-input-${index}`}
+            data-testid={`subtitle-shift-input-${id}`}
           />
           <Button
             variant="secondary"
             size="sm"
             onClick={handleApplyShift}
-            disabled={
-              isShiftingDisabled ||
-              !shiftAmount ||
-              parseFloat(shiftAmount) === 0
-            }
-            data-testid={`subtitle-shift-button-${index}`}
+            disabled={Number(shiftAmount) === 0}
+            data-testid={`subtitle-shift-button-${id}`}
           >
             {t('editSubtitles.item.applyShift')}
           </Button>
@@ -261,15 +244,4 @@ export default function SubtitleEditor({
       </div>
     </div>
   );
-
-  function handleTimeChange(field: 'start' | 'end', value: string) {
-    onEditSubtitle({ index, field, value });
-  }
-
-  function handleApplyShift() {
-    const offset = parseFloat(shiftAmount);
-    if (!isNaN(offset) && offset !== 0) {
-      onShiftSubtitle(index, offset);
-    }
-  }
 }

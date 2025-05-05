@@ -1,20 +1,21 @@
 import * as FileIPC from '../../renderer/ipc/file.js';
+import { open } from '@ipc/file';
 
 export async function retryCall<Fn extends (...a: any[]) => Promise<any>>(
   fn: Fn,
-  ...args: Parameters<Fn>
+  ...rest: Parameters<Fn>
 ): Promise<Awaited<ReturnType<Fn>>> {
-  const options = {
-    maxRetries: 10,
-    initialDelay: 300,
-    ...(args[args.length - 1] &&
-    typeof args[args.length - 1] === 'object' &&
-    'maxRetries' in args[args.length - 1]
-      ? args.pop()
-      : {}),
-  };
-  let delay = options.initialDelay;
-  const maxRetries = options.maxRetries;
+  const args = [...rest];
+  let opts: any = {};
+  const lastArg = args[args.length - 1];
+
+  if (lastArg && typeof lastArg === 'object' && 'maxRetries' in lastArg) {
+    opts = args.pop();
+  }
+
+  const maxRetries = opts.maxRetries ?? 10;
+  let delay = opts.initialDelay ?? 300;
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn(...args);
@@ -169,3 +170,5 @@ export async function openFileWithRetry(options: {
     };
   }
 }
+
+export { open as openFile };

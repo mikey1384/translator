@@ -1,4 +1,12 @@
 import { SrtSegment } from '@shared-types/app';
+import { openFile } from './electron-ipc';
+
+export function srtStringToSeconds(raw: string): number {
+  const m = raw.match(/(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
+  if (!m) return 0;
+  const [, hh, mm, ss, ms] = m.map(Number);
+  return hh * 3600 + mm * 60 + ss + ms / 1000;
+}
 
 export class SubtitleProcessingError extends Error {
   constructor(message: string) {
@@ -36,7 +44,14 @@ export function parseSrt(srtString: string): SrtSegment[] {
     const original = textLines[0] ?? '';
     const translation = textLines.length === 2 ? textLines[1] : undefined;
 
-    out.push({ index, start, end, original, translation });
+    out.push({
+      id: crypto.randomUUID(),
+      index,
+      start,
+      end,
+      original,
+      translation,
+    });
   });
 
   return out;
@@ -164,7 +179,7 @@ export async function openSubtitleWithElectron(): Promise<{
   error?: string;
 }> {
   try {
-    const result = await window.electron.openFile({
+    const result = await openFile({
       filters: [{ name: 'Subtitle Files', extensions: ['srt'] }],
       title: 'Open Subtitle File',
     });

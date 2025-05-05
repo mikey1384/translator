@@ -153,6 +153,7 @@ declare module '@shared-types/app' {
   // =========================================
 
   export interface SrtSegment {
+    id: string;
     index: number;
     start: number;
     end: number;
