@@ -122,6 +122,7 @@ declare module '@shared-types/app' {
   export interface ProcessUrlOptions {
     url: string;
     quality?: VideoQuality;
+    operationId?: string;
   }
 
   export interface ProcessUrlResult {
@@ -135,6 +136,7 @@ declare module '@shared-types/app' {
     originalVideoPath?: string;
     error?: string;
     operationId?: string;
+    cancelled?: boolean;
   }
 
   export type UrlProgressCallback = (progress: {
@@ -201,6 +203,7 @@ declare module '@shared-types/app' {
   }
 
   export interface GenerateSubtitlesResult {
+    cancelled?: boolean;
     subtitles?: string;
     error?: string;
     success: boolean;

@@ -4,6 +4,11 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "lib": ["dom", "es2022"],
-    "types": ["electron"]
+    "types": ["electron"],
+    "baseUrl": ".",
+    "paths": {
+      "@ipc/*": ["./ipc/*"],
+      "@shared-types/*": ["../../shared/types/*"]
+    }
   }
 }

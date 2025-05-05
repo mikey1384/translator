@@ -15,7 +15,7 @@ import TranslationProgressArea from '../components/ProgressAreas/TranslationProg
 import LogoDisplay from '../components/LogoDisplay.js';
 import FindBar from '../components/FindBar.js';
 import LanguageSwitcher from '../components/LanguageSwitcher.js';
-import { VideoQuality } from '../../services/url-processor.js';
+import type { VideoQuality, ProcessUrlResult } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import ProgressArea from '../components/ProgressAreas/ProgressArea.js';
@@ -32,20 +32,11 @@ import subtitleRendererClient from '../clients/subtitle-renderer-client.js';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles.js';
 import { getNativePlayerInstance } from '../native-player.js';
 
-// Add this interface definition
-interface ElectronProcessUrlResult {
-  success: boolean;
-  message?: string;
-  filePath?: string;
-  videoPath?: string;
-  filename?: string;
-  size?: number;
-  fileUrl?: string;
-  originalVideoPath?: string;
-  error?: string;
-  operationId: string;
-  cancelled?: boolean;
-}
+import * as FileIPC from '@ipc/file';
+import * as VideoIPC from '@ipc/video';
+import * as SubtitlesIPC from '@ipc/subtitles';
+import * as UrlIPC from '@ipc/url';
+import * as SystemIPC from '@ipc/system';
 
 const headerRightGroupStyles = css`
   display: flex;
@@ -89,9 +80,8 @@ const mainContentStyles = css`
   position: relative;
 `;
 
-const DOWNLOAD_PROGRESS_COLOR = colors.primary; // Or another color
+const DOWNLOAD_PROGRESS_COLOR = colors.primary;
 
-// --- Helper Function ---
 const throttle = <T extends (...args: any[]) => any>(
   func: T,
   delay: number
@@ -108,12 +98,12 @@ const throttle = <T extends (...args: any[]) => any>(
       timeoutId = setTimeout(() => {
         timeoutId = null;
         if (trailingCallScheduled && lastArgs) {
-          throttled(...lastArgs); // Trigger trailing call
+          throttled(...lastArgs);
           trailingCallScheduled = false;
         }
       }, delay);
     } else {
-      trailingCallScheduled = true; // Schedule a trailing call
+      trailingCallScheduled = true;
     }
   };
 
@@ -125,7 +115,6 @@ const throttle = <T extends (...args: any[]) => any>(
 
   return throttled as T & { cancel: () => void };
 };
-// --- End Helper Function ---
 
 function AppContent() {
   const { t } = useTranslation();
@@ -185,7 +174,6 @@ function AppContent() {
 
   const saveCurrentPositionImmediately = useCallback(
     async (filePathToSave: string | null, player: HTMLVideoElement | null) => {
-      // --- DETAILED LOGGING ---
       const now = new Date().toLocaleTimeString();
       const duration = player ? player.duration : 'N/A';
       const currentTime = player ? player.currentTime : 'N/A';
@@ -195,29 +183,20 @@ function AppContent() {
       console.log(
         `[${now}] [SAVE_IMMEDIATE_CHECK] Path: ${filePathToSave}, PlayerValid: ${isPlayerValid}, Duration: ${duration} (Valid: ${isDurationValid}), CurrentTime: ${currentTime} (Valid: ${isTimeValid})`
       );
-      // --- END DETAILED LOGGING ---
 
       if (filePathToSave && player && player.duration > 0) {
         const position = player.currentTime;
         if (position >= 0) {
-          // --- Add Execution Log ---
           console.log(
             `[${now}] [SAVE_IMMEDIATE_EXEC] Saving position for ${filePathToSave}: ${position}`
           );
-          // --- End Execution Log ---
-          await window.electron.saveVideoPlaybackPosition(
-            filePathToSave,
-            position
-          );
+          await VideoIPC.savePlaybackPosition(filePathToSave, position);
         } else {
-          // --- Add Skip Log ---
           console.log(
             `[${now}] [SAVE_IMMEDIATE_SKIP] Reason: Inner check failed - Invalid position (${position})`
           );
-          // --- End Skip Log ---
         }
       } else {
-        // --- Add Skip Log ---
         let reason = '';
         if (!filePathToSave) reason += 'No file path. ';
         if (!player) reason += 'Player is null. ';
@@ -226,13 +205,12 @@ function AppContent() {
         console.log(
           `[${now}] [SAVE_IMMEDIATE_SKIP] Reason: Outer check failed - ${reason.trim()}`
         );
-        // --- End Skip Log ---
       }
     },
     []
   );
 
-  const SAVE_INTERVAL = 5000; // Save every 5 seconds during playback
+  const SAVE_INTERVAL = 5000;
   const saveCurrentPositionThrottled = useRef(
     throttle(
       (filePathToSave: string | null, player: HTMLVideoElement | null) => {
@@ -243,24 +221,18 @@ function AppContent() {
   ).current;
 
   useEffect(() => {
-    // When videoFilePath changes, save the position of the *previous* path
     const previousPath = previousVideoPathRef.current;
 
-    // Check readiness flag *before* getting player
     if (isVideoPlayerReady) {
       const currentPlayer = getNativePlayerInstance(); // Get player here
       if (previousPath && previousPath !== videoFilePath && currentPlayer) {
-        // console.log(`[AppContent] Video path changed from ${previousPath}. Saving its position.`);
         saveCurrentPositionImmediately(previousPath, currentPlayer);
       }
     }
 
-    // Update the ref to the new path for the next change
     previousVideoPathRef.current = videoFilePath;
 
-    // Cleanup the throttle timer if the component unmounts while throttled
     return () => {
-      // Only cancel if the throttle function exists (it should, but safety)
       if (saveCurrentPositionThrottled?.cancel) {
         saveCurrentPositionThrottled.cancel();
       }
@@ -314,9 +286,9 @@ function AppContent() {
     frameRate: number;
   } | null>(null);
 
-  const [mergeFontSize, setMergeFontSize] = useState<number>(24); // Default size
+  const [mergeFontSize, setMergeFontSize] = useState<number>(24);
   const [mergeStylePreset, setMergeStylePreset] =
-    useState<SubtitleStylePresetKey>('Default'); // Default style
+    useState<SubtitleStylePresetKey>('Default');
 
   const [downloadOperationId, setDownloadOperationId] = useState<string | null>(
     null
@@ -327,7 +299,7 @@ function AppContent() {
   const [downloadProgressStage, setDownloadProgressStage] =
     useState<string>('');
 
-  const isInitialMount = useRef(true); // Ref to track initial mount
+  const isInitialMount = useRef(true);
   const previousVideoPathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -374,42 +346,33 @@ function AppContent() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isFindBarVisible]);
+  }, []);
 
   useEffect(() => {
-    const unlisten = window.electron.onProcessUrlProgress((progress: any) => {
+    const unlisten = UrlIPC.onProgress((progress: any) => {
       const currentPercent = progress.percent ?? 0;
       const currentStage = progress.stage ?? '';
       const error = progress.error ?? null;
 
-      // *** Update specific download state ***
       setDownloadProgressPercent(currentPercent);
       setDownloadProgressStage(currentStage);
-      // *** End update ***
 
       if (error) {
         console.error('Error during download progress:', error);
         setError(`Error during download: ${error}`);
-        // Update stage to show error, let auto-close handle hiding
-        setDownloadProgressStage(`Error: ${error}`); // Use specific state
-        setDownloadProgressPercent(100); // Trigger auto-close on error
-        setIsProcessingUrl(true); // Keep visible until auto-close
-        setDownloadOperationId(null); // Clear ID on error
-      } else if (currentPercent >= 100) {
-        // Optionally set a specific "complete" stage if needed
-        // setDownloadProgressStage("Download Complete");
-        // The ProgressArea auto-close will handle hiding it based on percent
+        setDownloadProgressStage(`Error: ${error}`);
+        setDownloadProgressPercent(100);
+        setIsProcessingUrl(true);
+        setDownloadOperationId(null);
       }
     });
-    return unlisten; // Cleanup listener
-  }, []); // Keep empty dependency array
+    return unlisten;
+  }, []);
 
   useEffect(() => {
-    // Load the saved target language when the component mounts
     const loadSavedLanguage = async () => {
       try {
-        // Use the correct function exposed via preload
-        const savedLanguage = await window.electron.getSubtitleTargetLanguage();
+        const savedLanguage = await SubtitlesIPC.getTargetLanguage();
         if (savedLanguage && typeof savedLanguage === 'string') {
           console.log(
             `[AppContent] Loaded subtitle target language: ${savedLanguage}`
@@ -432,14 +395,12 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    // Save the target language whenever it changes (except for the initial default load)
     const saveLanguage = async () => {
       console.log(
         `[AppContent] Saving subtitle target language: ${targetLanguage}`
       );
       try {
-        // Use the correct function exposed via preload
-        await window.electron.setSubtitleTargetLanguage(targetLanguage);
+        await SubtitlesIPC.setTargetLanguage(targetLanguage);
       } catch (error) {
         console.error(
           '[AppContent] Error saving subtitle target language:',
@@ -448,19 +409,13 @@ function AppContent() {
       }
     };
 
-    // --- ADD THIS CHECK ---
-    // Only save after the initial mount/load cycle is complete
     if (!isInitialMount?.current) {
-      // --- END ADD ---
       if (targetLanguage) {
         saveLanguage();
       }
-      // --- ADD THIS CHECK ---
     } else {
-      // On the initial mount, set the ref to false for subsequent renders
       isInitialMount.current = false;
     }
-    // --- END ADD ---
   }, [targetLanguage]);
 
   useEffect(() => {
@@ -476,7 +431,6 @@ function AppContent() {
             `[AppContent] Nudging player & track. Current time: ${currentTime}`
           );
 
-          // Find the active text track
           let activeTrack: TextTrack | null = null;
           for (let i = 0; i < video.textTracks.length; i++) {
             if (video.textTracks[i].mode === 'showing') {
@@ -486,24 +440,17 @@ function AppContent() {
           }
 
           if (activeTrack) {
-            // Store original mode and disable the track
             const originalMode = activeTrack.mode;
-            activeTrack.mode = 'hidden'; // Or 'disabled'
-
-            // Nudge the video time
+            activeTrack.mode = 'hidden';
             video.currentTime = currentTime;
 
-            // After a tiny delay, restore the track mode
-            // This delay allows the browser to process the mode change
             setTimeout(() => {
               if (activeTrack) {
-                // Check again in case something changed rapidly
                 activeTrack.mode = originalMode;
                 console.log('[AppContent] Restored track mode.');
               }
-            }, 10); // 10ms delay is usually sufficient
+            }, 10);
           } else {
-            // If no active track, just nudge the video time as before
             video.currentTime = currentTime;
           }
         } else {
@@ -603,7 +550,7 @@ function AppContent() {
         );
         try {
           const savedPosition =
-            await window.electron.getVideoPlaybackPosition(videoFilePath);
+            await VideoIPC.getPlaybackPosition(videoFilePath);
           if (savedPosition !== null && player.seekable.length > 0) {
             const seekableEnd = player.seekable.end(player.seekable.length - 1);
             const seekableStart = player.seekable.start(0);
@@ -664,13 +611,13 @@ function AppContent() {
   ]);
 
   useEffect(() => {
-    const remove = window.electron.onMergeSubtitlesProgress(
+    const remove = SubtitlesIPC.onMergeProgress(
       ({ percent = 0, stage = '' }) => {
         setMergeProgress(percent);
         setMergeStage(stage);
       }
     );
-    return remove; // tidy up on unmount
+    return remove;
   }, []);
 
   useLayoutEffect(() => {
@@ -820,36 +767,32 @@ function AppContent() {
               </div>
             </div>
 
-            {/* --- Render ProgressArea for Download --- */}
             <ProgressArea
               isVisible={
                 isProcessingUrl &&
                 downloadProgressPercent > 0 &&
                 !downloadComplete
-              } // Use new state var
+              }
               title="Download in Progress"
-              progress={downloadProgressPercent} // Use new state var
-              stage={downloadProgressStage} // Use new state var
+              progress={downloadProgressPercent}
+              stage={downloadProgressStage}
               progressBarColor={
-                downloadProgressStage.toLowerCase().includes('error') // Use new state var
+                downloadProgressStage.toLowerCase().includes('error')
                   ? colors.danger
                   : DOWNLOAD_PROGRESS_COLOR
               }
               operationId={downloadOperationId}
-              isCancelling={false} // Still assuming false for now
+              isCancelling={false}
               onCancel={handleCancelDownload}
               onClose={() => {
                 setIsProcessingUrl(false);
                 setDownloadOperationId(null);
-                // Reset download-specific state
                 setDownloadProgressPercent(0);
                 setDownloadProgressStage('');
               }}
               autoCloseDelay={4000}
             />
-            {/* --- End Render ProgressArea for Download --- */}
 
-            {/* Conditionally render other progress areas */}
             {isMergingInProgress && (
               <MergingProgressArea
                 mergeProgress={mergeProgress}
@@ -885,7 +828,7 @@ function AppContent() {
 
   async function handleSelectVideoClick() {
     try {
-      const result = await window.electron.openFile({
+      const result = await FileIPC.open({
         properties: ['openFile'],
         filters: [
           {
@@ -908,24 +851,19 @@ function AppContent() {
 
       if (!result.canceled && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
-        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_media'; // Extract filename
+        const fileName = filePath.split(/[\\/]/).pop() || 'unknown_media';
 
-        setDownloadedVideoPath(null); // Reset URL download state
+        setDownloadedVideoPath(null);
 
-        // --- Call BOTH state update functions ---
-        // 1. Set the File object and URL (for the player preview)
-        await handleSetVideoFile({ path: filePath, name: fileName }); // Pass path and name info
+        await handleSetVideoFile({ path: filePath, name: fileName });
 
-        // 2. Set the file path state and fetch metadata
         await handleVideoFileSelected(filePath);
-        // --- End calling both ---
       } else {
         console.log('File selection cancelled or no file chosen.');
       }
     } catch (err: any) {
       console.error('Error opening file dialog:', err);
-      // Reset video state if dialog fails
-      handleSetVideoFile(null); // Use the action to properly clear state
+      handleSetVideoFile(null);
       setVideoFilePath(null);
       setVideoMetadata(null);
     }
@@ -980,7 +918,7 @@ function AppContent() {
       : 'downloaded_video.mp4';
 
     try {
-      const saveDialogResult = await window.electron.saveFile({
+      const saveDialogResult = await FileIPC.save({
         content: '',
         defaultPath: suggestedName,
         title: 'Save Downloaded Video As',
@@ -998,13 +936,13 @@ function AppContent() {
         return;
       }
 
-      const copyRes = await window.electron.copyFile(
+      const copyRes = await FileIPC.copy(
         downloadedVideoPath,
         saveDialogResult.filePath
       );
       if (copyRes.error) throw new Error(copyRes.error);
 
-      window.electron.showMessage(`Video saved: ${saveDialogResult.filePath}`);
+      SystemIPC.showMessage(`Video saved: ${saveDialogResult.filePath}`);
     } catch (err: any) {
       console.error('Error saving video:', err);
       setError(`Error saving video: ${err.message || err}`);
@@ -1017,10 +955,9 @@ function AppContent() {
     setDownloadComplete(false);
     setDownloadedVideoPath(null);
     setDownloadOperationId(null);
-    // *** Update specific download state for error ***
     setDownloadProgressStage(`Error: ${err.message || err}`);
-    setDownloadProgressPercent(100); // Trigger auto-close
-    setIsProcessingUrl(true); // Keep visible until auto-close
+    setDownloadProgressPercent(100);
+    setIsProcessingUrl(true);
   }
 
   function handleFindPrev() {
@@ -1042,9 +979,7 @@ function AppContent() {
       `[AppContent] Replacing "${findText}" with "${replaceWithText}"`
     );
 
-    // Capture the result of the replacement
     const updatedSegments = replaceAll(subtitleSegments);
-    // Update the state with the new segments
     handleSetSubtitleSegments(updatedSegments);
 
     setMatchedIndices([]);
@@ -1073,7 +1008,7 @@ function AppContent() {
   }
 
   async function onProcessUrl() {
-    if (!urlInput || !window.electron) {
+    if (!urlInput) {
       setError('Please enter a valid video URL');
       return;
     }
@@ -1081,32 +1016,25 @@ function AppContent() {
     const newDownloadId = `download-${Date.now()}`;
     setDownloadOperationId(newDownloadId);
 
-    // *** ADD LOGGING HERE ***
     const optionsToSend = {
       url: urlInput,
       quality: downloadQuality,
-      operationId: newDownloadId, // Include the generated ID
+      operationId: newDownloadId,
     };
     console.log(
-      '[AppContent] Calling window.electron.processUrl with options:',
+      '[AppContent] Calling UrlIPC.process with options:',
       JSON.stringify(optionsToSend)
     );
-    // *** END LOGGING ***
 
     try {
-      // Pass the prepared options object
-      const result = (await window.electron.processUrl(
-        optionsToSend
-      )) as ElectronProcessUrlResult;
+      const result = (await UrlIPC.process(optionsToSend)) as ProcessUrlResult;
 
-      // *** Check for cancellation FIRST ***
       if (result.cancelled) {
         console.log('[AppContent] Download operation was cancelled.');
-        // Just reset state, don't show error
-        resetUrlStates(); // Call reset to clear progress etc.
-        setIsProcessingUrl(false); // Explicitly hide progress area if reset doesn't
+        resetUrlStates();
+        setIsProcessingUrl(false);
         setDownloadOperationId(null);
-        return; // Stop processing here
+        return;
       }
 
       if (result.error) {
@@ -1142,8 +1070,7 @@ function AppContent() {
     await handleVideoFileSelected(videoPath);
 
     try {
-      const fileContentResult =
-        await window.electron.readFileContent(videoPath);
+      const fileContentResult = await FileIPC.readFileContent(videoPath);
       if (!fileContentResult.success || !fileContentResult.data) {
         throw new Error(fileContentResult.error || 'Failed to read video file');
       }
@@ -1178,7 +1105,7 @@ function AppContent() {
   }
 
   async function onGenerateSubtitles() {
-    if ((!videoFile && !videoFilePath) || !window.electron) {
+    if (!videoFile && !videoFilePath) {
       setError('Please select a video file first');
       return;
     }
@@ -1187,7 +1114,7 @@ function AppContent() {
     handleSrtFileLoaded(null);
     try {
       const options = buildGenerateOptions();
-      const result = await window.electron.generateSubtitles(options);
+      const result = await SubtitlesIPC.generate(options);
 
       if (result.error) {
         throw new Error(result.error);
@@ -1210,7 +1137,7 @@ function AppContent() {
         }
       } else if (result.cancelled) {
         setIsGenerating(false);
-        return;
+        setError('Subtitles generation cancelled.');
       } else {
         setError(
           'No subtitles were generated. This could be due to a language not being supported, audio quality, internet connection issues, or the video being too short.'
@@ -1260,10 +1187,9 @@ function AppContent() {
         `[AppContent ${options.operationId}] Error during PNG render/save flow:`,
         error
       );
-      // Update UI for error state
       setIsMergingInProgress(false);
       setMergeStage(`Error: ${errorMessage.substring(0, 100)}`);
-      setSaveError(errorMessage); // Set error message state
+      setSaveError(errorMessage);
       setMergeOperationId(null);
       return { success: false, error: errorMessage };
     }
@@ -1275,7 +1201,7 @@ function AppContent() {
     if (filePath) {
       try {
         if (!isAudioOnly) {
-          const result = await window.electron.getVideoMetadata(filePath);
+          const result = await VideoIPC.getMetadata(filePath);
           if (result.success && result.metadata) {
             setVideoMetadata(result.metadata);
           } else {
@@ -1307,7 +1233,7 @@ function AppContent() {
       return;
     }
     try {
-      await window.electron.cancelOperation(operationId);
+      await UrlIPC.cancel(operationId);
     } catch (error) {
       console.error(
         `[AppContent] Error sending cancel request for download ${operationId}:`,

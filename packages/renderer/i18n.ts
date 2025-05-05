@@ -42,9 +42,6 @@ import swTranslation from './locales/sw.json' assert { type: 'json' };
 import afTranslation from './locales/af.json' assert { type: 'json' };
 import viTranslation from './locales/vi.json' assert { type: 'json' };
 
-// Storage keys for Electron app
-// const LANGUAGE_PREFERENCE_KEY = 'app_language_preference'; // No longer needed here
-
 // Helper to get initial language from electron storage or localStorage fallback
 const getInitialLanguage = async (): Promise<string> => {
   try {
@@ -274,14 +271,12 @@ i18n
         translation: viTranslation,
       },
     },
-    lng: initialLanguage, // Set initial language explicitly (will be updated async)
+    lng: initialLanguage,
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development', // Enable debug only in dev
+    debug: process.env.NODE_ENV === 'development',
     interpolation: {
-      escapeValue: false, // React already safes from XSS
+      escapeValue: false,
     },
-    // detection: false, // Disable i18next detector, we handle it manually
-    // Important for Suspense to work correctly
     react: {
       useSuspense: true,
     },
