@@ -13,7 +13,7 @@ const containerStyles = css`
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-bottom: 80px; // Keep bottom margin for fixed action bar
+  margin-bottom: 80px;
 
   .highlight-subtitle {
     animation: highlight-pulse 2s ease-in-out;
@@ -44,23 +44,21 @@ const containerStyles = css`
 `;
 
 function SubtitleList({ subtitleRefs, searchText, forcedId }: Props) {
-  const activeSubtitles = useSubStore(s => s.segments);
+  const subtitles = useSubStore(s => s.segments); // single selector keeps it simple
 
   return (
     <div className={`subtitle-editor-container ${containerStyles}`}>
-      {activeSubtitles.map(sub => {
-        return (
-          <SubtitleItem
-            key={sub.id}
-            id={sub.id}
-            searchText={searchText}
-            forcedId={forcedId ?? null}
-            ref={(el: HTMLDivElement | null) => {
-              subtitleRefs.current[sub.id] = el;
-            }}
-          />
-        );
-      })}
+      {subtitles.map(sub => (
+        <SubtitleItem
+          key={sub.id}
+          id={sub.id}
+          searchText={searchText}
+          forcedId={forcedId ?? null}
+          ref={(el: HTMLDivElement | null) => {
+            subtitleRefs.current[sub.id] = el;
+          }}
+        />
+      ))}
     </div>
   );
 }
