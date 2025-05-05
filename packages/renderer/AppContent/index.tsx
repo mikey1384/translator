@@ -36,6 +36,7 @@ import * as FileIPC from '@ipc/file';
 import * as VideoIPC from '@ipc/video';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import * as UrlIPC from '@ipc/url';
+import * as OperationIPC from '@ipc/operation';
 import * as SystemIPC from '@ipc/system';
 
 const headerRightGroupStyles = css`
@@ -1245,7 +1246,7 @@ function AppContent() {
       return;
     }
     try {
-      await UrlIPC.cancel(operationId);
+      await OperationIPC.cancel(operationId);
     } catch (error) {
       console.error(
         `[AppContent] Error sending cancel request for download ${operationId}:`,
