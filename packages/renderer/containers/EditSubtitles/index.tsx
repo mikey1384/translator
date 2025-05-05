@@ -29,6 +29,7 @@ import {
 import { colors } from '../../styles.js'; // Import colors
 import FileInputButton from '../../components/FileInputButton.js';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
+import { useSubStore } from '../../state/subtitle-store';
 
 export interface EditSubtitlesProps {
   isAudioOnly: boolean;
@@ -100,6 +101,7 @@ export function EditSubtitles({
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
   const [forcedIndex, setForcedIndex] = useState<number | null>(null);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const loadSubtitlesIntoStore = useSubStore(s => s.load);
 
   useEffect(() => {
     console.log(
@@ -332,6 +334,15 @@ export function EditSubtitles({
     }
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
+  useEffect(() => {
+    if (subtitlesProp && subtitlesProp.length) {
+      const withIds = subtitlesProp.map(seg =>
+        seg.id ? seg : { ...seg, id: crypto.randomUUID() }
+      );
+      loadSubtitlesIntoStore(withIds);
+    }
+  }, [subtitlesProp, loadSubtitlesIntoStore]);
+
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
       {saveError && (
@@ -425,23 +436,10 @@ export function EditSubtitles({
               margin-bottom: 80px;
             `}`}
           >
-            <SubtitleList
-              subtitleRefs={subtitleRefs}
-              searchText={searchText || ''}
-              forcedId={
-                forcedIndex !== null &&
-                subtitlesProp &&
-                subtitlesProp[forcedIndex]
-                  ? subtitlesProp[forcedIndex].id
-                  : null
-              }
-            />
+            <SubtitleList searchText={searchText || ''} />
           </div>
         </>
       )}
-      {/* --- Restore Original Subtitle List Section --- END --- */}
-
-      {/* --- Restore Original Fixed Action Bar --- START --- */}
       {subtitlesProp && subtitlesProp.length > 0 && (
         <div
           className={css`

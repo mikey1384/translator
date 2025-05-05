@@ -1,70 +1,30 @@
-import { useRef, useState, forwardRef } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { mergeRefs } from 'react-merge-refs';
-import SubtitleEditor from './SubtitleEditor.js';
-import { useLazyLoad } from './hooks/useLazyLoad.js';
+import React, { forwardRef } from 'react';
 import { css } from '@emotion/css';
+import SubtitleEditor from './SubtitleEditor.js';
 import { useSubtitleRow } from '../../state/subtitle-store';
 
-interface SubtitleItemProps {
+interface Props {
   id: string;
   searchText?: string;
-  forcedId?: string | null;
 }
 
-const SubtitleItem = forwardRef<HTMLDivElement, SubtitleItemProps>(
-  ({ id, searchText, forcedId }, parentRef) => {
-    const shouldForceRender = forcedId === id;
-    const [ComponentRef, inView] = useInView();
-
-    const { subtitle: subtitleFromStore } = useSubtitleRow(id);
-    const activeSub = subtitleFromStore;
-
-    const [isVisible, setIsVisible] = useState(false);
-    const [placeholderHeight, setPlaceholderHeight] = useState(150);
-    const itemRef = useRef<HTMLDivElement>(null);
-
-    useLazyLoad({
-      itemRef,
-      inView,
-      onSetIsVisible: setIsVisible,
-      onSetPlaceholderHeight: setPlaceholderHeight,
-      delay: 500,
-    });
-
-    if (!activeSub) {
-      return null;
-    }
-
-    const shouldRender = shouldForceRender || isVisible || inView;
+const SubtitleItem = forwardRef<HTMLDivElement, Props>(
+  ({ id, searchText }, ref) => {
+    const { subtitle } = useSubtitleRow(id);
+    if (!subtitle) return null;
 
     return (
       <div
-        ref={mergeRefs([parentRef, ComponentRef])}
+        ref={ref}
         className={css`
-          margin-bottom: 15px;
-          min-height: ${placeholderHeight}px;
+          padding-bottom: 15px; /* matches the old gap */
         `}
       >
-        {shouldRender ? (
-          <div ref={itemRef} className="subtitle-editor-content-wrapper">
-            <SubtitleEditor id={activeSub.id} searchText={searchText} />
-          </div>
-        ) : (
-          <div
-            className={css`
-              height: ${placeholderHeight}px;
-              background-color: rgba(0, 0, 0, 0.03);
-              border-radius: 8px;
-              border: 1px solid rgba(0, 0, 0, 0.1);
-            `}
-          />
-        )}
+        <SubtitleEditor id={id} searchText={searchText} />
       </div>
     );
   }
 );
 
 SubtitleItem.displayName = 'SubtitleItem';
-
-export default SubtitleItem;
+export default React.memo(SubtitleItem);

@@ -6,6 +6,7 @@ import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
 import { useTranslation } from 'react-i18next';
 import { useSubtitleRow } from '../../state/subtitle-store';
 import { secondsToSrtTime, srtStringToSeconds } from '../../../shared/helpers';
+import { useRowActions } from '../../hooks/useRowActions';
 
 const timeInputStyles = css`
   width: 150px;
@@ -38,7 +39,8 @@ export default function SubtitleEditor({
   searchText,
 }: SubtitleEditorProps) {
   const { t } = useTranslation();
-  const { subtitle, isPlaying, actions } = useSubtitleRow(id);
+  const { subtitle, isPlaying } = useSubtitleRow(id);
+  const actions = useRowActions(id);
   const [shiftAmount, setShiftAmount] = useState('0');
 
   if (!subtitle) {

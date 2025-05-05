@@ -42,22 +42,27 @@ export function HighlightedTextarea({
   rows = 5,
   placeholder = '',
 }: HighlightedTextareaProps) {
-  const [inputValue, setInputValue] = useState(value);
+  const [draft, setDraft] = useState(value);
   const highlightRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Keep local state in sync with external prop
+  // Keep local draft state in sync with external prop (when store changes)
   useEffect(() => {
-    setInputValue(value);
+    setDraft(value);
   }, [value]);
 
-  // Generate the highlighting markup each render
-  const highlightedHtml = getHighlightedHtml(inputValue, searchTerm);
+  // Generate the highlighting markup each render based on draft
+  const highlightedHtml = getHighlightedHtml(draft, searchTerm);
 
-  // Handle user input
+  // Handle user input: update local draft only
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-    onChange(e.target.value);
+    setDraft(e.target.value);
+    // Remove direct call to external onChange here
+  };
+
+  // Call external onChange (update store) on blur
+  const handleBlur = () => {
+    onChange(draft);
   };
 
   // Keep highlight layer scrolled to match the textarea
@@ -131,9 +136,10 @@ export function HighlightedTextarea({
         className={textareaStyles}
         placeholder={placeholder}
         rows={rows}
-        value={inputValue}
+        value={draft}
         onChange={handleInput}
-        onScroll={handleScroll} // Rely on this for scroll sync
+        onBlur={handleBlur}
+        onScroll={handleScroll}
       />
     </div>
   );

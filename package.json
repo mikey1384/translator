@@ -51,9 +51,12 @@
     "wait-on": "^8.0.3"
   },
   "dependencies": {
+    "@types/react-window": "^1.8.8",
     "@types/which": "^3.0.4",
     "immer": "^10.1.1",
     "react-merge-refs": "^3.0.1",
+    "react-window": "^1.8.11",
+    "use-sync-external-store": "^1.5.0",
     "zustand": "^5.0.4"
   },
   "trustedDependencies": [
