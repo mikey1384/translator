@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Define Key Status Type moved from App/index.tsx
 export type ApiKeyStatus = {
   openai: boolean;
 } | null;
@@ -9,7 +8,6 @@ export function useApiKeyStatus() {
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus>(null);
   const [isLoadingKeyStatus, setIsLoadingKeyStatus] = useState<boolean>(true);
 
-  // --- Fetch API Key Status --- moved from App/index.tsx
   const fetchKeyStatus = useCallback(async () => {
     console.log('Attempting to fetch API key status...');
     setIsLoadingKeyStatus(true);
@@ -31,7 +29,6 @@ export function useApiKeyStatus() {
     }
   }, []);
 
-  // Fetch status on initial mount - moved from App/index.tsx
   useEffect(() => {
     fetchKeyStatus();
   }, [fetchKeyStatus]);

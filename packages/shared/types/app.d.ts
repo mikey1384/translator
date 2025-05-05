@@ -4,7 +4,166 @@ declare module '@shared-types/app' {
   import type { FFmpegService } from '@app/services';
   import type { FileManager } from '@app/services';
 
-  // === Subtitle Generation and Processing ===
+  // =========================================
+  // === General & Utility Types
+  // =========================================
+
+  export type VideoQuality = 'high' | 'mid' | 'low';
+
+  export interface CancelOperationResult {
+    success: boolean;
+    error?: string;
+  }
+
+  // =========================================
+  // === File Operations
+  // =========================================
+
+  export interface OpenFileOptions {
+    title?: string;
+    filters?: { name: string; extensions: string[] }[];
+    multiple?: boolean;
+    properties?: (
+      | 'openFile'
+      | 'openDirectory'
+      | 'multiSelections'
+      | 'showHiddenFiles'
+      | 'createDirectory'
+      | 'promptToCreate'
+      | 'noResolveAliases'
+      | 'treatPackageAsDirectory'
+      | 'dontAddToRecent'
+    )[];
+  }
+
+  export interface OpenFileResult {
+    canceled: boolean;
+    filePaths: string[];
+    bookmarks?: string[];
+    fileContents?: string[];
+    error?: string;
+  }
+
+  export interface SaveFileOptions {
+    content: string;
+    defaultPath?: string;
+    filters?: { name: string; extensions: string[] }[];
+    filePath?: string;
+    title?: string;
+  }
+
+  export interface SaveFileResult {
+    filePath: string;
+    error?: string;
+  }
+
+  export interface DeleteFileOptions {
+    filePath: string;
+  }
+
+  export interface DeleteFileResult {
+    success: boolean;
+    error?: string;
+  }
+
+  export interface FileData {
+    name: string;
+    path: string;
+    size: number;
+    type: string;
+  }
+
+  // =========================================
+  // === Video Metadata & Playback
+  // =========================================
+
+  export interface VideoMetadataResult {
+    success: boolean;
+    metadata?: {
+      duration: number;
+      width: number;
+      height: number;
+      frameRate: number;
+    };
+    error?: string;
+  }
+
+  // =========================================
+  // === Progress Callbacks
+  // =========================================
+
+  type ProgressEventCallback = (
+    event: any,
+    progress: {
+      partialResult?: string;
+      percent: number;
+      stage: string;
+      current?: number;
+      total?: number;
+      warning?: string;
+      operationId?: string;
+    }
+  ) => void;
+
+  export type ProgressCallback = (progress: {
+    percent: number;
+    stage: string;
+    current?: number;
+    total?: number;
+    partialResult?: string;
+    error?: string;
+    batchStartIndex?: number;
+  }) => void;
+
+  // =========================================
+  // === URL Processing
+  // =========================================
+
+  export interface ProcessUrlOptions {
+    url: string;
+    quality?: VideoQuality;
+  }
+
+  export interface ProcessUrlResult {
+    success: boolean;
+    subtitles?: string;
+    videoPath?: string;
+    filePath?: string;
+    filename?: string;
+    size?: number;
+    fileUrl?: string;
+    originalVideoPath?: string;
+    error?: string;
+    operationId?: string;
+  }
+
+  export type UrlProgressCallback = (progress: {
+    percent: number;
+    stage: string;
+    error?: string;
+    operationId?: string;
+    current?: number;
+    total?: number;
+  }) => void;
+
+  // =========================================
+  // === Subtitle Generation & Processing
+  // =========================================
+
+  export interface SrtSegment {
+    index: number;
+    start: number;
+    end: number;
+    original: string;
+    translation?: string;
+    reviewedInBatch?: number;
+  }
+
+  export interface SubtitleHandlerServices {
+    ffmpegService: FFmpegService;
+    fileManager: FileManager;
+  }
+
   interface GenerateSubtitlesFromAudioArgs {
     inputAudioPath: string;
     progressCallback?: GenerateProgressCallback;
@@ -31,21 +190,37 @@ declare module '@shared-types/app' {
     });
   }
 
-  export interface SrtSegment {
-    index: number;
-    start: number;
-    end: number;
-    original: string;
-    translation?: string;
-    reviewedInBatch?: number;
+  export interface GenerateSubtitlesOptions {
+    videoPath?: string;
+    videoFile?: File;
+    targetLanguage: string;
+    streamResults?: boolean;
+    filters?: { name: string; extensions: string[] }[];
+    multiple?: boolean;
+    sourceLang?: string;
   }
 
-  export interface SubtitleHandlerServices {
-    ffmpegService: FFmpegService;
-    fileManager: FileManager;
+  export interface GenerateSubtitlesResult {
+    subtitles?: string;
+    error?: string;
+    success: boolean;
   }
 
-  // === Translation Related Types ===
+  // =========================================
+  // === Subtitle Translation
+  // =========================================
+
+  export interface TranslateSubtitlesOptions {
+    subtitles: string;
+    sourceLanguage: string;
+    targetLanguage: string;
+  }
+
+  export interface TranslateSubtitlesResult {
+    translatedSubtitles: string;
+    error?: string;
+  }
+
   interface TranslateBatchArgs {
     batch: {
       segments: any[];
@@ -58,246 +233,21 @@ declare module '@shared-types/app' {
     signal?: AbortSignal;
   }
 
-  // === Progress Callbacks ===
-  type ProgressEventCallback = (
-    event: any,
-    progress: {
-      partialResult?: string;
-      percent: number;
-      stage: string;
-      current?: number;
-      total?: number;
-      warning?: string;
-      operationId?: string;
-    }
-  ) => void;
-
-  export type ProgressCallback = (progress: {
-    percent: number;
-    stage: string;
-    current?: number;
-    total?: number;
-    partialResult?: string;
-    error?: string;
-    batchStartIndex?: number;
-  }) => void;
-
-  // === URL Processing ===
-  interface ProcessUrlOptions {
-    url: string;
-    quality?: VideoQuality; // Add optional quality setting
+  export interface ReviewTranslationBatchArgs {
+    segments: SrtSegment[];
+    startIndex: number;
+    endIndex: number;
+    targetLang: string;
   }
 
-  interface ProcessUrlResult {
+  export interface CancelTranslationResult {
     success: boolean;
-    subtitles?: string; // The generated subtitles (kept for backward compatibility)
-    videoPath?: string; // Path to the downloaded video file
-    filePath?: string; // Alternative name for videoPath (for backwards compatibility)
-    filename?: string; // Name of the downloaded file
-    size?: number; // Size of the downloaded file in bytes
-    fileUrl?: string; // Direct file:// URL to the downloaded video
-    originalVideoPath?: string; // Path to the downloaded temp file (for potential later use/cleanup by renderer?)
-    error?: string;
-    operationId?: string;
-  }
-
-  // Define a specific progress type for URL processing (download + generation)
-  type UrlProgressCallback = (progress: {
-    percent: number;
-    stage: string;
-    error?: string;
-    operationId?: string;
-    current?: number; // Optional for transcription stage
-    total?: number; // Optional for transcription stage
-  }) => void;
-
-  // === Render Results ===
-  interface ExposedRenderResult {
-    // Add this interface if not already defined globally
-    success: boolean;
-    outputPath?: string;
-    error?: string;
-    cancelled?: boolean;
-    operationId: string;
-  }
-
-  // === Electron API and File Operations ===
-  interface ElectronAPI {
-    hasVideoTrack: (filePath: string) => Promise<boolean>;
-    ping: () => Promise<string>;
-    saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
-    openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
-    moveFile: (
-      sourcePath: string,
-      destinationPath: string
-    ) => Promise<{ success?: boolean; error?: string }>;
-    deleteFile: (options: DeleteFileOptions) => Promise<DeleteFileResult>;
-
-    // === Add generateSubtitles and its progress listener ===
-    generateSubtitles: (
-      options: GenerateSubtitlesOptions
-    ) => Promise<GenerateSubtitlesResult>;
-
-    onGenerateSubtitlesProgress: (
-      callback: ProgressEventCallback | null
-    ) => () => void;
-    onMergeSubtitlesProgress: (
-      callback: ProgressEventCallback | null
-    ) => () => void;
-
-    // === Add Subtitle Translation ===
-    translateSubtitles: (
-      options: TranslateSubtitlesOptions
-    ) => Promise<TranslateSubtitlesResult>;
-    onTranslateSubtitlesProgress: (
-      callback: ProgressEventCallback | null
-    ) => () => void;
-
-    // === URL Processing ===
-    processUrl: (options: ProcessUrlOptions) => Promise<ProcessUrlResult>;
-    onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
-
-    // === API Key Management ===
-    getApiKeyStatus: () => Promise<{
-      success: boolean;
-      status: { openai: boolean };
-      error?: string;
-    }>;
-    saveApiKey: (
-      keyType: 'openai',
-      apiKey: string
-    ) => Promise<{ success: boolean; error?: string }>;
-
-    // Add the missing showMessage method
-    showMessage: (message: string) => Promise<void>;
-
-    // Add copyFile signature
-    copyFile: (
-      sourcePath: string,
-      destinationPath: string
-    ) => Promise<{ success?: boolean; error?: string }>;
-
-    // === Add readFileContent === START ===
-    readFileContent: (
-      filePath: string
-    ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
-    // === Add readFileContent === END ===
-
-    // Translation cancellation
-    cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
-
-    // Find-in-Page Functions
-    sendFindInPage: (options: {
-      text: string;
-      findNext?: boolean;
-      forward?: boolean;
-      matchCase?: boolean;
-    }) => void;
-    sendStopFind: () => void;
-    onShowFindBar: (callback: () => void) => () => void; // Listener returns cleanup function
-    onFindResults: (
-      callback: (results: {
-        matches: number;
-        activeMatchOrdinal: number;
-        finalUpdate: boolean;
-      }) => void
-    ) => () => void; // Listener returns cleanup function
-
-    // === Get Locale URL ===
-    getLocaleUrl: (lang: string) => Promise<string>;
-
-    // === Language Preferences ===
-    getLanguagePreference: () => Promise<string>;
-    setLanguagePreference: (
-      lang: string
-    ) => Promise<{ success: boolean; error?: string }>;
-
-    // --- ADD THESE LINES for Subtitle Target Language ---
-    getSubtitleTargetLanguage: () => Promise<string>; // Main handler provides default 'original'
-    setSubtitleTargetLanguage: (
-      lang: string
-    ) => Promise<{ success: boolean; error?: string }>;
-    // --- END ADD ---
-
-    getVideoMetadata: (filePath: string) => Promise<{
-      success: boolean;
-      metadata?: {
-        duration: number;
-        width: number;
-        height: number;
-        frameRate: number;
-      };
-      error?: string;
-    }>;
-
-    sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
-    onPngRenderResult: (
-      callback: (result: ExposedRenderResult) => void
-    ) => () => void; // Listener returns cleanup fn
-    saveVideoPlaybackPosition: (
-      filePath: string,
-      position: number
-    ) => Promise<void>;
-    getVideoPlaybackPosition: (filePath: string) => Promise<number | null>;
-    // --- END ADD ---
-  }
-
-  // === File and Subtitle Options ===
-  export interface GenerateSubtitlesOptions {
-    videoPath?: string;
-    videoFile?: File;
-    targetLanguage: string;
-    streamResults?: boolean; // Whether to stream partial results
-    filters?: { name: string; extensions: string[] }[];
-    multiple?: boolean;
-    sourceLang?: string; // Optional string property
-  }
-
-  export interface OpenFileResult {
-    canceled: boolean;
-    filePaths: string[]; // ← no longer optional
-    bookmarks?: string[];
-    fileContents?: string[];
     error?: string;
   }
 
-  export interface FileData {
-    name: string;
-    path: string;
-    size: number;
-    type: string;
-  }
-
-  export interface SaveFileOptions {
-    content: string;
-    defaultPath?: string;
-    filters?: { name: string; extensions: string[] }[];
-    filePath?: string; // Direct path to save to without showing dialog
-    title?: string; // Add title for save dialog
-  }
-
-  export interface SaveFileResult {
-    filePath: string;
-    error?: string;
-  }
-
-  export interface OpenFileOptions {
-    title?: string;
-    filters?: { name: string; extensions: string[] }[];
-    multiple?: boolean;
-    /** Electron showOpenDialog flags */
-    properties?: (
-      | 'openFile'
-      | 'openDirectory'
-      | 'multiSelections'
-      | 'showHiddenFiles'
-      | 'createDirectory'
-      | 'promptToCreate'
-      | 'noResolveAliases'
-      | 'treatPackageAsDirectory'
-      | 'dontAddToRecent'
-    )[];
-  }
+  // =========================================
+  // === Subtitle Editing
+  // =========================================
 
   export type EditField = 'start' | 'end' | 'original' | 'translation';
   export type EditArgs = {
@@ -306,38 +256,10 @@ declare module '@shared-types/app' {
     value: number | string;
   };
 
-  // === Translation Options and Results ===
-  export interface TranslateSubtitlesOptions {
-    subtitles: string;
-    sourceLanguage: string;
-    targetLanguage: string;
-  }
+  // =========================================
+  // === Subtitle Rendering
+  // =========================================
 
-  export interface TranslateSubtitlesResult {
-    translatedSubtitles: string;
-    error?: string;
-  }
-
-  export interface CancelTranslationResult {
-    success: boolean;
-    error?: string;
-  }
-
-  // Define a generic CancelResult type
-  export interface CancelOperationResult {
-    success: boolean;
-    error?: string;
-  }
-
-  // Add ReviewTranslationBatchArgs type
-  export interface ReviewTranslationBatchArgs {
-    segments: SrtSegment[]; // Assuming the 'any[]' in original code corresponds to SrtSegment[]
-    startIndex: number;
-    endIndex: number;
-    targetLang: string;
-  }
-
-  // === Rendering Options ===
   export interface RenderSubtitlesOptions {
     fontSizePx: number;
     operationId: string;
@@ -353,5 +275,113 @@ declare module '@shared-types/app' {
     outputMode?: 'original' | 'translation' | 'dual';
   }
 
-  export type VideoQuality = 'high' | 'mid' | 'low';
+  export interface ExposedRenderResult {
+    success: boolean;
+    outputPath?: string;
+    error?: string;
+    cancelled?: boolean;
+    operationId: string;
+  }
+
+  // =========================================
+  // === System & Configuration
+  // =========================================
+
+  export interface ApiKeyStatusResult {
+    success: boolean;
+    status?: {
+      openai: boolean;
+    };
+    error?: string;
+  }
+
+  // =========================================
+  // === Electron API (Main -> Renderer Communication Contract)
+  // =========================================
+
+  interface ElectronAPI {
+    saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
+    openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
+    moveFile: (
+      sourcePath: string,
+      destinationPath: string
+    ) => Promise<{ success?: boolean; error?: string }>;
+    deleteFile: (options: DeleteFileOptions) => Promise<DeleteFileResult>;
+    copyFile: (
+      sourcePath: string,
+      destinationPath: string
+    ) => Promise<{ success?: boolean; error?: string }>;
+    readFileContent: (
+      filePath: string
+    ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
+
+    hasVideoTrack: (filePath: string) => Promise<boolean>;
+    getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;
+    saveVideoPlaybackPosition: (
+      filePath: string,
+      position: number
+    ) => Promise<void>;
+    getVideoPlaybackPosition: (filePath: string) => Promise<number | null>;
+
+    generateSubtitles: (
+      options: GenerateSubtitlesOptions
+    ) => Promise<GenerateSubtitlesResult>;
+    onGenerateSubtitlesProgress: (
+      callback: ProgressEventCallback | null
+    ) => () => void;
+    onMergeSubtitlesProgress: (
+      callback: ProgressEventCallback | null
+    ) => () => void;
+
+    translateSubtitles: (
+      options: TranslateSubtitlesOptions
+    ) => Promise<TranslateSubtitlesResult>;
+    onTranslateSubtitlesProgress: (
+      callback: ProgressEventCallback | null
+    ) => () => void;
+
+    sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
+    onPngRenderResult: (
+      callback: (result: ExposedRenderResult) => void
+    ) => () => void;
+
+    processUrl: (options: ProcessUrlOptions) => Promise<ProcessUrlResult>;
+    onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
+
+    cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
+
+    getApiKeyStatus: () => Promise<ApiKeyStatusResult>;
+    saveApiKey: (
+      keyType: 'openai',
+      apiKey: string
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    ping: () => Promise<string>;
+    showMessage: (message: string) => Promise<void>;
+    getLocaleUrl: (lang: string) => Promise<string>;
+    getLanguagePreference: () => Promise<string>;
+    setLanguagePreference: (
+      lang: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    getSubtitleTargetLanguage: () => Promise<string>;
+    setSubtitleTargetLanguage: (
+      lang: string
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    sendFindInPage: (options: {
+      text: string;
+      findNext?: boolean;
+      forward?: boolean;
+      matchCase?: boolean;
+    }) => void;
+    sendStopFind: () => void;
+    onShowFindBar: (callback: () => void) => () => void;
+    onFindResults: (
+      callback: (results: {
+        matches: number;
+        activeMatchOrdinal: number;
+        finalUpdate: boolean;
+      }) => void
+    ) => () => void;
+  }
 }

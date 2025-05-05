@@ -64,6 +64,15 @@ module.exports = {
     ],
     '@typescript-eslint/ban-ts-comment': 'warn',
     'import/no-unresolved': 'off',
+    'no-restricted-properties': [
+      'error',
+      {
+        object: 'window',
+        property: 'electron',
+        message:
+          'Import from @ipc/* instead of using window.electron directly.',
+      },
+    ],
   },
   overrides: [
     {
@@ -71,6 +80,12 @@ module.exports = {
       parser: 'espree',
       parserOptions: {
         ecmaVersion: 2021,
+      },
+    },
+    {
+      files: ['packages/renderer/ipc/*.ts'],
+      rules: {
+        'no-restricted-properties': 'off',
       },
     },
   ],
