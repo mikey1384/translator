@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SrtSegment } from '@shared-types/app';
 import { parseSrt } from '../../../../shared/helpers/index.js';
+import * as SubtitlesIPC from '@ipc/subtitles';
 
 type ProgressMsg = {
   partialResult?: string;
@@ -54,6 +55,10 @@ export function useSubtitleState() {
     if (operationId) setTranslationOperationId(operationId);
 
     setIsTranslationInProgress(percent < 100);
+    if (percent >= 100) {
+      setIsReceivingPartialResults(false);
+      setReviewedBatchStartIndex(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -64,29 +69,15 @@ export function useSubtitleState() {
     let cleanupGenerate: (() => void) | null = null;
     let cleanupTranslate: (() => void) | null = null;
 
-    if (window.electron) {
-      if (typeof window.electron.onGenerateSubtitlesProgress === 'function') {
-        const cleanup =
-          window.electron.onGenerateSubtitlesProgress(handleProgressUpdate);
-        if (typeof cleanup === 'function') {
-          cleanupGenerate = cleanup;
-        }
-      }
-      if (typeof window.electron.onTranslateSubtitlesProgress === 'function') {
-        const cleanup =
-          window.electron.onTranslateSubtitlesProgress(handleProgressUpdate);
-        if (typeof cleanup === 'function') {
-          cleanupTranslate = cleanup;
-        }
-      }
-    }
+    cleanupGenerate = SubtitlesIPC.onGenerateProgress(handleProgressUpdate);
+    cleanupTranslate = SubtitlesIPC.onTranslateProgress(handleProgressUpdate);
 
     return () => {
       cleanupGenerate?.();
       cleanupTranslate?.();
     };
 
-    function handleProgressUpdate(progress: any) {
+    function handleProgressUpdate(progress: ProgressMsg) {
       if (handlePartialResultRef?.current) {
         handlePartialResultRef?.current(progress || {});
       }
@@ -105,5 +96,14 @@ export function useSubtitleState() {
     reviewedBatchStartIndex,
     subtitleSourceId,
     translationOperationId,
+    reset: () => {
+      setSubtitleSegments([]);
+      setIsTranslationInProgress(false);
+      setTranslationProgress(0);
+      setTranslationStage('');
+      setIsReceivingPartialResults(false);
+      setReviewedBatchStartIndex(null);
+      setTranslationOperationId(null);
+    },
   };
 }

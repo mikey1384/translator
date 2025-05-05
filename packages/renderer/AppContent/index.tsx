@@ -144,8 +144,9 @@ function AppContent() {
   const [activeMatchIndex, setActiveMatchIndex] = useState<number>(0);
   const [showOriginalText, setShowOriginalText] = useState<boolean>(true);
 
-  const { apiKeyStatus, isLoadingKeyStatus, fetchKeyStatus } =
-    useApiKeyStatus();
+  const { state: apiKeyState, refetch: fetchKeyStatus } = useApiKeyStatus();
+  const isLoadingKeyStatus = apiKeyState.status === 'loading';
+  const apiKeyStatus = apiKeyState.status === 'ready' ? apiKeyState.data : null;
 
   const {
     subtitleSegments,
@@ -157,6 +158,7 @@ function AppContent() {
     setIsTranslationInProgress,
     setSubtitleSegments,
     setSubtitleSourceId,
+    reset: resetSubtitleState,
   } = useSubtitleState();
 
   const [isMergingInProgress, setIsMergingInProgress] =
@@ -255,19 +257,21 @@ function AppContent() {
       showOriginalText,
     });
 
-  const { handleSetVideoFile, handleTogglePlay, handleVideoPlayerReady } =
-    useVideoActions({
-      setVideoFile,
-      setVideoUrl,
-      setVideoFilePath,
-      setIsPlaying,
-      setIsAudioOnly,
-      setOriginalSrtFilePath,
-      setSaveError,
-      setIsVideoPlayerReady,
-      videoUrl,
-      onSrtFileLoaded: handleSrtFileLoaded,
-    });
+  const {
+    handleSetVideoFile,
+    handleTogglePlay,
+    handleVideoPlayerReady,
+    reset: resetVideoState,
+  } = useVideoActions({
+    setVideoFile,
+    setVideoUrl,
+    setVideoFilePath,
+    setIsPlaying,
+    setIsAudioOnly,
+    setIsVideoPlayerReady,
+    videoUrl,
+    onSrtFileLoaded: handleSrtFileLoaded,
+  });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
   const editSubtitlesRef = useRef<HTMLDivElement>(null);
@@ -625,9 +629,15 @@ function AppContent() {
     requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }));
   }, [videoUrl]);
 
+  useEffect(() => {
+    return () => {
+      resetVideoState();
+    };
+  }, [resetVideoState]);
+
   return (
     <div className={pageWrapperStyles}>
-      {videoUrl && <div style={{ height: 'CALC(35vh + 2rem)' }} />}
+      {videoUrl && <div style={{ height: 'calc(35vh + 2rem)' }} />}
       <FindBar
         isVisible={isFindBarVisible}
         searchText={searchText}
@@ -860,12 +870,11 @@ function AppContent() {
         await handleVideoFileSelected(filePath);
       } else {
         console.log('File selection cancelled or no file chosen.');
+        resetVideoState();
       }
     } catch (err: any) {
       console.error('Error opening file dialog:', err);
-      handleSetVideoFile(null);
-      setVideoFilePath(null);
-      setVideoMetadata(null);
+      resetVideoState();
     }
   }
 
@@ -958,6 +967,7 @@ function AppContent() {
     setDownloadProgressStage(`Error: ${err.message || err}`);
     setDownloadProgressPercent(100);
     setIsProcessingUrl(true);
+    resetVideoState();
   }
 
   function handleFindPrev() {
@@ -1068,6 +1078,7 @@ function AppContent() {
     setVideoFilePath(videoPath);
     setDidDownloadFromUrl(true);
     await handleVideoFileSelected(videoPath);
+    resetSubtitleState();
 
     try {
       const fileContentResult = await FileIPC.readFileContent(videoPath);
@@ -1110,8 +1121,8 @@ function AppContent() {
       return;
     }
     setError('');
+    resetSubtitleState();
     setIsGenerating(true);
-    handleSrtFileLoaded(null);
     try {
       const options = buildGenerateOptions();
       const result = await SubtitlesIPC.generate(options);
@@ -1198,6 +1209,7 @@ function AppContent() {
   async function handleVideoFileSelected(filePath: string) {
     setVideoFilePath(filePath);
     setVideoMetadata(null);
+    resetSubtitleState();
     if (filePath) {
       try {
         if (!isAudioOnly) {

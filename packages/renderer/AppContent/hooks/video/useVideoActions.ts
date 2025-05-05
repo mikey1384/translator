@@ -4,11 +4,15 @@ import {
   nativePlay,
   nativeIsPlaying,
 } from '../../../native-player.js';
+import * as VideoIPC from '@ipc/video';
 
-/**
- * Extra prop: setIsAudioOnly – lets the parent know whether
- * the loaded media has a video track or not
- */
+const isPlainFile = (f: unknown): f is Blob & { name: string } =>
+  !!f &&
+  typeof f === 'object' &&
+  'name' in f &&
+  'type' in f &&
+  f instanceof Blob;
+
 export function useVideoActions({
   setVideoFile,
   setVideoUrl,
@@ -17,111 +21,95 @@ export function useVideoActions({
   onSrtFileLoaded,
   setIsVideoPlayerReady,
   setIsAudioOnly,
-  videoUrl,
+  videoUrl = '',
 }: {
   onSrtFileLoaded: (filePath: string | null) => void;
   setVideoFile: (value: File | null) => void;
   setVideoUrl: (value: string) => void;
   setVideoFilePath: (value: string | null) => void;
   setIsPlaying: (value: boolean) => void;
-  setOriginalSrtFilePath: (value: string) => void;
-  setSaveError: (value: string) => void;
   setIsVideoPlayerReady: (value: boolean) => void;
-  setIsAudioOnly: (value: boolean) => void; // <-- [NEW]
-  videoUrl: string;
+  setIsAudioOnly: (value: boolean) => void;
+  videoUrl?: string;
 }) {
-  /**
-   * -------------------------------------------------------------
-   * 1. Helper – run ffprobe in the main-process and update state
-   * -------------------------------------------------------------
-   */
-  async function analyseFile(path: string) {
-    try {
-      // (Assumes window.electron.hasVideoTrack is defined in preload)
-      const hasVideo = await window.electron.hasVideoTrack(path);
-      setIsAudioOnly(!hasVideo); // If no video track => isAudioOnly = true
-    } catch (err) {
-      console.error('[useVideoActions] hasVideoTrack probe failed:', err);
-      // Fall back: treat as if it has video
-      setIsAudioOnly(false);
-    }
-  }
+  const analyseFile = useCallback(
+    async (path: string) => {
+      try {
+        const hasVideo = await VideoIPC.hasVideoTrack(path);
+        setIsAudioOnly(!hasVideo);
+      } catch (err) {
+        console.error('[useVideoActions] hasVideoTrack probe failed:', err);
+        setIsAudioOnly(false);
+      }
+    },
+    [setIsAudioOnly]
+  );
 
-  /**
-   * -------------------------------------------------------------
-   * 2. Main setter – handleSetVideoFile
-   * -------------------------------------------------------------
-   */
+  const reset = useCallback(() => {
+    setVideoFile(null);
+    setVideoUrl('');
+    setIsAudioOnly(false);
+    setIsPlaying(false);
+  }, [setVideoFile, setVideoUrl, setIsAudioOnly, setIsPlaying]);
+
   async function handleSetVideoFile(
     fileData: File | { name: string; path: string } | null
   ) {
     onSrtFileLoaded(null);
     setIsVideoPlayerReady(false);
 
-    // Revoke any old blob URL to avoid memory leaks
-    if (videoUrl && videoUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(videoUrl);
-    }
-
-    // ---------- (A) object with explicit .path ----------
-    if (
-      fileData &&
-      typeof fileData === 'object' &&
-      !(fileData instanceof File) &&
-      'path' in fileData &&
-      fileData.path
-    ) {
-      const minimalFileObj = new File([], fileData.name, { type: 'video/*' });
-      (minimalFileObj as any).path = fileData.path;
-
-      setVideoFile(minimalFileObj as File);
-      setVideoFilePath(fileData.path);
-
-      const encodedPath = encodeURI(fileData.path.replace(/\\/g, '/'));
-      setVideoUrl(`file://${encodedPath}`);
-
-      // [NEW] check if audio-only
-      await analyseFile(fileData.path);
-    }
-
-    // ---------- (B) “fake” File object from a blob or URL download ----------
-    else if (
-      fileData &&
-      typeof fileData === 'object' &&
-      (fileData as any)._blobUrl
-    ) {
-      const blobFileData = fileData as any;
-
-      setVideoFile(blobFileData as File);
-      setVideoUrl(blobFileData._blobUrl);
-      setVideoFilePath(blobFileData._originalPath || null);
-
-      if (blobFileData._originalPath) {
-        await analyseFile(blobFileData._originalPath);
+    if (videoUrl?.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(videoUrl);
+      } catch {
+        // Ignore error
       }
     }
 
-    // ---------- (C) genuine File object from user’s machine ----------
-    else if (fileData instanceof File) {
-      setVideoFile(fileData);
-      setVideoFilePath(fileData.path);
+    if (!fileData) {
+      console.warn('[useVideoActions] No fileData provided');
+      reset();
+      return;
+    }
 
+    if ('path' in fileData) {
+      // ① path-based object (from File-open dialog)
+      const minimalFile = {
+        name: fileData.name,
+        path: fileData.path,
+      } as File & { path: string };
+
+      setVideoFile(minimalFile as any);
+      setVideoFilePath(fileData.path);
+      setVideoUrl(`file://${encodeURI(fileData.path.replace(/\\/g, '/'))}`);
+      await analyseFile(fileData.path);
+    } else if ((fileData as any)?._blobUrl) {
+      // ② special blob wrapper (URL download flow)
+      const blobFile = fileData as any;
+      setVideoFile(blobFile);
+      setVideoUrl(blobFile._blobUrl);
+      setVideoFilePath(blobFile._originalPath || null);
+      if (blobFile._originalPath && blobFile._hasVideo === undefined) {
+        await analyseFile(blobFile._originalPath);
+      }
+    } else if (isPlainFile(fileData)) {
+      // ③ vanilla File (drag-and-drop)
+      setVideoFile(fileData);
+      const filePath = (fileData as any).path;
+      setVideoFilePath(filePath || null);
       const blobUrl = URL.createObjectURL(fileData);
       setVideoUrl(blobUrl);
-
-      // [NEW] check if audio-only
-      await analyseFile(fileData.path);
-    }
-
-    // ---------- (D) fallback / nothing ----------
-    else {
+      if (filePath) {
+        await analyseFile(filePath);
+      } else {
+        setIsAudioOnly(false); // assume video present
+      }
+    } else {
+      // ④ unexpected / null
       console.warn('[useVideoActions] Unexpected fileData:', fileData);
-      setVideoFile(null);
-      setVideoUrl('');
-      setIsAudioOnly(false); // fallback to “not audio-only”
+      reset();
     }
 
-    // Always reset playback to paused
     setIsPlaying(false);
   }
 
@@ -143,14 +131,10 @@ export function useVideoActions({
     setIsVideoPlayerReady(true);
   }, [setIsVideoPlayerReady]);
 
-  /**
-   * -------------------------------------------------------------
-   * 4. Expose these functions
-   * -------------------------------------------------------------
-   */
   return {
     handleSetVideoFile,
     handleTogglePlay,
     handleVideoPlayerReady,
+    reset,
   };
 }
