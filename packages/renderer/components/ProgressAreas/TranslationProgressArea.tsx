@@ -1,22 +1,26 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { colors } from '../../styles.js';
 import ProgressArea from './ProgressArea.js';
+import * as OperationIPC from '@ipc/operation';
 
-interface SubtitleProgressInfo {
-  current?: number;
-  total?: number;
-  warning?: string;
-}
+const devLog = (...args: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...args);
+  }
+};
+
+const devError = (...args: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(...args);
+  }
+};
 
 interface TranslationProgressAreaProps {
   translationProgress: number;
   translationStage: string;
-  subtitleProgress?: SubtitleProgressInfo;
   isTranslationInProgress: boolean;
   onSetIsTranslationInProgress: (inProgress: boolean) => void;
   autoCloseDelay?: number;
-  partialResult?: string;
-  onPartialResult?: (partialResult: string) => void;
   translationOperationId?: string | null;
 }
 
@@ -32,34 +36,49 @@ export default function TranslationProgressArea({
 }: TranslationProgressAreaProps) {
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const handleTranslationCancel = async (idToCancel: string) => {
-    try {
-      console.log(
-        `[TranslationProgressArea] Attempting electron cancel: ${idToCancel}`
-      );
-      await window.electron.cancelOperation(idToCancel);
-      console.log(
-        `[TranslationProgressArea] Electron cancel request sent for ${idToCancel}.`
-      );
-      onSetIsTranslationInProgress(false);
-    } catch (error) {
-      console.error(
-        `[TranslationProgressArea] Error calling cancelOperation for ${idToCancel}:`,
-        error
-      );
-      onSetIsTranslationInProgress(false);
-    } finally {
-      setIsCancelling(false);
-      onSetIsTranslationInProgress(false);
-    }
-  };
+  const handleTranslationCancel = useCallback(
+    async (id?: string | null) => {
+      if (!id) {
+        console.warn('[TranslationProgressArea] No operationId to cancel.');
+        onSetIsTranslationInProgress(false);
+        return;
+      }
 
-  const handleClose = () => {
-    console.log(
+      if (
+        !window.confirm(
+          "Are you sure you want to cancel the translation? Progress will be lost and you'll need to start again."
+        )
+      ) {
+        return;
+      }
+
+      setIsCancelling(true);
+
+      try {
+        devLog(`[TranslationProgressArea] Attempting electron cancel: ${id}`);
+        await OperationIPC.cancel(id);
+        devLog(
+          `[TranslationProgressArea] Electron cancel request sent for ${id}.`
+        );
+      } catch (error) {
+        devError(
+          `[TranslationProgressArea] Error calling cancelOperation for ${id}:`,
+          error
+        );
+      } finally {
+        setIsCancelling(false);
+        onSetIsTranslationInProgress(false);
+      }
+    },
+    [onSetIsTranslationInProgress]
+  );
+
+  const handleClose = useCallback(() => {
+    devLog(
       '[TranslationProgressArea] handleClose called by ProgressArea, signaling parent.'
     );
     onSetIsTranslationInProgress(false);
-  };
+  }, [onSetIsTranslationInProgress]);
 
   return (
     <ProgressArea
@@ -68,8 +87,14 @@ export default function TranslationProgressArea({
       title="Translation in Progress"
       progress={translationProgress}
       stage={translationStage}
-      progressBarColor={TRANSLATION_PROGRESS_COLOR}
-      operationId={translationOperationId || null}
+      progressBarColor={
+        isCancelling
+          ? colors.danger
+          : translationProgress >= 100
+            ? colors.success
+            : TRANSLATION_PROGRESS_COLOR
+      }
+      operationId={translationOperationId ?? null}
       onCancel={handleTranslationCancel}
       onClose={handleClose}
       autoCloseDelay={autoCloseDelay}
