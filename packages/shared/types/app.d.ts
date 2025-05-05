@@ -339,9 +339,6 @@ declare module '@shared-types/app' {
     translateSubtitles: (
       options: TranslateSubtitlesOptions
     ) => Promise<TranslateSubtitlesResult>;
-    onTranslateSubtitlesProgress: (
-      callback: ProgressEventCallback | null
-    ) => () => void;
 
     sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
     onPngRenderResult: (

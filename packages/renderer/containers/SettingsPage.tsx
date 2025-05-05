@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { css } from '@emotion/css';
 import { colors, linkStyles as globalLinkStyles } from '../styles.js';
 import { useTranslation } from 'react-i18next';
+import * as SystemIPC from '@ipc/system';
 
 const settingsPageStyles = css`
   padding: 30px;
@@ -129,7 +130,7 @@ const errorMessageStyles = css`
 `;
 
 const linkStyles = css`
-  ${globalLinkStyles}// Use global link style
+  ${globalLinkStyles}
 `;
 
 const infoTextStyles = css`
@@ -217,13 +218,13 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
     setLoadingStatus(isLoadingStatus);
   }, [isLoadingStatus]);
 
-  const handleSaveKey = async () => {
-    const apiKey = openaiKeyInput;
+  const handleSaveKey = useCallback(async () => {
+    const apiKey = openaiKeyInput.trim();
     setIsSaving(true);
-    setSaveStatus(null); // Clear previous status
+    setSaveStatus(null);
 
     try {
-      const result = await window.electron.saveApiKey('openai', apiKey);
+      const result = await SystemIPC.saveApiKey('openai', apiKey);
       if (result.success) {
         setSaveStatus({
           type: 'openai',
@@ -250,14 +251,15 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
       setSaveStatus({
         type: 'openai',
         success: false,
-        message: t('common.error.unexpected'),
+        message:
+          error instanceof Error ? error.message : t('common.error.unexpected'),
       });
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [openaiKeyInput, t, setKeyStatus, setSaveStatus]);
 
-  const handleRemoveKey = async () => {
+  const handleRemoveKey = useCallback(async () => {
     // Add confirmation dialog at the beginning
     if (!window.confirm(t('settings.openai.confirmRemovePrompt'))) {
       console.log('OpenAI key removal cancelled by user.');
@@ -270,7 +272,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
 
     try {
       console.log('Calling saveApiKey to remove openai key...');
-      const result = await window.electron.saveApiKey('openai', '');
+      const result = await SystemIPC.saveApiKey('openai', '');
       console.log('Result from saveApiKey for removing openai:', result);
 
       if (result.success) {
@@ -300,13 +302,16 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
       setSaveStatus({
         type: 'openai',
         success: false,
-        message: t('common.error.unexpectedRemove'),
+        message:
+          error instanceof Error
+            ? error.message
+            : t('common.error.unexpectedRemove'),
       });
     } finally {
       setIsSaving(false);
       console.log('Finished handleRemoveKey for openai.');
     }
-  };
+  }, [t, setKeyStatus, setSaveStatus]);
 
   const renderStatusIndicator = (isSet: boolean | undefined) => {
     if (loadingStatus)
@@ -333,6 +338,10 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
 
     return (
       <p
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        id="feedback-message"
         className={css`
           ${feedbackMessageStyles} ${saveStatus.success
             ? successMessageStyles
@@ -402,12 +411,14 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
             onChange={e => setInputValue(e.target.value)}
             placeholder={placeholder}
             disabled={isSaving}
+            aria-describedby="feedback-message"
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button
               className={buttonStyles}
               onClick={handleSaveKey}
               disabled={isSaving || (!currentInputValue && !isSet)}
+              aria-disabled={isSaving || (!currentInputValue && !isSet)}
             >
               {isSaving
                 ? t('common.saving')
@@ -424,6 +435,7 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
                   setSaveStatus(null); // Clear any previous save messages
                 }}
                 disabled={isSaving}
+                aria-disabled={isSaving}
               >
                 {t('common.cancel')}
               </button>

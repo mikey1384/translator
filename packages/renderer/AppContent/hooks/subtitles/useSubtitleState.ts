@@ -67,14 +67,11 @@ export function useSubtitleState() {
 
   useEffect(() => {
     let cleanupGenerate: (() => void) | null = null;
-    let cleanupTranslate: (() => void) | null = null;
 
     cleanupGenerate = SubtitlesIPC.onGenerateProgress(handleProgressUpdate);
-    cleanupTranslate = SubtitlesIPC.onTranslateProgress(handleProgressUpdate);
 
     return () => {
       cleanupGenerate?.();
-      cleanupTranslate?.();
     };
 
     function handleProgressUpdate(progress: ProgressMsg) {

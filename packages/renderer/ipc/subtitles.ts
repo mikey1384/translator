@@ -43,12 +43,6 @@ export function onMergeProgress(callback: ProgressEventCallback): () => void {
   return window.electron.onMergeSubtitlesProgress(callback);
 }
 
-export function onTranslateProgress(
-  callback: ProgressEventCallback
-): () => void {
-  return window.electron.onTranslateSubtitlesProgress(callback);
-}
-
 export function onRenderPngResult(
   callback: (result: ExposedRenderResult) => void
 ): () => void {

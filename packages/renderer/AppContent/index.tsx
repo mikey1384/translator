@@ -871,11 +871,9 @@ function AppContent() {
         await handleVideoFileSelected(filePath);
       } else {
         console.log('File selection cancelled or no file chosen.');
-        resetVideoState();
       }
     } catch (err: any) {
       console.error('Error opening file dialog:', err);
-      resetVideoState();
     }
   }
 

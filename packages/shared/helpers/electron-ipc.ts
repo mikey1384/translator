@@ -1,72 +1,73 @@
-export async function retryElectronCall<T>(
-  method: string,
-  args: any,
-  maxRetries = 10,
-  initialDelay = 300
-): Promise<T> {
-  if (!window.electron) {
-    throw new Error('Electron API not available');
-  }
+import * as FileIPC from '../../renderer/ipc/file.js';
 
-  // Get the method from electron
-  const electronMethod = (window.electron as any)[method];
-  if (!electronMethod) {
-    throw new Error(`Method ${method} not available in Electron API`);
-  }
-
-  try {
-    // First attempt
-    const result = await electronMethod(args);
-    return result;
-  } catch (error: any) {
-    // Only retry for "No handler registered" errors
-    if (!error.message?.includes('No handler registered')) {
-      throw error;
-    }
-
-    // Retry with increasing delays
-    let delay = initialDelay;
-    for (let i = 0; i < maxRetries; i++) {
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay));
-
-      try {
-        const result = await electronMethod(args);
-        return result;
-      } catch (retryError: any) {
-        // If not a "No handler registered" error, rethrow
-        if (!retryError.message?.includes('No handler registered')) {
-          throw retryError;
-        }
-
-        // Increase delay for next retry (more gradually)
-        delay *= 1.3;
+export async function retryCall<Fn extends (...a: any[]) => Promise<any>>(
+  fn: Fn,
+  ...args: Parameters<Fn>
+): Promise<Awaited<ReturnType<Fn>>> {
+  const options = {
+    maxRetries: 10,
+    initialDelay: 300,
+    ...(args[args.length - 1] &&
+    typeof args[args.length - 1] === 'object' &&
+    'maxRetries' in args[args.length - 1]
+      ? args.pop()
+      : {}),
+  };
+  let delay = options.initialDelay;
+  const maxRetries = options.maxRetries;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn(...args);
+    } catch (err: any) {
+      if (
+        !err.message?.includes('No handler registered') ||
+        attempt === maxRetries
+      ) {
+        throw err;
       }
+      await new Promise(r => setTimeout(r, delay));
+      delay *= 1.3 * (1 + Math.random() * 0.2); // Add ±10% jitter
     }
-
-    // If we reach here, all retries failed
-    throw new Error(
-      `Failed to call ${method} after ${maxRetries} retries. The main process may not be fully initialized or there's an issue with IPC communication.`
-    );
   }
+  throw new Error('Failed to complete IPC call after maximum retries');
 }
 
 /**
- * Browser-based file download fallback when Electron IPC fails
+ * Browser-based file download fallback when Electron IPC fails.
+ * @param content - The content to download as a string or other BlobPart.
+ * @param filename - The name of the file to download.
+ * @returns The filename used for the download.
+ * @throws Error if the browser download fails.
  */
-function downloadFile(content: string, filename: string): string {
+function downloadFile(
+  content: BlobPart | BlobPart[],
+  filename: string
+): string {
   try {
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob(Array.isArray(content) ? content : [content], {
+      type: 'text/plain',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
+    a.rel = 'noopener'; // Security enhancement
     document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
+    try {
+      requestAnimationFrame(() => {
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      });
+    } catch (domError) {
+      throw new Error(
+        `DOM interaction failed: ${
+          domError instanceof Error ? domError.message : String(domError)
+        }`
+      );
+    }
     return filename;
   } catch (error) {
     throw new Error(
@@ -78,10 +79,12 @@ function downloadFile(content: string, filename: string): string {
 }
 
 /**
- * Save file with retry mechanism and fallback to browser download
+ * Saves a file with retry mechanism and fallback to browser download.
+ * @param options - Configuration for saving the file.
+ * @returns Promise resolving to an object with filePath or error message.
  */
 export async function saveFileWithRetry(options: {
-  content: string;
+  content: string; // Keeping as string to match SaveFileOptions, will adjust if IPC supports BlobPart
   defaultPath?: string;
   filePath?: string;
   filters?: { name: string; extensions: string[] }[];
@@ -89,12 +92,11 @@ export async function saveFileWithRetry(options: {
   originalLoadPath?: string;
   targetPath?: string;
   forceDialog?: boolean;
-}): Promise<{ filePath?: string; error?: string }> {
-  // Get the original file paths if they exist and weren't passed in
-  const storedTargetPath = localStorage.getItem('targetPath');
-  const storedOriginalLoadPath = localStorage.getItem('originalLoadPath');
-
-  // Use passed values or fall back to stored values, but respect forceDialog
+}): Promise<{ filePath?: string; error?: string; fallbackError?: string }> {
+  const storedTargetPath = localStorage.getItem('subsapp.targetPath');
+  const storedOriginalLoadPath = localStorage.getItem(
+    'subsapp.originalLoadPath'
+  );
   const targetPath = options.forceDialog
     ? undefined
     : options.targetPath || storedTargetPath;
@@ -102,6 +104,10 @@ export async function saveFileWithRetry(options: {
     ? undefined
     : options.originalLoadPath || storedOriginalLoadPath;
   const filePath = options.forceDialog ? undefined : options.filePath;
+
+  if (options.forceDialog) {
+    localStorage.removeItem('subsapp.targetPath');
+  }
 
   try {
     const saveOptions = {
@@ -112,20 +118,17 @@ export async function saveFileWithRetry(options: {
       forceDialog: options.forceDialog,
     };
 
-    const result = await retryElectronCall<{
-      filePath?: string;
-      error?: string;
-    }>('saveFile', saveOptions);
+    const result = await retryCall(FileIPC.save, saveOptions);
 
-    // Update our path information if the save was successful
     if (result?.filePath && !result.error) {
-      // Store the successful path for future use
-      localStorage.setItem('targetPath', result.filePath);
+      localStorage.setItem('subsapp.targetPath', result.filePath);
+      if (originalLoadPath) {
+        localStorage.setItem('subsapp.originalLoadPath', originalLoadPath);
+      }
     }
 
     return result;
   } catch (error: any) {
-    // Try browser fallback if electron method failed
     try {
       const filename =
         options.defaultPath ||
@@ -134,40 +137,30 @@ export async function saveFileWithRetry(options: {
       const downloadedFilename = downloadFile(options.content, filename);
       return {
         filePath: downloadedFilename,
-        error: `Electron save failed, used browser download as fallback: ${
-          error.message || String(error)
-        }`,
+        error: `Electron save failed, used browser download as fallback.`,
+        fallbackError: error.message || String(error),
       };
     } catch (fallbackError: any) {
       return {
-        error: `All save methods failed. Main error: ${
-          error.message || String(error)
-        }. Fallback error: ${fallbackError.message || String(fallbackError)}`,
+        error: `All save methods failed.`,
+        fallbackError: `Main error: ${error.message || String(error)}. Fallback error: ${fallbackError.message || String(fallbackError)}`,
       };
     }
   }
 }
 
-/**
- * Open file with retry mechanism
- */
 export async function openFileWithRetry(options: {
   filters?: { name: string; extensions: string[] }[];
   multiple?: boolean;
   title?: string;
 }): Promise<{
   filePaths: string[];
-  fileContents?: string[];
+  fileContents?: string[] | ArrayBuffer[] | undefined;
   error?: string;
   canceled?: boolean;
 }> {
   try {
-    const result = await retryElectronCall<{
-      filePaths: string[];
-      fileContents?: string[];
-      error?: string;
-      canceled?: boolean;
-    }>('openFile', options);
+    const result = await retryCall(FileIPC.open, options);
     return result;
   } catch (error: any) {
     return {
@@ -175,52 +168,4 @@ export async function openFileWithRetry(options: {
       error: error.message || String(error),
     };
   }
-}
-
-export function registerSubtitleStreamListeners(
-  partialResultCallback: (result: {
-    partialResult: string;
-    percent: number;
-    stage: string;
-    current?: number;
-    total?: number;
-  }) => void,
-  type: 'generate' | 'translate' = 'generate'
-): () => void {
-  // This variable will hold the function so we can remove it later
-  let listener: ((event: any, progress: any) => void) | null = null;
-
-  if (window.electron) {
-    // Handler for progress events
-    listener = (_: any, progress: any) => {
-      // Always provide default values to avoid undefined properties
-      const safeProgress = {
-        partialResult: progress?.partialResult || '',
-        percent: progress?.percent || 0,
-        stage:
-          progress?.stage ||
-          (type === 'generate' ? 'Processing' : 'Translating'),
-        current: progress?.current || 0,
-        total: progress?.total || 0,
-      };
-
-      partialResultCallback(safeProgress);
-    };
-
-    if (type === 'generate') {
-      window.electron.onGenerateSubtitlesProgress(listener);
-    } else {
-      window.electron.onTranslateSubtitlesProgress(listener);
-    }
-  }
-
-  return () => {
-    if (window.electron && listener) {
-      if (type === 'generate') {
-        window.electron.onGenerateSubtitlesProgress(null);
-      } else {
-        window.electron.onTranslateSubtitlesProgress(null);
-      }
-    }
-  };
 }
