@@ -43,10 +43,8 @@ import viTranslation from './locales/vi.json';
 
 import * as SystemIPC from '@ipc/system';
 
-// Define constant for LocalStorage key
 const LS_KEY = 'app_language_preference';
 
-// Helper to get initial language from electron storage or localStorage fallback
 const getInitialLanguage = async (): Promise<string> => {
   try {
     const storedLang = await SystemIPC.getLanguagePreference();
@@ -78,7 +76,6 @@ const getInitialLanguage = async (): Promise<string> => {
   return defaultLang;
 };
 
-// Initialize i18n after fetching the initial language
 const initI18n = async () => {
   const initialLanguage = await getInitialLanguage();
   console.log(`[i18n] Setting initial language to: ${initialLanguage}`);
@@ -137,14 +134,13 @@ initI18n().catch(err => {
   console.error('[i18n] Failed to initialize i18n:', err);
 });
 
-// Function to change language: Use IPC to save preference
 export const changeLanguage = async (lng: string) => {
   console.log(`[i18n] changeLanguage called for: ${lng}`);
 
   try {
     await SystemIPC.setLanguagePreference(lng);
     console.log(`[i18n] Saved language preference via Electron store: ${lng}`);
-    localStorage.setItem(LS_KEY, lng); // Persist to LocalStorage as fallback for non-Electron environments
+    localStorage.setItem(LS_KEY, lng);
 
     if (i18n.hasResourceBundle(lng, 'translation')) {
       console.log(
