@@ -1204,7 +1204,6 @@ function AppContent() {
   async function handleVideoFileSelected(filePath: string) {
     setVideoFilePath(filePath);
     setVideoMetadata(null);
-    resetSubtitleState();
     if (filePath) {
       try {
         if (!isAudioOnly) {
