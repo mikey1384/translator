@@ -6,6 +6,23 @@ import type {
   GenerateSubtitlesResult,
 } from '@shared-types/app';
 
+type PngRenderResult = {
+  operationId: string;
+  success: boolean;
+  outputPath?: string;
+  error?: string;
+};
+
+export function onPngRenderResult(
+  callback: (result: PngRenderResult) => void
+): () => void {
+  return window.electron.onPngRenderResult(callback);
+}
+
+export function sendPngRenderRequest(options: RenderSubtitlesOptions): void {
+  window.electron.sendPngRenderRequest(options);
+}
+
 export function generate(
   options: GenerateSubtitlesOptions
 ): Promise<GenerateSubtitlesResult> {

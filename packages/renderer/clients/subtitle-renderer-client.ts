@@ -1,40 +1,38 @@
 import { RenderSubtitlesOptions } from '@shared-types/app'; // Import types
+import * as SubtitleIPC from '@ipc/subtitles';
 
-// Add this type definition
 type PngRenderResult = {
   operationId: string;
   success: boolean;
-  outputPath?: string; // Optional: path to the final overlay video on success
-  error?: string; // Optional: error message on failure
+  outputPath?: string;
+  error?: string;
 };
 
-// Channels for the main renderer client triggering the process
 export const RENDER_CHANNELS = {
-  REQUEST: 'render-subtitles-request', // Main Window -> Main Process
-  RESULT: 'render-subtitles-result', // Main Process -> Main Window
+  REQUEST: 'render-subtitles-request',
+  RESULT: 'render-subtitles-result',
 };
 
-// Channels for managing the hidden render window
 export const WINDOW_CHANNELS = {
-  CREATE_REQUEST: 'create-render-window-request', // Main Window Client -> Main Process
-  CREATE_SUCCESS: 'create-render-window-success', // Main Process -> Main Window Client
-  DESTROY_REQUEST: 'destroy-render-window-request', // Main Window Client -> Main Process
-  UPDATE_SUBTITLE: 'render-window-update-subtitle', // Main Process -> Hidden Window (relayed)
+  CREATE_REQUEST: 'create-render-window-request',
+  CREATE_SUCCESS: 'create-render-window-success',
+  DESTROY_REQUEST: 'destroy-render-window-request',
+  UPDATE_SUBTITLE: 'render-window-update-subtitle',
 };
 
-// Channels for coordinating frame capture and final assembly
 export const CAPTURE_CHANNELS = {
-  CAPTURE_FRAME_REQUEST: 'capture-frame-request', // Main Window Client -> Main Process
-  FFMPEG_ASSEMBLE_REQUEST: 'ffmpeg-assemble-pngs-request', // Main Window Client -> Main Process
-  // Results for invoke calls are handled via Promise resolution/rejection
+  CAPTURE_FRAME_REQUEST: 'capture-frame-request',
+  FFMPEG_ASSEMBLE_REQUEST: 'ffmpeg-assemble-pngs-request',
 };
 
-// Basic class structure (will be filled in later)
 class SubtitleRendererClient {
-  private removeResultListener: (() => void) | null = null; // Store cleanup function
+  private removeResultListener: (() => void) | null = null;
   private renderPromises = new Map<
     string,
-    { resolve: (result: PngRenderResult) => void; reject: (error: any) => void }
+    {
+      resolve: (result: PngRenderResult) => void;
+      reject: (error: unknown) => void;
+    }
   >();
 
   constructor() {
@@ -44,25 +42,21 @@ class SubtitleRendererClient {
     this.setupIpcListenersViaBridge();
   }
 
-  // Setup listener via the preload bridge
   private setupIpcListenersViaBridge(): void {
     console.log(
       '[SubtitleRendererClient] Setting up result listener via window.electron.onPngRenderResult'
     );
     try {
-      // Remove previous listener if exists (safety measure)
       if (this.removeResultListener) {
         this.removeResultListener();
         this.removeResultListener = null;
       }
 
-      // Use the exposed function from preload
-      this.removeResultListener = window.electron.onPngRenderResult(
+      this.removeResultListener = SubtitleIPC.onPngRenderResult(
         (result: PngRenderResult) => {
           const { operationId, success, error, outputPath } = result;
-          console.info(`[Preload] Received PngRenderResult:`, result); // Log the raw result
+          console.info(`[Preload] Received PngRenderResult:`, result);
 
-          // Find the corresponding promise callbacks
           const promiseCallbacks = this.renderPromises.get(operationId);
 
           if (promiseCallbacks) {
@@ -70,17 +64,18 @@ class SubtitleRendererClient {
               console.info(
                 `[SubtitleRendererClient ${operationId}] Received SUCCESS result from main.`
               );
-              promiseCallbacks.resolve({ operationId, success, outputPath }); // Resolve the promise
+              promiseCallbacks.resolve({ operationId, success, outputPath });
             } else {
               console.error(
                 `[SubtitleRendererClient ${operationId}] Received FAILURE result from main:`,
                 error
               );
               promiseCallbacks.reject(
-                new Error(error || 'Unknown rendering error from main process')
-              ); // Reject the promise
+                new Error(
+                  String(error || 'Unknown rendering error from main process')
+                )
+              );
             }
-            // Clean up the stored promise
             this.renderPromises.delete(operationId);
           } else {
             console.warn(
@@ -94,45 +89,55 @@ class SubtitleRendererClient {
         '[SubtitleRendererClient] Failed to set up listener via preload bridge:',
         error
       );
-      // Maybe show an error to the user?
     }
   }
 
-  // Main method called by the UI
   async renderSubtitles(
-    options: RenderSubtitlesOptions
+    options: RenderSubtitlesOptions & { timeoutMs?: number }
   ): Promise<PngRenderResult> {
-    const { operationId } = options;
+    const DEFAULT_TIMEOUT_MS = 60_000;
+    const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
     console.log(
       `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,
       options
     );
 
-    // Return a new Promise
     return new Promise((resolve, reject) => {
-      // Store the resolve/reject functions
-      this.renderPromises.set(operationId, { resolve, reject });
+      const timer = setTimeout(() => {
+        this.renderPromises.delete(operationId);
+        reject(
+          new Error(`Render ${operationId} timed out after ${timeoutMs} ms`)
+        );
+      }, timeoutMs);
+
+      this.renderPromises.set(operationId, {
+        resolve: result => {
+          clearTimeout(timer);
+          resolve(result);
+        },
+        reject: error => {
+          clearTimeout(timer);
+          reject(error as unknown);
+        },
+      });
 
       try {
-        // Send the request via the preload bridge
-        window.electron.sendPngRenderRequest(options);
+        SubtitleIPC.sendPngRenderRequest(options);
         console.log(
-          `[SubtitleRendererClient ${operationId}] Sent request via window.electron.sendPngRenderRequest.`
+          `[SubtitleRendererClient ${operationId}] Sent request via SubtitleIPC.sendPngRenderRequest.`
         );
-        // DO NOT resolve or return anything else here - wait for the listener
       } catch (error) {
         console.error(
           `[SubtitleRendererClient ${operationId}] Error sending request via bridge:`,
           error
         );
-        // If sending fails immediately, remove from map and reject
+        clearTimeout(timer);
         this.renderPromises.delete(operationId);
-        reject(error); // Reject the promise
+        reject(error as unknown);
       }
     });
   }
 }
 
-// Instantiate and export
 const subtitleRendererClient = new SubtitleRendererClient();
 export default subtitleRendererClient;
