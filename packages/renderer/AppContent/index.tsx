@@ -636,7 +636,9 @@ function AppContent() {
 
   return (
     <div className={pageWrapperStyles}>
-      {videoUrl && <div style={{ height: 'calc(35vh + 2rem)' }} />}
+      {!showSettings && videoUrl && (
+        <div style={{ height: 'calc(35vh + 2rem)' }} />
+      )}
       <FindBar
         isVisible={isFindBarVisible}
         searchText={searchText}
@@ -875,7 +877,9 @@ function AppContent() {
 
   function handleBackFromSettings() {
     setShowSettings(false);
-    fetchKeyStatus();
+    if (typeof fetchKeyStatus === 'function') {
+      fetchKeyStatus();
+    }
   }
 
   function handleCloseFindBar() {
@@ -907,7 +911,9 @@ function AppContent() {
   function handleToggleSettings(show: boolean) {
     setShowSettings(show);
     if (!show) {
-      fetchKeyStatus();
+      if (typeof fetchKeyStatus === 'function') {
+        fetchKeyStatus();
+      }
     }
   }
 
