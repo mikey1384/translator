@@ -11,6 +11,7 @@ import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
 import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
+import { debounce } from 'lodash-es';
 
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
@@ -106,13 +107,28 @@ export function EditSubtitles({
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const loadSubtitlesIntoStore = useSubStore(s => s.load);
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
-  const { currentSegmentsMap, currentOrder } = useSubStore(state => ({
-    currentSegmentsMap: state.segments,
-    currentOrder: state.order,
-  }));
-  const orderedCurrentSubtitles = useMemo(() => {
-    return currentOrder.map(id => currentSegmentsMap[id]).filter(Boolean);
-  }, [currentSegmentsMap, currentOrder]);
+  const prevSubsRef = useRef<SrtSegment[]>([]);
+
+  const highlight = useMemo(
+    () =>
+      debounce((el: HTMLElement) => {
+        if (!el) return;
+        el.classList.remove('highlight-subtitle');
+        el.classList.add('highlight-subtitle');
+        setTimeout(() => {
+          if (el && el.classList.contains('highlight-subtitle')) {
+            el.classList.remove('highlight-subtitle');
+          }
+        }, 2000);
+      }, 100),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      highlight.cancel();
+    };
+  }, [highlight]); // Depend on highlight instance
 
   console.log('[review] prop:', reviewedBatchStartIndex);
 
@@ -315,13 +331,7 @@ export function EditSubtitles({
             );
             scrollPrecisely(targetElement);
 
-            requestAnimationFrame(() => {
-              targetElement.classList.remove('highlight-subtitle');
-              targetElement.classList.add('highlight-subtitle');
-              setTimeout(() => {
-                targetElement.classList.remove('highlight-subtitle');
-              }, 2000);
-            });
+            highlight(targetElement);
           } else {
             console.warn(
               `[EditSubtitles] Target element for index ${index} not found after forced render.`
@@ -332,7 +342,8 @@ export function EditSubtitles({
         console.warn(`[EditSubtitles] Invalid index for scrolling: ${index}`);
       }
     },
-    [subtitleRefs, subtitlesProp]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [subtitlesProp]
   );
 
   useEffect(() => {
@@ -343,63 +354,73 @@ export function EditSubtitles({
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
   useEffect(() => {
-    if (subtitlesProp && subtitlesProp.length) {
-      const withIds = subtitlesProp.map(seg =>
-        seg.id ? seg : { ...seg, id: crypto.randomUUID() }
-      );
-      const prevSubsForDiff = [...orderedCurrentSubtitles];
+    // Early exit if subtitlesProp is not a valid array
+    if (!Array.isArray(subtitlesProp)) {
+      prevSubsRef.current = []; // Ensure ref is cleared if props become invalid
+      return;
+    }
+    // Effect to load subtitles, calculate diff for animation, and handle reviewed batches
+    if (!subtitlesProp?.length) {
+      prevSubsRef.current = []; // Clear ref if props are empty
+      return;
+    }
 
-      // --- Populate _oldText before updating store --- START ---
-      const merged = withIds.map((nextSeg, index) => {
-        // Find the corresponding previous segment *by ID* if possible, else by index
-        const prevSeg =
-          prevSubsForDiff.find(p => p.id === nextSeg.id) ??
-          prevSubsForDiff[index];
+    const withIds = subtitlesProp.map(seg =>
+      seg.id ? seg : { ...seg, id: crypto.randomUUID() }
+    );
+    const prevSubsForDiff = prevSubsRef.current;
 
-        // Check if text content actually changed compared to the previous state
-        if (
-          prevSeg &&
-          (prevSeg.translation !== nextSeg.translation ||
-            prevSeg.original !== nextSeg.original)
-        ) {
-          // If changed, store the previous text (prefer translation) in _oldText
-          return {
-            ...nextSeg,
-            _oldText: prevSeg.translation ?? prevSeg.original,
-          };
-        }
-        // If not changed, return the segment as is (ensuring _oldText isn't carried over unnecessarily)
-        const { _oldText, ...rest } = nextSeg; // Remove potential stale _oldText
-        return rest;
-      });
-      // --- Populate _oldText before updating store --- END ---
+    // --- Populate _oldText before updating store --- START ---
+    const merged = withIds.map((nextSeg, index) => {
+      // Find the corresponding previous segment *by ID* if possible, else by index
+      const prevSeg =
+        prevSubsForDiff.find(p => p.id === nextSeg.id) ??
+        prevSubsForDiff[index];
 
-      loadSubtitlesIntoStore(merged);
-
+      // Check if text content actually changed compared to the previous state
       if (
-        reviewedBatchStartIndex !== null &&
-        reviewedBatchStartIndex !== undefined
+        prevSeg &&
+        (prevSeg.translation !== nextSeg.translation ||
+          prevSeg.original !== nextSeg.original)
       ) {
-        console.log(
-          `[EditSubtitles] Calculating diff based on reviewedBatchStartIndex: ${reviewedBatchStartIndex}`
-        );
-        const diffIndices = calcAffected(
-          prevSubsForDiff,
-          merged,
-          reviewedBatchStartIndex
-        );
-        // Wrap in rAF to ensure DOM updates (from store load) complete before triggering scroll effect
-        requestAnimationFrame(() => {
-          setAffectedRows(diffIndices);
-        });
+        // If changed, store the previous text (prefer translation) in _oldText
+        return {
+          ...nextSeg,
+          _oldText: prevSeg.translation ?? prevSeg.original,
+        };
+      }
+      // If not changed, return the segment as is (ensuring _oldText isn't carried over unnecessarily)
+      const { _oldText, ...rest } = nextSeg; // Remove potential stale _oldText
+      return rest;
+    });
+    // --- Populate _oldText before updating store --- END ---
+
+    loadSubtitlesIntoStore(merged);
+
+    if (reviewedBatchStartIndex != null) {
+      console.log(
+        `[EditSubtitles] Calculating diff based on reviewedBatchStartIndex: ${reviewedBatchStartIndex}`
+      );
+
+      const diffIndices = calcAffected(
+        prevSubsForDiff,
+        merged,
+        reviewedBatchStartIndex
+      );
+      // Wrap in rAF to ensure DOM updates (from store load) complete before triggering scroll effect
+      requestAnimationFrame(() => {
+        setAffectedRows(diffIndices);
+      });
+    } else {
+      if (affectedRows.length > 0) {
+        setAffectedRows([]);
       }
     }
-  }, [
-    subtitlesProp,
-    loadSubtitlesIntoStore,
-    reviewedBatchStartIndex,
-    orderedCurrentSubtitles,
-  ]);
+
+    prevSubsRef.current = merged;
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtitlesProp, reviewedBatchStartIndex]);
 
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
