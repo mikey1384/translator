@@ -31,7 +31,7 @@ class SubtitleRendererClient {
     string,
     {
       resolve: (result: PngRenderResult) => void;
-      reject: (error: unknown) => void;
+      reject: (error: Error) => void;
     }
   >();
 
@@ -95,31 +95,52 @@ class SubtitleRendererClient {
   async renderSubtitles(
     options: RenderSubtitlesOptions & { timeoutMs?: number }
   ): Promise<PngRenderResult> {
-    const DEFAULT_TIMEOUT_MS = 600_000;
+    const DEFAULT_TIMEOUT_MS = 60_000;
     const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
     console.log(
       `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,
       options
     );
 
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.renderPromises.delete(operationId);
-        reject(
-          new Error(`Render ${operationId} timed out after ${timeoutMs} ms`)
-        );
-      }, timeoutMs);
+    let timer: ReturnType<typeof setTimeout>;
+    let offProgress: (() => void) | null = null;
+
+    return new Promise<PngRenderResult>((resolve, reject) => {
+      const arm = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          if (offProgress) offProgress();
+          this.renderPromises.delete(operationId);
+          reject(
+            new Error(
+              `Render ${operationId} stalled or timed out after ${timeoutMs} ms`
+            )
+          );
+        }, timeoutMs);
+      };
+
+      arm();
 
       this.renderPromises.set(operationId, {
         resolve: result => {
           clearTimeout(timer);
+          if (offProgress) offProgress();
           resolve(result);
         },
-        reject: error => {
+        reject: (error: Error) => {
           clearTimeout(timer);
-          reject(error as unknown);
+          if (offProgress) offProgress();
+          reject(error);
         },
       });
+
+      offProgress = SubtitleIPC.onMergeProgress(
+        (p: { operationId: string; [key: string]: any }) => {
+          if (p.operationId === operationId) {
+            arm();
+          }
+        }
+      );
 
       try {
         SubtitleIPC.sendPngRenderRequest(options);
@@ -132,8 +153,9 @@ class SubtitleRendererClient {
           error
         );
         clearTimeout(timer);
+        if (offProgress) offProgress();
         this.renderPromises.delete(operationId);
-        reject(error as unknown);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }

@@ -1,5 +1,4 @@
 declare module '@shared-types/app' {
-  import type { IpcRenderer } from 'electron';
   import type { SubtitleStylePresetKey } from '@shared/constants/subtitle-styles';
   import type { FFmpegService } from '@app/services';
   import type { FileManager } from '@app/services';

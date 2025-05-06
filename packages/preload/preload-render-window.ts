@@ -10,13 +10,10 @@ console.log('[preload-render-window] Preload script started.');
 // Securely expose specific IPC functionality to the hidden window's renderer process
 try {
   contextBridge.exposeInMainWorld('renderHostBridge', {
-    // Expose a function that the React component can call to set up a listener
     onUpdateSubtitle: (callback: (text: string) => void) => {
-      // Define the actual listener function that will receive messages from the main process
       const handler = (_event: IpcRendererEvent, args: { text: string }) => {
         const newText = args?.text ?? '';
-        // console.debug(`[Preload] Received subtitle update via bridge: ${newText.substring(0, 30)}`); // Optional
-        callback(newText); // Pass the text to the callback provided by the React component
+        callback(newText);
       };
 
       console.log(

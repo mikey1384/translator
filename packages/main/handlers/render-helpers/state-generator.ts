@@ -28,6 +28,7 @@ export async function generateStatePngs({
   const pngs: Array<{ path: string; duration: number }> = [];
   const total = events.length;
   const STAGE_PERCENT = 10;
+  const STEP = Math.max(1, Math.floor(total / 200));
 
   for (let i = 0; i < total; i++) {
     const ev = events[i];
@@ -67,7 +68,7 @@ export async function generateStatePngs({
 
     pngs.push({ path: file, duration: durationToUse });
     const pct = Math.round(((i + 1) / total) * STAGE_PERCENT);
-    if (i < 50 || (i + 1) % 10 === 0 || i === total - 1) {
+    if (i % STEP === 0 || i === total - 1) {
       progress({
         percent: pct,
         stage: `Rendering subtitles ${i + 1}/${total}`,

@@ -29,10 +29,6 @@ export function generate(
   return window.electron.generateSubtitles(options);
 }
 
-export function renderPngSequence(options: RenderSubtitlesOptions): void {
-  window.electron.sendPngRenderRequest(options);
-}
-
 export function onGenerateProgress(
   callback: ProgressEventCallback
 ): () => void {
