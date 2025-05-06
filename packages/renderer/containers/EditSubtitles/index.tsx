@@ -10,6 +10,7 @@ import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
 import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
+import ErrorBanner from '../../components/ErrorBanner.js';
 
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
@@ -359,19 +360,7 @@ export function EditSubtitles({
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
       {saveError && (
-        <div
-          className={css`
-            color: #dc3545;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 16px;
-            font-size: 14px;
-          `}
-        >
-          {saveError}
-        </div>
+        <ErrorBanner message={saveError} onClose={() => setSaveError('')} />
       )}
 
       {(!videoFile ||

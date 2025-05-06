@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import { errorMessageStyles } from '../../styles.js';
 import ApiKeyLock from './ApiKeyLock.js';
 import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
@@ -11,6 +10,7 @@ import { VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
 import ProgressDisplay from './ProgressDisplay.js';
+import ErrorBanner from '../../components/ErrorBanner.js';
 
 type ApiKeyStatus = {
   openai: boolean;
@@ -98,29 +98,7 @@ export default function GenerateSubtitles({
       {!isLoadingKeyStatus && apiKeyStatus?.openai && (
         <>
           {error && (
-            <div
-              className={errorMessageStyles}
-              style={{ position: 'relative', paddingRight: '30px' }}
-            >
-              {error}
-              <button
-                onClick={() => onSetError('')}
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  right: '10px',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: colors.danger,
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                }}
-                aria-label="Close error message"
-              >
-                ✕
-              </button>
-            </div>
+            <ErrorBanner message={error} onClose={() => onSetError('')} />
           )}
 
           <ProgressDisplay
