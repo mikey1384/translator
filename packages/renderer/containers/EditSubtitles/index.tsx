@@ -237,10 +237,6 @@ export function EditSubtitles({
         const targetSubtitle = subtitlesProp[lastIndexInBatch];
         const targetId = targetSubtitle.id;
 
-        console.log(
-          `[review] Effect fired for start index ${reviewedBatchStartIndex}, scrolling to last index ${lastIndexInBatch}, targetId: ${targetId}`
-        );
-
         // Define the success callback to reset the index
         const handleScrollSuccess = () => {
           console.log(

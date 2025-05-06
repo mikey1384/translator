@@ -474,9 +474,7 @@ function AppContent() {
   }, [isVideoPlayerReady]);
 
   const handleTimeUpdate = useCallback(() => {
-    const now = new Date().toLocaleTimeString();
     const currentPlayer = getNativePlayerInstance();
-    console.log(`[${now}] [HANDLE_TIMEUPDATE] Fired for:`, currentPlayer);
 
     if (videoFilePath && currentPlayer) {
       saveCurrentPositionThrottled(videoFilePath, currentPlayer);
@@ -484,9 +482,7 @@ function AppContent() {
   }, [videoFilePath, saveCurrentPositionThrottled]);
 
   const handlePause = useCallback(() => {
-    const now = new Date().toLocaleTimeString();
     const currentPlayer = getNativePlayerInstance();
-    console.log(`[${now}] [HANDLE_PAUSE] Fired for:`, currentPlayer);
 
     if (videoFilePath && currentPlayer) {
       saveCurrentPositionThrottled.cancel?.();
