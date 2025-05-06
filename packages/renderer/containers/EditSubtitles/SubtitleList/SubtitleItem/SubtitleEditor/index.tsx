@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
-import Button from '../../components/Button.js';
-import { colors } from '../../styles.js';
-import { HighlightedTextarea } from '../../components/HighlightedTextarea.js';
+import Button from '../../../../../components/Button.js';
+import { colors } from '../../../../../styles.js';
+import SubtitleEditTextarea from './SubtitleEditTextarea.js';
 import { useTranslation } from 'react-i18next';
-import { useSubtitleRow } from '../../state/subtitle-store';
-import { secondsToSrtTime, srtStringToSeconds } from '../../../shared/helpers';
-import { useRowActions } from '../../hooks/useRowActions';
+import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
+import {
+  secondsToSrtTime,
+  srtStringToSeconds,
+} from '../../../../../../shared/helpers/index.js';
+import { useRowActions } from '../../../../../hooks/useRowActions.js';
 
 const timeInputStyles = css`
   width: 150px;
@@ -206,7 +209,7 @@ export default function SubtitleEditor({
         </div>
       </div>
 
-      <HighlightedTextarea
+      <SubtitleEditTextarea
         value={subtitle.original}
         searchTerm={searchText || ''}
         onChange={v => actions.update({ original: v })}
@@ -236,7 +239,7 @@ export default function SubtitleEditor({
         </div>
       )}
 
-      <HighlightedTextarea
+      <SubtitleEditTextarea
         value={subtitle.translation ?? ''}
         searchTerm={searchText || ''}
         onChange={v => actions.update({ translation: v })}

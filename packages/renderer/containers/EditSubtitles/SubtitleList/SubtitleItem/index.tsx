@@ -1,8 +1,11 @@
 import React, { forwardRef, useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { useInView } from 'react-intersection-observer';
-import SubtitleEditor from './SubtitleEditor.js';
-import { useSubtitleRow, useSubActions } from '../../state/subtitle-store.js';
+import SubtitleEditor from './SubtitleEditor/index.js';
+import {
+  useSubtitleRow,
+  useSubActions,
+} from '../../../../state/subtitle-store.js';
 
 interface Props {
   id: string;

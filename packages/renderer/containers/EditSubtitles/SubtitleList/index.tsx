@@ -1,7 +1,7 @@
 import { useMemo, RefObject } from 'react';
 import { css } from '@emotion/css';
-import SubtitleItem from './SubtitleItem.js';
-import { useSubStore } from '../../state/subtitle-store';
+import SubtitleItem from './SubtitleItem/index.js';
+import { useSubStore } from '../../../state/subtitle-store.js';
 
 interface Props {
   searchText?: string;

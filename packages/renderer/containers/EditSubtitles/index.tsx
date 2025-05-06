@@ -12,7 +12,7 @@ import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
 import ErrorBanner from '../../components/ErrorBanner.js';
 
-import SubtitleList from './SubtitleList.js';
+import SubtitleList from './SubtitleList/index.js';
 import MergeControls from './MergeControls.js';
 import EditSubtitlesHeader from './EditSubtitlesHeader.js';
 import { subtitleVideoPlayer } from '../../../shared/constants/index.js';

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { css } from '@emotion/css';
 
-interface HighlightedTextareaProps {
+interface SubtitleEditTextareaProps {
   value: string;
   searchTerm: string;
   onChange: (newValue: string) => void;
@@ -9,13 +9,11 @@ interface HighlightedTextareaProps {
   placeholder?: string;
 }
 
-// 1) Escape regex special chars
 function escapeRegExp(text: string) {
   return text.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
 }
 
 function getHighlightedHtml(text: string, searchTerm: string): string {
-  // If no searchTerm, just show text with <br/> + &nbsp; replacements
   if (!searchTerm) {
     return text.replace(/ /g, '&nbsp;').replace(/\n/g, '<br/>');
   }
@@ -23,25 +21,23 @@ function getHighlightedHtml(text: string, searchTerm: string): string {
   const safeTerm = escapeRegExp(searchTerm);
   const regex = new RegExp(safeTerm, 'gi');
 
-  // Replace text + highlight all matches in <mark>
   return text
     .replace(/ /g, '&nbsp;')
     .replace(/\n/g, '<br/>')
     .replace(
       regex,
-      // Keep the mark tag generation on a single line to avoid extra whitespace
       match =>
         `<mark style="background: yellow; color: black; border-radius: 3px; padding: 0 2px;">${match.trim()}</mark>`
     );
 }
 
-export function HighlightedTextarea({
+export default function SubtitleEditTextarea({
   value,
   searchTerm,
   onChange,
   rows = 5,
   placeholder = '',
-}: HighlightedTextareaProps) {
+}: SubtitleEditTextareaProps) {
   const [draft, setDraft] = useState(value);
   const highlightRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -144,5 +140,3 @@ export function HighlightedTextarea({
     </div>
   );
 }
-
-export default HighlightedTextarea;
