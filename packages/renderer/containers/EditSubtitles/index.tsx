@@ -69,7 +69,6 @@ export interface EditSubtitlesProps {
   setMergeFontSize: (value: number) => void;
   mergeStylePreset: SubtitleStylePresetKey;
   setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
-  onSetReviewIndex?: (index: number | null) => void;
 }
 
 export function EditSubtitles({
@@ -101,7 +100,6 @@ export function EditSubtitles({
   setMergeFontSize,
   mergeStylePreset,
   setMergeStylePreset,
-  onSetReviewIndex,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
@@ -221,47 +219,6 @@ export function EditSubtitles({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtitlesProp]);
-
-  useEffect(() => {
-    if (
-      reviewedBatchStartIndex !== null &&
-      reviewedBatchStartIndex !== undefined &&
-      reviewedBatchStartIndex >= 0
-    ) {
-      if (subtitlesProp && reviewedBatchStartIndex < subtitlesProp.length) {
-        const REVIEW_BATCH_SIZE = 50;
-        const lastIndexInBatch = Math.min(
-          subtitlesProp.length - 1,
-          reviewedBatchStartIndex + REVIEW_BATCH_SIZE - 1
-        );
-        const targetSubtitle = subtitlesProp[lastIndexInBatch];
-        const targetId = targetSubtitle.id;
-
-        // Define the success callback to reset the index
-        const handleScrollSuccess = () => {
-          console.log(
-            `[review] Scroll succeeded for index ${reviewedBatchStartIndex}, resetting.`
-          );
-          onSetReviewIndex?.(null);
-        };
-
-        // Call scrollWhenReady, passing the success handler
-        scrollWhenReady(
-          targetId,
-          subtitleRefs,
-          true,
-          0,
-          30,
-          handleScrollSuccess
-        );
-      } else {
-        console.warn(
-          `[EditSubtitles] reviewedBatchStartIndex ${reviewedBatchStartIndex} is out of bounds.`
-        );
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reviewedBatchStartIndex, subtitlesProp]);
 
   useEffect(() => {
     if (affectedRows.length > 0 && subtitlesProp) {
