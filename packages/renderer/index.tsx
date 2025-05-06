@@ -1,8 +1,6 @@
 import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './AppContent/index.js';
-import { Global } from '@emotion/react';
-import { globalAnimations } from './styles';
 import './i18n.js';
 import './highlight.css';
 
@@ -24,7 +22,6 @@ const renderApp = () => {
   root.render(
     <React.StrictMode>
       <Suspense fallback={<div>Loading translations...</div>}>
-        <Global styles={globalAnimations} />
         <App />
       </Suspense>
     </React.StrictMode>

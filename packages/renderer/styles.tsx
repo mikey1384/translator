@@ -654,49 +654,6 @@ export const overflowVisibleStyle = css`
   overflow: visible;
 `;
 
-// Add new animation styles from checklist
-export const strikeFade = css`
-  color: ${colors.danger};
-  text-decoration: line-through;
-  opacity: 1;
-  animation: strikeOutKey 300ms forwards;
-  pointer-events: none;
-`;
-
-// Define keyframes globally
-export const globalAnimations = css`
-  @keyframes fadeInKey {
-    0% {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes flashHighlightKey {
-    0% {
-      background-color: rgba(253, 216, 53, 0.7);
-      outline-color: #fdd835;
-    }
-    70% {
-      background-color: rgba(253, 216, 53, 0.3);
-      outline-color: #fdd835;
-    }
-    100% {
-      background-color: transparent;
-      outline-color: transparent;
-    }
-  }
-
-  @keyframes strikeOutKey {
-    to {
-      opacity: 0;
-      transform: translateX(-8px);
-    }
-  }
-`;
-
 export const fadeIn = css`
   opacity: 0;
   animation: fadeInKey 0.3s forwards;

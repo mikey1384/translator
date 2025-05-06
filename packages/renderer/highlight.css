@@ -26,22 +26,3 @@
   overflow: visible;
   pointer-events: none;
 }
-
-@keyframes strikeFade {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-}
-
-.strike-fade {
-  animation: strikeFade 800ms forwards;
-  color: var(--danger, #e65e6a);
-  text-decoration: line-through;
-  pointer-events: none;
-  display: inline-block; /* Minimize space after animation */
-}

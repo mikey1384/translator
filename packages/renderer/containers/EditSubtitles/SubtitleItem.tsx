@@ -3,7 +3,6 @@ import { css, cx } from '@emotion/css';
 import { useInView } from 'react-intersection-observer';
 import SubtitleEditor from './SubtitleEditor.js';
 import { useSubtitleRow, useSubActions } from '../../state/subtitle-store.js';
-import { strikeFade, fadeIn } from '../../styles';
 
 interface Props {
   id: string;
@@ -54,21 +53,12 @@ const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
       }
     };
 
-    const animationClass = isAffected
-      ? showNew
-        ? fadeIn
-        : strikeFade
-      : undefined;
-
     return (
       <div
         ref={combinedRef}
-        className={cx(
-          css`
-            box-sizing: border-box;
-          `,
-          animationClass
-        )}
+        className={css`
+          box-sizing: border-box;
+        `}
       >
         {shouldRender && (
           <SubtitleEditor
