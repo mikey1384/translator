@@ -1,3 +1,7 @@
+:root {
+  --danger: #e65e6a; /* Define danger color for reuse */
+}
+
 @keyframes flashHighlight {
   0% {
     background: rgba(253, 216, 53, 0.7);
@@ -21,4 +25,23 @@
   z-index: 9999;
   overflow: visible;
   pointer-events: none;
+}
+
+@keyframes strikeFade {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+.strike-fade {
+  animation: strikeFade 300ms forwards;
+  color: var(--danger, #e65e6a);
+  text-decoration: line-through;
+  pointer-events: none;
+  display: inline-block; /* Minimize space after animation */
 }

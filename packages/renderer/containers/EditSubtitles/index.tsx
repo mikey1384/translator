@@ -229,10 +229,16 @@ export function EditSubtitles({
       reviewedBatchStartIndex >= 0
     ) {
       if (subtitlesProp && reviewedBatchStartIndex < subtitlesProp.length) {
-        const targetSubtitle = subtitlesProp[reviewedBatchStartIndex];
+        const REVIEW_BATCH_SIZE = 50;
+        const lastIndexInBatch = Math.min(
+          subtitlesProp.length - 1,
+          reviewedBatchStartIndex + REVIEW_BATCH_SIZE - 1
+        );
+        const targetSubtitle = subtitlesProp[lastIndexInBatch];
         const targetId = targetSubtitle.id;
+
         console.log(
-          `[review] Effect fired for index ${reviewedBatchStartIndex}, targetId: ${targetId}`
+          `[review] Effect fired for start index ${reviewedBatchStartIndex}, scrolling to last index ${lastIndexInBatch}, targetId: ${targetId}`
         );
 
         // Define the success callback to reset the index
@@ -263,14 +269,11 @@ export function EditSubtitles({
 
   useEffect(() => {
     if (affectedRows.length > 0 && subtitlesProp) {
-      const firstAffectedIndex = affectedRows[0];
-      if (
-        firstAffectedIndex >= 0 &&
-        firstAffectedIndex < subtitlesProp.length
-      ) {
-        const targetId = subtitlesProp[firstAffectedIndex].id;
+      const lastAffectedIndex = affectedRows[affectedRows.length - 1];
+      if (lastAffectedIndex >= 0 && lastAffectedIndex < subtitlesProp.length) {
+        const targetId = subtitlesProp[lastAffectedIndex].id;
         console.log(
-          `[affectedRows Effect] Scrolling to first affected row index ${firstAffectedIndex}, id ${targetId}`
+          `[affectedRows Effect] Scrolling to last affected row index ${lastAffectedIndex}, id ${targetId}`
         );
         const scrollDone = () => {
           console.log(
@@ -281,7 +284,7 @@ export function EditSubtitles({
         scrollWhenReady(targetId, subtitleRefs, false, 0, 30, scrollDone);
       } else {
         console.warn(
-          `[affectedRows Effect] First affected index ${firstAffectedIndex} out of bounds.`
+          `[affectedRows Effect] Last affected index ${lastAffectedIndex} out of bounds.`
         );
         setAffectedRows([]);
       }

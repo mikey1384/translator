@@ -7,11 +7,21 @@ const getHeaderOffset = () => {
   return header?.getBoundingClientRect().height ?? 0;
 };
 
-export function scrollPrecisely(el: HTMLElement, smooth = false) {
-  const offset = getHeaderOffset();
+export function scrollPrecisely(
+  el: HTMLElement,
+  smooth = true,
+  extraOffset = 0
+) {
+  const offset = getHeaderOffset() + extraOffset;
   const absoluteY = window.scrollY + el.getBoundingClientRect().top - offset;
 
-  window.scrollTo({ top: absoluteY, behavior: smooth ? 'smooth' : 'auto' });
+  if (smooth) {
+    requestAnimationFrame(() =>
+      window.scrollTo({ top: absoluteY, behavior: 'smooth' })
+    );
+  } else {
+    window.scrollTo({ top: absoluteY, behavior: 'auto' });
+  }
 }
 
 export function scrollWhenReady(

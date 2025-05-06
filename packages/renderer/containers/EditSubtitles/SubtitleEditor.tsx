@@ -181,7 +181,6 @@ export default function SubtitleEditor({
         </div>
       </div>
 
-      {/* --- Replace Textarea with HighlightedTextarea --- START --- */}
       <HighlightedTextarea
         value={subtitle.original}
         searchTerm={searchText || ''}
@@ -189,12 +188,27 @@ export default function SubtitleEditor({
         rows={4}
         placeholder={t('editSubtitles.item.subtitlePlaceholder')}
       />
+
+      {temporaryAffectedText && (
+        <div
+          className={css`
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+          `}
+        >
+          <span
+            className="strike-fade"
+            onAnimationEnd={() => actions.update({ _oldText: undefined })}
+          >
+            {temporaryAffectedText}
+          </span>
+        </div>
+      )}
+
       <HighlightedTextarea
-        value={
-          temporaryAffectedText !== undefined
-            ? temporaryAffectedText
-            : (subtitle.translation ?? '')
-        }
+        value={subtitle.translation ?? ''}
         searchTerm={searchText || ''}
         onChange={v => actions.update({ translation: v })}
         rows={4}
