@@ -95,7 +95,31 @@ export default function GenerateSubtitles({
 
       {!isLoadingKeyStatus && apiKeyStatus?.openai && (
         <>
-          {error && <div className={errorMessageStyles}>{error}</div>}
+          {error && (
+            <div
+              className={errorMessageStyles}
+              style={{ position: 'relative', paddingRight: '30px' }}
+            >
+              {error}
+              <button
+                onClick={() => onSetError('')}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '10px',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: colors.danger,
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+                aria-label="Close error message"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           <ProgressDisplay
             downloadComplete={downloadComplete}
