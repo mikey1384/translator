@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
@@ -29,6 +29,9 @@ const actionButtonsStyles = css`
   align-items: center;
 `;
 
+const TIMECODE_RX = /^\d{2}:\d{2}:\d{2},\d{3}$/;
+const PARTIAL_RX = /^\d{0,2}(:\d{0,2}){0,2}[,.]?\d{0,3}$/;
+
 interface SubtitleEditorProps {
   id: string;
   searchText?: string;
@@ -44,13 +47,35 @@ export default function SubtitleEditor({
   const { subtitle, isPlaying } = useSubtitleRow(id);
   const actions = useRowActions(id);
   const [shiftAmount, setShiftAmount] = useState('0');
+  const [localStart, setLocalStart] = useState(
+    subtitle ? secondsToSrtTime(subtitle.start) : '00:00:00,000'
+  );
+  const [localEnd, setLocalEnd] = useState(
+    subtitle ? secondsToSrtTime(subtitle.end) : '00:00:00,000'
+  );
+
+  useEffect(() => {
+    if (subtitle) {
+      setLocalStart(secondsToSrtTime(subtitle.start));
+      setLocalEnd(secondsToSrtTime(subtitle.end));
+    }
+  }, [subtitle]);
 
   if (!subtitle) {
     return null;
   }
 
-  const handleTimeChange = (field: 'start' | 'end', value: string) => {
-    actions.update({ [field]: srtStringToSeconds(value) });
+  const commitTimeChange = (field: 'start' | 'end', value: string) => {
+    const trimmedValue = value.trim();
+    if (TIMECODE_RX.test(trimmedValue)) {
+      const seconds = srtStringToSeconds(trimmedValue);
+      actions.update({ [field]: seconds });
+      if (field === 'start') {
+        setLocalStart(secondsToSrtTime(seconds));
+      } else {
+        setLocalEnd(secondsToSrtTime(seconds));
+      }
+    }
   };
 
   const handleApplyShift = () => {
@@ -231,8 +256,15 @@ export default function SubtitleEditor({
         <div className={actionButtonsStyles}>
           <input
             type="text"
-            value={secondsToSrtTime(subtitle.start)}
-            onChange={e => handleTimeChange('start', e.target.value)}
+            value={localStart}
+            onChange={e => {
+              const val = e.target.value;
+              if (PARTIAL_RX.test(val)) setLocalStart(val);
+            }}
+            onBlur={e => commitTimeChange('start', e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitTimeChange('start', localStart);
+            }}
             className={timeInputStyles}
             aria-label={`Start time for subtitle ${id}`}
             data-testid={`subtitle-start-${id}`}
@@ -240,8 +272,15 @@ export default function SubtitleEditor({
           <span>→</span>
           <input
             type="text"
-            value={secondsToSrtTime(subtitle.end)}
-            onChange={e => handleTimeChange('end', e.target.value)}
+            value={localEnd}
+            onChange={e => {
+              const val = e.target.value;
+              if (PARTIAL_RX.test(val)) setLocalEnd(val);
+            }}
+            onBlur={e => commitTimeChange('end', e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitTimeChange('end', localEnd);
+            }}
             className={timeInputStyles}
             aria-label={`End time for subtitle ${id}`}
             data-testid={`subtitle-end-${id}`}
@@ -253,7 +292,7 @@ export default function SubtitleEditor({
             value={shiftAmount}
             onChange={e => setShiftAmount(e.target.value)}
             className={timeInputStyles}
-            placeholder={t('editSubtitles.item.shiftPlaceholder')}
+            placeholder="0.5"
             title={t('editSubtitles.item.shiftTitle')}
             data-testid={`subtitle-shift-input-${id}`}
           />
