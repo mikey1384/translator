@@ -1,4 +1,4 @@
-import { useRef, useMemo, RefObject } from 'react';
+import { useMemo, RefObject } from 'react';
 import { css } from '@emotion/css';
 import SubtitleItem from './SubtitleItem.js';
 import { useSubStore } from '../../state/subtitle-store';

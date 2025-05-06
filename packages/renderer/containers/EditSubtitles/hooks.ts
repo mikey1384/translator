@@ -1,11 +1,5 @@
 import { useCallback } from 'react';
 import { SrtSegment } from '@shared-types/app';
-import { flashSubtitle } from '../../utils/flashSubtitle';
-
-const getHeaderOffset = () => {
-  const header = document.querySelector('.fixed-video-container');
-  return header?.getBoundingClientRect().height ?? 0;
-};
 
 function smoothScrollTo(y: number) {
   const root = (document.scrollingElement ||
@@ -29,6 +23,11 @@ export function scrollPrecisely(
     smoothScrollTo(absoluteY);
   } else {
     window.scrollTo({ top: absoluteY, behavior: 'auto' });
+  }
+
+  function getHeaderOffset() {
+    const header = document.querySelector('.fixed-video-container');
+    return header?.getBoundingClientRect().height ?? 0;
   }
 }
 
@@ -54,12 +53,11 @@ export function scrollWhenReady(
     );
     scrollPrecisely(el, smooth);
 
-    // Flash EVERY time we scroll
     requestAnimationFrame(() => flashSubtitle(el));
 
     onSuccess?.();
 
-    return true; // Indicate success
+    return true;
   }
 
   if (tries < maxTries) {
@@ -154,3 +152,20 @@ export const useSubtitleNavigation = (
 
   return { scrollToCurrentSubtitle };
 };
+
+export function flashSubtitle(node: HTMLElement | null) {
+  if (!node) return;
+
+  node.classList.remove('highlight-subtitle');
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  node.offsetWidth;
+  node.classList.add('highlight-subtitle');
+
+  function handleEnd() {
+    if (node) {
+      node.classList.remove('highlight-subtitle');
+      node.removeEventListener('animationend', handleEnd);
+    }
+  }
+  node.addEventListener('animationend', handleEnd);
+}

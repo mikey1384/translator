@@ -39,19 +39,19 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
-    'unused-imports/no-unused-imports': 'off',
-    'unused-imports/no-unused-vars': [
-      'warn',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
       {
         vars: 'all',
-        varsIgnorePattern: '^_',
         args: 'all',
-        argsIgnorePattern: '^_',
         ignoreRestSiblings: true,
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
         destructuredArrayIgnorePattern: '^_',
       },
     ],
+    'unused-imports/no-unused-imports': 'off',
+    'unused-imports/no-unused-vars': 'off',
     'prettier/prettier': [
       'error',
       {

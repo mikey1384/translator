@@ -125,23 +125,16 @@
         }, 1000);
       });
     </script>
-    <!--  Tiny helper to flash an element ------------------->
     <script>
-      // Re-triggers the animation every time it's called
-      function flashSubtitle(node) {
-        node.classList.remove('highlight-subtitle');
-        void node.offsetWidth; // force reflow
-        node.classList.add('highlight-subtitle');
-      }
-
-      // DEMO: wait until the subtitle editor is on the DOM, then flash it
       window.addEventListener('DOMContentLoaded', () => {
         const el = document.querySelector('.subtitle-editor-container div');
         if (el) flashSubtitle(el);
       });
-
-      // You can export flashSubtitle and call it anywhere in your React app:
-      // import { flashSubtitle } from './flash';
+      function flashSubtitle(node) {
+        node.classList.remove('highlight-subtitle');
+        void node.offsetWidth;
+        node.classList.add('highlight-subtitle');
+      }
     </script>
   </body>
 </html>

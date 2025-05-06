@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import ProgressArea from '../components/ProgressAreas/ProgressArea.js';
 
-import { parseSrt, secondsToSrtTime } from '../../shared/helpers/index.js';
+import { parseSrt } from '../../shared/helpers/index.js';
 import { useApiKeyStatus } from './hooks/useApiKeyStatus.js';
 import { useSubtitleState } from './hooks/subtitles/useSubtitleState.js';
 import { useSubtitleActions } from './hooks/subtitles/useSubtitleActions.js';

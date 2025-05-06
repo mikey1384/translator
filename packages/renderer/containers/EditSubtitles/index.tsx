@@ -31,7 +31,6 @@ import FileInputButton from '../../components/FileInputButton.js';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { useSubStore } from '../../state/subtitle-store';
 import { scrollPrecisely, scrollWhenReady } from './hooks';
-import { flashSubtitle } from '../../utils/flashSubtitle';
 
 export interface EditSubtitlesProps {
   isAudioOnly: boolean;
