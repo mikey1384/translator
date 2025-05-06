@@ -611,14 +611,10 @@ function AppContent() {
 
   useEffect(() => {
     const remove = SubtitlesIPC.onMergeProgress(
-      ({ percent = 0, stage = '' }) => {
+      ({ percent = 0, stage = '', error }) => {
         setMergeProgress(percent);
         setMergeStage(stage);
-        if (
-          percent >= 100 ||
-          stage.toLowerCase().includes('error') ||
-          stage.toLowerCase().includes('failed')
-        ) {
+        if (error) {
           setIsMergingInProgress(false);
           setMergeOperationId(null);
         }
@@ -1193,6 +1189,7 @@ function AppContent() {
 
       if (result.success && result.outputPath) {
         setMergeStage('Overlay video saved successfully!');
+        setTimeout(() => setIsMergingInProgress(false), 3500);
         return { success: true, outputPath: result.outputPath };
       } else {
         throw new Error(result.error || 'Overlay generation or save failed.');

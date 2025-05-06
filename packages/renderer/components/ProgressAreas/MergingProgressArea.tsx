@@ -1,109 +1,76 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { colors } from '../../styles.js';
 import ProgressArea from './ProgressArea.js';
 import * as OperationIPC from '@ipc/operation';
 
 interface MergingProgressAreaProps {
   mergeProgress: number;
-  mergeStage?: string;
-  isMergingInProgress: boolean;
-  onSetIsMergingInProgress: (inProgress: boolean) => void;
+  mergeStage: string;
+  onSetIsMergingInProgress: (isMerging: boolean) => void;
   operationId: string | null;
-  autoCloseDelay?: number;
+  isMergingInProgress: boolean;
 }
 
-const MERGE_PROGRESS_COLOR = colors.warning;
+const MERGE_PROGRESS_COLOR = colors.primary;
 
 export default function MergingProgressArea({
   mergeProgress,
   mergeStage,
-  isMergingInProgress,
   onSetIsMergingInProgress,
   operationId,
-  autoCloseDelay = 5000,
+  isMergingInProgress,
 }: MergingProgressAreaProps) {
-  const [isCancelling, setIsCancelling] = useState(false);
-
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       console.log('MergingProgressArea received operationId:', operationId);
     }
   }, [operationId]);
 
-  const handleCancel = async () => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Cancel button clicked, operationId:', operationId);
-    }
-
-    if (
-      !window.confirm(
-        "Are you sure you want to cancel the subtitle merge? Any progress will be lost and you'll need to start again."
-      )
-    ) {
-      return;
-    }
-
-    setIsCancelling(true);
-
+  const handleCancelMerge = async () => {
     if (!operationId) {
-      console.warn('Cannot cancel merge: operationId is null.');
-      alert(
-        'Cannot cancel the operation: Operation ID is missing. The process will continue.'
+      console.warn(
+        '[MergingProgressArea] Cannot cancel merge: operationId is missing.'
       );
       onSetIsMergingInProgress(false);
       return;
     }
     try {
-      console.log(`Attempting to cancel merge operation: ${operationId}`);
-      const result = await OperationIPC.cancel(operationId);
-      console.log(`Cancellation result for ${operationId}:`, result);
-      if (result.success) {
-        console.log(`Successfully canceled operation ${operationId}`);
-      } else {
-        console.error(
-          `Failed to cancel operation ${operationId}:`,
-          result.error
-        );
-        alert(
-          `Failed to cancel the operation: ${result.error || 'Unknown error'}`
-        );
-      }
-    } catch (error: any) {
-      console.error(`Error calling cancelOperation for ${operationId}:`, error);
-      alert(`Failed to cancel the operation: ${error.message || error}`);
-    } finally {
-      setIsCancelling(false);
-      onSetIsMergingInProgress(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (process.env.NODE_ENV !== 'production') {
       console.log(
-        '[MergingProgressArea] handleClose called by ProgressArea, signaling parent.'
+        `[MergingProgressArea] Sending cancel request for merge ${operationId}`
       );
+      await OperationIPC.cancel(operationId);
+    } catch (error) {
+      console.error(
+        `[MergingProgressArea] Error sending cancel request for merge ${operationId}:`,
+        error
+      );
+    } finally {
+      onSetIsMergingInProgress(false); // Ensure progress bar hides after attempt
     }
-    onSetIsMergingInProgress(false);
   };
 
   return (
     <ProgressArea
       isVisible={isMergingInProgress}
-      title="Merge in Progress"
+      title="Merging Video & Subtitles"
       progress={mergeProgress}
-      stage={mergeStage ?? ''}
+      stage={mergeStage}
       progressBarColor={
-        isCancelling
+        mergeStage.toLowerCase().includes('error')
           ? colors.danger
           : mergeProgress >= 100
             ? colors.success
             : MERGE_PROGRESS_COLOR
       }
-      isCancelling={isCancelling}
+      isCancelling={false}
       operationId={operationId}
-      onCancel={handleCancel}
-      onClose={handleClose}
-      autoCloseDelay={autoCloseDelay}
+      onCancel={handleCancelMerge}
+      onClose={() => onSetIsMergingInProgress(false)}
+      autoCloseDelay={
+        mergeProgress >= 100 && !mergeStage.toLowerCase().includes('error')
+          ? 4000
+          : undefined
+      }
     />
   );
 }

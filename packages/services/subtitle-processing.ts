@@ -1561,14 +1561,14 @@ export async function detectSpeechIntervals({
       '-i',
       inputPath,
       '-f',
-      's16le', // Signed 16-bit Little Endian PCM
+      's16le',
       '-ac',
-      '1', // Mono
+      '1',
       '-ar',
-      String(sampleRate), // Target sample rate
+      String(sampleRate),
       '-loglevel',
-      'error', // Reduce ffmpeg noise
-      '-', // Output to stdout
+      'error',
+      '-',
     ]);
 
     ffmpeg.stdout.on('data', (chunk: Buffer) => {

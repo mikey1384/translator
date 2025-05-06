@@ -95,7 +95,7 @@ class SubtitleRendererClient {
   async renderSubtitles(
     options: RenderSubtitlesOptions & { timeoutMs?: number }
   ): Promise<PngRenderResult> {
-    const DEFAULT_TIMEOUT_MS = 60_000;
+    const DEFAULT_TIMEOUT_MS = 600_000;
     const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
     console.log(
       `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,
