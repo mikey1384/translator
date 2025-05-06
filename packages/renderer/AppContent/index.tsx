@@ -614,6 +614,14 @@ function AppContent() {
       ({ percent = 0, stage = '' }) => {
         setMergeProgress(percent);
         setMergeStage(stage);
+        if (
+          percent >= 100 ||
+          stage.toLowerCase().includes('error') ||
+          stage.toLowerCase().includes('failed')
+        ) {
+          setIsMergingInProgress(false);
+          setMergeOperationId(null);
+        }
       }
     );
     return remove;
@@ -1182,8 +1190,6 @@ function AppContent() {
 
       if (result.success && result.outputPath) {
         setMergeStage('Overlay video saved successfully!');
-        setIsMergingInProgress(false);
-        setMergeOperationId(null);
         return { success: true, outputPath: result.outputPath };
       } else {
         throw new Error(result.error || 'Overlay generation or save failed.');
