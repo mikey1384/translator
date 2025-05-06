@@ -6,9 +6,14 @@ import { useSubStore } from '../../state/subtitle-store';
 interface Props {
   searchText?: string;
   subtitleRefs: RefObject<Record<string, HTMLDivElement | null>>;
+  affectedRows: number[];
 }
 
-export default function SubtitleList({ searchText = '', subtitleRefs }: Props) {
+export default function SubtitleList({
+  searchText = '',
+  subtitleRefs,
+  affectedRows,
+}: Props) {
   const { order } = useSubStore(s => ({ order: s.order })); // IDs only
 
   const setRowRef = useMemo(() => {
@@ -32,12 +37,13 @@ export default function SubtitleList({ searchText = '', subtitleRefs }: Props) {
         padding-bottom: 90px;
       `}
     >
-      {order.map(id => (
+      {order.map((id, idx) => (
         <SubtitleItem
           key={id}
           id={id}
           searchText={searchText}
-          ref={setRowRef[id]} // Pass stable ref setter
+          ref={setRowRef[id]}
+          isAffected={affectedRows.includes(idx)}
         />
       ))}
     </div>

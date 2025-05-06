@@ -32,11 +32,13 @@ const actionButtonsStyles = css`
 interface SubtitleEditorProps {
   id: string;
   searchText?: string;
+  temporaryAffectedText?: string;
 }
 
 export default function SubtitleEditor({
   id,
   searchText,
+  temporaryAffectedText,
 }: SubtitleEditorProps) {
   const { t } = useTranslation();
   const { subtitle, isPlaying } = useSubtitleRow(id);
@@ -188,7 +190,11 @@ export default function SubtitleEditor({
         placeholder={t('editSubtitles.item.subtitlePlaceholder')}
       />
       <HighlightedTextarea
-        value={subtitle.translation ?? ''}
+        value={
+          temporaryAffectedText !== undefined
+            ? temporaryAffectedText
+            : (subtitle.translation ?? '')
+        }
         searchTerm={searchText || ''}
         onChange={v => actions.update({ translation: v })}
         rows={4}

@@ -1,7 +1,8 @@
 import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './AppContent/index.js';
-// Import i18n configuration
+import { Global } from '@emotion/react';
+import { globalAnimations } from './styles';
 import './i18n.js';
 
 let root: ReturnType<typeof createRoot> | null = null;
@@ -22,6 +23,7 @@ const renderApp = () => {
   root.render(
     <React.StrictMode>
       <Suspense fallback={<div>Loading translations...</div>}>
+        <Global styles={globalAnimations} />
         <App />
       </Suspense>
     </React.StrictMode>

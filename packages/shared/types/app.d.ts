@@ -160,6 +160,7 @@ declare module '@shared-types/app' {
     original: string;
     translation?: string;
     reviewedInBatch?: number;
+    _oldText?: string;
   }
 
   export interface SubtitleHandlerServices {

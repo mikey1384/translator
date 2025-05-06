@@ -1,19 +1,47 @@
-import React, { forwardRef, useState } from 'react';
-import { css } from '@emotion/css';
+import React, { forwardRef, useState, useEffect } from 'react';
+import { css, cx } from '@emotion/css';
 import { useInView } from 'react-intersection-observer';
 import SubtitleEditor from './SubtitleEditor.js';
+import { useSubtitleRow, useSubActions } from '../../state/subtitle-store.js';
+import { strikeFade, fadeIn } from '../../styles';
 
 interface Props {
   id: string;
   searchText?: string;
+  isAffected: boolean;
 }
 
 const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
-  ({ id, searchText = '' }, outerRef) => {
+  ({ id, searchText = '', isAffected }, outerRef) => {
+    const { subtitle: seg } = useSubtitleRow(id);
+    const { update: updateSubtitle } = useSubActions();
     const [ref, inView] = useInView({
       rootMargin: '50% 0px',
       triggerOnce: false,
     });
+
+    const [showNew, setShowNew] = useState(!isAffected);
+
+    useEffect(() => {
+      let timeoutId: NodeJS.Timeout | null = null;
+      if (isAffected) {
+        setShowNew(false);
+        timeoutId = setTimeout(() => {
+          setShowNew(true);
+          if (seg?._oldText !== undefined) {
+            console.log(`[SubtitleItem ${id}] Clearing _oldText`);
+            updateSubtitle(id, { _oldText: undefined });
+          }
+        }, 300);
+      } else {
+        setShowNew(true);
+      }
+
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAffected]);
 
     const shouldRender = inView;
 
@@ -26,14 +54,31 @@ const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
       }
     };
 
+    const animationClass = isAffected
+      ? showNew
+        ? fadeIn
+        : strikeFade
+      : undefined;
+
     return (
       <div
         ref={combinedRef}
-        className={css`
-          box-sizing: border-box;
-        `}
+        className={cx(
+          css`
+            box-sizing: border-box;
+          `,
+          animationClass
+        )}
       >
-        {shouldRender && <SubtitleEditor id={id} searchText={searchText} />}
+        {shouldRender && (
+          <SubtitleEditor
+            id={id}
+            searchText={searchText}
+            temporaryAffectedText={
+              isAffected && !showNew ? seg?._oldText : undefined
+            }
+          />
+        )}
         {!shouldRender && (
           <div
             className={css`

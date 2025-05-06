@@ -5,6 +5,7 @@ import React, {
   useState,
   SetStateAction,
   Dispatch,
+  useMemo,
 } from 'react';
 import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
@@ -104,6 +105,14 @@ export function EditSubtitles({
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const loadSubtitlesIntoStore = useSubStore(s => s.load);
+  const [affectedRows, setAffectedRows] = useState<number[]>([]);
+  const { currentSegmentsMap, currentOrder } = useSubStore(state => ({
+    currentSegmentsMap: state.segments,
+    currentOrder: state.order,
+  }));
+  const orderedCurrentSubtitles = useMemo(() => {
+    return currentOrder.map(id => currentSegmentsMap[id]).filter(Boolean);
+  }, [currentSegmentsMap, currentOrder]);
 
   console.log('[review] prop:', reviewedBatchStartIndex);
 
@@ -256,6 +265,33 @@ export function EditSubtitles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewedBatchStartIndex, subtitlesProp]);
 
+  useEffect(() => {
+    if (affectedRows.length > 0 && subtitlesProp) {
+      const firstAffectedIndex = affectedRows[0];
+      if (
+        firstAffectedIndex >= 0 &&
+        firstAffectedIndex < subtitlesProp.length
+      ) {
+        const targetId = subtitlesProp[firstAffectedIndex].id;
+        console.log(
+          `[affectedRows Effect] Scrolling to first affected row index ${firstAffectedIndex}, id ${targetId}`
+        );
+        const scrollDone = () => {
+          console.log(
+            `[affectedRows Effect] Scroll finished, clearing affectedRows.`
+          );
+          setAffectedRows([]);
+        };
+        scrollWhenReady(targetId, subtitleRefs, false, 0, 30, scrollDone);
+      } else {
+        console.warn(
+          `[affectedRows Effect] First affected index ${firstAffectedIndex} out of bounds.`
+        );
+        setAffectedRows([]);
+      }
+    }
+  }, [affectedRows, subtitlesProp]);
+
   const activePlayer =
     videoPlayerRef ?? (subtitleVideoPlayer?.instance || undefined);
 
@@ -311,9 +347,59 @@ export function EditSubtitles({
       const withIds = subtitlesProp.map(seg =>
         seg.id ? seg : { ...seg, id: crypto.randomUUID() }
       );
-      loadSubtitlesIntoStore(withIds);
+      const prevSubsForDiff = [...orderedCurrentSubtitles];
+
+      // --- Populate _oldText before updating store --- START ---
+      const merged = withIds.map((nextSeg, index) => {
+        // Find the corresponding previous segment *by ID* if possible, else by index
+        const prevSeg =
+          prevSubsForDiff.find(p => p.id === nextSeg.id) ??
+          prevSubsForDiff[index];
+
+        // Check if text content actually changed compared to the previous state
+        if (
+          prevSeg &&
+          (prevSeg.translation !== nextSeg.translation ||
+            prevSeg.original !== nextSeg.original)
+        ) {
+          // If changed, store the previous text (prefer translation) in _oldText
+          return {
+            ...nextSeg,
+            _oldText: prevSeg.translation ?? prevSeg.original,
+          };
+        }
+        // If not changed, return the segment as is (ensuring _oldText isn't carried over unnecessarily)
+        const { _oldText, ...rest } = nextSeg; // Remove potential stale _oldText
+        return rest;
+      });
+      // --- Populate _oldText before updating store --- END ---
+
+      loadSubtitlesIntoStore(merged);
+
+      if (
+        reviewedBatchStartIndex !== null &&
+        reviewedBatchStartIndex !== undefined
+      ) {
+        console.log(
+          `[EditSubtitles] Calculating diff based on reviewedBatchStartIndex: ${reviewedBatchStartIndex}`
+        );
+        const diffIndices = calcAffected(
+          prevSubsForDiff,
+          merged,
+          reviewedBatchStartIndex
+        );
+        // Wrap in rAF to ensure DOM updates (from store load) complete before triggering scroll effect
+        requestAnimationFrame(() => {
+          setAffectedRows(diffIndices);
+        });
+      }
     }
-  }, [subtitlesProp, loadSubtitlesIntoStore]);
+  }, [
+    subtitlesProp,
+    loadSubtitlesIntoStore,
+    reviewedBatchStartIndex,
+    orderedCurrentSubtitles,
+  ]);
 
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
@@ -411,6 +497,7 @@ export function EditSubtitles({
             <SubtitleList
               subtitleRefs={subtitleRefs}
               searchText={searchText || ''}
+              affectedRows={affectedRows}
             />
           </div>
         </>
@@ -475,6 +562,7 @@ export function EditSubtitles({
       );
       onSetSubtitleSegments(result.segments);
       onSrtFileLoaded(result.filePath);
+      setAffectedRows([]);
       setSaveError('');
     } else {
       console.warn('[handleLoadSrtLocal] Unexpected result:', result);
@@ -590,3 +678,32 @@ export function EditSubtitles({
     }
   }
 }
+
+const calcAffected = (
+  prevSubs: SrtSegment[],
+  nextSubs: SrtSegment[],
+  startIndex: number | null | undefined
+): number[] => {
+  if (startIndex === null || startIndex === undefined) return [];
+  const REVIEW_BATCH_SIZE = 50;
+  const affectedIndices: number[] = [];
+  for (
+    let i = startIndex;
+    i <
+    Math.min(startIndex + REVIEW_BATCH_SIZE, prevSubs.length, nextSubs.length);
+    i++
+  ) {
+    if (
+      prevSubs[i] &&
+      nextSubs[i] &&
+      (prevSubs[i].translation !== nextSubs[i].translation ||
+        prevSubs[i].original !== nextSubs[i].original)
+    ) {
+      affectedIndices.push(i);
+      // Optionally track which batch reviewed this segment:
+      // if (nextSubs[i]) nextSubs[i].reviewedInBatch = startIndex; // Or use a batch ID
+    }
+  }
+  console.log('[calcAffected] Placeholder affected indices:', affectedIndices);
+  return affectedIndices;
+};

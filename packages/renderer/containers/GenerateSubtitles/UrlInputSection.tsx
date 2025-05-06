@@ -90,7 +90,6 @@ function UrlInputSection({
         <label
           htmlFor="quality-select"
           className={css`
-            /* Add screen-reader only styles if needed */
             position: absolute;
             width: 1px;
             height: 1px;

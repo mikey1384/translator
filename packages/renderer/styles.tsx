@@ -25,6 +25,10 @@ export const colors = {
   grayDark: '#E0E0E0', // Secondary light text color
   white: '#080808', // Darker main background
   border: '#333333', // Subtle border color
+  text: '#eee',
+  textDim: '#bbb',
+  background: '#222',
+  backgroundLight: '#333',
 };
 
 // Advanced gradient system - Removed for flat design
@@ -655,4 +659,35 @@ export const noShadowStyle = css`
 
 export const overflowVisibleStyle = css`
   overflow: visible;
+`;
+
+// Add new animation styles from checklist
+export const strikeFade = css`
+  color: ${colors.danger};
+  text-decoration: line-through;
+  opacity: 1;
+  transition:
+    opacity 0.3s ease,
+    color 0.15s ease;
+  pointer-events: none;
+`;
+
+// Define keyframes globally
+export const globalAnimations = css`
+  @keyframes fadeInKey {
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+export const fadeIn = css`
+  opacity: 0;
+  animation: fadeInKey 0.3s forwards; // Reference the global keyframe name
+`;
+
+// Dummy class to ensure keyframes are not tree-shaken
+export const dummyKey = css`
+  /* never used – only here so fadeInKey survives minification */
+  animation: fadeInKey 0s;
 `;
