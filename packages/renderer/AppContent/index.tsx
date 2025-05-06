@@ -1128,8 +1128,11 @@ function AppContent() {
     setError('');
     resetSubtitleState();
     setIsGenerating(true);
+    const operationId = `generate-${Date.now()}`;
+    setIsTranslationInProgress(true);
     try {
       const options = buildGenerateOptions();
+      options.operationId = operationId;
       const result = await SubtitlesIPC.generate(options);
 
       if (result.error) {

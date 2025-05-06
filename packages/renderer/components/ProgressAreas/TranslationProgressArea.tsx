@@ -40,6 +40,9 @@ export default function TranslationProgressArea({
     async (id?: string | null) => {
       if (!id) {
         console.warn('[TranslationProgressArea] No operationId to cancel.');
+        alert(
+          'Cannot cancel the operation: Operation ID is missing. The process will continue.'
+        );
         onSetIsTranslationInProgress(false);
         return;
       }
@@ -60,11 +63,12 @@ export default function TranslationProgressArea({
         devLog(
           `[TranslationProgressArea] Electron cancel request sent for ${id}.`
         );
-      } catch (error) {
+      } catch (error: any) {
         devError(
           `[TranslationProgressArea] Error calling cancelOperation for ${id}:`,
           error
         );
+        alert(`Failed to cancel the operation: ${error.message || error}`);
       } finally {
         setIsCancelling(false);
         onSetIsTranslationInProgress(false);

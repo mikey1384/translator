@@ -47,6 +47,9 @@ export default function MergingProgressArea({
 
     if (!operationId) {
       console.warn('Cannot cancel merge: operationId is null.');
+      alert(
+        'Cannot cancel the operation: Operation ID is missing. The process will continue.'
+      );
       onSetIsMergingInProgress(false);
       return;
     }
@@ -61,9 +64,13 @@ export default function MergingProgressArea({
           `Failed to cancel operation ${operationId}:`,
           result.error
         );
+        alert(
+          `Failed to cancel the operation: ${result.error || 'Unknown error'}`
+        );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error calling cancelOperation for ${operationId}:`, error);
+      alert(`Failed to cancel the operation: ${error.message || error}`);
     } finally {
       setIsCancelling(false);
       onSetIsMergingInProgress(false);

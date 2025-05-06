@@ -135,9 +135,9 @@ try {
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const controller = new AbortController();
     const { signal } = controller;
-    const operationId = `generate-${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2, 9)}`;
+    const operationId =
+      options.operationId ||
+      `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     log.info(`[main.ts/generate-subtitles] Starting operation: ${operationId}`);
     subtitleGenerationControllers.set(operationId, controller);
