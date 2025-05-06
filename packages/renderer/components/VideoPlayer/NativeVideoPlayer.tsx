@@ -207,10 +207,9 @@ export default function NativeVideoPlayer({
       if (onReadyCalledRef.current) return;
       onReadyCalledRef.current = true;
       if (getNativePlayerInstance() !== videoElement) {
-        setNativePlayerInstance(videoElement); // Use the setter function
+        setNativePlayerInstance(videoElement);
       }
-      console.log('Native player is now ready (via canplay).');
-      onPlayerReady(videoElement); // Call the prop callback
+      onPlayerReady(videoElement);
 
       if (isFileUrlVideo && pendingSeekRef?.current !== null) {
         const targetTime = pendingSeekRef?.current;

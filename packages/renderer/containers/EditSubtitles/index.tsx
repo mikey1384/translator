@@ -21,7 +21,7 @@ import {
   openSubtitleWithElectron,
 } from '../../../shared/helpers/index.js';
 
-import { useSubtitleNavigation } from './hooks.js';
+import { useSubtitleNavigation, flashSubtitle } from './hooks.js';
 import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
@@ -263,6 +263,7 @@ export function EditSubtitles({
               `[EditSubtitles] Executing scrollIntoView for forced index: ${index}`
             );
             scrollPrecisely(targetElement, false);
+            requestAnimationFrame(() => flashSubtitle(targetElement));
           } else {
             console.warn(
               `[EditSubtitles] Target element for index ${index} not found after forced render.`
