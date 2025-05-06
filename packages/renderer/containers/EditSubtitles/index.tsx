@@ -5,13 +5,11 @@ import React, {
   useState,
   SetStateAction,
   Dispatch,
-  useMemo,
 } from 'react';
 import { css } from '@emotion/css';
 import Section from '../../components/Section.js';
 import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
-import { debounce } from 'lodash-es';
 
 import SubtitleList from './SubtitleList.js';
 import MergeControls from './MergeControls.js';
