@@ -10,25 +10,28 @@ export const breakpoints = {
 
 // Colors system - Dark Theme
 export const colors = {
-  primary: '#5876F5', // Brighter blue accent
+  primary: '#5876F5',
   primaryLight: '#7B97FF',
   primaryDark: '#3A57D1',
-  secondary: '#4A43C9', // Adjusted secondary accent
-  success: '#4CE0B3', // Brighter teal/green
-  info: '#5BC0DE', // Adjusted info blue
-  warning: '#F7559A', // Adjusted pink/warning
-  danger: '#E65E6A', // Adjusted red/danger
-  light: '#1E1E1E', // Secondary dark background (e.g., cards, inputs on main bg)
-  dark: '#F5F5F5', // Primary light text color
-  gray: '#8A8A8A', // Medium gray for secondary text/elements
-  grayLight: '#2A2A2A', // Surface color (slightly lighter than main bg)
-  grayDark: '#E0E0E0', // Secondary light text color
-  white: '#080808', // Darker main background
-  border: '#333333', // Subtle border color
+  secondary: '#4A43C9',
+  success: '#4CE0B3',
+  info: '#5BC0DE',
+  warning: '#F7559A',
+  danger: '#E65E6A',
+  light: '#1E1E1E',
+  dark: '#F5F5F5',
+  gray: '#8A8A8A',
+  grayLight: '#2A2A2A',
+  grayDark: '#E0E0E0',
+  white: '#080808',
+  border: '#333333',
   text: '#eee',
   textDim: '#bbb',
   background: '#222',
   backgroundLight: '#333',
+  progressDownload: '#FCBF49',
+  progressMerge: '#F7559A',
+  progressTranslate: '#5876F5',
 };
 
 // Advanced gradient system - Removed for flat design

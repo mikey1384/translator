@@ -81,7 +81,7 @@ const mainContentStyles = css`
   position: relative;
 `;
 
-const DOWNLOAD_PROGRESS_COLOR = colors.primary;
+const DOWNLOAD_PROGRESS_COLOR = colors.progressDownload;
 
 const throttle = <T extends (...args: any[]) => any>(
   func: T,

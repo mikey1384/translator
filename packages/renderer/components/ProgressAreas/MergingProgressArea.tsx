@@ -11,7 +11,7 @@ interface MergingProgressAreaProps {
   isMergingInProgress: boolean;
 }
 
-const MERGE_PROGRESS_COLOR = colors.primary;
+const MERGE_PROGRESS_COLOR = colors.progressMerge;
 
 export default function MergingProgressArea({
   mergeProgress,

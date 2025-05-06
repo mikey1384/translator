@@ -30,3 +30,12 @@ const renderApp = () => {
 
 // Initial render
 renderApp();
+
+if (import.meta.hot || (module as any)?.hot) {
+  import.meta.hot?.accept?.();
+  (module as any)?.hot?.accept?.();
+
+  const dispose = () => window.location.reload();
+  import.meta.hot?.dispose?.(dispose);
+  (module as any)?.hot?.dispose?.(dispose);
+}

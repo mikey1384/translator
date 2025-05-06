@@ -24,7 +24,7 @@ interface TranslationProgressAreaProps {
   translationOperationId?: string | null;
 }
 
-const TRANSLATION_PROGRESS_COLOR = colors.info;
+const TRANSLATION_PROGRESS_COLOR = colors.progressTranslate;
 
 export default function TranslationProgressArea({
   translationProgress,
