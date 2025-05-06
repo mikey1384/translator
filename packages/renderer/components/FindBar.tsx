@@ -14,7 +14,7 @@ const findBarStyles = css`
   display: flex;
   align-items: center;
   gap: 8px;
-  z-index: 1000;
+  z-index: 1200;
   font-size: 0.9rem;
   color: ${colors.dark};
 `;
