@@ -15,6 +15,8 @@ interface ProgressAreaProps {
   onClose: () => void;
 }
 
+export const PROGRESS_BAR_HEIGHT = 150;
+
 // --- Styles ---
 const progressContainerStyles = css`
   position: fixed;

@@ -7,6 +7,7 @@ import Button from '../Button.js';
 import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
+import { PROGRESS_BAR_HEIGHT } from '../ProgressAreas/ProgressArea.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 
@@ -227,6 +228,7 @@ const controlsWrapperStyles = (isFullScreen: boolean) => css`
 `;
 
 export default function VideoPlayer({
+  isProgressBarVisible,
   videoUrl,
   subtitles,
   onPlayerReady,
@@ -289,6 +291,15 @@ export default function VideoPlayer({
   const ignoreScrollRef = useRef(false);
   const ignoreScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // New useEffect to set progressBarHeight based on isProgressBarVisible prop
+  useEffect(() => {
+    if (isProgressBarVisible) {
+      setProgressBarHeight(PROGRESS_BAR_HEIGHT);
+    } else {
+      setProgressBarHeight(0);
+    }
+  }, [isProgressBarVisible]);
+
   // Function to handle UI interaction and set ignore flag
   const handleUiInteraction = useCallback(() => {
     ignoreScrollRef.current = true;
@@ -326,10 +337,8 @@ export default function VideoPlayer({
       ignoreScrollTimeoutRef.current = null;
     }
     ignoreScrollRef.current = false;
-    console.log('Cleared existing cooldowns before Scroll to Current');
 
     isScrollToCurrentActive.current = true;
-    console.log('Scroll to Current activated, preventing size changes');
 
     if (scrollToCurrentTimeoutRef?.current) {
       clearTimeout(scrollToCurrentTimeoutRef?.current);
@@ -340,7 +349,6 @@ export default function VideoPlayer({
     scrollToCurrentTimeoutRef.current = setTimeout(() => {
       isScrollToCurrentActive.current = false;
       scrollToCurrentTimeoutRef.current = null;
-      console.log('Scroll to Current complete, size changes enabled');
     }, 1500);
   }, [onScrollToCurrentSubtitle]);
 
@@ -530,61 +538,6 @@ export default function VideoPlayer({
       }
     }
   }, [isFullScreen, handleActivity]);
-
-  useEffect(() => {
-    const checkProgressBar = () => {
-      const progressAreas = Array.from(document.querySelectorAll('div')).filter(
-        el => {
-          // Check if this element contains headers with specific text
-          return (
-            el.innerHTML.includes('Translation in Progress') ||
-            el.innerHTML.includes('Merge in Progress')
-          );
-        }
-      );
-
-      let maxHeight = 0;
-      progressAreas.forEach(el => {
-        // Find the top-most parent with fixed positioning
-        let currentEl: HTMLElement | null = el;
-        let fixedParent: HTMLElement | null = null;
-
-        while (currentEl && currentEl !== document.body) {
-          const style = window.getComputedStyle(currentEl);
-          if (style.position === 'fixed') {
-            fixedParent = currentEl;
-            break;
-          }
-          currentEl = currentEl.parentElement;
-        }
-
-        if (fixedParent) {
-          const height = fixedParent.getBoundingClientRect().height;
-          if (height > maxHeight) {
-            maxHeight = height;
-          }
-        }
-      });
-
-      setProgressBarHeight(maxHeight);
-    };
-
-    // Check initially
-    checkProgressBar();
-
-    // Set up a mutation observer to detect when progress bar appears/disappears
-    const observer = new MutationObserver(checkProgressBar);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Check periodically as well for safety
-    const intervalId = setInterval(checkProgressBar, 500);
-
-    // Clean up
-    return () => {
-      observer.disconnect();
-      clearInterval(intervalId);
-    };
-  }, []);
 
   // Add keyboard shortcut handler for time seeking with arrow keys
   const handleKeyDown = useCallback(
