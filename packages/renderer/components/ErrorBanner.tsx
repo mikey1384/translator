@@ -14,7 +14,7 @@ export default function ErrorBanner({ message, onClose }: Props) {
       className={css`
         ${errorMessageStyles};
         position: relative;
-        padding-right: 30px; /* space for the X */
+        padding-right: 30px;
       `}
     >
       {message}
