@@ -51,25 +51,25 @@ export const shadows = {
 export const inputStyles = css`
   padding: 10px 14px;
   border-radius: 6px;
-  border: 1px solid ${colors.border}; // Use dark border
+  border: 1px solid ${colors.border};
   font-size: 0.95rem;
-  transition: border-color 0.2s ease; // Simpler transition
+  transition: border-color 0.2s ease;
   width: 100%;
   max-width: 320px;
-  background-color: ${colors.light}; // Use secondary dark bg
-  color: ${colors.dark}; // Use light text color
-  box-shadow: ${shadows.sm}; // Removed shadow
+  background-color: ${colors.light};
+  color: ${colors.dark};
+  box-shadow: ${shadows.sm};
   box-sizing: border-box;
   line-height: 1.2;
 
   &:focus {
     outline: none;
-    border-color: ${colors.primary}; // Use primary accent for focus border
-    box-shadow: none; // Ensure no focus shadow
+    border-color: ${colors.primary};
+    box-shadow: none;
   }
 
   &::placeholder {
-    color: ${colors.gray}; // Placeholder text color
+    color: ${colors.gray};
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -79,10 +79,9 @@ export const inputStyles = css`
 
 // Select styles - Dark Theme
 export const selectStyles = css`
-  ${inputStyles} // Inherit base input styles
+  ${inputStyles}
   height: 40px;
   cursor: pointer;
-  // Update SVG color for dark theme
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(
     colors.gray
   )}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='6 9 12 15 18 9'%3E%3C/polygon%3E%3C/svg%3E");
@@ -106,8 +105,10 @@ export const selectStyles = css`
   }
 
   option {
-    background-color: ${colors.light}; // Option background
-    color: ${colors.dark}; // Option text color
+    background-color: ${colors.light};
+    color: ${colors.dark};
+    width: auto;
+    max-width: none;
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -117,11 +118,6 @@ export const selectStyles = css`
 
   &::-ms-expand {
     display: none;
-  }
-
-  option {
-    width: auto;
-    max-width: none;
   }
 `;
 
@@ -136,7 +132,7 @@ export const fileInputWrapperStyles = css`
     margin-bottom: 8px;
     font-weight: 500;
     font-size: 0.95rem;
-    color: ${colors.dark}; // Use light text color
+    color: ${colors.dark};
   }
 `;
 
@@ -161,11 +157,11 @@ export const containerStyles = css`
 export const videoContainerStyles = css`
   position: relative;
   z-index: 1;
-  background-color: rgba(30, 30, 30, 0.9); // Darker semi-transparent bg
+  background-color: rgba(30, 30, 30, 0.9);
   backdrop-filter: blur(8px);
   padding: 15px;
   border-radius: 8px;
-  border: 1px solid ${colors.border}; // Subtle dark border
+  border: 1px solid ${colors.border};
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
@@ -174,7 +170,7 @@ export const videoContainerStyles = css`
   max-height: 60vh;
   overflow: visible;
   transition: all 0.2s ease-out;
-  box-shadow: ${shadows.md}; // Removed shadow
+  box-shadow: ${shadows.md};
 
   @media (max-height: 700px) {
     max-height: 40vh;
@@ -189,7 +185,7 @@ export const videoContainerStyles = css`
 // Title Styles - Dark Theme
 export const titleStyles = css`
   font-size: 2.5rem;
-  color: ${colors.dark}; // Use light text color
+  color: ${colors.dark};
   margin-bottom: 1.5rem;
   font-weight: 700;
 
@@ -201,19 +197,19 @@ export const titleStyles = css`
 
 // Section Styles - Dark Theme
 export const sectionStyles = css`
-  background-color: ${colors.grayLight}; // Use surface color
+  background-color: ${colors.grayLight};
   border-radius: 8px;
-  box-shadow: ${shadows.section}; // Removed shadow
+  box-shadow: ${shadows.section};
   padding: 1.5rem;
   margin-bottom: 2rem;
-  transition: none; // Removed shadow transition
+  transition: none;
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-  border: 1px solid ${colors.border}; // Add subtle border for definition
+  border: 1px solid ${colors.border};
 
   &:hover {
-    box-shadow: ${shadows.sectionHover}; // Removed shadow
+    box-shadow: ${shadows.sectionHover};
   }
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
@@ -226,11 +222,11 @@ export const sectionStyles = css`
 export const sectionTitleStyles = css`
   font-size: 1.5rem;
   font-weight: 600;
-  color: ${colors.dark}; // Light text
+  color: ${colors.dark};
   margin-top: 0;
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid ${colors.border}; // Subtle border
+  border-bottom: 1px solid ${colors.border};
 
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     font-size: 1.3rem;
@@ -254,7 +250,7 @@ export const textAreaStyles = css`
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-    box-shadow: none; // Remove focus shadow
+    box-shadow: none;
   }
 
   &::placeholder {
@@ -265,7 +261,7 @@ export const textAreaStyles = css`
 // Progress Bar Background - Dark Theme
 export const progressBarBackgroundStyles = css`
   height: 12px;
-  background-color: ${colors.light}; // Use secondary dark bg
+  background-color: ${colors.light};
   border-radius: 6px;
   overflow: hidden;
   margin: 8px 0;
@@ -276,10 +272,9 @@ export const progressBarBackgroundStyles = css`
 export const progressBarFillStyles = (progress: number) => css`
   height: 100%;
   width: ${progress}%;
-  background-color: ${colors.primary}; // Solid primary color
-  border-radius: 6px 0 0 6px; // Maintain radius on left
+  background-color: ${colors.primary};
+  border-radius: 6px 0 0 6px;
   transition: width 0.3s ease-in-out;
-  // Subtle stripes for dark theme
   background-image: linear-gradient(
     45deg,
     rgba(255, 255, 255, 0.08) 25%,
@@ -290,7 +285,7 @@ export const progressBarFillStyles = (progress: number) => css`
     transparent 75%,
     transparent
   );
-  background-size: 30px 30px; // Smaller stripes
+  background-size: 30px 30px;
   animation: progress-bar-stripes 1s linear infinite;
 
   @keyframes progress-bar-stripes {
@@ -306,7 +301,7 @@ export const progressBarFillStyles = (progress: number) => css`
 // Progress Stage - Dark Theme
 export const progressStageStyles = css`
   font-size: 0.875rem;
-  color: ${colors.grayDark}; // Use secondary light text
+  color: ${colors.grayDark};
   margin-bottom: 0.5rem;
   font-weight: 500;
 `;
@@ -314,17 +309,17 @@ export const progressStageStyles = css`
 // Results Area - Dark Theme
 export const resultsAreaStyles = css`
   margin-top: 1rem;
-  border: 1px solid ${colors.border}; // Dark border
+  border: 1px solid ${colors.border};
   border-radius: 6px;
   padding: 1rem;
-  background-color: ${colors.light}; // Secondary dark bg
+  background-color: ${colors.light};
   max-height: 300px;
   overflow-y: auto;
   font-family: monospace;
   white-space: pre-wrap;
   font-size: 0.875rem;
-  box-shadow: ${shadows.inner}; // Removed shadow
-  color: ${colors.dark}; // Light text
+  box-shadow: ${shadows.inner};
+  color: ${colors.dark};
   width: 100%;
   box-sizing: border-box;
   overflow-x: auto;
@@ -332,8 +327,8 @@ export const resultsAreaStyles = css`
 
 // General page wrapper - Dark Theme
 export const pageWrapperStyles = css`
-  background-color: ${colors.white}; // Use main dark background
-  color: ${colors.dark}; // Default text color
+  background-color: ${colors.white};
+  color: ${colors.dark};
   min-height: 100vh;
   overflow-x: hidden;
   display: flex;
@@ -343,17 +338,15 @@ export const pageWrapperStyles = css`
 // Status Item - Dark Theme
 export const statusItemStyles = css`
   padding: 1rem;
-  background-color: ${colors.light}; // Use secondary dark bg
+  background-color: ${colors.light};
   border-radius: 8px;
-  box-shadow: ${shadows.sm}; // Removed shadow
+  box-shadow: ${shadows.sm};
   transition: none;
   border: 1px solid ${colors.border};
 
   &:hover {
     transform: none;
-    box-shadow: ${shadows.md}; // Removed shadow
-    // Optional: Slightly change border or background on hover for feedback
-    // border-color: ${colors.primary};
+    box-shadow: ${shadows.md};
   }
 `;
 
@@ -372,7 +365,7 @@ export const statusGridStyles = css`
 export const statusLabelStyles = css`
   font-weight: 500;
   margin-bottom: 0.5rem;
-  color: ${colors.grayDark}; // Use secondary light text
+  color: ${colors.grayDark};
 `;
 
 // Form Group - No theme change needed
@@ -387,7 +380,7 @@ export const formLabelStyles = css`
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: ${colors.dark}; // Use light text
+  color: ${colors.dark};
 `;
 
 // Form Row - No theme change needed
@@ -429,8 +422,8 @@ export const actionButtonsStyles = css`
 
 // Error message styles - Dark Theme
 export const errorMessageStyles = css`
-  background-color: rgba(230, 94, 106, 0.15); // Danger background tint
-  color: ${colors.danger}; // Danger text color
+  background-color: rgba(230, 94, 106, 0.15);
+  color: ${colors.danger};
   border: 1px solid ${colors.danger};
   padding: 12px 16px;
   border-radius: 6px;
@@ -444,14 +437,14 @@ export const resultsHeaderStyles = css`
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: ${colors.dark}; // Light text
+  color: ${colors.dark};
 `;
 
 // Key Status Indicators - Dark Theme
 export const statusIndicatorStyles = (status: boolean) => css`
   display: inline-block;
   padding: 4px 10px;
-  border-radius: 12px; // Pill shape
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
   margin-left: 12px;
@@ -459,7 +452,7 @@ export const statusIndicatorStyles = (status: boolean) => css`
   border: 1px solid ${status ? colors.success : colors.danger};
   background-color: ${status
     ? 'rgba(76, 201, 176, 0.1)'
-    : 'rgba(230, 94, 106, 0.1)'}; // Tinted background
+    : 'rgba(230, 94, 106, 0.1)'};
   color: ${status ? colors.success : colors.danger};
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -486,11 +479,11 @@ export const timestampStyles = css`
   margin-top: 5px;
   font-size: 14px;
   font-family: monospace;
-  background-color: ${colors.light}; // Use secondary dark bg
+  background-color: ${colors.light};
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid ${colors.border}; // Use dark border
-  color: ${colors.grayDark}; // Use secondary light text
+  border: 1px solid ${colors.border};
+  color: ${colors.grayDark};
   display: inline-block;
 `;
 
@@ -500,21 +493,21 @@ export const controlsStyles = css`
   justify-content: space-between;
   align-items: center;
   margin-top: 1rem;
-  background-color: ${colors.light}; // Use secondary dark bg
+  background-color: ${colors.light};
   padding: 0.75rem;
   border-radius: 6px;
-  border: 1px solid ${colors.border}; // Use dark border
+  border: 1px solid ${colors.border};
 `;
 
 // Link Styles - Dark Theme
 export const linkStyles = css`
-  color: ${colors.primary}; // Use primary accent
+  color: ${colors.primary};
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 
   &:hover {
-    color: ${colors.primaryLight}; // Lighter accent on hover
+    color: ${colors.primaryLight};
     text-decoration: underline;
   }
 `;
@@ -666,28 +659,52 @@ export const strikeFade = css`
   color: ${colors.danger};
   text-decoration: line-through;
   opacity: 1;
-  transition:
-    opacity 0.3s ease,
-    color 0.15s ease;
+  animation: strikeOutKey 300ms forwards;
   pointer-events: none;
 `;
 
 // Define keyframes globally
 export const globalAnimations = css`
   @keyframes fadeInKey {
+    0% {
+      opacity: 0;
+    }
     to {
       opacity: 1;
     }
+  }
+
+  @keyframes flashHighlightKey {
+    0% {
+      background: rgba(253, 216, 53, 0.7);
+    }
+    70% {
+      background: rgba(253, 216, 53, 0.2);
+    }
+    100% {
+      background: transparent;
+    }
+  }
+
+  @keyframes strikeOutKey {
+    to {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+  }
+
+  .highlight-subtitle {
+    background: transparent;
+    animation: flashHighlightKey 450ms ease-in-out;
+    outline: 2px solid #fdd835;
   }
 `;
 
 export const fadeIn = css`
   opacity: 0;
-  animation: fadeInKey 0.3s forwards; // Reference the global keyframe name
+  animation: fadeInKey 0.3s forwards;
 `;
 
-// Dummy class to ensure keyframes are not tree-shaken
 export const dummyKey = css`
-  /* never used – only here so fadeInKey survives minification */
   animation: fadeInKey 0s;
 `;

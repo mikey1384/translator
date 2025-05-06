@@ -23,6 +23,13 @@ export function scrollWhenReady(
 ): boolean {
   const el = subtitleRefs.current[id];
   if (el) {
+    if (!document.contains(el)) {
+      console.log(
+        `[review scrollWhenReady] Element ${id} detached before scroll.`
+      );
+      return false;
+    }
+
     console.log(
       `[review scrollWhenReady] Found element for ${id}, scrolling...`
     );
