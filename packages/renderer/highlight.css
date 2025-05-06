@@ -39,7 +39,7 @@
 }
 
 .strike-fade {
-  animation: strikeFade 300ms forwards;
+  animation: strikeFade 800ms forwards;
   color: var(--danger, #e65e6a);
   text-decoration: line-through;
   pointer-events: none;

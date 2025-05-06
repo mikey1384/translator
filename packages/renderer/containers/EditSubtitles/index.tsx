@@ -312,9 +312,7 @@ export function EditSubtitles({
             console.log(
               `[EditSubtitles] Executing scrollIntoView for forced index: ${index}`
             );
-            scrollPrecisely(targetElement);
-
-            flashSubtitle(targetElement);
+            scrollPrecisely(targetElement, false);
           } else {
             console.warn(
               `[EditSubtitles] Target element for index ${index} not found after forced render.`
@@ -703,6 +701,14 @@ const calcAffected = (
       (prevSubs[i].translation !== nextSubs[i].translation ||
         prevSubs[i].original !== nextSubs[i].original)
     ) {
+      console.log(
+        `%c[Δ %d]`,
+        'color:#f7559a;font-weight:bold',
+        '\nprev:',
+        prevSubs[i].translation ?? prevSubs[i].original,
+        '\nnext:',
+        nextSubs[i].translation ?? nextSubs[i].original
+      );
       affectedIndices.push(i);
       // Optionally track which batch reviewed this segment:
       // if (nextSubs[i]) nextSubs[i].reviewedInBatch = startIndex; // Or use a batch ID

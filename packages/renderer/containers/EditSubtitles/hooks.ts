@@ -7,18 +7,26 @@ const getHeaderOffset = () => {
   return header?.getBoundingClientRect().height ?? 0;
 };
 
+function smoothScrollTo(y: number) {
+  const root = (document.scrollingElement ||
+    document.documentElement) as HTMLElement;
+  root.style.scrollBehavior = 'smooth';
+  root.scrollTo({ top: y });
+  setTimeout(() => {
+    root.style.scrollBehavior = 'auto';
+  }, 600);
+}
+
 export function scrollPrecisely(
   el: HTMLElement,
-  smooth = true,
+  smooth = false,
   extraOffset = 0
 ) {
   const offset = getHeaderOffset() + extraOffset;
   const absoluteY = window.scrollY + el.getBoundingClientRect().top - offset;
 
   if (smooth) {
-    requestAnimationFrame(() =>
-      window.scrollTo({ top: absoluteY, behavior: 'smooth' })
-    );
+    smoothScrollTo(absoluteY);
   } else {
     window.scrollTo({ top: absoluteY, behavior: 'auto' });
   }
@@ -46,7 +54,7 @@ export function scrollWhenReady(
     );
     scrollPrecisely(el, smooth);
 
-    // Highlight logic moved here
+    // Flash EVERY time we scroll
     requestAnimationFrame(() => flashSubtitle(el));
 
     onSuccess?.();
@@ -139,7 +147,7 @@ export const useSubtitleNavigation = (
     if (el) {
       // Default scroll behavior for navigation should be instant ('auto')
       scrollPrecisely(el, false);
-
+      // Flash on every scroll, including 'Go to current subtitle'
       requestAnimationFrame(() => flashSubtitle(el));
     }
   }, [subtitles, subtitleRefs, videoPlayerRef]);

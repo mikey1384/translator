@@ -200,7 +200,11 @@ export default function SubtitleEditor({
         >
           <span
             className="strike-fade"
-            onAnimationEnd={() => actions.update({ _oldText: undefined })}
+            onAnimationEnd={() => {
+              requestAnimationFrame(() =>
+                actions.update({ _oldText: undefined })
+              );
+            }}
           >
             {temporaryAffectedText}
           </span>
