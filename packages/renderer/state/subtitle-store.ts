@@ -2,6 +2,7 @@ import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 import { SrtSegment } from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
+import { getNativePlayerInstance } from '../native-player.js';
 
 /* ------------------------------------------------------------------ */
 /* 📊  Store shape                                                     */
@@ -89,6 +90,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
 
         s.segments[newCue.id] = newCue; // Add to map
         s.order.splice(i + 1, 0, newCue.id); // Insert into order
+        s.order = [...s.order]; // Create new array reference to trigger re-render
 
         // Re-index affected segments
         for (let j = i + 1; j < s.order.length; j++) {
@@ -103,6 +105,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
 
         delete s.segments[id]; // Remove from map
         s.order.splice(i, 1); // Remove from order
+        s.order = [...s.order]; // Create new array reference to trigger re-render
 
         // Re-index remaining segments
         for (let j = i; j < s.order.length; j++) {
@@ -129,14 +132,14 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
     /* ---------- Player helpers ---------- */
     seek: id => {
       const cue = get().segments[id]; // Direct lookup
-      if (!cue) return;
-      const np = (window as any).nativePlayer?.instance;
-      if (np) np.currentTime = cue.start;
+      const np = getNativePlayerInstance();
+      if (!cue || !np) return;
+      np.currentTime = cue.start;
     },
 
     play: id => {
       const cue = get().segments[id]; // Direct lookup
-      const np = (window as any).nativePlayer?.instance;
+      const np = getNativePlayerInstance();
       if (!cue || !np) return;
 
       np.currentTime = cue.start;
@@ -162,7 +165,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
     },
 
     pause: () => {
-      (window as any).nativePlayer?.instance?.pause();
+      getNativePlayerInstance()?.pause();
       set({ playingId: null });
     },
   }))

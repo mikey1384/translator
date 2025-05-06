@@ -99,26 +99,21 @@ export default function NativeVideoPlayer({
 
   const onReadyCalledRef = useRef<boolean>(false);
 
-  // Updated handlePlayerClick to toggle play/pause
   const handlePlayerClick = useCallback(() => {
     if (!videoRef?.current) return;
     const video = videoRef?.current;
 
-    // Clear any existing timeout
     if (indicatorTimeoutRef?.current) {
       clearTimeout(indicatorTimeoutRef?.current);
     }
 
-    // Toggle play/pause (indicator type set by event listeners now)
     if (video.paused) {
       video.play().catch(err => console.error('Play error:', err));
     } else {
       video.pause();
     }
 
-    // Show ephemeral overlay (regardless of type initially, event listener sets it)
     setShowIndicator(true);
-    // Hide again after 600ms
     indicatorTimeoutRef.current = setTimeout(() => {
       setShowIndicator(false);
     }, 600);
@@ -150,10 +145,9 @@ export default function NativeVideoPlayer({
           video.currentTime = Math.min(time + 10, duration);
           break;
 
-        /* SPACE  ── play / pause */
         case ' ':
         case 'Space':
-        case 'Spacebar': // legacy
+        case 'Spacebar':
           if (video.paused) {
             video.play().catch(console.error);
           } else {
@@ -162,17 +156,15 @@ export default function NativeVideoPlayer({
           break;
 
         default:
-          return; // we don’t care → let it bubble
+          return;
       }
 
-      /* ← we handled it: block further handling */
-      event.preventDefault(); // stops page-scroll
-      event.stopPropagation(); // stops the “expand” shortcut above us
+      event.preventDefault();
+      event.stopPropagation();
     },
     [videoRef]
   );
 
-  // When video URL changes, check if it's a file:// URL
   useEffect(() => {
     setIsFileUrlVideo(videoUrl.startsWith('file://'));
   }, [videoUrl]);
@@ -181,7 +173,6 @@ export default function NativeVideoPlayer({
     const videoElement = videoRef?.current;
     if (!videoElement) return;
 
-    // Reset the flag when the video URL changes
     onReadyCalledRef.current = false;
 
     const handleError = (_e: Event) => {
@@ -192,10 +183,7 @@ export default function NativeVideoPlayer({
       } else {
         setErrorMessage('Unknown video error');
       }
-      // Ensure player isn't marked as ready globally on error
       if (getNativePlayerInstance() === videoElement) {
-        // Cannot directly set isReady, use setNativePlayerInstance if needed
-        // For now, just logging or handling the error state is typical
         console.error(
           'Native player error encountered, associated instance:',
           videoElement

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSubActions } from '../state/subtitle-store';
-import { SrtSegment } from '@shared-types/app';
+import type { SrtSegment } from '@shared-types/app';
 
 /**
  * Provides memoized, row-scoped actions for a specific subtitle ID.
@@ -8,19 +8,45 @@ import { SrtSegment } from '@shared-types/app';
  * @returns A stable object containing actions bound to the specified ID.
  */
 export function useRowActions(id: string) {
-  const global = useSubActions();
+  const { update, remove, insertAfter, shift, seek, play, pause, setActive } =
+    useSubActions();
 
   return useMemo(
     () => ({
-      update: (p: Partial<SrtSegment>) => global.update(id, p),
-      remove: () => global.remove(id),
-      insertAfter: () => global.insertAfter(id),
-      shift: (secs: number) => global.shift(id, secs),
-      seek: () => global.seek(id),
-      play: () => global.play(id),
-      pause: global.pause,
-      setActive: () => global.setActive(id),
+      update: (patch: Partial<SrtSegment>) => {
+        console.log('UPDATE called for id:', id);
+        return update(id, patch);
+      },
+      shift: (secs: number) => {
+        console.log('SHIFT called for id:', id, 'with seconds:', secs);
+        return shift(id, secs);
+      },
+
+      /** structural ops */
+      remove: () => {
+        console.log('REMOVE called for id:', id);
+        return remove(id);
+      },
+      insertAfter: () => {
+        console.log('INSERT AFTER called for id:', id);
+        return insertAfter(id);
+      },
+
+      /** player helpers */
+      seek: () => {
+        console.log('SEEK called for id:', id);
+        return seek(id);
+      },
+      play: () => {
+        console.log('PLAY called for id:', id);
+        return play(id);
+      },
+      pause, // no id needed
+      setActive: () => {
+        console.log('SET ACTIVE called for id:', id);
+        return setActive(id);
+      },
     }),
-    [global, id]
+    [id, update, remove, insertAfter, shift, seek, play, pause, setActive]
   );
 }
