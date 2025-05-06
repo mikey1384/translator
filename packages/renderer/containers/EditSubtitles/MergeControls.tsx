@@ -5,7 +5,6 @@ import { colors } from '../../styles.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 import { useTranslation } from 'react-i18next';
 
-// Define local styles copied from EditSubtitles/index.tsx
 const mergeOptionsStyles = css`
   display: flex;
   align-items: center;
@@ -76,6 +75,7 @@ interface MergeControlsProps {
   isMergingInProgress: boolean;
   videoFileExists: boolean;
   subtitlesExist: boolean;
+  isTranslationInProgress?: boolean;
 }
 
 function MergeControls({
@@ -87,6 +87,7 @@ function MergeControls({
   isMergingInProgress,
   videoFileExists,
   subtitlesExist,
+  isTranslationInProgress,
 }: MergeControlsProps) {
   const { t } = useTranslation();
 
@@ -134,10 +135,9 @@ function MergeControls({
         value={mergeFontSize || ''} // Handle potential 0 or NaN
         onChange={handleFontSizeChange}
         onBlur={handleFontSizeBlur}
-        disabled={isMergingInProgress}
+        disabled={isMergingInProgress || isTranslationInProgress}
       />
 
-      {/* Style Preset Select */}
       <label className={fontSizeLabelStyles} htmlFor="mergeStylePresetSelect">
         {t('editSubtitles.mergeControls.styleLabel')}
       </label>
@@ -148,7 +148,7 @@ function MergeControls({
         onChange={e =>
           setMergeStylePreset(e.target.value as SubtitleStylePresetKey)
         }
-        disabled={isMergingInProgress}
+        disabled={isMergingInProgress || isTranslationInProgress}
       >
         {stylePresetOrder.map(key => (
           <option key={key} value={key}>
@@ -157,10 +157,14 @@ function MergeControls({
         ))}
       </select>
 
-      {/* Merge Button */}
       <Button
         onClick={handleMergeVideoWithSubtitles}
-        disabled={!videoFileExists || !subtitlesExist || isMergingInProgress}
+        disabled={
+          !videoFileExists ||
+          !subtitlesExist ||
+          isMergingInProgress ||
+          isTranslationInProgress
+        }
         isLoading={isMergingInProgress}
         className={mergeButtonStyle}
       >

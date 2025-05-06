@@ -39,6 +39,7 @@ export interface EditSubtitlesProps {
   subtitles?: SrtSegment[];
   videoPlayerRef?: any;
   isMergingInProgress?: boolean;
+  isTranslationInProgress?: boolean;
   setMergeStage: React.Dispatch<React.SetStateAction<string>>;
   onSetMergeOperationId: Dispatch<SetStateAction<string | null>>;
   editorRef?: React.RefObject<{
@@ -75,6 +76,7 @@ export function EditSubtitles({
   subtitles: subtitlesProp,
   videoPlayerRef,
   isMergingInProgress: isMergingInProgressProp,
+  isTranslationInProgress,
   onSelectVideoClick,
   setMergeStage,
   onSetMergeOperationId,
@@ -488,8 +490,9 @@ export function EditSubtitles({
             setMergeStylePreset={setMergeStylePreset}
             handleMergeVideoWithSubtitles={handleMergeVideoWithSubtitles}
             isMergingInProgress={isMergingInProgressProp || false}
-            videoFileExists={!!videoFile}
+            videoFileExists={!!videoFile || !!videoFilePath}
             subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)}
+            isTranslationInProgress={isTranslationInProgress}
           />
         </div>
       )}

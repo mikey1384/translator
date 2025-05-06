@@ -43,6 +43,7 @@ export default function GenerateSubtitles({
   urlInput,
   videoFile,
   videoFilePath,
+  isMergingInProgress,
 }: {
   apiKeyStatus: ApiKeyStatus;
   didDownloadFromUrl: boolean;
@@ -70,6 +71,7 @@ export default function GenerateSubtitles({
   urlInput: string;
   videoFile: File | null;
   videoFilePath?: string | null;
+  isMergingInProgress: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -195,6 +197,7 @@ export default function GenerateSubtitles({
               videoFilePath={videoFilePath}
               isProcessingUrl={isProcessingUrl}
               handleGenerateSubtitles={onGenerateSubtitles}
+              isMergingInProgress={isMergingInProgress}
             />
           )}
         </>

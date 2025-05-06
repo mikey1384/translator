@@ -92,6 +92,7 @@ interface GenerateSubtitlesPanelProps {
   videoFilePath?: string | null;
   isProcessingUrl: boolean;
   handleGenerateSubtitles: () => void;
+  isMergingInProgress: boolean;
 }
 
 /**
@@ -107,6 +108,7 @@ export default function GenerateSubtitlesPanel({
   videoFilePath,
   isProcessingUrl,
   handleGenerateSubtitles,
+  isMergingInProgress,
 }: GenerateSubtitlesPanelProps) {
   const { t } = useTranslation();
 
@@ -137,7 +139,7 @@ export default function GenerateSubtitlesPanel({
           value={targetLanguage}
           onChange={e => setTargetLanguage(e.target.value)}
           className={selectStyles}
-          disabled={isGenerating || isProcessingUrl}
+          disabled={isGenerating || isProcessingUrl || isMergingInProgress}
         >
           {baseLanguageOptions.map(lang => (
             <option key={lang.value} value={lang.value}>
@@ -186,7 +188,10 @@ export default function GenerateSubtitlesPanel({
         <Button
           onClick={handleGenerateSubtitles}
           disabled={
-            (!videoFile && !videoFilePath) || isGenerating || isProcessingUrl
+            (!videoFile && !videoFilePath) ||
+            isGenerating ||
+            isProcessingUrl ||
+            isMergingInProgress
           }
           size="md"
           variant="primary"

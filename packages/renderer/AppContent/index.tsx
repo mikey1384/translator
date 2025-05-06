@@ -738,6 +738,7 @@ function AppContent() {
                 urlInput={urlInput}
                 videoFile={videoFile}
                 videoFilePath={videoFilePath}
+                isMergingInProgress={isMergingInProgress}
               />
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">
@@ -772,6 +773,7 @@ function AppContent() {
                   setMergeFontSize={setMergeFontSize}
                   mergeStylePreset={mergeStylePreset}
                   setMergeStylePreset={setMergeStylePreset}
+                  isTranslationInProgress={isTranslationInProgress}
                 />
               </div>
             </div>
