@@ -4,6 +4,7 @@ import App from './AppContent/index.js';
 import { Global } from '@emotion/react';
 import { globalAnimations } from './styles';
 import './i18n.js';
+import './highlight.css';
 
 let root: ReturnType<typeof createRoot> | null = null;
 

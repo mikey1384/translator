@@ -676,13 +676,16 @@ export const globalAnimations = css`
 
   @keyframes flashHighlightKey {
     0% {
-      background: rgba(253, 216, 53, 0.7);
+      background-color: rgba(253, 216, 53, 0.7);
+      outline-color: #fdd835;
     }
     70% {
-      background: rgba(253, 216, 53, 0.2);
+      background-color: rgba(253, 216, 53, 0.3);
+      outline-color: #fdd835;
     }
     100% {
-      background: transparent;
+      background-color: transparent;
+      outline-color: transparent;
     }
   }
 
@@ -691,12 +694,6 @@ export const globalAnimations = css`
       opacity: 0;
       transform: translateX(-8px);
     }
-  }
-
-  .highlight-subtitle {
-    background: transparent;
-    animation: flashHighlightKey 450ms ease-in-out;
-    outline: 2px solid #fdd835;
   }
 `;
 

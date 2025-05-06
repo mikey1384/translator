@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { SrtSegment } from '@shared-types/app';
+import { flashSubtitle } from '../../utils/flashSubtitle';
 
 const getHeaderOffset = () => {
   const header = document.querySelector('.fixed-video-container');
@@ -36,13 +37,7 @@ export function scrollWhenReady(
     scrollPrecisely(el, smooth);
 
     // Highlight logic moved here
-    requestAnimationFrame(() => {
-      el.classList.remove('highlight-subtitle'); // Ensure clean state
-      el.classList.add('highlight-subtitle');
-      setTimeout(() => {
-        el.classList.remove('highlight-subtitle');
-      }, 2000);
-    });
+    requestAnimationFrame(() => flashSubtitle(el));
 
     onSuccess?.();
 
@@ -135,12 +130,7 @@ export const useSubtitleNavigation = (
       // Default scroll behavior for navigation should be instant ('auto')
       scrollPrecisely(el, false);
 
-      requestAnimationFrame(() => {
-        el.classList.add('highlight-subtitle');
-        setTimeout(() => {
-          el.classList.remove('highlight-subtitle');
-        }, 2000);
-      });
+      requestAnimationFrame(() => flashSubtitle(el));
     }
   }, [subtitles, subtitleRefs, videoPlayerRef]);
 

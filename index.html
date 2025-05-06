@@ -91,6 +91,31 @@
       <div class="loading-text">Loading application...</div>
     </div>
     <div id="root"></div>
+    <style id="highlight-style">
+      @keyframes flashHighlightKey {
+        0% {
+          background: rgba(253, 216, 53, 0.7);
+          outline-color: #fdd835;
+        }
+        70% {
+          background: rgba(253, 216, 53, 0.3);
+          outline-color: #fdd835;
+        }
+        100% {
+          background: transparent;
+          outline-color: transparent;
+        }
+      }
+      .highlight-subtitle {
+        animation: flashHighlightKey 0.6s ease-in-out;
+        background: rgba(253, 216, 53, 0.7) !important;
+        outline: 3px solid #fdd835 !important;
+        position: relative;
+        z-index: 9999;
+        overflow: visible;
+        pointer-events: none;
+      }
+    </style>
 
     <script src="./index.js" type="module"></script>
     <script>
@@ -99,6 +124,24 @@
           document.body.classList.add('loaded');
         }, 1000);
       });
+    </script>
+    <!--  Tiny helper to flash an element ------------------->
+    <script>
+      // Re-triggers the animation every time it's called
+      function flashSubtitle(node) {
+        node.classList.remove('highlight-subtitle');
+        void node.offsetWidth; // force reflow
+        node.classList.add('highlight-subtitle');
+      }
+
+      // DEMO: wait until the subtitle editor is on the DOM, then flash it
+      window.addEventListener('DOMContentLoaded', () => {
+        const el = document.querySelector('.subtitle-editor-container div');
+        if (el) flashSubtitle(el);
+      });
+
+      // You can export flashSubtitle and call it anywhere in your React app:
+      // import { flashSubtitle } from './flash';
     </script>
   </body>
 </html>

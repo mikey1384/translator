@@ -33,6 +33,7 @@ import FileInputButton from '../../components/FileInputButton.js';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { useSubStore } from '../../state/subtitle-store';
 import { scrollPrecisely, scrollWhenReady } from './hooks';
+import { flashSubtitle } from '../../utils/flashSubtitle';
 
 export interface EditSubtitlesProps {
   isAudioOnly: boolean;
@@ -108,27 +109,6 @@ export function EditSubtitles({
   const loadSubtitlesIntoStore = useSubStore(s => s.load);
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
   const prevSubsRef = useRef<SrtSegment[]>([]);
-
-  const highlight = useMemo(
-    () =>
-      debounce((el: HTMLElement) => {
-        if (!el) return;
-        el.classList.remove('highlight-subtitle');
-        el.classList.add('highlight-subtitle');
-        setTimeout(() => {
-          if (el && el.classList.contains('highlight-subtitle')) {
-            el.classList.remove('highlight-subtitle');
-          }
-        }, 2000);
-      }, 100),
-    []
-  );
-
-  useEffect(() => {
-    return () => {
-      highlight.cancel();
-    };
-  }, [highlight]); // Depend on highlight instance
 
   console.log('[review] prop:', reviewedBatchStartIndex);
 
@@ -331,7 +311,7 @@ export function EditSubtitles({
             );
             scrollPrecisely(targetElement);
 
-            highlight(targetElement);
+            flashSubtitle(targetElement);
           } else {
             console.warn(
               `[EditSubtitles] Target element for index ${index} not found after forced render.`

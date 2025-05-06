@@ -1,0 +1,24 @@
+@keyframes flashHighlight {
+  0% {
+    background: rgba(253, 216, 53, 0.7);
+    outline-color: #fdd835;
+  }
+  70% {
+    background: rgba(253, 216, 53, 0.3);
+    outline-color: #fdd835;
+  }
+  100% {
+    background: transparent;
+    outline-color: transparent;
+  }
+}
+
+.highlight-subtitle {
+  animation: flashHighlight 0.6s ease-in-out;
+  background: rgba(253, 216, 53, 0.7) !important;
+  outline: 3px solid #fdd835 !important;
+  position: relative;
+  z-index: 9999;
+  overflow: visible;
+  pointer-events: none;
+}
