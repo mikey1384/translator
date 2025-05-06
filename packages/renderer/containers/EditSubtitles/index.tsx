@@ -30,7 +30,7 @@ import { colors } from '../../styles.js';
 import FileInputButton from '../../components/FileInputButton.js';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { useSubStore } from '../../state/subtitle-store';
-import { scrollPrecisely } from './hooks';
+import { scrollPrecisely, scrollWhenReady } from './hooks';
 
 export interface EditSubtitlesProps {
   isAudioOnly: boolean;
@@ -66,6 +66,7 @@ export interface EditSubtitlesProps {
   setMergeFontSize: (value: number) => void;
   mergeStylePreset: SubtitleStylePresetKey;
   setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
+  onSetReviewIndex?: (index: number | null) => void;
 }
 
 export function EditSubtitles({
@@ -97,11 +98,14 @@ export function EditSubtitles({
   setMergeFontSize,
   mergeStylePreset,
   setMergeStylePreset,
+  onSetReviewIndex,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const loadSubtitlesIntoStore = useSubStore(s => s.load);
+
+  console.log('[review] prop:', reviewedBatchStartIndex);
 
   useEffect(() => {
     console.log(
@@ -221,51 +225,35 @@ export function EditSubtitles({
     ) {
       if (subtitlesProp && reviewedBatchStartIndex < subtitlesProp.length) {
         const targetSubtitle = subtitlesProp[reviewedBatchStartIndex];
-        const targetElement = subtitleRefs?.current[targetSubtitle.id];
-        if (targetElement) {
+        const targetId = targetSubtitle.id;
+        console.log(
+          `[review] Effect fired for index ${reviewedBatchStartIndex}, targetId: ${targetId}`
+        );
+
+        // Define the success callback to reset the index
+        const handleScrollSuccess = () => {
           console.log(
-            `[EditSubtitles] Scrolling to reviewed index: ${reviewedBatchStartIndex}`
+            `[review] Scroll succeeded for index ${reviewedBatchStartIndex}, resetting.`
           );
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          onSetReviewIndex?.(null);
+        };
 
-          const REVIEW_BATCH_SIZE = 50;
-          const endIndex = Math.min(
-            reviewedBatchStartIndex + REVIEW_BATCH_SIZE,
-            subtitlesProp.length
-          );
-
-          Object.values(subtitleRefs?.current || {}).forEach(element => {
-            if (element) {
-              element.classList.remove('highlight-subtitle');
-            }
-          });
-
-          for (let i = reviewedBatchStartIndex; i < endIndex; i++) {
-            const subtitle = subtitlesProp[i];
-            const element = subtitleRefs?.current[subtitle.id];
-            if (element) {
-              setTimeout(
-                () => {
-                  element.classList.add('highlight-subtitle');
-                },
-                (i - reviewedBatchStartIndex) * 100
-              );
-
-              setTimeout(
-                () => {
-                  element.classList.remove('highlight-subtitle');
-                },
-                2000 + (i - reviewedBatchStartIndex) * 100
-              );
-            }
-          }
-        }
+        // Call scrollWhenReady, passing the success handler
+        scrollWhenReady(
+          targetId,
+          subtitleRefs,
+          true,
+          0,
+          30,
+          handleScrollSuccess
+        );
       } else {
         console.warn(
           `[EditSubtitles] reviewedBatchStartIndex ${reviewedBatchStartIndex} is out of bounds.`
         );
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewedBatchStartIndex, subtitlesProp]);
 
   const activePlayer =

@@ -6,11 +6,54 @@ const getHeaderOffset = () => {
   return header?.getBoundingClientRect().height ?? 0;
 };
 
-export function scrollPrecisely(el: HTMLElement) {
+export function scrollPrecisely(el: HTMLElement, smooth = false) {
   const offset = getHeaderOffset();
   const absoluteY = window.scrollY + el.getBoundingClientRect().top - offset;
 
-  window.scrollTo({ top: absoluteY, behavior: 'auto' });
+  window.scrollTo({ top: absoluteY, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+export function scrollWhenReady(
+  id: string,
+  subtitleRefs: React.RefObject<Record<string, HTMLElement | null>>,
+  smooth = true,
+  tries = 0,
+  maxTries = 30,
+  onSuccess?: () => void
+): boolean {
+  const el = subtitleRefs.current[id];
+  if (el) {
+    console.log(
+      `[review scrollWhenReady] Found element for ${id}, scrolling...`
+    );
+    scrollPrecisely(el, smooth);
+
+    // Highlight logic moved here
+    requestAnimationFrame(() => {
+      el.classList.remove('highlight-subtitle'); // Ensure clean state
+      el.classList.add('highlight-subtitle');
+      setTimeout(() => {
+        el.classList.remove('highlight-subtitle');
+      }, 2000);
+    });
+
+    onSuccess?.();
+
+    return true; // Indicate success
+  }
+
+  if (tries < maxTries) {
+    console.log(
+      `[review scrollWhenReady] Waiting for element ${id} (try ${tries + 1})`
+    );
+    requestAnimationFrame(() =>
+      scrollWhenReady(id, subtitleRefs, smooth, tries + 1, maxTries, onSuccess)
+    );
+    return false; // Indicate still trying
+  } else {
+    console.warn(`[review scrollWhenReady] Gave up waiting for refs of ${id}`);
+    return false; // Indicate failure
+  }
 }
 
 interface FocusedInput {
@@ -82,7 +125,8 @@ export const useSubtitleNavigation = (
 
     const el = subtitleRefs.current[subtitles[currentSubtitleIndex].id];
     if (el) {
-      scrollPrecisely(el);
+      // Default scroll behavior for navigation should be instant ('auto')
+      scrollPrecisely(el, false);
 
       requestAnimationFrame(() => {
         el.classList.add('highlight-subtitle');
