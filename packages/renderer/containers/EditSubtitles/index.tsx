@@ -68,6 +68,7 @@ export interface EditSubtitlesProps {
   setMergeFontSize: (value: number) => void;
   mergeStylePreset: SubtitleStylePresetKey;
   setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
+  showOriginalText: boolean;
 }
 
 export function EditSubtitles({
@@ -100,6 +101,7 @@ export function EditSubtitles({
   setMergeFontSize,
   mergeStylePreset,
   setMergeStylePreset,
+  showOriginalText,
 }: EditSubtitlesProps) {
   const { t } = useTranslation();
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(true);
@@ -566,9 +568,10 @@ export function EditSubtitles({
     onSetMergeOperationId(operationId);
 
     try {
+      const mode = showOriginalText ? 'dual' : 'translation';
       const srtContent = buildSrt({
         segments: subtitlesProp,
-        mode: 'dual',
+        mode,
       });
       const videoDuration = videoDurationProp ?? 0;
       const videoWidth = isAudioOnly ? 1280 : (videoWidthProp ?? 1280);

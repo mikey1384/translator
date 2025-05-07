@@ -743,6 +743,7 @@ function AppContent() {
 
               <div ref={editSubtitlesRef} id="edit-subtitles-section">
                 <EditSubtitles
+                  showOriginalText={showOriginalText}
                   isAudioOnly={isAudioOnly}
                   videoFile={videoFile}
                   videoFilePath={videoFilePath}

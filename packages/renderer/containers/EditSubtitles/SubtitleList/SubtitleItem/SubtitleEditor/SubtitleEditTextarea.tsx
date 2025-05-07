@@ -42,35 +42,24 @@ export default function SubtitleEditTextarea({
   const highlightRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Keep local draft state in sync with external prop (when store changes)
   useEffect(() => {
     setDraft(value);
   }, [value]);
 
-  // Generate the highlighting markup each render based on draft
   const highlightedHtml = getHighlightedHtml(draft, searchTerm);
 
-  // Handle user input: update local draft only
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDraft(e.target.value);
-    // Remove direct call to external onChange here
+    const next = e.target.value;
+    setDraft(next);
+    onChange(next); // write-through
   };
 
-  // Call external onChange (update store) on blur
-  const handleBlur = () => {
-    onChange(draft);
-  };
-
-  // Keep highlight layer scrolled to match the textarea
   const handleScroll = useCallback(() => {
     if (!highlightRef?.current || !textareaRef?.current) return;
     highlightRef.current.scrollTop = textareaRef?.current.scrollTop;
     highlightRef.current.scrollLeft = textareaRef?.current.scrollLeft;
   }, []);
 
-  // Removed useEffect for manual event listener - relying on onScroll prop
-
-  // Common styles for both overlay and textarea
   const commonStyles = css`
     padding: 8px;
     font-size: 14px;
@@ -119,14 +108,11 @@ export default function SubtitleEditTextarea({
         min-height: calc(${rows} * 1.4em + 16px);
       `}
     >
-      {/* Highlight layer */}
       <div
         ref={highlightRef}
         className={highlightStyles}
         dangerouslySetInnerHTML={{ __html: highlightedHtml }}
       />
-
-      {/* Actual editable textarea */}
       <textarea
         ref={textareaRef}
         className={textareaStyles}
@@ -134,7 +120,6 @@ export default function SubtitleEditTextarea({
         rows={rows}
         value={draft}
         onChange={handleInput}
-        onBlur={handleBlur}
         onScroll={handleScroll}
       />
     </div>

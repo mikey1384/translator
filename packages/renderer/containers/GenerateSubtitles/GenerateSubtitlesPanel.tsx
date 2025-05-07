@@ -172,7 +172,8 @@ export default function GenerateSubtitlesPanel({
           >
             <input
               type="checkbox"
-              checked={showOriginalText || targetLanguage === 'original'}
+              checked={showOriginalText}
+              disabled={targetLanguage === 'original'}
               onChange={e => onShowOriginalTextChange(e.target.checked)}
               className={css`
                 margin-right: 6px;
