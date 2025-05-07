@@ -1207,8 +1207,7 @@ function AppContent() {
       const result = await subtitleRendererClient.renderSubtitles(options);
 
       if (result.success && result.outputPath) {
-        setMergeStage('Overlay video saved successfully!');
-        setTimeout(() => setIsMergingInProgress(false), 3500);
+        setTimeout(() => setIsMergingInProgress(false), 2500);
         return { success: true, outputPath: result.outputPath };
       } else {
         throw new Error(result.error || 'Overlay generation or save failed.');
