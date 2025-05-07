@@ -1173,9 +1173,11 @@ function AppContent() {
           );
         }
       } else {
-        setError(
-          'No subtitles were generated. This could be due to a language not being supported, audio quality, internet connection issues, or the video being too short.'
-        );
+        if (!result.cancelled) {
+          setError(
+            'No subtitles were generated. This could be due to a language not being supported, audio quality, internet connection issues, or the video being too short.'
+          );
+        }
       }
     } catch (err: any) {
       console.error('Error generating subtitles:', err);
