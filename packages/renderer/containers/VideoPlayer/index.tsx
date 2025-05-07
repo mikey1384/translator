@@ -3,11 +3,11 @@ import { css } from '@emotion/css';
 import NativeVideoPlayer from './NativeVideoPlayer.js';
 import SideMenu from './SideMenu.js';
 import { colors } from '../../styles.js';
-import Button from '../Button.js';
+import Button from '../../components/Button.js';
 import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
-import { PROGRESS_BAR_HEIGHT } from '../ProgressAreas/ProgressArea.js';
+import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea.js';
 
 const SCROLL_IGNORE_DURATION = 2000;
 

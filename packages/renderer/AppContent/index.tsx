@@ -7,7 +7,7 @@ import {
 } from 'react';
 import BackToTopButton from '../components/BackToTopButton.js';
 import SettingsPage from '../containers/SettingsPage.js';
-import VideoPlayer from '../components/VideoPlayer/index.js';
+import VideoPlayer from '../containers/VideoPlayer/index.js';
 import { EditSubtitles } from '../containers/EditSubtitles/index.js';
 import GenerateSubtitles from '../containers/GenerateSubtitles/index.js';
 import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea.js';
