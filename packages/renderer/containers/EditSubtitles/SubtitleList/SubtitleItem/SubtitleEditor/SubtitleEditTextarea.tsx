@@ -10,7 +10,7 @@ interface SubtitleEditTextareaProps {
 }
 
 function escapeRegExp(text: string) {
-  return text.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
+  return text.replace(/[.*+?^${}()|[\\]]/g, '\\$&');
 }
 
 function getHighlightedHtml(text: string, searchTerm: string): string {
@@ -38,21 +38,70 @@ export default function SubtitleEditTextarea({
   rows = 5,
   placeholder = '',
 }: SubtitleEditTextareaProps) {
-  const [draft, setDraft] = useState(value);
-  const highlightRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const draftRef = useRef(value);
+  const idleTimer = useRef<NodeJS.Timeout | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+
+  const [highlightHtml, setHighlightHtml] = useState(() =>
+    getHighlightedHtml(value, searchTerm)
+  );
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    setDraft(value);
+    draftRef.current = value;
+    if (textareaRef.current && textareaRef.current.value !== value) {
+      textareaRef.current.value = value;
+    }
   }, [value]);
 
-  const highlightedHtml = getHighlightedHtml(draft, searchTerm);
+  useEffect(() => {
+    setHighlightHtml(getHighlightedHtml(draftRef.current, searchTerm));
+  }, [searchTerm]);
 
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const next = e.target.value;
-    setDraft(next);
-    onChange(next); // write-through
-  };
+  useEffect(() => {
+    if (!highlightRef.current || !textareaRef.current) return;
+    highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+    highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+  }, [highlightHtml]);
+
+  const commit = useCallback(() => {
+    onChange(draftRef.current);
+  }, [onChange]);
+
+  const refreshHighlight = useCallback(() => {
+    if (rafIdRef.current) return;
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      setHighlightHtml(getHighlightedHtml(draftRef.current, searchTerm));
+    });
+  }, [searchTerm]);
+
+  const handleInput = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      draftRef.current = e.target.value;
+      setIsTyping(true);
+      if (idleTimer.current) {
+        clearTimeout(idleTimer.current);
+      }
+      idleTimer.current = setTimeout(() => {
+        setIsTyping(false);
+        refreshHighlight();
+        commit();
+      }, 200);
+    },
+    [commit, refreshHighlight]
+  );
+
+  const handleBlur = useCallback(() => {
+    if (idleTimer.current) {
+      clearTimeout(idleTimer.current);
+    }
+    setIsTyping(false);
+    refreshHighlight();
+    commit();
+  }, [commit, refreshHighlight]);
 
   const handleScroll = useCallback(() => {
     if (!highlightRef?.current || !textareaRef?.current) return;
@@ -60,20 +109,29 @@ export default function SubtitleEditTextarea({
     highlightRef.current.scrollLeft = textareaRef?.current.scrollLeft;
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (idleTimer.current) {
+        clearTimeout(idleTimer.current);
+      }
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, []);
+
   const commonStyles = css`
     padding: 8px;
     font-size: 14px;
     line-height: 1.4;
-    font-family: monospace; // Use monospace for better alignment
+    font-family: monospace;
     box-sizing: border-box;
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow: auto;
     width: 100%;
-    /* Approx height formula for "rows" */
-    min-height: calc(
-      ${rows} * 1.4em + 16px
-    ); // 1.4em line height + 2 * 8px padding
+    min-height: calc(${rows} * 1.4em + 16px);
   `;
 
   const highlightStyles = css`
@@ -83,20 +141,19 @@ export default function SubtitleEditTextarea({
     left: 0;
     height: 100%;
     pointer-events: none;
-    /* Show text in the desired color (e.g., white for dark theme) */
-    color: #fff; // Changed from #BBB to the primary text color
-    border: 1px solid transparent; // Overlay shouldn't have its own border
+    color: #fff;
+    border: 1px solid transparent;
     z-index: 1;
   `;
 
-  const textareaStyles = css`
+  const textareaStyles = (typing: boolean) => css`
     ${commonStyles}
     position: relative;
     background: transparent;
     resize: none;
-    border: 1px solid #555; // Keep the border for the interactive element
-    color: transparent; // Make the actual textarea text invisible
-    caret-color: #fff; // Ensure the caret is visible on dark background
+    border: 1px solid #555;
+    color: ${typing ? '#fff' : 'transparent'};
+    caret-color: #fff;
     z-index: 2;
   `;
 
@@ -111,15 +168,16 @@ export default function SubtitleEditTextarea({
       <div
         ref={highlightRef}
         className={highlightStyles}
-        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        dangerouslySetInnerHTML={{ __html: highlightHtml }}
       />
       <textarea
         ref={textareaRef}
-        className={textareaStyles}
+        className={textareaStyles(isTyping)}
         placeholder={placeholder}
         rows={rows}
-        value={draft}
+        defaultValue={value}
         onChange={handleInput}
+        onBlur={handleBlur}
         onScroll={handleScroll}
       />
     </div>

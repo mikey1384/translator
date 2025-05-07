@@ -1,42 +1,98 @@
+import { ChildProcess } from 'child_process';
 import { execa } from 'execa';
 import log from 'electron-log'; // Import log
 
-// Define the type for the download process object using ReturnType
-export type DownloadProcessType = ReturnType<typeof execa>;
+export type DownloadProcess = ReturnType<typeof execa>;
+export type RenderJob = {
+  processes: ChildProcess[]; // ffmpeg, etc.
+  browser?: { close: () => Promise<void> };
+};
+export type SubtitleJob = AbortController;
 
-// Map to store active yt-dlp download processes, keyed by operationId
-const downloadProcesses = new Map<string, DownloadProcessType>();
+type RegistryEntry =
+  | { kind: 'download'; handle: DownloadProcess }
+  | { kind: 'subtitle'; handle: SubtitleJob }
+  | { kind: 'render'; handle: RenderJob };
 
-// Export functions to manage the map, adding logging
-export function addDownloadProcess(id: string, process: DownloadProcessType) {
-  log.info(`[active-processes] Setting process for ID: ${id}`);
-  downloadProcesses.set(id, process);
+const registry = new Map<string, RegistryEntry>();
+
+/**
+ * Add a download process to the registry.
+ * @param id - The unique identifier for the download process.
+ * @param proc - The download process handle.
+ */
+export function addDownload(id: string, proc: DownloadProcess) {
+  log.info(`[registry] add download ${id}`);
+  registry.set(id, { kind: 'download', handle: proc });
 }
 
-export function getDownloadProcess(
-  id: string
-): DownloadProcessType | undefined {
-  const found = downloadProcesses.has(id);
-  log.info(`[active-processes] Getting process for ID: ${id}. Found: ${found}`);
-  return downloadProcesses.get(id);
+/**
+ * Add a subtitle job to the registry.
+ * @param id - The unique identifier for the subtitle job.
+ * @param ctrl - The subtitle job controller.
+ */
+export function addSubtitle(id: string, ctrl: SubtitleJob) {
+  log.info(`[registry] add subtitle ${id}`);
+  registry.set(id, { kind: 'subtitle', handle: ctrl });
 }
 
-export function hasDownloadProcess(id: string): boolean {
-  const found = downloadProcesses.has(id);
-  log.info(
-    `[active-processes] Checking process for ID: ${id}. Found: ${found}`
-  );
-  return found;
+/**
+ * Add a render job to the registry.
+ * @param id - The unique identifier for the render job.
+ * @param job - The render job details.
+ */
+export function addRender(id: string, job: RenderJob) {
+  log.info(`[registry] add render ${id}`);
+  registry.set(id, { kind: 'render', handle: job });
 }
 
-export function removeDownloadProcess(id: string): boolean {
-  const existed = downloadProcesses.has(id);
-  const deleted = downloadProcesses.delete(id);
-  log.info(
-    `[active-processes] Deleting process for ID: ${id}. Existed: ${existed}, Deleted: ${deleted}`
-  );
-  return deleted;
+/**
+ * Remove a process from the registry.
+ * @param id - The ID of the process to remove.
+ * @returns True if the process was removed, false if it was not found.
+ */
+export function finish(id: string): boolean {
+  return registry.delete(id);
 }
 
-// You can add other process maps here later if needed
-// export const ffmpegProcesses = new Map<string, SomeOtherProcessType>();
+/**
+ * Check if a process with the given ID exists in the registry.
+ * @param id - The ID of the process to check.
+ * @returns True if the process exists in the registry, false otherwise.
+ */
+export function hasProcess(id: string): boolean {
+  return registry.has(id);
+}
+
+export async function cancel(id: string): Promise<boolean> {
+  const entry = registry.get(id);
+  if (!entry) return false;
+  const sig = process.platform === 'win32' ? 'SIGINT' : 'SIGTERM';
+  switch (entry.kind) {
+    case 'subtitle':
+      entry.handle.abort();
+      break;
+    case 'download':
+      if (!entry.handle.killed) entry.handle.kill(sig);
+      break;
+    case 'render':
+      entry.handle.processes.forEach(proc => {
+        try {
+          proc.kill(sig);
+        } catch (e) {
+          log.error(`[registry] error killing process for ${id}:`, e);
+        }
+      });
+      if (entry.handle.browser) {
+        await entry.handle.browser
+          .close()
+          .catch(err =>
+            log.error(`[registry] error closing browser for ${id}:`, err)
+          );
+      }
+      break;
+  }
+  registry.delete(id);
+  log.info(`[registry] cancelled ${entry.kind} ${id}`);
+  return true;
+}

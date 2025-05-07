@@ -1,9 +1,10 @@
-import { IpcMainInvokeEvent, BrowserWindow } from 'electron';
+import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import { processVideoUrl, VideoQuality } from '../../services/url-processor.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
 import { FileManager } from '../../services/file-manager.js';
 import { FFmpegService } from '../../services/ffmpeg-service.js';
+import { CancelledError } from '../../shared/cancelled-error.js';
 
 // Define services structure
 interface UrlHandlerServices {
@@ -165,36 +166,22 @@ export async function handleProcessUrl(
 
     return successResult;
   } catch (error: any) {
+    if (error instanceof CancelledError) {
+      log.info(
+        `[url-handler] Download was cancelled by user (Op ID: ${operationId})`
+      );
+      return {
+        success: false,
+        cancelled: true,
+        operationId,
+      };
+    }
+
     log.error(
       `[url-handler] Error processing URL for Op ID ${operationId}:`,
       error
     );
-    log.warn(
-      `[url-handler] Caught error message during cancel check: "${error?.message}"`
-    );
-    log.warn(
-      `[url-handler] Checking error properties. killed: ${error?.killed}, isTerminated: ${error?.isTerminated}, isCanceled: ${error?.isCanceled}`
-    );
 
-    // Check for cancellation using the 'isTerminated' property
-    if (error.isTerminated === true) {
-      log.info(
-        `[url-handler] Operation ${operationId} was cancelled (isTerminated=true).`
-      );
-      // Send a final "cancelled" progress update with NO error message
-      sendProgress({
-        percent: 100,
-        stage: 'Download cancelled',
-        error: null,
-      });
-      // Return the object indicating cancellation
-      return { cancelled: true, success: false, operationId };
-    }
-
-    // Handle ALL OTHER (non-cancellation) errors
-    log.error(
-      `[url-handler] Handling non-termination error for Op ID ${operationId}`
-    );
     // Enhanced error logging
     log.error(`[url-handler] Error type: ${typeof error}`);
     log.error(`[url-handler] Error message: ${error.message || 'No message'}`);

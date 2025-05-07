@@ -304,6 +304,8 @@ function AppContent() {
   const isInitialMount = useRef(true);
   const previousVideoPathRef = useRef<string | null>(null);
 
+  const [isCancellingDownload, setIsCancellingDownload] = useState(false);
+
   useEffect(() => {
     if (!searchText) {
       setMatchedIndices([]);
@@ -355,6 +357,16 @@ function AppContent() {
       const currentPercent = progress.percent ?? 0;
       const currentStage = progress.stage ?? '';
       const error = progress.error ?? null;
+
+      // Handle cancellation gracefully
+      if (currentStage === 'Download cancelled') {
+        setIsProcessingUrl(false);
+        setDownloadOperationId(null);
+        setDownloadProgressPercent(0);
+        setDownloadProgressStage('');
+        setIsCancellingDownload(false);
+        return;
+      }
 
       setDownloadProgressPercent(currentPercent);
       setDownloadProgressStage(currentStage);
@@ -793,7 +805,7 @@ function AppContent() {
                   : DOWNLOAD_PROGRESS_COLOR
               }
               operationId={downloadOperationId}
-              isCancelling={false}
+              isCancelling={isCancellingDownload}
               onCancel={handleCancelDownload}
               onClose={() => {
                 setIsProcessingUrl(false);
@@ -1062,6 +1074,13 @@ function AppContent() {
       setUrlInput('');
       setIsProcessingUrl(false);
     } catch (err: any) {
+      if (err?.isCancelled) {
+        console.log('[AppContent] Download operation was cancelled.');
+        resetUrlStates();
+        setIsProcessingUrl(false);
+        setDownloadOperationId(null);
+        return;
+      }
       handleUrlError(err);
     }
   }
@@ -1247,7 +1266,12 @@ function AppContent() {
       setIsProcessingUrl(false);
       return;
     }
+
     try {
+      setIsCancellingDownload(true);
+      console.log(
+        `[AppContent] Sending cancel request for download ${operationId}`
+      );
       await OperationIPC.cancel(operationId);
     } catch (error) {
       console.error(
@@ -1255,6 +1279,7 @@ function AppContent() {
         error
       );
     } finally {
+      setIsCancellingDownload(false);
       setIsProcessingUrl(false);
       setDownloadOperationId(null);
       setDownloadProgressPercent(0);

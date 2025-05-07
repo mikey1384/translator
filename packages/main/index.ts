@@ -16,12 +16,7 @@ import nodeProcess from 'process';
 import Store from 'electron-store';
 import * as renderWindowHandlers from './handlers/render-window-handlers.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
-import {
-  getDownloadProcess,
-  removeDownloadProcess,
-} from './active-processes.js';
-
-import { getActiveRenderJob } from './handlers/render-window-handlers.js';
+import * as registry from './active-processes.js';
 
 // --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
@@ -43,9 +38,6 @@ import * as apiKeyHandlers from './handlers/api-key-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
-
-// Map to store AbortControllers for active subtitle generation operations
-const subtitleGenerationControllers = new Map<string, AbortController>();
 
 // --- Initialize electron-store ---
 const settingsStore = new Store<{
@@ -140,7 +132,7 @@ try {
       `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     log.info(`[main.ts/generate-subtitles] Starting operation: ${operationId}`);
-    subtitleGenerationControllers.set(operationId, controller);
+    registry.addSubtitle(operationId, controller);
 
     try {
       const result = await subtitleHandlers.handleGenerateSubtitles(
@@ -160,16 +152,10 @@ try {
       );
       throw error;
     } finally {
-      const deleted = subtitleGenerationControllers.delete(operationId);
-      if (deleted) {
-        log.info(
-          `[main.ts/generate-subtitles] Removed controller for ${operationId}.`
-        );
-      } else {
-        log.warn(
-          `[main.ts/generate-subtitles] Controller for ${operationId} not found for removal.`
-        );
-      }
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/generate-subtitles] Removed controller for ${operationId}.`
+      );
     }
   });
 
@@ -179,119 +165,23 @@ try {
   // Operation Cancellation - Updated
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
     log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
-    let cancelledViaController = false;
-    let cancelledViaDownload = false;
-    let errorMessage = '';
-
-    const controller = subtitleGenerationControllers.get(operationId);
-    if (controller) {
-      try {
-        log.info(
-          `[main.ts/cancel-operation] Aborting controller for ${operationId}.`
-        );
-        controller.abort();
-        subtitleGenerationControllers.delete(operationId);
-        cancelledViaController = true;
-        log.info(
-          `[main.ts/cancel-operation] Controller for ${operationId} aborted and removed.`
-        );
-      } catch (error) {
-        log.error(
-          `[main.ts/cancel-operation] Error aborting controller for ${operationId}:`,
-          error
-        );
-        errorMessage += `Controller abort failed: ${
-          error instanceof Error ? error.message : String(error)
-        }; `;
-      }
-    } else {
-      log.info(
-        `[main.ts/cancel-operation] No active AbortController found for ${operationId}.`
-      );
-    }
-
-    // 2. Try cancelling via Download Process Map
-    const downloadProcess = getDownloadProcess(operationId);
-    if (downloadProcess && !downloadProcess.killed) {
-      try {
-        log.info(
-          `[main.ts/cancel-operation] Killing download process for ${operationId}.`
-        );
-        downloadProcess.kill();
-        removeDownloadProcess(operationId);
-        cancelledViaDownload = true;
-        log.info(
-          `[main.ts/cancel-operation] Download process for ${operationId} killed and removed.`
-        );
-      } catch (error) {
-        log.error(
-          `[main.ts/cancel-operation] Error killing download process ${operationId}:`,
-          error
-        );
-        errorMessage += `Download process kill failed: ${
-          error instanceof Error ? error.message : String(error)
-        }; `;
-        removeDownloadProcess(operationId);
-      }
-    } else if (downloadProcess && downloadProcess.killed) {
-      log.info(
-        `[main.ts/cancel-operation] Download process ${operationId} already killed. Removing from map.`
-      );
-      removeDownloadProcess(operationId);
-    } else {
-      log.info(
-        `[main.ts/cancel-operation] No active Download Process found for ${operationId}.`
-      );
-    }
-
-    // --- new block for merge jobs -----------------
-    if (operationId.startsWith('render-')) {
-      const job = getActiveRenderJob(operationId);
-      if (job) {
-        job.processes.forEach(proc => {
-          try {
-            const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
-            proc.kill(sig);
-          } catch {
-            /* ignore */
-          }
-        });
-        // Close Puppeteer browser if present
-        try {
-          await job.browser?.close();
-        } catch {
-          /* ignore */
-        }
-
-        log.info(
-          `[main.ts/cancel-operation] Render job ${operationId} cancelled.`
-        );
-        return {
-          success: true,
-          message: `Render job ${operationId} cancelled`,
-        };
-      }
-      // If no job found, it will fall through to the final throw below
-    }
-    // ----------------------------------------------
-
-    // 4. Return overall status if we already canceled something
-    const success = cancelledViaController || cancelledViaDownload;
-    if (success) {
-      log.info(
-        `[main.ts/cancel-operation] Cancellation initiated for ${operationId} (Controller: ${cancelledViaController}, Download: ${cancelledViaDownload})`
-      );
+    try {
+      const success = await registry.cancel(operationId);
       return {
-        success: true,
-        message: `Cancellation initiated for ${operationId}`,
+        success,
+        message: success
+          ? `Cancellation initiated for ${operationId}`
+          : `No active operation found for ${operationId}`,
       };
-    } else {
+    } catch (error) {
       log.error(
-        `[main.ts/cancel-operation] Failed to find operation to cancel for ${operationId}. Errors: ${errorMessage}`
+        `[main.ts/cancel-operation] Error cancelling operation ${operationId}:`,
+        error
       );
-      // If we get here, it means we didn't find any matching operation (controller, download, or render)
       throw new Error(
-        `No active operation ${operationId} to cancel. ${errorMessage}`
+        `Failed to cancel operation ${operationId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   });

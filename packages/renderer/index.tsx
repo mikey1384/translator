@@ -31,11 +31,14 @@ const renderApp = () => {
 // Initial render
 renderApp();
 
-if (import.meta.hot || (module as any)?.hot) {
-  import.meta.hot?.accept?.();
-  (module as any)?.hot?.accept?.();
+/* ------------------------------------------------------------------ */
+/* 🔥  HMR – safe for both ESM (Vite) and CJS (Webpack) bundles        */
+/* ------------------------------------------------------------------ */
+const hot =
+  (import.meta as any).hot ??
+  (typeof module !== 'undefined' ? (module as any).hot : undefined);
 
-  const dispose = () => window.location.reload();
-  import.meta.hot?.dispose?.(dispose);
-  (module as any)?.hot?.dispose?.(dispose);
+if (hot) {
+  hot.accept?.();
+  hot.dispose?.(() => window.location.reload());
 }

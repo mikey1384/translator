@@ -10,11 +10,11 @@ import which from 'which';
 import { FFmpegService } from './ffmpeg-service.js';
 import { FileManager } from './file-manager.js';
 import {
-  addDownloadProcess,
-  removeDownloadProcess,
-  hasDownloadProcess,
-  type DownloadProcessType,
+  addDownload,
+  finish as removeDownloadProcess,
 } from '../main/active-processes.js';
+import type { DownloadProcess as DownloadProcessType } from '../main/active-processes.js';
+import { CancelledError } from '../shared/cancelled-error.js';
 
 export type VideoQuality = 'low' | 'mid' | 'high';
 const qualityFormatMap: Record<VideoQuality, string> = {
@@ -52,9 +52,6 @@ async function findYtDlpBinary(): Promise<string | null> {
   const moduleDir = dirname(fileURLToPath(import.meta.url));
 
   try {
-    // 1️⃣ Look in workspace-local .bin (relative to CWD)
-    // NOTE: This assumes the process CWD is the monorepo root or the relevant package root.
-    // Adjust if CWD might be different (e.g., use a more robust way to find project root).
     const cwdBinPath = join(process.cwd(), 'node_modules', '.bin', binaryName);
     if (fs.existsSync(cwdBinPath)) {
       log.info(
@@ -409,7 +406,7 @@ async function downloadVideoFromPlatform(
     });
 
     if (subprocess) {
-      addDownloadProcess(operationId, subprocess);
+      addDownload(operationId, subprocess);
       log.info(`[URLProcessor] Added download process ${operationId} to map.`);
 
       subprocess.on('error', (err: any) => {
@@ -417,8 +414,7 @@ async function downloadVideoFromPlatform(
           `[URLProcessor] Subprocess ${operationId} emitted error:`,
           err
         );
-        if (hasDownloadProcess(operationId)) {
-          removeDownloadProcess(operationId);
+        if (removeDownloadProcess(operationId)) {
           log.info(
             `[URLProcessor] Removed download process ${operationId} from map due to subprocess error event.`
           );
@@ -428,15 +424,17 @@ async function downloadVideoFromPlatform(
         log.info(
           `[URLProcessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
         );
-        if (hasDownloadProcess(operationId)) {
-          removeDownloadProcess(operationId);
+        if (removeDownloadProcess(operationId)) {
           log.info(
             `[URLProcessor] Removed download process ${operationId} from map due to subprocess exit event.`
           );
         }
       });
     } else {
-      throw new Error('Failed to start download subprocess.');
+      log.error(
+        `[URLProcessor] Failed to create subprocess (Op ID: ${operationId}).`
+      );
+      throw new Error('Could not start yt-dlp process.');
     }
 
     // --- Stream Processing ---
@@ -591,20 +589,24 @@ async function downloadVideoFromPlatform(
 
     return { filepath: finalFilepath, info: downloadInfo };
   } catch (error: any) {
-    log.error(
-      `[URLProcessor] Download execution error (Op ID: ${operationId}):`,
-      error
-    );
+    const rawErrorMessage = error.message || String(error);
+    let userFriendlyErrorMessage = rawErrorMessage;
 
-    // *** CHECK FOR CANCELLATION FIRST ***
-    if (error.killed || error.signal === 'SIGTERM') {
+    // Check if this was a cancellation
+    if (
+      error.signal === 'SIGTERM' ||
+      error.signal === 'SIGINT' ||
+      error.killed
+    ) {
       log.info(
-        `[URLProcessor] Download process ${operationId} was killed/terminated (likely cancelled).`
+        `[URLProcessor] Download cancelled by user (Op ID: ${operationId})`
       );
-      // Throw a clean error for cancellations, preventing large stdout propagation
-      throw new Error('Download cancelled by user');
+      progressCallback?.({
+        percent: 0,
+        stage: 'Download cancelled',
+      });
+      throw new CancelledError();
     }
-    // *** END CANCELLATION CHECK ***
 
     // If it wasn't killed, it's a real error. NOW log details and send failure progress.
     log.error(
@@ -626,10 +628,6 @@ async function downloadVideoFromPlatform(
     );
 
     // --- Start User-Friendly Error Mapping ---
-    let userFriendlyErrorMessage =
-      'Download failed. Please check the URL/connection or contact support at mikey@stage5society.com'; // <-- UPDATED fallback
-    const rawErrorMessage =
-      error.message || (typeof error === 'string' ? error : 'Unknown error');
     const stderrContent = error.stderr || '';
 
     const combinedErrorText =
@@ -671,19 +669,16 @@ async function downloadVideoFromPlatform(
       log.error(`[URLProcessor] Error stderr: ${stderrContent}`);
     if (error.stack) log.error(`[URLProcessor] Error stack: ${error.stack}`);
     progressCallback?.({
-      percent: 0, // Indicate failure
+      percent: 0,
       stage: 'Error',
-      error: userFriendlyErrorMessage, // Use the mapped message (now with email fallback)
+      error: userFriendlyErrorMessage,
     });
 
-    // Return the standard error object for the main promise result
-    // (Keep the detailed message here for potential debugging/logging later)
     throw new Error(
       `Download failed: ${rawErrorMessage}. Check logs or contact support at mikey@stage5society.com`
     );
   } finally {
-    if (hasDownloadProcess(operationId)) {
-      removeDownloadProcess(operationId);
+    if (removeDownloadProcess(operationId)) {
       log.info(
         `[URLProcessor] Removed download process ${operationId} from map in finally block.`
       );
