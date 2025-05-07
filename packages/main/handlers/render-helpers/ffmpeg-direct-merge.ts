@@ -14,8 +14,9 @@ interface DirectMergeOptions {
     percent: number;
     stage: string;
     error?: string;
-  }) => void; // Match Progress type
+  }) => void;
   registerProcess?: (c: ChildProcess) => void;
+  signal?: AbortSignal;
 }
 
 // Renamed opts fields to be more descriptive and match caller
@@ -32,6 +33,7 @@ export async function directMerge(
     progressCallback,
     registerProcess,
     operationId,
+    signal,
   } = opts;
 
   log.info(`[ffmpeg-direct-merge ${operationId}] Starting direct merge...`);
@@ -47,22 +49,13 @@ export async function directMerge(
   let vcodec = 'libx264'; // Default
   if (platform === 'darwin') {
     vcodec = 'h264_videotoolbox';
-  } else if (
-    platform ===
-    'win32' /* && check for NVIDIA GPU presence/driver? Could be complex */
-  ) {
-    // Basic check for windows, assuming NVENC might be available.
-    // A more robust check would involve trying to run ffmpeg -encoders
-    // vcodec = 'h264_nvenc'; // Keep commented unless NVIDIA check is robust
   }
   log.info(`[ffmpeg-direct-merge ${operationId}] Using video codec: ${vcodec}`);
 
   // Build FFmpeg arguments
   const ffArgs = [
-    // Input 0: Base video (make sure paths are handled correctly)
     '-i',
     baseVideoPath,
-    // Input 1: PNG sequence via concat demuxer
     '-f',
     'concat',
     '-safe',
@@ -71,35 +64,28 @@ export async function directMerge(
     'vfr',
     '-i',
     concatListPath,
-    // Filter Complex
     '-filter_complex',
-    // Prepare overlay: ensure RGBA, scale, reset timestamps
     `[1:v]format=rgba,scale=${videoWidth}:${videoHeight},setpts=PTS-STARTPTS[ov];` +
-      // Overlay onto base video: use shortest duration to match base video
-      `[0:v][ov]overlay=format=auto:shortest=1[out]`, // format=auto might be better than assuming formats
-    // Mapping
+      `[0:v][ov]overlay=format=auto:shortest=1[out]`,
     '-map',
-    '[out]', // Map filtered video output
+    '[out]',
     '-map',
-    '0:a?', // Map audio from base video (if it exists)
+    '0:a?',
     '-c:a',
-    'copy', // Copy audio stream
-    // Video Codec + Options
+    'copy',
     '-c:v',
     vcodec,
     '-preset',
-    'veryfast', // Adjust as needed
+    'veryfast',
     '-crf',
-    '22', // Adjust quality vs size
-    // Add pix_fmt for libx264/videotoolbox compatibility
+    '22',
     vcodec === 'libx264' || vcodec === 'h264_videotoolbox' ? '-pix_fmt' : '',
     vcodec === 'libx264' || vcodec === 'h264_videotoolbox' ? 'yuv420p' : '',
-    // Progress reporting
     '-progress',
     'pipe:1',
-    '-y', // Overwrite output
+    '-y',
     outputSavePath,
-  ].filter(Boolean); // Filter out empty strings from conditional args
+  ].filter(Boolean);
 
   log.info(
     `[ffmpeg-direct-merge ${operationId}] Spawning ffmpeg with args: ${ffArgs.join(' ')}`
@@ -138,6 +124,32 @@ export async function directMerge(
         });
       }
     });
+
+    if (signal) {
+      const onAbort = () => {
+        if (!ff.killed) {
+          try {
+            const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
+            ff.kill(sig);
+          } catch {
+            /* already exited */
+          }
+          progressCallback?.({
+            percent: VIDEO_START,
+            stage: 'Cancelled',
+            error: 'Operation cancelled by user',
+          });
+        }
+      };
+
+      void (signal.aborted
+        ? onAbort()
+        : signal.addEventListener('abort', onAbort, { once: true }));
+
+      const cleanupAbort = () => signal.removeEventListener('abort', onAbort);
+      ff.once('close', cleanupAbort);
+      ff.once('error', cleanupAbort);
+    }
 
     ff.once('close', code => {
       if (code === 0) {

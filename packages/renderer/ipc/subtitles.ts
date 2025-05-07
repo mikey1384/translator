@@ -54,3 +54,7 @@ export function setTargetLanguage(
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setSubtitleTargetLanguage(lang);
 }
+
+export const cancelPngRender = (operationId: string): void => {
+  window.electron.cancelPngRender(operationId);
+};

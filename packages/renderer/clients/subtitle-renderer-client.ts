@@ -8,11 +8,6 @@ type PngRenderResult = {
   error?: string;
 };
 
-export const RENDER_CHANNELS = {
-  REQUEST: 'render-subtitles-request',
-  RESULT: 'render-subtitles-result',
-};
-
 export const WINDOW_CHANNELS = {
   CREATE_REQUEST: 'create-render-window-request',
   CREATE_SUCCESS: 'create-render-window-success',
@@ -158,6 +153,10 @@ class SubtitleRendererClient {
         reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
+  }
+
+  cancelMerge(operationId: string): void {
+    SubtitleIPC.cancelPngRender(operationId);
   }
 }
 

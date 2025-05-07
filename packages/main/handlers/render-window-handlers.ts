@@ -25,12 +25,9 @@ const activeRenderJobs = new Map<
 >();
 export const getActiveRenderJob = (id: string) => activeRenderJobs.get(id);
 
-const fontRegular = pathToFileURL(getAssetsPath('NotoSans-Regular.ttf')).href;
+const jobControllers = new Map<string, AbortController>();
 
-const RENDER_CHANNELS = {
-  REQUEST: 'render-subtitles-request',
-  RESULT: 'render-subtitles-result',
-} as const;
+const fontRegular = pathToFileURL(getAssetsPath('NotoSans-Regular.ttf')).href;
 
 async function writeConcat({
   frames,
@@ -58,29 +55,25 @@ async function writeConcat({
   log.info(`[writeConcat] Wrote PNG concat list to ${listPath}`);
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* IPC bootstrap                                                             */
-/* ────────────────────────────────────────────────────────────────────────── */
 export function initializeRenderWindowHandlers(): void {
   log.info('[RenderWindowHandlers] Initialising …');
 
   ipcMain.on(
-    RENDER_CHANNELS.REQUEST,
+    'render-subtitles-request',
     async (event, options: RenderSubtitlesOptions) => {
       const { operationId } = options;
       log.info(
-        `[RenderWindowHandlers ${operationId}] ${RENDER_CHANNELS.REQUEST} received`
+        `[RenderWindowHandlers ${operationId}] render-subtitles-request received`
       );
 
-      /* register job immediately so that cancellation UI can see it */
+      const controller = new AbortController();
+      jobControllers.set(operationId, controller);
+
       activeRenderJobs.set(operationId, { processes: [] });
 
-      /* ╔═   locals that need cleanup in finally ─────────────────────────── */
       let tempDirPath: string | null = null;
       let browser: import('puppeteer').Browser | null = null;
-      /* ╚═══════════════════════════════════════════════════════════════════ */
 
-      /* quick helper for progress relay */
       const sendProgress = ({
         percent,
         stage,
@@ -105,10 +98,8 @@ export function initializeRenderWindowHandlers(): void {
       };
 
       try {
-        /* ─── 1. Temp workspace ───────────────────────────────────────── */
         tempDirPath = await createOperationTempDir({ operationId });
 
-        /* ─── 2. Spin-up Puppeteer page (+ preload CSS / preset) ──────── */
         const { browser: br, page } = await initPuppeteer({
           operationId,
           videoWidth: options.videoWidth,
@@ -118,16 +109,14 @@ export function initializeRenderWindowHandlers(): void {
           stylePreset: options.stylePreset,
         });
         browser = br;
-        activeRenderJobs.get(operationId)!.browser = browser; // track
+        activeRenderJobs.get(operationId)!.browser = browser;
 
-        /* ─── 3. Parse SRT ➜ timeline events (ms) ─────────────────────── */
         if (!options.originalVideoPath) {
           throw new Error(
             'Original video path is required but was not provided.'
           );
         }
 
-        // [ADDED] Get accurate frame rate before generating states
         log.info(
           `[RenderWindowHandlers ${operationId}] Probing FPS for ${options.originalVideoPath}...`
         );
@@ -144,7 +133,6 @@ export function initializeRenderWindowHandlers(): void {
           operationId,
         });
 
-        /* ─── 4. Render each subtitle "state" to PNG ──────────────────── */
         const statePngs = await generateStatePngs({
           page,
           events: uniqueEventsMs,
@@ -156,20 +144,25 @@ export function initializeRenderWindowHandlers(): void {
           fontSizePx: options.fontSizePx,
           stylePreset: options.stylePreset,
           progress: sendProgress,
+          signal: controller.signal,
         });
-        await page.close(); // page no longer needed
+        try {
+          await page.close();
+        } catch {
+          /* already closed */
+        }
 
         sendProgress({
           percent: 10,
           stage: 'Assembling subtitle overlay video...',
-        }); // Assuming 10% for Puppeteer/PNG stage
+        });
 
         const concatListPath = path.join(
           tempDirPath,
           `pngs_${operationId}.txt`
         );
         await writeConcat({ frames: statePngs, listPath: concatListPath });
-        sendProgress({ percent: 40, stage: 'Overlay concat ready' }); // Update progress stage
+        sendProgress({ percent: 40, stage: 'Overlay concat ready' });
 
         let videoForMerge = options.originalVideoPath;
         if (options.overlayMode === 'blackVideo') {
@@ -184,21 +177,20 @@ export function initializeRenderWindowHandlers(): void {
           });
         }
 
-        /* ─── 7. [REPLACED] Burn overlay directly onto base video ──────── */
         const tempMerged = path.join(tempDirPath, `merged_${operationId}.mp4`);
         await directMerge({
-          concatListPath, // Path to the PNG concat list
-          baseVideoPath: videoForMerge, // Base video (original or black)
-          outputSavePath: tempMerged, // Temp output path
+          concatListPath,
+          baseVideoPath: videoForMerge,
+          outputSavePath: tempMerged,
           videoWidth: options.videoWidth,
           videoHeight: options.videoHeight,
           videoDuration: options.videoDuration,
           operationId,
-          progressCallback: sendProgress, // Reuse the progress callback
-          registerProcess, // Reuse the process registration callback
+          progressCallback: sendProgress,
+          registerProcess,
+          signal: controller.signal,
         });
 
-        /* ─── 8. Ask user where to save result ────────────────────────── */
         const win = BrowserWindow.getAllWindows()[0];
         if (!win) {
           throw new Error(
@@ -222,7 +214,7 @@ export function initializeRenderWindowHandlers(): void {
         if (canceled || !userPath) {
           log.warn(`[${operationId}] User cancelled "save" dialog`);
           await fs.unlink(tempMerged).catch(() => void 0);
-          event.reply(RENDER_CHANNELS.RESULT, {
+          event.reply('render-subtitles-result', {
             operationId,
             success: false,
             error: 'Save cancelled by user.',
@@ -232,7 +224,7 @@ export function initializeRenderWindowHandlers(): void {
 
         await fs.rename(tempMerged, userPath);
         sendProgress({ percent: 100, stage: 'Merge complete!' });
-        event.reply(RENDER_CHANNELS.RESULT, {
+        event.reply('render-subtitles-result', {
           operationId,
           success: true,
           outputPath: userPath,
@@ -240,7 +232,7 @@ export function initializeRenderWindowHandlers(): void {
       } catch (err: any) {
         log.error(`[RenderWindowHandlers ${operationId}]`, err);
         if (!event.sender.isDestroyed()) {
-          event.reply(RENDER_CHANNELS.RESULT, {
+          event.reply('render-subtitles-result', {
             operationId,
             success: false,
             error: err.message ?? 'Unknown error',
@@ -254,9 +246,56 @@ export function initializeRenderWindowHandlers(): void {
         }
         await cleanupTempDir({ tempDirPath, operationId });
         activeRenderJobs.delete(operationId);
+        jobControllers.delete(operationId);
       }
     }
   );
 
+  ipcMain.on('render-subtitles-cancel', (_event, { operationId }) => {
+    cancelRenderJob(operationId);
+  });
+
   log.info('[RenderWindowHandlers] IPC handlers ready');
+}
+
+function cancelRenderJob(operationId: string) {
+  log.warn(`[render-cancel] cancelling ${operationId}`);
+
+  // 1) abort any JS-side awaits (Puppeteer loops, etc.)
+  const ctrl = jobControllers.get(operationId);
+  ctrl?.abort();
+  jobControllers.delete(operationId);
+
+  // 2) kill spawned ffmpeg / other OS procs
+  const job = activeRenderJobs.get(operationId);
+  job?.processes.forEach(p => {
+    if (!p.killed) {
+      const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
+      p.kill(sig);
+    }
+  });
+
+  // 3) close browser if still open
+  job?.browser?.close().catch(() => {});
+
+  // 4) Clean up temp dir
+  cleanupTempDir({ tempDirPath: null, operationId }).catch(err => {
+    log.error(
+      `[render-cancel] Failed to cleanup temp dir for ${operationId}:`,
+      err
+    );
+  });
+
+  // 5) Remove from active jobs
+  activeRenderJobs.delete(operationId);
+
+  // 6) Send final result to renderer
+  const win = BrowserWindow.getAllWindows()[0];
+  if (win && !win.isDestroyed()) {
+    win.webContents.send('render-subtitles-result', {
+      operationId,
+      success: false,
+      error: 'Process cancelled by user',
+    });
+  }
 }

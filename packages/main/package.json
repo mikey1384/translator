@@ -18,7 +18,7 @@
     "electron-log": "^5.4.0",
     "execa": "^9.5.2",
     "keytar": "^7.9.0",
-    "puppeteer": "^24.7.2",
+    "puppeteer": "^24.8.1",
     "uuid": "^11.1.0",
     "electron-store": "^10.0.1",
     "node-machine-id": "^1.1.12",

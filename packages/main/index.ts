@@ -113,7 +113,6 @@ try {
 
   ipcMain.handle('ping', utilityHandlers.handlePing);
   ipcMain.handle('show-message', utilityHandlers.handleShowMessage);
-  // File Operations
   ipcMain.handle('save-file', fileHandlers.handleSaveFile);
   ipcMain.handle('open-file', fileHandlers.handleOpenFile);
   ipcMain.handle('move-file', fileHandlers.handleMoveFile);

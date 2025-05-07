@@ -194,11 +194,10 @@ const electronAPI = {
       console.error('[Preload] Error sending PngRenderRequest:', error);
     }
   },
-
-  /**
-   * Sets up a listener for the final result of the PNG sequence render process.
-   * Returns a cleanup function to remove the listener.
-   */
+  cancelPngRender: (operationId: string): void => {
+    console.log('[Preload] Cancelling render job:', operationId);
+    ipcRenderer.send('render-subtitles-cancel', { operationId });
+  },
   onPngRenderResult: (
     callback: (result: ExposedRenderResult) => void
   ): (() => void) => {

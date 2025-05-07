@@ -304,6 +304,7 @@ declare module '@shared-types/app' {
   // =========================================
 
   interface ElectronAPI {
+    cancelPngRender: (operationId: string) => void;
     saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
     openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;
     moveFile: (

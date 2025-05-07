@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { colors } from '../../styles.js';
 import ProgressArea from './ProgressArea.js';
-import * as OperationIPC from '@ipc/operation';
+import subtitleRendererClient from '../../clients/subtitle-renderer-client.js';
 
 interface MergingProgressAreaProps {
   mergeProgress: number;
@@ -38,7 +38,7 @@ export default function MergingProgressArea({
       console.log(
         `[MergingProgressArea] Sending cancel request for merge ${operationId}`
       );
-      await OperationIPC.cancel(operationId);
+      subtitleRendererClient.cancelMerge(operationId);
     } catch (error) {
       console.error(
         `[MergingProgressArea] Error sending cancel request for merge ${operationId}:`,
