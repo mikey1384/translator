@@ -3,9 +3,9 @@ import { SrtSegment } from '@shared-types/app';
 import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { DEFAULT_FILENAME } from '../../../../shared/constants/index.js';
+import { useSubStore } from '../../../state/subtitle-store.js';
 
 export function useSubtitleActions({
-  subtitles,
   originalSrtFilePath,
   setSubtitleSegments,
   setSubtitleSourceId,
@@ -13,7 +13,6 @@ export function useSubtitleActions({
   onSaveAsComplete,
   showOriginalText,
 }: {
-  subtitles: SrtSegment[];
   originalSrtFilePath: string | null;
   setSubtitleSegments: Dispatch<SetStateAction<SrtSegment[]>>;
   setSubtitleSourceId: Dispatch<SetStateAction<number>>;
@@ -27,8 +26,14 @@ export function useSubtitleActions({
     segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])
   ) => void;
 } {
+  function getCurrentSegments() {
+    const { order, segments } = useSubStore.getState();
+    return order.map(id => segments[id]);
+  }
+
   async function handleSaveEditedSrtAs(): Promise<void> {
-    if (!subtitles || subtitles.length === 0) {
+    const liveSegments = getCurrentSegments();
+    if (liveSegments.length === 0) {
       setSaveError('No subtitle content to save.');
       return;
     }
@@ -44,7 +49,7 @@ export function useSubtitleActions({
       }
 
       const srtContent = buildSrt({
-        segments: subtitles,
+        segments: liveSegments,
         mode: showOriginalText ? 'dual' : 'translation',
       });
 
@@ -85,6 +90,12 @@ export function useSubtitleActions({
   async function handleSaveSrt(): Promise<void> {
     console.log('[useSubtitleSaving] Attempting to save...');
 
+    const liveSegments = getCurrentSegments();
+    if (liveSegments.length === 0) {
+      setSaveError('No subtitle content to save.');
+      return;
+    }
+
     if (!originalSrtFilePath) {
       console.warn(
         '[useSubtitleSaving] No original path. Redirecting to Save As...'
@@ -93,15 +104,10 @@ export function useSubtitleActions({
       return;
     }
 
-    if (!subtitles || subtitles.length === 0) {
-      setSaveError('No subtitle content to save.');
-      return;
-    }
-
     try {
       setSaveError('');
       const srtContent = buildSrt({
-        segments: subtitles,
+        segments: liveSegments,
         mode: showOriginalText ? 'dual' : 'translation',
       });
 

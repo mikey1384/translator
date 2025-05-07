@@ -248,7 +248,6 @@ function AppContent() {
 
   const { handleSaveSrt, handleSaveEditedSrtAs, handleSetSubtitleSegments } =
     useSubtitleActions({
-      subtitles: subtitleSegments,
       originalSrtFilePath: originalSrtFilePath,
       setSaveError,
       onSaveAsComplete: handleSaveAsComplete,
