@@ -228,6 +228,7 @@ const controlsWrapperStyles = (isFullScreen: boolean) => css`
 `;
 
 export default function VideoPlayer({
+  isMergingInProgress,
   isProcessingUrl,
   isTranslationInProgress,
   isProgressBarVisible,
@@ -251,6 +252,7 @@ export default function VideoPlayer({
   showOriginalText,
   videoRef,
 }: {
+  isMergingInProgress: boolean;
   isProcessingUrl: boolean;
   isTranslationInProgress: boolean;
   isProgressBarVisible: boolean;
@@ -722,6 +724,7 @@ export default function VideoPlayer({
         {!isFullScreen && (
           <div className={controlsWrapperStyles(isFullScreen)}>
             <SideMenu
+              isMergingInProgress={isMergingInProgress}
               isProcessingUrl={isProcessingUrl}
               isTranslationInProgress={isTranslationInProgress}
               onProcessUrl={onProcessUrl}

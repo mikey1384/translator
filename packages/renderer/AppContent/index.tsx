@@ -696,6 +696,7 @@ function AppContent() {
           <>
             {videoUrl && (
               <VideoPlayer
+                isMergingInProgress={isMergingInProgress}
                 isProcessingUrl={isProcessingUrl}
                 isTranslationInProgress={isTranslationInProgress}
                 videoRef={videoRef}

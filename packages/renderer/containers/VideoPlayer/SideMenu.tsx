@@ -7,6 +7,7 @@ import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 
 export default function SideMenu({
+  isMergingInProgress,
   isProcessingUrl,
   isTranslationInProgress,
   onProcessUrl,
@@ -22,6 +23,7 @@ export default function SideMenu({
   onSetSubtitleSegments,
   onSrtFileLoaded,
 }: {
+  isMergingInProgress: boolean;
   isProcessingUrl: boolean;
   isTranslationInProgress: boolean;
   onProcessUrl: () => void;
@@ -187,7 +189,10 @@ export default function SideMenu({
             size="sm"
             title={t('videoPlayer.sideMenu.loadVideoFromUrl')}
             disabled={
-              !urlInput.trim() || isTranslationInProgress || isProcessingUrl
+              !urlInput.trim() ||
+              isTranslationInProgress ||
+              isProcessingUrl ||
+              isMergingInProgress
             }
           >
             {t('videoPlayer.sideMenu.load')}
@@ -241,13 +246,10 @@ export default function SideMenu({
         </Button>
       </div>
 
-      {/* Scroll to Current Button */}
       {shouldShowScrollButton && (
         <Button
           onClick={() => {
-            // Call onUiInteraction first to ignore upcoming scroll events
             if (onUiInteraction) onUiInteraction();
-            // Then scroll to current subtitle
             onScrollToCurrentSubtitle();
           }}
           title={t('videoPlayer.sideMenu.scrollToCurrent')}
@@ -281,7 +283,6 @@ export default function SideMenu({
         </Button>
       )}
 
-      {/* Shift Controls */}
       {shouldShowShiftControls && (
         <div
           className={css`
