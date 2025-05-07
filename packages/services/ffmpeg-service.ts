@@ -104,10 +104,12 @@ export class FFmpegService {
     videoPath,
     progressCallback,
     operationId,
+    signal,
   }: {
     videoPath: string;
     progressCallback?: (progress: { percent: number; stage?: string }) => void;
     operationId?: string;
+    signal?: AbortSignal;
   }): Promise<string> {
     if (!fs.existsSync(videoPath)) {
       throw new FFmpegError(`Input video file not found: ${videoPath}`);
@@ -126,7 +128,7 @@ export class FFmpegService {
 
       const stats = fs.statSync(videoPath);
       const fileSizeMB = Math.round(stats.size / (1024 * 1024));
-      const duration = await this.getMediaDuration(videoPath);
+      const duration = await this.getMediaDuration(videoPath, signal);
       const durationMin = Math.round(duration / 60);
       let estimatedTimeSeconds = Math.round(duration * 0.1);
       if (fileSizeMB > 1000) estimatedTimeSeconds *= 1.5;
@@ -193,6 +195,7 @@ export class FFmpegService {
           }
         },
         filePath: videoPath,
+        signal,
       });
 
       progressCallback?.({
@@ -217,7 +220,10 @@ export class FFmpegService {
     }
   }
 
-  async getMediaDuration(filePath: string): Promise<number> {
+  async getMediaDuration(
+    filePath: string,
+    signal?: AbortSignal
+  ): Promise<number> {
     return new Promise((resolve, reject) => {
       const process = spawn(this.ffprobePath, [
         '-v',
@@ -228,6 +234,27 @@ export class FFmpegService {
         'default=noprint_wrappers=1:nokey=1',
         filePath,
       ]);
+
+      if (signal) {
+        const killSig = nodeProcess.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
+        const onAbort = () => {
+          if (!process.killed) {
+            log.info(
+              `[getMediaDuration] Killing ffprobe process due to abort signal`
+            );
+            process.kill(killSig);
+          }
+        };
+        if (signal.aborted) {
+          onAbort();
+        } else {
+          signal.addEventListener('abort', onAbort, { once: true });
+          process.once('close', () =>
+            signal.removeEventListener('abort', onAbort)
+          );
+        }
+      }
+
       let output = '';
       process.stdout.on('data', data => {
         output += data.toString();
@@ -476,14 +503,12 @@ export class FFmpegService {
           err
         );
 
-        // --- Remove the process from the map on error ---
         if (operationId) {
           this.activeProcesses.delete(operationId);
           log.info(
             `[${processId}] Removed process from active map due to process error.`
           );
         }
-        // --- End Remove ---
 
         reject(new FFmpegError(`Failed to run ffmpeg: ${err.message}`));
       });
@@ -653,12 +678,10 @@ export class FFmpegService {
           );
           resolve(hasVideo);
         } else {
-          // If ffprobe fails (e.g., corrupted file, not media), it might indicate no video.
-          // Let's resolve false but log the error.
           log.warn(
             `[hasVideoTrack] ffprobe exited with code ${code} for ${filePath}. Assuming no video track. Stderr: ${stderr}`
           );
-          resolve(false); // Resolve false on error, as the goal is detection.
+          resolve(false);
         }
       });
 
@@ -666,7 +689,7 @@ export class FFmpegService {
         log.error(
           `[hasVideoTrack] ffprobe spawn error for ${filePath}: ${err.message}`
         );
-        reject(new FFmpegError(`ffprobe error: ${err.message}`)); // Reject on spawn error
+        reject(new FFmpegError(`ffprobe error: ${err.message}`));
       });
     });
   }

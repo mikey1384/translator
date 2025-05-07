@@ -177,304 +177,325 @@ export async function extractSubtitlesFromVideo({
           });
         },
         operationId,
-      });
-    } catch (extractionError: any) {
-      if (
-        extractionError.name === 'AbortError' ||
-        (extractionError instanceof Error &&
-          extractionError.message === 'Operation cancelled') ||
-        signal.aborted
-      ) {
-        console.info(`[${operationId}] Audio extraction cancelled.`);
-      } else {
-        console.error(
-          `[${operationId}] Error during audio extraction:`,
-          extractionError
-        );
-        throw new Error(
-          `Audio extraction failed: ${extractionError.message || extractionError}`
-        );
-      }
-    }
-
-    // Step 1: Get initial subtitle content (string)
-    const { segments: firstPassSegments, speechIntervals } =
-      await generateSubtitlesFromAudio({
-        inputAudioPath: audioPath || '',
-        progressCallback: p => {
-          progressCallback?.({
-            percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
-            stage: p.stage,
-            partialResult: p.partialResult,
-            current: p?.current,
-            total: p.total,
-            error: p.error,
-          });
-        },
         signal,
-        operationId,
-        services,
       });
 
-    let processedSegments = firstPassSegments;
+      if (signal.aborted) throw new Error('Cancelled');
 
-    // Step 2: Process based on whether translation is needed
-    if (!isTranslationNeeded) {
-      progressCallback?.({
-        percent: STAGE_FINALIZING.start,
-        stage: 'Transcription complete, preparing final SRT',
-        partialResult: buildSrt({
-          segments: processedSegments,
-          mode: 'dual',
-        }),
-      });
-    } else {
-      // Translation needed - run translation and review logic
-      const segmentsInProcess = fuseOrphans(processedSegments).map(
-        (seg, i) => ({ ...seg, index: i + 1 })
-      );
-      const totalSegments = segmentsInProcess.length;
-      const TRANSLATION_BATCH_SIZE = 10;
+      // Step 1: Get initial subtitle content (string)
+      const { segments: firstPassSegments, speechIntervals } =
+        await generateSubtitlesFromAudio({
+          inputAudioPath: audioPath || '',
+          progressCallback: p => {
+            progressCallback?.({
+              percent: scaleProgress(p.percent, STAGE_TRANSCRIPTION),
+              stage: p.stage,
+              partialResult: p.partialResult,
+              current: p?.current,
+              total: p.total,
+              error: p.error,
+            });
+          },
+          signal,
+          operationId,
+          services,
+        });
 
-      const CONCURRENT_TRANSLATIONS = Math.min(
-        4,
-        Number(process.env.MAX_OPENAI_PARALLEL || 4)
-      );
-      const limit = pLimit(CONCURRENT_TRANSLATIONS);
+      let processedSegments = firstPassSegments;
 
-      const batchPromises = [];
-
-      let batchesDone = 0;
-
-      for (
-        let batchStart = 0;
-        batchStart < totalSegments;
-        batchStart += TRANSLATION_BATCH_SIZE
-      ) {
-        const batchEnd = Math.min(
-          batchStart + TRANSLATION_BATCH_SIZE,
-          totalSegments
+      // Step 2: Process based on whether translation is needed
+      if (!isTranslationNeeded) {
+        progressCallback?.({
+          percent: STAGE_FINALIZING.start,
+          stage: 'Transcription complete, preparing final SRT',
+          partialResult: buildSrt({
+            segments: processedSegments,
+            mode: 'dual',
+          }),
+        });
+      } else {
+        // Translation needed - run translation and review logic
+        const segmentsInProcess = fuseOrphans(processedSegments).map(
+          (seg, i) => ({ ...seg, index: i + 1 })
         );
-        const currentBatchOriginals = segmentsInProcess.slice(
-          batchStart,
-          batchEnd
-        );
-        const contextBefore = segmentsInProcess.slice(
-          Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
-          batchStart
-        );
-        const contextAfter = segmentsInProcess.slice(
-          batchEnd,
-          Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
-        );
+        const totalSegments = segmentsInProcess.length;
+        const TRANSLATION_BATCH_SIZE = 10;
 
-        const promise = limit(() =>
-          translateBatch({
+        const CONCURRENT_TRANSLATIONS = Math.min(
+          4,
+          Number(process.env.MAX_OPENAI_PARALLEL || 4)
+        );
+        const limit = pLimit(CONCURRENT_TRANSLATIONS);
+
+        const batchPromises = [];
+
+        let batchesDone = 0;
+
+        for (
+          let batchStart = 0;
+          batchStart < totalSegments;
+          batchStart += TRANSLATION_BATCH_SIZE
+        ) {
+          const batchEnd = Math.min(
+            batchStart + TRANSLATION_BATCH_SIZE,
+            totalSegments
+          );
+          const currentBatchOriginals = segmentsInProcess.slice(
+            batchStart,
+            batchEnd
+          );
+          const contextBefore = segmentsInProcess.slice(
+            Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
+            batchStart
+          );
+          const contextAfter = segmentsInProcess.slice(
+            batchEnd,
+            Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
+          );
+
+          const promise = limit(() =>
+            translateBatch({
+              batch: {
+                segments: currentBatchOriginals.map(seg => ({ ...seg })),
+                startIndex: batchStart,
+                endIndex: batchEnd,
+                contextBefore,
+                contextAfter,
+              },
+              targetLang,
+              operationId,
+              signal,
+            }).then(translatedBatch => {
+              for (let i = 0; i < translatedBatch.length; i++) {
+                segmentsInProcess[batchStart + i] = translatedBatch[i];
+              }
+            })
+          )
+            .catch(err => {
+              log.error(`[${operationId}] translate batch failed`, err);
+            })
+            .finally(() => {
+              batchesDone++;
+              const doneSoFar = Math.min(
+                batchesDone * TRANSLATION_BATCH_SIZE,
+                totalSegments
+              );
+              progressCallback?.({
+                percent: scaleProgress(
+                  (doneSoFar / totalSegments) * 100,
+                  STAGE_TRANSLATION
+                ),
+                stage: `Translating ${doneSoFar}/${totalSegments}`,
+                partialResult: buildSrt({
+                  segments: segmentsInProcess,
+                  mode: 'dual',
+                }),
+                current: doneSoFar,
+                total: totalSegments,
+              });
+            });
+
+          batchPromises.push(promise);
+        }
+
+        await Promise.all(batchPromises);
+
+        for (
+          let batchStart = 0;
+          batchStart < segmentsInProcess.length;
+          batchStart += REVIEW_STEP
+        ) {
+          const batchEnd = Math.min(
+            batchStart + REVIEW_BATCH_SIZE,
+            segmentsInProcess.length
+          );
+
+          const reviewSlice = segmentsInProcess.slice(batchStart, batchEnd);
+          const contextBefore = segmentsInProcess.slice(
+            Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
+            batchStart
+          );
+          const contextAfter = segmentsInProcess.slice(
+            batchEnd,
+            Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
+          );
+
+          const reviewed = await reviewTranslationBatch({
             batch: {
-              segments: currentBatchOriginals.map(seg => ({ ...seg })),
+              segments: reviewSlice,
               startIndex: batchStart,
               endIndex: batchEnd,
+              targetLang,
               contextBefore,
               contextAfter,
             },
-            targetLang,
             operationId,
             signal,
-          }).then(translatedBatch => {
-            for (let i = 0; i < translatedBatch.length; i++) {
-              segmentsInProcess[batchStart + i] = translatedBatch[i];
-            }
-          })
-        )
-          .catch(err => {
-            log.error(`[${operationId}] translate batch failed`, err);
-          })
-          .finally(() => {
-            batchesDone++;
-            const doneSoFar = Math.min(
-              batchesDone * TRANSLATION_BATCH_SIZE,
-              totalSegments
-            );
-            progressCallback?.({
-              percent: scaleProgress(
-                (doneSoFar / totalSegments) * 100,
-                STAGE_TRANSLATION
-              ),
-              stage: `Translating ${doneSoFar}/${totalSegments}`,
-              partialResult: buildSrt({
-                segments: segmentsInProcess,
-                mode: 'dual',
-              }),
-              current: doneSoFar,
-              total: totalSegments,
-            });
           });
 
-        batchPromises.push(promise);
-      }
-
-      await Promise.all(batchPromises);
-
-      for (
-        let batchStart = 0;
-        batchStart < segmentsInProcess.length;
-        batchStart += REVIEW_STEP
-      ) {
-        const batchEnd = Math.min(
-          batchStart + REVIEW_BATCH_SIZE,
-          segmentsInProcess.length
-        );
-
-        const reviewSlice = segmentsInProcess.slice(batchStart, batchEnd);
-        const contextBefore = segmentsInProcess.slice(
-          Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
-          batchStart
-        );
-        const contextAfter = segmentsInProcess.slice(
-          batchEnd,
-          Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
-        );
-
-        const reviewed = await reviewTranslationBatch({
-          batch: {
-            segments: reviewSlice,
-            startIndex: batchStart,
-            endIndex: batchEnd,
-            targetLang,
-            contextBefore,
-            contextAfter,
-          },
-          operationId,
-          signal,
-        });
-
-        // overwrite slice – newest version wins for overlaps
-        for (let i = 0; i < reviewed.length; i++) {
-          const globalIdx = batchStart + i;
-          if (
-            !segmentsInProcess[globalIdx].reviewedInBatch ||
-            segmentsInProcess[globalIdx].reviewedInBatch < batchStart
-          ) {
-            segmentsInProcess[globalIdx] = {
-              ...reviewed[i],
-              reviewedInBatch: batchStart,
-            };
+          // overwrite slice – newest version wins for overlaps
+          for (let i = 0; i < reviewed.length; i++) {
+            const globalIdx = batchStart + i;
+            if (
+              !segmentsInProcess[globalIdx].reviewedInBatch ||
+              segmentsInProcess[globalIdx].reviewedInBatch < batchStart
+            ) {
+              segmentsInProcess[globalIdx] = {
+                ...reviewed[i],
+                reviewedInBatch: batchStart,
+              };
+            }
           }
+
+          const overall = (batchEnd / segmentsInProcess.length) * 100;
+          progressCallback?.({
+            percent: scaleProgress(overall, STAGE_REVIEW),
+            stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
+              segmentsInProcess.length / REVIEW_BATCH_SIZE
+            )}`,
+            partialResult: buildSrt({
+              segments: segmentsInProcess,
+              mode: 'dual',
+            }),
+            current: batchEnd,
+            total: segmentsInProcess.length,
+            batchStartIndex: batchStart,
+          });
         }
 
-        const overall = (batchEnd / segmentsInProcess.length) * 100;
+        // After loops, segmentsInProcess contains the translated/reviewed segments
+        processedSegments = segmentsInProcess;
+      }
+
+      // --- Post-Processing Steps (Applied to EITHER original or translated segments) ---
+
+      progressCallback?.({
+        percent: STAGE_FINALIZING.start, // Or adjust percentage as needed
+        stage: 'Applying final adjustments',
+      });
+
+      // Step 3: Indexing (Common step)
+      const indexedSegments = processedSegments.map((block, idx) => ({
+        ...block,
+        index: idx + 1,
+        // --- Ensure start/end are numbers EARLY ---
+        start: Number(block.start),
+        end: Number(block.end),
+        // --- End Change ---
+      }));
+
+      // --- ADD LOG BEFORE CALL ---
+      log.debug(
+        `[${operationId}] Segments BEFORE calling extendShortSubtitleGaps (indices 25-27):`,
+        JSON.stringify(indexedSegments.slice(25, 28), null, 2)
+      );
+      // --- END ADD LOG ---
+
+      // Step 4: Apply Gap Filling (IN-PLACE)
+      extendShortSubtitleGaps({
+        segments: indexedSegments,
+        threshold: SUBTITLE_GAP_THRESHOLD,
+      });
+
+      // Log the state of indexedSegments *after* the in-place modification
+      log.debug(
+        `[${operationId}] Segments AFTER IN-PLACE gap fill, BEFORE blank fill (indices 25-27):`,
+        JSON.stringify(indexedSegments.slice(25, 28), null, 2)
+      );
+
+      // Step 5: Apply Blank Filling (Pass the mutated array)
+      const finalSegments = fillBlankTranslations(indexedSegments);
+
+      // Keep our previous log
+      log.debug(
+        `[${operationId}] Segments BEFORE buildSrt (indices 25-27):`,
+        JSON.stringify(finalSegments.slice(25, 28), null, 2)
+      );
+
+      // After all segments are collected and sorted:
+      finalSegments.sort((a, b) => a.start - b.start);
+      // optional "anchor" silence segments
+      const anchors: SrtSegment[] = [];
+      let tmpIdx = 0;
+      for (let i = 1; i < finalSegments.length; i++) {
+        const gap = finalSegments[i].start - finalSegments[i - 1].end;
+        if (gap > GAP_SEC) {
+          anchors.push({
+            id: crypto.randomUUID(),
+            index: ++tmpIdx,
+            start: finalSegments[i - 1].end,
+            end: finalSegments[i - 1].end + 0.5,
+            original: '',
+          });
+        }
+      }
+      finalSegments.push(...anchors);
+      finalSegments.sort((a, b) => a.start - b.start);
+
+      /* --- NEW: Fuse orphans before SRT build --- */
+      const reIndexed = finalSegments.map((seg, i) => ({
+        ...seg,
+        index: i + 1,
+      }));
+
+      const finalSrtContent = buildSrt({
+        segments: reIndexed,
+        mode: 'dual',
+      });
+
+      // --- Final Steps ---
+      await fileManager.writeTempFile(finalSrtContent, '.srt'); // Write the final version
+      log.info(
+        `[${operationId}] FINAL SRT CONTENT being returned:\n${finalSrtContent}`
+      ); // Log the actual final string
+
+      // --- ADDED: Send final result through progress callback for consistency ---
+      progressCallback?.({
+        percent: 100,
+        stage: 'Processing complete!',
+        partialResult: finalSrtContent,
+        current: finalSegments.length,
+        total: finalSegments.length,
+      });
+
+      return {
+        subtitles: finalSrtContent,
+        segments: reIndexed,
+        speechIntervals: speechIntervals,
+      };
+    } catch (error: any) {
+      console.error(
+        `[${operationId}] Error during subtitle generation:`,
+        error
+      );
+
+      // Detect if cancellation caused this error
+      const isCancel =
+        error.name === 'AbortError' ||
+        (error instanceof Error && error.message === 'Operation cancelled') ||
+        signal.aborted;
+
+      // If cancellation, set stage = "Process cancelled"
+      if (isCancel) {
         progressCallback?.({
-          percent: scaleProgress(overall, STAGE_REVIEW),
-          stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
-            segmentsInProcess.length / REVIEW_BATCH_SIZE
-          )}`,
-          partialResult: buildSrt({
-            segments: segmentsInProcess,
-            mode: 'dual',
-          }),
-          current: batchEnd,
-          total: segmentsInProcess.length,
-          batchStartIndex: batchStart,
+          percent: 100,
+          stage: 'Process cancelled',
+        });
+        log.info(`[${operationId}] Process cancelled by user.`);
+      } else {
+        // Otherwise, it's an actual error
+        progressCallback?.({
+          percent: 100,
+          stage: isCancel
+            ? 'Process cancelled'
+            : `Error: ${error?.message || String(error)}`,
+          error: !isCancel ? error?.message || String(error) : undefined,
         });
       }
 
-      // After loops, segmentsInProcess contains the translated/reviewed segments
-      processedSegments = segmentsInProcess;
+      // Rethrow the error so upper layers know we failed/cancelled
+      throw error;
     }
-
-    // --- Post-Processing Steps (Applied to EITHER original or translated segments) ---
-
-    progressCallback?.({
-      percent: STAGE_FINALIZING.start, // Or adjust percentage as needed
-      stage: 'Applying final adjustments',
-    });
-
-    // Step 3: Indexing (Common step)
-    const indexedSegments = processedSegments.map((block, idx) => ({
-      ...block,
-      index: idx + 1,
-      // --- Ensure start/end are numbers EARLY ---
-      start: Number(block.start),
-      end: Number(block.end),
-      // --- End Change ---
-    }));
-
-    // --- ADD LOG BEFORE CALL ---
-    log.debug(
-      `[${operationId}] Segments BEFORE calling extendShortSubtitleGaps (indices 25-27):`,
-      JSON.stringify(indexedSegments.slice(25, 28), null, 2)
-    );
-    // --- END ADD LOG ---
-
-    // Step 4: Apply Gap Filling (IN-PLACE)
-    extendShortSubtitleGaps({
-      segments: indexedSegments,
-      threshold: SUBTITLE_GAP_THRESHOLD,
-    });
-
-    // Log the state of indexedSegments *after* the in-place modification
-    log.debug(
-      `[${operationId}] Segments AFTER IN-PLACE gap fill, BEFORE blank fill (indices 25-27):`,
-      JSON.stringify(indexedSegments.slice(25, 28), null, 2)
-    );
-
-    // Step 5: Apply Blank Filling (Pass the mutated array)
-    const finalSegments = fillBlankTranslations(indexedSegments);
-
-    // Keep our previous log
-    log.debug(
-      `[${operationId}] Segments BEFORE buildSrt (indices 25-27):`,
-      JSON.stringify(finalSegments.slice(25, 28), null, 2)
-    );
-
-    // After all segments are collected and sorted:
-    finalSegments.sort((a, b) => a.start - b.start);
-    // optional "anchor" silence segments
-    const anchors: SrtSegment[] = [];
-    let tmpIdx = 0;
-    for (let i = 1; i < finalSegments.length; i++) {
-      const gap = finalSegments[i].start - finalSegments[i - 1].end;
-      if (gap > GAP_SEC) {
-        anchors.push({
-          id: crypto.randomUUID(),
-          index: ++tmpIdx,
-          start: finalSegments[i - 1].end,
-          end: finalSegments[i - 1].end + 0.5,
-          original: '',
-        });
-      }
-    }
-    finalSegments.push(...anchors);
-    finalSegments.sort((a, b) => a.start - b.start);
-
-    /* --- NEW: Fuse orphans before SRT build --- */
-    const reIndexed = finalSegments.map((seg, i) => ({ ...seg, index: i + 1 }));
-
-    const finalSrtContent = buildSrt({
-      segments: reIndexed,
-      mode: 'dual',
-    });
-
-    // --- Final Steps ---
-    await fileManager.writeTempFile(finalSrtContent, '.srt'); // Write the final version
-    log.info(
-      `[${operationId}] FINAL SRT CONTENT being returned:\n${finalSrtContent}`
-    ); // Log the actual final string
-
-    // --- ADDED: Send final result through progress callback for consistency ---
-    progressCallback?.({
-      percent: 100,
-      stage: 'Processing complete!',
-      partialResult: finalSrtContent,
-      current: finalSegments.length,
-      total: finalSegments.length,
-    });
-
-    return {
-      subtitles: finalSrtContent,
-      segments: reIndexed,
-      speechIntervals: speechIntervals,
-    };
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 
@@ -531,7 +552,7 @@ export async function generateSubtitlesFromAudio({
   operationId?: string;
   services?: {
     ffmpegService?: {
-      getMediaDuration: (p: string) => Promise<number>;
+      getMediaDuration: (p: string, signal?: AbortSignal) => Promise<number>;
       extractAudioSegment: (opts: {
         inputPath: string;
         outputPath: string;
@@ -572,7 +593,12 @@ export async function generateSubtitlesFromAudio({
       );
     }
 
-    const duration = await ffmpegService.getMediaDuration(inputAudioPath);
+    const duration = await ffmpegService.getMediaDuration(
+      inputAudioPath,
+      signal
+    );
+    if (signal?.aborted) throw new Error('Cancelled');
+
     if (isNaN(duration) || duration <= 0) {
       throw new SubtitleProcessingError(
         'Unable to determine valid audio duration.'
@@ -587,7 +613,13 @@ export async function generateSubtitlesFromAudio({
       stage: 'Analyzing audio for chunk boundaries...',
     });
 
-    const raw = await detectSpeechIntervals({ inputPath: inputAudioPath });
+    const raw = await detectSpeechIntervals({
+      inputPath: inputAudioPath,
+      operationId,
+      signal,
+    });
+    if (signal?.aborted) throw new Error('Cancelled');
+
     const cleaned = normalizeSpeechIntervals({ intervals: raw });
     const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC).flatMap(iv =>
       iv.end - iv.start > MAX_SPEECHLESS_SEC
@@ -714,6 +746,8 @@ export async function generateSubtitlesFromAudio({
             operationId: operationId ?? '',
             promptContext: promptForSlice,
           });
+
+          if (signal?.aborted) throw new Error('Cancelled');
 
           return segs;
         } catch (chunkError: any) {
@@ -1537,11 +1571,13 @@ export async function detectSpeechIntervals({
   vadMode = 2,
   frameMs = 30,
   operationId = '',
+  signal,
 }: {
   inputPath: string;
   vadMode?: 0 | 1 | 2 | 3;
   frameMs?: 10 | 20 | 30;
   operationId?: string;
+  signal?: AbortSignal;
 }): Promise<Array<{ start: number; end: number }>> {
   return new Promise((resolve, reject) => {
     log.info(`[${operationId}] Starting streamed VAD for: ${inputPath}`);
@@ -1570,6 +1606,26 @@ export async function detectSpeechIntervals({
       'error',
       '-',
     ]);
+
+    if (signal) {
+      const killSig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
+      const onAbort = () => {
+        if (!ffmpeg.killed) {
+          log.info(
+            `[${operationId}] Killing VAD ffmpeg process due to abort signal`
+          );
+          ffmpeg.kill(killSig);
+        }
+      };
+      if (signal.aborted) {
+        onAbort();
+      } else {
+        signal.addEventListener('abort', onAbort, { once: true });
+        ffmpeg.once('close', () =>
+          signal.removeEventListener('abort', onAbort)
+        );
+      }
+    }
 
     ffmpeg.stdout.on('data', (chunk: Buffer) => {
       // Combine leftover data from previous chunk with the new chunk

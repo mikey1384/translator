@@ -120,7 +120,6 @@ try {
   ipcMain.handle('copy-file', fileHandlers.handleCopyFile);
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
   ipcMain.handle('readFileContent', fileHandlers.handleReadFileContent);
-  // API Keys
   ipcMain.handle('get-api-key-status', apiKeyHandlers.handleGetApiKeyStatus);
   ipcMain.handle('save-api-key', apiKeyHandlers.handleSaveApiKey);
 
