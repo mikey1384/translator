@@ -228,6 +228,8 @@ const controlsWrapperStyles = (isFullScreen: boolean) => css`
 `;
 
 export default function VideoPlayer({
+  isProcessingUrl,
+  isTranslationInProgress,
   isProgressBarVisible,
   videoUrl,
   subtitles,
@@ -249,6 +251,8 @@ export default function VideoPlayer({
   showOriginalText,
   videoRef,
 }: {
+  isProcessingUrl: boolean;
+  isTranslationInProgress: boolean;
   isProgressBarVisible: boolean;
   videoUrl: string;
   subtitles: SrtSegment[];
@@ -718,6 +722,8 @@ export default function VideoPlayer({
         {!isFullScreen && (
           <div className={controlsWrapperStyles(isFullScreen)}>
             <SideMenu
+              isProcessingUrl={isProcessingUrl}
+              isTranslationInProgress={isTranslationInProgress}
               onProcessUrl={onProcessUrl}
               hasSubtitles={subtitles && subtitles.length > 0}
               onShiftAllSubtitles={onShiftAllSubtitles}

@@ -24,7 +24,7 @@ export default function GenerateSubtitles({
   downloadQuality,
   error,
   inputMode,
-  isGenerating,
+  isTranslationInProgress,
   isLoadingKeyStatus,
   isProcessingUrl,
   onGenerateSubtitles,
@@ -52,7 +52,7 @@ export default function GenerateSubtitles({
   downloadQuality: VideoQuality;
   error: string | null;
   inputMode: 'file' | 'url';
-  isGenerating: boolean;
+  isTranslationInProgress: boolean;
   isLoadingKeyStatus: boolean;
   isProcessingUrl: boolean;
   onGenerateSubtitles: () => void;
@@ -112,7 +112,7 @@ export default function GenerateSubtitles({
           <InputModeToggle
             inputMode={inputMode}
             onSetInputMode={onSetInputMode}
-            isGenerating={isGenerating}
+            isTranslationInProgress={isTranslationInProgress}
             isProcessingUrl={isProcessingUrl}
           />
 
@@ -159,7 +159,7 @@ export default function GenerateSubtitles({
                 setDownloadQuality={onSetDownloadQuality}
                 handleProcessUrl={onProcessUrl}
                 isProcessingUrl={isProcessingUrl}
-                isGenerating={isGenerating}
+                isTranslationInProgress={isTranslationInProgress}
               />
             </div>
           )}
@@ -168,7 +168,7 @@ export default function GenerateSubtitles({
             <GenerateSubtitlesPanel
               targetLanguage={targetLanguage}
               setTargetLanguage={onSetTargetLanguage}
-              isGenerating={isGenerating}
+              isTranslationInProgress={isTranslationInProgress}
               showOriginalText={showOriginalText}
               onShowOriginalTextChange={onShowOriginalTextChange}
               videoFile={videoFile}

@@ -7,6 +7,8 @@ import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 
 export default function SideMenu({
+  isProcessingUrl,
+  isTranslationInProgress,
   onProcessUrl,
   hasSubtitles = false,
   onShiftAllSubtitles,
@@ -20,6 +22,8 @@ export default function SideMenu({
   onSetSubtitleSegments,
   onSrtFileLoaded,
 }: {
+  isProcessingUrl: boolean;
+  isTranslationInProgress: boolean;
   onProcessUrl: () => void;
   hasSubtitles?: boolean;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
@@ -182,7 +186,9 @@ export default function SideMenu({
             variant="secondary"
             size="sm"
             title={t('videoPlayer.sideMenu.loadVideoFromUrl')}
-            disabled={!urlInput.trim()}
+            disabled={
+              !urlInput.trim() || isTranslationInProgress || isProcessingUrl
+            }
           >
             {t('videoPlayer.sideMenu.load')}
           </Button>

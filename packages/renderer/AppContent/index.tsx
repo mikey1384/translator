@@ -125,7 +125,6 @@ function AppContent() {
   const [downloadedVideoPath, setDownloadedVideoPath] = useState<string | null>(
     null
   );
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [urlInput, setUrlInput] = useState<string>('');
   const [downloadQuality, setDownloadQuality] = useState<VideoQuality>('mid');
   const [didDownloadFromUrl, setDidDownloadFromUrl] = useState<boolean>(false);
@@ -697,6 +696,8 @@ function AppContent() {
           <>
             {videoUrl && (
               <VideoPlayer
+                isProcessingUrl={isProcessingUrl}
+                isTranslationInProgress={isTranslationInProgress}
                 videoRef={videoRef}
                 videoUrl={videoUrl}
                 subtitles={subtitleSegments}
@@ -730,7 +731,7 @@ function AppContent() {
                 downloadQuality={downloadQuality}
                 error={error}
                 inputMode={inputMode}
-                isGenerating={isGenerating}
+                isTranslationInProgress={isTranslationInProgress}
                 isLoadingKeyStatus={isLoadingKeyStatus}
                 isProcessingUrl={isProcessingUrl}
                 onGenerateSubtitles={onGenerateSubtitles}
@@ -1144,7 +1145,6 @@ function AppContent() {
     }
     setError('');
     resetSubtitleState();
-    setIsGenerating(true);
     const operationId = `generate-${Date.now()}`;
     setIsTranslationInProgress(true);
     try {
@@ -1171,8 +1171,6 @@ function AppContent() {
             `Error processing final subtitles: ${parseError instanceof Error ? parseError.message : String(parseError)}`
           );
         }
-      } else if (result.cancelled) {
-        setIsGenerating(false);
       } else {
         setError(
           'No subtitles were generated. This could be due to a language not being supported, audio quality, internet connection issues, or the video being too short.'
@@ -1181,8 +1179,6 @@ function AppContent() {
     } catch (err: any) {
       console.error('Error generating subtitles:', err);
       setError(`Error generating subtitles: ${err.message || err}`);
-    } finally {
-      setIsGenerating(false);
     }
 
     function buildGenerateOptions() {

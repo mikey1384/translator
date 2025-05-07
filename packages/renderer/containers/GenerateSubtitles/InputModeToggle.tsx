@@ -51,12 +51,12 @@ const inputModeToggleStyles = css`
 function InputModeToggle({
   inputMode,
   onSetInputMode,
-  isGenerating,
+  isTranslationInProgress,
   isProcessingUrl,
 }: {
   inputMode: 'file' | 'url';
   onSetInputMode: (mode: 'file' | 'url') => void;
-  isGenerating: boolean;
+  isTranslationInProgress: boolean;
   isProcessingUrl: boolean;
 }) {
   const { t } = useTranslation();
@@ -66,14 +66,14 @@ function InputModeToggle({
       <button
         className={inputMode === 'file' ? 'active' : ''}
         onClick={() => onSetInputMode('file')}
-        disabled={isGenerating || isProcessingUrl}
+        disabled={isTranslationInProgress || isProcessingUrl}
       >
         {t('input.fromDevice')}
       </button>
       <button
         className={inputMode === 'url' ? 'active' : ''}
         onClick={() => onSetInputMode('url')}
-        disabled={isGenerating || isProcessingUrl}
+        disabled={isTranslationInProgress || isProcessingUrl}
       >
         {t('input.fromWeb')}
       </button>

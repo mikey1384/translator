@@ -9,7 +9,7 @@ interface UrlInputSectionProps {
   urlInput: string;
   setUrlInput: (value: string) => void;
   setError: (error: string) => void;
-  isGenerating: boolean;
+  isTranslationInProgress: boolean;
   isProcessingUrl: boolean;
   downloadQuality: VideoQuality;
   setDownloadQuality: (quality: VideoQuality) => void;
@@ -42,7 +42,7 @@ function UrlInputSection({
   urlInput,
   setUrlInput,
   setError,
-  isGenerating,
+  isTranslationInProgress,
   isProcessingUrl,
   downloadQuality,
   setDownloadQuality,
@@ -79,7 +79,7 @@ function UrlInputSection({
           setUrlInput(e.target.value);
           setError('');
         }}
-        disabled={isGenerating || isProcessingUrl}
+        disabled={isTranslationInProgress || isProcessingUrl}
       />
       <div
         className={css`
@@ -108,7 +108,7 @@ function UrlInputSection({
           onChange={(e: ChangeEvent<HTMLSelectElement>) =>
             setDownloadQuality(e.target.value as VideoQuality)
           }
-          disabled={isProcessingUrl || isGenerating}
+          disabled={isProcessingUrl || isTranslationInProgress}
           className={selectStyles} // Apply existing select styles
           style={{ minWidth: '120px' }}
         >
@@ -119,7 +119,7 @@ function UrlInputSection({
       </div>
       <Button
         onClick={handleProcessUrl}
-        disabled={!urlInput || isProcessingUrl || isGenerating}
+        disabled={!urlInput || isProcessingUrl || isTranslationInProgress}
         isLoading={isProcessingUrl}
         size="md"
         variant="secondary"

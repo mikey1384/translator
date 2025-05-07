@@ -83,7 +83,7 @@ interface GenerateSubtitlesPanelProps {
   /** from LanguageSelection: */
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
-  isGenerating: boolean;
+  isTranslationInProgress: boolean;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
 
@@ -101,7 +101,7 @@ interface GenerateSubtitlesPanelProps {
 export default function GenerateSubtitlesPanel({
   targetLanguage,
   setTargetLanguage,
-  isGenerating,
+  isTranslationInProgress,
   showOriginalText,
   onShowOriginalTextChange,
   videoFile,
@@ -139,7 +139,9 @@ export default function GenerateSubtitlesPanel({
           value={targetLanguage}
           onChange={e => setTargetLanguage(e.target.value)}
           className={selectStyles}
-          disabled={isGenerating || isProcessingUrl || isMergingInProgress}
+          disabled={
+            isTranslationInProgress || isProcessingUrl || isMergingInProgress
+          }
         >
           {baseLanguageOptions.map(lang => (
             <option key={lang.value} value={lang.value}>
@@ -190,15 +192,15 @@ export default function GenerateSubtitlesPanel({
           onClick={handleGenerateSubtitles}
           disabled={
             (!videoFile && !videoFilePath) ||
-            isGenerating ||
+            isTranslationInProgress ||
             isProcessingUrl ||
             isMergingInProgress
           }
           size="md"
           variant="primary"
-          isLoading={isGenerating}
+          isLoading={isTranslationInProgress}
         >
-          {isGenerating
+          {isTranslationInProgress
             ? t('subtitles.generating')
             : t('subtitles.generateNow')}
         </Button>
