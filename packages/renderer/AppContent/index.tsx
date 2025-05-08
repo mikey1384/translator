@@ -38,6 +38,7 @@ import * as SubtitlesIPC from '@ipc/subtitles';
 import * as UrlIPC from '@ipc/url';
 import * as OperationIPC from '@ipc/operation';
 import * as SystemIPC from '@ipc/system';
+import { useSubStore } from '../state/subtitle-store.js';
 
 const headerRightGroupStyles = css`
   display: flex;
@@ -995,6 +996,7 @@ export default function AppContent() {
   }
 
   function handleReplaceAll(findText: string, replaceWithText: string) {
+    findText = findText.trim();
     if (!findText || !replaceWithText) {
       console.warn(
         '[AppContent] Replace All requires both find and replace text.'
@@ -1006,21 +1008,31 @@ export default function AppContent() {
       `[AppContent] Replacing "${findText}" with "${replaceWithText}"`
     );
 
-    const updatedSegments = replaceAll(subtitleSegments);
+    const updatedSegments = replaceAllInSegments(getLiveSegments());
     handleSetSubtitleSegments(updatedSegments);
 
     setMatchedIndices([]);
     setActiveMatchIndex(0);
+    setSearchText('');
+    setTimeout(() => setSearchText(findText), 0);
 
-    function replaceAll(currentSegments: SrtSegment[]) {
+    function replaceAllInSegments(currentSegments: SrtSegment[]) {
       try {
-        const escapedFindText = findText.replace(/[.*+?^${}()|[\\\]]/g, '\\$&');
+        const escapedFindText = findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(escapedFindText, 'gi');
 
-        return currentSegments.map(seg => ({
-          ...seg,
-          translation: (seg.translation ?? '').replace(regex, replaceWithText),
-        }));
+        return currentSegments.map(seg => {
+          if (seg.translation && regex.test(seg.translation)) {
+            return {
+              ...seg,
+              translation: seg.translation.replace(regex, replaceWithText),
+            };
+          }
+          return {
+            ...seg,
+            original: seg.original.replace(regex, replaceWithText),
+          };
+        });
       } catch (error) {
         console.error('Error during Replace All regex operation:', error);
         setSaveError(`Error during replacement: ${error}`);
@@ -1253,6 +1265,11 @@ export default function AppContent() {
         );
       }
     }
+  }
+
+  function getLiveSegments(): SrtSegment[] {
+    const { order, segments } = useSubStore.getState();
+    return order.map(id => segments[id]);
   }
 
   async function handleCancelDownload(operationId: string) {
