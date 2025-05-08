@@ -4,10 +4,6 @@ import { SrtSegment } from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 
-/* ------------------------------------------------------------------ */
-/* 📊  Store shape                                                     */
-/* ------------------------------------------------------------------ */
-
 type SegmentMap = Record<string, SrtSegment>;
 
 interface State {
@@ -35,6 +31,7 @@ interface Actions {
   pause: () => void;
   incSourceId: () => void;
   setOriginalPath: (p: string | null) => void;
+  replaceAll: (find: string, replace: string) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -145,9 +142,12 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         });
       }),
 
-    scrollToCurrent: () => {
-      // Placeholder for scrolling to current subtitle logic
-      console.log('Scrolling to current subtitle');
+    scrollToCurrent() {
+      const { activeId, playingId } = get();
+      const id = playingId ?? activeId;
+      if (!id) return;
+      const node = document.querySelector<HTMLElement>(`[data-cue-id="${id}"]`);
+      node?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     },
 
     setSrtPath: filePath => set({ originalPath: filePath }),
@@ -199,12 +199,22 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
     },
 
     setOriginalPath: p => set({ originalPath: p }),
+
+    replaceAll: (find, replace) => {
+      if (!find.trim() || !replace) return;
+      const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(escaped, 'gi');
+      set(s => {
+        Object.values(s.segments).forEach(cue => {
+          cue.original = cue.original.replace(re, replace);
+          if (cue.translation) {
+            cue.translation = cue.translation.replace(re, replace);
+          }
+        });
+      });
+    },
   }))
 );
-
-/* ------------------------------------------------------------------ */
-/* 🎯  Row-level selector                                              */
-/* ------------------------------------------------------------------ */
 
 export const useSubActions = () =>
   useSubStore(

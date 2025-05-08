@@ -1,91 +1,126 @@
-import { useState, useCallback } from 'react';
-import ProgressArea from './ProgressArea';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { colors } from '../../styles';
-
+import ProgressArea from './ProgressArea';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
 
 /* ------------------------------------------------------------------ */
-/* util – dev-only logging                                             */
+/* 📐  Constants & helpers                                             */
 /* ------------------------------------------------------------------ */
-const dev = {
-  log: (...a: any[]) =>
-    process.env.NODE_ENV !== 'production' && console.log(...a),
-  error: (...a: any[]) =>
-    process.env.NODE_ENV !== 'production' && console.error(...a),
+const TRANSLATION_PROGRESS_COLOR = colors.progressTranslate;
+
+const devLog = (...a: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...a);
+  }
+};
+const devError = (...a: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(...a);
+  }
 };
 
-/* ------------------------------------------------------------------ */
-const BAR_COLOR = colors.progressTranslate;
+type TranslationSlice = {
+  inProgress: boolean;
+  percent: number;
+  stage: string;
+  id?: string;
+};
 
 export default function TranslationProgressArea({
   autoCloseDelay = 3_000,
 }: { autoCloseDelay?: number } = {}) {
-  /* pull translation slice from the global task store */
+  /* -------------------------------------------------------------- */
+  /* 1 ️⃣  read from zustand                                        */
+  /* -------------------------------------------------------------- */
   const {
     translation: { inProgress, percent, stage, id },
-    setTranslation,
+    setTranslation: patchTranslation,
   } = useTaskStore(s => ({
     translation: s.translation,
     setTranslation: s.setTranslation,
-  }));
+  })) as {
+    translation: TranslationSlice;
+    setTranslation: (p: Partial<TranslationSlice>) => void;
+  };
 
+  /* -------------------------------------------------------------- */
+  /* 2 ️⃣  local UI state                                           */
+  /* -------------------------------------------------------------- */
   const [isCancelling, setIsCancelling] = useState(false);
 
-  /* ---------------- cancel handler ---------------- */
+  useEffect(() => {
+    devLog('[TransPA] op id →', id);
+  }, [id]);
+
+  /* -------------------------------------------------------------- */
+  /* 3 ️⃣  handlers                                                */
+  /* -------------------------------------------------------------- */
   const handleCancel = useCallback(async () => {
     if (!id) {
-      alert('Cannot cancel – operation id missing.');
-      setTranslation({ inProgress: false });
+      console.warn('[TransPA] no operation id – nothing to cancel');
+      patchTranslation({ inProgress: false });
       return;
     }
 
     if (
       !window.confirm(
-        "Cancel translation?\n\nProgress will be lost and you'll need to start again."
+        "Cancel translation? Progress will be lost and you'll need to start again."
       )
-    ) {
+    )
       return;
-    }
 
     setIsCancelling(true);
+
     try {
-      dev.log('[TPA] sending cancel for', id);
+      devLog('[TransPA] cancelling', id);
       await OperationIPC.cancel(id);
     } catch (err: any) {
-      dev.error('[TPA] cancel failed', err);
-      alert(`Failed to cancel: ${err.message || err}`);
+      devError('[TransPA] cancel failed', err);
+      alert(`Failed to cancel the operation: ${err.message || err}`);
     } finally {
       setIsCancelling(false);
-      setTranslation({ inProgress: false });
+      patchTranslation({ inProgress: false });
     }
-  }, [id, setTranslation]);
+  }, [id, patchTranslation]);
 
-  /* ---------------- close handler (auto-hide) ----- */
   const handleClose = useCallback(() => {
-    dev.log('[TPA] closed manually/auto');
-    setTranslation({ inProgress: false });
-  }, [setTranslation]);
+    patchTranslation({ inProgress: false });
+  }, [patchTranslation]);
 
-  /* ---------------- render ------------------------ */
+  /* -------------------------------------------------------------- */
+  /* 4 ️⃣  derived colour                                           */
+  /* -------------------------------------------------------------- */
+  const progressBarColor = useMemo(() => {
+    if (isCancelling) return colors.danger;
+    if (percent >= 100) return colors.success;
+    return TRANSLATION_PROGRESS_COLOR;
+  }, [isCancelling, percent]);
+
+  /* -------------------------------------------------------------- */
+  /* 5 ️⃣  short-circuit when idle                                  */
+  /* -------------------------------------------------------------- */
+  if (!inProgress) return null;
+
+  /* -------------------------------------------------------------- */
+  /* 6 ️⃣  render                                                  */
+  /* -------------------------------------------------------------- */
   return (
     <ProgressArea
       isVisible={inProgress}
       title="Translation in Progress"
       progress={percent}
       stage={stage}
-      progressBarColor={
-        isCancelling
-          ? colors.danger
-          : percent >= 100
-            ? colors.success
-            : BAR_COLOR
-      }
-      operationId={id ?? null}
+      progressBarColor={progressBarColor}
       isCancelling={isCancelling}
+      operationId={id ?? null}
       onCancel={handleCancel}
       onClose={handleClose}
-      autoCloseDelay={autoCloseDelay}
+      autoCloseDelay={
+        percent >= 100 && !stage.toLowerCase().includes('error')
+          ? autoCloseDelay
+          : undefined
+      }
     />
   );
 }

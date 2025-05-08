@@ -84,17 +84,24 @@ const closeButtonStyles = css`
 
 export default function FindBar() {
   const {
-    findBarVisible: isVisible = false,
-    searchText = '',
-    setSearchText = () => {},
-    matchCount = 0,
-    activeMatchIndex = 0,
-    findNext = () => {},
-    findPrev = () => {},
-    hideFindBar = () => {},
-  } = useUIStore() || {};
-
-  const { replaceAll = () => {} } = useSubStore() || {};
+    isVisible,
+    searchText,
+    setSearchText,
+    matchCount,
+    activeMatchIndex,
+    findNext,
+    findPrev,
+    hideFindBar,
+  } = useUIStore(state => ({
+    isVisible: state.isFindBarVisible,
+    searchText: state.searchText,
+    setSearchText: state.setSearchText,
+    matchCount: state.matchedIndices.length,
+    activeMatchIndex: state.activeMatchIndex,
+    findNext: state.handleFindNext,
+    findPrev: state.handleFindPrev,
+    hideFindBar: state.handleCloseFindBar,
+  }));
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [replaceText, setReplaceText] = useState('');
@@ -199,7 +206,9 @@ export default function FindBar() {
       </button>
       <button
         className={buttonStyles}
-        onClick={() => replaceAll(searchText, replaceText)}
+        onClick={() =>
+          useSubStore.getState().replaceAll(searchText, replaceText)
+        }
         disabled={!searchText || !replaceText}
         title="Replace All Occurrences"
         aria-label="Replace all"

@@ -1,7 +1,8 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 import { useSubStore } from './subtitle-store';
-import { SrtSegment, VideoQuality } from '@shared-types/app';
+import { VideoQuality } from '@shared-types/app';
+import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 
 interface State {
   showSettings: boolean;
@@ -15,6 +16,8 @@ interface State {
   targetLanguage: string;
   showOriginalText: boolean;
   error: string | null;
+  baseFontSize: number;
+  subtitleStyle: SubtitleStylePresetKey;
 }
 
 interface Actions {
@@ -35,6 +38,8 @@ interface Actions {
   setError(error: string | null): void;
   handleProcessUrl(): void;
   openFileDialog(): void;
+  setBaseFontSize(size: number): void;
+  setSubtitleStyle(p: SubtitleStylePresetKey): void;
 }
 
 const initial: State = {
@@ -49,6 +54,8 @@ const initial: State = {
   targetLanguage: 'original',
   showOriginalText: true,
   error: null,
+  baseFontSize: 24,
+  subtitleStyle: 'Default' as SubtitleStylePresetKey,
 };
 
 export const useUIStore = createWithEqualityFn<State & Actions>()(
@@ -111,7 +118,9 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
       const { searchText } = get();
       if (!searchText.trim()) return;
       const replaceWith = prompt('Replace with:', '');
-      if (replaceWith !== null) replaceAll(searchText, replaceWith, true);
+      if (replaceWith !== null) {
+        useSubStore.getState().replaceAll(searchText, replaceWith);
+      }
     },
 
     setInputMode(mode) {
@@ -138,6 +147,14 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
       set({ error: error ?? null });
     },
 
+    setBaseFontSize(size) {
+      set({ baseFontSize: size });
+    },
+
+    setSubtitleStyle(p) {
+      set({ subtitleStyle: p });
+    },
+
     handleProcessUrl() {
       const { urlInput, downloadQuality } = get();
       if (!urlInput.trim()) return;
@@ -155,24 +172,9 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
   }))
 );
 
-function replaceAll(find: string, replace: string, dualMode = true) {
-  if (!find.trim() || !replace) return;
-
-  const { order, segments } = useSubStore.getState();
-  const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(escaped, 'gi');
-
-  const newSegs: SrtSegment[] = order.map(id => {
-    const s = segments[id];
-    return {
-      ...s,
-      original: s.original.replace(re, replace),
-      translation:
-        dualMode && s.translation
-          ? s.translation.replace(re, replace)
-          : s.translation,
-    };
-  });
-
-  useSubStore.getState().load(newSegs);
-}
+export const useSubtitlePrefs = () =>
+  useUIStore(s => ({
+    baseFontSize: s.baseFontSize,
+    subtitleStyle: s.subtitleStyle,
+    showOriginal: s.showOriginalText,
+  }));

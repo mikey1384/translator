@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { colors } from '../../styles.js';
 import ProgressArea from './ProgressArea.js';
 import subtitleRendererClient from '../../clients/subtitle-renderer-client.js';
@@ -6,10 +6,23 @@ import { useTaskStore } from '../../state';
 
 const MERGE_PROGRESS_COLOR = colors.progressMerge;
 
-const devLog = (...a: any[]) =>
-  process.env.NODE_ENV !== 'production' && console.log(...a);
-const devError = (...a: any[]) =>
-  process.env.NODE_ENV !== 'production' && console.error(...a);
+const devLog = (...a: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...a);
+  }
+};
+const devError = (...a: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(...a);
+  }
+};
+
+type MergeSlice = {
+  inProgress: boolean;
+  percent: number;
+  stage: string;
+  id?: string;
+};
 
 export default function MergingProgressArea({
   autoCloseDelay = 4_000,
@@ -20,7 +33,10 @@ export default function MergingProgressArea({
   } = useTaskStore(s => ({
     merge: s.merge,
     setMerge: s.setMerge,
-  }));
+  })) as {
+    merge: MergeSlice;
+    setMerge: (patch: Partial<MergeSlice>) => void;
+  };
 
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -47,8 +63,18 @@ export default function MergingProgressArea({
   }, [id, patchMerge]);
 
   const handleClose = useCallback(() => {
-    patchMerge({ inProgress: false });
+    patchMerge({ inProgress: false, percent: 0, stage: '' });
   }, [patchMerge]);
+
+  const progressBarColor = useMemo(() => {
+    return stage.toLowerCase().includes('error')
+      ? colors.danger
+      : percent >= 100
+        ? colors.success
+        : MERGE_PROGRESS_COLOR;
+  }, [stage, percent]);
+
+  if (!inProgress) return null;
 
   return (
     <ProgressArea
@@ -56,13 +82,7 @@ export default function MergingProgressArea({
       title="Merging Video & Subtitles"
       progress={percent}
       stage={stage}
-      progressBarColor={
-        stage.toLowerCase().includes('error')
-          ? colors.danger
-          : percent >= 100
-            ? colors.success
-            : MERGE_PROGRESS_COLOR
-      }
+      progressBarColor={progressBarColor}
       isCancelling={isCancelling}
       operationId={id ?? null}
       onCancel={handleCancel}

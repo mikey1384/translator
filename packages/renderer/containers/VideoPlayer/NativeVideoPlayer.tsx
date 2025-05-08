@@ -10,10 +10,10 @@ import {
 
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 
-import { useVideoStore, useSubStore, useUIStore } from '../../state';
+import { useVideoStore, useSubStore } from '../../state';
+import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
 
 import { cueText } from '../../../shared/helpers';
-import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
 
 declare global {
   interface Window {
@@ -60,19 +60,23 @@ export interface NativeVideoPlayerProps {
   parentRef?: React.RefObject<HTMLDivElement | null>;
   /** true when the player has been "zoomed" by VideoPlayer into full size */
   isFullyExpanded?: boolean;
+  baseFontSize: number;
+  stylePreset: SubtitleStylePresetKey;
+  showOriginalText: boolean;
 }
 
 export default function NativeVideoPlayer({
   parentRef,
   isFullyExpanded = false,
+  baseFontSize,
+  stylePreset,
+  showOriginalText,
 }: NativeVideoPlayerProps) {
   /* ============================================================
      1.  read everything from stores
      ============================================================ */
   const { url: videoUrl, togglePlay } = useVideoStore();
   const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
-
-  const { showOriginalText } = useUIStore();
 
   /* ============================================================
      2.  local state
@@ -84,7 +88,6 @@ export default function NativeVideoPlayer({
   const [activeSubtitle, setActiveSubtitle] = useState('');
   const [subtitleVisible, setSubtitleVisible] = useState(false);
 
-  const [_isPlaying, setIsPlaying] = useState(false);
   const [indicator, setIndicator] = useState<'play' | 'pause'>('pause');
   const [showInd, setShowInd] = useState(false);
 
@@ -103,18 +106,15 @@ export default function NativeVideoPlayer({
     if (getNativePlayerInstance() !== v) setNativePlayerInstance(v);
 
     const onPlay = () => {
-      setIsPlaying(true);
       setIndicator('play');
     };
     const onPause = () => {
-      setIsPlaying(false);
       setIndicator('pause');
     };
     const onErr = () => setErrorMessage('Video playback error');
 
     const onLoadedMetadata = () => {
       setNativeH(v.videoHeight);
-      setIsPlaying(!v.paused);
     };
 
     v.addEventListener('play', onPlay);
@@ -227,7 +227,7 @@ export default function NativeVideoPlayer({
   };
 
   const effFontSize = (() => {
-    const base = Math.max(10, 16); // Fallback to a default value
+    const base = baseFontSize;
     if (nativeH && dispH)
       return Math.max(10, Math.round((base * dispH) / nativeH));
     return isFullyExpanded ? Math.round(base * 1.2) : base;
@@ -276,7 +276,7 @@ export default function NativeVideoPlayer({
         isVisible={subtitleVisible}
         displayFontSize={effFontSize}
         isFullScreen={isFullyExpanded}
-        stylePreset={'default' as SubtitleStylePresetKey}
+        stylePreset={stylePreset}
       />
 
       {showInd && (

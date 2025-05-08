@@ -1,4 +1,4 @@
-import { useUIStore, useVideoStore, useTaskStore, useSubStore } from '../state';
+import { useUIStore, useVideoStore, useTaskStore } from '../state';
 
 import FindBar from '../components/FindBar';
 import SettingsPage from '../containers/SettingsPage';
@@ -15,7 +15,7 @@ import { pageWrapperStyles, containerStyles, colors } from '../styles';
 
 export default function AppContent() {
   const { showSettings } = useUIStore();
-  const { url: videoUrl, togglePlay } = useVideoStore();
+  const { url: videoUrl } = useVideoStore();
   const {
     download,
     merge,
@@ -23,7 +23,6 @@ export default function AppContent() {
     cancellingDownload,
     setCancellingDownload,
   } = useTaskStore();
-  const liveSegments = useSubStore(s => s.order.map(id => s.segments[id]));
 
   const handleCancelDownload = () => {
     if (!download.id) return;
@@ -46,16 +45,7 @@ export default function AppContent() {
           <SettingsPage />
         ) : (
           <>
-            {videoUrl && (
-              <VideoPlayer
-                videoUrl={videoUrl}
-                subtitles={liveSegments}
-                isTranslationInProgress={translation.inProgress}
-                isMergingInProgress={merge.inProgress}
-                isProcessingUrl={download.inProgress}
-                onTogglePlay={togglePlay}
-              />
-            )}
+            {videoUrl && <VideoPlayer />}
 
             <MainPanels />
 
@@ -80,20 +70,9 @@ export default function AppContent() {
               }
             />
 
-            {merge.inProgress && (
-              <MergingProgressArea
-                mergeProgress={merge.percent}
-                mergeStage={merge.stage}
-                operationId={merge.id}
-              />
-            )}
+            {merge.inProgress && <MergingProgressArea />}
 
-            <TranslationProgressArea
-              isTranslationInProgress={translation.inProgress}
-              translationProgress={translation.percent}
-              translationStage={translation.stage}
-              translationOperationId={translation.id}
-            />
+            {translation.inProgress && <TranslationProgressArea />}
 
             <BackToTopButton />
           </>

@@ -13,6 +13,7 @@ import {
   useTaskStore,
   useSubStore,
   useUIStore,
+  useSubtitlePrefs,
 } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
@@ -249,6 +250,7 @@ export default function VideoPlayer() {
   } = useVideoStore();
   const { merge, download, translation } = useTaskStore();
   const { handleProcessUrl } = useUIStore();
+  const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
 
   /* derived */
   const isProgressBarVisible =
@@ -372,6 +374,9 @@ export default function VideoPlayer() {
           <NativeVideoPlayer
             parentRef={playerDivRef}
             isFullyExpanded={isFullScreen}
+            baseFontSize={baseFontSize}
+            stylePreset={subtitleStyle}
+            showOriginalText={showOriginal}
           />
 
           {/* -------- overlays (shared for window & FS) -------- */}
