@@ -479,7 +479,7 @@ export function EditSubtitles({
             setMergeFontSize={setMergeFontSize}
             mergeStylePreset={mergeStylePreset}
             setMergeStylePreset={setMergeStylePreset}
-            handleMergeVideoWithSubtitles={handleMergeVideoWithSubtitles}
+            onMergeMediaWithSubtitles={handleMergeMediaWithSubtitles}
             isMergingInProgress={isMergingInProgressProp || false}
             videoFileExists={!!videoFile || !!videoFilePath}
             subtitlesExist={!!(subtitlesProp && subtitlesProp.length > 0)}
@@ -519,7 +519,7 @@ export function EditSubtitles({
     }
   }
 
-  async function handleMergeVideoWithSubtitles(): Promise<void> {
+  async function handleMergeMediaWithSubtitles(): Promise<void> {
     console.log(
       '[EditSubtitles] handleMergeVideoWithSubtitles triggered (New PNG Sequence Method).'
     );
@@ -573,7 +573,13 @@ export function EditSubtitles({
         segments: subtitlesProp,
         mode,
       });
-      const videoDuration = videoDurationProp ?? 0;
+      const videoDuration = videoDurationProp;
+      if (!videoDuration) {
+        const msg = 'Cannot merge: video/audio duration unknown.';
+        console.error(`[EditSubtitles] ${msg}`);
+        setSaveError(msg);
+        return;
+      }
       const videoWidth = isAudioOnly ? 1280 : (videoWidthProp ?? 1280);
       const videoHeight = isAudioOnly ? 720 : (videoHeightProp ?? 720);
       const frameRate = isAudioOnly ? 30 : (videoFrameRateProp ?? 30);

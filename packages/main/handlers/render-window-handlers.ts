@@ -137,7 +137,18 @@ export function initializeRenderWindowHandlers(): void {
         log.info(
           `[RenderWindowHandlers ${operationId}] Probing FPS for ${options.originalVideoPath}...`
         );
-        const realFps = await probeFps(options.originalVideoPath);
+        let realFps = options.frameRate || 30;
+        try {
+          const ffmpegSvc = new FFmpegService(app.getPath('temp'));
+          if (await ffmpegSvc.hasVideoTrack(options.originalVideoPath)) {
+            realFps = await probeFps(options.originalVideoPath);
+          }
+        } catch (err) {
+          log.warn(
+            `[${operationId}] Could not probe FPS, falling back to ${realFps}`,
+            err
+          );
+        }
         log.info(
           `[RenderWindowHandlers ${operationId}] Detected real FPS: ${realFps}`
         );
@@ -198,6 +209,10 @@ export function initializeRenderWindowHandlers(): void {
         await directMerge({
           concatListPath,
           baseVideoPath: videoForMerge,
+          audioPath:
+            options.overlayMode === 'blackVideo'
+              ? options.originalVideoPath
+              : undefined,
           outputSavePath: tempMerged,
           videoWidth: options.videoWidth,
           videoHeight: options.videoHeight,

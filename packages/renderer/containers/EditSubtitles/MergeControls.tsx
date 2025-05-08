@@ -71,7 +71,7 @@ interface MergeControlsProps {
   setMergeFontSize: (value: number) => void;
   mergeStylePreset: SubtitleStylePresetKey;
   setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
-  handleMergeVideoWithSubtitles: () => void;
+  onMergeMediaWithSubtitles: () => void;
   isMergingInProgress: boolean;
   videoFileExists: boolean;
   subtitlesExist: boolean;
@@ -83,7 +83,7 @@ function MergeControls({
   setMergeFontSize,
   mergeStylePreset,
   setMergeStylePreset,
-  handleMergeVideoWithSubtitles,
+  onMergeMediaWithSubtitles,
   isMergingInProgress,
   videoFileExists,
   subtitlesExist,
@@ -158,7 +158,7 @@ function MergeControls({
       </select>
 
       <Button
-        onClick={handleMergeVideoWithSubtitles}
+        onClick={onMergeMediaWithSubtitles}
         disabled={
           !videoFileExists ||
           !subtitlesExist ||

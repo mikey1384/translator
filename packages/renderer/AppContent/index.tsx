@@ -1232,17 +1232,16 @@ export default function AppContent() {
     setVideoMetadata(null);
     if (filePath) {
       try {
-        if (!isAudioOnly) {
-          const result = await VideoIPC.getMetadata(filePath);
-          if (result.success && result.metadata) {
-            setVideoMetadata(result.metadata);
-          } else {
-            console.error(
-              '[AppContent] Failed to get video metadata:',
-              result.error
-            );
-            setError(`Failed to get video metadata: ${result.error}`);
-          }
+        const result = await VideoIPC.getMetadata(filePath);
+        if (result.success && result.metadata) {
+          setVideoMetadata(result.metadata);
+          setIsAudioOnly(!(result.metadata.width && result.metadata.height));
+        } else {
+          console.error(
+            '[AppContent] Failed to get video metadata:',
+            result.error
+          );
+          setError(`Failed to get video metadata: ${result.error}`);
         }
       } catch (error) {
         console.error(

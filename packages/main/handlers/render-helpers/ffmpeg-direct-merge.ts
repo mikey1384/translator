@@ -5,6 +5,7 @@ import log from 'electron-log'; // Add log for debugging
 interface DirectMergeOptions {
   concatListPath: string;
   baseVideoPath: string;
+  audioPath?: string;
   outputSavePath: string;
   videoWidth: number;
   videoHeight: number;
@@ -19,13 +20,13 @@ interface DirectMergeOptions {
   signal?: AbortSignal;
 }
 
-// Renamed opts fields to be more descriptive and match caller
 export async function directMerge(
   opts: DirectMergeOptions
 ): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
   const {
     concatListPath,
     baseVideoPath,
+    audioPath,
     outputSavePath,
     videoWidth,
     videoHeight,
@@ -53,9 +54,12 @@ export async function directMerge(
   log.info(`[ffmpeg-direct-merge ${operationId}] Using video codec: ${vcodec}`);
 
   // Build FFmpeg arguments
+  const overlayInput = audioPath ? 2 : 1;
+  const audioMap = audioPath ? ['-map', '1:a:0'] : ['-map', '0:a?'];
   const ffArgs = [
     '-i',
     baseVideoPath,
+    ...(audioPath ? ['-i', audioPath] : []),
     '-f',
     'concat',
     '-safe',
@@ -65,12 +69,11 @@ export async function directMerge(
     '-i',
     concatListPath,
     '-filter_complex',
-    `[1:v]format=rgba,scale=${videoWidth}:${videoHeight},setpts=PTS-STARTPTS[ov];` +
+    `[${overlayInput}:v]format=rgba,scale=${videoWidth}:${videoHeight},setpts=PTS-STARTPTS[ov];` +
       `[0:v][ov]overlay=format=auto:shortest=1[out]`,
     '-map',
     '[out]',
-    '-map',
-    '0:a?',
+    ...audioMap,
     '-c:a',
     'copy',
     '-c:v',
