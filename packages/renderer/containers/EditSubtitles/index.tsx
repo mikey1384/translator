@@ -1,11 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  Dispatch,
-  SetStateAction,
-} from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 
@@ -27,10 +20,8 @@ import {
 } from './hooks';
 
 import { colors } from '../../styles';
-import {
-  SubtitleStylePresetKey,
-  SUBTITLE_STYLE_PRESETS,
-} from '../../../shared/constants/subtitle-styles';
+import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
+
 import {
   useUIStore,
   useVideoStore,
@@ -38,35 +29,30 @@ import {
   useSubStore,
 } from '../../state';
 
-import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
+import * as FileIPC from '@ipc/file';
 
-/* ------------------------------------------------------------------ */
-/* props still provided by parent */
-/* ------------------------------------------------------------------ */
+import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
+import { getNativePlayerInstance } from '../../native-player';
+
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
   onSetMergeOperationId: (id: string | null) => void;
   onStartPngRenderRequest: (
     opts: RenderSubtitlesOptions
   ) => Promise<{ success: boolean; error?: string }>;
-  /* optional – expose scroll helpers to parent */
   editorRef?: React.RefObject<{
     scrollToCurrentSubtitle: () => void;
     scrollToSubtitleIndex: (idx: number) => void;
   }>;
 }
 
-/* ------------------------------------------------------------------ */
-/* EditSubtitles component */
-/* ------------------------------------------------------------------ */
 export default function EditSubtitles({
   setMergeStage,
   onSetMergeOperationId,
   onStartPngRenderRequest,
   editorRef,
 }: EditSubtitlesProps) {
-  /* ---------- stores ---------- */
-  const { searchText, showOriginalText } = useUIStore();
+  const { searchText, showOriginalText, activeMatchIndex } = useUIStore();
   const {
     file: videoFile,
     path: videoPath,
@@ -77,12 +63,13 @@ export default function EditSubtitles({
   const { merge, translation } = useTaskStore();
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
+  const { originalPath, setOriginalPath } = useSubStore();
+  const canSaveDirectly = !!originalPath;
 
   /* ---------- local UI state ---------- */
   const [mergeFontSize, setMergeFontSize] = useState<number>(
     () => Number(localStorage.getItem('savedMergeFontSize')) || 24
   );
-
   const [mergeStylePreset, setMergeStylePreset] =
     useState<SubtitleStylePresetKey>(
       () =>
@@ -90,10 +77,11 @@ export default function EditSubtitles({
           'savedMergeStylePreset'
         ) as SubtitleStylePresetKey) || 'Default'
     );
-
   const [saveError, setSaveError] = useState('');
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const prevSubsRef = useRef<SrtSegment[]>([]);
+  const prevReviewedBatchRef = useRef<number | null>(null);
 
   /* ---------- persist UI prefs ---------- */
   useEffect(() => {
@@ -104,7 +92,7 @@ export default function EditSubtitles({
   }, [mergeStylePreset]);
 
   /* ---------- scrolling helpers ---------- */
-  const activePlayer = null; // replace with getNativePlayerInstance() if needed
+  const activePlayer = getNativePlayerInstance();
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
     subtitles,
     subtitleRefs,
@@ -123,6 +111,7 @@ export default function EditSubtitles({
     [subtitles]
   );
 
+  /* expose helpers to parent */
   useEffect(() => {
     if (editorRef?.current) {
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
@@ -130,62 +119,65 @@ export default function EditSubtitles({
     }
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
-  /* ---------- handle “open SRT” button ---------- */
-  async function handleLoadSrtLocal() {
-    setSaveError('');
-    const res = await openSubtitleWithElectron();
-    if (res.error && !res.error.includes('canceled')) {
-      setSaveError(res.error);
+  /* ---------- Cmd/Ctrl‑F navigation between matches ---------- */
+  useEffect(() => {
+    if (!searchText) return;
+    const matchIndices = subtitles
+      .map((seg, idx) => {
+        const haystack = showOriginalText
+          ? `${seg.original}\n${seg.translation ?? ''}`
+          : (seg.translation ?? seg.original);
+        return haystack.toLowerCase().includes(searchText.toLowerCase())
+          ? idx
+          : -1;
+      })
+      .filter(idx => idx !== -1);
+
+    if (matchIndices.length && activeMatchIndex < matchIndices.length) {
+      scrollToSubtitleIndex(matchIndices[activeMatchIndex]);
+    }
+  }, [
+    searchText,
+    activeMatchIndex,
+    subtitles,
+    showOriginalText,
+    scrollToSubtitleIndex,
+  ]);
+
+  useEffect(() => {
+    const { reviewedBatchStartIndex } = translation; // TODO: Confirm correct property name as it does not exist on Task type
+    if (
+      reviewedBatchStartIndex == null ||
+      reviewedBatchStartIndex === prevReviewedBatchRef.current
+    )
       return;
-    }
-    if (res.segments) subStore.load(res.segments);
-  }
 
-  /* ---------- merge to video ---------- */
-  async function handleMerge() {
-    if (!videoPath) {
-      setSaveError('No source video');
-      return;
-    }
-    if (subtitles.length === 0) {
-      setSaveError('No subtitles loaded');
-      return;
-    }
+    const diff = calcAffected(
+      prevSubsRef.current,
+      subtitles,
+      reviewedBatchStartIndex
+    );
+    setAffectedRows(diff);
+    prevReviewedBatchRef.current = reviewedBatchStartIndex;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [translation.reviewedBatchStartIndex, subtitles]); // TODO: Update dependency array with correct property
 
-    setMergeStage('Starting render...');
-    const opId = `render-${Date.now()}`;
-    onSetMergeOperationId(opId);
+  useEffect(() => {
+    if (affectedRows.length === 0) return;
+    const last = affectedRows[affectedRows.length - 1];
+    const id = subtitles[last]?.id;
+    if (!id) return;
+    const done = () => setAffectedRows([]);
+    scrollWhenReady(id, subtitleRefs, false, 0, 30, done);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [affectedRows]);
 
-    const srtContent = buildSrt({
-      segments: subtitles,
-      mode: showOriginalText ? 'dual' : 'translation',
-    });
+  useEffect(() => {
+    prevSubsRef.current = subtitles;
+  }, [subtitles]);
 
-    const opts: RenderSubtitlesOptions = {
-      operationId: opId,
-      srtContent,
-      outputDir: '/placeholder/output/dir',
-      videoDuration: meta?.duration ?? 0,
-      videoWidth: meta?.width ?? 1280,
-      videoHeight: meta?.height ?? 720,
-      frameRate: meta?.frameRate ?? 30,
-      originalVideoPath: videoPath,
-      fontSizePx: mergeFontSize,
-      stylePreset: mergeStylePreset,
-      overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
-    };
-
-    const res = await onStartPngRenderRequest(opts);
-    if (!res.success) {
-      setSaveError(res.error || 'Render failed');
-      setMergeStage('Error');
-      onSetMergeOperationId(null);
-    }
-  }
-
-  /* ---------- render ---------- */
   return (
-    <Section title={useTranslation().t('editSubtitles.title')} overflowVisible>
+    <Section title={t('editSubtitles.title')} overflowVisible>
       {saveError && (
         <ErrorBanner message={saveError} onClose={() => setSaveError('')} />
       )}
@@ -201,12 +193,8 @@ export default function EditSubtitles({
                 marginBottom: 10,
               }}
             >
-              <FileInputButton
-                onClick={() => {
-                  /* trigger file-open */
-                }}
-              >
-                Select video / audio file
+              <FileInputButton onClick={handleSelectVideoClick}>
+                {t('input.selectVideoAudioFile')}
               </FileInputButton>
             </div>
           )}
@@ -269,13 +257,9 @@ export default function EditSubtitles({
           `}
         >
           <EditSubtitlesHeader
-            onSave={() => {
-              /* call save in store */
-            }}
-            onSaveAs={() => {
-              /* save as */
-            }}
-            canSaveDirectly={false}
+            onSave={handleSaveSrt}
+            onSaveAs={handleSaveEditedSrtAs}
+            canSaveDirectly={canSaveDirectly}
             subtitlesExist={subtitles.length > 0}
           />
 
@@ -294,31 +278,158 @@ export default function EditSubtitles({
       )}
     </Section>
   );
-}
 
-/* ------------------------------------------------------------------ */
-/* util – calculate rows to flash after batch review */
-/* ------------------------------------------------------------------ */
-function calcAffected(
-  prev: SrtSegment[],
-  next: SrtSegment[],
-  start: number | null | undefined
-): number[] {
-  if (start == null) return [];
-  const BATCH = 50,
-    out: number[] = [];
-  for (
-    let i = start;
-    i < Math.min(start + BATCH, prev.length, next.length);
-    i++
-  ) {
-    if (
-      prev[i] &&
-      next[i] &&
-      (prev[i].original !== next[i].original ||
-        prev[i].translation !== next[i].translation)
-    )
-      out.push(i);
+  async function handleSaveSrt() {
+    if (!canSaveDirectly) return handleSaveEditedSrtAs();
+    await writeSrt(originalPath);
   }
-  return out;
+
+  async function handleSaveEditedSrtAs() {
+    const suggestion = originalPath || 'edited_subtitles.srt';
+    const res = await FileIPC.save({
+      title: 'Save SRT File As',
+      defaultPath: suggestion,
+      filters: [{ name: 'SRT Files', extensions: ['srt'] }],
+      content: buildSrt({ segments: subtitles }),
+    });
+    if (res.error && !res.error.includes('canceled')) {
+      setSaveError(res.error);
+    } else if (res.filePath) {
+      await writeSrt(res.filePath);
+      setOriginalPath(res.filePath);
+    }
+  }
+
+  async function writeSrt(path: string) {
+    const result = await FileIPC.save({
+      title: 'Save SRT File',
+      defaultPath: path,
+      filters: [{ name: 'SRT Files', extensions: ['srt'] }],
+      content: buildSrt({ segments: subtitles }),
+    });
+    if (result.error) {
+      setSaveError(result.error);
+    } else {
+      alert(`File saved:\n${path}`);
+    }
+  }
+
+  /* ---------- merge to video ---------- */
+  async function handleMerge() {
+    if (!videoPath) {
+      setSaveError('No source video');
+      return;
+    }
+    if (subtitles.length === 0) {
+      setSaveError('No subtitles loaded');
+      return;
+    }
+    if (!isAudioOnly) {
+      const missing: string[] = [];
+      if (!meta?.duration) missing.push('duration');
+      if (!meta?.width) missing.push('width');
+      if (!meta?.height) missing.push('height');
+      if (!meta?.frameRate) missing.push('frame rate');
+      if (missing.length) {
+        setSaveError(`Missing video metadata (${missing.join(', ')})`);
+        return;
+      }
+    }
+
+    setMergeStage('Starting render…');
+    const opId = `render-${Date.now()}`;
+    onSetMergeOperationId(opId);
+
+    const srtContent = buildSrt({
+      segments: subtitles,
+      mode: showOriginalText ? 'dual' : 'translation',
+    });
+
+    const opts: RenderSubtitlesOptions = {
+      operationId: opId,
+      srtContent,
+      outputDir: '/placeholder/output/dir',
+      videoDuration: meta?.duration ?? 0,
+      videoWidth: meta?.width ?? 1280,
+      videoHeight: meta?.height ?? 720,
+      frameRate: meta?.frameRate ?? 30,
+      originalVideoPath: videoPath,
+      fontSizePx: mergeFontSize,
+      stylePreset: mergeStylePreset,
+      overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+    };
+
+    const res = await onStartPngRenderRequest(opts);
+    if (!res.success) {
+      setSaveError(res.error || 'Render failed');
+      setMergeStage('Error');
+      onSetMergeOperationId(null);
+    }
+  }
+
+  async function handleLoadSrtLocal() {
+    setSaveError('');
+    const res = await openSubtitleWithElectron();
+    if (res.error && !res.error.includes('canceled')) {
+      setSaveError(res.error);
+      return;
+    }
+    if (res.segments) {
+      subStore.load(res.segments);
+      setOriginalPath(res.filePath ?? null);
+    }
+  }
+
+  async function handleSelectVideoClick() {
+    const result = await FileIPC.open({
+      properties: ['openFile'],
+      filters: [
+        {
+          name: 'Media Files',
+          extensions: [
+            'mp4',
+            'mkv',
+            'avi',
+            'mov',
+            'webm',
+            'mp3',
+            'wav',
+            'aac',
+            'ogg',
+            'flac',
+          ],
+        },
+      ],
+    });
+    if (!result.canceled && result.filePaths.length) {
+      await useVideoStore.getState().setFile({
+        name: result.filePaths[0].split(/[\\/]/).pop() || 'media',
+        path: result.filePaths[0],
+      });
+    }
+  }
+
+  function calcAffected(
+    prev: SrtSegment[],
+    next: SrtSegment[],
+    start: number | null | undefined
+  ): number[] {
+    if (start == null) return [];
+    const BATCH = 50,
+      out: number[] = [];
+    for (
+      let i = start;
+      i < Math.min(start + BATCH, prev.length, next.length);
+      i++
+    ) {
+      if (
+        prev[i] &&
+        next[i] &&
+        (prev[i].original !== next[i].original ||
+          prev[i].translation !== next[i].translation)
+      )
+        out.push(i);
+    }
+    return out;
+  }
 }

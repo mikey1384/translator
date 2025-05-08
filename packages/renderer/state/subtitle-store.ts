@@ -17,6 +17,7 @@ interface State {
   playingId: string | null;
   _abortPlayListener?: () => void;
   sourceId: number;
+  originalPath: string | null;
 }
 
 interface Actions {
@@ -33,6 +34,8 @@ interface Actions {
   pause: () => void;
 
   incSourceId: () => void;
+
+  setOriginalPath: (p: string | null) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -46,6 +49,7 @@ const initialState: State = {
   playingId: null,
   _abortPlayListener: undefined,
   sourceId: 0,
+  originalPath: null,
 };
 
 export const useSubStore = createWithEqualityFn<State & Actions>()(
@@ -177,6 +181,8 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
       getNativePlayerInstance()?.pause();
       set({ playingId: null });
     },
+
+    setOriginalPath: p => set({ originalPath: p }),
   }))
 );
 

@@ -2,7 +2,7 @@ import { useState, useRef, Dispatch, SetStateAction, useEffect } from 'react';
 import { debounce } from 'lodash';
 import { EditField, SrtSegment } from '@shared-types/app';
 import { srtTimeToSeconds } from '../../../../shared/helpers/index.js';
-import { useRestoreFocus } from './useRestoreFocus.js';
+import { useRestoreFocus, FocusedInput } from './restoreFocus.js';
 import { DEBOUNCE_DELAY_MS } from '../../../../shared/constants/index.js';
 
 type EditArgs = {
@@ -31,10 +31,7 @@ export function useSubtitleEditing({
   >({});
 
   // Used to restore focus after editing
-  const focusedInputRef = useRef<{
-    index: number | null;
-    field: EditField | null;
-  }>({ index: null, field: null });
+  const focusedInputRef = useRef<FocusedInput>({ index: null, field: null });
 
   // Internal focus restoration logic is handled by useRestoreFocus
   useRestoreFocus(focusedInputRef);

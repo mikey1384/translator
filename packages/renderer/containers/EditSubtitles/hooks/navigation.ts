@@ -74,29 +74,6 @@ export function scrollWhenReady(
   }
 }
 
-interface FocusedInput {
-  index: number | null;
-  field: 'start' | 'end' | 'text' | null;
-}
-
-export const useRestoreFocus = (
-  focusedInputRef: React.RefObject<FocusedInput>
-) => {
-  return useCallback(() => {
-    const { index, field } = focusedInputRef.current;
-    if (index === null || field === null) return;
-    const inputId = `subtitle-${index}-${field}`;
-    const inputToFocus = document.getElementById(inputId);
-    if (inputToFocus) {
-      (inputToFocus as HTMLElement).focus();
-      if (inputToFocus instanceof HTMLInputElement) {
-        const length = inputToFocus.value.length;
-        inputToFocus.setSelectionRange(length, length);
-      }
-    }
-  }, [focusedInputRef]);
-};
-
 export const useSubtitleNavigation = (
   subtitles: SrtSegment[],
   subtitleRefs: React.RefObject<Record<string, HTMLElement | null>>,
