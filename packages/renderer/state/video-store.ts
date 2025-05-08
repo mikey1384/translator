@@ -2,12 +2,13 @@ import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 import { getNativePlayerInstance } from '../native-player';
 import * as VideoIPC from '../ipc/video';
+import * as FileIPC from '../ipc/file';
 
 type Meta = {
   duration: number;
   width: number;
   height: number;
-  frameRate: number;
+  frameRate: number | string;
 } | null;
 
 interface State {
@@ -95,9 +96,37 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     },
 
     async openFileDialog() {
-      // Placeholder for opening file dialog logic
-      console.log('Opening file dialog for video selection');
-      // This should trigger an IPC call or similar to open a file dialog
+      const res = await FileIPC.open({
+        properties: ['openFile'],
+        filters: [
+          {
+            name: 'Media',
+            extensions: [
+              'mp4',
+              'mkv',
+              'avi',
+              'mov',
+              'webm',
+              'mp3',
+              'wav',
+              'aac',
+              'ogg',
+              'flac',
+            ],
+          },
+        ],
+      });
+      if (res.canceled || !res.filePaths.length) return;
+      const p = res.filePaths[0];
+      try {
+        await get().setFile({ name: p.split(/[\\/]/).pop()!, path: p });
+      } catch (err) {
+        console.error('[video-store] Error setting file:', err);
+      }
+      // Keep UI state in sync
+      import('../state/ui-store').then(m =>
+        m.useUIStore.getState().setInputMode('file')
+      );
     },
 
     markReady() {

@@ -55,8 +55,12 @@ const initial: State = {
   showOriginalText: true,
   error: null,
   baseFontSize: 24,
-  subtitleStyle: 'Default' as SubtitleStylePresetKey,
+  subtitleStyle: 'default' as const,
 };
+
+// helper
+const sameArray = (a: number[], b: number[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
 
 export const useUIStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
@@ -90,7 +94,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
     },
 
     setMatchedIndices(indices) {
-      set({ matchedIndices: indices });
+      set(s => {
+        if (sameArray(s.matchedIndices, indices)) return;
+        s.matchedIndices = indices;
+      });
     },
 
     handleFindNext() {

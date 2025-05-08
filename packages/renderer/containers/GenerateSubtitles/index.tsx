@@ -40,7 +40,12 @@ export default function GenerateSubtitles() {
     setError,
   } = useUIStore();
 
-  const { file: videoFile, path: videoFilePath, setFile } = useVideoStore();
+  const {
+    file: videoFile,
+    path: videoFilePath,
+    setFile,
+    openFileDialog,
+  } = useVideoStore();
 
   const { download, translation, merge, setDownload, setTranslation } =
     useTaskStore();
@@ -102,7 +107,7 @@ export default function GenerateSubtitles() {
           >
             {t('input.selectVideoAudioFile')}:
           </label>
-          <FileInputButton onClick={handleSelectVideoClick}>
+          <FileInputButton onClick={openFileDialog}>
             {videoFile
               ? `${t('common.selected')}: ${videoFile.name}`
               : t('input.selectFile')}
@@ -247,35 +252,6 @@ export default function GenerateSubtitles() {
         inProgress: false,
       });
     }
-  }
-
-  async function handleSelectVideoClick() {
-    const res = await FileIPC.open({
-      properties: ['openFile'],
-      filters: [
-        {
-          name: 'Media',
-          extensions: [
-            'mp4',
-            'mkv',
-            'avi',
-            'mov',
-            'webm',
-            'mp3',
-            'wav',
-            'aac',
-            'ogg',
-            'flac',
-          ],
-        },
-      ],
-    });
-    if (res.canceled || !res.filePaths.length) return;
-    const p = res.filePaths[0];
-    await useVideoStore
-      .getState()
-      .setFile({ name: p.split(/[\\/]/).pop()!, path: p });
-    useUIStore.getState().setInputMode('file');
   }
 
   async function handleSaveOriginalVideo() {
