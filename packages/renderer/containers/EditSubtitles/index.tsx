@@ -134,9 +134,6 @@ export default function EditSubtitles({
       showOriginalText
     );
 
-    // keep the counter in the store up-to-date
-    // This ensures that when navigation or search text changes,
-    // the store reflects the matches based on the current subtitles state.
     const currentMatchedIndices = useUIStore.getState().matchedIndices;
     if (!sameArray(currentMatchedIndices, localMatchIndices)) {
       useUIStore.getState().setMatchedIndices(localMatchIndices);
