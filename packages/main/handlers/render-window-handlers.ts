@@ -8,6 +8,10 @@ import { pathToFileURL } from 'url';
 import { RenderSubtitlesOptions } from '@shared-types/app';
 import { FFmpegService } from '../../services/ffmpeg-service.js';
 import { getAssetsPath } from '../../shared/helpers/paths.js';
+import {
+  registerAutoCancel,
+  finish as registryFinish,
+} from '../active-processes.js';
 
 import {
   createOperationTempDir,
@@ -70,6 +74,10 @@ export function initializeRenderWindowHandlers(): void {
       jobControllers.set(operationId, controller);
 
       activeRenderJobs.set(operationId, { processes: [] });
+
+      registerAutoCancel(operationId, event.sender, () =>
+        cancelRenderJob(operationId)
+      );
 
       let tempDirPath: string | null = null;
       let browser: import('puppeteer').Browser | null = null;
@@ -247,6 +255,7 @@ export function initializeRenderWindowHandlers(): void {
         await cleanupTempDir({ tempDirPath, operationId });
         activeRenderJobs.delete(operationId);
         jobControllers.delete(operationId);
+        registryFinish(operationId);
       }
     }
   );

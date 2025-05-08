@@ -5,18 +5,22 @@ import log from 'electron-log';
 import { FileManager } from '../../services/file-manager.js';
 import { FFmpegService } from '../../services/ffmpeg-service.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
+import {
+  registerAutoCancel,
+  registerDownloadProcess,
+  finish as registryFinish,
+  hasProcess,
+  cancelSafely,
+} from '../active-processes.js';
 
-// Define services structure
 interface UrlHandlerServices {
   fileManager: FileManager;
   ffmpegService: FFmpegService;
 }
 
-// Module-level variables
 let fileManagerInstance: FileManager | null = null;
 let ffmpegServiceInstance: FFmpegService | null = null;
 
-// Initialization function
 export function initializeUrlHandler(services: UrlHandlerServices): void {
   if (!services || !services.fileManager || !services.ffmpegService) {
     throw new Error(
@@ -30,7 +34,6 @@ export function initializeUrlHandler(services: UrlHandlerServices): void {
   );
 }
 
-// Helper to check initialization
 function checkServicesInitialized(): {
   fileManager: FileManager;
   ffmpegService: FFmpegService;
@@ -44,12 +47,8 @@ function checkServicesInitialized(): {
   };
 }
 
-// Define interfaces for clarity and type safety
-// interface UrlProgress { ... }
-
 interface ProcessUrlOptions {
   url: string;
-  language?: string; // Language is not used by processVideoUrl directly, kept for future?
   quality?: VideoQuality;
   operationId?: string;
 }
@@ -57,14 +56,14 @@ interface ProcessUrlOptions {
 interface ProcessUrlResult {
   success: boolean;
   message?: string;
-  filePath?: string; // Map from videoPath
-  videoId?: string; // Not provided by processVideoUrl
-  title?: string; // Not provided by processVideoUrl
-  duration?: number; // Not provided by processVideoUrl
-  filename?: string; // Provided by processVideoUrl
-  size?: number; // Provided by processVideoUrl
-  fileUrl?: string; // Provided by processVideoUrl
-  originalVideoPath?: string; // Provided by processVideoUrl
+  filePath?: string;
+  videoId?: string;
+  title?: string;
+  duration?: number;
+  filename?: string;
+  size?: number;
+  fileUrl?: string;
+  originalVideoPath?: string;
   error?: string;
   operationId: string;
   cancelled?: boolean;
@@ -74,7 +73,6 @@ export async function handleProcessUrl(
   _event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
-  // Add highly visible debug logs
   log.error('[url-handler] HANDLER FUNCTION CALLED');
   log.warn('[url-handler] Processing URL request');
   log.error(`[url-handler] URL TO DOWNLOAD: ${options.url}`);
@@ -125,7 +123,16 @@ export async function handleProcessUrl(
 
     const { fileManager, ffmpegService } = checkServicesInitialized();
 
-    // Call processVideoUrl with correct arguments
+    // Track early cancellation
+    let cancelledEarly = false;
+
+    // Register auto-cancel early with a placeholder cancel function that attempts cancellation
+    registerAutoCancel(operationId, _event.sender, () => {
+      cancelledEarly = true;
+      cancelSafely(operationId);
+      log.info(`[url-handler] Early cancel triggered for ${operationId}`);
+    });
+
     const result = await processVideoUrl(
       url,
       options.quality || 'mid',
@@ -142,34 +149,60 @@ export async function handleProcessUrl(
       }
     );
 
+    // Check if cancellation was requested early before proceeding
+    if (cancelledEarly) {
+      if (!result.proc.killed) {
+        const sig = process.platform === 'win32' ? 'SIGINT' : 'SIGTERM';
+        result.proc.kill(sig);
+        log.info(
+          `[url-handler] Late kill of process for early cancelled ${operationId}`
+        );
+      }
+      registryFinish(operationId); // Clean up the entry
+      sendProgress({
+        percent: 0,
+        stage: 'Cancelled',
+        error: 'Cancelled by reload',
+      });
+      return {
+        success: false,
+        cancelled: true,
+        operationId,
+      };
+    }
+
+    // Manual cancel (Stop button)
+    if (!hasProcess(operationId)) {
+      registerDownloadProcess(operationId, result.proc);
+    }
+
     log.info(
       `[url-handler] processVideoUrl completed successfully for Operation ID: ${operationId}`
     );
 
-    // Map the successful result to ProcessUrlResult format
     const successResult: ProcessUrlResult = {
       success: true,
-      filePath: result.videoPath, // Map videoPath to filePath
+      filePath: result.videoPath,
       filename: result.filename,
       size: result.size,
       fileUrl: result.fileUrl,
       originalVideoPath: result.originalVideoPath,
-      // videoId, title, duration are not available from processVideoUrl
       operationId,
     };
     sendProgress({ percent: 100, stage: 'Completed' });
 
-    // --- ADD LOGGING HERE ---
     log.info(
       `[url-handler] processVideoUrl returned: ${JSON.stringify(result)}`
     );
 
+    registryFinish(operationId);
     return successResult;
   } catch (error: any) {
     if (error instanceof CancelledError) {
       log.info(
         `[url-handler] Download was cancelled by user (Op ID: ${operationId})`
       );
+      registryFinish(operationId); // tidy up
       return {
         success: false,
         cancelled: true,
@@ -182,22 +215,17 @@ export async function handleProcessUrl(
       error
     );
 
-    // Enhanced error logging
     log.error(`[url-handler] Error type: ${typeof error}`);
     log.error(`[url-handler] Error message: ${error.message || 'No message'}`);
     log.error(`[url-handler] Error stack: ${error.stack || 'No stack'}`);
 
-    // Try to get more detailed info if it's a string
     if (typeof error === 'string') {
       log.error(`[url-handler] Error is string: ${error}`);
-    }
-    // If it's an object, log its properties
-    else if (typeof error === 'object' && error !== null) {
+    } else if (typeof error === 'object' && error !== null) {
       log.error(
         `[url-handler] Error object keys: ${Object.keys(error).join(', ')}`
       );
 
-      // Log specific properties we're interested in
       if (error.stderr)
         log.error(`[url-handler] Error stderr: ${error.stderr}`);
       if (error.stdout)
@@ -209,18 +237,15 @@ export async function handleProcessUrl(
       error.message ||
       (typeof error === 'string' ? error : 'An unknown error occurred');
 
-    // Send a generic, user-friendly error progress update
     sendProgress({
       percent: 0,
       stage: 'Error',
       error: 'Download failed...',
     });
 
-    // Return the standard error object for the main promise result
+    registryFinish(operationId); // tidy up
     return {
       success: false,
-      // Include the raw error here if needed for debugging later,
-      // but the UI primarily reacts to the progress update error.
       error: `Download failed: ${rawErrorMessage}.`,
       operationId,
     };

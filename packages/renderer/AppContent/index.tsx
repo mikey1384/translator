@@ -117,7 +117,7 @@ const throttle = <T extends (...args: any[]) => any>(
   return throttled as T & { cancel: () => void };
 };
 
-function AppContent() {
+export default function AppContent() {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>('');
   const [isProcessingUrl, setIsProcessingUrl] = useState<boolean>(false);
@@ -1284,8 +1284,4 @@ function AppContent() {
       setDownloadProgressStage('');
     }
   }
-}
-
-export default function App() {
-  return <AppContent />;
 }

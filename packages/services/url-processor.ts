@@ -10,7 +10,7 @@ import which from 'which';
 import { FFmpegService } from './ffmpeg-service.js';
 import { FileManager } from './file-manager.js';
 import {
-  addDownload,
+  registerDownloadProcess,
   finish as removeDownloadProcess,
 } from '../main/active-processes.js';
 import type { DownloadProcess as DownloadProcessType } from '../main/active-processes.js';
@@ -256,7 +256,7 @@ async function downloadVideoFromPlatform(
   services?: {
     ffmpegService: FFmpegService;
   }
-): Promise<{ filepath: string; info: any }> {
+): Promise<{ filepath: string; info: any; proc: DownloadProcessType }> {
   log.info(`[URLProcessor] Starting download: ${url} (Op ID: ${operationId})`);
 
   if (!services?.ffmpegService) {
@@ -406,7 +406,7 @@ async function downloadVideoFromPlatform(
     });
 
     if (subprocess) {
-      addDownload(operationId, subprocess);
+      registerDownloadProcess(operationId, subprocess);
       log.info(`[URLProcessor] Added download process ${operationId} to map.`);
 
       subprocess.on('error', (err: any) => {
@@ -587,7 +587,7 @@ async function downloadVideoFromPlatform(
       `[URLProcessor] Download successful, returning filepath: ${finalFilepath}`
     );
 
-    return { filepath: finalFilepath, info: downloadInfo };
+    return { filepath: finalFilepath, info: downloadInfo, proc: subprocess! };
   } catch (error: any) {
     const rawErrorMessage = error.message || String(error);
     let userFriendlyErrorMessage = rawErrorMessage;
@@ -684,7 +684,7 @@ async function downloadVideoFromPlatform(
       );
     } else {
       log.warn(
-        `[URLProcessor] Process ${operationId} not found in map during finally block (already removed or never added?).`
+        `[URLProcessor] Process ${operationId} not found in map during finally block (already removed or never added).`
       );
     }
   }
@@ -705,6 +705,7 @@ export async function processVideoUrl(
   size: number;
   fileUrl: string;
   originalVideoPath: string;
+  proc: DownloadProcessType;
 }> {
   log.info(`[URLProcessor] processVideoUrl CALLED (Op ID: ${operationId})`);
 
@@ -729,7 +730,7 @@ export async function processVideoUrl(
     throw new Error('Invalid URL provided.');
   }
 
-  const { filepath } = await downloadVideoFromPlatform(
+  const downloadResult = await downloadVideoFromPlatform(
     url,
     tempDir,
     quality,
@@ -737,18 +738,19 @@ export async function processVideoUrl(
     operationId,
     { ffmpegService }
   );
-  const stats = await fsp.stat(filepath);
-  const filename = path.basename(filepath);
+  const stats = await fsp.stat(downloadResult.filepath);
+  const filename = path.basename(downloadResult.filepath);
   progressCallback?.({
     percent: PROGRESS.FINAL_END,
     stage: 'Download complete',
   }); // Use constant
 
   return {
-    videoPath: filepath,
+    videoPath: downloadResult.filepath,
     filename,
     size: stats.size,
-    fileUrl: `file://${filepath}`,
-    originalVideoPath: filepath,
+    fileUrl: `file://${downloadResult.filepath}`,
+    originalVideoPath: downloadResult.filepath,
+    proc: downloadResult.proc,
   };
 }
