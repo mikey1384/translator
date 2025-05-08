@@ -100,6 +100,8 @@ export default function FindBar({
 }: FindBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [replaceText, setReplaceText] = useState('');
+  const [draft, setDraft] = useState(searchText);
+  const debounceId = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isVisible) {
@@ -107,9 +109,28 @@ export default function FindBar({
     }
   }, [isVisible]);
 
+  useEffect(() => {
+    setDraft(searchText);
+  }, [searchText]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchTextChange(e.target.value);
+    const value = e.target.value;
+    setDraft(value);
+    if (debounceId.current) {
+      clearTimeout(debounceId.current);
+    }
+    debounceId.current = setTimeout(() => {
+      onSearchTextChange(value);
+    }, 150);
   };
+
+  useEffect(() => {
+    return () => {
+      if (debounceId.current) {
+        clearTimeout(debounceId.current);
+      }
+    };
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -145,7 +166,7 @@ export default function FindBar({
         ref={inputRef}
         type="text"
         placeholder="Find in subtitles..."
-        value={searchText}
+        value={draft}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         className={inputStyles}

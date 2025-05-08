@@ -1,5 +1,4 @@
 import { Dispatch, SetStateAction } from 'react';
-import { SrtSegment } from '@shared-types/app';
 import { saveFileWithRetry } from '../../../../shared/helpers/electron-ipc.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { DEFAULT_FILENAME } from '../../../../shared/constants/index.js';
@@ -7,24 +6,17 @@ import { useSubStore } from '../../../state/subtitle-store.js';
 
 export function useSubtitleActions({
   originalSrtFilePath,
-  setSubtitleSegments,
-  setSubtitleSourceId,
   setSaveError,
   onSaveAsComplete,
   showOriginalText,
 }: {
   originalSrtFilePath: string | null;
-  setSubtitleSegments: Dispatch<SetStateAction<SrtSegment[]>>;
-  setSubtitleSourceId: Dispatch<SetStateAction<number>>;
   setSaveError: Dispatch<SetStateAction<string>>;
   onSaveAsComplete: (newFilePath: string) => void;
   showOriginalText: boolean;
 }): {
   handleSaveSrt: () => Promise<void>;
   handleSaveEditedSrtAs: () => Promise<void>;
-  handleSetSubtitleSegments: (
-    segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])
-  ) => void;
 } {
   function getCurrentSegments() {
     const { order, segments } = useSubStore.getState();
@@ -74,7 +66,8 @@ export function useSubtitleActions({
           `[useSubtitleSaving] File saved via Save As: ${result.filePath}`
         );
         onSaveAsComplete(result.filePath);
-        alert(`File saved successfully to:\n${result.filePath}`);
+        alert(`File saved successfully to:
+${result.filePath}`);
       } else if (result?.error && !result.error.includes('canceled')) {
         setSaveError(`Save As failed: ${result.error}`);
       } else {
@@ -137,19 +130,8 @@ export function useSubtitleActions({
     }
   }
 
-  function handleSetSubtitleSegments(
-    segments: SrtSegment[] | ((prevState: SrtSegment[]) => SrtSegment[])
-  ): void {
-    setSubtitleSegments(segments);
-    setSubtitleSourceId((prevId: number) => prevId + 1);
-    console.info(
-      `[useSubtitleManagement] Segments set externally, incremented source ID.`
-    );
-  }
-
   return {
     handleSaveSrt,
     handleSaveEditedSrtAs,
-    handleSetSubtitleSegments,
   };
 }

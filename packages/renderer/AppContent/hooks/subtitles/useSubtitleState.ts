@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SrtSegment } from '@shared-types/app';
 import { parseSrt } from '../../../../shared/helpers/index.js';
 import * as SubtitlesIPC from '@ipc/subtitles';
+import { useSubStore } from '../../../state/subtitle-store';
 
 type ProgressMsg = {
   partialResult?: string;
@@ -14,7 +14,6 @@ type ProgressMsg = {
 };
 
 export function useSubtitleState() {
-  const [subtitleSegments, setSubtitleSegments] = useState<SrtSegment[]>([]);
   const [isTranslationInProgress, setIsTranslationInProgress] =
     useState<boolean>(false);
   const [translationProgress, setTranslationProgress] = useState(0);
@@ -24,7 +23,6 @@ export function useSubtitleState() {
   const [reviewedBatchStartIndex, setReviewedBatchStartIndex] = useState<
     number | null
   >(null);
-  const [subtitleSourceId, setSubtitleSourceId] = useState(0);
   const [translationOperationId, setTranslationOperationId] = useState<
     string | null
   >(null);
@@ -48,7 +46,7 @@ export function useSubtitleState() {
     if (partialResult.trim()) {
       setIsReceivingPartialResults(true);
       const parsed = parseSrt(partialResult);
-      setSubtitleSegments(parsed);
+      useSubStore.getState().load(parsed);
     }
     setTranslationProgress(percent);
     setTranslationStage(stage);
@@ -82,19 +80,15 @@ export function useSubtitleState() {
   }, []);
 
   return {
-    setSubtitleSegments,
-    setSubtitleSourceId,
-    subtitleSegments,
     isTranslationInProgress,
     translationProgress,
     translationStage,
     setIsTranslationInProgress,
     isReceivingPartialResults,
     reviewedBatchStartIndex,
-    subtitleSourceId,
     translationOperationId,
     reset: () => {
-      setSubtitleSegments([]);
+      useSubStore.getState().load([]);
       setIsTranslationInProgress(false);
       setTranslationProgress(0);
       setTranslationStage('');

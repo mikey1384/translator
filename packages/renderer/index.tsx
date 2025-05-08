@@ -1,3 +1,4 @@
+import './listeners';
 import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './AppContent/index.js';

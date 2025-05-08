@@ -16,6 +16,7 @@ interface State {
   activeId: string | null;
   playingId: string | null;
   _abortPlayListener?: () => void;
+  sourceId: number;
 }
 
 interface Actions {
@@ -30,6 +31,8 @@ interface Actions {
   seek: (id: string) => void;
   play: (id: string) => void;
   pause: () => void;
+
+  incSourceId: () => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -42,6 +45,7 @@ const initialState: State = {
   activeId: null,
   playingId: null,
   _abortPlayListener: undefined,
+  sourceId: 0,
 };
 
 export const useSubStore = createWithEqualityFn<State & Actions>()(
@@ -52,14 +56,19 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
     /* ---------- CRUD ---------- */
     load: segs =>
       set(s => {
-        // Convert array to map and set order
-        s.segments = segs.reduce<SegmentMap>((acc, cue) => {
-          acc[cue.id] = cue;
+        // Convert array to map and set order, cloning each cue to ensure it's mutable
+        s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
+          acc[cue.id] = { ...cue, index: i + 1 };
           return acc;
         }, {});
         s.order = segs.map(cue => cue.id);
-        // Re-index after loading
-        s.order.forEach((id, idx) => (s.segments[id].index = idx + 1));
+        // Increment sourceId to notify components of data change
+        s.sourceId += 1;
+      }),
+
+    incSourceId: () =>
+      set(s => {
+        s.sourceId += 1;
       }),
 
     update: (id, patch) =>
@@ -189,6 +198,8 @@ export const useSubActions = () =>
     }),
     shallow
   );
+
+export const useSubSourceId = () => useSubStore(s => s.sourceId);
 
 export const useSubtitleRow = (id: string) =>
   useSubStore(

@@ -71,7 +71,7 @@ export interface EditSubtitlesProps {
   showOriginalText: boolean;
 }
 
-export function EditSubtitles({
+export default function EditSubtitles({
   isAudioOnly,
   videoFile,
   videoFilePath,
