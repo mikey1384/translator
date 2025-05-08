@@ -107,7 +107,10 @@ export default function GenerateSubtitles() {
           >
             {t('input.selectVideoAudioFile')}:
           </label>
-          <FileInputButton onClick={openFileDialog}>
+          <FileInputButton
+            onClick={openFileDialog}
+            disabled={download.inProgress || translation.inProgress}
+          >
             {videoFile
               ? `${t('common.selected')}: ${videoFile.name}`
               : t('input.selectFile')}

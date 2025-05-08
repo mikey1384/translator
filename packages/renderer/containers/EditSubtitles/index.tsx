@@ -349,7 +349,7 @@ export default function EditSubtitles({
       videoDuration: meta?.duration ?? 0,
       videoWidth: meta?.width ?? 1280,
       videoHeight: meta?.height ?? 720,
-      frameRate: meta?.frameRate ?? 30,
+      frameRate: Number(meta?.frameRate ?? 30),
       originalVideoPath: videoPath,
       fontSizePx: mergeFontSize,
       stylePreset: mergeStylePreset,

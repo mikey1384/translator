@@ -1,5 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
+import { Draft } from 'immer';
+import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { VideoQuality } from '@shared-types/app';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
@@ -58,125 +60,144 @@ const initial: State = {
   subtitleStyle: 'default' as const,
 };
 
+// Helper function hoisted to module scope
+const resetSearchState = (s: Draft<State>) => {
+  s.searchText = '';
+  s.matchedIndices = [];
+  s.activeMatchIndex = 0;
+};
+
 // helper
 const sameArray = (a: number[], b: number[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
 export const useUIStore = createWithEqualityFn<State & Actions>()(
-  immer((set, get) => ({
-    ...initial,
+  subscribeWithSelector(
+    immer((set, get) => {
+      return {
+        ...initial,
 
-    toggleSettings(show) {
-      set({ showSettings: show !== undefined ? show : !get().showSettings });
-    },
+        toggleSettings(show) {
+          set({
+            showSettings: show !== undefined ? show : !get().showSettings,
+          });
+        },
 
-    setFindBarVisible(visible) {
-      set(s => {
-        s.isFindBarVisible = visible;
-        if (!visible) {
-          s.searchText = '';
-          s.matchedIndices = [];
-          s.activeMatchIndex = 0;
-        }
-      });
-    },
+        setFindBarVisible(visible) {
+          set(s => {
+            s.isFindBarVisible = visible;
+            if (!visible) {
+              resetSearchState(s);
+            }
+          });
+        },
 
-    setSearchText(text) {
-      set(s => {
-        s.searchText = text;
-        s.activeMatchIndex = 0;
-        s.matchedIndices = [];
-      });
-    },
+        setSearchText(text) {
+          set(s => {
+            s.searchText = text;
+            s.activeMatchIndex = 0;
+            s.matchedIndices = [];
+          });
+        },
 
-    setActiveMatchIndex(index) {
-      set({ activeMatchIndex: index });
-    },
+        setActiveMatchIndex(index) {
+          set({ activeMatchIndex: index });
+        },
 
-    setMatchedIndices(indices) {
-      set(s => {
-        if (sameArray(s.matchedIndices, indices)) return;
-        s.matchedIndices = indices;
-      });
-    },
+        setMatchedIndices(indices) {
+          set(draft => {
+            /* 1️⃣  matched indices --------------------------------------- */
+            if (!sameArray(draft.matchedIndices, indices)) {
+              draft.matchedIndices = indices;
+            }
 
-    handleFindNext() {
-      const current = get();
-      if (current.matchedIndices.length === 0) return;
-      const nextIndex =
-        (current.activeMatchIndex + 1) % current.matchedIndices.length;
-      set({ activeMatchIndex: nextIndex });
-    },
+            /* 2️⃣  clamp active index ------------------------------------ */
+            const maxIndex = indices.length ? indices.length - 1 : 0;
+            if (draft.activeMatchIndex > maxIndex) {
+              draft.activeMatchIndex = 0;
+            }
+          });
+        },
 
-    handleFindPrev() {
-      const current = get();
-      if (current.matchedIndices.length === 0) return;
-      const prevIndex =
-        (current.activeMatchIndex - 1 + current.matchedIndices.length) %
-        current.matchedIndices.length;
-      set({ activeMatchIndex: prevIndex });
-    },
+        handleFindNext() {
+          const current = get();
+          if (current.matchedIndices.length === 0) return;
+          const nextIndex =
+            (current.activeMatchIndex + 1) % current.matchedIndices.length;
+          set({ activeMatchIndex: nextIndex });
+        },
 
-    handleCloseFindBar() {
-      set({ isFindBarVisible: false });
-    },
+        handleFindPrev() {
+          const current = get();
+          if (current.matchedIndices.length === 0) return;
+          const prevIndex =
+            (current.activeMatchIndex - 1 + current.matchedIndices.length) %
+            current.matchedIndices.length;
+          set({ activeMatchIndex: prevIndex });
+        },
 
-    handleReplaceAll() {
-      const { searchText } = get();
-      if (!searchText.trim()) return;
-      const replaceWith = prompt('Replace with:', '');
-      if (replaceWith !== null) {
-        useSubStore.getState().replaceAll(searchText, replaceWith);
-      }
-    },
+        handleCloseFindBar() {
+          get().setFindBarVisible(false);
+        },
 
-    setInputMode(mode) {
-      set({ inputMode: mode });
-    },
+        handleReplaceAll() {
+          const { searchText } = get();
+          if (!searchText.trim()) return;
+          const replaceWith = prompt('Replace with:', '');
+          if (replaceWith !== null) {
+            useSubStore.getState().replaceAll(searchText, replaceWith);
+          }
+        },
 
-    setUrlInput(url) {
-      set({ urlInput: url });
-    },
+        setInputMode(mode) {
+          set({ inputMode: mode });
+        },
 
-    setDownloadQuality(quality) {
-      set({ downloadQuality: quality });
-    },
+        setUrlInput(url) {
+          set({ urlInput: url });
+        },
 
-    setTargetLanguage(lang) {
-      set({ targetLanguage: lang });
-    },
+        setDownloadQuality(quality) {
+          set({ downloadQuality: quality });
+        },
 
-    setShowOriginalText(show) {
-      set({ showOriginalText: show });
-    },
+        setTargetLanguage(lang) {
+          set({ targetLanguage: lang });
+        },
 
-    setError(error) {
-      set({ error: error ?? null });
-    },
+        setShowOriginalText(show) {
+          set({ showOriginalText: show });
+        },
 
-    setBaseFontSize(size) {
-      set({ baseFontSize: size });
-    },
+        setError(error) {
+          set({ error: error ?? null });
+        },
 
-    setSubtitleStyle(p) {
-      set({ subtitleStyle: p });
-    },
+        setBaseFontSize(size) {
+          set({ baseFontSize: size });
+        },
 
-    handleProcessUrl() {
-      const { urlInput, downloadQuality } = get();
-      if (!urlInput.trim()) return;
-      import('../ipc/url').then(({ process }) =>
-        process({ url: urlInput, quality: downloadQuality }).catch(
-          console.error
-        )
-      );
-    },
+        setSubtitleStyle(p) {
+          set({ subtitleStyle: p });
+        },
 
-    openFileDialog() {
-      // Placeholder for opening file dialog
-      console.log('Opening file dialog');
-    },
-  }))
+        handleProcessUrl() {
+          const { urlInput, downloadQuality } = get();
+          if (!urlInput.trim()) return;
+          import('../ipc/url').then(({ process }) =>
+            process({ url: urlInput, quality: downloadQuality }).catch(
+              console.error
+            )
+          );
+        },
+
+        openFileDialog() {
+          // Placeholder for opening file dialog
+          console.log('Opening file dialog');
+        },
+      };
+    })
+  )
 );
 
 export const useSubtitlePrefs = () =>

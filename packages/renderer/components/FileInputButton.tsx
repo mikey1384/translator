@@ -4,12 +4,14 @@ import Button from './Button.js';
 export default function FileInputButton({
   children,
   onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <Button onClick={onClick} variant="secondary" size="lg">
+    <Button onClick={onClick} variant="secondary" size="lg" disabled={disabled}>
       <svg
         width="18"
         height="18"
