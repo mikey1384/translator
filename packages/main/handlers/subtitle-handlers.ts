@@ -10,6 +10,11 @@ import {
   GenerateSubtitlesOptions,
   SubtitleHandlerServices,
 } from '@shared-types/app';
+import {
+  addSubtitle,
+  registerAutoCancel,
+  finish as registryFinish,
+} from '../active-processes.js';
 
 // Module-level variables to hold initialized services
 let ffmpegServiceInstance: FFmpegService | null = null;
@@ -47,7 +52,6 @@ function checkServicesInitialized(): {
 export async function handleGenerateSubtitles(
   event: IpcMainInvokeEvent,
   options: GenerateSubtitlesOptions,
-  signal: AbortSignal,
   operationId: string
 ): Promise<{
   success: boolean;
@@ -62,6 +66,13 @@ export async function handleGenerateSubtitles(
 
   let tempVideoPath: string | null = null;
   const finalOptions = { ...options };
+  const controller = new AbortController();
+
+  // Register auto-cancel when the window reloads or closes
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+
+  // Add subtitle job to registry for manual cancellation
+  addSubtitle(operationId, controller);
 
   try {
     // -------------------- STEP 1: PREPARE VIDEO PATH --------------------
@@ -87,7 +98,7 @@ export async function handleGenerateSubtitles(
     const result = await extractSubtitlesFromVideo({
       options: finalOptions,
       operationId,
-      signal,
+      signal: controller.signal,
       progressCallback,
       services: { ffmpegService, fileManager },
     });
@@ -100,14 +111,13 @@ export async function handleGenerateSubtitles(
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
     const isCancel =
+      controller.signal.aborted ||
       error.name === 'AbortError' ||
-      error.message === 'Operation cancelled' ||
-      signal.aborted;
+      error.message === 'Operation cancelled';
     if (tempVideoPath && !isCancel) {
       await cleanupTempFile(tempVideoPath);
     }
 
-    // Notify renderer of final state
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
       stage: isCancel ? 'Generation cancelled' : `Error: ${error.message}`,
@@ -120,6 +130,8 @@ export async function handleGenerateSubtitles(
       cancelled: isCancel,
       operationId,
     };
+  } finally {
+    registryFinish(operationId);
   }
 
   async function maybeWriteTempVideo({

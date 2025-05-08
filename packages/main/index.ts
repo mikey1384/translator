@@ -123,20 +123,16 @@ try {
   ipcMain.handle('save-api-key', apiKeyHandlers.handleSaveApiKey);
 
   ipcMain.handle('generate-subtitles', async (event, options) => {
-    const controller = new AbortController();
-    const { signal } = controller;
     const operationId =
       options.operationId ||
       `generate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     log.info(`[main.ts/generate-subtitles] Starting operation: ${operationId}`);
-    registry.addSubtitle(operationId, controller);
 
     try {
       const result = await subtitleHandlers.handleGenerateSubtitles(
         event,
         options,
-        signal,
         operationId
       );
       log.info(
