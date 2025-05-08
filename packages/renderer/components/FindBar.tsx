@@ -132,8 +132,12 @@ export default function FindBar({
   const hasMatches = matchCount > 0;
   const showMatchInfo =
     searchText.length > 0
-      ? `${activeMatchIndex + 1} of ${matchCount}`
+      ? `${hasMatches ? activeMatchIndex + 1 : 0} of ${matchCount}`
       : '0 of 0';
+  const matchInfoColor =
+    matchCount === 0 && searchText.length > 0
+      ? colors.danger || '#d9534f'
+      : colors.gray;
 
   return (
     <div className={findBarStyles}>
@@ -155,12 +159,15 @@ export default function FindBar({
           min-width: 120px;
         `}`}
       />
-      <span className={matchCountStyles}>{showMatchInfo}</span>
+      <span className={matchCountStyles} style={{ color: matchInfoColor }}>
+        {showMatchInfo}
+      </span>
       <button
         className={buttonStyles}
         onClick={onFindNext}
         disabled={!hasMatches}
         title="Next Match (Enter)"
+        aria-label="Next match"
       >
         <span style={{ verticalAlign: 'middle' }}>↓</span>
       </button>
@@ -169,6 +176,7 @@ export default function FindBar({
         onClick={onFindPrev}
         disabled={!hasMatches}
         title="Previous Match (Shift+Enter)"
+        aria-label="Previous match"
       >
         <span style={{ verticalAlign: 'middle' }}>↑</span>
       </button>
@@ -177,6 +185,7 @@ export default function FindBar({
         onClick={() => onReplaceAll?.(searchText, replaceText)}
         disabled={!searchText || !replaceText || !onReplaceAll}
         title="Replace All Occurrences"
+        aria-label="Replace all"
       >
         Replace All
       </button>
@@ -184,6 +193,7 @@ export default function FindBar({
         className={closeButtonStyles}
         onClick={onClose}
         title="Close (Esc)"
+        aria-label="Close find bar"
       >
         <span style={{ verticalAlign: 'middle' }}>✕</span>
       </button>
