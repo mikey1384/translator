@@ -238,13 +238,15 @@ export default function GenerateSubtitles() {
           inProgress: false,
         });
       } else {
-        setError('No subtitles were generated');
-        setTranslation({
-          id: operationId,
-          stage: 'Error',
-          percent: 100,
-          inProgress: false,
-        });
+        if (!result.cancelled) {
+          setError('No subtitles were generated');
+          setTranslation({
+            id: operationId,
+            stage: 'Error',
+            percent: 100,
+            inProgress: false,
+          });
+        }
       }
     } catch (err: any) {
       setError(`Error generating subtitles: ${err.message || err}`);

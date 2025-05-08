@@ -111,29 +111,27 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
               draft.matchedIndices = indices;
             }
 
-            /* 2️⃣  clamp active index ------------------------------------ */
-            const maxIndex = indices.length ? indices.length - 1 : 0;
-            if (draft.activeMatchIndex > maxIndex) {
+            // ✅  Only reset when there are *no* matches left
+            if (indices.length === 0) {
               draft.activeMatchIndex = 0;
             }
           });
         },
 
         handleFindNext() {
-          const current = get();
-          if (current.matchedIndices.length === 0) return;
-          const nextIndex =
-            (current.activeMatchIndex + 1) % current.matchedIndices.length;
-          set({ activeMatchIndex: nextIndex });
+          const { matchedIndices, activeMatchIndex } = get();
+          if (matchedIndices.length === 0) return;
+          const next = (activeMatchIndex + 1) % matchedIndices.length;
+          set({ activeMatchIndex: next });
         },
 
         handleFindPrev() {
-          const current = get();
-          if (current.matchedIndices.length === 0) return;
-          const prevIndex =
-            (current.activeMatchIndex - 1 + current.matchedIndices.length) %
-            current.matchedIndices.length;
-          set({ activeMatchIndex: prevIndex });
+          const { matchedIndices, activeMatchIndex } = get();
+          if (matchedIndices.length === 0) return;
+          const prev =
+            (activeMatchIndex - 1 + matchedIndices.length) %
+            matchedIndices.length;
+          set({ activeMatchIndex: prev });
         },
 
         handleCloseFindBar() {

@@ -82,6 +82,9 @@ export default function SubtitleEditTextarea({
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       draftRef.current = e.target.value;
       setIsTyping(true);
+
+      refreshHighlight();
+
       if (idleTimer.current) {
         clearTimeout(idleTimer.current);
       }

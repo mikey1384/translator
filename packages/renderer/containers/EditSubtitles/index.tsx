@@ -87,6 +87,9 @@ export default function EditSubtitles({
   const prevSubsRef = useRef<SrtSegment[]>([]);
   const prevReviewedBatchRef = useRef<number | null>(null);
 
+  /** remembers which match we last scrolled to */
+  const prevActiveRef = useRef(activeMatchIndex);
+
   /* ---------- persist UI prefs ---------- */
   useEffect(() => {
     localStorage.setItem('savedMergeFontSize', String(mergeFontSize));
@@ -125,27 +128,39 @@ export default function EditSubtitles({
 
   /* ---------- Cmd/Ctrl‑F navigation between matches ---------- */
   useEffect(() => {
-    if (!searchText) return;
-    const matchIndices = subtitles
-      .map((seg, idx) => {
-        const haystack = showOriginalText
-          ? `${seg.original}\n${seg.translation ?? ''}`
-          : (seg.translation ?? seg.original);
-        return haystack.toLowerCase().includes(searchText.toLowerCase())
-          ? idx
-          : -1;
-      })
-      .filter(idx => idx !== -1);
+    const localMatchIndices = collectMatchIndices(
+      subtitles,
+      searchText,
+      showOriginalText
+    );
 
-    if (matchIndices.length && activeMatchIndex < matchIndices.length) {
-      scrollToSubtitleIndex(matchIndices[activeMatchIndex]);
+    // keep the counter in the store up-to-date
+    // This ensures that when navigation or search text changes,
+    // the store reflects the matches based on the current subtitles state.
+    const currentMatchedIndices = useUIStore.getState().matchedIndices;
+    if (!sameArray(currentMatchedIndices, localMatchIndices)) {
+      useUIStore.getState().setMatchedIndices(localMatchIndices);
     }
+
+    // scroll *only* when the user actively navigates or search criteria change
+    if (
+      prevActiveRef.current !== activeMatchIndex &&
+      localMatchIndices.length > 0 &&
+      activeMatchIndex < localMatchIndices.length
+    ) {
+      scrollToSubtitleIndex(localMatchIndices[activeMatchIndex]);
+    }
+
+    // remember for the next run
+    prevActiveRef.current = activeMatchIndex;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     searchText,
     activeMatchIndex,
-    subtitles,
     showOriginalText,
     scrollToSubtitleIndex,
+    // subtitles is intentionally omitted to prevent scrolling on every edit
+    // The current subtitles are accessed directly within the effect's closure
   ]);
 
   const rbs = translation.reviewedBatchStartIndex;
@@ -430,4 +445,27 @@ export default function EditSubtitles({
     }
     return out;
   }
+}
+
+function collectMatchIndices(
+  subs: SrtSegment[],
+  term: string,
+  showOriginal: boolean
+) {
+  if (!term.trim()) return [];
+  const needle = term.toLowerCase();
+  return subs
+    .map((seg, idx) => {
+      const originalText = seg.original || '';
+      const translationText = seg.translation || '';
+      const haystack = showOriginal
+        ? `${originalText}\n${translationText}`.toLowerCase()
+        : (translationText || originalText).toLowerCase();
+      return haystack.includes(needle) ? idx : -1;
+    })
+    .filter(idx => idx !== -1);
+}
+
+function sameArray(a: number[], b: number[]) {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
 }
