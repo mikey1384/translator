@@ -1,15 +1,26 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
 import { css } from '@emotion/css';
-import NativeVideoPlayer from './NativeVideoPlayer.js';
-import SideMenu from './SideMenu.js';
-import { colors } from '../../styles.js';
-import Button from '../../components/Button.js';
-import { SrtSegment, VideoQuality } from '@shared-types/app';
-import { getNativePlayerInstance, nativeSeek } from '../../native-player.js';
-import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
-import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea.js';
 
-const SCROLL_IGNORE_DURATION = 2000;
+import NativeVideoPlayer from './NativeVideoPlayer';
+import SideMenu from './SideMenu';
+
+import { colors } from '../../styles';
+import Button from '../../components/Button';
+import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea';
+
+import {
+  useVideoStore,
+  useTaskStore,
+  useSubStore,
+  useUIStore,
+} from '../../state';
+
+import { getNativePlayerInstance, nativeSeek } from '../../native-player';
+
+/* ------------------------------------------------------------------ */
+/* static styles (unchanged – shortened where obvious) */
+/* ------------------------------------------------------------------ */
+const _SCROLL_IGNORE_DURATION = 2_000;
 
 const videoOverlayControlsStyles = css`
   position: absolute;
@@ -110,7 +121,6 @@ const timeDisplayStyles = css`
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 `;
 
-// Add fullscreen variant for time display
 const fullscreenTimeDisplayStyles = css`
   ${timeDisplayStyles}
   font-size: 1.2rem;
@@ -131,7 +141,6 @@ const transparentButtonStyles = css`
   }
 `;
 
-// Add fullscreen variant for button
 const fullscreenButtonStyles = css`
   ${transparentButtonStyles}
   svg {
@@ -139,7 +148,6 @@ const fullscreenButtonStyles = css`
     height: 32px;
   }
 `;
-// --- Add Video Controls Overlay Styles --- END ---
 
 const fixedVideoContainerBaseStyles = css`
   position: fixed;
@@ -227,392 +235,172 @@ const controlsWrapperStyles = (isFullScreen: boolean) => css`
   `}
 `;
 
-export default function VideoPlayer({
-  isMergingInProgress,
-  isProcessingUrl,
-  isTranslationInProgress,
-  isProgressBarVisible,
-  videoUrl,
-  subtitles,
-  onPlayerReady,
-  onSelectVideoClick,
-  onSetUrlInput,
-  urlInput,
-  onScrollToCurrentSubtitle,
-  onTogglePlay,
-  onShiftAllSubtitles,
-  onUiInteraction,
-  onProcessUrl,
-  onSetSubtitleSegments,
-  onSrtFileLoaded,
-  mergeFontSize,
-  mergeStylePreset,
-  downloadQuality,
-  onSetDownloadQuality,
-  showOriginalText,
-  videoRef,
-}: {
-  isMergingInProgress: boolean;
-  isProcessingUrl: boolean;
-  isTranslationInProgress: boolean;
-  isProgressBarVisible: boolean;
-  videoUrl: string;
-  subtitles: SrtSegment[];
-  onSetUrlInput: (url: string) => void;
-  urlInput: string;
-  onPlayerReady: (player: any) => void;
-  onSelectVideoClick: () => void;
-  onSetSubtitleSegments: (segments: SrtSegment[]) => void;
-  onScrollToCurrentSubtitle?: () => void;
-  onTogglePlay?: () => void;
-  onShiftAllSubtitles?: (offsetSeconds: number) => void;
-  onUiInteraction?: () => void;
-  onProcessUrl: () => void;
-  onSrtFileLoaded: (filePath: string | null) => void;
-  mergeFontSize: number;
-  mergeStylePreset: SubtitleStylePresetKey;
-  downloadQuality: VideoQuality;
-  onSetDownloadQuality: (quality: VideoQuality) => void;
-  showOriginalText: boolean;
-  videoRef: React.RefObject<HTMLVideoElement | null>;
-}) {
-  const [isPlaying, setIsPlaying] = useState(false);
+/* ------------------------------------------------------------------ */
+/* helper: time formatter */
+/* ------------------------------------------------------------------ */
+const fmt = (s: number) => {
+  if (Number.isNaN(s)) return '00:00';
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  return h
+    ? [h, m, sec].map(n => String(n).padStart(2, '0')).join(':')
+    : [m, sec].map(n => String(n).padStart(2, '0')).join(':');
+};
+
+/* ------------------------------------------------------------------ */
+/* component */
+/* ------------------------------------------------------------------ */
+export default function VideoPlayer() {
+  /* ===============================================================
+     1. Pull data + actions from the stores
+     ============================================================== */
+  const { url: videoUrl, togglePlay } = useVideoStore();
+
+  const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
+  const { merge, download, translation } = useTaskStore();
+
+  const {
+    downloadQuality,
+    setDownloadQuality,
+    showOriginalText,
+    setUrlInput,
+    urlInput,
+  } = useUIStore();
+
+  /* derived */
+  const isProgressBarVisible =
+    merge.inProgress || download.inProgress || translation.inProgress;
+
+  /* ============================================================== */
+  /* 2. Local UI state */
+  /* ============================================================== */
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const [showOverlay, setShowOverlay] = useState(false);
-  const [progressBarHeight, setProgressBarHeight] = useState(0);
+  const [showFsControls, setShowFsControls] = useState(true);
+  const activityTimeout = useRef<NodeJS.Timeout | null>(null);
+  const playerDivRef = useRef<HTMLDivElement>(null);
 
-  // Add a state to track if we're currently auto-scrolling from "Scroll to Current" button
-  const isScrollToCurrentActive = useRef(false);
-  const scrollToCurrentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // --- State for Fullscreen Control Auto-Hide --- START ---
-  const [showFullscreenControls, setShowFullscreenControls] = useState(true); // Initially visible
-  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // --- State for Fullscreen Control Auto-Hide --- END ---
-
-  const playerRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const ignoreScrollRef = useRef(false);
-  const ignoreScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // New useEffect to set progressBarHeight based on isProgressBarVisible prop
+  /* progress-bar offset so the fixed player never overlaps */
+  const [progressBarH, setProgressBarH] = useState(0);
   useEffect(() => {
-    if (isProgressBarVisible) {
-      setProgressBarHeight(PROGRESS_BAR_HEIGHT);
-    } else {
-      setProgressBarHeight(0);
-    }
+    setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
   }, [isProgressBarVisible]);
 
-  // Function to handle UI interaction and set ignore flag
-  const handleUiInteraction = useCallback(() => {
-    ignoreScrollRef.current = true;
-    // Clear any existing timeout
-    if (ignoreScrollTimeoutRef?.current) {
-      clearTimeout(ignoreScrollTimeoutRef?.current);
-    }
-    // Set a new timeout to reset the flag
-    ignoreScrollTimeoutRef.current = setTimeout(() => {
-      ignoreScrollRef.current = false;
-    }, SCROLL_IGNORE_DURATION);
-
-    // Call the prop if provided
-    if (onUiInteraction) onUiInteraction();
-  }, [onUiInteraction]);
-
-  // focus helper -------------------------------------------------------------
-  const focusPlayerWrapper = () => {
-    const wrapper = playerRef.current?.querySelector<HTMLDivElement>(
-      '.native-video-player-wrapper'
-    );
-    wrapper?.focus();
-  };
-
-  // keep focus even after state-driven re-renders
+  /* ============================================================== */
+  /* 3. Keep local state in sync with <video> element */
+  /* ============================================================== */
   useEffect(() => {
-    focusPlayerWrapper();
-  }, [isFullScreen]);
+    const v = getNativePlayerInstance();
+    if (!v) return;
 
-  const handleScrollToCurrentSubtitle = useCallback(() => {
-    if (!onScrollToCurrentSubtitle) return;
+    /* handlers --------------------------------------------------- */
+    const onTime = () => setCurrentTime(v.currentTime);
+    const onDur = () => !Number.isNaN(v.duration) && setDuration(v.duration);
+    const onPlayPause = () => setIsPlaying(!v.paused);
 
-    if (ignoreScrollTimeoutRef?.current) {
-      clearTimeout(ignoreScrollTimeoutRef?.current);
-      ignoreScrollTimeoutRef.current = null;
-    }
-    ignoreScrollRef.current = false;
+    /* attach ----------------------------------------------------- */
+    v.addEventListener('timeupdate', onTime);
+    v.addEventListener('durationchange', onDur);
+    v.addEventListener('play', onPlayPause);
+    v.addEventListener('pause', onPlayPause);
 
-    isScrollToCurrentActive.current = true;
+    /* init ------------------------------------------------------- */
+    onTime();
+    onDur();
+    onPlayPause();
 
-    if (scrollToCurrentTimeoutRef?.current) {
-      clearTimeout(scrollToCurrentTimeoutRef?.current);
-    }
-
-    onScrollToCurrentSubtitle();
-
-    scrollToCurrentTimeoutRef.current = setTimeout(() => {
-      isScrollToCurrentActive.current = false;
-      scrollToCurrentTimeoutRef.current = null;
-    }, 1500);
-  }, [onScrollToCurrentSubtitle]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
+    /* detach ----------------------------------------------------- */
     return () => {
-      if (ignoreScrollTimeoutRef?.current) {
-        clearTimeout(ignoreScrollTimeoutRef?.current);
-      }
-      if (scrollToCurrentTimeoutRef?.current) {
-        clearTimeout(scrollToCurrentTimeoutRef?.current);
-      }
+      v.removeEventListener('timeupdate', onTime);
+      v.removeEventListener('durationchange', onDur);
+      v.removeEventListener('play', onPlayPause);
+      v.removeEventListener('pause', onPlayPause);
     };
-  }, []);
+  }, [videoUrl]);
 
-  useEffect(() => {
-    const videoElement = getNativePlayerInstance();
-    if (!videoElement) return;
+  /* ============================================================== */
+  /* 4. Helpers */
+  /* ============================================================== */
+  const seek = (val: number) => nativeSeek(val);
 
-    const updatePlayState = () => setIsPlaying(!videoElement.paused);
-
-    videoElement.addEventListener('play', updatePlayState);
-    videoElement.addEventListener('pause', updatePlayState);
-
-    updatePlayState();
-
-    return () => {
-      videoElement.removeEventListener('play', updatePlayState);
-      videoElement.removeEventListener('pause', updatePlayState);
-    };
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    setIsFullScreen(prev => {
-      const next = !prev;
-      if (next) {
-        document.body.style.overflow = 'hidden';
-        setTimeout(focusPlayerWrapper, 0);
-      } else {
-        document.body.style.overflow = '';
-      }
+  const toggleFullscreen = () => {
+    setIsFullScreen(f => {
+      const next = !f;
+      document.body.style.overflow = next ? 'hidden' : '';
+      setTimeout(() => playerDivRef.current?.focus(), 0);
       window.dispatchEvent(new Event('resize'));
       return next;
     });
-  }, []);
+  };
 
-  // --- New: Handle Escape key to exit pseudo-fullscreen ---
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isFullScreen) {
-        toggleFullscreen();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      // Ensure body overflow is reset if component unmounts while fullscreen
-      if (isFullScreen) {
-        document.body.style.overflow = '';
-      }
-    };
-  }, [isFullScreen, toggleFullscreen]);
-
-  // Add utility function to format time for the progress bar
-  const formatTime = useCallback((seconds: number): string => {
-    if (isNaN(seconds)) return '00:00';
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-
-    if (hrs > 0) {
-      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  /* escape key exits pseudo-FS + arrow seeking ------------------- */
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && isFullScreen) {
+      toggleFullscreen();
+      e.preventDefault();
+      return;
     }
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  }, []);
-
-  // Add effects for tracking video time and playing status
-  useEffect(() => {
-    const videoElement = getNativePlayerInstance();
-    if (!videoElement) return;
-
-    // Update state when video time changes
-    const handleTimeUpdate = () => {
-      setCurrentTime(videoElement.currentTime);
-    };
-
-    // Update duration when available
-    const handleDurationChange = () => {
-      if (!isNaN(videoElement.duration)) {
-        setDuration(videoElement.duration);
-      }
-    };
-
-    // Update play state
-    const updatePlayState = () => {
-      setIsPlaying(!videoElement.paused);
-    };
-
-    videoElement.addEventListener('timeupdate', handleTimeUpdate);
-    videoElement.addEventListener('durationchange', handleDurationChange);
-    videoElement.addEventListener('play', updatePlayState);
-    videoElement.addEventListener('pause', updatePlayState);
-
-    // Initial setup
-    handleTimeUpdate();
-    handleDurationChange();
-    updatePlayState();
-
-    return () => {
-      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
-      videoElement.removeEventListener('durationchange', handleDurationChange);
-      videoElement.removeEventListener('play', updatePlayState);
-      videoElement.removeEventListener('pause', updatePlayState);
-    };
-  }, []);
-
-  // Add handlers for the overlay controls
-  const handleSeek = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const seekTime = parseFloat(e.target.value);
-      // Use the imported nativeSeek function
-      nativeSeek(seekTime);
-      if (onUiInteraction) onUiInteraction();
-    },
-    [onUiInteraction]
-  );
-
-  const handleOverlayTogglePlay = useCallback(() => {
-    if (onTogglePlay) {
-      onTogglePlay();
-      if (onUiInteraction) onUiInteraction();
+    const v = getNativePlayerInstance();
+    if (!v) return;
+    if (e.key === 'ArrowRight') {
+      seek(Math.min(v.currentTime + 10, v.duration));
+      e.preventDefault();
     }
-  }, [onTogglePlay, onUiInteraction]);
-
-  const handlePlayerWrapperHover = useCallback(() => {
-    setShowOverlay(true);
-  }, []);
-
-  const handlePlayerWrapperLeave = useCallback(() => {
-    setShowOverlay(false);
-  }, []);
-
-  // --- Logic for Fullscreen Control Auto-Hide --- START ---
-  const handleActivity = useCallback(() => {
-    if (!isFullScreen) return; // Only run in fullscreen
-
-    setShowFullscreenControls(true);
-
-    // Clear existing timeout
-    if (activityTimeoutRef?.current) {
-      clearTimeout(activityTimeoutRef?.current);
+    if (e.key === 'ArrowLeft') {
+      seek(Math.max(v.currentTime - 10, 0));
+      e.preventDefault();
     }
+  };
 
-    // Set new timeout to hide controls
-    activityTimeoutRef.current = setTimeout(() => {
-      setShowFullscreenControls(false);
-    }, 3000); // Hide after 3 seconds
-  }, [isFullScreen]);
+  /* overlay auto-hide in FS -------------------------------------- */
+  const pokeFsControls = () => {
+    if (!isFullScreen) return;
+    setShowFsControls(true);
+    if (activityTimeout.current) clearTimeout(activityTimeout.current);
+    activityTimeout.current = setTimeout(() => setShowFsControls(false), 3000);
+  };
 
-  // Effect to attach/detach listeners and clean up timeout
-  useEffect(() => {
-    const playerWrapper = playerRef?.current?.querySelector(
-      '.native-video-player-wrapper'
-    );
-
-    if (isFullScreen && playerWrapper) {
-      // Initially show controls and start timer
-      handleActivity();
-
-      playerWrapper.addEventListener('mousemove', handleActivity);
-      playerWrapper.addEventListener('mouseleave', handleActivity); // Hide immediately on leave
-
-      return () => {
-        playerWrapper.removeEventListener('mousemove', handleActivity);
-        playerWrapper.removeEventListener('mouseleave', handleActivity);
-        if (activityTimeoutRef?.current) {
-          clearTimeout(activityTimeoutRef?.current);
-        }
-      };
-    } else {
-      // Ensure controls are shown when not in fullscreen
-      setShowFullscreenControls(true);
-      // Clear timeout if exiting fullscreen
-      if (activityTimeoutRef?.current) {
-        clearTimeout(activityTimeoutRef?.current);
-      }
-    }
-  }, [isFullScreen, handleActivity]);
-
-  // Add keyboard shortcut handler for time seeking with arrow keys
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      // Handle escape key for fullscreen toggle
-      if (e.key === 'Escape' && isFullScreen) {
-        toggleFullscreen();
-        e.preventDefault();
-        return;
-      }
-
-      // Handle arrow keys for seeking if player is ready
-      const videoElement = getNativePlayerInstance();
-      if (videoElement) {
-        const currentTime = videoElement.currentTime;
-        const duration = videoElement.duration || 0;
-
-        switch (e.key) {
-          case 'ArrowRight':
-            // Use nativeSeek for consistency
-            nativeSeek(Math.min(currentTime + 10, duration));
-            if (onUiInteraction) onUiInteraction();
-            e.preventDefault();
-            break;
-
-          case 'ArrowLeft':
-            // Use nativeSeek for consistency
-            nativeSeek(Math.max(currentTime - 10, 0));
-            if (onUiInteraction) onUiInteraction();
-            e.preventDefault();
-            break;
-        }
-      }
-    },
-    [isFullScreen, toggleFullscreen, onUiInteraction]
-  );
-
+  /* ============================================================== */
+  /* 5. Render */
+  /* ============================================================== */
   if (!videoUrl) return null;
 
-  // Calculate progress percentage for the seekbar
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const pct = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div ref={containerRef}>
+    <div style={{ position: 'relative' }}>
       <div
-        className={`fixed-video-container ${fixedVideoContainerStyles(isFullScreen)}`}
-        ref={playerRef}
-        style={{ top: isFullScreen ? 0 : progressBarHeight }}
-        tabIndex={0} // Make container focusable
-        onKeyDown={handleKeyDown} // Handle keyboard events at this level
+        ref={playerDivRef}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        className={fixedVideoContainerStyles(isFullScreen)}
+        style={{ top: isFullScreen ? 0 : progressBarH }}
       >
+        {/* -----------------  video wrapper  -------------------- */}
         <div
           className={playerWrapperStyles(isFullScreen)}
-          onMouseEnter={handlePlayerWrapperHover}
-          onMouseLeave={handlePlayerWrapperLeave}
+          onMouseEnter={() => setShowOverlay(true)}
+          onMouseLeave={() => setShowOverlay(false)}
+          onMouseMove={pokeFsControls}
         >
           <NativeVideoPlayer
-            showOriginalText={showOriginalText}
-            videoRef={videoRef}
             videoUrl={videoUrl}
+            videoRef={null}
             subtitles={subtitles}
-            onPlayerReady={handlePlayerReady}
+            parentRef={playerDivRef}
             isFullyExpanded={isFullScreen}
-            parentRef={playerRef}
-            baseFontSize={mergeFontSize}
-            stylePreset={mergeStylePreset}
+            showOriginalText={showOriginalText}
+            baseFontSize={16}
+            stylePreset={'default'}
+            onPlayerReady={() => {}}
           />
 
-          {/* Modified Video Controls Overlay to work in both modes */}
+          {/* -------- overlays (shared for window & FS) -------- */}
           <div
             className={
               isFullScreen
@@ -621,7 +409,7 @@ export default function VideoPlayer({
             }
             style={{
               opacity: isFullScreen
-                ? showFullscreenControls
+                ? showFsControls
                   ? 1
                   : 0
                 : showOverlay
@@ -630,7 +418,7 @@ export default function VideoPlayer({
             }}
           >
             <Button
-              onClick={handleOverlayTogglePlay}
+              onClick={togglePlay}
               variant="primary"
               size="sm"
               className={
@@ -638,20 +426,20 @@ export default function VideoPlayer({
               }
             >
               {isPlaying ? (
-                <svg
+                /* pause icon */ <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
                 >
-                  <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
+                  <path d="M5.5 3.5A1.5 1.5 0 017 5v6a1.5 1.5 0 01-3 0V5A1.5 1.5 0 015.5 3.5zm5 0A1.5 1.5 0 0112 5v6a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5z" />
                 </svg>
               ) : (
-                <svg
+                /* play icon  */ <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
                 >
-                  <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
+                  <path d="M11.596 8.697l-6.363 3.692C4.694 12.702 4 12.323 4 11.692V4.308c0-.63.694-1.01 1.233-.696l6.363 3.692a.802.802 0 010 1.393z" />
                 </svg>
               )}
             </Button>
@@ -661,21 +449,23 @@ export default function VideoPlayer({
                 isFullScreen ? fullscreenTimeDisplayStyles : timeDisplayStyles
               }
             >
-              {formatTime(currentTime)}
+              {fmt(currentTime)}
             </span>
 
-            <div style={{ flexGrow: 1, position: 'relative' }}>
+            <div style={{ flexGrow: 1 }}>
               <input
                 type="range"
                 min={0}
                 max={duration || 1}
-                value={currentTime}
-                onChange={handleSeek}
                 step="0.1"
+                value={currentTime}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  seek(+e.target.value)
+                }
                 className={
                   isFullScreen ? fullscreenSeekbarStyles : seekbarStyles
                 }
-                style={{ '--seek-before-width': `${progressPercent}%` } as any}
+                style={{ '--seek-before-width': `${pct}%` } as any}
               />
             </div>
 
@@ -684,15 +474,12 @@ export default function VideoPlayer({
                 isFullScreen ? fullscreenTimeDisplayStyles : timeDisplayStyles
               }
             >
-              {formatTime(duration)}
+              {fmt(duration)}
             </span>
 
-            {/* Add Fullscreen Button */}
+            {/* Full-screen toggle */}
             <Button
-              onClick={() => {
-                toggleFullscreen();
-                playerRef.current?.focus();
-              }}
+              onClick={toggleFullscreen}
               variant="secondary"
               size="sm"
               className={
@@ -701,7 +488,7 @@ export default function VideoPlayer({
               title={isFullScreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
             >
               {isFullScreen ? (
-                <svg
+                /* exit */ <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
@@ -709,7 +496,7 @@ export default function VideoPlayer({
                   <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z" />
                 </svg>
               ) : (
-                <svg
+                /* enter */ <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
@@ -721,32 +508,34 @@ export default function VideoPlayer({
           </div>
         </div>
 
+        {/* ---------- side-menu (only when docked) ---------- */}
         {!isFullScreen && (
-          <div className={controlsWrapperStyles(isFullScreen)}>
+          <div className={controlsWrapperStyles(false)}>
             <SideMenu
-              isMergingInProgress={isMergingInProgress}
-              isProcessingUrl={isProcessingUrl}
-              isTranslationInProgress={isTranslationInProgress}
-              onProcessUrl={onProcessUrl}
-              hasSubtitles={subtitles && subtitles.length > 0}
-              onShiftAllSubtitles={onShiftAllSubtitles}
-              onScrollToCurrentSubtitle={handleScrollToCurrentSubtitle}
-              onUiInteraction={handleUiInteraction}
-              onSetUrlInput={onSetUrlInput}
+              hasSubtitles={subtitles.length > 0}
+              isMergingInProgress={merge.inProgress}
+              isProcessingUrl={download.inProgress}
+              isTranslationInProgress={translation.inProgress}
+              onScrollToCurrentSubtitle={() => {}}
+              onShiftAllSubtitles={offset => {}}
+              onProcessUrl={() => {
+                /* trigger from store/client */
+              }}
+              onSelectVideoClick={() => {
+                /* open file dialog etc. */
+              }}
+              onSetUrlInput={setUrlInput}
               urlInput={urlInput}
-              onSelectVideoClick={onSelectVideoClick}
               downloadQuality={downloadQuality}
-              onSetDownloadQuality={onSetDownloadQuality}
-              onSrtFileLoaded={onSrtFileLoaded}
-              onSetSubtitleSegments={onSetSubtitleSegments}
+              onSetDownloadQuality={setDownloadQuality}
+              onSrtFileLoaded={() => {
+                /* ... */
+              }}
+              onSetSubtitleSegments={segs => useSubStore.getState().load(segs)}
             />
           </div>
         )}
       </div>
     </div>
   );
-
-  function handlePlayerReady(player: any) {
-    onPlayerReady(player);
-  }
 }

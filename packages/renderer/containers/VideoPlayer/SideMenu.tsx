@@ -5,51 +5,42 @@ import Button from '../../components/Button.js';
 import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
+import { useUIStore, useTaskStore, useSubStore } from '../../state';
 
-export default function SideMenu({
-  isMergingInProgress,
-  isProcessingUrl,
-  isTranslationInProgress,
-  onProcessUrl,
-  hasSubtitles = false,
-  onShiftAllSubtitles,
-  onScrollToCurrentSubtitle,
-  onUiInteraction,
-  onSelectVideoClick,
-  onSetUrlInput,
-  urlInput,
-  downloadQuality,
-  onSetDownloadQuality,
-  onSetSubtitleSegments,
-  onSrtFileLoaded,
-}: {
-  isMergingInProgress: boolean;
-  isProcessingUrl: boolean;
-  isTranslationInProgress: boolean;
+export interface SideMenuProps {
   onProcessUrl: () => void;
-  hasSubtitles?: boolean;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
-  onUiInteraction?: () => void;
   onSelectVideoClick: () => void;
-  onSetUrlInput: (url: string) => void;
-  urlInput: string;
-  downloadQuality: VideoQuality;
-  onSetDownloadQuality: (quality: VideoQuality) => void;
-  onSrtFileLoaded: (filePath: string | null) => void;
   onSetSubtitleSegments: (segments: SrtSegment[]) => void;
-}) {
-  const { t } = useTranslation();
-  // State for the shift input field
-  const [shiftAmount, setShiftAmount] = useState<string>('0');
+  onSrtFileLoaded: (filePath: string | null) => void;
+  onUiInteraction?: () => void;
+}
 
-  // Determine visibility of optional sections
-  const shouldShowScrollButton = onScrollToCurrentSubtitle && hasSubtitles;
-  const shouldShowShiftControls = onShiftAllSubtitles && hasSubtitles;
-  const onlyTopButtonsBlockVisible =
+export default function SideMenu({
+  onProcessUrl,
+  onShiftAllSubtitles,
+  onScrollToCurrentSubtitle,
+  onSelectVideoClick,
+  onSetSubtitleSegments,
+  onSrtFileLoaded,
+  onUiInteraction,
+}: SideMenuProps) {
+  const { t } = useTranslation();
+  const { urlInput, setUrlInput, downloadQuality, setDownloadQuality } =
+    useUIStore();
+  const { download, merge, translation } = useTaskStore();
+  const subtitleCount = useSubStore(s => s.order.length);
+  const [shiftAmount, setShiftAmount] = useState<string>('0');
+  const hasSubtitles = subtitleCount > 0;
+  const isProcessingUrl = download.inProgress;
+  const isMergingInProgress = merge.inProgress;
+  const isTranslationInProgress = translation.inProgress;
+  const shouldShowScrollButton = !!onScrollToCurrentSubtitle && hasSubtitles;
+  const shouldShowShiftControls = !!onShiftAllSubtitles && hasSubtitles;
+  const onlyTopButtonsBlock =
     !shouldShowScrollButton && !shouldShowShiftControls;
 
-  // Simplified component with only the necessary buttons
   return (
     <div
       className={css`
@@ -68,7 +59,6 @@ export default function SideMenu({
         flex-direction: column;
         padding: 10px;
         gap: 10px;
-        height: 100%;
         overflow-y: auto;
       `}
     >
@@ -79,7 +69,7 @@ export default function SideMenu({
           flex-direction: column;
           gap: 10px;
           width: 100%;
-          ${onlyTopButtonsBlockVisible ? 'margin-top: auto;' : ''}
+          ${onlyTopButtonsBlock ? 'margin-top: auto;' : ''}
         `}
       >
         <Button
@@ -129,7 +119,7 @@ export default function SideMenu({
             type="url"
             placeholder={t('videoPlayer.sideMenu.enterUrlPlaceholder')}
             value={urlInput}
-            onChange={e => onSetUrlInput(e.target.value)}
+            onChange={e => setUrlInput(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 e.stopPropagation();
@@ -158,9 +148,9 @@ export default function SideMenu({
           />
           <select
             value={downloadQuality}
-            onChange={e => onSetDownloadQuality(e.target.value as VideoQuality)}
+            onChange={e => setDownloadQuality(e.target.value as VideoQuality)}
             className={css`
-              padding: 6px 4px; // Slightly less padding than input
+              padding: 6px 4px;
               border-radius: 4px;
               border: 1px solid ${colors.border};
               background-color: ${colors.light};

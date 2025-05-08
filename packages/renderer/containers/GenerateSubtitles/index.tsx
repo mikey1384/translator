@@ -10,9 +10,15 @@ import { useTranslation } from 'react-i18next';
 import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
 import ProgressDisplay from './ProgressDisplay.js';
 import ErrorBanner from '../../components/ErrorBanner.js';
-import { useUIStore, useVideoStore, useTaskStore } from '../../state';
+import {
+  useUIStore,
+  useVideoStore,
+  useTaskStore,
+  useSubStore,
+} from '../../state';
 import * as UrlIPC from '../../ipc/url';
 import * as SubtitlesIPC from '../../ipc/subtitles';
+import { parseSrt } from '../../../shared/helpers';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
@@ -32,7 +38,7 @@ export default function GenerateSubtitles() {
     setError,
   } = useUIStore();
 
-  const { file: videoFile, path: videoFilePath } = useVideoStore();
+  const { file: videoFile, path: videoFilePath, setFile } = useVideoStore();
 
   const { download, translation, merge, setDownload, setTranslation } =
     useTaskStore();
@@ -49,7 +55,97 @@ export default function GenerateSubtitles() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile]);
 
-  const handleProcessUrl = async () => {
+  return (
+    <Section title={t('subtitles.generate')}>
+      <ApiKeyLock
+        apiKeyStatus={{ openai: true }}
+        isLoadingKeyStatus={false}
+        onNavigateToSettings={handleNavigateToSettings}
+      />
+
+      {error && <ErrorBanner message={error} onClose={() => setError('')} />}
+
+      <ProgressDisplay
+        downloadComplete={!download.inProgress && download.percent === 100}
+        downloadedVideoPath={videoFilePath}
+        onSaveOriginalVideo={handleSaveOriginalVideo}
+        inputMode={inputMode}
+        didDownloadFromUrl={false} // Placeholder
+      />
+
+      <InputModeToggle
+        inputMode={inputMode}
+        onSetInputMode={setInputMode}
+        isTranslationInProgress={false} // Placeholder; update with store data if available
+        isProcessingUrl={download.inProgress}
+      />
+
+      {inputMode === 'file' && (
+        <div
+          className={css`
+            padding: 13px 20px;
+            border: 1px solid ${colors.border};
+            border-radius: 6px;
+            background-color: ${colors.light};
+          `}
+        >
+          <label
+            style={{
+              marginRight: '12px',
+              display: 'inline-block',
+              minWidth: '220px',
+            }}
+          >
+            {t('input.selectVideoAudioFile')}:
+          </label>
+          <FileInputButton onClick={handleSelectVideoClick}>
+            {videoFile
+              ? `${t('common.selected')}: ${videoFile.name}`
+              : t('input.selectFile')}
+          </FileInputButton>
+        </div>
+      )}
+
+      {inputMode === 'url' && (
+        <div
+          className={css`
+            padding: 20px;
+            border: 1px solid ${colors.border};
+            border-radius: 6px;
+            background-color: ${colors.light};
+          `}
+        >
+          <UrlInputSection
+            urlInput={urlInput}
+            setUrlInput={setUrlInput}
+            setError={setError}
+            downloadQuality={downloadQuality}
+            setDownloadQuality={setDownloadQuality}
+            handleProcessUrl={handleProcessUrl}
+            isProcessingUrl={download.inProgress}
+            isTranslationInProgress={translation.inProgress}
+          />
+        </div>
+      )}
+
+      {videoFile && (
+        <GenerateSubtitlesPanel
+          targetLanguage={targetLanguage}
+          setTargetLanguage={setTargetLanguage}
+          isTranslationInProgress={translation.inProgress}
+          showOriginalText={showOriginalText}
+          onShowOriginalTextChange={setShowOriginalText}
+          videoFile={videoFile}
+          videoFilePath={videoFilePath}
+          isProcessingUrl={download.inProgress}
+          handleGenerateSubtitles={handleGenerateSubtitles}
+          isMergingInProgress={merge.inProgress}
+        />
+      )}
+    </Section>
+  );
+
+  async function handleProcessUrl() {
     if (!urlInput.trim()) {
       setError('Please enter a valid URL');
       return;
@@ -68,10 +164,8 @@ export default function GenerateSubtitles() {
         operationId: opId,
       });
       // Handle success/error logic here, updating stores as needed
-      if (res.success) {
-        // Update video store with the downloaded video path
-        // This is a placeholder; actual implementation depends on response structure
-        // useVideoStore.getState().setFile({ path: res.videoPath, name: res.filename });
+      if (res.success && res.videoPath && res.filename) {
+        await setFile({ path: res.videoPath, name: res.filename });
         setDownload({
           id: opId,
           stage: 'Completed',
@@ -97,9 +191,9 @@ export default function GenerateSubtitles() {
         inProgress: false,
       });
     }
-  };
+  }
 
-  const handleGenerateSubtitles = async () => {
+  async function handleGenerateSubtitles() {
     if (!videoFile && !videoFilePath) {
       setError('Please select a video file first');
       return;
@@ -122,9 +216,8 @@ export default function GenerateSubtitles() {
       opts.operationId = operationId;
       const result = await SubtitlesIPC.generate(opts);
       if (result.subtitles) {
-        // Update subtitle store with the generated subtitles
-        // This is a placeholder; actual implementation depends on response structure
-        // useSubStore.getState().load(parseSrt(result.subtitles));
+        const finalSegments = parseSrt(result.subtitles);
+        useSubStore.getState().load(finalSegments);
         setTranslation({
           id: operationId,
           stage: 'Completed',
@@ -149,119 +242,18 @@ export default function GenerateSubtitles() {
         inProgress: false,
       });
     }
-  };
+  }
 
-  const handleSelectVideoClick = () => {
-    // Placeholder for file selection logic
-    // This should trigger a file chooser and update video store
+  async function handleSelectVideoClick() {
     console.log('Select video file clicked');
-  };
+  }
 
-  const handleNavigateToSettings = (show: boolean) => {
+  function handleNavigateToSettings(show: boolean) {
     useUIStore.getState().toggleSettings(show);
-  };
+  }
 
-  const handleSaveOriginalVideo = () => {
+  function handleSaveOriginalVideo() {
     // Placeholder for saving original video logic
     console.log('Save original video clicked');
-  };
-
-  return (
-    <Section title={t('subtitles.generate')}>
-      <ApiKeyLock
-        apiKeyStatus={{ openai: true }} // Placeholder; replace with actual store data if available
-        isLoadingKeyStatus={false} // Placeholder
-        onNavigateToSettings={handleNavigateToSettings}
-      />
-
-      {true &&
-        true && ( // Replace with actual conditions from store if needed
-          <>
-            {error && (
-              <ErrorBanner message={error} onClose={() => setError('')} />
-            )}
-
-            <ProgressDisplay
-              downloadComplete={
-                !download.inProgress && download.percent === 100
-              }
-              downloadedVideoPath={videoFilePath}
-              onSaveOriginalVideo={handleSaveOriginalVideo}
-              inputMode={inputMode}
-              didDownloadFromUrl={false} // Placeholder
-            />
-
-            <InputModeToggle
-              inputMode={inputMode}
-              onSetInputMode={setInputMode}
-              isTranslationInProgress={translation.inProgress}
-              isProcessingUrl={download.inProgress}
-            />
-
-            {inputMode === 'file' && (
-              <div
-                className={css`
-                  padding: 13px 20px;
-                  border: 1px solid ${colors.border};
-                  border-radius: 6px;
-                  background-color: ${colors.light};
-                `}
-              >
-                <label
-                  style={{
-                    marginRight: '12px',
-                    display: 'inline-block',
-                    minWidth: '220px',
-                  }}
-                >
-                  {t('input.selectVideoAudioFile')}:
-                </label>
-                <FileInputButton onClick={handleSelectVideoClick}>
-                  {videoFile
-                    ? `${t('common.selected')}: ${videoFile.name}`
-                    : t('input.selectFile')}
-                </FileInputButton>
-              </div>
-            )}
-
-            {inputMode === 'url' && (
-              <div
-                className={css`
-                  padding: 20px;
-                  border: 1px solid ${colors.border};
-                  border-radius: 6px;
-                  background-color: ${colors.light};
-                `}
-              >
-                <UrlInputSection
-                  urlInput={urlInput}
-                  setUrlInput={setUrlInput}
-                  setError={setError}
-                  downloadQuality={downloadQuality}
-                  setDownloadQuality={setDownloadQuality}
-                  handleProcessUrl={handleProcessUrl}
-                  isProcessingUrl={download.inProgress}
-                  isTranslationInProgress={translation.inProgress}
-                />
-              </div>
-            )}
-
-            {videoFile && (
-              <GenerateSubtitlesPanel
-                targetLanguage={targetLanguage}
-                setTargetLanguage={setTargetLanguage}
-                isTranslationInProgress={translation.inProgress}
-                showOriginalText={showOriginalText}
-                onShowOriginalTextChange={setShowOriginalText}
-                videoFile={videoFile}
-                videoFilePath={videoFilePath}
-                isProcessingUrl={download.inProgress}
-                handleGenerateSubtitles={handleGenerateSubtitles}
-                isMergingInProgress={merge.inProgress}
-              />
-            )}
-          </>
-        )}
-    </Section>
-  );
+  }
 }

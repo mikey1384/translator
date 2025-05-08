@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../styles.js';
+import { useUIStore } from '../state/ui-store';
+import { useSubStore } from '../state/subtitle-store';
 
 const findBarStyles = css`
   position: fixed;
@@ -41,6 +43,11 @@ const inputStyles = css`
   }
 `;
 
+const inputReplaceStyles = css`
+  ${inputStyles}
+  min-width: 120px;
+`;
+
 const matchCountStyles = css`
   color: ${colors.gray};
   min-width: 50px; // Prevent layout shift
@@ -75,29 +82,20 @@ const closeButtonStyles = css`
   margin-left: 5px;
 `;
 
-interface FindBarProps {
-  isVisible: boolean;
-  searchText: string;
-  onSearchTextChange: (val: string) => void;
-  matchCount: number;
-  activeMatchIndex: number;
-  onFindNext: () => void;
-  onFindPrev: () => void;
-  onClose: () => void;
-  onReplaceAll?: (searchText: string, replaceText: string) => void;
-}
+export default function FindBar() {
+  const {
+    findBarVisible: isVisible = false,
+    searchText = '',
+    setSearchText = () => {},
+    matchCount = 0,
+    activeMatchIndex = 0,
+    findNext = () => {},
+    findPrev = () => {},
+    hideFindBar = () => {},
+  } = useUIStore() || {};
 
-export default function FindBar({
-  isVisible,
-  searchText,
-  onSearchTextChange,
-  matchCount,
-  activeMatchIndex,
-  onFindNext,
-  onFindPrev,
-  onClose,
-  onReplaceAll,
-}: FindBarProps) {
+  const { replaceAll = () => {} } = useSubStore() || {};
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [replaceText, setReplaceText] = useState('');
   const [draft, setDraft] = useState(searchText);
@@ -120,7 +118,7 @@ export default function FindBar({
       clearTimeout(debounceId.current);
     }
     debounceId.current = setTimeout(() => {
-      onSearchTextChange(value);
+      setSearchText(value);
     }, 150);
   };
 
@@ -136,13 +134,13 @@ export default function FindBar({
     if (e.key === 'Enter') {
       e.preventDefault();
       if (e.shiftKey) {
-        onFindPrev();
+        findPrev();
       } else {
-        onFindNext();
+        findNext();
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      onClose();
+      hideFindBar();
     }
   };
 
@@ -176,16 +174,14 @@ export default function FindBar({
         placeholder="Replace with..."
         value={replaceText}
         onChange={e => setReplaceText(e.target.value)}
-        className={`${inputStyles} ${css`
-          min-width: 120px;
-        `}`}
+        className={inputReplaceStyles}
       />
       <span className={matchCountStyles} style={{ color: matchInfoColor }}>
         {showMatchInfo}
       </span>
       <button
         className={buttonStyles}
-        onClick={onFindNext}
+        onClick={findNext}
         disabled={!hasMatches}
         title="Next Match (Enter)"
         aria-label="Next match"
@@ -194,7 +190,7 @@ export default function FindBar({
       </button>
       <button
         className={buttonStyles}
-        onClick={onFindPrev}
+        onClick={findPrev}
         disabled={!hasMatches}
         title="Previous Match (Shift+Enter)"
         aria-label="Previous match"
@@ -203,8 +199,8 @@ export default function FindBar({
       </button>
       <button
         className={buttonStyles}
-        onClick={() => onReplaceAll?.(searchText, replaceText)}
-        disabled={!searchText || !replaceText || !onReplaceAll}
+        onClick={() => replaceAll(searchText, replaceText)}
+        disabled={!searchText || !replaceText}
         title="Replace All Occurrences"
         aria-label="Replace all"
       >
@@ -212,7 +208,7 @@ export default function FindBar({
       </button>
       <button
         className={closeButtonStyles}
-        onClick={onClose}
+        onClick={hideFindBar}
         title="Close (Esc)"
         aria-label="Close find bar"
       >

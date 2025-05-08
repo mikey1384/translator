@@ -1,465 +1,166 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { css } from '@emotion/css';
-import { colors, linkStyles as globalLinkStyles } from '../styles.js';
+import { colors, linkStyles as globalLink } from '../styles';
 import { useTranslation } from 'react-i18next';
-import * as SystemIPC from '@ipc/system';
+import { useSettingsStore } from '../state/settings-store';
 
-const settingsPageStyles = css`
+const page = css`
   padding: 30px;
   max-width: 700px;
   margin: 20px auto;
-  background-color: ${colors.white};
-  border-radius: 8px;
+  background: ${colors.white};
   border: 1px solid ${colors.border};
+  border-radius: 8px;
 `;
-
-const titleStyles = css`
+const h1 = css`
   font-size: 1.8em;
   color: ${colors.dark};
   margin-bottom: 25px;
   border-bottom: 1px solid ${colors.border};
   padding-bottom: 15px;
 `;
-
-const sectionStyles = css`
+const info = css`
+  font-size: 0.9em;
+  color: ${colors.grayDark};
+  line-height: 1.4;
+  margin: 10px 0 15px;
+`;
+const box = css`
   margin-bottom: 35px;
   padding: 20px;
-  background-color: ${colors.light};
+  background: ${colors.light};
   border: 1px solid ${colors.border};
   border-radius: 6px;
 `;
-
-const sectionTitleStyles = css`
+const h2 = css`
   font-size: 1.3em;
   color: ${colors.dark};
   margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 `;
-
-const labelStyles = css`
+const label = css`
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
   color: ${colors.grayDark};
 `;
-
-const inputStyles = css`
+const input = css`
   width: 100%;
   padding: 10px 12px;
+  margin-bottom: 15px;
   border: 1px solid ${colors.border};
   border-radius: 4px;
   font-size: 1em;
-  box-sizing: border-box;
-  margin-bottom: 15px;
-  background-color: ${colors.grayLight};
+  background: ${colors.grayLight};
   color: ${colors.dark};
-  transition: border-color 0.2s ease;
-
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-    box-shadow: none;
-  }
-
-  &::placeholder {
-    color: ${colors.gray};
   }
 `;
-
-const buttonStyles = css`
+const btn = css`
   padding: 10px 18px;
-  background-color: ${colors.primary};
-  color: white;
+  background: ${colors.primary};
+  color: #fff;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.2s ease;
   margin-right: 10px;
-  box-shadow: none;
-
+  cursor: pointer;
   &:hover {
-    background-color: ${colors.primaryLight};
+    background: ${colors.primaryLight};
   }
-
   &:disabled {
-    background-color: ${colors.gray};
-    color: ${colors.grayDark};
+    background: ${colors.gray};
     cursor: not-allowed;
-    opacity: 0.7;
   }
 `;
-
-const statusIndicatorStyles = css`
-  display: inline-block;
+const util = css`
+  padding: 5px 10px;
+  font-size: 0.85em;
+  background: ${colors.grayLight};
+  border: 1px solid ${colors.border};
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background: ${colors.light};
+    border-color: ${colors.primary};
+  }
+`;
+const status = css`
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.9em;
-  margin-left: 15px;
-  vertical-align: middle;
 `;
-
-const statusSetStyles = css`
-  background-color: rgba(76, 201, 176, 0.1);
+const setOk = css`
+  ${status};
+  background: rgba(76, 201, 176, 0.1);
   color: ${colors.success};
   border: 1px solid ${colors.success};
 `;
-
-const statusNotSetStyles = css`
-  background-color: rgba(230, 94, 106, 0.1);
+const setBad = css`
+  ${status};
+  background: rgba(230, 94, 106, 0.1);
   color: ${colors.danger};
   border: 1px solid ${colors.danger};
 `;
-
-const feedbackMessageStyles = css`
-  margin-top: 15px;
+const feedOk = css`
+  margin-top: 12px;
   padding: 10px;
+  border: 1px solid ${colors.success};
+  background: rgba(76, 201, 176, 0.15);
+  color: ${colors.success};
   border-radius: 4px;
   font-size: 0.95em;
 `;
-
-const successMessageStyles = css`
-  background-color: rgba(76, 201, 176, 0.15);
-  color: ${colors.success};
-  border: 1px solid ${colors.success};
-`;
-
-const errorMessageStyles = css`
-  background-color: rgba(230, 94, 106, 0.15);
-  color: ${colors.danger};
+const feedNg = css`
+  margin-top: 12px;
+  padding: 10px;
   border: 1px solid ${colors.danger};
-`;
-
-const linkStyles = css`
-  ${globalLinkStyles}
-`;
-
-const infoTextStyles = css`
-  font-size: 0.9em;
-  color: ${colors.grayDark}; // Secondary light text
-  margin-top: 10px;
-  margin-bottom: 15px;
-  line-height: 1.4;
-`;
-
-type ApiKeyStatus = {
-  openai: boolean;
-} | null;
-
-type SaveStatus = {
-  type: 'openai';
-  success: boolean;
-  message: string;
-} | null;
-
-interface SettingsPageProps {
-  apiKeyStatus: ApiKeyStatus;
-  isLoadingStatus: boolean;
-}
-
-const keySetInfoStyles = css`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 15px;
-  background-color: ${colors.light};
-  border: 1px solid ${colors.border};
+  background: rgba(230, 94, 106, 0.15);
+  color: ${colors.danger};
   border-radius: 4px;
-  margin-bottom: 15px;
+  font-size: 0.95em;
+`;
+const link = css`
+  ${globalLink}
 `;
 
-const keySetTextStyles = css`
-  font-weight: 500;
-  color: ${colors.dark}; // Light text
-`;
-
-const keyActionButtonsStyles = css`
-  display: flex;
-  gap: 8px;
-`;
-
-const utilityButtonStyles = css`
-  padding: 5px 10px;
-  font-size: 0.85em;
-  background-color: ${colors.grayLight};
-  color: ${colors.dark};
-  border: 1px solid ${colors.border};
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-  box-shadow: none;
-
-  &:hover {
-    background-color: ${colors.light};
-    border-color: ${colors.primary};
-  }
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
+export default function SettingsPage() {
   const { t } = useTranslation();
-  const [openaiKeyInput, setOpenaiKeyInput] = useState('');
-  const [keyStatus, setKeyStatus] = useState<ApiKeyStatus>(apiKeyStatus);
-  const [loadingStatus, setLoadingStatus] = useState(isLoadingStatus);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
-  const [isSaving, setIsSaving] = useState(false);
 
-  const [isEditingOpenAI, setIsEditingOpenAI] = useState(false);
+  const { loading, keySet, saveKey, saveStatus, clearStatus } =
+    useSettingsStore();
 
-  useEffect(() => {
-    setKeyStatus(apiKeyStatus);
-  }, [apiKeyStatus]);
+  const [draft, setDraft] = useState('');
+  const [editing, setEditing] = useState(false);
+  const busy = loading || (saveStatus === null ? false : undefined); // disable buttons while saving
 
-  useEffect(() => {
-    setLoadingStatus(isLoadingStatus);
-  }, [isLoadingStatus]);
+  const indicator = loading ? (
+    t('common.loading')
+  ) : keySet ? (
+    <span className={setOk}>{t('settings.keySet')}</span>
+  ) : (
+    <span className={setBad}>{t('settings.keyNotSet')}</span>
+  );
 
-  const handleSaveKey = useCallback(async () => {
-    const apiKey = openaiKeyInput.trim();
-    setIsSaving(true);
-    setSaveStatus(null);
-
-    try {
-      const result = await SystemIPC.saveApiKey('openai', apiKey);
-      if (result.success) {
-        setSaveStatus({
-          type: 'openai',
-          success: true,
-          message: apiKey
-            ? t('settings.openai.saveSuccess')
-            : t('settings.openai.removeSuccess'),
-        });
-        setKeyStatus(prevStatus => ({
-          ...prevStatus!,
-          openai: !!apiKey,
-        }));
-        setOpenaiKeyInput('');
-        setIsEditingOpenAI(false);
-      } else {
-        setSaveStatus({
-          type: 'openai',
-          success: false,
-          message: result.error || t('settings.openai.saveError'),
-        });
-      }
-    } catch (error) {
-      console.error('Error calling saveApiKey for openai:', error);
-      setSaveStatus({
-        type: 'openai',
-        success: false,
-        message:
-          error instanceof Error ? error.message : t('common.error.unexpected'),
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [openaiKeyInput, t, setKeyStatus, setSaveStatus]);
-
-  const handleRemoveKey = useCallback(async () => {
-    // Add confirmation dialog at the beginning
-    if (!window.confirm(t('settings.openai.confirmRemovePrompt'))) {
-      console.log('OpenAI key removal cancelled by user.');
-      return;
-    }
-
-    console.log('Attempting to remove OpenAI key...');
-    setSaveStatus(null);
-    setIsSaving(true);
-
-    try {
-      console.log('Calling saveApiKey to remove openai key...');
-      const result = await SystemIPC.saveApiKey('openai', '');
-      console.log('Result from saveApiKey for removing openai:', result);
-
-      if (result.success) {
-        console.log('Key removal success for openai. Updating state...');
-        setSaveStatus({
-          type: 'openai',
-          success: true,
-          message: t('settings.openai.removeSuccess'),
-        });
-        console.log('Updating keyStatus for openai to false.');
-        setKeyStatus(prevStatus => {
-          const newState = { ...prevStatus!, openai: false };
-          console.log('New keyStatus state (after removal):', newState);
-          return newState;
-        });
-        setIsEditingOpenAI(false);
-      } else {
-        console.error('Key removal failed for openai:', result.error);
-        setSaveStatus({
-          type: 'openai',
-          success: false,
-          message: result.error || t('settings.openai.removeError'),
-        });
-      }
-    } catch (error) {
-      console.error('Error calling saveApiKey to remove openai key:', error);
-      setSaveStatus({
-        type: 'openai',
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : t('common.error.unexpectedRemove'),
-      });
-    } finally {
-      setIsSaving(false);
-      console.log('Finished handleRemoveKey for openai.');
-    }
-  }, [t, setKeyStatus, setSaveStatus]);
-
-  const renderStatusIndicator = (isSet: boolean | undefined) => {
-    if (loadingStatus)
-      return (
-        <span className={statusIndicatorStyles}>{t('common.loading')}</span>
-      );
-    if (isSet === undefined) return null; // Status not yet loaded
-
-    return (
-      <span
-        className={css`
-          ${statusIndicatorStyles} ${isSet
-            ? statusSetStyles
-            : statusNotSetStyles}
-        `}
-      >
-        {isSet ? t('settings.keySet') : t('settings.keyNotSet')}
-      </span>
-    );
+  const handleSave = async () => {
+    await saveKey(draft.trim());
+    setDraft('');
+    setEditing(false);
   };
 
-  const renderFeedbackMessage = () => {
-    if (!saveStatus) return null;
-
-    return (
-      <p
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        id="feedback-message"
-        className={css`
-          ${feedbackMessageStyles} ${saveStatus.success
-            ? successMessageStyles
-            : errorMessageStyles}
-        `}
-      >
-        {saveStatus.message}
-      </p>
-    );
-  };
-
-  const renderOpenAIKeySection = () => {
-    const isSet = keyStatus ? keyStatus.openai : false;
-    const isEditing = isEditingOpenAI;
-    const currentInputValue = openaiKeyInput;
-    const setInputValue = setOpenaiKeyInput;
-    const setIsEditing = setIsEditingOpenAI;
-    const placeholder = t('settings.openai.placeholder');
-    const getName = 'OpenAI';
-    const getKeyLink = 'https://platform.openai.com/api-keys';
-
-    if (loadingStatus) {
-      return <p>{t('settings.loadingStatus')}</p>;
-    }
-
-    if (isSet && !isEditing) {
-      return (
-        <div className={keySetInfoStyles}>
-          <span className={keySetTextStyles}>{t('settings.openai.isSet')}</span>
-          <div className={keyActionButtonsStyles}>
-            <button
-              className={utilityButtonStyles}
-              onClick={() => setIsEditing(true)}
-              disabled={isSaving}
-            >
-              {t('settings.changeKey')}
-            </button>
-            <button
-              className={css`
-                ${utilityButtonStyles} ${css`
-                  color: #dc3545;
-                  border-color: #dc3545;
-                  &:hover {
-                    background-color: #f8d7da;
-                  }
-                `}
-              `}
-              onClick={handleRemoveKey}
-              disabled={isSaving}
-            >
-              {t('settings.removeKey')}
-            </button>
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <>
-          <label htmlFor="openai-key" className={labelStyles}>
-            {t('settings.openai.apiKeyLabel')}:
-          </label>
-          <input
-            id="openai-key"
-            type="password"
-            className={inputStyles}
-            value={currentInputValue}
-            onChange={e => setInputValue(e.target.value)}
-            placeholder={placeholder}
-            disabled={isSaving}
-            aria-describedby="feedback-message"
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              className={buttonStyles}
-              onClick={handleSaveKey}
-              disabled={isSaving || (!currentInputValue && !isSet)}
-              aria-disabled={isSaving || (!currentInputValue && !isSet)}
-            >
-              {isSaving
-                ? t('common.saving')
-                : isEditing
-                  ? t('settings.saveChanges')
-                  : t('settings.saveKey', { name: getName })}
-            </button>
-            {isEditing && (
-              <button
-                className={utilityButtonStyles}
-                onClick={() => {
-                  setIsEditing(false);
-                  setInputValue(''); // Clear input on cancel
-                  setSaveStatus(null); // Clear any previous save messages
-                }}
-                disabled={isSaving}
-                aria-disabled={isSaving}
-              >
-                {t('common.cancel')}
-              </button>
-            )}
-            <a
-              href={getKeyLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={linkStyles}
-              style={{ marginLeft: isEditing ? '0' : 'auto' }} // Adjust margin
-            >
-              {t('settings.getKey', { name: getName })}
-            </a>
-          </div>
-          {renderFeedbackMessage()}
-        </>
-      );
-    }
+  const handleRemove = async () => {
+    if (!window.confirm(t('settings.openai.confirmRemovePrompt'))) return;
+    await saveKey('');
   };
 
   return (
-    <div className={settingsPageStyles}>
-      <h1 className={titleStyles}>{t('settings.title')}</h1>
-      <p className={infoTextStyles}>
+    <div className={page}>
+      <h1 className={h1}>{t('settings.title')}</h1>
+
+      <p className={info}>
         {t('settings.description.para1')}
         <br />
         <br />
@@ -468,25 +169,106 @@ function SettingsPage({ apiKeyStatus, isLoadingStatus }: SettingsPageProps) {
           href="https://platform.openai.com/api-keys"
           target="_blank"
           rel="noopener noreferrer"
-          className={linkStyles}
+          className={link}
         >
           {t('settings.description.para2.link')}
         </a>
-        .
-        <br />
+        .<br />
         <br />
         {t('settings.description.para3')}
       </p>
 
-      <div className={sectionStyles}>
-        <h2 className={sectionTitleStyles}>
+      <div className={box}>
+        <h2 className={h2}>
           {t('settings.openai.sectionTitle')}
-          {renderStatusIndicator(keyStatus?.openai)}
+          {indicator}
         </h2>
-        {renderOpenAIKeySection()}
+
+        {/* key already set & not editing */}
+        {keySet && !editing && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span>{t('settings.openai.isSet')}</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className={util}
+                onClick={() => {
+                  setEditing(true);
+                  clearStatus();
+                }}
+                disabled={busy}
+              >
+                {t('settings.changeKey')}
+              </button>
+              <button
+                className={util}
+                onClick={handleRemove}
+                disabled={busy}
+                style={{ color: '#dc3545', borderColor: '#dc3545' }}
+              >
+                {t('settings.removeKey')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {(!keySet || editing) && (
+          <>
+            <label htmlFor="openai" className={label}>
+              {t('settings.openai.apiKeyLabel')}:
+            </label>
+            <input
+              id="openai"
+              type="password"
+              className={input}
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              placeholder={t('settings.openai.placeholder')}
+            />
+
+            <button
+              className={btn}
+              onClick={handleSave}
+              disabled={busy || (!draft.trim() && keySet)}
+            >
+              {t('common.save')}
+            </button>
+            {editing && (
+              <button
+                className={util}
+                onClick={() => {
+                  setEditing(false);
+                  setDraft('');
+                  clearStatus();
+                }}
+                disabled={busy}
+              >
+                {t('common.cancel')}
+              </button>
+            )}
+            <a
+              href="https://platform.openai.com/api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={link}
+              style={{ marginLeft: editing ? '0' : 'auto' }}
+            >
+              {t('settings.getKey', { name: 'OpenAI' })}
+            </a>
+          </>
+        )}
+
+        {saveStatus && (
+          <p className={saveStatus.ok ? feedOk : feedNg} role="status">
+            {saveStatus.msg}
+          </p>
+        )}
       </div>
     </div>
   );
 }
-
-export default SettingsPage;

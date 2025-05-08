@@ -1,74 +1,75 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { colors } from '../../styles.js';
 import ProgressArea from './ProgressArea.js';
 import subtitleRendererClient from '../../clients/subtitle-renderer-client.js';
-
-interface MergingProgressAreaProps {
-  mergeProgress: number;
-  mergeStage: string;
-  onSetIsMergingInProgress: (isMerging: boolean) => void;
-  operationId: string | null;
-  isMergingInProgress: boolean;
-}
+import { useTaskStore } from '../../state';
 
 const MERGE_PROGRESS_COLOR = colors.progressMerge;
 
-export default function MergingProgressArea({
-  mergeProgress,
-  mergeStage,
-  onSetIsMergingInProgress,
-  operationId,
-  isMergingInProgress,
-}: MergingProgressAreaProps) {
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('MergingProgressArea received operationId:', operationId);
-    }
-  }, [operationId]);
+const devLog = (...a: any[]) =>
+  process.env.NODE_ENV !== 'production' && console.log(...a);
+const devError = (...a: any[]) =>
+  process.env.NODE_ENV !== 'production' && console.error(...a);
 
-  const handleCancelMerge = async () => {
-    if (!operationId) {
-      console.warn(
-        '[MergingProgressArea] Cannot cancel merge: operationId is missing.'
-      );
-      onSetIsMergingInProgress(false);
+export default function MergingProgressArea({
+  autoCloseDelay = 4_000,
+}: { autoCloseDelay?: number } = {}) {
+  const {
+    merge: { inProgress, percent, stage, id },
+    setMerge: patchMerge,
+  } = useTaskStore(s => ({
+    merge: s.merge,
+    setMerge: s.setMerge,
+  }));
+
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  useEffect(() => {
+    devLog('[MergePA] op id →', id);
+  }, [id]);
+
+  const handleCancel = useCallback(async () => {
+    if (!id) {
+      console.warn('[MergePA] no operation id – nothing to cancel');
+      patchMerge({ inProgress: false });
       return;
     }
+    setIsCancelling(true);
     try {
-      console.log(
-        `[MergingProgressArea] Sending cancel request for merge ${operationId}`
-      );
-      subtitleRendererClient.cancelMerge(operationId);
-    } catch (error) {
-      console.error(
-        `[MergingProgressArea] Error sending cancel request for merge ${operationId}:`,
-        error
-      );
+      devLog('[MergePA] cancelling', id);
+      await subtitleRendererClient.cancelMerge(id);
+    } catch (err: any) {
+      devError('[MergePA] cancel failed', err);
     } finally {
-      onSetIsMergingInProgress(false); // Ensure progress bar hides after attempt
+      setIsCancelling(false);
+      patchMerge({ inProgress: false });
     }
-  };
+  }, [id, patchMerge]);
+
+  const handleClose = useCallback(() => {
+    patchMerge({ inProgress: false });
+  }, [patchMerge]);
 
   return (
     <ProgressArea
-      isVisible={isMergingInProgress}
+      isVisible={inProgress}
       title="Merging Video & Subtitles"
-      progress={mergeProgress}
-      stage={mergeStage}
+      progress={percent}
+      stage={stage}
       progressBarColor={
-        mergeStage.toLowerCase().includes('error')
+        stage.toLowerCase().includes('error')
           ? colors.danger
-          : mergeProgress >= 100
+          : percent >= 100
             ? colors.success
             : MERGE_PROGRESS_COLOR
       }
-      isCancelling={false}
-      operationId={operationId}
-      onCancel={handleCancelMerge}
-      onClose={() => onSetIsMergingInProgress(false)}
+      isCancelling={isCancelling}
+      operationId={id ?? null}
+      onCancel={handleCancel}
+      onClose={handleClose}
       autoCloseDelay={
-        mergeProgress >= 100 && !mergeStage.toLowerCase().includes('error')
-          ? 4000
+        percent >= 100 && !stage.toLowerCase().includes('error')
+          ? autoCloseDelay
           : undefined
       }
     />

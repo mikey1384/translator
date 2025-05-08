@@ -1,105 +1,89 @@
 import { useState, useCallback } from 'react';
-import { colors } from '../../styles.js';
-import ProgressArea from './ProgressArea.js';
+import ProgressArea from './ProgressArea';
+import { colors } from '../../styles';
+
+import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
 
-const devLog = (...args: any[]) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(...args);
-  }
+/* ------------------------------------------------------------------ */
+/* util – dev-only logging                                             */
+/* ------------------------------------------------------------------ */
+const dev = {
+  log: (...a: any[]) =>
+    process.env.NODE_ENV !== 'production' && console.log(...a),
+  error: (...a: any[]) =>
+    process.env.NODE_ENV !== 'production' && console.error(...a),
 };
 
-const devError = (...args: any[]) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.error(...args);
-  }
-};
-
-interface TranslationProgressAreaProps {
-  translationProgress: number;
-  translationStage: string;
-  isTranslationInProgress: boolean;
-  onSetIsTranslationInProgress: (inProgress: boolean) => void;
-  autoCloseDelay?: number;
-  translationOperationId?: string | null;
-}
-
-const TRANSLATION_PROGRESS_COLOR = colors.progressTranslate;
+/* ------------------------------------------------------------------ */
+const BAR_COLOR = colors.progressTranslate;
 
 export default function TranslationProgressArea({
-  translationProgress,
-  translationStage,
-  isTranslationInProgress,
-  onSetIsTranslationInProgress,
-  autoCloseDelay = 3000,
-  translationOperationId,
-}: TranslationProgressAreaProps) {
+  autoCloseDelay = 3_000,
+}: { autoCloseDelay?: number } = {}) {
+  /* pull translation slice from the global task store */
+  const {
+    translation: { inProgress, percent, stage, id },
+    setTranslation,
+  } = useTaskStore(s => ({
+    translation: s.translation,
+    setTranslation: s.setTranslation,
+  }));
+
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const handleTranslationCancel = useCallback(
-    async (id?: string | null) => {
-      if (!id) {
-        console.warn('[TranslationProgressArea] No operationId to cancel.');
-        alert(
-          'Cannot cancel the operation: Operation ID is missing. The process will continue.'
-        );
-        onSetIsTranslationInProgress(false);
-        return;
-      }
+  /* ---------------- cancel handler ---------------- */
+  const handleCancel = useCallback(async () => {
+    if (!id) {
+      alert('Cannot cancel – operation id missing.');
+      setTranslation({ inProgress: false });
+      return;
+    }
 
-      if (
-        !window.confirm(
-          "Are you sure you want to cancel the translation? Progress will be lost and you'll need to start again."
-        )
-      ) {
-        return;
-      }
+    if (
+      !window.confirm(
+        "Cancel translation?\n\nProgress will be lost and you'll need to start again."
+      )
+    ) {
+      return;
+    }
 
-      setIsCancelling(true);
+    setIsCancelling(true);
+    try {
+      dev.log('[TPA] sending cancel for', id);
+      await OperationIPC.cancel(id);
+    } catch (err: any) {
+      dev.error('[TPA] cancel failed', err);
+      alert(`Failed to cancel: ${err.message || err}`);
+    } finally {
+      setIsCancelling(false);
+      setTranslation({ inProgress: false });
+    }
+  }, [id, setTranslation]);
 
-      try {
-        devLog(`[TranslationProgressArea] Attempting electron cancel: ${id}`);
-        await OperationIPC.cancel(id);
-        devLog(
-          `[TranslationProgressArea] Electron cancel request sent for ${id}.`
-        );
-      } catch (error: any) {
-        devError(
-          `[TranslationProgressArea] Error calling cancelOperation for ${id}:`,
-          error
-        );
-        alert(`Failed to cancel the operation: ${error.message || error}`);
-      } finally {
-        setIsCancelling(false);
-        onSetIsTranslationInProgress(false);
-      }
-    },
-    [onSetIsTranslationInProgress]
-  );
-
+  /* ---------------- close handler (auto-hide) ----- */
   const handleClose = useCallback(() => {
-    devLog(
-      '[TranslationProgressArea] handleClose called by ProgressArea, signaling parent.'
-    );
-    onSetIsTranslationInProgress(false);
-  }, [onSetIsTranslationInProgress]);
+    dev.log('[TPA] closed manually/auto');
+    setTranslation({ inProgress: false });
+  }, [setTranslation]);
 
+  /* ---------------- render ------------------------ */
   return (
     <ProgressArea
-      isCancelling={isCancelling}
-      isVisible={isTranslationInProgress}
+      isVisible={inProgress}
       title="Translation in Progress"
-      progress={translationProgress}
-      stage={translationStage}
+      progress={percent}
+      stage={stage}
       progressBarColor={
         isCancelling
           ? colors.danger
-          : translationProgress >= 100
+          : percent >= 100
             ? colors.success
-            : TRANSLATION_PROGRESS_COLOR
+            : BAR_COLOR
       }
-      operationId={translationOperationId ?? null}
-      onCancel={handleTranslationCancel}
+      operationId={id ?? null}
+      isCancelling={isCancelling}
+      onCancel={handleCancel}
       onClose={handleClose}
       autoCloseDelay={autoCloseDelay}
     />
