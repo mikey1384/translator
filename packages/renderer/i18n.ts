@@ -76,7 +76,7 @@ const getInitialLanguage = async (): Promise<string> => {
   return defaultLang;
 };
 
-const initI18n = async () => {
+const initI18nPromise = (async () => {
   const initialLanguage = await getInitialLanguage();
   console.log(`[i18n] Setting initial language to: ${initialLanguage}`);
 
@@ -128,9 +128,11 @@ const initI18n = async () => {
     interpolation: { escapeValue: false },
     react: { useSuspense: true },
   });
-};
 
-initI18n().catch(err => {
+  return i18n;
+})();
+
+initI18nPromise.catch(err => {
   console.error('[i18n] Failed to initialize i18n:', err);
 });
 
@@ -159,4 +161,5 @@ export const changeLanguage = async (lng: string) => {
   }
 };
 
-export default i18n;
+export { i18n };
+export default initI18nPromise;

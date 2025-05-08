@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './AppContent/index.js';
-import './i18n.js';
+import initI18nPromise from './i18n.js';
 import './highlight.css';
 
 let root: ReturnType<typeof createRoot> | null = null;
@@ -28,8 +28,15 @@ const renderApp = () => {
   );
 };
 
-// Initial render
-renderApp();
+initI18nPromise
+  .then(() => {
+    console.log('[index] i18n initialization complete, rendering app');
+    renderApp();
+  })
+  .catch(error => {
+    console.error('[index] Error initializing i18n:', error);
+    renderApp();
+  });
 
 /* ------------------------------------------------------------------ */
 /* 🔥  HMR – safe for both ESM (Vite) and CJS (Webpack) bundles        */
