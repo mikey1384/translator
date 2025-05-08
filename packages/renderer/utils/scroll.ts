@@ -1,6 +1,3 @@
-// @ts-nocheck
-// Functions moved from packages/renderer/containers/EditSubtitles/hooks/navigation.ts
-
 export function smoothScrollTo(y: number) {
   const root = (document.scrollingElement ||
     document.documentElement) as HTMLElement;
