@@ -16,11 +16,7 @@ import {
 } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
-
-/* ------------------------------------------------------------------ */
-/* static styles (unchanged – shortened where obvious) */
-/* ------------------------------------------------------------------ */
-const _SCROLL_IGNORE_DURATION = 2_000;
+import { SrtSegment } from '@shared-types/app';
 
 const videoOverlayControlsStyles = css`
   position: absolute;
@@ -235,9 +231,6 @@ const controlsWrapperStyles = (isFullScreen: boolean) => css`
   `}
 `;
 
-/* ------------------------------------------------------------------ */
-/* helper: time formatter */
-/* ------------------------------------------------------------------ */
 const fmt = (s: number) => {
   if (Number.isNaN(s)) return '00:00';
   const h = Math.floor(s / 3600);
@@ -248,25 +241,14 @@ const fmt = (s: number) => {
     : [m, sec].map(n => String(n).padStart(2, '0')).join(':');
 };
 
-/* ------------------------------------------------------------------ */
-/* component */
-/* ------------------------------------------------------------------ */
 export default function VideoPlayer() {
-  /* ===============================================================
-     1. Pull data + actions from the stores
-     ============================================================== */
-  const { url: videoUrl, togglePlay } = useVideoStore();
-
-  const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
-  const { merge, download, translation } = useTaskStore();
-
   const {
-    downloadQuality,
-    setDownloadQuality,
-    showOriginalText,
-    setUrlInput,
-    urlInput,
-  } = useUIStore();
+    url: videoUrl,
+    handleTogglePlay: togglePlay,
+    openFileDialog: selectVideo,
+  } = useVideoStore();
+  const { merge, download, translation } = useTaskStore();
+  const { handleProcessUrl } = useUIStore();
 
   /* derived */
   const isProgressBarVisible =
@@ -279,7 +261,6 @@ export default function VideoPlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-
   const [showOverlay, setShowOverlay] = useState(false);
   const [showFsControls, setShowFsControls] = useState(true);
   const activityTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -389,15 +370,8 @@ export default function VideoPlayer() {
           onMouseMove={pokeFsControls}
         >
           <NativeVideoPlayer
-            videoUrl={videoUrl}
-            videoRef={null}
-            subtitles={subtitles}
             parentRef={playerDivRef}
             isFullyExpanded={isFullScreen}
-            showOriginalText={showOriginalText}
-            baseFontSize={16}
-            stylePreset={'default'}
-            onPlayerReady={() => {}}
           />
 
           {/* -------- overlays (shared for window & FS) -------- */}
@@ -512,26 +486,15 @@ export default function VideoPlayer() {
         {!isFullScreen && (
           <div className={controlsWrapperStyles(false)}>
             <SideMenu
-              hasSubtitles={subtitles.length > 0}
-              isMergingInProgress={merge.inProgress}
-              isProcessingUrl={download.inProgress}
-              isTranslationInProgress={translation.inProgress}
-              onScrollToCurrentSubtitle={() => {}}
-              onShiftAllSubtitles={offset => {}}
-              onProcessUrl={() => {
-                /* trigger from store/client */
-              }}
-              onSelectVideoClick={() => {
-                /* open file dialog etc. */
-              }}
-              onSetUrlInput={setUrlInput}
-              urlInput={urlInput}
-              downloadQuality={downloadQuality}
-              onSetDownloadQuality={setDownloadQuality}
-              onSrtFileLoaded={() => {
-                /* ... */
-              }}
-              onSetSubtitleSegments={segs => useSubStore.getState().load(segs)}
+              onProcessUrl={handleProcessUrl}
+              onShiftAllSubtitles={useSubStore.getState().shiftAll}
+              onScrollToCurrentSubtitle={useSubStore.getState().scrollToCurrent}
+              onSelectVideoClick={selectVideo}
+              onSetSubtitleSegments={(segs: SrtSegment[]) =>
+                useSubStore.getState().load(segs)
+              }
+              onSrtFileLoaded={useSubStore.getState().setSrtPath}
+              onUiInteraction={pokeFsControls}
             />
           </div>
         )}

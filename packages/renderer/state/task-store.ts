@@ -6,7 +6,7 @@ type Task = {
   stage: string;
   percent: number;
   inProgress: boolean;
-  batchStartIndex?: number;
+  batchStartIndex?: number /** transient: only arrives from IPC */;
 };
 
 interface State {
@@ -55,7 +55,14 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
     setMerge: p =>
       set(s => {
         Object.assign(s.merge, p);
+        if (p.percent !== undefined) s.merge.inProgress = p.percent < 100;
       }),
     setCancellingDownload: b => set({ cancellingDownload: b }),
   }))
 );
+
+export const useDownloadTask = () => useTaskStore(s => s.download);
+export const useTranslationTask = () => useTaskStore(s => s.translation);
+export const useMergeTask = () => useTaskStore(s => s.merge);
+export const useCancellingDownload = () =>
+  useTaskStore(s => s.cancellingDownload);

@@ -2,13 +2,13 @@ import { ChangeEvent } from 'react';
 import { css } from '@emotion/css';
 import { colors, selectStyles } from '../../styles.js';
 import Button from '../../components/Button.js';
-import { VideoQuality } from '../../../services/url-processor.js';
+import { VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 
 interface UrlInputSectionProps {
   urlInput: string;
   setUrlInput: (value: string) => void;
-  setError: (error: string) => void;
+  setError: (error: string | null) => void;
   isTranslationInProgress: boolean;
   isProcessingUrl: boolean;
   downloadQuality: VideoQuality;
@@ -77,7 +77,7 @@ function UrlInputSection({
         value={urlInput}
         onChange={e => {
           setUrlInput(e.target.value);
-          setError('');
+          setError(null);
         }}
         disabled={isTranslationInProgress || isProcessingUrl}
       />

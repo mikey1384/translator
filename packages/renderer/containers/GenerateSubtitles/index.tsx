@@ -19,6 +19,8 @@ import {
 import * as UrlIPC from '../../ipc/url';
 import * as SubtitlesIPC from '../../ipc/subtitles';
 import { parseSrt } from '../../../shared/helpers';
+import * as FileIPC from '../../ipc/file';
+import * as SystemIPC from '../../ipc/system';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
@@ -60,7 +62,9 @@ export default function GenerateSubtitles() {
       <ApiKeyLock
         apiKeyStatus={{ openai: true }}
         isLoadingKeyStatus={false}
-        onNavigateToSettings={handleNavigateToSettings}
+        onNavigateToSettings={show =>
+          useUIStore.getState().toggleSettings(show)
+        }
       />
 
       {error && <ErrorBanner message={error} onClose={() => setError('')} />}
@@ -70,13 +74,13 @@ export default function GenerateSubtitles() {
         downloadedVideoPath={videoFilePath}
         onSaveOriginalVideo={handleSaveOriginalVideo}
         inputMode={inputMode}
-        didDownloadFromUrl={false} // Placeholder
+        didDownloadFromUrl={!!download.id}
       />
 
       <InputModeToggle
         inputMode={inputMode}
         onSetInputMode={setInputMode}
-        isTranslationInProgress={false} // Placeholder; update with store data if available
+        isTranslationInProgress={translation.inProgress}
         isProcessingUrl={download.inProgress}
       />
 
@@ -173,6 +177,7 @@ export default function GenerateSubtitles() {
           inProgress: false,
         });
         setUrlInput('');
+        useSubStore.getState().load([]); // clear any stale subtitles
       } else {
         setError(res.error || 'Failed to process URL');
         setDownload({
@@ -245,15 +250,72 @@ export default function GenerateSubtitles() {
   }
 
   async function handleSelectVideoClick() {
-    console.log('Select video file clicked');
+    const res = await FileIPC.open({
+      properties: ['openFile'],
+      filters: [
+        {
+          name: 'Media',
+          extensions: [
+            'mp4',
+            'mkv',
+            'avi',
+            'mov',
+            'webm',
+            'mp3',
+            'wav',
+            'aac',
+            'ogg',
+            'flac',
+          ],
+        },
+      ],
+    });
+    if (res.canceled || !res.filePaths.length) return;
+    const p = res.filePaths[0];
+    await useVideoStore
+      .getState()
+      .setFile({ name: p.split(/[\\/]/).pop()!, path: p });
+    useUIStore.getState().setInputMode('file');
   }
 
-  function handleNavigateToSettings(show: boolean) {
-    useUIStore.getState().toggleSettings(show);
-  }
+  async function handleSaveOriginalVideo() {
+    if (!videoFilePath) {
+      setError('No downloaded video found to save.');
+      return;
+    }
 
-  function handleSaveOriginalVideo() {
-    // Placeholder for saving original video logic
-    console.log('Save original video clicked');
+    const suggestName = (() => {
+      const filename = videoFilePath.split(/[\\/]/).pop() || 'downloaded_video';
+      return filename.startsWith('ytdl_') ? filename.slice(5) : filename;
+    })();
+
+    try {
+      const { filePath, error } = await FileIPC.save({
+        title: 'Save Downloaded Video As',
+        defaultPath: suggestName,
+        content: '',
+        filters: [
+          {
+            name: 'Video Files',
+            extensions: ['mp4', 'mkv', 'webm', 'mov', 'avi'],
+          },
+        ],
+      });
+
+      if (error) {
+        if (!error.includes('canceled')) setError(error);
+        return;
+      }
+      if (!filePath) return; // user cancelled
+
+      const copyRes = await FileIPC.copy(videoFilePath, filePath);
+      if (copyRes.error) throw new Error(copyRes.error);
+
+      // Tell the user
+      SystemIPC.showMessage(`Video saved to:\n${filePath}`);
+    } catch (err: any) {
+      console.error('[GenerateSubtitles] save original video error:', err);
+      setError(`Error saving video: ${err.message || String(err)}`);
+    }
   }
 }

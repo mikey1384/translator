@@ -26,15 +26,14 @@ interface Actions {
   insertAfter: (id: string) => void;
   remove: (id: string) => void;
   shift: (id: string, secs: number) => void;
-
+  shiftAll: (offsetSeconds: number) => void;
+  scrollToCurrent: () => void;
+  setSrtPath: (filePath: string | null) => void;
   setActive: (id: string | null) => void;
-
   seek: (id: string) => void;
   play: (id: string) => void;
   pause: () => void;
-
   incSourceId: () => void;
-
   setOriginalPath: (p: string | null) => void;
 }
 
@@ -135,6 +134,23 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         cue.start = newStart;
         cue.end = newStart + dur;
       }),
+
+    shiftAll: offsetSeconds =>
+      set(s => {
+        Object.values(s.segments).forEach(cue => {
+          const dur = cue.end - cue.start;
+          const newStart = Math.max(0, cue.start + offsetSeconds);
+          cue.start = newStart;
+          cue.end = newStart + dur;
+        });
+      }),
+
+    scrollToCurrent: () => {
+      // Placeholder for scrolling to current subtitle logic
+      console.log('Scrolling to current subtitle');
+    },
+
+    setSrtPath: filePath => set({ originalPath: filePath }),
 
     /* ---------- UI ---------- */
     setActive: id =>

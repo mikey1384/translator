@@ -22,6 +22,8 @@ interface State {
 interface Actions {
   setFile(file: File | { name: string; path: string } | null): Promise<void>;
   togglePlay(): Promise<void>;
+  handleTogglePlay(): void;
+  openFileDialog(): Promise<void>;
   markReady(): void;
   reset(): void;
 }
@@ -83,6 +85,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (!np) return;
       if (np.paused) await np.play();
       else np.pause();
+    },
+
+    handleTogglePlay() {
+      const np = getNativePlayerInstance();
+      if (!np) return;
+      if (np.paused) np.play().catch(console.error);
+      else np.pause();
+    },
+
+    async openFileDialog() {
+      // Placeholder for opening file dialog logic
+      console.log('Opening file dialog for video selection');
+      // This should trigger an IPC call or similar to open a file dialog
     },
 
     markReady() {

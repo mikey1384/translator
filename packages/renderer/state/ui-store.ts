@@ -33,6 +33,8 @@ interface Actions {
   setTargetLanguage(lang: string): void;
   setShowOriginalText(show: boolean): void;
   setError(error: string | null): void;
+  handleProcessUrl(): void;
+  openFileDialog(): void;
 }
 
 const initial: State = {
@@ -58,11 +60,22 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
     },
 
     setFindBarVisible(visible) {
-      set({ isFindBarVisible: visible });
+      set(s => {
+        s.isFindBarVisible = visible;
+        if (!visible) {
+          s.searchText = '';
+          s.matchedIndices = [];
+          s.activeMatchIndex = 0;
+        }
+      });
     },
 
     setSearchText(text) {
-      set({ searchText: text });
+      set(s => {
+        s.searchText = text;
+        s.activeMatchIndex = 0;
+        s.matchedIndices = [];
+      });
     },
 
     setActiveMatchIndex(index) {
@@ -96,9 +109,9 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
     handleReplaceAll() {
       const { searchText } = get();
+      if (!searchText.trim()) return;
       const replaceWith = prompt('Replace with:', '');
-      if (replaceWith !== null)
-        replaceAll(searchText, replaceWith, /* dualMode */ true);
+      if (replaceWith !== null) replaceAll(searchText, replaceWith, true);
     },
 
     setInputMode(mode) {
@@ -122,7 +135,22 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
     },
 
     setError(error) {
-      set({ error });
+      set({ error: error ?? null });
+    },
+
+    handleProcessUrl() {
+      const { urlInput, downloadQuality } = get();
+      if (!urlInput.trim()) return;
+      import('../ipc/url').then(({ process }) =>
+        process({ url: urlInput, quality: downloadQuality }).catch(
+          console.error
+        )
+      );
+    },
+
+    openFileDialog() {
+      // Placeholder for opening file dialog
+      console.log('Opening file dialog');
     },
   }))
 );

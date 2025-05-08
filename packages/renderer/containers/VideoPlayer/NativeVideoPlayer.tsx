@@ -72,7 +72,7 @@ export default function NativeVideoPlayer({
   const { url: videoUrl, togglePlay } = useVideoStore();
   const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
 
-  const { downloadQuality, showOriginalText } = useUIStore();
+  const { showOriginalText } = useUIStore();
 
   /* ============================================================
      2.  local state
@@ -84,7 +84,7 @@ export default function NativeVideoPlayer({
   const [activeSubtitle, setActiveSubtitle] = useState('');
   const [subtitleVisible, setSubtitleVisible] = useState(false);
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [_isPlaying, setIsPlaying] = useState(false);
   const [indicator, setIndicator] = useState<'play' | 'pause'>('pause');
   const [showInd, setShowInd] = useState(false);
 
