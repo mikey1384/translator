@@ -31,14 +31,21 @@ export function scrollPrecisely(
   }
 }
 
-export function scrollWhenReady(
-  id: string,
-  subtitleRefs: React.RefObject<Record<string, HTMLElement | null>>,
+export function scrollWhenReady({
+  id,
+  subtitleRefs,
   smooth = true,
   tries = 0,
   maxTries = 30,
-  onSuccess?: () => void
-): boolean {
+  onSuccess,
+}: {
+  id: string;
+  subtitleRefs: React.RefObject<Record<string, HTMLElement | null>>;
+  smooth?: boolean;
+  tries?: number;
+  maxTries?: number;
+  onSuccess?: () => void;
+}): boolean {
   const el = subtitleRefs.current[id];
   if (el) {
     if (!document.contains(el)) {
@@ -65,7 +72,14 @@ export function scrollWhenReady(
       `[review scrollWhenReady] Waiting for element ${id} (try ${tries + 1})`
     );
     requestAnimationFrame(() =>
-      scrollWhenReady(id, subtitleRefs, smooth, tries + 1, maxTries, onSuccess)
+      scrollWhenReady({
+        id,
+        subtitleRefs,
+        smooth,
+        tries: tries + 1,
+        maxTries,
+        onSuccess,
+      })
     );
     return false; // Indicate still trying
   } else {

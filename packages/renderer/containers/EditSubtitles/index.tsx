@@ -17,7 +17,7 @@ import {
   scrollPrecisely,
   scrollWhenReady,
   useSubtitleNavigation,
-} from './hooks';
+} from './hooks/index.js';
 
 import { colors } from '../../styles';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
@@ -60,10 +60,14 @@ export default function EditSubtitles({
     meta,
   } = useVideoStore();
   const { t } = useTranslation();
-  const { merge, translation } = useTaskStore();
+  const { merge: mergeTask, translation } = useTaskStore();
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
-  const { originalPath, setOriginalPath } = useSubStore();
+
+  const { originalPath, setOriginalPath } = useSubStore(s => ({
+    originalPath: s.originalPath,
+    setOriginalPath: s.setOriginalPath,
+  }));
   const canSaveDirectly = !!originalPath;
 
   /* ---------- local UI state ---------- */
@@ -144,23 +148,14 @@ export default function EditSubtitles({
     scrollToSubtitleIndex,
   ]);
 
+  const rbs = translation.reviewedBatchStartIndex;
   useEffect(() => {
-    const { reviewedBatchStartIndex } = translation; // TODO: Confirm correct property name as it does not exist on Task type
-    if (
-      reviewedBatchStartIndex == null ||
-      reviewedBatchStartIndex === prevReviewedBatchRef.current
-    )
-      return;
+    if (rbs == null || rbs === prevReviewedBatchRef.current) return;
 
-    const diff = calcAffected(
-      prevSubsRef.current,
-      subtitles,
-      reviewedBatchStartIndex
-    );
+    const diff = calcAffected(prevSubsRef.current, subtitles, rbs);
     setAffectedRows(diff);
-    prevReviewedBatchRef.current = reviewedBatchStartIndex;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [translation.reviewedBatchStartIndex, subtitles]); // TODO: Update dependency array with correct property
+    prevReviewedBatchRef.current = rbs;
+  }, [rbs, subtitles]);
 
   useEffect(() => {
     if (affectedRows.length === 0) return;
@@ -168,9 +163,13 @@ export default function EditSubtitles({
     const id = subtitles[last]?.id;
     if (!id) return;
     const done = () => setAffectedRows([]);
-    scrollWhenReady(id, subtitleRefs, false, 0, 30, done);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [affectedRows]);
+    scrollWhenReady({
+      id,
+      subtitleRefs: subtitleRefs,
+      smooth: false,
+      onSuccess: done,
+    });
+  }, [affectedRows, subtitles]);
 
   useEffect(() => {
     prevSubsRef.current = subtitles;
@@ -269,7 +268,7 @@ export default function EditSubtitles({
             mergeStylePreset={mergeStylePreset}
             setMergeStylePreset={setMergeStylePreset}
             onMergeMediaWithSubtitles={handleMerge}
-            isMergingInProgress={merge.inProgress}
+            isMergingInProgress={mergeTask.inProgress}
             videoFileExists={!!videoPath}
             subtitlesExist={subtitles.length > 0}
             isTranslationInProgress={translation.inProgress}
@@ -280,7 +279,7 @@ export default function EditSubtitles({
   );
 
   async function handleSaveSrt() {
-    if (!canSaveDirectly) return handleSaveEditedSrtAs();
+    if (!originalPath) return handleSaveEditedSrtAs();
     await writeSrt(originalPath);
   }
 
@@ -302,9 +301,7 @@ export default function EditSubtitles({
 
   async function writeSrt(path: string) {
     const result = await FileIPC.save({
-      title: 'Save SRT File',
-      defaultPath: path,
-      filters: [{ name: 'SRT Files', extensions: ['srt'] }],
+      filePath: path,
       content: buildSrt({ segments: subtitles }),
     });
     if (result.error) {
@@ -406,6 +403,7 @@ export default function EditSubtitles({
         name: result.filePaths[0].split(/[\\/]/).pop() || 'media',
         path: result.filePaths[0],
       });
+      setOriginalPath(null);
     }
   }
 

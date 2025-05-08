@@ -6,11 +6,12 @@ type Task = {
   stage: string;
   percent: number;
   inProgress: boolean;
+  batchStartIndex?: number;
 };
 
 interface State {
   download: Task;
-  translation: Task;
+  translation: Task & { reviewedBatchStartIndex: number | null };
   merge: Task;
   cancellingDownload: boolean;
 }
@@ -23,10 +24,15 @@ interface Actions {
 
 const empty: Task = { id: null, stage: '', percent: 0, inProgress: false };
 
+const initialTranslation = {
+  ...empty,
+  reviewedBatchStartIndex: null,
+};
+
 export const useTaskStore = createWithEqualityFn<State & Actions>()(
   immer(set => ({
     download: { ...empty },
-    translation: { ...empty },
+    translation: { ...initialTranslation },
     merge: { ...empty },
     cancellingDownload: false,
 
@@ -37,6 +43,14 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
     setTranslation: p =>
       set(s => {
         Object.assign(s.translation, p);
+        if (p.percent !== undefined) {
+          s.translation.inProgress = p.percent < 100;
+          if (!s.translation.inProgress)
+            s.translation.reviewedBatchStartIndex = null;
+        }
+        if (p.batchStartIndex !== undefined) {
+          s.translation.reviewedBatchStartIndex = p.batchStartIndex;
+        }
       }),
     setMerge: p =>
       set(s => {
