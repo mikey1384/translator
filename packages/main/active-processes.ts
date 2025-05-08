@@ -2,6 +2,7 @@ import { ChildProcess } from 'child_process';
 import { execa } from 'execa';
 import log from 'electron-log';
 import type { WebContents } from 'electron';
+import { app } from 'electron';
 
 export type DownloadProcess = ReturnType<typeof execa>;
 export type RenderJob = {
@@ -11,7 +12,7 @@ export type RenderJob = {
 export type SubtitleJob = AbortController;
 
 type RegistryEntry =
-  | { kind: 'download'; handle: DownloadProcess }
+  | { kind: 'download'; handle: DownloadProcess; cancel?: () => void }
   | { kind: 'subtitle'; handle: SubtitleJob }
   | { kind: 'render'; handle: RenderJob }
   | { kind: 'generic'; wc: WebContents; cancel: () => void };
@@ -31,7 +32,11 @@ export async function registerDownloadProcess(
 
   if (existing && existing.kind !== 'download') {
     if (existing.kind === 'generic') {
-      registry.set(id, { kind: 'download', handle: proc });
+      registry.set(id, {
+        kind: 'download',
+        handle: proc,
+        cancel: existing.cancel,
+      });
       log.info(`[registry] Promoted generic entry to download process ${id}`);
       return;
     } else {
@@ -106,10 +111,29 @@ export function registerAutoCancel(
 
   const cancelOnce = () => {
     cancelSafely(operationId);
-    registry.delete(operationId); // Ensure cleanup even if cancel throws
   };
   wc.once('destroyed', cancelOnce);
   wc.once('render-process-gone', cancelOnce);
+  wc.once('will-navigate', cancelOnce);
+  wc.once(
+    'did-start-navigation' as any,
+    (
+      _e: unknown,
+      _url: unknown,
+      _isInPlace: unknown,
+      _isMainFrame: unknown,
+      _frameId: unknown,
+      _parentFrameId: unknown,
+      details: unknown
+    ) => {
+      if ((details as any)?.isReload) {
+        log.info(
+          `[registry] Cancelling due to reload for operation ${operationId}`
+        );
+        cancelOnce();
+      }
+    }
+  );
 }
 
 export async function cancel(id: string): Promise<boolean> {
@@ -145,3 +169,9 @@ export async function cancelSafely(id: string): Promise<boolean> {
   }
   return true;
 }
+
+app.on('before-quit', () => {
+  for (const id of registry.keys()) {
+    cancelSafely(id);
+  }
+});

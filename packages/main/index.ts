@@ -603,8 +603,6 @@ function createApplicationMenu() {
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
         ...((isDev
           ? [{ role: 'toggleDevTools' }]
           : []) as MenuItemConstructorOptions[]),
