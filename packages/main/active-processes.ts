@@ -69,6 +69,33 @@ export function addSubtitle(id: string, job: SubtitleJob) {
 }
 
 /**
+ * Add a render job to the registry.
+ * @param id - The unique identifier for the render job.
+ * @param job - The render job to add.
+ */
+export function registerRenderJob(id: string, job: RenderJob) {
+  const existing = registry.get(id);
+
+  if (existing && existing.kind !== 'render') {
+    if (existing.kind === 'generic') {
+      registry.set(id, { kind: 'render', handle: job });
+      log.info(`[registry] Promoted generic entry to render job ${id}`);
+    } else {
+      log.warn(`[registry] ID ${id} already used for a ${existing.kind} job`);
+    }
+    return;
+  }
+
+  if (existing?.kind === 'render') {
+    existing.handle = job; // refresh handle
+    return;
+  }
+
+  log.info(`[registry] register render job ${id}`);
+  registry.set(id, { kind: 'render', handle: job });
+}
+
+/**
  * Remove a process from the registry.
  * @param id - The ID of the process to remove.
  * @returns True if the process was removed, false if it was not found.

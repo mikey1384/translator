@@ -10,7 +10,8 @@ import { FFmpegService } from '../../services/ffmpeg-service.js';
 import { getAssetsPath } from '../../shared/helpers/paths.js';
 import {
   registerAutoCancel,
-  finish as registryFinish,
+  registerRenderJob,
+  cancel as registryCancel,
 } from '../active-processes.js';
 
 import {
@@ -75,6 +76,12 @@ export function initializeRenderWindowHandlers(): void {
 
       activeRenderJobs.set(operationId, { processes: [] });
 
+      const renderHandle = {
+        processes: [] as ChildProcess[],
+        browser: undefined as any,
+      };
+      registerRenderJob(operationId, renderHandle);
+
       registerAutoCancel(operationId, event.sender, () =>
         cancelRenderJob(operationId)
       );
@@ -103,6 +110,7 @@ export function initializeRenderWindowHandlers(): void {
 
       const registerProcess = (p: ChildProcess) => {
         activeRenderJobs.get(operationId)?.processes.push(p);
+        renderHandle.processes.push(p);
       };
 
       try {
@@ -118,6 +126,7 @@ export function initializeRenderWindowHandlers(): void {
         });
         browser = br;
         activeRenderJobs.get(operationId)!.browser = browser;
+        renderHandle.browser = browser;
 
         if (!options.originalVideoPath) {
           throw new Error(
@@ -255,7 +264,6 @@ export function initializeRenderWindowHandlers(): void {
         await cleanupTempDir({ tempDirPath, operationId });
         activeRenderJobs.delete(operationId);
         jobControllers.delete(operationId);
-        registryFinish(operationId);
       }
     }
   );
@@ -269,42 +277,9 @@ export function initializeRenderWindowHandlers(): void {
 
 function cancelRenderJob(operationId: string) {
   log.warn(`[render-cancel] cancelling ${operationId}`);
-
-  // 1) abort any JS-side awaits (Puppeteer loops, etc.)
-  const ctrl = jobControllers.get(operationId);
-  ctrl?.abort();
+  jobControllers.get(operationId)?.abort();
   jobControllers.delete(operationId);
-
-  // 2) kill spawned ffmpeg / other OS procs
-  const job = activeRenderJobs.get(operationId);
-  job?.processes.forEach(p => {
-    if (!p.killed) {
-      const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
-      p.kill(sig);
-    }
-  });
-
-  // 3) close browser if still open
-  job?.browser?.close().catch(() => {});
-
-  // 4) Clean up temp dir
-  cleanupTempDir({ tempDirPath: null, operationId }).catch(err => {
-    log.error(
-      `[render-cancel] Failed to cleanup temp dir for ${operationId}:`,
-      err
-    );
-  });
-
-  // 5) Remove from active jobs
-  activeRenderJobs.delete(operationId);
-
-  // 6) Send final result to renderer
-  const win = BrowserWindow.getAllWindows()[0];
-  if (win && !win.isDestroyed()) {
-    win.webContents.send('render-subtitles-result', {
-      operationId,
-      success: false,
-      error: 'Process cancelled by user',
-    });
-  }
+  registryCancel(operationId).catch(err =>
+    log.error(`[render-cancel] failed:`, err)
+  );
 }
