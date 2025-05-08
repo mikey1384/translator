@@ -12,12 +12,8 @@ import MergeControls from './MergeControls';
 import EditSubtitlesHeader from './EditSubtitlesHeader';
 
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
-import {
-  flashSubtitle,
-  scrollPrecisely,
-  scrollWhenReady,
-  useSubtitleNavigation,
-} from './hooks/index.js';
+import { scrollWhenReady, useSubtitleNavigation } from './hooks/index.js';
+import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 
 import { colors } from '../../styles';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';

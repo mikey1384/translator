@@ -361,7 +361,10 @@ export default function VideoPlayer() {
         ref={playerDivRef}
         tabIndex={0}
         onKeyDown={onKeyDown}
-        className={fixedVideoContainerStyles(isFullScreen)}
+        className={[
+          'fixed-video-container',
+          fixedVideoContainerStyles(isFullScreen),
+        ].join(' ')}
         style={{ top: isFullScreen ? 0 : progressBarH }}
       >
         {/* -----------------  video wrapper  -------------------- */}

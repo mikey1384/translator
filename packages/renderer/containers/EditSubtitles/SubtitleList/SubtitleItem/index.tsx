@@ -59,6 +59,7 @@ const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
     return (
       <div
         ref={combinedRef}
+        data-cue-id={id}
         className={css`
           box-sizing: border-box;
         `}

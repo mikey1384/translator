@@ -4,6 +4,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { SrtSegment } from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
+import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 
 type SegmentMap = Record<string, SrtSegment>;
 
@@ -142,13 +143,44 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         }),
 
       scrollToCurrent() {
-        const { activeId, playingId } = get();
-        const id = playingId ?? activeId;
+        const { activeId, playingId, order, segments } = get();
+
+        let id: string | null = playingId ?? activeId ?? null;
+
+        if (!id) {
+          const v = getNativePlayerInstance();
+          if (v) {
+            const t = v.currentTime;
+
+            id =
+              order.find(cueId => {
+                const c = segments[cueId];
+                return t >= c.start && t <= c.end;
+              }) ?? null;
+
+            if (!id) {
+              for (let i = order.length - 1; i >= 0; i--) {
+                if (segments[order[i]].start < t) {
+                  id = order[i];
+                  break;
+                }
+              }
+            }
+
+            if (!id && order.length) {
+              id = order.find(cueId => segments[cueId].start > t) ?? order[0];
+            }
+          }
+        }
+
+        /* 3️⃣ scroll or give up ----------------------------------------- */
         if (!id) return;
-        const node = document.querySelector<HTMLElement>(
-          `[data-cue-id="${id}"]`
-        );
-        node?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+
+        const el = document.querySelector<HTMLElement>(`[data-cue-id="${id}"]`);
+        if (el) {
+          scrollPrecisely(el, false);
+          requestAnimationFrame(() => flashSubtitle(el));
+        }
       },
 
       setSrtPath: filePath => set({ originalPath: filePath }),
