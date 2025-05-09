@@ -252,13 +252,9 @@ export default function VideoPlayer() {
   const { handleProcessUrl } = useUIStore();
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
 
-  /* derived */
   const isProgressBarVisible =
     merge.inProgress || download.inProgress || translation.inProgress;
 
-  /* ============================================================== */
-  /* 2. Local UI state */
-  /* ============================================================== */
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -268,47 +264,59 @@ export default function VideoPlayer() {
   const activityTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerDivRef = useRef<HTMLDivElement>(null);
 
-  /* progress-bar offset so the fixed player never overlaps */
   const [progressBarH, setProgressBarH] = useState(0);
   useEffect(() => {
     setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
   }, [isProgressBarVisible]);
 
-  /* ============================================================== */
-  /* 3. Keep local state in sync with <video> element */
-  /* ============================================================== */
   useEffect(() => {
     const v = getNativePlayerInstance();
     if (!v) return;
 
-    /* handlers --------------------------------------------------- */
     const onTime = () => setCurrentTime(v.currentTime);
     const onDur = () => !Number.isNaN(v.duration) && setDuration(v.duration);
     const onPlayPause = () => setIsPlaying(!v.paused);
 
-    /* attach ----------------------------------------------------- */
     v.addEventListener('timeupdate', onTime);
     v.addEventListener('durationchange', onDur);
     v.addEventListener('play', onPlayPause);
     v.addEventListener('pause', onPlayPause);
 
-    /* init ------------------------------------------------------- */
     onTime();
     onDur();
     onPlayPause();
 
-    /* detach ----------------------------------------------------- */
+    useVideoStore.getState().startPositionSaving();
+
     return () => {
       v.removeEventListener('timeupdate', onTime);
       v.removeEventListener('durationchange', onDur);
       v.removeEventListener('play', onPlayPause);
       v.removeEventListener('pause', onPlayPause);
+      useVideoStore.getState().stopPositionSaving();
     };
   }, [videoUrl]);
 
-  /* ============================================================== */
-  /* 4. Helpers */
-  /* ============================================================== */
+  useEffect(() => {
+    const v = getNativePlayerInstance();
+    if (!v) return;
+
+    const { resumeAt } = useVideoStore.getState();
+    if (resumeAt === null) return;
+
+    const waitUntilSeekable = () =>
+      new Promise<void>(res => {
+        if (v.seekable.length) return res();
+        v.addEventListener('loadedmetadata', () => res(), { once: true });
+      });
+
+    waitUntilSeekable().then(() => {
+      const end = v.seekable.end(v.seekable.length - 1);
+      v.currentTime = Math.min(resumeAt, end - 0.25);
+      useVideoStore.setState({ resumeAt: null });
+    });
+  }, [videoUrl]);
+
   const seek = (val: number) => nativeSeek(val);
 
   const toggleFullscreen = () => {
@@ -321,7 +329,6 @@ export default function VideoPlayer() {
     });
   };
 
-  /* escape key exits pseudo-FS + arrow seeking ------------------- */
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && isFullScreen) {
       toggleFullscreen();
@@ -340,7 +347,6 @@ export default function VideoPlayer() {
     }
   };
 
-  /* overlay auto-hide in FS -------------------------------------- */
   const pokeFsControls = () => {
     if (!isFullScreen) return;
     setShowFsControls(true);
@@ -348,9 +354,6 @@ export default function VideoPlayer() {
     activityTimeout.current = setTimeout(() => setShowFsControls(false), 3000);
   };
 
-  /* ============================================================== */
-  /* 5. Render */
-  /* ============================================================== */
   if (!videoUrl) return null;
 
   const pct = duration ? (currentTime / duration) * 100 : 0;
@@ -367,7 +370,6 @@ export default function VideoPlayer() {
         ].join(' ')}
         style={{ top: isFullScreen ? 0 : progressBarH }}
       >
-        {/* -----------------  video wrapper  -------------------- */}
         <div
           className={playerWrapperStyles(isFullScreen)}
           onMouseEnter={() => setShowOverlay(true)}
@@ -382,7 +384,6 @@ export default function VideoPlayer() {
             showOriginalText={showOriginal}
           />
 
-          {/* -------- overlays (shared for window & FS) -------- */}
           <div
             className={
               isFullScreen
@@ -408,7 +409,7 @@ export default function VideoPlayer() {
               }
             >
               {isPlaying ? (
-                /* pause icon */ <svg
+                <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
@@ -416,7 +417,7 @@ export default function VideoPlayer() {
                   <path d="M5.5 3.5A1.5 1.5 0 017 5v6a1.5 1.5 0 01-3 0V5A1.5 1.5 0 015.5 3.5zm5 0A1.5 1.5 0 0112 5v6a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5z" />
                 </svg>
               ) : (
-                /* play icon  */ <svg
+                <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
@@ -459,7 +460,6 @@ export default function VideoPlayer() {
               {fmt(duration)}
             </span>
 
-            {/* Full-screen toggle */}
             <Button
               onClick={toggleFullscreen}
               variant="secondary"
@@ -470,7 +470,7 @@ export default function VideoPlayer() {
               title={isFullScreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
             >
               {isFullScreen ? (
-                /* exit */ <svg
+                <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
@@ -478,7 +478,7 @@ export default function VideoPlayer() {
                   <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z" />
                 </svg>
               ) : (
-                /* enter */ <svg
+                <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 16 16"
                   fill="currentColor"
@@ -490,7 +490,6 @@ export default function VideoPlayer() {
           </div>
         </div>
 
-        {/* ---------- side-menu (only when docked) ---------- */}
         {!isFullScreen && (
           <div className={controlsWrapperStyles(false)}>
             <SideMenu

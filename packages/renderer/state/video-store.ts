@@ -3,6 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { getNativePlayerInstance } from '../native-player';
 import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
+import throttle from 'lodash/throttle';
 
 type Meta = {
   duration: number;
@@ -18,6 +19,11 @@ interface State {
   meta: Meta;
   isAudioOnly: boolean;
   isReady: boolean;
+  resumeAt: number | null; // Add resumeAt to store the saved position
+  _positionListeners: {
+    onTimeUpdate: () => void;
+    onPause: () => void;
+  } | null;
 }
 
 interface Actions {
@@ -27,6 +33,9 @@ interface Actions {
   openFileDialog(): Promise<void>;
   markReady(): void;
   reset(): void;
+  savePosition(position: number): void; // Add method to save position
+  startPositionSaving(): void; // Add method to start saving position
+  stopPositionSaving(): void; // Add method to stop saving position
 }
 
 const initial: State = {
@@ -36,7 +45,30 @@ const initial: State = {
   meta: null,
   isAudioOnly: false,
   isReady: false,
+  resumeAt: null,
+  _positionListeners: null,
 };
+
+// Manage a single throttler for saving position
+let currentSaver: ReturnType<typeof throttle> | null = null;
+
+function attachSaver(path: string) {
+  currentSaver?.cancel();
+  currentSaver = throttle(async (pos: number) => {
+    try {
+      await VideoIPC.savePlaybackPosition(path, pos);
+    } catch (e) {
+      console.error('[video-store] save', e);
+    }
+  }, 5000);
+}
+
+// Add a listener for window unload to flush the last save
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    currentSaver?.flush?.();
+  });
+}
 
 export const useVideoStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
@@ -59,6 +91,21 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.url = url;
         });
         await analyse(fd.path);
+        // Load saved position after file is set
+        if (fd.path) {
+          try {
+            const saved = await VideoIPC.getPlaybackPosition(fd.path);
+            if (saved != null) {
+              set({ resumeAt: saved });
+            }
+          } catch (err) {
+            console.error('[video-store] Failed to load saved position:', err);
+          }
+          // Attach saver and refresh listeners for the new file
+          attachSaver(fd.path);
+          get().stopPositionSaving();
+          get().startPositionSaving();
+        }
         return;
       }
 
@@ -70,7 +117,24 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
         });
-        if (b._originalPath) await analyse(b._originalPath);
+        if (b._originalPath) {
+          await analyse(b._originalPath);
+          // Load saved position after file is set
+          try {
+            const saved = await VideoIPC.getPlaybackPosition(b._originalPath);
+            if (saved != null) {
+              set({ resumeAt: saved });
+            }
+          } catch (err) {
+            console.error('[video-store] Failed to load saved position:', err);
+          }
+          // Attach saver and refresh listeners for the new file
+          if (b._originalPath) {
+            attachSaver(b._originalPath);
+            get().stopPositionSaving();
+            get().startPositionSaving();
+          }
+        }
         return;
       }
 
@@ -78,7 +142,24 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       const blobUrl = URL.createObjectURL(fd as File);
       set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null });
-      if ((fd as any).path) await analyse((fd as any).path);
+      if ((fd as any).path) {
+        await analyse((fd as any).path);
+        // Load saved position after file is set
+        try {
+          const saved = await VideoIPC.getPlaybackPosition((fd as any).path);
+          if (saved != null) {
+            set({ resumeAt: saved });
+          }
+        } catch (err) {
+          console.error('[video-store] Failed to load saved position:', err);
+        }
+        // Attach saver and refresh listeners for the new file
+        if ((fd as any).path) {
+          attachSaver((fd as any).path);
+          get().stopPositionSaving();
+          get().startPositionSaving();
+        }
+      }
     },
 
     async togglePlay() {
@@ -137,6 +218,58 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       set(initial);
+      if (currentSaver) {
+        currentSaver.cancel();
+        currentSaver = null;
+      }
+    },
+
+    savePosition(position: number) {
+      if (currentSaver) {
+        currentSaver(position);
+      }
+    },
+
+    startPositionSaving() {
+      const np = getNativePlayerInstance();
+      const state = get();
+      if (!np || !state.path) {
+        if (!state.path && currentSaver) {
+          currentSaver.cancel();
+          currentSaver = null;
+        }
+        return;
+      }
+      const onTimeUpdate = () => {
+        if (currentSaver) {
+          currentSaver(np.currentTime);
+        }
+      };
+      const onPause = () => {
+        if (currentSaver) {
+          currentSaver.flush?.();
+        }
+      };
+      np.addEventListener('timeupdate', onTimeUpdate);
+      np.addEventListener('pause', onPause);
+      // Store the listeners for removal later
+      set({ _positionListeners: { onTimeUpdate, onPause } });
+    },
+
+    stopPositionSaving() {
+      const np = getNativePlayerInstance();
+      const state = get();
+      if (!np) return;
+      if ((state as any)._positionListeners) {
+        const { onTimeUpdate, onPause } = (state as any)._positionListeners;
+        np.removeEventListener('timeupdate', onTimeUpdate);
+        np.removeEventListener('pause', onPause);
+        set({ _positionListeners: null });
+        if (currentSaver) {
+          currentSaver.flush?.();
+          currentSaver.cancel();
+        }
+      }
     },
   }))
 );
