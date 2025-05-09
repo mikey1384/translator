@@ -1,4 +1,3 @@
-import React from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 
@@ -48,12 +47,11 @@ const goToSettingsButtonStyles = css`
   }
 `;
 
-const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
+export default function ApiKeyLock({
   apiKeyStatus,
   isLoadingKeyStatus,
   onNavigateToSettings,
-}) => {
-  // Calculate key status - Only check for OpenAI
+}: ApiKeyLockProps) {
   const keysSetCount = apiKeyStatus ? (apiKeyStatus.openai ? 1 : 0) : 0;
   const allKeysSet = keysSetCount === 1; // Changed required count to 1
 
@@ -89,6 +87,4 @@ const ApiKeyLock: React.FC<ApiKeyLockProps> = ({
       </button>
     </div>
   );
-};
-
-export default ApiKeyLock;
+}

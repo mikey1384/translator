@@ -15,6 +15,7 @@ import {
   useVideoStore,
   useTaskStore,
   useSubStore,
+  useSettingsStore,
 } from '../../state';
 import * as UrlIPC from '../../ipc/url';
 import * as SubtitlesIPC from '../../ipc/subtitles';
@@ -24,6 +25,8 @@ import * as SystemIPC from '../../ipc/system';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
+
+  const { loading: loadingKeyStatus, keySet, fetchStatus } = useSettingsStore();
 
   const {
     inputMode,
@@ -62,11 +65,15 @@ export default function GenerateSubtitles() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile]);
 
+  useEffect(() => {
+    if (keySet === undefined) fetchStatus();
+  }, [keySet, fetchStatus]);
+
   return (
     <Section title={t('subtitles.generate')}>
       <ApiKeyLock
-        apiKeyStatus={{ openai: true }}
-        isLoadingKeyStatus={false}
+        apiKeyStatus={{ openai: !!keySet }}
+        isLoadingKeyStatus={loadingKeyStatus}
         onNavigateToSettings={show =>
           useUIStore.getState().toggleSettings(show)
         }
@@ -152,6 +159,7 @@ export default function GenerateSubtitles() {
           isProcessingUrl={download.inProgress}
           handleGenerateSubtitles={handleGenerateSubtitles}
           isMergingInProgress={merge.inProgress}
+          disabledKey={!keySet}
         />
       )}
     </Section>

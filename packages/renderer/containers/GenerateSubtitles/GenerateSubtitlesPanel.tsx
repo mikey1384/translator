@@ -93,11 +93,9 @@ interface GenerateSubtitlesPanelProps {
   isProcessingUrl: boolean;
   handleGenerateSubtitles: () => void;
   isMergingInProgress: boolean;
+  disabledKey: boolean;
 }
 
-/**
- * Merged UI: language selection + generate button in a single container
- */
 export default function GenerateSubtitlesPanel({
   targetLanguage,
   setTargetLanguage,
@@ -109,6 +107,7 @@ export default function GenerateSubtitlesPanel({
   isProcessingUrl,
   handleGenerateSubtitles,
   isMergingInProgress,
+  disabledKey,
 }: GenerateSubtitlesPanelProps) {
   const { t } = useTranslation();
 
@@ -140,7 +139,10 @@ export default function GenerateSubtitlesPanel({
           onChange={e => setTargetLanguage(e.target.value)}
           className={selectStyles}
           disabled={
-            isTranslationInProgress || isProcessingUrl || isMergingInProgress
+            disabledKey ||
+            isTranslationInProgress ||
+            isProcessingUrl ||
+            isMergingInProgress
           }
         >
           {baseLanguageOptions.map(lang => (
@@ -191,6 +193,7 @@ export default function GenerateSubtitlesPanel({
         <Button
           onClick={handleGenerateSubtitles}
           disabled={
+            disabledKey ||
             (!videoFile && !videoFilePath) ||
             isTranslationInProgress ||
             isProcessingUrl ||
