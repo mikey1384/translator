@@ -3,8 +3,9 @@ import { useUIStore } from '../state';
 import LogoDisplay from '../components/LogoDisplay';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { colors } from '../styles';
 
-const headerBtn = css`
+const headerRow = css`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -12,22 +13,34 @@ const headerBtn = css`
   gap: 15px;
 `;
 
+const settingsButton = css`
+  padding: 8px 15px;
+  font-size: 0.9em;
+  background-color: ${colors.grayLight};
+  color: ${colors.dark};
+  border: 1px solid ${colors.border};
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: none;
+
+  &:hover {
+    background-color: ${colors.light};
+    border-color: ${colors.primary};
+  }
+`;
+
 export default function Header() {
   const { t } = useTranslation();
   const { showSettings, toggleSettings } = useUIStore();
 
   return (
-    <div className={headerBtn}>
+    <div className={headerRow}>
       {showSettings ? (
         <button
-          className={css`
-            padding: 8px 15px;
-            font-size: 0.9em;
-            background: #eee;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-          `}
+          className={settingsButton}
           onClick={() => toggleSettings(false)}
         >
           {t('common.backToApp')}
@@ -40,7 +53,7 @@ export default function Header() {
       )}
 
       {!showSettings && (
-        <button className={headerBtn} onClick={() => toggleSettings(true)}>
+        <button className={settingsButton} onClick={() => toggleSettings(true)}>
           {t('common.settings')}
         </button>
       )}

@@ -29,11 +29,14 @@ export const useSettingsStore = create<SettingsState>(set => ({
     const res = await SystemIPC.saveApiKey('openai', key);
     set({
       keySet: !!key && res.success,
-      saveStatus: {
-        ok: res.success,
-        msg: res.success ? 'Saved!' : res.error || 'Error',
-      },
+      saveStatus: !res.success
+        ? { ok: false, msg: res.error || 'Error' }
+        : key
+          ? { ok: true, msg: 'Saved!' }
+          : null,
     });
+
+    if (key) setTimeout(() => set({ saveStatus: null }), 3000);
   },
   clearStatus: () => set({ saveStatus: null }),
 }));
