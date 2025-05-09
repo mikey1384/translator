@@ -20,6 +20,8 @@ interface Actions {
   setTranslation(patch: Partial<Task>): void;
   setMerge(patch: Partial<Task>): void;
   setCancellingDownload(b: boolean): void;
+  startMerge(): void;
+  doneMerge(): void;
 }
 
 const empty: Task = { id: null, stage: '', percent: 0, inProgress: false };
@@ -58,6 +60,24 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         if (p.percent !== undefined) s.merge.inProgress = p.percent < 100;
       }),
     setCancellingDownload: b => set({ cancellingDownload: b }),
+    startMerge: () =>
+      set(s => {
+        s.merge = {
+          ...s.merge,
+          percent: 0,
+          stage: 'starting',
+          inProgress: true,
+        };
+      }),
+    doneMerge: () =>
+      set(s => {
+        s.merge = {
+          ...s.merge,
+          percent: 100,
+          stage: 'done',
+          inProgress: false,
+        };
+      }),
   }))
 );
 

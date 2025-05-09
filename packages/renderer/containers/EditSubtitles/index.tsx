@@ -298,56 +298,61 @@ export default function EditSubtitles({
 
   /* ---------- merge to video ---------- */
   async function handleMerge() {
-    if (!videoPath) {
-      setSaveError('No source video');
-      return;
-    }
-    if (subtitles.length === 0) {
-      setSaveError('No subtitles loaded');
-      return;
-    }
-    if (!isAudioOnly) {
-      const missing: string[] = [];
-      if (!meta?.duration) missing.push('duration');
-      if (!meta?.width) missing.push('width');
-      if (!meta?.height) missing.push('height');
-      if (!meta?.frameRate) missing.push('frame rate');
-      if (missing.length) {
-        setSaveError(`Missing video metadata (${missing.join(', ')})`);
+    try {
+      if (!videoPath) {
+        setSaveError('No source video');
         return;
       }
-    }
+      if (subtitles.length === 0) {
+        setSaveError('No subtitles loaded');
+        return;
+      }
+      if (!isAudioOnly) {
+        const missing: string[] = [];
+        if (!meta?.duration) missing.push('duration');
+        if (!meta?.width) missing.push('width');
+        if (!meta?.height) missing.push('height');
+        if (!meta?.frameRate) missing.push('frame rate');
+        if (missing.length) {
+          setSaveError(`Missing video metadata (${missing.join(', ')})`);
+          return;
+        }
+      }
 
-    setMergeStage('Starting render…');
-    const opId = `render-${Date.now()}`;
-    onSetMergeOperationId(opId);
+      setMergeStage('Starting render…');
+      const opId = `render-${Date.now()}`;
+      onSetMergeOperationId(opId);
+      useTaskStore.getState().startMerge();
 
-    const srtContent = buildSrt({
-      segments: subtitles,
-      mode: showOriginalText ? 'dual' : 'translation',
-    });
+      const srtContent = buildSrt({
+        segments: subtitles,
+        mode: showOriginalText ? 'dual' : 'translation',
+      });
 
-    const { baseFontSize, subtitleStyle } = useUIStore.getState();
+      const { baseFontSize, subtitleStyle } = useUIStore.getState();
 
-    const opts: RenderSubtitlesOptions = {
-      operationId: opId,
-      srtContent,
-      outputDir: '/placeholder/output/dir',
-      videoDuration: meta?.duration ?? 0,
-      videoWidth: meta?.width ?? 1280,
-      videoHeight: meta?.height ?? 720,
-      frameRate: Number(meta?.frameRate ?? 30),
-      originalVideoPath: videoPath,
-      fontSizePx: baseFontSize,
-      stylePreset: subtitleStyle,
-      overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
-    };
+      const opts: RenderSubtitlesOptions = {
+        operationId: opId,
+        srtContent,
+        outputDir: '/placeholder/output/dir',
+        videoDuration: meta?.duration ?? 0,
+        videoWidth: meta?.width ?? 1280,
+        videoHeight: meta?.height ?? 720,
+        frameRate: Number(meta?.frameRate ?? 30),
+        originalVideoPath: videoPath,
+        fontSizePx: baseFontSize,
+        stylePreset: subtitleStyle,
+        overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+      };
 
-    const res = await onStartPngRenderRequest(opts);
-    if (!res.success) {
-      setSaveError(res.error || 'Render failed');
-      setMergeStage('Error');
-      onSetMergeOperationId(null);
+      const res = await onStartPngRenderRequest(opts);
+      if (!res.success) {
+        setSaveError(res.error || 'Render failed');
+        setMergeStage('Error');
+        onSetMergeOperationId(null);
+      }
+    } finally {
+      useTaskStore.getState().doneMerge();
     }
   }
 

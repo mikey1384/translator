@@ -1,5 +1,6 @@
 import { RenderSubtitlesOptions } from '@shared-types/app'; // Import types
 import * as SubtitleIPC from '@ipc/subtitles';
+import { useTaskStore } from '../state';
 
 type PngRenderResult = {
   operationId: string;
@@ -131,9 +132,11 @@ class SubtitleRendererClient {
 
       offProgress = SubtitleIPC.onMergeProgress(
         (p: { operationId: string; [key: string]: any }) => {
-          if (p.operationId === operationId) {
-            arm();
-          }
+          if (p.operationId !== operationId) return;
+
+          arm();
+          const { percent = 0, stage = '' } = p ?? {};
+          useTaskStore.getState().setMerge({ percent, stage });
         }
       );
 
