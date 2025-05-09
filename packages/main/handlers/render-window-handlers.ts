@@ -6,7 +6,7 @@ import log from 'electron-log';
 import { pathToFileURL } from 'url';
 
 import { RenderSubtitlesOptions } from '@shared-types/app';
-import { FFmpegService } from '../../services/ffmpeg-service.js';
+import { FFmpegService } from '../services/ffmpeg-service.js';
 import { getAssetsPath } from '../../shared/helpers/paths.js';
 import {
   registerAutoCancel,

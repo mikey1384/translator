@@ -16,7 +16,6 @@ export function generateSubtitleEvents({
 }): Array<{ timeMs: number; text: string }> {
   const ms = (sec: number) => Math.round(sec * 1000);
 
-  /* ── 1. Parse SRT and generate merged segments ───────────────────── */
   interface Interval {
     start: number;
     end: number;
@@ -62,7 +61,6 @@ export function generateSubtitleEvents({
     `[srt-parser ${operationId}] created ${mergedSegments.length} merged segments`
   );
 
-  /* ── 2. Convert merged segments to [time,text] change-list ──────── */
   const events: Array<{ timeMs: number; text: string }> = [
     { timeMs: 0, text: '' },
   ];
@@ -75,7 +73,6 @@ export function generateSubtitleEvents({
     events.push({ timeMs: seg.end, text: '' });
   });
 
-  /* Ensure trailing blank at exact video duration */
   const durationMs = ms(videoDuration);
   events.push({ timeMs: durationMs, text: '' });
 

@@ -1,6 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
-import os from 'os'; // Need os for platform check
-import log from 'electron-log'; // Add log for debugging
+import os from 'os';
+import log from 'electron-log';
 
 interface DirectMergeOptions {
   concatListPath: string;
@@ -39,21 +39,18 @@ export async function directMerge(
 
   log.info(`[ffmpeg-direct-merge ${operationId}] Starting direct merge...`);
 
-  // Define progress bands locally within this function
   const VIDEO_START = 40;
   const FINAL_START = 90;
   const FINAL_END = 100;
   const VIDEO_RANGE = FINAL_START - VIDEO_START;
 
-  // Determine video codec (similar to old merge, slightly cleaned up)
   const platform = os.platform();
-  let vcodec = 'libx264'; // Default
+  let vcodec = 'libx264';
   if (platform === 'darwin') {
     vcodec = 'h264_videotoolbox';
   }
   log.info(`[ffmpeg-direct-merge ${operationId}] Using video codec: ${vcodec}`);
 
-  // Build FFmpeg arguments
   const overlayInput = audioPath ? 2 : 1;
   const audioMap = audioPath ? ['-map', '1:a:0'] : ['-map', '0:a?'];
   const ffArgs = [
@@ -98,17 +95,14 @@ export async function directMerge(
     const ff = spawn('ffmpeg', ffArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
     registerProcess?.(ff);
 
-    // Add stderr logging
     ff.stderr.setEncoding('utf8');
     ff.stderr.on('data', (data: string) => {
       log.debug(`[ffmpeg-direct-merge ${operationId} stderr] ${data.trim()}`);
     });
 
-    // Handle stdout for progress
     ff.stdout.setEncoding('utf8');
     ff.stdout.on('data', (data: string) => {
-      const txt = data.toString(); // Already string due to setEncoding
-      // ── 1) update bar while video frames are still encoding ─────────────
+      const txt = data.toString();
       const m = /out_time_ms=(\d+)/.exec(txt);
       if (m) {
         const frac = Math.min(parseInt(m[1], 10) / (videoDuration * 1e6), 1); // 0 → 1
@@ -119,10 +113,9 @@ export async function directMerge(
         });
       }
 
-      // ── 2) update stage when ffmpeg signals progress=end ───────────────
       if (/progress=end/.test(txt)) {
         progressCallback({
-          percent: FINAL_START, // Stay at 90%
+          percent: FINAL_START,
           stage: 'Finalising container…',
         });
       }
@@ -165,7 +158,7 @@ export async function directMerge(
         const err = `ffmpeg direct merge exited with ${code}`;
         log.error(`[ffmpeg-direct-merge ${operationId}] ${err}`);
         progressCallback?.({
-          percent: VIDEO_START, // Revert progress on error
+          percent: VIDEO_START,
           stage: 'Merge failed',
           error: err,
         });

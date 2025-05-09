@@ -56,11 +56,6 @@ export class FileManager {
     }
   }
 
-  /**
-   * Save content to a file with a dialog or directly to a specified path
-   * @param content The content to save
-   * @param options Object containing save options (defaultPath, filters, filePath)
-   */
   async saveFile(
     content: string,
     options: {
@@ -110,9 +105,6 @@ export class FileManager {
     }
   }
 
-  /**
-   * Open a file with a dialog
-   */
   async openFile(options: {
     title?: string;
     filters?: { name: string; extensions: string[] }[];
@@ -234,9 +226,6 @@ export class FileManager {
     }
   }
 
-  /**
-   * Read content from a file
-   */
   async readFile(filePath: string): Promise<string> {
     try {
       return await fs.readFile(filePath, 'utf8');
@@ -246,17 +235,13 @@ export class FileManager {
     }
   }
 
-  /**
-   * Move a file from source to destination
-   * This copies the file and then deletes the original
-   */
   async moveFile(sourcePath: string, destinationPath: string): Promise<void> {
     try {
       log.info(`Moving file from ${sourcePath} to ${destinationPath}`);
 
       try {
         await fs.access(sourcePath);
-      } catch (error) {
+      } catch {
         throw new FileManagerError(
           `Source file does not exist or is not accessible: ${sourcePath}`
         );
@@ -281,16 +266,13 @@ export class FileManager {
     }
   }
 
-  /**
-   * Copy a file from source to destination
-   */
   async copyFile(sourcePath: string, destinationPath: string): Promise<void> {
     try {
       log.info(`Copying file from ${sourcePath} to ${destinationPath}`);
 
       try {
         await fs.access(sourcePath);
-      } catch (error) {
+      } catch {
         throw new FileManagerError(
           `Source file does not exist or is not accessible: ${sourcePath}`
         );

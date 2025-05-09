@@ -1,9 +1,9 @@
 import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
-import { processVideoUrl, VideoQuality } from '../../services/url-processor.js';
+import { processVideoUrl, VideoQuality } from '../services/url-processor.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
-import { FileManager } from '../../services/file-manager.js';
-import { FFmpegService } from '../../services/ffmpeg-service.js';
+import { FileManager } from '../services/file-manager.js';
+import { FFmpegService } from '../services/ffmpeg-service.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
 import {
   registerAutoCancel,

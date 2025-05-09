@@ -2,9 +2,9 @@ import path from 'path';
 import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
-import { FFmpegService } from '../../services/ffmpeg-service.js';
-import { FileManager } from '../../services/file-manager.js';
-import { extractSubtitlesFromVideo } from '../../services/subtitle-processing.js';
+import { FFmpegService } from '../services/ffmpeg-service.js';
+import { FileManager } from '../services/file-manager.js';
+import { extractSubtitlesFromVideo } from '../services/subtitle-processing.js';
 import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
@@ -16,11 +16,9 @@ import {
   finish as registryFinish,
 } from '../active-processes.js';
 
-// Module-level variables to hold initialized services
 let ffmpegServiceInstance: FFmpegService | null = null;
 let fileManagerInstance: FileManager | null = null;
 
-// --- Initialization ---
 export function initializeSubtitleHandlers(
   services: SubtitleHandlerServices
 ): void {
@@ -35,7 +33,6 @@ export function initializeSubtitleHandlers(
   log.info('[src/handlers/subtitle-handlers.ts] Initialized!');
 }
 
-// Helper function to check if services are initialized
 function checkServicesInitialized(): {
   ffmpegService: FFmpegService;
   fileManager: FileManager;
@@ -68,14 +65,11 @@ export async function handleGenerateSubtitles(
   const finalOptions = { ...options };
   const controller = new AbortController();
 
-  // Register auto-cancel when the window reloads or closes
   registerAutoCancel(operationId, event.sender, () => controller.abort());
 
-  // Add subtitle job to registry for manual cancellation
   addSubtitle(operationId, controller);
 
   try {
-    // -------------------- STEP 1: PREPARE VIDEO PATH --------------------
     tempVideoPath = await maybeWriteTempVideo({
       finalOptions,
       ffmpegService,
@@ -86,7 +80,6 @@ export async function handleGenerateSubtitles(
     finalOptions.videoPath = path.normalize(finalOptions.videoPath);
     await fs.access(finalOptions.videoPath);
 
-    // -------------------- STEP 2: PROGRESS CALLBACK --------------------
     const progressCallback: GenerateProgressCallback = progress => {
       event.sender.send('generate-subtitles-progress', {
         ...progress,
@@ -94,7 +87,6 @@ export async function handleGenerateSubtitles(
       });
     };
 
-    // -------------------- STEP 3: GENERATE SUBTITLES --------------------
     const result = await extractSubtitlesFromVideo({
       options: finalOptions,
       operationId,
@@ -107,7 +99,6 @@ export async function handleGenerateSubtitles(
 
     return { success: true, subtitles: result.subtitles, operationId };
   } catch (error: any) {
-    // -------------------- STEP 4: ERROR HANDLING --------------------
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
     const isCancel =

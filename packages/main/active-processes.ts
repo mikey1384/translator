@@ -19,11 +19,6 @@ type RegistryEntry =
 
 const registry = new Map<string, RegistryEntry>();
 
-/**
- * Add a download process to the registry.
- * @param id - The unique identifier for the download process.
- * @param proc - The download process to register.
- */
 export async function registerDownloadProcess(
   id: string,
   proc: DownloadProcess
@@ -53,26 +48,15 @@ export async function registerDownloadProcess(
     return;
   }
 
-  // not tracked yet → add it
   log.info(`[registry] register download process ${id}`);
   registry.set(id, { kind: 'download', handle: proc });
 }
 
-/**
- * Add a subtitle job to the registry.
- * @param id - The unique identifier for the subtitle job.
- * @param job - The subtitle job to add.
- */
 export function addSubtitle(id: string, job: SubtitleJob) {
   log.info(`[registry] add subtitle ${id}`);
   registry.set(id, { kind: 'subtitle', handle: job });
 }
 
-/**
- * Add a render job to the registry.
- * @param id - The unique identifier for the render job.
- * @param job - The render job to add.
- */
 export function registerRenderJob(id: string, job: RenderJob) {
   const existing = registry.get(id);
 
@@ -87,7 +71,7 @@ export function registerRenderJob(id: string, job: RenderJob) {
   }
 
   if (existing?.kind === 'render') {
-    existing.handle = job; // refresh handle
+    existing.handle = job;
     return;
   }
 
@@ -95,30 +79,14 @@ export function registerRenderJob(id: string, job: RenderJob) {
   registry.set(id, { kind: 'render', handle: job });
 }
 
-/**
- * Remove a process from the registry.
- * @param id - The ID of the process to remove.
- * @returns True if the process was removed, false if it was not found.
- */
 export function finish(id: string): boolean {
   return registry.delete(id);
 }
 
-/**
- * Check if a process with the given ID exists in the registry.
- * @param id - The ID of the process to check.
- * @returns True if the process exists in the registry, false otherwise.
- */
 export function hasProcess(id: string): boolean {
   return registry.has(id);
 }
 
-/**
- * Attach WebContents listener so the job auto-cancels if that renderer dies
- * @param operationId - The unique identifier for the operation.
- * @param wc - The WebContents object to attach the listener to.
- * @param cancel - The function to call when the WebContents is destroyed.
- */
 export function registerAutoCancel(
   operationId: string,
   wc: WebContents,
@@ -127,7 +95,7 @@ export function registerAutoCancel(
   const existing = registry.get(operationId);
 
   if (existing?.kind === 'generic') {
-    existing.cancel = cancel; // refresh cancel function
+    existing.cancel = cancel;
     log.info(
       `[registry] Updated cancel function for existing operation ${operationId}`
     );

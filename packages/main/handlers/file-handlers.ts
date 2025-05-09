@@ -1,21 +1,18 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
-import { FileManager } from '../../services/file-manager.js';
-import { SaveFileService, SaveFileOptions } from '../../services/save-file.js';
+import { FileManager } from '../services/file-manager.js';
+import { SaveFileService, SaveFileOptions } from '../services/save-file.js';
 import { OpenFileResult, OpenFileOptions } from '@shared-types/app';
 
-// Define the services structure expected by the initializer
 interface FileHandlerServices {
   fileManager: FileManager;
   saveFileService: SaveFileService;
 }
 
-// Module-level variables to hold initialized services
 let fileManagerInstance: FileManager | null = null;
 let saveFileServiceInstance: SaveFileService | null = null;
 
-// Initialization function (now exported)
 export function initializeFileHandlers(services: FileHandlerServices): void {
   if (!services || !services.fileManager || !services.saveFileService) {
     throw new Error(
@@ -27,7 +24,6 @@ export function initializeFileHandlers(services: FileHandlerServices): void {
   console.info('[src/handlers/file-handlers.ts] Initialized.');
 }
 
-// Helper function to check if services are initialized
 function checkServicesInitialized(): {
   fileManager: FileManager;
   saveFileService: SaveFileService;
@@ -40,8 +36,6 @@ function checkServicesInitialized(): {
     saveFileService: saveFileServiceInstance,
   };
 }
-
-// === Handlers ===
 
 export async function handleSaveFile(
   _event: IpcMainInvokeEvent,
@@ -59,7 +53,7 @@ export async function handleSaveFile(
 
 export async function handleOpenFile(
   _event: IpcMainInvokeEvent,
-  options: OpenFileOptions // Use imported type
+  options: OpenFileOptions
 ): Promise<OpenFileResult> {
   try {
     const { fileManager } = checkServicesInitialized();
@@ -119,15 +113,12 @@ export async function handleDeleteFile(
 
   try {
     const { fileManager } = checkServicesInitialized();
-    // Check if the file exists before attempting to delete using fs.access
     try {
       await fs.access(filePathToDelete);
-      // File exists, proceed with deletion
       console.log(`[handleDeleteFile] Deleting file: ${filePathToDelete}`);
       await fileManager.deleteFile(filePathToDelete);
       return { success: true };
     } catch (accessError: any) {
-      // If fs.access throws, the file likely doesn't exist or isn't accessible
       if (accessError.code === 'ENOENT') {
         console.log(
           `[handleDeleteFile] File does not exist: ${filePathToDelete}`
@@ -137,7 +128,6 @@ export async function handleDeleteFile(
           message: 'File does not exist, no deletion needed',
         };
       } else {
-        // Other access error (e.g., permissions)
         throw accessError;
       }
     }
@@ -158,7 +148,6 @@ export async function handleReadFileContent(
     return { success: false, error: 'Invalid file path provided.' };
   }
   try {
-    // No need for fileManager here, fs is sufficient and already imported
     const normalizedPath = path.normalize(filePath);
     await fs.access(normalizedPath, fs.constants.R_OK);
     const buffer = await fs.readFile(normalizedPath);

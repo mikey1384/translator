@@ -4,7 +4,6 @@ import { Browser, Page, launch } from 'puppeteer';
 import { app } from 'electron';
 import log from 'electron-log';
 
-/* internal helper – resolves dist / dev HTML */
 const getRenderHostPath = (): string => {
   const appPath = app.getAppPath();
   return app.isPackaged
@@ -48,7 +47,6 @@ export async function initPuppeteer({
   page.setViewport({ width: videoWidth, height: videoHeight });
   await page.goto(hostUrl, { waitUntil: 'networkidle0' });
 
-  /* embed font + preset before first screenshot */
   if (fontSizePx) {
     await page.addStyleTag({
       content: `
@@ -67,7 +65,6 @@ export async function initPuppeteer({
     }, stylePreset);
   }
 
-  /* ensure render-host script exported updateSubtitle */
   await page.waitForFunction('typeof window.updateSubtitle === "function"', {
     timeout: 5_000,
   });

@@ -10,28 +10,24 @@ interface ApiKeys {
 
 function generateEncryptionKey(): string {
   try {
-    // Get a unique machine ID
     const machineId = machineIdSync();
 
-    // Create a hash for better security
     const hash = crypto
       .createHash('sha256')
       .update(`TranslatorApp-${machineId}`)
       .digest('hex');
 
-    return hash.substring(0, 32); // Use first 32 chars (256 bits)
+    return hash.substring(0, 32);
   } catch (error) {
     log.error('[secure-store] Error generating encryption key:', error);
-    // Fallback with a less secure but still usable default
     return 'TranslatorApp-DefaultEncryptionKey';
   }
 }
 
-// Create secure store with encryption
 const secureStore = new Store<{
   apiKeys?: ApiKeys;
 }>({
-  name: 'secure-store', // Creates secure-store.json in app's user data folder
+  name: 'secure-store',
   encryptionKey: generateEncryptionKey(),
 });
 
@@ -55,14 +51,11 @@ export async function saveApiKey(
     const apiKeys = secureStore.get(API_KEYS_KEY) || {};
 
     if (apiKey === '') {
-      // Delete the key
       delete apiKeys[keyType];
     } else {
-      // Save the key
       apiKeys[keyType] = apiKey;
     }
 
-    // Update the store
     secureStore.set(API_KEYS_KEY, apiKeys);
     log.info(
       `[secure-store] API key for ${keyType} ${apiKey === '' ? 'deleted' : 'saved'}`
@@ -78,7 +71,6 @@ export async function hasApiKey(keyType: 'openai'): Promise<boolean> {
   return !!key;
 }
 
-// Migration utility to transfer from keytar (optional)
 export async function migrateFromKeytar(
   keytarService: string,
   getKeytarPassword: (
@@ -87,7 +79,6 @@ export async function migrateFromKeytar(
   ) => Promise<string | null>
 ): Promise<void> {
   try {
-    // Try to migrate OpenAI key
     const openaiKey = await getKeytarPassword(keytarService, 'openai');
     if (openaiKey) {
       await saveApiKey('openai', openaiKey);

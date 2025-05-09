@@ -4,15 +4,13 @@ export async function handlePing(): Promise<string> {
   return 'pong';
 }
 
-// Define a type for the return value for clarity
 interface ShowMessageResult {
   success: boolean;
   error?: string;
 }
 
-// Add type for the message parameter
 export async function handleShowMessage(
-  _event: Electron.IpcMainInvokeEvent, // Add type for the unused event argument
+  _event: Electron.IpcMainInvokeEvent,
   message: string
 ): Promise<ShowMessageResult> {
   try {
@@ -24,7 +22,6 @@ export async function handleShowMessage(
     });
     return { success: true };
   } catch (error: any) {
-    // Type the error
     console.error('[handleShowMessage] Error:', error);
     return { success: false, error: error.message || String(error) };
   }

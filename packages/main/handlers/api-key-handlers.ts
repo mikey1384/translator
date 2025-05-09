@@ -1,8 +1,7 @@
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
-import { getApiKey, saveApiKey } from '../../services/secure-store.js';
+import { getApiKey, saveApiKey } from '../services/secure-store.js';
 
-// Define interfaces for API key status and results
 interface ApiKeyStatus {
   openai: boolean;
 }
@@ -28,7 +27,6 @@ export async function handleGetApiKeyStatus(
 ): Promise<ApiKeyResult> {
   log.info('[api-key-handler] Received get-api-key-status request');
   try {
-    // Use secure-store instead of keytar
     const status: ApiKeyStatus = {
       openai: false,
     };
@@ -39,7 +37,6 @@ export async function handleGetApiKeyStatus(
     return { success: true, status };
   } catch (error: any) {
     log.error('[api-key-handler] Error getting API key status:', error);
-    // Do not expose raw error details to the renderer
     return {
       success: false,
       error: 'Failed to retrieve API key status.',
@@ -61,19 +58,11 @@ export async function handleSaveApiKey(
 
   const { keyType, apiKey } = options;
 
-  // Validate keyType
-  if (keyType !== 'openai') {
-    log.warn(`[api-key-handler] Invalid key type: ${keyType}`);
-    return { success: false, error: 'Invalid key type specified.' };
-  }
-
   try {
-    // Use secure-store instead of keytar
     if (apiKey === '') {
       await saveApiKey(keyType, '');
       log.info(`[api-key-handler] API key for ${keyType} deleted.`);
     } else {
-      // Basic format check (example: OpenAI starts with sk-)
       if (keyType === 'openai' && !apiKey.startsWith('sk-')) {
         log.warn('[api-key-handler] Invalid OpenAI key format detected.');
         return { success: false, error: 'Invalid OpenAI key format.' };

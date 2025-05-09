@@ -2,20 +2,17 @@ import { BrowserWindow, dialog, app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-// --- Simple JSON Storage --- START ---
 const SETTINGS_FILE_NAME = 'save-settings.json';
 let settingsFilePath: string | null = null;
 
 function getSettingsFilePath(): string {
   if (!settingsFilePath) {
     try {
-      // Ensure app path is available
       const userDataPath = app.getPath('userData');
       settingsFilePath = path.join(userDataPath, SETTINGS_FILE_NAME);
     } catch (e) {
-      // Fallback if app path isn't ready (shouldn't happen in normal flow)
       console.error('Failed to get userData path, using fallback path.', e);
-      settingsFilePath = path.join(__dirname, SETTINGS_FILE_NAME); // Less ideal fallback
+      settingsFilePath = path.join(__dirname, SETTINGS_FILE_NAME);
     }
   }
   return settingsFilePath;
@@ -38,13 +35,13 @@ function loadSettings(): SaveSettings {
       error
     );
   }
-  return {}; // Return empty object if file doesn't exist or fails to parse
+  return {};
 }
 
 function saveSettings(settings: SaveSettings): void {
   const filePath = getSettingsFilePath();
   try {
-    const data = JSON.stringify(settings, null, 2); // Pretty print JSON
+    const data = JSON.stringify(settings, null, 2);
     fs.writeFileSync(filePath, data, 'utf-8');
   } catch (error) {
     console.error(
@@ -53,7 +50,6 @@ function saveSettings(settings: SaveSettings): void {
     );
   }
 }
-// --- Simple JSON Storage --- END ---
 
 export class SaveFileError extends Error {
   constructor(message: string) {
@@ -73,7 +69,6 @@ export interface SaveFileOptions {
 
 export class SaveFileService {
   private static instance: SaveFileService;
-  // Load last directory from our JSON storage
   private lastSaveDirectory: string | undefined;
 
   private constructor() {
@@ -91,12 +86,11 @@ export class SaveFileService {
     return SaveFileService.instance;
   }
 
-  // Helper to persist the last directory
   private persistLastDirectory(dirPath: string | undefined): void {
     if (dirPath && dirPath !== this.lastSaveDirectory) {
       this.lastSaveDirectory = dirPath;
-      const currentSettings = loadSettings(); // Load current settings
-      saveSettings({ ...currentSettings, lastSaveDirectory: dirPath }); // Update only lastSaveDirectory
+      const currentSettings = loadSettings();
+      saveSettings({ ...currentSettings, lastSaveDirectory: dirPath });
       console.log(
         `[SaveFileService] Stored last save directory: ${this.lastSaveDirectory}`
       );
@@ -116,14 +110,14 @@ export class SaveFileService {
         const dir = path.dirname(filePath);
         try {
           await fs.promises.mkdir(dir, { recursive: true });
-          this.persistLastDirectory(dir); // Use helper to save
+          this.persistLastDirectory(dir);
         } catch (mkdirError: any) {
           if (mkdirError.code !== 'EEXIST') {
             throw new SaveFileError(
               `Failed to create directory ${dir}: ${mkdirError.message}`
             );
           } else {
-            this.persistLastDirectory(dir); // Use helper to save even if dir existed
+            this.persistLastDirectory(dir);
           }
         }
       } else {
@@ -162,7 +156,7 @@ export class SaveFileService {
         }
         targetPath = dialogResult.filePath;
 
-        this.persistLastDirectory(path.dirname(targetPath)); // Use helper to save
+        this.persistLastDirectory(path.dirname(targetPath));
       }
 
       if (!targetPath) {

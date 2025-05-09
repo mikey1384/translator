@@ -1,10 +1,10 @@
 import path from 'path';
 import { FFmpegService } from './ffmpeg-service.js';
-import { buildSrt } from '../shared/helpers/index.js';
+import { buildSrt } from '../../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import { getApiKey as getSecureApiKey } from './secure-store.js';
-import { AI_MODELS } from '../shared/constants/index.js';
+import { AI_MODELS } from '../../shared/constants/index.js';
 import {
   GenerateSubtitlesOptions,
   GenerateProgressCallback,

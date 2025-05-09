@@ -18,17 +18,14 @@ import * as renderWindowHandlers from './handlers/render-window-handlers.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 
-// --- ES Module __dirname / __filename Setup ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- Constants ---
 const isDev = !app.isPackaged;
 
-// --- Services & Handlers Imports ---
-import { FFmpegService } from '../services/ffmpeg-service.js';
-import { SaveFileService } from '../services/save-file.js';
-import { FileManager } from '../services/file-manager.js';
+import { FFmpegService } from './services/ffmpeg-service.js';
+import { SaveFileService } from './services/save-file.js';
+import { FileManager } from './services/file-manager.js';
 import {
   handleProcessUrl,
   initializeUrlHandler,
@@ -39,7 +36,6 @@ import * as utilityHandlers from './handlers/utility-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
-// --- Initialize electron-store ---
 const settingsStore = new Store<{
   app_language_preference: string;
   subtitleTargetLanguage: string;
@@ -68,30 +64,26 @@ app.on('second-instance', () => {
   }
 });
 
-// --- Global Variables ---
 let mainWindow: BrowserWindow | null = null;
 let services: {
   saveFileService: SaveFileService;
   fileManager: FileManager;
   ffmpegService: FFmpegService;
 } | null = null;
-let isQuitting = false; // Flag for will-quit handler
+let isQuitting = false;
 
-// --- Service and Handler Initialization ---
 try {
   log.info('[main.ts] Initializing Services...');
 
   const tempPath = path.join(app.getPath('temp'), 'translator-electron');
   log.info(`[main.ts] Determined temp path for services: ${tempPath}`);
 
-  // Instantiate services, injecting the correct temp path
   const saveFileService = SaveFileService.getInstance();
   const fileManager = new FileManager(tempPath);
   const ffmpegService = new FFmpegService(tempPath);
   services = { saveFileService, fileManager, ffmpegService };
   log.info('[main.ts] Services Initialized.');
 
-  // Initialize Handlers
   log.info('[main.ts] Initializing Handlers...');
   fileHandlers.initializeFileHandlers({ fileManager, saveFileService });
   subtitleHandlers.initializeSubtitleHandlers({ ffmpegService, fileManager });
@@ -99,9 +91,7 @@ try {
   renderWindowHandlers.initializeRenderWindowHandlers();
   log.info('[main.ts] Handlers Initialized.');
 
-  // --- IPC Handlers Registration ---
   log.info('[main.ts] Registering IPC Handlers...');
-  // Utility
   ipcMain.handle('has-video-track', async (_evt, filePath: string) => {
     try {
       return await services!.ffmpegService.hasVideoTrack(filePath);
@@ -153,10 +143,8 @@ try {
     }
   });
 
-  // URL Processing
   ipcMain.handle('process-url', handleProcessUrl);
 
-  // Operation Cancellation - Updated
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
     log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
     try {
@@ -180,12 +168,10 @@ try {
     }
   });
 
-  // Get App Path
   ipcMain.handle('get-app-path', () => {
     return app.getAppPath();
   });
 
-  // Get Locale File URL
   ipcMain.handle('get-locale-url', async (_event, lang: string) => {
     try {
       let localeDirPath: string;
@@ -232,7 +218,6 @@ try {
     }
   });
 
-  // --- Language Preference Handlers ---
   ipcMain.handle('get-language-preference', async () => {
     try {
       const lang = settingsStore.get('app_language_preference', 'en');
@@ -263,7 +248,6 @@ try {
     }
   });
 
-  // --- Subtitle Target Language Preference Handlers ---
   ipcMain.handle('get-subtitle-target-language', async () => {
     try {
       const lang = settingsStore.get('subtitleTargetLanguage', 'original');
@@ -305,7 +289,6 @@ try {
 
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
-  // Save/Load video playback position
   ipcMain.handle(
     'save-video-playback-position',
     (_event, filePath: string, position: number) => {
@@ -387,7 +370,6 @@ try {
     });
 }
 
-// --- App Event Handler: will-quit ---
 app.on('will-quit', async event => {
   log.info(`[main.ts] 'will-quit' event triggered. isQuitting: ${isQuitting}`);
   if (isQuitting) {
@@ -442,7 +424,6 @@ nodeProcess.on('uncaughtException', error => {
   }
 });
 
-// --- Window Creation ---
 async function createWindow() {
   log.info('[main.ts] Creating main window...');
   mainWindow = new BrowserWindow({
@@ -497,7 +478,6 @@ async function createWindow() {
     mainWindow = null;
   });
 
-  // Find-in-Page IPC
   let currentFindText = '';
   ipcMain.on(
     'find-in-page',

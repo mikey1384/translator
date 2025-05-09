@@ -18,14 +18,13 @@ export async function probeFps(file: string): Promise<number> {
     let out = '';
     let err = '';
     p.stdout.on('data', d => (out += d));
-    p.stderr.on('data', d => (err += d)); // Capture stderr too
+    p.stderr.on('data', d => (err += d));
 
     p.on('close', code => {
       if (code !== 0 || !out.trim()) {
         log.error(
           `[ffprobe-utils] Failed to probe FPS for ${file}. Code: ${code}, Stderr: ${err}`
         );
-        // Reject or return a default/error indicator? Rejecting for now.
         return reject(
           new Error(`ffprobe failed (code ${code}): ${err || 'No output'}`)
         );
@@ -42,7 +41,7 @@ export async function probeFps(file: string): Promise<number> {
         }
         const fps = num / den;
         log.info(`[ffprobe-utils] Detected FPS: ${fps} for ${file}`);
-        resolve(fps); // ≈ 29.970029…
+        resolve(fps);
       } catch (parseError: any) {
         log.error(
           `[ffprobe-utils] Error parsing ffprobe output: ${parseError.message}`

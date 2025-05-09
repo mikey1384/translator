@@ -12,9 +12,9 @@ import { FileManager } from './file-manager.js';
 import {
   registerDownloadProcess,
   finish as removeDownloadProcess,
-} from '../main/active-processes.js';
-import type { DownloadProcess as DownloadProcessType } from '../main/active-processes.js';
-import { CancelledError } from '../shared/cancelled-error.js';
+} from '../active-processes.js';
+import type { DownloadProcess as DownloadProcessType } from '../active-processes.js';
+import { CancelledError } from '../../shared/cancelled-error.js';
 
 export type VideoQuality = 'low' | 'mid' | 'high';
 const qualityFormatMap: Record<VideoQuality, string> = {
