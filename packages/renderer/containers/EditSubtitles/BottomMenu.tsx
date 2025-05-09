@@ -4,6 +4,7 @@ import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 import { useTranslation } from 'react-i18next';
+import { useUIStore } from '../../state/ui-store';
 
 const mergeOptionsStyles = css`
   display: flex;
@@ -66,40 +67,42 @@ const mergeButtonStyle = css`
   }
 `;
 
-interface MergeControlsProps {
-  mergeFontSize: number;
-  setMergeFontSize: (value: number) => void;
-  mergeStylePreset: SubtitleStylePresetKey;
-  setMergeStylePreset: (value: SubtitleStylePresetKey) => void;
-  onMergeMediaWithSubtitles: () => void;
+interface BottomMenuProps {
   isMergingInProgress: boolean;
   videoFileExists: boolean;
   subtitlesExist: boolean;
   isTranslationInProgress?: boolean;
+  onMergeMediaWithSubtitles: () => void;
 }
 
-function MergeControls({
-  mergeFontSize,
-  setMergeFontSize,
-  mergeStylePreset,
-  setMergeStylePreset,
-  onMergeMediaWithSubtitles,
+export default function BottomMenu({
   isMergingInProgress,
   videoFileExists,
   subtitlesExist,
   isTranslationInProgress,
-}: MergeControlsProps) {
+  onMergeMediaWithSubtitles,
+}: BottomMenuProps) {
   const { t } = useTranslation();
+
+  const [mergeFontSize, setMergeFontSize] = useUIStore(s => [
+    s.baseFontSize,
+    s.setBaseFontSize,
+  ]);
+
+  const [mergeStylePreset, setMergeStylePreset] = useUIStore(s => [
+    s.subtitleStyle,
+    s.setSubtitleStyle,
+  ]);
 
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const stringValue = e.target.value;
     if (stringValue === '') {
-      setMergeFontSize(0); // Or a placeholder/min value
+      setMergeFontSize(0);
       return;
     }
     const numericString = stringValue.replace(/\D/g, '');
     if (numericString === '') {
-      setMergeFontSize(0); // Or a placeholder/min value
+      setMergeFontSize(0);
       return;
     }
     const numValue = parseInt(numericString, 10);
@@ -199,5 +202,3 @@ function MergeControls({
     </div>
   );
 }
-
-export default MergeControls;

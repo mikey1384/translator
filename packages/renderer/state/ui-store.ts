@@ -56,8 +56,10 @@ const initial: State = {
   targetLanguage: 'original',
   showOriginalText: true,
   error: null,
-  baseFontSize: 24,
-  subtitleStyle: 'default' as const,
+  baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
+  subtitleStyle:
+    (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
+    'Default',
 };
 
 // Helper function hoisted to module scope
@@ -197,6 +199,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
     })
   )
 );
+
+useUIStore.subscribe(s => {
+  localStorage.setItem('savedMergeFontSize', String(s.baseFontSize));
+  localStorage.setItem('savedMergeStylePreset', s.subtitleStyle);
+});
 
 export const useSubtitlePrefs = () =>
   useUIStore(s => ({

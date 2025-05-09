@@ -8,7 +8,7 @@ import Button from '../../components/Button';
 import FileInputButton from '../../components/FileInputButton';
 
 import SubtitleList from './SubtitleList';
-import MergeControls from './MergeControls';
+import BottomMenu from './BottomMenu';
 import EditSubtitlesHeader from './EditSubtitlesHeader';
 
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
@@ -16,7 +16,6 @@ import { scrollWhenReady, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 
 import { colors } from '../../styles';
-import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
 
 import {
   useUIStore,
@@ -67,16 +66,6 @@ export default function EditSubtitles({
   const canSaveDirectly = !!originalPath;
 
   /* ---------- local UI state ---------- */
-  const [mergeFontSize, setMergeFontSize] = useState<number>(
-    () => Number(localStorage.getItem('savedMergeFontSize')) || 24
-  );
-  const [mergeStylePreset, setMergeStylePreset] =
-    useState<SubtitleStylePresetKey>(
-      () =>
-        (localStorage.getItem(
-          'savedMergeStylePreset'
-        ) as SubtitleStylePresetKey) || 'Default'
-    );
   const [saveError, setSaveError] = useState('');
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -85,14 +74,6 @@ export default function EditSubtitles({
 
   /** remembers which match we last scrolled to */
   const prevActiveRef = useRef(activeMatchIndex);
-
-  /* ---------- persist UI prefs ---------- */
-  useEffect(() => {
-    localStorage.setItem('savedMergeFontSize', String(mergeFontSize));
-  }, [mergeFontSize]);
-  useEffect(() => {
-    localStorage.setItem('savedMergeStylePreset', mergeStylePreset);
-  }, [mergeStylePreset]);
 
   /* ---------- scrolling helpers ---------- */
   const activePlayer = getNativePlayerInstance();
@@ -270,11 +251,7 @@ export default function EditSubtitles({
             subtitlesExist={subtitles.length > 0}
           />
 
-          <MergeControls
-            mergeFontSize={mergeFontSize}
-            setMergeFontSize={setMergeFontSize}
-            mergeStylePreset={mergeStylePreset}
-            setMergeStylePreset={setMergeStylePreset}
+          <BottomMenu
             onMergeMediaWithSubtitles={handleMerge}
             isMergingInProgress={mergeTask.inProgress}
             videoFileExists={!!videoPath}
@@ -350,6 +327,8 @@ export default function EditSubtitles({
       mode: showOriginalText ? 'dual' : 'translation',
     });
 
+    const { baseFontSize, subtitleStyle } = useUIStore.getState();
+
     const opts: RenderSubtitlesOptions = {
       operationId: opId,
       srtContent,
@@ -359,8 +338,8 @@ export default function EditSubtitles({
       videoHeight: meta?.height ?? 720,
       frameRate: Number(meta?.frameRate ?? 30),
       originalVideoPath: videoPath,
-      fontSizePx: mergeFontSize,
-      stylePreset: mergeStylePreset,
+      fontSizePx: baseFontSize,
+      stylePreset: subtitleStyle,
       overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
     };
 
