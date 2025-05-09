@@ -243,11 +243,10 @@ const fmt = (s: number) => {
 };
 
 export default function VideoPlayer() {
-  const {
-    url: videoUrl,
-    handleTogglePlay: togglePlay,
-    openFileDialog: selectVideo,
-  } = useVideoStore();
+  const videoUrl = useVideoStore(s => s.url);
+  const resumeAt = useVideoStore(s => s.resumeAt);
+  const togglePlay = useVideoStore(s => s.handleTogglePlay);
+  const selectVideo = useVideoStore(s => s.openFileDialog);
   const { merge, download, translation } = useTaskStore();
   const { handleProcessUrl } = useUIStore();
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
@@ -301,7 +300,6 @@ export default function VideoPlayer() {
     const v = getNativePlayerInstance();
     if (!v) return;
 
-    const { resumeAt } = useVideoStore.getState();
     if (resumeAt === null) return;
 
     const waitUntilSeekable = () =>
@@ -315,7 +313,7 @@ export default function VideoPlayer() {
       v.currentTime = Math.min(resumeAt, end - 0.25);
       useVideoStore.setState({ resumeAt: null });
     });
-  }, [videoUrl]);
+  }, [videoUrl, resumeAt]);
 
   const seek = (val: number) => nativeSeek(val);
 
