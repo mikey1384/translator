@@ -271,8 +271,8 @@ export default function SettingsPage() {
                   }
                 `}
                 onClick={handleSave}
-                disabled={busy || (!draft.trim() && keySet)}
-                aria-disabled={busy || (!draft.trim() && keySet)}
+                disabled={busy || !draft.trim()}
+                aria-disabled={busy || !draft.trim()}
               >
                 {t('common.save')}
               </button>
