@@ -183,8 +183,8 @@ const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
     border-radius: 0;
     z-index: 9999;
     background-color: black;
-    gap: 0; /* Adjust gap for fullscreen */
-    flex-direction: column; /* Stack elements vertically */
+    gap: 0;
+    flex-direction: column;
   `
     : `
     width: calc(95% - 30px);
@@ -204,7 +204,7 @@ const playerWrapperStyles = (isFullScreen: boolean) => css`
   flex-shrink: 1;
   min-width: 0;
   position: relative;
-  ${isFullScreen ? 'height: 100%;' : ''}/* Take full height in fullscreen */
+  ${isFullScreen ? 'height: 100%;' : ''}
 `;
 
 const controlsWrapperStyles = (isFullScreen: boolean) => css`
@@ -218,17 +218,17 @@ const controlsWrapperStyles = (isFullScreen: boolean) => css`
     right: 0;
     width: 100%;
     height: 100px;
-    background-color: transparent; // Default to transparent
-    border-top: none; // Remove border when overlaying
-    z-index: 10; // Ensure it's above the video wrapper
+    background-color: transparent;
+    border-top: none;
+    z-index: 10;
     &:hover {
-      background-color: rgba(0, 0, 0, 0.95); // Darker, more opaque background
-      border-top: 1px solid ${colors.border}; // Show border on hover
+      background-color: rgba(0, 0, 0, 0.95);
+      border-top: 1px solid ${colors.border};
     }
   `
     : `
     width: 240px;
-    border-top: 1px solid ${colors.border}; // Keep border for non-fullscreen
+    border-top: 1px solid ${colors.border};
   `}
 `;
 
