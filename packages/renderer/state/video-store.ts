@@ -13,13 +13,13 @@ type Meta = {
 } | null;
 
 interface State {
-  file: File | null; // actual File/Blob
-  path: string | null; // original disk path (if any)
-  url: string | null; // blob: or file://
+  file: File | null;
+  path: string | null;
+  url: string | null;
   meta: Meta;
   isAudioOnly: boolean;
   isReady: boolean;
-  resumeAt: number | null; // Add resumeAt to store the saved position
+  resumeAt: number | null;
   _positionListeners: {
     onTimeUpdate: () => void;
     onPause: () => void;
@@ -33,9 +33,9 @@ interface Actions {
   openFileDialog(): Promise<void>;
   markReady(): void;
   reset(): void;
-  savePosition(position: number): void; // Add method to save position
-  startPositionSaving(): void; // Add method to start saving position
-  stopPositionSaving(): void; // Add method to stop saving position
+  savePosition(position: number): void;
+  startPositionSaving(): void;
+  stopPositionSaving(): void;
 }
 
 const initial: State = {
@@ -49,7 +49,6 @@ const initial: State = {
   _positionListeners: null,
 };
 
-// Manage a single throttler for saving position
 let currentSaver: ReturnType<typeof throttle> | null = null;
 
 function attachSaver(path: string) {
@@ -63,7 +62,6 @@ function attachSaver(path: string) {
   }, 5000);
 }
 
-// Add a listener for window unload to flush the last save
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     currentSaver?.flush?.();
@@ -75,14 +73,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     ...initial,
 
     async setFile(fd) {
-      /* —— reset first —— */
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       set(initial);
 
       if (!fd) return;
 
-      /* 1 ) file chosen via dialog (has .path) */
       if ('path' in fd) {
         const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;
         set(s => {
@@ -91,7 +87,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.url = url;
         });
         await analyse(fd.path);
-        // Load saved position after file is set
         if (fd.path) {
           try {
             const saved = await VideoIPC.getPlaybackPosition(fd.path);
@@ -101,7 +96,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           } catch (err) {
             console.error('[video-store] Failed to load saved position:', err);
           }
-          // Attach saver and refresh listeners for the new file
           attachSaver(fd.path);
           get().stopPositionSaving();
           get().startPositionSaving();
@@ -109,7 +103,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         return;
       }
 
-      /* 2 ) special blob wrapper from URL flow */
       if ((fd as any)._blobUrl) {
         const b = fd as any;
         set(s => {
@@ -119,7 +112,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         });
         if (b._originalPath) {
           await analyse(b._originalPath);
-          // Load saved position after file is set
           try {
             const saved = await VideoIPC.getPlaybackPosition(b._originalPath);
             if (saved != null) {
@@ -128,7 +120,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           } catch (err) {
             console.error('[video-store] Failed to load saved position:', err);
           }
-          // Attach saver and refresh listeners for the new file
           if (b._originalPath) {
             attachSaver(b._originalPath);
             get().stopPositionSaving();
@@ -138,13 +129,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         return;
       }
 
-      /* 3 ) Plain drag-and-drop File */
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       const blobUrl = URL.createObjectURL(fd as File);
       set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null });
       if ((fd as any).path) {
         await analyse((fd as any).path);
-        // Load saved position after file is set
         try {
           const saved = await VideoIPC.getPlaybackPosition((fd as any).path);
           if (saved != null) {
@@ -153,7 +142,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         } catch (err) {
           console.error('[video-store] Failed to load saved position:', err);
         }
-        // Attach saver and refresh listeners for the new file
         if ((fd as any).path) {
           attachSaver((fd as any).path);
           get().stopPositionSaving();
@@ -204,7 +192,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       } catch (err) {
         console.error('[video-store] Error setting file:', err);
       }
-      // Keep UI state in sync
       import('../state/ui-store').then(m =>
         m.useUIStore.getState().setInputMode('file')
       );
@@ -274,7 +261,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
   }))
 );
 
-/* --- helpers --- */
 async function analyse(path: string) {
   try {
     const [hasVideo, metaRes] = await Promise.all([
