@@ -12,12 +12,12 @@ import {
   useVideoStore,
   useTaskStore,
   useSubStore,
-  useUIStore,
   useSubtitlePrefs,
 } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { SrtSegment } from '@shared-types/app';
+import { useUrlStore } from '../../state/url-store';
 
 const videoOverlayControlsStyles = css`
   position: absolute;
@@ -247,8 +247,8 @@ export default function VideoPlayer() {
   const resumeAt = useVideoStore(s => s.resumeAt);
   const togglePlay = useVideoStore(s => s.handleTogglePlay);
   const selectVideo = useVideoStore(s => s.openFileDialog);
-  const { merge, download, translation } = useTaskStore();
-  const { handleProcessUrl } = useUIStore();
+  const { merge, translation } = useTaskStore();
+  const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
 
   const isProgressBarVisible =
@@ -491,7 +491,6 @@ export default function VideoPlayer() {
         {!isFullScreen && (
           <div className={controlsWrapperStyles(false)}>
             <SideMenu
-              onProcessUrl={handleProcessUrl}
               onShiftAllSubtitles={useSubStore.getState().shiftAll}
               onScrollToCurrentSubtitle={useSubStore.getState().scrollToCurrent}
               onSelectVideoClick={selectVideo}

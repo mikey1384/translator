@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 interface UrlInputSectionProps {
   urlInput: string;
   setUrlInput: (value: string) => void;
-  setError: (error: string | null) => void;
   isTranslationInProgress: boolean;
   isProcessingUrl: boolean;
   downloadQuality: VideoQuality;
@@ -41,7 +40,6 @@ const urlInputStyles = css`
 function UrlInputSection({
   urlInput,
   setUrlInput,
-  setError,
   isTranslationInProgress,
   isProcessingUrl,
   downloadQuality,
@@ -77,7 +75,6 @@ function UrlInputSection({
         value={urlInput}
         onChange={e => {
           setUrlInput(e.target.value);
-          setError(null);
         }}
         disabled={isTranslationInProgress || isProcessingUrl}
       />

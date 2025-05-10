@@ -5,10 +5,10 @@ import Button from '../../components/Button.js';
 import { openSubtitleWithElectron } from '../../../shared/helpers/index.js';
 import { SrtSegment, VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
-import { useUIStore, useTaskStore, useSubStore } from '../../state';
+import { useTaskStore, useSubStore } from '../../state';
+import { useUrlStore } from '../../state/url-store';
 
 export interface SideMenuProps {
-  onProcessUrl: () => void;
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
   onSelectVideoClick: () => void;
@@ -18,7 +18,6 @@ export interface SideMenuProps {
 }
 
 export default function SideMenu({
-  onProcessUrl,
   onShiftAllSubtitles,
   onScrollToCurrentSubtitle,
   onSelectVideoClick,
@@ -27,9 +26,15 @@ export default function SideMenu({
   onUiInteraction,
 }: SideMenuProps) {
   const { t } = useTranslation();
-  const { urlInput, setUrlInput, downloadQuality, setDownloadQuality } =
-    useUIStore();
-  const { download, merge, translation } = useTaskStore();
+  const {
+    urlInput,
+    setUrlInput,
+    downloadQuality,
+    setDownloadQuality,
+    download,
+    processUrl,
+  } = useUrlStore();
+  const { merge, translation } = useTaskStore();
   const subtitleCount = useSubStore(s => s.order.length);
   const [shiftAmount, setShiftAmount] = useState<string>('0');
   const hasSubtitles = subtitleCount > 0;
@@ -174,7 +179,10 @@ export default function SideMenu({
             <option value="low">{t('videoPlayer.sideMenu.qualityLow')}</option>
           </select>
           <Button
-            onClick={onProcessUrl}
+            onClick={() => {
+              processUrl();
+              onUiInteraction?.();
+            }}
             variant="secondary"
             size="sm"
             title={t('videoPlayer.sideMenu.loadVideoFromUrl')}

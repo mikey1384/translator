@@ -27,7 +27,9 @@ interface State {
 }
 
 interface Actions {
-  setFile(file: File | { name: string; path: string } | null): Promise<void>;
+  setFile(
+    file: File | { name: string | undefined; path: string } | null
+  ): Promise<void>;
   togglePlay(): Promise<void>;
   handleTogglePlay(): void;
   openFileDialog(): Promise<void>;
@@ -72,7 +74,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
     ...initial,
 
-    async setFile(fd) {
+    async setFile(fd: File | { name: string; path: string } | null) {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       set(initial);

@@ -1,13 +1,14 @@
-import { useUIStore, useTaskStore } from '../state';
+import { useUrlStore } from '../state/url-store';
 import * as UrlIPC from '../ipc/url';
 
 UrlIPC.onProgress(p => {
-  useTaskStore.getState().setDownload({
-    id: p.operationId || null,
-    stage: p.stage || '',
-    percent: p.percent || 0,
-    inProgress: (p.percent || 0) < 100,
+  const { percent = 0, stage = '', operationId: opId } = p;
+  useUrlStore.getState().setDownload({
+    id: opId,
+    stage,
+    percent,
+    inProgress: percent < 100,
   });
-  if (p.error) useUIStore.getState().setError(p.error as string);
-  else useUIStore.getState().setError(null);
+  if (p.error) useUrlStore.getState().setError(p.error as string);
+  else useUrlStore.getState().setError('');
 });

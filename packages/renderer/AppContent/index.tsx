@@ -1,4 +1,5 @@
 import { useUIStore, useVideoStore, useTaskStore } from '../state';
+import { useUrlStore } from '../state/url-store';
 
 import FindBar from '../components/FindBar';
 import SettingsPage from '../containers/SettingsPage';
@@ -15,14 +16,11 @@ import { pageWrapperStyles, containerStyles, colors } from '../styles';
 
 export default function AppContent() {
   const { showSettings } = useUIStore();
+  const { cancellingDownload, setCancellingDownload, setDownload } =
+    useUrlStore();
   const { url: videoUrl } = useVideoStore();
-  const {
-    download,
-    merge,
-    translation,
-    cancellingDownload,
-    setCancellingDownload,
-  } = useTaskStore();
+  const { merge, translation } = useTaskStore();
+  const download = useUrlStore(s => s.download);
 
   const handleCancelDownload = () => {
     if (!download.id) return;
@@ -66,7 +64,12 @@ export default function AppContent() {
               isCancelling={cancellingDownload}
               onCancel={handleCancelDownload}
               onClose={() =>
-                useTaskStore.getState().setDownload({ inProgress: false })
+                setDownload({
+                  inProgress: false,
+                  percent: 100,
+                  stage: 'Completed',
+                  id: null,
+                })
               }
             />
 

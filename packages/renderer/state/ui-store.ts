@@ -3,7 +3,6 @@ import { immer } from 'zustand/middleware/immer';
 import { Draft } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
-import { VideoQuality } from '@shared-types/app';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 
 interface State {
@@ -13,11 +12,8 @@ interface State {
   activeMatchIndex: number;
   matchedIndices: number[];
   inputMode: 'file' | 'url';
-  urlInput: string;
-  downloadQuality: VideoQuality;
   targetLanguage: string;
   showOriginalText: boolean;
-  error: string | null;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
 }
@@ -33,12 +29,8 @@ interface Actions {
   handleCloseFindBar(): void;
   handleReplaceAll(): void;
   setInputMode(mode: 'file' | 'url'): void;
-  setUrlInput(url: string): void;
-  setDownloadQuality(quality: VideoQuality): void;
   setTargetLanguage(lang: string): void;
   setShowOriginalText(show: boolean): void;
-  setError(error: string | null): void;
-  handleProcessUrl(): void;
   openFileDialog(): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
@@ -51,25 +43,20 @@ const initial: State = {
   activeMatchIndex: 0,
   matchedIndices: [],
   inputMode: 'file',
-  urlInput: '',
-  downloadQuality: 'mid',
   targetLanguage: 'original',
   showOriginalText: true,
-  error: null,
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
     'Default',
 };
 
-// Helper function hoisted to module scope
 const resetSearchState = (s: Draft<State>) => {
   s.searchText = '';
   s.matchedIndices = [];
   s.activeMatchIndex = 0;
 };
 
-// helper
 const sameArray = (a: number[], b: number[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
@@ -108,12 +95,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setMatchedIndices(indices) {
           set(draft => {
-            /* 1️⃣  matched indices --------------------------------------- */
             if (!sameArray(draft.matchedIndices, indices)) {
               draft.matchedIndices = indices;
             }
 
-            // ✅  Only reset when there are *no* matches left
             if (indices.length === 0) {
               draft.activeMatchIndex = 0;
             }
@@ -153,14 +138,6 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ inputMode: mode });
         },
 
-        setUrlInput(url) {
-          set({ urlInput: url });
-        },
-
-        setDownloadQuality(quality) {
-          set({ downloadQuality: quality });
-        },
-
         setTargetLanguage(lang) {
           set({ targetLanguage: lang });
         },
@@ -169,8 +146,8 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ showOriginalText: show });
         },
 
-        setError(error) {
-          set({ error: error ?? null });
+        openFileDialog() {
+          console.log('Opening file dialog');
         },
 
         setBaseFontSize(size) {
@@ -179,21 +156,6 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setSubtitleStyle(p) {
           set({ subtitleStyle: p });
-        },
-
-        handleProcessUrl() {
-          const { urlInput, downloadQuality } = get();
-          if (!urlInput.trim()) return;
-          import('../ipc/url').then(({ process }) =>
-            process({ url: urlInput, quality: downloadQuality }).catch(
-              console.error
-            )
-          );
-        },
-
-        openFileDialog() {
-          // Placeholder for opening file dialog
-          console.log('Opening file dialog');
         },
       };
     })
