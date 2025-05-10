@@ -164,6 +164,8 @@ export default function EditSubtitles({
     prevSubsRef.current = subtitles;
   }, [subtitles]);
 
+  const getSrtMode = () => (showOriginalText ? 'dual' : 'translation');
+
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>
       {saveError && (
@@ -274,7 +276,7 @@ export default function EditSubtitles({
       title: 'Save SRT File As',
       defaultPath: suggestion,
       filters: [{ name: 'SRT Files', extensions: ['srt'] }],
-      content: buildSrt({ segments: subtitles }),
+      content: buildSrt({ segments: subtitles, mode: getSrtMode() }),
     });
     if (res.error && !res.error.includes('canceled')) {
       setSaveError(res.error);
@@ -287,7 +289,7 @@ export default function EditSubtitles({
   async function writeSrt(path: string) {
     const result = await FileIPC.save({
       filePath: path,
-      content: buildSrt({ segments: subtitles }),
+      content: buildSrt({ segments: subtitles, mode: getSrtMode() }),
     });
     if (result.error) {
       setSaveError(result.error);
@@ -326,7 +328,7 @@ export default function EditSubtitles({
 
       const srtContent = buildSrt({
         segments: subtitles,
-        mode: showOriginalText ? 'dual' : 'translation',
+        mode: getSrtMode(),
       });
 
       const { baseFontSize, subtitleStyle } = useUIStore.getState();
