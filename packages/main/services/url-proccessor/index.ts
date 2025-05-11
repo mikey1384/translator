@@ -5,7 +5,7 @@ import { ProgressCallback, VideoQuality } from './types.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { findYtDlpBinary } from './binary-locator.js';
 import { downloadVideoFromPlatform } from './download.js';
-import { qualityFormatMap, PROGRESS } from './constants.js';
+import { PROGRESS } from './constants.js';
 import { FFmpegService } from '../ffmpeg-service.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
@@ -85,4 +85,4 @@ export async function processVideoUrl(
   };
 }
 
-export { VideoQuality, qualityFormatMap };
+export { VideoQuality };
