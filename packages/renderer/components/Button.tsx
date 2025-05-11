@@ -1,4 +1,4 @@
-import React, { useRef, ChangeEvent, ReactNode } from 'react';
+import React, { useRef, ChangeEvent, ReactNode, forwardRef } from 'react';
 import { css, cx } from '@emotion/css';
 import { colors, breakpoints } from '../styles.js';
 // import LoadingSpinner from './LoadingSpinner'; // Comment out for now
@@ -26,7 +26,6 @@ export interface ButtonProps
   className?: string;
   isLoading?: boolean;
   children: ReactNode;
-  // File input props
   asFileInput?: boolean;
   onFileChange?: (event: FileChangeEvent) => void;
   accept?: string;
@@ -191,108 +190,106 @@ const hiddenInputStyles = css`
   width: 1px;
 `;
 
-const Button: React.FC<ButtonProps> = ({
-  children,
-  variant = 'primary',
-  size = 'md',
-  fullWidth = false,
-  className,
-  isLoading = false,
-  disabled,
-  asFileInput = false,
-  onFileChange,
-  accept,
-  directory = false,
-  webkitdirectory = false,
-  onClick,
-  ...rest
-}) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleButtonClick = async (
-    event: React.MouseEvent<HTMLButtonElement>
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      children,
+      variant = 'primary',
+      size = 'md',
+      fullWidth = false,
+      className,
+      isLoading = false,
+      asFileInput = false,
+      onFileChange,
+      accept,
+      directory = false,
+      webkitdirectory = false,
+      onClick,
+      ...rest
+    },
+    ref
   ) => {
-    if (isLoading || disabled) return;
-    if (asFileInput && inputRef?.current) {
-      // Trigger regular file input click
-      inputRef?.current.click();
-    } else if (onClick) {
-      // Standard button click
-      onClick(event);
-    }
-  };
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (onFileChange) {
-      onFileChange(event);
-      // Reset input value to allow selecting the same file again
-      if (inputRef?.current) {
-        inputRef.current.value = '';
+    const handleButtonClick = async (
+      event: React.MouseEvent<HTMLButtonElement>
+    ) => {
+      if (asFileInput && inputRef.current) {
+        inputRef.current.click();
+      } else if (onClick) {
+        onClick(event);
       }
-    }
-  };
+    };
 
-  const buttonContent = (
-    <>
-      {isLoading && (
-        <div className={loadingOverlayStyles}>
-          {/* <LoadingSpinner size={size === 'sm' ? 16 : 20} /> */}
-          <span>Loading...</span> {/* Placeholder */}
-        </div>
-      )}
-      <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-        {/* Remove icon rendering logic */}
-        {children}
-      </span>
-    </>
-  );
+    const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+      if (onFileChange) {
+        onFileChange(event);
+        // Reset input value to allow selecting the same file again
+        if (inputRef?.current) {
+          inputRef.current.value = '';
+        }
+      }
+    };
 
-  const commonButtonProps = {
-    className: cx(
-      baseButtonStyles,
-      buttonVariants[variant],
-      buttonSizes[size],
-      fullWidth && fullWidthStyle,
-      className
-    ),
-    disabled: disabled || isLoading,
-    ...rest,
-  };
-
-  if (asFileInput) {
-    // If acting as file input, use a label wrapping the button styling
-    // But handle the click via the outer button/div to manage Electron logic
-    return (
-      <button {...commonButtonProps} type="button" onClick={handleButtonClick}>
-        {buttonContent}
-        {/* Conditionally render input only if not using Electron dialog */}
-        {!(directory || webkitdirectory) && (
-          <input
-            ref={inputRef}
-            type="file"
-            className={hiddenInputStyles}
-            accept={accept}
-            onChange={handleInputChange}
-            disabled={disabled || isLoading}
-            tabIndex={-1} // Make it non-focusable
-            aria-hidden="true"
-            {...(webkitdirectory ? { webkitdirectory: 'true' } : {})} // Use standard prop if true
-          />
+    const buttonContent = (
+      <>
+        {isLoading && (
+          <div className={loadingOverlayStyles}>
+            {/* <LoadingSpinner size={size === 'sm' ? 16 : 20} /> */}
+            <span>Loading...</span> {/* Placeholder */}
+          </div>
         )}
+        <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+          {/* Remove icon rendering logic */}
+          {children}
+        </span>
+      </>
+    );
+
+    const commonButtonProps = {
+      ref,
+      onClick: handleButtonClick,
+      className: cx(
+        baseButtonStyles,
+        buttonVariants[variant],
+        buttonSizes[size],
+        fullWidth && fullWidthStyle,
+        className
+      ),
+      disabled: isLoading,
+      ...rest,
+    };
+
+    if (asFileInput) {
+      // If acting as file input, use a label wrapping the button styling
+      // But handle the click via the outer button/div to manage Electron logic
+      return (
+        <button {...commonButtonProps} type="button">
+          {buttonContent}
+          {/* Conditionally render input only if not using Electron dialog */}
+          {!(directory || webkitdirectory) && (
+            <input
+              ref={inputRef}
+              type="file"
+              className={hiddenInputStyles}
+              accept={accept}
+              onChange={handleInputChange}
+              onClick={e => e.stopPropagation()}
+              {...(webkitdirectory ? { webkitdirectory: 'true' } : {})} // Use standard prop if true
+            />
+          )}
+        </button>
+      );
+    }
+
+    // Standard button rendering
+    return (
+      <button {...commonButtonProps} type={rest.type || 'button'}>
+        {buttonContent}
       </button>
     );
   }
+);
 
-  // Standard button rendering
-  return (
-    <button
-      {...commonButtonProps}
-      type={rest.type || 'button'} // Default to button type
-      onClick={onClick}
-    >
-      {buttonContent}
-    </button>
-  );
-};
-
+Button.displayName = 'Button';
 export default Button;

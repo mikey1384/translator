@@ -11,6 +11,7 @@ import { css } from '@emotion/css';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
 import SideMenu from './SideMenu';
+import SpeedMenu from './SpeedMenu';
 
 import { colors } from '../../styles';
 import Button from '../../components/Button';
@@ -28,22 +29,14 @@ import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { SrtSegment } from '@shared-types/app';
 import { useUrlStore } from '../../state/url-store';
 
-const videoOverlayControlsStyles = css`
+const commonOverlayControlsStyles = css`
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.5) 60%,
-    transparent 100%
-  );
   z-index: 10;
   display: flex;
   align-items: center;
-  padding: 0 20px;
   gap: 15px;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
@@ -53,8 +46,20 @@ const videoOverlayControlsStyles = css`
   }
 `;
 
+const videoOverlayControlsStyles = css`
+  ${commonOverlayControlsStyles}
+  height: 80px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+  padding: 0 20px;
+`;
+
 const fullscreenOverlayControlsStyles = css`
-  ${videoOverlayControlsStyles}
+  ${commonOverlayControlsStyles}
   height: 100px;
   padding: 0 40px;
   background: linear-gradient(
@@ -66,9 +71,8 @@ const fullscreenOverlayControlsStyles = css`
   bottom: 0;
 `;
 
-const seekbarStyles = css`
+const commonSeekbarStyles = css`
   width: 100%;
-  height: 8px;
   cursor: pointer;
   appearance: none;
   background: linear-gradient(
@@ -86,16 +90,12 @@ const seekbarStyles = css`
 
   &::-webkit-slider-thumb {
     appearance: none;
-    width: 16px;
-    height: 16px;
     background: ${colors.light};
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
   }
   &::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
     background: ${colors.light};
     border-radius: 50%;
     cursor: pointer;
@@ -104,8 +104,22 @@ const seekbarStyles = css`
   }
 `;
 
+const seekbarStyles = css`
+  ${commonSeekbarStyles}
+  height: 8px;
+
+  &::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+  }
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
 const fullscreenSeekbarStyles = css`
-  ${seekbarStyles}
+  ${commonSeekbarStyles}
   height: 12px;
 
   &::-webkit-slider-thumb {
@@ -118,29 +132,38 @@ const fullscreenSeekbarStyles = css`
   }
 `;
 
-const timeDisplayStyles = css`
-  font-size: 0.9rem;
-  min-width: 50px;
-  text-align: center;
+const commonTimeDisplayStyles = css`
   font-family: monospace;
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  text-align: center;
+`;
+
+const timeDisplayStyles = css`
+  ${commonTimeDisplayStyles}
+  font-size: 0.9rem;
+  min-width: 50px;
 `;
 
 const fullscreenTimeDisplayStyles = css`
-  ${timeDisplayStyles}
+  ${commonTimeDisplayStyles}
   font-size: 1.2rem;
   min-width: 70px;
 `;
 
-const transparentButtonStyles = css`
+const commonButtonStyles = css`
   background: transparent !important;
   border: none !important;
   padding: 5px;
   color: white;
+  cursor: pointer;
   &:hover {
     color: ${colors.primary};
   }
+`;
+
+const transparentButtonStyles = css`
+  ${commonButtonStyles}
   svg {
     width: 24px;
     height: 24px;
@@ -148,7 +171,7 @@ const transparentButtonStyles = css`
 `;
 
 const fullscreenButtonStyles = css`
-  ${transparentButtonStyles}
+  ${commonButtonStyles}
   svg {
     width: 32px;
     height: 32px;
@@ -261,7 +284,9 @@ const fmt = (s: number) => {
     : [m, sec].map(n => String(n).padStart(2, '0')).join(':');
 };
 
-const HIDE_DELAY = 3000; // ms
+const HIDE_DELAY = 3000;
+
+export const SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 10] as const;
 
 export default function VideoPlayer() {
   const videoUrl = useVideoStore(s => s.url);
@@ -282,12 +307,15 @@ export default function VideoPlayer() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showFsControls, setShowFsControls] = useState(true);
   const [cursorHidden, setCursorHidden] = useState(false);
+  const [playbackRate, setPlaybackRate] =
+    useState<(typeof SPEED_STEPS)[number]>(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const activityTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerDivRef = useRef<HTMLDivElement>(null);
+  const speedBtnRef = useRef<HTMLButtonElement>(null);
 
   const [progressBarH, setProgressBarH] = useState(0);
 
-  // helper – centralises timer handling
   const restartHideTimer = useCallback(() => {
     if (activityTimeout.current) clearTimeout(activityTimeout.current);
     setCursorHidden(false);
@@ -328,6 +356,9 @@ export default function VideoPlayer() {
   useEffect(() => {
     const v = getNativePlayerInstance();
     if (!v) return;
+
+    v.playbackRate = 1;
+    setPlaybackRate(1);
 
     const onTime = () => setCurrentTime(v.currentTime);
     const onDur = () => !Number.isNaN(v.duration) && setDuration(v.duration);
@@ -397,6 +428,20 @@ export default function VideoPlayer() {
       return;
     }
 
+    // Faster (>) / Slower (<)
+    if (e.key === '>' || e.key === '.') {
+      // shift+. on most layouts
+      stepRate('up');
+      e.preventDefault();
+      return;
+    }
+    if (e.key === '<' || e.key === ',') {
+      // shift+, (or just , )
+      stepRate('down');
+      e.preventDefault();
+      return;
+    }
+
     const v = getNativePlayerInstance();
     if (!v) return;
     if (e.key === 'ArrowRight') {
@@ -442,6 +487,24 @@ export default function VideoPlayer() {
   if (!videoUrl) return null;
 
   const pct = duration ? (currentTime / duration) * 100 : 0;
+
+  /** change <video>.playbackRate and remember the new value */
+  const applyRate = (rate: (typeof SPEED_STEPS)[number]) => {
+    const v = getNativePlayerInstance();
+    if (!v) return;
+    v.playbackRate = rate;
+    setPlaybackRate(rate);
+  };
+
+  /** step to next or previous rate in SPEED_STEPS */
+  const stepRate = (dir: 'up' | 'down') => {
+    const idx = SPEED_STEPS.indexOf(playbackRate);
+    const next =
+      dir === 'up'
+        ? SPEED_STEPS[Math.min(idx + 1, SPEED_STEPS.length - 1)]
+        : SPEED_STEPS[Math.max(idx - 1, 0)];
+    applyRate(next);
+  };
 
   return (
     <div style={{ position: 'relative' }}>
@@ -545,6 +608,43 @@ export default function VideoPlayer() {
             >
               {fmt(duration)}
             </span>
+
+            <div
+              style={{ position: 'relative' /* anchor for absolute menu */ }}
+            >
+              <Button
+                ref={speedBtnRef}
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowSpeedMenu(m => !m)}
+                className={`speed-btn ${
+                  isFullScreen
+                    ? fullscreenButtonStyles
+                    : transparentButtonStyles
+                }`}
+                title="Playback speed"
+              >
+                {playbackRate}×
+              </Button>
+
+              {showSpeedMenu && (
+                <SpeedMenu
+                  current={
+                    SPEED_STEPS.find(
+                      rate =>
+                        rate ===
+                        (getNativePlayerInstance()?.playbackRate ??
+                          playbackRate)
+                    ) ?? playbackRate
+                  }
+                  onSelect={applyRate}
+                  onClose={() => {
+                    setShowSpeedMenu(false);
+                    speedBtnRef.current?.focus();
+                  }}
+                />
+              )}
+            </div>
 
             <Button
               onClick={toggleFullscreen}
