@@ -1,4 +1,12 @@
-import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
+import {
+  useState,
+  useEffect,
+  useRef,
+  KeyboardEvent,
+  ChangeEvent,
+  useLayoutEffect,
+  useCallback,
+} from 'react';
 import { css } from '@emotion/css';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
@@ -7,6 +15,7 @@ import SideMenu from './SideMenu';
 import { colors } from '../../styles';
 import Button from '../../components/Button';
 import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea';
+import { BASELINE_HEIGHT } from '../../../shared/constants';
 
 import {
   useVideoStore,
@@ -166,6 +175,12 @@ const fixedVideoContainerBaseStyles = css`
     outline: none;
     box-shadow: none;
   }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 `;
 
 const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
@@ -267,6 +282,28 @@ export default function VideoPlayer() {
   useEffect(() => {
     setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
   }, [isProgressBarVisible]);
+
+  const syncVisibleHeight = useCallback(() => {
+    const getHeight = () =>
+      isFullScreen
+        ? window.innerHeight
+        : (playerDivRef.current?.getBoundingClientRect().height ??
+          BASELINE_HEIGHT);
+    getHeight();
+  }, [isFullScreen]);
+
+  useEffect(() => {
+    window.addEventListener('resize', syncVisibleHeight);
+    return () => window.removeEventListener('resize', syncVisibleHeight);
+  }, [syncVisibleHeight]);
+
+  useLayoutEffect(() => {
+    const el = playerDivRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(syncVisibleHeight);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [syncVisibleHeight]);
 
   useEffect(() => {
     const v = getNativePlayerInstance();

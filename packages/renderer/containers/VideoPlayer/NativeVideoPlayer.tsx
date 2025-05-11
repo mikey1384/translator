@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, KeyboardEvent, MouseEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  KeyboardEvent,
+  MouseEvent,
+  useCallback,
+  useLayoutEffect,
+} from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
 
@@ -12,6 +20,7 @@ import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 
 import { useVideoStore, useSubStore } from '../../state';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
+import { fontScale } from '../../../shared/constants';
 
 import { cueText } from '../../../shared/helpers';
 
@@ -21,7 +30,6 @@ declare global {
   }
 }
 
-// Define SVG Icons
 interface IconProps {
   size?: string;
   color?: string;
@@ -56,9 +64,7 @@ const PauseIcon = ({ size = '64px', color = '#fff' }: IconProps) => (
 );
 
 export interface NativeVideoPlayerProps {
-  /** container that should receive focus when video clicked */
   parentRef?: React.RefObject<HTMLDivElement | null>;
-  /** true when the player has been "zoomed" by VideoPlayer into full size */
   isFullyExpanded?: boolean;
   baseFontSize: number;
   stylePreset: SubtitleStylePresetKey;
@@ -72,18 +78,13 @@ export default function NativeVideoPlayer({
   stylePreset,
   showOriginalText,
 }: NativeVideoPlayerProps) {
-  /* ============================================================
-     1.  read everything from stores
-     ============================================================ */
   const { url: videoUrl, togglePlay } = useVideoStore();
   const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
 
-  /* ============================================================
-     2.  local state
-     ============================================================ */
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [scale, setScale] = useState(1);
 
   const [activeSubtitle, setActiveSubtitle] = useState('');
   const [subtitleVisible, setSubtitleVisible] = useState(false);
@@ -92,17 +93,18 @@ export default function NativeVideoPlayer({
   const [showInd, setShowInd] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [nativeH, setNativeH] = useState(0);
-  const [dispH, setDispH] = useState(0);
 
-  /* ============================================================
-     5.  attach basic video listeners
-     ============================================================ */
+  const recomputeScale = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const rect = v.getBoundingClientRect();
+    setScale(fontScale(Math.round(rect.height)));
+  }, []);
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    /* make this the global player */
     if (getNativePlayerInstance() !== v) setNativePlayerInstance(v);
 
     const onPlay = () => {
@@ -113,42 +115,29 @@ export default function NativeVideoPlayer({
     };
     const onErr = () => setErrorMessage('Video playback error');
 
-    const onLoadedMetadata = () => {
-      setNativeH(v.videoHeight);
-    };
+    const onLoadedMetadata = recomputeScale;
 
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
     v.addEventListener('error', onErr);
     v.addEventListener('loadedmetadata', onLoadedMetadata);
 
-    /* detach */
     return () => {
       v.removeEventListener('play', onPlay);
       v.removeEventListener('pause', onPause);
       v.removeEventListener('error', onErr);
       v.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-  }, [videoUrl]);
+  }, [recomputeScale, videoUrl]);
 
-  /* ============================================================
-     6.  track container resize → dynamic subtitle font size
-     ============================================================ */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-
-    const ro = new ResizeObserver(entries => {
-      const h = Math.round(entries[0].contentRect.height);
-      if (h > 0) setDispH(h);
-    });
+    const ro = new ResizeObserver(recomputeScale);
     ro.observe(v);
     return () => ro.disconnect();
-  }, []);
+  }, [recomputeScale]);
 
-  /* ============================================================
-     7.  subtitle sync
-     ============================================================ */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -169,7 +158,6 @@ export default function NativeVideoPlayer({
     return () => v.removeEventListener('timeupdate', onTime);
   }, [subtitles, showOriginalText, activeSubtitle]);
 
-  /* fade-in new subtitle */
   useEffect(() => {
     if (!activeSubtitle) {
       setSubtitleVisible(false);
@@ -179,12 +167,8 @@ export default function NativeVideoPlayer({
     return () => clearTimeout(id);
   }, [activeSubtitle]);
 
-  /* fallback guard */
   if (!videoUrl) return null;
 
-  /* ============================================================
-     3.  player click → play / pause + indicator
-     ============================================================ */
   const onVideoClick = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -201,13 +185,9 @@ export default function NativeVideoPlayer({
     setShowInd(true);
     indicatorTimer.current = setTimeout(() => setShowInd(false), 600);
 
-    /* bubble focus to wrapper so keyboard shortcuts still work */
     (parentRef?.current ?? containerRef.current)?.focus();
   };
 
-  /* ============================================================
-     4.  key-handler (←/→ = seek 10s, space = toggle)
-     ============================================================ */
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const v = videoRef.current;
     if (!v) return;
@@ -226,12 +206,7 @@ export default function NativeVideoPlayer({
     }
   };
 
-  const effFontSize = (() => {
-    const base = baseFontSize;
-    if (nativeH && dispH)
-      return Math.max(10, Math.round((base * dispH) / nativeH));
-    return isFullyExpanded ? Math.round(base * 1.2) : base;
-  })();
+  const effFontSize = Math.max(10, Math.round(baseFontSize * scale));
 
   const wrapperCls =
     css`

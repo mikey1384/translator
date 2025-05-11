@@ -1252,6 +1252,9 @@ var SUBTITLE_STYLE_PRESETS = {
   }
 };
 
+// ../shared/constants/index.ts
+var BASELINE_FONT_SIZE = 30;
+
 // ../shared/helpers/subtitle-style-util.ts
 function assColorToRgba(ass) {
   if (!ass?.startsWith("&H"))
@@ -1265,7 +1268,7 @@ function assColorToRgba(ass) {
 }
 function getSubtitleStyles(opts) {
   const {
-    displayFontSize = 20,
+    displayFontSize = BASELINE_FONT_SIZE,
     isFullScreen = false,
     stylePreset = "Default",
     isMultiLine

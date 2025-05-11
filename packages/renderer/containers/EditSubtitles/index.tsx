@@ -14,6 +14,7 @@ import EditSubtitlesHeader from './EditSubtitlesHeader';
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
 import { scrollWhenReady, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
+import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
 import { colors } from '../../styles';
 
@@ -333,6 +334,12 @@ export default function EditSubtitles({
 
       const { baseFontSize, subtitleStyle } = useUIStore.getState();
 
+      const targetHeight = meta?.height ?? BASELINE_HEIGHT;
+      const scaledFontSize = Math.max(
+        1,
+        Math.round(baseFontSize * fontScale(targetHeight))
+      );
+
       const opts: RenderSubtitlesOptions = {
         operationId: opId,
         srtContent,
@@ -342,7 +349,7 @@ export default function EditSubtitles({
         videoHeight: meta?.height ?? 720,
         frameRate: Number(meta?.frameRate ?? 30),
         originalVideoPath: videoPath,
-        fontSizePx: baseFontSize,
+        fontSizePx: scaledFontSize,
         stylePreset: subtitleStyle,
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
       };

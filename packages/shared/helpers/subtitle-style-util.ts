@@ -3,6 +3,7 @@ import {
   SUBTITLE_STYLE_PRESETS,
   SubtitleStylePresetKey,
 } from '../constants/subtitle-styles.js';
+import { BASELINE_FONT_SIZE } from '../constants/index.js';
 
 /* ---------- small helpers ---------- */
 export function assColorToRgba(ass: string): string {
@@ -24,7 +25,7 @@ export function getSubtitleStyles(opts: {
   isMultiLine: boolean;
 }): string {
   const {
-    displayFontSize = 20,
+    displayFontSize = BASELINE_FONT_SIZE,
     isFullScreen = false,
     stylePreset = 'Default',
     isMultiLine,
