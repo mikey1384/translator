@@ -51,6 +51,7 @@ interface ProcessUrlOptions {
   url: string;
   quality?: VideoQuality;
   operationId?: string;
+  useCookies?: boolean;
 }
 
 interface ProcessUrlResult {
@@ -146,7 +147,8 @@ export async function handleProcessUrl(
       {
         fileManager,
         ffmpegService,
-      }
+      },
+      options.useCookies || false
     );
 
     // Check if cancellation was requested early before proceeding

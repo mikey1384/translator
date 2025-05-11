@@ -122,6 +122,7 @@ declare module '@shared-types/app' {
     url: string;
     quality?: VideoQuality;
     operationId?: string;
+    useCookies?: boolean;
   }
 
   export interface ProcessUrlResult {

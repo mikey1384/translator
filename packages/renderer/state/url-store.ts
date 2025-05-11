@@ -30,6 +30,7 @@ interface UrlState {
   setCancellingDownload: (cancellingDownload: boolean) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
+  retryWithCookies: () => Promise<ProcessUrlResult | void>;
   onDownloadProgress: ({
     percent,
     stage,
@@ -69,77 +70,16 @@ export const useUrlStore = create<UrlState>()(
     setError: msg => set({ error: msg }),
 
     async downloadMedia() {
-      const { urlInput, downloadQuality } = get();
-      if (!urlInput.trim()) {
-        set({ error: 'Please enter a valid URL' });
-        return;
-      }
+      set({ needCookies: false });
+      return downloadMediaInternal(set, get);
+    },
 
-      const opId = `download-${Date.now()}`;
-      set(state => {
-        state.download = {
-          id: opId,
-          stage: STARTING_STAGE,
-          percent: 0,
-          inProgress: true,
-        };
-        state.error = null;
+    retryWithCookies: async () => {
+      set((state: UrlState) => {
+        state.needCookies = false;
+        state.download = initialDownload;
       });
-
-      const offProgress = UrlIPC.onProgress(p => {
-        if (p.operationId !== opId) return;
-        if (p.stage === 'NeedCookies') return;
-        set(state => {
-          state.download.percent = p.percent ?? 0;
-          state.download.stage = p.stage ?? '';
-          state.download.inProgress = (p.percent ?? 0) < 100 && !p.error;
-        });
-        if (p.error) set({ error: `Download error: ${p.error}` });
-      });
-
-      try {
-        const res = await UrlIPC.download({
-          url: urlInput,
-          quality: downloadQuality,
-          operationId: opId,
-        });
-
-        const finalPath = res.videoPath ?? res.filePath;
-        const filename = res.filename;
-
-        if (res.cancelled || !finalPath || !filename) {
-          set(state => {
-            state.download.inProgress = false;
-            state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
-            state.download.percent = 100;
-            if (!res.cancelled)
-              state.error = res.error || 'Failed to process URL';
-          });
-          return res;
-        }
-
-        await useVideoStore
-          .getState()
-          .setFile({ path: finalPath!, name: filename! });
-        useSubStore.getState().load([]);
-
-        set(state => {
-          state.download.stage = 'Completed';
-          state.download.percent = 100;
-          state.download.inProgress = false;
-        });
-        set({ urlInput: '' });
-        return res;
-      } catch (err: any) {
-        set(state => {
-          state.error = err.message || String(err);
-          state.download.stage = 'Error';
-          state.download.percent = 100;
-          state.download.inProgress = false;
-        });
-      } finally {
-        offProgress();
-      }
+      return downloadMediaInternal(set, get, { useCookies: true });
     },
 
     setCancellingDownload: cancellingDownload => set({ cancellingDownload }),
@@ -184,5 +124,87 @@ export const useUrlStore = create<UrlState>()(
   }))
 );
 
-export const setCookieNeededFlag = (v: boolean) =>
-  useUrlStore.getState().setNeedCookies(v);
+async function downloadMediaInternal(
+  set: any,
+  get: any,
+  opts: { useCookies?: boolean } = {}
+): Promise<ProcessUrlResult | void> {
+  const { urlInput, downloadQuality } = get();
+  if (!urlInput.trim()) {
+    set((state: UrlState) => {
+      state.error = 'Please enter a valid URL';
+    });
+    return;
+  }
+
+  const opId = `download-${Date.now()}`;
+  set((state: UrlState) => {
+    state.download = {
+      id: opId,
+      stage: STARTING_STAGE,
+      percent: 0,
+      inProgress: true,
+    };
+    state.error = null;
+  });
+
+  const offProgress = UrlIPC.onProgress(p => {
+    if (p.operationId !== opId) return;
+    if (p.stage === 'NeedCookies') return;
+    set((state: UrlState) => {
+      state.download.percent = p.percent ?? 0;
+      state.download.stage = p.stage ?? '';
+      state.download.inProgress = (p.percent ?? 0) < 100 && !p.error;
+    });
+    if (p.error)
+      set((state: UrlState) => {
+        state.error = `Download error: ${p.error}`;
+      });
+  });
+
+  try {
+    const res = await UrlIPC.download({
+      url: urlInput,
+      quality: downloadQuality,
+      operationId: opId,
+      useCookies: opts.useCookies ?? false,
+    });
+
+    const finalPath = res.videoPath ?? res.filePath;
+    const filename = res.filename;
+
+    if (res.cancelled || !finalPath || !filename) {
+      set((state: UrlState) => {
+        state.download.inProgress = false;
+        state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
+        state.download.percent = 100;
+        if (!res.cancelled) state.error = res.error || 'Failed to process URL';
+      });
+      return res;
+    }
+
+    await useVideoStore
+      .getState()
+      .setFile({ path: finalPath!, name: filename! });
+    useSubStore.getState().load([]);
+
+    set((state: UrlState) => {
+      state.download.stage = 'Completed';
+      state.download.percent = 100;
+      state.download.inProgress = false;
+    });
+    set((state: UrlState) => {
+      state.urlInput = '';
+    });
+    return res;
+  } catch (err: any) {
+    set((state: UrlState) => {
+      state.error = err.message || String(err);
+      state.download.stage = 'Error';
+      state.download.percent = 100;
+      state.download.inProgress = false;
+    });
+  } finally {
+    offProgress();
+  }
+}

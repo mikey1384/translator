@@ -32,7 +32,8 @@ export async function processVideoUrl(
   services?: {
     fileManager: FileManager;
     ffmpegService: FFmpegService;
-  }
+  },
+  useCookies: boolean = false
 ): Promise<{
   videoPath: string;
   filename: string;
@@ -62,7 +63,11 @@ export async function processVideoUrl(
     throw new Error('Invalid URL provided.');
   }
 
-  // --- 1st attempt: no cookies, normal quality ---
+  const extra = useCookies
+    ? ['--cookies-from-browser', defaultBrowserHint()]
+    : [];
+
+  // --- 1st attempt: use cookies if specified ---
   try {
     const downloadResult = await downloadVideoFromPlatform(
       url,
@@ -70,7 +75,8 @@ export async function processVideoUrl(
       quality,
       progressCallback,
       operationId,
-      { ffmpegService }
+      { ffmpegService },
+      extra
     );
     const stats = await fsp.stat(downloadResult.filepath);
     const filename = path.basename(downloadResult.filepath);
@@ -94,49 +100,27 @@ export async function processVideoUrl(
     });
 
     // Detect 429 / suspicious block
-    if (/rate-limiting/i.test(friendly)) {
+    if (
+      /429|too\s+many\s+requests|rate[- ]?limiting/i.test(friendly) &&
+      !useCookies
+    ) {
       progressCallback?.({
         percent: PROGRESS.WARMUP_END,
         stage: 'Retrying with browser cookies...',
       });
 
-      try {
-        // --- 2nd attempt: re-use browser cookies silently ---
-        const result = await downloadVideoFromPlatform(
-          url,
-          tempDir,
-          quality,
-          progressCallback,
-          operationId,
-          { ffmpegService },
-          ['--cookies-from-browser', defaultBrowserHint()]
-        );
-        const stats = await fsp.stat(result.filepath);
-        const filename = path.basename(result.filepath);
-        progressCallback?.({
-          percent: PROGRESS.FINAL_END,
-          stage: 'Download complete',
-        });
-
-        return {
-          videoPath: result.filepath,
-          filename,
-          size: stats.size,
-          fileUrl: `file://${result.filepath}`,
-          originalVideoPath: result.filepath,
-          proc: result.proc,
-        };
-      } catch (err2: any) {
-        // 2nd attempt failed too → tell the UI we need manual cookies via progress callback
-        progressCallback?.({
-          percent: 0,
-          stage: 'NeedCookies',
-        });
-        throw err2; // bubble up → banner will appear
-      }
+      // Recursive retry with cookies
+      return processVideoUrl(
+        url,
+        quality,
+        progressCallback,
+        operationId,
+        services,
+        true
+      );
     }
 
-    throw err; // not a 429 ⇒ let normal error flow handle it
+    throw err; // not a 429 or already using cookies ⇒ let normal error flow handle it
   }
 }
 
