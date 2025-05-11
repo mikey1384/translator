@@ -26,7 +26,7 @@ export async function downloadVideoFromPlatform(
   },
   extraArgs: string[] = []
 ): Promise<{ filepath: string; info: any; proc: DownloadProcessType }> {
-  log.info(`[URLProcessor] Starting download: ${url} (Op ID: ${operationId})`);
+  log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
 
   if (!services?.ffmpegService) {
     throw new Error('FFmpegService is required for downloadVideoFromPlatform');
@@ -47,7 +47,7 @@ export async function downloadVideoFromPlatform(
     });
     throw new Error('yt-dlp binary not found.');
   }
-  log.info(`[URLProcessor] Found yt-dlp at: ${ytDlpPath}`);
+  log.info(`[URLprocessor] Found yt-dlp at: ${ytDlpPath}`);
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START + 3,
@@ -56,14 +56,14 @@ export async function downloadVideoFromPlatform(
 
   try {
     fs.accessSync(ytDlpPath, fs.constants.X_OK);
-    log.info(`[URLProcessor] yt-dlp is executable.`);
+    log.info(`[URLprocessor] yt-dlp is executable.`);
   } catch {
-    log.warn(`[URLProcessor] yt-dlp not executable, attempting chmod +x`);
+    log.warn(`[URLprocessor] yt-dlp not executable, attempting chmod +x`);
     try {
       await execa('chmod', ['+x', ytDlpPath]);
-      log.info(`[URLProcessor] chmod +x successful.`);
+      log.info(`[URLprocessor] chmod +x successful.`);
     } catch (e) {
-      log.warn('[URLProcessor] Could not make yt-dlp executable:', e);
+      log.warn('[URLprocessor] Could not make yt-dlp executable:', e);
       // Proceed anyway, it might work depending on system config
     }
   }
@@ -78,9 +78,9 @@ export async function downloadVideoFromPlatform(
     const testFile = join(outputDir, `test_${Date.now()}.tmp`);
     await fsp.writeFile(testFile, 'test');
     await fsp.unlink(testFile);
-    log.info(`[URLProcessor] Output directory verified: ${outputDir}`);
+    log.info(`[URLprocessor] Output directory verified: ${outputDir}`);
   } catch (dirError) {
-    log.error(`[URLProcessor] Output directory check failed:`, dirError);
+    log.error(`[URLprocessor] Output directory check failed:`, dirError);
     progressCallback?.({
       percent: 0,
       stage: 'Failed',
@@ -98,7 +98,7 @@ export async function downloadVideoFromPlatform(
   if (isYouTubeShorts && quality === 'low') {
     effectiveQuality = 'mid';
     log.info(
-      `[URLProcessor] YouTube Shorts detected with 'low' quality, upgrading to 'mid'.`
+      `[URLprocessor] YouTube Shorts detected with 'low' quality, upgrading to 'mid'.`
     );
   }
 
@@ -107,13 +107,13 @@ export async function downloadVideoFromPlatform(
     // Use effectiveQuality for format lookup
     formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.high;
     log.info(
-      `[URLProcessor] Using YouTube format for effective quality '${effectiveQuality}': ${formatString}`
+      `[URLprocessor] Using YouTube format for effective quality '${effectiveQuality}': ${formatString}`
     );
   } else {
     // For non-YouTube, use a more robust generic MP4 preference with fallbacks
     formatString = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
     log.info(
-      `[URLProcessor] Using generic MP4 format for non-YouTube URL: ${formatString}`
+      `[URLprocessor] Using generic MP4 format for non-YouTube URL: ${formatString}`
     );
   }
   // --- Determine Format String --- END ---
@@ -125,7 +125,7 @@ export async function downloadVideoFromPlatform(
     `download_${safeTimestamp}_%(id)s.%(ext)s` // Simple pattern using timestamp and ID
   );
   log.info(
-    `[URLProcessor] Using simplified temp pattern: ${tempFilenamePattern}`
+    `[URLprocessor] Using simplified temp pattern: ${tempFilenamePattern}`
   );
 
   const ffmpegPath = ffmpegService.getFFmpegPath();
@@ -149,9 +149,9 @@ export async function downloadVideoFromPlatform(
   ];
 
   log.info(
-    `[URLProcessor] Executing yt-dlp: ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
+    `[URLprocessor] Executing yt-dlp: ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
   );
-  log.info(`[URLProcessor] yt-dlp intended output directory: ${outputDir}`);
+  log.info(`[URLprocessor] yt-dlp intended output directory: ${outputDir}`);
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_END,
@@ -177,32 +177,32 @@ export async function downloadVideoFromPlatform(
 
     if (subprocess) {
       registerDownloadProcess(operationId, subprocess);
-      log.info(`[URLProcessor] Added download process ${operationId} to map.`);
+      log.info(`[URLprocessor] Added download process ${operationId} to map.`);
 
       subprocess.on('error', (err: any) => {
         log.error(
-          `[URLProcessor] Subprocess ${operationId} emitted error:`,
+          `[URLprocessor] Subprocess ${operationId} emitted error:`,
           err
         );
         if (removeDownloadProcess(operationId)) {
           log.info(
-            `[URLProcessor] Removed download process ${operationId} from map due to subprocess error event.`
+            `[URLprocessor] Removed download process ${operationId} from map due to subprocess error event.`
           );
         }
       });
       subprocess.on('exit', (code: number, signal: string) => {
         log.info(
-          `[URLProcessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
+          `[URLprocessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
         );
         if (removeDownloadProcess(operationId)) {
           log.info(
-            `[URLProcessor] Removed download process ${operationId} from map due to subprocess exit event.`
+            `[URLprocessor] Removed download process ${operationId} from map due to subprocess exit event.`
           );
         }
       });
     } else {
       log.error(
-        `[URLProcessor] Failed to create subprocess (Op ID: ${operationId}).`
+        `[URLprocessor] Failed to create subprocess (Op ID: ${operationId}).`
       );
       throw new Error('Could not start yt-dlp process.');
     }
@@ -222,17 +222,17 @@ export async function downloadVideoFromPlatform(
           if (line.startsWith('{') && line.endsWith('}')) {
             // Assume this is the final JSON output
             finalJsonOutput = line;
-            log.info('[URLProcessor] Received potential JSON output.');
+            log.info('[URLprocessor] Received potential JSON output.');
             // Try parsing immediately to validate
             try {
               downloadInfo = JSON.parse(finalJsonOutput);
               finalFilepath = downloadInfo?._filename;
               log.info(
-                `[URLProcessor] Parsed final filename from JSON: ${finalFilepath}`
+                `[URLprocessor] Parsed final filename from JSON: ${finalFilepath}`
               );
             } catch (jsonError) {
               log.warn(
-                `[URLProcessor] Failed to parse line as JSON immediately: ${line}`,
+                `[URLprocessor] Failed to parse line as JSON immediately: ${line}`,
                 jsonError
               );
               finalJsonOutput = ''; // Reset if parsing failed
@@ -250,7 +250,7 @@ export async function downloadVideoFromPlatform(
                 phase = 'dl2';
                 didAutoLift = true;
                 log.info(
-                  `[URLProcessor] Phase transition detected: dl1 -> dl2 (Op ID: ${operationId})`
+                  `[URLprocessor] Phase transition detected: dl1 -> dl2 (Op ID: ${operationId})`
                 );
               }
 
@@ -278,14 +278,14 @@ export async function downloadVideoFromPlatform(
           ) {
             finalFilepath = line.trim();
             log.info(
-              `[URLProcessor] Got final filepath from --print: ${finalFilepath}`
+              `[URLprocessor] Got final filepath from --print: ${finalFilepath}`
             );
           }
         }
       });
     } else {
       log.error(
-        `[URLProcessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
+        `[URLprocessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
       );
       throw new Error('Could not access yt-dlp output stream.');
     }
@@ -294,7 +294,7 @@ export async function downloadVideoFromPlatform(
     const result = await subprocess;
 
     log.info(
-      `[URLProcessor] yt-dlp process finished with code ${result.exitCode}`
+      `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
     );
     // Process any remaining data in the buffer
     if (
@@ -302,35 +302,35 @@ export async function downloadVideoFromPlatform(
       stdoutBuffer.trim().endsWith('}')
     ) {
       finalJsonOutput = stdoutBuffer.trim();
-      log.info('[URLProcessor] Processing remaining buffer as JSON.');
+      log.info('[URLprocessor] Processing remaining buffer as JSON.');
       try {
         downloadInfo = JSON.parse(finalJsonOutput);
         finalFilepath = downloadInfo?._filename;
         log.info(
-          `[URLProcessor] Parsed filename from final buffer: ${finalFilepath}`
+          `[URLprocessor] Parsed filename from final buffer: ${finalFilepath}`
         );
       } catch (jsonError) {
         log.error(
-          '[URLProcessor] Error parsing final JSON from buffer:',
+          '[URLprocessor] Error parsing final JSON from buffer:',
           jsonError
         );
-        log.error(`[URLProcessor] Final buffer content: ${stdoutBuffer}`);
+        log.error(`[URLprocessor] Final buffer content: ${stdoutBuffer}`);
         throw new Error('Failed to parse final JSON output from yt-dlp.');
       }
     } else if (!finalFilepath && stdoutBuffer.trim()) {
       // Log remaining buffer if it wasn't JSON and we don't have a path yet
       log.warn(
-        `[URLProcessor] yt-dlp finished with non-JSON remaining buffer: ${stdoutBuffer.trim().substring(0, 500)}...`
+        `[URLprocessor] yt-dlp finished with non-JSON remaining buffer: ${stdoutBuffer.trim().substring(0, 500)}...`
       );
     }
 
     if (!finalFilepath) {
-      log.error('[URLProcessor] Final filename not found in yt-dlp output.');
-      log.error(`[URLProcessor] Final JSON attempted: ${finalJsonOutput}`);
+      log.error('[URLprocessor] Final filename not found in yt-dlp output.');
+      log.error(`[URLprocessor] Final JSON attempted: ${finalJsonOutput}`);
       throw new Error('yt-dlp did not provide a final filename in JSON.');
     }
 
-    log.info(`[URLProcessor] Final file path determined: ${finalFilepath}`);
+    log.info(`[URLprocessor] Final file path determined: ${finalFilepath}`);
 
     progressCallback?.({
       percent: PROGRESS.FINAL_END - 5, // Use constant
@@ -340,21 +340,21 @@ export async function downloadVideoFromPlatform(
     // --- File Verification ---
     if (!fs.existsSync(finalFilepath)) {
       log.error(
-        `[URLProcessor] Downloaded file not found at path: ${finalFilepath}`
+        `[URLprocessor] Downloaded file not found at path: ${finalFilepath}`
       );
       throw new Error(`Downloaded file not found: ${finalFilepath}`);
     }
     const stats = await fsp.stat(finalFilepath);
     if (!stats.size) {
-      log.error(`[URLProcessor] Downloaded file is empty: ${finalFilepath}`);
+      log.error(`[URLprocessor] Downloaded file is empty: ${finalFilepath}`);
       await fsp.unlink(finalFilepath); // Clean up empty file
       throw new Error(`Downloaded file is empty: ${finalFilepath}`);
     }
     log.info(
-      `[URLProcessor] File verified: ${finalFilepath}, Size: ${stats.size}`
+      `[URLprocessor] File verified: ${finalFilepath}, Size: ${stats.size}`
     );
     log.info(
-      `[URLProcessor] Download successful, returning filepath: ${finalFilepath}`
+      `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
     );
 
     return { filepath: finalFilepath, info: downloadInfo, proc: subprocess! };
@@ -369,7 +369,7 @@ export async function downloadVideoFromPlatform(
       error.killed
     ) {
       log.info(
-        `[URLProcessor] Download cancelled by user (Op ID: ${operationId})`
+        `[URLprocessor] Download cancelled by user (Op ID: ${operationId})`
       );
       progressCallback?.({
         percent: 0,
@@ -380,21 +380,21 @@ export async function downloadVideoFromPlatform(
 
     // If it wasn't killed, it's a real error. NOW log details and send failure progress.
     log.error(
-      `[URLProcessor] Handling non-cancellation error for Op ID ${operationId}`
+      `[URLprocessor] Handling non-cancellation error for Op ID ${operationId}`
     );
     if (error.stderr) {
-      log.error('[URLProcessor] yt-dlp STDERR:', error.stderr);
+      log.error('[URLprocessor] yt-dlp STDERR:', error.stderr);
     }
     if (error.stdout) {
-      log.error('[URLProcessor] yt-dlp STDOUT on error:', error.stdout);
+      log.error('[URLprocessor] yt-dlp STDOUT on error:', error.stdout);
     }
     if (error.all) {
-      log.error('[URLProcessor] yt-dlp ALL on error:', error.all);
+      log.error('[URLprocessor] yt-dlp ALL on error:', error.all);
     }
 
     // Handle ALL OTHER (non-cancellation) errors
     log.error(
-      `[URLProcessor] Handling non-termination error for Op ID ${operationId}`
+      `[URLprocessor] Handling non-termination error for Op ID ${operationId}`
     );
 
     // Use mapErrorToUserFriendly for error mapping
@@ -404,15 +404,15 @@ export async function downloadVideoFromPlatform(
     });
 
     log.info(
-      `[URLProcessor] Determined user-friendly error: "${userFriendlyErrorMessage}"`
+      `[URLprocessor] Determined user-friendly error: "${userFriendlyErrorMessage}"`
     );
     // --- End User-Friendly Error Mapping ---
 
     // Enhanced error logging (Keep this if you want detailed logs)
-    log.error(`[URLProcessor] Error type: ${typeof error}`);
-    log.error(`[URLProcessor] Raw error message: ${rawErrorMessage}`);
-    if (error.stderr) log.error(`[URLProcessor] Error stderr: ${error.stderr}`);
-    if (error.stack) log.error(`[URLProcessor] Error stack: ${error.stack}`);
+    log.error(`[URLprocessor] Error type: ${typeof error}`);
+    log.error(`[URLprocessor] Raw error message: ${rawErrorMessage}`);
+    if (error.stderr) log.error(`[URLprocessor] Error stderr: ${error.stderr}`);
+    if (error.stack) log.error(`[URLprocessor] Error stack: ${error.stack}`);
     progressCallback?.({
       percent: 0,
       stage: 'Error',
@@ -425,11 +425,11 @@ export async function downloadVideoFromPlatform(
   } finally {
     if (removeDownloadProcess(operationId)) {
       log.info(
-        `[URLProcessor] Removed download process ${operationId} from map in finally block.`
+        `[URLprocessor] Removed download process ${operationId} from map in finally block.`
       );
     } else {
       log.warn(
-        `[URLProcessor] Process ${operationId} not found in map during finally block (already removed or never added).`
+        `[URLprocessor] Process ${operationId} not found in map during finally block (already removed or never added).`
       );
     }
   }

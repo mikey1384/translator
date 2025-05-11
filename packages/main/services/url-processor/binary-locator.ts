@@ -16,7 +16,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
     const cwdBinPath = join(process.cwd(), 'node_modules', '.bin', binaryName);
     if (fs.existsSync(cwdBinPath)) {
       log.info(
-        `[URLProcessor] Found yt-dlp in CWD node_modules/.bin: ${cwdBinPath}`
+        `[URLprocessor] Found yt-dlp in CWD node_modules/.bin: ${cwdBinPath}`
       );
       // Ensure executable (especially needed if found via CWD)
       if (process.platform !== 'win32') {
@@ -25,9 +25,9 @@ export async function findYtDlpBinary(): Promise<string | null> {
         } catch {
           try {
             await execa('chmod', ['+x', cwdBinPath]);
-            log.info(`[URLProcessor] Made ${cwdBinPath} executable.`);
+            log.info(`[URLprocessor] Made ${cwdBinPath} executable.`);
           } catch (e) {
-            log.warn(`[URLProcessor] Failed to chmod +x ${cwdBinPath}:`, e);
+            log.warn(`[URLprocessor] Failed to chmod +x ${cwdBinPath}:`, e);
             // Continue, it might still work
           }
         }
@@ -40,7 +40,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
       const pathBinary = await which(binaryName).catch(() => null);
       if (pathBinary && fs.existsSync(pathBinary)) {
         log.info(
-          `[URLProcessor] Found yt-dlp in PATH via 'which': ${pathBinary}`
+          `[URLprocessor] Found yt-dlp in PATH via 'which': ${pathBinary}`
         );
         // We generally assume PATH binaries are executable, but check anyway
         if (process.platform !== 'win32') {
@@ -48,7 +48,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
             fs.accessSync(pathBinary, fs.constants.X_OK);
           } catch {
             log.warn(
-              `[URLProcessor] Binary found in PATH (${pathBinary}) but might not be executable.`
+              `[URLprocessor] Binary found in PATH (${pathBinary}) but might not be executable.`
             );
             // Proceed cautiously
           }
@@ -58,7 +58,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
     } catch (whichError: any) {
       // Ignore 'not found' errors from 'which', log others
       log.warn(
-        `[URLProcessor] Error checking system PATH with 'which' package:`,
+        `[URLprocessor] Error checking system PATH with 'which' package:`,
         whichError
       );
     }
@@ -80,14 +80,14 @@ export async function findYtDlpBinary(): Promise<string | null> {
       );
       if (fs.existsSync(unpackedMacLinux)) {
         log.info(
-          `[URLProcessor] Found yt-dlp in packaged Mac/Linux path: ${unpackedMacLinux}`
+          `[URLprocessor] Found yt-dlp in packaged Mac/Linux path: ${unpackedMacLinux}`
         );
         try {
           await execa('chmod', ['+x', unpackedMacLinux]);
         } catch {
           // If chmod fails, might still be executable
           log.warn(
-            `[URLProcessor] Failed chmod on packaged Mac/Linux path: ${unpackedMacLinux}, proceeding anyway.`
+            `[URLprocessor] Failed chmod on packaged Mac/Linux path: ${unpackedMacLinux}, proceeding anyway.`
           );
         }
         return unpackedMacLinux;
@@ -106,14 +106,14 @@ export async function findYtDlpBinary(): Promise<string | null> {
       );
       if (fs.existsSync(unpackedGeneric)) {
         log.info(
-          `[URLProcessor] Found yt-dlp in generic packaged path: ${unpackedGeneric}`
+          `[URLprocessor] Found yt-dlp in generic packaged path: ${unpackedGeneric}`
         );
         if (process.platform !== 'win32') {
           try {
             await execa('chmod', ['+x', unpackedGeneric]);
           } catch (e) {
             log.warn(
-              `[URLProcessor] Failed chmod on generic packaged path: ${unpackedGeneric}, proceeding anyway.`,
+              `[URLprocessor] Failed chmod on generic packaged path: ${unpackedGeneric}, proceeding anyway.`,
               e
             );
           }
@@ -131,14 +131,14 @@ export async function findYtDlpBinary(): Promise<string | null> {
       );
       if (fs.existsSync(unpackedAppPath)) {
         log.info(
-          `[URLProcessor] Found yt-dlp in app.asar replaced path: ${unpackedAppPath}`
+          `[URLprocessor] Found yt-dlp in app.asar replaced path: ${unpackedAppPath}`
         );
         if (process.platform !== 'win32') {
           try {
             await execa('chmod', ['+x', unpackedAppPath]);
           } catch (e) {
             log.warn(
-              `[URLProcessor] Failed chmod on app.asar replaced path: ${unpackedAppPath}, proceeding anyway.`,
+              `[URLprocessor] Failed chmod on app.asar replaced path: ${unpackedAppPath}, proceeding anyway.`,
               e
             );
           }
@@ -161,7 +161,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
     );
     if (fs.existsSync(relativePath)) {
       log.info(
-        `[URLProcessor] Found yt-dlp via relative path: ${relativePath}`
+        `[URLprocessor] Found yt-dlp via relative path: ${relativePath}`
       );
       if (process.platform !== 'win32') {
         try {
@@ -171,7 +171,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
             await execa('chmod', ['+x', relativePath]);
           } catch {
             log.warn(
-              `[URLProcessor] Failed chmod on relative path: ${relativePath}`
+              `[URLprocessor] Failed chmod on relative path: ${relativePath}`
             );
             // Continue, might still work
           }
@@ -182,12 +182,12 @@ export async function findYtDlpBinary(): Promise<string | null> {
 
     // If none found after all checks
     log.error(
-      '[URLProcessor] yt-dlp binary could not be located via CWD .bin, PATH, packaged paths, or relative path.'
+      '[URLprocessor] yt-dlp binary could not be located via CWD .bin, PATH, packaged paths, or relative path.'
     );
     return null;
   } catch (error) {
     log.error(
-      '[URLProcessor] Unexpected error during yt-dlp binary search:',
+      '[URLprocessor] Unexpected error during yt-dlp binary search:',
       error
     );
     return null;

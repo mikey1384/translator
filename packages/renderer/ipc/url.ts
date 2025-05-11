@@ -10,6 +10,8 @@ export function download<
   return window.electron.processUrl(options);
 }
 
+export const downloadUrl = (o: ProcessUrlOptions) => download(o);
+
 export function onProgress(callback: UrlProgressCallback): () => void {
   return window.electron.onProcessUrlProgress(callback);
 }

@@ -23,38 +23,7 @@ import * as SubtitlesIPC from '../../ipc/subtitles';
 import { parseSrt } from '../../../shared/helpers';
 import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
-import Button from '../../components/Button.js';
-
-function UrlCookieBanner() {
-  const { t } = useTranslation();
-  const needCookies = useUrlStore(s => s.needCookies);
-  const setNeedCookies = useUrlStore(s => s.setNeedCookies);
-  const retryWithCookies = useUrlStore(s => s.retryWithCookies);
-  const downloadInProgress = useUrlStore(s => s.download.inProgress);
-
-  useEffect(() => {
-    if (downloadInProgress) {
-      setNeedCookies(false);
-    }
-  }, [downloadInProgress]);
-
-  if (!needCookies) return null;
-
-  return (
-    <div>
-      <ErrorBanner
-        message={t(
-          'errors.needCookies',
-          'YouTube needs a human check. Click below to retry with your browser cookies.'
-        )}
-        onClose={() => setNeedCookies(false)}
-      />
-      <Button variant="secondary" onClick={retryWithCookies}>
-        {t('input.retryWithCookies', 'Retry with browser cookies')}
-      </Button>
-    </div>
-  );
-}
+import UrlCookieBanner from './UrlCookieBanner';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();

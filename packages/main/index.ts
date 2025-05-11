@@ -14,7 +14,7 @@ import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import Store from 'electron-store';
-import * as renderWindowHandlers from './handlers/render-window-handlers.js';
+import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 

@@ -37,7 +37,7 @@ export function mapErrorToUserFriendly({
   }
 
   log.info(
-    `[URLProcessor] No specific error mapping for: "${rawErrorMessage}"`
+    `[URLprocessor] No specific error mapping for: "${rawErrorMessage}"`
   );
   return rawErrorMessage;
 }

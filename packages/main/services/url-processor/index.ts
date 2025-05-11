@@ -19,7 +19,7 @@ export async function updateYtDlp(): Promise<boolean> {
     const { stdout } = await execa(binPath, ['--update']);
     return stdout.includes('up to date') || stdout.includes('updated');
   } catch (error) {
-    log.error('[URLProcessor] Failed to update yt-dlp:', error);
+    log.error('[URLprocessor] Failed to update yt-dlp:', error);
     return false;
   }
 }
@@ -42,14 +42,14 @@ export async function processVideoUrl(
   originalVideoPath: string;
   proc: DownloadProcessType;
 }> {
-  log.info(`[URLProcessor] processVideoUrl CALLED (Op ID: ${operationId})`);
+  log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
 
   if (!services?.fileManager) {
     throw new Error('FileManager instance is required for processVideoUrl');
   }
   const tempDir = services.fileManager.getTempDir();
   log.info(
-    `[URLProcessor] processVideoUrl using tempDir from FileManager: ${tempDir}`
+    `[URLprocessor] processVideoUrl using tempDir from FileManager: ${tempDir}`
   );
 
   if (!services?.ffmpegService) {
@@ -101,7 +101,9 @@ export async function processVideoUrl(
 
     // Detect 429 / suspicious block
     if (
-      /429|too\s+many\s+requests|rate[- ]?limiting/i.test(friendly) &&
+      /429|too\s+many\s+requests|rate[- ]?limiting|looks\s+suspicious|verify\s+you\s+are\s+human/i.test(
+        friendly
+      ) &&
       !useCookies
     ) {
       progressCallback?.({
@@ -109,15 +111,39 @@ export async function processVideoUrl(
         stage: 'Retrying with browser cookies...',
       });
 
-      // Recursive retry with cookies
-      return processVideoUrl(
-        url,
-        quality,
-        progressCallback,
-        operationId,
-        services,
-        true
-      );
+      try {
+        // Recursive retry with cookies
+        progressCallback?.({
+          percent: 10,
+          stage: 'Using cookies',
+        });
+        const result = await processVideoUrl(
+          url,
+          quality,
+          progressCallback,
+          operationId,
+          services,
+          true
+        );
+        return result;
+      } catch (err2: any) {
+        const friendly2 = mapErrorToUserFriendly({
+          rawErrorMessage: err2.message ?? String(err2),
+          stderrContent: err2.stderr ?? '',
+        });
+        if (
+          /429|too\s+many\s+requests|rate[- ]?limiting|looks\s+suspicious|verify\s+you\s+are\s+human/i.test(
+            friendly2
+          )
+        ) {
+          progressCallback?.({
+            percent: 0,
+            stage: 'NeedCookies',
+          });
+          throw err2; // Prevent infinite recursion on repeated 429
+        }
+        throw err2;
+      }
     }
 
     throw err; // not a 429 or already using cookies ⇒ let normal error flow handle it

@@ -78,6 +78,8 @@ export const useUrlStore = create<UrlState>()(
       set((state: UrlState) => {
         state.needCookies = false;
         state.download = initialDownload;
+        state.download.percent = 1;
+        state.error = null;
       });
       return downloadMediaInternal(set, get, { useCookies: true });
     },
@@ -109,7 +111,7 @@ export const useUrlStore = create<UrlState>()(
         });
         return;
       }
-      if (stage === 'Completed') {
+      if (stage === 'Completed' || stage === 'Error') {
         set(state => {
           state.needCookies = false;
         });

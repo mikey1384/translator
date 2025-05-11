@@ -1,10 +1,11 @@
 import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
-import { processVideoUrl, VideoQuality } from '../services/url-proccessor';
+import { processVideoUrl } from '../services/url-processor/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
 import { FFmpegService } from '../services/ffmpeg-service.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
+import { ProcessUrlOptions } from '@shared-types/app';
 import {
   registerAutoCancel,
   registerDownloadProcess,
@@ -47,13 +48,6 @@ function checkServicesInitialized(): {
   };
 }
 
-interface ProcessUrlOptions {
-  url: string;
-  quality?: VideoQuality;
-  operationId?: string;
-  useCookies?: boolean;
-}
-
 interface ProcessUrlResult {
   success: boolean;
   message?: string;
@@ -80,6 +74,7 @@ export async function handleProcessUrl(
   log.error(
     `[url-handler] Received options.operationId: ${options.operationId} (Type: ${typeof options.operationId})`
   );
+  log.info('useCookies:', options.useCookies || false);
 
   const mainWindow = BrowserWindow.getAllWindows()[0];
   const operationId = options.operationId || uuidv4();
