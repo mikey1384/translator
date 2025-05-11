@@ -5,9 +5,7 @@ import {
 } from '../constants/subtitle-styles.js';
 import { BASELINE_FONT_SIZE } from '../constants/index.js';
 
-/* ---------- small helpers ---------- */
 export function assColorToRgba(ass: string): string {
-  // This matches the logic from your snippet
   if (!ass?.startsWith('&H')) return 'rgba(255,255,255,1)';
   const hex = ass.substring(2).padStart(8, '0'); // e.g. AABBGGRR
   const a = 255 - parseInt(hex.slice(0, 2), 16); // invert alpha
@@ -17,7 +15,6 @@ export function assColorToRgba(ass: string): string {
   return `rgba(${r},${g},${b},${(a / 255).toFixed(2)})`;
 }
 
-/* ---------- the style factory (copied from BaseSubtitleDisplay) ---------- */
 export function getSubtitleStyles(opts: {
   displayFontSize?: number;
   isFullScreen?: boolean;
@@ -34,18 +31,14 @@ export function getSubtitleStyles(opts: {
   const style =
     SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
 
-  // Ensure a minimum font size
   const finalFontSize = Math.max(10, displayFontSize);
 
-  // Convert the ASS colors to rgba
   const primaryRgba = assColorToRgba(style.primaryColor);
   const outlineRgba = assColorToRgba(style.outlineColor);
-  const shadowRgba = assColorToRgba(style.backColor); // used for shadow/box
+  const shadowRgba = assColorToRgba(style.backColor);
 
-  // Decide position
   const position: 'fixed' | 'absolute' = 'fixed';
 
-  // Tweak vertical positioning depending on multi-line vs single line
   let bottomValue: string;
   if (isMultiLine) {
     bottomValue = isFullScreen ? '5%' : '2.5%';
@@ -53,28 +46,23 @@ export function getSubtitleStyles(opts: {
     bottomValue = isFullScreen ? '10%' : '5%';
   }
 
-  // You can also set a right or left offset if you want
   const maxWidth = '100%';
   const right: string | number | undefined = isFullScreen ? '5%' : undefined;
 
-  // Start building text shadow & box style
   let textShadow = 'none';
   let backgroundColor = 'transparent';
   let boxShadowValue = 'none';
   let containerPadding = '10px 20px';
 
   if (stylePreset === 'LineBox') {
-    // For "LineBox", we typically have no shadow/box around each line
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
     containerPadding = '0 0 10px 0';
     textShadow = 'none';
   } else if (style.borderStyle === 1) {
-    // Outline + Shadow style
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
     const outlineSize = Math.max(0.1, style.outlineSize);
-    // 8-direction outline
     textShadow = `
       ${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
       -${outlineSize}px ${outlineSize}px 0 ${outlineRgba},
@@ -86,16 +74,13 @@ export function getSubtitleStyles(opts: {
       0px -${outlineSize}px 0 ${outlineRgba}
     `;
   } else if (style.borderStyle === 3 || style.borderStyle === 4) {
-    // Boxed styles
     backgroundColor = shadowRgba;
     boxShadowValue = '0 4px 16px rgba(0, 0, 0, 0.4)';
-    // If borderStyle=4, add a subtle glow outline
     if (style.borderStyle === 4 && style.outlineSize > 0) {
       textShadow = `0 0 ${style.outlineSize}px ${outlineRgba}`;
     }
   }
 
-  // Add transitions for smooth changes
   let transitionValue = `
     opacity 0.2s ease-in-out,
     font-size 0.1s linear,
@@ -108,7 +93,6 @@ export function getSubtitleStyles(opts: {
   `;
 
   if (stylePreset === 'LineBox') {
-    // If you don't want fade-ins for linebox
     transitionValue = `
       font-size 0.1s linear,
       color 0.2s linear,
