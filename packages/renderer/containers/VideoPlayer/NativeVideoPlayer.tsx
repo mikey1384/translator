@@ -101,18 +101,22 @@ export default function NativeVideoPlayer({
     setScale(fontScale(Math.round(rect.height)));
   }, []);
 
+  // Function to centralize indicator logic
+  const flash = useCallback((state: 'play' | 'pause') => {
+    setIndicator(state);
+    setShowInd(true);
+    if (indicatorTimer.current) clearTimeout(indicatorTimer.current);
+    indicatorTimer.current = setTimeout(() => setShowInd(false), 600);
+  }, []);
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
     if (getNativePlayerInstance() !== v) setNativePlayerInstance(v);
 
-    const onPlay = () => {
-      setIndicator('play');
-    };
-    const onPause = () => {
-      setIndicator('pause');
-    };
+    const onPlay = () => flash('play');
+    const onPause = () => flash('pause');
     const onErr = () => setErrorMessage('Video playback error');
 
     const onLoadedMetadata = recomputeScale;
@@ -128,7 +132,7 @@ export default function NativeVideoPlayer({
       v.removeEventListener('error', onErr);
       v.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-  }, [recomputeScale, videoUrl]);
+  }, [recomputeScale, videoUrl, flash]);
 
   useLayoutEffect(() => {
     const v = videoRef.current;
@@ -173,17 +177,11 @@ export default function NativeVideoPlayer({
     const v = videoRef.current;
     if (!v) return;
 
-    if (indicatorTimer.current) clearTimeout(indicatorTimer.current);
-
     if (v.paused) {
       v.play().catch(console.error);
-      setIndicator('play');
     } else {
       v.pause();
-      setIndicator('pause');
     }
-    setShowInd(true);
-    indicatorTimer.current = setTimeout(() => setShowInd(false), 600);
 
     (parentRef?.current ?? containerRef.current)?.focus();
   };

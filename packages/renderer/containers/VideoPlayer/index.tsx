@@ -390,6 +390,13 @@ export default function VideoPlayer() {
       e.preventDefault();
       return;
     }
+
+    if (e.key === ' ' || e.key === 'Spacebar' || e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      togglePlay();
+      return;
+    }
+
     const v = getNativePlayerInstance();
     if (!v) return;
     if (e.key === 'ArrowRight') {
