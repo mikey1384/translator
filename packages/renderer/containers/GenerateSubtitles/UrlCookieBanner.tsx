@@ -20,7 +20,16 @@ export default function UrlCookieBanner() {
   if (!needCookies) return null;
 
   return (
-    <div>
+    <div
+      style={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+      }}
+    >
       <ErrorBanner
         message={t(
           'errors.needCookies',
@@ -28,7 +37,7 @@ export default function UrlCookieBanner() {
         )}
         onClose={() => setNeedCookies(false)}
       />
-      <Button variant="secondary" onClick={retryWithCookies}>
+      <Button variant="success" onClick={retryWithCookies}>
         {t('input.retryWithCookies', 'Retry with browser cookies')}
       </Button>
     </div>
