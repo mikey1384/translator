@@ -176,6 +176,10 @@ const fixedVideoContainerBaseStyles = css`
     box-shadow: none;
   }
 
+  &.cursor-off {
+    cursor: none !important;
+  }
+
   video {
     width: 100%;
     height: 100%;
@@ -257,6 +261,8 @@ const fmt = (s: number) => {
     : [m, sec].map(n => String(n).padStart(2, '0')).join(':');
 };
 
+const HIDE_DELAY = 3000; // ms
+
 export default function VideoPlayer() {
   const videoUrl = useVideoStore(s => s.url);
   const resumeAt = useVideoStore(s => s.resumeAt);
@@ -275,10 +281,24 @@ export default function VideoPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [showFsControls, setShowFsControls] = useState(true);
+  const [cursorHidden, setCursorHidden] = useState(false);
   const activityTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerDivRef = useRef<HTMLDivElement>(null);
 
   const [progressBarH, setProgressBarH] = useState(0);
+
+  // helper – centralises timer handling
+  const restartHideTimer = useCallback(() => {
+    if (activityTimeout.current) clearTimeout(activityTimeout.current);
+    setCursorHidden(false);
+    setShowFsControls(true);
+
+    activityTimeout.current = setTimeout(() => {
+      setCursorHidden(true);
+      setShowFsControls(false);
+    }, HIDE_DELAY);
+  }, []);
+
   useEffect(() => {
     setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
   }, [isProgressBarVisible]);
@@ -382,11 +402,34 @@ export default function VideoPlayer() {
     }
   };
 
+  useEffect(() => {
+    if (isFullScreen) {
+      restartHideTimer(); // start the countdown immediately
+      window.addEventListener('mousemove', restartHideTimer);
+    } else {
+      setCursorHidden(false); // make sure cursor is back
+      window.removeEventListener('mousemove', restartHideTimer);
+      if (activityTimeout.current) clearTimeout(activityTimeout.current);
+    }
+    return () => window.removeEventListener('mousemove', restartHideTimer);
+  }, [isFullScreen, restartHideTimer]);
+
+  useEffect(() => {
+    if (!isFullScreen && cursorHidden) {
+      setCursorHidden(false);
+    }
+  }, [isFullScreen, cursorHidden]);
+
+  useEffect(
+    () => () => {
+      if (activityTimeout.current) clearTimeout(activityTimeout.current);
+    },
+    []
+  );
+
   const pokeFsControls = () => {
     if (!isFullScreen) return;
-    setShowFsControls(true);
-    if (activityTimeout.current) clearTimeout(activityTimeout.current);
-    activityTimeout.current = setTimeout(() => setShowFsControls(false), 3000);
+    restartHideTimer(); // one call does everything
   };
 
   if (!videoUrl) return null;
@@ -402,6 +445,7 @@ export default function VideoPlayer() {
         className={[
           'fixed-video-container',
           fixedVideoContainerStyles(isFullScreen),
+          cursorHidden ? 'cursor-off' : '',
         ].join(' ')}
         style={{ top: isFullScreen ? 0 : progressBarH }}
       >
