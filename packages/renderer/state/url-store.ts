@@ -20,6 +20,7 @@ interface UrlState {
   download: DownloadTask;
   error: string | null;
   inputMode: 'url' | 'file';
+  needCookies: boolean;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
@@ -28,6 +29,7 @@ interface UrlState {
   setDownload: (patch: Partial<DownloadTask>) => void;
   setCancellingDownload: (cancellingDownload: boolean) => void;
   setInputMode: (mode: 'url' | 'file') => void;
+  setNeedCookies: (v: boolean) => void;
   onDownloadProgress: ({
     percent,
     stage,
@@ -47,13 +49,14 @@ const initialDownload: DownloadTask = {
 };
 
 export const useUrlStore = create<UrlState>()(
-  immer((set, get) => ({
+  immer<UrlState>((set, get) => ({
     urlInput: '',
     cancellingDownload: false as boolean,
     downloadQuality: 'mid' as VideoQuality,
     download: initialDownload,
-    error: null,
+    error: null as string | null,
     inputMode: 'url',
+    needCookies: false,
 
     setUrlInput: urlInput => {
       set(state => {
@@ -85,6 +88,7 @@ export const useUrlStore = create<UrlState>()(
 
       const offProgress = UrlIPC.onProgress(p => {
         if (p.operationId !== opId) return;
+        if (p.stage === 'NeedCookies') return;
         set(state => {
           state.download.percent = p.percent ?? 0;
           state.download.stage = p.stage ?? '';
@@ -147,6 +151,8 @@ export const useUrlStore = create<UrlState>()(
 
     setInputMode: mode => set({ inputMode: mode }),
 
+    setNeedCookies: v => set({ needCookies: v }),
+
     onDownloadProgress: ({
       percent,
       stage,
@@ -157,12 +163,26 @@ export const useUrlStore = create<UrlState>()(
       operationId: string;
     }) => {
       console.log('[url-store] download progress', { percent, stage });
-      useUrlStore.getState().setDownload({
-        percent,
-        stage,
-        inProgress: percent < 100,
-        id: operationId,
+      if (stage === 'NeedCookies') {
+        set(state => {
+          state.needCookies = true;
+        });
+        return;
+      }
+      if (stage === 'Completed') {
+        set(state => {
+          state.needCookies = false;
+        });
+      }
+      set(state => {
+        state.download.percent = percent;
+        state.download.stage = stage;
+        state.download.inProgress = percent < 100;
+        state.download.id = operationId;
       });
     },
   }))
 );
+
+export const setCookieNeededFlag = (v: boolean) =>
+  useUrlStore.getState().setNeedCookies(v);

@@ -10,7 +10,6 @@ export function mapErrorToUserFriendly({
   const combinedErrorText =
     `${rawErrorMessage}\n${stderrContent}`.toLowerCase();
 
-  // Check for common patterns
   if (combinedErrorText.includes('unsupported url')) {
     return 'This website or URL is not supported.';
   } else if (combinedErrorText.includes('video unavailable')) {
@@ -37,7 +36,6 @@ export function mapErrorToUserFriendly({
     return 'YouTube is rate-limiting this IP (HTTP 429). Retrying with browser cookies…';
   }
 
-  // If no specific match, return the original message
   log.info(
     `[URLProcessor] No specific error mapping for: "${rawErrorMessage}"`
   );

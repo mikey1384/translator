@@ -23,7 +23,8 @@ export async function downloadVideoFromPlatform(
   operationId: string,
   services?: {
     ffmpegService: FFmpegService;
-  }
+  },
+  extraArgs: string[] = []
 ): Promise<{ filepath: string; info: any; proc: DownloadProcessType }> {
   log.info(`[URLProcessor] Starting download: ${url} (Op ID: ${operationId})`);
 
@@ -144,6 +145,7 @@ export async function downloadVideoFromPlatform(
     'after_move:%(filepath)s',
     '--ffmpeg-location',
     ffmpegPath,
+    ...extraArgs,
   ];
 
   log.info(

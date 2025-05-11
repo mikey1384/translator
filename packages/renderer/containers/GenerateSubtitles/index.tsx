@@ -24,6 +24,24 @@ import { parseSrt } from '../../../shared/helpers';
 import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
 
+function UrlCookieBanner() {
+  const { t } = useTranslation();
+  const needCookies = useUrlStore(s => s.needCookies);
+  const setNeedCookies = useUrlStore(s => s.setNeedCookies);
+
+  if (!needCookies) return null;
+
+  return (
+    <ErrorBanner
+      message={t(
+        'errors.needCookies',
+        'YouTube needs a human check. Import your browser cookies to continue.'
+      )}
+      onClose={() => setNeedCookies(false)}
+    />
+  );
+}
+
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
@@ -82,6 +100,8 @@ export default function GenerateSubtitles() {
           useUIStore.getState().toggleSettings(show)
         }
       />
+
+      <UrlCookieBanner />
 
       {error && <ErrorBanner message={error} onClose={() => clearError()} />}
 
