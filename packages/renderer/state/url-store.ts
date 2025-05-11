@@ -24,7 +24,7 @@ interface UrlState {
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
   setError: (msg: string) => void;
-  processUrl: () => Promise<ProcessUrlResult | void>;
+  downloadMedia: () => Promise<ProcessUrlResult | void>;
   setDownload: (patch: Partial<DownloadTask>) => void;
   setCancellingDownload: (cancellingDownload: boolean) => void;
   setInputMode: (mode: 'url' | 'file') => void;
@@ -65,7 +65,7 @@ export const useUrlStore = create<UrlState>()(
     clearError: () => set({ error: null }),
     setError: msg => set({ error: msg }),
 
-    async processUrl() {
+    async downloadMedia() {
       const { urlInput, downloadQuality } = get();
       if (!urlInput.trim()) {
         set({ error: 'Please enter a valid URL' });
@@ -94,7 +94,7 @@ export const useUrlStore = create<UrlState>()(
       });
 
       try {
-        const res = await UrlIPC.process({
+        const res = await UrlIPC.download({
           url: urlInput,
           quality: downloadQuality,
           operationId: opId,

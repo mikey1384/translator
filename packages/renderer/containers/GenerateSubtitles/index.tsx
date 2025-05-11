@@ -46,7 +46,7 @@ export default function GenerateSubtitles() {
     setUrlInput,
     setDownloadQuality,
     clearError,
-    processUrl,
+    downloadMedia,
   } = useUrlStore();
 
   const {
@@ -143,7 +143,7 @@ export default function GenerateSubtitles() {
             setUrlInput={setUrlInput}
             downloadQuality={downloadQuality}
             setDownloadQuality={setDownloadQuality}
-            handleProcessUrl={processUrl}
+            handleProcessUrl={downloadMedia}
             isProcessingUrl={download.inProgress}
             isTranslationInProgress={translation.inProgress}
           />

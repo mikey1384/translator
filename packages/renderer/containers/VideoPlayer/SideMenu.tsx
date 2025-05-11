@@ -32,7 +32,7 @@ export default function SideMenu({
     downloadQuality,
     setDownloadQuality,
     download,
-    processUrl,
+    downloadMedia,
   } = useUrlStore();
   const { merge, translation } = useTaskStore();
   const subtitleCount = useSubStore(s => s.order.length);
@@ -180,7 +180,7 @@ export default function SideMenu({
           </select>
           <Button
             onClick={() => {
-              processUrl();
+              downloadMedia();
               onUiInteraction?.();
             }}
             variant="secondary"
