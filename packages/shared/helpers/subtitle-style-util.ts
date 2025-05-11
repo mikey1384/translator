@@ -7,8 +7,8 @@ import { BASELINE_FONT_SIZE } from '../constants/index.js';
 
 export function assColorToRgba(ass: string): string {
   if (!ass?.startsWith('&H')) return 'rgba(255,255,255,1)';
-  const hex = ass.substring(2).padStart(8, '0'); // e.g. AABBGGRR
-  const a = 255 - parseInt(hex.slice(0, 2), 16); // invert alpha
+  const hex = ass.substring(2).padStart(8, '0');
+  const a = 255 - parseInt(hex.slice(0, 2), 16);
   const b = parseInt(hex.slice(2, 4), 16);
   const g = parseInt(hex.slice(4, 6), 16);
   const r = parseInt(hex.slice(6, 8), 16);
