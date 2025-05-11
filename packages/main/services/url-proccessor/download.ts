@@ -1,253 +1,21 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import { join, dirname } from 'node:path';
-import path from 'node:path';
+import { join } from 'node:path';
 import { execa } from 'execa';
 import log from 'electron-log';
-import { app } from 'electron';
-import { fileURLToPath } from 'node:url';
-import which from 'which';
-import { FFmpegService } from './ffmpeg-service.js';
-import { FileManager } from './file-manager.js';
+import { FFmpegService } from '../ffmpeg-service.js';
 import {
   registerDownloadProcess,
   finish as removeDownloadProcess,
-} from '../active-processes.js';
-import type { DownloadProcess as DownloadProcessType } from '../active-processes.js';
-import { CancelledError } from '../../shared/cancelled-error.js';
+} from '../../active-processes.js';
+import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
+import { CancelledError } from '../../../shared/cancelled-error.js';
+import { findYtDlpBinary } from './binary-locator.js';
+import { ProgressCallback, VideoQuality } from './types.js';
+import { PROGRESS, qualityFormatMap } from './constants.js';
+import { mapErrorToUserFriendly } from './error-map.js';
 
-export type VideoQuality = 'low' | 'mid' | 'high';
-const qualityFormatMap: Record<VideoQuality, string> = {
-  high: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-  mid: 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]',
-  low: 'best[height<=480]',
-};
-
-type ProgressCallback = (info: {
-  percent: number;
-  stage: string;
-  error?: string | null;
-}) => void;
-
-// --- Progress Constants ---
-const PROGRESS = {
-  WARMUP_START: 0,
-  WARMUP_END: 10,
-
-  DL1_START: 10,
-  DL1_END: 40,
-
-  FINAL_START: 40,
-  FINAL_END: 100,
-} as const;
-// --- End Progress Constants ---
-
-log.info('[URLProcessor] MODULE LOADED');
-
-// Locate the yt-dlp binary in dev/production modes
-async function findYtDlpBinary(): Promise<string | null> {
-  const exeExt = process.platform === 'win32' ? '.exe' : '';
-  const binaryName = `yt-dlp${exeExt}`;
-  const isPackaged = app.isPackaged;
-  const moduleDir = dirname(fileURLToPath(import.meta.url));
-
-  try {
-    const cwdBinPath = join(process.cwd(), 'node_modules', '.bin', binaryName);
-    if (fs.existsSync(cwdBinPath)) {
-      log.info(
-        `[URLProcessor] Found yt-dlp in CWD node_modules/.bin: ${cwdBinPath}`
-      );
-      // Ensure executable (especially needed if found via CWD)
-      if (process.platform !== 'win32') {
-        try {
-          fs.accessSync(cwdBinPath, fs.constants.X_OK);
-        } catch {
-          try {
-            await execa('chmod', ['+x', cwdBinPath]);
-            log.info(`[URLProcessor] Made ${cwdBinPath} executable.`);
-          } catch (e) {
-            log.warn(`[URLProcessor] Failed to chmod +x ${cwdBinPath}:`, e);
-            // Continue, it might still work
-          }
-        }
-      }
-      return cwdBinPath;
-    }
-
-    // 2️⃣ Look in system PATH using the 'which' package
-    try {
-      const pathBinary = await which(binaryName).catch(() => null);
-      if (pathBinary && fs.existsSync(pathBinary)) {
-        log.info(
-          `[URLProcessor] Found yt-dlp in PATH via 'which': ${pathBinary}`
-        );
-        // We generally assume PATH binaries are executable, but check anyway
-        if (process.platform !== 'win32') {
-          try {
-            fs.accessSync(pathBinary, fs.constants.X_OK);
-          } catch {
-            log.warn(
-              `[URLProcessor] Binary found in PATH (${pathBinary}) but might not be executable.`
-            );
-            // Proceed cautiously
-          }
-        }
-        return pathBinary;
-      }
-    } catch (whichError: any) {
-      // Ignore 'not found' errors from 'which', log others
-      log.warn(
-        `[URLProcessor] Error checking system PATH with 'which' package:`,
-        whichError
-      );
-    }
-
-    // --- Start: Original Packaged App Checks (Integrated) ---
-
-    // 3️⃣ Packaged App: Mac/Linux direct unpacked path
-    if (
-      (process.platform === 'darwin' || process.platform === 'linux') &&
-      isPackaged
-    ) {
-      const unpackedMacLinux = join(
-        process.resourcesPath,
-        'app.asar.unpacked',
-        'node_modules',
-        'youtube-dl-exec',
-        'bin',
-        binaryName // Use binaryName here
-      );
-      if (fs.existsSync(unpackedMacLinux)) {
-        log.info(
-          `[URLProcessor] Found yt-dlp in packaged Mac/Linux path: ${unpackedMacLinux}`
-        );
-        try {
-          await execa('chmod', ['+x', unpackedMacLinux]);
-        } catch {
-          // If chmod fails, might still be executable
-          log.warn(
-            `[URLProcessor] Failed chmod on packaged Mac/Linux path: ${unpackedMacLinux}, proceeding anyway.`
-          );
-        }
-        return unpackedMacLinux;
-      }
-    }
-
-    // 4️⃣ Packaged App: Generic unpacked path (Windows/Other or fallback)
-    if (isPackaged) {
-      const unpackedGeneric = join(
-        process.resourcesPath,
-        'app.asar.unpacked',
-        'node_modules',
-        'youtube-dl-exec',
-        'bin',
-        binaryName // Use binaryName here
-      );
-      if (fs.existsSync(unpackedGeneric)) {
-        log.info(
-          `[URLProcessor] Found yt-dlp in generic packaged path: ${unpackedGeneric}`
-        );
-        if (process.platform !== 'win32') {
-          try {
-            await execa('chmod', ['+x', unpackedGeneric]);
-          } catch (e) {
-            log.warn(
-              `[URLProcessor] Failed chmod on generic packaged path: ${unpackedGeneric}, proceeding anyway.`,
-              e
-            );
-          }
-        }
-        return unpackedGeneric;
-      }
-
-      // Fallback check for older structure (app.asar path replace) - Less likely needed now
-      const unpackedAppPath = join(
-        app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
-        'node_modules',
-        'youtube-dl-exec',
-        'bin',
-        binaryName // Use binaryName here
-      );
-      if (fs.existsSync(unpackedAppPath)) {
-        log.info(
-          `[URLProcessor] Found yt-dlp in app.asar replaced path: ${unpackedAppPath}`
-        );
-        if (process.platform !== 'win32') {
-          try {
-            await execa('chmod', ['+x', unpackedAppPath]);
-          } catch (e) {
-            log.warn(
-              `[URLProcessor] Failed chmod on app.asar replaced path: ${unpackedAppPath}, proceeding anyway.`,
-              e
-            );
-          }
-        }
-        return unpackedAppPath;
-      }
-    }
-
-    // --- End: Original Packaged App Checks ---
-
-    // 5️⃣ Relative path from module (Original fallback for dev/non-packaged)
-    const relativePath = join(
-      moduleDir, // Use dirname result
-      '..',
-      '..',
-      'node_modules',
-      'youtube-dl-exec',
-      'bin',
-      binaryName // Use binaryName here
-    );
-    if (fs.existsSync(relativePath)) {
-      log.info(
-        `[URLProcessor] Found yt-dlp via relative path: ${relativePath}`
-      );
-      if (process.platform !== 'win32') {
-        try {
-          fs.accessSync(relativePath, fs.constants.X_OK);
-        } catch {
-          try {
-            await execa('chmod', ['+x', relativePath]);
-          } catch {
-            log.warn(
-              `[URLProcessor] Failed chmod on relative path: ${relativePath}`
-            );
-            // Continue, might still work
-          }
-        }
-      }
-      return relativePath;
-    }
-
-    // If none found after all checks
-    log.error(
-      '[URLProcessor] yt-dlp binary could not be located via CWD .bin, PATH, packaged paths, or relative path.'
-    );
-    return null;
-  } catch (error) {
-    log.error(
-      '[URLProcessor] Unexpected error during yt-dlp binary search:',
-      error
-    );
-    return null;
-  }
-}
-
-// Optionally update to the latest yt-dlp
-export async function updateYtDlp(): Promise<boolean> {
-  try {
-    const binPath = await findYtDlpBinary();
-    if (!binPath) return false;
-    const { stdout } = await execa(binPath, ['--update']);
-    return stdout.includes('up to date') || stdout.includes('updated');
-  } catch (error) {
-    log.error('[URLProcessor] Failed to update yt-dlp:', error);
-    return false;
-  }
-}
-
-// Download video from a URL using yt-dlp
-async function downloadVideoFromPlatform(
+export async function downloadVideoFromPlatform(
   url: string,
   outputDir: string,
   quality: VideoQuality,
@@ -627,35 +395,11 @@ async function downloadVideoFromPlatform(
       `[URLProcessor] Handling non-termination error for Op ID ${operationId}`
     );
 
-    // --- Start User-Friendly Error Mapping ---
-    const stderrContent = error.stderr || '';
-
-    const combinedErrorText =
-      `${rawErrorMessage}\n${stderrContent}`.toLowerCase();
-
-    // Check for common patterns (keep existing checks)
-    if (combinedErrorText.includes('unsupported url')) {
-      userFriendlyErrorMessage = 'This website or URL is not supported.';
-    } else if (combinedErrorText.includes('video unavailable')) {
-      userFriendlyErrorMessage = 'This video is unavailable.';
-    } else if (combinedErrorText.includes('this video is private')) {
-      userFriendlyErrorMessage = 'This video is private.';
-    } else if (combinedErrorText.includes('http error 404')) {
-      userFriendlyErrorMessage = 'Video not found at this URL (404 Error).';
-    } else if (combinedErrorText.includes('invalid url')) {
-      userFriendlyErrorMessage = 'The URL format appears invalid.';
-    } else if (
-      combinedErrorText.includes('name or service not known') ||
-      combinedErrorText.includes('temporary failure in name resolution') ||
-      combinedErrorText.includes('network is unreachable')
-    ) {
-      userFriendlyErrorMessage =
-        'Network error. Please check your internet connection.';
-    } else if (combinedErrorText.includes('unable to download video data')) {
-      userFriendlyErrorMessage =
-        'Failed to download video data. The video might be region-locked or require login.';
-    }
-    // You can add more 'else if' conditions here for other specific errors
+    // Use mapErrorToUserFriendly for error mapping
+    userFriendlyErrorMessage = mapErrorToUserFriendly({
+      rawErrorMessage,
+      stderrContent: error.stderr || '',
+    });
 
     log.info(
       `[URLProcessor] Determined user-friendly error: "${userFriendlyErrorMessage}"`
@@ -665,8 +409,7 @@ async function downloadVideoFromPlatform(
     // Enhanced error logging (Keep this if you want detailed logs)
     log.error(`[URLProcessor] Error type: ${typeof error}`);
     log.error(`[URLProcessor] Raw error message: ${rawErrorMessage}`);
-    if (error.stderr)
-      log.error(`[URLProcessor] Error stderr: ${stderrContent}`);
+    if (error.stderr) log.error(`[URLProcessor] Error stderr: ${error.stderr}`);
     if (error.stack) log.error(`[URLProcessor] Error stack: ${error.stack}`);
     progressCallback?.({
       percent: 0,
@@ -688,69 +431,4 @@ async function downloadVideoFromPlatform(
       );
     }
   }
-}
-
-export async function processVideoUrl(
-  url: string,
-  quality: VideoQuality,
-  progressCallback: ProgressCallback | undefined,
-  operationId: string,
-  services?: {
-    fileManager: FileManager;
-    ffmpegService: FFmpegService;
-  }
-): Promise<{
-  videoPath: string;
-  filename: string;
-  size: number;
-  fileUrl: string;
-  originalVideoPath: string;
-  proc: DownloadProcessType;
-}> {
-  log.info(`[URLProcessor] processVideoUrl CALLED (Op ID: ${operationId})`);
-
-  // Use provided FileManager to get tempDir
-  if (!services?.fileManager) {
-    throw new Error('FileManager instance is required for processVideoUrl');
-  }
-  const tempDir = services.fileManager.getTempDir();
-  log.info(
-    `[URLProcessor] processVideoUrl using tempDir from FileManager: ${tempDir}`
-  );
-
-  // Use provided FFmpegService
-  if (!services?.ffmpegService) {
-    throw new Error('FFmpegService instance is required for processVideoUrl');
-  }
-  const { ffmpegService } = services; // Get ffmpegService
-
-  try {
-    new URL(url);
-  } catch {
-    throw new Error('Invalid URL provided.');
-  }
-
-  const downloadResult = await downloadVideoFromPlatform(
-    url,
-    tempDir,
-    quality,
-    progressCallback,
-    operationId,
-    { ffmpegService }
-  );
-  const stats = await fsp.stat(downloadResult.filepath);
-  const filename = path.basename(downloadResult.filepath);
-  progressCallback?.({
-    percent: PROGRESS.FINAL_END,
-    stage: 'Download complete',
-  }); // Use constant
-
-  return {
-    videoPath: downloadResult.filepath,
-    filename,
-    size: stats.size,
-    fileUrl: `file://${downloadResult.filepath}`,
-    originalVideoPath: downloadResult.filepath,
-    proc: downloadResult.proc,
-  };
 }
