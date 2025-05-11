@@ -15,16 +15,16 @@ const mergeOptionsStyles = css`
 
 const fontSizeInputStyles = css`
   padding: 0.5rem 0.75rem;
-  border: 1px solid ${colors.border}; // Use theme color
+  border: 1px solid ${colors.border};
   border-radius: 4px;
   font-size: 1rem;
   width: 80px;
-  background-color: ${colors.light}; // Theme background
-  color: ${colors.dark}; // Theme text
+  background-color: ${colors.light};
+  color: ${colors.dark};
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-    box-shadow: 0 0 0 2px rgba(88, 118, 245, 0.3); // Adjusted focus shadow for dark
+    box-shadow: 0 0 0 2px rgba(88, 118, 245, 0.3);
   }
 `;
 
@@ -35,34 +35,31 @@ const fontSizeLabelStyles = css`
 
 const styleSelectStyles = css`
   padding: 0.5rem 0.75rem;
-  border: 1px solid ${colors.border}; // Use theme color
+  border: 1px solid ${colors.border};
   border-radius: 4px;
   font-size: 1rem;
-  background-color: ${colors.light}; // Theme background
-  color: ${colors.dark}; // Theme text
+  background-color: ${colors.light};
+  color: ${colors.dark};
   cursor: pointer;
   &:focus {
     outline: none;
     border-color: ${colors.primary};
-    box-shadow: 0 0 0 2px rgba(88, 118, 245, 0.3); // Adjusted focus shadow for dark
+    box-shadow: 0 0 0 2px rgba(88, 118, 245, 0.3);
   }
 `;
 
-// Define the custom style for the merge button
 const mergeButtonStyle = css`
-  background-color: ${colors.warning}; // Use the 'warning' color
+  background-color: ${colors.warning};
   border-color: ${colors.warning};
-  color: #ffffff !important; // Ensure text is white for contrast
+  color: #ffffff !important;
 
   &:hover:not(:disabled) {
-    // Define a slightly darker hover state for the warning color
-    background-color: #e0488a; // Darker shade of #F7559A
+    background-color: #e0488a;
     border-color: #e0488a;
   }
 
-  // Optional: Define active state if needed
   &:active:not(:disabled) {
-    background-color: #c7407b; // Even darker shade
+    background-color: #c7407b;
     border-color: #c7407b;
   }
 `;
@@ -135,7 +132,7 @@ export default function BottomMenu({
         inputMode="numeric"
         pattern="[0-9]*"
         className={fontSizeInputStyles}
-        value={mergeFontSize || ''} // Handle potential 0 or NaN
+        value={mergeFontSize || ''}
         onChange={handleFontSizeChange}
         onBlur={handleFontSizeBlur}
         disabled={isMergingInProgress || isTranslationInProgress}

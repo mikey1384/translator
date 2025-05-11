@@ -6,23 +6,20 @@ import log from 'electron-log';
 import { pathToFileURL } from 'url';
 
 import { RenderSubtitlesOptions } from '@shared-types/app';
-import { FFmpegService } from '../services/ffmpeg-service.js';
-import { getAssetsPath } from '../../shared/helpers/paths.js';
+import { FFmpegService } from '../../services/ffmpeg-service.js';
+import { getAssetsPath } from '../../../shared/helpers/paths.js';
 import {
   registerAutoCancel,
   registerRenderJob,
   cancel as registryCancel,
-} from '../active-processes.js';
+} from '../../active-processes.js';
 
-import {
-  createOperationTempDir,
-  cleanupTempDir,
-} from './render-helpers/temp-utils.js';
-import { initPuppeteer } from './render-helpers/puppeteer-setup.js';
-import { generateSubtitleEvents } from './render-helpers/srt-parser.js';
-import { generateStatePngs } from './render-helpers/state-generator.js';
-import { directMerge } from './render-helpers/ffmpeg-direct-merge.js';
-import { probeFps } from './render-helpers/ffprobe-utils.js';
+import { createOperationTempDir, cleanupTempDir } from './temp-utils.js';
+import { initPuppeteer } from './puppeteer-setup.js';
+import { generateSubtitleEvents } from './srt-parser.js';
+import { generateStatePngs } from './state-generator.js';
+import { directMerge } from './ffmpeg-direct-merge.js';
+import { probeFps } from './ffprobe-utils.js';
 
 const activeRenderJobs = new Map<
   string,
