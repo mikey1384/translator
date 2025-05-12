@@ -36,7 +36,7 @@ function flush() {
 }
 
 SubtitlesIPC.onGenerateProgress(progress => {
-  queued = progress; // now it's the real payload
+  queued = progress;
 
   if (!document.hidden) {
     flush();
