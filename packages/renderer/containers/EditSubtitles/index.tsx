@@ -109,7 +109,6 @@ export default function EditSubtitles({
       useUIStore.getState().setMatchedIndices(localMatchIndices);
     }
 
-    // scroll *only* when the user actively navigates or search criteria change
     if (
       prevActiveRef.current !== activeMatchIndex &&
       localMatchIndices.length > 0 &&
@@ -118,17 +117,9 @@ export default function EditSubtitles({
       scrollToSubtitleIndex(localMatchIndices[activeMatchIndex]);
     }
 
-    // remember for the next run
     prevActiveRef.current = activeMatchIndex;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    searchText,
-    activeMatchIndex,
-    showOriginalText,
-    scrollToSubtitleIndex,
-    // subtitles is intentionally omitted to prevent scrolling on every edit
-    // The current subtitles are accessed directly within the effect's closure
-  ]);
+  }, [searchText, activeMatchIndex, showOriginalText, scrollToSubtitleIndex]);
 
   const rbs = translation.reviewedBatchStartIndex;
   useEffect(() => {
@@ -165,7 +156,6 @@ export default function EditSubtitles({
         <ErrorBanner message={saveError} onClose={() => setSaveError('')} />
       )}
 
-      {/* file / srt pickers */}
       {(!videoFile || subtitles.length === 0) && (
         <div style={{ marginTop: 30 }}>
           {!videoFile && (
