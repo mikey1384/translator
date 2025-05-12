@@ -4,7 +4,7 @@ import Button from '../../components/Button.js';
 import { colors } from '../../styles.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 import { useTranslation } from 'react-i18next';
-import { useUIStore } from '../../state/ui-store';
+import { useUIStore } from '../../state/ui-store.js';
 
 const mergeOptionsStyles = css`
   display: flex;
@@ -64,7 +64,7 @@ const mergeButtonStyle = css`
   }
 `;
 
-interface BottomMenuProps {
+interface MergeMenuProps {
   isMergingInProgress: boolean;
   videoFileExists: boolean;
   subtitlesExist: boolean;
@@ -72,13 +72,13 @@ interface BottomMenuProps {
   onMergeMediaWithSubtitles: () => void;
 }
 
-export default function BottomMenu({
+export default function MergeMenu({
   isMergingInProgress,
   videoFileExists,
   subtitlesExist,
   isTranslationInProgress,
   onMergeMediaWithSubtitles,
-}: BottomMenuProps) {
+}: MergeMenuProps) {
   const { t } = useTranslation();
 
   const [mergeFontSize, setMergeFontSize] = useUIStore(s => [
@@ -122,7 +122,6 @@ export default function BottomMenu({
 
   return (
     <div className={mergeOptionsStyles}>
-      {/* Font Size Input */}
       <label className={fontSizeLabelStyles} htmlFor="mergeFontSizeInput">
         {t('editSubtitles.mergeControls.fontSizeLabel')}
       </label>

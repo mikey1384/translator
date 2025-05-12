@@ -8,8 +8,8 @@ import Button from '../../components/Button';
 import FileInputButton from '../../components/FileInputButton';
 
 import SubtitleList from './SubtitleList';
-import BottomMenu from './BottomMenu';
-import EditSubtitlesHeader from './EditSubtitlesHeader';
+import MergeMenu from './MergeMenu';
+import SaveMenu from './SaveMenu';
 
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
 import { scrollWhenReady, useSubtitleNavigation } from './hooks/index.js';
@@ -60,9 +60,7 @@ export default function EditSubtitles({
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
 
-  const { originalPath } = useSubStore(s => ({
-    originalPath: s.originalPath,
-  }));
+  const { originalPath } = useSubStore();
   const canSaveDirectly = !!originalPath;
 
   const [saveError, setSaveError] = useState('');
@@ -240,14 +238,14 @@ export default function EditSubtitles({
             z-index: 100;
           `}
         >
-          <EditSubtitlesHeader
+          <SaveMenu
             onSave={handleSaveSrt}
             onSaveAs={handleSaveEditedSrtAs}
             canSaveDirectly={canSaveDirectly}
             subtitlesExist={subtitles.length > 0}
           />
 
-          <BottomMenu
+          <MergeMenu
             onMergeMediaWithSubtitles={handleMerge}
             isMergingInProgress={mergeTask.inProgress}
             videoFileExists={!!videoPath}
@@ -344,7 +342,6 @@ export default function EditSubtitles({
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
       };
 
-      console.log('MERGE opts →', opts);
       const res = await onStartPngRenderRequest(opts);
       if (!res.success) {
         setSaveError(res.error || 'Render failed');

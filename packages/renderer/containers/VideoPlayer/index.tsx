@@ -26,7 +26,6 @@ import {
 } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
-import { SrtSegment } from '@shared-types/app';
 import { useUrlStore } from '../../state/url-store';
 
 const commonOverlayControlsStyles = css`
@@ -428,15 +427,12 @@ export default function VideoPlayer() {
       return;
     }
 
-    // Faster (>) / Slower (<)
     if (e.key === '>' || e.key === '.') {
-      // shift+. on most layouts
       stepRate('up');
       e.preventDefault();
       return;
     }
     if (e.key === '<' || e.key === ',') {
-      // shift+, (or just , )
       stepRate('down');
       e.preventDefault();
       return;
@@ -456,10 +452,10 @@ export default function VideoPlayer() {
 
   useEffect(() => {
     if (isFullScreen) {
-      restartHideTimer(); // start the countdown immediately
+      restartHideTimer();
       window.addEventListener('mousemove', restartHideTimer);
     } else {
-      setCursorHidden(false); // make sure cursor is back
+      setCursorHidden(false);
       window.removeEventListener('mousemove', restartHideTimer);
       if (activityTimeout.current) clearTimeout(activityTimeout.current);
     }
@@ -481,14 +477,13 @@ export default function VideoPlayer() {
 
   const pokeFsControls = () => {
     if (!isFullScreen) return;
-    restartHideTimer(); // one call does everything
+    restartHideTimer();
   };
 
   if (!videoUrl) return null;
 
   const pct = duration ? (currentTime / duration) * 100 : 0;
 
-  /** change <video>.playbackRate and remember the new value */
   const applyRate = (rate: (typeof SPEED_STEPS)[number]) => {
     const v = getNativePlayerInstance();
     if (!v) return;
@@ -496,7 +491,6 @@ export default function VideoPlayer() {
     setPlaybackRate(rate);
   };
 
-  /** step to next or previous rate in SPEED_STEPS */
   const stepRate = (dir: 'up' | 'down') => {
     const idx = SPEED_STEPS.indexOf(playbackRate);
     const next =
@@ -609,9 +603,7 @@ export default function VideoPlayer() {
               {fmt(duration)}
             </span>
 
-            <div
-              style={{ position: 'relative' /* anchor for absolute menu */ }}
-            >
+            <div style={{ position: 'relative' }}>
               <Button
                 ref={speedBtnRef}
                 variant="secondary"
@@ -682,10 +674,7 @@ export default function VideoPlayer() {
               onShiftAllSubtitles={useSubStore.getState().shiftAll}
               onScrollToCurrentSubtitle={useSubStore.getState().scrollToCurrent}
               onSelectVideoClick={selectVideo}
-              onSetSubtitleSegments={(segs: SrtSegment[]) =>
-                useSubStore.getState().load(segs)
-              }
-              onSrtFileLoaded={useSubStore.getState().setSrtPath}
+              onSetSubtitleSegments={useSubStore.getState().load}
               onUiInteraction={pokeFsControls}
             />
           </div>

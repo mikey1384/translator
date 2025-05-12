@@ -160,9 +160,6 @@ export function fixOverlappingSegments(segments: SrtSegment[]): SrtSegment[] {
   return sortedSegments;
 }
 
-/**
- * Format a time for display (compact format)
- */
 export function formatTimeForDisplay(seconds: number): string {
   if (isNaN(seconds)) return '00:00';
   const minutes = Math.floor(seconds / 60);

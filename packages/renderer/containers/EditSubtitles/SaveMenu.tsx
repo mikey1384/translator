@@ -3,23 +3,21 @@ import { buttonGradientStyles } from '../../styles.js';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 
-interface EditSubtitlesHeaderProps {
+interface SaveMenuProps {
   onSave: () => Promise<void>;
   onSaveAs: () => Promise<void>;
   canSaveDirectly: boolean;
   subtitlesExist: boolean;
 }
 
-// Use function declaration syntax
-function EditSubtitlesHeader({
+export default function SaveMenu({
   onSave,
   onSaveAs,
   canSaveDirectly,
   subtitlesExist,
-}: EditSubtitlesHeaderProps) {
+}: SaveMenuProps) {
   const { t } = useTranslation();
 
-  // If no subtitles exist, render nothing or a placeholder
   if (!subtitlesExist) {
     return null;
   }
@@ -33,7 +31,6 @@ function EditSubtitlesHeader({
         // Removed justify-content, border, padding as it will be part of the action bar
       `}
     >
-      {/* Save Button */}
       <Button
         onClick={onSave}
         variant="primary"
@@ -71,7 +68,6 @@ function EditSubtitlesHeader({
         </div>
       </Button>
 
-      {/* Save As Button */}
       <Button onClick={onSaveAs} variant="secondary" size="md">
         <div
           className={css`
@@ -100,5 +96,3 @@ function EditSubtitlesHeader({
     </div>
   );
 }
-
-export default EditSubtitlesHeader;

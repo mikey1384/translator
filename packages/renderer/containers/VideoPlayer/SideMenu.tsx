@@ -12,8 +12,7 @@ export interface SideMenuProps {
   onShiftAllSubtitles?: (offsetSeconds: number) => void;
   onScrollToCurrentSubtitle?: () => void;
   onSelectVideoClick: () => void;
-  onSetSubtitleSegments: (segments: SrtSegment[]) => void;
-  onSrtFileLoaded: (filePath: string | null) => void;
+  onSetSubtitleSegments: (segments: SrtSegment[], filePath: string) => void;
   onUiInteraction?: () => void;
 }
 
@@ -22,7 +21,6 @@ export default function SideMenu({
   onScrollToCurrentSubtitle,
   onSelectVideoClick,
   onSetSubtitleSegments,
-  onSrtFileLoaded,
   onUiInteraction,
 }: SideMenuProps) {
   const { t } = useTranslation();
@@ -67,7 +65,6 @@ export default function SideMenu({
         overflow-y: auto;
       `}
     >
-      {/* Video, SRT Buttons */}
       <div
         className={css`
           display: flex;
@@ -348,8 +345,7 @@ export default function SideMenu({
     try {
       const result = await openSubtitleWithElectron();
       if (result.filePath && result.segments) {
-        onSrtFileLoaded(result.filePath);
-        onSetSubtitleSegments(result.segments);
+        onSetSubtitleSegments(result.segments, result.filePath);
       } else if (result.error && !result.error.includes('canceled')) {
         console.error('Error loading SRT:', result.error);
       }

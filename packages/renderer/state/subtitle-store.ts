@@ -26,19 +26,13 @@ interface Actions {
   shift: (id: string, secs: number) => void;
   shiftAll: (offsetSeconds: number) => void;
   scrollToCurrent: () => void;
-  setSrtPath: (filePath: string | null) => void;
   setActive: (id: string | null) => void;
   seek: (id: string) => void;
   play: (id: string) => void;
   pause: () => void;
   incSourceId: () => void;
-  setOriginalPath: (p: string | null) => void;
   replaceAll: (find: string, replace: string) => void;
 }
-
-/* ------------------------------------------------------------------ */
-/* 🏪  Store factory                                                   */
-/* ------------------------------------------------------------------ */
 
 const initialState: State = {
   segments: {},
@@ -54,7 +48,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
       ...initialState,
-      load: (segs, srcPath = null) =>
+      load: (segs, srcPath = null) => {
         set(s => {
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
@@ -63,7 +57,8 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.order = segs.map(cue => cue.id);
           s.sourceId += 1;
           s.originalPath = srcPath;
-        }),
+        });
+      },
 
       incSourceId: () =>
         set(s => {
@@ -179,8 +174,6 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         }
       },
 
-      setSrtPath: filePath => set({ originalPath: filePath }),
-
       setActive: id =>
         set(s => {
           s.activeId = id;
@@ -223,8 +216,6 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         getNativePlayerInstance()?.pause();
         set({ playingId: null });
       },
-
-      setOriginalPath: p => set({ originalPath: p }),
 
       replaceAll: (find, replace) => {
         if (!find.trim() || !replace) return;
