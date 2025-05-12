@@ -37,6 +37,7 @@ interface Actions {
 }
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
+const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 
 const initial: State = {
   showSettings: false,
@@ -46,7 +47,9 @@ const initial: State = {
   matchedIndices: [],
   inputMode: 'file',
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
-  showOriginalText: true,
+  showOriginalText: JSON.parse(
+    localStorage.getItem(SHOW_ORIGINAL_KEY) ?? 'true'
+  ),
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
@@ -146,6 +149,7 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         },
 
         setShowOriginalText(show) {
+          localStorage.setItem(SHOW_ORIGINAL_KEY, JSON.stringify(show));
           set({ showOriginalText: show });
         },
 
