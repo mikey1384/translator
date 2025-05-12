@@ -1,16 +1,16 @@
 import OpenAI from 'openai';
 import log from 'electron-log';
-import { SrtSegment } from './types.js';
 import crypto from 'crypto';
 import { AI_MODELS } from '../../../shared/constants/index.js';
 import { createFileFromPath } from './openai-client.js';
 import { callAIModel } from './openai-client.js';
-import * as C from './constants.js';
+import { SrtSegment } from '@shared-types/app';
+import {
+  NO_SPEECH_PROB_THRESHOLD,
+  AVG_LOGPROB_THRESHOLD,
+} from './constants.js';
 import fs from 'fs';
 
-/**
- * Transcribes an audio chunk using Whisper API
- */
 export async function transcribeChunk({
   chunkIndex,
   chunkPath,
@@ -35,7 +35,7 @@ export async function transcribeChunk({
     throw new Error('Cancelled');
   }
 
-  let fileStream: ReturnType<typeof createFileFromPath>;
+  let fileStream: fs.ReadStream;
   try {
     fileStream = createFileFromPath(chunkPath);
   } catch (streamError: any) {
@@ -46,13 +46,11 @@ export async function transcribeChunk({
     return [];
   }
 
-  // Helper: is a word inside a valid segment?
   function isWordInValidSegment(
     word: any,
     validSegments: Array<{ start: number; end: number }>,
     startTime: number
   ) {
-    // If no valid segments, accept all words (fallback)
     if (!validSegments.length) return true;
     const wStart = word.start + startTime;
     const wEnd = word.end + startTime;
@@ -67,7 +65,6 @@ export async function transcribeChunk({
       ).toFixed(2)} MB) to Whisper API.`
     );
 
-    // Request word-level and segment-level timestamps
     const res = await openai.audio.transcriptions.create(
       {
         model: AI_MODELS.WHISPER.id,
@@ -84,7 +81,6 @@ export async function transcribeChunk({
       `[${operationId}] Received transcription response for chunk ${chunkIndex}.`
     );
 
-    // Parse segments and words arrays
     const segments = (res as any)?.segments as Array<any> | undefined;
     const words = (res as any)?.words as Array<any> | undefined;
     if (!Array.isArray(words) || words.length === 0) {
@@ -94,13 +90,12 @@ export async function transcribeChunk({
       return [];
     }
 
-    // Filter valid segments by speech probability and logprob
     const validSegments: Array<{ start: number; end: number }> = [];
     if (Array.isArray(segments)) {
       for (const seg of segments) {
         if (
-          seg.no_speech_prob < C.NO_SPEECH_PROB_THRESHOLD &&
-          seg.avg_logprob > C.AVG_LOGPROB_THRESHOLD
+          seg.no_speech_prob < NO_SPEECH_PROB_THRESHOLD &&
+          seg.avg_logprob > AVG_LOGPROB_THRESHOLD
         ) {
           validSegments.push({
             start: seg.start + startTime,
@@ -110,17 +105,15 @@ export async function transcribeChunk({
       }
     }
 
-    // Group words into captions: ≤8s, ideally 6–12 words, break at segment boundaries
-    const MAX_SEG_LEN = 8; // seconds
+    const MAX_SEG_LEN = 8;
     const MAX_WORDS = 12;
-    const MIN_WORDS = 3; // NEW – avoid 1- or 2-word orphans
+    const MIN_WORDS = 3;
     const srtSegments: SrtSegment[] = [];
     let currentWords: any[] = [];
     let groupStart = null;
     let groupEnd = null;
     let segIdx = 1;
 
-    // Build a set of segment end times for easy lookup
     const segmentEnds = new Set<number>();
     if (Array.isArray(segments)) {
       for (const seg of segments) {
@@ -142,18 +135,14 @@ export async function transcribeChunk({
       const isLastWord = i === words.length - 1;
       const groupDuration = groupEnd - groupStart;
       const groupWordCount = currentWords.length;
-      // decide if we *could* break here
       const hardBoundary = isSegmentEnd || isLastWord;
       const sizeBoundary =
         groupDuration >= MAX_SEG_LEN || groupWordCount >= MAX_WORDS;
-      // *** DON'T commit if the fragment would be too short ***
       const shouldBreak = hardBoundary || sizeBoundary;
       if (shouldBreak) {
         if (groupWordCount < MIN_WORDS && !hardBoundary) {
-          // keep accumulating – we don't want a tiny tail like "use"
           continue;
         }
-        // Join words, attach punctuation to previous word (Unicode-aware)
         let text = '';
         for (let j = 0; j < currentWords.length; ++j) {
           const word = currentWords[j].word;
@@ -170,7 +159,6 @@ export async function transcribeChunk({
           end: groupEnd,
           original: text.trim(),
         });
-        // Prepare for next group
         if (!isLastWord) {
           groupStart = null;
           groupEnd = null;
@@ -179,7 +167,6 @@ export async function transcribeChunk({
       }
     }
 
-    // Always scrub hallucinations before returning
     const cleanSegs = await scrubHallucinationsBatch({
       segments: srtSegments,
       operationId: operationId ?? '',
@@ -206,10 +193,7 @@ export async function transcribeChunk({
   }
 }
 
-/**
- * Scrubs hallucinations from a batch of segments
- */
-export async function scrubHallucinationsBatch({
+async function scrubHallucinationsBatch({
   segments,
   operationId,
   signal,
@@ -268,27 +252,21 @@ output → @@LINE@@ 18: Thanks for watching!
     signal,
   });
 
-  /* ──────────────────── 2. PARSE MODEL RESPONSE ─────────────────── */
   const lineRE = /^@@LINE@@\s+(\d+)\s*:\s*(.*)$/;
-  const modelMap = new Map<number, string>(); // index → cleaned-or-blank
+  const modelMap = new Map<number, string>();
   raw.split('\n').forEach(row => {
     const m = row.match(lineRE);
     if (m) modelMap.set(Number(m[1]), (m[2] ?? '').trim());
   });
 
-  /* ───────────────────── 3. LOCAL NOISE STRIPPER ─────────────────── */
   const stripNoise = (txt: string): string => {
-    // 1️⃣ zap standalone emoji
     txt = txt.replace(/\p{Extended_Pictographic}/gu, '');
 
-    // 2️⃣ collapse repeated punctuation **only if** not common sentence punctuation
-    txt = txt.replace(/([^\w\s.,'"])\1{2,}/gu, '$1'); // Exclude common punctuation from repetition collapse
+    txt = txt.replace(/([^\w\s.,'"])\1{2,}/gu, '$1');
 
-    // 3️⃣ tidy whitespace
     return txt.replace(/\s{2,}/g, ' ').trim();
   };
 
-  /* ─────────────────── 4. BUILD CLEAN ARRAY & LOG ────────────────── */
   const cleanedSegments: SrtSegment[] = [];
 
   segments.forEach(seg => {

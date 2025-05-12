@@ -4,18 +4,12 @@ import { AI_MODELS } from '../../../shared/constants/index.js';
 import { SubtitleProcessingError } from './errors.js';
 import fs from 'fs';
 
-/**
- * Gets the API key for the specified service
- */
 export async function getApiKey(keyType: 'openai'): Promise<string> {
   const key = await getSecureApiKey(keyType);
   if (key) return key;
   throw new SubtitleProcessingError('OpenAI API key not found.');
 }
 
-/**
- * Calls the OpenAI Chat API with retry logic
- */
 export async function callOpenAIChat({
   model,
   messages,
@@ -92,9 +86,6 @@ export async function callOpenAIChat({
   );
 }
 
-/**
- * Wrapper for AI model calls that handles retries and errors
- */
 export async function callAIModel({
   messages,
   max_tokens,
@@ -118,9 +109,6 @@ export async function callAIModel({
   });
 }
 
-/**
- * Creates a file stream from a file path
- */
 export function createFileFromPath(filePath: string) {
   try {
     return fs.createReadStream(filePath);

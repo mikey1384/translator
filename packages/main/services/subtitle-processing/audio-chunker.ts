@@ -1,13 +1,13 @@
 import log from 'electron-log';
 import { spawn } from 'child_process';
 import * as webrtcvadPackage from 'webrtcvad';
-import * as C from './constants.js';
+import {
+  VAD_NORMALIZATION_MIN_GAP_SEC,
+  VAD_NORMALIZATION_MIN_DURATION_SEC,
+} from './constants.js';
 
 const Vad = webrtcvadPackage.default.default;
 
-/**
- * Detects speech intervals in an audio file
- */
 export async function detectSpeechIntervals({
   inputPath,
   vadMode = 2,
@@ -150,13 +150,10 @@ export async function detectSpeechIntervals({
   });
 }
 
-/**
- * Normalizes speech intervals by merging close ones and removing short ones
- */
 export function normalizeSpeechIntervals({
   intervals,
-  minGapSec = C.VAD_NORMALIZATION_MIN_GAP_SEC,
-  minDurSec = C.VAD_NORMALIZATION_MIN_DURATION_SEC,
+  minGapSec = VAD_NORMALIZATION_MIN_GAP_SEC,
+  minDurSec = VAD_NORMALIZATION_MIN_DURATION_SEC,
 }: {
   intervals: Array<{ start: number; end: number }>;
   minGapSec?: number;
@@ -183,9 +180,6 @@ export function normalizeSpeechIntervals({
   return merged.filter(i => i.end - i.start >= minDurSec);
 }
 
-/**
- * Chunks a speech interval into smaller parts if needed
- */
 export function chunkSpeechInterval({
   interval,
   duration,
@@ -210,9 +204,6 @@ export function chunkSpeechInterval({
   ];
 }
 
-/**
- * Merges adjacent intervals if they're close enough
- */
 export function mergeAdjacentIntervals(
   intervals: Array<{ start: number; end: number }>,
   maxGapSec: number

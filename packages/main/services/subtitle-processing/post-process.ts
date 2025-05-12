@@ -1,14 +1,9 @@
-import { SrtSegment } from './types.js';
-import * as C from './constants.js';
+import { SrtSegment } from '@shared-types/app';
+import { MAX_GAP_TO_FUSE, SUBTITLE_GAP_THRESHOLD } from './constants.js';
 
-/**
- * Extends subtitle gaps that are shorter than the threshold.
- * This makes subtitles stay on screen a bit longer when there's
- * only a tiny gap before the next one.
- */
 export function extendShortSubtitleGaps({
   segments,
-  threshold = C.SUBTITLE_GAP_THRESHOLD,
+  threshold = SUBTITLE_GAP_THRESHOLD,
 }: {
   segments: SrtSegment[];
   threshold?: number;
@@ -27,17 +22,10 @@ export function extendShortSubtitleGaps({
   return segments;
 }
 
-/**
- * Fills in blank translations with the original text.
- * This ensures no subtitle has an empty translation.
- */
 export function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
-  return segments; // blanks stay blank, no carry-over
+  return segments;
 }
 
-/**
- * Fuses segments with few words, to avoid very short subtitles
- */
 export function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
   const MIN_WORDS = 4;
 
@@ -52,8 +40,7 @@ export function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
       const prev = fused[fused.length - 1];
       const gap = seg.start - prev.end;
 
-      if (gap < C.MAX_GAP_TO_FUSE) {
-        // → just a hiccup in the waveform: stretch timing & append text
+      if (gap < MAX_GAP_TO_FUSE) {
         prev.end = seg.end;
         prev.original = `${prev.original} ${seg.original}`.trim();
         continue;
@@ -64,6 +51,5 @@ export function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
     fused.push({ ...seg });
   }
 
-  // re-index before returning
   return fused.map((s, i) => ({ ...s, index: i + 1 }));
 }

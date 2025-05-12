@@ -1,10 +1,4 @@
-import {
-  SrtSegment,
-  GenerateSubtitlesOptions,
-  GenerateProgressCallback,
-} from '@shared-types/app';
-import { AbortSignal } from 'node:events';
-import OpenAI from 'openai';
+import { SrtSegment } from '@shared-types/app';
 
 export type ReviewBatch = {
   segments: SrtSegment[];
@@ -34,5 +28,3 @@ export type GenerateSubtitlesFullResult = {
   speechIntervals: Array<{ start: number; end: number }>;
   error?: string;
 };
-
-export { SrtSegment, GenerateSubtitlesOptions, GenerateProgressCallback };

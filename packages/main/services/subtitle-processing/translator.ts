@@ -3,9 +3,6 @@ import log from 'electron-log';
 import { TranslateBatchArgs, ReviewBatch } from './types.js';
 import { callAIModel } from './openai-client.js';
 
-/**
- * Translates a batch of segments to the target language
- */
 export async function translateBatch({
   batch,
   targetLang,
@@ -134,9 +131,6 @@ Translate EACH line individually, preserving the line order.
   }));
 }
 
-/**
- * Reviews a batch of translated segments for quality and consistency
- */
 export async function reviewTranslationBatch({
   batch,
   operationId,
