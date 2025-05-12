@@ -24,9 +24,9 @@ export async function detectSpeechIntervals({
   return new Promise((resolve, reject) => {
     log.info(`[${operationId}] Starting streamed VAD for: ${inputPath}`);
     const sampleRate = 16_000;
-    const bytesPerSample = 2; // 16-bit
+    const bytesPerSample = 2;
     const frameSizeSamples = (sampleRate * frameMs) / 1000;
-    const bytesPerFrame = frameSizeSamples * bytesPerSample; // 16‑bit mono
+    const bytesPerFrame = frameSizeSamples * bytesPerSample;
 
     const vad = new Vad(sampleRate, vadMode);
     const intervals: Array<{ start: number; end: number }> = [];
@@ -70,11 +70,9 @@ export async function detectSpeechIntervals({
     }
 
     ffmpeg.stdout.on('data', (chunk: Buffer) => {
-      // Combine leftover data from previous chunk with the new chunk
       const currentBuffer = Buffer.concat([leftoverBuffer, chunk]);
       let offset = 0;
 
-      // Process as many full frames as possible from the current buffer
       while (offset + bytesPerFrame <= currentBuffer.length) {
         const frame = currentBuffer.subarray(offset, offset + bytesPerFrame);
         const t = currentFrameIndex * (frameMs / 1000);
@@ -95,14 +93,12 @@ export async function detectSpeechIntervals({
             `[${operationId}] VAD process error on frame ${currentFrameIndex}`,
             vadError
           );
-          // Decide if you want to stop or continue
         }
 
         offset += bytesPerFrame;
         currentFrameIndex++;
       }
 
-      // Keep any remaining incomplete frame data for the next chunk
       leftoverBuffer = currentBuffer.subarray(offset);
     });
 
@@ -113,14 +109,11 @@ export async function detectSpeechIntervals({
     ffmpeg.on('close', code => {
       log.info(`[${operationId}] ffmpeg process exited with code ${code}`);
       if (speechOpen) {
-        // Flush the last segment if speech was open at the end
         const endTime = currentFrameIndex * (frameMs / 1000);
         intervals.push({ start: segStart, end: endTime });
-        speechOpen = false; // Reset state
+        speechOpen = false;
       }
       if (code !== 0 && code !== null) {
-        // Allow null code for graceful exit/cancel
-        // Check if the intervals array is empty, might indicate early failure
         if (intervals.length === 0 && leftoverBuffer.length === 0) {
           log.error(
             `[${operationId}] FFmpeg exited abnormally (code ${code}) before processing any frames. Check input file/FFmpeg installation.`
@@ -134,7 +127,6 @@ export async function detectSpeechIntervals({
           log.warn(
             `[${operationId}] FFmpeg process exited with code ${code}, but some intervals may have been processed.`
           );
-          // Continue with potentially partial results
         }
       }
       log.info(
@@ -220,7 +212,6 @@ export function mergeAdjacentIntervals(
     const last = merged[merged.length - 1];
 
     if (current.start - last.end < maxGapSec) {
-      // Merge if gap is small enough
       last.end = Math.max(last.end, current.end);
     } else {
       merged.push({ ...current });
