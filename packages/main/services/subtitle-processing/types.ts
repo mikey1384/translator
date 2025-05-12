@@ -9,19 +9,6 @@ export type ReviewBatch = {
   contextAfter: SrtSegment[];
 };
 
-export type TranslateBatchArgs = {
-  batch: {
-    segments: SrtSegment[];
-    startIndex: number;
-    endIndex: number;
-    contextBefore: SrtSegment[];
-    contextAfter: SrtSegment[];
-  };
-  targetLang: string;
-  operationId: string;
-  signal?: AbortSignal;
-};
-
 export type GenerateSubtitlesFullResult = {
   subtitles: string;
   segments: SrtSegment[];

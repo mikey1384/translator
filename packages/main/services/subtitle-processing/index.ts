@@ -41,13 +41,16 @@ import {
   chunkSpeechInterval,
   mergeAdjacentIntervals,
   normalizeSpeechIntervals,
+  detectSpeechIntervals,
 } from './audio-chunker.js';
 import { getApiKey } from './openai-client.js';
-import { detectSpeechIntervals } from './audio-chunker.js';
 import { transcribeChunk } from './transcriber.js';
 import { reviewTranslationBatch, translateBatch } from './translator.js';
-import { fillBlankTranslations, fuseOrphans } from './post-process.js';
-import { extendShortSubtitleGaps } from './post-process.js';
+import {
+  extendShortSubtitleGaps,
+  fillBlankTranslations,
+  fuseOrphans,
+} from './post-process.js';
 import { buildContextPrompt, findCaptionGaps } from './gap-repair.js';
 import { SubtitleProcessingError } from './errors.js';
 

@@ -232,6 +232,8 @@ declare module '@shared-types/app' {
       startIndex: number;
       endIndex: number;
       targetLang?: string;
+      contextBefore?: SrtSegment[];
+      contextAfter?: SrtSegment[];
     };
     targetLang: string;
     operationId: string;

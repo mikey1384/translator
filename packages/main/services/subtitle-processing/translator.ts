@@ -1,7 +1,8 @@
 import { AI_MODELS } from '../../../shared/constants/index.js';
 import log from 'electron-log';
-import { TranslateBatchArgs, ReviewBatch } from './types.js';
+import { ReviewBatch } from './types.js';
 import { callAIModel } from './openai-client.js';
+import { TranslateBatchArgs } from '@shared-types/app';
 
 export async function translateBatch({
   batch,
