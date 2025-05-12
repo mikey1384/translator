@@ -1,4 +1,3 @@
-// renderer/listeners/progress-buffer.ts
 import { parseSrt } from '../../shared/helpers';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state/task-store';
@@ -22,7 +21,6 @@ function flush() {
     batchStartIndex,
   } = queued;
 
-  // ① progress bar
   useTaskStore.getState().setTranslation({
     stage,
     percent,
@@ -30,7 +28,6 @@ function flush() {
     batchStartIndex,
   });
 
-  // ② subtitles
   if (partialResult?.trim()) {
     useSubStore.getState().load(parseSrt(partialResult));
   }
@@ -38,8 +35,8 @@ function flush() {
   queued = null;
 }
 
-SubtitlesIPC.onGenerateProgress((_, progress) => {
-  queued = progress; // ← we store only the payload
+SubtitlesIPC.onGenerateProgress(progress => {
+  queued = progress; // now it's the real payload
 
   if (!document.hidden) {
     flush();
