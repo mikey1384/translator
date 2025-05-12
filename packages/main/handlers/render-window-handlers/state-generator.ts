@@ -80,7 +80,12 @@ export async function generateStatePngs({
         await page.screenshot({
           path: file,
           omitBackground: true,
-          clip: { x: 0, y: 0, width: videoWidth, height: videoHeight },
+          clip: {
+            x: 0,
+            y: 0,
+            width: videoWidth > 0 ? videoWidth : 1280,
+            height: videoHeight > 0 ? videoHeight : 720,
+          },
           type: 'png',
         });
       } catch (err) {

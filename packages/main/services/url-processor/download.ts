@@ -14,6 +14,7 @@ import { findYtDlpBinary } from './binary-locator.js';
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
+import { findFfmpeg } from '../ffmpeg-runner.js';
 
 export async function downloadVideoFromPlatform(
   url: string,
@@ -31,7 +32,6 @@ export async function downloadVideoFromPlatform(
   if (!services?.ffmpeg) {
     throw new Error('FFmpegContext is required for downloadVideoFromPlatform');
   }
-  const { ffmpeg } = services;
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START,
@@ -128,7 +128,7 @@ export async function downloadVideoFromPlatform(
     `[URLprocessor] Using simplified temp pattern: ${tempFilenamePattern}`
   );
 
-  const ffmpegPath = ffmpeg.ffmpegPath;
+  const ffmpegPath = await findFfmpeg();
 
   const args = [
     url,

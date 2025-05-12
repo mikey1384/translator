@@ -81,7 +81,7 @@ try {
 
   const saveFileService = SaveFileService.getInstance();
   const fileManager = new FileManager(tempPath);
-  const ffmpeg = createFFmpegContext(tempPath);
+  const ffmpeg = await createFFmpegContext(tempPath);
   services = { saveFileService, fileManager, ffmpeg };
   log.info('[main.ts] Services Initialized.');
 

@@ -127,6 +127,12 @@ export function initializeRenderWindowHandlers({
       try {
         tempDirPath = await createOperationTempDir({ operationId });
 
+        // Guard width/height to ensure they are not zero for audio-only files
+        if (!options.videoWidth || options.videoWidth <= 0)
+          options.videoWidth = 1280;
+        if (!options.videoHeight || options.videoHeight <= 0)
+          options.videoHeight = 720;
+
         const { browser: br, page } = await initPuppeteer({
           operationId,
           videoWidth: options.videoWidth,

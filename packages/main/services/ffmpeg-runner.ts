@@ -1,9 +1,15 @@
 import { spawn, ChildProcessWithoutNullStreams, execFile } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { createRequire } from 'module';
 import log from 'electron-log';
 import process from 'process';
+import which from 'which';
+import { app } from 'electron';
+
+log.info(
+  '[ffmpeg-runner] module loaded ***',
+  new Error().stack?.split('\n')[2]
+);
 
 export class FFmpegError extends Error {
   constructor(message: string) {
@@ -48,46 +54,71 @@ export interface VideoMeta {
   frameRate: number;
 }
 
-export function createFFmpegContext(tempDirPath: string): FFmpegContext {
-  const require = createRequire(import.meta.url);
-  let ffmpegPath: string;
-  let ffprobePath: string;
+let _ffmpegCached: string | null = null;
+
+async function pickBinary(
+  bundled: () => Promise<string>,
+  fallbackName: string
+): Promise<string> {
+  // 1. bundled copy
   try {
-    ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-    ffprobePath = require('@ffprobe-installer/ffprobe').path;
+    const p = await bundled();
+    return app.isPackaged ? p.replace('app.asar', 'app.asar.unpacked') : p;
   } catch {
-    ffmpegPath = 'ffmpeg';
-    ffprobePath = 'ffprobe';
-  }
-  if (!fs.existsSync(ffmpegPath)) {
-    log.warn(`[ffmpeg-runner] ffmpeg path not found, relying on $PATH`);
-    if (process.env.NODE_ENV === 'development') {
-      throw new Error(
-        'ffmpeg binary not found in development mode. Ensure it is installed or available in PATH.'
-      );
-    }
-  }
-  if (!fs.existsSync(ffprobePath)) {
-    log.warn(`[ffmpeg-runner] ffprobe path not found, relying on $PATH`);
-    if (process.env.NODE_ENV === 'development') {
-      throw new Error(
-        'ffprobe binary not found in development mode. Ensure it is installed or available in PATH.'
-      );
-    }
+    log.debug(`[ffmpeg-runner] no bundled ${fallbackName} module`);
   }
 
-  if (
-    (process as any).versions?.electron &&
-    (process as any).defaultApp === undefined
-  ) {
-    ffmpegPath = ffmpegPath.replace('app.asar/', 'app.asar.unpacked/');
-    ffprobePath = ffprobePath.replace('app.asar/', 'app.asar.unpacked/');
-  }
+  // 2. user PATH
+  const p = which.sync(fallbackName, { nothrow: true });
+  if (p) return p;
+
+  throw new Error(`${fallbackName} executable not available`);
+}
+
+export async function findFfmpeg(): Promise<string> {
+  if (_ffmpegCached) return _ffmpegCached;
+  const ffmpegPath = await pickBinary(async () => {
+    const mod = await import('@ffmpeg-installer/ffmpeg');
+    let p = mod.path as string;
+    if (app.isPackaged) p = p.replace('app.asar', 'app.asar.unpacked');
+    return p;
+  }, 'ffmpeg');
+  _ffmpegCached = ffmpegPath;
+  log.info(`[ffmpeg-runner] final ffmpeg path => ${ffmpegPath}`);
+  return ffmpegPath;
+}
+
+let _ffprobeCached: string | null = null;
+export async function findFfprobe(): Promise<string> {
+  if (_ffprobeCached) return _ffprobeCached;
+  const ffprobePath = await pickBinary(async () => {
+    const mod = await import('@ffprobe-installer/ffprobe');
+    let p = mod.path as string;
+    if (app.isPackaged) p = p.replace('app.asar', 'app.asar.unpacked');
+    return p;
+  }, 'ffprobe');
+  _ffprobeCached = ffprobePath;
+  log.info(`[ffmpeg-runner] final ffprobe path => ${ffprobePath}`);
+  return ffprobePath;
+}
+
+export const resolvedFfmpeg = () => _ffmpegCached;
+export const resolvedFfprobe = () => _ffprobeCached;
+
+export async function createFFmpegContext(
+  tempDirPath: string
+): Promise<FFmpegContext> {
+  const ffmpegPath = await findFfmpeg();
+  const ffprobePath = await findFfprobe();
 
   if (!tempDirPath)
     throw new Error('createFFmpegContext requires a tempDirPath');
-  if (!fs.existsSync(tempDirPath))
+  if (!fs.existsSync(tempDirPath)) {
     fs.mkdirSync(tempDirPath, { recursive: true });
+    log.info(
+      `[ffmpeg-runner] re-created missing temp directory: ${tempDirPath}`
+    );
+  }
   const tempDir = path.resolve(tempDirPath);
 
   const active = new Map<string, ChildProcessWithoutNullStreams>();
@@ -96,6 +127,10 @@ export function createFFmpegContext(tempDirPath: string): FFmpegContext {
     const { operationId, totalDuration, progress, cwd, env, signal } = opts;
     if (signal?.aborted) throw new FFmpegError('Operation aborted');
 
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+      log.info(`[ffmpeg-runner] re-created missing temp directory: ${tempDir}`);
+    }
     const spawnOpts = {
       env: env ?? process.env,
       cwd: cwd ?? tempDir,
@@ -258,6 +293,8 @@ export function createFFmpegContext(tempDirPath: string): FFmpegContext {
       log.info(`[ffmpeg-runner] cancelled ${id}`);
     }
   }
+
+  // DEBUG: Prove we can spawn inside Electron too
 
   return {
     tempDir,

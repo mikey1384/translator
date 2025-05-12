@@ -14,6 +14,16 @@ export default {
     'packages/preload/dist/**/*',
     'packages/renderer/dist/**/*',
     'assets/**/*',
+    // Include FFmpeg binaries and package files but exclude package.json
+    '!**/node_modules/@ffmpeg-installer/**/package.json',
+    'node_modules/@ffmpeg-installer/**/ffmpeg',
+    '!**/node_modules/@ffprobe-installer/**/package.json',
+    'node_modules/@ffprobe-installer/**/ffprobe',
+  ],
+  asarUnpack: [
+    // Ensure FFmpeg binaries are unpacked outside the asar archive
+    'node_modules/@ffmpeg-installer/**/ffmpeg',
+    'node_modules/@ffprobe-installer/**/ffprobe',
   ],
   extraMetadata: {
     main: 'packages/main/dist/index.js',
