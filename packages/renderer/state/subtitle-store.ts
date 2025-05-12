@@ -19,7 +19,7 @@ interface State {
 }
 
 interface Actions {
-  load: (segs: SrtSegment[]) => void;
+  load: (segs: SrtSegment[], srcPath?: string | null) => void;
   update: (id: string, patch: Partial<SrtSegment>) => void;
   insertAfter: (id: string) => void;
   remove: (id: string) => void;
@@ -54,16 +54,15 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
       ...initialState,
-      load: segs =>
+      load: (segs, srcPath = null) =>
         set(s => {
-          // Convert array to map and set order, cloning each cue to ensure it's mutable
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
             return acc;
           }, {});
           s.order = segs.map(cue => cue.id);
-          // Increment sourceId to notify components of data change
           s.sourceId += 1;
+          s.originalPath = srcPath;
         }),
 
       incSourceId: () =>
@@ -73,13 +72,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
 
       update: (id, patch) =>
         set(state => {
-          const cue = state.segments[id]; // Direct lookup
+          const cue = state.segments[id];
           if (cue) Object.assign(cue, patch);
         }),
 
       insertAfter: id =>
         set(s => {
-          const i = s.order.findIndex(cueId => cueId === id); // Find index in order array
+          const i = s.order.findIndex(cueId => cueId === id);
           if (i === -1) return;
 
           const prev = s.segments[id];
@@ -90,18 +89,17 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
 
           const newCue: SrtSegment = {
             id: crypto.randomUUID(),
-            index: i + 2, // Tentative index
+            index: i + 2,
             start: gapStart,
             end: gapEnd,
             original: '',
             translation: '',
           };
 
-          s.segments[newCue.id] = newCue; // Add to map
-          s.order.splice(i + 1, 0, newCue.id); // Insert into order
-          s.order = [...s.order]; // Create new array reference to trigger re-render
+          s.segments[newCue.id] = newCue;
+          s.order.splice(i + 1, 0, newCue.id);
+          s.order = [...s.order];
 
-          // Re-index affected segments
           for (let j = i + 1; j < s.order.length; j++) {
             s.segments[s.order[j]].index = j + 1;
           }
@@ -112,11 +110,10 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           const i = s.order.findIndex(cueId => cueId === id);
           if (i === -1) return;
 
-          delete s.segments[id]; // Remove from map
-          s.order.splice(i, 1); // Remove from order
-          s.order = [...s.order]; // Create new array reference to trigger re-render
+          delete s.segments[id];
+          s.order.splice(i, 1);
+          s.order = [...s.order];
 
-          // Re-index remaining segments
           for (let j = i; j < s.order.length; j++) {
             s.segments[s.order[j]].index = j + 1;
           }
@@ -124,7 +121,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
 
       shift: (id, secs) =>
         set(s => {
-          const cue = s.segments[id]; // Direct lookup
+          const cue = s.segments[id];
           if (!cue) return;
           const dur = cue.end - cue.start;
           const newStart = Math.max(0, cue.start + secs);
@@ -173,7 +170,6 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           }
         }
 
-        /* 3️⃣ scroll or give up ----------------------------------------- */
         if (!id) return;
 
         const el = document.querySelector<HTMLElement>(`[data-cue-id="${id}"]`);
@@ -185,22 +181,20 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
 
       setSrtPath: filePath => set({ originalPath: filePath }),
 
-      /* ---------- UI ---------- */
       setActive: id =>
         set(s => {
           s.activeId = id;
         }),
 
-      /* ---------- Player helpers ---------- */
       seek: id => {
-        const cue = get().segments[id]; // Direct lookup
+        const cue = get().segments[id];
         const np = getNativePlayerInstance();
         if (!cue || !np) return;
         np.currentTime = cue.start;
       },
 
       play: id => {
-        const cue = get().segments[id]; // Direct lookup
+        const cue = get().segments[id];
         const np = getNativePlayerInstance();
         if (!cue || !np) return;
 
@@ -208,7 +202,6 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
         np.play();
         set({ playingId: id });
 
-        /* Auto-pause at cue end */
         const abort = get()._abortPlayListener;
         if (abort) abort();
 
@@ -244,7 +237,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
               cue.translation = cue.translation.replace(re, replace);
             }
           });
-          s.sourceId += 1; // Notify subscribers of the change
+          s.sourceId += 1;
         });
       },
     }))
@@ -271,7 +264,7 @@ export const useSubSourceId = () => useSubStore(s => s.sourceId);
 export const useSubtitleRow = (id: string) =>
   useSubStore(
     (s: State & Actions) => ({
-      subtitle: s.segments[id], // Direct lookup
+      subtitle: s.segments[id],
       isPlaying: s.playingId === id,
     }),
     shallow

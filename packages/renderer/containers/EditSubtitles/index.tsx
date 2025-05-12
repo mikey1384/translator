@@ -60,23 +60,19 @@ export default function EditSubtitles({
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
 
-  const { originalPath, setOriginalPath } = useSubStore(s => ({
+  const { originalPath } = useSubStore(s => ({
     originalPath: s.originalPath,
-    setOriginalPath: s.setOriginalPath,
   }));
   const canSaveDirectly = !!originalPath;
 
-  /* ---------- local UI state ---------- */
   const [saveError, setSaveError] = useState('');
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const prevSubsRef = useRef<SrtSegment[]>([]);
   const prevReviewedBatchRef = useRef<number | null>(null);
 
-  /** remembers which match we last scrolled to */
   const prevActiveRef = useRef(activeMatchIndex);
 
-  /* ---------- scrolling helpers ---------- */
   const activePlayer = getNativePlayerInstance();
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
     subtitles,
@@ -96,7 +92,6 @@ export default function EditSubtitles({
     [subtitles]
   );
 
-  /* expose helpers to parent */
   useEffect(() => {
     if (editorRef?.current) {
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
@@ -104,7 +99,6 @@ export default function EditSubtitles({
     }
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
-  /* ---------- Cmd/Ctrl‑F navigation between matches ---------- */
   useEffect(() => {
     const localMatchIndices = collectMatchIndices(
       subtitles,
@@ -203,7 +197,6 @@ export default function EditSubtitles({
         </div>
       )}
 
-      {/* subtitle list */}
       {subtitles.length > 0 && (
         <>
           <h3 style={{ margin: '10px 0' }}>
@@ -283,7 +276,6 @@ export default function EditSubtitles({
       setSaveError(res.error);
     } else if (res.filePath) {
       await writeSrt(res.filePath);
-      setOriginalPath(res.filePath);
     }
   }
 
@@ -299,7 +291,6 @@ export default function EditSubtitles({
     }
   }
 
-  /* ---------- merge to video ---------- */
   async function handleMerge() {
     try {
       if (!videoPath) {
@@ -373,8 +364,7 @@ export default function EditSubtitles({
       return;
     }
     if (res.segments) {
-      subStore.load(res.segments);
-      setOriginalPath(res.filePath ?? null);
+      subStore.load(res.segments, res.filePath ?? null);
     }
   }
 
@@ -404,7 +394,6 @@ export default function EditSubtitles({
         name: result.filePaths[0].split(/[\\/]/).pop() || 'media',
         path: result.filePaths[0],
       });
-      setOriginalPath(null);
     }
   }
 
