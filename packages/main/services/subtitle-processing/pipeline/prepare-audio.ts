@@ -1,4 +1,5 @@
-import { FFmpegService } from '../../ffmpeg-service.js';
+import type { FFmpegContext } from '../../ffmpeg-runner.js';
+import { attachExtractAudio } from '../audio-extractor.js';
 import { GenerateProgressCallback } from '@shared-types/app';
 import { Stage, scaleProgress } from './progress.js';
 
@@ -10,7 +11,7 @@ export async function prepareAudio({
   signal,
 }: {
   videoPath: string;
-  services: { ffmpegService: FFmpegService };
+  services: { ffmpeg: FFmpegContext };
   progressCallback?: GenerateProgressCallback;
   operationId: string;
   signal: AbortSignal;
@@ -20,21 +21,18 @@ export async function prepareAudio({
     stage: 'Starting subtitle generation',
   });
 
-  const audioPath = await services.ffmpegService.extractAudio({
+  attachExtractAudio(services.ffmpeg);
+
+  const audioPath = await services.ffmpeg.extractAudio!({
     videoPath,
-    progressCallback: extractionProgress => {
-      const stagePercent = scaleProgress(
-        extractionProgress.percent,
-        Stage.AUDIO,
-        Stage.TRANSCRIBE
-      );
-      progressCallback?.({
-        percent: stagePercent,
-        stage: extractionProgress.stage || '',
-      });
-    },
     operationId,
     signal,
+    progress: ({ percent, stage }: { percent: number; stage?: string }) => {
+      progressCallback?.({
+        percent: scaleProgress(percent, Stage.AUDIO, Stage.TRANSCRIBE),
+        stage: stage ?? '',
+      });
+    },
   });
 
   if (signal.aborted) throw new Error('Cancelled');

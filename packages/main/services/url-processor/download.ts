@@ -3,7 +3,7 @@ import fsp from 'node:fs/promises';
 import { join } from 'node:path';
 import { execa } from 'execa';
 import log from 'electron-log';
-import { FFmpegService } from '../ffmpeg-service.js';
+import type { FFmpegContext } from '../ffmpeg-runner.js';
 import {
   registerDownloadProcess,
   finish as removeDownloadProcess,
@@ -22,16 +22,16 @@ export async function downloadVideoFromPlatform(
   progressCallback: ProgressCallback | undefined,
   operationId: string,
   services?: {
-    ffmpegService: FFmpegService;
+    ffmpeg: FFmpegContext;
   },
   extraArgs: string[] = []
 ): Promise<{ filepath: string; info: any; proc: DownloadProcessType }> {
   log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
 
-  if (!services?.ffmpegService) {
-    throw new Error('FFmpegService is required for downloadVideoFromPlatform');
+  if (!services?.ffmpeg) {
+    throw new Error('FFmpegContext is required for downloadVideoFromPlatform');
   }
-  const { ffmpegService } = services;
+  const { ffmpeg } = services;
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START,
@@ -128,7 +128,7 @@ export async function downloadVideoFromPlatform(
     `[URLprocessor] Using simplified temp pattern: ${tempFilenamePattern}`
   );
 
-  const ffmpegPath = ffmpegService.getFFmpegPath();
+  const ffmpegPath = ffmpeg.ffmpegPath;
 
   const args = [
     url,

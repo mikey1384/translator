@@ -3,7 +3,7 @@ import { processVideoUrl } from '../services/url-processor/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
-import { FFmpegService } from '../services/ffmpeg-service.js';
+import type { FFmpegContext } from '../services/ffmpeg-runner.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
 import { ProcessUrlOptions } from '@shared-types/app';
 import {
@@ -16,36 +16,29 @@ import {
 
 interface UrlHandlerServices {
   fileManager: FileManager;
-  ffmpegService: FFmpegService;
+  ffmpeg: FFmpegContext;
 }
 
 let fileManagerInstance: FileManager | null = null;
-let ffmpegServiceInstance: FFmpegService | null = null;
+let ffmpegCtx: FFmpegContext | null = null;
 
 export function initializeUrlHandler(services: UrlHandlerServices): void {
-  if (!services || !services.fileManager || !services.ffmpegService) {
-    throw new Error(
-      '[url-handler] FileManager and FFmpegService services not provided.'
-    );
+  if (!services || !services.fileManager || !services.ffmpeg) {
+    throw new Error('[url-handler] FileManager and FFmpegContext required.');
   }
   fileManagerInstance = services.fileManager;
-  ffmpegServiceInstance = services.ffmpegService;
-  log.info(
-    '[url-handler] Initialized with FileManager and FFmpegService (v2).'
-  );
+  ffmpegCtx = services.ffmpeg;
+  log.info('[url-handler] Initialized with FileManager + FFmpegContext.');
 }
 
 function checkServicesInitialized(): {
   fileManager: FileManager;
-  ffmpegService: FFmpegService;
+  ffmpeg: FFmpegContext;
 } {
-  if (!fileManagerInstance || !ffmpegServiceInstance) {
-    throw new Error('[url-handler] Services not initialized (v2).');
+  if (!fileManagerInstance || !ffmpegCtx) {
+    throw new Error('[url-handler] Services not initialized.');
   }
-  return {
-    fileManager: fileManagerInstance,
-    ffmpegService: ffmpegServiceInstance,
-  };
+  return { fileManager: fileManagerInstance, ffmpeg: ffmpegCtx };
 }
 
 interface ProcessUrlResult {
@@ -117,7 +110,7 @@ export async function handleProcessUrl(
       `[url-handler] Calling processVideoUrl for Operation ID: ${operationId}`
     );
 
-    const { fileManager, ffmpegService } = checkServicesInitialized();
+    const { fileManager, ffmpeg } = checkServicesInitialized();
 
     // Track early cancellation
     let cancelledEarly = false;
@@ -141,7 +134,7 @@ export async function handleProcessUrl(
       operationId,
       {
         fileManager,
-        ffmpegService,
+        ffmpeg,
       },
       options.useCookies || false
     );

@@ -1,12 +1,12 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { ChildProcess } from 'child_process';
-import { app, ipcMain, BrowserWindow, dialog } from 'electron';
+import { ipcMain, BrowserWindow, dialog } from 'electron';
 import log from 'electron-log';
 import { pathToFileURL } from 'url';
 
 import { RenderSubtitlesOptions } from '@shared-types/app';
-import { FFmpegService } from '../../services/ffmpeg-service.js';
+import type { FFmpegContext } from '../../services/ffmpeg-runner.js';
 import { getAssetsPath } from '../../../shared/helpers/paths.js';
 import {
   registerAutoCancel,
@@ -31,34 +31,48 @@ const jobControllers = new Map<string, AbortController>();
 
 const fontRegular = pathToFileURL(getAssetsPath('NotoSans-Regular.ttf')).href;
 
-async function writeConcat({
-  frames,
-  listPath,
+export function initializeRenderWindowHandlers({
+  ffmpeg,
 }: {
-  frames: Array<{ path: string; duration: number }>;
-  listPath: string;
-}) {
-  let out = 'ffconcat version 1.0\n\n';
-  for (const f of frames) {
-    const relativePath = path
-      .relative(path.dirname(listPath), f.path)
-      .replace(/\\/g, '/');
-    out += `file '${relativePath}'\n`;
-    out += `duration ${f.duration.toFixed(6)}\n\n`;
-  }
-
-  if (frames.length > 0) {
-    const lastRelativePath = path
-      .relative(path.dirname(listPath), frames.at(-1)!.path)
-      .replace(/\\/g, '/');
-    out += `file '${lastRelativePath}'\n`;
-  }
-  await fs.writeFile(listPath, out, 'utf8');
-  log.info(`[writeConcat] Wrote PNG concat list to ${listPath}`);
-}
-
-export function initializeRenderWindowHandlers(): void {
+  ffmpeg: FFmpegContext;
+}): void {
   log.info('[RenderWindowHandlers] Initialising …');
+
+  async function makeBlackVideo({
+    out,
+    w,
+    h,
+    fps,
+    dur,
+  }: {
+    out: string;
+    w: number;
+    h: number;
+    fps: number;
+    dur: number;
+  }) {
+    await ffmpeg.run(
+      [
+        '-f',
+        'lavfi',
+        '-i',
+        `color=c=black:s=${w}x${h}:r=${fps}`,
+        '-t',
+        String(dur),
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '22',
+        '-pix_fmt',
+        'yuv420p',
+        '-an',
+        out,
+      ],
+      { operationId: 'makeBlackVideo' }
+    );
+  }
 
   ipcMain.on(
     'render-subtitles-request',
@@ -136,8 +150,7 @@ export function initializeRenderWindowHandlers(): void {
         );
         let realFps = options.frameRate || 30;
         try {
-          const ffmpegSvc = new FFmpegService(app.getPath('temp'));
-          if (await ffmpegSvc.hasVideoTrack(options.originalVideoPath)) {
+          if (await ffmpeg.hasVideoTrack(options.originalVideoPath)) {
             realFps = await probeFps(options.originalVideoPath);
           }
         } catch (err) {
@@ -191,9 +204,8 @@ export function initializeRenderWindowHandlers(): void {
 
         let videoForMerge = options.originalVideoPath;
         if (options.overlayMode === 'blackVideo') {
-          const ffmpegSvc = new FFmpegService(app.getPath('temp'));
           videoForMerge = path.join(tempDirPath, `black_${operationId}.mp4`);
-          await ffmpegSvc.makeBlackVideo({
+          await makeBlackVideo({
             out: videoForMerge,
             w: options.videoWidth,
             h: options.videoHeight,
@@ -294,4 +306,30 @@ function cancelRenderJob(operationId: string) {
   registryCancel(operationId).catch(err =>
     log.error(`[render-cancel] failed:`, err)
   );
+}
+
+async function writeConcat({
+  frames,
+  listPath,
+}: {
+  frames: Array<{ path: string; duration: number }>;
+  listPath: string;
+}) {
+  let out = 'ffconcat version 1.0\n\n';
+  for (const f of frames) {
+    const relativePath = path
+      .relative(path.dirname(listPath), f.path)
+      .replace(/\\/g, '/');
+    out += `file '${relativePath}'\n`;
+    out += `duration ${f.duration.toFixed(6)}\n\n`;
+  }
+
+  if (frames.length > 0) {
+    const lastRelativePath = path
+      .relative(path.dirname(listPath), frames.at(-1)!.path)
+      .replace(/\\/g, '/');
+    out += `file '${lastRelativePath}'\n`;
+  }
+  await fs.writeFile(listPath, out, 'utf8');
+  log.info(`[writeConcat] Wrote PNG concat list to ${listPath}`);
 }

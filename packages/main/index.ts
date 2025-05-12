@@ -23,16 +23,17 @@ const __dirname = path.dirname(__filename);
 
 const isDev = !app.isPackaged;
 
-import { FFmpegService } from './services/ffmpeg-service.js';
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
 import {
   handleProcessUrl,
   initializeUrlHandler,
-} from './handlers/url-handler.js';
+} from './handlers/url-handlers.js';
 import * as fileHandlers from './handlers/file-handlers.js';
 import * as apiKeyHandlers from './handlers/api-key-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
+import { createFFmpegContext } from './services/ffmpeg-runner.js';
+import type { FFmpegContext } from './services/ffmpeg-runner.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -68,7 +69,7 @@ let mainWindow: BrowserWindow | null = null;
 let services: {
   saveFileService: SaveFileService;
   fileManager: FileManager;
-  ffmpegService: FFmpegService;
+  ffmpeg: FFmpegContext;
 } | null = null;
 let isQuitting = false;
 
@@ -80,21 +81,21 @@ try {
 
   const saveFileService = SaveFileService.getInstance();
   const fileManager = new FileManager(tempPath);
-  const ffmpegService = new FFmpegService(tempPath);
-  services = { saveFileService, fileManager, ffmpegService };
+  const ffmpeg = createFFmpegContext(tempPath);
+  services = { saveFileService, fileManager, ffmpeg };
   log.info('[main.ts] Services Initialized.');
 
   log.info('[main.ts] Initializing Handlers...');
   fileHandlers.initializeFileHandlers({ fileManager, saveFileService });
-  subtitleHandlers.initializeSubtitleHandlers({ ffmpegService, fileManager });
-  initializeUrlHandler({ fileManager, ffmpegService });
-  renderWindowHandlers.initializeRenderWindowHandlers();
+  subtitleHandlers.initializeSubtitleHandlers({ ffmpeg, fileManager });
+  initializeUrlHandler({ fileManager, ffmpeg });
+  renderWindowHandlers.initializeRenderWindowHandlers({ ffmpeg });
   log.info('[main.ts] Handlers Initialized.');
 
   log.info('[main.ts] Registering IPC Handlers...');
   ipcMain.handle('has-video-track', async (_evt, filePath: string) => {
     try {
-      return await services!.ffmpegService.hasVideoTrack(filePath);
+      return await services!.ffmpeg.hasVideoTrack(filePath);
     } catch (err: any) {
       log.error('[main] has-video-track error:', err);
       return { success: false, error: err?.message ?? String(err) };

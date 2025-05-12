@@ -4,7 +4,7 @@ import {
 } from '@shared-types/app';
 import log from 'electron-log';
 import { FileManager } from '../file-manager.js';
-import { FFmpegService } from '../ffmpeg-service.js';
+import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { GenerateSubtitlesFullResult } from './types.js';
 import { SubtitleProcessingError } from './errors.js';
 import { prepareAudio } from './pipeline/prepare-audio.js';
@@ -25,7 +25,7 @@ export async function extractSubtitlesFromMedia({
   progressCallback?: GenerateProgressCallback;
   services: {
     fileManager: FileManager;
-    ffmpegService: FFmpegService;
+    ffmpeg: FFmpegContext;
   };
 }): Promise<GenerateSubtitlesFullResult> {
   if (!options) {
@@ -41,7 +41,7 @@ export async function extractSubtitlesFromMedia({
     );
   }
 
-  const { ffmpegService, fileManager } = services;
+  const { ffmpeg, fileManager } = services;
   const targetLang = options.targetLanguage.toLowerCase();
 
   let audioPath: string | null = null;
@@ -49,7 +49,7 @@ export async function extractSubtitlesFromMedia({
   try {
     const { audioPath: extractedAudioPath } = await prepareAudio({
       videoPath: options.videoPath,
-      services: { ffmpegService },
+      services: { ffmpeg },
       progressCallback,
       operationId,
       signal,
@@ -58,7 +58,7 @@ export async function extractSubtitlesFromMedia({
 
     const { segments, speechIntervals } = await transcribePass({
       audioPath: audioPath,
-      services: { ffmpegService },
+      services: { ffmpeg },
       progressCallback,
       operationId,
       signal,

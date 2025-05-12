@@ -2,46 +2,50 @@ import path from 'path';
 import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
-import { FFmpegService } from '../services/ffmpeg-service.js';
 import { FileManager } from '../services/file-manager.js';
 import { extractSubtitlesFromMedia } from '../services/subtitle-processing/index.js';
 import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
-  SubtitleHandlerServices,
 } from '@shared-types/app';
 import {
   addSubtitle,
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
+import type { FFmpegContext } from '../services/ffmpeg-runner.js';
 
-let ffmpegServiceInstance: FFmpegService | null = null;
 let fileManagerInstance: FileManager | null = null;
+let ffmpegCtx: FFmpegContext | null = null;
+
+interface SubtitleHandlerServices {
+  ffmpeg: FFmpegContext;
+  fileManager: FileManager;
+}
 
 export function initializeSubtitleHandlers(
   services: SubtitleHandlerServices
 ): void {
-  if (!services || !services.ffmpegService || !services.fileManager) {
+  if (!services || !services.ffmpeg || !services.fileManager) {
     throw new Error(
-      '[subtitle-handlers] Required services (ffmpegService, fileManager) not provided.'
+      '[subtitle-handlers] Required services (ffmpeg, fileManager) not provided.'
     );
   }
-  ffmpegServiceInstance = services.ffmpegService;
+  ffmpegCtx = services.ffmpeg;
   fileManagerInstance = services.fileManager;
 
   log.info('[src/handlers/subtitle-handlers.ts] Initialized!');
 }
 
 function checkServicesInitialized(): {
-  ffmpegService: FFmpegService;
+  ffmpeg: FFmpegContext;
   fileManager: FileManager;
 } {
-  if (!ffmpegServiceInstance || !fileManagerInstance) {
+  if (!ffmpegCtx || !fileManagerInstance) {
     throw new Error('[subtitle-handlers] Services not initialized before use.');
   }
   return {
-    ffmpegService: ffmpegServiceInstance,
+    ffmpeg: ffmpegCtx,
     fileManager: fileManagerInstance,
   };
 }
@@ -57,7 +61,7 @@ export async function handleGenerateSubtitles(
   error?: string;
   operationId: string;
 }> {
-  const { ffmpegService, fileManager } = checkServicesInitialized();
+  const { ffmpeg, fileManager } = checkServicesInitialized();
 
   log.info(`[handleGenerateSubtitles] Starting. Operation ID: ${operationId}`);
 
@@ -72,7 +76,6 @@ export async function handleGenerateSubtitles(
   try {
     tempVideoPath = await maybeWriteTempVideo({
       finalOptions,
-      ffmpegService,
     });
     if (!finalOptions.videoPath) {
       throw new Error('Video path is required');
@@ -92,7 +95,7 @@ export async function handleGenerateSubtitles(
       operationId,
       signal: controller.signal,
       progressCallback,
-      services: { ffmpegService, fileManager },
+      services: { ffmpeg, fileManager },
     });
 
     await cleanupTempFile(tempVideoPath);
@@ -127,10 +130,8 @@ export async function handleGenerateSubtitles(
 
   async function maybeWriteTempVideo({
     finalOptions,
-    ffmpegService,
   }: {
     finalOptions: GenerateSubtitlesOptions;
-    ffmpegService: FFmpegService;
   }): Promise<string | null> {
     if (finalOptions.videoFile) {
       const safeName = finalOptions.videoFile.name.replace(
@@ -138,7 +139,7 @@ export async function handleGenerateSubtitles(
         '_'
       );
       const tempVideoPath = path.join(
-        ffmpegService.getTempDir(),
+        ffmpegCtx!.tempDir,
         `temp_generate_${Date.now()}_${safeName}`
       );
 
@@ -164,12 +165,12 @@ export async function handleGenerateSubtitles(
 }
 
 export async function handleGetVideoMetadata(_event: any, filePath: string) {
-  if (!ffmpegServiceInstance) {
-    log.error('[getVideoMetadata] FFmpegService not initialized.');
-    return { success: false, error: 'FFmpegService not available.' };
+  if (!ffmpegCtx) {
+    log.error('[getVideoMetadata] FFmpegContext not initialized.');
+    return { success: false, error: 'FFmpegContext not available.' };
   }
   try {
-    const metadata = await ffmpegServiceInstance.getVideoMetadata(filePath);
+    const metadata = await ffmpegCtx.getVideoMetadata(filePath);
     return { success: true, metadata };
   } catch (error: any) {
     log.error(

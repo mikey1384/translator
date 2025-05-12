@@ -6,7 +6,7 @@ import type { DownloadProcess as DownloadProcessType } from '../../active-proces
 import { findYtDlpBinary } from './binary-locator.js';
 import { downloadVideoFromPlatform } from './download.js';
 import { PROGRESS } from './constants.js';
-import { FFmpegService } from '../ffmpeg-service.js';
+import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
 import { mapErrorToUserFriendly } from './error-map.js';
@@ -31,7 +31,7 @@ export async function processVideoUrl(
   operationId: string,
   services?: {
     fileManager: FileManager;
-    ffmpegService: FFmpegService;
+    ffmpeg: FFmpegContext;
   },
   useCookies: boolean = false
 ): Promise<{
@@ -52,10 +52,10 @@ export async function processVideoUrl(
     `[URLprocessor] processVideoUrl using tempDir from FileManager: ${tempDir}`
   );
 
-  if (!services?.ffmpegService) {
-    throw new Error('FFmpegService instance is required for processVideoUrl');
+  if (!services?.ffmpeg) {
+    throw new Error('FFmpegContext is required for processVideoUrl');
   }
-  const { ffmpegService } = services;
+  const { ffmpeg } = services;
 
   try {
     new URL(url);
@@ -75,7 +75,7 @@ export async function processVideoUrl(
       quality,
       progressCallback,
       operationId,
-      { ffmpegService },
+      { ffmpeg },
       extra
     );
     const stats = await fsp.stat(downloadResult.filepath);

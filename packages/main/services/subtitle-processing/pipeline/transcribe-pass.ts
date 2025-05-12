@@ -1,4 +1,4 @@
-import { FFmpegService } from '../../ffmpeg-service.js';
+import { FFmpegContext } from '../../ffmpeg-runner.js';
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
 import OpenAI from 'openai';
 import path from 'path';
@@ -39,7 +39,7 @@ export async function transcribePass({
   signal,
 }: {
   audioPath: string;
-  services: { ffmpegService: FFmpegService };
+  services: { ffmpeg: FFmpegContext };
   progressCallback?: GenerateProgressCallback;
   operationId: string;
   signal: AbortSignal;
@@ -56,16 +56,16 @@ export async function transcribePass({
     const openaiApiKey = await getApiKey('openai');
     openai = new OpenAI({ apiKey: openaiApiKey });
 
-    if (!services?.ffmpegService) {
-      throw new SubtitleProcessingError('FFmpegService is required.');
+    if (!services?.ffmpeg) {
+      throw new SubtitleProcessingError('FFmpegContext is required.');
     }
-    const { ffmpegService } = services;
+    const { ffmpeg } = services;
 
     if (!fs.existsSync(audioPath)) {
       throw new SubtitleProcessingError(`Audio file not found: ${audioPath}`);
     }
 
-    const duration = await ffmpegService.getMediaDuration(audioPath, signal);
+    const duration = await ffmpeg.getMediaDuration(audioPath, signal);
     if (signal?.aborted) throw new Error('Cancelled');
 
     if (isNaN(duration) || duration <= 0) {
@@ -193,10 +193,10 @@ export async function transcribePass({
         createdChunkPaths.push(mp3Path);
 
         try {
-          await ffmpegService.extractAudioSegment({
-            inputPath: audioPath,
-            outputPath: mp3Path,
-            startTime: meta.start,
+          await ffmpeg.extractAudioSegment({
+            input: audioPath,
+            output: mp3Path,
+            start: meta.start,
             duration: meta.end - meta.start,
             operationId: operationId ?? '',
             signal,
@@ -334,10 +334,10 @@ export async function transcribePass({
       );
       createdChunkPaths.push(repairPath);
 
-      await ffmpegService.extractAudioSegment({
-        inputPath: audioPath,
-        outputPath: repairPath,
-        startTime: gap.start,
+      await ffmpeg.extractAudioSegment({
+        input: audioPath,
+        output: repairPath,
+        start: gap.start,
         duration: gap.end - gap.start,
         operationId: operationId ?? '',
         signal,
