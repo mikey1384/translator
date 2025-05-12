@@ -101,6 +101,7 @@ declare module '@shared-types/app' {
       total?: number;
       warning?: string;
       operationId?: string;
+      batchStartIndex?: number;
     }
   ) => void;
 
