@@ -437,6 +437,7 @@ async function createWindow() {
       allowRunningInsecureContent: false,
       sandbox: false,
       preload: path.join(__dirname, '../preload/preload.cjs'),
+      backgroundThrottling: false,
     },
   });
 
