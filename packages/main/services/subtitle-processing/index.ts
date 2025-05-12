@@ -17,38 +17,36 @@ import { spawn } from 'child_process';
 import * as webrtcvadPackage from 'webrtcvad';
 import pLimit from 'p-limit';
 import crypto from 'crypto';
+import {
+  MAX_PROMPT_CHARS,
+  VAD_NORMALIZATION_MIN_GAP_SEC,
+  VAD_NORMALIZATION_MIN_DURATION_SEC,
+  PRE_PAD_SEC,
+  POST_PAD_SEC,
+  MERGE_GAP_SEC,
+  MAX_SPEECHLESS_SEC,
+  SUBTITLE_GAP_THRESHOLD,
+  NO_SPEECH_PROB_THRESHOLD,
+  AVG_LOGPROB_THRESHOLD,
+  MAX_GAP_TO_FUSE,
+  MISSING_GAP_SEC,
+  REPAIR_PROGRESS_START,
+  REPAIR_PROGRESS_END,
+  MIN_CHUNK_DURATION_SEC,
+  MAX_CHUNK_DURATION_SEC,
+  GAP_SEC,
+  TRANSCRIPTION_BATCH_SIZE,
+  REVIEW_BATCH_SIZE,
+  REVIEW_OVERLAP_CTX,
+  REVIEW_STEP,
+  STAGE_AUDIO_EXTRACTION,
+  STAGE_TRANSCRIPTION,
+  PROGRESS_ANALYSIS_DONE,
+  PROGRESS_TRANSCRIPTION_START,
+  PROGRESS_TRANSCRIPTION_END,
+} from './constants.js';
 
 const Vad = webrtcvadPackage.default.default;
-
-// --- Configuration Constants ---
-const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
-const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
-const PRE_PAD_SEC = 0.1;
-const POST_PAD_SEC = 0.15;
-const MERGE_GAP_SEC = 0.5;
-const MAX_SPEECHLESS_SEC = 15;
-const NO_SPEECH_PROB_THRESHOLD = 0.7;
-const AVG_LOGPROB_THRESHOLD = -4.5;
-const MAX_PROMPT_CHARS = 600;
-const SUBTITLE_GAP_THRESHOLD = 5;
-const MAX_GAP_TO_FUSE = 0.3;
-
-const MISSING_GAP_SEC = 10;
-const REPAIR_PROGRESS_START = 90;
-const REPAIR_PROGRESS_END = 100;
-
-const MIN_CHUNK_DURATION_SEC = 8;
-const MAX_CHUNK_DURATION_SEC = 15;
-const GAP_SEC = 3;
-
-// --- Concurrency Setting ---
-const TRANSCRIPTION_BATCH_SIZE = 50;
-
-// --------------------------------------------------------------------------
-// ★ NEW – review/polish constants (put just after TRANSCRIPTION_BATCH_SIZE)
-const REVIEW_BATCH_SIZE = 50;
-const REVIEW_OVERLAP_CTX = 8;
-const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 
 type ReviewBatch = {
   segments: SrtSegment[];
@@ -134,8 +132,6 @@ export async function extractSubtitlesFromVideo({
   const targetLang = options.targetLanguage.toLowerCase();
   const isTranslationNeeded = targetLang !== 'original';
 
-  const STAGE_AUDIO_EXTRACTION = { start: 0, end: 10 };
-  const STAGE_TRANSCRIPTION = { start: 10, end: 50 };
   const STAGE_TRANSLATION = isTranslationNeeded
     ? { start: 50, end: 75 }
     : { start: 50, end: 100 };
@@ -568,11 +564,6 @@ export async function generateSubtitlesFromAudio({
   speechIntervals: Array<{ start: number; end: number }>;
   srt: string;
 }> {
-  // progress constants
-  const PROGRESS_ANALYSIS_DONE = 5;
-  const PROGRESS_TRANSCRIPTION_START = 20;
-  const PROGRESS_TRANSCRIPTION_END = 95;
-
   let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
   const tempDir = path.dirname(inputAudioPath);

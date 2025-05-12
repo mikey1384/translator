@@ -11,10 +11,12 @@ export const MAX_PROMPT_CHARS = 600;
 export const SUBTITLE_GAP_THRESHOLD = 5;
 export const MAX_GAP_TO_FUSE = 0.3;
 
+// --- Repair constants ---
 export const MISSING_GAP_SEC = 10;
 export const REPAIR_PROGRESS_START = 90;
 export const REPAIR_PROGRESS_END = 100;
 
+// --- Chunking constants ---
 export const MIN_CHUNK_DURATION_SEC = 8;
 export const MAX_CHUNK_DURATION_SEC = 15;
 export const GAP_SEC = 3;
@@ -30,7 +32,6 @@ export const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 // Translation and processing progress stages
 export const STAGE_AUDIO_EXTRACTION = { start: 0, end: 10 };
 export const STAGE_TRANSCRIPTION = { start: 10, end: 50 };
-export const STAGE_FINALIZING = { start: 95, end: 100 };
 
 // Progress constants for transcription
 export const PROGRESS_ANALYSIS_DONE = 5;
