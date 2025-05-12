@@ -30,6 +30,7 @@ import {
 } from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
+import { extractAudioSegment } from '../audio-extractor.js';
 
 export async function transcribePass({
   audioPath,
@@ -186,16 +187,16 @@ export async function transcribePass({
         }
 
         // Create a temp chunk
-        const mp3Path = path.join(
+        const flacPath = path.join(
           tempDir,
-          `chunk_${meta.index}_${operationId}.mp3`
+          `chunk_${meta.index}_${operationId}.flac`
         );
-        createdChunkPaths.push(mp3Path);
+        createdChunkPaths.push(flacPath);
 
         try {
-          await ffmpeg.extractAudioSegment({
+          await extractAudioSegment(ffmpeg, {
             input: audioPath,
-            output: mp3Path,
+            output: flacPath,
             start: meta.start,
             duration: meta.end - meta.start,
             operationId: operationId ?? '',
@@ -206,7 +207,7 @@ export async function transcribePass({
 
           const segs = await transcribeChunk({
             chunkIndex: meta.index,
-            chunkPath: mp3Path,
+            chunkPath: flacPath,
             startTime: meta.start,
             signal,
             openai,
@@ -330,11 +331,11 @@ export async function transcribePass({
 
       const repairPath = path.join(
         tempDir,
-        `repair_gap_${gapIndex}_${operationId}.mp3`
+        `repair_gap_${gapIndex}_${operationId}.flac`
       );
       createdChunkPaths.push(repairPath);
 
-      await ffmpeg.extractAudioSegment({
+      await extractAudioSegment(ffmpeg, {
         input: audioPath,
         output: repairPath,
         start: gap.start,

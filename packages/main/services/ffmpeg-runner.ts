@@ -18,7 +18,6 @@ export interface FFmpegContext {
   readonly ffprobePath: string;
   run(args: string[], opts?: RunOpts): Promise<void>;
   getMediaDuration(file: string, signal?: AbortSignal): Promise<number>;
-  extractAudioSegment(opts: AudioSliceOpts): Promise<string>;
   hasVideoTrack(file: string): Promise<boolean>;
   getVideoMetadata(file: string): Promise<VideoMeta>;
   cancelOperation(id: string): void;
@@ -115,6 +114,7 @@ export function createFFmpegContext(tempDirPath: string): FFmpegContext {
     child.stderr.on('data', d => {
       const line = d.toString();
       stderrBuf.push(line);
+      log.error(`[ffmpeg ${operationId ?? 'no-id'}] ${line}`);
       if (totalDuration && progress)
         parseProgress(line, totalDuration, progress);
     });
@@ -197,33 +197,6 @@ export function createFFmpegContext(tempDirPath: string): FFmpegContext {
     });
   }
 
-  async function extractAudioSegment(opts: AudioSliceOpts): Promise<string> {
-    const { input, output, start, duration, operationId, signal } = opts;
-    const args = [
-      '-y',
-      '-ss',
-      String(start),
-      '-t',
-      String(duration),
-      '-i',
-      input,
-      '-vn',
-      '-af',
-      'afftdn=nf=-25,agate=threshold=-30dB',
-      '-ar',
-      '16000',
-      '-ac',
-      '1',
-      '-c:a',
-      'flac',
-      output,
-    ];
-    await run(args, { operationId, cwd: path.dirname(input), signal });
-    if (!fs.existsSync(output) || fs.statSync(output).size === 0)
-      throw new FFmpegError('empty slice output');
-    return output;
-  }
-
   function hasVideoTrack(file: string): Promise<boolean> {
     return new Promise(res => {
       const p = spawn(ffprobePath, [
@@ -292,7 +265,6 @@ export function createFFmpegContext(tempDirPath: string): FFmpegContext {
     ffprobePath,
     run,
     getMediaDuration,
-    extractAudioSegment,
     hasVideoTrack,
     getVideoMetadata,
     cancelOperation,

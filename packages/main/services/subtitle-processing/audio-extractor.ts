@@ -2,7 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import fsp from 'fs/promises';
 import log from 'electron-log';
-import { FFmpegError, FFmpegContext } from '../ffmpeg-runner.js';
+import { spawn } from 'child_process';
+import {
+  FFmpegError,
+  AudioSliceOpts,
+  FFmpegContext,
+} from '../ffmpeg-runner.js';
 
 declare module '../ffmpeg-runner.js' {
   interface FFmpegContext {
@@ -13,6 +18,28 @@ declare module '../ffmpeg-runner.js' {
       progress?: (p: { percent: number; stage?: string }) => void;
     }) => Promise<string>;
   }
+}
+
+async function getFirstAudioIndex(
+  file: string,
+  ffprobePath: string
+): Promise<string | null> {
+  return new Promise<string | null>(res => {
+    const p = spawn(ffprobePath, [
+      '-v',
+      'error',
+      '-select_streams',
+      'a',
+      '-show_entries',
+      'stream=index',
+      '-of',
+      'csv=p=0',
+      file,
+    ]);
+    let out = '';
+    p.stdout.on('data', d => (out += d));
+    p.on('close', () => res(out.trim().split('\n')[0] || null));
+  });
 }
 
 export async function extractAudio(
@@ -41,6 +68,8 @@ export async function extractAudio(
       stage: 'Analyzing video file...',
     });
 
+    fs.mkdirSync(ctx.tempDir, { recursive: true });
+
     const stats = fs.statSync(videoPath);
     const fileSizeMB = Math.round(stats.size / (1024 * 1024));
     const duration = await ctx.getMediaDuration(videoPath, signal);
@@ -63,10 +92,20 @@ export async function extractAudio(
     const startTime = Date.now();
     let lastProgressPercent = EXTRACTION_START;
 
+    const audioIdx = await getFirstAudioIndex(videoPath, ctx.ffprobePath);
+    if (audioIdx === null) {
+      throw new FFmpegError('No audio stream detected in input file');
+    }
+
     const ffmpegArgs = [
+      '-v',
+      'error',
+      '-discard:v',
+      'all',
       '-i',
       videoPath,
-      '-vn',
+      '-map',
+      '0:a:0?',
       '-acodec',
       'flac',
       '-ar',
@@ -78,6 +117,8 @@ export async function extractAudio(
       '-y',
       outputPath,
     ];
+
+    log.info(`[ffmpeg extractAudio] Running command: ${ffmpegArgs.join(' ')}`);
 
     await ctx.run(ffmpegArgs, {
       operationId,
@@ -134,6 +175,41 @@ export async function extractAudio(
   }
 }
 
+export async function extractAudioSegment(
+  ctx: FFmpegContext,
+  opts: AudioSliceOpts
+): Promise<string> {
+  const { input, output, start, duration, operationId, signal } = opts;
+  const audioIdx = await getFirstAudioIndex(input, ctx.ffprobePath);
+  if (audioIdx === null) throw new FFmpegError('No audio stream in file');
+  const args = [
+    '-y',
+    '-ss',
+    String(start),
+    '-t',
+    String(duration),
+    '-i',
+    input,
+    '-map',
+    '0:a:0?',
+    '-vn',
+    '-af',
+    'afftdn=nf=-25,agate=threshold=-30dB',
+    '-ar',
+    '16000',
+    '-ac',
+    '1',
+    '-c:a',
+    'flac',
+    output,
+  ];
+  await ctx.run(args, { operationId, cwd: path.dirname(input), signal });
+  if (!fs.existsSync(output) || fs.statSync(output).size === 0) {
+    throw new FFmpegError('empty slice output');
+  }
+  return output;
+}
+
 // Helper to attach to context
 export function attachExtractAudio(ctx: FFmpegContext): void {
   if (ctx.extractAudio) return; // avoid re-binding
@@ -143,4 +219,10 @@ export function attachExtractAudio(ctx: FFmpegContext): void {
     signal?: AbortSignal;
     progress?: (p: { percent: number; stage?: string }) => void;
   }) => extractAudio(ctx, opts);
+}
+
+export function attachExtractAudioSegment(ctx: FFmpegContext): void {
+  if ('extractAudioSegment' in ctx) return; // already attached
+  (ctx as any).extractAudioSegment = (opts: AudioSliceOpts) =>
+    extractAudioSegment(ctx, opts);
 }
