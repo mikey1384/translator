@@ -263,7 +263,7 @@ export default function EditSubtitles({
   }
 
   async function handleSaveEditedSrtAs() {
-    const suggestion = originalPath || 'edited_subtitles.srt';
+    const suggestion = originalPath || 'subtitles.srt';
     const res = await FileIPC.save({
       title: 'Save SRT File As',
       defaultPath: suggestion,
@@ -273,7 +273,8 @@ export default function EditSubtitles({
     if (res.error && !res.error.includes('canceled')) {
       setSaveError(res.error);
     } else if (res.filePath) {
-      await writeSrt(res.filePath);
+      subStore.load(subtitles, res.filePath);
+      alert(`File saved:\n${res.filePath}`);
     }
   }
 
