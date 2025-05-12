@@ -135,7 +135,6 @@ export default function BottomMenu({
         value={mergeFontSize || ''}
         onChange={handleFontSizeChange}
         onBlur={handleFontSizeBlur}
-        disabled={isMergingInProgress || isTranslationInProgress}
       />
 
       <label className={fontSizeLabelStyles} htmlFor="mergeStylePresetSelect">
@@ -148,7 +147,6 @@ export default function BottomMenu({
         onChange={e =>
           setMergeStylePreset(e.target.value as SubtitleStylePresetKey)
         }
-        disabled={isMergingInProgress || isTranslationInProgress}
       >
         {stylePresetOrder.map(key => (
           <option key={key} value={key}>
