@@ -1,10 +1,10 @@
 import path from 'path';
-import { FFmpegService } from './ffmpeg-service.js';
-import { buildSrt } from '../../shared/helpers/index.js';
+import { FFmpegService } from '../ffmpeg-service.js';
+import { buildSrt } from '../../../shared/helpers/index.js';
 import fs from 'fs';
 import fsp from 'fs/promises';
-import { getApiKey as getSecureApiKey } from './secure-store.js';
-import { AI_MODELS } from '../../shared/constants/index.js';
+import { getApiKey as getSecureApiKey } from '../secure-store.js';
+import { AI_MODELS } from '../../../shared/constants/index.js';
 import {
   GenerateSubtitlesOptions,
   GenerateProgressCallback,
@@ -12,7 +12,7 @@ import {
 } from '@shared-types/app';
 import log from 'electron-log';
 import OpenAI from 'openai';
-import { FileManager } from './file-manager.js';
+import { FileManager } from '../file-manager.js';
 import { spawn } from 'child_process';
 import * as webrtcvadPackage from 'webrtcvad';
 import pLimit from 'p-limit';
