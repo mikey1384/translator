@@ -1,0 +1,178 @@
+import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
+import { fuseOrphans } from '../post-process.js';
+import pLimit from 'p-limit';
+import log from 'electron-log';
+import { scaleProgress, Stage } from './progress.js';
+import { buildSrt } from '../../../../shared/helpers/index.js';
+import { translateBatch, reviewTranslationBatch } from '../translator.js';
+import {
+  REVIEW_OVERLAP_CTX,
+  REVIEW_BATCH_SIZE,
+  REVIEW_STEP,
+} from '../constants.js';
+
+export async function translatePass({
+  segments,
+  targetLang,
+  progressCallback,
+  operationId,
+  signal,
+}: {
+  segments: SrtSegment[];
+  targetLang: string;
+  progressCallback?: GenerateProgressCallback;
+  operationId: string;
+  signal: AbortSignal;
+}): Promise<SrtSegment[]> {
+  if (targetLang === 'original') {
+    return segments;
+  }
+
+  const segmentsInProcess = fuseOrphans(segments).map((seg, i) => ({
+    ...seg,
+    index: i + 1,
+  }));
+  const totalSegments = segmentsInProcess.length;
+  const TRANSLATION_BATCH_SIZE = 10;
+
+  const CONCURRENT_TRANSLATIONS = Math.min(
+    4,
+    Number(process.env.MAX_OPENAI_PARALLEL || 4)
+  );
+  const limit = pLimit(CONCURRENT_TRANSLATIONS);
+
+  const batchPromises = [];
+
+  let batchesDone = 0;
+
+  for (
+    let batchStart = 0;
+    batchStart < totalSegments;
+    batchStart += TRANSLATION_BATCH_SIZE
+  ) {
+    const batchEnd = Math.min(
+      batchStart + TRANSLATION_BATCH_SIZE,
+      totalSegments
+    );
+    const currentBatchOriginals = segmentsInProcess.slice(batchStart, batchEnd);
+    const contextBefore = segmentsInProcess.slice(
+      Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
+      batchStart
+    );
+    const contextAfter = segmentsInProcess.slice(
+      batchEnd,
+      Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
+    );
+
+    const promise = limit(() =>
+      translateBatch({
+        batch: {
+          segments: currentBatchOriginals.map(seg => ({ ...seg })),
+          startIndex: batchStart,
+          endIndex: batchEnd,
+          contextBefore,
+          contextAfter,
+        },
+        targetLang,
+        operationId,
+        signal,
+      }).then(translatedBatch => {
+        for (let i = 0; i < translatedBatch.length; i++) {
+          segmentsInProcess[batchStart + i] = translatedBatch[i];
+        }
+      })
+    )
+      .catch(err => {
+        log.error(`[${operationId}] translate batch failed`, err);
+      })
+      .finally(() => {
+        batchesDone++;
+        const doneSoFar = Math.min(
+          batchesDone * TRANSLATION_BATCH_SIZE,
+          totalSegments
+        );
+        progressCallback?.({
+          percent: scaleProgress(
+            (doneSoFar / totalSegments) * 100,
+            Stage.TRANSLATE,
+            Stage.REVIEW
+          ),
+          stage: `Translating ${doneSoFar}/${totalSegments}`,
+          partialResult: buildSrt({
+            segments: segmentsInProcess,
+            mode: 'dual',
+          }),
+          current: doneSoFar,
+          total: totalSegments,
+        });
+      });
+
+    batchPromises.push(promise);
+  }
+
+  await Promise.all(batchPromises);
+
+  for (
+    let batchStart = 0;
+    batchStart < segmentsInProcess.length;
+    batchStart += REVIEW_STEP
+  ) {
+    const batchEnd = Math.min(
+      batchStart + REVIEW_BATCH_SIZE,
+      segmentsInProcess.length
+    );
+
+    const reviewSlice = segmentsInProcess.slice(batchStart, batchEnd);
+    const contextBefore = segmentsInProcess.slice(
+      Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
+      batchStart
+    );
+    const contextAfter = segmentsInProcess.slice(
+      batchEnd,
+      Math.min(batchEnd + REVIEW_OVERLAP_CTX, segmentsInProcess.length)
+    );
+
+    const reviewed = await reviewTranslationBatch({
+      batch: {
+        segments: reviewSlice,
+        startIndex: batchStart,
+        endIndex: batchEnd,
+        targetLang,
+        contextBefore,
+        contextAfter,
+      },
+      operationId,
+      signal,
+    });
+
+    for (let i = 0; i < reviewed.length; i++) {
+      const globalIdx = batchStart + i;
+      if (
+        !segmentsInProcess[globalIdx].reviewedInBatch ||
+        segmentsInProcess[globalIdx].reviewedInBatch < batchStart
+      ) {
+        segmentsInProcess[globalIdx] = {
+          ...reviewed[i],
+          reviewedInBatch: batchStart,
+        };
+      }
+    }
+
+    const overall = (batchEnd / segmentsInProcess.length) * 100;
+    progressCallback?.({
+      percent: scaleProgress(overall, Stage.REVIEW, Stage.FINAL),
+      stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
+        segmentsInProcess.length / REVIEW_BATCH_SIZE
+      )}`,
+      partialResult: buildSrt({
+        segments: segmentsInProcess,
+        mode: 'dual',
+      }),
+      current: batchEnd,
+      total: segmentsInProcess.length,
+      batchStartIndex: batchStart,
+    });
+  }
+
+  return segmentsInProcess;
+}

@@ -13,8 +13,6 @@ export const MAX_GAP_TO_FUSE = 0.3;
 
 // --- Repair constants ---
 export const MISSING_GAP_SEC = 10;
-export const REPAIR_PROGRESS_START = 90;
-export const REPAIR_PROGRESS_END = 100;
 
 // --- Chunking constants ---
 export const MIN_CHUNK_DURATION_SEC = 8;
@@ -29,11 +27,5 @@ export const REVIEW_BATCH_SIZE = 50;
 export const REVIEW_OVERLAP_CTX = 8;
 export const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 
-// Translation and processing progress stages
-export const STAGE_AUDIO_EXTRACTION = { start: 0, end: 10 };
-export const STAGE_TRANSCRIPTION = { start: 10, end: 50 };
-
 // Progress constants for transcription
 export const PROGRESS_ANALYSIS_DONE = 5;
-export const PROGRESS_TRANSCRIPTION_START = 20;
-export const PROGRESS_TRANSCRIPTION_END = 95;
