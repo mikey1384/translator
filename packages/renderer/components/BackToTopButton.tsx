@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import IconButton from './IconButton.js';
 import { useTranslation } from 'react-i18next';
+import { useTaskStore } from '../state';
+import * as SubtitleIPC from '@ipc/subtitles';
 
 interface BackToTopButtonProps {
   scrollThreshold?: number;
@@ -52,10 +54,16 @@ export default function BackToTopButton({
     }
   };
 
-  const handleReloadClick = () => {
-    if (window.confirm(t('common.confirmReload'))) {
-      window.location.reload();
+  const handleReloadClick = async () => {
+    if (!window.confirm(t('common.confirmReload'))) return;
+
+    const opId = useTaskStore.getState().merge.id;
+    if (opId) {
+      SubtitleIPC.cancelPngRender(opId);
+      await new Promise(r => setTimeout(r, 200));
     }
+
+    window.location.reload();
   };
 
   return (
