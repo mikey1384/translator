@@ -9,6 +9,8 @@ type ProgressPayload = Parameters<
 
 let queued: ProgressPayload | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
+const MIN_PARSE_INTERVAL = 1500;
+let lastParsed = 0;
 
 function flush() {
   if (!queued) return;
@@ -28,8 +30,9 @@ function flush() {
     batchStartIndex,
   });
 
-  if (partialResult?.trim()) {
+  if (partialResult?.trim() && Date.now() - lastParsed > MIN_PARSE_INTERVAL) {
     useSubStore.getState().load(parseSrt(partialResult));
+    lastParsed = Date.now();
   }
 
   queued = null;

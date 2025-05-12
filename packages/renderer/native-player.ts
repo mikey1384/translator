@@ -102,7 +102,11 @@ export function nativeSeek(time: number): void {
       if (!instance) return;
 
       const currentTime = instance.currentTime;
-      if (Math.abs(currentTime - validTime) > 0.5) {
+      const drift = Math.abs(currentTime - validTime);
+
+      if (!instance.paused && drift < 1) return;
+
+      if (drift > 0.5) {
         console.warn(
           `Seek correction needed: Current ${currentTime}, Target ${validTime}. Retrying.`
         );
