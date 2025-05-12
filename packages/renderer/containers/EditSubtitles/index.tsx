@@ -335,10 +335,9 @@ export default function EditSubtitles({
       const { baseFontSize, subtitleStyle } = useUIStore.getState();
 
       const targetHeight = meta?.height ?? BASELINE_HEIGHT;
-      const scaledFontSize = Math.max(
-        1,
-        Math.round(baseFontSize * fontScale(targetHeight))
-      );
+      const scaledFontSize = isAudioOnly
+        ? baseFontSize
+        : Math.max(1, Math.round(baseFontSize * fontScale(targetHeight)));
 
       const opts: RenderSubtitlesOptions = {
         operationId: opId,
@@ -354,6 +353,7 @@ export default function EditSubtitles({
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
       };
 
+      console.log('MERGE opts →', opts);
       const res = await onStartPngRenderRequest(opts);
       if (!res.success) {
         setSaveError(res.error || 'Render failed');
