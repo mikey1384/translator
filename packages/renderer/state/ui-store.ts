@@ -36,6 +36,8 @@ interface Actions {
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
 }
 
+const TARGET_LANG_KEY = 'savedTargetLanguage';
+
 const initial: State = {
   showSettings: false,
   isFindBarVisible: false,
@@ -43,7 +45,7 @@ const initial: State = {
   activeMatchIndex: 0,
   matchedIndices: [],
   inputMode: 'file',
-  targetLanguage: 'original',
+  targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   showOriginalText: true,
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
@@ -139,6 +141,7 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         },
 
         setTargetLanguage(lang) {
+          localStorage.setItem(TARGET_LANG_KEY, lang);
           set({ targetLanguage: lang });
         },
 
