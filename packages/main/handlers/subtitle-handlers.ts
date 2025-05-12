@@ -4,7 +4,7 @@ import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
 import { FFmpegService } from '../services/ffmpeg-service.js';
 import { FileManager } from '../services/file-manager.js';
-import { extractSubtitlesFromVideo } from '../services/subtitle-processing/index.js';
+import { extractSubtitlesFromMedia } from '../services/subtitle-processing/index.js';
 import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
@@ -87,7 +87,7 @@ export async function handleGenerateSubtitles(
       });
     };
 
-    const result = await extractSubtitlesFromVideo({
+    const result = await extractSubtitlesFromMedia({
       options: finalOptions,
       operationId,
       signal: controller.signal,

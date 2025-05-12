@@ -12,7 +12,7 @@ import { transcribePass } from './pipeline/transcribe-pass.js';
 import { translatePass } from './pipeline/translate-pass.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 
-export async function extractSubtitlesFromVideo({
+export async function extractSubtitlesFromMedia({
   options,
   operationId,
   signal,
