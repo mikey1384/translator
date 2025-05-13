@@ -206,7 +206,7 @@ async function scrubHallucinationsBatch({
   const SYSTEM_HEADER = `
 VIDEO_LENGTH_SEC = ${Math.round(videoLen)}
 An outro is only valid if caption.start_sec > 0.9 * VIDEO_LENGTH_SEC.
-*** DO NOT delete ordinary punctuation.  
+*** PRESERVING PUNCTUATION IS CRITICAL. DO NOT DELETE OR ALTER STANDARD PUNCTUATION unless it is part of a clear noise pattern (e.g., 'text...???!!!'). ***
 The following characters are ALWAYS allowed and never count as noise:  
 . , ? ! … : ; " ' - – — ( ) [ ] { }
 `;
@@ -217,25 +217,48 @@ ${SYSTEM_HEADER}
 
 TASK
 ────
-For every caption decide whether to
-  • clean  – remove emoji / ★★★★ / ░░░ / premature "please subscribe", "see you in the next video" etc.
-  • delete – if it is only noise (no real words).
+For every caption, decide whether to:
+  • clean  – Remove only clear noise such as emojis, repeated special characters (e.g., ★★★★, ░░░), or premature promotional phrases like "please subscribe", "see you in the next video" when they appear early in the video (start_sec < 0.9 * VIDEO_LENGTH_SEC).
+  • delete – Remove the caption entirely if it contains no meaningful words (e.g., only noise or gibberish).
+  • keep as is – If the caption is meaningful and does not contain noise, preserve it exactly, including all standard punctuation.
 
-OUTPUT  (exactly one line per input, same order)
+OUTPUT (exactly one line per input, same order)
   @@LINE@@ <index>: <clean text>
-If the caption should be deleted output nothing after the colon.
+If the caption should be deleted, output nothing after the colon.
 
-1. Use common sense - if the caption says something like "please subscribe" or "see you in the next video" etc when video is still far from the end, it's probably a hallucination and should be deleted.
-2. If the caption is spammy, it's probably a hallucination and should be deleted.
-3. Why would a subtitle have any emojis or other non-text characters?
+RULES (Strictly Follow)
+────────────────────
+1. **Preserve Standard Punctuation:** Do not remove or alter periods (.), commas (,), question marks (?), exclamation marks (!), or other standard sentence punctuation unless they are part of a noise pattern (e.g., excessive repetition like 'text...???!!!'). If cleaning would require rephrasing that removes punctuation, prioritize keeping the original text unchanged.
+2. **Detecting Premature Outros:** If a caption contains phrases like "thanks for watching", "please subscribe", "see you next time", or similar closing remarks AND its start_sec is less than 0.9 * VIDEO_LENGTH_SEC, it is a hallucination and must be deleted.
+3. **Spam or Gibberish Detection:** Delete captions that are meaningless, such as random character strings, repeated symbols (e.g., ★★★★★, #####), or nonsensical text with no clear message.
+4. **Meaningful but Awkward Text:** If a caption has real words and conveys a message, even if slightly awkward or imperfect, keep it unless it contains clear noise elements to clean.
+5. **Timestamp Parsing:** The start time of each caption is provided in the format '<index> @ <start_sec>: <text>'. Use this to evaluate against VIDEO_LENGTH_SEC for outro detection.
 
 EXAMPLES
 ────────
 input  → 17: ★★★★★★★★★★
 output → @@LINE@@ 17:
 
-input  → 18: Thanks for watching!!! 👍👍👍
-output → @@LINE@@ 18: Thanks for watching!
+input  → 18: Thanks for watching!!! 👍👍👍 @ 30.5
+output → @@LINE@@ 18:
+
+input  → 19: Thanks for watching! See you next time. @ 950.0
+output → @@LINE@@ 19: Thanks for watching! See you next time.
+
+input  → 20: Hello, how are you today? @ 50.2
+output → @@LINE@@ 20: Hello, how are you today?
+
+input  → 21: This is a test...???!!! @ 100.3
+output → @@LINE@@ 21: This is a test.
+
+input  → 22: Subscribe now for more videos! @ 45.7
+output → @@LINE@@ 22:
+
+input  → 23: I think this is fine. Don't you? @ 200.1
+output → @@LINE@@ 23: I think this is fine. Don't you?
+
+input  → 24: ##### VIDEO END ##### @ 80.4
+output → @@LINE@@ 24:
 `;
 
   const userPayload = segments

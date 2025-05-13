@@ -1,4 +1,5 @@
 import { SrtSegment } from '@shared-types/app';
+import { MAX_CHUNK_DURATION_SEC, MIN_CHUNK_DURATION_SEC } from './constants.js';
 
 export function findCaptionGaps(
   speech: Array<{ start: number; end: number }>,
@@ -45,5 +46,60 @@ export function buildContextPrompt(
     .slice(0, wordsPerSide)
     .join(' ');
 
-  return `Context before:\n${beforeText}\n\n(You are continuing the same speaker)\n\nContext after:\n${afterText}\n\nTranscript:`;
+  return `Context before:\n${beforeText}\n\nContext after:\n${afterText}\n\nTranscript:`;
+}
+
+export interface RepairableGap {
+  start: number;
+  end: number;
+}
+
+/**
+ * Identifies gaps between existing SRT segments that are larger than a threshold.
+ * If a gap is very large, it can optionally be broken into smaller, manageable sub-gaps.
+ */
+export function findGapsBetweenTranscribedSegments(
+  existingSegments: SrtSegment[],
+  minGapSecForRepair: number,
+  maxRepairChunkDuration: number = MAX_CHUNK_DURATION_SEC,
+  minRepairChunkDuration: number = MIN_CHUNK_DURATION_SEC
+): RepairableGap[] {
+  if (existingSegments.length < 1) {
+    return [];
+  }
+
+  const repairableGaps: RepairableGap[] = [];
+  const sortedSegments = [...existingSegments].sort(
+    (a, b) => a.start - b.start
+  );
+
+  for (let i = 0; i < sortedSegments.length - 1; i++) {
+    const prevSegment = sortedSegments[i];
+    const nextSegment = sortedSegments[i + 1];
+
+    const gapStart = prevSegment.end;
+    const gapEnd = nextSegment.start;
+    const gapDuration = gapEnd - gapStart;
+
+    if (gapDuration >= minGapSecForRepair) {
+      let currentSubGapStart = gapStart;
+      while (currentSubGapStart < gapEnd) {
+        const remainingDurationInMajorGap = gapEnd - currentSubGapStart;
+        if (remainingDurationInMajorGap < minRepairChunkDuration) {
+          break;
+        }
+        const currentSubGapEnd = Math.min(
+          currentSubGapStart + maxRepairChunkDuration,
+          gapEnd
+        );
+        repairableGaps.push({
+          start: currentSubGapStart,
+          end: currentSubGapEnd,
+        });
+        currentSubGapStart = currentSubGapEnd;
+      }
+    }
+  }
+
+  return repairableGaps;
 }

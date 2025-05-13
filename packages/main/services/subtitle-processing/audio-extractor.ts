@@ -9,6 +9,10 @@ import {
   FFmpegContext,
 } from '../ffmpeg-runner.js';
 
+const fastMode = process.env.ASR_FAST === '1';
+export const ASR_SAMPLE_RATE = fastMode ? 16_000 : 24_000; // Hz
+export const ASR_COMPR_LEVEL = fastMode ? 3 : 5;
+
 declare module '../ffmpeg-runner.js' {
   interface FFmpegContext {
     extractAudio?: (opts: {
@@ -88,7 +92,6 @@ export async function extractAudio(
       percent: PREP_END,
       stage: `Starting audio extraction (est. ${Math.round(estimatedTimeSeconds / 60)} min)...`,
     });
-    const audioRate = '16000';
     const startTime = Date.now();
     let lastProgressPercent = EXTRACTION_START;
 
@@ -106,12 +109,14 @@ export async function extractAudio(
       videoPath,
       '-map',
       '0:a:0?',
-      '-acodec',
-      'flac',
       '-ar',
-      audioRate,
+      String(ASR_SAMPLE_RATE),
       '-ac',
       '1',
+      '-c:a',
+      'flac',
+      '-compression_level',
+      String(ASR_COMPR_LEVEL),
       '-progress',
       'pipe:1',
       '-y',
@@ -193,14 +198,14 @@ export async function extractAudioSegment(
     '-map',
     '0:a:0?',
     '-vn',
-    '-af',
-    'afftdn=nf=-25,agate=threshold=-30dB',
     '-ar',
-    '16000',
+    String(ASR_SAMPLE_RATE),
     '-ac',
     '1',
     '-c:a',
     'flac',
+    '-compression_level',
+    String(ASR_COMPR_LEVEL),
     output,
   ];
   await ctx.run(args, { operationId, cwd: path.dirname(input), signal });

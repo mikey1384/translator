@@ -5,14 +5,14 @@ export const PRE_PAD_SEC = 0.1;
 export const POST_PAD_SEC = 0.15;
 export const MERGE_GAP_SEC = 0.5;
 export const MAX_SPEECHLESS_SEC = 15;
-export const NO_SPEECH_PROB_THRESHOLD = 0.7;
-export const AVG_LOGPROB_THRESHOLD = -4.5;
+export const NO_SPEECH_PROB_THRESHOLD = 0.96;
+export const AVG_LOGPROB_THRESHOLD = -6.5;
 export const MAX_PROMPT_CHARS = 600;
 export const SUBTITLE_GAP_THRESHOLD = 5;
 export const MAX_GAP_TO_FUSE = 0.3;
 
 // --- Repair constants ---
-export const MISSING_GAP_SEC = 10;
+export const MISSING_GAP_SEC = 5;
 
 // --- Chunking constants ---
 export const MIN_CHUNK_DURATION_SEC = 8;
