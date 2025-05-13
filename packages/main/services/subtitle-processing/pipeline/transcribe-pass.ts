@@ -234,6 +234,7 @@ export async function transcribePass({
             openai,
             operationId: operationId ?? '',
             promptContext: promptForSlice,
+            mediaDuration: duration,
           });
 
           if (signal?.aborted) throw new Error('Cancelled');
@@ -404,6 +405,7 @@ export async function transcribePass({
           ffmpeg,
           openai,
           createdChunkPaths,
+          mediaDuration: duration,
         }
       );
       // NEW: Fix overlap filter to use adjustedGap
@@ -508,6 +510,7 @@ export async function transcribePass({
       ffmpeg,
       openai,
       createdChunkPaths,
+      mediaDuration: duration,
     }: {
       audioPath: string;
       tempDir: string;
@@ -516,6 +519,7 @@ export async function transcribePass({
       ffmpeg: FFmpegContext;
       openai: OpenAI;
       createdChunkPaths: string[];
+      mediaDuration: number;
     }
   ): Promise<SrtSegment[]> {
     const gapDuration = gapToProcess.end - gapToProcess.start;
@@ -550,6 +554,7 @@ export async function transcribePass({
       openai,
       operationId,
       promptContext: promptForOriginalGap,
+      mediaDuration: duration,
     });
 
     function isGood(seg: any) {
@@ -649,6 +654,7 @@ export async function transcribePass({
             openai,
             operationId,
             promptContext: promptForOriginalGap, // Reuse context
+            mediaDuration: duration,
           });
           retriedSegmentsFromHalves.push(...segmentsFromHalf);
         }
@@ -696,6 +702,7 @@ export async function transcribePass({
             openai,
             operationId,
             promptContext: promptForOriginalGap,
+            mediaDuration: duration,
           });
           retriedSegmentsFromHalves.push(...segmentsFromInterval);
           intervalIndex++;

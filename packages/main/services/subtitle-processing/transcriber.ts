@@ -18,6 +18,7 @@ export async function transcribeChunk({
   promptContext,
   language,
   temperature = 0,
+  mediaDuration,
 }: {
   chunkIndex: number;
   chunkPath: string;
@@ -28,6 +29,7 @@ export async function transcribeChunk({
   promptContext?: string;
   language?: string;
   temperature?: number;
+  mediaDuration?: number;
 }): Promise<SrtSegment[]> {
   if (signal?.aborted) {
     log.info(
@@ -186,6 +188,7 @@ export async function transcribeChunk({
       segments: srtSegments,
       operationId: operationId ?? '',
       signal,
+      mediaDuration,
     });
     return cleanSegs;
   } catch (error: any) {
@@ -212,14 +215,17 @@ async function scrubHallucinationsBatch({
   segments,
   operationId,
   signal,
+  mediaDuration = 0,
 }: {
   segments: SrtSegment[];
   operationId: string;
   signal?: AbortSignal;
+  mediaDuration?: number;
 }): Promise<SrtSegment[]> {
-  const videoLen = segments.at(-1)?.end ?? 0;
+  const videoLen =
+    mediaDuration > 0 ? Math.round(mediaDuration) : (segments.at(-1)?.end ?? 0);
   const SYSTEM_HEADER = `
-VIDEO_LENGTH_SEC = ${Math.round(videoLen)}
+VIDEO_LENGTH_SEC = ${videoLen}
 An outro is only valid if caption.start_sec > 0.9 * VIDEO_LENGTH_SEC.
 *** PRESERVING PUNCTUATION IS CRITICAL. DO NOT DELETE OR ALTER STANDARD PUNCTUATION unless it is part of a clear noise pattern (e.g., 'text...???!!!'). ***
 The following characters are ALWAYS allowed and never count as noise:  
