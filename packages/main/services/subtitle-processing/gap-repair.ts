@@ -20,9 +20,9 @@ import {
 } from './constants.js';
 import os from 'os';
 import { mkdirSync, copyFileSync } from 'fs';
-import { throwIfAborted } from './utils/cancel.js';
+import { throwIfAborted } from './utils.js';
 
-const SAVE_WHISPER_CHUNKS = true;
+const SAVE_WHISPER_CHUNKS = false;
 
 export function buildContextPrompt(
   allSegments: SrtSegment[],

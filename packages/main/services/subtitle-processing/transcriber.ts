@@ -7,7 +7,7 @@ import { callAIModel } from './openai-client.js';
 import { SrtSegment } from '@shared-types/app';
 import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
-import { throwIfAborted } from './utils/cancel.js';
+import { throwIfAborted, sig } from './utils.js';
 
 export const VALID_SEG_MARGIN = 0.05;
 
@@ -79,10 +79,6 @@ export async function transcribeChunk({
       { signal }
     );
 
-    log.debug(
-      `[${operationId}] Received transcription response for chunk ${chunkIndex}.`
-    );
-
     const segments = (res as any)?.segments as Array<any> | undefined;
     const words = (res as any)?.words as Array<any> | undefined;
     if (!Array.isArray(words) || words.length === 0) {
@@ -110,7 +106,7 @@ export async function transcribeChunk({
     const MAX_SEG_LEN = 8;
     const MAX_WORDS = 12;
     const MIN_WORDS = 3;
-    const srtSegments: SrtSegment[] = [];
+    let srtSegments: SrtSegment[] = [];
     let currentWords: any[] = [];
     let groupStart: number | null = null;
     let groupEnd: number | null = null;
@@ -214,13 +210,16 @@ export async function transcribeChunk({
       } as SrtSegment);
     }
 
+    srtSegments = fuseZeroLengthCaptions(srtSegments);
+
     const cleanSegs = await scrubHallucinationsBatch({
       segments: srtSegments,
-      operationId: operationId ?? '',
+      operationId,
       signal,
       mediaDuration,
     });
-    const norm = (w: string) => w.replace(/[^\p{L}\p{N}]+$/u, '');
+    sig({ stage: 'SCRUBBED', segs: cleanSegs, operationId });
+    const norm = (w: string) => w.replace(/[^{-￿]+$/u, '');
     const lastJSONWord = words.at(-1)?.word?.trim();
     const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
     if (
@@ -393,4 +392,47 @@ output → @@LINE@@ 24:
   });
 
   return cleanedSegments;
+}
+
+function fuseZeroLengthCaptions(segs: SrtSegment[]): SrtSegment[] {
+  const MIN_DUR = 0.001;
+  const normWord = (w: string) =>
+    w
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, '')
+      .normalize('NFKD');
+
+  if (segs.length === 0) return segs;
+
+  for (let i = 0; i < segs.length; i++) {
+    const tail = segs[i];
+    if (tail.end - tail.start >= MIN_DUR) continue;
+
+    const prev = segs[i - 1];
+    const next = segs[i + 1];
+
+    if (prev) {
+      prev.end = next && next.start > prev.end ? next.start : tail.end;
+
+      const prevLast = normWord(prev.original.split(/\s+/).at(-1) || '');
+      const tailFirst = normWord(tail.original.split(/\s+/).at(0) || '');
+
+      if (prevLast !== tailFirst) {
+        prev.original = `${prev.original} ${tail.original}`.trim();
+      }
+    } else if (next) {
+      next.start = tail.start;
+
+      const tailLast = normWord(tail.original.split(/\s+/).at(-1) || '');
+      const nextFirst = normWord(next.original.split(/\s+/).at(0) || '');
+
+      if (tailLast !== nextFirst) {
+        next.original = `${tail.original} ${next.original}`.trim();
+      }
+    }
+
+    segs.splice(i--, 1);
+  }
+
+  return segs.map((c, idx) => ({ ...c, index: idx + 1 }));
 }

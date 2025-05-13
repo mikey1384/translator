@@ -37,7 +37,7 @@ import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
 import { extractAudioSegment } from '../audio-extractor.js';
 import pLimit from 'p-limit';
-import { throwIfAborted } from '../utils/cancel.js';
+import { throwIfAborted } from '../utils.js';
 
 const SAVE_WHISPER_CHUNKS = false;
 
@@ -525,6 +525,7 @@ export async function transcribePass({
     if (signal?.aborted) {
       throwIfAborted(signal);
     }
+
     return {
       segments: overallSegments,
       speechIntervals: merged.slice(),

@@ -1,5 +1,4 @@
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
-import { fuseOrphans } from '../post-process.js';
 import pLimit from 'p-limit';
 import log from 'electron-log';
 import { scaleProgress, Stage } from './progress.js';
@@ -9,7 +8,9 @@ import {
   REVIEW_OVERLAP_CTX,
   REVIEW_BATCH_SIZE,
   REVIEW_STEP,
+  MAX_GAP_TO_FUSE,
 } from '../constants.js';
+import { throwIfAborted } from '../utils.js';
 
 export async function translatePass({
   segments,
@@ -111,6 +112,7 @@ export async function translatePass({
   }
 
   await Promise.all(batchPromises);
+  throwIfAborted(signal);
 
   for (
     let batchStart = 0;
@@ -175,4 +177,31 @@ export async function translatePass({
   }
 
   return segmentsInProcess;
+}
+
+function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
+  const MIN_WORDS = 4;
+
+  if (!segments.length) return [];
+
+  const fused: SrtSegment[] = [];
+
+  for (const seg of segments) {
+    const wordCount = seg.original.trim().split(/\s+/).length;
+
+    if (wordCount < MIN_WORDS && fused.length) {
+      const prev = fused[fused.length - 1];
+      const gap = seg.start - prev.end;
+
+      if (gap < MAX_GAP_TO_FUSE) {
+        prev.end = seg.end;
+        prev.original = `${prev.original} ${seg.original}`.trim();
+        continue;
+      }
+    }
+
+    fused.push({ ...seg });
+  }
+
+  return fused.map((s, i) => ({ ...s, index: i + 1 }));
 }
