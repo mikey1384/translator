@@ -26,7 +26,7 @@ export function findCaptionGaps(
 export function buildContextPrompt(
   allSegments: SrtSegment[],
   gap: { start: number; end: number },
-  wordsPerSide = 40
+  wordsPerSide = 80
 ) {
   const beforeText = allSegments
     .filter(s => s.end <= gap.start)
@@ -102,4 +102,21 @@ export function findGapsBetweenTranscribedSegments(
   }
 
   return repairableGaps;
+}
+
+export function uncoveredSpeech(
+  speech: Array<{ start: number; end: number }>,
+  caps: SrtSegment[],
+  minDur = 1
+): RepairableGap[] {
+  const gaps: RepairableGap[] = [];
+  for (const iv of speech) {
+    let ptr = iv.start;
+    for (const c of caps.filter(c => c.end > iv.start && c.start < iv.end)) {
+      if (c.start - ptr >= minDur) gaps.push({ start: ptr, end: c.start });
+      ptr = Math.max(ptr, c.end);
+    }
+    if (iv.end - ptr >= minDur) gaps.push({ start: ptr, end: iv.end });
+  }
+  return gaps;
 }

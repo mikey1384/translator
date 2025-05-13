@@ -17,8 +17,8 @@ import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import {
   buildContextPrompt,
-  findGapsBetweenTranscribedSegments,
   RepairableGap,
+  uncoveredSpeech,
 } from '../gap-repair.js';
 import {
   PRE_PAD_SEC,
@@ -31,7 +31,6 @@ import {
   TRANSCRIPTION_BATCH_SIZE,
   GAP_SEC,
   MAX_PROMPT_CHARS,
-  MISSING_GAP_SEC,
 } from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
@@ -128,6 +127,8 @@ export async function transcribePass({
     const chunks: Array<{ start: number; end: number; index: number }> = [];
     merged.sort((a, b) => a.start - b.start);
 
+    const dynamicMinChunkDuration = 8; // Will be adjusted dynamically once language detection is implemented
+
     for (const blk of merged) {
       const s = Math.max(0, blk.start - PRE_PAD_SEC);
       const e = Math.min(duration, blk.end + POST_PAD_SEC);
@@ -149,6 +150,9 @@ export async function transcribePass({
       if (currEnd - chunkStart >= MAX_CHUNK_DURATION_SEC) {
         chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
         chunkStart = null;
+      } else if (currEnd - chunkStart < dynamicMinChunkDuration) {
+        // Keep accumulating if below minimum duration
+        continue;
       }
     }
 
@@ -323,12 +327,7 @@ export async function transcribePass({
     overallSegments.push(...anchors);
     overallSegments.sort((a, b) => a.start - b.start);
 
-    const repairGaps = findGapsBetweenTranscribedSegments(
-      overallSegments,
-      MISSING_GAP_SEC,
-      MAX_CHUNK_DURATION_SEC,
-      MIN_CHUNK_DURATION_SEC
-    );
+    const repairGaps = uncoveredSpeech(merged, overallSegments, 1);
 
     log.info(
       `[${operationId}] Found ${repairGaps.length} big gap(s) in speech. Attempting to fill...`
@@ -426,12 +425,7 @@ export async function transcribePass({
 
     // ─── NEW: Final Gap Repair Pass ────────────────
     log.info(`[${operationId}] Starting final gap repair pass.`);
-    const finalRepairGaps = findGapsBetweenTranscribedSegments(
-      overallSegments,
-      MISSING_GAP_SEC,
-      MAX_CHUNK_DURATION_SEC,
-      MIN_CHUNK_DURATION_SEC
-    );
+    const finalRepairGaps = uncoveredSpeech(merged, overallSegments, 1);
     log.info(
       `[${operationId}] Found ${finalRepairGaps.length} gap(s) for final repair pass.`
     );
@@ -610,6 +604,17 @@ export async function transcribePass({
       operationId,
       promptContext: promptForOriginalGap,
     });
+
+    function isGood(seg: any) {
+      const WORDS = seg.original.trim().split(/\s+/).length;
+      const DURATION = seg.end - seg.start;
+      return seg.avg_logprob > -6.0 && WORDS >= 2 && DURATION > 0.35;
+    }
+
+    const goodSegs = segments.filter(isGood);
+    if (goodSegs.length === 0) {
+      segments.length = 0; // force the VAD-split retry
+    }
 
     // If initial attempt is empty and gap is long enough, try splitting and retrying using VAD
     if (

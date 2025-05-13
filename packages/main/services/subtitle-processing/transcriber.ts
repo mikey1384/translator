@@ -19,6 +19,8 @@ export async function transcribeChunk({
   openai,
   operationId,
   promptContext,
+  language,
+  temperature = 0,
 }: {
   chunkIndex: number;
   chunkPath: string;
@@ -27,6 +29,8 @@ export async function transcribeChunk({
   openai: OpenAI;
   operationId: string;
   promptContext?: string;
+  language?: string;
+  temperature?: number;
 }): Promise<SrtSegment[]> {
   if (signal?.aborted) {
     log.info(
@@ -70,7 +74,8 @@ export async function transcribeChunk({
         model: AI_MODELS.WHISPER.id,
         file: fileStream,
         response_format: 'verbose_json',
-        temperature: 0,
+        temperature,
+        language,
         prompt: promptContext ?? '',
         timestamp_granularities: ['word', 'segment'],
       },
