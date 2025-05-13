@@ -89,6 +89,13 @@ export default function SubtitleEditor({
     }
   };
 
+  const handleRemove = () => {
+    const msg = t('editSubtitles.item.confirmRemove');
+    if (window.confirm(msg)) {
+      actions.remove();
+    }
+  };
+
   return (
     <div
       className={css`
@@ -184,7 +191,7 @@ export default function SubtitleEditor({
           <Button
             variant="danger"
             size="sm"
-            onClick={() => actions.remove()}
+            onClick={handleRemove}
             title={t('editSubtitles.item.removeTitle')}
           >
             <svg

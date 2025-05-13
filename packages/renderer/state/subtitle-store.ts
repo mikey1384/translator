@@ -21,7 +21,7 @@ interface State {
 interface Actions {
   load: (segs: SrtSegment[], srcPath?: string | null) => void;
   update: (id: string, patch: Partial<SrtSegment>) => void;
-  insertAfter: (id: string) => void;
+  insertAfter: (id: string) => string | null;
   remove: (id: string) => void;
   shift: (id: string, secs: number) => void;
   shiftAll: (offsetSeconds: number) => void;
@@ -71,7 +71,8 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           if (cue) Object.assign(cue, patch);
         }),
 
-      insertAfter: id =>
+      insertAfter: (id: string) => {
+        let newCueId: string | null = null;
         set(s => {
           const i = s.order.findIndex(cueId => cueId === id);
           if (i === -1) return;
@@ -98,7 +99,10 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           for (let j = i + 1; j < s.order.length; j++) {
             s.segments[s.order[j]].index = j + 1;
           }
-        }),
+          newCueId = newCue.id;
+        });
+        return newCueId;
+      },
 
       remove: id =>
         set(s => {
