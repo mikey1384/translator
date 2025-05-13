@@ -510,7 +510,7 @@ export async function transcribePass({
       ffmpeg,
       openai,
       createdChunkPaths,
-      mediaDuration: duration,
+      mediaDuration,
     }: {
       audioPath: string;
       tempDir: string;
@@ -554,7 +554,7 @@ export async function transcribePass({
       openai,
       operationId,
       promptContext: promptForOriginalGap,
-      mediaDuration: duration,
+      mediaDuration,
     });
 
     function isGood(seg: any) {
@@ -654,7 +654,7 @@ export async function transcribePass({
             openai,
             operationId,
             promptContext: promptForOriginalGap, // Reuse context
-            mediaDuration: duration,
+            mediaDuration,
           });
           retriedSegmentsFromHalves.push(...segmentsFromHalf);
         }
@@ -702,7 +702,7 @@ export async function transcribePass({
             openai,
             operationId,
             promptContext: promptForOriginalGap,
-            mediaDuration: duration,
+            mediaDuration,
           });
           retriedSegmentsFromHalves.push(...segmentsFromInterval);
           intervalIndex++;
