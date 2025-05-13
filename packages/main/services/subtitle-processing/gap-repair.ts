@@ -20,6 +20,7 @@ import {
 } from './constants.js';
 import os from 'os';
 import { mkdirSync, copyFileSync } from 'fs';
+import { throwIfAborted } from './utils/cancel.js';
 
 const SAVE_WHISPER_CHUNKS = true;
 
@@ -105,6 +106,7 @@ export async function transcribeGapAudioWithRetry(
     mediaDuration: number;
   }
 ): Promise<SrtSegment[]> {
+  throwIfAborted(signal);
   const gapDuration = gapToProcess.end - gapToProcess.start;
 
   const promptForOriginalGap = buildContextPrompt(
@@ -126,6 +128,7 @@ export async function transcribeGapAudioWithRetry(
     operationId,
     signal,
   });
+  throwIfAborted(signal);
   maybeCopyForDebug(originalGapAudioFilePath, operationId, baseChunkLogIdx);
 
   let segments = await transcribeChunk({
@@ -152,8 +155,7 @@ export async function transcribeGapAudioWithRetry(
       operationId,
       signal,
     });
-
-    if (signal?.aborted) return [];
+    throwIfAborted(signal);
 
     const normalizedIntervals = normalizeSpeechIntervals({
       intervals: vadIntervals,
@@ -181,7 +183,7 @@ export async function transcribeGapAudioWithRetry(
       ];
 
       for (const half of halves) {
-        if (signal?.aborted) break;
+        throwIfAborted(signal);
         const halfDur = half.end - half.start;
 
         if (halfDur < MIN_CHUNK_DURATION_SEC * MIN_HALF_DURATION_FACTOR) {
@@ -203,6 +205,7 @@ export async function transcribeGapAudioWithRetry(
           operationId,
           signal,
         });
+        throwIfAborted(signal);
         maybeCopyForDebug(halfAudioFilePath, operationId, halfLogIdx);
 
         const segmentsFromHalf = await transcribeChunk({
@@ -220,7 +223,7 @@ export async function transcribeGapAudioWithRetry(
     } else {
       let intervalIndex = 0;
       for (const interval of mergedIntervals) {
-        if (signal?.aborted) break;
+        throwIfAborted(signal);
         const intervalStart = gapToProcess.start + interval.start;
         const intervalEnd = gapToProcess.start + interval.end;
         const intervalDur = intervalEnd - intervalStart;
@@ -248,6 +251,7 @@ export async function transcribeGapAudioWithRetry(
           operationId,
           signal,
         });
+        throwIfAborted(signal);
         maybeCopyForDebug(intervalAudioFilePath, operationId, intervalLogIdx);
 
         const segmentsFromInterval = await transcribeChunk({

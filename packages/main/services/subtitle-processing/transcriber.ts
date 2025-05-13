@@ -7,6 +7,9 @@ import { callAIModel } from './openai-client.js';
 import { SrtSegment } from '@shared-types/app';
 import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
+import { throwIfAborted } from './utils/cancel.js';
+
+export const VALID_SEG_MARGIN = 0.05;
 
 export async function transcribeChunk({
   chunkIndex,
@@ -31,12 +34,7 @@ export async function transcribeChunk({
   temperature?: number;
   mediaDuration?: number;
 }): Promise<SrtSegment[]> {
-  if (signal?.aborted) {
-    log.info(
-      `[${operationId}] Transcription for chunk ${chunkIndex} cancelled before API call.`
-    );
-    throw new Error('Cancelled');
-  }
+  throwIfAborted(signal);
 
   let fileStream: fs.ReadStream;
   try {
@@ -102,8 +100,8 @@ export async function transcribeChunk({
           seg.avg_logprob > LOG_PROB_THRESHOLD
         ) {
           validSegments.push({
-            start: seg.start + startTime,
-            end: seg.end + startTime,
+            start: seg.start + startTime - VALID_SEG_MARGIN,
+            end: seg.end + startTime + VALID_SEG_MARGIN,
           });
         }
       }
@@ -142,8 +140,8 @@ export async function transcribeChunk({
       const hardBoundary = isSegmentEnd || isLastWord;
       const sizeBoundary =
         groupDuration >= MAX_SEG_LEN || groupWordCount >= MAX_WORDS;
-      const shouldBreak = hardBoundary || sizeBoundary;
-      if (shouldBreak) {
+      if (groupWordCount < MIN_WORDS && !hardBoundary) continue;
+      if (hardBoundary || sizeBoundary) {
         if (groupWordCount < MIN_WORDS && !hardBoundary) {
           continue;
         }
@@ -184,12 +182,56 @@ export async function transcribeChunk({
       }
     }
 
+    if (currentWords.length) {
+      let text = '';
+      for (let j = 0; j < currentWords.length; ++j) {
+        const word = currentWords[j].word;
+        const isPunctuation = /^[\p{P}$+<=>^`|~]/u.test(word);
+        if (j > 0 && !isPunctuation) {
+          text += ' ';
+        }
+        text += word;
+      }
+      let avgLogprob = 0;
+      let noSpeechProb = 0;
+      if (Array.isArray(segments)) {
+        const matchingSegment = segments.find(
+          seg => Math.abs(seg.end + startTime - (groupEnd || 0)) < 0.1
+        );
+        if (matchingSegment) {
+          avgLogprob = matchingSegment.avg_logprob || 0;
+          noSpeechProb = matchingSegment.no_speech_prob || 0;
+        }
+      }
+      srtSegments.push({
+        id: crypto.randomUUID(),
+        index: segIdx++,
+        start: groupStart || 0,
+        end: groupEnd || 0,
+        original: text.trim(),
+        avg_logprob: avgLogprob,
+        no_speech_prob: noSpeechProb,
+      } as SrtSegment);
+    }
+
     const cleanSegs = await scrubHallucinationsBatch({
       segments: srtSegments,
       operationId: operationId ?? '',
       signal,
       mediaDuration,
     });
+    const norm = (w: string) => w.replace(/[^\p{L}\p{N}]+$/u, '');
+    const lastJSONWord = words.at(-1)?.word?.trim();
+    const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
+    if (
+      lastJSONWord &&
+      lastCaptionWord &&
+      norm(lastJSONWord) !== norm(lastCaptionWord)
+    ) {
+      log.warn(
+        `[${operationId}] ⚠️ tail-word mismatch: "${lastJSONWord}" ➜ "${lastCaptionWord}"`
+      );
+    }
     return cleanSegs;
   } catch (error: any) {
     if (
@@ -208,6 +250,8 @@ export async function transcribeChunk({
       );
       return [];
     }
+  } finally {
+    fileStream.destroy();
   }
 }
 

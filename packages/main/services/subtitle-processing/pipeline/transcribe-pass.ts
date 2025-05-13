@@ -37,6 +37,7 @@ import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
 import { extractAudioSegment } from '../audio-extractor.js';
 import pLimit from 'p-limit';
+import { throwIfAborted } from '../utils/cancel.js';
 
 const SAVE_WHISPER_CHUNKS = false;
 
@@ -165,7 +166,14 @@ export async function transcribePass({
     let batchContext = '';
 
     let done = 0;
+    const CONCURRENCY = Math.max(
+      1,
+      parseInt(process.env.WHISPER_PARALLEL ?? '3', 10)
+    );
+    const limit = pLimit(CONCURRENCY);
+    signal?.addEventListener('abort', () => limit.clearQueue());
     for (let b = 0; b < chunks.length; b += TRANSCRIPTION_BATCH_SIZE) {
+      throwIfAborted(signal);
       const slice = chunks.slice(b, b + TRANSCRIPTION_BATCH_SIZE);
 
       log.info(
@@ -179,8 +187,7 @@ export async function transcribePass({
       const promptForSlice = buildPrompt(batchContext);
 
       const segArraysPromises = slice.map(async meta => {
-        if (signal?.aborted) throw new Error('Cancelled');
-
+        throwIfAborted(signal);
         if (meta.end <= meta.start) {
           log.warn(
             `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(
@@ -279,7 +286,13 @@ export async function transcribePass({
         partialResult: intermediateSrt,
       });
 
-      if (signal?.aborted) throw new Error('Cancelled');
+      if (signal?.aborted) {
+        throwIfAborted(signal);
+        return {
+          segments: overallSegments,
+          speechIntervals: merged.slice(),
+        };
+      }
     }
 
     overallSegments.sort((a, b) => a.start - b.start);
@@ -344,18 +357,14 @@ export async function transcribePass({
     let gapsToRepair = dedupeGaps(repairGaps);
     let iteration = 1;
     const maxIterations = 2;
-    const CONCURRENCY = Math.max(
-      1,
-      parseInt(process.env.WHISPER_PARALLEL ?? '3', 10)
-    );
-    const limit = pLimit(CONCURRENCY);
-    let processedGaps = 0;
 
     while (
       gapsToRepair.length > 0 &&
       iteration <= maxIterations &&
       !signal?.aborted
     ) {
+      let processedInPass = 0;
+      const totalGaps = gapsToRepair.length;
       const newlyRepairedSegments: SrtSegment[] = [];
       log.info(
         `[${operationId}] Starting gap repair iteration ${iteration}/${maxIterations} with ${gapsToRepair.length} gaps to repair.`
@@ -369,9 +378,9 @@ export async function transcribePass({
       }
 
       gapsToRepair.sort((a, b) => a.end - a.start - (b.end - b.start));
-      const totalGaps = processedGaps + gapsToRepair.length;
       const tasks = gapsToRepair.map((gap, i) =>
         limit(async () => {
+          throwIfAborted(signal);
           if (signal?.aborted) return [];
 
           let adjustedGap = { ...gap };
@@ -408,27 +417,30 @@ export async function transcribePass({
               mediaDuration: duration,
             }
           );
-          // NEW: Fix overlap filter to use adjustedGap
           const filteredNewSegs = newSegs.filter(
             seg => seg.end > adjustedGap.start && seg.start < adjustedGap.end
           );
 
-          processedGaps += 1;
-          if (processedGaps % 3 === 0 || processedGaps === totalGaps) {
+          processedInPass += 1;
+          if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
             const calcPct = scaleProgress(
-              (processedGaps / totalGaps) * 100,
+              (processedInPass / totalGaps) * 100,
               Stage.TRANSCRIBE,
               Stage.TRANSLATE
             );
             const cappedPct = Math.min(calcPct, 99);
             progressCallback?.({
               percent: cappedPct,
-              stage: `Gap repair #${iteration} (${processedGaps}/${totalGaps})`,
-              current: processedGaps,
+              stage: `Gap repair #${iteration} (${processedInPass}/${totalGaps})`,
+              current: processedInPass,
               total: totalGaps,
             });
           }
 
+          if (signal?.aborted) {
+            throwIfAborted(signal);
+            return filteredNewSegs;
+          }
           return filteredNewSegs;
         })
       );
@@ -436,21 +448,23 @@ export async function transcribePass({
       try {
         const results = await Promise.all(tasks);
         for (const segs of results) {
-          appendRepaired(overallSegments, segs);
-          newlyRepairedSegments.push(...segs);
+          if (segs) {
+            appendRepaired(overallSegments, segs);
+            newlyRepairedSegments.push(...segs);
+          }
         }
         // Final update for this wave
         progressCallback?.({
           percent: Math.min(
             scaleProgress(
-              (processedGaps / totalGaps) * 100,
+              (processedInPass / totalGaps) * 100,
               Stage.TRANSCRIBE,
               Stage.TRANSLATE
             ),
             99
           ),
-          stage: `Gap repair #${iteration} (${processedGaps}/${totalGaps})`,
-          current: processedGaps,
+          stage: `Gap repair #${iteration} (${processedInPass}/${totalGaps})`,
+          current: processedInPass,
           total: totalGaps,
         });
       } catch (error) {
@@ -508,6 +522,9 @@ export async function transcribePass({
       `[${operationId}] ✏️  Wrote debug SRT with ${overallSegments.length} segments`
     );
 
+    if (signal?.aborted) {
+      throwIfAborted(signal);
+    }
     return {
       segments: overallSegments,
       speechIntervals: merged.slice(),

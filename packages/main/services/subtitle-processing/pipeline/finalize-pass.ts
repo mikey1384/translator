@@ -4,6 +4,8 @@ import { GenerateSubtitlesFullResult } from '../types.js';
 import {
   extendShortSubtitleGaps,
   fillBlankTranslations,
+  enforceMinDuration,
+  fuseOrphans,
 } from '../post-process.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import log from 'electron-log';
@@ -38,24 +40,32 @@ export async function finalizePass({
 
   log.debug(
     `[${operationId}] Segments BEFORE calling extendShortSubtitleGaps (indices 25-27):`,
-    JSON.stringify(indexedSegments.slice(25, 28), null, 2)
+    indexedSegments.length > 25
+      ? JSON.stringify(indexedSegments.slice(25, 28), null, 2)
+      : 'Segment count less than 25'
   );
 
+  const orphanFused = fuseOrphans(indexedSegments);
   extendShortSubtitleGaps({
-    segments: indexedSegments,
+    segments: orphanFused,
     threshold: SUBTITLE_GAP_THRESHOLD,
   });
 
   log.debug(
     `[${operationId}] Segments AFTER IN-PLACE gap fill, BEFORE blank fill (indices 25-27):`,
-    JSON.stringify(indexedSegments.slice(25, 28), null, 2)
+    orphanFused.length > 25
+      ? JSON.stringify(orphanFused.slice(25, 28), null, 2)
+      : 'Segment count less than 25'
   );
 
-  const finalSegments = fillBlankTranslations(indexedSegments);
+  const filled = fillBlankTranslations(orphanFused);
+  const finalSegments = enforceMinDuration(filled);
 
   log.debug(
     `[${operationId}] Segments BEFORE buildSrt (indices 25-27):`,
-    JSON.stringify(finalSegments.slice(25, 28), null, 2)
+    finalSegments.length > 25
+      ? JSON.stringify(finalSegments.slice(25, 28), null, 2)
+      : 'Segment count less than 25'
   );
 
   finalSegments.sort((a, b) => a.start - b.start);
