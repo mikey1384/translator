@@ -8,6 +8,8 @@ export const MAX_SPEECHLESS_SEC = 15;
 export const NO_SPEECH_PROB_THRESHOLD = 0.96;
 export const LOG_PROB_THRESHOLD = -6.5;
 export const MAX_PROMPT_CHARS = 600;
+export const MIN_DURATION_FOR_RETRY_SPLIT_SEC = 5.0;
+export const MIN_HALF_DURATION_FACTOR = 0.8;
 export const SUBTITLE_GAP_THRESHOLD = 5;
 export const MAX_GAP_TO_FUSE = 0.3;
 

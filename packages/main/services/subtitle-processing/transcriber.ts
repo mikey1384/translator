@@ -222,6 +222,32 @@ async function scrubHallucinationsBatch({
   signal?: AbortSignal;
   mediaDuration?: number;
 }): Promise<SrtSegment[]> {
+  const BATCH_SIZE = 100;
+  const cleanedSegments: SrtSegment[] = [];
+  for (let i = 0; i < segments.length; i += BATCH_SIZE) {
+    const batch = segments.slice(i, i + BATCH_SIZE);
+    const batchResult = await scrubHallucinationsBatchInner({
+      segments: batch,
+      operationId,
+      signal,
+      mediaDuration,
+    });
+    cleanedSegments.push(...batchResult);
+  }
+  return cleanedSegments;
+}
+
+async function scrubHallucinationsBatchInner({
+  segments,
+  operationId,
+  signal,
+  mediaDuration = 0,
+}: {
+  segments: SrtSegment[];
+  operationId: string;
+  signal?: AbortSignal;
+  mediaDuration?: number;
+}): Promise<SrtSegment[]> {
   const videoLen =
     mediaDuration > 0 ? Math.round(mediaDuration) : (segments.at(-1)?.end ?? 0);
   const SYSTEM_HEADER = `
