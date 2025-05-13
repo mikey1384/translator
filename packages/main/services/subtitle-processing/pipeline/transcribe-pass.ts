@@ -31,6 +31,7 @@ import {
   TRANSCRIPTION_BATCH_SIZE,
   GAP_SEC,
   MAX_PROMPT_CHARS,
+  LOG_PROB_THRESHOLD,
 } from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
@@ -42,10 +43,6 @@ const SAVE_WHISPER_CHUNKS = true;
 
 const MIN_DURATION_FOR_RETRY_SPLIT_SEC = 5.0;
 const MIN_HALF_DURATION_FACTOR = 0.8;
-
-export const OPENING_REVIEW_CHUNKS = 10; // how many speech blocks to cover
-export const OPENING_REVIEW_MAX_SEC = 60; // total window cap
-export const OPENING_REVIEW_SUB_SEC = 30; // per-slice cap
 
 function maybeCopyForDebug(srcPath: string, opId: string, _idx: number) {
   if (!SAVE_WHISPER_CHUNKS) return;
@@ -126,9 +123,6 @@ export async function transcribePass({
 
     const chunks: Array<{ start: number; end: number; index: number }> = [];
     merged.sort((a, b) => a.start - b.start);
-
-    const dynamicMinChunkDuration = 8; // Will be adjusted dynamically once language detection is implemented
-
     for (const blk of merged) {
       const s = Math.max(0, blk.start - PRE_PAD_SEC);
       const e = Math.min(duration, blk.end + POST_PAD_SEC);
@@ -150,13 +144,10 @@ export async function transcribePass({
       if (currEnd - chunkStart >= MAX_CHUNK_DURATION_SEC) {
         chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
         chunkStart = null;
-      } else if (currEnd - chunkStart < dynamicMinChunkDuration) {
-        // Keep accumulating if below minimum duration
-        continue;
       }
     }
 
-    // flush tail-end if leftover
+    // Flush any remaining short tail block
     if (chunkStart !== null) {
       if (currEnd > chunkStart) {
         chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
@@ -310,6 +301,23 @@ export async function transcribePass({
 
     overallSegments.sort((a, b) => a.start - b.start);
 
+    const isWeak = (seg: SrtSegment) => {
+      const words = seg.original.trim().split(/\s+/).length;
+      const avgLogprob = seg.avg_logprob ?? 0;
+      return avgLogprob < LOG_PROB_THRESHOLD || words < 3;
+    };
+    overallSegments.forEach(s => {
+      if (s.start < 30 && isWeak(s)) {
+        s.original = '';
+      }
+    });
+    // Filter out segments with empty original text
+    const filteredSegments = overallSegments.filter(
+      s => s.original.trim() !== ''
+    );
+    overallSegments.length = 0;
+    overallSegments.push(...filteredSegments);
+
     const anchors: SrtSegment[] = [];
     let tmpIdx = 0;
     for (let i = 1; i < overallSegments.length; i++) {
@@ -329,29 +337,52 @@ export async function transcribePass({
 
     const repairGaps = uncoveredSpeech(merged, overallSegments, 1);
 
+    // NEW: Deduplicate repair gaps to avoid duplicate head-gap ranges
+    repairGaps.sort((a, b) => a.start - b.start);
+    const dedupedRepairGaps: RepairableGap[] = [];
+    for (const g of repairGaps) {
+      if (
+        !dedupedRepairGaps.length ||
+        g.start >= dedupedRepairGaps.at(-1)!.end - 0.01
+      ) {
+        dedupedRepairGaps.push(g);
+      }
+    }
     log.info(
-      `[${operationId}] Found ${repairGaps.length} big gap(s) in speech. Attempting to fill...`
+      `[${operationId}] Found ${dedupedRepairGaps.length} big gap(s) in speech after deduplication. Attempting to fill...`
     );
 
-    if (repairGaps.length === 0) {
+    if (dedupedRepairGaps.length === 0) {
       return {
         segments: overallSegments,
         speechIntervals: merged.slice(),
       };
     }
 
-    if (repairGaps.length > 0) {
+    if (dedupedRepairGaps.length > 0) {
       progressCallback?.({
         percent: scaleProgress(90, Stage.TRANSCRIBE, Stage.TRANSLATE),
-        stage: `Repairing missing captions 0 / ${repairGaps.length}`,
+        stage: `Repairing missing captions 0 / ${dedupedRepairGaps.length}`,
       });
     }
     let lastPct = -1;
     const newlyRepairedSegments: SrtSegment[] = [];
-    for (let i = 0; i < repairGaps.length; i++) {
+    for (let i = 0; i < dedupedRepairGaps.length; i++) {
       if (signal?.aborted) break;
 
-      const gap = repairGaps[i];
+      const gap = dedupedRepairGaps[i];
+      // NEW: Wider window for early gaps with clamping
+      let adjustedGap = { ...gap };
+      if (gap.start < 10) {
+        const pad = 15;
+        const winStart = Math.max(0, gap.start - pad);
+        let winEnd = gap.end + pad;
+        // Clamp window size to avoid exceeding MAX_CHUNK_DURATION_SEC
+        if (winEnd - winStart > MAX_CHUNK_DURATION_SEC) {
+          winEnd = winStart + MAX_CHUNK_DURATION_SEC;
+        }
+        adjustedGap = { start: winStart, end: winEnd };
+      }
       const gapIndex = i + 1;
       const baseLogIdx = 10000 + gapIndex;
 
@@ -361,7 +392,7 @@ export async function transcribePass({
       ].sort((a, b) => a.start - b.start);
 
       const newSegs = await transcribeGapAudioWithRetry(
-        gap,
+        adjustedGap,
         baseLogIdx,
         'first_repair_gap',
         contextSegmentsForThisGap,
@@ -375,19 +406,23 @@ export async function transcribePass({
           createdChunkPaths,
         }
       );
-      newlyRepairedSegments.push(...newSegs);
+      // NEW: Fix overlap filter to use adjustedGap
+      const filteredNewSegs = newSegs.filter(
+        seg => seg.end > adjustedGap.start && seg.start < adjustedGap.end
+      );
+      newlyRepairedSegments.push(...filteredNewSegs);
 
       const pct = scaleProgress(
-        ((i + 1) / repairGaps.length) * 100,
+        ((i + 1) / dedupedRepairGaps.length) * 100,
         Stage.TRANSCRIBE,
         Stage.TRANSLATE
       );
       if (Math.round(pct) !== lastPct) {
         progressCallback?.({
           percent: Math.round(pct),
-          stage: `Repairing missing captions ${i + 1} / ${repairGaps.length}`,
+          stage: `Repairing missing captions ${i + 1} / ${dedupedRepairGaps.length}`,
           current: i + 1,
-          total: repairGaps.length,
+          total: dedupedRepairGaps.length,
         });
         lastPct = Math.round(pct);
       }
@@ -397,101 +432,13 @@ export async function transcribePass({
     overallSegments.forEach((segment, index) => {
       segment.index = index + 1;
     });
-    if (repairGaps.length > 0) {
+    if (dedupedRepairGaps.length > 0) {
       progressCallback?.({
         percent: scaleProgress(100, Stage.TRANSCRIBE, Stage.TRANSLATE),
         stage: 'Gap-repair pass complete',
       });
     }
 
-    // ─── NEW: polish the opening chunks ────────────────
-    await refineOpeningChunks({
-      overallSegments,
-      mergedSpeech: merged,
-      ffmpeg,
-      audioPath,
-      tempDir,
-      operationId,
-      signal,
-      createdChunkPaths,
-      openai,
-      progressCallback,
-    });
-
-    overallSegments.sort((a, b) => a.start - b.start);
-    overallSegments.forEach((segment, index) => {
-      segment.index = index + 1;
-    });
-
-    // ─── NEW: Final Gap Repair Pass ────────────────
-    log.info(`[${operationId}] Starting final gap repair pass.`);
-    const finalRepairGaps = uncoveredSpeech(merged, overallSegments, 1);
-    log.info(
-      `[${operationId}] Found ${finalRepairGaps.length} gap(s) for final repair pass.`
-    );
-
-    if (finalRepairGaps.length > 0) {
-      progressCallback?.({
-        percent: scaleProgress(90, Stage.TRANSCRIBE, Stage.TRANSLATE),
-        stage: `Final gap repair: 0 / ${finalRepairGaps.length}`,
-      });
-    }
-    let lastFinalPct = -1;
-    const finalPassRepairedSegments: SrtSegment[] = [];
-    for (let i = 0; i < finalRepairGaps.length; i++) {
-      if (signal?.aborted) break;
-      const gap = finalRepairGaps[i];
-      const gapIndex = i + 1;
-      const baseLogIdx = 30000 + gapIndex; // Higher base index for this pass
-
-      const contextSegmentsForFinalGap = [
-        ...overallSegments,
-        ...finalPassRepairedSegments,
-      ].sort((a, b) => a.start - b.start);
-
-      const newSegs = await transcribeGapAudioWithRetry(
-        gap,
-        baseLogIdx,
-        'final_repair_gap',
-        contextSegmentsForFinalGap,
-        {
-          audioPath,
-          tempDir,
-          operationId,
-          signal,
-          ffmpeg,
-          openai,
-          createdChunkPaths,
-        }
-      );
-      finalPassRepairedSegments.push(...newSegs);
-
-      const pct = scaleProgress(
-        90 + ((i + 1) / finalRepairGaps.length) * 10,
-        Stage.TRANSCRIBE,
-        Stage.TRANSLATE
-      );
-      if (Math.round(pct) !== lastFinalPct) {
-        progressCallback?.({
-          percent: Math.round(pct),
-          stage: `Final gap repair: ${gapIndex}/${finalRepairGaps.length}`,
-          current: gapIndex,
-          total: finalRepairGaps.length,
-        });
-        lastFinalPct = Math.round(pct);
-      }
-    }
-    overallSegments.push(...finalPassRepairedSegments);
-    overallSegments.sort((a, b) => a.start - b.start);
-    overallSegments.forEach((s, i) => (s.index = i + 1));
-    if (finalRepairGaps.length > 0) {
-      progressCallback?.({
-        percent: scaleProgress(100, Stage.TRANSCRIBE, Stage.TRANSLATE),
-        stage: 'Final gap-repair pass complete.',
-      });
-    }
-
-    // Final sort and re-index
     overallSegments.sort((a, b) => a.start - b.start);
     overallSegments.forEach((s, i) => (s.index = i + 1));
 
@@ -608,7 +555,9 @@ export async function transcribePass({
     function isGood(seg: any) {
       const WORDS = seg.original.trim().split(/\s+/).length;
       const DURATION = seg.end - seg.start;
-      return seg.avg_logprob > -6.0 && WORDS >= 2 && DURATION > 0.35;
+      return (
+        seg.avg_logprob > LOG_PROB_THRESHOLD && WORDS >= 2 && DURATION > 0.35
+      );
     }
 
     const goodSegs = segments.filter(isGood);
@@ -755,280 +704,5 @@ export async function transcribePass({
       segments = retriedSegmentsFromHalves; // Replace original empty result
     }
     return segments;
-  }
-
-  async function refineOpeningChunks({
-    overallSegments,
-    mergedSpeech,
-    ffmpeg,
-    audioPath,
-    tempDir,
-    operationId,
-    signal,
-    createdChunkPaths,
-    openai,
-    progressCallback,
-  }: {
-    overallSegments: SrtSegment[];
-    mergedSpeech: Array<{ start: number; end: number }>;
-    ffmpeg: FFmpegContext;
-    audioPath: string;
-    tempDir: string;
-    operationId: string;
-    signal: AbortSignal;
-    createdChunkPaths: string[];
-    openai: OpenAI;
-    progressCallback?: (progress: {
-      percent: number;
-      stage: string;
-      current?: number;
-      total?: number;
-    }) => void;
-  }) {
-    if (
-      (!overallSegments || overallSegments.length === 0) &&
-      mergedSpeech.length === 0
-    ) {
-      log.info(
-        `[${operationId}] refineOpeningChunks: No segments or VAD speech to define opening window. Skipping.`
-      );
-      return;
-    }
-    if (mergedSpeech.length === 0) {
-      log.warn(
-        `[${operationId}] refineOpeningChunks: mergedSpeech is empty, cannot define opening window based on it. Skipping.`
-      );
-      return;
-    }
-
-    progressCallback?.({
-      percent: scaleProgress(90, Stage.TRANSCRIBE, Stage.TRANSLATE),
-      stage: 'Refining opening chunks',
-    });
-
-    // 1. Define the overall opening window (sliceFrom, sliceTo)
-    const lastIdx = Math.min(
-      OPENING_REVIEW_CHUNKS - 1,
-      mergedSpeech.length - 1
-    );
-    // Ensure mergedSpeech[0] exists before accessing its properties
-    const firstVADStart = mergedSpeech[0]?.start ?? 0;
-    const lastVADEnd = mergedSpeech[lastIdx]?.end ?? firstVADStart;
-
-    const sliceFrom = Math.max(0, firstVADStart - PRE_PAD_SEC); // Absolute time
-    const sliceTo = Math.min(
-      sliceFrom + OPENING_REVIEW_MAX_SEC,
-      lastVADEnd + POST_PAD_SEC // Absolute time
-    );
-
-    const openingWindowDuration = sliceTo - sliceFrom;
-
-    if (openingWindowDuration < MIN_CHUNK_DURATION_SEC) {
-      log.info(
-        `[${operationId}] refineOpeningChunks: Calculated opening window is too short (${openingWindowDuration.toFixed(2)}s). Skipping.`
-      );
-      return;
-    }
-
-    log.info(
-      `[${operationId}] Refining opening chunks: Window from ${sliceFrom.toFixed(2)}s to ${sliceTo.toFixed(2)}s (duration ${openingWindowDuration.toFixed(2)}s).`
-    );
-
-    // 2. Extract audio for the entire opening window
-    const openingWindowAudioPath = path.join(
-      tempDir,
-      `_opening_window_audio_${operationId}.flac`
-    );
-    createdChunkPaths.push(openingWindowAudioPath);
-
-    try {
-      await extractAudioSegment(ffmpeg, {
-        input: audioPath,
-        output: openingWindowAudioPath,
-        start: sliceFrom,
-        duration: openingWindowDuration,
-        operationId,
-        signal,
-      });
-      maybeCopyForDebug(openingWindowAudioPath, operationId, 1_999_999);
-    } catch (extractionError) {
-      log.error(
-        `[${operationId}] Failed to extract audio for opening window refinement: ${extractionError}`
-      );
-      return;
-    }
-
-    if (signal?.aborted) throw new Error('Cancelled');
-
-    // 3. Run VAD on this extracted openingWindowAudioPath to find a single split point
-    const vadIntervalsInOpeningWindow = await detectSpeechIntervals({
-      inputPath: openingWindowAudioPath,
-      operationId: `${operationId}_vad_opening_refine`,
-      signal,
-    });
-
-    if (signal?.aborted) throw new Error('Cancelled');
-
-    const refinedAll: SrtSegment[] = [];
-
-    // 4. Determine a single split point based on VAD results
-    let splitPointRelative: number;
-    if (vadIntervalsInOpeningWindow.length > 1) {
-      // If multiple intervals, split between the first and second interval if possible
-      const normalizedVAD = normalizeSpeechIntervals({
-        intervals: vadIntervalsInOpeningWindow,
-      });
-      const mergedIntervals = mergeAdjacentIntervals(
-        normalizedVAD,
-        MERGE_GAP_SEC * 0.5 || 0.2
-      );
-
-      if (mergedIntervals.length > 1) {
-        splitPointRelative =
-          (mergedIntervals[0].end + mergedIntervals[1].start) / 2;
-        log.info(
-          `[${operationId}] VAD on opening window found ${mergedIntervals.length} intervals. Splitting at ${splitPointRelative.toFixed(2)}s relative to window start.`
-        );
-      } else {
-        // If only one interval after merging, split in the middle of the window
-        splitPointRelative = openingWindowDuration / 2;
-        log.info(
-          `[${operationId}] VAD on opening window found only one interval after merging. Splitting in middle at ${splitPointRelative.toFixed(2)}s relative to window start.`
-        );
-      }
-    } else if (vadIntervalsInOpeningWindow.length === 1) {
-      // If only one interval, split in the middle of the window
-      splitPointRelative = openingWindowDuration / 2;
-      log.info(
-        `[${operationId}] VAD on opening window found only one interval. Splitting in middle at ${splitPointRelative.toFixed(2)}s relative to window start.`
-      );
-    } else {
-      // If no intervals, split in the middle
-      splitPointRelative = openingWindowDuration / 2;
-      log.info(
-        `[${operationId}] VAD on opening window found no intervals. Splitting in middle at ${splitPointRelative.toFixed(2)}s relative to window start.`
-      );
-    }
-
-    // 5. Create exactly two sub-chunks based on the split point
-    const subChunks = [
-      { start: 0, end: splitPointRelative, index: 0 },
-      { start: splitPointRelative, end: openingWindowDuration, index: 1 },
-    ];
-
-    // 6. Process each of the two sub-chunks
-    for (const subChunk of subChunks) {
-      if (signal?.aborted) break;
-
-      const absSubChunkStartTime = sliceFrom + subChunk.start;
-      const absSubChunkEndTime = sliceFrom + subChunk.end;
-      const subChunkDuration = absSubChunkEndTime - absSubChunkStartTime;
-
-      if (
-        subChunkDuration <
-        MIN_CHUNK_DURATION_SEC * MIN_HALF_DURATION_FACTOR
-      ) {
-        log.warn(
-          `[${operationId}] Skipping opening refinement sub-chunk ${subChunk.index} due to short duration: ${subChunkDuration.toFixed(2)}s`
-        );
-        continue;
-      }
-
-      const subChunkAudioToTranscribePath = path.join(
-        tempDir,
-        `opening_refine_half_${subChunk.index}_${operationId}.flac`
-      );
-      createdChunkPaths.push(subChunkAudioToTranscribePath);
-      const subChunkLogIdx = 1_000_000 + subChunk.index;
-
-      await extractAudioSegment(ffmpeg, {
-        input: audioPath,
-        output: subChunkAudioToTranscribePath,
-        start: absSubChunkStartTime,
-        duration: subChunkDuration,
-        operationId,
-        signal,
-      });
-      maybeCopyForDebug(
-        subChunkAudioToTranscribePath,
-        operationId,
-        subChunkLogIdx
-      );
-
-      const promptCtx = buildContextPrompt(
-        overallSegments,
-        { start: absSubChunkStartTime, end: absSubChunkEndTime },
-        120
-      );
-
-      log.info(promptCtx);
-
-      const segs = await transcribeChunk({
-        chunkIndex: subChunkLogIdx,
-        chunkPath: subChunkAudioToTranscribePath,
-        startTime: absSubChunkStartTime,
-        promptContext: promptCtx,
-        openai,
-        operationId,
-        signal,
-      });
-      refinedAll.push(...segs);
-    }
-
-    // 7. Splicing and Re-indexing
-    const firstSegmentIdxToReplace = overallSegments.findIndex(
-      seg => seg.start >= sliceFrom
-    );
-    let lastSegmentIdxPlusOneToReplace = overallSegments.findIndex(
-      seg => seg.start >= sliceTo
-    );
-
-    if (lastSegmentIdxPlusOneToReplace === -1) {
-      lastSegmentIdxPlusOneToReplace = overallSegments.length;
-    }
-
-    const deletedSegmentsCount =
-      firstSegmentIdxToReplace !== -1
-        ? lastSegmentIdxPlusOneToReplace - firstSegmentIdxToReplace
-        : 0;
-
-    if (refinedAll.length > 0 || deletedSegmentsCount > 0) {
-      if (firstSegmentIdxToReplace !== -1) {
-        overallSegments.splice(
-          firstSegmentIdxToReplace,
-          deletedSegmentsCount,
-          ...refinedAll
-        );
-      } else {
-        const preWindowSegments = overallSegments.filter(
-          s => s.end <= sliceFrom
-        );
-        const postWindowSegments = overallSegments.filter(
-          s => s.start >= sliceTo
-        );
-        overallSegments.length = 0;
-        overallSegments.push(
-          ...preWindowSegments,
-          ...refinedAll,
-          ...postWindowSegments
-        );
-        log.info(
-          `[${operationId}] Refined opening: Rebuilt segments. Added ${refinedAll.length} new segments for opening.`
-        );
-      }
-      log.info(
-        `[${operationId}] Refined opening: Spliced ${refinedAll.length} new segments, potentially removing ${deletedSegmentsCount} old ones.`
-      );
-    } else {
-      log.info(
-        `[${operationId}] Refined opening: No segments to transcribe or no existing segments to replace in the window.`
-      );
-    }
-
-    overallSegments.sort((a, b) => a.start - b.start);
-    overallSegments.forEach((s, i) => (s.index = i + 1));
-    log.info(
-      `[${operationId}] refineOpeningChunks complete. Total segments now: ${overallSegments.length}`
-    );
   }
 }

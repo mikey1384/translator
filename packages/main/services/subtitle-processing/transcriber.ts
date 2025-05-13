@@ -5,10 +5,7 @@ import { AI_MODELS } from '../../../shared/constants/index.js';
 import { createFileFromPath } from './openai-client.js';
 import { callAIModel } from './openai-client.js';
 import { SrtSegment } from '@shared-types/app';
-import {
-  NO_SPEECH_PROB_THRESHOLD,
-  AVG_LOGPROB_THRESHOLD,
-} from './constants.js';
+import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
 
 export async function transcribeChunk({
@@ -100,7 +97,7 @@ export async function transcribeChunk({
       for (const seg of segments) {
         if (
           seg.no_speech_prob < NO_SPEECH_PROB_THRESHOLD &&
-          seg.avg_logprob > AVG_LOGPROB_THRESHOLD
+          seg.avg_logprob > LOG_PROB_THRESHOLD
         ) {
           validSegments.push({
             start: seg.start + startTime,
@@ -115,8 +112,8 @@ export async function transcribeChunk({
     const MIN_WORDS = 3;
     const srtSegments: SrtSegment[] = [];
     let currentWords: any[] = [];
-    let groupStart = null;
-    let groupEnd = null;
+    let groupStart: number | null = null;
+    let groupEnd: number | null = null;
     let segIdx = 1;
 
     const segmentEnds = new Set<number>();
@@ -138,7 +135,7 @@ export async function transcribeChunk({
       groupEnd = wEnd;
       const isSegmentEnd = segmentEnds.has(Number(wEnd.toFixed(3)));
       const isLastWord = i === words.length - 1;
-      const groupDuration = groupEnd - groupStart;
+      const groupDuration = (groupEnd || 0) - (groupStart || 0);
       const groupWordCount = currentWords.length;
       const hardBoundary = isSegmentEnd || isLastWord;
       const sizeBoundary =
@@ -157,13 +154,26 @@ export async function transcribeChunk({
           }
           text += word;
         }
+        let avgLogprob = 0;
+        let noSpeechProb = 0;
+        if (Array.isArray(segments)) {
+          const matchingSegment = segments.find(
+            seg => Math.abs(seg.end + startTime - (groupEnd || 0)) < 0.1
+          );
+          if (matchingSegment) {
+            avgLogprob = matchingSegment.avg_logprob || 0;
+            noSpeechProb = matchingSegment.no_speech_prob || 0;
+          }
+        }
         srtSegments.push({
           id: crypto.randomUUID(),
           index: segIdx++,
-          start: groupStart,
-          end: groupEnd,
+          start: groupStart || 0,
+          end: groupEnd || 0,
           original: text.trim(),
-        });
+          avg_logprob: avgLogprob,
+          no_speech_prob: noSpeechProb,
+        } as SrtSegment);
         if (!isLastWord) {
           groupStart = null;
           groupEnd = null;
