@@ -21,6 +21,7 @@ import {
   transcribeGapAudioWithRetry,
 } from '../gap-repair.js';
 import {
+  SAVE_WHISPER_CHUNKS,
   PRE_PAD_SEC,
   POST_PAD_SEC,
   MAX_SPEECHLESS_SEC,
@@ -38,8 +39,6 @@ import { Stage, scaleProgress } from './progress.js';
 import { extractAudioSegment } from '../audio-extractor.js';
 import pLimit from 'p-limit';
 import { throwIfAborted } from '../utils.js';
-
-const SAVE_WHISPER_CHUNKS = false;
 
 export async function transcribePass({
   audioPath,

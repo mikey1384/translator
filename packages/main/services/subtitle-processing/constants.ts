@@ -1,4 +1,5 @@
 // --- Configuration Constants ---
+export const SAVE_WHISPER_CHUNKS = false;
 export const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
 export const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
 export const PRE_PAD_SEC = 0.1;
@@ -22,7 +23,7 @@ export const MAX_CHUNK_DURATION_SEC = 15;
 export const GAP_SEC = 3;
 
 // --- Concurrency Setting ---
-export const TRANSCRIPTION_BATCH_SIZE = 50;
+export const TRANSCRIPTION_BATCH_SIZE = 30;
 
 // --- Review/Polish constants ---
 export const REVIEW_BATCH_SIZE = 50;

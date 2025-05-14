@@ -17,12 +17,11 @@ import {
   MERGE_GAP_SEC,
   NO_SPEECH_PROB_THRESHOLD,
   LOG_PROB_THRESHOLD,
+  SAVE_WHISPER_CHUNKS,
 } from './constants.js';
 import os from 'os';
 import { mkdirSync, copyFileSync } from 'fs';
 import { throwIfAborted } from './utils.js';
-
-const SAVE_WHISPER_CHUNKS = false;
 
 export function buildContextPrompt(
   allSegments: SrtSegment[],
