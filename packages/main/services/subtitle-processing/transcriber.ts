@@ -20,7 +20,6 @@ export async function transcribeChunk({
   operationId,
   promptContext,
   language,
-  temperature = 0,
   mediaDuration,
 }: {
   chunkIndex: number | string;
@@ -31,7 +30,6 @@ export async function transcribeChunk({
   operationId: string;
   promptContext?: string;
   language?: string;
-  temperature?: number;
   mediaDuration?: number;
 }): Promise<SrtSegment[]> {
   throwIfAborted(signal);
@@ -71,7 +69,6 @@ export async function transcribeChunk({
         model: AI_MODELS.WHISPER.id,
         file: fileStream,
         response_format: 'verbose_json',
-        temperature,
         language,
         prompt: promptContext ?? '',
         timestamp_granularities: ['word', 'segment'],

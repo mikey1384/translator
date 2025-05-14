@@ -46,7 +46,6 @@ export async function callOpenAIChat({
           model: model,
           messages: messages,
           max_tokens: max_tokens,
-          temperature: 0.1,
         },
         { signal }
       );
