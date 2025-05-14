@@ -54,7 +54,7 @@ export interface RepairableGap {
   end: number;
 }
 
-export function uncoveredSpeech(
+export function identifyGapsToRepair(
   speech: Array<{ start: number; end: number }>,
   caps: SrtSegment[],
   minDur = 1

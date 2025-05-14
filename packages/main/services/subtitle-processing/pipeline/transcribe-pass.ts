@@ -17,7 +17,7 @@ import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import {
   RepairableGap,
-  uncoveredSpeech,
+  identifyGapsToRepair,
   transcribeGapAudioWithRetry,
 } from '../gap-repair.js';
 import {
@@ -329,7 +329,7 @@ export async function transcribePass({
     overallSegments.push(...anchors);
     overallSegments.sort((a, b) => a.start - b.start);
 
-    const repairGaps = uncoveredSpeech(merged, overallSegments, 1);
+    const repairGaps = identifyGapsToRepair(merged, overallSegments, 1);
 
     repairGaps.sort((a, b) => a.start - b.start);
     const dedupeGaps = (gaps: RepairableGap[]): RepairableGap[] => {
@@ -485,7 +485,7 @@ export async function transcribePass({
 
       iteration++;
       gapsToRepair = dedupeGaps(
-        uncoveredSpeech(merged, overallSegments, 1).filter(
+        identifyGapsToRepair(merged, overallSegments, 1).filter(
           g => g.end - g.start >= GAP_SEC
         )
       );
