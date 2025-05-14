@@ -164,6 +164,7 @@ declare module '@shared-types/app' {
     _oldText?: string;
     avg_logprob?: number;
     no_speech_prob?: number;
+    words?: { start: number; end: number; word: string }[];
   }
 
   export interface SubtitleHandlerServices {

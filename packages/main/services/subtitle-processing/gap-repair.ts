@@ -2,11 +2,6 @@ import { SrtSegment } from '@shared-types/app';
 import { transcribeChunk } from './transcriber.js';
 import path from 'path';
 import log from 'electron-log';
-import {
-  detectSpeechIntervals,
-  normalizeSpeechIntervals,
-  mergeAdjacentIntervals,
-} from './audio-chunker.js';
 import { extractAudioSegment } from './audio-extractor.js';
 import { FFmpegContext } from '../ffmpeg-runner.js';
 import OpenAI from 'openai';
@@ -22,6 +17,11 @@ import {
 import os from 'os';
 import { mkdirSync, copyFileSync } from 'fs';
 import { throwIfAborted } from './utils.js';
+import {
+  detectSpeechIntervals,
+  normalizeSpeechIntervals,
+  mergeAdjacentIntervals,
+} from './audio-chunker.js';
 
 export function buildContextPrompt(
   allSegments: SrtSegment[],
@@ -130,7 +130,10 @@ export async function transcribeGapAudioWithRetry(
     signal,
     openai,
     operationId,
-    promptContext: promptForOriginalGap,
+    promptContext:
+      gapDuration <= MIN_DURATION_FOR_RETRY_SPLIT_SEC
+        ? promptForOriginalGap
+        : undefined,
     mediaDuration,
   });
 
@@ -292,16 +295,18 @@ function maybeCopyForDebug(srcPath: string, opId: string, _idx: number) {
 }
 
 export function trimPhantomTail(seg: SrtSegment) {
-  if (!('words' in seg) || !Array.isArray(seg.words) || !seg.words.length)
+  if (!seg.words || !Array.isArray(seg.words) || !seg.words.length) {
     return;
+  }
 
   const last = seg.words[seg.words.length - 1];
-  const tail = seg.end - last.end;
+  const lastAbsEnd = last.end + seg.start;
+  const tail = seg.end - lastAbsEnd;
   const PHANTOM_TAIL_SEC = 0.5;
   const TAIL_PADDING = 0.1;
 
   if (tail >= PHANTOM_TAIL_SEC) {
-    seg.end = last.end + TAIL_PADDING;
+    seg.end = lastAbsEnd + TAIL_PADDING;
   }
 }
 
@@ -313,6 +318,8 @@ export async function refineOvershoots({
   tempDir,
   operationId,
   createdChunkPaths,
+  openai,
+  mediaDuration,
 }: {
   segments: SrtSegment[];
   ffmpeg: FFmpegContext;
@@ -321,81 +328,77 @@ export async function refineOvershoots({
   tempDir: string;
   operationId: string;
   createdChunkPaths: string[];
+  openai: OpenAI;
+  mediaDuration: number;
 }): Promise<void> {
-  const isBloated = (seg: SrtSegment) => {
-    const duration = seg.end - seg.start;
-    const wordCount = seg.original.trim().split(/\s+/).length;
-    const wps = wordCount / duration;
-    return duration > 4 || wps < 1.2;
-  };
+  const MAX_SEC_PER_WORD = 0.55;
+  const SILENCE_CAP = 5;
 
-  const splits: Array<[number, SrtSegment, SrtSegment]> = [];
+  function isBloated(seg: SrtSegment) {
+    const dur = seg.end - seg.start;
+    if (dur <= 0) return false;
+    const words = seg.original.trim().split(/\s+/).filter(Boolean).length;
+    if (words === 0) return false;
+    const speechBudget = words * MAX_SEC_PER_WORD;
+    const silence = dur - speechBudget;
+    return silence > SILENCE_CAP;
+  }
+
+  const maxReasonableDur = (word: string) => {
+    const syll = Math.max(1, Math.ceil(word.length / 3));
+    return 0.66 * syll + 0.2;
+  };
 
   for (let i = 0; i < segments.length; i++) {
     throwIfAborted(signal);
     const seg = segments[i];
-    if (!isBloated(seg)) continue;
+    if (!isBloated(seg) || !seg.words?.length) continue;
 
-    const segAudioPath = path.join(
-      tempDir,
-      `seg_refine_${seg.index}_${operationId}.flac`
-    );
-    createdChunkPaths.push(segAudioPath);
-
-    await extractAudioSegment(ffmpeg, {
-      input: audioPath,
-      output: segAudioPath,
-      start: seg.start,
-      duration: seg.end - seg.start,
-      operationId,
-      signal,
-    });
-
-    throwIfAborted(signal);
-
-    const vadResults = await detectSpeechIntervals({
-      inputPath: segAudioPath,
-      operationId,
-      signal,
-    });
-
-    throwIfAborted(signal);
-
-    const speech = normalizeSpeechIntervals({ intervals: vadResults });
-    let prev = 0;
-    const silences = [];
-    const segDur = seg.end - seg.start;
-    for (const iv of speech) {
-      if (iv.start - prev >= 0.6) {
-        silences.push({ start: prev, end: iv.start });
-      }
-      prev = iv.end;
-    }
-    if (segDur - prev >= 0.6) {
-      silences.push({ start: prev, end: segDur });
+    let trustedEndAbs = seg.start;
+    for (const w of seg.words) {
+      const dur = w.end - w.start;
+      if (dur <= 0 || dur > maxReasonableDur(w.word)) break;
+      trustedEndAbs = seg.start + w.end;
     }
 
-    const cut = silences.find(
-      sil =>
-        sil.end - sil.start >= 0.6 && sil.start > 0.3 && segDur - sil.end > 0.3
-    );
-    if (cut) {
-      const cutTime = seg.start + (cut.start + cut.end) / 2;
-      const newSeg1 = { ...seg, end: cutTime };
-      const newSeg2 = { ...seg, start: cutTime };
-      splits.push([i, newSeg1, newSeg2]);
-      log.info(
-        `[${operationId}] Split seg ${seg.index}: ${(seg.end - seg.start).toFixed(1)}s ➜ ${(newSeg1.end - newSeg1.start).toFixed(1)}s + ${(newSeg2.end - newSeg2.start).toFixed(1)}s`
+    const cutAbs = trustedEndAbs + 0.1;
+    const nextAbs = segments[i + 1]?.start ?? mediaDuration;
+    const newEnd = Math.min(cutAbs, nextAbs - 0.05, mediaDuration);
+
+    if (newEnd < seg.end - 0.2) {
+      log.debug(
+        `[${operationId}] Trim seg ${seg.index}: ${seg.end.toFixed(2)} → ${newEnd.toFixed(2)}`
       );
-    }
-  }
+      seg.end = newEnd;
 
-  for (const [idx, left, right] of splits.reverse()) {
-    segments.splice(idx, 1, left, right);
+      const tailStart = newEnd;
+      const tailEnd = nextAbs;
+
+      if (tailEnd - tailStart >= 0.2) {
+        const tailSegs = await transcribeTailDirect({
+          ffmpeg,
+          openai,
+          inputPath: audioPath,
+          outputDir: tempDir,
+          start: tailStart,
+          end: tailEnd,
+          segIndex: seg.index,
+          operationId,
+          promptContext: buildContextPrompt(segments, {
+            start: tailStart,
+            end: tailEnd,
+          }),
+          signal,
+          createdChunkPaths,
+        });
+
+        segments.push(...tailSegs);
+      }
+    }
   }
 
   segments.sort((a, b) => a.start - b.start);
-  segments.forEach((s, i) => (s.index = i + 1));
+  segments.forEach((s, idx) => (s.index = idx + 1));
 }
 
 export function sanityScan({
@@ -436,4 +439,65 @@ export function sanityScan({
     vadIndex++;
   }
   return additionalGaps;
+}
+
+async function transcribeTailDirect({
+  ffmpeg,
+  openai,
+  inputPath,
+  outputDir,
+  start,
+  end,
+  segIndex,
+  operationId,
+  promptContext = '',
+  signal,
+  createdChunkPaths,
+}: {
+  ffmpeg: FFmpegContext;
+  openai: OpenAI;
+  inputPath: string;
+  outputDir: string;
+  start: number;
+  end: number;
+  segIndex: number;
+  operationId: string;
+  promptContext?: string;
+  signal: AbortSignal;
+  createdChunkPaths: string[];
+}): Promise<SrtSegment[]> {
+  const outPath = path.join(
+    outputDir,
+    `overshoot_tail_${segIndex}_${operationId}.flac`
+  );
+  await extractAudioSegment(ffmpeg, {
+    input: inputPath,
+    output: outPath,
+    start,
+    duration: end - start,
+    operationId,
+    signal,
+  });
+
+  createdChunkPaths.push(outPath);
+  maybeCopyForDebug(outPath, operationId, segIndex);
+
+  const segs = await transcribeChunk({
+    chunkIndex:
+      segIndex * 1000000 + Number(process.hrtime.bigint() % BigInt(1000000)),
+    chunkPath: outPath,
+    startTime: start,
+    signal,
+    openai,
+    operationId,
+    promptContext,
+  });
+
+  if (segs.length === 0) {
+    log.debug(
+      `[${operationId}] No segments returned from Whisper for tail of seg ${segIndex}`
+    );
+  }
+
+  return segs;
 }

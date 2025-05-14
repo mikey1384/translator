@@ -10,8 +10,9 @@ import {
 } from '../ffmpeg-runner.js';
 
 const fastMode = process.env.ASR_FAST === '1';
-export const ASR_SAMPLE_RATE = fastMode ? 16_000 : 24_000; // Hz
-export const ASR_COMPR_LEVEL = fastMode ? 3 : 5;
+export const ASR_SAMPLE_RATE = fastMode ? 12_000 : 16_000; // Hz
+export const ASR_SAMPLE_FMT = 's16'; // 16-bit
+export const ASR_COMPR_LEVEL = fastMode ? 6 : 8;
 
 declare module '../ffmpeg-runner.js' {
   interface FFmpegContext {
@@ -111,6 +112,8 @@ export async function extractAudio(
       '0:a:0?',
       '-ar',
       String(ASR_SAMPLE_RATE),
+      '-sample_fmt',
+      ASR_SAMPLE_FMT,
       '-ac',
       '1',
       '-c:a',
@@ -200,6 +203,8 @@ export async function extractAudioSegment(
     '-vn',
     '-ar',
     String(ASR_SAMPLE_RATE),
+    '-sample_fmt',
+    ASR_SAMPLE_FMT,
     '-ac',
     '1',
     '-c:a',

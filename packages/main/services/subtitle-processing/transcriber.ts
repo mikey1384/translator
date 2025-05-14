@@ -7,7 +7,7 @@ import { callAIModel } from './openai-client.js';
 import { SrtSegment } from '@shared-types/app';
 import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
-import { throwIfAborted, sig } from './utils.js';
+import { throwIfAborted } from './utils.js';
 
 export const VALID_SEG_MARGIN = 0.05;
 
@@ -23,7 +23,7 @@ export async function transcribeChunk({
   temperature = 0,
   mediaDuration,
 }: {
-  chunkIndex: number;
+  chunkIndex: number | string;
   chunkPath: string;
   startTime: number;
   signal?: AbortSignal;
@@ -161,6 +161,15 @@ export async function transcribeChunk({
             noSpeechProb = matchingSegment.no_speech_prob || 0;
           }
         }
+        const segmentRelativeWords = currentWords.map(cw => {
+          const absoluteWordStart = cw.start + startTime;
+          const absoluteWordEnd = cw.end + startTime;
+          return {
+            ...cw,
+            start: absoluteWordStart - (groupStart as number),
+            end: absoluteWordEnd - (groupStart as number),
+          };
+        });
         srtSegments.push({
           id: crypto.randomUUID(),
           index: segIdx++,
@@ -169,6 +178,7 @@ export async function transcribeChunk({
           original: text.trim(),
           avg_logprob: avgLogprob,
           no_speech_prob: noSpeechProb,
+          words: segmentRelativeWords,
         } as SrtSegment);
         if (!isLastWord) {
           groupStart = null;
@@ -188,6 +198,15 @@ export async function transcribeChunk({
         }
         text += word;
       }
+      const finalSegmentRelativeWords = currentWords.map(cw => {
+        const absoluteWordStart = cw.start + startTime;
+        const absoluteWordEnd = cw.end + startTime;
+        return {
+          ...cw,
+          start: absoluteWordStart - (groupStart as number),
+          end: absoluteWordEnd - (groupStart as number),
+        };
+      });
       let avgLogprob = 0;
       let noSpeechProb = 0;
       if (Array.isArray(segments)) {
@@ -207,6 +226,7 @@ export async function transcribeChunk({
         original: text.trim(),
         avg_logprob: avgLogprob,
         no_speech_prob: noSpeechProb,
+        words: finalSegmentRelativeWords,
       } as SrtSegment);
     }
 
@@ -218,7 +238,7 @@ export async function transcribeChunk({
       signal,
       mediaDuration,
     });
-    sig({ stage: 'SCRUBBED', segs: cleanSegs, operationId });
+
     const norm = (w: string) => w.replace(/[^{-￿]+$/u, '');
     const lastJSONWord = words.at(-1)?.word?.trim();
     const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
@@ -420,7 +440,18 @@ function fuseZeroLengthCaptions(segs: SrtSegment[]): SrtSegment[] {
       if (prevLast !== tailFirst) {
         prev.original = `${prev.original} ${tail.original}`.trim();
       }
+      // Merge words for prev
+      const tailOffsetToPrev = tail.start - prev.start;
+      const adjustedTailWords = (tail.words || []).map(w => ({
+        ...w,
+        start: w.start + tailOffsetToPrev,
+        end: w.end + tailOffsetToPrev,
+      }));
+      prev.words = [...(prev.words || []), ...adjustedTailWords].sort(
+        (a, b) => a.start - b.start
+      );
     } else if (next) {
+      const originalNextStart = next.start;
       next.start = tail.start;
 
       const tailLast = normWord(tail.original.split(/\s+/).at(-1) || '');
@@ -429,6 +460,17 @@ function fuseZeroLengthCaptions(segs: SrtSegment[]): SrtSegment[] {
       if (tailLast !== nextFirst) {
         next.original = `${tail.original} ${next.original}`.trim();
       }
+      // Merge words for next
+      const wordsFromTail = (tail.words || []).map(w => ({ ...w })); // Already relative to tail.start (which is new next.start)
+      const nextStartAdjustment = originalNextStart - next.start; // next.start is now tail.start
+      const adjustedOriginalNextWords = (next.words || []).map(w => ({
+        ...w,
+        start: w.start + nextStartAdjustment,
+        end: w.end + nextStartAdjustment,
+      }));
+      next.words = [...wordsFromTail, ...adjustedOriginalNextWords].sort(
+        (a, b) => a.start - b.start
+      );
     }
 
     segs.splice(i--, 1);
