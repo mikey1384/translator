@@ -17,8 +17,11 @@ import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import {
   RepairableGap,
-  identifyGapsToRepair,
   transcribeGapAudioWithRetry,
+  refineOvershoots,
+  sanityScan,
+  identifyGaps,
+  trimPhantomTail,
 } from '../gap-repair.js';
 import {
   SAVE_WHISPER_CHUNKS,
@@ -27,6 +30,7 @@ import {
   MAX_SPEECHLESS_SEC,
   MAX_CHUNK_DURATION_SEC,
   MIN_CHUNK_DURATION_SEC,
+  MIN_REPAIR_GAP_SEC,
   MERGE_GAP_SEC,
   PROGRESS_ANALYSIS_DONE,
   TRANSCRIPTION_BATCH_SIZE,
@@ -311,6 +315,7 @@ export async function transcribePass({
     );
     overallSegments.length = 0;
     overallSegments.push(...filteredSegments);
+    overallSegments.forEach(trimPhantomTail);
 
     const anchors: SrtSegment[] = [];
     let tmpIdx = 0;
@@ -329,7 +334,28 @@ export async function transcribePass({
     overallSegments.push(...anchors);
     overallSegments.sort((a, b) => a.start - b.start);
 
-    const repairGaps = identifyGapsToRepair(merged, overallSegments, 1);
+    await refineOvershoots({
+      segments: overallSegments,
+      ffmpeg,
+      signal,
+      audioPath,
+      tempDir,
+      operationId,
+      createdChunkPaths,
+    });
+
+    const additionalGaps = sanityScan({
+      vadIntervals: merged,
+      segments: overallSegments,
+      minGap: MIN_REPAIR_GAP_SEC,
+    });
+    log.info(
+      `[${operationId}] Sanity scan found ${additionalGaps.length} additional gaps.`
+    );
+
+    const repairGaps = identifyGaps(overallSegments, MIN_REPAIR_GAP_SEC).concat(
+      additionalGaps
+    );
 
     repairGaps.sort((a, b) => a.start - b.start);
     const dedupeGaps = (gaps: RepairableGap[]): RepairableGap[] => {
@@ -485,9 +511,7 @@ export async function transcribePass({
 
       iteration++;
       gapsToRepair = dedupeGaps(
-        identifyGapsToRepair(merged, overallSegments, 1).filter(
-          g => g.end - g.start >= GAP_SEC
-        )
+        identifyGaps(overallSegments, MIN_REPAIR_GAP_SEC)
       );
       log.info(
         `[${operationId}] After iteration ${iteration - 1}, found ${gapsToRepair.length} remaining gap(s) for next pass.`

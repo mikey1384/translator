@@ -15,7 +15,7 @@ export const SUBTITLE_GAP_THRESHOLD = 5;
 export const MAX_GAP_TO_FUSE = 0.3;
 
 // --- Repair constants ---
-export const MISSING_GAP_SEC = 5;
+export const MIN_REPAIR_GAP_SEC = 0.5;
 
 // --- Chunking constants ---
 export const MIN_CHUNK_DURATION_SEC = 8;
