@@ -29,11 +29,10 @@ import {
   MAX_SPEECHLESS_SEC,
   MAX_CHUNK_DURATION_SEC,
   MIN_CHUNK_DURATION_SEC,
-  MIN_REPAIR_GAP_SEC,
+  GAP_SEC,
   MERGE_GAP_SEC,
   PROGRESS_ANALYSIS_DONE,
   TRANSCRIPTION_BATCH_SIZE,
-  GAP_SEC,
   MAX_PROMPT_CHARS,
   LOG_PROB_THRESHOLD,
 } from '../constants.js';
@@ -329,54 +328,42 @@ export async function transcribePass({
       openai,
     });
 
+    overallSegments.sort((a, b) => a.start - b.start);
+    const dedupedSegments = dedupeNearDuplicates(overallSegments);
+
     const anchors: SrtSegment[] = [];
     let tmpIdx = 0;
-    for (let i = 1; i < overallSegments.length; i++) {
-      const gap = overallSegments[i].start - overallSegments[i - 1].end;
+    for (let i = 1; i < dedupedSegments.length; i++) {
+      const gap = dedupedSegments[i].start - dedupedSegments[i - 1].end;
       if (gap > GAP_SEC) {
         anchors.push({
           id: crypto.randomUUID(),
           index: ++tmpIdx,
-          start: overallSegments[i - 1].end,
-          end: overallSegments[i - 1].end + 0.5,
+          start: dedupedSegments[i - 1].end,
+          end: dedupedSegments[i - 1].end + 0.5,
           original: '',
         });
       }
     }
-    overallSegments.push(...anchors);
-    overallSegments.sort((a, b) => a.start - b.start);
+    dedupedSegments.push(...anchors);
+    dedupedSegments.sort((a, b) => a.start - b.start);
 
-    overallSegments.forEach((s, i) => (s.index = i + 1));
+    dedupedSegments.forEach((s, i) => (s.index = i + 1));
+    const finalDedupedSegments = dedupeNearDuplicates(dedupedSegments);
 
     const additionalGaps = sanityScan({
       vadIntervals: merged,
-      segments: overallSegments,
-      minGap: MIN_REPAIR_GAP_SEC,
+      segments: finalDedupedSegments,
+      minGap: GAP_SEC,
     });
     log.info(
       `[${operationId}] Sanity scan found ${additionalGaps.length} additional gaps.`
     );
 
     const repairGapsInput = [
-      ...identifyGaps(overallSegments, MIN_REPAIR_GAP_SEC),
+      ...identifyGaps(finalDedupedSegments, GAP_SEC),
       ...additionalGaps,
     ];
-
-    const dedupeGaps = (gaps: RepairableGap[]): RepairableGap[] => {
-      if (!gaps.length) return [];
-      const sortedGaps = [...gaps].sort((a, b) => a.start - b.start);
-      if (sortedGaps.length === 0) return [];
-      const deduped: RepairableGap[] = [sortedGaps[0]];
-      for (let i = 1; i < sortedGaps.length; i++) {
-        const g = sortedGaps[i];
-        if (g.start <= deduped.at(-1)!.end + 0.01) {
-          deduped.at(-1)!.end = Math.max(deduped.at(-1)!.end, g.end);
-        } else {
-          deduped.push(g);
-        }
-      }
-      return deduped;
-    };
 
     let repairGaps = dedupeGaps(repairGapsInput);
 
@@ -386,7 +373,7 @@ export async function transcribePass({
 
     if (repairGaps.length === 0) {
       return {
-        segments: overallSegments,
+        segments: finalDedupedSegments,
         speechIntervals: merged.slice(),
       };
     }
@@ -433,7 +420,7 @@ export async function transcribePass({
           const baseLogIdx = 10000 * iteration + gapIndex;
 
           const contextSegmentsForThisGap = [
-            ...overallSegments,
+            ...finalDedupedSegments,
             ...newlyRepairedSegments,
           ].sort((a, b) => a.start - b.start);
 
@@ -485,11 +472,10 @@ export async function transcribePass({
         const results = await Promise.all(tasks);
         for (const segs of results) {
           if (segs) {
-            appendRepaired(overallSegments, segs);
+            appendRepaired(finalDedupedSegments, segs);
             newlyRepairedSegments.push(...segs);
           }
         }
-        // Final update for this wave
         progressCallback?.({
           percent: Math.min(
             scaleProgress(
@@ -507,7 +493,7 @@ export async function transcribePass({
         log.error(`[${operationId}] Error in gap repair tasks:`, error);
       }
 
-      overallSegments.sort((a, b) => a.start - b.start);
+      finalDedupedSegments.sort((a, b) => a.start - b.start);
 
       if (newlyRepairedSegments.length) {
         progressCallback?.({
@@ -521,9 +507,7 @@ export async function transcribePass({
       }
 
       iteration++;
-      repairGaps = dedupeGaps(
-        identifyGaps(overallSegments, MIN_REPAIR_GAP_SEC)
-      );
+      repairGaps = dedupeGaps(identifyGaps(finalDedupedSegments, GAP_SEC));
       log.info(
         `[${operationId}] After iteration ${iteration - 1}, found ${repairGaps.length} remaining gap(s) for next pass.`
       );
@@ -535,7 +519,7 @@ export async function transcribePass({
       );
     }
 
-    overallSegments.forEach((segment, index) => {
+    finalDedupedSegments.forEach((segment, index) => {
       segment.index = index + 1;
     });
 
@@ -546,14 +530,17 @@ export async function transcribePass({
       });
     }
 
-    const finalSrt = buildSrt({ segments: overallSegments, mode: 'original' });
+    const finalSrt = buildSrt({
+      segments: finalDedupedSegments,
+      mode: 'original',
+    });
     await fs.promises.writeFile(
       path.join(tempDir, `${operationId}_final_after_repair.srt`),
       finalSrt,
       'utf8'
     );
     log.info(
-      `[${operationId}] ✏️  Wrote debug SRT with ${overallSegments.length} segments`
+      `[${operationId}] ✏️  Wrote debug SRT with ${finalDedupedSegments.length} segments`
     );
 
     if (signal?.aborted) {
@@ -561,7 +548,7 @@ export async function transcribePass({
     }
 
     return {
-      segments: overallSegments,
+      segments: finalDedupedSegments,
       speechIntervals: merged.slice(),
     };
   } catch (error: any) {
@@ -612,11 +599,61 @@ export async function transcribePass({
       : history.slice(-MAX_PROMPT_CHARS);
   }
 
-  function appendRepaired(overall: SrtSegment[], repaired: SrtSegment[]) {
-    let nextIdx = (overall.at(-1)?.index ?? 0) + 1;
+  function appendRepaired(arr: SrtSegment[], repaired: SrtSegment[]) {
+    let nextIdx = (arr.at(-1)?.index ?? 0) + 1;
     for (const seg of repaired) {
       seg.index = nextIdx++;
-      overall.push(seg);
+      arr.push(seg);
     }
+  }
+
+  function dedupeGaps(gaps: RepairableGap[]) {
+    if (!gaps.length) return [];
+    const sortedGaps = [...gaps].sort((a, b) => a.start - b.start);
+    if (sortedGaps.length === 0) return [];
+    const deduped: RepairableGap[] = [sortedGaps[0]];
+    for (let i = 1; i < sortedGaps.length; i++) {
+      const g = sortedGaps[i];
+      if (g.start <= deduped.at(-1)!.end + 0.01) {
+        deduped.at(-1)!.end = Math.max(deduped.at(-1)!.end, g.end);
+      } else {
+        deduped.push(g);
+      }
+    }
+    return deduped;
+  }
+
+  function dedupeNearDuplicates(
+    segs: SrtSegment[],
+    { textTol = 0.85, timeTol = 0.35 } = {}
+  ): SrtSegment[] {
+    const norm = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .trim();
+
+    const sim = (a: string, b: string) => {
+      const aw = new Set(norm(a).split(/\s+/));
+      const bw = new Set(norm(b).split(/\s+/));
+      const inter = [...aw].filter(w => bw.has(w)).length;
+      return inter / Math.max(1, Math.max(aw.size, bw.size));
+    };
+
+    const out: SrtSegment[] = [];
+    for (const seg of segs) {
+      const last = out.at(-1);
+      const dup =
+        last &&
+        Math.abs(last.start - seg.start) < timeTol &&
+        sim(last.original, seg.original) >= textTol;
+
+      if (!dup) out.push(seg);
+      else {
+        if (seg.end - seg.start > last.end - last.start)
+          out[out.length - 1] = seg;
+      }
+    }
+    return out.map((s, i) => ({ ...s, index: i + 1 }));
   }
 }
