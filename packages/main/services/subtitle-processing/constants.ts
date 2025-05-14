@@ -1,5 +1,5 @@
 // --- Configuration Constants ---
-export const SAVE_WHISPER_CHUNKS = true;
+export const SAVE_WHISPER_CHUNKS = false;
 export const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
 export const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
 export const PRE_PAD_SEC = 0.1;
