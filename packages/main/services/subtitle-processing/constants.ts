@@ -2,8 +2,8 @@
 export const SAVE_WHISPER_CHUNKS = false;
 export const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
 export const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
-export const PRE_PAD_SEC = 0.1;
-export const POST_PAD_SEC = 0.15;
+export const PRE_PAD_SEC = 0;
+export const POST_PAD_SEC = 1;
 export const MERGE_GAP_SEC = 0.5;
 export const MAX_SPEECHLESS_SEC = 15;
 export const NO_SPEECH_PROB_THRESHOLD = 0.96;
