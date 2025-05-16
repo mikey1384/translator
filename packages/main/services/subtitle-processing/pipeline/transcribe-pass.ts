@@ -366,7 +366,7 @@ export async function transcribePass({
     }
 
     let iteration = 1;
-    const maxIterations = 2;
+    const maxIterations = 3;
 
     while (
       repairGaps.length > 0 &&

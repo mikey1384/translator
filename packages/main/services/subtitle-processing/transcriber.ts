@@ -69,7 +69,7 @@ export async function transcribeChunk({
         file: fileStream,
         response_format: 'verbose_json',
         language,
-        prompt: promptContext ?? '',
+        prompt: `${promptContext ?? ''}\n\nImportant: If there's no speech, return an empty array`,
         timestamp_granularities: ['word', 'segment'],
       },
       { signal }
@@ -102,7 +102,7 @@ export async function transcribeChunk({
     const MAX_SEG_LEN = 8;
     const MAX_WORDS = 12;
     const MIN_WORDS = 3;
-    let srtSegments: SrtSegment[] = [];
+    const srtSegments: SrtSegment[] = [];
     let currentWords: any[] = [];
     let groupStart: number | null = null;
     let groupEnd: number | null = null;
@@ -226,8 +226,6 @@ export async function transcribeChunk({
       } as SrtSegment);
     }
 
-    srtSegments = fuseZeroLengthCaptions(srtSegments);
-
     const cleanSegs = await scrubHallucinationsBatch({
       segments: srtSegments,
       operationId,
@@ -268,69 +266,4 @@ export async function transcribeChunk({
   } finally {
     fileStream.destroy();
   }
-}
-
-function fuseZeroLengthCaptions(segs: SrtSegment[]): SrtSegment[] {
-  const MIN_DUR = 0.001;
-  const normWord = (w: string) =>
-    w
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}]+/gu, '')
-      .normalize('NFKD');
-
-  if (segs.length === 0) return segs;
-
-  for (let i = 0; i < segs.length; i++) {
-    const tail = segs[i];
-    if (tail.end - tail.start >= MIN_DUR) continue;
-
-    const prev = segs[i - 1];
-    const next = segs[i + 1];
-
-    if (prev) {
-      prev.end = next && next.start > prev.end ? next.start : tail.end;
-
-      const prevLast = normWord(prev.original.split(/\s+/).at(-1) || '');
-      const tailFirst = normWord(tail.original.split(/\s+/).at(0) || '');
-
-      if (prevLast !== tailFirst) {
-        prev.original = `${prev.original} ${tail.original}`.trim();
-      }
-      // Merge words for prev
-      const tailOffsetToPrev = tail.start - prev.start;
-      const adjustedTailWords = (tail.words || []).map(w => ({
-        ...w,
-        start: w.start + tailOffsetToPrev,
-        end: w.end + tailOffsetToPrev,
-      }));
-      prev.words = [...(prev.words || []), ...adjustedTailWords].sort(
-        (a, b) => a.start - b.start
-      );
-    } else if (next) {
-      const originalNextStart = next.start;
-      next.start = tail.start;
-
-      const tailLast = normWord(tail.original.split(/\s+/).at(-1) || '');
-      const nextFirst = normWord(next.original.split(/\s+/).at(0) || '');
-
-      if (tailLast !== nextFirst) {
-        next.original = `${tail.original} ${next.original}`.trim();
-      }
-      // Merge words for next
-      const wordsFromTail = (tail.words || []).map(w => ({ ...w })); // Already relative to tail.start (which is new next.start)
-      const nextStartAdjustment = originalNextStart - next.start; // next.start is now tail.start
-      const adjustedOriginalNextWords = (next.words || []).map(w => ({
-        ...w,
-        start: w.start + nextStartAdjustment,
-        end: w.end + nextStartAdjustment,
-      }));
-      next.words = [...wordsFromTail, ...adjustedOriginalNextWords].sort(
-        (a, b) => a.start - b.start
-      );
-    }
-
-    segs.splice(i--, 1);
-  }
-
-  return segs.map((c, idx) => ({ ...c, index: idx + 1 }));
 }
