@@ -13,13 +13,11 @@ export async function getApiKey(keyType: 'openai'): Promise<string> {
 export async function callOpenAIChat({
   model,
   messages,
-  max_tokens,
   signal,
   retryAttempts = 3,
 }: {
   model: string;
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
-  max_tokens?: number;
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
@@ -45,7 +43,6 @@ export async function callOpenAIChat({
         {
           model: model,
           messages: messages,
-          max_tokens: max_tokens,
         },
         { signal }
       );
@@ -87,13 +84,11 @@ export async function callOpenAIChat({
 
 export async function callAIModel({
   messages,
-  max_tokens,
   signal,
   operationId,
   retryAttempts = 3,
 }: {
   messages: any[];
-  max_tokens?: number;
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
@@ -101,7 +96,6 @@ export async function callAIModel({
   return callOpenAIChat({
     model: AI_MODELS.GPT,
     messages,
-    max_tokens: max_tokens ?? 1000,
     signal,
     operationId,
     retryAttempts,

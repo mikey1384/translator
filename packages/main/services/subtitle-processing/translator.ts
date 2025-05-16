@@ -1,4 +1,3 @@
-import { AI_MODELS } from '../../../shared/constants/index.js';
 import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './openai-client.js';
@@ -43,7 +42,6 @@ Translate EACH line individually, preserving the line order.
       log.info(`[${operationId}] Sending translation batch via callChatModel`);
       const translation = await callAIModel({
         messages: [{ role: 'user', content: combinedPrompt }],
-        max_tokens: AI_MODELS.MAX_TOKENS,
         signal,
         operationId,
         retryAttempts: 3,
@@ -203,7 +201,6 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
   try {
     const reviewedContent = await callAIModel({
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: AI_MODELS.MAX_TOKENS,
       signal,
       operationId,
       retryAttempts: 3,
