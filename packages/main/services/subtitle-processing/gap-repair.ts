@@ -13,6 +13,7 @@ import {
   NO_SPEECH_PROB_THRESHOLD,
   LOG_PROB_THRESHOLD,
   SAVE_WHISPER_CHUNKS,
+  GAP_SEC,
 } from './constants.js';
 import os from 'os';
 import { mkdirSync, copyFileSync } from 'fs';
@@ -28,7 +29,10 @@ export interface RepairableGap {
   end: number;
 }
 
-export function identifyGaps(caps: SrtSegment[], minDur = 1): RepairableGap[] {
+export function identifyGaps(
+  caps: SrtSegment[],
+  minDur = GAP_SEC
+): RepairableGap[] {
   const gaps: RepairableGap[] = [];
   if (!caps.length) return gaps;
 
@@ -331,6 +335,7 @@ export async function refineOvershoots({
     const seg = segments[i];
     if (!isBloated(seg) || !seg.words?.length) continue;
 
+    const origEnd = seg.end;
     let trustedEndAbs = seg.start;
     for (const w of seg.words) {
       const dur = w.end - w.start;
@@ -349,7 +354,7 @@ export async function refineOvershoots({
       seg.end = newEnd;
 
       const tailStart = newEnd;
-      const tailEnd = nextAbs;
+      const tailEnd = Math.min(origEnd, nextAbs);
 
       if (tailEnd - tailStart >= 0.2) {
         const tailSegs = await transcribeTailDirect({

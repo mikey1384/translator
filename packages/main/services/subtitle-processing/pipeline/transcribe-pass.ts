@@ -134,7 +134,6 @@ export async function transcribePass({
       }
     }
 
-    // Flush any remaining short tail block
     if (chunkStart !== null) {
       if (currEnd > chunkStart) {
         chunks.push({ start: chunkStart, end: currEnd, index: ++idx });
@@ -394,16 +393,6 @@ export async function transcribePass({
           throwIfAborted(signal);
           if (signal?.aborted) return [];
 
-          let adjustedGap = { ...gap };
-          if (gap.start < 10) {
-            const pad = 15;
-            const winStart = Math.max(0, gap.start - pad);
-            let winEnd = gap.end + pad;
-            if (winEnd - winStart > MAX_CHUNK_DURATION_SEC) {
-              winEnd = winStart + MAX_CHUNK_DURATION_SEC;
-            }
-            adjustedGap = { start: winStart, end: winEnd };
-          }
           const gapIndex = i + 1;
           const baseLogIdx = 10000 * iteration + gapIndex;
 
@@ -413,7 +402,7 @@ export async function transcribePass({
           ].sort((a, b) => a.start - b.start);
 
           const newSegs = await transcribeGapAudioWithRetry(
-            adjustedGap,
+            gap,
             baseLogIdx,
             `repair_gap_iter_${iteration}`,
             contextSegmentsForThisGap,
@@ -429,7 +418,7 @@ export async function transcribePass({
             }
           );
           const filteredNewSegs = newSegs.filter(
-            seg => seg.end > adjustedGap.start && seg.start < adjustedGap.end
+            seg => seg.end > gap.start && seg.start < gap.end
           );
 
           processedInPass += 1;
