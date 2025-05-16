@@ -2,60 +2,24 @@ import { useCallback } from 'react';
 import { SrtSegment } from '@shared-types/app';
 import { scrollPrecisely, flashSubtitle } from '../../../utils/scroll.js';
 
-export function scrollWhenReady({
+export function flashReviewedSegment({
   id,
   subtitleRefs,
-  smooth = true,
-  tries = 0,
-  maxTries = 30,
   onSuccess,
 }: {
   id: string;
   subtitleRefs: React.RefObject<Record<string, HTMLElement | null>>;
-  smooth?: boolean;
-  tries?: number;
-  maxTries?: number;
   onSuccess?: () => void;
-}): boolean {
+}) {
   const el = subtitleRefs.current[id];
   if (el) {
     if (!document.contains(el)) {
-      console.log(
-        `[review scrollWhenReady] Element ${id} detached before scroll.`
-      );
       return false;
     }
-
-    console.log(
-      `[review scrollWhenReady] Found element for ${id}, scrolling...`
-    );
-    scrollPrecisely(el, smooth);
-
     requestAnimationFrame(() => flashSubtitle(el));
-
     onSuccess?.();
 
     return true;
-  }
-
-  if (tries < maxTries) {
-    console.log(
-      `[review scrollWhenReady] Waiting for element ${id} (try ${tries + 1})`
-    );
-    requestAnimationFrame(() =>
-      scrollWhenReady({
-        id,
-        subtitleRefs,
-        smooth,
-        tries: tries + 1,
-        maxTries,
-        onSuccess,
-      })
-    );
-    return false; // Indicate still trying
-  } else {
-    console.warn(`[review scrollWhenReady] Gave up waiting for refs of ${id}`);
-    return false; // Indicate failure
   }
 }
 

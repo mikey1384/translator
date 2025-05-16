@@ -3,7 +3,7 @@ export const SAVE_WHISPER_CHUNKS = false;
 export const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
 export const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
 export const PRE_PAD_SEC = 0;
-export const POST_PAD_SEC = 1;
+export const POST_PAD_SEC = 2;
 export const MERGE_GAP_SEC = 0.5;
 export const MAX_SPEECHLESS_SEC = 15;
 export const NO_SPEECH_PROB_THRESHOLD = 0.9;
@@ -31,3 +31,15 @@ export const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 
 // Progress constants for transcription
 export const PROGRESS_ANALYSIS_DONE = 5;
+
+// --- ASR Output Format Configuration ---
+const USE_FLAC = process.env.ASR_USE_FLAC === '1';
+const fastMode = process.env.ASR_FAST === '1';
+
+export const ASR_SAMPLE_RATE = fastMode ? 12_000 : 16_000;
+export const ASR_SAMPLE_FMT = 's16';
+export const ASR_OUT_EXT = USE_FLAC ? '.flac' : '.webm';
+export const ASR_AUDIO_CODEC = USE_FLAC ? 'flac' : 'libopus';
+export const ASR_OPUS_BITRATE = fastMode ? '24k' : '32k';
+export const ASR_VBR = 'on';
+export const ASR_COMPR_LEVEL = fastMode ? 6 : 8;

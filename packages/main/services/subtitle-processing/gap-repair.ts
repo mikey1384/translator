@@ -2,7 +2,7 @@ import { SrtSegment } from '@shared-types/app';
 import { transcribeChunk } from './transcriber.js';
 import path from 'path';
 import log from 'electron-log';
-import { extractAudioSegment } from './audio-extractor.js';
+import { extractAudioSegment, mkTempAudioName } from './audio-extractor.js';
 import { FFmpegContext } from '../ffmpeg-runner.js';
 import OpenAI from 'openai';
 import {
@@ -80,9 +80,8 @@ export async function transcribeGapAudioWithRetry(
     gapToProcess
   );
 
-  const originalGapAudioFilePath = path.join(
-    tempDir,
-    `${filePrefix}_${baseChunkLogIdx}_${operationId}.flac`
+  const originalGapAudioFilePath = mkTempAudioName(
+    path.join(tempDir, `${filePrefix}_${baseChunkLogIdx}_${operationId}`)
   );
   createdChunkPaths.push(originalGapAudioFilePath);
 
@@ -159,9 +158,11 @@ export async function transcribeGapAudioWithRetry(
           continue;
         }
 
-        const halfAudioFilePath = path.join(
-          tempDir,
-          `${filePrefix}_${baseChunkLogIdx}_half_${half.id}_${operationId}.flac`
+        const halfAudioFilePath = mkTempAudioName(
+          path.join(
+            tempDir,
+            `${filePrefix}_${baseChunkLogIdx}_half_${half.id}_${operationId}`
+          )
         );
         createdChunkPaths.push(halfAudioFilePath);
         const halfLogIdx = baseChunkLogIdx * 100 + half.retryLogIdxOffset;
@@ -205,9 +206,11 @@ export async function transcribeGapAudioWithRetry(
           continue;
         }
 
-        const intervalAudioFilePath = path.join(
-          tempDir,
-          `${filePrefix}_${baseChunkLogIdx}_interval_${intervalIndex}_${operationId}.flac`
+        const intervalAudioFilePath = mkTempAudioName(
+          path.join(
+            tempDir,
+            `${filePrefix}_${baseChunkLogIdx}_interval_${intervalIndex}_${operationId}`
+          )
         );
         createdChunkPaths.push(intervalAudioFilePath);
         const intervalLogIdx = baseChunkLogIdx * 100 + intervalIndex + 1;
@@ -480,9 +483,8 @@ async function transcribeTailDirect({
   signal: AbortSignal;
   createdChunkPaths: string[];
 }): Promise<SrtSegment[]> {
-  const outPath = path.join(
-    outputDir,
-    `overshoot_tail_${segIndex}_${operationId}.flac`
+  const outPath = mkTempAudioName(
+    path.join(outputDir, `overshoot_tail_${segIndex}_${operationId}`)
   );
   await extractAudioSegment(ffmpeg, {
     input: inputPath,

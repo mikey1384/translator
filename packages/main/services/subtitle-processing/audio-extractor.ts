@@ -8,11 +8,18 @@ import {
   AudioSliceOpts,
   FFmpegContext,
 } from '../ffmpeg-runner.js';
+import {
+  ASR_OUT_EXT,
+  ASR_AUDIO_CODEC,
+  ASR_OPUS_BITRATE,
+  ASR_VBR,
+  ASR_COMPR_LEVEL,
+  ASR_SAMPLE_RATE,
+  ASR_SAMPLE_FMT,
+} from './constants.js';
 
-const fastMode = process.env.ASR_FAST === '1';
-export const ASR_SAMPLE_RATE = fastMode ? 12_000 : 16_000; // Hz
-export const ASR_SAMPLE_FMT = 's16'; // 16-bit
-export const ASR_COMPR_LEVEL = fastMode ? 6 : 8;
+export const mkTempAudioName = (stem: string): string =>
+  `${stem}${ASR_OUT_EXT}`;
 
 declare module '../ffmpeg-runner.js' {
   interface FFmpegContext {
@@ -62,9 +69,11 @@ export async function extractAudio(
     throw new FFmpegError(`Input video file not found: ${videoPath}`);
   }
 
-  const outputPath = path.join(
-    ctx.tempDir,
-    `${path.basename(videoPath, path.extname(videoPath))}_audio.flac`
+  const outputPath = mkTempAudioName(
+    path.join(
+      ctx.tempDir,
+      `${path.basename(videoPath, path.extname(videoPath))}_audio`
+    )
   );
 
   try {
@@ -108,6 +117,8 @@ export async function extractAudio(
       'all',
       '-i',
       videoPath,
+      '-af',
+      'silenceremove=start_periods=1:start_silence=0.5:start_threshold=-50dB',
       '-map',
       '0:a:0?',
       '-ar',
@@ -117,14 +128,18 @@ export async function extractAudio(
       '-ac',
       '1',
       '-c:a',
-      'flac',
-      '-compression_level',
-      String(ASR_COMPR_LEVEL),
-      '-progress',
-      'pipe:1',
-      '-y',
-      outputPath,
+      ASR_AUDIO_CODEC,
     ];
+
+    if (ASR_AUDIO_CODEC === 'libopus') {
+      ffmpegArgs.push('-b:a', ASR_OPUS_BITRATE);
+      ffmpegArgs.push('-vbr', ASR_VBR);
+      ffmpegArgs.push('-application', 'voip');
+    } else {
+      ffmpegArgs.push('-compression_level', String(ASR_COMPR_LEVEL));
+    }
+
+    ffmpegArgs.push('-progress', 'pipe:1', '-y', outputPath);
 
     log.info(`[ffmpeg extractAudio] Running command: ${ffmpegArgs.join(' ')}`);
 
@@ -208,11 +223,18 @@ export async function extractAudioSegment(
     '-ac',
     '1',
     '-c:a',
-    'flac',
-    '-compression_level',
-    String(ASR_COMPR_LEVEL),
-    output,
+    ASR_AUDIO_CODEC,
   ];
+
+  if (ASR_AUDIO_CODEC === 'libopus') {
+    args.push('-b:a', ASR_OPUS_BITRATE);
+    args.push('-vbr', ASR_VBR);
+    args.push('-application', 'voip');
+  } else {
+    args.push('-compression_level', String(ASR_COMPR_LEVEL));
+  }
+  args.push(output);
+
   await ctx.run(args, { operationId, cwd: path.dirname(input), signal });
   if (!fs.existsSync(output) || fs.statSync(output).size === 0) {
     throw new FFmpegError('empty slice output');

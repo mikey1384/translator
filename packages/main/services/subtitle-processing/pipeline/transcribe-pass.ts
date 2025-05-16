@@ -34,11 +34,10 @@ import {
   PROGRESS_ANALYSIS_DONE,
   TRANSCRIPTION_BATCH_SIZE,
   MAX_PROMPT_CHARS,
-  LOG_PROB_THRESHOLD,
 } from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
-import { extractAudioSegment } from '../audio-extractor.js';
+import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 import pLimit from 'p-limit';
 import { throwIfAborted } from '../utils.js';
 import { refineOvershoots } from '../gap-repair.js';
@@ -199,16 +198,15 @@ export async function transcribePass({
           return [];
         }
 
-        const flacPath = path.join(
-          tempDir,
-          `chunk_${meta.index}_${operationId}.flac`
+        const chunkAudioPath = mkTempAudioName(
+          path.join(tempDir, `chunk_${meta.index}_${operationId}`)
         );
-        createdChunkPaths.push(flacPath);
+        createdChunkPaths.push(chunkAudioPath);
 
         try {
           await extractAudioSegment(ffmpeg, {
             input: audioPath,
-            output: flacPath,
+            output: chunkAudioPath,
             start: meta.start,
             duration: meta.end - meta.start,
             operationId: operationId ?? '',
@@ -219,7 +217,7 @@ export async function transcribePass({
 
           const segs = await transcribeChunk({
             chunkIndex: meta.index,
-            chunkPath: flacPath,
+            chunkPath: chunkAudioPath,
             startTime: meta.start,
             signal,
             openai,
@@ -299,16 +297,6 @@ export async function transcribePass({
 
     overallSegments.sort((a, b) => a.start - b.start);
 
-    const isWeak = (seg: SrtSegment) => {
-      const words = seg.original.trim().split(/\s+/).length;
-      const avgLogprob = seg.avg_logprob ?? 0;
-      return avgLogprob < LOG_PROB_THRESHOLD || words < 3;
-    };
-    overallSegments.forEach(s => {
-      if (s.start < 30 && isWeak(s)) {
-        s.original = '';
-      }
-    });
     const filteredSegments = overallSegments.filter(
       s => s.original.trim() !== ''
     );

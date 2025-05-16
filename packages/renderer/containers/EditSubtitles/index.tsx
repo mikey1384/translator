@@ -12,7 +12,7 @@ import MergeMenu from './MergeMenu';
 import SaveMenu from './SaveMenu';
 
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
-import { scrollWhenReady, useSubtitleNavigation } from './hooks/index.js';
+import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
@@ -136,10 +136,9 @@ export default function EditSubtitles({
     const id = subtitles[last]?.id;
     if (!id) return;
     const done = () => setAffectedRows([]);
-    scrollWhenReady({
+    flashReviewedSegment({
       id,
       subtitleRefs: subtitleRefs,
-      smooth: false,
       onSuccess: done,
     });
   }, [affectedRows, subtitles]);
