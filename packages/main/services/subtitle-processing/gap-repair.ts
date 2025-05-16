@@ -23,32 +23,6 @@ import {
   mergeAdjacentIntervals,
 } from './audio-chunker.js';
 
-export function buildContextPrompt(
-  allSegments: SrtSegment[],
-  gap: { start: number; end: number },
-  wordsPerSide = 80
-) {
-  const beforeText = allSegments
-    .filter(s => s.end <= gap.start)
-    .slice(-3)
-    .map(s => s.original)
-    .join(' ')
-    .split(/\s+/)
-    .slice(-wordsPerSide)
-    .join(' ');
-
-  const afterText = allSegments
-    .filter(s => s.start >= gap.end)
-    .slice(0, 3)
-    .map(s => s.original)
-    .join(' ')
-    .split(/\s+/)
-    .slice(0, wordsPerSide)
-    .join(' ');
-
-  return `Context before:\n${beforeText}\n\nContext after:\n${afterText}\n\nTranscript:`;
-}
-
 export interface RepairableGap {
   start: number;
   end: number;
@@ -399,6 +373,46 @@ export async function refineOvershoots({
 
   segments.sort((a, b) => a.start - b.start);
   segments.forEach((s, idx) => (s.index = idx + 1));
+}
+
+function buildContextPrompt(
+  allSegments: SrtSegment[],
+  gap: { start: number; end: number },
+  wordsPerSide = 80
+): string {
+  const collect = (segs: SrtSegment[], takeLast: boolean): string => {
+    let words: string[] = [];
+    const segmentsToProcess = takeLast ? [...segs].reverse() : segs;
+
+    for (const s of segmentsToProcess) {
+      if (!s.original?.trim()) {
+        continue;
+      }
+      const pieces = s.original.trim().split(/\s+/);
+      words = takeLast ? [...pieces, ...words] : [...words, ...pieces];
+      if (words.length >= wordsPerSide) {
+        break;
+      }
+    }
+    const collectedWords = takeLast
+      ? words.slice(-wordsPerSide)
+      : words.slice(0, wordsPerSide);
+    return collectedWords.join(' ');
+  };
+
+  const beforeText =
+    collect(
+      allSegments.filter(s => s.end < gap.start - 0.01),
+      true
+    ) || '<none>';
+
+  const afterText =
+    collect(
+      allSegments.filter(s => s.start > gap.end + 0.01),
+      false
+    ) || '<none>';
+
+  return `<before>\n${beforeText}\n</before>\n<after>\n${afterText}\n</after>\n<transcript>`;
 }
 
 export function sanityScan({
