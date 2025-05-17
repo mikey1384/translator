@@ -7,9 +7,15 @@ interface Props {
   current: (typeof SPEED_STEPS)[number];
   onSelect: (rate: (typeof SPEED_STEPS)[number]) => void;
   onClose: () => void;
+  placement?: 'up' | 'down';
 }
 
-export default function SpeedMenu({ current, onSelect, onClose }: Props) {
+export default function SpeedMenu({
+  current,
+  onSelect,
+  onClose,
+  placement = 'up',
+}: Props) {
   const menuRef = useRef<HTMLUListElement>(null);
   const selectedItemRef = useRef<HTMLLIElement>(null);
   const currentRateRef = useRef<(typeof SPEED_STEPS)[number]>(current);
@@ -71,9 +77,10 @@ export default function SpeedMenu({ current, onSelect, onClose }: Props) {
       role="menu"
       aria-label="Playback speed"
       aria-activedescendant={`speed-item-${current}`}
-      className={`speed-menu ${css`
+      className={`speed-menu ${
+        placement === 'down' ? 'pop-down' : 'pop-up'
+      } ${css`
         position: absolute;
-        bottom: 100%;
         right: 0;
         background: rgba(0, 0, 0, 0.95);
         border: 1px solid #444;
@@ -85,6 +92,16 @@ export default function SpeedMenu({ current, onSelect, onClose }: Props) {
         min-width: 80px;
         opacity: 1;
         transition: opacity 0.2s ease-out;
+
+        &.pop-up {
+          bottom: 100%;
+          margin-bottom: 6px;
+        }
+
+        &.pop-down {
+          top: 100%;
+          margin-top: 6px;
+        }
       `}`}
     >
       {SPEED_STEPS.map((r: (typeof SPEED_STEPS)[number]) => (

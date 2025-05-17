@@ -634,6 +634,7 @@ export default function VideoPlayer() {
                     setShowSpeedMenu(false);
                     speedBtnRef.current?.focus();
                   }}
+                  placement={isFullScreen ? 'up' : 'down'}
                 />
               )}
             </div>
