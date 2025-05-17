@@ -78,9 +78,7 @@ export async function transcribeChunk({
     const segments = (res as any)?.segments as Array<any> | undefined;
     const words = (res as any)?.words as Array<any> | undefined;
     if (!Array.isArray(words) || words.length === 0) {
-      log.warn(
-        `[${operationId}] Chunk ${chunkIndex}: No word-level timestamps in Whisper response.`
-      );
+      log.warn(`[] ⚠️ Mismatch between last JSON word "" and last caption word ""`);
       return [];
     }
 
@@ -233,7 +231,7 @@ export async function transcribeChunk({
       mediaDuration,
     });
 
-    const norm = (w: string) => w.replace(/[^{-￿]+$/u, '');
+    const norm = (w: string) => w.replace(/[\uFEFF\u200B]+$/g, '');
     const lastJSONWord = words.at(-1)?.word?.trim();
     const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
     if (
@@ -242,7 +240,7 @@ export async function transcribeChunk({
       norm(lastJSONWord) !== norm(lastCaptionWord)
     ) {
       log.warn(
-        `[${operationId}] ⚠️ tail-word mismatch: "${lastJSONWord}" ➜ "${lastCaptionWord}"`
+        `[${operationId}] WARNING: mismatch between last JSON word "${lastJSONWord}" and last caption word "${lastCaptionWord}"`
       );
     }
     return cleanSegs;
