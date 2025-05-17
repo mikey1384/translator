@@ -4,6 +4,7 @@ import { Draft } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
+import { sameArray } from '../utils/array';
 
 interface State {
   showSettings: boolean;
@@ -16,6 +17,7 @@ interface State {
   showOriginalText: boolean;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
+  navTick: number;
 }
 
 interface Actions {
@@ -31,7 +33,6 @@ interface Actions {
   setInputMode(mode: 'file' | 'url'): void;
   setTargetLanguage(lang: string): void;
   setShowOriginalText(show: boolean): void;
-  openFileDialog(): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
 }
@@ -45,6 +46,7 @@ const initial: State = {
   searchText: '',
   activeMatchIndex: 0,
   matchedIndices: [],
+  navTick: 0,
   inputMode: 'file',
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   showOriginalText: JSON.parse(
@@ -61,9 +63,6 @@ const resetSearchState = (s: Draft<State>) => {
   s.matchedIndices = [];
   s.activeMatchIndex = 0;
 };
-
-const sameArray = (a: number[], b: number[]) =>
-  a.length === b.length && a.every((v, i) => v === b[i]);
 
 export const useUIStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
@@ -95,7 +94,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         },
 
         setActiveMatchIndex(index) {
-          set({ activeMatchIndex: index });
+          set(s => {
+            s.activeMatchIndex = index;
+            s.navTick++;
+          });
         },
 
         setMatchedIndices(indices) {
@@ -114,7 +116,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           const { matchedIndices, activeMatchIndex } = get();
           if (matchedIndices.length === 0) return;
           const next = (activeMatchIndex + 1) % matchedIndices.length;
-          set({ activeMatchIndex: next });
+          set(s => {
+            s.activeMatchIndex = next;
+            s.navTick++;
+          });
         },
 
         handleFindPrev() {
@@ -123,7 +128,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           const prev =
             (activeMatchIndex - 1 + matchedIndices.length) %
             matchedIndices.length;
-          set({ activeMatchIndex: prev });
+          set(s => {
+            s.activeMatchIndex = prev;
+            s.navTick++;
+          });
         },
 
         handleCloseFindBar() {
@@ -151,10 +159,6 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         setShowOriginalText(show) {
           localStorage.setItem(SHOW_ORIGINAL_KEY, JSON.stringify(show));
           set({ showOriginalText: show });
-        },
-
-        openFileDialog() {
-          console.log('Opening file dialog');
         },
 
         setBaseFontSize(size) {

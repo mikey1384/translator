@@ -29,6 +29,7 @@ import * as FileIPC from '@ipc/file';
 
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { getNativePlayerInstance } from '../../native-player';
+import { sameArray } from '../../utils/array';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -48,7 +49,7 @@ export default function EditSubtitles({
   onStartPngRenderRequest,
   editorRef,
 }: EditSubtitlesProps) {
-  const { searchText, showOriginalText, activeMatchIndex } = useUIStore();
+  const { searchText, showOriginalText, navTick } = useUIStore();
   const {
     file: videoFile,
     path: videoPath,
@@ -68,8 +69,6 @@ export default function EditSubtitles({
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const prevSubsRef = useRef<SrtSegment[]>([]);
   const prevReviewedBatchRef = useRef<number | null>(null);
-
-  const prevActiveRef = useRef(activeMatchIndex);
 
   const activePlayer = getNativePlayerInstance();
   const { scrollToCurrentSubtitle } = useSubtitleNavigation(
@@ -98,28 +97,19 @@ export default function EditSubtitles({
   }, [editorRef, scrollToCurrentSubtitle, scrollToSubtitleIndex]);
 
   useEffect(() => {
-    const localMatchIndices = collectMatchIndices(
-      subtitles,
-      searchText,
-      showOriginalText
-    );
-
-    const currentMatchedIndices = useUIStore.getState().matchedIndices;
-    if (!sameArray(currentMatchedIndices, localMatchIndices)) {
-      useUIStore.getState().setMatchedIndices(localMatchIndices);
+    const local = collectMatchIndices(subtitles, searchText, showOriginalText);
+    if (!sameArray(useUIStore.getState().matchedIndices, local)) {
+      useUIStore.getState().setMatchedIndices(local);
     }
+  }, [searchText, showOriginalText, subtitles]);
 
-    if (
-      prevActiveRef.current !== activeMatchIndex &&
-      localMatchIndices.length > 0 &&
-      activeMatchIndex < localMatchIndices.length
-    ) {
-      scrollToSubtitleIndex(localMatchIndices[activeMatchIndex]);
+  useEffect(() => {
+    const { matchedIndices, activeMatchIndex } = useUIStore.getState();
+    if (matchedIndices.length && activeMatchIndex < matchedIndices.length) {
+      scrollToSubtitleIndex(matchedIndices[activeMatchIndex]);
     }
-
-    prevActiveRef.current = activeMatchIndex;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchText, activeMatchIndex, showOriginalText, scrollToSubtitleIndex]);
+  }, [navTick]);
 
   const rbs = translation.reviewedBatchStartIndex;
   useEffect(() => {
@@ -426,8 +416,4 @@ function collectMatchIndices(
       return haystack.includes(needle) ? idx : -1;
     })
     .filter(idx => idx !== -1);
-}
-
-function sameArray(a: number[], b: number[]) {
-  return a.length === b.length && a.every((v, i) => v === b[i]);
 }
