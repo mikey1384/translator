@@ -9,6 +9,7 @@ import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mapErrorToUserFriendly } from './error-map.js';
 import { defaultBrowserHint } from './utils.js';
 
@@ -89,7 +90,7 @@ export async function processVideoUrl(
       videoPath: downloadResult.filepath,
       filename,
       size: stats.size,
-      fileUrl: `file://${downloadResult.filepath}`,
+      fileUrl: pathToFileURL(downloadResult.filepath).href,
       originalVideoPath: downloadResult.filepath,
       proc: downloadResult.proc,
     };
