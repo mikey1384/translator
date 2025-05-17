@@ -69,7 +69,7 @@ export async function transcribeChunk({
         file: fileStream,
         response_format: 'verbose_json',
         language,
-        prompt: `${promptContext ?? ''}\n\nImportant: If there's no speech, return an empty array`,
+        prompt: `${promptContext ?? ''}\n\n<<<NOSPEECH>>>`,
         timestamp_granularities: ['word', 'segment'],
       },
       { signal }
