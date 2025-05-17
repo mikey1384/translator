@@ -242,7 +242,7 @@ export async function transcribeChunk({
       norm(lastJSONWord) !== norm(lastCaptionWord)
     ) {
       log.warn(
-        `[${operationId}] WARNING: mismatch between last JSON word "${lastJSONWord}" and last caption word "${lastCaptionWord}"`
+        `[${operationId}] ⚠️ tail-word mismatch: "${lastJSONWord}" ➜ "${lastCaptionWord}"`
       );
     }
     return cleanSegs;
