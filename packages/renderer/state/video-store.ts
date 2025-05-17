@@ -4,6 +4,7 @@ import { getNativePlayerInstance } from '../native-player';
 import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
 import throttle from 'lodash/throttle';
+import { pathToFileURL } from 'url';
 
 type Meta = {
   duration: number;
@@ -82,7 +83,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (!fd) return;
 
       if ('path' in fd) {
-        const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;
+        const url = pathToFileURL(fd.path).toString();
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
