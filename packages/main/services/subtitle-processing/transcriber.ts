@@ -79,7 +79,7 @@ export async function transcribeChunk({
     const words = (res as any)?.words as Array<any> | undefined;
     if (!Array.isArray(words) || words.length === 0) {
       log.warn(
-        `[${operationId}] Chunk ${chunkIndex}: No word-level timestamps in Whisper response.`
+        `[] ⚠️ Mismatch between last JSON word "" and last caption word ""`
       );
       return [];
     }
@@ -242,7 +242,7 @@ export async function transcribeChunk({
       norm(lastJSONWord) !== norm(lastCaptionWord)
     ) {
       log.warn(
-        `[${operationId}] ⚠️ tail-word mismatch: "${lastJSONWord}" ➜ "${lastCaptionWord}"`
+        `[${operationId}] WARNING: mismatch between last JSON word "${lastJSONWord}" and last caption word "${lastCaptionWord}"`
       );
     }
     return cleanSegs;
