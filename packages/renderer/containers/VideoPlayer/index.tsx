@@ -550,7 +550,7 @@ export default function VideoPlayer() {
                 ? showFsControls
                   ? 1
                   : 0
-                : showOverlay || isAudioOnly
+                : showOverlay
                   ? 1
                   : 0,
             }}

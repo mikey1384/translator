@@ -134,6 +134,7 @@ export default function NativeVideoPlayer({
     v.addEventListener('loadedmetadata', onLoadedMetadata);
 
     // Dispatch event when native player is ready
+    setNativePlayerInstance(v);
     const readyEvent = new Event('native-player-ready');
     window.dispatchEvent(readyEvent);
 
@@ -223,8 +224,8 @@ export default function NativeVideoPlayer({
     css`
       position: relative;
       width: 100%;
+      min-height: ${isAudioOnly ? BASELINE_HEIGHT : 180}px;
       height: 100%;
-      min-height: 180px;
       border-radius: 6px;
       overflow: hidden;
       will-change: transform;
@@ -234,11 +235,13 @@ export default function NativeVideoPlayer({
       & audio {
         display: block;
         width: 100%;
-        height: 28px;
-        background: #000;
-        outline: none;
-        padding: 0;
-        margin: 0;
+        height: auto;
+        min-height: ${BASELINE_HEIGHT}px;
+        object-fit: contain;
+        background: transparent;
+      }
+      & audio::-webkit-media-controls {
+        display: none !important;
       }
     ` + ' native-video-player-wrapper';
 
@@ -257,7 +260,7 @@ export default function NativeVideoPlayer({
         className={css`
           width: 100%;
           height: 100%;
-          ${!isAudioOnly && 'object-fit: contain;'}
+          ${!isAudioOnly ? 'object-fit: contain;' : ''}
         `}
         playsInline
         preload="auto"
