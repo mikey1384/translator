@@ -106,7 +106,7 @@ export async function directMerge(
       const m = /out_time_ms=(\d+)/.exec(txt);
       if (m) {
         const frac = Math.min(parseInt(m[1], 10) / (videoDuration * 1e6), 1); // 0 → 1
-        const pct = VIDEO_START + frac * VIDEO_RANGE; // 40 → 90
+        const pct = VIDEO_START + frac * VIDEO_RANGE;
         progressCallback({
           percent: Math.round(pct),
           stage: 'Encoding video…',

@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { Page } from 'puppeteer';
 import log from 'electron-log';
+import { BASELINE_HEIGHT } from '../../../shared/constants/index.js';
 
 export async function generateStatePngs({
   page,
@@ -68,12 +69,17 @@ export async function generateStatePngs({
       const durationToUse =
         i === 0 && ev.text ? Math.max(duration, 2 / fps) : duration;
 
+      const scaledSize =
+        fontSizePx && videoHeight
+          ? Math.round(fontSizePx * (videoHeight / BASELINE_HEIGHT))
+          : fontSizePx;
+
       await page.evaluate(
         ({ txt, size, preset }) => {
-          // @ts-expect-error supplied by render host
+          // @ts-expect-error provided by render-host script
           window.updateSubtitle(txt, { fontSizePx: size, stylePreset: preset });
         },
-        { txt: ev.text, size: fontSizePx, preset: stylePreset }
+        { txt: ev.text, size: scaledSize, preset: stylePreset }
       );
 
       try {
