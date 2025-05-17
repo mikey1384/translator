@@ -10,16 +10,26 @@ interface SubtitleEditTextareaProps {
 }
 
 function escapeRegExp(text: string) {
-  return text.replace(/[.*+?^${}()|[\\]]/g, '\\$&');
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function getHighlightedHtml(text: string, searchTerm: string): string {
-  if (!searchTerm) {
+  const buildRegex = (raw: string): RegExp | null => {
+    const trimmedRaw = raw.trim();
+    if (!trimmedRaw) return null;
+    try {
+      const pattern = escapeRegExp(trimmedRaw).replace(/\s+/g, '\\s+');
+      return new RegExp(pattern, 'gi');
+    } catch {
+      return null;
+    }
+  };
+
+  const regex = buildRegex(searchTerm);
+
+  if (!regex) {
     return text.replace(/ /g, '&nbsp;').replace(/\n/g, '<br/>');
   }
-
-  const safeTerm = escapeRegExp(searchTerm);
-  const regex = new RegExp(safeTerm, 'gi');
 
   return text
     .replace(/ /g, '&nbsp;')
@@ -74,7 +84,7 @@ export default function SubtitleEditTextarea({
       rafIdRef.current = null;
       setHighlightHtml(getHighlightedHtml(draftRef.current, searchTerm));
     });
-  }, [searchTerm]);
+  }, [searchTerm, setHighlightHtml]);
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

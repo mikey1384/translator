@@ -1,25 +1,20 @@
-let instance: HTMLVideoElement | null = null;
+let instance: HTMLMediaElement | null = null;
 let isReady: boolean = false;
-let lastAccessed: number = Date.now(); // Initialize lastAccessed
+let lastAccessed: number = Date.now();
 let isInitialized: boolean = false;
 
 export function setNativePlayerInstance(
-  videoElement: HTMLVideoElement | null
+  mediaElement: HTMLMediaElement | null
 ): void {
-  instance = videoElement;
-  isReady = !!videoElement;
-  if (!isInitialized && videoElement) {
-    isInitialized = true; // Mark as initialized only once a valid element is set
+  instance = mediaElement;
+  isReady = !!mediaElement;
+  if (!isInitialized && mediaElement) {
+    isInitialized = true;
   }
   lastAccessed = Date.now();
-  if (instance) {
-    console.log('Native player instance set/updated.');
-  } else {
-    console.log('Native player instance cleared.');
-  }
 }
 
-export function getNativePlayerInstance(): HTMLVideoElement | null {
+export function getNativePlayerInstance(): HTMLMediaElement | null {
   lastAccessed = Date.now();
   return instance;
 }
@@ -47,16 +42,11 @@ export async function nativePlay(): Promise<void> {
       window._videoLastValidTime &&
       window._videoLastValidTime > 0
     ) {
-      console.log(
-        `Restoring position to ${window._videoLastValidTime} before playing`
-      );
-      // Restore position directly
       instance.currentTime = window._videoLastValidTime;
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     await instance.play();
-    console.log('Native player playing.');
   } catch (error) {
     console.error('Error playing video:', error);
     throw error;
@@ -70,7 +60,6 @@ export function nativePause(): void {
     return;
   }
   instance.pause();
-  console.log('Native player paused.');
 }
 
 export function nativeSeek(time: number): void {
@@ -85,8 +74,6 @@ export function nativeSeek(time: number): void {
 
   try {
     const isFileUrl = instance.src.startsWith('file://');
-
-    console.log(`Seeking to ${validTime} (file URL: ${isFileUrl})`);
 
     if (window._videoLastValidTime === undefined) {
       window._videoLastValidTime = 0;
@@ -107,9 +94,6 @@ export function nativeSeek(time: number): void {
       if (!instance.paused && drift < 1) return;
 
       if (drift > 0.5) {
-        console.warn(
-          `Seek correction needed: Current ${currentTime}, Target ${validTime}. Retrying.`
-        );
         instance.currentTime = validTime; // First retry
 
         setTimeout(() => {
@@ -117,15 +101,9 @@ export function nativeSeek(time: number): void {
 
           const newTime = instance.currentTime;
           if (Math.abs(newTime - validTime) > 0.5) {
-            console.error(
-              `Second seek correction failed: Current ${newTime}, Target ${validTime}.`
-            );
             instance.currentTime = validTime;
 
             if (isFileUrl && !instance.paused) {
-              console.warn(
-                'Pause-seek-play strategy activated for file:// URL.'
-              );
               const wasPlaying = !instance.paused;
               nativePause();
 

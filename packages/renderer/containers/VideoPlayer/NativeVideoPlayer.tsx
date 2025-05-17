@@ -6,6 +6,7 @@ import {
   MouseEvent,
   useCallback,
   useLayoutEffect,
+  ElementType,
 } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
@@ -20,7 +21,7 @@ import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 
 import { useVideoStore, useSubStore } from '../../state';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
-import { fontScale } from '../../../shared/constants';
+import { fontScale, BASELINE_HEIGHT } from '../../../shared/constants';
 
 import { cueText } from '../../../shared/helpers';
 
@@ -69,6 +70,7 @@ export interface NativeVideoPlayerProps {
   baseFontSize: number;
   stylePreset: SubtitleStylePresetKey;
   showOriginalText: boolean;
+  isAudioOnly: boolean;
 }
 
 export default function NativeVideoPlayer({
@@ -77,13 +79,14 @@ export default function NativeVideoPlayer({
   baseFontSize,
   stylePreset,
   showOriginalText,
+  isAudioOnly,
 }: NativeVideoPlayerProps) {
   const { url: videoUrl, togglePlay } = useVideoStore();
   const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
 
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement & HTMLAudioElement>(null!);
   const [scale, setScale] = useState(1);
 
   const [activeSubtitle, setActiveSubtitle] = useState('');
@@ -98,8 +101,9 @@ export default function NativeVideoPlayer({
     const v = videoRef.current;
     if (!v) return;
     const rect = v.getBoundingClientRect();
-    setScale(fontScale(Math.round(rect.height)));
-  }, []);
+    const h = rect.height === 0 && isAudioOnly ? BASELINE_HEIGHT : rect.height;
+    setScale(fontScale(Math.round(h)));
+  }, [isAudioOnly]);
 
   const flash = useCallback((state: 'play' | 'pause') => {
     setIndicator(state);
@@ -120,7 +124,7 @@ export default function NativeVideoPlayer({
 
     const onPlay = () => flash('play');
     const onPause = () => flash('pause');
-    const onErr = () => setErrorMessage('Video playback error');
+    const onErr = () => setErrorMessage('Media playback error');
 
     const onLoadedMetadata = recomputeScale;
 
@@ -128,6 +132,10 @@ export default function NativeVideoPlayer({
     v.addEventListener('pause', onPause);
     v.addEventListener('error', onErr);
     v.addEventListener('loadedmetadata', onLoadedMetadata);
+
+    // Dispatch event when native player is ready
+    const readyEvent = new Event('native-player-ready');
+    window.dispatchEvent(readyEvent);
 
     return () => {
       v.removeEventListener('play', onPlay);
@@ -140,10 +148,12 @@ export default function NativeVideoPlayer({
   useLayoutEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    const ro = new ResizeObserver(recomputeScale);
-    ro.observe(v);
-    return () => ro.disconnect();
-  }, [recomputeScale]);
+    if (!isAudioOnly) {
+      const ro = new ResizeObserver(recomputeScale);
+      ro.observe(v);
+      return () => ro.disconnect();
+    }
+  }, [recomputeScale, isAudioOnly]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -221,7 +231,18 @@ export default function NativeVideoPlayer({
       &:focus {
         outline: none;
       }
+      & audio {
+        display: block;
+        width: 100%;
+        height: 28px;
+        background: #000;
+        outline: none;
+        padding: 0;
+        margin: 0;
+      }
     ` + ' native-video-player-wrapper';
+
+  const ElTag: ElementType = isAudioOnly ? 'audio' : 'video';
 
   return (
     <div
@@ -230,20 +251,20 @@ export default function NativeVideoPlayer({
       tabIndex={-1}
       onKeyDown={onKeyDown}
     >
-      <video
+      <ElTag
         ref={videoRef}
         src={videoUrl}
         className={css`
           width: 100%;
           height: 100%;
-          object-fit: contain;
+          ${!isAudioOnly && 'object-fit: contain;'}
         `}
         playsInline
         preload="auto"
         controls={false}
         onClick={(e: MouseEvent) => {
           onVideoClick();
-          (e.currentTarget as HTMLVideoElement).focus();
+          (e.currentTarget as HTMLMediaElement).focus();
         }}
       />
 

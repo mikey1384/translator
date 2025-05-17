@@ -292,6 +292,7 @@ export default function VideoPlayer() {
   const resumeAt = useVideoStore(s => s.resumeAt);
   const togglePlay = useVideoStore(s => s.handleTogglePlay);
   const selectVideo = useVideoStore(s => s.openFileDialog);
+  const isAudioOnly = useVideoStore(s => s.isAudioOnly);
   const { merge, translation } = useTaskStore();
   const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
@@ -353,33 +354,43 @@ export default function VideoPlayer() {
   }, [syncVisibleHeight]);
 
   useEffect(() => {
-    const v = getNativePlayerInstance();
-    if (!v) return;
+    const attachListeners = () => {
+      const v = getNativePlayerInstance();
+      if (!v) return;
 
-    v.playbackRate = 1;
-    setPlaybackRate(1);
+      v.playbackRate = 1;
+      setPlaybackRate(1);
 
-    const onTime = () => setCurrentTime(v.currentTime);
-    const onDur = () => !Number.isNaN(v.duration) && setDuration(v.duration);
-    const onPlayPause = () => setIsPlaying(!v.paused);
+      const onTime = () => setCurrentTime(v.currentTime);
+      const onDur = () => !Number.isNaN(v.duration) && setDuration(v.duration);
+      const onPlayPause = () => setIsPlaying(!v.paused);
 
-    v.addEventListener('timeupdate', onTime);
-    v.addEventListener('durationchange', onDur);
-    v.addEventListener('play', onPlayPause);
-    v.addEventListener('pause', onPlayPause);
+      v.addEventListener('timeupdate', onTime);
+      v.addEventListener('durationchange', onDur);
+      v.addEventListener('play', onPlayPause);
+      v.addEventListener('pause', onPlayPause);
 
-    onTime();
-    onDur();
-    onPlayPause();
+      onTime();
+      onDur();
+      onPlayPause();
 
-    useVideoStore.getState().startPositionSaving();
+      useVideoStore.getState().startPositionSaving();
+
+      return () => {
+        v.removeEventListener('timeupdate', onTime);
+        v.removeEventListener('durationchange', onDur);
+        v.removeEventListener('play', onPlayPause);
+        v.removeEventListener('pause', onPlayPause);
+        useVideoStore.getState().stopPositionSaving();
+      };
+    };
+
+    const cleanup = attachListeners();
+    window.addEventListener('native-player-ready', attachListeners);
 
     return () => {
-      v.removeEventListener('timeupdate', onTime);
-      v.removeEventListener('durationchange', onDur);
-      v.removeEventListener('play', onPlayPause);
-      v.removeEventListener('pause', onPlayPause);
-      useVideoStore.getState().stopPositionSaving();
+      if (cleanup) cleanup();
+      window.removeEventListener('native-player-ready', attachListeners);
     };
   }, [videoUrl]);
 
@@ -525,6 +536,7 @@ export default function VideoPlayer() {
             baseFontSize={baseFontSize}
             stylePreset={subtitleStyle}
             showOriginalText={showOriginal}
+            isAudioOnly={isAudioOnly}
           />
 
           <div
@@ -538,7 +550,7 @@ export default function VideoPlayer() {
                 ? showFsControls
                   ? 1
                   : 0
-                : showOverlay
+                : showOverlay || isAudioOnly
                   ? 1
                   : 0,
             }}
