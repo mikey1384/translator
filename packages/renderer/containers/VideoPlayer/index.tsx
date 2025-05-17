@@ -285,7 +285,7 @@ const fmt = (s: number) => {
 
 const HIDE_DELAY = 3000;
 
-export const SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 10] as const;
+export const SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 5, 10] as const;
 
 export default function VideoPlayer() {
   const videoUrl = useVideoStore(s => s.url);
