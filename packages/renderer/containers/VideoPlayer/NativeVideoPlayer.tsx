@@ -110,6 +110,10 @@ export default function NativeVideoPlayer({
   }, []);
 
   useEffect(() => {
+    setErrorMessage(null);
+  }, [videoUrl]);
+
+  useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
