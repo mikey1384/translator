@@ -21,7 +21,7 @@ import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 
 import { useVideoStore, useSubStore } from '../../state';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
-import { fontScale, BASELINE_HEIGHT } from '../../../shared/constants';
+import { fontScale } from '../../../shared/constants';
 
 import { cueText } from '../../../shared/helpers';
 
@@ -101,7 +101,7 @@ export default function NativeVideoPlayer({
     const v = videoRef.current;
     if (!v) return;
     const rect = v.getBoundingClientRect();
-    const h = rect.height === 0 && isAudioOnly ? BASELINE_HEIGHT : rect.height;
+    const h = rect.height === 0 && isAudioOnly ? 180 : rect.height;
     setScale(fontScale(Math.round(h)));
   }, [isAudioOnly]);
 
@@ -133,7 +133,6 @@ export default function NativeVideoPlayer({
     v.addEventListener('error', onErr);
     v.addEventListener('loadedmetadata', onLoadedMetadata);
 
-    // Dispatch event when native player is ready
     setNativePlayerInstance(v);
     const readyEvent = new Event('native-player-ready');
     window.dispatchEvent(readyEvent);
@@ -224,7 +223,7 @@ export default function NativeVideoPlayer({
     css`
       position: relative;
       width: 100%;
-      min-height: ${isAudioOnly ? BASELINE_HEIGHT : 180}px;
+      min-height: 180px;
       height: 100%;
       border-radius: 6px;
       overflow: hidden;
@@ -235,9 +234,7 @@ export default function NativeVideoPlayer({
       & audio {
         display: block;
         width: 100%;
-        height: auto;
-        min-height: ${BASELINE_HEIGHT}px;
-        object-fit: contain;
+        height: 100%;
         background: transparent;
       }
       & audio::-webkit-media-controls {
