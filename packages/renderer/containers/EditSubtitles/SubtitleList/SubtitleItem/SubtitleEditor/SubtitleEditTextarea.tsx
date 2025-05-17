@@ -54,11 +54,9 @@ export default function SubtitleEditTextarea({
     if (textareaRef.current && textareaRef.current.value !== value) {
       textareaRef.current.value = value;
     }
-  }, [value]);
 
-  useEffect(() => {
-    setHighlightHtml(getHighlightedHtml(draftRef.current, searchTerm));
-  }, [searchTerm]);
+    setHighlightHtml(getHighlightedHtml(value, searchTerm));
+  }, [value, searchTerm]);
 
   useEffect(() => {
     if (!highlightRef.current || !textareaRef.current) return;
