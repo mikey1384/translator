@@ -101,7 +101,6 @@ export default function NativeVideoPlayer({
     setScale(fontScale(Math.round(rect.height)));
   }, []);
 
-  // Function to centralize indicator logic
   const flash = useCallback((state: 'play' | 'pause') => {
     setIndicator(state);
     setShowInd(true);
