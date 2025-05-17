@@ -233,7 +233,7 @@ export async function transcribeChunk({
       mediaDuration,
     });
 
-    const norm = (w: string) => w.replace(/[^{-￿]+$/u, '');
+    const norm = (w: string) => w.replace(/[\p{Cf}\p{P}\p{S}]+$/u, '');
     const lastJSONWord = words.at(-1)?.word?.trim();
     const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
     if (
