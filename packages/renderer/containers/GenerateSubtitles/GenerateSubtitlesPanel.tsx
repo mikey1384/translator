@@ -80,14 +80,12 @@ const baseLanguageOptions: LanguageOption[] = [
 ];
 
 interface GenerateSubtitlesPanelProps {
-  /** from LanguageSelection: */
   targetLanguage: string;
   setTargetLanguage: (language: string) => void;
   isTranslationInProgress: boolean;
   showOriginalText: boolean;
   onShowOriginalTextChange: (show: boolean) => void;
 
-  /** from GenerateControls: */
   videoFile: File | null;
   videoFilePath?: string | null;
   isProcessingUrl: boolean;

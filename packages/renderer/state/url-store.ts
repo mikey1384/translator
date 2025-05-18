@@ -6,6 +6,8 @@ import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
 import { STARTING_STAGE } from '../../shared/constants';
 
+const SAVED_QUALITY_KEY = 'savedDownloadQuality';
+
 type DownloadTask = {
   id: string | null;
   stage: string;
@@ -53,7 +55,8 @@ export const useUrlStore = create<UrlState>()(
   immer<UrlState>((set, get) => ({
     urlInput: '',
     cancellingDownload: false as boolean,
-    downloadQuality: 'mid' as VideoQuality,
+    downloadQuality:
+      (localStorage.getItem(SAVED_QUALITY_KEY) as VideoQuality) ?? 'mid',
     download: initialDownload,
     error: null as string | null,
     inputMode: 'url',
@@ -65,7 +68,10 @@ export const useUrlStore = create<UrlState>()(
         state.urlInput = urlInput;
       });
     },
-    setDownloadQuality: downloadQuality => set({ downloadQuality }),
+    setDownloadQuality: downloadQuality => {
+      localStorage.setItem(SAVED_QUALITY_KEY, downloadQuality);
+      set({ downloadQuality });
+    },
     clearError: () => set({ error: null }),
     setError: msg => set({ error: msg }),
 

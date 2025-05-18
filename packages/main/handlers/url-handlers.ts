@@ -200,7 +200,7 @@ export async function handleProcessUrl(
       error: 'Download failed...',
     });
 
-    registryFinish(operationId); // tidy up
+    registryFinish(operationId);
     return {
       success: false,
       error: `Download failed: ${rawErrorMessage}.`,
