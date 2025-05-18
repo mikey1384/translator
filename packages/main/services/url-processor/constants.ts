@@ -14,5 +14,5 @@ export const PROGRESS = {
 export const qualityFormatMap: Record<VideoQuality, string> = {
   high: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
   mid: 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]',
-  low: 'best[height<=480]',
+  low: 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a][abr<=128]/best[height<=480][ext=mp4]/best',
 };

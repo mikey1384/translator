@@ -61,14 +61,6 @@ export async function handleProcessUrl(
   _event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
-  log.error('[url-handler] HANDLER FUNCTION CALLED');
-  log.warn('[url-handler] Processing URL request');
-  log.error(`[url-handler] URL TO DOWNLOAD: ${options.url}`);
-  log.error(
-    `[url-handler] Received options.operationId: ${options.operationId} (Type: ${typeof options.operationId})`
-  );
-  log.info('useCookies:', options.useCookies || false);
-
   const mainWindow = BrowserWindow.getAllWindows()[0];
   const operationId = options.operationId || uuidv4();
   log.info(
@@ -105,10 +97,6 @@ export async function handleProcessUrl(
 
   try {
     sendProgress({ percent: 0, stage: 'Validating' });
-
-    log.info(
-      `[url-handler] Calling processVideoUrl for Operation ID: ${operationId}`
-    );
 
     const { fileManager, ffmpeg } = checkServicesInitialized();
 
@@ -166,10 +154,6 @@ export async function handleProcessUrl(
       registerDownloadProcess(operationId, result.proc);
     }
 
-    log.info(
-      `[url-handler] processVideoUrl completed successfully for Operation ID: ${operationId}`
-    );
-
     const successResult: ProcessUrlResult = {
       success: true,
       filePath: result.videoPath,
@@ -180,34 +164,17 @@ export async function handleProcessUrl(
       operationId,
     };
     sendProgress({ percent: 100, stage: 'Completed' });
-
-    log.info(
-      `[url-handler] processVideoUrl returned: ${JSON.stringify(result)}`
-    );
-
     registryFinish(operationId);
     return successResult;
   } catch (error: any) {
     if (error instanceof CancelledError) {
-      log.info(
-        `[url-handler] Download was cancelled by user (Op ID: ${operationId})`
-      );
-      registryFinish(operationId); // tidy up
+      registryFinish(operationId);
       return {
         success: false,
         cancelled: true,
         operationId,
       };
     }
-
-    log.error(
-      `[url-handler] Error processing URL for Op ID ${operationId}:`,
-      error
-    );
-
-    log.error(`[url-handler] Error type: ${typeof error}`);
-    log.error(`[url-handler] Error message: ${error.message || 'No message'}`);
-    log.error(`[url-handler] Error stack: ${error.stack || 'No stack'}`);
 
     if (typeof error === 'string') {
       log.error(`[url-handler] Error is string: ${error}`);

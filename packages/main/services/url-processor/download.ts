@@ -64,7 +64,6 @@ export async function downloadVideoFromPlatform(
       log.info(`[URLprocessor] chmod +x successful.`);
     } catch (e) {
       log.warn('[URLprocessor] Could not make yt-dlp executable:', e);
-      // Proceed anyway, it might work depending on system config
     }
   }
 
@@ -89,12 +88,10 @@ export async function downloadVideoFromPlatform(
     throw new Error(`Output directory check failed: ${dirError}`);
   }
 
-  // --- Determine Format String --- START ---
   const isYouTube = /youtube\.com|youtu\.be/.test(url);
-  const isYouTubeShorts = /youtube\.com\/shorts\//.test(url); // Added check for Shorts
-  let effectiveQuality = quality; // Use a mutable variable for quality
+  const isYouTubeShorts = /youtube\.com\/shorts\//.test(url);
+  let effectiveQuality = quality;
 
-  // Upgrade quality for Shorts if 'low' is selected
   if (isYouTubeShorts && quality === 'low') {
     effectiveQuality = 'mid';
     log.info(
@@ -104,25 +101,21 @@ export async function downloadVideoFromPlatform(
 
   let formatString: string;
   if (isYouTube) {
-    // Use effectiveQuality for format lookup
-    formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.high;
+    formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.mid;
     log.info(
       `[URLprocessor] Using YouTube format for effective quality '${effectiveQuality}': ${formatString}`
     );
   } else {
-    // For non-YouTube, use a more robust generic MP4 preference with fallbacks
     formatString = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
     log.info(
       `[URLprocessor] Using generic MP4 format for non-YouTube URL: ${formatString}`
     );
   }
-  // --- Determine Format String --- END ---
 
-  // Use a simplified, ASCII-safe temporary name pattern
   const safeTimestamp = Date.now();
   const tempFilenamePattern = join(
     outputDir,
-    `download_${safeTimestamp}_%(id)s.%(ext)s` // Simple pattern using timestamp and ID
+    `download_${safeTimestamp}_%(id)s.%(ext)s`
   );
   log.info(
     `[URLprocessor] Using simplified temp pattern: ${tempFilenamePattern}`
