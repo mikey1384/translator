@@ -146,13 +146,61 @@ export async function createFFmpegContext(
     }
 
     const stderrBuf: string[] = [];
+    let stdoutBuffer = '';
+
+    const usesProgressPipe =
+      args.includes('-progress') &&
+      args.some(
+        (arg, i) => arg === '-progress' && args[i + 1]?.startsWith('pipe:')
+      );
+
     child.stderr.on('data', d => {
       const line = d.toString();
       stderrBuf.push(line);
-      log.error(`[ffmpeg ${operationId ?? 'no-id'}] ${line}`);
-      if (totalDuration && progress)
+      if (!usesProgressPipe) {
+        log.error(`[ffmpeg ${operationId ?? 'no-id'}] stderr: ${line.trim()}`);
+      } else if (!line.startsWith('frame=') && !line.startsWith('size=')) {
+        log.error(`[ffmpeg ${operationId ?? 'no-id'}] stderr: ${line.trim()}`);
+      }
+
+      if (!usesProgressPipe && totalDuration && progress) {
         parseProgress(line, totalDuration, progress);
+      }
     });
+
+    if (usesProgressPipe && progress && totalDuration) {
+      child.stdout.on('data', chunk => {
+        stdoutBuffer += chunk.toString();
+        const lines = stdoutBuffer.split('\n');
+        stdoutBuffer = lines.pop()!;
+
+        for (const l of lines) {
+          const [key, val] = l.trim().split('=');
+          let outTimeSeconds = -1;
+
+          if (key.startsWith('out_time')) {
+            if (key === 'out_time') {
+              const parts = val.split(':');
+              if (parts.length === 3) {
+                outTimeSeconds =
+                  Number(parts[0]) * 3600 +
+                  Number(parts[1]) * 60 +
+                  Number(parts[2]);
+              }
+            } else {
+              outTimeSeconds = Number(val) / 1_000_000;
+            }
+          }
+
+          if (outTimeSeconds !== -1 && totalDuration > 0) {
+            const percent = (outTimeSeconds / totalDuration) * 100;
+            progress(Math.min(100, percent));
+          } else if (key === 'progress' && val === 'end') {
+            progress(100);
+          }
+        }
+      });
+    }
 
     if (signal) {
       const abort = () => {
@@ -179,7 +227,12 @@ export async function createFFmpegContext(
 
       function done(err?: Error) {
         if (err) {
-          log.error(`[ffmpeg ${operationId ?? 'no-id'}]`, err.message);
+          log.error(`[ffmpeg ${operationId ?? 'no-id'}] Error:`, err.message);
+          // Log stderr buffer for context on error
+          if (stderrBuf.length > 0) {
+            log.error(`[ffmpeg ${operationId ?? 'no-id'}] Stderr Output:`);
+            stderrBuf.forEach(line => log.error(line.trim()));
+          }
           reject(err);
         } else resolve();
       }

@@ -88,8 +88,6 @@ export async function extractAudio(
     const fileSizeMB = Math.round(stats.size / (1024 * 1024));
     const duration = await ctx.getMediaDuration(videoPath, signal);
     const durationMin = Math.round(duration / 60);
-    let estimatedTimeSeconds = Math.round(duration * 0.1);
-    if (fileSizeMB > 1000) estimatedTimeSeconds *= 1.5;
     const ANALYSIS_END = 3;
     const PREP_END = 5;
     const EXTRACTION_START = 5;
@@ -100,9 +98,8 @@ export async function extractAudio(
     });
     progress?.({
       percent: PREP_END,
-      stage: `Starting audio extraction (est. ${Math.round(estimatedTimeSeconds / 60)} min)...`,
+      stage: `Starting audio extraction...`,
     });
-    const startTime = Date.now();
     let lastProgressPercent = EXTRACTION_START;
 
     const audioIdx = await getFirstAudioIndex(videoPath, ctx.ffprobePath);
@@ -120,7 +117,7 @@ export async function extractAudio(
       '-af',
       'silenceremove=start_periods=1:start_silence=0.5:start_threshold=-50dB',
       '-map',
-      '0:a:0?',
+      `0:a:${audioIdx}?`,
       '-ar',
       String(ASR_SAMPLE_RATE),
       '-sample_fmt',
@@ -147,28 +144,21 @@ export async function extractAudio(
       operationId,
       totalDuration: duration,
       progress: ffmpegProgress => {
-        const scaledPercent =
+        const currentActualPercent = ffmpegProgress;
+
+        const displayPercent =
           EXTRACTION_START +
-          (ffmpegProgress * (EXTRACTION_END - EXTRACTION_START)) / 100;
-        if (scaledPercent - lastProgressPercent >= 0.5) {
-          lastProgressPercent = scaledPercent;
-          const elapsedMs = Date.now() - startTime;
-          const elapsedSec = Math.round(elapsedMs / 1000);
-          let timeMessage = '';
-          if (ffmpegProgress > 0) {
-            const totalEstimatedSec = Math.round(
-              elapsedSec / (ffmpegProgress / 100)
-            );
-            const remainingSec = Math.max(0, totalEstimatedSec - elapsedSec);
-            if (remainingSec > 60) {
-              timeMessage = ` (~ ${Math.round(remainingSec / 60)} min remaining)`;
-            } else {
-              timeMessage = ` (~ ${remainingSec} sec remaining)`;
-            }
-          }
+          (currentActualPercent / 100) * (EXTRACTION_END - EXTRACTION_START);
+
+        if (
+          Math.abs(displayPercent - lastProgressPercent) >= 0.1 ||
+          currentActualPercent === 0 ||
+          currentActualPercent === 100
+        ) {
+          lastProgressPercent = displayPercent;
           progress?.({
-            percent: Math.min(EXTRACTION_END, scaledPercent),
-            stage: `Extracting audio: ${Math.round(ffmpegProgress)}%${timeMessage}`,
+            percent: Math.min(EXTRACTION_END, displayPercent),
+            stage: `Extracting audio (${currentActualPercent.toFixed(1)}%)`,
           });
         }
       },
