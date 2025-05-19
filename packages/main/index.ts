@@ -9,6 +9,7 @@ import {
 } from 'electron';
 import path from 'path';
 import * as fsPromises from 'fs/promises';
+import * as fs from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
@@ -37,6 +38,8 @@ import type { FFmpegContext } from './services/ffmpeg-runner.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
+let filePathToOpenOnLoad: string | null = null;
+
 const settingsStore = new Store<{
   app_language_preference: string;
   subtitleTargetLanguage: string;
@@ -58,10 +61,60 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
   nodeProcess.exit(0);
 }
-app.on('second-instance', () => {
+
+const fileArgFromPrimaryInstance = nodeProcess.argv
+  .slice(1)
+  .find(
+    p =>
+      /\.\w+$/.test(p) &&
+      !p.startsWith('--') &&
+      fs.existsSync(p.replace(/^"|"$/g, ''))
+  );
+if (fileArgFromPrimaryInstance) {
+  log.info(
+    `[main.ts] Application launched with file argument (primary instance): ${fileArgFromPrimaryInstance}`
+  );
+  filePathToOpenOnLoad = fileArgFromPrimaryInstance.replace(/^"|"$/g, '');
+}
+
+app.on('second-instance', (_event, commandLine, _workingDirectory) => {
+  log.info("[main.ts] 'second-instance' event triggered.");
+  log.info(`[main.ts] Command line: ${commandLine.join(' ')}`);
+
+  const fileArg = commandLine
+    .slice(1)
+    .find(
+      arg =>
+        /\.\w+$/.test(arg) &&
+        !arg.startsWith('--') &&
+        fs.existsSync(arg.replace(/^"|"$/g, ''))
+    );
+
+  if (fileArg) {
+    log.info(
+      `[main.ts] File path found in second-instance commandLine: ${fileArg}`
+    );
+    openVideoFile(fileArg.replace(/^"|"$/g, ''));
+  } else {
+    log.info(
+      '[main.ts] No specific file path found or file does not exist in second-instance commandLine. Focusing window.'
+    );
+  }
+
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
+  } else if (fileArg) {
+    createWindow().catch(err =>
+      log.error(
+        '[main.ts] Error creating window on second-instance for file:',
+        err
+      )
+    );
+  } else {
+    createWindow().catch(err =>
+      log.error('[main.ts] Error creating window on second-instance:', err)
+    );
   }
 });
 
@@ -410,6 +463,11 @@ app.on('activate', () => {
     createWindow().catch(err =>
       log.error('[main.ts] Error recreating window on activate:', err)
     );
+  } else if (filePathToOpenOnLoad && mainWindow) {
+    log.info(
+      `[main.ts] 'activate' with pending file: ${filePathToOpenOnLoad}. Ensuring it's processed.`
+    );
+    openVideoFile(filePathToOpenOnLoad);
   }
 });
 
@@ -512,6 +570,28 @@ async function createWindow() {
       activeMatchOrdinal: result.activeMatchOrdinal,
       finalUpdate: result.finalUpdate,
     });
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    log.info('[main.ts] Main window finished loading content.');
+    if (filePathToOpenOnLoad) {
+      log.info(
+        `[main.ts] Processing queued file path on did-finish-load: ${filePathToOpenOnLoad}`
+      );
+      if (
+        mainWindow &&
+        !mainWindow.isDestroyed() &&
+        mainWindow.webContents &&
+        !mainWindow.webContents.isDestroyed()
+      ) {
+        mainWindow.webContents.send('open-video-file', filePathToOpenOnLoad);
+      } else {
+        log.error(
+          '[main.ts] Cannot send queued file: mainWindow or webContents became invalid before did-finish-load processing.'
+        );
+      }
+      filePathToOpenOnLoad = null;
+    }
   });
 
   createApplicationMenu();
@@ -702,3 +782,62 @@ app
     app.quit();
     nodeProcess.exit(1);
   });
+
+function openVideoFile(filePath: string) {
+  log.info(`[main.ts] Request to open video file: ${filePath}`);
+  if (!filePath || !fs.existsSync(filePath)) {
+    log.warn(
+      `[main.ts] Invalid or non-existent file path for openVideoFile: ${filePath}`
+    );
+    filePathToOpenOnLoad = null;
+    return;
+  }
+
+  if (
+    mainWindow &&
+    !mainWindow.isDestroyed() &&
+    mainWindow.webContents &&
+    !mainWindow.webContents.isDestroyed() &&
+    !mainWindow.webContents.isLoading()
+  ) {
+    log.info(
+      `[main.ts] Main window is ready. Sending 'open-video-file' IPC for: ${filePath}`
+    );
+    mainWindow.webContents.send('open-video-file', filePath);
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+    filePathToOpenOnLoad = null;
+  } else {
+    log.info(
+      `[main.ts] Main window not fully ready or available. Queuing filePath: ${filePath}`
+    );
+    filePathToOpenOnLoad = filePath;
+    if (app.isReady() && BrowserWindow.getAllWindows().length === 0) {
+      log.info(
+        '[main.ts] No windows open, creating one to handle queued file.'
+      );
+      createWindow().catch(err =>
+        log.error('[main.ts] Error creating window for queued file:', err)
+      );
+    }
+  }
+}
+
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  log.info(`[main.ts] 'open-file' event (macOS) for: ${filePath}`);
+  if (!filePath || !fs.existsSync(filePath)) {
+    log.warn(
+      `[main.ts] Invalid or non-existent file path from 'open-file' event: ${filePath}`
+    );
+    filePathToOpenOnLoad = null;
+    return;
+  }
+  if (app.isReady()) {
+    openVideoFile(filePath);
+  } else {
+    filePathToOpenOnLoad = filePath;
+  }
+});
