@@ -39,9 +39,14 @@ const commonOverlayControlsStyles = css`
   gap: 15px;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
+  pointer-events: none;
 
   &:hover {
     opacity: 1;
+  }
+
+  & > * {
+    pointer-events: auto;
   }
 `;
 
@@ -320,12 +325,17 @@ export default function VideoPlayer() {
     if (activityTimeout.current) clearTimeout(activityTimeout.current);
     setCursorHidden(false);
     setShowFsControls(true);
+    if (!isFullScreen) setShowOverlay(true);
 
     activityTimeout.current = setTimeout(() => {
+      if (!isFullScreen) {
+        setShowOverlay(false);
+        if (activityTimeout.current) clearTimeout(activityTimeout.current);
+      }
       setCursorHidden(true);
       setShowFsControls(false);
     }, HIDE_DELAY);
-  }, []);
+  }, [isFullScreen]);
 
   useEffect(() => {
     setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
@@ -526,9 +536,12 @@ export default function VideoPlayer() {
       >
         <div
           className={playerWrapperStyles(isFullScreen)}
-          onMouseEnter={() => setShowOverlay(true)}
+          onMouseEnter={() => {
+            setShowOverlay(true);
+            restartHideTimer();
+          }}
           onMouseLeave={() => setShowOverlay(false)}
-          onMouseMove={pokeFsControls}
+          onMouseMove={() => restartHideTimer()}
         >
           <NativeVideoPlayer
             parentRef={playerDivRef}
@@ -644,6 +657,7 @@ export default function VideoPlayer() {
                   onSelect={applyRate}
                   onClose={() => {
                     setShowSpeedMenu(false);
+                    setShowOverlay(false);
                     speedBtnRef.current?.focus();
                   }}
                   placement={isFullScreen ? 'up' : 'down'}
