@@ -91,7 +91,7 @@ export async function extractAudio(
     const ANALYSIS_END = 3;
     const PREP_END = 5;
     const EXTRACTION_START = 5;
-    const EXTRACTION_END = 10;
+    const EXTRACTION_END = 100;
     progress?.({
       percent: ANALYSIS_END,
       stage: `Preparing audio extraction for ${fileSizeMB} MB video (${durationMin} min)...`,
