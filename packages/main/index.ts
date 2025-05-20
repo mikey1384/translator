@@ -31,7 +31,6 @@ import {
   initializeUrlHandler,
 } from './handlers/url-handlers.js';
 import * as fileHandlers from './handlers/file-handlers.js';
-import * as apiKeyHandlers from './handlers/api-key-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
@@ -167,8 +166,6 @@ try {
   ipcMain.handle('copy-file', fileHandlers.handleCopyFile);
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
   ipcMain.handle('readFileContent', fileHandlers.handleReadFileContent);
-  ipcMain.handle('get-api-key-status', apiKeyHandlers.handleGetApiKeyStatus);
-  ipcMain.handle('save-api-key', apiKeyHandlers.handleSaveApiKey);
 
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const operationId =

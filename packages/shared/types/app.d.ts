@@ -295,18 +295,6 @@ declare module '@shared-types/app' {
   }
 
   // =========================================
-  // === System & Configuration
-  // =========================================
-
-  export interface ApiKeyStatusResult {
-    success: boolean;
-    status?: {
-      openai: boolean;
-    };
-    error?: string;
-  }
-
-  // =========================================
   // === Monetisation / Credits
   // =========================================
   export interface CreditBalanceResult {
@@ -378,12 +366,6 @@ declare module '@shared-types/app' {
     onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
 
     cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
-
-    getApiKeyStatus: () => Promise<ApiKeyStatusResult>;
-    saveApiKey: (
-      keyType: 'openai',
-      apiKey: string
-    ) => Promise<{ success: boolean; error?: string }>;
 
     ping: () => Promise<string>;
     showMessage: (message: string) => Promise<void>;

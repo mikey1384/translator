@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API-sleutel Instellings",
+    "title": "Settings",
     "description": {
       "para1": "Om die vertaalfunksies aangedryf deur OpenAI (soos GPT-modelle) te gebruik, moet jy jou persoonlike API-sleutel verskaf. Hierdie sleutel laat die toepassing toe om namens jou versoeke aan OpenAI te rig.",
       "para2": {

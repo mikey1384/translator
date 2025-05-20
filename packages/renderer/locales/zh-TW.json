@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API金鑰設定",
+    "title": "Settings",
     "description": {
       "para1": "要使用由OpenAI提供支援的翻譯功能（如GPT模型），您需要提供個人API金鑰。此金鑰允許應用程式代表您向OpenAI發送請求。",
       "para2": {

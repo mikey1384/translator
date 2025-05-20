@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Mipangilio ya Ufunguo wa API",
+    "title": "Settings",
     "description": {
       "para1": "Ili kutumia vipengele vya tafsiri vinavyotumia OpenAI (kama vile mifano ya GPT), unahitaji kutoa ufunguo wako binafsi wa API. Ufunguo huu unaruhusu programu kutuma maombi kwa OpenAI kwa niaba yako.",
       "para2": {

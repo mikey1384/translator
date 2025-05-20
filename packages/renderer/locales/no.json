@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API-nøkkelinnstillinger",
+    "title": "Settings",
     "description": {
       "para1": "For å bruke oversettelsesfunksjonene drevet av OpenAI (som GPT-modeller), må du oppgi din personlige API-nøkkel. Denne nøkkelen lar applikasjonen sende forespørsler til OpenAI på dine vegne.",
       "para2": {

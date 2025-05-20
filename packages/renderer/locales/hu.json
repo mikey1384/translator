@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API kulcs beállítások",
+    "title": "Settings",
     "description": {
       "para1": "Az OpenAI által működtetett fordítási funkciók (például GPT modellek) használatához meg kell adnia személyes API kulcsát. Ez a kulcs lehetővé teszi, hogy az alkalmazás az Ön nevében kéréseket küldjön az OpenAI-nek.",
       "para2": {

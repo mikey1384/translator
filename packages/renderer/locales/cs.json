@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Nastavení API klíče",
+    "title": "Settings",
     "description": {
       "para1": "Pro využití funkcí překladu poháněných OpenAI (jako jsou modely GPT) musíte poskytnout svůj osobní API klíč. Tento klíč umožňuje aplikaci odesílat požadavky do OpenAI vaším jménem.",
       "para2": {

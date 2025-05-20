@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import ApiKeyLock from './ApiKeyLock.js';
 import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
@@ -15,7 +14,7 @@ import {
   useVideoStore,
   useTaskStore,
   useSubStore,
-  useSettingsStore,
+  useCreditStore,
 } from '../../state';
 import { STARTING_STAGE } from '../../../shared/constants';
 import { useUrlStore } from '../../state/url-store';
@@ -28,7 +27,7 @@ import UrlCookieBanner from './UrlCookieBanner';
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
-  const { loading: loadingKeyStatus, keySet, fetchStatus } = useSettingsStore();
+  const { balance, loading: creditLoading, refresh } = useCreditStore();
 
   const {
     inputMode,
@@ -58,6 +57,8 @@ export default function GenerateSubtitles() {
 
   const { translation, merge, setTranslation } = useTaskStore();
 
+  const toggleSettings = useUIStore(s => s.toggleSettings);
+
   useEffect(() => {
     if (videoFile) {
       const isLocalFileSelection =
@@ -71,18 +72,36 @@ export default function GenerateSubtitles() {
   }, [videoFile]);
 
   useEffect(() => {
-    if (keySet === undefined) fetchStatus();
-  }, [keySet, fetchStatus]);
+    refresh();
+  }, [refresh]);
 
   return (
     <Section title={t('subtitles.generate')}>
-      <ApiKeyLock
-        apiKeyStatus={{ openai: !!keySet }}
-        isLoadingKeyStatus={loadingKeyStatus}
-        onNavigateToSettings={show =>
-          useUIStore.getState().toggleSettings(show)
-        }
-      />
+      {(balance ?? 0) <= 0 && !creditLoading && (
+        <div
+          className={css`
+            background-color: #fff3cd;
+            border: 1px solid ${colors.warning};
+            color: ${colors.warning};
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            p a {
+              color: ${colors.primary};
+              text-decoration: underline;
+              cursor: pointer;
+            }
+          `}
+        >
+          <p>
+            {t('generateSubtitles.noCredits')}{' '}
+            <a onClick={() => toggleSettings(true)}>
+              {t('generateSubtitles.rechargeLink')}
+            </a>
+          </p>
+        </div>
+      )}
 
       <UrlCookieBanner />
 
@@ -165,7 +184,7 @@ export default function GenerateSubtitles() {
           isProcessingUrl={download.inProgress}
           handleGenerateSubtitles={handleGenerateSubtitles}
           isMergingInProgress={merge.inProgress}
-          disabledKey={!keySet}
+          disabledKey={(balance ?? 0) <= 0}
         />
       )}
     </Section>

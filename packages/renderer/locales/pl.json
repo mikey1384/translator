@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Ustawienia klucza API",
+    "title": "Settings",
     "description": {
       "para1": "Aby korzystać z funkcji tłumaczenia zasilanych przez OpenAI (jak modele GPT), musisz podać swój osobisty klucz API. Ten klucz pozwala aplikacji wysyłać zapytania do OpenAI w Twoim imieniu.",
       "para2": {

@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Impostazioni chiave API",
+    "title": "Settings",
     "description": {
       "para1": "Per utilizzare le funzionalità di traduzione alimentate da OpenAI (come i modelli GPT), devi fornire la tua chiave API personale. Questa chiave consente all'applicazione di effettuare richieste a OpenAI per tuo conto.",
       "para2": {

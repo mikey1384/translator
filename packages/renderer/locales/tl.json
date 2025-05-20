@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Mga Setting ng API Key",
+    "title": "Settings",
     "description": {
       "para1": "Para magamit ang mga feature ng pagsasalin na pinapagana ng OpenAI (tulad ng mga model ng GPT), kailangan mong ibigay ang iyong personal na API key. Ang key na ito ay nagbibigay-daan sa application na gumawa ng mga request sa OpenAI sa ngalan mo.",
       "para2": {

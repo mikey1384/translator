@@ -96,15 +96,7 @@
   },
   "settings": {
     "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here.",
-    "loadingStatus": "Loading key status...",
-    "keySet": "Key Set",
-    "keyNotSet": "Key Not Set",
-    "changeKey": "Change Key",
-    "removeKey": "Remove Key",
-    "saveChanges": "Save Changes",
-    "saveKey": "Save {{name}} Key",
-    "getKey": "Get {{name}} Key"
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -172,5 +164,9 @@
     "farsi": "Farsi (Persian)",
     "swahili": "Swahili",
     "afrikaans": "Afrikaans"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →"
   }
 }

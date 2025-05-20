@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API密钥设置",
+    "title": "Settings",
     "description": {
       "para1": "要使用由OpenAI提供支持的翻译功能（如GPT模型），您需要提供个人API密钥。此密钥允许应用程序代表您向OpenAI发送请求。",
       "para2": {

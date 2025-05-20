@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API-avaimen asetukset",
+    "title": "Settings",
     "description": {
       "para1": "Käyttääksesi OpenAI:n tarjoamia käännösominaisuuksia (kuten GPT-malleja), sinun on annettava henkilökohtainen API-avaimesi. Tämä avain sallii sovelluksen tehdä pyyntöjä OpenAI:lle puolestasi.",
       "para2": {

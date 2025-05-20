@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Pengaturan Kunci API",
+    "title": "Settings",
     "description": {
       "para1": "Untuk menggunakan fitur terjemahan yang didukung oleh OpenAI (seperti model GPT), Anda perlu menyediakan kunci API pribadi. Kunci ini memungkinkan aplikasi untuk membuat permintaan ke OpenAI atas nama Anda.",
       "para2": {

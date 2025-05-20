@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Cài đặt Khóa API",
+    "title": "Settings",
     "description": {
       "para1": "Để sử dụng các tính năng dịch được hỗ trợ bởi OpenAI (như mô hình GPT), bạn cần cung cấp khóa API cá nhân. Khóa này cho phép ứng dụng thực hiện yêu cầu đến OpenAI thay mặt bạn.",
       "para2": {

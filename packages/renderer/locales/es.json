@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Configuración de la clave API",
+    "title": "Settings",
     "description": {
       "para1": "Para utilizar las funciones de traducción impulsadas por OpenAI (como los modelos GPT), necesitas proporcionar tu clave API personal. Esta clave permite que la aplicación realice solicitudes a OpenAI en tu nombre.",
       "para2": {

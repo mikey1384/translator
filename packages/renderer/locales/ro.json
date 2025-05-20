@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "Setări Cheie API",
+    "title": "Settings",
     "description": {
       "para1": "Pentru a utiliza funcțiile de traducere furnizate de OpenAI (cum ar fi modelele GPT), trebuie să furnizați cheia API personală. Această cheie permite aplicației să facă cereri către OpenAI în numele dvs.",
       "para2": {

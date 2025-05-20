@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API Anahtarı Ayarları",
+    "title": "Settings",
     "description": {
       "para1": "OpenAI tarafından desteklenen çeviri özelliklerini (GPT modelleri gibi) kullanmak için kişisel API anahtarınızı sağlamanız gerekir. Bu anahtar, uygulamanın sizin adınıza OpenAI'ye istekte bulunmasına olanak tanır.",
       "para2": {

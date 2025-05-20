@@ -1,5 +1,5 @@
 import './listeners';
-import React, { Suspense } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './AppContent/index.js';
 import initI18nPromise from './i18n.js';
@@ -22,9 +22,7 @@ const renderApp = () => {
 
   root.render(
     <React.StrictMode>
-      <Suspense fallback={<div>Loading translations...</div>}>
-        <App />
-      </Suspense>
+      <App />
     </React.StrictMode>
   );
 };

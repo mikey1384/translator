@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "APIキー設定",
+    "title": "Settings",
     "description": {
       "para1": "OpenAI（GPTモデルなど）を利用した翻訳機能を使用するには、個人のAPIキーを提供する必要があります。このキーにより、アプリケーションはあなたの代わりにOpenAIにリクエストを行うことができます。",
       "para2": {

@@ -95,7 +95,7 @@
     }
   },
   "settings": {
-    "title": "API-Schlüssel Einstellungen",
+    "title": "Settings",
     "description": {
       "para1": "Um die von OpenAI unterstützten Übersetzungsfunktionen (wie GPT-Modelle) zu nutzen, müssen Sie Ihren persönlichen API-Schlüssel angeben. Dieser Schlüssel ermöglicht der Anwendung, Anfragen in Ihrem Namen an OpenAI zu stellen.",
       "para2": {

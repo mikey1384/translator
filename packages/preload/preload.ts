@@ -139,11 +139,6 @@ const electronAPI = {
   copyFile: (src: string, dest: string) =>
     ipcRenderer.invoke('copy-file', src, dest),
 
-  // ---------------------- API Key ----------------------
-  getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
-  saveApiKey: (keyType: string, apiKey: string) =>
-    ipcRenderer.invoke('save-api-key', { keyType, apiKey }),
-
   // ---------------------- Read File Content ----------------------
   readFileContent: (filePath: string) =>
     ipcRenderer.invoke('readFileContent', filePath),
