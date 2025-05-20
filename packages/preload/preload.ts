@@ -1,5 +1,4 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { shell } from 'electron';
+import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from 'electron';
 import {
   ExposedRenderResult,
   RenderSubtitlesOptions,
@@ -262,7 +261,6 @@ contextBridge.exposeInMainWorld('fileApi', {
   writeText: (p: string, data: string) => fs.writeFile(p, data, 'utf8'),
 });
 
-// Expose shell.openExternal via appShell bridge
 contextBridge.exposeInMainWorld('appShell', {
   openExternal: (url: string): Promise<void> => shell.openExternal(url),
 });
