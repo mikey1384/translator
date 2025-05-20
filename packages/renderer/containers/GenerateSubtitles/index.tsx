@@ -195,6 +195,22 @@ export default function GenerateSubtitles() {
       useUrlStore.getState().setError('Please select a video');
       return;
     }
+
+    // —— Credits guard ——
+    const needed = 0.25; // TODO: real duration-based formula
+    const { balance } = useCreditStore.getState();
+    if ((balance ?? 0) < needed) {
+      await SystemIPC.showMessage('Not enough credits for this video.');
+      return;
+    }
+    // Optimistic UI deduction
+    useCreditStore.setState(s => ({
+      balance: Math.max(0, (s.balance ?? 0) - needed),
+    }));
+    // Persist on disk
+    await SystemIPC.spendCredits(needed);
+    // ————————————————
+
     const operationId = `generate-${Date.now()}`;
     setTranslation({
       id: operationId,
@@ -220,7 +236,12 @@ export default function GenerateSubtitles() {
           percent: 100,
           inProgress: false,
         });
+        // SUCCESS ➜ keep the deduction (removed incorrect refund from here)
       } else {
+        // FAILURE / CANCELLATION ➜ refund
+        useCreditStore.setState(s => ({ balance: (s.balance ?? 0) + needed }));
+        await SystemIPC.refundCredits(needed); // Persisted refund
+
         if (!result.cancelled) {
           setTranslation({
             id: operationId,
@@ -228,10 +249,21 @@ export default function GenerateSubtitles() {
             percent: 100,
             inProgress: false,
           });
+        } else {
+          // Handle cancellation state if necessary, or assume SubtitlesIPC does
+          setTranslation({
+            id: operationId,
+            stage: 'Cancelled', // Assuming 'Cancelled' is a valid stage or needs to be handled
+            percent: 0, // Or 100, depending on desired state representation
+            inProgress: false,
+          });
         }
       }
     } catch (err: any) {
       console.error('Error generating subtitles:', err);
+      // Refund credits on error
+      useCreditStore.setState(s => ({ balance: (s.balance ?? 0) + needed }));
+      await SystemIPC.refundCredits(needed); // Persisted refund
       setTranslation({
         id: operationId,
         stage: 'Error',

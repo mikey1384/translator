@@ -31,3 +31,11 @@ export function purchaseCredits(
 ): Promise<PurchaseCreditsResult> {
   return window.electron.purchaseCredits(opts);
 }
+
+export function spendCredits(hours: number) {
+  return window.electron.spendCredits(hours);
+}
+
+export function refundCredits(hours: number) {
+  return window.electron.refundCredits(hours);
+}

@@ -232,6 +232,16 @@ const electronAPI = {
     ipcRenderer.invoke('get-credit-balance'),
   purchaseCredits: (opts: PurchaseCreditsOptions) =>
     ipcRenderer.invoke('purchase-credits', opts),
+
+  // Credit spending and refunding
+  spendCredits: (
+    hours: number
+  ): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> =>
+    ipcRenderer.invoke('spend-credits', hours),
+  refundCredits: (
+    hours: number
+  ): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> =>
+    ipcRenderer.invoke('refund-credits', hours),
 };
 
 try {
