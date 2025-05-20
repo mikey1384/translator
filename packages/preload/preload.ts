@@ -1,5 +1,10 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { ExposedRenderResult, RenderSubtitlesOptions } from '@shared-types/app';
+import {
+  ExposedRenderResult,
+  RenderSubtitlesOptions,
+  PurchaseCreditsOptions,
+  CreditBalanceResult,
+} from '@shared-types/app';
 import { promises as fs } from 'fs';
 
 const electronAPI = {
@@ -227,6 +232,11 @@ const electronAPI = {
   getVideoPlaybackPosition: (filePath: string): Promise<number | null> =>
     ipcRenderer.invoke('get-video-playback-position', filePath),
   // --- END ADD MAPPINGS ---
+
+  getCreditBalance: (): Promise<CreditBalanceResult> =>
+    ipcRenderer.invoke('get-credit-balance'),
+  purchaseCredits: (opts: PurchaseCreditsOptions) =>
+    ipcRenderer.invoke('purchase-credits', opts),
 };
 
 try {

@@ -35,6 +35,10 @@ import * as apiKeyHandlers from './handlers/api-key-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
+import {
+  handleGetCreditBalance,
+  handlePurchaseCredits,
+} from './handlers/credit-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -402,6 +406,9 @@ try {
       }
     }
   );
+
+  ipcMain.handle('get-credit-balance', handleGetCreditBalance);
+  ipcMain.handle('purchase-credits', handlePurchaseCredits);
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app

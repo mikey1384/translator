@@ -1,4 +1,9 @@
-import type { ApiKeyStatusResult } from '@shared-types/app';
+import type {
+  ApiKeyStatusResult,
+  CreditBalanceResult,
+  PurchaseCreditsOptions,
+  PurchaseCreditsResult,
+} from '@shared-types/app';
 
 type ApiKeyType = 'openai';
 
@@ -29,4 +34,14 @@ export function setLanguagePreference(
   lang: string
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setLanguagePreference(lang);
+}
+
+export function getCreditBalance(): Promise<CreditBalanceResult> {
+  return window.electron.getCreditBalance();
+}
+
+export function purchaseCredits(
+  opts: PurchaseCreditsOptions
+): Promise<PurchaseCreditsResult> {
+  return window.electron.purchaseCredits(opts);
 }

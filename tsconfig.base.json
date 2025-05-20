@@ -16,10 +16,6 @@
     },
     "types": ["node"]
   },
-  "include": [
-    "packages/**/*.ts",
-    "packages/**/*.tsx",
-    "packages/shared/types/**/*.d.ts"
-  ],
+  "include": ["packages/**/*.ts", "packages/**/*.tsx", "packages/**/*.d.ts"],
   "exclude": ["**/dist/**", "**/node_modules/**"]
 }

@@ -3,3 +3,4 @@ export * from './video-store';
 export * from './task-store';
 export * from './subtitle-store';
 export * from './settings-store';
+export * from './credit-store';
