@@ -37,8 +37,8 @@ import type { FFmpegContext } from './services/ffmpeg-runner.js';
 import {
   handleGetCreditBalance,
   handlePurchaseCredits,
-  handleSpendCredits,
   handleRefundCredits,
+  handleReserveCredits,
 } from './handlers/credit-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
@@ -408,8 +408,8 @@ try {
 
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
   ipcMain.handle('purchase-credits', handlePurchaseCredits);
-  ipcMain.handle('spend-credits', handleSpendCredits);
   ipcMain.handle('refund-credits', handleRefundCredits);
+  ipcMain.handle('reserve-credits', handleReserveCredits);
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app

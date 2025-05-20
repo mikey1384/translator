@@ -319,12 +319,12 @@ declare module '@shared-types/app' {
   // =========================================
 
   interface ElectronAPI {
-    spendCredits: (hours: number) => Promise<{
+    refundCredits: (hours: number) => Promise<{
       success: boolean;
       newBalanceHours?: number;
       error?: string;
     }>;
-    refundCredits: (hours: number) => Promise<{
+    reserveCredits: (hours: number) => Promise<{
       success: boolean;
       newBalanceHours?: number;
       error?: string;

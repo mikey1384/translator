@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import FileInputButton from '../../components/FileInputButton.js';
@@ -24,10 +24,20 @@ import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
 import UrlCookieBanner from './UrlCookieBanner';
 
+// Helper style for the cost hint (can be moved to a CSS file or styled component if preferred)
+const hintStyle = css`
+  font-size: 0.85em;
+  color: ${colors.text};
+  margin-top: 8px;
+  margin-bottom: 0px;
+  text-align: center;
+`;
+
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
   const { balance, loading: creditLoading, refresh } = useCreditStore();
+  const [durationSecs, setDurationSecs] = useState<number | null>(null);
 
   const {
     inputMode,
@@ -59,6 +69,17 @@ export default function GenerateSubtitles() {
 
   const toggleSettings = useUIStore(s => s.toggleSettings);
 
+  const hoursNeeded = useMemo(() => {
+    if (durationSecs !== null && durationSecs > 0) {
+      // Minimum 15 min (1 block), then round UP to nearest 15 min (0.25 hour) block
+      const blocks = Math.max(1, Math.ceil(durationSecs / 900)); // Changed Math.round to Math.ceil
+      return blocks / 4; // each block is 0.25 hours
+    }
+    return null;
+  }, [durationSecs]);
+
+  const costStr = useMemo(() => hoursNeeded?.toFixed(2), [hoursNeeded]);
+
   useEffect(() => {
     if (videoFile) {
       const isLocalFileSelection =
@@ -70,6 +91,22 @@ export default function GenerateSubtitles() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile]);
+
+  useEffect(() => {
+    if (videoFilePath) {
+      SystemIPC.getVideoMetadata(videoFilePath).then(
+        (res: import('@shared-types/app').VideoMetadataResult) => {
+          if (res.success && res.metadata?.duration) {
+            setDurationSecs(res.metadata.duration);
+          } else {
+            setDurationSecs(null); // Reset if metadata fetch fails or no duration
+          }
+        }
+      );
+    } else {
+      setDurationSecs(null); // Reset if no video file path
+    }
+  }, [videoFilePath]);
 
   useEffect(() => {
     refresh();
@@ -184,9 +221,18 @@ export default function GenerateSubtitles() {
           isProcessingUrl={download.inProgress}
           handleGenerateSubtitles={handleGenerateSubtitles}
           isMergingInProgress={merge.inProgress}
-          disabledKey={(balance ?? 0) <= 0}
+          disabledKey={(balance ?? 0) <= 0 || hoursNeeded == null}
         />
       )}
+      {videoFile &&
+        hoursNeeded !== null &&
+        costStr &&
+        durationSecs !== null &&
+        durationSecs > 0 && (
+          <p className={hintStyle}>
+            {t('generateSubtitles.costHint', { hours: costStr })}
+          </p>
+        )}
     </Section>
   );
 
@@ -196,19 +242,38 @@ export default function GenerateSubtitles() {
       return;
     }
 
-    // —— Credits guard ——
-    const needed = 0.25; // TODO: real duration-based formula
-    const { balance } = useCreditStore.getState();
-    if ((balance ?? 0) < needed) {
-      await SystemIPC.showMessage('Not enough credits for this video.');
+    if (durationSecs === null || durationSecs <= 0 || hoursNeeded === null) {
+      SystemIPC.showMessage(
+        t('generateSubtitles.calculatingCost') ||
+          'Video duration is being processed. Please try again shortly.'
+      );
       return;
     }
-    // Optimistic UI deduction
-    useCreditStore.setState(s => ({
-      balance: Math.max(0, (s.balance ?? 0) - needed),
-    }));
-    // Persist on disk
-    await SystemIPC.spendCredits(needed);
+
+    // —— Credits guard (based on calculated hoursNeeded) ——
+    const currentBalance = useCreditStore.getState().balance ?? 0;
+    if (currentBalance < hoursNeeded) {
+      await SystemIPC.showMessage(
+        t('generateSubtitles.notEnoughCredits') ||
+          'Not enough credits for this video.'
+      );
+      return;
+    }
+
+    // Try to reserve credits on disk via main process
+    const reserve = await SystemIPC.reserveCredits(hoursNeeded);
+    if (!reserve.success || typeof reserve.newBalanceHours !== 'number') {
+      refresh(); // Refresh balance from store as it might have changed or an error occurred
+      await SystemIPC.showMessage(
+        reserve.error ||
+          t('generateSubtitles.errorReservingCredits') ||
+          'Error reserving credits. Please try again.'
+      );
+      return;
+    }
+
+    // Optimistic UI update with the new balance from the reservation
+    useCreditStore.setState({ balance: reserve.newBalanceHours });
     // ————————————————
 
     const operationId = `generate-${Date.now()}`;
@@ -236,11 +301,13 @@ export default function GenerateSubtitles() {
           percent: 100,
           inProgress: false,
         });
-        // SUCCESS ➜ keep the deduction (removed incorrect refund from here)
+        // SUCCESS ➜ reservation is now the actual spend. No refund needed.
       } else {
-        // FAILURE / CANCELLATION ➜ refund
-        useCreditStore.setState(s => ({ balance: (s.balance ?? 0) + needed }));
-        await SystemIPC.refundCredits(needed); // Persisted refund
+        // FAILURE / CANCELLATION ➜ refund the reserved credits
+        useCreditStore.setState(s => ({
+          balance: (s.balance ?? 0) + hoursNeeded,
+        })); // Optimistic UI refund
+        await SystemIPC.refundCredits(hoursNeeded); // Persisted refund via main process
 
         if (!result.cancelled) {
           setTranslation({
@@ -261,9 +328,13 @@ export default function GenerateSubtitles() {
       }
     } catch (err: any) {
       console.error('Error generating subtitles:', err);
-      // Refund credits on error
-      useCreditStore.setState(s => ({ balance: (s.balance ?? 0) + needed }));
-      await SystemIPC.refundCredits(needed); // Persisted refund
+      // Refund credits on error (if hoursNeeded was calculated and potentially reserved)
+      if (hoursNeeded !== null) {
+        useCreditStore.setState(s => ({
+          balance: (s.balance ?? 0) + hoursNeeded,
+        })); // Optimistic UI refund
+        await SystemIPC.refundCredits(hoursNeeded); // Persisted refund via main process
+      }
       setTranslation({
         id: operationId,
         stage: 'Error',

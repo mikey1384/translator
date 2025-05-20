@@ -2,6 +2,7 @@ import type {
   CreditBalanceResult,
   PurchaseCreditsOptions,
   PurchaseCreditsResult,
+  VideoMetadataResult,
 } from '@shared-types/app';
 
 export function showMessage(message: string): Promise<void> {
@@ -32,10 +33,16 @@ export function purchaseCredits(
   return window.electron.purchaseCredits(opts);
 }
 
-export function spendCredits(hours: number) {
-  return window.electron.spendCredits(hours);
-}
-
 export function refundCredits(hours: number) {
   return window.electron.refundCredits(hours);
+}
+
+export function reserveCredits(hours: number) {
+  return window.electron.reserveCredits(hours);
+}
+
+export function getVideoMetadata(
+  filePath: string
+): Promise<VideoMetadataResult> {
+  return window.electron.getVideoMetadata(filePath);
 }

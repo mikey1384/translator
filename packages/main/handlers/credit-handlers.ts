@@ -51,26 +51,6 @@ export async function handlePurchaseCredits(
   return { success: true, newBalanceHours: newBal };
 }
 
-export async function handleSpendCredits(
-  _evt: Electron.IpcMainInvokeEvent,
-  hours: number
-): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> {
-  try {
-    if (typeof hours !== 'number' || hours <= 0) {
-      return { success: false, error: 'Invalid hours to spend' };
-    }
-    const currentBalance = store.get('balanceHours', 0);
-    // It's okay if this goes below zero temporarily, optimistic UI handles Math.max(0, ...)
-    // but the actual store should reflect the attempt accurately or clamp as well.
-    // Clamping here to prevent negative balance in the store.
-    const newBalance = Math.max(0, currentBalance - hours);
-    store.set('balanceHours', newBalance);
-    return { success: true, newBalanceHours: newBalance };
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
-}
-
 export async function handleRefundCredits(
   _evt: Electron.IpcMainInvokeEvent,
   hours: number
@@ -82,6 +62,27 @@ export async function handleRefundCredits(
     const currentBalance = store.get('balanceHours', 0);
     const newBalance = currentBalance + hours;
     store.set('balanceHours', newBalance);
+    return { success: true, newBalanceHours: newBalance };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function handleReserveCredits(
+  _evt: Electron.IpcMainInvokeEvent,
+  hours: number
+): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> {
+  try {
+    if (typeof hours !== 'number' || hours <= 0) {
+      return { success: false, error: 'Invalid hours to reserve' };
+    }
+    const currentBalance = store.get('balanceHours', 0);
+    if (currentBalance < hours) {
+      return { success: false, error: 'Insufficient credits' }; // Or a more specific error message
+    }
+    const newBalance = currentBalance - hours;
+    store.set('balanceHours', newBalance);
+    // Consider logging the reservation transaction here if needed in the future
     return { success: true, newBalanceHours: newBalance };
   } catch (err: any) {
     return { success: false, error: err.message };
