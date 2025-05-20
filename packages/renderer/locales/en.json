@@ -95,26 +95,8 @@
     }
   },
   "settings": {
-    "title": "API Key Settings",
-    "description": {
-      "para1": "To use the translation features powered by OpenAI (like GPT models), you need to provide your personal API key. This key allows the application to make requests to OpenAI on your behalf.",
-      "para2": {
-        "part1": "You can obtain an API key by signing up or logging into your OpenAI account and navigating to the",
-        "link": "API keys section"
-      },
-      "para3": "Your API key is stored securely on your computer using the system's keychain and is never shared externally."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT models)",
-      "isSet": "OpenAI API Key is Set",
-      "apiKeyLabel": "OpenAI API Key",
-      "placeholder": "Enter your OpenAI key (sk-...)",
-      "saveSuccess": "OpenAI key saved successfully!",
-      "removeSuccess": "OpenAI key removed successfully!",
-      "saveError": "Failed to save key.",
-      "removeError": "Failed to remove key.",
-      "confirmRemovePrompt": "Are you sure you want to remove the OpenAI API key?"
-    },
+    "title": "Settings",
+    "creditsDescription": "Buy or top-up AI usage hours here.",
     "loadingStatus": "Loading key status...",
     "keySet": "Key Set",
     "keyNotSet": "Key Not Set",
