@@ -1,0 +1,55 @@
+import { useState } from 'react';
+// import { shell } from 'electron'; // Removed direct shell import
+import * as SystemIPC from '@ipc/system';
+
+interface BuyCreditsButtonProps {
+  packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10';
+  // You might want to add a t function prop for i18n if this component is generic
+  // t: (key: string) => string;
+}
+
+export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleClick() {
+    try {
+      setLoading(true);
+      const url = await SystemIPC.createCheckoutSession(packId);
+      if (url) {
+        // Security: Validate the URL before opening
+        const trustedCheckoutPattern =
+          /^(https:\/\/(checkout\.stripe\.com|checkout\.paypal\.com|your\.pspdomain\.com))\//;
+        if (trustedCheckoutPattern.test(url)) {
+          await window.appShell.openExternal(url);
+        } else {
+          console.error('Untrusted checkout URL received:', url);
+          await SystemIPC.showMessage(
+            'Received an invalid checkout URL. Please contact support if this issue persists.'
+          );
+        }
+      } else {
+        console.error('Checkout session URL was null.');
+        await SystemIPC.showMessage(
+          'Could not retrieve checkout session. Please try again or contact support.'
+        );
+      }
+    } catch (err) {
+      console.error('Failed to start checkout:', err);
+      await SystemIPC.showMessage(
+        'An error occurred while trying to start checkout. Please check your connection and try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      style={{ padding: '10px 15px', cursor: loading ? 'wait' : 'pointer' }}
+    >
+      {loading ? 'Redirecting to payment...' : 'Buy Credits'}
+    </button>
+  );
+}

@@ -410,11 +410,21 @@ declare module '@shared-types/app' {
     purchaseCredits: (
       opts: PurchaseCreditsOptions
     ) => Promise<PurchaseCreditsResult>;
+    createCheckoutSession: (
+      packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10'
+    ) => Promise<string | null>;
   }
 
   declare global {
     interface Window {
       electron: ElectronAPI;
+      fileApi: {
+        readText: (p: string) => Promise<string>;
+        writeText: (p: string, data: string) => Promise<void>;
+      };
+      appShell: {
+        openExternal: (url: string) => Promise<void>;
+      };
     }
   }
 }

@@ -36,9 +36,10 @@ import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
 import {
   handleGetCreditBalance,
-  handlePurchaseCredits,
+  handleDevFakePurchaseCredits,
   handleRefundCredits,
   handleReserveCredits,
+  handleCreateCheckoutSession,
 } from './handlers/credit-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
@@ -407,9 +408,21 @@ try {
   );
 
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
-  ipcMain.handle('purchase-credits', handlePurchaseCredits);
+  ipcMain.handle('purchase-credits', (_evt, packId: any) => {
+    if (isDev) {
+      return handleDevFakePurchaseCredits(packId);
+    }
+    log.warn(
+      '[main.ts] purchase-credits attempted in production. Operation blocked.'
+    );
+    return {
+      success: false,
+      error: 'This action is disabled in production builds.',
+    };
+  });
   ipcMain.handle('refund-credits', handleRefundCredits);
   ipcMain.handle('reserve-credits', handleReserveCredits);
+  ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app

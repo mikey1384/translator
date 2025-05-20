@@ -46,3 +46,9 @@ export function getVideoMetadata(
 ): Promise<VideoMetadataResult> {
   return window.electron.getVideoMetadata(filePath);
 }
+
+export function createCheckoutSession(
+  packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10'
+): Promise<string | null> {
+  return window.electron.createCheckoutSession(packId);
+}

@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { shell } from 'electron';
 import {
   ExposedRenderResult,
   RenderSubtitlesOptions,
@@ -244,6 +245,9 @@ const electronAPI = {
     hours: number
   ): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> =>
     ipcRenderer.invoke('reserve-credits', hours),
+
+  createCheckoutSession: (packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10') =>
+    ipcRenderer.invoke('create-checkout-session', packId),
 };
 
 try {
@@ -256,4 +260,9 @@ try {
 contextBridge.exposeInMainWorld('fileApi', {
   readText: (p: string) => fs.readFile(p, 'utf8'),
   writeText: (p: string, data: string) => fs.writeFile(p, data, 'utf8'),
+});
+
+// Expose shell.openExternal via appShell bridge
+contextBridge.exposeInMainWorld('appShell', {
+  openExternal: (url: string): Promise<void> => shell.openExternal(url),
 });
