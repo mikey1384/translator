@@ -247,6 +247,9 @@ const electronAPI = {
 
   createCheckoutSession: (packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10') =>
     ipcRenderer.invoke('create-checkout-session', packId),
+
+  // Check if OpenAI API key is available
+  hasOpenAIKey: (): Promise<boolean> => ipcRenderer.invoke('has-openai-key'),
 };
 
 try {

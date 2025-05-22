@@ -413,6 +413,7 @@ declare module '@shared-types/app' {
     createCheckoutSession: (
       packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10'
     ) => Promise<string | null>;
+    hasOpenAIKey: () => Promise<boolean>;
   }
 
   declare global {

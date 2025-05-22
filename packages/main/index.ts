@@ -1,3 +1,26 @@
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure dotenv to look for .env file in project root
+const envPath = path.resolve(__dirname, '../../../../.env');
+dotenv.config({ path: envPath });
+
+import log from 'electron-log';
+
+// Debug: Check if .env is loading
+log.info('[DEBUG] Environment variables after dotenv:');
+log.info(`[DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
+log.info(
+  `[DEBUG] OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`
+);
+log.info(`[DEBUG] Current working directory: ${process.cwd()}`);
+log.info(`[DEBUG] Attempted .env path: ${envPath}`);
+
 import {
   app,
   BrowserWindow,
@@ -7,22 +30,14 @@ import {
   dialog,
   MenuItemConstructorOptions,
 } from 'electron';
-import path from 'path';
 import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
-import { fileURLToPath, pathToFileURL } from 'url';
-import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import Store from 'electron-store';
 import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const isDev = !app.isPackaged;
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -40,6 +55,7 @@ import {
   handleRefundCredits,
   handleReserveCredits,
   handleCreateCheckoutSession,
+  handleHasOpenAIKey,
 } from './handlers/credit-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
@@ -131,6 +147,8 @@ let services: {
   ffmpeg: FFmpegContext;
 } | null = null;
 let isQuitting = false;
+
+const isDev = !app.isPackaged;
 
 try {
   log.info('[main.ts] Initializing Services...');
@@ -423,6 +441,7 @@ try {
   ipcMain.handle('refund-credits', handleRefundCredits);
   ipcMain.handle('reserve-credits', handleReserveCredits);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
+  ipcMain.handle('has-openai-key', handleHasOpenAIKey);
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app

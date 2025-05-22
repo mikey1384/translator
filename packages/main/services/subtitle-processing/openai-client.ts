@@ -5,8 +5,18 @@ import { SubtitleProcessingError } from './errors.js';
 import fs from 'fs';
 
 export async function getApiKey(keyType: 'openai'): Promise<string> {
+  // Check secure store first
   const key = await getSecureApiKey(keyType);
   if (key) return key;
+
+  // Check environment variable as fallback
+  if (keyType === 'openai') {
+    const envKey = process.env.OPENAI_API_KEY;
+    if (envKey && envKey.trim().length > 0) {
+      return envKey.trim();
+    }
+  }
+
   throw new SubtitleProcessingError('OpenAI API key not found.');
 }
 

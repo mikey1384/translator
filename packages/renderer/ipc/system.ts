@@ -52,3 +52,7 @@ export function createCheckoutSession(
 ): Promise<string | null> {
   return window.electron.createCheckoutSession(packId);
 }
+
+export function hasOpenAIKey(): Promise<boolean> {
+  return window.electron.hasOpenAIKey();
+}

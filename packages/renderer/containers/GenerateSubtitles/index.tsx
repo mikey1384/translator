@@ -1,7 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import FileInputButton from '../../components/FileInputButton.js';
 import UrlInputSection from './UrlInputSection.js';
 import InputModeToggle from './InputModeToggle.js';
 import Section from '../../components/Section.js';
@@ -9,36 +8,35 @@ import { useTranslation } from 'react-i18next';
 import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
 import ProgressDisplay from './ProgressDisplay.js';
 import ErrorBanner from '../../components/ErrorBanner.js';
-import {
-  useUIStore,
-  useVideoStore,
-  useTaskStore,
-  useSubStore,
-  useCreditStore,
-} from '../../state';
-import { STARTING_STAGE } from '../../../shared/constants';
+import { useUIStore, useVideoStore, useTaskStore } from '../../state';
 import { useUrlStore } from '../../state/url-store';
-import * as SubtitlesIPC from '../../ipc/subtitles';
-import { parseSrt } from '../../../shared/helpers';
 import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
 import UrlCookieBanner from './UrlCookieBanner';
 
-// Helper style for the cost hint (can be moved to a CSS file or styled component if preferred)
-const hintStyle = css`
-  font-size: 0.85em;
-  color: ${colors.text};
-  margin-top: 8px;
-  margin-bottom: 0px;
-  text-align: center;
-`;
+// Custom hooks
+import { useVideoMetadata } from './hooks/useVideoMetadata';
+import { useCreditSystem } from './hooks/useCreditSystem';
+
+// Components
+import CreditWarningBanner from './components/CreditWarningBanner';
+import FileInputSection from './components/FileInputSection';
+import CostHint from './components/CostHint';
+
+// Utilities
+import {
+  validateAndReserveCredits,
+  refundCreditsIfNeeded,
+} from './utils/creditOperations';
+import {
+  executeSubtitleGeneration,
+  validateGenerationInputs,
+} from './utils/subtitleGeneration';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
-  const { balance, loading: creditLoading, refresh } = useCreditStore();
-  const [durationSecs, setDurationSecs] = useState<number | null>(null);
-
+  // UI State
   const {
     inputMode,
     targetLanguage,
@@ -46,8 +44,10 @@ export default function GenerateSubtitles() {
     setInputMode,
     setTargetLanguage,
     setShowOriginalText,
+    toggleSettings,
   } = useUIStore();
 
+  // URL processing state
   const {
     urlInput,
     downloadQuality,
@@ -59,27 +59,27 @@ export default function GenerateSubtitles() {
     downloadMedia,
   } = useUrlStore();
 
+  // Video file state
   const {
     file: videoFile,
     path: videoFilePath,
     openFileDialog,
   } = useVideoStore();
 
-  const { translation, merge, setTranslation } = useTaskStore();
+  // Task state
+  const { translation, merge } = useTaskStore();
 
-  const toggleSettings = useUIStore(s => s.toggleSettings);
+  // Custom hooks for business logic (after videoFilePath is declared)
+  const { durationSecs, hoursNeeded, costStr } =
+    useVideoMetadata(videoFilePath);
+  const {
+    showCreditWarning,
+    isButtonDisabled,
+    canBypassCredits,
+    refreshCreditState,
+  } = useCreditSystem();
 
-  const hoursNeeded = useMemo(() => {
-    if (durationSecs !== null && durationSecs > 0) {
-      // Minimum 15 min (1 block), then round UP to nearest 15 min (0.25 hour) block
-      const blocks = Math.max(1, Math.ceil(durationSecs / 900)); // Changed Math.round to Math.ceil
-      return blocks / 4; // each block is 0.25 hours
-    }
-    return null;
-  }, [durationSecs]);
-
-  const costStr = useMemo(() => hoursNeeded?.toFixed(2), [hoursNeeded]);
-
+  // Auto-set input mode when file is selected
   useEffect(() => {
     if (videoFile) {
       const isLocalFileSelection =
@@ -92,52 +92,10 @@ export default function GenerateSubtitles() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile]);
 
-  useEffect(() => {
-    if (videoFilePath) {
-      SystemIPC.getVideoMetadata(videoFilePath).then(
-        (res: import('@shared-types/app').VideoMetadataResult) => {
-          if (res.success && res.metadata?.duration) {
-            setDurationSecs(res.metadata.duration);
-          } else {
-            setDurationSecs(null); // Reset if metadata fetch fails or no duration
-          }
-        }
-      );
-    } else {
-      setDurationSecs(null); // Reset if no video file path
-    }
-  }, [videoFilePath]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
   return (
     <Section title={t('subtitles.generate')}>
-      {(balance ?? 0) <= 0 && !creditLoading && (
-        <div
-          className={css`
-            background-color: #fff3cd;
-            border: 1px solid ${colors.warning};
-            color: ${colors.warning};
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-            p a {
-              color: ${colors.primary};
-              text-decoration: underline;
-              cursor: pointer;
-            }
-          `}
-        >
-          <p>
-            {t('generateSubtitles.noCredits')}{' '}
-            <a onClick={() => toggleSettings(true)}>
-              {t('generateSubtitles.rechargeLink')}
-            </a>
-          </p>
-        </div>
+      {showCreditWarning && (
+        <CreditWarningBanner onSettingsClick={() => toggleSettings(true)} />
       )}
 
       <UrlCookieBanner />
@@ -160,32 +118,12 @@ export default function GenerateSubtitles() {
       />
 
       {inputMode === 'file' && (
-        <div
-          className={css`
-            padding: 13px 20px;
-            border: 1px solid ${colors.border};
-            border-radius: 6px;
-            background-color: ${colors.light};
-          `}
-        >
-          <label
-            style={{
-              marginRight: '12px',
-              display: 'inline-block',
-              minWidth: '220px',
-            }}
-          >
-            {t('input.selectVideoAudioFile')}:
-          </label>
-          <FileInputButton
-            onClick={openFileDialog}
-            disabled={download.inProgress || translation.inProgress}
-          >
-            {videoFile
-              ? `${t('common.selected')}: ${videoFile.name}`
-              : t('input.selectFile')}
-          </FileInputButton>
-        </div>
+        <FileInputSection
+          videoFile={videoFile}
+          onOpenFileDialog={openFileDialog}
+          isDownloadInProgress={download.inProgress}
+          isTranslationInProgress={translation.inProgress}
+        />
       )}
 
       {inputMode === 'url' && (
@@ -221,126 +159,67 @@ export default function GenerateSubtitles() {
           isProcessingUrl={download.inProgress}
           handleGenerateSubtitles={handleGenerateSubtitles}
           isMergingInProgress={merge.inProgress}
-          disabledKey={(balance ?? 0) <= 0 || hoursNeeded == null}
+          disabledKey={isButtonDisabled || hoursNeeded == null}
         />
       )}
       {videoFile &&
         hoursNeeded !== null &&
         costStr &&
         durationSecs !== null &&
-        durationSecs > 0 && (
-          <p className={hintStyle}>
-            {t('generateSubtitles.costHint', { hours: costStr })}
-          </p>
-        )}
+        durationSecs > 0 && <CostHint costStr={costStr} />}
     </Section>
   );
 
   async function handleGenerateSubtitles() {
-    if (!videoFile && !videoFilePath) {
-      useUrlStore.getState().setError('Please select a video');
+    // Validate inputs
+    const validation = validateGenerationInputs(
+      videoFile,
+      videoFilePath,
+      durationSecs,
+      hoursNeeded
+    );
+
+    if (!validation.isValid) {
+      if (validation.errorMessage === 'Please select a video') {
+        useUrlStore.getState().setError(validation.errorMessage);
+      } else {
+        SystemIPC.showMessage(
+          t('generateSubtitles.calculatingCost') ||
+            validation.errorMessage ||
+            'Invalid input'
+        );
+      }
       return;
     }
 
-    if (durationSecs === null || durationSecs <= 0 || hoursNeeded === null) {
-      SystemIPC.showMessage(
-        t('generateSubtitles.calculatingCost') ||
-          'Video duration is being processed. Please try again shortly.'
-      );
-      return;
-    }
+    // Reserve credits if needed
+    const creditResult = await validateAndReserveCredits(
+      hoursNeeded!,
+      canBypassCredits,
+      refreshCreditState
+    );
 
-    // —— Credits guard (based on calculated hoursNeeded) ——
-    const currentBalance = useCreditStore.getState().balance ?? 0;
-    if (currentBalance < hoursNeeded) {
+    if (!creditResult.success) {
       await SystemIPC.showMessage(
         t('generateSubtitles.notEnoughCredits') ||
-          'Not enough credits for this video.'
+          creditResult.error ||
+          'Credit reservation failed'
       );
       return;
     }
 
-    // Try to reserve credits on disk via main process
-    const reserve = await SystemIPC.reserveCredits(hoursNeeded);
-    if (!reserve.success || typeof reserve.newBalanceHours !== 'number') {
-      refresh(); // Refresh balance from store as it might have changed or an error occurred
-      await SystemIPC.showMessage(
-        reserve.error ||
-          t('generateSubtitles.errorReservingCredits') ||
-          'Error reserving credits. Please try again.'
-      );
-      return;
-    }
-
-    // Optimistic UI update with the new balance from the reservation
-    useCreditStore.setState({ balance: reserve.newBalanceHours });
-    // ————————————————
-
+    // Generate subtitles
     const operationId = `generate-${Date.now()}`;
-    setTranslation({
-      id: operationId,
-      stage: STARTING_STAGE,
-      percent: 0,
-      inProgress: true,
+    const result = await executeSubtitleGeneration({
+      videoFile,
+      videoFilePath,
+      targetLanguage,
+      operationId,
     });
-    try {
-      const opts: any = { targetLanguage, streamResults: true };
-      if (videoFilePath) {
-        opts.videoPath = videoFilePath;
-      } else if (videoFile) {
-        opts.videoFile = videoFile;
-      }
-      opts.operationId = operationId;
-      const result = await SubtitlesIPC.generate(opts);
-      if (result.subtitles) {
-        const finalSegments = parseSrt(result.subtitles);
-        useSubStore.getState().load(finalSegments);
-        setTranslation({
-          id: operationId,
-          stage: 'Completed',
-          percent: 100,
-          inProgress: false,
-        });
-        // SUCCESS ➜ reservation is now the actual spend. No refund needed.
-      } else {
-        // FAILURE / CANCELLATION ➜ refund the reserved credits
-        useCreditStore.setState(s => ({
-          balance: (s.balance ?? 0) + hoursNeeded,
-        })); // Optimistic UI refund
-        await SystemIPC.refundCredits(hoursNeeded); // Persisted refund via main process
 
-        if (!result.cancelled) {
-          setTranslation({
-            id: operationId,
-            stage: 'Error',
-            percent: 100,
-            inProgress: false,
-          });
-        } else {
-          // Handle cancellation state if necessary, or assume SubtitlesIPC does
-          setTranslation({
-            id: operationId,
-            stage: 'Cancelled', // Assuming 'Cancelled' is a valid stage or needs to be handled
-            percent: 0, // Or 100, depending on desired state representation
-            inProgress: false,
-          });
-        }
-      }
-    } catch (err: any) {
-      console.error('Error generating subtitles:', err);
-      // Refund credits on error (if hoursNeeded was calculated and potentially reserved)
-      if (hoursNeeded !== null) {
-        useCreditStore.setState(s => ({
-          balance: (s.balance ?? 0) + hoursNeeded,
-        })); // Optimistic UI refund
-        await SystemIPC.refundCredits(hoursNeeded); // Persisted refund via main process
-      }
-      setTranslation({
-        id: operationId,
-        stage: 'Error',
-        percent: 100,
-        inProgress: false,
-      });
+    // Handle refunds if generation failed
+    if (!result.success) {
+      await refundCreditsIfNeeded(hoursNeeded!, canBypassCredits);
     }
   }
 
