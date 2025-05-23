@@ -186,7 +186,7 @@ export default function GenerateSubtitles() {
         SystemIPC.showMessage(
           t('generateSubtitles.calculatingCost') ||
             validation.errorMessage ||
-            'Invalid input'
+            t('common.error.unexpected')
         );
       }
       return;
@@ -203,7 +203,7 @@ export default function GenerateSubtitles() {
       await SystemIPC.showMessage(
         t('generateSubtitles.notEnoughCredits') ||
           creditResult.error ||
-          'Credit reservation failed'
+          t('common.error.creditReservationFailed')
       );
       return;
     }
@@ -236,12 +236,12 @@ export default function GenerateSubtitles() {
 
     try {
       const { filePath, error } = await FileIPC.save({
-        title: 'Save Downloaded Video As',
+        title: t('dialogs.saveDownloadedVideoAs'),
         defaultPath: suggestName,
         content: '',
         filters: [
           {
-            name: 'Video Files',
+            name: t('common.fileFilters.videoFiles'),
             extensions: ['mp4', 'mkv', 'webm', 'mov', 'avi'],
           },
         ],
@@ -257,7 +257,7 @@ export default function GenerateSubtitles() {
       if (copyRes.error) throw new Error(copyRes.error);
 
       // Tell the user
-      SystemIPC.showMessage(`Video saved to:\n${filePath}`);
+      SystemIPC.showMessage(t('messages.videoSaved', { path: filePath }));
     } catch (err: any) {
       console.error('[GenerateSubtitles] save original video error:', err);
       clearError();

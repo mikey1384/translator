@@ -1,29 +1,34 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
-import { STARTING_STAGE } from '../../shared/constants';
+import { i18n } from '../i18n';
 
-type Task = {
+export interface TranslationTask {
   id: string | null;
   stage: string;
   percent: number;
   inProgress: boolean;
   batchStartIndex?: number;
-};
+}
 
 interface State {
-  translation: Task & { reviewedBatchStartIndex: number | null };
-  merge: Task;
+  translation: TranslationTask & { reviewedBatchStartIndex: number | null };
+  merge: TranslationTask;
   cancellingDownload: boolean;
 }
 
 interface Actions {
-  setTranslation(patch: Partial<Task>): void;
-  setMerge(patch: Partial<Task>): void;
+  setTranslation(patch: Partial<TranslationTask>): void;
+  setMerge(patch: Partial<TranslationTask>): void;
   startMerge(): void;
   doneMerge(): void;
 }
 
-const empty: Task = { id: null, stage: '', percent: 0, inProgress: false };
+const empty: TranslationTask = {
+  id: null,
+  stage: '',
+  percent: 0,
+  inProgress: false,
+};
 
 const initialTranslation = {
   ...empty,
@@ -58,7 +63,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         s.merge = {
           ...s.merge,
           percent: 0,
-          stage: STARTING_STAGE,
+          stage: i18n.t('generateSubtitles.status.starting'),
           inProgress: true,
         };
       }),

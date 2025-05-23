@@ -8,6 +8,7 @@ import {
   useCallback,
 } from 'react';
 import { css } from '@emotion/css';
+import { useTranslation } from 'react-i18next';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
 import SideMenu from './SideMenu';
@@ -293,6 +294,7 @@ const HIDE_DELAY = 3000;
 export const SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 5, 10] as const;
 
 export default function VideoPlayer() {
+  const { t } = useTranslation();
   const videoUrl = useVideoStore(s => s.url);
   const resumeAt = useVideoStore(s => s.resumeAt);
   const togglePlay = useVideoStore(s => s.handleTogglePlay);
@@ -672,7 +674,11 @@ export default function VideoPlayer() {
               className={
                 isFullScreen ? fullscreenButtonStyles : transparentButtonStyles
               }
-              title={isFullScreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+              title={
+                isFullScreen
+                  ? t('videoPlayer.exitFullscreen')
+                  : t('videoPlayer.enterFullscreen')
+              }
             >
               {isFullScreen ? (
                 <svg

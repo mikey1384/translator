@@ -48,7 +48,6 @@ export const MIN_FONT_SCALE = 0.5;
 export const MAX_FONT_SCALE = 2.0;
 export const DEBOUNCE_DELAY_MS = 300;
 export const DEFAULT_FILENAME = 'edited_subtitles.srt';
-export const STARTING_STAGE = 'Starting...';
 
 export function fontScale(height: number): number {
   const effectiveHeight = Math.max(height, MIN_VIDEO_HEIGHT);

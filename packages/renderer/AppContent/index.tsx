@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useUIStore, useVideoStore, useTaskStore } from '../state';
 import { useUrlStore } from '../state/url-store';
 
@@ -15,6 +16,7 @@ import BackToTopButton from '../components/BackToTopButton';
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 
 export default function AppContent() {
+  const { t } = useTranslation();
   const { showSettings } = useUIStore();
   const { cancellingDownload, setCancellingDownload, setDownload } =
     useUrlStore();
@@ -52,7 +54,7 @@ export default function AppContent() {
                 download.inProgress &&
                 !download.stage.toLowerCase().includes('error')
               }
-              title="Download in Progress"
+              title={t('dialogs.downloadInProgress')}
               progress={download.percent}
               stage={download.stage}
               progressBarColor={

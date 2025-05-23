@@ -17,7 +17,14 @@
       "unexpected": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
       "unexpectedRemove": "কী অপসারণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
       "unexpectedSave": "সংরক্ষণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
-      "unexpectedLoad": "লোড করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।"
+      "unexpectedLoad": "লোড করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
+      "renderFailed": "Render failed",
+      "creditReservationFailed": "Credit reservation failed",
+      "invalidRenderOptions": "Invalid render options provided",
+      "missingVideoMetadata": "Missing video metadata ({{missing}})",
+      "noSourceVideo": "No source video",
+      "noSubtitlesLoaded": "No subtitles loaded",
+      "failedToLoadSRT": "Failed to load SRT file"
     },
     "success": "সফল",
     "settings": "সেটিংস",
@@ -37,7 +44,12 @@
     "reloadPageAria": "পৃষ্ঠা রিলোড করুন",
     "backToTop": "উপরে ফিরে যান",
     "backToTopAria": "উপরে ফিরে স্ক্রোল করুন",
-    "confirmReload": "আপনি কি নিশ্চিত যে আপনি পৃষ্ঠাটি রিলোড করতে চান? যেকোন অসংরক্ষিত পরিবর্তন হারিয়ে যেতে পারে।"
+    "confirmReload": "আপনি কি নিশ্চিত যে আপনি পৃষ্ঠাটি রিলোড করতে চান? যেকোন অসংরক্ষিত পরিবর্তন হারিয়ে যেতে পারে।",
+    "fileFilters": {
+      "srtFiles": "SRT Files",
+      "mediaFiles": "Media Files",
+      "videoFiles": "Video Files"
+    }
   },
   "input": {
     "fromDevice": "আপনার ডিভাইস থেকে",
@@ -51,7 +63,8 @@
     "downloading": "ডাউনলোড হচ্ছে...",
     "selectFile": "ফাইল নির্বাচন করুন",
     "selectVideoFile": "ভিডিও ফাইল নির্বাচন করুন",
-    "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন"
+    "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন",
+    "selectVideoAudioFile": "Select Video / Audio File"
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
@@ -121,7 +134,8 @@
     "removeKey": "কী সরান",
     "saveChanges": "পরিবর্তনগুলি সংরক্ষণ করুন",
     "saveKey": "{{name}} কী সংরক্ষণ করুন",
-    "getKey": "{{name}} কী পান"
+    "getKey": "{{name}} কী পান",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -140,7 +154,9 @@
       "scrollToCurrent": "বর্তমানে স্ক্রোল করুন",
       "shiftLabel": "শিফট:",
       "applyShift": "প্রয়োগ করুন"
-    }
+    },
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "regions": {
     "eastAsia": "পূর্ব এশিয়া",
@@ -189,5 +205,52 @@
     "farsi": "ফার্সি (পারস্য)",
     "swahili": "সোয়াহিলি",
     "afrikaans": "আফ্রিকান্স"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →",
+    "creditWarning": {
+      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "settingsLinkText": "Settings"
+    },
+    "validation": {
+      "pleaseSelectVideo": "Please select a video",
+      "processingDuration": "Video duration is being processed. Please try again shortly."
+    },
+    "status": {
+      "starting": "Starting...",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    },
+    "buttons": {
+      "buyCredits": "Buy Credits",
+      "redirectingToPayment": "Redirecting to payment..."
+    },
+    "calculatingCost": "Calculating cost...",
+    "notEnoughCredits": "Not enough credits available"
+  },
+  "findBar": {
+    "findPlaceholder": "Find in subtitles...",
+    "replacePlaceholder": "Replace with...",
+    "replaceAll": "Replace All",
+    "nextMatch": "Next Match (Enter)",
+    "previousMatch": "Previous Match (Shift+Enter)",
+    "replaceAllTitle": "Replace All Occurrences",
+    "closeTitle": "Close (Esc)",
+    "nextMatchAria": "Next match",
+    "previousMatchAria": "Previous match",
+    "replaceAllAria": "Replace all",
+    "closeAria": "Close find bar"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "Save SRT File As",
+    "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "downloadInProgress": "Download in Progress",
+    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

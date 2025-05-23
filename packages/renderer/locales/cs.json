@@ -17,7 +17,14 @@
       "unexpected": "Došlo k neočekávané chybě.",
       "unexpectedRemove": "Došlo k neočekávané chybě při odstraňování klíče.",
       "unexpectedSave": "Došlo k neočekávané chybě při ukládání.",
-      "unexpectedLoad": "Došlo k neočekávané chybě při načítání."
+      "unexpectedLoad": "Došlo k neočekávané chybě při načítání.",
+      "renderFailed": "Render failed",
+      "creditReservationFailed": "Credit reservation failed",
+      "invalidRenderOptions": "Invalid render options provided",
+      "missingVideoMetadata": "Missing video metadata ({{missing}})",
+      "noSourceVideo": "No source video",
+      "noSubtitlesLoaded": "No subtitles loaded",
+      "failedToLoadSRT": "Failed to load SRT file"
     },
     "success": "Úspěch",
     "settings": "Nastavení",
@@ -37,7 +44,12 @@
     "reloadPageAria": "Znovu načíst stránku",
     "backToTop": "Zpět nahoru",
     "backToTopAria": "Přejít zpět nahoru",
-    "confirmReload": "Opravdu chcete znovu načíst stránku? Neuložené změny mohou být ztraceny."
+    "confirmReload": "Opravdu chcete znovu načíst stránku? Neuložené změny mohou být ztraceny.",
+    "fileFilters": {
+      "srtFiles": "SRT Files",
+      "mediaFiles": "Media Files",
+      "videoFiles": "Video Files"
+    }
   },
   "input": {
     "fromDevice": "Z vašeho zařízení",
@@ -122,7 +134,8 @@
     "removeKey": "Odstranit klíč",
     "saveChanges": "Uložit změny",
     "saveKey": "Uložit klíč {{name}}",
-    "getKey": "Získat klíč {{name}}"
+    "getKey": "Získat klíč {{name}}",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -141,7 +154,9 @@
       "scrollToCurrent": "Přejít na aktuální",
       "shiftLabel": "Posun:",
       "applyShift": "Použít"
-    }
+    },
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "regions": {
     "eastAsia": "Východní Asie",
@@ -190,5 +205,52 @@
     "farsi": "Farsí (perština)",
     "swahili": "Svahilština",
     "afrikaans": "Afrikánština"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →",
+    "creditWarning": {
+      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "settingsLinkText": "Settings"
+    },
+    "validation": {
+      "pleaseSelectVideo": "Please select a video",
+      "processingDuration": "Video duration is being processed. Please try again shortly."
+    },
+    "status": {
+      "starting": "Starting...",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    },
+    "buttons": {
+      "buyCredits": "Buy Credits",
+      "redirectingToPayment": "Redirecting to payment..."
+    },
+    "calculatingCost": "Calculating cost...",
+    "notEnoughCredits": "Not enough credits available"
+  },
+  "findBar": {
+    "findPlaceholder": "Find in subtitles...",
+    "replacePlaceholder": "Replace with...",
+    "replaceAll": "Replace All",
+    "nextMatch": "Next Match (Enter)",
+    "previousMatch": "Previous Match (Shift+Enter)",
+    "replaceAllTitle": "Replace All Occurrences",
+    "closeTitle": "Close (Esc)",
+    "nextMatchAria": "Next match",
+    "previousMatchAria": "Previous match",
+    "replaceAllAria": "Replace all",
+    "closeAria": "Close find bar"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "Save SRT File As",
+    "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "downloadInProgress": "Download in Progress",
+    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

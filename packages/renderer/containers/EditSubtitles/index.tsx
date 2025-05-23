@@ -244,16 +244,18 @@ export default function EditSubtitles({
   async function handleSaveEditedSrtAs() {
     const suggestion = originalPath || 'subtitles.srt';
     const res = await FileIPC.save({
-      title: 'Save SRT File As',
+      title: t('dialogs.saveSrtFileAs'),
       defaultPath: suggestion,
-      filters: [{ name: 'SRT Files', extensions: ['srt'] }],
+      filters: [
+        { name: t('common.fileFilters.srtFiles'), extensions: ['srt'] },
+      ],
       content: buildSrt({ segments: subtitles, mode: getSrtMode() }),
     });
     if (res.error && !res.error.includes('canceled')) {
       setSaveError(res.error);
     } else if (res.filePath) {
       subStore.load(subtitles, res.filePath);
-      alert(`File saved:\n${res.filePath}`);
+      alert(t('messages.fileSaved', { path: res.filePath }));
     }
   }
 
@@ -265,18 +267,18 @@ export default function EditSubtitles({
     if (result.error) {
       setSaveError(result.error);
     } else {
-      alert(`File saved:\n${path}`);
+      alert(t('messages.fileSaved', { path: path }));
     }
   }
 
   async function handleMerge() {
     try {
       if (!videoPath) {
-        setSaveError('No source video');
+        setSaveError(t('common.error.noSourceVideo'));
         return;
       }
       if (subtitles.length === 0) {
-        setSaveError('No subtitles loaded');
+        setSaveError(t('common.error.noSubtitlesLoaded'));
         return;
       }
       if (!isAudioOnly) {
@@ -286,7 +288,11 @@ export default function EditSubtitles({
         if (!meta?.height) missing.push('height');
         if (!meta?.frameRate) missing.push('frame rate');
         if (missing.length) {
-          setSaveError(`Missing video metadata (${missing.join(', ')})`);
+          setSaveError(
+            t('common.error.missingVideoMetadata', {
+              missing: missing.join(', '),
+            })
+          );
           return;
         }
       }
@@ -324,7 +330,7 @@ export default function EditSubtitles({
 
       const res = await onStartPngRenderRequest(opts);
       if (!res.success) {
-        setSaveError(res.error || 'Render failed');
+        setSaveError(res.error || t('common.error.renderFailed'));
         setMergeStage('Error');
         onSetMergeOperationId(null);
       }
@@ -350,7 +356,7 @@ export default function EditSubtitles({
       properties: ['openFile'],
       filters: [
         {
-          name: 'Media Files',
+          name: t('common.fileFilters.mediaFiles'),
           extensions: [
             'mp4',
             'mkv',

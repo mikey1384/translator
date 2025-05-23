@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert } from '../../../components/design-system/index.js';
 
 interface CreditWarningBannerProps {
@@ -8,20 +9,24 @@ interface CreditWarningBannerProps {
 export default function CreditWarningBanner({
   onSettingsClick,
 }: CreditWarningBannerProps) {
+  const { t } = useTranslation();
+
   return (
     <Alert variant="warning">
-      Purchase credits in{' '}
-      <a
-        style={{
-          textDecoration: 'underline',
-          color: 'white',
-          cursor: 'pointer',
-        }}
-        onClick={onSettingsClick}
-      >
-        Settings
-      </a>{' '}
-      to continue.
+      {t('generateSubtitles.creditWarning.message', {
+        settingsLink: (
+          <a
+            style={{
+              textDecoration: 'underline',
+              color: 'white',
+              cursor: 'pointer',
+            }}
+            onClick={onSettingsClick}
+          >
+            {t('generateSubtitles.creditWarning.settingsLinkText')}
+          </a>
+        ),
+      })}
     </Alert>
   );
 }

@@ -12,15 +12,6 @@ dotenv.config({ path: envPath });
 
 import log from 'electron-log';
 
-// Debug: Check if .env is loading
-log.info('[DEBUG] Environment variables after dotenv:');
-log.info(`[DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
-log.info(
-  `[DEBUG] OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`
-);
-log.info(`[DEBUG] Current working directory: ${process.cwd()}`);
-log.info(`[DEBUG] Attempted .env path: ${envPath}`);
-
 import {
   app,
   BrowserWindow,

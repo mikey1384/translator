@@ -17,7 +17,14 @@
       "unexpected": "예기치 않은 오류가 발생했습니다.",
       "unexpectedRemove": "제거 중 예기치 않은 오류가 발생했습니다.",
       "unexpectedSave": "저장 중 예기치 않은 오류가 발생했습니다.",
-      "unexpectedLoad": "로드 중 예기치 않은 오류가 발생했습니다."
+      "unexpectedLoad": "로드 중 예기치 않은 오류가 발생했습니다.",
+      "renderFailed": "렌더링 실패",
+      "creditReservationFailed": "크레딧 예약 실패",
+      "invalidRenderOptions": "잘못된 렌더링 옵션이 제공되었습니다",
+      "missingVideoMetadata": "비디오 메타데이터 누락 ({{missing}})",
+      "noSourceVideo": "소스 비디오 없음",
+      "noSubtitlesLoaded": "로드된 자막 없음",
+      "failedToLoadSRT": "SRT 파일 로드 실패"
     },
     "success": "성공",
     "settings": "설정",
@@ -37,7 +44,12 @@
     "reloadPageAria": "페이지를 새로고침합니다",
     "backToTop": "맨 위로",
     "backToTopAria": "맨 위로 스크롤",
-    "confirmReload": "페이지를 새로고침하시겠습니까? 저장되지 않은 변경사항이 손실될 수 있습니다."
+    "confirmReload": "페이지를 새로고침하시겠습니까? 저장되지 않은 변경사항이 손실될 수 있습니다.",
+    "fileFilters": {
+      "srtFiles": "SRT 파일",
+      "mediaFiles": "미디어 파일",
+      "videoFiles": "비디오 파일"
+    }
   },
   "input": {
     "fromDevice": "내 기기에서",
@@ -170,9 +182,12 @@
     "removeKey": "키 제거",
     "saveChanges": "변경사항 저장",
     "saveKey": "{{name}} 키 저장",
-    "getKey": "{{name}} 키 받기"
+    "getKey": "{{name}} 키 받기",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "전체화면 진입",
+    "exitFullscreen": "전체화면 종료",
     "sideMenu": {
       "changeVideo": "비디오 변경",
       "changeVideoAudio": "비디오/오디오 변경",
@@ -190,5 +205,52 @@
       "shiftLabel": "모든 자막 이동 (초):",
       "applyShift": "이동 적용"
     }
+  },
+  "generateSubtitles": {
+    "noCredits": "크레딧이 없습니다.",
+    "rechargeLink": "충전 →",
+    "creditWarning": {
+      "message": "계속하려면 {{settingsLink}}에서 크레딧을 구매하세요.",
+      "settingsLinkText": "설정"
+    },
+    "validation": {
+      "pleaseSelectVideo": "비디오를 선택해주세요",
+      "processingDuration": "비디오 길이를 처리 중입니다. 잠시 후 다시 시도해주세요."
+    },
+    "status": {
+      "starting": "시작 중...",
+      "completed": "완료",
+      "cancelled": "취소됨",
+      "error": "오류"
+    },
+    "buttons": {
+      "buyCredits": "크레딧 구매",
+      "redirectingToPayment": "결제 페이지로 이동 중..."
+    },
+    "calculatingCost": "비용 계산 중...",
+    "notEnoughCredits": "사용 가능한 크레딧이 부족합니다"
+  },
+  "findBar": {
+    "findPlaceholder": "자막에서 찾기...",
+    "replacePlaceholder": "다음으로 바꾸기...",
+    "replaceAll": "모두 바꾸기",
+    "nextMatch": "다음 일치 (Enter)",
+    "previousMatch": "이전 일치 (Shift+Enter)",
+    "replaceAllTitle": "모든 항목 바꾸기",
+    "closeTitle": "닫기 (Esc)",
+    "nextMatchAria": "다음 일치",
+    "previousMatchAria": "이전 일치",
+    "replaceAllAria": "모두 바꾸기",
+    "closeAria": "찾기 바 닫기"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "SRT 파일 다른 이름으로 저장",
+    "saveDownloadedVideoAs": "다운로드한 비디오 다른 이름으로 저장",
+    "downloadInProgress": "다운로드 진행 중",
+    "saveDownloadedFile": "다운로드한 파일 저장: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "파일 저장됨:\n{{path}}",
+    "videoSaved": "비디오 저장 완료:\n{{path}}"
   }
 }

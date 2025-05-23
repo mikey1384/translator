@@ -1,7 +1,7 @@
 import { useTaskStore, useSubStore } from '../../../state';
-import { STARTING_STAGE } from '../../../../shared/constants';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
+import { i18n } from '../../../i18n';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -27,7 +27,7 @@ export async function executeSubtitleGeneration({
   // Initialize progress tracking
   setTranslation({
     id: operationId,
-    stage: STARTING_STAGE,
+    stage: i18n.t('generateSubtitles.status.starting'),
     percent: 0,
     inProgress: true,
   });
@@ -52,7 +52,7 @@ export async function executeSubtitleGeneration({
 
       setTranslation({
         id: operationId,
-        stage: 'Completed',
+        stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
       });
@@ -60,7 +60,9 @@ export async function executeSubtitleGeneration({
       return { success: true, subtitles: result.subtitles };
     } else {
       // Handle failure or cancellation
-      const stage = result.cancelled ? 'Cancelled' : 'Error';
+      const stage = result.cancelled
+        ? i18n.t('generateSubtitles.status.cancelled')
+        : i18n.t('generateSubtitles.status.error');
       const percent = result.cancelled ? 0 : 100;
 
       setTranslation({
@@ -77,7 +79,7 @@ export async function executeSubtitleGeneration({
 
     setTranslation({
       id: operationId,
-      stage: 'Error',
+      stage: i18n.t('generateSubtitles.status.error'),
       percent: 100,
       inProgress: false,
     });
@@ -95,15 +97,14 @@ export function validateGenerationInputs(
   if (!videoFile && !videoFilePath) {
     return {
       isValid: false,
-      errorMessage: 'Please select a video',
+      errorMessage: i18n.t('generateSubtitles.validation.pleaseSelectVideo'),
     };
   }
 
   if (durationSecs === null || durationSecs <= 0 || hoursNeeded === null) {
     return {
       isValid: false,
-      errorMessage:
-        'Video duration is being processed. Please try again shortly.',
+      errorMessage: i18n.t('generateSubtitles.validation.processingDuration'),
     };
   }
 

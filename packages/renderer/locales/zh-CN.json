@@ -17,7 +17,14 @@
       "unexpected": "发生了意外错误。",
       "unexpectedRemove": "移除密钥时发生了意外错误。",
       "unexpectedSave": "保存时发生了意外错误。",
-      "unexpectedLoad": "加载时发生了意外错误。"
+      "unexpectedLoad": "加载时发生了意外错误。",
+      "renderFailed": "Render failed",
+      "creditReservationFailed": "Credit reservation failed",
+      "invalidRenderOptions": "Invalid render options provided",
+      "missingVideoMetadata": "Missing video metadata ({{missing}})",
+      "noSourceVideo": "No source video",
+      "noSubtitlesLoaded": "No subtitles loaded",
+      "failedToLoadSRT": "Failed to load SRT file"
     },
     "success": "成功",
     "settings": "设置",
@@ -37,7 +44,12 @@
     "reloadPageAria": "重新加载页面",
     "backToTop": "返回顶部",
     "backToTopAria": "滚动回到顶部",
-    "confirmReload": "确定要重新加载页面吗？未保存的更改可能会丢失。"
+    "confirmReload": "确定要重新加载页面吗？未保存的更改可能会丢失。",
+    "fileFilters": {
+      "srtFiles": "SRT Files",
+      "mediaFiles": "Media Files",
+      "videoFiles": "Video Files"
+    }
   },
   "input": {
     "fromDevice": "从您的设备",
@@ -122,7 +134,8 @@
     "removeKey": "移除密钥",
     "saveChanges": "保存更改",
     "saveKey": "保存{{name}}密钥",
-    "getKey": "获取{{name}}密钥"
+    "getKey": "获取{{name}}密钥",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -141,7 +154,9 @@
       "scrollToCurrent": "滚动到当前位置",
       "shiftLabel": "偏移:",
       "applyShift": "应用"
-    }
+    },
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "regions": {
     "eastAsia": "东亚",
@@ -190,5 +205,52 @@
     "farsi": "波斯语",
     "swahili": "斯瓦希里语",
     "afrikaans": "南非语"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →",
+    "creditWarning": {
+      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "settingsLinkText": "Settings"
+    },
+    "validation": {
+      "pleaseSelectVideo": "Please select a video",
+      "processingDuration": "Video duration is being processed. Please try again shortly."
+    },
+    "status": {
+      "starting": "Starting...",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    },
+    "buttons": {
+      "buyCredits": "Buy Credits",
+      "redirectingToPayment": "Redirecting to payment..."
+    },
+    "calculatingCost": "Calculating cost...",
+    "notEnoughCredits": "Not enough credits available"
+  },
+  "findBar": {
+    "findPlaceholder": "Find in subtitles...",
+    "replacePlaceholder": "Replace with...",
+    "replaceAll": "Replace All",
+    "nextMatch": "Next Match (Enter)",
+    "previousMatch": "Previous Match (Shift+Enter)",
+    "replaceAllTitle": "Replace All Occurrences",
+    "closeTitle": "Close (Esc)",
+    "nextMatchAria": "Next match",
+    "previousMatchAria": "Previous match",
+    "replaceAllAria": "Replace all",
+    "closeAria": "Close find bar"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "Save SRT File As",
+    "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "downloadInProgress": "Download in Progress",
+    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

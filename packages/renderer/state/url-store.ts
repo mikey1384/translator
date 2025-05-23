@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { VideoQuality, ProcessUrlResult } from '@shared-types/app';
-import * as UrlIPC from '../ipc/url';
+import type { VideoQuality, ProcessUrlResult } from '@shared-types/app';
+import * as UrlIPC from '@ipc/url';
+import { i18n } from '../i18n';
 import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
-import { STARTING_STAGE } from '../../shared/constants';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 
@@ -149,7 +149,7 @@ async function downloadMediaInternal(
   set((state: UrlState) => {
     state.download = {
       id: opId,
-      stage: STARTING_STAGE,
+      stage: i18n.t('input.downloading'),
       percent: 0,
       inProgress: true,
     };

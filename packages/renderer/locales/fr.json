@@ -17,7 +17,14 @@
       "unexpected": "Une erreur inattendue s'est produite.",
       "unexpectedRemove": "Une erreur inattendue s'est produite lors de la suppression de la clé.",
       "unexpectedSave": "Une erreur inattendue s'est produite lors de l'enregistrement.",
-      "unexpectedLoad": "Une erreur inattendue s'est produite lors du chargement."
+      "unexpectedLoad": "Une erreur inattendue s'est produite lors du chargement.",
+      "renderFailed": "Render failed",
+      "creditReservationFailed": "Credit reservation failed",
+      "invalidRenderOptions": "Invalid render options provided",
+      "missingVideoMetadata": "Missing video metadata ({{missing}})",
+      "noSourceVideo": "No source video",
+      "noSubtitlesLoaded": "No subtitles loaded",
+      "failedToLoadSRT": "Failed to load SRT file"
     },
     "success": "Succès",
     "settings": "Paramètres",
@@ -37,7 +44,12 @@
     "reloadPageAria": "Recharger la page",
     "backToTop": "Retour en haut",
     "backToTopAria": "Retourner en haut de la page",
-    "confirmReload": "Êtes-vous sûr de vouloir recharger la page ? Les modifications non enregistrées pourraient être perdues."
+    "confirmReload": "Êtes-vous sûr de vouloir recharger la page ? Les modifications non enregistrées pourraient être perdues.",
+    "fileFilters": {
+      "srtFiles": "SRT Files",
+      "mediaFiles": "Media Files",
+      "videoFiles": "Video Files"
+    }
   },
   "input": {
     "fromDevice": "Depuis votre appareil",
@@ -122,7 +134,8 @@
     "removeKey": "Supprimer la clé",
     "saveChanges": "Enregistrer les modifications",
     "saveKey": "Enregistrer la clé {{name}}",
-    "getKey": "Obtenir la clé {{name}}"
+    "getKey": "Obtenir la clé {{name}}",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -141,7 +154,9 @@
       "scrollToCurrent": "Défiler jusqu'à l'actuel",
       "shiftLabel": "Décalage :",
       "applyShift": "Appliquer"
-    }
+    },
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "regions": {
     "eastAsia": "Asie de l'Est",
@@ -190,5 +205,52 @@
     "farsi": "Farsi (Persan)",
     "swahili": "Swahili",
     "afrikaans": "Afrikaans"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →",
+    "creditWarning": {
+      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "settingsLinkText": "Settings"
+    },
+    "validation": {
+      "pleaseSelectVideo": "Please select a video",
+      "processingDuration": "Video duration is being processed. Please try again shortly."
+    },
+    "status": {
+      "starting": "Starting...",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    },
+    "buttons": {
+      "buyCredits": "Buy Credits",
+      "redirectingToPayment": "Redirecting to payment..."
+    },
+    "calculatingCost": "Calculating cost...",
+    "notEnoughCredits": "Not enough credits available"
+  },
+  "findBar": {
+    "findPlaceholder": "Find in subtitles...",
+    "replacePlaceholder": "Replace with...",
+    "replaceAll": "Replace All",
+    "nextMatch": "Next Match (Enter)",
+    "previousMatch": "Previous Match (Shift+Enter)",
+    "replaceAllTitle": "Replace All Occurrences",
+    "closeTitle": "Close (Esc)",
+    "nextMatchAria": "Next match",
+    "previousMatchAria": "Previous match",
+    "replaceAllAria": "Replace all",
+    "closeAria": "Close find bar"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "Save SRT File As",
+    "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "downloadInProgress": "Download in Progress",
+    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

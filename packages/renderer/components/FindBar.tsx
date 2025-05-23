@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../styles.js';
-import { useUIStore } from '../state/ui-store';
-import { useSubStore } from '../state/subtitle-store';
+import { useUIStore } from '../state/ui-store.js';
+import { useSubStore } from '../state/subtitle-store.js';
 
 const findBarStyles = css`
   position: fixed;
@@ -83,6 +84,7 @@ const closeButtonStyles = css`
 `;
 
 export default function FindBar() {
+  const { t } = useTranslation();
   const {
     isVisible,
     searchText,
@@ -170,7 +172,7 @@ export default function FindBar() {
       <input
         ref={inputRef}
         type="text"
-        placeholder="Find in subtitles..."
+        placeholder={t('findBar.findPlaceholder')}
         value={draft}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
@@ -178,7 +180,7 @@ export default function FindBar() {
       />
       <input
         type="text"
-        placeholder="Replace with..."
+        placeholder={t('findBar.replacePlaceholder')}
         value={replaceText}
         onChange={e => setReplaceText(e.target.value)}
         className={inputReplaceStyles}
@@ -190,8 +192,8 @@ export default function FindBar() {
         className={buttonStyles}
         onClick={findNext}
         disabled={!hasMatches}
-        title="Next Match (Enter)"
-        aria-label="Next match"
+        title={t('findBar.nextMatch')}
+        aria-label={t('findBar.nextMatchAria')}
       >
         <span style={{ verticalAlign: 'middle' }}>↓</span>
       </button>
@@ -199,8 +201,8 @@ export default function FindBar() {
         className={buttonStyles}
         onClick={findPrev}
         disabled={!hasMatches}
-        title="Previous Match (Shift+Enter)"
-        aria-label="Previous match"
+        title={t('findBar.previousMatch')}
+        aria-label={t('findBar.previousMatchAria')}
       >
         <span style={{ verticalAlign: 'middle' }}>↑</span>
       </button>
@@ -210,16 +212,16 @@ export default function FindBar() {
           useSubStore.getState().replaceAll(searchText, replaceText)
         }
         disabled={!searchText || !replaceText}
-        title="Replace All Occurrences"
-        aria-label="Replace all"
+        title={t('findBar.replaceAllTitle')}
+        aria-label={t('findBar.replaceAllAria')}
       >
-        Replace All
+        {t('findBar.replaceAll')}
       </button>
       <button
         className={closeButtonStyles}
         onClick={hideFindBar}
-        title="Close (Esc)"
-        aria-label="Close find bar"
+        title={t('findBar.closeTitle')}
+        aria-label={t('findBar.closeAria')}
       >
         <span style={{ verticalAlign: 'middle' }}>✕</span>
       </button>

@@ -164,4 +164,113 @@ languagesToCreate.forEach(lang => {
     console.log(`Created new translation file for ${lang.label} (${isoCode})`);
   }
 });
-console.log('All translation files generated successfully!');
+
+// New translation keys that need to be added to all languages
+const newKeys = {
+  'common.error.missingVideoMetadata': 'Missing video metadata ({{missing}})',
+  'common.error.noSourceVideo': 'No source video',
+  'common.error.noSubtitlesLoaded': 'No subtitles loaded',
+  'common.error.failedToLoadSRT': 'Failed to load SRT file',
+  'common.fileFilters.srtFiles': 'SRT Files',
+  'common.fileFilters.mediaFiles': 'Media Files',
+  'common.fileFilters.videoFiles': 'Video Files',
+  'dialogs.saveSrtFileAs': 'Save SRT File As',
+  'dialogs.saveDownloadedVideoAs': 'Save Downloaded Video As',
+  'dialogs.downloadInProgress': 'Download in Progress',
+  'dialogs.saveDownloadedFile': 'Save the downloaded file: {{path}}',
+  'messages.fileSaved': 'File saved:\n{{path}}',
+  'messages.videoSaved': 'Video saved to:\n{{path}}',
+  'videoPlayer.enterFullscreen': 'Enter Fullscreen',
+  'videoPlayer.exitFullscreen': 'Exit Fullscreen',
+  'generateSubtitles.calculatingCost': 'Calculating cost...',
+  'generateSubtitles.notEnoughCredits': 'Not enough credits available',
+  'findBar.findPlaceholder': 'Find in subtitles...',
+  'findBar.replacePlaceholder': 'Replace with...',
+  'findBar.replaceAll': 'Replace All',
+  'findBar.nextMatch': 'Next Match (Enter)',
+  'findBar.previousMatch': 'Previous Match (Shift+Enter)',
+  'findBar.replaceAllTitle': 'Replace All Occurrences',
+  'findBar.closeTitle': 'Close (Esc)',
+  'findBar.nextMatchAria': 'Next match',
+  'findBar.previousMatchAria': 'Previous match',
+  'findBar.replaceAllAria': 'Replace all',
+  'findBar.closeAria': 'Close find bar',
+};
+
+// Read the English file as reference
+const enFile = path.join(__dirname, 'en.json');
+const enData = JSON.parse(fs.readFileSync(enFile, 'utf8'));
+
+// Get all language files
+const localesDir = __dirname;
+const languageFiles = fs
+  .readdirSync(localesDir)
+  .filter(
+    file => file.endsWith('.json') && file !== 'en.json' && file !== 'ko.json'
+  );
+
+console.log(
+  `Found ${languageFiles.length} language files to update:`,
+  languageFiles
+);
+
+function setNestedValue(obj, path, value) {
+  const keys = path.split('.');
+  let current = obj;
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!current[keys[i]]) {
+      current[keys[i]] = {};
+    }
+    current = current[keys[i]];
+  }
+
+  current[keys[keys.length - 1]] = value;
+}
+
+function hasNestedValue(obj, path) {
+  const keys = path.split('.');
+  let current = obj;
+
+  for (const key of keys) {
+    if (!current || !current[key]) {
+      return false;
+    }
+    current = current[key];
+  }
+
+  return true;
+}
+
+// Update each language file
+languageFiles.forEach(filename => {
+  const langCode = filename.replace('.json', '');
+  const filePath = path.join(localesDir, filename);
+
+  try {
+    const langData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    let hasChanges = false;
+
+    // Add missing keys with English fallback
+    Object.entries(newKeys).forEach(([keyPath, englishValue]) => {
+      if (!hasNestedValue(langData, keyPath)) {
+        setNestedValue(langData, keyPath, englishValue);
+        hasChanges = true;
+        console.log(`Added ${keyPath} to ${langCode}`);
+      }
+    });
+
+    if (hasChanges) {
+      fs.writeFileSync(filePath, JSON.stringify(langData, null, 2) + '\n');
+      console.log(`✅ Updated ${filename}`);
+    } else {
+      console.log(`ℹ️  ${filename} already up to date`);
+    }
+  } catch (error) {
+    console.error(`❌ Error updating ${filename}:`, error.message);
+  }
+});
+
+console.log('\n🎉 Translation update complete!');
+console.log('📝 Note: New keys have been added with English fallbacks.');
+console.log('🔄 Consider running professional translation for production use.');

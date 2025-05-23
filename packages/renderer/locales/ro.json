@@ -17,7 +17,14 @@
       "unexpected": "A apărut o eroare neașteptată.",
       "unexpectedRemove": "A apărut o eroare neașteptată la eliminarea cheii.",
       "unexpectedSave": "A apărut o eroare neașteptată la salvare.",
-      "unexpectedLoad": "A apărut o eroare neașteptată la încărcare."
+      "unexpectedLoad": "A apărut o eroare neașteptată la încărcare.",
+      "renderFailed": "Render failed",
+      "creditReservationFailed": "Credit reservation failed",
+      "invalidRenderOptions": "Invalid render options provided",
+      "missingVideoMetadata": "Missing video metadata ({{missing}})",
+      "noSourceVideo": "No source video",
+      "noSubtitlesLoaded": "No subtitles loaded",
+      "failedToLoadSRT": "Failed to load SRT file"
     },
     "success": "Succes",
     "settings": "Setări",
@@ -37,7 +44,12 @@
     "reloadPageAria": "Reîncarcă pagina",
     "backToTop": "Înapoi sus",
     "backToTopAria": "Derulează înapoi sus",
-    "confirmReload": "Sigur doriți să reîncărcați pagina? Orice modificări nesalvate ar putea fi pierdute."
+    "confirmReload": "Sigur doriți să reîncărcați pagina? Orice modificări nesalvate ar putea fi pierdute.",
+    "fileFilters": {
+      "srtFiles": "SRT Files",
+      "mediaFiles": "Media Files",
+      "videoFiles": "Video Files"
+    }
   },
   "input": {
     "fromDevice": "De pe dispozitivul tău",
@@ -122,7 +134,8 @@
     "removeKey": "Elimină Cheia",
     "saveChanges": "Salvează Modificările",
     "saveKey": "Salvează Cheia {{name}}",
-    "getKey": "Obține Cheia {{name}}"
+    "getKey": "Obține Cheia {{name}}",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -141,7 +154,9 @@
       "scrollToCurrent": "Derulează la cel curent",
       "shiftLabel": "Decalaj:",
       "applyShift": "Aplică"
-    }
+    },
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "regions": {
     "eastAsia": "Asia de Est",
@@ -190,5 +205,52 @@
     "farsi": "Farsi (Persană)",
     "swahili": "Swahili",
     "afrikaans": "Afrikaans"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →",
+    "creditWarning": {
+      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "settingsLinkText": "Settings"
+    },
+    "validation": {
+      "pleaseSelectVideo": "Please select a video",
+      "processingDuration": "Video duration is being processed. Please try again shortly."
+    },
+    "status": {
+      "starting": "Starting...",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    },
+    "buttons": {
+      "buyCredits": "Buy Credits",
+      "redirectingToPayment": "Redirecting to payment..."
+    },
+    "calculatingCost": "Calculating cost...",
+    "notEnoughCredits": "Not enough credits available"
+  },
+  "findBar": {
+    "findPlaceholder": "Find in subtitles...",
+    "replacePlaceholder": "Replace with...",
+    "replaceAll": "Replace All",
+    "nextMatch": "Next Match (Enter)",
+    "previousMatch": "Previous Match (Shift+Enter)",
+    "replaceAllTitle": "Replace All Occurrences",
+    "closeTitle": "Close (Esc)",
+    "nextMatchAria": "Next match",
+    "previousMatchAria": "Previous match",
+    "replaceAllAria": "Replace all",
+    "closeAria": "Close find bar"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "Save SRT File As",
+    "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "downloadInProgress": "Download in Progress",
+    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

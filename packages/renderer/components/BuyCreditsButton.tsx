@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 // import { shell } from 'electron'; // Removed direct shell import
 import * as SystemIPC from '@ipc/system';
 
@@ -14,6 +15,7 @@ interface BuyCreditsButtonProps {
 }
 
 export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -55,7 +57,9 @@ export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
       disabled={loading}
       style={{ padding: '10px 15px', cursor: loading ? 'wait' : 'pointer' }}
     >
-      {loading ? 'Redirecting to payment...' : 'Buy Credits'}
+      {loading
+        ? t('generateSubtitles.buttons.redirectingToPayment')
+        : t('generateSubtitles.buttons.buyCredits')}
     </button>
   );
 }

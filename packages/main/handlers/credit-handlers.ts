@@ -172,21 +172,12 @@ export async function handleHasOpenAIKey(): Promise<boolean> {
   try {
     // Check secure store first
     const apiKey = await getApiKey('openai');
-    log.info(
-      `[credit-handler] Secure store API key: ${apiKey ? 'FOUND' : 'NOT FOUND'}`
-    );
     if (apiKey !== null && apiKey.trim().length > 0) {
       return true;
     }
 
     // Check environment variable as fallback
     const envApiKey = process.env.OPENAI_API_KEY;
-    log.info(
-      `[credit-handler] Environment API key: ${envApiKey ? 'FOUND' : 'NOT FOUND'}`
-    );
-    log.info(
-      `[credit-handler] Environment API key value: ${envApiKey ? envApiKey.substring(0, 10) + '...' : 'undefined'}`
-    );
     if (envApiKey && envApiKey.trim().length > 0) {
       return true;
     }

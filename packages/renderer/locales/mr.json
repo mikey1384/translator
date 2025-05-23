@@ -17,7 +17,14 @@
       "unexpected": "एक अनपेक्षित त्रुटी आली आहे.",
       "unexpectedRemove": "की काढताना एक अनपेक्षित त्रुटी आली आहे.",
       "unexpectedSave": "सेव्ह करताना एक अनपेक्षित त्रुटी आली आहे.",
-      "unexpectedLoad": "लोड करताना एक अनपेक्षित त्रुटी आली आहे."
+      "unexpectedLoad": "लोड करताना एक अनपेक्षित त्रुटी आली आहे.",
+      "renderFailed": "Render failed",
+      "creditReservationFailed": "Credit reservation failed",
+      "invalidRenderOptions": "Invalid render options provided",
+      "missingVideoMetadata": "Missing video metadata ({{missing}})",
+      "noSourceVideo": "No source video",
+      "noSubtitlesLoaded": "No subtitles loaded",
+      "failedToLoadSRT": "Failed to load SRT file"
     },
     "success": "यशस्वी",
     "settings": "सेटिंग्ज",
@@ -37,7 +44,12 @@
     "reloadPageAria": "पृष्ठ रीलोड करा",
     "backToTop": "शीर्षावर जा",
     "backToTopAria": "शीर्षावर स्क्रोल करा",
-    "confirmReload": "तुम्हाला खात्री आहे की तुम्ही पृष्ठ रीलोड करू इच्छिता? कोणतेही सेव्ह न केलेले बदल गमावले जाऊ शकतात."
+    "confirmReload": "तुम्हाला खात्री आहे की तुम्ही पृष्ठ रीलोड करू इच्छिता? कोणतेही सेव्ह न केलेले बदल गमावले जाऊ शकतात.",
+    "fileFilters": {
+      "srtFiles": "SRT Files",
+      "mediaFiles": "Media Files",
+      "videoFiles": "Video Files"
+    }
   },
   "input": {
     "fromDevice": "तुमच्या डिव्हाइसवरून",
@@ -122,7 +134,8 @@
     "removeKey": "की काढा",
     "saveChanges": "बदल सेव्ह करा",
     "saveKey": "{{name}} की सेव्ह करा",
-    "getKey": "{{name}} की मिळवा"
+    "getKey": "{{name}} की मिळवा",
+    "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
     "sideMenu": {
@@ -141,7 +154,9 @@
       "scrollToCurrent": "सध्याच्या स्थानावर स्क्रोल करा",
       "shiftLabel": "शिफ्ट:",
       "applyShift": "लागू करा"
-    }
+    },
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "regions": {
     "eastAsia": "पूर्व आशिया",
@@ -190,5 +205,52 @@
     "farsi": "फारसी (पर्शियन)",
     "swahili": "स्वाहिली",
     "afrikaans": "आफ्रिकान्स"
+  },
+  "generateSubtitles": {
+    "noCredits": "No credits.",
+    "rechargeLink": "Recharge →",
+    "creditWarning": {
+      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "settingsLinkText": "Settings"
+    },
+    "validation": {
+      "pleaseSelectVideo": "Please select a video",
+      "processingDuration": "Video duration is being processed. Please try again shortly."
+    },
+    "status": {
+      "starting": "Starting...",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    },
+    "buttons": {
+      "buyCredits": "Buy Credits",
+      "redirectingToPayment": "Redirecting to payment..."
+    },
+    "calculatingCost": "Calculating cost...",
+    "notEnoughCredits": "Not enough credits available"
+  },
+  "findBar": {
+    "findPlaceholder": "Find in subtitles...",
+    "replacePlaceholder": "Replace with...",
+    "replaceAll": "Replace All",
+    "nextMatch": "Next Match (Enter)",
+    "previousMatch": "Previous Match (Shift+Enter)",
+    "replaceAllTitle": "Replace All Occurrences",
+    "closeTitle": "Close (Esc)",
+    "nextMatchAria": "Next match",
+    "previousMatchAria": "Previous match",
+    "replaceAllAria": "Replace all",
+    "closeAria": "Close find bar"
+  },
+  "dialogs": {
+    "saveSrtFileAs": "Save SRT File As",
+    "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "downloadInProgress": "Download in Progress",
+    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }
