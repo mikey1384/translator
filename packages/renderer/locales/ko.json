@@ -247,7 +247,14 @@
     "saveSrtFileAs": "SRT 파일 다른 이름으로 저장",
     "saveDownloadedVideoAs": "다운로드한 비디오 다른 이름으로 저장",
     "downloadInProgress": "다운로드 진행 중",
-    "saveDownloadedFile": "다운로드한 파일 저장: {{path}}"
+    "saveDownloadedFile": "다운로드한 파일 저장: {{path}}",
+    "translationInProgress": "번역 진행 중",
+    "cancelTranslationConfirm": "번역을 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다."
+  },
+  "progress": {
+    "transcribedChunks": "{{done}}/{{total}} 청크 전사 및 정리 완료",
+    "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}"
   },
   "messages": {
     "fileSaved": "파일 저장됨:\n{{path}}",

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles';
 import ProgressArea from './ProgressArea';
 import { useTaskStore } from '../../state';
@@ -20,6 +21,47 @@ const devError = (...a: any[]) => {
   }
 };
 
+// Function to translate backend i18n messages
+function translateBackendMessage(
+  stage: string,
+  t: (key: string, options?: any) => string
+): string {
+  if (!stage.startsWith('__i18n__:')) {
+    return stage; // Return original if not a special message
+  }
+
+  const parts = stage.split(':');
+  const messageType = parts[1];
+
+  switch (messageType) {
+    case 'transcribed_chunks': {
+      const done = parseInt(parts[2], 10);
+      const total = parseInt(parts[3], 10);
+      return t('progress.transcribedChunks', { done, total });
+    }
+    case 'repairing_captions': {
+      const iteration = parseInt(parts[2], 10);
+      const maxIterations = parseInt(parts[3], 10);
+      const done = parseInt(parts[4], 10);
+      const total = parseInt(parts[5], 10);
+      return t('progress.repairingCaptions', {
+        iteration,
+        maxIterations,
+        done,
+        total,
+      });
+    }
+    case 'gap_repair': {
+      const iteration = parseInt(parts[2], 10);
+      const done = parseInt(parts[3], 10);
+      const total = parseInt(parts[4], 10);
+      return t('progress.gapRepair', { iteration, done, total });
+    }
+    default:
+      return stage; // Fallback to original
+  }
+}
+
 type TranslationSlice = {
   inProgress: boolean;
   percent: number;
@@ -30,6 +72,7 @@ type TranslationSlice = {
 export default function TranslationProgressArea({
   autoCloseDelay = 3_000,
 }: { autoCloseDelay?: number } = {}) {
+  const { t } = useTranslation();
   /* -------------------------------------------------------------- */
   /* 1 ️⃣  read from zustand                                        */
   /* -------------------------------------------------------------- */
@@ -63,12 +106,7 @@ export default function TranslationProgressArea({
       return;
     }
 
-    if (
-      !window.confirm(
-        "Cancel translation? Progress will be lost and you'll need to start again."
-      )
-    )
-      return;
+    if (!window.confirm(t('dialogs.cancelTranslationConfirm'))) return;
 
     setIsCancelling(true);
 
@@ -82,7 +120,7 @@ export default function TranslationProgressArea({
       setIsCancelling(false);
       patchTranslation({ inProgress: false });
     }
-  }, [id, patchTranslation]);
+  }, [id, patchTranslation, t]);
 
   const handleClose = useCallback(() => {
     patchTranslation({ inProgress: false });
@@ -108,9 +146,9 @@ export default function TranslationProgressArea({
   return (
     <ProgressArea
       isVisible={inProgress}
-      title="Translation in Progress"
+      title={t('dialogs.translationInProgress')}
       progress={percent}
-      stage={stage}
+      stage={translateBackendMessage(stage, t)}
       progressBarColor={progressBarColor}
       isCancelling={isCancelling}
       operationId={id ?? null}

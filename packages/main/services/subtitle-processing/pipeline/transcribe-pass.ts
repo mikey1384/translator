@@ -279,7 +279,7 @@ export async function transcribePass({
       );
       progressCallback?.({
         percent: Math.round(p),
-        stage: `Transcribed & scrubbed ${done}/${chunks.length} chunks`,
+        stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
         current: done,
         total: chunks.length,
         partialResult: intermediateSrt,
@@ -383,7 +383,7 @@ export async function transcribePass({
       if (repairGaps.length > 0) {
         progressCallback?.({
           percent: scaleProgress(90, Stage.TRANSCRIBE, Stage.TRANSLATE),
-          stage: `Repairing missing captions (Iteration ${iteration}/${maxIterations}) 0 / ${repairGaps.length}`,
+          stage: `__i18n__:repairing_captions:${iteration}:${maxIterations}:0:${repairGaps.length}`,
         });
       }
 
@@ -431,7 +431,7 @@ export async function transcribePass({
             const cappedPct = Math.min(calcPct, 99);
             progressCallback?.({
               percent: cappedPct,
-              stage: `Gap repair #${iteration} (${processedInPass}/${totalGaps})`,
+              stage: `__i18n__:gap_repair:${iteration}:${processedInPass}:${totalGaps}`,
               current: processedInPass,
               total: totalGaps,
             });
@@ -462,7 +462,7 @@ export async function transcribePass({
             ),
             99
           ),
-          stage: `Gap repair #${iteration} (${processedInPass}/${totalGaps})`,
+          stage: `Gap repair #${iteration}/${maxIterations}`,
           current: processedInPass,
           total: totalGaps,
         });

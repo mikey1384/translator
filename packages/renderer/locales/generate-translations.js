@@ -178,6 +178,14 @@ const newKeys = {
   'dialogs.saveDownloadedVideoAs': 'Save Downloaded Video As',
   'dialogs.downloadInProgress': 'Download in Progress',
   'dialogs.saveDownloadedFile': 'Save the downloaded file: {{path}}',
+  'dialogs.translationInProgress': 'Translation in Progress',
+  'dialogs.cancelTranslationConfirm':
+    "Cancel translation? Progress will be lost and you'll need to start again.",
+  'progress.transcribedChunks':
+    'Transcribed & scrubbed {{done}}/{{total}} chunks',
+  'progress.gapRepair': 'Gap repair #{{iteration}} ({{done}}/{{total}})',
+  'progress.repairingCaptions':
+    'Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}',
   'messages.fileSaved': 'File saved:\n{{path}}',
   'messages.videoSaved': 'Video saved to:\n{{path}}',
   'videoPlayer.enterFullscreen': 'Enter Fullscreen',

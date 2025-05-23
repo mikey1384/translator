@@ -220,7 +220,14 @@
     "saveSrtFileAs": "Save SRT File As",
     "saveDownloadedVideoAs": "Save Downloaded Video As",
     "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}"
+    "saveDownloadedFile": "Save the downloaded file: {{path}}",
+    "translationInProgress": "Translation in Progress",
+    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+  },
+  "progress": {
+    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
+    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
     "fileSaved": "File saved:\n{{path}}",
