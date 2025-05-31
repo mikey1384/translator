@@ -1,6 +1,7 @@
 {
   "appId": "tools.stage5.translator",
   "productName": "Translator",
+  "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
   "directories": {
     "app": ".",
     "output": "dist"
@@ -27,7 +28,6 @@
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
     "identity": "JONG UK LEE (26WR9SJHBZ)",
-    "artifactName": "Translator.dmg",
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
