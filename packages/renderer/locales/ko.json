@@ -252,7 +252,7 @@
     "cancelTranslationConfirm": "번역을 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다."
   },
   "progress": {
-    "transcribedChunks": "{{done}}/{{total}} 청크 전사 및 정리 완료",
+    "transcribedChunks": "{{done}}/{{total}} 정리 완료",
     "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}"
   },
