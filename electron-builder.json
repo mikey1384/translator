@@ -26,7 +26,7 @@
     "hardenedRuntime": true,
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
-    "identity": "Developer ID Application: Jong UK Lee (26WR9SJHBZ)",
+    "identity": "JONG UK LEE (26WR9SJHBZ)",
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
