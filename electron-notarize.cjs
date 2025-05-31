@@ -1,11 +1,7 @@
 // Import dotenv to load environment variables from .env file
 require('dotenv').config();
 
-// const { notarize } = require('@electron/notarize'); // Removed require
-// const { build } = require('./package.json'); // We don't seem to use 'build', remove this too
-
-exports.default = async function notarizing(context) {
-  // Dynamically import @electron/notarize
+exports.default = async function notarizeApp(context) {
   const { notarize } = await import('@electron/notarize');
 
   const { electronPlatformName, appOutDir } = context;
@@ -13,12 +9,9 @@ exports.default = async function notarizing(context) {
     return;
   }
 
-  console.log('Notarizing app...');
+  const appName = context.packager.appInfo.productFilename;
 
-  // Environment variables should be defined in .env file:
-  // APPLE_ID: Your Apple ID email
-  // APPLE_APP_SPECIFIC_PASSWORD: App-specific password (not your Apple ID password)
-  // APPLE_TEAM_ID: Your Apple Developer Team ID (can be found in your developer account)
+  console.log('Notarizing app...');
 
   // Verify that required environment variables are set
   if (!process.env.APPLE_ID) {
@@ -40,16 +33,16 @@ exports.default = async function notarizing(context) {
     return;
   }
 
-  const appName = context.packager.appInfo.productFilename;
-
   try {
-    return await notarize({
+    await notarize({
       tool: 'notarytool',
       appPath: `${appOutDir}/${appName}.app`,
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID,
     });
+
+    console.log('App notarized successfully');
   } catch (error) {
     console.error('Error during notarization:', error);
     throw error;

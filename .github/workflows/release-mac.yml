@@ -1,0 +1,70 @@
+name: Release – macOS (R2)
+
+on:
+  push:
+    tags:
+      - 'v*' # v1.0.0, v0.0.1-test, etc.
+
+jobs:
+  build-and-upload:
+    runs-on: macos-13
+    permissions:
+      contents: write # lets us create / update the GitHub Release
+    env:
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_R2_KEY: ${{ secrets.CF_R2_KEY }}
+      CF_R2_SECRET: ${{ secrets.CF_R2_SECRET }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build & package
+        run: bun run package # runs your "package" script (bun + electron-builder)
+
+      # Grab tag without the leading "v"
+      - id: version
+        run: echo "VER=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      # Find the DMG file that electron-builder just produced
+      - id: dmg
+        run: |
+          FILE=$(ls dist/*.dmg | head -n1)
+          echo "FILE=$FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
+          AWS_EC2_METADATA_DISABLED: true
+          AWS_DEFAULT_REGION: auto
+        run: |
+          pip install --quiet awscli
+          EP="https://${{ env.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com"
+          BUCKET="ai-translator-downloads"
+          VER="${{ steps.version.outputs.VER }}"
+          # upload versioned DMG
+          aws s3 cp "${{ steps.dmg.outputs.FILE }}" \
+            "s3://${{ env.CF_ACCOUNT_ID }}/${BUCKET}/mac/${VER}/Translator.dmg" \
+            --endpoint-url "$EP"
+          # upload/update latest-mac.yml
+          aws s3 cp "dist/latest-mac.yml" \
+            "s3://${{ env.CF_ACCOUNT_ID }}/${BUCKET}/mac/latest-mac.yml" \
+            --endpoint-url "$EP"
+
+      - name: Attach assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.dmg.outputs.FILE }}
+            dist/latest-mac.yml

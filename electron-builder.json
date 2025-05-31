@@ -1,0 +1,53 @@
+{
+  "appId": "com.yourcompany.translatorapp",
+  "productName": "TranslatorApp",
+  "directories": {
+    "app": ".",
+    "output": "dist"
+  },
+  "files": [
+    "index.js",
+    "packages/main/dist/main/**/*",
+    "packages/preload/dist/**/*",
+    "packages/renderer/dist/**/*",
+    "render-host-script.js"
+  ],
+  "extraResources": [
+    {
+      "from": "packages/renderer/dist/assets",
+      "to": "assets",
+      "filter": ["**/*"]
+    }
+  ],
+  "afterSign": "./electron-notarize.cjs",
+  "mac": {
+    "category": "public.app-category.video",
+    "target": ["dmg", "zip"],
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "entitlements.mac.plist",
+    "identity": "Developer ID Application: Jong UK Lee (26WR9SJHBZ)",
+    "fileAssociations": [
+      {
+        "ext": ["mp4", "mkv", "mov", "webm", "avi"],
+        "name": "Video File",
+        "role": "Viewer",
+        "rank": "Alternate"
+      }
+    ]
+  },
+  "win": {
+    "target": ["nsis"],
+    "fileAssociations": [
+      {
+        "ext": ["mp4", "mkv", "mov", "webm", "avi"],
+        "name": "Video File",
+        "description": "Video file opened with TranslatorApp",
+        "icon": "build/file_icon.ico"
+      }
+    ]
+  },
+  "nsis": {
+    "perMachine": true
+  }
+}
