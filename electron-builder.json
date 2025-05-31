@@ -1,6 +1,6 @@
 {
-  "appId": "com.yourcompany.translatorapp",
-  "productName": "TranslatorApp",
+  "appId": "tools.stage5.translator",
+  "productName": "Translator",
   "directories": {
     "app": ".",
     "output": "dist"
@@ -27,6 +27,7 @@
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
     "identity": "JONG UK LEE (26WR9SJHBZ)",
+    "artifactName": "Translator.dmg",
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
@@ -42,7 +43,7 @@
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
         "name": "Video File",
-        "description": "Video file opened with TranslatorApp",
+        "description": "Video file opened with Translator",
         "icon": "build/file_icon.ico"
       }
     ]
