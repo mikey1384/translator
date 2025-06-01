@@ -46,6 +46,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       # dist/ now contains *.dmg *.zip latest-mac.yml (because your `artifactName`
       # is `${productName}-${version}-${platform}-${arch}.${ext}` as per the previous fix)
