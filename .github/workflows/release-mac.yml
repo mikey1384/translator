@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     tags: ['v*'] # e.g. v1.0.0, v0.0.1-test
-  workflow_dispatch: # manual “Run workflow” button
+  workflow_dispatch: # manual "Run workflow" button
 
 concurrency:
   group: mac-release-${{ github.ref }}
@@ -48,10 +48,25 @@ jobs:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
+      # ---------- Configure AWS credentials ----------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.CF_R2_KEY }}
+          aws-secret-access-key: ${{ secrets.CF_R2_SECRET }}
+          aws-region: auto
+
+      # ---------- Install AWS CLI 2.22.35 ----------
+      - name: Install AWS CLI 2.22.35
+        run: |
+          curl -sSL "https://awscli.amazonaws.com/AWSCLIV2-2.22.35.pkg" -o awscliv2.pkg
+          sudo installer -pkg awscliv2.pkg -target /
+          aws --version
+
       # ---------- Upload to Cloudflare R2 ----------
       - name: Upload artefacts to R2
         env:
-          # 🔧 Disable the new CRC-64 trailer that R2 can’t parse yet
+          # 🔧 Disable the new CRC-64 trailer that R2 can't parse yet
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
         run: |
@@ -66,6 +81,7 @@ jobs:
 
       # ---------- Attach to a GitHub Release ----------
       - name: Create / Update GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
