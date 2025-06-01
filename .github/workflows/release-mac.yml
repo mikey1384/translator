@@ -21,7 +21,7 @@ jobs:
       R2_ENDPOINT: https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com
       AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
-      AWS_DEFAULT_REGION: auto # Cloudflare’s “pseudo-region” :contentReference[oaicite:0]{index=0}
+      AWS_DEFAULT_REGION: auto
 
     steps:
       - uses: actions/checkout@v4
@@ -48,22 +48,21 @@ jobs:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      # dist/ now contains *.dmg *.zip latest-mac.yml (because your `artifactName`
-      # is `${productName}-${version}-${platform}-${arch}.${ext}` as per the previous fix)
       # ---------- Upload to Cloudflare R2 ----------
       - name: Upload artefacts to R2
+        env:
+          # 🔧 Disable the new CRC-64 trailer that R2 can’t parse yet
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"          # strip leading “v” if this is a tag
-          TARGET_PATH="mac/${VERSION:-latest}"    # tags → versioned folder, branch pushes → “latest”
+          VERSION="${GITHUB_REF_NAME#v}"
+          TARGET_PATH="mac/${VERSION:-latest}"
 
-          # Copy everything
           aws s3 cp dist/ "s3://${R2_BUCKET}/${TARGET_PATH}/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
-          # Optional: keep a single “latest” pointer for auto-updates
           aws s3 cp dist/latest-mac.yml "s3://${R2_BUCKET}/mac/latest-mac.yml" \
             --endpoint-url "${R2_ENDPOINT}"
-        # This uses plain AWS CLI; it works with R2 because we set endpoint + region `auto`  :contentReference[oaicite:2]{index=2}
 
       # ---------- Attach to a GitHub Release ----------
       - name: Create / Update GitHub Release
