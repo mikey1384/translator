@@ -20,7 +20,6 @@
       "filter": ["**/*"]
     }
   ],
-  "afterSign": "./electron-notarize.cjs",
   "mac": {
     "category": "public.app-category.video",
     "target": ["dmg", "zip"],
@@ -28,6 +27,9 @@
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
     "identity": "JONG UK LEE (26WR9SJHBZ)",
+    "notarize": {
+      "appBundleId": "tools.stage5.translator"
+    },
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
