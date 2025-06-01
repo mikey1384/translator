@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build-sign-upload:
-    runs-on: macos-14 # Apple Silicon hosted runner
+    runs-on: macos-14
     timeout-minutes: 60
 
     # One place for all S3/R2 details
