@@ -10,8 +10,9 @@ import path from 'path';
 import log from 'electron-log';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
+import { esmDirname } from '@shared/esm-paths';
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = esmDirname(import.meta.url);
 const isDev = !app.isPackaged;
 
 let mainWindow: BrowserWindow | null = null;

@@ -1,6 +1,7 @@
 import { BrowserWindow, dialog, app } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import { esmDirname } from '@shared/esm-paths';
 
 const SETTINGS_FILE_NAME = 'save-settings.json';
 let settingsFilePath: string | null = null;
@@ -12,7 +13,10 @@ function getSettingsFilePath(): string {
       settingsFilePath = path.join(userDataPath, SETTINGS_FILE_NAME);
     } catch (e) {
       console.error('Failed to get userData path, using fallback path.', e);
-      settingsFilePath = path.join(__dirname, SETTINGS_FILE_NAME);
+      settingsFilePath = path.join(
+        esmDirname(import.meta.url),
+        SETTINGS_FILE_NAME
+      );
     }
   }
   return settingsFilePath;

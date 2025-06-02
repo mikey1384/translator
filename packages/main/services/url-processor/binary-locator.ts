@@ -1,16 +1,16 @@
 import fs from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { execa } from 'execa';
 import log from 'electron-log';
 import { app } from 'electron';
-import { fileURLToPath } from 'node:url';
 import which from 'which';
+import { esmDirname } from '@shared/esm-paths';
 
 export async function findYtDlpBinary(): Promise<string | null> {
   const exeExt = process.platform === 'win32' ? '.exe' : '';
   const binaryName = `yt-dlp${exeExt}`;
   const isPackaged = app.isPackaged;
-  const moduleDir = dirname(fileURLToPath(import.meta.url));
+  const moduleDir = esmDirname(import.meta.url);
 
   try {
     const cwdBinPath = join(process.cwd(), 'node_modules', '.bin', binaryName);

@@ -1,1 +1,1 @@
-require('./packages/main/dist/main/index.js');
+import('./packages/main/dist/main/index.mjs');

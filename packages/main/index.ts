@@ -1,10 +1,11 @@
 // Load environment variables from .env file
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { pathToFileURL } from 'url';
+import { esmFilename, esmDirname } from '@shared/esm-paths';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = esmFilename(import.meta.url);
+const __dirname = esmDirname(import.meta.url);
 
 // Configure dotenv to look for .env file in project root
 const envPath = path.resolve(__dirname, '../../../../.env');
