@@ -8,11 +8,12 @@
   },
   "files": [
     "index.js",
-    "packages/main/dist/main/**/*",
+    "packages/main/dist/**/*",
     "packages/preload/dist/**/*",
     "packages/renderer/dist/**/*",
     "render-host-script.js"
   ],
+  "asarUnpack": ["**/*.node"],
   "extraResources": [
     {
       "from": "packages/renderer/dist/assets",
