@@ -6,7 +6,9 @@
     "app": ".",
     "output": "dist"
   },
-  "asarUnpack": ["**/*.node"],
+  "asar": false,
+  "npmRebuild": false,
+  "buildDependenciesFromSource": false,
   "extraResources": [
     {
       "from": "packages/renderer/dist/assets",
@@ -19,6 +21,7 @@
     "packages/renderer/dist/**/*",
     "index.js",
     "package.json",
+    "packages/main/package.json",
     "node_modules/**/*"
   ],
   "mac": {
