@@ -18,8 +18,7 @@ import { pageWrapperStyles, containerStyles, colors } from '../styles';
 export default function AppContent() {
   const { t } = useTranslation();
   const { showSettings } = useUIStore();
-  const { cancellingDownload, setCancellingDownload, setDownload } =
-    useUrlStore();
+  const { setDownload } = useUrlStore();
   const { url: videoUrl } = useVideoStore();
   const { merge, translation } = useTaskStore();
   const download = useUrlStore(s => s.download);
@@ -27,7 +26,6 @@ export default function AppContent() {
   const handleCancelDownload = () => {
     if (!download.id) return;
     import('../ipc/operation').then(m => m.cancel(download.id!));
-    setCancellingDownload(true);
   };
 
   return (
@@ -63,7 +61,6 @@ export default function AppContent() {
                   : colors.progressDownload
               }
               operationId={download.id}
-              isCancelling={cancellingDownload}
               onCancel={handleCancelDownload}
               onClose={() =>
                 setDownload({

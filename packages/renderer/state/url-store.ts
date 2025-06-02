@@ -16,7 +16,6 @@ type DownloadTask = {
 };
 
 interface UrlState {
-  cancellingDownload: boolean;
   urlInput: string;
   downloadQuality: VideoQuality;
   download: DownloadTask;
@@ -29,7 +28,6 @@ interface UrlState {
   setError: (msg: string) => void;
   downloadMedia: () => Promise<ProcessUrlResult | void>;
   setDownload: (patch: Partial<DownloadTask>) => void;
-  setCancellingDownload: (cancellingDownload: boolean) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
   retryWithCookies: () => Promise<ProcessUrlResult | void>;
@@ -54,7 +52,6 @@ const initialDownload: DownloadTask = {
 export const useUrlStore = create<UrlState>()(
   immer<UrlState>((set, get) => ({
     urlInput: '',
-    cancellingDownload: false as boolean,
     downloadQuality:
       (localStorage.getItem(SAVED_QUALITY_KEY) as VideoQuality) ?? 'mid',
     download: initialDownload,
@@ -89,8 +86,6 @@ export const useUrlStore = create<UrlState>()(
       });
       return downloadMediaInternal(set, get, { useCookies: true });
     },
-
-    setCancellingDownload: cancellingDownload => set({ cancellingDownload }),
 
     setDownload: patch =>
       set(s => {

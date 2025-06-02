@@ -6,7 +6,8 @@
     "app": ".",
     "output": "dist"
   },
-  "asar": false,
+  "asar": true,
+  "asarUnpack": ["node_modules/webrtcvad/**", "node_modules/keytar/**"],
   "npmRebuild": false,
   "buildDependenciesFromSource": false,
   "extraResources": [

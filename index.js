@@ -1,1 +1,1 @@
-import('./packages/main/dist/main/index.mjs');
+import('./packages/main/boot.mjs');

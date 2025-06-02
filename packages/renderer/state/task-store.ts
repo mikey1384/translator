@@ -13,7 +13,6 @@ export interface TranslationTask {
 interface State {
   translation: TranslationTask & { reviewedBatchStartIndex: number | null };
   merge: TranslationTask;
-  cancellingDownload: boolean;
 }
 
 interface Actions {
@@ -39,7 +38,6 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
   immer(set => ({
     translation: { ...initialTranslation },
     merge: { ...empty },
-    cancellingDownload: false,
 
     setTranslation: p =>
       set(s => {

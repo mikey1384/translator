@@ -11,7 +11,7 @@ interface ProgressAreaProps {
   operationId: string | null;
   onCancel: (operationId: string) => Promise<void> | void;
   autoCloseDelay?: number;
-  isCancelling: boolean;
+  isCancelling?: boolean;
   onClose: () => void;
 }
 
