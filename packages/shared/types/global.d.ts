@@ -1,6 +1,11 @@
 import type { IpcRenderer } from 'electron';
 import type { ElectronAPI } from '@shared-types/app';
 
+declare module './dist/main/index.mjs' {
+  const value: any;
+  export = value;
+}
+
 declare global {
   /* ───────── window helpers ───────────────────────────── */
   interface Window {

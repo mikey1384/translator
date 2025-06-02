@@ -2,9 +2,8 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { esmFilename, esmDirname } from '@shared/esm-paths';
+import { esmDirname } from '@shared/esm-paths';
 
-const __filename = esmFilename(import.meta.url);
 const __dirname = esmDirname(import.meta.url);
 
 // Configure dotenv to look for .env file in project root
