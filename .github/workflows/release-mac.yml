@@ -58,22 +58,26 @@ jobs:
       # ---------- Upload to Cloudflare R2 ----------
       - name: Upload artefacts to R2
         env:
-          # 🔧 Disable the new CRC-64 trailer that R2 can't parse yet
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           TARGET_PATH="mac/${VERSION:-latest}"
 
+          # push everything under mac/<tag-or-branch>/
           aws s3 cp dist/ "s3://${R2_BUCKET}/${TARGET_PATH}/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
-          aws s3 cp dist/Translator-*.dmg "s3://${R2_BUCKET}/mac/latest/Translator.dmg" \
-            --endpoint-url "${R2_ENDPOINT}"
-          aws s3 cp dist/Translator-*.zip "s3://${R2_BUCKET}/mac/latest/Translator.zip" \
-            --endpoint-url "${R2_ENDPOINT}"
-          aws s3 cp dist/latest-mac.yml "s3://${R2_BUCKET}/mac/latest-mac.yml" \
-            --endpoint-url "${R2_ENDPOINT}"
+      # ---------- Promote artefacts to mac/latest/ ----------
+      - name: Promote artefacts to latest/
+        run: |
+          mkdir -p latest
+          # pick one dmg/zip variant to be the public download
+          cp dist/Translator-*-darwin-arm64.dmg  latest/Translator.dmg
+          cp dist/Translator-*-darwin-arm64.zip  latest/Translator.zip
+          cp dist/latest-mac.yml                 latest/
+          aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
+            --recursive --endpoint-url "${R2_ENDPOINT}"
 
       # ---------- Attach to a GitHub Release ----------
       - name: Create / Update GitHub Release
