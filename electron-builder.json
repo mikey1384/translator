@@ -13,7 +13,7 @@
     "packages/renderer/dist/**/*",
     "render-host-script.js"
   ],
-  "asarUnpack": ["**/*.node"],
+  "asarUnpack": ["**/*.node", "node_modules/electron-log/**"],
   "extraResources": [
     {
       "from": "packages/renderer/dist/assets",
