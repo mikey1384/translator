@@ -210,7 +210,7 @@
     "noCredits": "크레딧이 없습니다.",
     "rechargeLink": "충전 →",
     "creditWarning": {
-      "message": "계속하려면 {{settingsLink}}에서 크레딧을 구매하세요.",
+      "message": "계속하려면 <settingsLink>{{settingsLinkText}}</settingsLink>에서 크레딧을 구매하세요.",
       "settingsLinkText": "설정"
     },
     "validation": {
