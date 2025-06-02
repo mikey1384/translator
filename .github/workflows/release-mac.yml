@@ -41,14 +41,9 @@ jobs:
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
 
       # ---------- Build, sign & notarise ----------
-      - name: Build (skip notarize once)
-        continue-on-error: true
+      - name: Build
         run: |
           bun install --frozen-lockfile
-
-          # Tell electron-builder **not** to notarize, just sign & package
-          export CSC_IDENTITY_AUTO_DISCOVERY=false
-          export ELECTRON_BUILDER_SKIP_NOTARIZE=true
 
           # Your package script already runs electron-builder
           bun run package
