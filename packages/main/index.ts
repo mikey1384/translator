@@ -142,6 +142,35 @@ let isQuitting = false;
 
 const isDev = !app.isPackaged;
 
+function getRendererHtmlPath() {
+  return app.isPackaged
+    ? path.join(app.getAppPath(), 'packages', 'renderer', 'dist', 'index.html')
+    : path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        '..',
+        'packages',
+        'renderer',
+        'dist',
+        'index.html'
+      );
+}
+
+function getPreloadPath() {
+  return app.isPackaged
+    ? path.join(
+        app.getAppPath(),
+        'packages',
+        'main',
+        'dist',
+        'preload',
+        'preload.cjs'
+      )
+    : path.join(__dirname, '../preload/preload.cjs');
+}
+
 try {
   log.info('[main.ts] Initializing Services...');
 
@@ -258,8 +287,9 @@ try {
       } else {
         localeDirPath = path.join(
           app.getAppPath(),
-          'dist',
+          'packages',
           'renderer',
+          'dist',
           'locales'
         );
         log.info(`[main.ts/get-locale-url] Using prod path: ${localeDirPath}`);
@@ -526,7 +556,7 @@ async function createWindow() {
       webSecurity: !isDev,
       allowRunningInsecureContent: false,
       sandbox: false,
-      preload: path.join(__dirname, '../preload/preload.cjs'),
+      preload: getPreloadPath(),
       backgroundThrottling: false,
     },
   });
@@ -536,17 +566,7 @@ async function createWindow() {
     showInspectElement: isDev,
   });
 
-  const rendererPath = path.join(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    '..',
-    'packages',
-    'renderer',
-    'dist',
-    'index.html'
-  );
+  const rendererPath = getRendererHtmlPath();
   log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
   try {
     await mainWindow.loadFile(rendererPath);

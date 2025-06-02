@@ -6,13 +6,6 @@
     "app": ".",
     "output": "dist"
   },
-  "files": [
-    "index.js",
-    "packages/main/dist/**/*",
-    "packages/preload/dist/**/*",
-    "packages/renderer/dist/**/*",
-    "render-host-script.js"
-  ],
   "asarUnpack": ["**/*.node"],
   "extraResources": [
     {
