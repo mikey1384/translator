@@ -34,7 +34,7 @@ export function initializeSubtitleHandlers(
   ffmpegCtx = services.ffmpeg;
   fileManagerInstance = services.fileManager;
 
-  log.info('[src/handlers/subtitle-handlers.ts] Initialized!');
+  log.info('[handlers/subtitle-handlers.ts] Initialized!');
 }
 
 function checkServicesInitialized(): {

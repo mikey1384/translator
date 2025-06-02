@@ -1,26 +1,26 @@
 // ../../node_modules/@emotion/sheet/dist/emotion-sheet.esm.js
+var isDevelopment = false;
 function sheetForTag(tag) {
   if (tag.sheet) {
     return tag.sheet;
   }
-  for (var i = 0;i < document.styleSheets.length; i++) {
+  for (var i = 0; i < document.styleSheets.length; i++) {
     if (document.styleSheets[i].ownerNode === tag) {
       return document.styleSheets[i];
     }
   }
-  return;
+  return void 0;
 }
 function createStyleElement(options) {
   var tag = document.createElement("style");
   tag.setAttribute("data-emotion", options.key);
-  if (options.nonce !== undefined) {
+  if (options.nonce !== void 0) {
     tag.setAttribute("nonce", options.nonce);
   }
   tag.appendChild(document.createTextNode(""));
   tag.setAttribute("data-s", "");
   return tag;
 }
-var isDevelopment = false;
 var StyleSheet = /* @__PURE__ */ function() {
   function StyleSheet2(options) {
     var _this = this;
@@ -40,7 +40,7 @@ var StyleSheet = /* @__PURE__ */ function() {
       _this.container.insertBefore(tag, before);
       _this.tags.push(tag);
     };
-    this.isSpeedy = options.speedy === undefined ? !isDevelopment : options.speedy;
+    this.isSpeedy = options.speedy === void 0 ? !isDevelopment : options.speedy;
     this.tags = [];
     this.ctr = 0;
     this.nonce = options.nonce;
@@ -51,18 +51,18 @@ var StyleSheet = /* @__PURE__ */ function() {
     this.before = null;
   }
   var _proto = StyleSheet2.prototype;
-  _proto.hydrate = function hydrate(nodes) {
+  _proto.hydrate = function hydrate2(nodes) {
     nodes.forEach(this._insertTag);
   };
   _proto.insert = function insert(rule) {
-    if (this.ctr % (this.isSpeedy ? 65000 : 1) === 0) {
+    if (this.ctr % (this.isSpeedy ? 65e3 : 1) === 0) {
       this._insertTag(createStyleElement(this));
     }
     var tag = this.tags[this.tags.length - 1];
     if (this.isSpeedy) {
-      var sheet = sheetForTag(tag);
+      var sheet2 = sheetForTag(tag);
       try {
-        sheet.insertRule(rule, sheet.cssRules.length);
+        sheet2.insertRule(rule, sheet2.cssRules.length);
       } catch (e) {
       }
     } else {
@@ -70,10 +70,10 @@ var StyleSheet = /* @__PURE__ */ function() {
     }
     this.ctr++;
   };
-  _proto.flush = function flush() {
+  _proto.flush = function flush2() {
     this.tags.forEach(function(tag) {
       var _tag$parentNode;
-      return (_tag$parentNode = tag.parentNode) == null ? undefined : _tag$parentNode.removeChild(tag);
+      return (_tag$parentNode = tag.parentNode) == null ? void 0 : _tag$parentNode.removeChild(tag);
     });
     this.tags = [];
     this.ctr = 0;
@@ -93,8 +93,11 @@ var KEYFRAMES = "@keyframes";
 var LAYER = "@layer";
 
 // ../../node_modules/stylis/src/Utility.js
-function hash(value, length) {
-  return charat(value, 0) ^ 45 ? (((length << 2 ^ charat(value, 0)) << 2 ^ charat(value, 1)) << 2 ^ charat(value, 2)) << 2 ^ charat(value, 3) : 0;
+var abs = Math.abs;
+var from = String.fromCharCode;
+var assign = Object.assign;
+function hash(value, length2) {
+  return charat(value, 0) ^ 45 ? (((length2 << 2 ^ charat(value, 0)) << 2 ^ charat(value, 1)) << 2 ^ charat(value, 2)) << 2 ^ charat(value, 3) : 0;
 }
 function trim(value) {
   return value.trim();
@@ -126,13 +129,16 @@ function append(value, array) {
 function combine(array, callback) {
   return array.map(callback).join("");
 }
-var abs = Math.abs;
-var from = String.fromCharCode;
-var assign = Object.assign;
 
 // ../../node_modules/stylis/src/Tokenizer.js
-function node(value, root, parent, type, props, children, length) {
-  return { value, root, parent, type, props, children, line, column, length, return: "" };
+var line = 1;
+var column = 1;
+var length = 0;
+var position = 0;
+var character = 0;
+var characters = "";
+function node(value, root, parent, type, props, children, length2) {
+  return { value, root, parent, type, props, children, line, column, length: length2, return: "" };
 }
 function copy(root, props) {
   return assign(node("", null, null, "", null, null, 0), root, { length: -root.length }, props);
@@ -163,12 +169,14 @@ function slice(begin, end) {
 }
 function token(type) {
   switch (type) {
+    // \0 \t \n \r \s whitespace token
     case 0:
     case 9:
     case 10:
     case 13:
     case 32:
       return 5;
+    // ! + , / > @ ~ isolate token
     case 33:
     case 43:
     case 44:
@@ -176,17 +184,21 @@ function token(type) {
     case 62:
     case 64:
     case 126:
+    // ; { } breakpoint token
     case 59:
     case 123:
     case 125:
       return 4;
+    // : accompanied token
     case 58:
       return 3;
+    // " ' ( [ opening delimit token
     case 34:
     case 39:
     case 40:
     case 91:
       return 2;
+    // ) ] closing delimit token
     case 41:
     case 93:
       return 1;
@@ -219,17 +231,21 @@ function escaping(index, count) {
 function delimiter(type) {
   while (next())
     switch (character) {
+      // ] ) " '
       case type:
         return position;
+      // " '
       case 34:
       case 39:
         if (type !== 34 && type !== 39)
           delimiter(character);
         break;
+      // (
       case 40:
         if (type === 41)
           delimiter(type);
         break;
+      // \
       case 92:
         next();
         break;
@@ -249,12 +265,6 @@ function identifier(index) {
     next();
   return slice(index, position);
 }
-var line = 1;
-var column = 1;
-var length = 0;
-var position = 0;
-var character = 0;
-var characters = "";
 
 // ../../node_modules/stylis/src/Parser.js
 function compile(value) {
@@ -278,26 +288,31 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
   var characters2 = type;
   while (scanning)
     switch (previous = character2, character2 = next()) {
+      // (
       case 40:
         if (previous != 108 && charat(characters2, length2 - 1) == 58) {
           if (indexof(characters2 += replace(delimit(character2), "&", "&\f"), "&\f") != -1)
             ampersand = -1;
           break;
         }
+      // " ' [
       case 34:
       case 39:
       case 91:
         characters2 += delimit(character2);
         break;
+      // \t \n \r \s
       case 9:
       case 10:
       case 13:
       case 32:
         characters2 += whitespace(previous);
         break;
+      // \
       case 92:
         characters2 += escaping(caret() - 1, 7);
         continue;
+      // /
       case 47:
         switch (peek()) {
           case 42:
@@ -308,23 +323,28 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
             characters2 += "/";
         }
         break;
+      // {
       case 123 * variable:
         points[index++] = strlen(characters2) * ampersand;
+      // } ; \0
       case 125 * variable:
       case 59:
       case 0:
         switch (character2) {
+          // \0 }
           case 0:
           case 125:
             scanning = 0;
+          // ;
           case 59 + offset:
-            if (ampersand == -1)
-              characters2 = replace(characters2, /\f/g, "");
+            if (ampersand == -1) characters2 = replace(characters2, /\f/g, "");
             if (property > 0 && strlen(characters2) - length2)
               append(property > 32 ? declaration(characters2 + ";", rule, parent, length2 - 1) : declaration(replace(characters2, " ", "") + ";", rule, parent, length2 - 2), declarations);
             break;
+          // @ ;
           case 59:
             characters2 += ";";
+          // { rule/at-rule
           default:
             append(reference = ruleset(characters2, root, parent, index, offset, rules, points, type, props = [], children = [], length2), rulesets);
             if (character2 === 123)
@@ -332,6 +352,7 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
                 parse(characters2, root, reference, reference, props, rulesets, length2, points, children);
               else
                 switch (atrule === 99 && charat(characters2, 3) === 110 ? 100 : atrule) {
+                  // d l m s
                   case 100:
                   case 108:
                   case 109:
@@ -344,6 +365,7 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
         }
         index = offset = property = 0, variable = ampersand = 1, type = characters2 = "", length2 = pseudo;
         break;
+      // :
       case 58:
         length2 = 1 + strlen(characters2), property = previous;
       default:
@@ -354,17 +376,21 @@ function parse(value, root, parent, rule, rules, rulesets, pseudo, points, decla
             continue;
         }
         switch (characters2 += from(character2), character2 * variable) {
+          // &
           case 38:
             ampersand = offset > 0 ? 1 : (characters2 += "\f", -1);
             break;
+          // ,
           case 44:
             points[index++] = (strlen(characters2) - 1) * ampersand, ampersand = 1;
             break;
+          // @
           case 64:
             if (peek() === 45)
               characters2 += delimit(next());
             atrule = peek(), offset = length2 = strlen(type = characters2 += identifier(caret())), character2++;
             break;
+          // -
           case 45:
             if (previous === 45 && strlen(characters2) == 2)
               variable = 0;
@@ -376,8 +402,8 @@ function ruleset(value, root, parent, index, offset, rules, points, type, props,
   var post = offset - 1;
   var rule = offset === 0 ? rules : [""];
   var size = sizeof(rule);
-  for (var i = 0, j = 0, k = 0;i < index; ++i)
-    for (var x = 0, y = substr(value, post + 1, post = abs(j = points[i])), z = value;x < size; ++x)
+  for (var i = 0, j = 0, k = 0; i < index; ++i)
+    for (var x = 0, y = substr(value, post + 1, post = abs(j = points[i])), z = value; x < size; ++x)
       if (z = trim(j > 0 ? rule[x] + " " + y : replace(y, /&\f/g, rule[x])))
         props[k++] = z;
   return node(value, root, parent, offset === 0 ? RULESET : type, props, children, length2);
@@ -393,15 +419,14 @@ function declaration(value, root, parent, length2) {
 function serialize(children, callback) {
   var output = "";
   var length2 = sizeof(children);
-  for (var i = 0;i < length2; i++)
+  for (var i = 0; i < length2; i++)
     output += callback(children[i], i, children, callback) || "";
   return output;
 }
 function stringify(element, index, children, callback) {
   switch (element.type) {
     case LAYER:
-      if (element.children.length)
-        break;
+      if (element.children.length) break;
     case IMPORT:
     case DECLARATION:
       return element.return = element.return || element.value;
@@ -420,7 +445,7 @@ function middleware(collection) {
   var length2 = sizeof(collection);
   return function(element, index, children, callback) {
     var output = "";
-    for (var i = 0;i < length2; i++)
+    for (var i = 0; i < length2; i++)
       output += collection[i](element, index, children, callback) || "";
     return output;
   };
@@ -436,129 +461,14 @@ function rulesheet(callback) {
 
 // ../../node_modules/@emotion/memoize/dist/emotion-memoize.esm.js
 function memoize(fn) {
-  var cache = Object.create(null);
+  var cache2 = /* @__PURE__ */ Object.create(null);
   return function(arg) {
-    if (cache[arg] === undefined)
-      cache[arg] = fn(arg);
-    return cache[arg];
+    if (cache2[arg] === void 0) cache2[arg] = fn(arg);
+    return cache2[arg];
   };
 }
 
 // ../../node_modules/@emotion/cache/dist/emotion-cache.browser.esm.js
-function prefix(value, length2) {
-  switch (hash(value, length2)) {
-    case 5103:
-      return WEBKIT + "print-" + value + value;
-    case 5737:
-    case 4201:
-    case 3177:
-    case 3433:
-    case 1641:
-    case 4457:
-    case 2921:
-    case 5572:
-    case 6356:
-    case 5844:
-    case 3191:
-    case 6645:
-    case 3005:
-    case 6391:
-    case 5879:
-    case 5623:
-    case 6135:
-    case 4599:
-    case 4855:
-    case 4215:
-    case 6389:
-    case 5109:
-    case 5365:
-    case 5621:
-    case 3829:
-      return WEBKIT + value + value;
-    case 5349:
-    case 4246:
-    case 4810:
-    case 6968:
-    case 2756:
-      return WEBKIT + value + MOZ + value + MS + value + value;
-    case 6828:
-    case 4268:
-      return WEBKIT + value + MS + value + value;
-    case 6165:
-      return WEBKIT + value + MS + "flex-" + value + value;
-    case 5187:
-      return WEBKIT + value + replace(value, /(\w+).+(:[^]+)/, WEBKIT + "box-$1$2" + MS + "flex-$1$2") + value;
-    case 5443:
-      return WEBKIT + value + MS + "flex-item-" + replace(value, /flex-|-self/, "") + value;
-    case 4675:
-      return WEBKIT + value + MS + "flex-line-pack" + replace(value, /align-content|flex-|-self/, "") + value;
-    case 5548:
-      return WEBKIT + value + MS + replace(value, "shrink", "negative") + value;
-    case 5292:
-      return WEBKIT + value + MS + replace(value, "basis", "preferred-size") + value;
-    case 6060:
-      return WEBKIT + "box-" + replace(value, "-grow", "") + WEBKIT + value + MS + replace(value, "grow", "positive") + value;
-    case 4554:
-      return WEBKIT + replace(value, /([^-])(transform)/g, "$1" + WEBKIT + "$2") + value;
-    case 6187:
-      return replace(replace(replace(value, /(zoom-|grab)/, WEBKIT + "$1"), /(image-set)/, WEBKIT + "$1"), value, "") + value;
-    case 5495:
-    case 3959:
-      return replace(value, /(image-set\([^]*)/, WEBKIT + "$1" + "$`$1");
-    case 4968:
-      return replace(replace(value, /(.+:)(flex-)?(.*)/, WEBKIT + "box-pack:$3" + MS + "flex-pack:$3"), /s.+-b[^;]+/, "justify") + WEBKIT + value + value;
-    case 4095:
-    case 3583:
-    case 4068:
-    case 2532:
-      return replace(value, /(.+)-inline(.+)/, WEBKIT + "$1$2") + value;
-    case 8116:
-    case 7059:
-    case 5753:
-    case 5535:
-    case 5445:
-    case 5701:
-    case 4933:
-    case 4677:
-    case 5533:
-    case 5789:
-    case 5021:
-    case 4765:
-      if (strlen(value) - 1 - length2 > 6)
-        switch (charat(value, length2 + 1)) {
-          case 109:
-            if (charat(value, length2 + 4) !== 45)
-              break;
-          case 102:
-            return replace(value, /(.+:)(.+)-([^]+)/, "$1" + WEBKIT + "$2-$3" + "$1" + MOZ + (charat(value, length2 + 3) == 108 ? "$3" : "$2-$3")) + value;
-          case 115:
-            return ~indexof(value, "stretch") ? prefix(replace(value, "stretch", "fill-available"), length2) + value : value;
-        }
-      break;
-    case 4949:
-      if (charat(value, length2 + 1) !== 115)
-        break;
-    case 6444:
-      switch (charat(value, strlen(value) - 3 - (~indexof(value, "!important") && 10))) {
-        case 107:
-          return replace(value, ":", ":" + WEBKIT) + value;
-        case 101:
-          return replace(value, /(.+:)([^;!]+)(;|!.+)?/, "$1" + WEBKIT + (charat(value, 14) === 45 ? "inline-" : "") + "box$3" + "$1" + WEBKIT + "$2$3" + "$1" + MS + "$2box$3") + value;
-      }
-      break;
-    case 5936:
-      switch (charat(value, length2 + 11)) {
-        case 114:
-          return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb") + value;
-        case 108:
-          return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb-rl") + value;
-        case 45:
-          return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "lr") + value;
-      }
-      return WEBKIT + value + MS + value + value;
-  }
-  return value;
-}
 var identifierWithPointTracking = function identifierWithPointTracking2(begin, points, index) {
   var previous = 0;
   var character2 = 0;
@@ -595,6 +505,7 @@ var toRules = function toRules2(parsed, points) {
           points[index] = parsed[index].length;
           break;
         }
+      // fallthrough
       default:
         parsed[index] += from(character2);
     }
@@ -604,9 +515,11 @@ var toRules = function toRules2(parsed, points) {
 var getRules = function getRules2(value, points) {
   return dealloc(toRules(alloc(value), points));
 };
-var fixedElements = /* @__PURE__ */ new WeakMap;
+var fixedElements = /* @__PURE__ */ new WeakMap();
 var compat = function compat2(element) {
-  if (element.type !== "rule" || !element.parent || element.length < 1) {
+  if (element.type !== "rule" || !element.parent || // positive .length indicates that this rule contains pseudo
+  // negative .length indicates that this rule has been already prefixed
+  element.length < 1) {
     return;
   }
   var value = element.value;
@@ -614,8 +527,7 @@ var compat = function compat2(element) {
   var isImplicitRule = element.column === parent.column && element.line === parent.line;
   while (parent.type !== "rule") {
     parent = parent.parent;
-    if (!parent)
-      return;
+    if (!parent) return;
   }
   if (element.props.length === 1 && value.charCodeAt(0) !== 58 && !fixedElements.get(parent)) {
     return;
@@ -627,8 +539,8 @@ var compat = function compat2(element) {
   var points = [];
   var rules = getRules(value, points);
   var parentRules = parent.props;
-  for (var i = 0, k = 0;i < rules.length; i++) {
-    for (var j = 0;j < parentRules.length; j++, k++) {
+  for (var i = 0, k = 0; i < rules.length; i++) {
+    for (var j = 0; j < parentRules.length; j++, k++) {
       element.props[k] = points[i] ? rules[i].replace(/&\f/g, parentRules[j]) : parentRules[j] + " " + rules[i];
     }
   }
@@ -636,44 +548,190 @@ var compat = function compat2(element) {
 var removeLabel = function removeLabel2(element) {
   if (element.type === "decl") {
     var value = element.value;
-    if (value.charCodeAt(0) === 108 && value.charCodeAt(2) === 98) {
+    if (
+      // charcode for l
+      value.charCodeAt(0) === 108 && // charcode for b
+      value.charCodeAt(2) === 98
+    ) {
       element["return"] = "";
       element.value = "";
     }
   }
 };
+function prefix(value, length2) {
+  switch (hash(value, length2)) {
+    // color-adjust
+    case 5103:
+      return WEBKIT + "print-" + value + value;
+    // animation, animation-(delay|direction|duration|fill-mode|iteration-count|name|play-state|timing-function)
+    case 5737:
+    case 4201:
+    case 3177:
+    case 3433:
+    case 1641:
+    case 4457:
+    case 2921:
+    // text-decoration, filter, clip-path, backface-visibility, column, box-decoration-break
+    case 5572:
+    case 6356:
+    case 5844:
+    case 3191:
+    case 6645:
+    case 3005:
+    // mask, mask-image, mask-(mode|clip|size), mask-(repeat|origin), mask-position, mask-composite,
+    case 6391:
+    case 5879:
+    case 5623:
+    case 6135:
+    case 4599:
+    case 4855:
+    // background-clip, columns, column-(count|fill|gap|rule|rule-color|rule-style|rule-width|span|width)
+    case 4215:
+    case 6389:
+    case 5109:
+    case 5365:
+    case 5621:
+    case 3829:
+      return WEBKIT + value + value;
+    // appearance, user-select, transform, hyphens, text-size-adjust
+    case 5349:
+    case 4246:
+    case 4810:
+    case 6968:
+    case 2756:
+      return WEBKIT + value + MOZ + value + MS + value + value;
+    // flex, flex-direction
+    case 6828:
+    case 4268:
+      return WEBKIT + value + MS + value + value;
+    // order
+    case 6165:
+      return WEBKIT + value + MS + "flex-" + value + value;
+    // align-items
+    case 5187:
+      return WEBKIT + value + replace(value, /(\w+).+(:[^]+)/, WEBKIT + "box-$1$2" + MS + "flex-$1$2") + value;
+    // align-self
+    case 5443:
+      return WEBKIT + value + MS + "flex-item-" + replace(value, /flex-|-self/, "") + value;
+    // align-content
+    case 4675:
+      return WEBKIT + value + MS + "flex-line-pack" + replace(value, /align-content|flex-|-self/, "") + value;
+    // flex-shrink
+    case 5548:
+      return WEBKIT + value + MS + replace(value, "shrink", "negative") + value;
+    // flex-basis
+    case 5292:
+      return WEBKIT + value + MS + replace(value, "basis", "preferred-size") + value;
+    // flex-grow
+    case 6060:
+      return WEBKIT + "box-" + replace(value, "-grow", "") + WEBKIT + value + MS + replace(value, "grow", "positive") + value;
+    // transition
+    case 4554:
+      return WEBKIT + replace(value, /([^-])(transform)/g, "$1" + WEBKIT + "$2") + value;
+    // cursor
+    case 6187:
+      return replace(replace(replace(value, /(zoom-|grab)/, WEBKIT + "$1"), /(image-set)/, WEBKIT + "$1"), value, "") + value;
+    // background, background-image
+    case 5495:
+    case 3959:
+      return replace(value, /(image-set\([^]*)/, WEBKIT + "$1$`$1");
+    // justify-content
+    case 4968:
+      return replace(replace(value, /(.+:)(flex-)?(.*)/, WEBKIT + "box-pack:$3" + MS + "flex-pack:$3"), /s.+-b[^;]+/, "justify") + WEBKIT + value + value;
+    // (margin|padding)-inline-(start|end)
+    case 4095:
+    case 3583:
+    case 4068:
+    case 2532:
+      return replace(value, /(.+)-inline(.+)/, WEBKIT + "$1$2") + value;
+    // (min|max)?(width|height|inline-size|block-size)
+    case 8116:
+    case 7059:
+    case 5753:
+    case 5535:
+    case 5445:
+    case 5701:
+    case 4933:
+    case 4677:
+    case 5533:
+    case 5789:
+    case 5021:
+    case 4765:
+      if (strlen(value) - 1 - length2 > 6) switch (charat(value, length2 + 1)) {
+        // (m)ax-content, (m)in-content
+        case 109:
+          if (charat(value, length2 + 4) !== 45) break;
+        // (f)ill-available, (f)it-content
+        case 102:
+          return replace(value, /(.+:)(.+)-([^]+)/, "$1" + WEBKIT + "$2-$3$1" + MOZ + (charat(value, length2 + 3) == 108 ? "$3" : "$2-$3")) + value;
+        // (s)tretch
+        case 115:
+          return ~indexof(value, "stretch") ? prefix(replace(value, "stretch", "fill-available"), length2) + value : value;
+      }
+      break;
+    // position: sticky
+    case 4949:
+      if (charat(value, length2 + 1) !== 115) break;
+    // display: (flex|inline-flex)
+    case 6444:
+      switch (charat(value, strlen(value) - 3 - (~indexof(value, "!important") && 10))) {
+        // stic(k)y
+        case 107:
+          return replace(value, ":", ":" + WEBKIT) + value;
+        // (inline-)?fl(e)x
+        case 101:
+          return replace(value, /(.+:)([^;!]+)(;|!.+)?/, "$1" + WEBKIT + (charat(value, 14) === 45 ? "inline-" : "") + "box$3$1" + WEBKIT + "$2$3$1" + MS + "$2box$3") + value;
+      }
+      break;
+    // writing-mode
+    case 5936:
+      switch (charat(value, length2 + 11)) {
+        // vertical-l(r)
+        case 114:
+          return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb") + value;
+        // vertical-r(l)
+        case 108:
+          return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb-rl") + value;
+        // horizontal(-)tb
+        case 45:
+          return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "lr") + value;
+      }
+      return WEBKIT + value + MS + value + value;
+  }
+  return value;
+}
 var prefixer = function prefixer2(element, index, children, callback) {
   if (element.length > -1) {
-    if (!element["return"])
-      switch (element.type) {
-        case DECLARATION:
-          element["return"] = prefix(element.value, element.length);
-          break;
-        case KEYFRAMES:
-          return serialize([copy(element, {
-            value: replace(element.value, "@", "@" + WEBKIT)
-          })], callback);
-        case RULESET:
-          if (element.length)
-            return combine(element.props, function(value) {
-              switch (match(value, /(::plac\w+|:read-\w+)/)) {
-                case ":read-only":
-                case ":read-write":
-                  return serialize([copy(element, {
-                    props: [replace(value, /:(read-\w+)/, ":" + MOZ + "$1")]
-                  })], callback);
-                case "::placeholder":
-                  return serialize([copy(element, {
-                    props: [replace(value, /:(plac\w+)/, ":" + WEBKIT + "input-$1")]
-                  }), copy(element, {
-                    props: [replace(value, /:(plac\w+)/, ":" + MOZ + "$1")]
-                  }), copy(element, {
-                    props: [replace(value, /:(plac\w+)/, MS + "input-$1")]
-                  })], callback);
-              }
-              return "";
-            });
-      }
+    if (!element["return"]) switch (element.type) {
+      case DECLARATION:
+        element["return"] = prefix(element.value, element.length);
+        break;
+      case KEYFRAMES:
+        return serialize([copy(element, {
+          value: replace(element.value, "@", "@" + WEBKIT)
+        })], callback);
+      case RULESET:
+        if (element.length) return combine(element.props, function(value) {
+          switch (match(value, /(::plac\w+|:read-\w+)/)) {
+            // :read-(only|write)
+            case ":read-only":
+            case ":read-write":
+              return serialize([copy(element, {
+                props: [replace(value, /:(read-\w+)/, ":" + MOZ + "$1")]
+              })], callback);
+            // :placeholder
+            case "::placeholder":
+              return serialize([copy(element, {
+                props: [replace(value, /:(plac\w+)/, ":" + WEBKIT + "input-$1")]
+              }), copy(element, {
+                props: [replace(value, /:(plac\w+)/, ":" + MOZ + "$1")]
+              }), copy(element, {
+                props: [replace(value, /:(plac\w+)/, MS + "input-$1")]
+              })], callback);
+          }
+          return "";
+        });
+    }
   }
 };
 var defaultStylisPlugins = [prefixer];
@@ -696,13 +754,18 @@ var createCache = function createCache2(options) {
   var nodesToHydrate = [];
   {
     container = options.container || document.head;
-    Array.prototype.forEach.call(document.querySelectorAll("style[data-emotion^=\"" + key + " \"]"), function(node2) {
-      var attrib = node2.getAttribute("data-emotion").split(" ");
-      for (var i = 1;i < attrib.length; i++) {
-        inserted[attrib[i]] = true;
+    Array.prototype.forEach.call(
+      // this means we will ignore elements which don't have a space in them which
+      // means that the style elements we're looking at are only Emotion 11 server-rendered style elements
+      document.querySelectorAll('style[data-emotion^="' + key + ' "]'),
+      function(node2) {
+        var attrib = node2.getAttribute("data-emotion").split(" ");
+        for (var i = 1; i < attrib.length; i++) {
+          inserted[attrib[i]] = true;
+        }
+        nodesToHydrate.push(node2);
       }
-      nodesToHydrate.push(node2);
-    });
+    );
   }
   var _insert;
   var omnipresentPlugins = [compat, removeLabel];
@@ -712,18 +775,18 @@ var createCache = function createCache2(options) {
       currentSheet.insert(rule);
     })];
     var serializer = middleware(omnipresentPlugins.concat(stylisPlugins, finalizingPlugins));
-    var stylis = function stylis(styles) {
+    var stylis = function stylis2(styles) {
       return serialize(compile(styles), serializer);
     };
     _insert = function insert(selector, serialized, sheet2, shouldCache) {
       currentSheet = sheet2;
       stylis(selector ? selector + "{" + serialized.styles + "}" : serialized.styles);
       if (shouldCache) {
-        cache.inserted[serialized.name] = true;
+        cache2.inserted[serialized.name] = true;
       }
     };
   }
-  var cache = {
+  var cache2 = {
     key,
     sheet: new StyleSheet({
       key,
@@ -738,19 +801,23 @@ var createCache = function createCache2(options) {
     registered: {},
     insert: _insert
   };
-  cache.sheet.hydrate(nodesToHydrate);
-  return cache;
+  cache2.sheet.hydrate(nodesToHydrate);
+  return cache2;
 };
 
 // ../../node_modules/@emotion/hash/dist/emotion-hash.esm.js
 function murmur2(str) {
   var h = 0;
   var k, i = 0, len = str.length;
-  for (;len >= 4; ++i, len -= 4) {
+  for (; len >= 4; ++i, len -= 4) {
     k = str.charCodeAt(i) & 255 | (str.charCodeAt(++i) & 255) << 8 | (str.charCodeAt(++i) & 255) << 16 | (str.charCodeAt(++i) & 255) << 24;
-    k = (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16);
-    k ^= k >>> 24;
-    h = (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16) ^ (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
+    k = /* Math.imul(k, m): */
+    (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16);
+    k ^= /* k >>> r: */
+    k >>> 24;
+    h = /* Math.imul(k, m): */
+    (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16) ^ /* Math.imul(h, m): */
+    (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
   }
   switch (len) {
     case 3:
@@ -759,10 +826,12 @@ function murmur2(str) {
       h ^= (str.charCodeAt(i + 1) & 255) << 8;
     case 1:
       h ^= str.charCodeAt(i) & 255;
-      h = (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
+      h = /* Math.imul(h, m): */
+      (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
   }
   h ^= h >>> 13;
-  h = (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
+  h = /* Math.imul(h, m): */
+  (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
   return ((h ^ h >>> 15) >>> 0).toString(36);
 }
 
@@ -807,6 +876,7 @@ var unitlessKeys = {
   zIndex: 1,
   zoom: 1,
   WebkitLineClamp: 1,
+  // SVG-related properties
   fillOpacity: 1,
   floodOpacity: 1,
   stopOpacity: 1,
@@ -818,142 +888,6 @@ var unitlessKeys = {
 };
 
 // ../../node_modules/@emotion/serialize/dist/emotion-serialize.esm.js
-function handleInterpolation(mergedProps, registered, interpolation) {
-  if (interpolation == null) {
-    return "";
-  }
-  var componentSelector = interpolation;
-  if (componentSelector.__emotion_styles !== undefined) {
-    return componentSelector;
-  }
-  switch (typeof interpolation) {
-    case "boolean": {
-      return "";
-    }
-    case "object": {
-      var keyframes = interpolation;
-      if (keyframes.anim === 1) {
-        cursor = {
-          name: keyframes.name,
-          styles: keyframes.styles,
-          next: cursor
-        };
-        return keyframes.name;
-      }
-      var serializedStyles = interpolation;
-      if (serializedStyles.styles !== undefined) {
-        var next2 = serializedStyles.next;
-        if (next2 !== undefined) {
-          while (next2 !== undefined) {
-            cursor = {
-              name: next2.name,
-              styles: next2.styles,
-              next: cursor
-            };
-            next2 = next2.next;
-          }
-        }
-        var styles = serializedStyles.styles + ";";
-        return styles;
-      }
-      return createStringFromObject(mergedProps, registered, interpolation);
-    }
-    case "function": {
-      if (mergedProps !== undefined) {
-        var previousCursor = cursor;
-        var result = interpolation(mergedProps);
-        cursor = previousCursor;
-        return handleInterpolation(mergedProps, registered, result);
-      }
-      break;
-    }
-  }
-  var asString = interpolation;
-  if (registered == null) {
-    return asString;
-  }
-  var cached = registered[asString];
-  return cached !== undefined ? cached : asString;
-}
-function createStringFromObject(mergedProps, registered, obj) {
-  var string = "";
-  if (Array.isArray(obj)) {
-    for (var i = 0;i < obj.length; i++) {
-      string += handleInterpolation(mergedProps, registered, obj[i]) + ";";
-    }
-  } else {
-    for (var key in obj) {
-      var value = obj[key];
-      if (typeof value !== "object") {
-        var asString = value;
-        if (registered != null && registered[asString] !== undefined) {
-          string += key + "{" + registered[asString] + "}";
-        } else if (isProcessableValue(asString)) {
-          string += processStyleName(key) + ":" + processStyleValue(key, asString) + ";";
-        }
-      } else {
-        if (key === "NO_COMPONENT_SELECTOR" && isDevelopment2) {
-          throw new Error(noComponentSelectorMessage);
-        }
-        if (Array.isArray(value) && typeof value[0] === "string" && (registered == null || registered[value[0]] === undefined)) {
-          for (var _i = 0;_i < value.length; _i++) {
-            if (isProcessableValue(value[_i])) {
-              string += processStyleName(key) + ":" + processStyleValue(key, value[_i]) + ";";
-            }
-          }
-        } else {
-          var interpolated = handleInterpolation(mergedProps, registered, value);
-          switch (key) {
-            case "animation":
-            case "animationName": {
-              string += processStyleName(key) + ":" + interpolated + ";";
-              break;
-            }
-            default: {
-              string += key + "{" + interpolated + "}";
-            }
-          }
-        }
-      }
-    }
-  }
-  return string;
-}
-function serializeStyles(args, registered, mergedProps) {
-  if (args.length === 1 && typeof args[0] === "object" && args[0] !== null && args[0].styles !== undefined) {
-    return args[0];
-  }
-  var stringMode = true;
-  var styles = "";
-  cursor = undefined;
-  var strings = args[0];
-  if (strings == null || strings.raw === undefined) {
-    stringMode = false;
-    styles += handleInterpolation(mergedProps, registered, strings);
-  } else {
-    var asTemplateStringsArr = strings;
-    styles += asTemplateStringsArr[0];
-  }
-  for (var i = 1;i < args.length; i++) {
-    styles += handleInterpolation(mergedProps, registered, args[i]);
-    if (stringMode) {
-      var templateStringsArr = strings;
-      styles += templateStringsArr[i];
-    }
-  }
-  labelPattern.lastIndex = 0;
-  var identifierName = "";
-  var match2;
-  while ((match2 = labelPattern.exec(styles)) !== null) {
-    identifierName += "-" + match2[1];
-  }
-  var name = murmur2(styles) + identifierName;
-  return {
-    name,
-    styles,
-    next: cursor
-  };
-}
 var isDevelopment2 = false;
 var hyphenateRegex = /[A-Z]|^ms/g;
 var animationRegex = /_EMO_([^_]+?)_([^]*?)_EMO_/g;
@@ -987,15 +921,152 @@ var processStyleValue = function processStyleValue2(key, value) {
   }
   return value;
 };
-var noComponentSelectorMessage = "Component selectors can only be used in conjunction with " + "@emotion/babel-plugin, the swc Emotion plugin, or another Emotion-aware " + "compiler transform.";
+var noComponentSelectorMessage = "Component selectors can only be used in conjunction with @emotion/babel-plugin, the swc Emotion plugin, or another Emotion-aware compiler transform.";
+function handleInterpolation(mergedProps, registered, interpolation) {
+  if (interpolation == null) {
+    return "";
+  }
+  var componentSelector = interpolation;
+  if (componentSelector.__emotion_styles !== void 0) {
+    return componentSelector;
+  }
+  switch (typeof interpolation) {
+    case "boolean": {
+      return "";
+    }
+    case "object": {
+      var keyframes2 = interpolation;
+      if (keyframes2.anim === 1) {
+        cursor = {
+          name: keyframes2.name,
+          styles: keyframes2.styles,
+          next: cursor
+        };
+        return keyframes2.name;
+      }
+      var serializedStyles = interpolation;
+      if (serializedStyles.styles !== void 0) {
+        var next2 = serializedStyles.next;
+        if (next2 !== void 0) {
+          while (next2 !== void 0) {
+            cursor = {
+              name: next2.name,
+              styles: next2.styles,
+              next: cursor
+            };
+            next2 = next2.next;
+          }
+        }
+        var styles = serializedStyles.styles + ";";
+        return styles;
+      }
+      return createStringFromObject(mergedProps, registered, interpolation);
+    }
+    case "function": {
+      if (mergedProps !== void 0) {
+        var previousCursor = cursor;
+        var result = interpolation(mergedProps);
+        cursor = previousCursor;
+        return handleInterpolation(mergedProps, registered, result);
+      }
+      break;
+    }
+  }
+  var asString = interpolation;
+  if (registered == null) {
+    return asString;
+  }
+  var cached = registered[asString];
+  return cached !== void 0 ? cached : asString;
+}
+function createStringFromObject(mergedProps, registered, obj) {
+  var string = "";
+  if (Array.isArray(obj)) {
+    for (var i = 0; i < obj.length; i++) {
+      string += handleInterpolation(mergedProps, registered, obj[i]) + ";";
+    }
+  } else {
+    for (var key in obj) {
+      var value = obj[key];
+      if (typeof value !== "object") {
+        var asString = value;
+        if (registered != null && registered[asString] !== void 0) {
+          string += key + "{" + registered[asString] + "}";
+        } else if (isProcessableValue(asString)) {
+          string += processStyleName(key) + ":" + processStyleValue(key, asString) + ";";
+        }
+      } else {
+        if (key === "NO_COMPONENT_SELECTOR" && isDevelopment2) {
+          throw new Error(noComponentSelectorMessage);
+        }
+        if (Array.isArray(value) && typeof value[0] === "string" && (registered == null || registered[value[0]] === void 0)) {
+          for (var _i = 0; _i < value.length; _i++) {
+            if (isProcessableValue(value[_i])) {
+              string += processStyleName(key) + ":" + processStyleValue(key, value[_i]) + ";";
+            }
+          }
+        } else {
+          var interpolated = handleInterpolation(mergedProps, registered, value);
+          switch (key) {
+            case "animation":
+            case "animationName": {
+              string += processStyleName(key) + ":" + interpolated + ";";
+              break;
+            }
+            default: {
+              string += key + "{" + interpolated + "}";
+            }
+          }
+        }
+      }
+    }
+  }
+  return string;
+}
 var labelPattern = /label:\s*([^\s;{]+)\s*(;|$)/g;
 var cursor;
+function serializeStyles(args, registered, mergedProps) {
+  if (args.length === 1 && typeof args[0] === "object" && args[0] !== null && args[0].styles !== void 0) {
+    return args[0];
+  }
+  var stringMode = true;
+  var styles = "";
+  cursor = void 0;
+  var strings = args[0];
+  if (strings == null || strings.raw === void 0) {
+    stringMode = false;
+    styles += handleInterpolation(mergedProps, registered, strings);
+  } else {
+    var asTemplateStringsArr = strings;
+    styles += asTemplateStringsArr[0];
+  }
+  for (var i = 1; i < args.length; i++) {
+    styles += handleInterpolation(mergedProps, registered, args[i]);
+    if (stringMode) {
+      var templateStringsArr = strings;
+      styles += templateStringsArr[i];
+    }
+  }
+  labelPattern.lastIndex = 0;
+  var identifierName = "";
+  var match2;
+  while ((match2 = labelPattern.exec(styles)) !== null) {
+    identifierName += "-" + match2[1];
+  }
+  var name = murmur2(styles) + identifierName;
+  return {
+    name,
+    styles,
+    next: cursor
+  };
+}
 
 // ../../node_modules/@emotion/utils/dist/emotion-utils.browser.esm.js
+var isBrowser = true;
 function getRegisteredStyles(registered, registeredStyles, classNames) {
   var rawClassName = "";
   classNames.split(" ").forEach(function(className) {
-    if (registered[className] !== undefined) {
+    if (registered[className] !== void 0) {
       registeredStyles.push(registered[className] + ";");
     } else if (className) {
       rawClassName += className + " ";
@@ -1003,38 +1074,48 @@ function getRegisteredStyles(registered, registeredStyles, classNames) {
   });
   return rawClassName;
 }
-var isBrowser = true;
-var registerStyles = function registerStyles2(cache, serialized, isStringTag) {
-  var className = cache.key + "-" + serialized.name;
-  if ((isStringTag === false || isBrowser === false) && cache.registered[className] === undefined) {
-    cache.registered[className] = serialized.styles;
+var registerStyles = function registerStyles2(cache2, serialized, isStringTag) {
+  var className = cache2.key + "-" + serialized.name;
+  if (
+    // we only need to add the styles to the registered cache if the
+    // class name could be used further down
+    // the tree but if it's a string tag, we know it won't
+    // so we don't have to add it to registered cache.
+    // this improves memory usage since we can avoid storing the whole style string
+    (isStringTag === false || // we need to always store it if we're in compat mode and
+    // in node since emotion-server relies on whether a style is in
+    // the registered cache to know whether a style is global or not
+    // also, note that this check will be dead code eliminated in the browser
+    isBrowser === false) && cache2.registered[className] === void 0
+  ) {
+    cache2.registered[className] = serialized.styles;
   }
 };
-var insertStyles = function insertStyles2(cache, serialized, isStringTag) {
-  registerStyles(cache, serialized, isStringTag);
-  var className = cache.key + "-" + serialized.name;
-  if (cache.inserted[serialized.name] === undefined) {
+var insertStyles = function insertStyles2(cache2, serialized, isStringTag) {
+  registerStyles(cache2, serialized, isStringTag);
+  var className = cache2.key + "-" + serialized.name;
+  if (cache2.inserted[serialized.name] === void 0) {
     var current = serialized;
     do {
-      cache.insert(serialized === current ? "." + className : "", current, cache.sheet, true);
+      cache2.insert(serialized === current ? "." + className : "", current, cache2.sheet, true);
       current = current.next;
-    } while (current !== undefined);
+    } while (current !== void 0);
   }
 };
 
 // ../../node_modules/@emotion/css/create-instance/dist/emotion-css-create-instance.esm.js
 function insertWithoutScoping(cache2, serialized) {
-  if (cache2.inserted[serialized.name] === undefined) {
+  if (cache2.inserted[serialized.name] === void 0) {
     return cache2.insert("", serialized, cache2.sheet, true);
   }
 }
-function merge(registered, css, className) {
+function merge(registered, css2, className) {
   var registeredStyles = [];
   var rawClassName = getRegisteredStyles(registered, registeredStyles, className);
   if (registeredStyles.length < 2) {
     return className;
   }
-  return rawClassName + css(registeredStyles);
+  return rawClassName + css2(registeredStyles);
 }
 var createEmotion = function createEmotion2(options) {
   var cache2 = createCache(options);
@@ -1042,16 +1123,16 @@ var createEmotion = function createEmotion2(options) {
     this.isSpeedy = value;
   };
   cache2.compat = true;
-  var css = function css() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0;_key < _len; _key++) {
+  var css2 = function css3() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
-    var serialized = serializeStyles(args, cache2.registered, undefined);
+    var serialized = serializeStyles(args, cache2.registered, void 0);
     insertStyles(cache2, serialized, false);
     return cache2.key + "-" + serialized.name;
   };
-  var keyframes = function keyframes() {
-    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0;_key2 < _len2; _key2++) {
+  var keyframes2 = function keyframes3() {
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
       args[_key2] = arguments[_key2];
     }
     var serialized = serializeStyles(args, cache2.registered);
@@ -1062,30 +1143,30 @@ var createEmotion = function createEmotion2(options) {
     });
     return animation;
   };
-  var injectGlobal = function injectGlobal() {
-    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0;_key3 < _len3; _key3++) {
+  var injectGlobal2 = function injectGlobal3() {
+    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
       args[_key3] = arguments[_key3];
     }
     var serialized = serializeStyles(args, cache2.registered);
     insertWithoutScoping(cache2, serialized);
   };
-  var cx = function cx() {
-    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0;_key4 < _len4; _key4++) {
+  var cx2 = function cx3() {
+    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
       args[_key4] = arguments[_key4];
     }
-    return merge(cache2.registered, css, classnames(args));
+    return merge(cache2.registered, css2, classnames(args));
   };
   return {
-    css,
-    cx,
-    injectGlobal,
-    keyframes,
-    hydrate: function hydrate(ids) {
+    css: css2,
+    cx: cx2,
+    injectGlobal: injectGlobal2,
+    keyframes: keyframes2,
+    hydrate: function hydrate2(ids) {
       ids.forEach(function(key) {
         cache2.inserted[key] = true;
       });
     },
-    flush: function flush() {
+    flush: function flush2() {
       cache2.registered = {};
       cache2.inserted = {};
       cache2.sheet.flush();
@@ -1093,16 +1174,15 @@ var createEmotion = function createEmotion2(options) {
     sheet: cache2.sheet,
     cache: cache2,
     getRegisteredStyles: getRegisteredStyles.bind(null, cache2.registered),
-    merge: merge.bind(null, cache2.registered, css)
+    merge: merge.bind(null, cache2.registered, css2)
   };
 };
 var classnames = function classnames2(args) {
   var cls = "";
-  for (var i = 0;i < args.length; i++) {
+  for (var i = 0; i < args.length; i++) {
     var arg = args[i];
-    if (arg == null)
-      continue;
-    var toAdd = undefined;
+    if (arg == null) continue;
+    var toAdd = void 0;
     switch (typeof arg) {
       case "boolean":
         break;
@@ -1144,8 +1224,8 @@ var getRegisteredStyles2 = _createEmotion.getRegisteredStyles;
 var injectGlobal = _createEmotion.injectGlobal;
 var keyframes = _createEmotion.keyframes;
 var css = _createEmotion.css;
-var sheet2 = _createEmotion.sheet;
-var cache3 = _createEmotion.cache;
+var sheet = _createEmotion.sheet;
+var cache = _createEmotion.cache;
 
 // ../shared/constants/subtitle-styles.ts
 var DEFAULT_FONT = "Noto Sans";
@@ -1155,9 +1235,13 @@ var SUBTITLE_STYLE_PRESETS = {
     fontName: DEFAULT_FONT,
     fontSizePlaceholder: "%FONTSIZE%",
     primaryColor: "&H00FFFFFF",
+    // White
     secondaryColor: "&H000000FF",
+    // Red (Often unused, copy primary or set specific if needed)
     outlineColor: "&H00000000",
+    // Black
     backColor: "&H80000000",
+    // Semi-transparent black (for shadow)
     isBold: true,
     isItalic: false,
     isUnderline: false,
@@ -1167,9 +1251,11 @@ var SUBTITLE_STYLE_PRESETS = {
     spacing: 0,
     angle: 0,
     borderStyle: 1,
+    // Outline + Shadow
     outlineSize: 1.5,
     shadowDepth: 0.5,
     alignment: 2,
+    // BottomCenter
     marginLeft: 10,
     marginRight: 10,
     marginVertical: 15,
@@ -1180,10 +1266,14 @@ var SUBTITLE_STYLE_PRESETS = {
     fontName: DEFAULT_FONT,
     fontSizePlaceholder: "%FONTSIZE%",
     primaryColor: "&H00FFFFFF",
+    // White
     secondaryColor: "&H000000FF",
     outlineColor: "&H00000000",
+    // Black (used for Box border)
     backColor: "&H33000000",
+    // More transparent black (for Box background)
     isBold: true,
+    // ASS string had -1, but might look better non-bold in a box? Let's keep true for now.
     isItalic: false,
     isUnderline: false,
     isStrikeout: false,
@@ -1192,12 +1282,17 @@ var SUBTITLE_STYLE_PRESETS = {
     spacing: 0,
     angle: 0,
     borderStyle: 4,
+    // Use Style 4 for explicit box
     outlineSize: 1,
+    // Outline controls box padding/border
     shadowDepth: 0,
+    // Shadow controls box padding
     alignment: 2,
+    // BottomCenter
     marginLeft: 10,
     marginRight: 10,
     marginVertical: 15,
+    // Adjust if needed for box
     encoding: 1
   },
   Classic: {
@@ -1205,9 +1300,12 @@ var SUBTITLE_STYLE_PRESETS = {
     fontName: DEFAULT_FONT,
     fontSizePlaceholder: "%FONTSIZE%",
     primaryColor: "&H0000FFFF",
+    // Yellow
     secondaryColor: "&H000000FF",
     outlineColor: "&H00000000",
+    // Black
     backColor: "&H80000000",
+    // Semi-transparent black
     isBold: true,
     isItalic: false,
     isUnderline: false,
@@ -1218,8 +1316,11 @@ var SUBTITLE_STYLE_PRESETS = {
     angle: 0,
     borderStyle: 1,
     outlineSize: 2,
+    // Slightly thicker outline
     shadowDepth: 1,
+    // Slightly more shadow
     alignment: 2,
+    // BottomCenter
     marginLeft: 10,
     marginRight: 10,
     marginVertical: 15,
@@ -1230,9 +1331,11 @@ var SUBTITLE_STYLE_PRESETS = {
     fontName: DEFAULT_FONT,
     fontSizePlaceholder: "%FONTSIZE%",
     primaryColor: "&H00FFFFFF",
+    // White
     secondaryColor: "&H000000FF",
     outlineColor: "&H00FFFFFF",
     backColor: "&H33000000",
+    // Semi-transparent black
     isBold: true,
     isItalic: false,
     isUnderline: false,
@@ -1242,9 +1345,12 @@ var SUBTITLE_STYLE_PRESETS = {
     spacing: 0,
     angle: 0,
     borderStyle: 3,
+    // Keep as opaque box concept
     outlineSize: 0,
     shadowDepth: 0,
+    // No shadow offset needed for box
     alignment: 2,
+    // BottomCenter
     marginLeft: 10,
     marginRight: 10,
     marginVertical: 15,
@@ -1257,8 +1363,7 @@ var BASELINE_FONT_SIZE = 30;
 
 // ../shared/helpers/subtitle-style-util.ts
 function assColorToRgba(ass) {
-  if (!ass?.startsWith("&H"))
-    return "rgba(255,255,255,1)";
+  if (!ass?.startsWith("&H")) return "rgba(255,255,255,1)";
   const hex = ass.substring(2).padStart(8, "0");
   const a = 255 - parseInt(hex.slice(0, 2), 16);
   const b = parseInt(hex.slice(2, 4), 16);
@@ -1286,7 +1391,7 @@ function getSubtitleStyles(opts) {
     bottomValue = isFullScreen ? "10%" : "5%";
   }
   const maxWidth = "100%";
-  const right = isFullScreen ? "5%" : undefined;
+  const right = isFullScreen ? "5%" : void 0;
   let textShadow = "none";
   let backgroundColor = "transparent";
   let boxShadowValue = "none";
@@ -1389,11 +1494,11 @@ function applyPresetStyles(el, {
   stylePreset = "Default",
   isMultiLine = false
 } = {}) {
-  if (!el)
-    return;
+  if (!el) return;
   const dynamicClass = getSubtitleStyles({
     displayFontSize: fontSizePx,
     isFullScreen: false,
+    // your headless renderer might treat the canvas as always full-screen
     stylePreset,
     isMultiLine
   });
@@ -1417,7 +1522,9 @@ function initializeSubtitleDisplay() {
     rootElement.style.backgroundColor = "transparent";
     let subtitleEl = document.getElementById("subtitle");
     if (!subtitleEl) {
-      console.warn("#subtitle element not found in DOM. Creating one inside #render-host-root.");
+      console.warn(
+        "#subtitle element not found in DOM. Creating one inside #render-host-root."
+      );
       subtitleEl = document.createElement("div");
       subtitleEl.id = "subtitle";
       subtitleEl.style.position = "absolute";
@@ -1448,15 +1555,18 @@ function initializeSubtitleDisplay() {
   }
   window.updateSubtitle = (text, opts = {}) => {
     const el = document.getElementById("subtitle");
-    if (!el)
-      return;
+    if (!el) return;
     const { stylePreset = "Default", fontSizePx } = opts;
     const isMultiLine = text.includes("\n");
     if (stylePreset === "LineBox") {
-      const bg = assColorToRgba(SUBTITLE_STYLE_PRESETS.LineBox.backColor || "&H00000000");
+      const bg = assColorToRgba(
+        SUBTITLE_STYLE_PRESETS.LineBox.backColor || "&H00000000"
+      );
       const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
       if (text.trim()) {
-        const html = text.split("\n").map((line2) => `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` + `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` + `${esc(line2)}` + `</span>`).join("<br/>");
+        const html = text.split("\n").map(
+          (line2) => `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${esc(line2)}</span>`
+        ).join("<br/>");
         el.innerHTML = html;
       } else {
         el.innerHTML = "";
@@ -1472,7 +1582,9 @@ function initializeSubtitleDisplay() {
     }
   };
   window.applySubtitlePreset = applySubtitlePreset;
-  console.log("[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, applySubtitlePreset");
+  console.log(
+    "[initializeSubtitleDisplay] Exposed functions on window: updateSubtitle, applySubtitlePreset"
+  );
 }
 initializeSubtitleDisplay();
 export {

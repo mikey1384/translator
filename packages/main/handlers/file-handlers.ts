@@ -21,7 +21,7 @@ export function initializeFileHandlers(services: FileHandlerServices): void {
   }
   fileManagerInstance = services.fileManager;
   saveFileServiceInstance = services.saveFileService;
-  console.info('[src/handlers/file-handlers.ts] Initialized.');
+  console.info('[handlers/file-handlers.ts] Initialized.');
 }
 
 function checkServicesInitialized(): {
