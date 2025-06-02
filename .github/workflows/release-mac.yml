@@ -2,7 +2,7 @@ name: Release – macOS (R2)
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ['v*'] # e.g. v1.0.0, v0.0.1-test
   workflow_dispatch: # manual "Run workflow" button
 
@@ -22,6 +22,10 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
       AWS_DEFAULT_REGION: auto
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -35,18 +39,28 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
-      # The action above unlocks the cert; no extra keychain dance needed 🎉 :contentReference[oaicite:1]{index=1}
 
       # ---------- Build, sign & notarise ----------
       - name: Build + Notarise (bun run package)
+        continue-on-error: true
         run: |
           bun install --frozen-lockfile
           bun run package
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # ---------- DEBUG NOTARIZATION (prints the real Apple error) ----------
+      - name: Submit DMG to Apple manually
+        run: |
+          DMG_PATH=$(ls dist/Translator-*-darwin-arm64.dmg 2>/dev/null | head -n1)
+          if [ -z "$DMG_PATH" ]; then
+            echo "::error ::No DMG found in dist/, build step must have failed earlier."
+            exit 1
+          fi
+          echo "Submitting $DMG_PATH to Apple notarization API..."
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id   "$TEAM_ID" \
+            --wait
 
       # ---------- Install AWS CLI 2.22.35 ----------
       - name: Install AWS CLI 2.22.35
