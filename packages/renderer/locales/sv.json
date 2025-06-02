@@ -210,7 +210,7 @@
     "noCredits": "No credits.",
     "rechargeLink": "Recharge →",
     "creditWarning": {
-      "message": "Purchase credits in {{settingsLink}} to continue.",
+      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to continue.",
       "settingsLinkText": "Settings"
     },
     "validation": {
