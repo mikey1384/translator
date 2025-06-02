@@ -14,6 +14,13 @@
       "filter": ["**/*"]
     }
   ],
+  "files": [
+    "packages/main/dist/**/*",
+    "packages/renderer/dist/**/*",
+    "index.js",
+    "package.json",
+    "node_modules/**/*"
+  ],
   "mac": {
     "category": "public.app-category.video",
     "target": ["dmg", "zip"],
