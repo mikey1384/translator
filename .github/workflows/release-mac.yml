@@ -29,42 +29,37 @@ jobs:
       TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
     steps:
-      # 1) Checkout repo
       - uses: actions/checkout@v4
 
-      # 2) Bun toolchain
       - uses: oven-sh/setup-bun@v1
         with: { bun-version: 'latest' }
 
-      # 3) Import Developer-ID certificate
       - uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
 
-      # 4) Restore node_modules cache (optional but speeds things up)
       - uses: actions/cache@v4
         id: bun-cache
         with:
           path: node_modules
           key: bun-modules-${{ hashFiles('bun.lockb') }}
 
-      # 5) Install deps — postinstall hooks allowed via .bun-trust
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # 6) Build + sign + notarise (Electron Builder handles notarisation)
+      - name: Show what Bun blocked
+        run: bun pm untrusted
+
       - name: Build & package
         run: bun run package # your package script already calls electron-builder
 
-      # 6½) Install AWS CLI v2 (mac runner has v1 only)
       - name: Install AWS CLI v2
         run: |
           curl -sSL "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o aws.pkg
           sudo installer -pkg aws.pkg -target /
           aws --version   # sanity check
 
-      # 7) Upload artefacts to Cloudflare R2
       - name: Upload to R2
         env:
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
@@ -75,7 +70,6 @@ jobs:
           aws s3 cp dist/ "s3://${R2_BUCKET}/${TARGET}/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
-      # 8) Attach DMG/ZIP to a GitHub Release (only on tag pushes)
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
