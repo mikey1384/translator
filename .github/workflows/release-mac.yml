@@ -19,6 +19,7 @@ jobs:
       # ---------- Cloudflare R2 ----------
       R2_BUCKET: ai-translator-downloads
       R2_ENDPOINT: https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
       AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
       AWS_DEFAULT_REGION: auto
