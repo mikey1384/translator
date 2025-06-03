@@ -47,7 +47,7 @@ jobs:
           key: bun-modules-${{ hashFiles('bun.lockb') }}
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: BUN_INSTALL_ALLOW_SCRIPTS=true bun install --frozen-lockfile
 
       - name: Show what Bun blocked
         run: bun pm untrusted
@@ -69,6 +69,13 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           TARGET="mac/${VERSION:-latest}"
           aws s3 cp dist/ "s3://${R2_BUCKET}/${TARGET}/" \
+            --recursive --endpoint-url "${R2_ENDPOINT}"
+
+      - name: Promote artefacts to latest/
+        run: |
+          mkdir -p latest
+          cp dist/Translator-*-darwin-arm64.dmg  latest/Translator.dmg
+          aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
       - name: Publish GitHub Release
