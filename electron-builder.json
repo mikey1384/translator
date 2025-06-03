@@ -7,7 +7,14 @@
     "output": "dist"
   },
   "asar": true,
-  "asarUnpack": ["node_modules/webrtcvad/**", "node_modules/keytar/**"],
+  "asarUnpack": [
+    "node_modules/webrtcvad/**",
+    "node_modules/keytar/**",
+    "node_modules/@ffmpeg-installer/**",
+    "node_modules/@ffprobe-installer/**",
+    "render-host.html",
+    "render-host-script.js"
+  ],
   "npmRebuild": false,
   "buildDependenciesFromSource": false,
   "extraResources": [
@@ -19,10 +26,12 @@
   ],
   "files": [
     "packages/main/dist/**/*",
+    "packages/main/boot.mjs",
     "packages/renderer/dist/**/*",
     "index.js",
     "package.json",
     "packages/main/package.json",
+    "render-host.html",
     "node_modules/**/*"
   ],
   "mac": {

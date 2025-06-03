@@ -63,7 +63,24 @@ async function pickBinary(
   // 1. bundled copy
   try {
     const p = await bundled();
-    return app.isPackaged ? p.replace('app.asar', 'app.asar.unpacked') : p;
+    if (app.isPackaged) {
+      // When packaged, construct the path to the unpacked binary
+      const appPath = app.getAppPath();
+
+      // The installer path contains the full path to the binary
+      // We need to extract just the node_modules part and reconstruct with unpacked path
+      const nodeModulesIndex = p.indexOf('node_modules');
+      if (nodeModulesIndex !== -1) {
+        const nodeModulesPath = p.substring(nodeModulesIndex);
+        const unpackedPath = path.join(appPath + '.unpacked', nodeModulesPath);
+        log.debug(`[ffmpeg-runner] Constructed unpacked path: ${unpackedPath}`);
+        return unpackedPath;
+      } else {
+        log.warn(`[ffmpeg-runner] Could not find node_modules in path: ${p}`);
+        throw new Error(`Invalid installer path: ${p}`);
+      }
+    }
+    return p;
   } catch {
     log.debug(`[ffmpeg-runner] no bundled ${fallbackName} module`);
   }
@@ -79,9 +96,7 @@ export async function findFfmpeg(): Promise<string> {
   if (_ffmpegCached) return _ffmpegCached;
   const ffmpegPath = await pickBinary(async () => {
     const mod = await import('@ffmpeg-installer/ffmpeg');
-    let p = mod.path as string;
-    if (app.isPackaged) p = p.replace('app.asar', 'app.asar.unpacked');
-    return p;
+    return mod.path as string;
   }, 'ffmpeg');
   _ffmpegCached = ffmpegPath;
   log.info(`[ffmpeg-runner] final ffmpeg path => ${ffmpegPath}`);
@@ -93,9 +108,7 @@ export async function findFfprobe(): Promise<string> {
   if (_ffprobeCached) return _ffprobeCached;
   const ffprobePath = await pickBinary(async () => {
     const mod = await import('@ffprobe-installer/ffprobe');
-    let p = mod.path as string;
-    if (app.isPackaged) p = p.replace('app.asar', 'app.asar.unpacked');
-    return p;
+    return mod.path as string;
   }, 'ffprobe');
   _ffprobeCached = ffprobePath;
   log.info(`[ffmpeg-runner] final ffprobe path => ${ffprobePath}`);

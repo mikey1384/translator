@@ -7,7 +7,7 @@ import log from 'electron-log';
 const getRenderHostPath = (): string => {
   const appPath = app.getAppPath();
   return app.isPackaged
-    ? path.join(appPath, 'dist', 'render-host.html')
+    ? path.join(appPath + '.unpacked', 'render-host.html')
     : path.join(appPath, '..', '..', 'render-host.html');
 };
 
@@ -28,6 +28,9 @@ export async function initPuppeteer({
 }): Promise<{ browser: Browser; page: Page }> {
   const hostHtml = getRenderHostPath();
   const hostUrl = url.pathToFileURL(hostHtml).toString();
+
+  log.info(`[Puppeteer:${operationId}] Render host path: ${hostHtml}`);
+  log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
 
   const browser = await launch({
     headless: true,
