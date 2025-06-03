@@ -13,8 +13,7 @@ await esbuild.build({
     'electron',
     'webrtcvad', // native .node addon
     'keytar', // native .node addon
-    '@ffmpeg-installer/ffmpeg', // needs to reference unpacked binaries
-    '@ffprobe-installer/ffprobe', // needs to reference unpacked binaries
+    'ffmpeg-ffprobe-static', // needs to reference unpacked binaries
   ],
 });
 
@@ -69,7 +68,7 @@ cjsContent = cjsContent.replace(
 // Convert dynamic imports for external modules to synchronous require
 // This handles patterns like: await import("@ffmpeg-installer/ffmpeg")
 cjsContent = cjsContent.replace(
-  /await\s+import\s*\(\s*['"](@ffmpeg-installer\/ffmpeg|@ffprobe-installer\/ffprobe)['"]\s*\)/g,
+  /await\s+import\s*\(\s*['"](@ffmpeg-installer\/ffmpeg|@ffprobe-installer\/ffprobe|ffmpeg-ffprobe-static)['"]\s*\)/g,
   'require("$1")'
 );
 

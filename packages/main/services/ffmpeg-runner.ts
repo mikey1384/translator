@@ -95,8 +95,8 @@ async function pickBinary(
 export async function findFfmpeg(): Promise<string> {
   if (_ffmpegCached) return _ffmpegCached;
   const ffmpegPath = await pickBinary(async () => {
-    const mod = await import('@ffmpeg-installer/ffmpeg');
-    return mod.path as string;
+    const mod = await import('ffmpeg-ffprobe-static');
+    return mod.ffmpegPath as string;
   }, 'ffmpeg');
   _ffmpegCached = ffmpegPath;
   log.info(`[ffmpeg-runner] final ffmpeg path => ${ffmpegPath}`);
@@ -107,8 +107,8 @@ let _ffprobeCached: string | null = null;
 export async function findFfprobe(): Promise<string> {
   if (_ffprobeCached) return _ffprobeCached;
   const ffprobePath = await pickBinary(async () => {
-    const mod = await import('@ffprobe-installer/ffprobe');
-    return mod.path as string;
+    const mod = await import('ffmpeg-ffprobe-static');
+    return mod.ffprobePath as string;
   }, 'ffprobe');
   _ffprobeCached = ffprobePath;
   log.info(`[ffmpeg-runner] final ffprobe path => ${ffprobePath}`);

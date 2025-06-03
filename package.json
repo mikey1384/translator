@@ -57,8 +57,6 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@ffprobe-installer/ffprobe": "^2.1.2",
     "@types/react-window": "^1.8.8",
     "@types/which": "^3.0.4",
     "combined-stream": "^1.0.8",
@@ -67,6 +65,7 @@
     "electron-log": "^5.4.0",
     "electron-store": "^10.0.1",
     "execa": "^9.6.0",
+    "ffmpeg-ffprobe-static": "7.1.0-rc.1",
     "follow-redirects": "^1.15.9",
     "form-data": "^4.0.2",
     "immer": "^10.1.1",
