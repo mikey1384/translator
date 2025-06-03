@@ -32,6 +32,7 @@
     "package.json",
     "packages/main/package.json",
     "render-host.html",
+    "render-host-script.js",
     "node_modules/**/*"
   ],
   "mac": {
