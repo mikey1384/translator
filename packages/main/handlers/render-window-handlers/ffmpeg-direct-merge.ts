@@ -11,6 +11,7 @@ interface DirectMergeOptions {
   videoHeight: number;
   videoDuration: number;
   operationId: string;
+  ffmpegPath: string;
   progressCallback: (p: {
     percent: number;
     stage: string;
@@ -35,6 +36,7 @@ export async function directMerge(
     registerProcess,
     operationId,
     signal,
+    ffmpegPath,
   } = opts;
 
   log.info(`[ffmpeg-direct-merge ${operationId}] Starting direct merge...`);
@@ -92,7 +94,7 @@ export async function directMerge(
   );
 
   return new Promise((resolve, reject) => {
-    const ff = spawn('ffmpeg', ffArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const ff = spawn(ffmpegPath, ffArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
     registerProcess?.(ff);
 
     ff.stderr.setEncoding('utf8');

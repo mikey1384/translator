@@ -157,7 +157,10 @@ export function initializeRenderWindowHandlers({
         let realFps = options.frameRate || 30;
         try {
           if (await ffmpeg.hasVideoTrack(options.originalVideoPath)) {
-            realFps = await probeFps(options.originalVideoPath);
+            realFps = await probeFps(
+              options.originalVideoPath,
+              ffmpeg.ffprobePath
+            );
           }
         } catch (err) {
           log.warn(
@@ -233,6 +236,7 @@ export function initializeRenderWindowHandlers({
           videoHeight: options.videoHeight,
           videoDuration: options.videoDuration,
           operationId,
+          ffmpegPath: ffmpeg.ffmpegPath,
           progressCallback: sendProgress,
           registerProcess,
           signal: controller.signal,

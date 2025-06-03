@@ -1,10 +1,13 @@
 import { spawn } from 'child_process';
 import log from 'electron-log';
 
-export async function probeFps(file: string): Promise<number> {
+export async function probeFps(
+  file: string,
+  ffprobePath: string
+): Promise<number> {
   log.info(`[ffprobe-utils] Probing FPS for ${file}`);
   return await new Promise((resolve, reject) => {
-    const p = spawn('ffprobe', [
+    const p = spawn(ffprobePath, [
       '-v',
       'error',
       '-select_streams',
