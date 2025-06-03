@@ -23,6 +23,9 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
       AWS_DEFAULT_REGION: auto
+      # Disable SDK's new checksums to prevent R2 "unsupported trailed" errors
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
 
       # ---------- Apple codesign / notarise ----------
       APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -62,9 +65,6 @@ jobs:
           aws --version   # sanity check
 
       - name: Upload to R2
-        env:
-          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           TARGET="mac/${VERSION:-latest}"
