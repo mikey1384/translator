@@ -85,13 +85,17 @@
     "zustand": "^5.0.4"
   },
   "trustedDependencies": [
-    "@ffmpeg-installer/ffmpeg",
-    "@ffprobe-installer/ffprobe",
     "@ffmpeg-installer/darwin-arm64",
+    "@ffmpeg-installer/ffmpeg",
     "@ffprobe-installer/darwin-arm64",
+    "@ffprobe-installer/ffprobe",
     "electron",
+    "es5-ext",
+    "esbuild",
+    "ffmpeg-ffprobe-static",
     "keytar",
     "puppeteer",
-    "webrtcvad"
+    "webrtcvad",
+    "youtube-dl-exec"
   ]
 }

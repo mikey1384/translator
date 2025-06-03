@@ -1,7 +1,12 @@
+@ffmpeg-installer/darwin-arm64
+@ffmpeg-installer/ffmpeg
+@ffprobe-installer/darwin-arm64
+@ffprobe-installer/ffprobe
 electron
-electron-builder
+es5-ext
+esbuild
+ffmpeg-ffprobe-static
 keytar
 puppeteer
 webrtcvad
 youtube-dl-exec
-ffmpeg-ffprobe-static 
