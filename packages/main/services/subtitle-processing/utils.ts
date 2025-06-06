@@ -1,6 +1,18 @@
 import { SrtSegment } from '@shared-types/app';
 import log from 'electron-log';
 import { callAIModel } from './openai-client.js';
+import vadPkg from 'webrtcvad';
+
+export function getVadCtor() {
+  return (
+    // Bun/ESBuild wrapped CJS  → default.default
+    (vadPkg as any).default?.default ??
+    // Only one level of wrapping → default
+    (vadPkg as any).default ??
+    // Raw CJS export
+    vadPkg
+  );
+}
 
 export function sig({
   stage,

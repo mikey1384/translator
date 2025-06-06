@@ -1,12 +1,10 @@
 import log from 'electron-log';
 import { spawn } from 'child_process';
-import * as webrtcvadPackage from 'webrtcvad';
+import { getVadCtor } from './utils.js';
 import {
   VAD_NORMALIZATION_MIN_GAP_SEC,
   VAD_NORMALIZATION_MIN_DURATION_SEC,
 } from './constants.js';
-
-const Vad = webrtcvadPackage.default.default;
 
 export async function detectSpeechIntervals({
   inputPath,
@@ -28,6 +26,12 @@ export async function detectSpeechIntervals({
     const frameSizeSamples = (sampleRate * frameMs) / 1000;
     const bytesPerFrame = frameSizeSamples * bytesPerSample;
 
+    const Vad = getVadCtor();
+    // Runtime sanity check (remove after testing)
+    log.info(`[${operationId}] typeof Vad: ${typeof Vad}`);
+    log.info(
+      `[${operationId}] has process method: ${'process' in Vad.prototype}`
+    );
     const vad = new Vad(sampleRate, vadMode);
     const intervals: Array<{ start: number; end: number }> = [];
     let speechOpen = false;
