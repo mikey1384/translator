@@ -1,12 +1,10 @@
-import OpenAI from 'openai';
 import log from 'electron-log';
 import crypto from 'crypto';
-import { AI_MODELS } from '../../../shared/constants/index.js';
-import { createFileFromPath } from './openai-client.js';
 import { SrtSegment } from '@shared-types/app';
 import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
 import { scrubHallucinationsBatch, throwIfAborted } from './utils.js';
+import * as stage5Client from '../stage5-client.js';
 
 export const VALID_SEG_MARGIN = 0.05;
 
@@ -15,7 +13,6 @@ export async function transcribeChunk({
   chunkPath,
   startTime,
   signal,
-  openai,
   operationId,
   promptContext,
   language,
@@ -25,24 +22,12 @@ export async function transcribeChunk({
   chunkPath: string;
   startTime: number;
   signal?: AbortSignal;
-  openai: OpenAI;
   operationId: string;
   promptContext?: string;
   language?: string;
   mediaDuration?: number;
 }): Promise<SrtSegment[]> {
   throwIfAborted(signal);
-
-  let fileStream: fs.ReadStream;
-  try {
-    fileStream = createFileFromPath(chunkPath);
-  } catch (streamError: any) {
-    log.error(
-      `[${operationId}] Failed to create read stream for chunk ${chunkIndex} (${chunkPath}):`,
-      streamError?.message || streamError
-    );
-    return [];
-  }
 
   function isWordInValidSegment(
     word: any,
@@ -60,20 +45,17 @@ export async function transcribeChunk({
       `[${operationId}] Sending chunk ${chunkIndex} (${(
         fs.statSync(chunkPath).size /
         (1024 * 1024)
-      ).toFixed(2)} MB) to Whisper API.`
+      ).toFixed(2)} MB) to transcription API.`
     );
 
-    const res = await openai.audio.transcriptions.create(
-      {
-        model: AI_MODELS.WHISPER.id,
-        file: fileStream,
-        response_format: 'verbose_json',
-        language,
-        prompt: `${promptContext ?? ''}\n\n<<<NOSPEECH>>>`,
-        timestamp_granularities: ['word', 'segment'],
-      },
-      { signal }
-    );
+    let res: any;
+
+    log.debug(`[${operationId}] Using Stage5 API for transcription`);
+    res = await stage5Client.transcribe({
+      filePath: chunkPath,
+      language,
+      promptContext: `${promptContext ?? ''}\n\n<<<NOSPEECH>>>`,
+    });
 
     const segments = (res as any)?.segments as Array<any> | undefined;
     const words = (res as any)?.words as Array<any> | undefined;
@@ -263,7 +245,5 @@ export async function transcribeChunk({
       );
       return [];
     }
-  } finally {
-    fileStream.destroy();
   }
 }

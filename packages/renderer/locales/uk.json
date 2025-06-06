@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Щоб використовувати функції перекладу на основі OpenAI (як-от моделі GPT), вам потрібно надати ваш особистий ключ API. Цей ключ дозволяє програмі робити запити до OpenAI від вашого імені.",
-      "para2": {
-        "part1": "Ви можете отримати ключ API, зареєструвавшись або увійшовши в обліковий запис OpenAI та перейшовши до",
-        "link": "розділу ключів API"
-      },
-      "para3": "Ваш ключ API зберігається безпечно на вашому комп'ютері за допомогою системного сховища ключів і ніколи не передається зовнішнім сторонам."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (моделі GPT)",
-      "isSet": "Ключ API OpenAI встановлено",
-      "apiKeyLabel": "Ключ API OpenAI",
-      "placeholder": "Введіть ваш ключ OpenAI (sk-...)",
-      "saveSuccess": "Ключ OpenAI успішно збережено!",
-      "removeSuccess": "Ключ OpenAI успішно видалено!",
-      "saveError": "Не вдалося зберегти ключ.",
-      "removeError": "Не вдалося видалити ключ.",
-      "confirmRemovePrompt": "Ви впевнені, що хочете видалити ключ API OpenAI?"
-    },
-    "loadingStatus": "Завантаження статусу ключа...",
-    "keySet": "Ключ встановлено",
-    "keyNotSet": "Ключ не встановлено",
-    "changeKey": "Змінити ключ",
-    "removeKey": "Видалити ключ",
-    "saveChanges": "Зберегти зміни",
-    "saveKey": "Зберегти ключ {{name}}",
-    "getKey": "Отримати ключ {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Змінити відео",
       "changeVideoAudio": "Змінити відео / аудіо",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Прокрутити до поточного",
       "shiftLabel": "Зсув:",
       "applyShift": "Застосувати"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Східна Азія",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

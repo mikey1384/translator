@@ -46,7 +46,6 @@ import {
   handleRefundCredits,
   handleReserveCredits,
   handleCreateCheckoutSession,
-  handleHasOpenAIKey,
 } from './handlers/credit-handlers.js';
 
 log.info('--- [main.ts] Execution Started ---');
@@ -462,7 +461,6 @@ try {
   ipcMain.handle('refund-credits', handleRefundCredits);
   ipcMain.handle('reserve-credits', handleReserveCredits);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
-  ipcMain.handle('has-openai-key', handleHasOpenAIKey);
 
   // Expose app.isPackaged to renderer via preload (sync)
   ipcMain.on('is-packaged', event => {

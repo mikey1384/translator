@@ -97,7 +97,7 @@ const electronAPI = {
       ipcRenderer.removeListener('url-processing-progress', listener);
   },
 
-  // ---------------------- OpenAI / AI Connections ----------------------
+  // ---------------------- AI Connections ----------------------
   transcribeAudio: (options: any) =>
     ipcRenderer.invoke('transcribe-audio', options),
   cancelTranscription: (opId: string) =>
@@ -247,9 +247,6 @@ const electronAPI = {
 
   createCheckoutSession: (packId: 'HOUR_5') =>
     ipcRenderer.invoke('create-checkout-session', packId),
-
-  // Check if OpenAI API key is available
-  hasOpenAIKey: (): Promise<boolean> => ipcRenderer.invoke('has-openai-key'),
 
   // Listen for credit balance updates from the main process
   onCreditsUpdated: (callback: (balance: number) => void) => {

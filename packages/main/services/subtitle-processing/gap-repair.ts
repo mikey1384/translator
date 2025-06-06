@@ -4,7 +4,6 @@ import path from 'path';
 import log from 'electron-log';
 import { extractAudioSegment, mkTempAudioName } from './audio-extractor.js';
 import { FFmpegContext } from '../ffmpeg-runner.js';
-import OpenAI from 'openai';
 import {
   MIN_DURATION_FOR_RETRY_SPLIT_SEC,
   MIN_CHUNK_DURATION_SEC,
@@ -62,7 +61,6 @@ export async function transcribeGapAudioWithRetry(
     operationId,
     signal,
     ffmpeg,
-    openai,
     createdChunkPaths,
     mediaDuration,
   }: {
@@ -71,7 +69,6 @@ export async function transcribeGapAudioWithRetry(
     operationId: string;
     signal: AbortSignal;
     ffmpeg: FFmpegContext;
-    openai: OpenAI;
     createdChunkPaths: string[];
     mediaDuration: number;
   }
@@ -105,7 +102,6 @@ export async function transcribeGapAudioWithRetry(
     chunkPath: originalGapAudioFilePath,
     startTime: gapToProcess.start,
     signal,
-    openai,
     operationId,
     promptContext:
       gapDuration <= MIN_DURATION_FOR_RETRY_SPLIT_SEC
@@ -187,7 +183,6 @@ export async function transcribeGapAudioWithRetry(
           chunkPath: halfAudioFilePath,
           startTime: half.start,
           signal,
-          openai,
           operationId,
           promptContext: promptForOriginalGap,
           mediaDuration,
@@ -235,7 +230,6 @@ export async function transcribeGapAudioWithRetry(
           chunkPath: intervalAudioFilePath,
           startTime: intervalStart,
           signal,
-          openai,
           operationId,
           promptContext: promptForOriginalGap,
           mediaDuration,
@@ -299,7 +293,6 @@ export async function refineOvershoots({
   tempDir,
   operationId,
   createdChunkPaths,
-  openai,
   mediaDuration,
 }: {
   segments: SrtSegment[];
@@ -309,7 +302,6 @@ export async function refineOvershoots({
   tempDir: string;
   operationId: string;
   createdChunkPaths: string[];
-  openai: OpenAI;
   mediaDuration: number;
 }): Promise<void> {
   const MAX_SEC_PER_WORD = 0.55;
@@ -359,7 +351,6 @@ export async function refineOvershoots({
       if (tailEnd - tailStart >= 0.2) {
         const tailSegs = await transcribeTailDirect({
           ffmpeg,
-          openai,
           inputPath: audioPath,
           outputDir: tempDir,
           start: tailStart,
@@ -465,7 +456,6 @@ export function sanityScan({
 
 async function transcribeTailDirect({
   ffmpeg,
-  openai,
   inputPath,
   outputDir,
   start,
@@ -477,7 +467,6 @@ async function transcribeTailDirect({
   createdChunkPaths,
 }: {
   ffmpeg: FFmpegContext;
-  openai: OpenAI;
   inputPath: string;
   outputDir: string;
   start: number;
@@ -509,7 +498,6 @@ async function transcribeTailDirect({
     chunkPath: outPath,
     startTime: start,
     signal,
-    openai,
     operationId,
     promptContext,
   });

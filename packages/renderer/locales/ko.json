@@ -106,6 +106,31 @@
       "mergingButton": "병합 중..."
     }
   },
+  "settings": {
+    "title": "Settings",
+    "creditsDescription": "Buy or top-up AI usage hours here."
+  },
+  "videoPlayer": {
+    "enterFullscreen": "전체화면 진입",
+    "exitFullscreen": "전체화면 종료",
+    "sideMenu": {
+      "changeVideo": "비디오 변경",
+      "changeVideoAudio": "비디오/오디오 변경",
+      "enterUrlPlaceholder": "URL 입력...",
+      "qualityLow": "저",
+      "qualityMid": "중",
+      "qualityHigh": "고",
+      "load": "로드",
+      "loadVideoFromUrl": "URL에서 비디오 로드",
+      "loadSrtFile": "SRT 파일 로드",
+      "loadDifferentSrtFile": "다른 SRT 파일 로드",
+      "changeSrt": "SRT 변경",
+      "addSrt": "SRT 추가",
+      "scrollToCurrent": "현재 자막으로 스크롤",
+      "shiftLabel": "모든 자막 이동 (초):",
+      "applyShift": "이동 적용"
+    }
+  },
   "regions": {
     "eastAsia": "동아시아",
     "europe": "유럽",
@@ -153,58 +178,6 @@
     "farsi": "페르시아어",
     "swahili": "스와힐리어",
     "afrikaans": "아프리칸스어"
-  },
-  "settings": {
-    "title": "Settings",
-    "description": {
-      "para1": "OpenAI(예: GPT 모델) 기반 번역 기능을 사용하려면 개인 API 키를 제공해야 합니다. 이 키를 통해 애플리케이션이 사용자를 대신하여 OpenAI에 요청할 수 있습니다.",
-      "para2": {
-        "part1": "OpenAI 계정에 가입하거나 로그인한 후",
-        "link": "API 키 섹션"
-      },
-      "para3": "으로 이동하여 API 키를 얻을 수 있습니다. API 키는 시스템의 키체인을 사용하여 컴퓨터에 안전하게 저장되며 외부로 공유되지 않습니다."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT 모델)",
-      "isSet": "OpenAI API 키가 설정되었습니다",
-      "apiKeyLabel": "OpenAI API 키",
-      "placeholder": "OpenAI 키 입력 (sk-...)",
-      "saveSuccess": "OpenAI 키가 성공적으로 저장되었습니다!",
-      "removeSuccess": "OpenAI 키가 성공적으로 제거되었습니다!",
-      "saveError": "키 저장 실패",
-      "removeError": "키 제거 실패",
-      "confirmRemovePrompt": "OpenAI API 키를 제거하시겠습니까?"
-    },
-    "loadingStatus": "키 상태 로드 중...",
-    "keySet": "키 설정됨",
-    "keyNotSet": "키 설정 안됨",
-    "changeKey": "키 변경",
-    "removeKey": "키 제거",
-    "saveChanges": "변경사항 저장",
-    "saveKey": "{{name}} 키 저장",
-    "getKey": "{{name}} 키 받기",
-    "creditsDescription": "Buy or top-up AI usage hours here."
-  },
-  "videoPlayer": {
-    "enterFullscreen": "전체화면 진입",
-    "exitFullscreen": "전체화면 종료",
-    "sideMenu": {
-      "changeVideo": "비디오 변경",
-      "changeVideoAudio": "비디오/오디오 변경",
-      "enterUrlPlaceholder": "URL 입력...",
-      "qualityLow": "저",
-      "qualityMid": "중",
-      "qualityHigh": "고",
-      "load": "로드",
-      "loadVideoFromUrl": "URL에서 비디오 로드",
-      "loadSrtFile": "SRT 파일 로드",
-      "loadDifferentSrtFile": "다른 SRT 파일 로드",
-      "changeSrt": "SRT 변경",
-      "addSrt": "SRT 추가",
-      "scrollToCurrent": "현재 자막으로 스크롤",
-      "shiftLabel": "모든 자막 이동 (초):",
-      "applyShift": "이동 적용"
-    }
   },
   "generateSubtitles": {
     "noCredits": "크레딧이 없습니다.",

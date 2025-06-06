@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Para magamit ang mga feature ng pagsasalin na pinapagana ng OpenAI (tulad ng mga model ng GPT), kailangan mong ibigay ang iyong personal na API key. Ang key na ito ay nagbibigay-daan sa application na gumawa ng mga request sa OpenAI sa ngalan mo.",
-      "para2": {
-        "part1": "Maaari kang kumuha ng API key sa pamamagitan ng pag-sign up o pag-log in sa iyong OpenAI account at pag-navigate sa",
-        "link": "seksyon ng mga API key"
-      },
-      "para3": "Ang iyong API key ay naka-store ng secure sa iyong computer gamit ang keychain ng system at hindi kailanman ibinabahagi sa labas."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (mga model ng GPT)",
-      "isSet": "Naka-set na ang OpenAI API Key",
-      "apiKeyLabel": "OpenAI API Key",
-      "placeholder": "Ilagay ang iyong OpenAI key (sk-...)",
-      "saveSuccess": "Matagumpay na na-save ang OpenAI key!",
-      "removeSuccess": "Matagumpay na natanggal ang OpenAI key!",
-      "saveError": "Hindi na-save ang key.",
-      "removeError": "Hindi natanggal ang key.",
-      "confirmRemovePrompt": "Sigurado ka bang gusto mong tanggalin ang OpenAI API key?"
-    },
-    "loadingStatus": "Naglo-load ng status ng key...",
-    "keySet": "Naka-set ang Key",
-    "keyNotSet": "Hindi Naka-set ang Key",
-    "changeKey": "Baguhin ang Key",
-    "removeKey": "Tanggalin ang Key",
-    "saveChanges": "I-save ang mga Pagbabago",
-    "saveKey": "I-save ang {{name}} Key",
-    "getKey": "Kumuha ng {{name}} Key",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Baguhin ang Video",
       "changeVideoAudio": "Baguhin ang Video / Audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Mag-scroll sa kasalukuyan",
       "shiftLabel": "Shift:",
       "applyShift": "I-apply"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Silangang Asya",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

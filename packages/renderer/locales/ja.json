@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI（GPTモデルなど）を利用した翻訳機能を使用するには、個人のAPIキーを提供する必要があります。このキーにより、アプリケーションはあなたの代わりにOpenAIにリクエストを行うことができます。",
-      "para2": {
-        "part1": "APIキーは、OpenAIアカウントにサインアップまたはログインし、",
-        "link": "APIキーセクション"
-      },
-      "para3": "に移動して取得できます。APIキーはシステムのキーチェーンを使用してコンピュータに安全に保存され、外部に共有されることはありません。"
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPTモデル)",
-      "isSet": "OpenAI APIキーが設定されています",
-      "apiKeyLabel": "OpenAI APIキー",
-      "placeholder": "OpenAIキーを入力 (sk-...)",
-      "saveSuccess": "OpenAIキーが正常に保存されました！",
-      "removeSuccess": "OpenAIキーが正常に削除されました！",
-      "saveError": "キーの保存に失敗しました。",
-      "removeError": "キーの削除に失敗しました。",
-      "confirmRemovePrompt": "OpenAI APIキーを削除してもよろしいですか？"
-    },
-    "loadingStatus": "キー状態を読み込み中...",
-    "keySet": "キー設定済み",
-    "keyNotSet": "キー未設定",
-    "changeKey": "キーを変更",
-    "removeKey": "キーを削除",
-    "saveChanges": "変更を保存",
-    "saveKey": "{{name}}キーを保存",
-    "getKey": "{{name}}キーを取得",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "動画を変更",
       "changeVideoAudio": "動画/音声を変更",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "現在の位置にスクロール",
       "shiftLabel": "シフト:",
       "applyShift": "適用"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "東アジア",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

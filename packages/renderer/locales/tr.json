@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI tarafından desteklenen çeviri özelliklerini (GPT modelleri gibi) kullanmak için kişisel API anahtarınızı sağlamanız gerekir. Bu anahtar, uygulamanın sizin adınıza OpenAI'ye istekte bulunmasına olanak tanır.",
-      "para2": {
-        "part1": "OpenAI hesabınıza kaydolarak veya giriş yaparak ve",
-        "link": "API anahtarları bölümüne"
-      },
-      "para3": "API anahtarınız, sistemin anahtar zinciri kullanılarak bilgisayarınızda güvenli bir şekilde saklanır ve asla harici olarak paylaşılmaz."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT modelleri)",
-      "isSet": "OpenAI API Anahtarı Ayarlandı",
-      "apiKeyLabel": "OpenAI API Anahtarı",
-      "placeholder": "OpenAI anahtarınızı girin (sk-...)",
-      "saveSuccess": "OpenAI anahtarı başarıyla kaydedildi!",
-      "removeSuccess": "OpenAI anahtarı başarıyla kaldırıldı!",
-      "saveError": "Anahtar kaydedilemedi.",
-      "removeError": "Anahtar kaldırılamadı.",
-      "confirmRemovePrompt": "OpenAI API anahtarını kaldırmak istediğinizden emin misiniz?"
-    },
-    "loadingStatus": "Anahtar durumu yükleniyor...",
-    "keySet": "Anahtar Ayarlandı",
-    "keyNotSet": "Anahtar Ayarlanmadı",
-    "changeKey": "Anahtarı Değiştir",
-    "removeKey": "Anahtarı Kaldır",
-    "saveChanges": "Değişiklikleri Kaydet",
-    "saveKey": "{{name}} Anahtarını Kaydet",
-    "getKey": "{{name}} Anahtarını Al",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Videoyu Değiştir",
       "changeVideoAudio": "Video / Audio Değiştir",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Şimdiki konuma kaydır",
       "shiftLabel": "Kaydır:",
       "applyShift": "Uygula"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Doğu Asya",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "برای استفاده از ویژگی‌های ترجمه با پشتیبانی OpenAI (مانند مدل‌های GPT)، شما باید کلید API شخصی خود را ارائه دهید. این کلید به برنامه اجازه می‌دهد تا از طرف شما درخواست‌هایی را به OpenAI ارسال کند.",
-      "para2": {
-        "part1": "شما می‌توانید با ثبت‌نام یا ورود به حساب OpenAI خود و مراجعه به",
-        "link": "بخش کلیدهای API"
-      },
-      "para3": "کلید API شما به صورت امن در کامپیوتر شما با استفاده از دسته کلید سیستم ذخیره می‌شود و هرگز به صورت خارجی به اشتراک گذاشته نمی‌شود."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (مدل‌های GPT)",
-      "isSet": "کلید API OpenAI تنظیم شده است",
-      "apiKeyLabel": "کلید API OpenAI",
-      "placeholder": "کلید OpenAI خود را وارد کنید (sk-...)",
-      "saveSuccess": "کلید OpenAI با موفقیت ذخیره شد!",
-      "removeSuccess": "کلید OpenAI با موفقیت حذف شد!",
-      "saveError": "ذخیره کلید ناموفق بود.",
-      "removeError": "حذف کلید ناموفق بود.",
-      "confirmRemovePrompt": "آیا مطمئن هستید که می‌خواهید کلید API OpenAI را حذف کنید؟"
-    },
-    "loadingStatus": "در حال بارگیری وضعیت کلید...",
-    "keySet": "کلید تنظیم شده",
-    "keyNotSet": "کلید تنظیم نشده",
-    "changeKey": "تغییر کلید",
-    "removeKey": "حذف کلید",
-    "saveChanges": "ذخیره تغییرات",
-    "saveKey": "ذخیره کلید {{name}}",
-    "getKey": "دریافت کلید {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "تغییر ویدیو",
       "changeVideoAudio": "تغییر ویدیو / صوت",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "پیمایش به موقعیت فعلی",
       "shiftLabel": "جابجایی:",
       "applyShift": "اعمال"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "شرق آسیا",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

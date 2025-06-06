@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Para usar os recursos de tradução fornecidos pelo OpenAI (como modelos GPT), você precisa fornecer sua chave API pessoal. Esta chave permite que o aplicativo faça solicitações ao OpenAI em seu nome.",
-      "para2": {
-        "part1": "Você pode obter uma chave API registrando-se ou fazendo login na sua conta OpenAI e navegando até a",
-        "link": "seção de chaves API"
-      },
-      "para3": "Sua chave API é armazenada com segurança no seu computador usando o chaveiro do sistema e nunca é compartilhada externamente."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (modelos GPT)",
-      "isSet": "Chave API OpenAI está definida",
-      "apiKeyLabel": "Chave API OpenAI",
-      "placeholder": "Digite sua chave OpenAI (sk-...)",
-      "saveSuccess": "Chave OpenAI salva com sucesso!",
-      "removeSuccess": "Chave OpenAI removida com sucesso!",
-      "saveError": "Falha ao salvar chave.",
-      "removeError": "Falha ao remover chave.",
-      "confirmRemovePrompt": "Tem certeza que deseja remover a chave API OpenAI?"
-    },
-    "loadingStatus": "Carregando status da chave...",
-    "keySet": "Chave Definida",
-    "keyNotSet": "Chave Não Definida",
-    "changeKey": "Alterar Chave",
-    "removeKey": "Remover Chave",
-    "saveChanges": "Salvar Alterações",
-    "saveKey": "Salvar Chave {{name}}",
-    "getKey": "Obter Chave {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Alterar Vídeo",
       "changeVideoAudio": "Alterar Vídeo / Áudio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Rolar para o atual",
       "shiftLabel": "Deslocar:",
       "applyShift": "Aplicar"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Leste Asiático",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

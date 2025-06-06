@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Для использования функций перевода, работающих на основе OpenAI (например, модели GPT), вам необходимо предоставить свой личный API ключ. Этот ключ позволяет приложению отправлять запросы в OpenAI от вашего имени.",
-      "para2": {
-        "part1": "Вы можете получить API ключ, зарегистрировавшись или войдя в свою учетную запись OpenAI и перейдя в",
-        "link": "раздел API ключей"
-      },
-      "para3": "Ваш API ключ надежно хранится на вашем компьютере с использованием системного хранилища ключей и никогда не передается третьим лицам."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (модели GPT)",
-      "isSet": "API ключ OpenAI установлен",
-      "apiKeyLabel": "API ключ OpenAI",
-      "placeholder": "Введите ваш ключ OpenAI (sk-...)",
-      "saveSuccess": "Ключ OpenAI успешно сохранен!",
-      "removeSuccess": "Ключ OpenAI успешно удален!",
-      "saveError": "Не удалось сохранить ключ.",
-      "removeError": "Не удалось удалить ключ.",
-      "confirmRemovePrompt": "Вы уверены, что хотите удалить API ключ OpenAI?"
-    },
-    "loadingStatus": "Загрузка статуса ключа...",
-    "keySet": "Ключ установлен",
-    "keyNotSet": "Ключ не установлен",
-    "changeKey": "Изменить ключ",
-    "removeKey": "Удалить ключ",
-    "saveChanges": "Сохранить изменения",
-    "saveKey": "Сохранить ключ {{name}}",
-    "getKey": "Получить ключ {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Сменить видео",
       "changeVideoAudio": "Сменить видео / аудио",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Прокрутить к текущему",
       "shiftLabel": "Сдвиг:",
       "applyShift": "Применить"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Восточная Азия",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

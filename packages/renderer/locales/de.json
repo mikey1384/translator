@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Um die von OpenAI unterstützten Übersetzungsfunktionen (wie GPT-Modelle) zu nutzen, müssen Sie Ihren persönlichen API-Schlüssel angeben. Dieser Schlüssel ermöglicht der Anwendung, Anfragen in Ihrem Namen an OpenAI zu stellen.",
-      "para2": {
-        "part1": "Sie können einen API-Schlüssel erhalten, indem Sie sich bei Ihrem OpenAI-Konto anmelden oder registrieren und zum",
-        "link": "API-Schlüsselbereich"
-      },
-      "para3": "Ihr API-Schlüssel wird sicher auf Ihrem Computer mithilfe des Schlüsselbunds des Systems gespeichert und niemals extern geteilt."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT-Modelle)",
-      "isSet": "OpenAI API-Schlüssel ist festgelegt",
-      "apiKeyLabel": "OpenAI API-Schlüssel",
-      "placeholder": "Geben Sie Ihren OpenAI-Schlüssel ein (sk-...)",
-      "saveSuccess": "OpenAI-Schlüssel erfolgreich gespeichert!",
-      "removeSuccess": "OpenAI-Schlüssel erfolgreich entfernt!",
-      "saveError": "Fehler beim Speichern des Schlüssels.",
-      "removeError": "Fehler beim Entfernen des Schlüssels.",
-      "confirmRemovePrompt": "Sind Sie sicher, dass Sie den OpenAI API-Schlüssel entfernen möchten?"
-    },
-    "loadingStatus": "Schlüsselstatus wird geladen...",
-    "keySet": "Schlüssel festgelegt",
-    "keyNotSet": "Schlüssel nicht festgelegt",
-    "changeKey": "Schlüssel ändern",
-    "removeKey": "Schlüssel entfernen",
-    "saveChanges": "Änderungen speichern",
-    "saveKey": "{{name}}-Schlüssel speichern",
-    "getKey": "{{name}}-Schlüssel erhalten",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Video ändern",
       "changeVideoAudio": "Video / Audio ändern",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Zum aktuellen scrollen",
       "shiftLabel": "Verschieben:",
       "applyShift": "Anwenden"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Ostasien",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

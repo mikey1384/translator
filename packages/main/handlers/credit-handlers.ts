@@ -7,7 +7,7 @@ import Store from 'electron-store';
 import { dialog, BrowserWindow, app } from 'electron';
 import axios from 'axios'; // Assuming axios is available
 import log from 'electron-log'; // Assuming electron-log is correctly configured
-import { getApiKey } from '../services/secure-store.js';
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Generate or retrieve device ID using proper UUID v4
@@ -166,27 +166,6 @@ export async function handleReserveCredits(
     return { success: true, newBalanceHours: newBalance / 50000 }; // Convert back to hours for response
   } catch (err: any) {
     return { success: false, error: err.message };
-  }
-}
-
-export async function handleHasOpenAIKey(): Promise<boolean> {
-  try {
-    // Check secure store first
-    const apiKey = await getApiKey('openai');
-    if (apiKey !== null && apiKey.trim().length > 0) {
-      return true;
-    }
-
-    // Check environment variable as fallback
-    const envApiKey = process.env.OPENAI_API_KEY;
-    if (envApiKey && envApiKey.trim().length > 0) {
-      return true;
-    }
-
-    return false;
-  } catch (err: any) {
-    log.error('[credit-handler] handleHasOpenAIKey error:', err);
-    return false;
   }
 }
 

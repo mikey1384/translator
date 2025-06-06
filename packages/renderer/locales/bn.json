@@ -63,8 +63,8 @@
     "downloading": "ডাউনলোড হচ্ছে...",
     "selectFile": "ফাইল নির্বাচন করুন",
     "selectVideoFile": "ভিডিও ফাইল নির্বাচন করুন",
-    "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন",
-    "selectVideoAudioFile": "Select Video / Audio File"
+    "selectVideoAudioFile": "Select Video / Audio File",
+    "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন"
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI দ্বারা পরিচালিত অনুবাদ বৈশিষ্ট্যগুলি ব্যবহার করতে (যেমন GPT মডেল), আপনাকে আপনার ব্যক্তিগত API কী প্রদান করতে হবে। এই কী অ্যাপ্লিকেশনকে আপনার পক্ষে OpenAI-তে অনুরোধ করার অনুমতি দেয়।",
-      "para2": {
-        "part1": "আপনি আপনার OpenAI অ্যাকাউন্টে সাইন আপ বা লগ ইন করে এবং নেভিগেট করে একটি API কী পেতে পারেন",
-        "link": "API কী বিভাগে"
-      },
-      "para3": "আপনার API কী সিস্টেমের কীচেইন ব্যবহার করে আপনার কম্পিউটারে সুরক্ষিতভাবে সংরক্ষণ করা আছে এবং কখনোই বাইরের সাথে শেয়ার করা হয় না।"
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT মডেল)",
-      "isSet": "OpenAI API কী সেট করা আছে",
-      "apiKeyLabel": "OpenAI API কী",
-      "placeholder": "আপনার OpenAI কী লিখুন (sk-...)",
-      "saveSuccess": "OpenAI কী সফলভাবে সংরক্ষণ করা হয়েছে!",
-      "removeSuccess": "OpenAI কী সফলভাবে সরানো হয়েছে!",
-      "saveError": "কী সংরক্ষণ করতে ব্যর্থ হয়েছে।",
-      "removeError": "কী সরাতে ব্যর্থ হয়েছে।",
-      "confirmRemovePrompt": "আপনি কি নিশ্চিত যে আপনি OpenAI API কী সরাতে চান?"
-    },
-    "loadingStatus": "কী স্ট্যাটাস লোড হচ্ছে...",
-    "keySet": "কী সেট",
-    "keyNotSet": "কী সেট করা নেই",
-    "changeKey": "কী পরিবর্তন করুন",
-    "removeKey": "কী সরান",
-    "saveChanges": "পরিবর্তনগুলি সংরক্ষণ করুন",
-    "saveKey": "{{name}} কী সংরক্ষণ করুন",
-    "getKey": "{{name}} কী পান",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "ভিডিও পরিবর্তন করুন",
       "changeVideoAudio": "ভিডিও/অডিও পরিবর্তন করুন",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "বর্তমানে স্ক্রোল করুন",
       "shiftLabel": "শিফট:",
       "applyShift": "প্রয়োগ করুন"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "পূর্ব এশিয়া",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

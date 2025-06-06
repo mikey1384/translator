@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Pentru a utiliza funcțiile de traducere furnizate de OpenAI (cum ar fi modelele GPT), trebuie să furnizați cheia API personală. Această cheie permite aplicației să facă cereri către OpenAI în numele dvs.",
-      "para2": {
-        "part1": "Puteți obține o cheie API înregistrându-vă sau conectându-vă la contul OpenAI și navigând la",
-        "link": "secțiunea de chei API"
-      },
-      "para3": "Cheia dvs. API este stocată în siguranță pe computer folosind portcheia sistemului și nu este niciodată partajată extern."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (modele GPT)",
-      "isSet": "Cheia API OpenAI este setată",
-      "apiKeyLabel": "Cheie API OpenAI",
-      "placeholder": "Introduceți cheia OpenAI (sk-...)",
-      "saveSuccess": "Cheia OpenAI a fost salvată cu succes!",
-      "removeSuccess": "Cheia OpenAI a fost eliminată cu succes!",
-      "saveError": "Nu s-a putut salva cheia.",
-      "removeError": "Nu s-a putut elimina cheia.",
-      "confirmRemovePrompt": "Sigur doriți să eliminați cheia API OpenAI?"
-    },
-    "loadingStatus": "Se încarcă statusul cheii...",
-    "keySet": "Cheie Setată",
-    "keyNotSet": "Cheie Nesetată",
-    "changeKey": "Schimbă Cheia",
-    "removeKey": "Elimină Cheia",
-    "saveChanges": "Salvează Modificările",
-    "saveKey": "Salvează Cheia {{name}}",
-    "getKey": "Obține Cheia {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Schimbă Video",
       "changeVideoAudio": "Schimbă Video / Audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Derulează la cel curent",
       "shiftLabel": "Decalaj:",
       "applyShift": "Aplică"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Asia de Est",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

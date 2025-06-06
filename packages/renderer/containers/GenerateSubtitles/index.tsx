@@ -72,12 +72,8 @@ export default function GenerateSubtitles() {
   // Custom hooks for business logic (after videoFilePath is declared)
   const { durationSecs, hoursNeeded, costStr } =
     useVideoMetadata(videoFilePath);
-  const {
-    showCreditWarning,
-    isButtonDisabled,
-    canBypassCredits,
-    refreshCreditState,
-  } = useCreditSystem();
+  const { showCreditWarning, isButtonDisabled, refreshCreditState } =
+    useCreditSystem();
 
   // Auto-set input mode when file is selected
   useEffect(() => {
@@ -195,7 +191,6 @@ export default function GenerateSubtitles() {
     // Reserve credits if needed
     const creditResult = await validateAndReserveCredits(
       hoursNeeded!,
-      canBypassCredits,
       refreshCreditState
     );
 
@@ -219,7 +214,7 @@ export default function GenerateSubtitles() {
 
     // Handle refunds if generation failed
     if (!result.success) {
-      await refundCreditsIfNeeded(hoursNeeded!, canBypassCredits);
+      await refundCreditsIfNeeded(hoursNeeded!);
     }
   }
 

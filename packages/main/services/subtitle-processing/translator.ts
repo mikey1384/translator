@@ -1,6 +1,6 @@
 import log from 'electron-log';
 import { ReviewBatch } from './types.js';
-import { callAIModel } from './openai-client.js';
+import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
 
 export async function translateBatch({

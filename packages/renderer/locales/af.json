@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Om die vertaalfunksies aangedryf deur OpenAI (soos GPT-modelle) te gebruik, moet jy jou persoonlike API-sleutel verskaf. Hierdie sleutel laat die toepassing toe om namens jou versoeke aan OpenAI te rig.",
-      "para2": {
-        "part1": "Jy kan 'n API-sleutel verkry deur aan te meld of in te teken by jou OpenAI-rekening en na die",
-        "link": "API-sleutels afdeling"
-      },
-      "para3": "Jou API-sleutel word veilig op jou rekenaar gestoor met behulp van die stelsel se sleutelketting en word nooit ekstern gedeel nie."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT-modelle)",
-      "isSet": "OpenAI API-sleutel is Ingestel",
-      "apiKeyLabel": "OpenAI API-sleutel",
-      "placeholder": "Voer jou OpenAI-sleutel in (sk-...)",
-      "saveSuccess": "OpenAI-sleutel suksesvol gestoor!",
-      "removeSuccess": "OpenAI-sleutel suksesvol verwyder!",
-      "saveError": "Kon nie sleutel stoor nie.",
-      "removeError": "Kon nie sleutel verwyder nie.",
-      "confirmRemovePrompt": "Is jy seker jy wil die OpenAI API-sleutel verwyder?"
-    },
-    "loadingStatus": "Laai sleutelstatus...",
-    "keySet": "Sleutel Ingestel",
-    "keyNotSet": "Sleutel Nie Ingestel",
-    "changeKey": "Verander Sleutel",
-    "removeKey": "Verwyder Sleutel",
-    "saveChanges": "Stoor Veranderinge",
-    "saveKey": "Stoor {{name}}-sleutel",
-    "getKey": "Kry {{name}}-sleutel",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Verander Video",
       "changeVideoAudio": "Verander Video / Audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Rol na huidige",
       "shiftLabel": "Skuif:",
       "applyShift": "Pas toe"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Oos-Asië",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

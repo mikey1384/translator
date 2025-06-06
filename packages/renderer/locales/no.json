@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "For å bruke oversettelsesfunksjonene drevet av OpenAI (som GPT-modeller), må du oppgi din personlige API-nøkkel. Denne nøkkelen lar applikasjonen sende forespørsler til OpenAI på dine vegne.",
-      "para2": {
-        "part1": "Du kan få en API-nøkkel ved å registrere deg eller logge inn på OpenAI-kontoen din og navigere til",
-        "link": "API-nøkkelseksjonen"
-      },
-      "para3": "API-nøkkelen din lagres sikkert på datamaskinen din ved hjelp av systemets nøkkelring og deles aldri eksternt."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT-modeller)",
-      "isSet": "OpenAI API-nøkkel er angitt",
-      "apiKeyLabel": "OpenAI API-nøkkel",
-      "placeholder": "Skriv inn OpenAI-nøkkelen din (sk-...)",
-      "saveSuccess": "OpenAI-nøkkel lagret!",
-      "removeSuccess": "OpenAI-nøkkel fjernet!",
-      "saveError": "Kunne ikke lagre nøkkel.",
-      "removeError": "Kunne ikke fjerne nøkkel.",
-      "confirmRemovePrompt": "Er du sikker på at du vil fjerne OpenAI API-nøkkelen?"
-    },
-    "loadingStatus": "Laster nøkkelstatus...",
-    "keySet": "Nøkkel angitt",
-    "keyNotSet": "Nøkkel ikke angitt",
-    "changeKey": "Endre nøkkel",
-    "removeKey": "Fjern nøkkel",
-    "saveChanges": "Lagre endringer",
-    "saveKey": "Lagre {{name}}-nøkkel",
-    "getKey": "Hent {{name}}-nøkkel",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Bytt video",
       "changeVideoAudio": "Bytt video / audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Rull til nåværende",
       "shiftLabel": "Forskyv:",
       "applyShift": "Bruk"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Øst-Asia",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

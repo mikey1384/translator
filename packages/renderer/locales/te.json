@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI ద్వారా పవర్ చేయబడిన అనువాద ఫీచర్‌లను (GPT మోడల్‌లు వంటివి) ఉపయోగించడానికి, మీరు మీ వ్యక్తిగత API కీని అందించాలి. ఈ కీ యాప్‌ని మీ తరఫున OpenAIకి అభ్యర్థనలు చేయడానికి అనుమతిస్తుంది.",
-      "para2": {
-        "part1": "మీరు OpenAI ఖాతాలో సైన్ అప్ చేయడం లేదా లాగిన్ అవ్వడం ద్వారా API కీని పొందవచ్చు మరియు",
-        "link": "API కీల విభాగానికి"
-      },
-      "para3": "మీ API కీ మీ కంప్యూటర్‌లో సిస్టమ్ కీచైన్‌ని ఉపయోగించి సురక్షితంగా నిల్వ చేయబడుతుంది మరియు బయటికి ఎప్పుడూ షేర్ చేయబడదు."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT మోడల్స్)",
-      "isSet": "OpenAI API కీ సెట్ చేయబడింది",
-      "apiKeyLabel": "OpenAI API కీ",
-      "placeholder": "మీ OpenAI కీని నమోదు చేయండి (sk-...)",
-      "saveSuccess": "OpenAI కీ విజయవంతంగా సేవ్ చేయబడింది!",
-      "removeSuccess": "OpenAI కీ విజయవంతంగా తొలగించబడింది!",
-      "saveError": "కీని సేవ్ చేయడంలో విఫలమైంది.",
-      "removeError": "కీని తొలగించడంలో విఫలమైంది.",
-      "confirmRemovePrompt": "మీరు నిజంగానే OpenAI API కీని తొలగించాలనుకుంటున్నారా?"
-    },
-    "loadingStatus": "కీ స్థితిని లోడ్ చేస్తోంది...",
-    "keySet": "కీ సెట్ చేయబడింది",
-    "keyNotSet": "కీ సెట్ చేయబడలేదు",
-    "changeKey": "కీని మార్చండి",
-    "removeKey": "కీని తొలగించండి",
-    "saveChanges": "మార్పులను సేవ్ చేయండి",
-    "saveKey": "{{name}} కీని సేవ్ చేయండి",
-    "getKey": "{{name}} కీని పొందండి",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "వీడియోను మార్చండి",
       "changeVideoAudio": "వీడియో / ఆడియో మార్చండి",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "ప్రస్తుత స్థానానికి స్క్రోల్ చేయండి",
       "shiftLabel": "షిఫ్ట్:",
       "applyShift": "వర్తించు"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "తూర్పు ఆసియా",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

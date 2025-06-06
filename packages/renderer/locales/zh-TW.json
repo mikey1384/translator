@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "要使用由OpenAI提供支援的翻譯功能（如GPT模型），您需要提供個人API金鑰。此金鑰允許應用程式代表您向OpenAI發送請求。",
-      "para2": {
-        "part1": "您可以透過註冊或登入OpenAI帳戶並導航至",
-        "link": "API金鑰部分"
-      },
-      "para3": "獲取API金鑰。您的API金鑰使用系統的鑰匙圈安全地儲存在電腦上，絕不會對外共享。"
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT模型)",
-      "isSet": "已設定OpenAI API金鑰",
-      "apiKeyLabel": "OpenAI API金鑰",
-      "placeholder": "輸入您的OpenAI金鑰 (sk-...)",
-      "saveSuccess": "OpenAI金鑰儲存成功！",
-      "removeSuccess": "OpenAI金鑰移除成功！",
-      "saveError": "儲存金鑰失敗。",
-      "removeError": "移除金鑰失敗。",
-      "confirmRemovePrompt": "確定要移除OpenAI API金鑰嗎？"
-    },
-    "loadingStatus": "載入金鑰狀態...",
-    "keySet": "已設定金鑰",
-    "keyNotSet": "未設定金鑰",
-    "changeKey": "更改金鑰",
-    "removeKey": "移除金鑰",
-    "saveChanges": "儲存更改",
-    "saveKey": "儲存{{name}}金鑰",
-    "getKey": "獲取{{name}}金鑰",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "更換影片",
       "changeVideoAudio": "更換影片/音訊",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "滾動到當前位置",
       "shiftLabel": "偏移:",
       "applyShift": "套用"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "東亞",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

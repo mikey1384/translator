@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Aby korzystać z funkcji tłumaczenia zasilanych przez OpenAI (jak modele GPT), musisz podać swój osobisty klucz API. Ten klucz pozwala aplikacji wysyłać zapytania do OpenAI w Twoim imieniu.",
-      "para2": {
-        "part1": "Możesz uzyskać klucz API, rejestrując się lub logując do swojego konta OpenAI i przechodząc do",
-        "link": "sekcji kluczy API"
-      },
-      "para3": "Twój klucz API jest bezpiecznie przechowywany na Twoim komputerze przy użyciu systemowego pęku kluczy i nigdy nie jest udostępniany zewnętrznie."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (modele GPT)",
-      "isSet": "Klucz API OpenAI jest ustawiony",
-      "apiKeyLabel": "Klucz API OpenAI",
-      "placeholder": "Wprowadź swój klucz OpenAI (sk-...)",
-      "saveSuccess": "Klucz OpenAI zapisany pomyślnie!",
-      "removeSuccess": "Klucz OpenAI usunięty pomyślnie!",
-      "saveError": "Nie udało się zapisać klucza.",
-      "removeError": "Nie udało się usunąć klucza.",
-      "confirmRemovePrompt": "Czy na pewno chcesz usunąć klucz API OpenAI?"
-    },
-    "loadingStatus": "Ładowanie statusu klucza...",
-    "keySet": "Klucz ustawiony",
-    "keyNotSet": "Klucz nie ustawiony",
-    "changeKey": "Zmień klucz",
-    "removeKey": "Usuń klucz",
-    "saveChanges": "Zapisz zmiany",
-    "saveKey": "Zapisz klucz {{name}}",
-    "getKey": "Uzyskaj klucz {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Zmień wideo",
       "changeVideoAudio": "Zmień wideo / audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Przewiń do bieżącego",
       "shiftLabel": "Przesunięcie:",
       "applyShift": "Zastosuj"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Azja Wschodnia",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

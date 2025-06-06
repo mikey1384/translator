@@ -38,7 +38,7 @@ export async function translatePass({
 
   const CONCURRENT_TRANSLATIONS = Math.min(
     4,
-    Number(process.env.MAX_OPENAI_PARALLEL || 4)
+    Number(process.env.MAX_AI_PARALLEL || 4)
   );
   const limit = pLimit(CONCURRENT_TRANSLATIONS);
 

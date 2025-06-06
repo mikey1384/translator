@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Ili kutumia vipengele vya tafsiri vinavyotumia OpenAI (kama vile mifano ya GPT), unahitaji kutoa ufunguo wako binafsi wa API. Ufunguo huu unaruhusu programu kutuma maombi kwa OpenAI kwa niaba yako.",
-      "para2": {
-        "part1": "Unaweza kupata ufunguo wa API kwa kujiandikisha au kuingia kwenye akaunti yako ya OpenAI na kuelekea kwenye",
-        "link": "sehemu ya funguo za API"
-      },
-      "para3": "Ufunguo wako wa API unahifadhiwa kwa usalama kwenye kompyuta yako kwa kutumia mnyororo wa ufunguo wa mfumo na haujaigawanywa nje."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (mifano ya GPT)",
-      "isSet": "Ufunguo wa API wa OpenAI Umewekwa",
-      "apiKeyLabel": "Ufunguo wa API wa OpenAI",
-      "placeholder": "Ingiza ufunguo wako wa OpenAI (sk-...)",
-      "saveSuccess": "Ufunguo wa OpenAI umehifadhiwa kwa mafanikio!",
-      "removeSuccess": "Ufunguo wa OpenAI umeondolewa kwa mafanikio!",
-      "saveError": "Imeshindwa kuhifadhi ufunguo.",
-      "removeError": "Imeshindwa kuondoa ufunguo.",
-      "confirmRemovePrompt": "Je, una uhakika unataka kuondoa ufunguo wa API wa OpenAI?"
-    },
-    "loadingStatus": "Inapakia hali ya ufunguo...",
-    "keySet": "Ufunguo Umewekwa",
-    "keyNotSet": "Ufunguo Haujawekwa",
-    "changeKey": "Badilisha Ufunguo",
-    "removeKey": "Ondoa Ufunguo",
-    "saveChanges": "Hifadhi Mabadiliko",
-    "saveKey": "Hifadhi Ufunguo wa {{name}}",
-    "getKey": "Pata Ufunguo wa {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Badilisha Video",
       "changeVideoAudio": "Badilisha Video / Audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Sogeza hadi ya sasa",
       "shiftLabel": "Sogeza:",
       "applyShift": "Tumia"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Asia ya Mashariki",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

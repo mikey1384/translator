@@ -411,7 +411,6 @@ declare module '@shared-types/app' {
       opts: PurchaseCreditsOptions
     ) => Promise<PurchaseCreditsResult>;
     createCheckoutSession: (packId: 'HOUR_5') => Promise<string | null>;
-    hasOpenAIKey: () => Promise<boolean>;
     onCreditsUpdated: (callback: (balance: number) => void) => () => void;
   }
 

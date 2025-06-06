@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Az OpenAI által működtetett fordítási funkciók (például GPT modellek) használatához meg kell adnia személyes API kulcsát. Ez a kulcs lehetővé teszi, hogy az alkalmazás az Ön nevében kéréseket küldjön az OpenAI-nek.",
-      "para2": {
-        "part1": "API kulcsot szerezhet, ha regisztrál vagy bejelentkezik OpenAI fiókjába, és a",
-        "link": "API kulcsok részhez navigál"
-      },
-      "para3": "Az API kulcsa biztonságosan tárolódik a számítógépén a rendszer kulcstárának használatával, és soha nem kerül megosztásra külső felekkel."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT modellek)",
-      "isSet": "OpenAI API kulcs beállítva",
-      "apiKeyLabel": "OpenAI API kulcs",
-      "placeholder": "Adja meg OpenAI kulcsát (sk-...)",
-      "saveSuccess": "OpenAI kulcs sikeresen mentve!",
-      "removeSuccess": "OpenAI kulcs sikeresen eltávolítva!",
-      "saveError": "Nem sikerült menteni a kulcsot.",
-      "removeError": "Nem sikerült eltávolítani a kulcsot.",
-      "confirmRemovePrompt": "Biztosan el szeretné távolítani az OpenAI API kulcsot?"
-    },
-    "loadingStatus": "Kulcs állapotának betöltése...",
-    "keySet": "Kulcs beállítva",
-    "keyNotSet": "Kulcs nincs beállítva",
-    "changeKey": "Kulcs módosítása",
-    "removeKey": "Kulcs eltávolítása",
-    "saveChanges": "Változtatások mentése",
-    "saveKey": "{{name}} kulcs mentése",
-    "getKey": "{{name}} kulcs beszerzése",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Videó cseréje",
       "changeVideoAudio": "Videó / hang csere",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Görgetés az aktuálishoz",
       "shiftLabel": "Eltolás:",
       "applyShift": "Alkalmazás"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Kelet-Ázsia",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

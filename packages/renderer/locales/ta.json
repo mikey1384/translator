@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI ஆல் இயக்கப்படும் மொழிபெயர்ப்பு அம்சங்களைப் (GPT மாதிரிகள் போன்ற) பயன்படுத்த, உங்கள் சொந்த API விசையை வழங்க வேண்டும். இந்த விசை பயன்பாட்டிற்கு உங்கள் சார்பாக OpenAI க்கு கோரிக்கைகளை அனுப்ப அனுமதிக்கிறது.",
-      "para2": {
-        "part1": "OpenAI கணக்கில் பதிவு செய்து அல்லது உள்நுழைந்து",
-        "link": "API விசைகள் பகுதிக்கு"
-      },
-      "para3": "உங்கள் API விசை உங்கள் கணினியில் அமைப்பின் விசைச்சங்கிலியைப் பயன்படுத்தி பாதுகாப்பாக சேமிக்கப்படுகிறது மற்றும் வெளிப்புறமாக பகிரப்படுவதில்லை."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT மாதிரிகள்)",
-      "isSet": "OpenAI API விசை அமைக்கப்பட்டுள்ளது",
-      "apiKeyLabel": "OpenAI API விசை",
-      "placeholder": "உங்கள் OpenAI விசையை உள்ளிடுக (sk-...)",
-      "saveSuccess": "OpenAI விசை வெற்றிகரமாக சேமிக்கப்பட்டது!",
-      "removeSuccess": "OpenAI விசை வெற்றிகரமாக நீக்கப்பட்டது!",
-      "saveError": "விசையைச் சேமிக்கத் தவறிவிட்டது.",
-      "removeError": "விசையை நீக்கத் தவறிவிட்டது.",
-      "confirmRemovePrompt": "OpenAI API விசையை நிச்சயமாக நீக்க விரும்புகிறீர்களா?"
-    },
-    "loadingStatus": "விசை நிலையை ஏற்றுகிறது...",
-    "keySet": "விசை அமைக்கப்பட்டது",
-    "keyNotSet": "விசை அமைக்கப்படவில்லை",
-    "changeKey": "விசையை மாற்று",
-    "removeKey": "விசையை நீக்கு",
-    "saveChanges": "மாற்றங்களைச் சேமி",
-    "saveKey": "{{name}} விசையைச் சேமி",
-    "getKey": "{{name}} விசையைப் பெறு",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "காணொளியை மாற்று",
       "changeVideoAudio": "காணொளி / ஒலியை மாற்று",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "தற்போதைய இடத்திற்குச் செல்",
       "shiftLabel": "நகர்த்து:",
       "applyShift": "பயன்படுத்து"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "கிழக்கு ஆசியா",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

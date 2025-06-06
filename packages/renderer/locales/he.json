@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "כדי להשתמש בתכונות התרגום המופעלות על ידי OpenAI (כמו מודלים של GPT), עליך לספק את מפתח ה-API האישי שלך. מפתח זה מאפשר ליישום לבצע בקשות ל-OpenAI בשמך.",
-      "para2": {
-        "part1": "ניתן להשיג מפתח API על ידי הרשמה או כניסה לחשבון OpenAI שלך וניווט אל",
-        "link": "מקטע מפתחות API"
-      },
-      "para3": "מפתח ה-API שלך מאוחסן באופן מאובטח במחשב שלך באמצעות צרור המפתחות של המערכת ולעולם אינו משותף חיצונית."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (מודלי GPT)",
-      "isSet": "מפתח OpenAI API מוגדר",
-      "apiKeyLabel": "מפתח OpenAI API",
-      "placeholder": "הזן את מפתח OpenAI שלך (sk-...)",
-      "saveSuccess": "מפתח OpenAI נשמר בהצלחה!",
-      "removeSuccess": "מפתח OpenAI הוסר בהצלחה!",
-      "saveError": "נכשל בשמירת המפתח.",
-      "removeError": "נכשל בהסרת המפתח.",
-      "confirmRemovePrompt": "האם אתה בטוח שברצונך להסיר את מפתח OpenAI API?"
-    },
-    "loadingStatus": "טוען סטטוס מפתח...",
-    "keySet": "מפתח מוגדר",
-    "keyNotSet": "מפתח לא מוגדר",
-    "changeKey": "שנה מפתח",
-    "removeKey": "הסר מפתח",
-    "saveChanges": "שמור שינויים",
-    "saveKey": "שמור מפתח {{name}}",
-    "getKey": "קבל מפתח {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "החלף וידאו",
       "changeVideoAudio": "החלף וידאו / שונה",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "גלול אל הנוכחי",
       "shiftLabel": "הזז:",
       "applyShift": "החל"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "מזרח אסיה",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

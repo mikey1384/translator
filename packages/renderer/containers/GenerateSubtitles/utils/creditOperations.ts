@@ -8,15 +8,8 @@ export interface CreditReservationResult {
 
 export async function validateAndReserveCredits(
   hoursNeeded: number,
-  canBypassCredits: boolean,
   refreshCreditState: () => void
 ): Promise<CreditReservationResult> {
-  // Skip credit operations if using OpenAI key
-  if (canBypassCredits) {
-    return { success: true };
-  }
-
-  // Check if user has enough credits
   const currentBalance = useCreditStore.getState().balance ?? 0;
   if (currentBalance < hoursNeeded) {
     return {
@@ -41,15 +34,12 @@ export async function validateAndReserveCredits(
 }
 
 export async function refundCreditsIfNeeded(
-  hoursNeeded: number,
-  canBypassCredits: boolean
+  hoursNeeded: number
 ): Promise<void> {
-  if (!canBypassCredits && hoursNeeded !== null) {
-    // Optimistic UI refund
+  if (hoursNeeded !== null) {
     useCreditStore.setState(s => ({
       balance: (s.balance ?? 0) + hoursNeeded,
     }));
-    // Persisted refund via main process
     await SystemIPC.refundCredits(hoursNeeded);
   }
 }

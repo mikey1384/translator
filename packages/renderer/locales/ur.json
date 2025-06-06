@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI کے ذریعہ چلنے والی ترجمہ خصوصیات (جیسے GPT ماڈلز) کا استعمال کرنے کے لیے، آپ کو اپنی ذاتی API کلید فراہم کرنی ہوگی۔ یہ کلید ایپلیکیشن کو آپ کی طرف سے OpenAI کو درخواستیں بھیجنے کی اجازت دیتی ہے۔",
-      "para2": {
-        "part1": "آپ OpenAI اکاؤنٹ میں سائن اپ کر کے یا لاگ ان کر کے API کلید حاصل کر سکتے ہیں اور",
-        "link": "API کلیدز سیکشن میں جا سکتے ہیں"
-      },
-      "para3": "آپ کی API کلید سسٹم کی کی چین کا استعمال کرتے ہوئے آپ کے کمپیوٹر پر محفوظ طریقے سے ذخیرہ کی جاتی ہے اور کبھی بھی بیرونی طور پر شیئر نہیں کی جاتی۔"
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT ماڈلز)",
-      "isSet": "OpenAI API کلید سیٹ ہے",
-      "apiKeyLabel": "OpenAI API کلید",
-      "placeholder": "اپنی OpenAI کلید درج کریں (sk-...)",
-      "saveSuccess": "OpenAI کلید کامیابی سے محفوظ ہو گئی!",
-      "removeSuccess": "OpenAI کلید کامیابی سے ہٹا دی گئی!",
-      "saveError": "کلید محفوظ کرنے میں ناکام۔",
-      "removeError": "کلید ہٹانے میں ناکام۔",
-      "confirmRemovePrompt": "کیا آپ واقعی OpenAI API کلید کو ہٹانا چاہتے ہیں؟"
-    },
-    "loadingStatus": "کلید کی حالت لوڈ ہو رہی ہے...",
-    "keySet": "کلید سیٹ ہے",
-    "keyNotSet": "کلید سیٹ نہیں ہے",
-    "changeKey": "کلید تبدیل کریں",
-    "removeKey": "کلید ہٹائیں",
-    "saveChanges": "تبدیلیاں محفوظ کریں",
-    "saveKey": "{{name}} کلید محفوظ کریں",
-    "getKey": "{{name}} کلید حاصل کریں",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "ویڈیو تبدیل کریں",
       "changeVideoAudio": "ویڈیو / آئوڈیو تبدیل کریں",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "موجودہ پر سکرول کریں",
       "shiftLabel": "شفٹ:",
       "applyShift": "لاگو کریں"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "مشرقی ایشیا",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

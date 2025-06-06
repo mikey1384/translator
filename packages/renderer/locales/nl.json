@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Om de vertaalfuncties aangedreven door OpenAI (zoals GPT-modellen) te gebruiken, moet je je persoonlijke API-sleutel opgeven. Deze sleutel geeft de applicatie toestemming om namens jou verzoeken naar OpenAI te sturen.",
-      "para2": {
-        "part1": "Je kunt een API-sleutel verkrijgen door je aan te melden of in te loggen bij je OpenAI-account en naar de",
-        "link": "API-sleutels sectie"
-      },
-      "para3": "Je API-sleutel wordt veilig opgeslagen op je computer met behulp van de sleutelhanger van het systeem en wordt nooit extern gedeeld."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT-modellen)",
-      "isSet": "OpenAI API-sleutel is ingesteld",
-      "apiKeyLabel": "OpenAI API-sleutel",
-      "placeholder": "Voer je OpenAI-sleutel in (sk-...)",
-      "saveSuccess": "OpenAI-sleutel succesvol opgeslagen!",
-      "removeSuccess": "OpenAI-sleutel succesvol verwijderd!",
-      "saveError": "Kon sleutel niet opslaan.",
-      "removeError": "Kon sleutel niet verwijderen.",
-      "confirmRemovePrompt": "Weet je zeker dat je de OpenAI API-sleutel wilt verwijderen?"
-    },
-    "loadingStatus": "Sleutelstatus laden...",
-    "keySet": "Sleutel ingesteld",
-    "keyNotSet": "Sleutel niet ingesteld",
-    "changeKey": "Sleutel wijzigen",
-    "removeKey": "Sleutel verwijderen",
-    "saveChanges": "Wijzigingen opslaan",
-    "saveKey": "{{name}} sleutel opslaan",
-    "getKey": "{{name}} sleutel verkrijgen",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Video wijzigen",
       "changeVideoAudio": "Video / Audio wijzigen",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Naar huidige scrollen",
       "shiftLabel": "Verschuiven:",
       "applyShift": "Toepassen"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Oost-Azië",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

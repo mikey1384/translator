@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "För att använda översättningsfunktionerna som drivs av OpenAI (som GPT-modeller) behöver du ange din personliga API-nyckel. Denna nyckel låter applikationen göra förfrågningar till OpenAI å dina vägnar.",
-      "para2": {
-        "part1": "Du kan få en API-nyckel genom att registrera dig eller logga in på ditt OpenAI-konto och navigera till",
-        "link": "API-nyckelsektionen"
-      },
-      "para3": "Din API-nyckel lagras säkert på din dator med hjälp av systemets nyckelring och delas aldrig externt."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT-modeller)",
-      "isSet": "OpenAI API-nyckel är inställd",
-      "apiKeyLabel": "OpenAI API-nyckel",
-      "placeholder": "Ange din OpenAI-nyckel (sk-...)",
-      "saveSuccess": "OpenAI-nyckel sparad framgångsrikt!",
-      "removeSuccess": "OpenAI-nyckel borttagen framgångsrikt!",
-      "saveError": "Misslyckades med att spara nyckel.",
-      "removeError": "Misslyckades med att ta bort nyckel.",
-      "confirmRemovePrompt": "Är du säker på att du vill ta bort OpenAI API-nyckeln?"
-    },
-    "loadingStatus": "Laddar nyckelstatus...",
-    "keySet": "Nyckel inställd",
-    "keyNotSet": "Nyckel ej inställd",
-    "changeKey": "Ändra nyckel",
-    "removeKey": "Ta bort nyckel",
-    "saveChanges": "Spara ändringar",
-    "saveKey": "Spara {{name}}-nyckel",
-    "getKey": "Hämta {{name}}-nyckel",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Byt video",
       "changeVideoAudio": "Byt video / ljud",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Bläddra till aktuell",
       "shiftLabel": "Förskjutning:",
       "applyShift": "Tillämpa"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Östasien",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

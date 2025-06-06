@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Untuk menggunakan ciri terjemahan yang dikuasakan oleh OpenAI (seperti model GPT), anda perlu menyediakan kunci API peribadi anda. Kunci ini membolehkan aplikasi membuat permintaan kepada OpenAI bagi pihak anda.",
-      "para2": {
-        "part1": "Anda boleh mendapatkan kunci API dengan mendaftar atau log masuk ke akaun OpenAI anda dan navigasi ke",
-        "link": "bahagian kunci API"
-      },
-      "para3": "Kunci API anda disimpan dengan selamat di komputer anda menggunakan rantai kunci sistem dan tidak pernah dikongsi secara luaran."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (model GPT)",
-      "isSet": "Kunci API OpenAI Ditetapkan",
-      "apiKeyLabel": "Kunci API OpenAI",
-      "placeholder": "Masukkan kunci OpenAI anda (sk-...)",
-      "saveSuccess": "Kunci OpenAI berjaya disimpan!",
-      "removeSuccess": "Kunci OpenAI berjaya dibuang!",
-      "saveError": "Gagal menyimpan kunci.",
-      "removeError": "Gagal membuang kunci.",
-      "confirmRemovePrompt": "Adakah anda pasti mahu membuang kunci API OpenAI?"
-    },
-    "loadingStatus": "Memuatkan status kunci...",
-    "keySet": "Kunci Ditetapkan",
-    "keyNotSet": "Kunci Tidak Ditetapkan",
-    "changeKey": "Tukar Kunci",
-    "removeKey": "Buang Kunci",
-    "saveChanges": "Simpan Perubahan",
-    "saveKey": "Simpan Kunci {{name}}",
-    "getKey": "Dapatkan Kunci {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Tukar Video",
       "changeVideoAudio": "Tukar Video / Audio",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Skrol ke semasa",
       "shiftLabel": "Alih:",
       "applyShift": "Guna"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Asia Timur",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

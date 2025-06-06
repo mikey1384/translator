@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "เพื่อใช้คุณสมบัติการแปลที่ขับเคลื่อนโดย OpenAI (เช่น โมเดล GPT) คุณต้องให้คีย์ API ส่วนตัวของคุณ คีย์นี้ช่วยให้แอปพลิเคชันสามารถส่งคำขอไปยัง OpenAI ในนามของคุณ",
-      "para2": {
-        "part1": "คุณสามารถรับคีย์ API ได้โดยลงทะเบียนหรือเข้าสู่ระบบบัญชี OpenAI ของคุณและนำทางไปยัง",
-        "link": "ส่วนคีย์ API"
-      },
-      "para3": "คีย์ API ของคุณถูกเก็บไว้อย่างปลอดภัยบนคอมพิวเตอร์ของคุณโดยใช้พวงกุญแจของระบบและไม่เคยแชร์ภายนอก"
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (โมเดล GPT)",
-      "isSet": "ตั้งค่าคีย์ API OpenAI แล้ว",
-      "apiKeyLabel": "คีย์ API OpenAI",
-      "placeholder": "ป้อนคีย์ OpenAI ของคุณ (sk-...)",
-      "saveSuccess": "บันทึกคีย์ OpenAI สำเร็จแล้ว!",
-      "removeSuccess": "ลบคีย์ OpenAI สำเร็จแล้ว!",
-      "saveError": "ไม่สามารถบันทึกคีย์",
-      "removeError": "ไม่สามารถลบคีย์",
-      "confirmRemovePrompt": "คุณแน่ใจหรือไม่ว่าต้องการลบคีย์ API OpenAI?"
-    },
-    "loadingStatus": "กำลังโหลดสถานะคีย์...",
-    "keySet": "ตั้งค่าคีย์แล้ว",
-    "keyNotSet": "ยังไม่ได้ตั้งค่าคีย์",
-    "changeKey": "เปลี่ยนคีย์",
-    "removeKey": "ลบคีย์",
-    "saveChanges": "บันทึกการเปลี่ยนแปลง",
-    "saveKey": "บันทึกคีย์ {{name}}",
-    "getKey": "รับคีย์ {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "เปลี่ยนวิดีโอ",
       "changeVideoAudio": "เปลี่ยนวิดีโอ / เสียง",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "เลื่อนไปยังปัจจุบัน",
       "shiftLabel": "เลื่อน:",
       "applyShift": "นำไปใช้"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "เอเชียตะวันออก",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

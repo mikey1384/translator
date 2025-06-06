@@ -73,7 +73,6 @@
     "keytar": "^7.9.0",
     "lodash-es": "^4.17.21",
     "node-machine-id": "^1.1.12",
-    "openai": "^5.0.1",
     "proxy-from-env": "^1.1.0",
     "puppeteer": "^24.10.0",
     "react-merge-refs": "^3.0.1",

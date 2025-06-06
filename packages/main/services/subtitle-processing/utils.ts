@@ -1,6 +1,6 @@
 import { SrtSegment } from '@shared-types/app';
 import log from 'electron-log';
-import { callAIModel } from './openai-client.js';
+import { callAIModel } from './ai-client.js';
 import vadPkg from 'webrtcvad';
 
 export function getVadCtor() {

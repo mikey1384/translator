@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "OpenAI द्वारे समर्थित अनुवाद वैशिष्ट्ये (GPT मॉडेल्स सारखे) वापरण्यासाठी, तुम्हाला तुमची वैयक्तिक API की प्रदान करावी लागेल. ही की अॅप्लिकेशनला तुमच्या वतीने OpenAI ला विनंत्या करण्याची परवानगी देते.",
-      "para2": {
-        "part1": "तुम्ही OpenAI खात्यावर साइन अप करून किंवा लॉग इन करून API की मिळवू शकता आणि",
-        "link": "API कीज विभागात जाऊ शकता"
-      },
-      "para3": "तुमची API की सिस्टमच्या कीचेन वापरून तुमच्या संगणकावर सुरक्षितपणे साठवली जाते आणि कधीही बाह्य शेअर केली जात नाही."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT मॉडेल्स)",
-      "isSet": "OpenAI API की सेट केली आहे",
-      "apiKeyLabel": "OpenAI API की",
-      "placeholder": "तुमची OpenAI की टाका (sk-...)",
-      "saveSuccess": "OpenAI की यशस्वीरित्या सेव्ह केली!",
-      "removeSuccess": "OpenAI की यशस्वीरित्या काढली!",
-      "saveError": "की सेव्ह करण्यात अयशस्वी.",
-      "removeError": "की काढण्यात अयशस्वी.",
-      "confirmRemovePrompt": "तुम्हाला खात्री आहे की तुम्ही OpenAI API की काढू इच्छिता?"
-    },
-    "loadingStatus": "की स्थिती लोड करत आहे...",
-    "keySet": "की सेट केली",
-    "keyNotSet": "की सेट केली नाही",
-    "changeKey": "की बदला",
-    "removeKey": "की काढा",
-    "saveChanges": "बदल सेव्ह करा",
-    "saveKey": "{{name}} की सेव्ह करा",
-    "getKey": "{{name}} की मिळवा",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "व्हिडिओ बदला",
       "changeVideoAudio": "व्हिडिओ / ऑडिओ बदला",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "सध्याच्या स्थानावर स्क्रोल करा",
       "shiftLabel": "शिफ्ट:",
       "applyShift": "लागू करा"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "पूर्व आशिया",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

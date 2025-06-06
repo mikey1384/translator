@@ -1,12 +1,10 @@
 import { FFmpegContext } from '../../ffmpeg-runner.js';
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
-import OpenAI from 'openai';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import log from 'electron-log';
 import crypto from 'crypto';
-import { getApiKey } from '../openai-client.js';
 import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
@@ -58,15 +56,11 @@ export async function transcribePass({
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
 }> {
-  let openai: OpenAI;
   const overallSegments: SrtSegment[] = [];
   const tempDir = path.dirname(audioPath);
   const createdChunkPaths: string[] = [];
 
   try {
-    const openaiApiKey = await getApiKey('openai');
-    openai = new OpenAI({ apiKey: openaiApiKey });
-
     if (!services?.ffmpeg) {
       throw new SubtitleProcessingError('FFmpegContext is required.');
     }
@@ -219,7 +213,6 @@ export async function transcribePass({
             chunkPath: chunkAudioPath,
             startTime: meta.start,
             signal,
-            openai,
             operationId: operationId ?? '',
             promptContext: promptForSlice,
             mediaDuration: duration,
@@ -312,7 +305,6 @@ export async function transcribePass({
       audioPath,
       tempDir,
       createdChunkPaths,
-      openai,
     });
 
     overallSegments.sort((a, b) => a.start - b.start);
@@ -412,7 +404,6 @@ export async function transcribePass({
               operationId,
               signal,
               ffmpeg,
-              openai,
               createdChunkPaths,
               mediaDuration: duration,
             }

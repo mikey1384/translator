@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Για να χρησιμοποιήσετε τις λειτουργίες μετάφρασης που τροφοδοτούνται από το OpenAI (όπως τα μοντέλα GPT), πρέπει να παρέχετε το προσωπικό σας κλειδί API. Αυτό το κλειδί επιτρέπει στην εφαρμογή να κάνει αιτήματα στο OpenAI για λογαριασμό σας.",
-      "para2": {
-        "part1": "Μπορείτε να αποκτήσετε ένα κλειδί API εγγραφόμενοι ή συνδεόμενοι στον λογαριασμό σας στο OpenAI και πλοηγούμενοι στην",
-        "link": "ενότητα κλειδιών API"
-      },
-      "para3": "Το κλειδί API σας αποθηκεύεται με ασφάλεια στον υπολογιστή σας χρησιμοποιώντας την αλυσίδα κλειδιών του συστήματος και δεν μοιράζεται ποτέ εξωτερικά."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (μοντέλα GPT)",
-      "isSet": "Το κλειδί API του OpenAI έχει οριστεί",
-      "apiKeyLabel": "Κλειδί API OpenAI",
-      "placeholder": "Εισαγάγετε το κλειδί σας OpenAI (sk-...)",
-      "saveSuccess": "Το κλειδί OpenAI αποθηκεύτηκε με επιτυχία!",
-      "removeSuccess": "Το κλειδί OpenAI αφαιρέθηκε με επιτυχία!",
-      "saveError": "Αποτυχία αποθήκευσης κλειδιού.",
-      "removeError": "Αποτυχία αφαίρεσης κλειδιού.",
-      "confirmRemovePrompt": "Είστε βέβαιοι ότι θέλετε να αφαιρέσετε το κλειδί API του OpenAI;"
-    },
-    "loadingStatus": "Φόρτωση κατάστασης κλειδιού...",
-    "keySet": "Κλειδί Ορισμένο",
-    "keyNotSet": "Κλειδί Μη Ορισμένο",
-    "changeKey": "Αλλαγή Κλειδιού",
-    "removeKey": "Αφαίρεση Κλειδιού",
-    "saveChanges": "Αποθήκευση Αλλαγών",
-    "saveKey": "Αποθήκευση Κλειδιού {{name}}",
-    "getKey": "Λήψη Κλειδιού {{name}}",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Αλλαγή Βίντεο",
       "changeVideoAudio": "Αλλαγή Βίντεο / Ήχου",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Κύλιση στο τρέχον",
       "shiftLabel": "Μετατόπιση:",
       "applyShift": "Εφαρμογή"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Ανατολική Ασία",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

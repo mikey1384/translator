@@ -108,36 +108,11 @@
   },
   "settings": {
     "title": "Settings",
-    "description": {
-      "para1": "Käyttääksesi OpenAI:n tarjoamia käännösominaisuuksia (kuten GPT-malleja), sinun on annettava henkilökohtainen API-avaimesi. Tämä avain sallii sovelluksen tehdä pyyntöjä OpenAI:lle puolestasi.",
-      "para2": {
-        "part1": "Voit hankkia API-avaimen rekisteröitymällä tai kirjautumalla OpenAI-tilillesi ja siirtymällä",
-        "link": "API-avaimet-osioon"
-      },
-      "para3": "API-avaimesi tallennetaan turvallisesti tietokoneellesi käyttäen järjestelmän avainnippua, eikä sitä koskaan jaeta ulkopuolisille."
-    },
-    "openai": {
-      "sectionTitle": "OpenAI (GPT-mallit)",
-      "isSet": "OpenAI API-avain on asetettu",
-      "apiKeyLabel": "OpenAI API-avain",
-      "placeholder": "Syötä OpenAI-avaimesi (sk-...)",
-      "saveSuccess": "OpenAI-avain tallennettu onnistuneesti!",
-      "removeSuccess": "OpenAI-avain poistettu onnistuneesti!",
-      "saveError": "Avaimen tallennus epäonnistui.",
-      "removeError": "Avaimen poisto epäonnistui.",
-      "confirmRemovePrompt": "Haluatko varmasti poistaa OpenAI API-avaimen?"
-    },
-    "loadingStatus": "Ladataan avaimen tilaa...",
-    "keySet": "Avain asetettu",
-    "keyNotSet": "Avainta ei ole asetettu",
-    "changeKey": "Vaihda avain",
-    "removeKey": "Poista avain",
-    "saveChanges": "Tallenna muutokset",
-    "saveKey": "Tallenna {{name}}-avain",
-    "getKey": "Hanki {{name}}-avain",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "videoPlayer": {
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "sideMenu": {
       "changeVideo": "Vaihda video",
       "changeVideoAudio": "Vaihda video / ääni",
@@ -154,9 +129,7 @@
       "scrollToCurrent": "Vieritä nykyiseen kohtaan",
       "shiftLabel": "Siirrä:",
       "applyShift": "Käytä"
-    },
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    }
   },
   "regions": {
     "eastAsia": "Itä-Aasia",
@@ -251,13 +224,13 @@
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
   },
-  "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
-  },
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+  },
+  "messages": {
+    "fileSaved": "File saved:\n{{path}}",
+    "videoSaved": "Video saved to:\n{{path}}"
   }
 }

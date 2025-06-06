@@ -58,7 +58,3 @@ export function onCreditsUpdated(
 ): () => void {
   return window.electron.onCreditsUpdated(callback);
 }
-
-export function hasOpenAIKey(): Promise<boolean> {
-  return window.electron.hasOpenAIKey();
-}
