@@ -1,15 +1,31 @@
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import url from 'url';
 import { Browser, Page, launch } from 'puppeteer';
 import { app } from 'electron';
 import log from 'electron-log';
 
-const getRenderHostPath = (): string => {
-  const appPath = app.getAppPath();
-  return app.isPackaged
-    ? path.join(appPath + '.unpacked', 'render-host.html')
-    : path.join(appPath, '..', '..', 'render-host.html');
-};
+function getRenderHostPath(): string {
+  const devCandidate = path.resolve(__dirname, 'render-host.html');
+  if (fs.existsSync(devCandidate)) return devCandidate;
+
+  const unpackedCandidate = path.join(
+    path.dirname(app.getAppPath()),
+    'app.asar.unpacked',
+    'render-host.html'
+  );
+  if (fs.existsSync(unpackedCandidate)) return unpackedCandidate;
+
+  const asarCandidate = path.join(app.getAppPath(), 'render-host.html');
+  if (fs.existsSync(asarCandidate)) return asarCandidate;
+
+  throw new Error(
+    `render-host.html not found. looked in:
+      ${devCandidate}
+      ${unpackedCandidate}
+      ${asarCandidate}`
+  );
+}
 
 export async function initPuppeteer({
   operationId,
@@ -29,6 +45,7 @@ export async function initPuppeteer({
   const hostHtml = getRenderHostPath();
   const hostUrl = url.pathToFileURL(hostHtml).toString();
 
+  log.info('[Puppeteer]', { hostHtml });
   log.info(`[Puppeteer:${operationId}] Render host path: ${hostHtml}`);
   log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
 
