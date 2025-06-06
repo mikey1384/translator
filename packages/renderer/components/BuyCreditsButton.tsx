@@ -23,20 +23,19 @@ export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
       setLoading(true);
       const url = await SystemIPC.createCheckoutSession(packId);
       if (url) {
-        // Security: Validate the URL before opening
-        if (TRUSTED_CHECKOUT_PATTERN.test(url)) {
-          await window.appShell.openExternal(url);
-        } else {
-          console.error('Untrusted checkout URL received:', url);
-          await SystemIPC.showMessage(
-            'Received an invalid checkout URL. Please contact support if this issue persists.'
-          );
+        if (!window.env.isPackaged) {
+          if (TRUSTED_CHECKOUT_PATTERN.test(url)) {
+            await window.appShell.openExternal(url);
+          } else {
+            console.error('Untrusted checkout URL received:', url);
+            await SystemIPC.showMessage(
+              'Received an invalid checkout URL. Please contact support if this issue persists.'
+            );
+          }
         }
       } else {
-        console.error('Checkout session URL was null.');
-        await SystemIPC.showMessage(
-          'Could not retrieve checkout session. Please try again or contact support.'
-        );
+        // null means the main process handled the checkout flow internally
+        console.log('Checkout flow handled by main process.');
       }
     } catch (err: any) {
       console.error('Failed to start checkout:', err);

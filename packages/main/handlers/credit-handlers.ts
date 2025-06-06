@@ -4,7 +4,7 @@ import type {
   PurchaseCreditsResult,
 } from '@shared-types/app';
 import Store from 'electron-store';
-import { dialog, BrowserWindow } from 'electron';
+import { dialog, BrowserWindow, app } from 'electron';
 import axios from 'axios'; // Assuming axios is available
 import log from 'electron-log'; // Assuming electron-log is correctly configured
 import { getApiKey } from '../services/secure-store.js';
@@ -105,14 +105,19 @@ export async function handleCreateCheckoutSession(
     });
 
     // Expecting backend to respond with { url: 'https://checkout.stripe.com/…' }
-    if (response.data && response.data.url) {
+    if (response.data?.url) {
       log.info(
         `[credit-handler] Checkout session URL received: ${response.data.url}`
       );
 
-      // Open checkout in BrowserWindow instead of external browser
-      await openStripeCheckout(response.data.url);
-      return response.data.url;
+      /** DEV = not-packaged → open in external browser so we can watch Stripe logs
+       *  PROD = packaged     → keep everything in modal for nicer UX        */
+      if (!app.isPackaged) {
+        return response.data.url; // Hand back to renderer ⇒ shell.openExternal
+      }
+
+      await openStripeCheckout(response.data.url); // packaged flow
+      return null; // renderer does nothing
     }
     log.warn(
       '[credit-handler] Backend did not return a URL for checkout session.',
@@ -217,6 +222,18 @@ async function openStripeCheckout(sessionUrl: string): Promise<void> {
         resolve();
       }
     });
+
+    // Handle network failures to prevent freezing
+    win.webContents.on(
+      'did-fail-load',
+      (event, errorCode, errorDescription) => {
+        log.error(
+          `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
+        );
+        win.close();
+        resolve();
+      }
+    );
 
     win.on('closed', () => {
       resolve();

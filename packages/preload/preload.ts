@@ -274,3 +274,6 @@ contextBridge.exposeInMainWorld('fileApi', {
 contextBridge.exposeInMainWorld('appShell', {
   openExternal: (url: string): Promise<void> => shell.openExternal(url),
 });
+
+const isPackaged = ipcRenderer.sendSync('is-packaged');
+contextBridge.exposeInMainWorld('env', { isPackaged });

@@ -463,6 +463,11 @@ try {
   ipcMain.handle('reserve-credits', handleReserveCredits);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
   ipcMain.handle('has-openai-key', handleHasOpenAIKey);
+
+  // Expose app.isPackaged to renderer via preload (sync)
+  ipcMain.on('is-packaged', event => {
+    event.returnValue = app.isPackaged;
+  });
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app

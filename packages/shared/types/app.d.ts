@@ -425,6 +425,9 @@ declare module '@shared-types/app' {
       appShell: {
         openExternal: (url: string) => Promise<void>;
       };
+      env: {
+        isPackaged: boolean;
+      };
     }
   }
 }

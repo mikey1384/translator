@@ -124,7 +124,6 @@ const initI18nPromise = (async () => {
     },
     lng: initialLanguage,
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development',
     interpolation: { escapeValue: false },
     react: { useSuspense: true },
   });
