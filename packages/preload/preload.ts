@@ -245,11 +245,18 @@ const electronAPI = {
   ): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> =>
     ipcRenderer.invoke('reserve-credits', hours),
 
-  createCheckoutSession: (packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10') =>
+  createCheckoutSession: (packId: 'HOUR_5') =>
     ipcRenderer.invoke('create-checkout-session', packId),
 
   // Check if OpenAI API key is available
   hasOpenAIKey: (): Promise<boolean> => ipcRenderer.invoke('has-openai-key'),
+
+  // Listen for credit balance updates from the main process
+  onCreditsUpdated: (callback: (balance: number) => void) => {
+    const handler = (_: any, balance: number) => callback(balance);
+    ipcRenderer.on('credits-updated', handler);
+    return () => ipcRenderer.removeListener('credits-updated', handler);
+  },
 };
 
 try {

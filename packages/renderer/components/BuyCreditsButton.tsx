@@ -9,7 +9,7 @@ const TRUSTED_CHECKOUT_PATTERN =
   /^(https:\/\/(checkout\.stripe\.com|checkout\.paypal\.com|your\.pspdomain\.com))\//;
 
 interface BuyCreditsButtonProps {
-  packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10';
+  packId: 'HOUR_5';
   // You might want to add a t function prop for i18n if this component is generic
   // t: (key: string) => string;
 }

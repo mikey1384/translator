@@ -48,9 +48,15 @@ export function getVideoMetadata(
 }
 
 export function createCheckoutSession(
-  packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10'
+  packId: 'HOUR_5'
 ): Promise<string | null> {
   return window.electron.createCheckoutSession(packId);
+}
+
+export function onCreditsUpdated(
+  callback: (balance: number) => void
+): () => void {
+  return window.electron.onCreditsUpdated(callback);
 }
 
 export function hasOpenAIKey(): Promise<boolean> {

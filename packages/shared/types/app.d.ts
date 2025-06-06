@@ -410,10 +410,9 @@ declare module '@shared-types/app' {
     purchaseCredits: (
       opts: PurchaseCreditsOptions
     ) => Promise<PurchaseCreditsResult>;
-    createCheckoutSession: (
-      packId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10'
-    ) => Promise<string | null>;
+    createCheckoutSession: (packId: 'HOUR_5') => Promise<string | null>;
     hasOpenAIKey: () => Promise<boolean>;
+    onCreditsUpdated: (callback: (balance: number) => void) => () => void;
   }
 
   declare global {
