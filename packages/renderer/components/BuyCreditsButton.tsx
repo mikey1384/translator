@@ -10,8 +10,6 @@ const TRUSTED_CHECKOUT_PATTERN =
 
 interface BuyCreditsButtonProps {
   packId: 'HOUR_5';
-  // You might want to add a t function prop for i18n if this component is generic
-  // t: (key: string) => string;
 }
 
 export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {

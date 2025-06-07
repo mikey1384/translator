@@ -7,6 +7,7 @@ import Store from 'electron-store';
 import { dialog, BrowserWindow, app } from 'electron';
 import axios from 'axios'; // Assuming axios is available
 import log from 'electron-log'; // Assuming electron-log is correctly configured
+import { CREDITS_PER_HOUR } from '@shared/constants';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,12 +37,17 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
 
-    if (response.data && typeof response.data.creditBalance === 'number') {
+    if (
+      response.data &&
+      typeof response.data.creditBalance === 'number' &&
+      typeof response.data.hoursBalance === 'number'
+    ) {
       const balanceFromBackend = response.data.creditBalance;
+      const hoursFromBackend = response.data.hoursBalance;
       store.set('balanceCredits', balanceFromBackend); // Update cache
       return {
         success: true,
-        balanceHours: balanceFromBackend / 50000, // Convert credits to hours for display
+        balanceHours: hoursFromBackend,
         updatedAt: new Date().toISOString(),
       };
     } else {
@@ -49,12 +55,12 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     }
   } catch (err: any) {
     log.error('[credit-handler] handleGetCreditBalance error:', err);
-    // Attempt to return cached value on error
+    // Attempt to return cached value on error - use fallback conversion for cached data
     const cachedBal = store.get('balanceCredits', 0);
     return {
       success: false,
       error: err.message,
-      balanceHours: cachedBal / 50000, // Convert cached credits to hours for display
+      balanceHours: cachedBal / CREDITS_PER_HOUR, // Keep fallback conversion for cached data only
       updatedAt: new Date().toISOString(),
     };
   }
@@ -81,7 +87,7 @@ export async function handleDevFakePurchaseCredits(
   });
   if (confirmed === 0) return { success: false, error: 'Cancelled' };
 
-  const addCredits = add * 50000; // Convert hours to credits
+  const addCredits = add * CREDITS_PER_HOUR; // Convert hours to credits
   const newBal = store.get('balanceCredits', 0) + addCredits;
   store.set('balanceCredits', newBal);
   log.info(
@@ -138,11 +144,11 @@ export async function handleRefundCredits(
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to refund' };
     }
-    const creditsToRefund = hours * 50000; // Convert hours to credits
+    const creditsToRefund = hours * CREDITS_PER_HOUR; // Convert hours to credits
     const currentBalance = store.get('balanceCredits', 0);
     const newBalance = currentBalance + creditsToRefund;
     store.set('balanceCredits', newBalance);
-    return { success: true, newBalanceHours: newBalance / 50000 }; // Convert back to hours for response
+    return { success: true, newBalanceHours: newBalance / CREDITS_PER_HOUR }; // Convert back to hours for response
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -156,14 +162,14 @@ export async function handleReserveCredits(
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to reserve' };
     }
-    const creditsToReserve = hours * 50000; // Convert hours to credits
+    const creditsToReserve = hours * CREDITS_PER_HOUR; // Convert hours to credits
     const currentBalance = store.get('balanceCredits', 0);
     if (currentBalance < creditsToReserve) {
       return { success: false, error: 'Insufficient credits' };
     }
     const newBalance = currentBalance - creditsToReserve;
     store.set('balanceCredits', newBalance);
-    return { success: true, newBalanceHours: newBalance / 50000 }; // Convert back to hours for response
+    return { success: true, newBalanceHours: newBalance / CREDITS_PER_HOUR }; // Convert back to hours for response
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -232,17 +238,22 @@ async function handleStripeSuccess(sessionId?: string | null): Promise<void> {
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
 
-    if (response.data && typeof response.data.creditBalance === 'number') {
+    if (
+      response.data &&
+      typeof response.data.creditBalance === 'number' &&
+      typeof response.data.hoursBalance === 'number'
+    ) {
       const newBalance = response.data.creditBalance;
+      const newHoursBalance = response.data.hoursBalance;
       store.set('balanceCredits', newBalance);
       log.info(
-        `[credit-handler] Updated credit balance: ${newBalance} credits`
+        `[credit-handler] Updated credit balance: ${newBalance} credits (${newHoursBalance} hours)`
       );
 
-      // Notify the renderer process about the updated balance (convert to hours for UI)
+      // Notify the renderer process about the updated balance using API's hours calculation
       const mainWindow = BrowserWindow.getAllWindows()[0];
       if (mainWindow) {
-        mainWindow.webContents.send('credits-updated', newBalance / 50000);
+        mainWindow.webContents.send('credits-updated', newHoursBalance);
       }
     }
   } catch (error) {

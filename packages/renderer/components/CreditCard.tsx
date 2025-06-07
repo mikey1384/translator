@@ -36,10 +36,10 @@ export default function CreditCard() {
         <p style={{ color: colors.textDim }}>{t('credits.loading')}</p>
       ) : error ? (
         <p style={{ color: colors.danger }}>{error}</p>
-      ) : (
+      ) : balance !== null ? (
         <>
           <span className={balanceTxt}>
-            {(balance ?? 0).toFixed(1)}
+            {balance.toFixed(1)}
             <span style={{ fontSize: '1rem', fontWeight: 400 }}>
               {' '}
               {t('credits.hours')}
@@ -52,7 +52,7 @@ export default function CreditCard() {
             {t('credits.description')}
           </p>
         </>
-      )}
+      ) : null}
     </section>
   );
 }
