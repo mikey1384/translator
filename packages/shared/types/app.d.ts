@@ -313,11 +313,13 @@ declare module '@shared-types/app' {
   interface ElectronAPI {
     refundCredits: (hours: number) => Promise<{
       success: boolean;
+      newBalanceCredits?: number;
       newBalanceHours?: number;
       error?: string;
     }>;
     reserveCredits: (hours: number) => Promise<{
       success: boolean;
+      newBalanceCredits?: number;
       newBalanceHours?: number;
       error?: string;
     }>;
@@ -400,7 +402,12 @@ declare module '@shared-types/app' {
 
     getCreditBalance: () => Promise<CreditBalanceResult>;
     createCheckoutSession: (packId: 'HOUR_5') => Promise<string | null>;
-    onCreditsUpdated: (callback: (balance: number) => void) => () => void;
+    onCreditsUpdated: (
+      callback: (payload: {
+        creditBalance: number;
+        hoursBalance: number;
+      }) => void
+    ) => () => void;
   }
 
   declare global {

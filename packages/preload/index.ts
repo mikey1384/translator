@@ -233,21 +233,31 @@ const electronAPI = {
   // Credit spending and refunding (spendCredits removed)
   refundCredits: (
     hours: number
-  ): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> =>
-    ipcRenderer.invoke('refund-credits', hours),
+  ): Promise<{
+    success: boolean;
+    newBalanceCredits?: number;
+    newBalanceHours?: number;
+    error?: string;
+  }> => ipcRenderer.invoke('refund-credits', hours),
 
   // Credit reservation
   reserveCredits: (
     hours: number
-  ): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> =>
-    ipcRenderer.invoke('reserve-credits', hours),
+  ): Promise<{
+    success: boolean;
+    newBalanceCredits?: number;
+    newBalanceHours?: number;
+    error?: string;
+  }> => ipcRenderer.invoke('reserve-credits', hours),
 
   createCheckoutSession: (packId: 'HOUR_5') =>
     ipcRenderer.invoke('create-checkout-session', packId),
 
   // Listen for credit balance updates from the main process
-  onCreditsUpdated: (callback: (balance: number) => void) => {
-    const handler = (_: any, balance: number) => callback(balance);
+  onCreditsUpdated: (
+    callback: (payload: { creditBalance: number; hoursBalance: number }) => void
+  ) => {
+    const handler = (_: any, payload: any) => callback(payload);
     ipcRenderer.on('credits-updated', handler);
     return () => ipcRenderer.removeListener('credits-updated', handler);
   },

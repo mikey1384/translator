@@ -25,11 +25,21 @@ export function getCreditBalance(): Promise<CreditBalanceResult> {
   return window.electron.getCreditBalance();
 }
 
-export function refundCredits(hours: number) {
+export function refundCredits(hours: number): Promise<{
+  success: boolean;
+  newBalanceCredits?: number;
+  newBalanceHours?: number;
+  error?: string;
+}> {
   return window.electron.refundCredits(hours);
 }
 
-export function reserveCredits(hours: number) {
+export function reserveCredits(hours: number): Promise<{
+  success: boolean;
+  newBalanceCredits?: number;
+  newBalanceHours?: number;
+  error?: string;
+}> {
   return window.electron.reserveCredits(hours);
 }
 
@@ -46,7 +56,7 @@ export function createCheckoutSession(
 }
 
 export function onCreditsUpdated(
-  callback: (balance: number) => void
+  callback: (payload: { creditBalance: number; hoursBalance: number }) => void
 ): () => void {
   return window.electron.onCreditsUpdated(callback);
 }

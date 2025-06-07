@@ -16,7 +16,11 @@ export const useCreditStore = create<CreditState>((set, get) => {
   const sync = debounce(() => get().refresh(), 250);
 
   // Set up listener for credit updates from main process
-  const unsub = SystemIPC.onCreditsUpdated(sync);
+  const unsub = SystemIPC.onCreditsUpdated(
+    ({ creditBalance, hoursBalance }) => {
+      set({ credits: creditBalance, hours: hoursBalance });
+    }
+  );
 
   // Clean up on hot reload during development
   if (import.meta.hot) {

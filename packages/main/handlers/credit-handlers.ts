@@ -104,7 +104,12 @@ export async function handleCreateCheckoutSession(
 export async function handleRefundCredits(
   _evt: Electron.IpcMainInvokeEvent,
   hours: number
-): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> {
+): Promise<{
+  success: boolean;
+  newBalanceCredits?: number;
+  newBalanceHours?: number;
+  error?: string;
+}> {
   try {
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to refund' };
@@ -114,7 +119,21 @@ export async function handleRefundCredits(
     const currentBalance = store.get('balanceCredits', 0);
     const newBalance = currentBalance + creditsToRefund;
     store.set('balanceCredits', newBalance);
-    return { success: true, newBalanceHours: newBalance / perHour }; // Convert back using same rate
+
+    // Emit credits-updated event to notify UI
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+      mainWindow.webContents.send('credits-updated', {
+        creditBalance: newBalance,
+        hoursBalance: newBalance / perHour,
+      });
+    }
+
+    return {
+      success: true,
+      newBalanceCredits: newBalance,
+      newBalanceHours: newBalance / perHour,
+    };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -123,7 +142,12 @@ export async function handleRefundCredits(
 export async function handleReserveCredits(
   _evt: Electron.IpcMainInvokeEvent,
   hours: number
-): Promise<{ success: boolean; newBalanceHours?: number; error?: string }> {
+): Promise<{
+  success: boolean;
+  newBalanceCredits?: number;
+  newBalanceHours?: number;
+  error?: string;
+}> {
   try {
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to reserve' };
@@ -136,7 +160,21 @@ export async function handleReserveCredits(
     }
     const newBalance = currentBalance - creditsToReserve;
     store.set('balanceCredits', newBalance);
-    return { success: true, newBalanceHours: newBalance / perHour }; // Convert back using same rate
+
+    // Emit credits-updated event to notify UI
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+      mainWindow.webContents.send('credits-updated', {
+        creditBalance: newBalance,
+        hoursBalance: newBalance / perHour,
+      });
+    }
+
+    return {
+      success: true,
+      newBalanceCredits: newBalance,
+      newBalanceHours: newBalance / perHour,
+    };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

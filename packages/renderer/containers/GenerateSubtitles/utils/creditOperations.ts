@@ -29,7 +29,10 @@ export async function validateAndReserveCredits(
   }
 
   // Optimistic UI update with the new balance from the reservation
-  useCreditStore.setState({ hours: reserve.newBalanceHours });
+  useCreditStore.setState({
+    credits: reserve.newBalanceCredits ?? useCreditStore.getState().credits,
+    hours: reserve.newBalanceHours,
+  });
   return { success: true };
 }
 
@@ -37,9 +40,13 @@ export async function refundCreditsIfNeeded(
   hoursNeeded: number
 ): Promise<void> {
   if (hoursNeeded !== null) {
-    useCreditStore.setState(s => ({
-      hours: (s.hours ?? 0) + hoursNeeded,
-    }));
-    await SystemIPC.refundCredits(hoursNeeded);
+    const result = await SystemIPC.refundCredits(hoursNeeded);
+    if (result.success) {
+      // Update store with the actual returned values
+      useCreditStore.setState({
+        credits: result.newBalanceCredits ?? useCreditStore.getState().credits,
+        hours: result.newBalanceHours ?? useCreditStore.getState().hours,
+      });
+    }
   }
 }
