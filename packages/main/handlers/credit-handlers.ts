@@ -261,7 +261,10 @@ async function handleStripeSuccess(sessionId?: string | null): Promise<void> {
       // Notify the renderer process about the updated balance using API's hours calculation
       const mainWindow = BrowserWindow.getAllWindows()[0];
       if (mainWindow) {
-        mainWindow.webContents.send('credits-updated', hoursBalance);
+        mainWindow.webContents.send('credits-updated', {
+          creditBalance,
+          hoursBalance,
+        });
       }
     }
   } catch (error) {
