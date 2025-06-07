@@ -21,7 +21,6 @@ import { useCreditSystem } from './hooks/useCreditSystem';
 // Components
 import CreditWarningBanner from './components/CreditWarningBanner';
 import FileInputSection from './components/FileInputSection';
-import CostHint from './components/CostHint';
 
 // Utilities
 import {
@@ -158,11 +157,6 @@ export default function GenerateSubtitles() {
           disabledKey={isButtonDisabled || hoursNeeded == null}
         />
       )}
-      {videoFile &&
-        hoursNeeded !== null &&
-        costStr &&
-        durationSecs !== null &&
-        durationSecs > 0 && <CostHint costStr={costStr} />}
     </Section>
   );
 
