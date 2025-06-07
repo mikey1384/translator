@@ -113,6 +113,7 @@
   "credits": {
     "title": "AI 사용 시간",
     "loading": "불러오는 중…",
+    "credits": "크레딧",
     "hours": "시간",
     "buyCredits": "$10 크레딧 구매",
     "redirectingToPayment": "결제 창을 여는 중…",

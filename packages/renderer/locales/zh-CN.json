@@ -113,6 +113,7 @@
   "credits": {
     "title": "AI使用时长",
     "loading": "加载中...",
+    "credits": "积分",
     "hours": "小时",
     "buyCredits": "购买$10套餐",
     "redirectingToPayment": "正在打开安全支付…",

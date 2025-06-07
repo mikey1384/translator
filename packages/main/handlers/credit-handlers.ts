@@ -42,7 +42,9 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       store.set('creditsPerHour', creditsPerHour); // Cache the conversion rate
       return {
         success: true,
+        creditBalance,
         balanceHours: hoursBalance, // Use API's calculation directly
+        creditsPerHour,
         updatedAt: new Date().toISOString(),
       };
     } else {
@@ -56,7 +58,9 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     return {
       success: false,
       error: err.message,
+      creditBalance: cachedBal, // NEW
       balanceHours: cachedBal / cachedPerHour, // Use cached conversion rate
+      creditsPerHour: cachedPerHour, // NEW
       updatedAt: new Date().toISOString(),
     };
   }

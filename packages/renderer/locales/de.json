@@ -113,6 +113,7 @@
   "credits": {
     "title": "KI-Nutzungsstunden",
     "loading": "Lädt...",
+    "credits": "Credits",
     "hours": "Stunden",
     "buyCredits": "$10 Paket kaufen",
     "redirectingToPayment": "Sichere Zahlung öffnen…",

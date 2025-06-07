@@ -10,7 +10,7 @@ export async function validateAndReserveCredits(
   hoursNeeded: number,
   refreshCreditState: () => void
 ): Promise<CreditReservationResult> {
-  const currentBalance = useCreditStore.getState().balance ?? 0;
+  const currentBalance = useCreditStore.getState().hours ?? 0;
   if (currentBalance < hoursNeeded) {
     return {
       success: false,
@@ -29,7 +29,7 @@ export async function validateAndReserveCredits(
   }
 
   // Optimistic UI update with the new balance from the reservation
-  useCreditStore.setState({ balance: reserve.newBalanceHours });
+  useCreditStore.setState({ hours: reserve.newBalanceHours });
   return { success: true };
 }
 
@@ -38,7 +38,7 @@ export async function refundCreditsIfNeeded(
 ): Promise<void> {
   if (hoursNeeded !== null) {
     useCreditStore.setState(s => ({
-      balance: (s.balance ?? 0) + hoursNeeded,
+      hours: (s.hours ?? 0) + hoursNeeded,
     }));
     await SystemIPC.refundCredits(hoursNeeded);
   }

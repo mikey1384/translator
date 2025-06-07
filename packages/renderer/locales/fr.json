@@ -113,6 +113,7 @@
   "credits": {
     "title": "Heures d'utilisation IA",
     "loading": "Chargement...",
+    "credits": "crédits",
     "hours": "heures",
     "buyCredits": "Acheter pack $10",
     "redirectingToPayment": "Ouverture paiement sécurisé…",

@@ -1,7 +1,5 @@
 import type {
   CreditBalanceResult,
-  PurchaseCreditsOptions,
-  PurchaseCreditsResult,
   VideoMetadataResult,
 } from '@shared-types/app';
 
@@ -25,12 +23,6 @@ export function setLanguagePreference(
 
 export function getCreditBalance(): Promise<CreditBalanceResult> {
   return window.electron.getCreditBalance();
-}
-
-export function purchaseCredits(
-  opts: PurchaseCreditsOptions
-): Promise<PurchaseCreditsResult> {
-  return window.electron.purchaseCredits(opts);
 }
 
 export function refundCredits(hours: number) {

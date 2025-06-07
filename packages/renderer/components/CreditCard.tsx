@@ -24,7 +24,7 @@ const balanceTxt = css`
 
 export default function CreditCard() {
   const { t } = useTranslation();
-  const { balance, loading, error } = useCreditStore();
+  const { credits, hours, loading, error } = useCreditStore();
 
   return (
     <section className={card}>
@@ -36,19 +36,26 @@ export default function CreditCard() {
         <p style={{ color: colors.textDim }}>{t('credits.loading')}</p>
       ) : error ? (
         <p style={{ color: colors.danger }}>{error}</p>
-      ) : balance !== null ? (
+      ) : credits !== null && hours !== null ? (
         <>
           <span className={balanceTxt}>
-            {balance.toFixed(1)}
+            {credits.toLocaleString()}
             <span style={{ fontSize: '1rem', fontWeight: 400 }}>
               {' '}
-              {t('credits.hours')}
+              {t('credits.credits')}
+            </span>
+            <span style={{ fontSize: '1rem', color: colors.textDim }}>
+              {' '}
+              ({hours.toFixed(1)} {t('credits.hours')})
             </span>
           </span>
 
           {/* single purchase option */}
           <BuyCreditsButton packId="HOUR_5" />
-          <p style={{ fontSize: '.85rem', color: colors.grayDark }}>
+          <p
+            className="hint"
+            style={{ fontSize: '.85rem', color: colors.grayDark }}
+          >
             {t('credits.description')}
           </p>
         </>

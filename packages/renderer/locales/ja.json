@@ -113,6 +113,7 @@
   "credits": {
     "title": "AI使用時間",
     "loading": "読み込み中...",
+    "credits": "クレジット",
     "hours": "時間",
     "buyCredits": "$10パック購入",
     "redirectingToPayment": "安全な決済を開いています…",

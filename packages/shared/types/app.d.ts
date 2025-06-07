@@ -299,6 +299,7 @@ declare module '@shared-types/app' {
   // =========================================
   export interface CreditBalanceResult {
     success: boolean;
+    creditBalance?: number;
     balanceHours?: number;
     creditsPerHour?: number;
     updatedAt?: string;

@@ -113,6 +113,7 @@
   "credits": {
     "title": "AI Usage Hours",
     "loading": "Loading...",
+    "credits": "credits",
     "hours": "hours",
     "buyCredits": "Buy $10 credit pack",
     "redirectingToPayment": "Opening secure checkout…",
