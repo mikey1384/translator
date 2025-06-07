@@ -80,7 +80,7 @@ export default function AdminResetButton() {
       disabled={loading}
       title="Admin: Add 5h test credits (250,000 credits)"
     >
-      {loading ? '🔄 Adding credits...' : '➕ Add 5h Test Credits'}
+      {loading ? '🔄 Adding credits...' : '➕ Add 250,000 Credits'}
     </button>
   );
 }
