@@ -1,6 +1,6 @@
 import type { CreditBalanceResult } from '@shared-types/app';
 import Store from 'electron-store';
-import { BrowserWindow, app } from 'electron';
+import { BrowserWindow } from 'electron';
 import axios from 'axios'; // Assuming axios is available
 import log from 'electron-log'; // Assuming electron-log is correctly configured
 
@@ -82,14 +82,9 @@ export async function handleCreateCheckoutSession(
         `[credit-handler] Checkout session URL received: ${response.data.url}`
       );
 
-      /** DEV = not-packaged → open in external browser so we can watch Stripe logs
-       *  PROD = packaged     → keep everything in modal for nicer UX        */
-      if (!app.isPackaged) {
-        return response.data.url; // Hand back to renderer ⇒ shell.openExternal
-      }
-
-      await openStripeCheckout(response.data.url); // packaged flow
-      return null; // renderer does nothing
+      // Always open inside an Electron modal so we catch the redirect even in dev
+      await openStripeCheckout(response.data.url);
+      return null;
     }
     log.warn(
       '[credit-handler] Backend did not return a URL for checkout session.',
@@ -160,8 +155,8 @@ async function openStripeCheckout(sessionUrl: string): Promise<void> {
 
     win.loadURL(sessionUrl);
 
-    // 1️⃣ Intercept navigation inside the child window
-    win.webContents.on('will-redirect', (event, url) => {
+    // Handle redirect events (will-redirect is primary, will-navigate as safety net)
+    const handleRedirect = (event: Electron.Event, url: string) => {
       if (url.startsWith('https://stage5.tools/checkout/success')) {
         event.preventDefault(); // stay on current page
         const u = new URL(url);
@@ -174,7 +169,10 @@ async function openStripeCheckout(sessionUrl: string): Promise<void> {
         win.close();
         resolve();
       }
-    });
+    };
+
+    win.webContents.on('will-redirect', handleRedirect);
+    win.webContents.on('will-navigate', handleRedirect); // Extra safety net for Windows/Linux
 
     // Handle network failures to prevent freezing
     win.webContents.on(
