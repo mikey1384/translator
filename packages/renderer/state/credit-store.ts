@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { debounce } from 'lodash-es';
 import * as SystemIPC from '@ipc/system';
 
 interface CreditState {
@@ -7,26 +8,37 @@ interface CreditState {
   loading: boolean;
   error?: string;
   refresh: () => Promise<void>;
+  unsub?: () => void; // For external cleanup
 }
 
-export const useCreditStore = create<CreditState>(set => {
+export const useCreditStore = create<CreditState>((set, get) => {
+  // Debounced sync function to prevent rapid API calls
+  const sync = debounce(() => get().refresh(), 250);
+
   // Set up listener for credit updates from main process
-  SystemIPC.onCreditsUpdated(() => {
-    useCreditStore.getState().refresh();
-  });
+  const unsub = SystemIPC.onCreditsUpdated(sync);
+
+  // Clean up on hot reload during development
+  if (import.meta.hot) {
+    import.meta.hot.dispose(unsub);
+  }
 
   return {
     credits: null,
     hours: null,
     loading: true,
     error: undefined,
+    unsub, // Return for external disposal
     refresh: async () => {
-      set({ loading: true });
+      // Only show loading spinner on first load, not on updates
+      const isFirstLoad = get().credits === null;
+      if (isFirstLoad) set({ loading: true });
+
       const res = await SystemIPC.getCreditBalance();
       if (res.success) {
         set({
-          credits: res.creditBalance ?? null,
-          hours: res.balanceHours ?? null,
+          credits: res.creditBalance ?? get().credits, // Keep previous if missing
+          hours: res.balanceHours ?? get().hours, // Keep previous if missing
           loading: false,
           error: undefined,
         });
@@ -37,4 +49,4 @@ export const useCreditStore = create<CreditState>(set => {
   };
 });
 
-useCreditStore.getState().refresh(); // kick off once on module import
+useCreditStore.getState().refresh();
