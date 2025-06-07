@@ -299,18 +299,9 @@ declare module '@shared-types/app' {
   // =========================================
   export interface CreditBalanceResult {
     success: boolean;
-    balanceHours?: number; // e.g. 4.5 = four-and-a-half playback hours
-    updatedAt?: string; // ISO8601
-    error?: string;
-  }
-
-  export interface PurchaseCreditsOptions {
-    packageId: 'HOUR_1' | 'HOUR_5' | 'HOUR_10'; // whatever you sell
-  }
-  export interface PurchaseCreditsResult {
-    success: boolean;
-    newBalanceHours?: number;
-    redirectUrl?: string; // if we're doing Stripe Checkout in browser
+    balanceHours?: number;
+    creditsPerHour?: number;
+    updatedAt?: string;
     error?: string;
   }
 
@@ -407,9 +398,6 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     getCreditBalance: () => Promise<CreditBalanceResult>;
-    purchaseCredits: (
-      opts: PurchaseCreditsOptions
-    ) => Promise<PurchaseCreditsResult>;
     createCheckoutSession: (packId: 'HOUR_5') => Promise<string | null>;
     onCreditsUpdated: (callback: (balance: number) => void) => () => void;
   }

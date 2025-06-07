@@ -1,5 +1,5 @@
 export const AI_MODELS = {
-  GPT: 'gpt-4o',
+  GPT: 'gpt-4.1',
   WHISPER: { id: 'whisper-1' },
 } as const;
 
@@ -48,9 +48,6 @@ export const MIN_FONT_SCALE = 0.5;
 export const MAX_FONT_SCALE = 2.0;
 export const DEBOUNCE_DELAY_MS = 300;
 export const DEFAULT_FILENAME = 'edited_subtitles.srt';
-
-// Credit system constants
-export const CREDITS_PER_HOUR = 50000;
 
 export function fontScale(height: number): number {
   const effectiveHeight = Math.max(height, MIN_VIDEO_HEIGHT);

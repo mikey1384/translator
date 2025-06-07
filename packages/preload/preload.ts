@@ -2,7 +2,6 @@ import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from 'electron';
 import {
   ExposedRenderResult,
   RenderSubtitlesOptions,
-  PurchaseCreditsOptions,
   CreditBalanceResult,
 } from '@shared-types/app';
 import { promises as fs } from 'fs';
@@ -230,8 +229,6 @@ const electronAPI = {
 
   getCreditBalance: (): Promise<CreditBalanceResult> =>
     ipcRenderer.invoke('get-credit-balance'),
-  purchaseCredits: (opts: PurchaseCreditsOptions) =>
-    ipcRenderer.invoke('purchase-credits', opts),
 
   // Credit spending and refunding (spendCredits removed)
   refundCredits: (
