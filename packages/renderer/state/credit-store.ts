@@ -11,8 +11,8 @@ interface CreditState {
 
 export const useCreditStore = create<CreditState>(set => {
   // Set up listener for credit updates from main process
-  SystemIPC.onCreditsUpdated((balance: number) => {
-    set({ hours: balance, loading: false });
+  SystemIPC.onCreditsUpdated(() => {
+    useCreditStore.getState().refresh();
   });
 
   return {
