@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
+import AdminResetButton from './AdminResetButton';
 import { colors } from '../styles';
 
 const card = css`
@@ -52,6 +53,10 @@ export default function CreditCard() {
 
           {/* single purchase option */}
           <BuyCreditsButton packId="HOUR_5" />
+
+          {/* Admin reset button (only shows for admin device) */}
+          <AdminResetButton />
+
           <p
             className="hint"
             style={{ fontSize: '.85rem', color: colors.grayDark }}

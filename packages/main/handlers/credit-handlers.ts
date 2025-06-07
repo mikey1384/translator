@@ -7,7 +7,7 @@ import log from 'electron-log'; // Assuming electron-log is correctly configured
 import { v4 as uuidv4 } from 'uuid';
 
 // Generate or retrieve device ID using proper UUID v4
-function getDeviceId(): string {
+export function getDeviceId(): string {
   const deviceIdStore = new Store<{ deviceId?: string }>({
     name: 'device-config',
   });
@@ -21,7 +21,7 @@ function getDeviceId(): string {
 
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
-  defaults: { balanceCredits: 0, creditsPerHour: 50000 }, // Keep fallback for offline scenarios
+  defaults: { balanceCredits: 0, creditsPerHour: 18000 },
 });
 
 export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
@@ -54,7 +54,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     // Attempt to return cached value on error - use cached conversion rate
     const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', 50000);
+    const cachedPerHour = store.get('creditsPerHour', 18000);
     return {
       success: false,
       error: err.message,
@@ -114,7 +114,7 @@ export async function handleRefundCredits(
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to refund' };
     }
-    const perHour = store.get('creditsPerHour', 50000); // Use cached conversion rate
+    const perHour = store.get('creditsPerHour', 18000); // Use cached conversion rate
     const creditsToRefund = hours * perHour; // Convert hours to credits
     const currentBalance = store.get('balanceCredits', 0);
     const newBalance = currentBalance + creditsToRefund;
@@ -152,7 +152,7 @@ export async function handleReserveCredits(
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to reserve' };
     }
-    const perHour = store.get('creditsPerHour', 50000); // Use cached conversion rate
+    const perHour = store.get('creditsPerHour', 18000); // Use cached conversion rate
     const creditsToReserve = hours * perHour; // Convert hours to credits
     const currentBalance = store.get('balanceCredits', 0);
     if (currentBalance < creditsToReserve) {
@@ -232,6 +232,60 @@ async function openStripeCheckout(sessionUrl: string): Promise<void> {
       resolve();
     });
   });
+}
+
+export async function handleResetCredits(): Promise<{
+  success: boolean;
+  creditsAdded?: number;
+  error?: string;
+}> {
+  try {
+    log.info('[credit-handler] Attempting admin credit reset...');
+
+    const response = await axios.post('https://api.stage5.tools/admin/reset', {
+      deviceId: getDeviceId(),
+      pack: 'HOUR_5', // Reset with one standard pack
+    });
+
+    if (response.data?.success) {
+      const { creditsAdded } = response.data;
+      log.info(
+        `[credit-handler] ✅ Admin reset successful: Added ${creditsAdded} credits`
+      );
+
+      // Force a refresh so UI updates instantly
+      const updatedBalance = await handleGetCreditBalance();
+
+      // Broadcast the updated balance to renderer
+      if (
+        updatedBalance.success &&
+        updatedBalance.creditBalance !== undefined
+      ) {
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (mainWindow) {
+          mainWindow.webContents.send('credits-updated', {
+            creditBalance: updatedBalance.creditBalance,
+            hoursBalance: updatedBalance.balanceHours || 0,
+          });
+        }
+      }
+
+      return {
+        success: true,
+        creditsAdded,
+      };
+    } else {
+      const error = response.data?.error || 'Unknown error';
+      log.error(`[credit-handler] ❌ Admin reset failed: ${error}`);
+      return { success: false, error };
+    }
+  } catch (err: any) {
+    log.error('[credit-handler] ❌ Admin reset error:', err);
+    return {
+      success: false,
+      error: err.response?.data?.error || err.message || 'Network error',
+    };
+  }
 }
 
 async function handleStripeSuccess(sessionId?: string | null): Promise<void> {

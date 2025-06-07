@@ -402,6 +402,13 @@ declare module '@shared-types/app' {
 
     getCreditBalance: () => Promise<CreditBalanceResult>;
     createCheckoutSession: (packId: 'HOUR_5') => Promise<string | null>;
+    resetCredits: () => Promise<{
+      success: boolean;
+      creditsAdded?: number;
+      error?: string;
+    }>;
+    getDeviceId: () => Promise<string>;
+    getAdminDeviceId: () => Promise<string | null>;
     onCreditsUpdated: (
       callback: (payload: {
         creditBalance: number;

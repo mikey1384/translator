@@ -253,6 +253,18 @@ const electronAPI = {
   createCheckoutSession: (packId: 'HOUR_5') =>
     ipcRenderer.invoke('create-checkout-session', packId),
 
+  // Admin credit reset function
+  resetCredits: (): Promise<{
+    success: boolean;
+    creditsAdded?: number;
+    error?: string;
+  }> => ipcRenderer.invoke('reset-credits'),
+
+  // Get device ID for admin button visibility
+  getDeviceId: (): Promise<string> => ipcRenderer.invoke('get-device-id'),
+  getAdminDeviceId: (): Promise<string | null> =>
+    ipcRenderer.invoke('get-admin-device-id'),
+
   // Listen for credit balance updates from the main process
   onCreditsUpdated: (
     callback: (payload: { creditBalance: number; hoursBalance: number }) => void
