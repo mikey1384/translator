@@ -110,6 +110,14 @@
     "title": "Settings",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
+  "credits": {
+    "title": "AI使用時間",
+    "loading": "読み込み中...",
+    "hours": "時間",
+    "buyCredits": "$10パック購入",
+    "redirectingToPayment": "安全な決済を開いています…",
+    "description": "1パック($10)でインタビュー形式の動画約5時間を翻訳できます。"
+  },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",
     "exitFullscreen": "Exit Fullscreen",

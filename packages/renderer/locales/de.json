@@ -110,6 +110,14 @@
     "title": "Settings",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
+  "credits": {
+    "title": "KI-Nutzungsstunden",
+    "loading": "Lädt...",
+    "hours": "Stunden",
+    "buyCredits": "$10 Paket kaufen",
+    "redirectingToPayment": "Sichere Zahlung öffnen…",
+    "description": "Ein Paket ($10) kann etwa 5 Stunden Interview-Videos übersetzen."
+  },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",
     "exitFullscreen": "Exit Fullscreen",

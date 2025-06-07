@@ -1,19 +1,17 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
-import type { PurchaseCreditsOptions } from '@shared-types/app';
 
 interface CreditState {
   balance: number | null;
   loading: boolean;
   error?: string;
   refresh: () => Promise<void>;
-  buy: (pkg: PurchaseCreditsOptions['packageId']) => Promise<void>;
 }
 
 export const useCreditStore = create<CreditState>(set => {
   // Set up listener for credit updates from main process
   SystemIPC.onCreditsUpdated((balance: number) => {
-    set({ balance, error: undefined });
+    set({ balance, loading: false });
   });
 
   return {
@@ -28,15 +26,6 @@ export const useCreditStore = create<CreditState>(set => {
         loading: false,
         error: res.error,
       });
-    },
-    buy: async pkg => {
-      set({ loading: true }); // Optional: set loading true before purchase
-      const res = await SystemIPC.purchaseCredits({ packageId: pkg });
-      if (res.success) {
-        set({ balance: res.newBalanceHours, error: undefined, loading: false });
-      } else {
-        set({ error: res.error, loading: false });
-      }
     },
   };
 });

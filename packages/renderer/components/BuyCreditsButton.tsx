@@ -56,9 +56,7 @@ export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
       disabled={loading}
       style={{ padding: '10px 15px', cursor: loading ? 'wait' : 'pointer' }}
     >
-      {loading
-        ? t('generateSubtitles.buttons.redirectingToPayment')
-        : t('generateSubtitles.buttons.buyCredits')}
+      {loading ? t('credits.redirectingToPayment') : t('credits.buyCredits')}
     </button>
   );
 }

@@ -110,6 +110,14 @@
     "title": "Settings",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
+  "credits": {
+    "title": "AI使用时长",
+    "loading": "加载中...",
+    "hours": "小时",
+    "buyCredits": "购买$10套餐",
+    "redirectingToPayment": "正在打开安全支付…",
+    "description": "一个套餐($10)可以翻译大约5小时的访谈类视频。"
+  },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",
     "exitFullscreen": "Exit Fullscreen",

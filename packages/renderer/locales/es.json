@@ -110,6 +110,14 @@
     "title": "Settings",
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
+  "credits": {
+    "title": "Horas de uso de IA",
+    "loading": "Cargando...",
+    "hours": "horas",
+    "buyCredits": "Comprar paquete de $10",
+    "redirectingToPayment": "Abriendo pago seguro…",
+    "description": "Un paquete ($10) puede traducir aproximadamente 5 horas de videos tipo entrevista."
+  },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",
     "exitFullscreen": "Exit Fullscreen",
