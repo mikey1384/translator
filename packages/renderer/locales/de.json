@@ -191,7 +191,7 @@
     "noCredits": "No credits.",
     "rechargeLink": "Recharge →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to continue.",
+      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
       "settingsLinkText": "Settings"
     },
     "validation": {
