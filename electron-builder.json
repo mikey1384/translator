@@ -36,7 +36,16 @@
   ],
   "mac": {
     "category": "public.app-category.video",
-    "target": ["dmg", "zip"],
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64", "arm64"]
+      }
+    ],
     "hardenedRuntime": true,
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
@@ -54,7 +63,12 @@
     ]
   },
   "win": {
-    "target": ["nsis"],
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      }
+    ],
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],

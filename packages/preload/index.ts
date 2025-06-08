@@ -273,6 +273,19 @@ const electronAPI = {
     ipcRenderer.on('credits-updated', handler);
     return () => ipcRenderer.removeListener('credits-updated', handler);
   },
+
+  // Listen for checkout status events
+  onCheckoutPending: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('checkout-pending', handler);
+    return () => ipcRenderer.removeListener('checkout-pending', handler);
+  },
+
+  onCheckoutConfirmed: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('checkout-confirmed', handler);
+    return () => ipcRenderer.removeListener('checkout-confirmed', handler);
+  },
 };
 
 try {
@@ -293,3 +306,12 @@ contextBridge.exposeInMainWorld('appShell', {
 
 const isPackaged = ipcRenderer.sendSync('is-packaged');
 contextBridge.exposeInMainWorld('env', { isPackaged });
+
+// Listen for postMessage from Stripe checkout pages and forward to main process
+window.addEventListener('message', event => {
+  if (event.data?.type === 'stripe-success') {
+    ipcRenderer.send('stripe-success', event.data);
+  } else if (event.data?.type === 'stripe-cancelled') {
+    ipcRenderer.send('stripe-cancelled', event.data);
+  }
+});

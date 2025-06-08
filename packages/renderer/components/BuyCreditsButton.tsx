@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
 
 const TRUSTED_CHECKOUT_PATTERN =
-  /^(https:\/\/(checkout\.stripe\.com|checkout\.paypal\.com|your\.pspdomain\.com))\//;
+  /^(https:\/\/(checkout\.stripe\.com|checkout\.paypal\.com|stage5\.tools\/checkout|your\.pspdomain\.com))\//;
 
 interface BuyCreditsButtonProps {
   packId: 'STARTER' | 'STANDARD' | 'PRO';

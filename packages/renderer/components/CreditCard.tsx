@@ -25,7 +25,7 @@ const balanceTxt = css`
 
 export default function CreditCard() {
   const { t } = useTranslation();
-  const { credits, hours, loading, error } = useCreditStore();
+  const { credits, hours, loading, error, checkoutPending } = useCreditStore();
 
   return (
     <section className={card}>
@@ -37,6 +37,8 @@ export default function CreditCard() {
         <p style={{ color: colors.textDim }}>{t('credits.loading')}</p>
       ) : error ? (
         <p style={{ color: colors.danger }}>{error}</p>
+      ) : checkoutPending ? (
+        <p style={{ color: colors.primary }}>🔄 Processing payment...</p>
       ) : credits !== null && hours !== null ? (
         <>
           <span className={balanceTxt}>

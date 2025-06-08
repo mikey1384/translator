@@ -417,6 +417,8 @@ declare module '@shared-types/app' {
         hoursBalance: number;
       }) => void
     ) => () => void;
+    onCheckoutPending: (callback: () => void) => () => void;
+    onCheckoutConfirmed: (callback: () => void) => () => void;
   }
 
   declare global {

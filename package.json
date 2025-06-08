@@ -60,6 +60,7 @@
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "@types/which": "^3.0.4",
+    "axios": "^1.6.0",
     "combined-stream": "^1.0.8",
     "dotenv": "^16.5.0",
     "electron-context-menu": "^4.1.0",

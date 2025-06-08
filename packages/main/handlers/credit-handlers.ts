@@ -85,6 +85,12 @@ export async function handleCreateCheckoutSession(
         `[credit-handler] Checkout session URL received: ${response.data.url}`
       );
 
+      // Emit checkout-pending event so UI can show "syncing balance..." until webhook lands
+      const mainWindow = BrowserWindow.getAllWindows()[0];
+      if (mainWindow) {
+        mainWindow.webContents.send('checkout-pending');
+      }
+
       // Always open inside an Electron modal so we catch the redirect even in dev
       await openStripeCheckout(response.data.url);
       return null;
@@ -287,7 +293,9 @@ export async function handleResetCredits(): Promise<{
   }
 }
 
-async function handleStripeSuccess(sessionId?: string | null): Promise<void> {
+export async function handleStripeSuccess(
+  sessionId?: string | null
+): Promise<void> {
   if (!sessionId) return;
 
   try {
@@ -318,6 +326,8 @@ async function handleStripeSuccess(sessionId?: string | null): Promise<void> {
           creditBalance,
           hoursBalance,
         });
+        // Emit checkout-confirmed to indicate the payment processing is complete
+        mainWindow.webContents.send('checkout-confirmed');
       }
     }
   } catch (error) {

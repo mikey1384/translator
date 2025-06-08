@@ -60,3 +60,11 @@ export function onCreditsUpdated(
 ): () => void {
   return window.electron.onCreditsUpdated(callback);
 }
+
+export function onCheckoutPending(callback: () => void): () => void {
+  return window.electron.onCheckoutPending(callback);
+}
+
+export function onCheckoutConfirmed(callback: () => void): () => void {
+  return window.electron.onCheckoutConfirmed(callback);
+}

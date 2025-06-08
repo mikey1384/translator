@@ -46,6 +46,7 @@ import {
   handleReserveCredits,
   handleCreateCheckoutSession,
   handleResetCredits,
+  handleStripeSuccess,
   getDeviceId,
 } from './handlers/credit-handlers.js';
 
@@ -456,6 +457,17 @@ try {
     'get-admin-device-id',
     () => process.env.ADMIN_DEVICE_ID || null
   );
+
+  // Handle Stripe checkout completion messages from embedded window
+  ipcMain.on('stripe-success', async (_event, data) => {
+    log.info('[main.ts] Received stripe-success message:', data);
+    await handleStripeSuccess(data.sessionId);
+  });
+
+  ipcMain.on('stripe-cancelled', (_event, data) => {
+    log.info('[main.ts] Received stripe-cancelled message:', data);
+    // No action needed for cancellation
+  });
 
   // Expose app.isPackaged to renderer via preload (sync)
   ipcMain.on('is-packaged', event => {
