@@ -33,6 +33,17 @@ export async function generateStatePngs({
   const total = events.length;
   const STAGE_PERCENT = 10;
   const STEP = Math.max(1, Math.floor(total / 200));
+  let captured = 0;
+
+  // Bump the progress bar every 5s even if nothing else happens
+  // This prevents client timeout during long PNG capture operations
+  const heartbeat = setInterval(() => {
+    const frac = captured / total;
+    progress({
+      percent: 2 + frac * 8, // Stay in the 0-10% bucket
+      stage: `Capturing PNGs… (${captured}/${total})`,
+    });
+  }, 5_000);
 
   const abortCleanups: (() => void)[] = [];
   if (signal) {
@@ -84,7 +95,7 @@ export async function generateStatePngs({
 
       try {
         await page.screenshot({
-          path: file,
+          path: file as `${string}.png`,
           omitBackground: true,
           clip: {
             x: 0,
@@ -106,15 +117,20 @@ export async function generateStatePngs({
 
       pngs.push({ path: file, duration: durationToUse });
 
-      if (i % STEP === 0 || i === total - 1) {
-        const pct = Math.round(((i + 1) / total) * STAGE_PERCENT);
+      captured++;
+
+      // Coarser incremental updates (keeps the bar moving)
+      if (captured % 100 === 0 || captured === total) {
+        const frac = captured / total;
         progress({
-          percent: pct,
-          stage: `Rendering subtitles ${i + 1}/${total}`,
+          percent: 2 + frac * 8, // Stay in the 0-10% bucket
+          stage: `Capturing PNGs… (${captured}/${total})`,
         });
       }
     }
 
+    clearInterval(heartbeat);
+    progress({ percent: 10, stage: 'Overlay concat ready' });
     log.info(`[state-generator ${operationId}] captured ${pngs.length} PNGs`);
     return pngs;
   } catch (err) {
@@ -131,11 +147,12 @@ export async function generateStatePngs({
           }
         })
       );
-      const lastPct = Math.round((pngs.length / total) * STAGE_PERCENT);
+      const lastPct = Math.round((captured / total) * STAGE_PERCENT);
       progress({ percent: lastPct, stage: 'Cancelled' });
     }
     throw err;
   } finally {
     abortCleanups.forEach(cleanup => cleanup());
+    clearInterval(heartbeat);
   }
 }
