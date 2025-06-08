@@ -7,17 +7,13 @@ interface CreditState {
   hours: number | null;
   loading: boolean;
   error?: string;
-  checkoutPending: boolean; // True when payment is processing
+  checkoutPending: boolean;
   refresh: () => Promise<void>;
-  cleanup: () => void; // Clean up listeners
-  unsub?: () => void; // For external cleanup (deprecated, use cleanup)
+  cleanup: () => void;
+  unsub?: () => void;
 }
 
 export const useCreditStore = create<CreditState>((set, get) => {
-  // Debounced sync function to prevent rapid API calls
-  const sync = debounce(() => get().refresh(), 250);
-
-  // Set up listener for credit updates from main process
   const unsubCredits = SystemIPC.onCreditsUpdated(
     ({ creditBalance, hoursBalance }) => {
       set({
@@ -56,7 +52,6 @@ export const useCreditStore = create<CreditState>((set, get) => {
     error: undefined,
     unsub: unsubCredits, // Return for external disposal (deprecated)
     refresh: async () => {
-      // Only show loading spinner on first load, not on updates
       const isFirstLoad = get().credits === null;
       if (isFirstLoad) set({ loading: true });
 
