@@ -33,8 +33,13 @@ export const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 export const PROGRESS_ANALYSIS_DONE = 5;
 
 // --- ASR Output Format Configuration ---
-const USE_FLAC = process.env.ASR_USE_FLAC === '1';
-const fastMode = process.env.ASR_FAST === '1';
+import {
+  ASR_USE_FLAC,
+  ASR_FAST_MODE,
+} from '../../../shared/constants/runtime-config.js';
+
+const USE_FLAC = ASR_USE_FLAC;
+const fastMode = ASR_FAST_MODE;
 
 export const ASR_SAMPLE_RATE = fastMode ? 12_000 : 16_000;
 export const ASR_SAMPLE_FMT = 's16';

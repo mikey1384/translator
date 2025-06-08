@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import { Page } from 'puppeteer';
 import log from 'electron-log';
 import { BASELINE_HEIGHT } from '../../../shared/constants/index.js';
+import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
 
 export async function generateStatePngs({
   page,
@@ -43,7 +44,7 @@ export async function generateStatePngs({
       percent: 2 + frac * 8, // Stay in the 0-10% bucket
       stage: `Capturing PNGs… (${captured}/${total})`,
     });
-  }, 5_000);
+  }, HEARTBEAT_INTERVAL_MS);
 
   const abortCleanups: (() => void)[] = [];
   if (signal) {

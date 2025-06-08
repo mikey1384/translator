@@ -11,12 +11,12 @@ import * as OperationIPC from '@ipc/operation';
 const TRANSLATION_PROGRESS_COLOR = colors.progressTranslate;
 
 const devLog = (...a: any[]) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!window.env.isPackaged) {
     console.log(...a);
   }
 };
 const devError = (...a: any[]) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!window.env.isPackaged) {
     console.error(...a);
   }
 };

@@ -41,18 +41,14 @@ export const languages = [
   { code: 'hi', name: 'Hindi' },
 ];
 
-export const BASELINE_HEIGHT = 720;
-export const BASELINE_FONT_SIZE = 30;
-export const MIN_VIDEO_HEIGHT = 360;
-export const MIN_FONT_SCALE = 0.5;
-export const MAX_FONT_SCALE = 2.0;
-export const DEBOUNCE_DELAY_MS = 300;
-export const DEFAULT_FILENAME = 'edited_subtitles.srt';
-
-export function fontScale(height: number): number {
-  const effectiveHeight = Math.max(height, MIN_VIDEO_HEIGHT);
-  return Math.min(
-    Math.max(effectiveHeight / BASELINE_HEIGHT, MIN_FONT_SCALE),
-    MAX_FONT_SCALE
-  );
-}
+// Re-export from runtime-config for backward compatibility
+export {
+  BASELINE_HEIGHT,
+  BASELINE_FONT_SIZE,
+  MIN_VIDEO_HEIGHT,
+  MIN_FONT_SCALE,
+  MAX_FONT_SCALE,
+  DEBOUNCE_DELAY_MS,
+  DEFAULT_FILENAME,
+  fontScale,
+} from './runtime-config';

@@ -1,6 +1,7 @@
 import { RenderSubtitlesOptions } from '@shared-types/app'; // Import types
 import * as SubtitleIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state';
+import { SUBTITLE_RENDER_TIMEOUT } from '../../shared/constants/runtime-config';
 
 type PngRenderResult = {
   operationId: string;
@@ -91,8 +92,7 @@ class SubtitleRendererClient {
   async renderSubtitles(
     options: RenderSubtitlesOptions & { timeoutMs?: number }
   ): Promise<PngRenderResult> {
-    const DEFAULT_TIMEOUT_MS =
-      Number(process.env.SUBTITLE_RENDER_TIMEOUT) || 120_000;
+    const DEFAULT_TIMEOUT_MS = SUBTITLE_RENDER_TIMEOUT;
     const { operationId, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
     console.log(
       `[SubtitleRendererClient ${operationId}] Starting overlay render process via bridge:`,

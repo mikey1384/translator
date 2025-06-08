@@ -11,6 +11,7 @@ import {
   MAX_GAP_TO_FUSE,
 } from '../constants.js';
 import { throwIfAborted } from '../utils.js';
+import { MAX_AI_PARALLEL } from '../../../../shared/constants/runtime-config.js';
 
 export async function translatePass({
   segments,
@@ -36,10 +37,7 @@ export async function translatePass({
   const totalSegments = segmentsInProcess.length;
   const TRANSLATION_BATCH_SIZE = 10;
 
-  const CONCURRENT_TRANSLATIONS = Math.min(
-    4,
-    Number(process.env.MAX_AI_PARALLEL || 4)
-  );
+  const CONCURRENT_TRANSLATIONS = Math.min(4, MAX_AI_PARALLEL);
   const limit = pLimit(CONCURRENT_TRANSLATIONS);
 
   const batchPromises = [];

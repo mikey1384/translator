@@ -33,6 +33,7 @@ import {
   TRANSCRIPTION_BATCH_SIZE,
   MAX_PROMPT_CHARS,
 } from '../constants.js';
+import { WHISPER_PARALLEL } from '../../../../shared/constants/runtime-config.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
@@ -160,10 +161,7 @@ export async function transcribePass({
     let batchContext = '';
 
     let done = 0;
-    const CONCURRENCY = Math.max(
-      1,
-      parseInt(process.env.WHISPER_PARALLEL ?? '3', 10)
-    );
+    const CONCURRENCY = Math.max(1, WHISPER_PARALLEL);
     const limit = pLimit(CONCURRENCY);
     signal?.addEventListener('abort', () => limit.clearQueue());
     for (let b = 0; b < chunks.length; b += TRANSCRIPTION_BATCH_SIZE) {

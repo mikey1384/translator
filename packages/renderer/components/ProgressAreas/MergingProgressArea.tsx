@@ -7,12 +7,12 @@ import { useTaskStore } from '../../state';
 const MERGE_PROGRESS_COLOR = colors.progressMerge;
 
 const devLog = (...a: any[]) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!window.env.isPackaged) {
     console.log(...a);
   }
 };
 const devError = (...a: any[]) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!window.env.isPackaged) {
     console.error(...a);
   }
 };

@@ -1358,7 +1358,7 @@ var SUBTITLE_STYLE_PRESETS = {
   }
 };
 
-// ../shared/constants/index.ts
+// ../shared/constants/runtime-config.ts
 var BASELINE_FONT_SIZE = 30;
 
 // ../shared/helpers/subtitle-style-util.ts
