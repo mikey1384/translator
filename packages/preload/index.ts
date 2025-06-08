@@ -230,26 +230,6 @@ const electronAPI = {
   getCreditBalance: (): Promise<CreditBalanceResult> =>
     ipcRenderer.invoke('get-credit-balance'),
 
-  // Credit spending and refunding (spendCredits removed)
-  refundCredits: (
-    hours: number
-  ): Promise<{
-    success: boolean;
-    newBalanceCredits?: number;
-    newBalanceHours?: number;
-    error?: string;
-  }> => ipcRenderer.invoke('refund-credits', hours),
-
-  // Credit reservation
-  reserveCredits: (
-    hours: number
-  ): Promise<{
-    success: boolean;
-    newBalanceCredits?: number;
-    newBalanceHours?: number;
-    error?: string;
-  }> => ipcRenderer.invoke('reserve-credits', hours),
-
   createCheckoutSession: (packId: 'STARTER' | 'STANDARD' | 'PRO') =>
     ipcRenderer.invoke('create-checkout-session', packId),
 

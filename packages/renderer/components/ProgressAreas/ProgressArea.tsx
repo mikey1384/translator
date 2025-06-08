@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
+import CreditBalance from '../CreditBalance';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -150,10 +151,22 @@ export default function ProgressArea({
     return null;
   }
 
+  // Check if this is a translation/transcription operation (blue progress bar)
+  const isTranslationOperation = progressBarColor === colors.progressTranslate;
+
   return (
     <div className={progressContainerStyles}>
       <div className={headerStyles}>
-        <h3>{title}</h3>
+        <div
+          className={css`
+            display: flex;
+            align-items: center;
+            gap: 15px;
+          `}
+        >
+          <h3>{title}</h3>
+          {isTranslationOperation && <CreditBalance />}
+        </div>
         <button
           className={closeButtonStyles}
           onClick={handleCloseOrCancelClick}

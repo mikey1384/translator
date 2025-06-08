@@ -25,24 +25,6 @@ export function getCreditBalance(): Promise<CreditBalanceResult> {
   return window.electron.getCreditBalance();
 }
 
-export function refundCredits(hours: number): Promise<{
-  success: boolean;
-  newBalanceCredits?: number;
-  newBalanceHours?: number;
-  error?: string;
-}> {
-  return window.electron.refundCredits(hours);
-}
-
-export function reserveCredits(hours: number): Promise<{
-  success: boolean;
-  newBalanceCredits?: number;
-  newBalanceHours?: number;
-  error?: string;
-}> {
-  return window.electron.reserveCredits(hours);
-}
-
 export function getVideoMetadata(
   filePath: string
 ): Promise<VideoMetadataResult> {

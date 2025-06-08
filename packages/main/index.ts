@@ -42,8 +42,6 @@ import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
 import {
   handleGetCreditBalance,
-  handleRefundCredits,
-  handleReserveCredits,
   handleCreateCheckoutSession,
   handleResetCredits,
   handleStripeSuccess,
@@ -448,8 +446,6 @@ try {
   );
 
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
-  ipcMain.handle('refund-credits', handleRefundCredits);
-  ipcMain.handle('reserve-credits', handleReserveCredits);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('get-device-id', () => getDeviceId());

@@ -2,9 +2,14 @@ import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import CreditCard from '../components/CreditCard';
 import { colors } from '../styles';
+import { useCreditStore } from '../state/credit-store';
+import { useEffect } from 'react';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  useEffect(() => {
+    useCreditStore.getState().refresh();
+  }, []);
 
   return (
     <div

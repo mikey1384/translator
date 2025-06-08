@@ -3,6 +3,7 @@ import { useUIStore } from '../state';
 import LogoDisplay from '../components/LogoDisplay';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import CreditBalance from '../components/CreditBalance';
 import { colors } from '../styles';
 
 const headerRow = css`
@@ -53,9 +54,15 @@ export default function Header() {
       )}
 
       {!showSettings && (
-        <button className={settingsButton} onClick={() => toggleSettings(true)}>
-          {t('common.settings')}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+          <CreditBalance />
+          <button
+            className={settingsButton}
+            onClick={() => toggleSettings(true)}
+          >
+            {t('common.settings')}
+          </button>
+        </div>
       )}
     </div>
   );

@@ -73,5 +73,3 @@ export const useCreditStore = create<CreditState>((set, get) => {
     },
   };
 });
-
-useCreditStore.getState().refresh();

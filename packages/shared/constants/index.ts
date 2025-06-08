@@ -41,6 +41,9 @@ export const languages = [
   { code: 'hi', name: 'Hindi' },
 ];
 
+// Credit system constants
+export const CREDITS_PER_AUDIO_HOUR = 83_333;
+
 // Re-export from runtime-config for backward compatibility
 export {
   BASELINE_HEIGHT,

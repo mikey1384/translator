@@ -23,11 +23,7 @@ import CreditWarningBanner from './components/CreditWarningBanner';
 import FileInputSection from './components/FileInputSection';
 
 // Utilities
-import {
-  validateAndReserveCredits,
-  refundCreditsIfNeeded,
-  checkSufficientCredits,
-} from './utils/creditOperations';
+import { checkSufficientCredits } from './utils/creditCheck';
 import {
   executeSubtitleGeneration,
   validateGenerationInputs,
@@ -194,34 +190,14 @@ export default function GenerateSubtitles() {
       }
     }
 
-    // Reserve credits if needed
-    const creditResult = await validateAndReserveCredits(
-      hoursNeeded!,
-      refreshCreditState
-    );
-
-    if (!creditResult.success) {
-      await SystemIPC.showMessage(
-        t('generateSubtitles.notEnoughCredits') ||
-          creditResult.error ||
-          t('common.error.creditReservationFailed')
-      );
-      return;
-    }
-
-    // Generate subtitles
+    // Generate subtitles - backend will handle credit deduction on success
     const operationId = `generate-${Date.now()}`;
-    const result = await executeSubtitleGeneration({
+    await executeSubtitleGeneration({
       videoFile,
       videoFilePath,
       targetLanguage,
       operationId,
     });
-
-    // Handle refunds if generation failed
-    if (!result.success) {
-      await refundCreditsIfNeeded(hoursNeeded!);
-    }
   }
 
   async function handleSaveOriginalVideo() {
