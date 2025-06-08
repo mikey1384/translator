@@ -65,6 +65,19 @@ export default function CreditCard() {
           {/* Admin reset button (only shows for admin device) */}
           <AdminResetButton />
 
+          {checkoutPending && (
+            <p
+              style={{
+                fontSize: '.9rem',
+                color: colors.primary,
+                textAlign: 'center',
+                fontStyle: 'italic',
+              }}
+            >
+              ⏳ Confirming payment with bank...
+            </p>
+          )}
+
           <p
             className="hint"
             style={{ fontSize: '.85rem', color: colors.grayDark }}

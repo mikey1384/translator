@@ -309,6 +309,11 @@ contextBridge.exposeInMainWorld('env', { isPackaged });
 
 // Listen for postMessage from Stripe checkout pages and forward to main process
 window.addEventListener('message', event => {
+  // Only accept messages from our trusted checkout domain
+  if (event.origin !== 'https://stage5.tools') {
+    return;
+  }
+
   if (event.data?.type === 'stripe-success') {
     ipcRenderer.send('stripe-success', event.data);
   } else if (event.data?.type === 'stripe-cancelled') {

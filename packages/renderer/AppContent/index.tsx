@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore, useVideoStore, useTaskStore } from '../state';
+import { useCreditStore } from '../state';
 import { useUrlStore } from '../state/url-store';
 
 import FindBar from '../components/FindBar';
@@ -22,6 +24,13 @@ export default function AppContent() {
   const { url: videoUrl } = useVideoStore();
   const { merge, translation } = useTaskStore();
   const download = useUrlStore(s => s.download);
+
+  // Cleanup credit store listeners on unmount
+  useEffect(() => {
+    return () => {
+      useCreditStore.getState().cleanup();
+    };
+  }, []);
 
   const handleCancelDownload = () => {
     if (!download.id) return;

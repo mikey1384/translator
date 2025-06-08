@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as SystemIPC from '@ipc/system';
+import { useCreditStore } from '../state';
 
 const TRUSTED_CHECKOUT_PATTERN =
   /^(https:\/\/(checkout\.stripe\.com|checkout\.paypal\.com|stage5\.tools\/checkout|your\.pspdomain\.com))\//;
@@ -16,6 +17,7 @@ export default function BuyCreditsButton({
 }: BuyCreditsButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const { checkoutPending } = useCreditStore();
 
   async function handleClick() {
     try {
@@ -49,13 +51,23 @@ export default function BuyCreditsButton({
     }
   }
 
+  const isDisabled = loading || checkoutPending;
+
   return (
     <button
       onClick={handleClick}
-      disabled={loading}
-      style={{ padding: '10px 15px', cursor: loading ? 'wait' : 'pointer' }}
+      disabled={isDisabled}
+      style={{
+        padding: '10px 15px',
+        cursor: isDisabled ? 'wait' : 'pointer',
+        opacity: checkoutPending ? 0.7 : 1,
+      }}
     >
-      {loading ? t('credits.redirectingToPayment') : label}
+      {loading
+        ? t('credits.redirectingToPayment')
+        : checkoutPending
+          ? 'Processing...'
+          : label}
     </button>
   );
 }
