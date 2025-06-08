@@ -301,14 +301,22 @@ export async function handleStripeSuccess(
   try {
     log.info(`[credit-handler] Processing successful payment: ${sessionId}`);
 
-    // Refresh the credit balance from the server
-    const response = await axios.get(
-      `https://api.stage5.tools/credits/${getDeviceId()}`,
-      { headers: { Authorization: `Bearer ${getDeviceId()}` } }
-    );
+    // Refresh the credit balance from the server with retry logic for webhook race conditions
+    let response = null;
+    for (let i = 0; i < 3; i++) {
+      response = await axios.get(
+        `https://api.stage5.tools/credits/${getDeviceId()}`,
+        { headers: { Authorization: `Bearer ${getDeviceId()}` } }
+      );
+      if (response.data?.creditBalance !== undefined) break;
+      log.info(
+        `[credit-handler] Balance not yet updated, retrying in 2s (attempt ${i + 1}/3)...`
+      );
+      await new Promise(r => setTimeout(r, 2_000)); // wait 2 seconds
+    }
 
     if (
-      response.data &&
+      response?.data &&
       typeof response.data.creditBalance === 'number' &&
       typeof response.data.hoursBalance === 'number'
     ) {

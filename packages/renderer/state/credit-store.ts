@@ -35,6 +35,8 @@ export const useCreditStore = create<CreditState>((set, get) => {
 
   const unsubConfirmed = SystemIPC.onCheckoutConfirmed(() => {
     set({ checkoutPending: false });
+    // Belt-and-suspenders: refresh balance just in case IPC event didn't come through
+    get().refresh();
   });
 
   // Clean up on hot reload during development
