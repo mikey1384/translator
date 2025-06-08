@@ -50,7 +50,7 @@ export function getVideoMetadata(
 }
 
 export function createCheckoutSession(
-  packId: 'HOUR_5'
+  packId: 'STARTER' | 'STANDARD' | 'PRO'
 ): Promise<string | null> {
   return window.electron.createCheckoutSession(packId);
 }

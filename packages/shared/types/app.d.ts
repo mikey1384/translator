@@ -401,7 +401,9 @@ declare module '@shared-types/app' {
     ) => () => void;
 
     getCreditBalance: () => Promise<CreditBalanceResult>;
-    createCheckoutSession: (packId: 'HOUR_5') => Promise<string | null>;
+    createCheckoutSession: (
+      packId: 'STARTER' | 'STANDARD' | 'PRO'
+    ) => Promise<string | null>;
     resetCredits: () => Promise<{
       success: boolean;
       creditsAdded?: number;

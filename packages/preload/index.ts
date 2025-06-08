@@ -250,7 +250,7 @@ const electronAPI = {
     error?: string;
   }> => ipcRenderer.invoke('reserve-credits', hours),
 
-  createCheckoutSession: (packId: 'HOUR_5') =>
+  createCheckoutSession: (packId: 'STARTER' | 'STANDARD' | 'PRO') =>
     ipcRenderer.invoke('create-checkout-session', packId),
 
   // Admin credit reset function

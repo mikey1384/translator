@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-// import { shell } from 'electron'; // Removed direct shell import
 import * as SystemIPC from '@ipc/system';
 
-// Define the pattern outside the component so it's not re-compiled on every render/click.
-// TODO: Update this pattern with your actual trusted PSP domain(s).
 const TRUSTED_CHECKOUT_PATTERN =
   /^(https:\/\/(checkout\.stripe\.com|checkout\.paypal\.com|your\.pspdomain\.com))\//;
 
 interface BuyCreditsButtonProps {
-  packId: 'HOUR_5';
+  packId: 'STARTER' | 'STANDARD' | 'PRO';
+  label: string;
 }
 
-export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
+export default function BuyCreditsButton({
+  packId,
+  label,
+}: BuyCreditsButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +55,7 @@ export default function BuyCreditsButton({ packId }: BuyCreditsButtonProps) {
       disabled={loading}
       style={{ padding: '10px 15px', cursor: loading ? 'wait' : 'pointer' }}
     >
-      {loading ? t('credits.redirectingToPayment') : t('credits.buyCredits')}
+      {loading ? t('credits.redirectingToPayment') : label}
     </button>
   );
 }

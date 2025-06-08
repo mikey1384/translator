@@ -51,8 +51,14 @@ export default function CreditCard() {
             </span>
           </span>
 
-          {/* single purchase option */}
-          <BuyCreditsButton packId="HOUR_5" />
+          {/* Pack purchase options */}
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+          >
+            <BuyCreditsButton packId="STARTER" label="$5 · 1 h 30 m" />
+            <BuyCreditsButton packId="STANDARD" label="$10 · 3 h" />
+            <BuyCreditsButton packId="PRO" label="$50 · 24 h" />
+          </div>
 
           {/* Admin reset button (only shows for admin device) */}
           <AdminResetButton />

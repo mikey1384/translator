@@ -52,15 +52,14 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     }
   } catch (err: any) {
     log.error('[credit-handler] handleGetCreditBalance error:', err);
-    // Attempt to return cached value on error - use cached conversion rate
     const cachedBal = store.get('balanceCredits', 0);
     const cachedPerHour = store.get('creditsPerHour', 18000);
     return {
       success: false,
       error: err.message,
-      creditBalance: cachedBal, // NEW
-      balanceHours: cachedBal / cachedPerHour, // Use cached conversion rate
-      creditsPerHour: cachedPerHour, // NEW
+      creditBalance: cachedBal,
+      balanceHours: cachedBal / cachedPerHour,
+      creditsPerHour: cachedPerHour,
       updatedAt: new Date().toISOString(),
     };
   }
@@ -68,7 +67,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
 
 export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
-  packId: 'HOUR_5' // ← only one pack supported for now
+  packId: 'STARTER' | 'STANDARD' | 'PRO'
 ): Promise<string | null> {
   try {
     const apiUrl = 'https://api.stage5.tools/payments/create-session';
@@ -244,7 +243,7 @@ export async function handleResetCredits(): Promise<{
 
     const response = await axios.post('https://api.stage5.tools/admin/reset', {
       deviceId: getDeviceId(),
-      pack: 'HOUR_5', // Reset with one standard pack
+      pack: 'STANDARD',
     });
 
     if (response.data?.success) {
