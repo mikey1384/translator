@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { debounce } from 'lodash-es';
 import * as SystemIPC from '@ipc/system';
 
 interface CreditState {
