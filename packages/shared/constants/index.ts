@@ -43,6 +43,7 @@ export const languages = [
 
 // Credit system constants
 export const CREDITS_PER_AUDIO_HOUR = 100_000;
+export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
 // Re-export from runtime-config for backward compatibility
 export {

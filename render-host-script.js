@@ -1361,6 +1361,10 @@ var SUBTITLE_STYLE_PRESETS = {
 // ../shared/constants/runtime-config.ts
 var BASELINE_FONT_SIZE = 30;
 
+// ../shared/constants/index.ts
+var CREDITS_PER_AUDIO_HOUR = 1e5;
+var CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3600;
+
 // ../shared/helpers/subtitle-style-util.ts
 function assColorToRgba(ass) {
   if (!ass?.startsWith("&H")) return "rgba(255,255,255,1)";

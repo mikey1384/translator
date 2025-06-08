@@ -1,12 +1,11 @@
 import { useCreditStore } from '../../../state';
-import { CREDITS_PER_AUDIO_HOUR } from '../../../../shared/constants';
+import { CREDITS_PER_AUDIO_SECOND } from '../../../../shared/constants';
 
 export function secondsToCredits({ seconds }: { seconds: number }): number {
-  return Math.ceil(seconds * (CREDITS_PER_AUDIO_HOUR / 3600));
+  return Math.ceil(seconds * CREDITS_PER_AUDIO_SECOND);
 }
 
 export function estimateCreditsForVideo(videoLengthSec: number): number {
-  // Add 15% buffer for processing overhead
   return Math.ceil(secondsToCredits({ seconds: videoLengthSec }) * 1.15);
 }
 
