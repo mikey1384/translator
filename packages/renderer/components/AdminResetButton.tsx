@@ -78,7 +78,7 @@ export default function AdminResetButton() {
       className={resetButton}
       onClick={handleReset}
       disabled={loading}
-      title="Admin: Add 5h test credits (250,000 credits)"
+      title="Admin: Add standard pack (250,000 credits)"
     >
       {loading ? '🔄 Adding credits...' : '➕ Add 250,000 Credits'}
     </button>
