@@ -21,7 +21,7 @@ export function getDeviceId(): string {
 
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
-  defaults: { balanceCredits: 0, creditsPerHour: 83333 },
+  defaults: { balanceCredits: 0, creditsPerHour: 100_000 },
 });
 
 export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
@@ -53,7 +53,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   } catch (err: any) {
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', 83333);
+    const cachedPerHour = store.get('creditsPerHour', 100_000);
     return {
       success: false,
       error: err.message,

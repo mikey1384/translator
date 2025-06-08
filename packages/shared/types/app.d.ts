@@ -311,19 +311,6 @@ declare module '@shared-types/app' {
   // =========================================
 
   interface ElectronAPI {
-    refundCredits: (hours: number) => Promise<{
-      success: boolean;
-      newBalanceCredits?: number;
-      newBalanceHours?: number;
-      error?: string;
-    }>;
-    reserveCredits: (hours: number) => Promise<{
-      success: boolean;
-      newBalanceCredits?: number;
-      newBalanceHours?: number;
-      error?: string;
-    }>;
-
     cancelPngRender: (operationId: string) => void;
     saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
     openFile: (options?: OpenFileOptions) => Promise<OpenFileResult>;

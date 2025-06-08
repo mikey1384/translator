@@ -57,9 +57,15 @@ export default function CreditCard() {
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
           >
-            <BuyCreditsButton packId="STARTER" label="$5 · 1 h 30 m" />
-            <BuyCreditsButton packId="STANDARD" label="$10 · 3 h" />
-            <BuyCreditsButton packId="PRO" label="$50 · 24 h" />
+            <BuyCreditsButton
+              packId="STARTER"
+              label="$5 · 1 h 30 m (150 000 cr)"
+            />
+            <BuyCreditsButton
+              packId="STANDARD"
+              label="$10 · 3 h (300 000 cr)"
+            />
+            <BuyCreditsButton packId="PRO" label="$50 · 24 h (2 400 000 cr)" />
           </div>
 
           {/* Admin reset button (only shows for admin device) */}
