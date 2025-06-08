@@ -117,7 +117,8 @@
     "hours": "hours",
     "buyCredits": "Buy Credits",
     "redirectingToPayment": "Opening secure checkout…",
-    "description": "Choose from $5 (1.5h), $10 (3h), or $50 (24h) credit packs"
+    "description": "Choose from $5 (1.5h), $10 (3h), or $50 (24h) credit packs",
+    "notEnough": "Insufficient credits. Please purchase more credits to continue."
   },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",

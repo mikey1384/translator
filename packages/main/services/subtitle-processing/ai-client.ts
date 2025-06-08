@@ -59,6 +59,13 @@ export async function callAIModel({
         }
       }
 
+      // Handle specific error cases
+      if (error.message === 'insufficient-credits') {
+        throw new SubtitleProcessingError(
+          'Insufficient credits. Please purchase more credits to continue.'
+        );
+      }
+
       throw new Error(
         `Stage5 API call failed: ${error.message || String(error)}`
       );

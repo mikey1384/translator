@@ -309,8 +309,16 @@ contextBridge.exposeInMainWorld('env', { isPackaged });
 
 // Listen for postMessage from Stripe checkout pages and forward to main process
 window.addEventListener('message', event => {
-  // Only accept messages from our trusted checkout domain
-  if (event.origin !== 'https://stage5.tools') {
+  // Only accept messages from our trusted checkout domains
+  const trustedOrigins = ['https://stage5.tools'];
+
+  // In development, also allow localhost for testing
+  const isPackaged = ipcRenderer.sendSync('is-packaged');
+  if (!isPackaged) {
+    trustedOrigins.push('http://localhost:3000');
+  }
+
+  if (!trustedOrigins.includes(event.origin)) {
     return;
   }
 

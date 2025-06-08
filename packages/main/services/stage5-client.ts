@@ -44,14 +44,22 @@ export async function transcribe({
 
   fd.append('model', model);
 
-  const response = await axios.post(`${API}/transcribe`, fd, {
-    headers: {
-      ...headers(),
-      ...fd.getHeaders(), // Let form-data set the proper boundary
-    },
-  });
+  try {
+    const response = await axios.post(`${API}/transcribe`, fd, {
+      headers: {
+        ...headers(),
+        ...fd.getHeaders(), // Let form-data set the proper boundary
+      },
+    });
 
-  return response.data;
+    return response.data;
+  } catch (error: any) {
+    // Handle insufficient credits with a friendly error message
+    if (error.response?.status === 402) {
+      throw new Error('insufficient-credits');
+    }
+    throw error;
+  }
 }
 
 export async function translate({
@@ -63,11 +71,19 @@ export async function translate({
   model?: string;
   temperature?: number;
 }) {
-  const response = await axios.post(
-    `${API}/translate`,
-    { messages, model, temperature },
-    { headers: headers() }
-  );
+  try {
+    const response = await axios.post(
+      `${API}/translate`,
+      { messages, model, temperature },
+      { headers: headers() }
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error: any) {
+    // Handle insufficient credits with a friendly error message
+    if (error.response?.status === 402) {
+      throw new Error('insufficient-credits');
+    }
+    throw error;
+  }
 }
