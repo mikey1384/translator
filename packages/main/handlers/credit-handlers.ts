@@ -21,7 +21,7 @@ export function getDeviceId(): string {
 
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
-  defaults: { balanceCredits: 0, creditsPerHour: 18000 },
+  defaults: { balanceCredits: 0, creditsPerHour: 83333 },
 });
 
 export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
@@ -53,7 +53,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   } catch (err: any) {
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', 18000);
+    const cachedPerHour = store.get('creditsPerHour', 83333);
     return {
       success: false,
       error: err.message,
@@ -113,7 +113,7 @@ export async function handleRefundCredits(
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to refund' };
     }
-    const perHour = store.get('creditsPerHour', 18000); // Use cached conversion rate
+    const perHour = store.get('creditsPerHour', 83333); // Use cached conversion rate
     const creditsToRefund = hours * perHour; // Convert hours to credits
     const currentBalance = store.get('balanceCredits', 0);
     const newBalance = currentBalance + creditsToRefund;
@@ -151,7 +151,7 @@ export async function handleReserveCredits(
     if (typeof hours !== 'number' || hours <= 0) {
       return { success: false, error: 'Invalid hours to reserve' };
     }
-    const perHour = store.get('creditsPerHour', 18000); // Use cached conversion rate
+    const perHour = store.get('creditsPerHour', 83333); // Use cached conversion rate
     const creditsToReserve = hours * perHour; // Convert hours to credits
     const currentBalance = store.get('balanceCredits', 0);
     if (currentBalance < creditsToReserve) {

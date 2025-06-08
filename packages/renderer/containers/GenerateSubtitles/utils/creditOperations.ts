@@ -6,6 +6,34 @@ export interface CreditReservationResult {
   error?: string;
 }
 
+// Match the backend calculation exactly
+const CREDITS_PER_AUDIO_HOUR = 83_333;
+
+export function secondsToCredits({ seconds }: { seconds: number }): number {
+  // Direct conversion: 83,333 credits per hour
+  return Math.ceil(seconds * (CREDITS_PER_AUDIO_HOUR / 3600));
+}
+
+export function estimateCreditsForVideo(videoLengthSec: number): number {
+  // Add 15% buffer for processing overhead
+  return Math.ceil(secondsToCredits({ seconds: videoLengthSec }) * 1.15);
+}
+
+export function checkSufficientCredits(videoLengthSec: number): {
+  hasSufficientCredits: boolean;
+  estimatedCredits: number;
+  currentBalance: number;
+} {
+  const estimatedCredits = estimateCreditsForVideo(videoLengthSec);
+  const currentBalance = useCreditStore.getState().credits ?? 0;
+
+  return {
+    hasSufficientCredits: currentBalance >= estimatedCredits,
+    estimatedCredits,
+    currentBalance,
+  };
+}
+
 export async function validateAndReserveCredits(
   hoursNeeded: number,
   refreshCreditState: () => void

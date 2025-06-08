@@ -26,6 +26,7 @@ import FileInputSection from './components/FileInputSection';
 import {
   validateAndReserveCredits,
   refundCreditsIfNeeded,
+  checkSufficientCredits,
 } from './utils/creditOperations';
 import {
   executeSubtitleGeneration,
@@ -180,6 +181,17 @@ export default function GenerateSubtitles() {
         );
       }
       return;
+    }
+
+    // Guard: Check if we have sufficient credits before starting
+    if (durationSecs) {
+      const creditCheck = checkSufficientCredits(durationSecs);
+      if (!creditCheck.hasSufficientCredits) {
+        await SystemIPC.showMessage(
+          `Not enough credits. This video needs ~${creditCheck.estimatedCredits.toLocaleString()} credits, but you only have ${creditCheck.currentBalance.toLocaleString()}.`
+        );
+        return;
+      }
     }
 
     // Reserve credits if needed
