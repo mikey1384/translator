@@ -24,10 +24,12 @@
     "rebuild:arm64": "electron-rebuild --arch=arm64 --force",
     "rebuild:x64": "electron-rebuild --arch=x64 --force",
     "package": "bun run package:intel && bun run package:arm",
-    "package:intel": "bun run clean && bun run build && electron-rebuild --arch=x64 --force && cross-env TARGET_ARCH=x64 node scripts/rebuild-vad.js && electron-builder --mac --x64",
+    "package:intel": "bun run clean && bunx rimraf node_modules && arch -x86_64 bun install && arch -x86_64 bun run build && arch -x86_64 electron-rebuild --arch=x64 --force && cross-env TARGET_ARCH=x64 arch -x86_64 node scripts/rebuild-vad.js && electron-builder --mac --x64",
     "package:arm": "bun run clean && bun run build && electron-rebuild --arch=arm64 --force && cross-env TARGET_ARCH=arm64 node scripts/rebuild-vad.js && electron-builder --mac --arm64",
     "verify:architectures": "bash scripts/verify-architectures.sh",
-    "release:checklist": "bash scripts/release-checklist.sh"
+    "release:checklist": "bash scripts/release-checklist.sh",
+    "test:intel": "arch -x86_64 open dist/mac/Translator.app",
+    "test:arm": "open dist/mac-arm64/Translator.app"
   },
   "devDependencies": {
     "@emotion/css": "^11.13.5",
