@@ -10,10 +10,20 @@ const targetArch = process.env.TARGET_ARCH || process.arch; // 'x64' or 'arm64'
 
 console.log(`[postinstall] Rebuilding webrtcvad for ${targetArch}…`);
 const useBunx = process.platform === 'darwin';
-const cmd = useBunx ? 'bunx' : 'npm';
+const cmd = useBunx ? 'bunx' : 'npx';
 const args = useBunx
-  ? ['npm', 'rebuild', 'webrtcvad', `--arch=${targetArch}`, '--platform=darwin']
-  : ['rebuild', 'webrtcvad', `--arch=${targetArch}`, '--platform=darwin'];
+  ? [
+      'electron-rebuild',
+      'webrtcvad',
+      `--arch=${targetArch}`,
+      '--platform=darwin',
+    ]
+  : [
+      'electron-rebuild',
+      'webrtcvad',
+      `--arch=${targetArch}`,
+      '--platform=darwin',
+    ];
 const res = spawnSync(cmd, args, { stdio: 'inherit' });
 
 if (res.status !== 0) {

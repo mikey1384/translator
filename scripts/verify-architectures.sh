@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+shopt -s globstar nullglob
 
 echo "🔍 Verifying native module architectures…"
 echo
