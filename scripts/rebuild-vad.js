@@ -9,22 +9,16 @@ if (process.platform !== 'darwin') {
 const targetArch = process.env.TARGET_ARCH || process.arch; // 'x64' or 'arm64'
 console.log(`[postinstall] Rebuilding webrtcvad for ${targetArch}…`);
 
-const runner = process.platform === 'darwin' ? 'bunx' : 'npx';
-
-/**
- * 👉  electron-rebuild syntax
- *     -f  = force rebuild
- *     -w  = rebuild only the named module (webrtcvad)
- */
 const res = spawnSync(
-  runner,
+  'npx',
   [
     'electron-rebuild',
-    `--arch=${targetArch}`,
+    '--arch',
+    targetArch,
     '--platform=darwin',
-    '-f', // force
-    '-w',
-    'webrtcvad', // whitelist webrtcvad only
+    '--force',
+    '--only',
+    'webrtcvad',
   ],
   { stdio: 'inherit' }
 );

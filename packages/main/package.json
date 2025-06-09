@@ -5,12 +5,12 @@
   "type": "module",
   "main": "boot.mjs",
   "scripts": {
-    "build": "bunx tsx build.ts",
-    "build:dev": "bun run build",
-    "build:prod": "bun run build",
-    "build:watch": "bunx chokidar \"index.ts\" \"**/*.ts\" -c \"bun run build\" --initial",
-    "dev": "bun run build:dev && (bun run build:watch & bunx electron .)",
-    "start": "bunx electron ."
+    "build": "npx tsx build.ts",
+    "build:dev": "npm run build",
+    "build:prod": "npm run build",
+    "build:watch": "npx chokidar \"index.ts\" \"**/*.ts\" -c \"npm run build\" --initial",
+    "dev": "npm run build:dev && (npm run build:watch & npx electron .)",
+    "start": "npx electron ."
   },
   "dependencies": {
     "electron": "35.0.0"

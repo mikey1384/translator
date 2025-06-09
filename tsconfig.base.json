@@ -12,6 +12,7 @@
     "paths": {
       "@shared/*": ["packages/shared/*"],
       "@shared-types/*": ["packages/shared/types/*"],
+      "@ipc": ["packages/renderer/ipc/index.ts"],
       "@ipc/*": ["packages/renderer/ipc/*"]
     },
     "types": ["node"]
