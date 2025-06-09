@@ -15,5 +15,7 @@
   "dependencies": {
     "electron": "35.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "esbuild": "^0.25.5"
+  }
 }
