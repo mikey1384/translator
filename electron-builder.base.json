@@ -2,10 +2,12 @@
   "appId": "tools.stage5.translator",
   "productName": "Translator",
   "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
+
   "directories": {
     "app": ".",
     "output": "dist"
   },
+
   "asar": true,
   "asarUnpack": [
     "node_modules/webrtcvad/**",
@@ -14,21 +16,18 @@
     "render-host.html",
     "render-host-script.js"
   ],
+
   "npmRebuild": false,
   "buildDependenciesFromSource": false,
+
   "extraResources": [
     {
       "from": "packages/renderer/dist/assets",
       "to": "assets",
       "filter": ["**/*"]
-    },
-    {
-      "from": "vendor/chrome-x64",
-      "to": "chromium-x64",
-      "filter": ["**/*"],
-      "arch": "x64"
     }
   ],
+
   "files": [
     "packages/main/dist/**/*",
     "packages/main/boot.mjs",
@@ -40,25 +39,18 @@
     "render-host-script.js",
     "node_modules/**/*"
   ],
+
   "mac": {
     "category": "public.app-category.video",
     "target": [
-      {
-        "target": "dmg",
-        "arch": ["x64", "arm64"]
-      },
-      {
-        "target": "zip",
-        "arch": ["x64", "arm64"]
-      }
+      { "target": "dmg", "arch": ["x64", "arm64"] },
+      { "target": "zip", "arch": ["x64", "arm64"] }
     ],
     "hardenedRuntime": true,
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
     "identity": "JONG UK LEE (26WR9SJHBZ)",
-    "notarize": {
-      "teamId": "26WR9SJHBZ"
-    },
+    "notarize": { "teamId": "26WR9SJHBZ" },
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
@@ -68,13 +60,9 @@
       }
     ]
   },
+
   "win": {
-    "target": [
-      {
-        "target": "nsis",
-        "arch": ["x64", "ia32"]
-      }
-    ],
+    "target": [{ "target": "nsis", "arch": ["x64", "ia32"] }],
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],
@@ -84,7 +72,6 @@
       }
     ]
   },
-  "nsis": {
-    "perMachine": true
-  }
+
+  "nsis": { "perMachine": true }
 }
