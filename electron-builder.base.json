@@ -17,7 +17,6 @@
     "render-host-script.js"
   ],
 
-  "npmRebuild": false,
   "buildDependenciesFromSource": false,
 
   "extraResources": [
@@ -50,7 +49,7 @@
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",
     "identity": "JONG UK LEE (26WR9SJHBZ)",
-    "notarize": { "teamId": "26WR9SJHBZ" },
+    "notarize": true,
     "fileAssociations": [
       {
         "ext": ["mp4", "mkv", "mov", "webm", "avi"],

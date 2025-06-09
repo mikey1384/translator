@@ -28,7 +28,7 @@ jobs:
       # ---------- Apple codesign / notarise ----------
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
@@ -55,11 +55,10 @@ jobs:
       # ---------- build & package ----------
       - name: Build (arm64 & x64)
         run: |
-          # build arm64 first (native)
-          npm run build:all
+          # ARM first (runs natively on the M-series host)
           npm run package:arm
 
-          # build Intel under Rosetta
+          # Intel in Rosetta, fully isolated
           arch -x86_64 npm run package:intel
 
       # —————————————————————————————————— upload & release ——————————————————————————
