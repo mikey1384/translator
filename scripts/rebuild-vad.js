@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 
 const targetArch = process.env.TARGET_ARCH || process.arch; // 'x64' or 'arm64'
