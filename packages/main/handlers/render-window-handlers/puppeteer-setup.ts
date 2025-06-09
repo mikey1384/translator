@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'url';
-import { Browser, Page, launch } from 'puppeteer';
+import { Browser, Page, launch } from 'puppeteer-core';
 import { app } from 'electron';
 import log from 'electron-log';
 
@@ -49,7 +49,34 @@ export async function initPuppeteer({
   log.info(`[Puppeteer:${operationId}] Render host path: ${hostHtml}`);
   log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
 
+  // Try to use bundled Chrome first (for packaged Intel builds)
+  let executablePath: string | undefined;
+
+  try {
+    const bundledChromePath = path.join(
+      process.resourcesPath,
+      'chromium-x64',
+      'chrome-mac',
+      'Chromium.app',
+      'Contents',
+      'MacOS',
+      'Chromium'
+    );
+
+    if (fs.existsSync(bundledChromePath)) {
+      executablePath = bundledChromePath;
+      log.info(
+        `[Puppeteer:${operationId}] Using bundled Chrome: ${executablePath}`
+      );
+    }
+  } catch (err) {
+    log.info(
+      `[Puppeteer:${operationId}] Bundled Chrome not available, falling back to system Chrome`
+    );
+  }
+
   const browser = await launch({
+    executablePath,
     headless: true,
     args: [
       '--no-sandbox',

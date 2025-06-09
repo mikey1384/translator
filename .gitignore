@@ -24,6 +24,7 @@ build/
 
 # Electron packaging files
 out/
+vendor/
 
 # Testing
 coverage/

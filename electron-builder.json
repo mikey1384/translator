@@ -21,6 +21,12 @@
       "from": "packages/renderer/dist/assets",
       "to": "assets",
       "filter": ["**/*"]
+    },
+    {
+      "from": "vendor/chrome-x64",
+      "to": "chromium-x64",
+      "filter": ["**/*"],
+      "condition": "arch==x64"
     }
   ],
   "files": [
