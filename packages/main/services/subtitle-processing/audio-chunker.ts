@@ -12,12 +12,14 @@ export async function detectSpeechIntervals({
   frameMs = 30,
   operationId = '',
   signal,
+  ffmpegPath,
 }: {
   inputPath: string;
   vadMode?: 0 | 1 | 2 | 3;
   frameMs?: 10 | 20 | 30;
   operationId?: string;
   signal?: AbortSignal;
+  ffmpegPath?: string;
 }): Promise<Array<{ start: number; end: number }>> {
   return new Promise((resolve, reject) => {
     log.info(`[${operationId}] Starting streamed VAD for: ${inputPath}`);
@@ -39,7 +41,7 @@ export async function detectSpeechIntervals({
     let currentFrameIndex = 0;
     let leftoverBuffer = Buffer.alloc(0);
 
-    const ffmpeg = spawn('ffmpeg', [
+    const ffmpeg = spawn(ffmpegPath || 'ffmpeg', [
       '-i',
       inputPath,
       '-f',

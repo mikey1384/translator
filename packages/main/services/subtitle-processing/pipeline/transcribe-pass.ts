@@ -89,6 +89,7 @@ export async function transcribePass({
       inputPath: audioPath,
       operationId,
       signal,
+      ffmpegPath: ffmpeg.ffmpegPath,
     });
     if (signal?.aborted) throw new Error('Cancelled');
 

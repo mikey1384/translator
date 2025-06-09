@@ -122,6 +122,7 @@ export async function transcribeGapAudioWithRetry(
       inputPath: originalGapAudioFilePath,
       operationId,
       signal,
+      ffmpegPath: ffmpeg.ffmpegPath,
     });
     throwIfAborted(signal);
 
