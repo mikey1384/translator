@@ -1,4 +1,5 @@
 {
+  "extends": "electron-builder.base.json",
   "extraResources": [
     {
       "from": "vendor/chrome-x64",

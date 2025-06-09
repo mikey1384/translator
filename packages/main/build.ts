@@ -1,4 +1,20 @@
+// ─── ES-module shim for __dirname / __filename ───────────────────────────
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// ─────────────────────────────────────────────────────────────────────────
+
 import esbuild from 'esbuild';
+import { mkdirSync, existsSync } from 'node:fs';
+
+// ─── make sure ./lib/ exists before we try to read / write in it
+const libDir = path.resolve(__dirname, 'lib');
+if (!existsSync(libDir)) {
+  mkdirSync(libDir, { recursive: true });
+  console.log('[build] created missing directory:', libDir);
+}
 
 await esbuild.build({
   entryPoints: ['index.ts'],

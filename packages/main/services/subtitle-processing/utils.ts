@@ -4,14 +4,7 @@ import { callAIModel } from './ai-client.js';
 import vadPkg from 'webrtcvad';
 
 export function getVadCtor() {
-  return (
-    // Bun/ESBuild wrapped CJS  → default.default
-    (vadPkg as any).default?.default ??
-    // Only one level of wrapping → default
-    (vadPkg as any).default ??
-    // Raw CJS export
-    vadPkg
-  );
+  return (vadPkg as any).default?.default ?? (vadPkg as any).default ?? vadPkg;
 }
 
 export function sig({

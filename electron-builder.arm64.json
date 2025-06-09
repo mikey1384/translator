@@ -1,1 +1,3 @@
-{}
+{
+  "extends": "electron-builder.base.json"
+}

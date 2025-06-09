@@ -1,10 +1,10 @@
 name: Release – macOS (R2)
 
 on:
-  workflow_dispatch: # manual "Run workflow" button
+  workflow_dispatch: # manual trigger
   push:
-    branches: [master] # build on every commit to master
-    tags: ['v*'] # …and on version tags e.g. v1.2.3
+    branches: [master] # every push to mainline
+    tags: ['v*'] # version tags (v1.2.3 …)
 
 concurrency:
   group: mac-release-${{ github.ref }}
@@ -12,18 +12,16 @@ concurrency:
 
 jobs:
   mac-build:
-    runs-on: macos-14
+    runs-on: macos-14 # Apple-silicon runner, Rosetta is available
     timeout-minutes: 60
 
     env:
       # ---------- Cloudflare R2 ----------
       R2_BUCKET: ai-translator-downloads
       R2_ENDPOINT: https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
       AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
       AWS_DEFAULT_REGION: auto
-      # Disable SDK's new checksums to prevent R2 "unsupported trailed" errors
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
 
@@ -31,38 +29,45 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
+      # ————————————————————————————————————————————————————————————
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v1
-        with: { bun-version: 'latest' }
+      # ---------- Node (no Bun) ----------
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20' # same major you build with
+          cache: 'npm'
 
+      # ---------- Apple signing cert ----------
       - uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
 
-      - uses: actions/cache@v4
-        id: bun-cache
-        with:
-          path: node_modules
-          key: bun-modules-${{ hashFiles('bun.lockb') }}
+      # ---------- install dependencies ----------
+      - name: Install deps
+        run: |
+          npm ci --no-audit --fund=false
 
-      - name: Install dependencies
-        run: BUN_INSTALL_ALLOW_SCRIPTS=true bun install --frozen-lockfile
+      # ---------- build & package ----------
+      - name: Build (arm64 & x64)
+        run: |
+          # build arm64 first (native)
+          npm run build:all
+          npm run package:arm
 
-      - name: Show what Bun blocked
-        run: bun pm untrusted
+          # build Intel under Rosetta
+          arch -x86_64 npm run package:intel
 
-      - name: Build & package
-        run: bun run package # your package script already calls electron-builder
-
+      # —————————————————————————————————— upload & release ——————————————————————————
       - name: Install AWS CLI v2
         run: |
           curl -sSL "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o aws.pkg
           sudo installer -pkg aws.pkg -target /
-          aws --version   # sanity check
+          aws --version
 
       - name: Upload to R2
         run: |
@@ -72,6 +77,7 @@ jobs:
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
       - name: Promote artefacts to latest/
+        if: github.ref_type == 'tag'
         run: |
           mkdir -p latest
           cp dist/Translator-*-darwin-arm64.dmg  latest/Translator.dmg
@@ -83,8 +89,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          prerelease: ${{ contains(github.ref, '-') }} # treat v1.0.0-beta as prerelease
+          prerelease: ${{ contains(github.ref, '-') }}
           files: |
             dist/*.dmg
             dist/*.zip
-            dist/*.yml      # optional auto-update metadata
+            dist/*.yml

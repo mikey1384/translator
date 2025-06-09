@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'url';
-import { Browser, Page, launch } from 'puppeteer-core';
+import type { Browser, Page } from 'puppeteer-core'; // keep the types
 import { app } from 'electron';
 import log from 'electron-log';
 
@@ -75,7 +75,12 @@ export async function initPuppeteer({
     );
   }
 
-  const browser = await launch({
+  // Use dynamic import to switch between puppeteer packages
+  const { launch } = app.isPackaged
+    ? await import('puppeteer-core')
+    : await import('puppeteer'); // pulls the auto-downloaded Chromium
+
+  const browser = (await launch({
     executablePath,
     headless: true,
     args: [
@@ -85,10 +90,10 @@ export async function initPuppeteer({
       '--allow-file-access-from-files',
       '--disable-web-security',
     ],
-  });
+  })) as Browser;
 
-  const page = await browser.newPage();
-  page.on('console', msg =>
+  const page = (await browser.newPage()) as Page;
+  page.on('console', (msg: any) =>
     log.info(`[Puppeteer:${operationId}][${msg.type()}] ${msg.text()}`)
   );
   page.setViewport({ width: videoWidth, height: videoHeight });
@@ -103,18 +108,21 @@ export async function initPuppeteer({
           font-weight: normal;
         }`,
     });
-    await page.evaluate(() => document.fonts.ready);
+    await (page as any).evaluate(() => document.fonts.ready);
   }
   if (stylePreset) {
-    await page.evaluate(p => {
+    await (page as any).evaluate((p: any) => {
       // @ts-expect-error defined in render-host-script
       window.applySubtitlePreset?.(p);
     }, stylePreset);
   }
 
-  await page.waitForFunction('typeof window.updateSubtitle === "function"', {
-    timeout: 5_000,
-  });
+  await (page as any).waitForFunction(
+    'typeof window.updateSubtitle === "function"',
+    {
+      timeout: 5_000,
+    }
+  );
 
   log.info(`[Puppeteer:${operationId}] ready`);
 
