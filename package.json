@@ -20,7 +20,12 @@
     "start": "bun run --cwd packages/main start",
     "dev:init": "bun run build:dev && wait-on $(pwd)/packages/main/dist/main/main.cjs $(pwd)/packages/main/dist/preload/preload.cjs $(pwd)/packages/renderer/dist/index.js $(pwd)/render-host-script.js",
     "dev": "bun run dev:init && bunx concurrently -k -n electron,main,preload,renderer,hostRenderer \"bunx electron .\" \"bun run --cwd packages/main build:watch\" \"bun run --cwd packages/preload dev\" \"bun run --cwd packages/renderer dev\" \"cd packages/renderer && bunx esbuild render-host-script.tsx --bundle --platform=browser --format=esm --target=es2022 --external:electron --outfile=../../render-host-script.js --watch\"",
-    "package": "bun run build && electron-builder build --config electron-builder.json -m"
+    "postinstall": "node scripts/rebuild-vad.js",
+    "rebuild:arm64": "electron-rebuild --arch=arm64 --force",
+    "rebuild:x64": "electron-rebuild --arch=x64 --force",
+    "package": "bun run package:intel && bun run package:arm",
+    "package:intel": "bun run build && cross-env TARGET_ARCH=x64 node scripts/rebuild-vad.js && electron-builder --mac --x64",
+    "package:arm": "bun run clean && bun run build && cross-env TARGET_ARCH=arm64 node scripts/rebuild-vad.js && electron-builder --mac --arm64"
   },
   "devDependencies": {
     "@emotion/css": "^11.13.5",
@@ -36,7 +41,9 @@
     "@typescript-eslint/parser": "^8.31.1",
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
     "esbuild": "^0.25.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.2",
