@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 
+if (process.platform !== 'darwin') {
+  console.log('[postinstall] Skip VAD rebuild – not macOS');
+  process.exit(0);
+}
+
 const targetArch = process.env.TARGET_ARCH || process.arch; // 'x64' or 'arm64'
 
 console.log(`[postinstall] Rebuilding webrtcvad for ${targetArch}…`);
-const res = spawnSync(
-  'npm',
-  ['rebuild', 'webrtcvad', `--arch=${targetArch}`, '--platform=darwin'],
-  { stdio: 'inherit' }
-);
+const useBunx = process.platform === 'darwin';
+const cmd = useBunx ? 'bunx' : 'npm';
+const args = useBunx
+  ? ['npm', 'rebuild', 'webrtcvad', `--arch=${targetArch}`, '--platform=darwin']
+  : ['rebuild', 'webrtcvad', `--arch=${targetArch}`, '--platform=darwin'];
+const res = spawnSync(cmd, args, { stdio: 'inherit' });
 
 if (res.status !== 0) {
   console.error('❌ webrtcvad rebuild failed');
