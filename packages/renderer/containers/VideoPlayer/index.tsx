@@ -300,6 +300,7 @@ export default function VideoPlayer() {
   const togglePlay = useVideoStore(s => s.handleTogglePlay);
   const selectVideo = useVideoStore(s => s.openFileDialog);
   const isAudioOnly = useVideoStore(s => s.isAudioOnly);
+  const videoPath = useVideoStore(s => s.path);
   const { merge, translation } = useTaskStore();
   const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
@@ -522,6 +523,47 @@ export default function VideoPlayer() {
         : SPEED_STEPS[Math.max(idx - 1, 0)];
     applyRate(next);
   };
+
+  // Load saved position when component mounts if not already loaded
+  useEffect(() => {
+    const loadSavedPosition = async () => {
+      if (!videoPath || resumeAt !== null) return;
+
+      try {
+        const saved = await import('../../ipc/video').then(m =>
+          m.getPlaybackPosition(videoPath)
+        );
+        if (saved != null) {
+          useVideoStore.setState({ resumeAt: saved });
+        }
+      } catch (err) {
+        console.error(
+          '[VideoPlayer] Failed to load saved position on mount:',
+          err
+        );
+      }
+    };
+
+    loadSavedPosition();
+  }, [videoPath]);
+
+  // Save current position immediately when component unmounts
+  useEffect(() => {
+    return () => {
+      const v = getNativePlayerInstance();
+      if (v && videoPath && v.currentTime > 0) {
+        // Force save current position immediately on unmount
+        import('../../ipc/video').then(m => {
+          m.savePlaybackPosition(videoPath, v.currentTime).catch(err => {
+            console.error(
+              '[VideoPlayer] Failed to save position on unmount:',
+              err
+            );
+          });
+        });
+      }
+    };
+  }, [videoPath]);
 
   return (
     <div style={{ position: 'relative' }}>
