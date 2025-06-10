@@ -22,29 +22,16 @@ module.exports = async ({ appOutDir, packager }) => {
 
   console.log('[sign-chromium] signing vendored headless_shell binaries');
 
-  for (const headlessDir of headlessDirectories) {
-    if (!fs.existsSync(headlessDir)) {
-      console.log(`[sign-chromium] ${headlessDir} not found – skipping`);
-      continue;
-    }
-
-    const headlessShellPath = path.join(headlessDir, 'headless_shell');
-    if (!fs.existsSync(headlessShellPath)) {
-      console.log(
-        `[sign-chromium] headless_shell not found in ${headlessDir} – skipping`
-      );
-      continue;
-    }
-
-    console.log(`[sign-chromium] signing ${headlessShellPath}`);
+  function signBinary(binaryPath) {
+    console.log(`[sign-chromium] signing ${binaryPath}`);
 
     try {
       // 1) Remove any existing signature
-      execaSync('codesign', ['--remove-signature', headlessShellPath]);
+      execaSync('codesign', ['--remove-signature', binaryPath]);
     } catch {}
 
     // 2) Ensure executable bit
-    fs.chmodSync(headlessShellPath, 0o755);
+    fs.chmodSync(binaryPath, 0o755);
 
     // 3) Sign with hardened runtime
     const args = [
@@ -54,16 +41,46 @@ module.exports = async ({ appOutDir, packager }) => {
       '--timestamp',
       '--options',
       'runtime',
-      headlessShellPath,
+      binaryPath,
     ];
 
     try {
       execaSync('codesign', args, { stdio: 'inherit' });
-      console.log(`[sign-chromium] successfully signed ${headlessShellPath}`);
+      console.log(`[sign-chromium] successfully signed ${binaryPath}`);
     } catch (e) {
-      console.error(`[sign-chromium] FAILED: ${headlessShellPath}`);
+      console.error(`[sign-chromium] FAILED: ${binaryPath}`);
       throw e; // abort build—safer than continuing
     }
+  }
+
+  function walkAndSign(dir) {
+    try {
+      for (const entry of fs.readdirSync(dir)) {
+        const fullPath = path.join(dir, entry);
+        const stat = fs.lstatSync(fullPath);
+
+        if (stat.isDirectory()) {
+          walkAndSign(fullPath);
+        } else if (
+          entry === 'chrome-headless-shell' ||
+          entry === 'headless_shell'
+        ) {
+          signBinary(fullPath);
+        }
+      }
+    } catch (error) {
+      console.log(`[sign-chromium] Error walking ${dir}: ${error.message}`);
+    }
+  }
+
+  for (const headlessDir of headlessDirectories) {
+    if (!fs.existsSync(headlessDir)) {
+      console.log(`[sign-chromium] ${headlessDir} not found – skipping`);
+      continue;
+    }
+
+    console.log(`[sign-chromium] walking ${headlessDir} for binaries to sign`);
+    walkAndSign(headlessDir);
   }
 
   console.log('[sign-chromium] complete');

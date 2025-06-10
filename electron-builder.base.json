@@ -19,7 +19,7 @@
 
   "buildDependenciesFromSource": false,
 
-  "afterSign": "scripts/sign-chromium.cjs",
+  "afterPack": "scripts/sign-chromium.cjs",
 
   "extraResources": [
     {
