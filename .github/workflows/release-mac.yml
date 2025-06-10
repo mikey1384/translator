@@ -69,6 +69,10 @@ jobs:
           arch -x86_64 npx puppeteer@24.10.0 browsers install chrome-headless-shell \
             --platform mac_arm --path vendor/headless-arm64
 
+      # ---------- Clean dist before x64 build ----------
+      - name: Clean dist before x64 build
+        run: rm -rf dist/mac
+
       # ---------- Build x64 ----------
       - name: Build x64
         run: arch -x86_64 npm run package:intel
