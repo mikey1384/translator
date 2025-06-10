@@ -2,6 +2,7 @@
   "appId": "tools.stage5.translator",
   "productName": "Translator",
   "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
+  "icon": "assets/icon",
 
   "directories": {
     "app": ".",
