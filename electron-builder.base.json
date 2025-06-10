@@ -19,12 +19,16 @@
 
   "buildDependenciesFromSource": false,
 
+  "afterSign": "scripts/sign-chromium.cjs",
+
   "extraResources": [
     {
       "from": "packages/renderer/dist/assets",
       "to": "assets",
       "filter": ["**/*"]
-    }
+    },
+    { "from": "vendor/headless-arm64", "to": "headless-arm64" },
+    { "from": "vendor/headless-x64", "to": "headless-x64" }
   ],
 
   "files": [
@@ -39,12 +43,12 @@
     "node_modules/**/*"
   ],
 
+  "dmg": {
+    "format": "UDZO"
+  },
+
   "mac": {
     "category": "public.app-category.video",
-    "target": [
-      { "target": "dmg", "arch": ["x64", "arm64"] },
-      { "target": "zip", "arch": ["x64", "arm64"] }
-    ],
     "hardenedRuntime": true,
     "gatekeeperAssess": false,
     "entitlements": "entitlements.mac.plist",

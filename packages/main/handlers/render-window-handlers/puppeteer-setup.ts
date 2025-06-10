@@ -1,31 +1,30 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import url from 'url';
-import type { Browser, Page } from 'puppeteer-core'; // keep the types
+import url from 'node:url';
+
+import type { Browser, Page } from 'puppeteer-core';
 import { app } from 'electron';
 import log from 'electron-log';
 
-function getRenderHostPath(): string {
-  const devCandidate = path.resolve(__dirname, 'render-host.html');
-  if (fs.existsSync(devCandidate)) return devCandidate;
+/* ───────── helpers ───────── */
 
-  const unpackedCandidate = path.join(
+function getRenderHostPath(): string {
+  const dev = path.resolve(__dirname, 'render-host.html');
+  if (fs.existsSync(dev)) return dev;
+  const unpacked = path.join(
     path.dirname(app.getAppPath()),
     'app.asar.unpacked',
     'render-host.html'
   );
-  if (fs.existsSync(unpackedCandidate)) return unpackedCandidate;
+  if (fs.existsSync(unpacked)) return unpacked;
 
-  const asarCandidate = path.join(app.getAppPath(), 'render-host.html');
-  if (fs.existsSync(asarCandidate)) return asarCandidate;
+  const inAsar = path.join(app.getAppPath(), 'render-host.html');
+  if (fs.existsSync(inAsar)) return inAsar;
 
-  throw new Error(
-    `render-host.html not found. looked in:
-      ${devCandidate}
-      ${unpackedCandidate}
-      ${asarCandidate}`
-  );
+  throw new Error(`render-host.html not found in any expected location`);
 }
+
+/* ───────── main entry ───────── */
 
 export async function initPuppeteer({
   operationId,
@@ -46,41 +45,33 @@ export async function initPuppeteer({
   const hostUrl = url.pathToFileURL(hostHtml).toString();
 
   log.info('[Puppeteer]', { hostHtml });
-  log.info(`[Puppeteer:${operationId}] Render host path: ${hostHtml}`);
   log.info(`[Puppeteer:${operationId}] Render host URL: ${hostUrl}`);
 
-  // Try to use bundled Chrome first (for packaged Intel builds)
-  let executablePath: string | undefined;
+  // choose package + executable ------------------------------------------
+  const isDev = !app.isPackaged;
+  const { default: puppeteer } = isDev
+    ? await import('puppeteer')
+    : await import('puppeteer-core');
 
-  try {
-    const bundledChromePath = path.join(
-      process.resourcesPath,
-      'chromium-x64',
-      'chrome-mac',
-      'Chromium.app',
-      'Contents',
-      'MacOS',
-      'Chromium'
-    );
-
-    if (fs.existsSync(bundledChromePath)) {
-      executablePath = bundledChromePath;
-      log.info(
-        `[Puppeteer:${operationId}] Using bundled Chrome: ${executablePath}`
+  const executablePath = isDev
+    ? undefined // dev → use Puppeteer's own Chrome
+    : path.join(
+        process.resourcesPath,
+        process.arch === 'arm64' ? 'headless-arm64' : 'headless-x64',
+        'headless_shell' // your minimal Chromium binary
       );
-    }
-  } catch (err) {
+  // ----------------------------------------------------------------------
+
+  if (executablePath && !isDev)
     log.info(
-      `[Puppeteer:${operationId}] Bundled Chrome not available, falling back to system Chrome`
+      `[Puppeteer:${operationId}] Using bundled headless_shell: ${executablePath}`
     );
-  }
+  else
+    log.info(
+      `[Puppeteer:${operationId}] Using Puppeteer's own Chrome (dev mode)`
+    );
 
-  // Use dynamic import to switch between puppeteer packages
-  const { launch } = app.isPackaged
-    ? await import('puppeteer-core')
-    : await import('puppeteer'); // pulls the auto-downloaded Chromium
-
-  const browser = (await launch({
+  const browser = (await puppeteer.launch({
     executablePath,
     headless: true,
     args: [
@@ -93,12 +84,15 @@ export async function initPuppeteer({
   })) as Browser;
 
   const page = (await browser.newPage()) as Page;
-  page.on('console', (msg: any) =>
-    log.info(`[Puppeteer:${operationId}][${msg.type()}] ${msg.text()}`)
+  page.on('console', msg =>
+    log.info(
+      `[Puppeteer:${operationId}][${msg.type()}] ${msg.text().substring(0, 300)}`
+    )
   );
-  page.setViewport({ width: videoWidth, height: videoHeight });
+  await page.setViewport({ width: videoWidth, height: videoHeight });
   await page.goto(hostUrl, { waitUntil: 'networkidle0' });
 
+  /* ─── optional font & style helpers ─── */
   if (fontSizePx) {
     await page.addStyleTag({
       content: `
@@ -108,23 +102,19 @@ export async function initPuppeteer({
           font-weight: normal;
         }`,
     });
-    await (page as any).evaluate(() => document.fonts.ready);
+    await page.evaluate(() => document.fonts.ready);
   }
+
   if (stylePreset) {
-    await (page as any).evaluate((p: any) => {
-      // @ts-expect-error defined in render-host-script
-      window.applySubtitlePreset?.(p);
+    await page.evaluate(preset => {
+      // @ts-expect-error injected by render-host-script
+      window.applySubtitlePreset?.(preset);
     }, stylePreset);
   }
 
-  await (page as any).waitForFunction(
-    'typeof window.updateSubtitle === "function"',
-    {
-      timeout: 5_000,
-    }
-  );
-
-  log.info(`[Puppeteer:${operationId}] ready`);
+  await page.waitForFunction('typeof window.updateSubtitle === "function"', {
+    timeout: 5_000,
+  });
 
   await page.addStyleTag({
     content: `
@@ -137,5 +127,6 @@ export async function initPuppeteer({
     `,
   });
 
+  log.info(`[Puppeteer:${operationId}] ready`);
   return { browser, page };
 }

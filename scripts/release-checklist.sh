@@ -6,15 +6,15 @@ echo "=============================="
 echo
 
 echo "1️⃣  Clean install..."
-bun run clean && bun install
+npm run clean && npm install
 
 echo
 echo "2️⃣  Building both architectures..."
-bun run package
+npm run package
 
 echo
 echo "3️⃣  Verifying native module architectures..."
-bun run verify:architectures
+npm run verify:architectures
 
 echo
 echo "4️⃣  Ready for smoke testing!"

@@ -30,8 +30,7 @@ await esbuild.build({
     'webrtcvad', // native .node addon
     'keytar', // native .node addon
     'ffmpeg-ffprobe-static', // needs to reference unpacked binaries
-    'puppeteer', // dev-only, excluded by --omit=dev
-    'p-limit', // dev-only, excluded by --omit=dev
+    'puppeteer', // keep external so it's loaded from node_modules
   ],
 });
 

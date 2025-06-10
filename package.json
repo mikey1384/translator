@@ -32,6 +32,7 @@
     "test:arm": "open dist/mac-arm64/Translator.app"
   },
   "devDependencies": {
+    "@electron/osx-sign": "^2.0.0",
     "@types/i18next": "^13.0.0",
     "@types/lodash": "^4.17.16",
     "@types/lodash-es": "^4.17.12",
