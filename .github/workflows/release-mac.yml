@@ -47,19 +47,31 @@ jobs:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
 
-      # ---------- install dependencies ----------
-      - name: Install deps
+      # ---------- Install deps & headless_shell (arm64) ----------
+      - name: Install deps & headless_shell (arm64)
         run: |
           npm ci --no-audit --fund=false
+          npx puppeteer@24.10.0 browsers install chrome-headless-shell \
+            --platform mac_arm --path vendor/headless-arm64
+          npx puppeteer@24.10.0 browsers install chrome-headless-shell \
+            --platform mac     --path vendor/headless-x64
 
-      # ---------- build & package ----------
-      - name: Build (arm64 & x64)
+      # ---------- Build arm64 ----------
+      - name: Build arm64
+        run: npm run package:arm
+
+      # ---------- Install deps & headless_shell (x64) ----------
+      - name: Install deps & headless_shell (x64)
         run: |
-          # ARM first (runs natively on the M-series host)
-          npm run package:arm
+          arch -x86_64 npm ci --no-audit --fund=false
+          arch -x86_64 npx puppeteer@24.10.0 browsers install chrome-headless-shell \
+            --platform mac     --path vendor/headless-x64
+          arch -x86_64 npx puppeteer@24.10.0 browsers install chrome-headless-shell \
+            --platform mac_arm --path vendor/headless-arm64
 
-          # Intel in Rosetta, fully isolated
-          arch -x86_64 npm run package:intel
+      # ---------- Build x64 ----------
+      - name: Build x64
+        run: arch -x86_64 npm run package:intel
 
       # —————————————————————————————————— upload & release ——————————————————————————
       - name: Install AWS CLI v2
@@ -79,7 +91,10 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           mkdir -p latest
-          cp dist/Translator-*-darwin-arm64.dmg  latest/Translator.dmg
+          # copy – and rename – each DMG so the filenames stay explicit
+          cp dist/Translator-*-darwin-arm64.dmg latest/Translator-arm64.dmg
+          cp dist/Translator-*-darwin-x64.dmg   latest/Translator-intel.dmg
+          cp dist/Translator-*-darwin-arm64.dmg latest/Translator.dmg   # default = Apple-silicon
           aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 

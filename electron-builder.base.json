@@ -43,10 +43,6 @@
     "node_modules/**/*"
   ],
 
-  "dmg": {
-    "format": "UDZO"
-  },
-
   "mac": {
     "category": "public.app-category.video",
     "hardenedRuntime": true,
