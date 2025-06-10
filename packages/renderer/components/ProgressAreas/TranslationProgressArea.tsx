@@ -4,6 +4,7 @@ import { colors } from '../../styles';
 import ProgressArea from './ProgressArea';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
+import { css } from '@emotion/css';
 
 /* ------------------------------------------------------------------ */
 /* 📐  Constants & helpers                                             */
@@ -91,6 +92,35 @@ export default function TranslationProgressArea({
   /* 2 ️⃣  local UI state                                           */
   /* -------------------------------------------------------------- */
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showSlowProgressBanner, setShowSlowProgressBanner] = useState(false);
+  const [lastProgressUpdate, setLastProgressUpdate] = useState<number | null>(
+    null
+  );
+
+  // Track progress updates to detect when AI processing is stalled
+  useEffect(() => {
+    if (inProgress) {
+      setLastProgressUpdate(Date.now());
+      setShowSlowProgressBanner(false);
+    }
+  }, [percent, stage, inProgress]);
+
+  // Show banner if AI processing has been stuck for too long
+  useEffect(() => {
+    if (!inProgress || !lastProgressUpdate) {
+      setShowSlowProgressBanner(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const timeSinceLastUpdate = Date.now() - lastProgressUpdate;
+      if (timeSinceLastUpdate > 30000) {
+        setShowSlowProgressBanner(true);
+      }
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, [lastProgressUpdate, inProgress, stage]);
 
   useEffect(() => {
     devLog('[TransPA] op id →', id);
@@ -126,39 +156,87 @@ export default function TranslationProgressArea({
     patchTranslation({ inProgress: false });
   }, [patchTranslation]);
 
-  /* -------------------------------------------------------------- */
-  /* 4 ️⃣  derived colour                                           */
-  /* -------------------------------------------------------------- */
   const progressBarColor = useMemo(() => {
     if (isCancelling) return colors.danger;
     if (percent >= 100) return colors.success;
     return TRANSLATION_PROGRESS_COLOR;
   }, [isCancelling, percent]);
 
-  /* -------------------------------------------------------------- */
-  /* 5 ️⃣  short-circuit when idle                                  */
-  /* -------------------------------------------------------------- */
   if (!inProgress) return null;
 
-  /* -------------------------------------------------------------- */
-  /* 6 ️⃣  render                                                  */
-  /* -------------------------------------------------------------- */
   return (
-    <ProgressArea
-      isVisible={inProgress}
-      title={t('dialogs.translationInProgress')}
-      progress={percent}
-      stage={translateBackendMessage(stage, t)}
-      progressBarColor={progressBarColor}
-      isCancelling={isCancelling}
-      operationId={id ?? null}
-      onCancel={handleCancel}
-      onClose={handleClose}
-      autoCloseDelay={
-        percent >= 100 && !stage.toLowerCase().includes('error')
-          ? autoCloseDelay
-          : undefined
-      }
-    />
+    <>
+      {showSlowProgressBanner && (
+        <div
+          className={css`
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1200;
+            background-color: #fff3cd;
+            border-bottom: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          `}
+        >
+          <span
+            className={css`
+              font-size: 16px;
+            `}
+          >
+            ⏳
+          </span>
+          <div>
+            <strong>{t('dialogs.slowProcessingBanner.title')}</strong>
+            <br />
+            {t('dialogs.slowProcessingBanner.description')}{' '}
+            <a
+              href="https://status.openai.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={css`
+                color: #856404;
+                text-decoration: underline;
+                cursor: pointer;
+                &:hover {
+                  text-decoration: none;
+                }
+              `}
+            >
+              {t('dialogs.slowProcessingBanner.checkStatus')}
+            </a>
+          </div>
+        </div>
+      )}
+      <div
+        className={css`
+          margin-top: ${showSlowProgressBanner
+            ? '60px'
+            : '0'}; /* Space for the banner above */
+        `}
+      >
+        <ProgressArea
+          isVisible={inProgress}
+          title={t('dialogs.translationInProgress')}
+          progress={percent}
+          stage={translateBackendMessage(stage, t)}
+          progressBarColor={progressBarColor}
+          isCancelling={isCancelling}
+          operationId={id ?? null}
+          onCancel={handleCancel}
+          onClose={handleClose}
+          autoCloseDelay={
+            percent >= 100 && !stage.toLowerCase().includes('error')
+              ? autoCloseDelay
+              : undefined
+          }
+        />
+      </div>
+    </>
   );
 }
