@@ -90,11 +90,10 @@ jobs:
       - name: Promote artefacts to latest/
         if: github.ref_type == 'tag'
         run: |
-          mkdir -p latest
-          # copy – and rename – each DMG so the filenames stay explicit
-          cp dist/Translator-*-darwin-arm64.dmg latest/Translator-arm64.dmg
-          cp dist/Translator-*-darwin-x64.dmg   latest/Translator-intel.dmg
-          cp dist/Translator-*-darwin-arm64.dmg latest/Translator.dmg   # default = Apple-silicon
+          mkdir -p latest/darwin-arm64 latest/darwin-x64
+          # copy – and keep clear names
+          cp dist/Translator-*-darwin-arm64.dmg latest/darwin-arm64/Translator.dmg
+          cp dist/Translator-*-darwin-x64.dmg   latest/darwin-x64/Translator.dmg
           aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
