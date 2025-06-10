@@ -65,9 +65,7 @@ jobs:
         run: |
           arch -x86_64 npm ci --no-audit --fund=false
           arch -x86_64 npx puppeteer@24.10.0 browsers install chrome-headless-shell \
-            --platform mac     --path vendor/headless-x64
-          arch -x86_64 npx puppeteer@24.10.0 browsers install chrome-headless-shell \
-            --platform mac_arm --path vendor/headless-arm64
+            --platform mac --path vendor/headless-x64
 
       # ---------- Clean dist before x64 build ----------
       - name: Clean dist before x64 build
