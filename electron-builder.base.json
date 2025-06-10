@@ -22,11 +22,6 @@
   "afterPack": "scripts/sign-chromium.cjs",
 
   "extraResources": [
-    {
-      "from": "packages/renderer/dist/assets",
-      "to": "assets",
-      "filter": ["**/*"]
-    },
     { "from": "vendor/headless-arm64", "to": "headless-arm64" },
     { "from": "vendor/headless-x64", "to": "headless-x64" }
   ],
