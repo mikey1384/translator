@@ -1,4 +1,3 @@
-// Load environment variables from .env file
 import dotenv from 'dotenv';
 import path from 'path';
 import { pathToFileURL } from 'url';
@@ -29,6 +28,7 @@ import Store from 'electron-store';
 import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
+import { buildSettingsHandlers } from './handlers/settings-handlers.js';
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -189,6 +189,41 @@ try {
   log.info('[main.ts] Handlers Initialized.');
 
   log.info('[main.ts] Registering IPC Handlers...');
+
+  // ──────────────────────────────────────────────────────────────
+  // Settings IPC handlers
+  // ──────────────────────────────────────────────────────────────
+  const settingsHandlers = buildSettingsHandlers({
+    store: settingsStore,
+    isDev,
+  });
+
+  ipcMain.handle('get-locale-url', settingsHandlers.getLocaleUrl);
+  ipcMain.handle(
+    'get-language-preference',
+    settingsHandlers.getLanguagePreference
+  );
+  ipcMain.handle(
+    'set-language-preference',
+    settingsHandlers.setLanguagePreference
+  );
+  ipcMain.handle(
+    'get-subtitle-target-language',
+    settingsHandlers.getSubtitleTargetLanguage
+  );
+  ipcMain.handle(
+    'set-subtitle-target-language',
+    settingsHandlers.setSubtitleTargetLanguage
+  );
+  ipcMain.handle(
+    'save-video-playback-position',
+    settingsHandlers.saveVideoPlaybackPosition
+  );
+  ipcMain.handle(
+    'get-video-playback-position',
+    settingsHandlers.getVideoPlaybackPosition
+  );
+
   ipcMain.handle('has-video-track', async (_evt, filePath: string) => {
     try {
       return await services!.ffmpeg.hasVideoTrack(filePath);
@@ -267,183 +302,7 @@ try {
     return app.getAppPath();
   });
 
-  ipcMain.handle('get-locale-url', async (_event, lang: string) => {
-    try {
-      let localeDirPath: string;
-
-      if (isDev) {
-        localeDirPath = path.join(
-          app.getAppPath(),
-          '..',
-          'src',
-          'renderer',
-          'locales'
-        );
-        log.info(
-          `[main.ts/get-locale-url] Using dev path (relative to app path parent): ${localeDirPath}`
-        );
-      } else {
-        localeDirPath = path.join(
-          app.getAppPath(),
-          'packages',
-          'renderer',
-          'dist',
-          'locales'
-        );
-        log.info(`[main.ts/get-locale-url] Using prod path: ${localeDirPath}`);
-      }
-
-      const localePath = path.join(localeDirPath, `${lang}.json`);
-      const localeUrl = pathToFileURL(localePath).toString();
-
-      try {
-        await fsPromises.access(localePath, fsPromises.constants.R_OK);
-        log.info(
-          `[main.ts/get-locale-url] Found ${localePath}. URL for ${lang}: ${localeUrl}`
-        );
-        return localeUrl;
-      } catch (accessError: any) {
-        log.error(
-          `[main.ts/get-locale-url] Cannot access locale file at ${localePath}. Error: ${accessError.message}`
-        );
-        return null;
-      }
-    } catch (error) {
-      log.error(`[main.ts/get-locale-url] Error constructing URL:`, error);
-      return null;
-    }
-  });
-
-  ipcMain.handle('get-language-preference', async () => {
-    try {
-      const lang = settingsStore.get('app_language_preference', 'en');
-      log.info(
-        `[main.ts/get-language-preference] Retrieved UI language: ${lang}`
-      );
-      return lang;
-    } catch (error) {
-      log.error(
-        '[main.ts/get-language-preference] Error retrieving UI language:',
-        error
-      );
-      return 'en';
-    }
-  });
-
-  ipcMain.handle('set-language-preference', async (_event, lang: string) => {
-    try {
-      settingsStore.set('app_language_preference', lang);
-      log.info(`[main.ts/set-language-preference] Set UI language to: ${lang}`);
-      return { success: true };
-    } catch (error) {
-      log.error(
-        '[main.ts/set-language-preference] Error setting UI language:',
-        error
-      );
-      return { success: false, error: (error as Error).message };
-    }
-  });
-
-  ipcMain.handle('get-subtitle-target-language', async () => {
-    try {
-      const lang = settingsStore.get('subtitleTargetLanguage', 'original');
-      log.info(`[main.ts/get-subtitle-target-language] Retrieved: ${lang}`);
-      return lang;
-    } catch (error) {
-      log.error(
-        '[main.ts/get-subtitle-target-language] Error retrieving:',
-        error
-      );
-      return 'original';
-    }
-  });
-
-  ipcMain.handle(
-    'set-subtitle-target-language',
-    async (_event, lang: string) => {
-      try {
-        if (typeof lang === 'string') {
-          settingsStore.set('subtitleTargetLanguage', lang);
-          log.info(`[main.ts/set-subtitle-target-language] Set to: ${lang}`);
-          return { success: true };
-        } else {
-          log.warn(
-            '[main.ts] Invalid type received for set-subtitle-target-language:',
-            lang
-          );
-          return { success: false, error: 'Invalid language type received' };
-        }
-      } catch (error) {
-        log.error(
-          '[main.ts/set-subtitle-target-language] Error setting language:',
-          error
-        );
-        return { success: false, error: (error as Error).message };
-      }
-    }
-  );
-
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
-
-  ipcMain.handle(
-    'save-video-playback-position',
-    (_event, filePath: string, position: number) => {
-      if (!filePath || typeof position !== 'number' || position < 0) {
-        log.warn(
-          `[main.ts] Invalid attempt to save playback position: Path=${filePath}, Position=${position}`
-        );
-        return;
-      }
-      try {
-        const currentPositions = settingsStore.get(
-          'videoPlaybackPositions',
-          {}
-        ) as { [key: string]: number };
-        const updatedPositions = {
-          ...currentPositions,
-          [filePath]: position,
-        };
-        settingsStore.set('videoPlaybackPositions', updatedPositions);
-      } catch (error) {
-        log.error(
-          `[main.ts] Error saving playback position for ${filePath}:`,
-          error
-        );
-      }
-    }
-  );
-
-  ipcMain.handle(
-    'get-video-playback-position',
-    async (_event, filePath: string): Promise<number | null> => {
-      if (!filePath) {
-        log.warn(
-          '[main.ts] Invalid attempt to get playback position: empty path'
-        );
-        return null;
-      }
-      try {
-        const positions = settingsStore.get('videoPlaybackPositions', {}) as {
-          [key: string]: number;
-        };
-        const position = positions[filePath];
-        if (typeof position === 'number' && position >= 0) {
-          log.info(
-            `[main.ts] Retrieved playback position for ${filePath}: ${position}s`
-          );
-          return position;
-        }
-        log.info(`[main.ts] No valid playback position found for ${filePath}`);
-        return null;
-      } catch (error) {
-        log.error(
-          `[main.ts] Error getting playback position for ${filePath}:`,
-          error
-        );
-        return null;
-      }
-    }
-  );
 
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
