@@ -117,7 +117,7 @@
     "hours": "時間",
     "buyCredits": "クレジットを購入",
     "redirectingToPayment": "安全な決済を開いています…",
-    "description": "$5（1.5時間）、$10（3時間）、または$50（24時間）のクレジットパックからお選びください",
+    "description": "${{pack1Price}}（{{pack1Hours}}時間）、${{pack2Price}}（{{pack2Hours}}時間）、または${{pack3Price}}（{{pack3Hours}}時間）のクレジットパックからお選びください",
     "notEnough": "クレジットが不足しています。続行するにはクレジットを購入してください。"
   },
   "videoPlayer": {

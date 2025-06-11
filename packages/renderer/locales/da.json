@@ -245,7 +245,7 @@
     "hours": "timer",
     "buyCredits": "Køb kreditter",
     "redirectingToPayment": "Åbner sikker betaling...",
-    "description": "Vælg mellem $5 (1,5t), $10 (3t) eller $50 (24t) kreditpakker",
+    "description": "Vælg mellem ${{pack1Price}} ({{pack1Hours}}t), ${{pack2Price}} ({{pack2Hours}}t) eller ${{pack3Price}} ({{pack3Hours}}t) kreditpakker",
     "notEnough": "Utilstrækkelige kreditter. Køb venligst flere kreditter for at fortsætte."
   }
 }

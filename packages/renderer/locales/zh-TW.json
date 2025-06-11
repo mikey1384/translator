@@ -245,7 +245,7 @@
     "hours": "小時",
     "buyCredits": "購買點數",
     "redirectingToPayment": "開啟安全結帳中…",
-    "description": "選擇 $5 (1.5小時)、$10 (3小時) 或 $50 (24小時) 點數包",
+    "description": "選擇 ${{pack1Price}} ({{pack1Hours}}小時)、${{pack2Price}} ({{pack2Hours}}小時) 或 ${{pack3Price}} ({{pack3Hours}}小時) 點數包",
     "notEnough": "點數不足。請購買更多點數以繼續。"
   }
 }

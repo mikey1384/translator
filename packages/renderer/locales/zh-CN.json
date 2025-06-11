@@ -117,7 +117,7 @@
     "hours": "小时",
     "buyCredits": "购买积分",
     "redirectingToPayment": "正在打开安全支付…",
-    "description": "选择$5（1.5小时）、$10（3小时）或$50（24小时）积分包",
+    "description": "选择${{pack1Price}}（{{pack1Hours}}小时）、${{pack2Price}}（{{pack2Hours}}小时）或${{pack3Price}}（{{pack3Hours}}小时）积分包",
     "notEnough": "积分不足。请购买更多积分以继续。"
   },
   "videoPlayer": {

@@ -45,6 +45,28 @@ export const languages = [
 export const CREDITS_PER_AUDIO_HOUR = 100_000;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
+// Credit pack configurations
+export const CREDIT_PACKS = {
+  STARTER: {
+    id: 'STARTER' as const,
+    price: 5,
+    hours: 1.5,
+    credits: 150_000,
+  },
+  STANDARD: {
+    id: 'STANDARD' as const,
+    price: 10,
+    hours: 3.5,
+    credits: 350_000,
+  },
+  PRO: {
+    id: 'PRO' as const,
+    price: 50,
+    hours: 24,
+    credits: 2_400_000,
+  },
+} as const;
+
 // Re-export from runtime-config for backward compatibility
 export {
   BASELINE_HEIGHT,

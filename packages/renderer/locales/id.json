@@ -245,7 +245,7 @@
     "hours": "jam",
     "buyCredits": "Beli Kredit",
     "redirectingToPayment": "Membuka checkout aman…",
-    "description": "Pilih dari paket kredit $5 (1,5 jam), $10 (3 jam), atau $50 (24 jam)",
+    "description": "Pilih dari paket kredit ${{pack1Price}} ({{pack1Hours}} jam), ${{pack2Price}} ({{pack2Hours}} jam), atau ${{pack3Price}} ({{pack3Hours}} jam)",
     "notEnough": "Kredit tidak mencukupi. Silakan beli lebih banyak kredit untuk melanjutkan."
   }
 }

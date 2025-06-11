@@ -117,7 +117,7 @@
     "hours": "heures",
     "buyCredits": "Acheter des crédits",
     "redirectingToPayment": "Ouverture paiement sécurisé…",
-    "description": "Choisissez parmi les packs de $5 (1,5h), $10 (3h), ou $50 (24h) de crédits",
+    "description": "Choisissez parmi les packs de ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), ou ${{pack3Price}} ({{pack3Hours}}h) de crédits",
     "notEnough": "Crédits insuffisants. Veuillez acheter plus de crédits pour continuer."
   },
   "videoPlayer": {

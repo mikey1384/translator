@@ -117,7 +117,7 @@
     "hours": "часы",
     "buyCredits": "Купить кредиты",
     "redirectingToPayment": "Открытие безопасной оплаты…",
-    "description": "Выберите из пакетов $5 (1.5ч), $10 (3ч), или $50 (24ч) кредитов",
+    "description": "Выберите из пакетов ${{pack1Price}} ({{pack1Hours}}ч), ${{pack2Price}} ({{pack2Hours}}ч), или ${{pack3Price}} ({{pack3Hours}}ч) кредитов",
     "notEnough": "Недостаточно кредитов. Пожалуйста, купите больше кредитов для продолжения."
   },
   "videoPlayer": {

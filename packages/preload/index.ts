@@ -240,6 +240,12 @@ const electronAPI = {
     error?: string;
   }> => ipcRenderer.invoke('reset-credits'),
 
+  // Admin reset credits to zero function
+  resetCreditsToZero: (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => ipcRenderer.invoke('reset-credits-to-zero'),
+
   // Get device ID for admin button visibility
   getDeviceId: (): Promise<string> => ipcRenderer.invoke('get-device-id'),
   getAdminDeviceId: (): Promise<string | null> =>

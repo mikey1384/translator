@@ -245,7 +245,7 @@
     "hours": "ure",
     "buyCredits": "Koop Krediet",
     "redirectingToPayment": "Maak veilige uitklok oop...",
-    "description": "Kies uit $5 (1.5u), $10 (3u), of $50 (24u) kredietpakkette",
+    "description": "Kies uit ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) kredietpakkette",
     "notEnough": "Onvoldoende krediet. Koop asseblief meer krediet om voort te gaan."
   }
 }

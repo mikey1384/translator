@@ -166,17 +166,20 @@ export async function handleResetCredits(): Promise<{
   error?: string;
 }> {
   try {
-    log.info('[credit-handler] Attempting admin credit reset...');
+    log.info('[credit-handler] Attempting admin add credits...');
 
-    const response = await axios.post('https://api.stage5.tools/admin/reset', {
-      deviceId: getDeviceId(),
-      pack: 'STANDARD',
-    });
+    const response = await axios.post(
+      'https://api.stage5.tools/admin/add-credits',
+      {
+        deviceId: getDeviceId(),
+        pack: 'STANDARD',
+      }
+    );
 
     if (response.data?.success) {
       const { creditsAdded } = response.data;
       log.info(
-        `[credit-handler] ✅ Admin reset successful: Added ${creditsAdded} credits`
+        `[credit-handler] ✅ Admin add credits successful: Added ${creditsAdded} credits`
       );
 
       // Force a refresh so UI updates instantly
@@ -202,11 +205,60 @@ export async function handleResetCredits(): Promise<{
       };
     } else {
       const error = response.data?.error || 'Unknown error';
-      log.error(`[credit-handler] ❌ Admin reset failed: ${error}`);
+      log.error(`[credit-handler] ❌ Admin add credits failed: ${error}`);
       return { success: false, error };
     }
   } catch (err: any) {
-    log.error('[credit-handler] ❌ Admin reset error:', err);
+    log.error('[credit-handler] ❌ Admin add credits error:', err);
+    return {
+      success: false,
+      error: err.response?.data?.error || err.message || 'Network error',
+    };
+  }
+}
+
+export async function handleResetCreditsToZero(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    log.info('[credit-handler] Attempting admin credit reset to zero...');
+
+    const response = await axios.post(
+      'https://api.stage5.tools/admin/reset-to-zero',
+      {
+        deviceId: getDeviceId(),
+      }
+    );
+
+    if (response.data?.success) {
+      log.info('[credit-handler] ✅ Admin reset to zero successful');
+
+      // Force a refresh so UI updates instantly
+      const updatedBalance = await handleGetCreditBalance();
+
+      // Broadcast the updated balance to renderer
+      if (
+        updatedBalance.success &&
+        updatedBalance.creditBalance !== undefined
+      ) {
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (mainWindow) {
+          mainWindow.webContents.send('credits-updated', {
+            creditBalance: updatedBalance.creditBalance,
+            hoursBalance: updatedBalance.balanceHours || 0,
+          });
+        }
+      }
+
+      return { success: true };
+    } else {
+      const error = response.data?.error || 'Unknown error';
+      log.error(`[credit-handler] ❌ Admin reset to zero failed: ${error}`);
+      return { success: false, error };
+    }
+  } catch (err: any) {
+    log.error('[credit-handler] ❌ Admin reset to zero error:', err);
     return {
       success: false,
       error: err.response?.data?.error || err.message || 'Network error',

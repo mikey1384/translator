@@ -245,7 +245,7 @@
     "hours": "ساعات",
     "buyCredits": "شراء النقاط",
     "redirectingToPayment": "فتح الدفع الآمن…",
-    "description": "اختر من حزم $5 (1.5س)، $10 (3س)، أو $50 (24س) من النقاط",
+    "description": "اختر من حزم ${{pack1Price}} ({{pack1Hours}}س)، ${{pack2Price}} ({{pack2Hours}}س)، أو ${{pack3Price}} ({{pack3Hours}}س) من النقاط",
     "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة."
   }
 }

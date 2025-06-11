@@ -245,7 +245,7 @@
     "hours": "masaa",
     "buyCredits": "Nunua Mikopo",
     "redirectingToPayment": "Inafungua malipo salama...",
-    "description": "Chagua kutoka kwa paketi za $5 (masaa 1.5), $10 (masaa 3), au $50 (masaa 24)",
+    "description": "Chagua kutoka kwa paketi za ${{pack1Price}} (masaa {{pack1Hours}}), ${{pack2Price}} (masaa {{pack2Hours}}), au ${{pack3Price}} (masaa {{pack3Hours}})",
     "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea."
   }
 }

@@ -245,7 +245,7 @@
     "hours": "godziny",
     "buyCredits": "Kup kredyty",
     "redirectingToPayment": "Otwieranie bezpiecznej płatności…",
-    "description": "Wybierz spośród pakietów $5 (1,5h), $10 (3h), lub $50 (24h)",
+    "description": "Wybierz spośród pakietów ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), lub ${{pack3Price}} ({{pack3Hours}}h)",
     "notEnough": "Niewystarczające kredyty. Kup więcej kredytów, aby kontynuować."
   }
 }

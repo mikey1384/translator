@@ -114,10 +114,10 @@ export default function TranslationProgressArea({
 
     const timer = setTimeout(() => {
       const timeSinceLastUpdate = Date.now() - lastProgressUpdate;
-      if (timeSinceLastUpdate > 30000) {
+      if (timeSinceLastUpdate > 60000) {
         setShowSlowProgressBanner(true);
       }
-    }, 30000);
+    }, 60000);
 
     return () => clearTimeout(timer);
   }, [lastProgressUpdate, inProgress, stage]);

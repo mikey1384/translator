@@ -245,7 +245,7 @@
     "hours": "hodiny",
     "buyCredits": "Koupit kredity",
     "redirectingToPayment": "Otevírání zabezpečené pokladny…",
-    "description": "Vyberte z balíčků $5 (1,5h), $10 (3h), nebo $50 (24h)",
+    "description": "Vyberte z balíčků ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), nebo ${{pack3Price}} ({{pack3Hours}}h)",
     "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování."
   }
 }

@@ -245,7 +245,7 @@
     "hours": "שעות",
     "buyCredits": "קנה קרדיט",
     "redirectingToPayment": "פותח תשלום מאובטח...",
-    "description": "בחר מבין חבילות קרדיט של $5 (1.5 שעות), $10 (3 שעות), או $50 (24 שעות)",
+    "description": "בחר מבין חבילות קרדיט של ${{pack1Price}} ({{pack1Hours}} שעות), ${{pack2Price}} ({{pack2Hours}} שעות), או ${{pack3Price}} ({{pack3Hours}} שעות)",
     "notEnough": "קרדיט לא מספיק. אנא רכוש קרדיט נוסף כדי להמשיך."
   }
 }

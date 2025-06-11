@@ -245,7 +245,7 @@
     "hours": "ώρες",
     "buyCredits": "Αγορά Πιστώσεων",
     "redirectingToPayment": "Άνοιγμα ασφαλούς πληρωμής…",
-    "description": "Επιλέξτε από πακέτα $5 (1,5ω), $10 (3ω), ή $50 (24ω)",
+    "description": "Επιλέξτε από πακέτα ${{pack1Price}} ({{pack1Hours}}ω), ${{pack2Price}} ({{pack2Hours}}ω), ή ${{pack3Price}} ({{pack3Hours}}ω)",
     "notEnough": "Ανεπαρκείς πιστώσεις. Παρακαλώ αγοράστε περισσότερες πιστώσεις για να συνεχίσετε."
   }
 }

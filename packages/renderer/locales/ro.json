@@ -245,7 +245,7 @@
     "hours": "ore",
     "buyCredits": "Cumpără Credite",
     "redirectingToPayment": "Se deschide plata securizată…",
-    "description": "Alegeți dintre pachetele $5 (1,5o), $10 (3o), sau $50 (24o)",
+    "description": "Alegeți dintre pachetele ${{pack1Price}} ({{pack1Hours}}o), ${{pack2Price}} ({{pack2Hours}}o), sau ${{pack3Price}} ({{pack3Hours}}o)",
     "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua."
   }
 }

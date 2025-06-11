@@ -396,6 +396,10 @@ declare module '@shared-types/app' {
       creditsAdded?: number;
       error?: string;
     }>;
+    resetCreditsToZero: () => Promise<{
+      success: boolean;
+      error?: string;
+    }>;
     getDeviceId: () => Promise<string>;
     getAdminDeviceId: () => Promise<string | null>;
     onCreditsUpdated: (

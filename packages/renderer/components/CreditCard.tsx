@@ -4,6 +4,7 @@ import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
 import AdminResetButton from './AdminResetButton';
 import { colors } from '../styles';
+import { CREDIT_PACKS } from '../../shared/constants';
 
 const card = css`
   background: rgba(40, 40, 40, 0.6);
@@ -58,14 +59,17 @@ export default function CreditCard() {
             style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
           >
             <BuyCreditsButton
-              packId="STARTER"
-              label="$5 · 1 h 30 m (150 000 cr)"
+              packId={CREDIT_PACKS.STARTER.id}
+              label={`$${CREDIT_PACKS.STARTER.price} · ${CREDIT_PACKS.STARTER.hours} h (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
-              packId="STANDARD"
-              label="$10 · 3 h (300 000 cr)"
+              packId={CREDIT_PACKS.STANDARD.id}
+              label={`$${CREDIT_PACKS.STANDARD.price} · ${CREDIT_PACKS.STANDARD.hours} h (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
             />
-            <BuyCreditsButton packId="PRO" label="$50 · 24 h (2 400 000 cr)" />
+            <BuyCreditsButton
+              packId={CREDIT_PACKS.PRO.id}
+              label={`$${CREDIT_PACKS.PRO.price} · ${CREDIT_PACKS.PRO.hours} h (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
+            />
           </div>
 
           {/* Admin reset button (only shows for admin device) */}
@@ -88,7 +92,14 @@ export default function CreditCard() {
             className="hint"
             style={{ fontSize: '.85rem', color: colors.grayDark }}
           >
-            {t('credits.description')}
+            {t('credits.description', {
+              pack1Price: CREDIT_PACKS.STARTER.price,
+              pack1Hours: CREDIT_PACKS.STARTER.hours,
+              pack2Price: CREDIT_PACKS.STANDARD.price,
+              pack2Hours: CREDIT_PACKS.STANDARD.hours,
+              pack3Price: CREDIT_PACKS.PRO.price,
+              pack3Hours: CREDIT_PACKS.PRO.hours,
+            })}
           </p>
         </>
       ) : null}

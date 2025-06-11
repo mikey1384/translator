@@ -44,6 +44,7 @@ import {
   handleGetCreditBalance,
   handleCreateCheckoutSession,
   handleResetCredits,
+  handleResetCreditsToZero,
   handleStripeSuccess,
   getDeviceId,
 } from './handlers/credit-handlers.js';
@@ -307,6 +308,7 @@ try {
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
   ipcMain.handle('reset-credits', handleResetCredits);
+  ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('get-device-id', () => getDeviceId());
   ipcMain.handle(
     'get-admin-device-id',

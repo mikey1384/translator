@@ -245,7 +245,7 @@
     "hours": "uren",
     "buyCredits": "Credits kopen",
     "redirectingToPayment": "Veilige checkout openen…",
-    "description": "Kies uit $5 (1,5u), $10 (3u), of $50 (24u) creditpakketten",
+    "description": "Kies uit ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) creditpakketten",
     "notEnough": "Onvoldoende credits. Koop meer credits om door te gaan."
   }
 }

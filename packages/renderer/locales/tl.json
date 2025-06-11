@@ -245,7 +245,7 @@
     "hours": "mga oras",
     "buyCredits": "Bumili ng Credit",
     "redirectingToPayment": "Binubuksan ang secure checkout…",
-    "description": "Pumili mula sa $5 (1.5 oras), $10 (3 oras), o $50 (24 oras) na credit packs",
+    "description": "Pumili mula sa ${{pack1Price}} ({{pack1Hours}} oras), ${{pack2Price}} ({{pack2Hours}} oras), o ${{pack3Price}} ({{pack3Hours}} oras) na credit packs",
     "notEnough": "Hindi sapat ang mga credit. Mangyaring bumili pa ng mga credit para magpatuloy."
   }
 }

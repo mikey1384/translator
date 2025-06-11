@@ -245,7 +245,7 @@
     "hours": "години",
     "buyCredits": "Купити кредити",
     "redirectingToPayment": "Відкриття безпечної оплати…",
-    "description": "Оберіть з пакетів $5 (1,5г), $10 (3г), або $50 (24г)",
+    "description": "Оберіть з пакетів ${{pack1Price}} ({{pack1Hours}}г), ${{pack2Price}} ({{pack2Hours}}г), або ${{pack3Price}} ({{pack3Hours}}г)",
     "notEnough": "Недостатньо кредитів. Будь ласка, придбайте більше кредитів, щоб продовжити."
   }
 }

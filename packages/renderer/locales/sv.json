@@ -245,7 +245,7 @@
     "hours": "timmar",
     "buyCredits": "Köp krediter",
     "redirectingToPayment": "Öppnar säker utcheckning…",
-    "description": "Välj mellan $5 (1,5 tim), $10 (3 tim), eller $50 (24 tim) kreditpaket",
+    "description": "Välj mellan ${{pack1Price}} ({{pack1Hours}} tim), ${{pack2Price}} ({{pack2Hours}} tim), eller ${{pack3Price}} ({{pack3Hours}} tim) kreditpaket",
     "notEnough": "Otillräckliga krediter. Vänligen köp fler krediter för att fortsätta."
   }
 }

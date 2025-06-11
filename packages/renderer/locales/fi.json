@@ -245,7 +245,7 @@
     "hours": "tuntia",
     "buyCredits": "Osta krediittejä",
     "redirectingToPayment": "Avataan turvallinen kassa...",
-    "description": "Valitse $5 (1,5h), $10 (3h) tai $50 (24h) krediittipaketeista",
+    "description": "Valitse ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) tai ${{pack3Price}} ({{pack3Hours}}h) krediittipaketeista",
     "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi."
   }
 }

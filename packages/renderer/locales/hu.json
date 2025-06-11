@@ -245,7 +245,7 @@
     "hours": "órák",
     "buyCredits": "Kreditek vásárlása",
     "redirectingToPayment": "Biztonságos fizetés megnyitása…",
-    "description": "Válasszon $5 (1,5 óra), $10 (3 óra), vagy $50 (24 óra) kredit csomagokból",
+    "description": "Válasszon ${{pack1Price}} ({{pack1Hours}} óra), ${{pack2Price}} ({{pack2Hours}} óra), vagy ${{pack3Price}} ({{pack3Hours}} óra) kredit csomagokból",
     "notEnough": "Nincs elegendő kredit. Kérjük vásároljon több kreditet a folytatáshoz."
   }
 }

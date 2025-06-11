@@ -245,7 +245,7 @@
     "hours": "giờ",
     "buyCredits": "Mua Tín dụng",
     "redirectingToPayment": "Đang mở thanh toán an toàn…",
-    "description": "Chọn từ các gói tín dụng $5 (1,5 giờ), $10 (3 giờ), hoặc $50 (24 giờ)",
+    "description": "Chọn từ các gói tín dụng ${{pack1Price}} ({{pack1Hours}} giờ), ${{pack2Price}} ({{pack2Hours}} giờ), hoặc ${{pack3Price}} ({{pack3Hours}} giờ)",
     "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục."
   }
 }

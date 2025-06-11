@@ -245,7 +245,7 @@
     "hours": "saat",
     "buyCredits": "Kredi Satın Al",
     "redirectingToPayment": "Güvenli ödeme açılıyor…",
-    "description": "$5 (1,5s), $10 (3s), veya $50 (24s) kredi paketlerinden seçin",
+    "description": "${{pack1Price}} ({{pack1Hours}}s), ${{pack2Price}} ({{pack2Hours}}s), veya ${{pack3Price}} ({{pack3Hours}}s) kredi paketlerinden seçin",
     "notEnough": "Yetersiz kredi. Devam etmek için lütfen daha fazla kredi satın alın."
   }
 }

@@ -245,7 +245,7 @@
     "hours": "घंटे",
     "buyCredits": "क्रेडिट खरीदें",
     "redirectingToPayment": "सुरक्षित चेकआउट खोल रहा है…",
-    "description": "$5 (1.5घं), $10 (3घं), या $50 (24घं) क्रेडिट पैक में से चुनें",
+    "description": "${{pack1Price}} ({{pack1Hours}}घं), ${{pack2Price}} ({{pack2Hours}}घं), या ${{pack3Price}} ({{pack3Hours}}घं) क्रेडिट पैक में से चुनें",
     "notEnough": "अपर्याप्त क्रेडिट। जारी रखने के लिए कृपया अधिक क्रेडिट खरीदें।"
   }
 }
