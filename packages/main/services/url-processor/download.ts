@@ -11,6 +11,7 @@ import {
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
 import { findYtDlpBinary } from './binary-locator.js';
+import { ensureYtDlpBinary } from './binary-installer.js';
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
@@ -38,16 +39,38 @@ export async function downloadVideoFromPlatform(
     stage: 'Locating yt-dlp...',
   });
 
-  const ytDlpPath = await findYtDlpBinary();
+  let ytDlpPath = await findYtDlpBinary();
   if (!ytDlpPath) {
+    log.info(
+      '[URLprocessor] yt-dlp binary not found, attempting to install...'
+    );
+
     progressCallback?.({
-      percent: 0,
-      stage: 'Failed',
-      error: 'yt-dlp binary not found.',
+      percent: PROGRESS.WARMUP_START + 2,
+      stage: 'Setting up yt-dlp...',
     });
-    throw new Error('yt-dlp binary not found.');
+
+    // Try to automatically install the binary
+    ytDlpPath = await ensureYtDlpBinary();
+
+    if (!ytDlpPath) {
+      progressCallback?.({
+        percent: 0,
+        stage: 'Failed',
+        error:
+          'yt-dlp binary not found and could not be installed automatically.',
+      });
+      throw new Error(
+        'yt-dlp binary not found and could not be installed automatically.'
+      );
+    }
+
+    log.info(
+      `[URLprocessor] Successfully installed and located yt-dlp at: ${ytDlpPath}`
+    );
+  } else {
+    log.info(`[URLprocessor] Found yt-dlp at: ${ytDlpPath}`);
   }
-  log.info(`[URLprocessor] Found yt-dlp at: ${ytDlpPath}`);
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START + 3,
