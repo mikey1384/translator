@@ -10,7 +10,6 @@ import {
 } from '../../active-processes.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
-import { findYtDlpBinary } from './binary-locator.js';
 import { ensureYtDlpBinary } from './binary-installer.js';
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
