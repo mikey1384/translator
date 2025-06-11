@@ -23,12 +23,8 @@
   "afterPack": "scripts/sign-chromium.cjs",
 
   "extraResources": [
-    {
-      "from": "vendor/headless-arm64",
-      "to": "headless-arm64",
-      "arch": "arm64"
-    },
-    { "from": "vendor/headless-x64", "to": "headless-x64", "arch": "x64" }
+    { "from": "vendor/headless-arm64", "to": "headless-arm64" },
+    { "from": "vendor/headless-x64", "to": "headless-x64" }
   ],
 
   "files": [
