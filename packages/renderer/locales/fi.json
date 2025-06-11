@@ -18,13 +18,13 @@
       "unexpectedRemove": "Tapahtui odottamaton virhe avainta poistettaessa.",
       "unexpectedSave": "Tapahtui odottamaton virhe tallennettaessa.",
       "unexpectedLoad": "Tapahtui odottamaton virhe ladattaessa.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Renderöinti epäonnistui",
+      "creditReservationFailed": "Krediittien varaaminen epäonnistui",
+      "invalidRenderOptions": "Virheelliset renderöintiasetukset annettu",
+      "missingVideoMetadata": "Puuttuvat videometadatat ({{missing}})",
+      "noSourceVideo": "Ei lähdettä videota",
+      "noSubtitlesLoaded": "Ei ladattuja tekstityksiä",
+      "failedToLoadSRT": "SRT-tiedoston lataaminen epäonnistui"
     },
     "success": "Onnistui",
     "settings": "Asetukset",
@@ -46,9 +46,9 @@
     "backToTopAria": "Vieritä takaisin ylös",
     "confirmReload": "Haluatko varmasti ladata sivun uudelleen? Tallentamattomat muutokset saattavat kadota.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT-tiedostot",
+      "mediaFiles": "Mediatiedostot",
+      "videoFiles": "Videotiedostot"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Asetukset",
+    "creditsDescription": "Osta tai lataa AI-käyttötunteja täältä."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Siirry koko näytön tilaan",
+    "exitFullscreen": "Poistu koko näytön tilasta",
     "sideMenu": {
       "changeVideo": "Vaihda video",
       "changeVideoAudio": "Vaihda video / ääni",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Ei krediittejä.",
+    "rechargeLink": "Lataa →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Osta krediittejä <settingsLink>{{settingsLinkText}}</settingsLink> käyttääksesi käännös- ja litterointiominaisuuksia.",
+      "settingsLinkText": "Asetukset"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Valitse video",
+      "processingDuration": "Videon kestoa käsitellään. Yritä hetken kuluttua uudelleen."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Aloitetaan...",
+      "completed": "Valmis",
+      "cancelled": "Peruutettu",
+      "error": "Virhe"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Osta krediittejä",
+      "redirectingToPayment": "Ohjataan maksuun..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Lasketaan kustannuksia...",
+    "notEnoughCredits": "Ei tarpeeksi krediittejä saatavilla"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Etsi tekstityksissä...",
+    "replacePlaceholder": "Korvaa tällä...",
+    "replaceAll": "Korvaa kaikki",
+    "nextMatch": "Seuraava osuma (Enter)",
+    "previousMatch": "Edellinen osuma (Shift+Enter)",
+    "replaceAllTitle": "Korvaa kaikki esiintymät",
+    "closeTitle": "Sulje (Esc)",
+    "nextMatchAria": "Seuraava osuma",
+    "previousMatchAria": "Edellinen osuma",
+    "replaceAllAria": "Korvaa kaikki",
+    "closeAria": "Sulje etsintäpalkki"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Tallenna SRT-tiedosto nimellä",
+    "saveDownloadedVideoAs": "Tallenna ladattu video nimellä",
+    "downloadInProgress": "Lataus meneillään",
+    "saveDownloadedFile": "Tallenna ladattu tiedosto: {{path}}",
+    "translationInProgress": "Käännös meneillään",
+    "cancelTranslationConfirm": "Peruuta käännös? Edistyminen menetetään ja sinun täytyy aloittaa uudelleen.",
+    "slowProcessingBanner": {
+      "title": "Käsittely kestää tavallista kauemmin.",
+      "description": "Tämä saattaa johtua suuresta kysynnästä tai OpenAI:n palvelinongelmista. Prosessi jatkuu taustalla.",
+      "checkStatus": "Tarkista OpenAI:n tila"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Litteroitu ja käsitelty {{done}}/{{total}} osaa",
+    "gapRepair": "Aukkojen korjaus #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Korjataan puuttuvia tekstityksiä (Kierros {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Tiedosto tallennettu:\n{{path}}",
+    "videoSaved": "Video tallennettu:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI-käyttötunnit",
+    "loading": "Ladataan...",
+    "credits": "krediittiä",
+    "hours": "tuntia",
+    "buyCredits": "Osta krediittejä",
+    "redirectingToPayment": "Avataan turvallinen kassa...",
+    "description": "Valitse $5 (1,5h), $10 (3h) tai $50 (24h) krediittipaketeista",
+    "notEnough": "Riittämättömästi krediittejä. Osta lisää krediittejä jatkaaksesi."
   }
 }

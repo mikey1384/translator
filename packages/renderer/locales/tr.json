@@ -18,13 +18,13 @@
       "unexpectedRemove": "Anahtar kaldırılırken beklenmeyen bir hata oluştu.",
       "unexpectedSave": "Kaydedilirken beklenmeyen bir hata oluştu.",
       "unexpectedLoad": "Yüklenirken beklenmeyen bir hata oluştu.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Render işlemi başarısız",
+      "creditReservationFailed": "Kredi rezervasyonu başarısız",
+      "invalidRenderOptions": "Geçersiz render seçenekleri verildi",
+      "missingVideoMetadata": "Video metadatası eksik ({{missing}})",
+      "noSourceVideo": "Kaynak video yok",
+      "noSubtitlesLoaded": "Yüklenen altyazı yok",
+      "failedToLoadSRT": "SRT dosyası yüklenemedi"
     },
     "success": "Başarılı",
     "settings": "Ayarlar",
@@ -46,9 +46,9 @@
     "backToTopAria": "Sayfanın başına dön",
     "confirmReload": "Sayfayı yenilemek istediğinizden emin misiniz? Kaydedilmemiş değişiklikler kaybolabilir.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT Dosyaları",
+      "mediaFiles": "Medya Dosyaları",
+      "videoFiles": "Video Dosyaları"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Ayarlar",
+    "creditsDescription": "AI kullanım saatlerini buradan satın alın veya yükleyin."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Tam Ekrana Geç",
+    "exitFullscreen": "Tam Ekrandan Çık",
     "sideMenu": {
       "changeVideo": "Videoyu Değiştir",
       "changeVideoAudio": "Video / Audio Değiştir",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaanca"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Kredi yok.",
+    "rechargeLink": "Yeniden Yükle →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Çeviri ve transkripsiyon özelliklerini kullanmak için <settingsLink>{{settingsLinkText}}</settingsLink> bölümünden kredi satın alın.",
+      "settingsLinkText": "Ayarlar"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Lütfen bir video seçin",
+      "processingDuration": "Video süresi işleniyor. Lütfen kısa süre sonra tekrar deneyin."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Başlıyor...",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi",
+      "error": "Hata"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Kredi Satın Al",
+      "redirectingToPayment": "Ödemeye yönlendiriliyor..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Maliyet hesaplanıyor...",
+    "notEnoughCredits": "Yeterli kredi yok"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Altyazılarda ara...",
+    "replacePlaceholder": "Şununla değiştir...",
+    "replaceAll": "Tümünü Değiştir",
+    "nextMatch": "Sonraki Eşleşme (Enter)",
+    "previousMatch": "Önceki Eşleşme (Shift+Enter)",
+    "replaceAllTitle": "Tüm Oluşumları Değiştir",
+    "closeTitle": "Kapat (Esc)",
+    "nextMatchAria": "Sonraki eşleşme",
+    "previousMatchAria": "Önceki eşleşme",
+    "replaceAllAria": "Tümünü değiştir",
+    "closeAria": "Arama çubuğunu kapat"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "SRT Dosyasını Farklı Kaydet",
+    "saveDownloadedVideoAs": "İndirilen Videoyu Farklı Kaydet",
+    "downloadInProgress": "İndirme Devam Ediyor",
+    "saveDownloadedFile": "İndirilen dosyayı kaydet: {{path}}",
+    "translationInProgress": "Çeviri Devam Ediyor",
+    "cancelTranslationConfirm": "Çeviri iptal edilsin mi? İlerleme kaybedilecek ve yeniden başlamanız gerekecek.",
+    "slowProcessingBanner": {
+      "title": "İşleme normalden uzun sürüyor.",
+      "description": "Bu yüksek talep veya OpenAI sunucularındaki sorunlardan kaynaklanıyor olabilir. İşlem arka planda devam ediyor.",
+      "checkStatus": "OpenAI durumunu kontrol et"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Metne çevrildi ve temizlendi {{done}}/{{total}} parça",
+    "gapRepair": "Boşluk onarımı #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Eksik altyazılar onarılıyor (Tekrar {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Dosya kaydedildi:\n{{path}}",
+    "videoSaved": "Video şuraya kaydedildi:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI Kullanım Saatleri",
+    "loading": "Yükleniyor...",
+    "credits": "kredi",
+    "hours": "saat",
+    "buyCredits": "Kredi Satın Al",
+    "redirectingToPayment": "Güvenli ödeme açılıyor…",
+    "description": "$5 (1,5s), $10 (3s), veya $50 (24s) kredi paketlerinden seçin",
+    "notEnough": "Yetersiz kredi. Devam etmek için lütfen daha fazla kredi satın alın."
   }
 }

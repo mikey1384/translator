@@ -15,16 +15,16 @@
     "loading": "ஏற்றுகிறது...",
     "error": {
       "unexpected": "எதிர்பாராத பிழை ஏற்பட்டது.",
-      "unexpectedRemove": "விசையை நீக்கும்போது எதிர்பாராத பிழை ஏற்பட்டது.",
+      "unexpectedRemove": "விசையை அகற்றும்போது எதிர்பாராத பிழை ஏற்பட்டது.",
       "unexpectedSave": "சேமிக்கும்போது எதிர்பாராத பிழை ஏற்பட்டது.",
       "unexpectedLoad": "ஏற்றும்போது எதிர்பாராத பிழை ஏற்பட்டது.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "ரெண்டரிங் தோல்வியுற்றது",
+      "creditReservationFailed": "கிரெடிட் பதிவு தோல்வியுற்றது",
+      "invalidRenderOptions": "தவறான ரெண்டர் விருப்பங்கள் வழங்கப்பட்டன",
+      "missingVideoMetadata": "காணொளி மெட்டாடேட்டா காணவில்லை ({{missing}})",
+      "noSourceVideo": "மூல காணொளி இல்லை",
+      "noSubtitlesLoaded": "துணைத் தலைப்புகள் ஏற்றப்படவில்லை",
+      "failedToLoadSRT": "SRT கோப்பை ஏற்ற முடியவில்லை"
     },
     "success": "வெற்றி",
     "settings": "அமைப்புகள்",
@@ -46,9 +46,9 @@
     "backToTopAria": "பக்கத்தின் மேல்பகுதிக்குச் செல்",
     "confirmReload": "நிச்சயமாக பக்கத்தை மீண்டும் ஏற்ற விரும்புகிறீர்களா? சேமிக்கப்படாத மாற்றங்கள் இழக்கப்படலாம்.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT கோப்புகள்",
+      "mediaFiles": "ஊடக கோப்புகள்",
+      "videoFiles": "காணொளி கோப்புகள்"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "அமைப்புகள்",
+    "creditsDescription": "AI பயன்பாட்டு நேரங்களை இங்கே வாங்கவும் அல்லது டாப்-அப் செய்யவும்."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "முழுத்திரையில் நுழை",
+    "exitFullscreen": "முழுத்திரையிலிருந்து வெளியேறு",
     "sideMenu": {
       "changeVideo": "காணொளியை மாற்று",
       "changeVideoAudio": "காணொளி / ஒலியை மாற்று",
@@ -180,57 +180,72 @@
     "afrikaans": "ஆஃப்ரிகான்ஸ்"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "கிரெடிட்கள் இல்லை.",
+    "rechargeLink": "ரீசார்ஜ் →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "மொழிபெயர்ப்பு மற்றும் டிரான்ஸ்கிரிப்ஷன் அம்சங்களைப் பயன்படுத்த <settingsLink>{{settingsLinkText}}</settingsLink> இல் கிரெடிட்களை வாங்கவும்.",
+      "settingsLinkText": "அமைப்புகள்"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "தயவுசெய்து காணொளியைத் தேர்ந்தெடுக்கவும்",
+      "processingDuration": "காணொளியின் கால அளவு செயலாக்கப்படுகிறது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "தொடங்குகிறது...",
+      "completed": "முடிந்தது",
+      "cancelled": "ரத்து செய்யப்பட்டது",
+      "error": "பிழை"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "கிரெடிட்களை வாங்கு",
+      "redirectingToPayment": "பணம் செலுத்துதலுக்கு திருப்பி விடுகிறது..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "செலவைக் கணக்கிடுகிறது...",
+    "notEnoughCredits": "போதுமான கிரெடிட்கள் இல்லை"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "துணைத் தலைப்புகளில் தேடு...",
+    "replacePlaceholder": "இதனுடன் மாற்று...",
+    "replaceAll": "அனைத்தையும் மாற்று",
+    "nextMatch": "அடுத்த பொருத்தம் (Enter)",
+    "previousMatch": "முந்தைய பொருத்தம் (Shift+Enter)",
+    "replaceAllTitle": "அனைத்து நிகழ்வுகளையும் மாற்று",
+    "closeTitle": "மூடு (Esc)",
+    "nextMatchAria": "அடுத்த பொருத்தம்",
+    "previousMatchAria": "முந்தைய பொருத்தம்",
+    "replaceAllAria": "அனைத்தையும் மாற்று",
+    "closeAria": "தேடல் பட்டியை மூடு"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "SRT கோப்பை இவ்வாறு சேமி",
+    "saveDownloadedVideoAs": "பதிவிறக்கம் செய்த காணொளியை இவ்வாறு சேமி",
+    "downloadInProgress": "பதிவிறக்கம் நடந்துக்கொண்டே இருக்கிறது",
+    "saveDownloadedFile": "பதிவிறக்கம் செய்த கோப்பை சேமி: {{path}}",
+    "translationInProgress": "மொழிபெயர்ப்பு நடந்துக்கொண்டே இருக்கிறது",
+    "cancelTranslationConfirm": "மொழிபெயர்ப்பை ரத்து செய்யவா? முன்னேற்றம் இழக்கப்படும் மற்றும் நீங்கள் மீண்டும் தொடங்க வேண்டும்.",
+    "slowProcessingBanner": {
+      "title": "செயலாக்கம் வழக்கத்தை விட அதிக நேரம் எடுக்கிறது.",
+      "description": "இது அதிக தேவை அல்லது OpenAI சர்வர்களில் உள்ள சிக்கல்களால் இருக்கலாம். செயல்முறை இன்னும் பின்னணியில் இயங்கிக்கொண்டிருக்கிறது.",
+      "checkStatus": "OpenAI நிலையைச் சரிபார்க்கவும்"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "டிரான்ஸ்கிரைப் செய்யப்பட்டு சுத்தப்படுத்தப்பட்டது {{done}}/{{total}} பகுதிகள்",
+    "gapRepair": "இடைவெளி பழுதுபார்ப்பு #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "காணாமல் போன துணைத் தலைப்புகளை சரிசெய்கிறது (மறுமுறை {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "கோப்பு சேமிக்கப்பட்டது:\n{{path}}",
+    "videoSaved": "காணொளி சேமிக்கப்பட்ட இடம்:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI பயன்பாட்டு நேரங்கள்",
+    "loading": "ஏற்றுகிறது...",
+    "credits": "கிரெடிட்கள்",
+    "hours": "மணிநேரங்கள்",
+    "buyCredits": "கிரெடிட்களை வாங்கு",
+    "redirectingToPayment": "பாதுகாப்பான செக்அவுட்டைத் திறக்கிறது...",
+    "description": "$5 (1.5 மணிநேரம்), $10 (3 மணிநேரம்), அல்லது $50 (24 மணிநேரம்) கிரெடிட் பேக்கேஜ்களில் இருந்து தேர்ந்தெடுக்கவும்",
+    "notEnough": "போதுமான கிரெடிட்கள் இல்லை. தொடர்வதற்கு தயவுசெய்து அதிக கிரெடிட்களை வாங்கவும்."
   }
 }

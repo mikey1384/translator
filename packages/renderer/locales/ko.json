@@ -107,8 +107,8 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "설정",
+    "creditsDescription": "여기서 AI 사용 시간을 구매하거나 충전하세요."
   },
   "credits": {
     "title": "AI 사용 시간",

@@ -18,13 +18,13 @@
       "unexpectedRemove": "Hitilafu isiyotarajiwa imetokea wakati wa kuondoa ufunguo.",
       "unexpectedSave": "Hitilafu isiyotarajiwa imetokea wakati wa kuhifadhi.",
       "unexpectedLoad": "Hitilafu isiyotarajiwa imetokea wakati wa kupakia.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Utengenezaji umeshindikana",
+      "creditReservationFailed": "Uhifadhi wa mkopo umeshindikana",
+      "invalidRenderOptions": "Chaguo batili za utengenezaji zimetolewa",
+      "missingVideoMetadata": "Metadata ya video haipo ({{missing}})",
+      "noSourceVideo": "Hakuna video ya chanzo",
+      "noSubtitlesLoaded": "Hakuna manukuu yaliyopakiwa",
+      "failedToLoadSRT": "Imeshindikana kupakia faili ya SRT"
     },
     "success": "Imefanikiwa",
     "settings": "Mipangilio",
@@ -46,9 +46,9 @@
     "backToTopAria": "Sogeza kurudi juu",
     "confirmReload": "Je, una uhakika unataka kupakia ukurasa upya? Mabadiliko yoyote ambayo hayajahifadhiwa yanaweza kupotea.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Faili za SRT",
+      "mediaFiles": "Faili za Vyombo vya Habari",
+      "videoFiles": "Faili za Video"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Mipangilio",
+    "creditsDescription": "Nunua au ongeza masaa ya matumizi ya AI hapa."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Ingia Skrini Kamili",
+    "exitFullscreen": "Toka Skrini Kamili",
     "sideMenu": {
       "changeVideo": "Badilisha Video",
       "changeVideoAudio": "Badilisha Video / Audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Kiafrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Hakuna mikopo.",
+    "rechargeLink": "Jaza upya →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Nunua mikopo katika <settingsLink>{{settingsLinkText}}</settingsLink> kutumia vipengele vya kutafsiri na kuandika.",
+      "settingsLinkText": "Mipangilio"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Tafadhali chagua video",
+      "processingDuration": "Urefu wa video unachakatwa. Tafadhali jaribu tena baadaye."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Inaanza...",
+      "completed": "Imekamilika",
+      "cancelled": "Imeghairiwa",
+      "error": "Hitilafu"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Nunua Mikopo",
+      "redirectingToPayment": "Inaelekeza kwa malipo..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Inahesabu gharama...",
+    "notEnoughCredits": "Mikopo haitoshi"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Tafuta katika manukuu...",
+    "replacePlaceholder": "Badilisha na...",
+    "replaceAll": "Badilisha Yote",
+    "nextMatch": "Mechi Ijayo (Enter)",
+    "previousMatch": "Mechi Iliyopita (Shift+Enter)",
+    "replaceAllTitle": "Badilisha Matukio Yote",
+    "closeTitle": "Funga (Esc)",
+    "nextMatchAria": "Mechi ijayo",
+    "previousMatchAria": "Mechi iliyopita",
+    "replaceAllAria": "Badilisha yote",
+    "closeAria": "Funga upau wa kutafuta"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Hifadhi Faili ya SRT Kama",
+    "saveDownloadedVideoAs": "Hifadhi Video Iliyopakuliwa Kama",
+    "downloadInProgress": "Upakuliaji Unaendelea",
+    "saveDownloadedFile": "Hifadhi faili iliyopakuliwa: {{path}}",
+    "translationInProgress": "Utafsiri Unaendelea",
+    "cancelTranslationConfirm": "Ghairi utafsiri? Maendeleo yatapotea na utahitaji kuanza upya.",
+    "slowProcessingBanner": {
+      "title": "Uchakataji unachukua muda mrefu kuliko kawaida.",
+      "description": "Hii inaweza kuwa kwa sababu ya mahitaji mengi au matatizo na seva za OpenAI. Mchakato bado unaendelea nyuma.",
+      "checkStatus": "Angalia hali ya OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Imeandikwa na kusafishwa {{done}}/{{total}} vipande",
+    "gapRepair": "Ukarabati wa pengo #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Inarekebisha manukuu yanayokosekana (Mzunguko {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Faili imehifadhiwa:\n{{path}}",
+    "videoSaved": "Video imehifadhiwa kwenye:\n{{path}}"
+  },
+  "credits": {
+    "title": "Masaa ya Matumizi ya AI",
+    "loading": "Inapakia...",
+    "credits": "mikopo",
+    "hours": "masaa",
+    "buyCredits": "Nunua Mikopo",
+    "redirectingToPayment": "Inafungua malipo salama...",
+    "description": "Chagua kutoka kwa paketi za $5 (masaa 1.5), $10 (masaa 3), au $50 (masaa 24)",
+    "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea."
   }
 }

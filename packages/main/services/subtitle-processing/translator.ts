@@ -187,6 +187,7 @@ ${translatedTexts}
 4. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
    If the draft already meets that bar, you may leave it unchanged.
 5. **You may NOT merge, split, reorder, add, or delete lines.**
+6. For languages with varying politeness levels, ensure that narrations use the polite/formal form.
 
 ******************** OUTPUT ********************
 • Output **one line per input line**.

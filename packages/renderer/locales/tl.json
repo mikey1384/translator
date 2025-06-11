@@ -18,13 +18,13 @@
       "unexpectedRemove": "May naganap na hindi inaasahang error habang tinatanggal ang key.",
       "unexpectedSave": "May naganap na hindi inaasahang error habang sine-save.",
       "unexpectedLoad": "May naganap na hindi inaasahang error habang naglo-load.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Nabigo ang pag-render",
+      "creditReservationFailed": "Nabigo ang pag-reserve ng credit",
+      "invalidRenderOptions": "Hindi wastong render options ang binigay",
+      "missingVideoMetadata": "Nawawalang metadata ng video ({{missing}})",
+      "noSourceVideo": "Walang source video",
+      "noSubtitlesLoaded": "Walang na-load na subtitle",
+      "failedToLoadSRT": "Nabigo ang pag-load ng SRT file"
     },
     "success": "Tagumpay",
     "settings": "Mga Setting",
@@ -46,9 +46,9 @@
     "backToTopAria": "Mag-scroll pabalik sa itaas",
     "confirmReload": "Sigurado ka bang gusto mong i-reload ang page? Maaaring mawala ang anumang hindi na-save na pagbabago.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Mga SRT File",
+      "mediaFiles": "Mga Media File",
+      "videoFiles": "Mga Video File"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Mga Setting",
+    "creditsDescription": "Bumili o mag-top-up ng AI usage hours dito."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Pumasok sa Fullscreen",
+    "exitFullscreen": "Lumabas sa Fullscreen",
     "sideMenu": {
       "changeVideo": "Baguhin ang Video",
       "changeVideoAudio": "Baguhin ang Video / Audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Walang credit.",
+    "rechargeLink": "I-recharge →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Bumili ng mga credit sa <settingsLink>{{settingsLinkText}}</settingsLink> para gamitin ang mga feature ng translation at transcription.",
+      "settingsLinkText": "Mga Setting"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Mangyaring pumili ng video",
+      "processingDuration": "Pinoproseso ang duration ng video. Subukan ulit mamaya."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Nagsisimula...",
+      "completed": "Tapos na",
+      "cancelled": "Nakansela",
+      "error": "May Error"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Bumili ng Credit",
+      "redirectingToPayment": "Nagre-redirect sa payment..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Kinakalkula ang gastos...",
+    "notEnoughCredits": "Hindi sapat ang mga credit"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Hanapin sa mga subtitle...",
+    "replacePlaceholder": "Palitan ng...",
+    "replaceAll": "Palitan Lahat",
+    "nextMatch": "Susunod na Tugma (Enter)",
+    "previousMatch": "Nakaraang Tugma (Shift+Enter)",
+    "replaceAllTitle": "Palitan Lahat ng Mga Nangyayari",
+    "closeTitle": "Isara (Esc)",
+    "nextMatchAria": "Susunod na tugma",
+    "previousMatchAria": "Nakaraang tugma",
+    "replaceAllAria": "Palitan lahat",
+    "closeAria": "Isara ang find bar"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "I-save ang SRT File Bilang",
+    "saveDownloadedVideoAs": "I-save ang Na-download na Video Bilang",
+    "downloadInProgress": "May Kasalukuyang Download",
+    "saveDownloadedFile": "I-save ang na-download na file: {{path}}",
+    "translationInProgress": "May Kasalukuyang Translation",
+    "cancelTranslationConfirm": "Kanselahin ang translation? Mawawala ang progress at kailangan mong magsimula ulit.",
+    "slowProcessingBanner": {
+      "title": "Mas matagal kaysa sa karaniwan ang processing.",
+      "description": "Maaaring dahil sa mataas na demand o may problema sa mga server ng OpenAI. Patuloy pa ring tumatakbo ang proseso sa background.",
+      "checkStatus": "I-check ang status ng OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Na-transcribe at na-linis na {{done}}/{{total}} chunks",
+    "gapRepair": "Pag-aayos ng gap #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Inaayos ang mga nawawalang caption (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Na-save ang file:\n{{path}}",
+    "videoSaved": "Na-save ang video sa:\n{{path}}"
+  },
+  "credits": {
+    "title": "Mga Oras ng Paggamit ng AI",
+    "loading": "Naglo-load...",
+    "credits": "mga credit",
+    "hours": "mga oras",
+    "buyCredits": "Bumili ng Credit",
+    "redirectingToPayment": "Binubuksan ang secure checkout…",
+    "description": "Pumili mula sa $5 (1.5 oras), $10 (3 oras), o $50 (24 oras) na credit packs",
+    "notEnough": "Hindi sapat ang mga credit. Mangyaring bumili pa ng mga credit para magpatuloy."
   }
 }

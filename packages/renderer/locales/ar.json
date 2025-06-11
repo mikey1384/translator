@@ -18,13 +18,13 @@
       "unexpectedRemove": "حدث خطأ غير متوقع أثناء إزالة المفتاح.",
       "unexpectedSave": "حدث خطأ غير متوقع أثناء الحفظ.",
       "unexpectedLoad": "حدث خطأ غير متوقع أثناء التحميل.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "فشل في العرض",
+      "creditReservationFailed": "فشل في حجز النقاط",
+      "invalidRenderOptions": "تم توفير خيارات عرض غير صالحة",
+      "missingVideoMetadata": "بيانات الفيديو الوصفية مفقودة ({{missing}})",
+      "noSourceVideo": "لا يوجد فيديو مصدر",
+      "noSubtitlesLoaded": "لم يتم تحميل ترجمات",
+      "failedToLoadSRT": "فشل في تحميل ملف SRT"
     },
     "success": "نجاح",
     "settings": "الإعدادات",
@@ -46,9 +46,9 @@
     "backToTopAria": "التمرير للعودة إلى الأعلى",
     "confirmReload": "هل أنت متأكد أنك تريد إعادة تحميل الصفحة؟ قد تفقد أي تغييرات غير محفوظة.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "ملفات SRT",
+      "mediaFiles": "ملفات الوسائط",
+      "videoFiles": "ملفات الفيديو"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "الإعدادات",
+    "creditsDescription": "اشترِ أو أعد شحن ساعات استخدام الذكاء الاصطناعي هنا."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "دخول وضع الشاشة الكاملة",
+    "exitFullscreen": "الخروج من وضع الشاشة الكاملة",
     "sideMenu": {
       "changeVideo": "تغيير الفيديو",
       "changeVideoAudio": "تغيير الفيديو / الصوت",
@@ -180,57 +180,72 @@
     "afrikaans": "الأفريقانية"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "لا توجد نقاط.",
+    "rechargeLink": "إعادة الشحن ←",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "اشترِ النقاط في <settingsLink>{{settingsLinkText}}</settingsLink> لاستخدام ميزات الترجمة والنسخ.",
+      "settingsLinkText": "الإعدادات"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "يرجى اختيار فيديو",
+      "processingDuration": "جارٍ معالجة مدة الفيديو. يرجى المحاولة مرة أخرى قريباً."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "جارٍ البدء...",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "error": "خطأ"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "شراء النقاط",
+      "redirectingToPayment": "إعادة التوجيه للدفع..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "جارٍ حساب التكلفة...",
+    "notEnoughCredits": "لا توجد نقاط كافية متاحة"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "البحث في الترجمات...",
+    "replacePlaceholder": "استبدال بـ...",
+    "replaceAll": "استبدال الكل",
+    "nextMatch": "التطابق التالي (Enter)",
+    "previousMatch": "التطابق السابق (Shift+Enter)",
+    "replaceAllTitle": "استبدال جميع التطابقات",
+    "closeTitle": "إغلاق (Esc)",
+    "nextMatchAria": "التطابق التالي",
+    "previousMatchAria": "التطابق السابق",
+    "replaceAllAria": "استبدال الكل",
+    "closeAria": "إغلاق شريط البحث"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "حفظ ملف SRT باسم",
+    "saveDownloadedVideoAs": "حفظ الفيديو المحمل باسم",
+    "downloadInProgress": "التنزيل قيد التقدم",
+    "saveDownloadedFile": "حفظ الملف المحمل: {{path}}",
+    "translationInProgress": "الترجمة قيد التقدم",
+    "cancelTranslationConfirm": "إلغاء الترجمة؟ ستفقد التقدم وستحتاج للبدء من جديد.",
+    "slowProcessingBanner": {
+      "title": "المعالجة تستغرق وقتاً أطول من المعتاد.",
+      "description": "قد يكون هذا بسبب الطلب العالي أو مشاكل في خوادم OpenAI. العملية لا تزال تعمل في الخلفية.",
+      "checkStatus": "تحقق من حالة OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "تم نسخ وتنظيف {{done}}/{{total}} من المقاطع",
+    "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "تم حفظ الملف:\n{{path}}",
+    "videoSaved": "تم حفظ الفيديو في:\n{{path}}"
+  },
+  "credits": {
+    "title": "ساعات استخدام الذكاء الاصطناعي",
+    "loading": "جارٍ التحميل...",
+    "credits": "نقاط",
+    "hours": "ساعات",
+    "buyCredits": "شراء النقاط",
+    "redirectingToPayment": "فتح الدفع الآمن…",
+    "description": "اختر من حزم $5 (1.5س)، $10 (3س)، أو $50 (24س) من النقاط",
+    "notEnough": "نقاط غير كافية. يرجى شراء المزيد من النقاط للمتابعة."
   }
 }

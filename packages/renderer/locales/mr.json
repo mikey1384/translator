@@ -18,13 +18,13 @@
       "unexpectedRemove": "की काढताना एक अनपेक्षित त्रुटी आली आहे.",
       "unexpectedSave": "सेव्ह करताना एक अनपेक्षित त्रुटी आली आहे.",
       "unexpectedLoad": "लोड करताना एक अनपेक्षित त्रुटी आली आहे.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "रेंडर अयशस्वी झाले",
+      "creditReservationFailed": "क्रेडिट आरक्षण अयशस्वी झाले",
+      "invalidRenderOptions": "चुकीचे रेंडर पर्याय दिले गेले",
+      "missingVideoMetadata": "व्हिडिओ मेटाडेटा गहाळ आहे ({{missing}})",
+      "noSourceVideo": "स्त्रोत व्हिडिओ नाही",
+      "noSubtitlesLoaded": "उपशीर्षके लोड झाली नाहीत",
+      "failedToLoadSRT": "SRT फाईल लोड करण्यात अयशस्वी"
     },
     "success": "यशस्वी",
     "settings": "सेटिंग्ज",
@@ -46,9 +46,9 @@
     "backToTopAria": "शीर्षावर स्क्रोल करा",
     "confirmReload": "तुम्हाला खात्री आहे की तुम्ही पृष्ठ रीलोड करू इच्छिता? कोणतेही सेव्ह न केलेले बदल गमावले जाऊ शकतात.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT फाईल्स",
+      "mediaFiles": "मीडिया फाईल्स",
+      "videoFiles": "व्हिडिओ फाईल्स"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "सेटिंग्ज",
+    "creditsDescription": "येथे AI वापर तास खरेदी करा किंवा टॉप-अप करा."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "पूर्ण स्क्रीनमध्ये जा",
+    "exitFullscreen": "पूर्ण स्क्रीनमधून बाहेर पडा",
     "sideMenu": {
       "changeVideo": "व्हिडिओ बदला",
       "changeVideoAudio": "व्हिडिओ / ऑडिओ बदला",
@@ -180,57 +180,72 @@
     "afrikaans": "आफ्रिकान्स"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "क्रेडिट्स नाहीत.",
+    "rechargeLink": "रीचार्ज →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "अनुवाद आणि ट्रान्स्क्रिप्शन वैशिष्ट्ये वापरण्यासाठी <settingsLink>{{settingsLinkText}}</settingsLink> मध्ये क्रेडिट्स खरेदी करा.",
+      "settingsLinkText": "सेटिंग्ज"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "कृपया व्हिडिओ निवडा",
+      "processingDuration": "व्हिडिओ कालावधी प्रक्रिया केला जात आहे. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "सुरू करत आहे...",
+      "completed": "पूर्ण झाले",
+      "cancelled": "रद्द केले",
+      "error": "त्रुटी"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "क्रेडिट्स खरेदी करा",
+      "redirectingToPayment": "पेमेंटकडे दिशानिर्देश करत आहे..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "खर्च मोजत आहे...",
+    "notEnoughCredits": "पुरेसे क्रेडिट्स उपलब्ध नाहीत"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "उपशीर्षकांमध्ये शोधा...",
+    "replacePlaceholder": "यासह बदला...",
+    "replaceAll": "सर्व बदला",
+    "nextMatch": "पुढील मॅच (Enter)",
+    "previousMatch": "मागील मॅच (Shift+Enter)",
+    "replaceAllTitle": "सर्व घटना बदला",
+    "closeTitle": "बंद करा (Esc)",
+    "nextMatchAria": "पुढील मॅच",
+    "previousMatchAria": "मागील मॅच",
+    "replaceAllAria": "सर्व बदला",
+    "closeAria": "शोध बार बंद करा"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "SRT फाईल असे सेव्ह करा",
+    "saveDownloadedVideoAs": "डाउनलोड केलेला व्हिडिओ असे सेव्ह करा",
+    "downloadInProgress": "डाउनलोड सुरू आहे",
+    "saveDownloadedFile": "डाउनलोड केलेली फाईल सेव्ह करा: {{path}}",
+    "translationInProgress": "अनुवाद सुरू आहे",
+    "cancelTranslationConfirm": "अनुवाद रद्द करायचा? प्रगती गमावली जाईल आणि तुम्हाला पुन्हा सुरू करावे लागेल.",
+    "slowProcessingBanner": {
+      "title": "प्रक्रिया नेहमीपेक्षा जास्त वेळ घेत आहे.",
+      "description": "हे उच्च मागणी किंवा OpenAI च्या सर्व्हरच्या समस्यांमुळे असू शकते. प्रक्रिया अजूनही बॅकग्राउंडमध्ये चालू आहे.",
+      "checkStatus": "OpenAI स्थिती तपासा"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "ट्रान्स्क्राइब आणि साफ केलेले {{done}}/{{total}} भाग",
+    "gapRepair": "गॅप रिपेअर #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "गहाळ कॅप्शन्स दुरुस्त करत आहे (पुनरावृत्ती {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "फाईल सेव्ह केली:\n{{path}}",
+    "videoSaved": "व्हिडिओ येथे सेव्ह केला:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI वापर तास",
+    "loading": "लोड करत आहे...",
+    "credits": "क्रेडिट्स",
+    "hours": "तास",
+    "buyCredits": "क्रेडिट्स खरेदी करा",
+    "redirectingToPayment": "सुरक्षित चेकआउट उघडत आहे…",
+    "description": "$5 (1.5 तास), $10 (3 तास), किंवा $50 (24 तास) क्रेडिट पॅकमधून निवडा",
+    "notEnough": "अपुरे क्रेडिट्स. कृपया चालू ठेवण्यासाठी अधिक क्रेडिट्स खरेदी करा."
   }
 }

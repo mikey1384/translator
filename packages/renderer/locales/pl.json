@@ -18,13 +18,13 @@
       "unexpectedRemove": "Wystąpił nieoczekiwany błąd podczas usuwania klucza.",
       "unexpectedSave": "Wystąpił nieoczekiwany błąd podczas zapisywania.",
       "unexpectedLoad": "Wystąpił nieoczekiwany błąd podczas ładowania.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Renderowanie nie powiodło się",
+      "creditReservationFailed": "Rezerwacja kredytów nie powiodła się",
+      "invalidRenderOptions": "Podano nieprawidłowe opcje renderowania",
+      "missingVideoMetadata": "Brakuje metadanych wideo ({{missing}})",
+      "noSourceVideo": "Brak wideo źródłowego",
+      "noSubtitlesLoaded": "Nie załadowano napisów",
+      "failedToLoadSRT": "Nie udało się załadować pliku SRT"
     },
     "success": "Sukces",
     "settings": "Ustawienia",
@@ -46,9 +46,9 @@
     "backToTopAria": "Przewiń na górę strony",
     "confirmReload": "Czy na pewno chcesz odświeżyć stronę? Niezapisane zmiany mogą zostać utracone.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Pliki SRT",
+      "mediaFiles": "Pliki multimedialne",
+      "videoFiles": "Pliki wideo"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Ustawienia",
+    "creditsDescription": "Tutaj kup lub doładuj godziny użytkowania AI."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Przejdź na pełny ekran",
+    "exitFullscreen": "Wyjdź z pełnego ekranu",
     "sideMenu": {
       "changeVideo": "Zmień wideo",
       "changeVideoAudio": "Zmień wideo / audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Brak kredytów.",
+    "rechargeLink": "Doładuj →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Kup kredyty w <settingsLink>{{settingsLinkText}}</settingsLink>, aby korzystać z funkcji tłumaczenia i transkrypcji.",
+      "settingsLinkText": "Ustawienia"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Proszę wybrać wideo",
+      "processingDuration": "Czas trwania wideo jest przetwarzany. Spróbuj ponownie za chwilę."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Rozpoczynanie...",
+      "completed": "Ukończone",
+      "cancelled": "Anulowane",
+      "error": "Błąd"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Kup kredyty",
+      "redirectingToPayment": "Przekierowanie do płatności..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Obliczanie kosztu...",
+    "notEnoughCredits": "Brak wystarczających kredytów"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Znajdź w napisach...",
+    "replacePlaceholder": "Zamień na...",
+    "replaceAll": "Zamień wszystkie",
+    "nextMatch": "Następne dopasowanie (Enter)",
+    "previousMatch": "Poprzednie dopasowanie (Shift+Enter)",
+    "replaceAllTitle": "Zamień wszystkie wystąpienia",
+    "closeTitle": "Zamknij (Esc)",
+    "nextMatchAria": "Następne dopasowanie",
+    "previousMatchAria": "Poprzednie dopasowanie",
+    "replaceAllAria": "Zamień wszystkie",
+    "closeAria": "Zamknij pasek wyszukiwania"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Zapisz plik SRT jako",
+    "saveDownloadedVideoAs": "Zapisz pobrane wideo jako",
+    "downloadInProgress": "Pobieranie w toku",
+    "saveDownloadedFile": "Zapisz pobrany plik: {{path}}",
+    "translationInProgress": "Tłumaczenie w toku",
+    "cancelTranslationConfirm": "Anulować tłumaczenie? Postęp zostanie utracony i trzeba będzie zacząć od nowa.",
+    "slowProcessingBanner": {
+      "title": "Przetwarzanie trwa dłużej niż zwykle.",
+      "description": "Może to być spowodowane dużym zapotrzebowaniem lub problemami z serwerami OpenAI. Proces nadal działa w tle.",
+      "checkStatus": "Sprawdź status OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Przepisano i oczyszczono {{done}}/{{total}} fragmentów",
+    "gapRepair": "Naprawa luk #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Naprawa brakujących napisów (Iteracja {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Plik zapisany:\n{{path}}",
+    "videoSaved": "Wideo zapisane do:\n{{path}}"
+  },
+  "credits": {
+    "title": "Godziny użytkowania AI",
+    "loading": "Ładowanie...",
+    "credits": "kredyty",
+    "hours": "godziny",
+    "buyCredits": "Kup kredyty",
+    "redirectingToPayment": "Otwieranie bezpiecznej płatności…",
+    "description": "Wybierz spośród pakietów $5 (1,5h), $10 (3h), lub $50 (24h)",
+    "notEnough": "Niewystarczające kredyty. Kup więcej kredytów, aby kontynuować."
   }
 }

@@ -18,13 +18,13 @@
       "unexpectedRemove": "Произошла непредвиденная ошибка при удалении ключа.",
       "unexpectedSave": "Произошла непредвиденная ошибка при сохранении.",
       "unexpectedLoad": "Произошла непредвиденная ошибка при загрузке.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Ошибка рендеринга",
+      "creditReservationFailed": "Ошибка резервирования кредитов",
+      "invalidRenderOptions": "Предоставлены неверные параметры рендеринга",
+      "missingVideoMetadata": "Отсутствуют метаданные видео ({{missing}})",
+      "noSourceVideo": "Нет исходного видео",
+      "noSubtitlesLoaded": "Субтитры не загружены",
+      "failedToLoadSRT": "Не удалось загрузить SRT файл"
     },
     "success": "Успех",
     "settings": "Настройки",
@@ -46,9 +46,9 @@
     "backToTopAria": "Прокрутить вверх страницы",
     "confirmReload": "Вы уверены, что хотите перезагрузить страницу? Все несохраненные изменения могут быть потеряны.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT файлы",
+      "mediaFiles": "Медиафайлы",
+      "videoFiles": "Видеофайлы"
     }
   },
   "input": {
@@ -107,20 +107,22 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Настройки",
+    "creditsDescription": "Купите или пополните часы использования ИИ здесь."
   },
   "credits": {
-    "title": "AI Usage Hours",
-    "loading": "Loading...",
-    "hours": "hours",
-    "buyCredits": "Buy $10 credit pack",
-    "redirectingToPayment": "Opening secure checkout…",
-    "description": "One pack ($10) can translate about 5 hours of interview-style videos."
+    "title": "Часы использования ИИ",
+    "loading": "Загрузка...",
+    "credits": "кредиты",
+    "hours": "часы",
+    "buyCredits": "Купить кредиты",
+    "redirectingToPayment": "Открытие безопасной оплаты…",
+    "description": "Выберите из пакетов $5 (1.5ч), $10 (3ч), или $50 (24ч) кредитов",
+    "notEnough": "Недостаточно кредитов. Пожалуйста, купите больше кредитов для продолжения."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Во весь экран",
+    "exitFullscreen": "Выйти из полноэкранного режима",
     "sideMenu": {
       "changeVideo": "Сменить видео",
       "changeVideoAudio": "Сменить видео / аудио",
@@ -188,57 +190,62 @@
     "afrikaans": "Африкаанс"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Нет кредитов.",
+    "rechargeLink": "Пополнить →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Купите кредиты в <settingsLink>{{settingsLinkText}}</settingsLink> для использования функций перевода и транскрипции.",
+      "settingsLinkText": "Настройки"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Пожалуйста, выберите видео",
+      "processingDuration": "Обрабатывается длительность видео. Попробуйте еще раз через некоторое время."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Запуск...",
+      "completed": "Завершено",
+      "cancelled": "Отменено",
+      "error": "Ошибка"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Купить кредиты",
+      "redirectingToPayment": "Перенаправление на оплату..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Расчет стоимости...",
+    "notEnoughCredits": "Недостаточно доступных кредитов"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Найти в субтитрах...",
+    "replacePlaceholder": "Заменить на...",
+    "replaceAll": "Заменить все",
+    "nextMatch": "Следующее совпадение (Enter)",
+    "previousMatch": "Предыдущее совпадение (Shift+Enter)",
+    "replaceAllTitle": "Заменить все вхождения",
+    "closeTitle": "Закрыть (Esc)",
+    "nextMatchAria": "Следующее совпадение",
+    "previousMatchAria": "Предыдущее совпадение",
+    "replaceAllAria": "Заменить все",
+    "closeAria": "Закрыть панель поиска"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Сохранить SRT файл как",
+    "saveDownloadedVideoAs": "Сохранить скачанное видео как",
+    "downloadInProgress": "Загрузка в процессе",
+    "saveDownloadedFile": "Сохранить скачанный файл: {{path}}",
+    "translationInProgress": "Перевод в процессе",
+    "cancelTranslationConfirm": "Отменить перевод? Прогресс будет потерян, и вам нужно будет начать заново.",
+    "slowProcessingBanner": {
+      "title": "Обработка занимает больше времени, чем обычно.",
+      "description": "Это может быть связано с высокой нагрузкой или проблемами с серверами OpenAI. Процесс все еще выполняется в фоновом режиме.",
+      "checkStatus": "Проверить статус OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Транскрибировано и очищено {{done}}/{{total}} фрагментов",
+    "gapRepair": "Восстановление пропусков #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Файл сохранен:\n{{path}}",
+    "videoSaved": "Видео сохранено в:\n{{path}}"
   }
 }

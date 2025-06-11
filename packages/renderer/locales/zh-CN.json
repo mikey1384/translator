@@ -18,13 +18,13 @@
       "unexpectedRemove": "移除密钥时发生了意外错误。",
       "unexpectedSave": "保存时发生了意外错误。",
       "unexpectedLoad": "加载时发生了意外错误。",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "渲染失败",
+      "creditReservationFailed": "点数预留失败",
+      "invalidRenderOptions": "提供了无效的渲染选项",
+      "missingVideoMetadata": "缺少视频元数据 ({{missing}})",
+      "noSourceVideo": "无源视频",
+      "noSubtitlesLoaded": "未加载字幕",
+      "failedToLoadSRT": "加载SRT文件失败"
     },
     "success": "成功",
     "settings": "设置",
@@ -46,9 +46,9 @@
     "backToTopAria": "滚动回到顶部",
     "confirmReload": "确定要重新加载页面吗？未保存的更改可能会丢失。",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT文件",
+      "mediaFiles": "媒体文件",
+      "videoFiles": "视频文件"
     }
   },
   "input": {
@@ -107,21 +107,22 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "设置",
+    "creditsDescription": "在此购买或充值AI使用时长。"
   },
   "credits": {
     "title": "AI使用时长",
     "loading": "加载中...",
     "credits": "积分",
     "hours": "小时",
-    "buyCredits": "购买$10套餐",
+    "buyCredits": "购买积分",
     "redirectingToPayment": "正在打开安全支付…",
-    "description": "一个套餐($10)可以翻译大约5小时的访谈类视频。"
+    "description": "选择$5（1.5小时）、$10（3小时）或$50（24小时）积分包",
+    "notEnough": "积分不足。请购买更多积分以继续。"
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "进入全屏",
+    "exitFullscreen": "退出全屏",
     "sideMenu": {
       "changeVideo": "更换视频",
       "changeVideoAudio": "更换视频/音频",
@@ -189,57 +190,62 @@
     "afrikaans": "南非语"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "没有点数。",
+    "rechargeLink": "充值 →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "在<settingsLink>{{settingsLinkText}}</settingsLink>中购买点数以使用翻译和转录功能。",
+      "settingsLinkText": "设置"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "请选择视频",
+      "processingDuration": "正在处理视频时长，请稍后重试。"
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "正在启动...",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "error": "错误"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "购买点数",
+      "redirectingToPayment": "正在跳转到支付..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "正在计算费用...",
+    "notEnoughCredits": "可用点数不足"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "在字幕中查找...",
+    "replacePlaceholder": "替换为...",
+    "replaceAll": "全部替换",
+    "nextMatch": "下一个匹配 (Enter)",
+    "previousMatch": "上一个匹配 (Shift+Enter)",
+    "replaceAllTitle": "替换所有匹配项",
+    "closeTitle": "关闭 (Esc)",
+    "nextMatchAria": "下一个匹配",
+    "previousMatchAria": "上一个匹配",
+    "replaceAllAria": "全部替换",
+    "closeAria": "关闭查找栏"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "另存SRT文件为",
+    "saveDownloadedVideoAs": "另存下载的视频为",
+    "downloadInProgress": "正在下载",
+    "saveDownloadedFile": "保存下载的文件：{{path}}",
+    "translationInProgress": "正在翻译",
+    "cancelTranslationConfirm": "取消翻译？进度将丢失，您需要重新开始。",
+    "slowProcessingBanner": {
+      "title": "处理时间比平常更长。",
+      "description": "这可能是由于高需求或OpenAI服务器问题造成的。处理过程仍在后台运行。",
+      "checkStatus": "检查OpenAI状态"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "已转录和清理 {{done}}/{{total}} 片段",
+    "gapRepair": "间隙修复 #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "文件已保存：\n{{path}}",
+    "videoSaved": "视频已保存到：\n{{path}}"
   }
 }

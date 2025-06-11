@@ -18,13 +18,13 @@
       "unexpectedRemove": "కీని తొలగిస్తున్నప్పుడు ఊహించని లోపం సంభవించింది.",
       "unexpectedSave": "సేవ్ చేస్తున్నప్పుడు ఊహించని లోపం సంభవించింది.",
       "unexpectedLoad": "లోడ్ చేస్తున్నప్పుడు ఊహించని లోపం సంభవించింది.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "రెండర్ విఫలమైంది",
+      "creditReservationFailed": "క్రెడిట్ రిజర్వేషన్ విఫలమైంది",
+      "invalidRenderOptions": "చెల్లని రెండర్ ఎంపికలు అందించబడ్డాయి",
+      "missingVideoMetadata": "వీడియో మెటాడేటా లేదు ({{missing}})",
+      "noSourceVideo": "సోర్స్ వీడియో లేదు",
+      "noSubtitlesLoaded": "ఉపశీర్షికలు లోడ్ చేయబడలేదు",
+      "failedToLoadSRT": "SRT ఫైల్ లోడ్ చేయడంలో విఫలమైంది"
     },
     "success": "విజయవంతం",
     "settings": "సెట్టింగ్‌లు",
@@ -46,9 +46,9 @@
     "backToTopAria": "పేజీ పైకి స్క్రోల్ చేయండి",
     "confirmReload": "మీరు నిజంగా పేజీని రీలోడ్ చేయాలనుకుంటున్నారా? సేవ్ చేయని మార్పులు కోల్పోవచ్చు.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT ఫైల్‌లు",
+      "mediaFiles": "మీడియా ఫైల్‌లు",
+      "videoFiles": "వీడియో ఫైల్‌లు"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "సెట్టింగ్‌లు",
+    "creditsDescription": "ఇక్కడ AI వినియోగ గంటలను కొనుగోలు చేయండి లేదా టాప్-అప్ చేయండి."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "పూర్తి స్క్రీన్‌లోకి వెళ్లండి",
+    "exitFullscreen": "పూర్తి స్క్రీన్ నుండి నిష్క్రమించండి",
     "sideMenu": {
       "changeVideo": "వీడియోను మార్చండి",
       "changeVideoAudio": "వీడియో / ఆడియో మార్చండి",
@@ -180,57 +180,72 @@
     "afrikaans": "ఆఫ్రికాన్స్"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "క్రెడిట్‌లు లేవు.",
+    "rechargeLink": "రీచార్జ్ →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "అనువాదం మరియు ట్రాన్స్‌క్రిప్షన్ ఫీచర్లను ఉపయోగించడానికి <settingsLink>{{settingsLinkText}}</settingsLink>లో క్రెడిట్‌లను కొనుగోలు చేయండి.",
+      "settingsLinkText": "సెట్టింగ్‌లు"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "దయచేసి వీడియోను ఎంచుకోండి",
+      "processingDuration": "వీడియో వ్యవధి ప్రాసెస్ చేయబడుతోంది. దయచేసి కాసేపు తర్వాత మళ్లీ ప్రయత్నించండి."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "ప్రారంభిస్తోంది...",
+      "completed": "పూర్తయింది",
+      "cancelled": "రద్దు చేయబడింది",
+      "error": "లోపం"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "క్రెడిట్‌లు కొనుగోలు చేయండి",
+      "redirectingToPayment": "చెల్లింపుకు దారిమార్పం చేస్తోంది..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "ఖర్చును లెక్కిస్తోంది...",
+    "notEnoughCredits": "తగినంత క్రెడిట్‌లు అందుబాటులో లేవు"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "ఉపశీర్షికలలో కనుగొనండి...",
+    "replacePlaceholder": "దీనితో భర్తీ చేయండి...",
+    "replaceAll": "అన్నింటినీ భర్తీ చేయండి",
+    "nextMatch": "తదుపరి మ్యాచ్ (Enter)",
+    "previousMatch": "మునుపటి మ్యాచ్ (Shift+Enter)",
+    "replaceAllTitle": "అన్ని సంఘటనలను భర్తీ చేయండి",
+    "closeTitle": "మూసివేయండి (Esc)",
+    "nextMatchAria": "తదుపరి మ్యాచ్",
+    "previousMatchAria": "మునుపటి మ్యాచ్",
+    "replaceAllAria": "అన్నింటినీ భర్తీ చేయండి",
+    "closeAria": "కనుగొనే బార్‌ను మూసివేయండి"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "SRT ఫైల్‌ను ఇలా సేవ్ చేయండి",
+    "saveDownloadedVideoAs": "డౌన్‌లోడ్ చేసిన వీడియోను ఇలా సేవ్ చేయండి",
+    "downloadInProgress": "డౌన్‌లోడ్ జరుగుతోంది",
+    "saveDownloadedFile": "డౌన్‌లోడ్ చేసిన ఫైల్‌ను సేవ్ చేయండి: {{path}}",
+    "translationInProgress": "అనువాదం జరుగుతోంది",
+    "cancelTranslationConfirm": "అనువాదాన్ని రద్దు చేయాలా? ప్రోగ్రెస్ పోతుంది మరియు మీరు మళ్లీ ప్రారంభించాల్సి వస్తుంది.",
+    "slowProcessingBanner": {
+      "title": "ప్రాసెసింగ్ సాధారణం కంటే ఎక్కువ సమయం తీసుకుంటోంది.",
+      "description": "ఇది అధిక డిమాండ్ లేదా OpenAI సర్వర్‌లతో సమస్యల వల్ల కావచ్చు. ప్రాసెస్ ఇప్పటికీ బ్యాక్‌గ్రౌండ్‌లో నడుస్తోంది.",
+      "checkStatus": "OpenAI స్థితిని తనిఖీ చేయండి"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "ట్రాన్స్‌క్రైబ్ మరియు క్లీన్ చేయబడిన {{done}}/{{total}} భాగాలు",
+    "gapRepair": "గ్యాప్ రిపెయర్ #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "తప్పిపోయిన క్యాప్షన్‌లను రిపెయర్ చేస్తోంది (ఇటరేషన్ {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "ఫైల్ సేవ్ చేయబడింది:\n{{path}}",
+    "videoSaved": "వీడియో ఇక్కడ సేవ్ చేయబడింది:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI వినియోగ గంటలు",
+    "loading": "లోడ్ అవుతోంది...",
+    "credits": "క్రెడిట్‌లు",
+    "hours": "గంటలు",
+    "buyCredits": "క్రెడిట్‌లు కొనుగోలు చేయండి",
+    "redirectingToPayment": "సురక్షిత చెక్‌అవుట్ తెరుస్తోంది…",
+    "description": "$5 (1.5గంటలు), $10 (3గంటలు), లేదా $50 (24గంటలు) క్రెడిట్ ప్యాక్‌లలో నుండి ఎంచుకోండి",
+    "notEnough": "తగినంత క్రెడిట్‌లు లేవు. కొనసాగడానికి దయచేసి మరింత క్రెడిట్‌లను కొనుగోలు చేయండి."
   }
 }

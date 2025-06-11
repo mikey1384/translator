@@ -18,13 +18,13 @@
       "unexpectedRemove": "هنگام حذف کلید خطای غیرمنتظره‌ای رخ داد.",
       "unexpectedSave": "هنگام ذخیره خطای غیرمنتظره‌ای رخ داد.",
       "unexpectedLoad": "هنگام بارگذاری خطای غیرمنتظره‌ای رخ داد.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "رندر ناموفق بود",
+      "creditReservationFailed": "رزرو اعتبار ناموفق بود",
+      "invalidRenderOptions": "گزینه‌های رندر نامعتبر ارائه شده",
+      "missingVideoMetadata": "متاداده ویدیو موجود نیست ({{missing}})",
+      "noSourceVideo": "ویدیو منبع موجود نیست",
+      "noSubtitlesLoaded": "زیرنویس بارگذاری نشده",
+      "failedToLoadSRT": "بارگذاری فایل SRT ناموفق بود"
     },
     "success": "موفقیت",
     "settings": "تنظیمات",
@@ -46,9 +46,9 @@
     "backToTopAria": "پیمایش به بالای صفحه",
     "confirmReload": "آیا مطمئن هستید که می‌خواهید صفحه را مجددا بارگذاری کنید؟ تغییرات ذخیره نشده ممکن است از بین بروند.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "فایل‌های SRT",
+      "mediaFiles": "فایل‌های رسانه",
+      "videoFiles": "فایل‌های ویدیو"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "تنظیمات",
+    "creditsDescription": "ساعات استفاده از هوش مصنوعی را اینجا خریداری یا شارژ کنید."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "ورود به حالت تمام صفحه",
+    "exitFullscreen": "خروج از حالت تمام صفحه",
     "sideMenu": {
       "changeVideo": "تغییر ویدیو",
       "changeVideoAudio": "تغییر ویدیو / صوت",
@@ -180,57 +180,72 @@
     "afrikaans": "آفریکانس"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "اعتبار موجود نیست.",
+    "rechargeLink": "شارژ →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "برای استفاده از ویژگی‌های ترجمه و رونویسی، اعتبار را در <settingsLink>{{settingsLinkText}}</settingsLink> خریداری کنید.",
+      "settingsLinkText": "تنظیمات"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "لطفاً ویدیو را انتخاب کنید",
+      "processingDuration": "مدت زمان ویدیو در حال پردازش است. لطفاً کمی بعد دوباره تلاش کنید."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "در حال شروع...",
+      "completed": "تکمیل شد",
+      "cancelled": "لغو شد",
+      "error": "خطا"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "خرید اعتبار",
+      "redirectingToPayment": "هدایت به پرداخت..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "در حال محاسبه هزینه...",
+    "notEnoughCredits": "اعتبار کافی در دسترس نیست"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "جستجو در زیرنویس‌ها...",
+    "replacePlaceholder": "جایگزینی با...",
+    "replaceAll": "جایگزینی همه",
+    "nextMatch": "تطبیق بعدی (Enter)",
+    "previousMatch": "تطبیق قبلی (Shift+Enter)",
+    "replaceAllTitle": "جایگزینی همه موارد",
+    "closeTitle": "بستن (Esc)",
+    "nextMatchAria": "تطبیق بعدی",
+    "previousMatchAria": "تطبیق قبلی",
+    "replaceAllAria": "جایگزینی همه",
+    "closeAria": "بستن نوار جستجو"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "ذخیره فایل SRT به عنوان",
+    "saveDownloadedVideoAs": "ذخیره ویدیو دانلود شده به عنوان",
+    "downloadInProgress": "دانلود در حال انجام",
+    "saveDownloadedFile": "ذخیره فایل دانلود شده: {{path}}",
+    "translationInProgress": "ترجمه در حال انجام",
+    "cancelTranslationConfirm": "ترجمه لغو شود؟ پیشرفت از بین خواهد رفت و باید دوباره شروع کنید.",
+    "slowProcessingBanner": {
+      "title": "پردازش بیشتر از حد معمول طول می‌کشد.",
+      "description": "این ممکن است به دلیل تقاضای بالا یا مشکلات سرورهای OpenAI باشد. فرآیند همچنان در پس‌زمینه در حال اجرا است.",
+      "checkStatus": "بررسی وضعیت OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "رونویسی و پاکسازی شده {{done}}/{{total}} قطعه",
+    "gapRepair": "تعمیر شکاف #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "تعمیر زیرنویس‌های گمشده (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "فایل ذخیره شد:\n{{path}}",
+    "videoSaved": "ویدیو ذخیره شد در:\n{{path}}"
+  },
+  "credits": {
+    "title": "ساعات استفاده از هوش مصنوعی",
+    "loading": "در حال بارگذاری...",
+    "credits": "اعتبارات",
+    "hours": "ساعت",
+    "buyCredits": "خرید اعتبار",
+    "redirectingToPayment": "در حال باز کردن تسویه حساب امن…",
+    "description": "از بسته‌های اعتباری $5 (1.5 ساعت)، $10 (3 ساعت)، یا $50 (24 ساعت) انتخاب کنید",
+    "notEnough": "اعتبار ناکافی. لطفاً برای ادامه اعتبار بیشتری خریداری کنید."
   }
 }

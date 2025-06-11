@@ -18,13 +18,13 @@
       "unexpectedRemove": "A apărut o eroare neașteptată la eliminarea cheii.",
       "unexpectedSave": "A apărut o eroare neașteptată la salvare.",
       "unexpectedLoad": "A apărut o eroare neașteptată la încărcare.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Redarea a eșuat",
+      "creditReservationFailed": "Rezervarea creditelor a eșuat",
+      "invalidRenderOptions": "Opțiuni de redare nevalide furnizate",
+      "missingVideoMetadata": "Lipsesc metadatele video ({{missing}})",
+      "noSourceVideo": "Fără video sursă",
+      "noSubtitlesLoaded": "Nicio subtitrare încărcată",
+      "failedToLoadSRT": "Încărcarea fișierului SRT a eșuat"
     },
     "success": "Succes",
     "settings": "Setări",
@@ -46,9 +46,9 @@
     "backToTopAria": "Derulează înapoi sus",
     "confirmReload": "Sigur doriți să reîncărcați pagina? Orice modificări nesalvate ar putea fi pierdute.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Fișiere SRT",
+      "mediaFiles": "Fișiere Media",
+      "videoFiles": "Fișiere Video"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Setări",
+    "creditsDescription": "Cumpărați sau reîncărcați orele de utilizare AI aici."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Intră în ecran complet",
+    "exitFullscreen": "Ieși din ecran complet",
     "sideMenu": {
       "changeVideo": "Schimbă Video",
       "changeVideoAudio": "Schimbă Video / Audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Fără credite.",
+    "rechargeLink": "Reîncarcă →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Cumpărați credite în <settingsLink>{{settingsLinkText}}</settingsLink> pentru a folosi funcțiile de traducere și transcriere.",
+      "settingsLinkText": "Setări"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Vă rugăm să selectați un video",
+      "processingDuration": "Durata video este în curs de procesare. Încercați din nou în scurt timp."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Pornire...",
+      "completed": "Completat",
+      "cancelled": "Anulat",
+      "error": "Eroare"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Cumpără Credite",
+      "redirectingToPayment": "Redirecționare către plată..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Se calculează costul...",
+    "notEnoughCredits": "Credite insuficiente disponibile"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Găsește în subtitrări...",
+    "replacePlaceholder": "Înlocuiește cu...",
+    "replaceAll": "Înlocuiește Tot",
+    "nextMatch": "Următoarea Potrivire (Enter)",
+    "previousMatch": "Potrivirea Anterioară (Shift+Enter)",
+    "replaceAllTitle": "Înlocuiește Toate Aparițiile",
+    "closeTitle": "Închide (Esc)",
+    "nextMatchAria": "Următoarea potrivire",
+    "previousMatchAria": "Potrivirea anterioară",
+    "replaceAllAria": "Înlocuiește tot",
+    "closeAria": "Închide bara de căutare"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Salvează Fișierul SRT Ca",
+    "saveDownloadedVideoAs": "Salvează Video Descărcat Ca",
+    "downloadInProgress": "Descărcare în Curs",
+    "saveDownloadedFile": "Salvează fișierul descărcat: {{path}}",
+    "translationInProgress": "Traducere în Curs",
+    "cancelTranslationConfirm": "Anulezi traducerea? Progresul va fi pierdut și va trebui să începi din nou.",
+    "slowProcessingBanner": {
+      "title": "Procesarea durează mai mult decât de obicei.",
+      "description": "Aceasta poate fi din cauza cererii mari sau problemelor cu serverele OpenAI. Procesul încă rulează în fundal.",
+      "checkStatus": "Verifică starea OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Transcrise și curățate {{done}}/{{total}} fragmente",
+    "gapRepair": "Repararea golurilor #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Repararea subtitrărilor lipsă (Iterația {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Fișier salvat:\n{{path}}",
+    "videoSaved": "Video salvat în:\n{{path}}"
+  },
+  "credits": {
+    "title": "Ore de Utilizare AI",
+    "loading": "Se încarcă...",
+    "credits": "credite",
+    "hours": "ore",
+    "buyCredits": "Cumpără Credite",
+    "redirectingToPayment": "Se deschide plata securizată…",
+    "description": "Alegeți dintre pachetele $5 (1,5o), $10 (3o), sau $50 (24o)",
+    "notEnough": "Credite insuficiente. Vă rugăm să cumpărați mai multe credite pentru a continua."
   }
 }

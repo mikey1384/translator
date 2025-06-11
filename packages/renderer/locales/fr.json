@@ -107,21 +107,22 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Paramètres",
+    "creditsDescription": "Achetez ou rechargez vos heures d'utilisation IA ici."
   },
   "credits": {
     "title": "Heures d'utilisation IA",
     "loading": "Chargement...",
     "credits": "crédits",
     "hours": "heures",
-    "buyCredits": "Acheter pack $10",
+    "buyCredits": "Acheter des crédits",
     "redirectingToPayment": "Ouverture paiement sécurisé…",
-    "description": "Un pack ($10) peut traduire environ 5 heures de vidéos d'interview."
+    "description": "Choisissez parmi les packs de $5 (1,5h), $10 (3h), ou $50 (24h) de crédits",
+    "notEnough": "Crédits insuffisants. Veuillez acheter plus de crédits pour continuer."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Mode plein écran",
+    "exitFullscreen": "Quitter plein écran",
     "sideMenu": {
       "changeVideo": "Changer de vidéo",
       "changeVideoAudio": "Changer de vidéo / audio",
@@ -189,57 +190,62 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Aucun crédit.",
+    "rechargeLink": "Recharger →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Achetez des crédits dans <settingsLink>{{settingsLinkText}}</settingsLink> pour utiliser les fonctionnalités de traduction et de transcription.",
+      "settingsLinkText": "Paramètres"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Veuillez sélectionner une vidéo",
+      "processingDuration": "La durée de la vidéo est en cours de traitement. Veuillez réessayer dans quelques instants."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Démarrage...",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "error": "Erreur"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Acheter des crédits",
+      "redirectingToPayment": "Redirection vers le paiement..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Calcul du coût...",
+    "notEnoughCredits": "Pas assez de crédits disponibles"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Rechercher dans les sous-titres...",
+    "replacePlaceholder": "Remplacer par...",
+    "replaceAll": "Tout remplacer",
+    "nextMatch": "Correspondance suivante (Entrée)",
+    "previousMatch": "Correspondance précédente (Maj+Entrée)",
+    "replaceAllTitle": "Remplacer toutes les occurrences",
+    "closeTitle": "Fermer (Échap)",
+    "nextMatchAria": "Correspondance suivante",
+    "previousMatchAria": "Correspondance précédente",
+    "replaceAllAria": "Tout remplacer",
+    "closeAria": "Fermer la barre de recherche"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Enregistrer le fichier SRT sous",
+    "saveDownloadedVideoAs": "Enregistrer la vidéo téléchargée sous",
+    "downloadInProgress": "Téléchargement en cours",
+    "saveDownloadedFile": "Enregistrer le fichier téléchargé : {{path}}",
+    "translationInProgress": "Traduction en cours",
+    "cancelTranslationConfirm": "Annuler la traduction ? Le progrès sera perdu et vous devrez recommencer.",
+    "slowProcessingBanner": {
+      "title": "Le traitement prend plus de temps que d'habitude.",
+      "description": "Cela peut être dû à une forte demande ou à des problèmes avec les serveurs d'OpenAI. Le processus continue en arrière-plan.",
+      "checkStatus": "Vérifier le statut d'OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Transcrit et nettoyé {{done}}/{{total}} fragments",
+    "gapRepair": "Réparation des lacunes #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Réparation des sous-titres manquants (Itération {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Fichier enregistré :\n{{path}}",
+    "videoSaved": "Vidéo enregistrée dans :\n{{path}}"
   }
 }

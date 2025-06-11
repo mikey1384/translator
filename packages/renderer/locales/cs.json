@@ -18,13 +18,13 @@
       "unexpectedRemove": "Došlo k neočekávané chybě při odstraňování klíče.",
       "unexpectedSave": "Došlo k neočekávané chybě při ukládání.",
       "unexpectedLoad": "Došlo k neočekávané chybě při načítání.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Renderování selhalo",
+      "creditReservationFailed": "Rezervace kreditů selhala",
+      "invalidRenderOptions": "Poskytnuty neplatné možnosti renderování",
+      "missingVideoMetadata": "Chybějící metadata videa ({{missing}})",
+      "noSourceVideo": "Žádné zdrojové video",
+      "noSubtitlesLoaded": "Žádné titulky nenačteny",
+      "failedToLoadSRT": "Nepodařilo se načíst SRT soubor"
     },
     "success": "Úspěch",
     "settings": "Nastavení",
@@ -46,9 +46,9 @@
     "backToTopAria": "Přejít zpět nahoru",
     "confirmReload": "Opravdu chcete znovu načíst stránku? Neuložené změny mohou být ztraceny.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT soubory",
+      "mediaFiles": "Mediální soubory",
+      "videoFiles": "Video soubory"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Nastavení",
+    "creditsDescription": "Zde nakupte nebo doplňte hodiny používání AI."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Vstup do celé obrazovky",
+    "exitFullscreen": "Opustit celou obrazovku",
     "sideMenu": {
       "changeVideo": "Změnit video",
       "changeVideoAudio": "Změnit video / audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikánština"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Žádné kredity.",
+    "rechargeLink": "Dobít →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Nakupte kredity v <settingsLink>{{settingsLinkText}}</settingsLink> pro použití funkcí překladu a přepisu.",
+      "settingsLinkText": "Nastavení"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Prosím vyberte video",
+      "processingDuration": "Zpracovává se délka videa. Zkuste to prosím znovu za chvíli."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Spouštění...",
+      "completed": "Dokončeno",
+      "cancelled": "Zrušeno",
+      "error": "Chyba"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Koupit kredity",
+      "redirectingToPayment": "Přesměrování na platbu..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Výpočet nákladů...",
+    "notEnoughCredits": "Nedostatek kreditů"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Hledat v titulcích...",
+    "replacePlaceholder": "Nahradit za...",
+    "replaceAll": "Nahradit vše",
+    "nextMatch": "Další shoda (Enter)",
+    "previousMatch": "Předchozí shoda (Shift+Enter)",
+    "replaceAllTitle": "Nahradit všechny výskyty",
+    "closeTitle": "Zavřít (Esc)",
+    "nextMatchAria": "Další shoda",
+    "previousMatchAria": "Předchozí shoda",
+    "replaceAllAria": "Nahradit vše",
+    "closeAria": "Zavřít vyhledávací panel"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Uložit SRT soubor jako",
+    "saveDownloadedVideoAs": "Uložit stažené video jako",
+    "downloadInProgress": "Probíhá stahování",
+    "saveDownloadedFile": "Uložit stažený soubor: {{path}}",
+    "translationInProgress": "Probíhá překlad",
+    "cancelTranslationConfirm": "Zrušit překlad? Pokrok bude ztracen a budete muset začít znovu.",
+    "slowProcessingBanner": {
+      "title": "Zpracování trvá déle než obvykle.",
+      "description": "To může být způsobeno vysokou poptávkou nebo problémy se servery OpenAI. Proces stále běží na pozadí.",
+      "checkStatus": "Zkontrolovat stav OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Přepsáno a vyčištěno {{done}}/{{total}} úseků",
+    "gapRepair": "Oprava mezer #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Oprava chybějících titulků (Iterace {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Soubor uložen:\n{{path}}",
+    "videoSaved": "Video uloženo do:\n{{path}}"
+  },
+  "credits": {
+    "title": "Hodiny používání AI",
+    "loading": "Načítání...",
+    "credits": "kredity",
+    "hours": "hodiny",
+    "buyCredits": "Koupit kredity",
+    "redirectingToPayment": "Otevírání zabezpečené pokladny…",
+    "description": "Vyberte z balíčků $5 (1,5h), $10 (3h), nebo $50 (24h)",
+    "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování."
   }
 }

@@ -18,13 +18,13 @@
       "unexpectedRemove": "কী অপসারণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
       "unexpectedSave": "সংরক্ষণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
       "unexpectedLoad": "লোড করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "রেন্ডার ব্যর্থ হয়েছে",
+      "creditReservationFailed": "ক্রেডিট সংরক্ষণ ব্যর্থ হয়েছে",
+      "invalidRenderOptions": "অবৈধ রেন্ডার অপশন প্রদান করা হয়েছে",
+      "missingVideoMetadata": "ভিডিও মেটাডেটা অনুপস্থিত ({{missing}})",
+      "noSourceVideo": "কোন সোর্স ভিডিও নেই",
+      "noSubtitlesLoaded": "কোন সাবটাইটেল লোড হয়নি",
+      "failedToLoadSRT": "SRT ফাইল লোড করতে ব্যর্থ"
     },
     "success": "সফল",
     "settings": "সেটিংস",
@@ -46,9 +46,9 @@
     "backToTopAria": "উপরে ফিরে স্ক্রোল করুন",
     "confirmReload": "আপনি কি নিশ্চিত যে আপনি পৃষ্ঠাটি রিলোড করতে চান? যেকোন অসংরক্ষিত পরিবর্তন হারিয়ে যেতে পারে।",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT ফাইল",
+      "mediaFiles": "মিডিয়া ফাইল",
+      "videoFiles": "ভিডিও ফাইল"
     }
   },
   "input": {
@@ -63,7 +63,7 @@
     "downloading": "ডাউনলোড হচ্ছে...",
     "selectFile": "ফাইল নির্বাচন করুন",
     "selectVideoFile": "ভিডিও ফাইল নির্বাচন করুন",
-    "selectVideoAudioFile": "Select Video / Audio File",
+    "selectVideoAudioFile": "ভিডিও / অডিও ফাইল নির্বাচন করুন",
     "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন"
   },
   "subtitles": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "সেটিংস",
+    "creditsDescription": "AI ব্যবহারের ঘন্টা এখানে কিনুন বা টপ-আপ করুন।"
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "পূর্ণস্ক্রীনে প্রবেশ করুন",
+    "exitFullscreen": "পূর্ণস্ক্রীন থেকে বেরিয়ে আসুন",
     "sideMenu": {
       "changeVideo": "ভিডিও পরিবর্তন করুন",
       "changeVideoAudio": "ভিডিও/অডিও পরিবর্তন করুন",
@@ -180,57 +180,72 @@
     "afrikaans": "আফ্রিকান্স"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "কোন ক্রেডিট নেই।",
+    "rechargeLink": "রিচার্জ →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "অনুবাদ এবং ট্রান্সক্রিপশন বৈশিষ্ট্য ব্যবহার করতে <settingsLink>{{settingsLinkText}}</settingsLink> এ ক্রেডিট কিনুন।",
+      "settingsLinkText": "সেটিংস"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "অনুগ্রহ করে একটি ভিডিও নির্বাচন করুন",
+      "processingDuration": "ভিডিওর দৈর্ঘ্য প্রক্রিয়াজাত করা হচ্ছে। অনুগ্রহ করে শীঘ্রই আবার চেষ্টা করুন।"
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "শুরু হচ্ছে...",
+      "completed": "সম্পন্ন",
+      "cancelled": "বাতিল",
+      "error": "ত্রুটি"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "ক্রেডিট কিনুন",
+      "redirectingToPayment": "পেমেন্টে পুনর্নির্দেশ করা হচ্ছে..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "খরচ গণনা করা হচ্ছে...",
+    "notEnoughCredits": "পর্যাপ্ত ক্রেডিট উপলব্ধ নেই"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "সাবটাইটেলে খুঁজুন...",
+    "replacePlaceholder": "এটি দিয়ে প্রতিস্থাপন করুন...",
+    "replaceAll": "সব প্রতিস্থাপন করুন",
+    "nextMatch": "পরবর্তী মিল (Enter)",
+    "previousMatch": "পূর্ববর্তী মিল (Shift+Enter)",
+    "replaceAllTitle": "সব ঘটনা প্রতিস্থাপন করুন",
+    "closeTitle": "বন্ধ করুন (Esc)",
+    "nextMatchAria": "পরবর্তী মিল",
+    "previousMatchAria": "পূর্ববর্তী মিল",
+    "replaceAllAria": "সব প্রতিস্থাপন করুন",
+    "closeAria": "অনুসন্ধান বার বন্ধ করুন"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "SRT ফাইল এভাবে সংরক্ষণ করুন",
+    "saveDownloadedVideoAs": "ডাউনলোড করা ভিডিও এভাবে সংরক্ষণ করুন",
+    "downloadInProgress": "ডাউনলোড চলমান",
+    "saveDownloadedFile": "ডাউনলোড করা ফাইল সংরক্ষণ করুন: {{path}}",
+    "translationInProgress": "অনুবাদ চলমান",
+    "cancelTranslationConfirm": "অনুবাদ বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
+    "slowProcessingBanner": {
+      "title": "প্রক্রিয়াকরণ স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
+      "description": "এটি উচ্চ চাহিদা বা OpenAI সার্ভারের সমস্যার কারণে হতে পারে। প্রক্রিয়াটি এখনও পেছনে চলছে।",
+      "checkStatus": "OpenAI স্ট্যাটাস চেক করুন"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "ট্রান্সক্রাইব ও পরিষ্কার করা হয়েছে {{done}}/{{total}} অংশ",
+    "gapRepair": "গ্যাপ মেরামত #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "অনুপস্থিত ক্যাপশন মেরামত করা হচ্ছে (পুনরাবৃত্তি {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "ফাইল সংরক্ষিত হয়েছে:\n{{path}}",
+    "videoSaved": "ভিডিও সংরক্ষিত হয়েছে:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI ব্যবহারের ঘন্টা",
+    "loading": "লোড হচ্ছে...",
+    "credits": "ক্রেডিট",
+    "hours": "ঘন্টা",
+    "buyCredits": "ক্রেডিট কিনুন",
+    "redirectingToPayment": "নিরাপদ চেকআউট খোলা হচ্ছে...",
+    "description": "$5 (১.৫ ঘন্টা), $10 (৩ ঘন্টা), বা $50 (২৪ ঘন্টা) ক্রেডিট প্যাক থেকে বেছে নিন",
+    "notEnough": "অপর্যাপ্ত ক্রেডিট। অব্যাহত রাখতে অনুগ্রহ করে আরো ক্রেডিট কিনুন।"
   }
 }

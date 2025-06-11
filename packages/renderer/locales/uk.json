@@ -18,13 +18,13 @@
       "unexpectedRemove": "Сталася неочікувана помилка під час видалення ключа.",
       "unexpectedSave": "Сталася неочікувана помилка під час збереження.",
       "unexpectedLoad": "Сталася неочікувана помилка під час завантаження.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Помилка рендерингу",
+      "creditReservationFailed": "Помилка резервування кредитів",
+      "invalidRenderOptions": "Надано неправильні параметри рендерингу",
+      "missingVideoMetadata": "Відсутні метадані відео ({{missing}})",
+      "noSourceVideo": "Немає вихідного відео",
+      "noSubtitlesLoaded": "Не завантажено субтитрів",
+      "failedToLoadSRT": "Не вдалося завантажити файл SRT"
     },
     "success": "Успіх",
     "settings": "Налаштування",
@@ -46,9 +46,9 @@
     "backToTopAria": "Прокрутити нагору",
     "confirmReload": "Ви впевнені, що хочете перезавантажити сторінку? Всі незбережені зміни можуть бути втрачені.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Файли SRT",
+      "mediaFiles": "Медіа файли",
+      "videoFiles": "Відео файли"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Налаштування",
+    "creditsDescription": "Придбайте або поповніть години використання ШІ тут."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Увійти в повноекранний режим",
+    "exitFullscreen": "Вийти з повноекранного режиму",
     "sideMenu": {
       "changeVideo": "Змінити відео",
       "changeVideoAudio": "Змінити відео / аудіо",
@@ -180,57 +180,72 @@
     "afrikaans": "Африкаанс"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Немає кредитів.",
+    "rechargeLink": "Поповнити →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Придбайте кредити в <settingsLink>{{settingsLinkText}}</settingsLink>, щоб використовувати функції перекладу та транскрипції.",
+      "settingsLinkText": "Налаштування"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Будь ласка, оберіть відео",
+      "processingDuration": "Тривалість відео обробляється. Спробуйте ще раз через деякий час."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Запуск...",
+      "completed": "Завершено",
+      "cancelled": "Скасовано",
+      "error": "Помилка"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Купити кредити",
+      "redirectingToPayment": "Перенаправлення до оплати..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Розрахунок вартості...",
+    "notEnoughCredits": "Недостатньо кредитів"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Знайти в субтитрах...",
+    "replacePlaceholder": "Замінити на...",
+    "replaceAll": "Замінити все",
+    "nextMatch": "Наступний збіг (Enter)",
+    "previousMatch": "Попередній збіг (Shift+Enter)",
+    "replaceAllTitle": "Замінити всі входження",
+    "closeTitle": "Закрити (Esc)",
+    "nextMatchAria": "Наступний збіг",
+    "previousMatchAria": "Попередній збіг",
+    "replaceAllAria": "Замінити все",
+    "closeAria": "Закрити панель пошуку"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Зберегти файл SRT як",
+    "saveDownloadedVideoAs": "Зберегти завантажене відео як",
+    "downloadInProgress": "Завантаження триває",
+    "saveDownloadedFile": "Зберегти завантажений файл: {{path}}",
+    "translationInProgress": "Переклад триває",
+    "cancelTranslationConfirm": "Скасувати переклад? Прогрес буде втрачено, і доведеться почати спочатку.",
+    "slowProcessingBanner": {
+      "title": "Обробка займає більше часу, ніж зазвичай.",
+      "description": "Це може бути пов'язано з високим попитом або проблемами із серверами OpenAI. Процес все ще виконується у фоновому режимі.",
+      "checkStatus": "Перевірити статус OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Транскрибовано і очищено {{done}}/{{total}} фрагментів",
+    "gapRepair": "Виправлення прогалин #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Виправлення відсутніх субтитрів (Ітерація {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Файл збережено:\n{{path}}",
+    "videoSaved": "Відео збережено до:\n{{path}}"
+  },
+  "credits": {
+    "title": "Години використання ШІ",
+    "loading": "Завантаження...",
+    "credits": "кредити",
+    "hours": "години",
+    "buyCredits": "Купити кредити",
+    "redirectingToPayment": "Відкриття безпечної оплати…",
+    "description": "Оберіть з пакетів $5 (1,5г), $10 (3г), або $50 (24г)",
+    "notEnough": "Недостатньо кредитів. Будь ласка, придбайте більше кредитів, щоб продовжити."
   }
 }

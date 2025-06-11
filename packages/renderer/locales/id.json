@@ -18,13 +18,13 @@
       "unexpectedRemove": "Terjadi kesalahan yang tidak terduga saat menghapus kunci.",
       "unexpectedSave": "Terjadi kesalahan yang tidak terduga saat menyimpan.",
       "unexpectedLoad": "Terjadi kesalahan yang tidak terduga saat memuat.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Render gagal",
+      "creditReservationFailed": "Reservasi kredit gagal",
+      "invalidRenderOptions": "Opsi render yang diberikan tidak valid",
+      "missingVideoMetadata": "Metadata video hilang ({{missing}})",
+      "noSourceVideo": "Tidak ada video sumber",
+      "noSubtitlesLoaded": "Tidak ada subtitle yang dimuat",
+      "failedToLoadSRT": "Gagal memuat berkas SRT"
     },
     "success": "Berhasil",
     "settings": "Pengaturan",
@@ -46,9 +46,9 @@
     "backToTopAria": "Gulir kembali ke atas",
     "confirmReload": "Apakah Anda yakin ingin memuat ulang halaman? Perubahan yang belum disimpan mungkin akan hilang.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Berkas SRT",
+      "mediaFiles": "Berkas Media",
+      "videoFiles": "Berkas Video"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Pengaturan",
+    "creditsDescription": "Beli atau isi ulang jam penggunaan AI di sini."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Masuk Layar Penuh",
+    "exitFullscreen": "Keluar dari Layar Penuh",
     "sideMenu": {
       "changeVideo": "Ubah Video",
       "changeVideoAudio": "Ubah Video / Audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Bahasa Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Tidak ada kredit.",
+    "rechargeLink": "Isi Ulang →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Beli kredit di <settingsLink>{{settingsLinkText}}</settingsLink> untuk menggunakan fitur terjemahan dan transkripsi.",
+      "settingsLinkText": "Pengaturan"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Silakan pilih video",
+      "processingDuration": "Durasi video sedang diproses. Silakan coba lagi sebentar."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Memulai...",
+      "completed": "Selesai",
+      "cancelled": "Dibatalkan",
+      "error": "Kesalahan"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Beli Kredit",
+      "redirectingToPayment": "Mengarahkan ke pembayaran..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Menghitung biaya...",
+    "notEnoughCredits": "Kredit tidak mencukupi"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Cari dalam subtitle...",
+    "replacePlaceholder": "Ganti dengan...",
+    "replaceAll": "Ganti Semua",
+    "nextMatch": "Kecocokan Berikutnya (Enter)",
+    "previousMatch": "Kecocokan Sebelumnya (Shift+Enter)",
+    "replaceAllTitle": "Ganti Semua Kejadian",
+    "closeTitle": "Tutup (Esc)",
+    "nextMatchAria": "Kecocokan berikutnya",
+    "previousMatchAria": "Kecocokan sebelumnya",
+    "replaceAllAria": "Ganti semua",
+    "closeAria": "Tutup bilah pencarian"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Simpan Berkas SRT Sebagai",
+    "saveDownloadedVideoAs": "Simpan Video yang Diunduh Sebagai",
+    "downloadInProgress": "Unduhan Sedang Berlangsung",
+    "saveDownloadedFile": "Simpan berkas yang diunduh: {{path}}",
+    "translationInProgress": "Terjemahan Sedang Berlangsung",
+    "cancelTranslationConfirm": "Batalkan terjemahan? Progres akan hilang dan Anda perlu memulai lagi.",
+    "slowProcessingBanner": {
+      "title": "Pemrosesan memakan waktu lebih lama dari biasanya.",
+      "description": "Ini mungkin karena permintaan tinggi atau masalah dengan server OpenAI. Proses masih berjalan di latar belakang.",
+      "checkStatus": "Periksa status OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Ditranskripsi & dibersihkan {{done}}/{{total}} bagian",
+    "gapRepair": "Perbaikan celah #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Memperbaiki subtitle yang hilang (Iterasi {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Berkas disimpan:\n{{path}}",
+    "videoSaved": "Video disimpan ke:\n{{path}}"
+  },
+  "credits": {
+    "title": "Jam Penggunaan AI",
+    "loading": "Memuat...",
+    "credits": "kredit",
+    "hours": "jam",
+    "buyCredits": "Beli Kredit",
+    "redirectingToPayment": "Membuka checkout aman…",
+    "description": "Pilih dari paket kredit $5 (1,5 jam), $10 (3 jam), atau $50 (24 jam)",
+    "notEnough": "Kredit tidak mencukupi. Silakan beli lebih banyak kredit untuk melanjutkan."
   }
 }

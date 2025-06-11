@@ -18,13 +18,13 @@
       "unexpectedRemove": "'n Onverwagse fout het voorgekom tydens die verwydering van die sleutel.",
       "unexpectedSave": "'n Onverwagse fout het voorgekom tydens die stoor.",
       "unexpectedLoad": "'n Onverwagse fout het voorgekom tydens die laai.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Rendering het gefaal",
+      "creditReservationFailed": "Kredietreservering het gefaal",
+      "invalidRenderOptions": "Ongeldige rendering-opsies verskaf",
+      "missingVideoMetadata": "Video-metadata ontbreek ({{missing}})",
+      "noSourceVideo": "Geen bronvideo",
+      "noSubtitlesLoaded": "Geen onderskrifte gelaai nie",
+      "failedToLoadSRT": "Kon nie SRT-lêer laai nie"
     },
     "success": "Sukses",
     "settings": "Instellings",
@@ -46,9 +46,9 @@
     "backToTopAria": "Rol terug na bo",
     "confirmReload": "Is jy seker jy wil die bladsy herlaai? Enige ongestoorde veranderinge mag verlore gaan.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT-lêers",
+      "mediaFiles": "Medialêers",
+      "videoFiles": "Videolêers"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Instellings",
+    "creditsDescription": "Koop of laai AI-gebruiksure hier op."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Gaan na Volskerm",
+    "exitFullscreen": "Verlaat Volskerm",
     "sideMenu": {
       "changeVideo": "Verander Video",
       "changeVideoAudio": "Verander Video / Audio",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Geen krediet nie.",
+    "rechargeLink": "Herlaai →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Koop krediet in <settingsLink>{{settingsLinkText}}</settingsLink> om vertaal- en transkripsie-funksies te gebruik.",
+      "settingsLinkText": "Instellings"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Kies asseblief 'n video",
+      "processingDuration": "Video-duur word verwerk. Probeer asseblief weer binnekort."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Begin...",
+      "completed": "Voltooi",
+      "cancelled": "Gekanselleer",
+      "error": "Fout"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Koop Krediet",
+      "redirectingToPayment": "Herlei na betaling..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Bereken koste...",
+    "notEnoughCredits": "Nie genoeg krediet beskikbaar nie"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Vind in onderskrifte...",
+    "replacePlaceholder": "Vervang met...",
+    "replaceAll": "Vervang Alles",
+    "nextMatch": "Volgende Ooreenkoms (Enter)",
+    "previousMatch": "Vorige Ooreenkoms (Shift+Enter)",
+    "replaceAllTitle": "Vervang Alle Voorkomste",
+    "closeTitle": "Sluit (Esc)",
+    "nextMatchAria": "Volgende ooreenkoms",
+    "previousMatchAria": "Vorige ooreenkoms",
+    "replaceAllAria": "Vervang alles",
+    "closeAria": "Sluit vind-balk"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Stoor SRT-lêer As",
+    "saveDownloadedVideoAs": "Stoor Afgelaaide Video As",
+    "downloadInProgress": "Aflaai is aan die Gang",
+    "saveDownloadedFile": "Stoor die afgelaaide lêer: {{path}}",
+    "translationInProgress": "Vertaling is aan die Gang",
+    "cancelTranslationConfirm": "Kanselleer vertaling? Vordering sal verlore gaan en jy sal weer moet begin.",
+    "slowProcessingBanner": {
+      "title": "Verwerking neem langer as gewoonlik.",
+      "description": "Dit kan wees as gevolg van hoë aanvraag of probleme met OpenAI se bedieners. Die proses loop nog steeds op die agtergrond.",
+      "checkStatus": "Kontroleer OpenAI-status"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Getranskribeer en skoongevee {{done}}/{{total}} stukkies",
+    "gapRepair": "Gaping herstel #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Herstel ontbrekende onderskrifte (Iterasie {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Lêer gestoor:\n{{path}}",
+    "videoSaved": "Video gestoor na:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI Gebruiksure",
+    "loading": "Laai...",
+    "credits": "krediet",
+    "hours": "ure",
+    "buyCredits": "Koop Krediet",
+    "redirectingToPayment": "Maak veilige uitklok oop...",
+    "description": "Kies uit $5 (1.5u), $10 (3u), of $50 (24u) kredietpakkette",
+    "notEnough": "Onvoldoende krediet. Koop asseblief meer krediet om voort te gaan."
   }
 }

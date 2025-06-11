@@ -18,13 +18,13 @@
       "unexpectedRemove": "Đã xảy ra lỗi không mong muốn khi xóa khóa.",
       "unexpectedSave": "Đã xảy ra lỗi không mong muốn khi lưu.",
       "unexpectedLoad": "Đã xảy ra lỗi không mong muốn khi tải.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Render thất bại",
+      "creditReservationFailed": "Đặt chỗ tín dụng thất bại",
+      "invalidRenderOptions": "Các tùy chọn render không hợp lệ",
+      "missingVideoMetadata": "Thiếu metadata video ({{missing}})",
+      "noSourceVideo": "Không có video nguồn",
+      "noSubtitlesLoaded": "Không có phụ đề nào được tải",
+      "failedToLoadSRT": "Không thể tải tệp SRT"
     },
     "success": "Thành công",
     "settings": "Cài đặt",
@@ -46,9 +46,9 @@
     "backToTopAria": "Cuộn lên đầu trang",
     "confirmReload": "Bạn có chắc chắn muốn tải lại trang không? Mọi thay đổi chưa lưu có thể bị mất.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Tệp SRT",
+      "mediaFiles": "Tệp Media",
+      "videoFiles": "Tệp Video"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Cài đặt",
+    "creditsDescription": "Mua hoặc nạp thêm giờ sử dụng AI tại đây."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Vào Toàn màn hình",
+    "exitFullscreen": "Thoát Toàn màn hình",
     "sideMenu": {
       "changeVideo": "Thay đổi video",
       "changeVideoAudio": "Thay đổi video / âm thanh",
@@ -180,57 +180,72 @@
     "afrikaans": "Tiếng Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Không có tín dụng.",
+    "rechargeLink": "Nạp thêm →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Mua tín dụng trong <settingsLink>{{settingsLinkText}}</settingsLink> để sử dụng tính năng dịch và phiên âm.",
+      "settingsLinkText": "Cài đặt"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Vui lòng chọn video",
+      "processingDuration": "Thời lượng video đang được xử lý. Vui lòng thử lại sau ít phút."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Đang bắt đầu...",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy",
+      "error": "Lỗi"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Mua Tín dụng",
+      "redirectingToPayment": "Đang chuyển hướng đến thanh toán..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Đang tính toán chi phí...",
+    "notEnoughCredits": "Không đủ tín dụng"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Tìm trong phụ đề...",
+    "replacePlaceholder": "Thay thế bằng...",
+    "replaceAll": "Thay thế Tất cả",
+    "nextMatch": "Kết quả Tiếp theo (Enter)",
+    "previousMatch": "Kết quả Trước (Shift+Enter)",
+    "replaceAllTitle": "Thay thế Tất cả Lần xuất hiện",
+    "closeTitle": "Đóng (Esc)",
+    "nextMatchAria": "Kết quả tiếp theo",
+    "previousMatchAria": "Kết quả trước",
+    "replaceAllAria": "Thay thế tất cả",
+    "closeAria": "Đóng thanh tìm kiếm"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Lưu Tệp SRT Dưới dạng",
+    "saveDownloadedVideoAs": "Lưu Video Đã tải Dưới dạng",
+    "downloadInProgress": "Đang Tải xuống",
+    "saveDownloadedFile": "Lưu tệp đã tải xuống: {{path}}",
+    "translationInProgress": "Đang Dịch",
+    "cancelTranslationConfirm": "Hủy dịch? Tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại.",
+    "slowProcessingBanner": {
+      "title": "Quá trình xử lý mất nhiều thời gian hơn bình thường.",
+      "description": "Điều này có thể do nhu cầu cao hoặc sự cố với máy chủ OpenAI. Quá trình vẫn đang chạy ở chế độ nền.",
+      "checkStatus": "Kiểm tra trạng thái OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Đã phiên âm & làm sạch {{done}}/{{total}} đoạn",
+    "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Đang sửa phụ đề bị thiếu (Lần {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Tệp đã được lưu:\n{{path}}",
+    "videoSaved": "Video đã được lưu vào:\n{{path}}"
+  },
+  "credits": {
+    "title": "Giờ Sử dụng AI",
+    "loading": "Đang tải...",
+    "credits": "tín dụng",
+    "hours": "giờ",
+    "buyCredits": "Mua Tín dụng",
+    "redirectingToPayment": "Đang mở thanh toán an toàn…",
+    "description": "Chọn từ các gói tín dụng $5 (1,5 giờ), $10 (3 giờ), hoặc $50 (24 giờ)",
+    "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục."
   }
 }

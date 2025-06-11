@@ -18,13 +18,13 @@
       "unexpectedRemove": "Der opstod en uventet fejl under fjernelse af nøglen.",
       "unexpectedSave": "Der opstod en uventet fejl under gemning.",
       "unexpectedLoad": "Der opstod en uventet fejl under indlæsning.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Rendering mislykkedes",
+      "creditReservationFailed": "Kreditreservation mislykkedes",
+      "invalidRenderOptions": "Ugyldige renderingsindstillinger angivet",
+      "missingVideoMetadata": "Manglende videometadata ({{missing}})",
+      "noSourceVideo": "Ingen kildevideo",
+      "noSubtitlesLoaded": "Ingen undertekster indlæst",
+      "failedToLoadSRT": "Kunne ikke indlæse SRT-fil"
     },
     "success": "Succes",
     "settings": "Indstillinger",
@@ -46,9 +46,9 @@
     "backToTopAria": "Rul tilbage til toppen",
     "confirmReload": "Er du sikker på, at du vil genindlæse siden? Alle ikke-gemte ændringer kan gå tabt.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT-filer",
+      "mediaFiles": "Mediefiler",
+      "videoFiles": "Videofiler"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "Indstillinger",
+    "creditsDescription": "Køb eller påfyld AI-timer her."
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "Gå til fuldskærm",
+    "exitFullscreen": "Forlad fuldskærm",
     "sideMenu": {
       "changeVideo": "Skift video",
       "changeVideoAudio": "Skift video / lydfil",
@@ -180,57 +180,72 @@
     "afrikaans": "Afrikaans"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "Ingen kreditter.",
+    "rechargeLink": "Genopfyld →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "Køb kreditter i <settingsLink>{{settingsLinkText}}</settingsLink> for at bruge oversættelses- og transskriptionsfunktioner.",
+      "settingsLinkText": "Indstillinger"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "Vælg venligst en video",
+      "processingDuration": "Videovarighed behandles. Prøv igen om lidt."
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "Starter...",
+      "completed": "Fuldført",
+      "cancelled": "Annulleret",
+      "error": "Fejl"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "Køb kreditter",
+      "redirectingToPayment": "Omdirigerer til betaling..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "Beregner omkostninger...",
+    "notEnoughCredits": "Ikke nok kreditter tilgængelige"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "Find i undertekster...",
+    "replacePlaceholder": "Erstat med...",
+    "replaceAll": "Erstat alle",
+    "nextMatch": "Næste match (Enter)",
+    "previousMatch": "Forrige match (Shift+Enter)",
+    "replaceAllTitle": "Erstat alle forekomster",
+    "closeTitle": "Luk (Esc)",
+    "nextMatchAria": "Næste match",
+    "previousMatchAria": "Forrige match",
+    "replaceAllAria": "Erstat alle",
+    "closeAria": "Luk søgebar"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "Gem SRT-fil som",
+    "saveDownloadedVideoAs": "Gem downloadet video som",
+    "downloadInProgress": "Download i gang",
+    "saveDownloadedFile": "Gem den downloadede fil: {{path}}",
+    "translationInProgress": "Oversættelse i gang",
+    "cancelTranslationConfirm": "Annuller oversættelse? Fremskridt vil gå tabt og du skal starte forfra.",
+    "slowProcessingBanner": {
+      "title": "Behandling tager længere tid end normalt.",
+      "description": "Dette skyldes muligvis høj efterspørgsel eller problemer med OpenAI's servere. Processen kører stadig i baggrunden.",
+      "checkStatus": "Tjek OpenAI status"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "Transskriberet og redigeret {{done}}/{{total}} dele",
+    "gapRepair": "Hul-reparation #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "Reparerer manglende undertekster (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "Fil gemt:\n{{path}}",
+    "videoSaved": "Video gemt til:\n{{path}}"
+  },
+  "credits": {
+    "title": "AI-timer",
+    "loading": "Indlæser...",
+    "credits": "kreditter",
+    "hours": "timer",
+    "buyCredits": "Køb kreditter",
+    "redirectingToPayment": "Åbner sikker betaling...",
+    "description": "Vælg mellem $5 (1,5t), $10 (3t) eller $50 (24t) kreditpakker",
+    "notEnough": "Utilstrækkelige kreditter. Køb venligst flere kreditter for at fortsætte."
   }
 }

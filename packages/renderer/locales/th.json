@@ -18,13 +18,13 @@
       "unexpectedRemove": "เกิดข้อผิดพลาดที่ไม่คาดคิดขณะลบคีย์",
       "unexpectedSave": "เกิดข้อผิดพลาดที่ไม่คาดคิดขณะบันทึก",
       "unexpectedLoad": "เกิดข้อผิดพลาดที่ไม่คาดคิดขณะโหลด",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "การเรนเดอร์ล้มเหลว",
+      "creditReservationFailed": "การจองเครดิตล้มเหลว",
+      "invalidRenderOptions": "ตัวเลือกการเรนเดอร์ไม่ถูกต้อง",
+      "missingVideoMetadata": "ข้อมูลวิดีโอหายไป ({{missing}})",
+      "noSourceVideo": "ไม่มีวิดีโอต้นฉบับ",
+      "noSubtitlesLoaded": "ไม่ได้โหลดคำบรรยาย",
+      "failedToLoadSRT": "โหลดไฟล์ SRT ล้มเหลว"
     },
     "success": "สำเร็จ",
     "settings": "การตั้งค่า",
@@ -46,9 +46,9 @@
     "backToTopAria": "เลื่อนกลับไปด้านบน",
     "confirmReload": "คุณแน่ใจหรือไม่ว่าต้องการโหลดหน้าใหม่? การเปลี่ยนแปลงที่ไม่ได้บันทึกอาจสูญหาย",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "ไฟล์ SRT",
+      "mediaFiles": "ไฟล์สื่อ",
+      "videoFiles": "ไฟล์วิดีโอ"
     }
   },
   "input": {
@@ -107,12 +107,12 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "การตั้งค่า",
+    "creditsDescription": "ซื้อหรือเติมชั่วโมงการใช้งาน AI ที่นี่"
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "เข้าสู่โหมดเต็มจอ",
+    "exitFullscreen": "ออกจากโหมดเต็มจอ",
     "sideMenu": {
       "changeVideo": "เปลี่ยนวิดีโอ",
       "changeVideoAudio": "เปลี่ยนวิดีโอ / เสียง",
@@ -180,57 +180,72 @@
     "afrikaans": "แอฟริกานส์"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "ไม่มีเครดิต",
+    "rechargeLink": "เติมเครดิต →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "ซื้อเครดิตใน <settingsLink>{{settingsLinkText}}</settingsLink> เพื่อใช้ฟีเจอร์การแปลและการถอดข้อความ",
+      "settingsLinkText": "การตั้งค่า"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "กรุณาเลือกวิดีโอ",
+      "processingDuration": "กำลังประมวลผลระยะเวลาวิดีโอ กรุณาลองใหม่อีกครู่"
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "กำลังเริ่มต้น...",
+      "completed": "เสร็จสิ้น",
+      "cancelled": "ยกเลิกแล้ว",
+      "error": "เกิดข้อผิดพลาด"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "ซื้อเครดิต",
+      "redirectingToPayment": "กำลังเปลี่ยนเส้นทางไปยังการชำระเงิน..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "กำลังคำนวณค่าใช้จ่าย...",
+    "notEnoughCredits": "เครดิตไม่เพียงพอ"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "ค้นหาในคำบรรยาย...",
+    "replacePlaceholder": "แทนที่ด้วย...",
+    "replaceAll": "แทนที่ทั้งหมด",
+    "nextMatch": "รายการถัดไป (Enter)",
+    "previousMatch": "รายการก่อนหน้า (Shift+Enter)",
+    "replaceAllTitle": "แทนที่ทุกที่ที่พบ",
+    "closeTitle": "ปิด (Esc)",
+    "nextMatchAria": "รายการถัดไป",
+    "previousMatchAria": "รายการก่อนหน้า",
+    "replaceAllAria": "แทนที่ทั้งหมด",
+    "closeAria": "ปิดแถบค้นหา"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "บันทึกไฟล์ SRT เป็น",
+    "saveDownloadedVideoAs": "บันทึกวิดีโอที่ดาวน์โหลดเป็น",
+    "downloadInProgress": "กำลังดาวน์โหลด",
+    "saveDownloadedFile": "บันทึกไฟล์ที่ดาวน์โหลด: {{path}}",
+    "translationInProgress": "กำลังแปล",
+    "cancelTranslationConfirm": "ยกเลิกการแปล? ความคืบหน้าจะหายไปและคุณจะต้องเริ่มใหม่",
+    "slowProcessingBanner": {
+      "title": "การประมวลผลใช้เวลานานกว่าปกติ",
+      "description": "อาจเนื่องจากความต้องการสูงหรือปัญหากับเซิร์ฟเวอร์ของ OpenAI กระบวนการยังคงทำงานอยู่เบื้องหลัง",
+      "checkStatus": "ตรวจสอบสถานะ OpenAI"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "ถอดข้อความและทำความสะอาดแล้ว {{done}}/{{total}} ส่วน",
+    "gapRepair": "การซ่อมแซมช่องว่าง #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "กำลังซ่อมแซมคำบรรยายที่หายไป (รอบที่ {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "บันทึกไฟล์แล้ว:\n{{path}}",
+    "videoSaved": "บันทึกวิดีโอไปยัง:\n{{path}}"
+  },
+  "credits": {
+    "title": "ชั่วโมงการใช้งาน AI",
+    "loading": "กำลังโหลด...",
+    "credits": "เครดิต",
+    "hours": "ชั่วโมง",
+    "buyCredits": "ซื้อเครดิต",
+    "redirectingToPayment": "กำลังเปิดหน้าชำระเงินที่ปลอดภัย...",
+    "description": "เลือกจากแพ็กเครดิต $5 (1.5 ชั่วโมง), $10 (3 ชั่วโมง), หรือ $50 (24 ชั่วโมง)",
+    "notEnough": "เครดิตไม่เพียงพอ กรุณาซื้อเครดิตเพิ่มเติมเพื่อดำเนินการต่อ"
   }
 }

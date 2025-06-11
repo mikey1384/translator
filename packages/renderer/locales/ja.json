@@ -18,13 +18,13 @@
       "unexpectedRemove": "削除中に予期しないエラーが発生しました。",
       "unexpectedSave": "保存中に予期しないエラーが発生しました。",
       "unexpectedLoad": "読み込み中に予期しないエラーが発生しました。",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "レンダリングに失敗しました",
+      "creditReservationFailed": "クレジット予約に失敗しました",
+      "invalidRenderOptions": "無効なレンダリングオプションが提供されました",
+      "missingVideoMetadata": "動画メタデータが不足しています ({{missing}})",
+      "noSourceVideo": "ソース動画がありません",
+      "noSubtitlesLoaded": "字幕が読み込まれていません",
+      "failedToLoadSRT": "SRTファイルの読み込みに失敗しました"
     },
     "success": "成功",
     "settings": "設定",
@@ -46,9 +46,9 @@
     "backToTopAria": "ページのトップに戻る",
     "confirmReload": "ページを再読み込みしますか？保存されていない変更は失われる可能性があります。",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRTファイル",
+      "mediaFiles": "メディアファイル",
+      "videoFiles": "動画ファイル"
     }
   },
   "input": {
@@ -107,21 +107,22 @@
     }
   },
   "settings": {
-    "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "title": "設定",
+    "creditsDescription": "ここでAI使用時間を購入またはチャージしてください。"
   },
   "credits": {
     "title": "AI使用時間",
     "loading": "読み込み中...",
     "credits": "クレジット",
     "hours": "時間",
-    "buyCredits": "$10パック購入",
+    "buyCredits": "クレジットを購入",
     "redirectingToPayment": "安全な決済を開いています…",
-    "description": "1パック($10)でインタビュー形式の動画約5時間を翻訳できます。"
+    "description": "$5（1.5時間）、$10（3時間）、または$50（24時間）のクレジットパックからお選びください",
+    "notEnough": "クレジットが不足しています。続行するにはクレジットを購入してください。"
   },
   "videoPlayer": {
-    "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "enterFullscreen": "フルスクリーン",
+    "exitFullscreen": "フルスクリーン終了",
     "sideMenu": {
       "changeVideo": "動画を変更",
       "changeVideoAudio": "動画/音声を変更",
@@ -189,57 +190,62 @@
     "afrikaans": "アフリカーンス語"
   },
   "generateSubtitles": {
-    "noCredits": "No credits.",
-    "rechargeLink": "Recharge →",
+    "noCredits": "クレジットがありません。",
+    "rechargeLink": "チャージ →",
     "creditWarning": {
-      "message": "Purchase credits in <settingsLink>{{settingsLinkText}}</settingsLink> to use translation and transcription features.",
-      "settingsLinkText": "Settings"
+      "message": "翻訳および文字起こし機能を使用するには、<settingsLink>{{settingsLinkText}}</settingsLink>でクレジットを購入してください。",
+      "settingsLinkText": "設定"
     },
     "validation": {
-      "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "pleaseSelectVideo": "動画を選択してください",
+      "processingDuration": "動画の長さを処理中です。しばらくしてから再度お試しください。"
     },
     "status": {
-      "starting": "Starting...",
-      "completed": "Completed",
-      "cancelled": "Cancelled",
-      "error": "Error"
+      "starting": "開始中...",
+      "completed": "完了",
+      "cancelled": "キャンセル済み",
+      "error": "エラー"
     },
     "buttons": {
-      "buyCredits": "Buy Credits",
-      "redirectingToPayment": "Redirecting to payment..."
+      "buyCredits": "クレジットを購入",
+      "redirectingToPayment": "決済ページにリダイレクト中..."
     },
-    "calculatingCost": "Calculating cost...",
-    "notEnoughCredits": "Not enough credits available"
+    "calculatingCost": "コストを計算中...",
+    "notEnoughCredits": "利用可能なクレジットが不足しています"
   },
   "findBar": {
-    "findPlaceholder": "Find in subtitles...",
-    "replacePlaceholder": "Replace with...",
-    "replaceAll": "Replace All",
-    "nextMatch": "Next Match (Enter)",
-    "previousMatch": "Previous Match (Shift+Enter)",
-    "replaceAllTitle": "Replace All Occurrences",
-    "closeTitle": "Close (Esc)",
-    "nextMatchAria": "Next match",
-    "previousMatchAria": "Previous match",
-    "replaceAllAria": "Replace all",
-    "closeAria": "Close find bar"
+    "findPlaceholder": "字幕内を検索...",
+    "replacePlaceholder": "置換先...",
+    "replaceAll": "すべて置換",
+    "nextMatch": "次の一致 (Enter)",
+    "previousMatch": "前の一致 (Shift+Enter)",
+    "replaceAllTitle": "すべての一致を置換",
+    "closeTitle": "閉じる (Esc)",
+    "nextMatchAria": "次の一致",
+    "previousMatchAria": "前の一致",
+    "replaceAllAria": "すべて置換",
+    "closeAria": "検索バーを閉じる"
   },
   "dialogs": {
-    "saveSrtFileAs": "Save SRT File As",
-    "saveDownloadedVideoAs": "Save Downloaded Video As",
-    "downloadInProgress": "Download in Progress",
-    "saveDownloadedFile": "Save the downloaded file: {{path}}",
-    "translationInProgress": "Translation in Progress",
-    "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again."
+    "saveSrtFileAs": "SRTファイルに名前を付けて保存",
+    "saveDownloadedVideoAs": "ダウンロードした動画に名前を付けて保存",
+    "downloadInProgress": "ダウンロード中",
+    "saveDownloadedFile": "ダウンロードしたファイルを保存: {{path}}",
+    "translationInProgress": "翻訳中",
+    "cancelTranslationConfirm": "翻訳をキャンセルしますか？進行状況は失われ、最初からやり直す必要があります。",
+    "slowProcessingBanner": {
+      "title": "処理が通常より長時間かかっています。",
+      "description": "これは高い需要やOpenAIのサーバーの問題が原因の可能性があります。プロセスはバックグラウンドで実行中です。",
+      "checkStatus": "OpenAIの状況を確認"
+    }
   },
   "progress": {
-    "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
-    "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "transcribedChunks": "{{done}}/{{total}} チャンクを文字起こし・クリーニング済み",
+    "gapRepair": "ギャップ修復 #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}"
   },
   "messages": {
-    "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "fileSaved": "ファイルを保存しました:\n{{path}}",
+    "videoSaved": "動画を保存しました:\n{{path}}"
   }
 }
