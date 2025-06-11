@@ -111,7 +111,7 @@
     "creditsDescription": "Buy or top-up AI usage hours here."
   },
   "credits": {
-    "title": "AI Usage Hours",
+    "title": "AI Credits",
     "loading": "Loading...",
     "credits": "credits",
     "hours": "hours",
