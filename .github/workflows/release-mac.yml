@@ -34,6 +34,9 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
+      # ---------- youtube-dl-exec ----------
+      YOUTUBE_DL_SKIP_DOWNLOAD: 'true'
+
     steps:
       # ————————————————————————————————————————————————————————————
       - uses: actions/checkout@v4
