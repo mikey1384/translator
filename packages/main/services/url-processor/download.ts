@@ -36,7 +36,7 @@ export async function downloadVideoFromPlatform(
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START,
-    stage: 'Setting up yt-dlp...',
+    stage: 'Warming up...',
   });
 
   // Ensure yt-dlp binary is available and working (installs if missing, can update if needed)
