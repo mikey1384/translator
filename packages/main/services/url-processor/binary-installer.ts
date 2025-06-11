@@ -8,13 +8,13 @@ import fsp from 'node:fs/promises';
 /**
  * Ensures yt-dlp binary is available and up-to-date.
  * - If binary doesn't exist, installs it
- * - If binary exists, optionally updates it
+ * - If binary exists, automatically tries to update it (yt-dlp needs frequent updates)
  * - Returns the path to the working binary
  */
 export async function ensureYtDlpBinary({
-  forceUpdate = false,
+  skipUpdate = false,
 }: {
-  forceUpdate?: boolean;
+  skipUpdate?: boolean;
 } = {}): Promise<string | null> {
   log.info('[URLprocessor] Ensuring yt-dlp binary is available...');
 
@@ -22,31 +22,34 @@ export async function ensureYtDlpBinary({
     // First try to find existing binary
     const existingBinary = await findExistingBinary();
 
-    if (existingBinary && !forceUpdate) {
-      // Binary exists and we're not forcing an update
+    if (existingBinary) {
       log.info(
         `[URLprocessor] Found existing yt-dlp binary: ${existingBinary}`
       );
 
-      // Optionally check if it's working
+      // Test if it's working
       if (await testBinary(existingBinary)) {
-        return existingBinary;
+        // Binary works - now try to update it (unless explicitly skipped)
+        if (!skipUpdate) {
+          log.info(
+            '[URLprocessor] Attempting to update yt-dlp to latest version...'
+          );
+          if (await updateExistingBinary(existingBinary)) {
+            return existingBinary;
+          } else {
+            log.warn(
+              '[URLprocessor] Update failed, but existing binary works, continuing...'
+            );
+            return existingBinary;
+          }
+        } else {
+          log.info('[URLprocessor] Skipping update as requested');
+          return existingBinary;
+        }
       } else {
         log.warn(
           '[URLprocessor] Existing binary is not working, will reinstall...'
         );
-      }
-    }
-
-    if (existingBinary && forceUpdate) {
-      log.info(
-        '[URLprocessor] Force update requested, updating existing binary...'
-      );
-      // Try to update existing binary first
-      if (await updateExistingBinary(existingBinary)) {
-        return existingBinary;
-      } else {
-        log.warn('[URLprocessor] Update failed, will reinstall...');
       }
     }
 

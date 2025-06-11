@@ -36,41 +36,22 @@ export async function downloadVideoFromPlatform(
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START,
-    stage: 'Locating yt-dlp...',
+    stage: 'Setting up yt-dlp...',
   });
 
-  let ytDlpPath = await findYtDlpBinary();
+  // Ensure yt-dlp binary is available and working (installs if missing, can update if needed)
+  const ytDlpPath = await ensureYtDlpBinary();
+
   if (!ytDlpPath) {
-    log.info(
-      '[URLprocessor] yt-dlp binary not found, attempting to install...'
-    );
-
     progressCallback?.({
-      percent: PROGRESS.WARMUP_START + 2,
-      stage: 'Setting up yt-dlp...',
+      percent: 0,
+      stage: 'Failed',
+      error: 'yt-dlp binary could not be set up.',
     });
-
-    // Try to automatically install the binary
-    ytDlpPath = await ensureYtDlpBinary();
-
-    if (!ytDlpPath) {
-      progressCallback?.({
-        percent: 0,
-        stage: 'Failed',
-        error:
-          'yt-dlp binary not found and could not be installed automatically.',
-      });
-      throw new Error(
-        'yt-dlp binary not found and could not be installed automatically.'
-      );
-    }
-
-    log.info(
-      `[URLprocessor] Successfully installed and located yt-dlp at: ${ytDlpPath}`
-    );
-  } else {
-    log.info(`[URLprocessor] Found yt-dlp at: ${ytDlpPath}`);
+    throw new Error('yt-dlp binary could not be set up.');
   }
+
+  log.info(`[URLprocessor] yt-dlp ready at: ${ytDlpPath}`);
 
   progressCallback?.({
     percent: PROGRESS.WARMUP_START + 3,
