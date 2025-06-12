@@ -1,9 +1,9 @@
 {
-  "name": "translator-electron-monorepo",
+  "name": "Translator by Stage5",
   "private": true,
-  "version": "1.1.15",
+  "version": "1.1.16",
   "type": "module",
-  "description": "Translator by Stage5 - AI-powered video translation tool",
+  "description": "Translator - AI-powered video translation tool",
   "author": "Mikey Lee",
   "workspaces": [
     "packages/*"
