@@ -1,10 +1,9 @@
 name: Release – macOS (R2)
 
 on:
-  workflow_dispatch: # manual trigger
+  workflow_dispatch: # manual trigger for testing
   push:
-    branches: [master] # every push to mainline
-    tags: ['v*'] # version tags (v1.2.3 …)
+    tags: ['v*'] # only version tags trigger releases
 
 concurrency:
   group: mac-release-${{ github.ref }}
