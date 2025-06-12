@@ -653,9 +653,8 @@ app
     app.setAboutPanelOptions({
       applicationName: 'Translator',
       applicationVersion: app.getVersion(),
-      version: app.getVersion(), // shows in parentheses
-      copyright: '© 2025 Mikey Lee',
-      credits: 'by Stage5',
+      version: app.getVersion(),
+      copyright: '© 2025 Stage5 Tools LLC',
     });
 
     try {
