@@ -651,11 +651,11 @@ app
 
     // Customize About panel
     app.setAboutPanelOptions({
-      applicationName: 'Translator by Stage5',
+      applicationName: 'Translator',
       applicationVersion: app.getVersion(),
       version: app.getVersion(), // shows in parentheses
       copyright: '© 2025 Mikey Lee',
-      credits: 'Powered by Stage5',
+      credits: 'by Stage5',
     });
 
     try {
