@@ -1,7 +1,7 @@
 {
   "name": "translator-electron-monorepo",
   "private": true,
-  "version": "1.0.9",
+  "version": "1.1.10",
   "type": "module",
   "description": "Translator by Stage5 - AI-powered video translation tool",
   "author": "Jong UK Lee",

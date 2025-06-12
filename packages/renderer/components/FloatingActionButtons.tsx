@@ -41,6 +41,11 @@ const updateButtonStyles = css`
     animation-play-state: paused;
     transform: scale(1.05);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    transform: none;
+  }
 `;
 
 export default function FloatingActionButtons({
@@ -171,7 +176,7 @@ export default function FloatingActionButtons({
     if (available && !downloaded) {
       if (downloading) {
         return {
-          title: `Downloading update... ${Math.round(percent)}%`,
+          title: `Downloading update... ${Math.round(percent ?? 0)}%`,
           variant: 'secondary' as const,
           icon: (
             <svg
@@ -211,7 +216,7 @@ export default function FloatingActionButtons({
         };
       } else {
         return {
-          title: 'Click to download update',
+          title: t('common.downloadUpdate', 'Click to download update'),
           variant: 'secondary' as const,
           icon: (
             <svg
