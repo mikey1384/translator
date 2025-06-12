@@ -28,7 +28,7 @@
 
   "buildDependenciesFromSource": false,
 
-  "appCopyright": "© 2025 Mikey Lee",
+  "copyright": "Copyright © 2025 Mikey Lee",
 
   "afterPack": "scripts/sign-chromium.cjs",
 
