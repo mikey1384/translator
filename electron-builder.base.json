@@ -7,7 +7,7 @@
   "publish": [
     {
       "provider": "github",
-      "owner": "stage5",
+      "owner": "mikey1384",
       "repo": "translator"
     }
   ],
