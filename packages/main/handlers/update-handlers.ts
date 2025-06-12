@@ -23,7 +23,7 @@ export function buildUpdateHandlers(opts: {
   }
 
   /* 1️⃣  Configure ---------------------------------------------------- */
-  autoUpdater.autoDownload = false; // we want the user to click "Download"
+  autoUpdater.autoDownload = true; // download automatically in background
   autoUpdater.disableWebInstaller = true; // VSCode-style in-place update
   autoUpdater.logger = log;
   autoUpdater.channel = 'latest'; // or 'beta', 'alpha', …
@@ -39,6 +39,7 @@ export function buildUpdateHandlers(opts: {
 
   autoUpdater.on('update-available', (info: UpdateInfo) => {
     log.info('[update] Update available:', info);
+    log.info('[update] Starting automatic download...');
     send('available', info);
   });
 

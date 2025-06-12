@@ -62,24 +62,13 @@ jobs:
           npx puppeteer@24.10.0 browsers install chrome-headless-shell \
             --platform mac     --path vendor/headless-x64
 
-      # ---------- Build arm64 ----------
-      - name: Build arm64
-        run: npm run package:arm
+      # ---------- Rebuild native modules for both architectures ----------
+      - name: Rebuild native modules for x64
+        run: npm exec electron-builder install-app-deps -- --arch x64
 
-      # ---------- Install deps & headless_shell (x64) ----------
-      - name: Install deps & headless_shell (x64)
-        run: |
-          arch -x86_64 npm ci --no-audit --fund=false
-          arch -x86_64 npx puppeteer@24.10.0 browsers install chrome-headless-shell \
-            --platform mac --path vendor/headless-x64
-
-      # ---------- Clean dist before x64 build ----------
-      - name: Clean dist before x64 build
-        run: rm -rf dist/mac
-
-      # ---------- Build x64 ----------
-      - name: Build x64
-        run: arch -x86_64 npm run package:intel
+      # ---------- Build both arm64 & x64 in one run ----------
+      - name: Build both architectures
+        run: npm run package:mac
 
       # —————————————————————————————————— upload & release ——————————————————————————
       - name: Install AWS CLI v2
@@ -98,10 +87,13 @@ jobs:
       - name: Promote artefacts to latest/
         if: github.ref_type == 'tag'
         run: |
-          mkdir -p latest/darwin-arm64 latest/darwin-x64
-          # copy – and keep clear names
-          cp dist/Translator-*-darwin-arm64.dmg latest/darwin-arm64/Translator.dmg
-          cp dist/Translator-*-darwin-x64.dmg   latest/darwin-x64/Translator.dmg
+          mkdir -p latest
+          # Copy the critical auto-updater files
+          cp dist/latest-mac.yml latest/
+          cp dist/*.blockmap latest/
+          # Copy DMGs with clear names
+          cp dist/Translator-*-darwin-arm64.dmg latest/Translator-arm64.dmg
+          cp dist/Translator-*-darwin-x64.dmg   latest/Translator-x64.dmg
           aws s3 cp latest/ "s3://${R2_BUCKET}/mac/latest/" \
             --recursive --endpoint-url "${R2_ENDPOINT}"
 
@@ -110,8 +102,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          draft: false
+          make_latest: true
           prerelease: ${{ contains(github.ref, '-') }}
-          files: |
-            dist/*.dmg
-            dist/*.zip
-            dist/*.yml

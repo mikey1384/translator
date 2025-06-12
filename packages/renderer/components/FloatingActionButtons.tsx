@@ -72,7 +72,7 @@ export default function FloatingActionButtons({
   };
 
   const handleReloadClick = async () => {
-    // If update is downloaded, install it
+    // If update is downloaded, install it immediately
     if (downloaded) {
       if (
         !window.confirm(
@@ -84,13 +84,13 @@ export default function FloatingActionButtons({
       return;
     }
 
-    // If update is available but not downloaded, start download
-    if (available && !downloading) {
-      if (
-        !window.confirm(t('common.confirmDownloadUpdate', 'Download update?'))
-      )
-        return;
-      await download();
+    // If update is downloading, do nothing (let it finish in background)
+    if (downloading) {
+      return;
+    }
+
+    // If update is available but not downloaded, do nothing (auto-download handles this)
+    if (available) {
       return;
     }
 
@@ -108,6 +108,7 @@ export default function FloatingActionButtons({
 
   // Determine button appearance based on update state
   const getButtonProps = () => {
+    // Only show update button when download is complete and ready to install
     if (downloaded) {
       return {
         title: t('common.installUpdate', 'Restart to Update'),
@@ -140,79 +141,9 @@ export default function FloatingActionButtons({
       };
     }
 
-    if (available && !downloading) {
-      return {
-        title: t('common.downloadUpdate', 'Download Update'),
-        variant: 'secondary' as const,
-        icon: (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <polyline
-              points="7,10 12,15 17,10"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <line
-              x1="12"
-              y1="15"
-              x2="12"
-              y2="3"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ),
-      };
-    }
-
-    if (downloading) {
-      return {
-        title: t(
-          'common.downloadingUpdate',
-          `Downloading ${percent.toFixed(0)}%`
-        ),
-        variant: 'secondary' as const,
-        icon: (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M12 6v6l4 2"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ),
-      };
+    // Hide button during download (happening silently in background)
+    if (downloading || available) {
+      return null; // Don't show any update-related button
     }
 
     // Default reload button
@@ -250,15 +181,17 @@ export default function FloatingActionButtons({
 
   return (
     <div className={buttonContainerStyles}>
-      <IconButton
-        onClick={handleReloadClick}
-        title={buttonProps.title}
-        aria-label={buttonProps.title}
-        size="lg"
-        variant={buttonProps.variant}
-        disabled={downloading}
-        icon={buttonProps.icon}
-      />
+      {buttonProps && (
+        <IconButton
+          onClick={handleReloadClick}
+          title={buttonProps.title}
+          aria-label={buttonProps.title}
+          size="lg"
+          variant={buttonProps.variant}
+          disabled={downloading}
+          icon={buttonProps.icon}
+        />
+      )}
       {showScrollToTopButton && (
         <IconButton
           onClick={handleBackToTopClick}
