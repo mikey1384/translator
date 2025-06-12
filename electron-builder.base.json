@@ -1,7 +1,7 @@
 {
   "appId": "tools.stage5.translator",
   "productName": "Translator by Stage5",
-  "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
+  "artifactName": "Translator-${version}-darwin-${arch}.${ext}",
   "icon": "assets/icon",
 
   "publish": [

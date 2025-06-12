@@ -44,7 +44,7 @@ jobs:
       # ---------- Node (no Bun) ----------
       - uses: actions/setup-node@v4
         with:
-          node-version: '20' # same major you build with
+          node-version: '22' # updated to avoid warnings
           cache: 'npm'
 
       # ---------- Apple signing cert ----------
@@ -82,7 +82,9 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           TARGET="mac/${VERSION:-latest}"
           aws s3 cp dist/ "s3://${R2_BUCKET}/${TARGET}/" \
-            --recursive --endpoint-url "${R2_ENDPOINT}"
+            --recursive --exclude "*" --include "*.dmg" --include "*.zip" \
+            --include "*mac.yml" --include "*.blockmap" \
+            --endpoint-url "${R2_ENDPOINT}"
 
       - name: Promote artefacts to latest/
         if: github.ref_type == 'tag'
