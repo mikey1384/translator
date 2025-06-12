@@ -50,9 +50,9 @@
       "mediaFiles": "فایل‌های رسانه",
       "videoFiles": "فایل‌های ویدیو"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "راه‌اندازی مجدد برای به‌روزرسانی",
+    "confirmInstallUpdate": "نصب به‌روزرسانی و راه‌اندازی مجدد؟",
+    "downloadUpdate": "برای دانلود به‌روزرسانی کلیک کنید"
   },
   "input": {
     "fromDevice": "از دستگاه شما",

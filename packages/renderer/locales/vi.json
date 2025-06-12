@@ -50,9 +50,9 @@
       "mediaFiles": "Tệp Media",
       "videoFiles": "Tệp Video"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Khởi động lại để cập nhật",
+    "confirmInstallUpdate": "Cài đặt bản cập nhật và khởi động lại?",
+    "downloadUpdate": "Nhấp để tải xuống bản cập nhật"
   },
   "input": {
     "fromDevice": "Từ thiết bị của bạn",

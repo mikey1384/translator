@@ -50,9 +50,9 @@
       "mediaFiles": "Medialêers",
       "videoFiles": "Videolêers"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Herlaai om op te dateer",
+    "confirmInstallUpdate": "Installeer opdatering en herlaai?",
+    "downloadUpdate": "Klik om opdatering af te laai"
   },
   "input": {
     "fromDevice": "Van jou toestel",

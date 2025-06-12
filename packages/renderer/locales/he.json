@@ -50,9 +50,9 @@
       "mediaFiles": "קבצי מדיה",
       "videoFiles": "קבצי וידאו"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "הפעל מחדש כדי לעדכן",
+    "confirmInstallUpdate": "התקן עדכון והפעל מחדש?",
+    "downloadUpdate": "לחץ כדי להוריד עדכון"
   },
   "input": {
     "fromDevice": "מהמכשיר שלך",

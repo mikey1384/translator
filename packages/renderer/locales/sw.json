@@ -50,9 +50,9 @@
       "mediaFiles": "Faili za Vyombo vya Habari",
       "videoFiles": "Faili za Video"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Anzisha upya ili kusasisha",
+    "confirmInstallUpdate": "Sakinisha sasishwa na uanzishe upya?",
+    "downloadUpdate": "Bonyeza ili kupakua sasishwa"
   },
   "input": {
     "fromDevice": "Kutoka kwenye kifaa chako",

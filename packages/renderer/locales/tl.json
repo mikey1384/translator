@@ -50,9 +50,9 @@
       "mediaFiles": "Mga Media File",
       "videoFiles": "Mga Video File"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "I-restart para mag-update",
+    "confirmInstallUpdate": "I-install ang update at i-restart?",
+    "downloadUpdate": "I-click para i-download ang update"
   },
   "input": {
     "fromDevice": "Mula sa iyong device",
