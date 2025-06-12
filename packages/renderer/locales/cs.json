@@ -50,9 +50,9 @@
       "mediaFiles": "Mediální soubory",
       "videoFiles": "Video soubory"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Restartovat pro aktualizaci",
+    "confirmInstallUpdate": "Nainstalovat aktualizaci a restartovat?",
+    "downloadUpdate": "Klikněte pro stažení aktualizace"
   },
   "input": {
     "fromDevice": "Z vašeho zařízení",

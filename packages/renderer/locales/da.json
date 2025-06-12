@@ -50,9 +50,9 @@
       "mediaFiles": "Mediefiler",
       "videoFiles": "Videofiler"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Genstart for at opdatere",
+    "confirmInstallUpdate": "Installer opdatering og genstart?",
+    "downloadUpdate": "Klik for at downloade opdatering"
   },
   "input": {
     "fromDevice": "Fra din enhed",

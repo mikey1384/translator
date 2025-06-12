@@ -50,9 +50,9 @@
       "mediaFiles": "Αρχεία Πολυμέσων",
       "videoFiles": "Αρχεία Βίντεο"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Επανεκκίνηση για ενημέρωση",
+    "confirmInstallUpdate": "Εγκατάσταση ενημέρωσης και επανεκκίνηση;",
+    "downloadUpdate": "Κάντε κλικ για λήψη ενημέρωσης"
   },
   "input": {
     "fromDevice": "Από τη συσκευή σας",

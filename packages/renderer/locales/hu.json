@@ -50,9 +50,9 @@
       "mediaFiles": "Médiafájlok",
       "videoFiles": "Videofájlok"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Újraindítás frissítéshez",
+    "confirmInstallUpdate": "Telepíti a frissítést és újraindítja?",
+    "downloadUpdate": "Kattintson a frissítés letöltéséhez"
   },
   "input": {
     "fromDevice": "Az eszközödről",

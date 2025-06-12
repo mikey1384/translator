@@ -50,9 +50,9 @@
       "mediaFiles": "Fișiere Media",
       "videoFiles": "Fișiere Video"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Repornește pentru actualizare",
+    "confirmInstallUpdate": "Instalează actualizarea și repornește?",
+    "downloadUpdate": "Faceți clic pentru a descărca actualizarea"
   },
   "input": {
     "fromDevice": "De pe dispozitivul tău",
