@@ -41,26 +41,6 @@ const greenPulseKeyframes = css`
   }
 `;
 
-const orangePulseKeyframes = css`
-  @keyframes orangePulse {
-    0%,
-    100% {
-      transform: scale(1);
-      box-shadow: 0 0 10px rgba(217, 119, 6, 0.5);
-    }
-    50% {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(217, 119, 6, 0.8);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    transform: none;
-    box-shadow: none;
-  }
-`;
-
 const spinKeyframes = css`
   @keyframes spin {
     from {
@@ -168,12 +148,6 @@ export default function FloatingActionButtons({
       return;
     }
 
-    // If update is available but not downloaded, let user force download
-    if (available && !downloaded && !downloading) {
-      await download();
-      return;
-    }
-
     // Otherwise, regular reload
     if (!window.confirm(t('common.confirmReload'))) return;
 
@@ -278,58 +252,6 @@ export default function FloatingActionButtons({
                   {Math.round(percent)}%
                 </span>
               )}
-            </div>
-          ),
-        };
-      } else {
-        return {
-          title: t(
-            'common.downloadUpdate',
-            'UPDATE AVAILABLE - Click to download'
-          ),
-          variant: 'primary' as const,
-          'aria-label': t(
-            'common.downloadUpdateAria',
-            'Download available update'
-          ),
-          className: css`
-            ${orangePulseKeyframes}
-            background: #d97706 !important;
-            color: white !important;
-            animation: orangePulse 2s ease-in-out infinite;
-            box-shadow: 0 0 10px rgba(217, 119, 6, 0.5);
-
-            &:hover {
-              animation-play-state: paused;
-              transform: scale(1.05);
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-              animation: none;
-              transform: none;
-              box-shadow: 0 0 10px rgba(217, 119, 6, 0.5);
-            }
-          `,
-          icon: (
-            <div className={iconContainerStyles}>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className={iconTextStyles}>
-                {t('common.downloadUpdateShort', 'DOWNLOAD')}
-              </span>
             </div>
           ),
         };
