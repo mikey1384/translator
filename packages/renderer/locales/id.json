@@ -50,9 +50,9 @@
       "mediaFiles": "Berkas Media",
       "videoFiles": "Berkas Video"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Mulai ulang untuk memperbarui",
+    "confirmInstallUpdate": "Instal pembaruan dan mulai ulang?",
+    "downloadUpdate": "Klik untuk mengunduh pembaruan"
   },
   "input": {
     "fromDevice": "Dari perangkat Anda",

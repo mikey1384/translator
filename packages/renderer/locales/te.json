@@ -50,9 +50,9 @@
       "mediaFiles": "మీడియా ఫైల్‌లు",
       "videoFiles": "వీడియో ఫైల్‌లు"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "అప్డేట్ చేయడానికి రీస్టార్ట్ చేయండి",
+    "confirmInstallUpdate": "అప్డేట్ ఇన్స్టాల్ చేసి రీస్టార్ట్ చేయాలా?",
+    "downloadUpdate": "అప్డేట్ డౌన్లోడ్ చేయడానికి క్లిక్ చేయండి"
   },
   "input": {
     "fromDevice": "మీ పరికరం నుండి",

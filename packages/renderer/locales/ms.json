@@ -50,9 +50,9 @@
       "mediaFiles": "Fail Media",
       "videoFiles": "Fail Video"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Mula semula untuk kemas kini",
+    "confirmInstallUpdate": "Pasang kemas kini dan mula semula?",
+    "downloadUpdate": "Klik untuk muat turun kemas kini"
   },
   "input": {
     "fromDevice": "Dari peranti anda",

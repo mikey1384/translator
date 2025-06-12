@@ -50,9 +50,9 @@
       "mediaFiles": "ஊடக கோப்புகள்",
       "videoFiles": "காணொளி கோப்புகள்"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "புதுப்பிக்க மறுதொடக்கம் செய்யவும்",
+    "confirmInstallUpdate": "புதுப்பிப்பை நிறுவி மறுதொடக்கம் செய்யவா?",
+    "downloadUpdate": "புதுப்பிப்பைப் பதிவிறக்க கிளிக் செய்யவும்"
   },
   "input": {
     "fromDevice": "உங்கள் சாதனத்திலிருந்து",

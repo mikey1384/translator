@@ -50,9 +50,9 @@
       "mediaFiles": "मीडिया फाईल्स",
       "videoFiles": "व्हिडिओ फाईल्स"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "अपडेटसाठी रीस्टार्ट करा",
+    "confirmInstallUpdate": "अपडेट इन्स्टॉल करून रीस्टार्ट करायचे?",
+    "downloadUpdate": "अपडेट डाउनलोड करण्यासाठी क्लिक करा"
   },
   "input": {
     "fromDevice": "तुमच्या डिव्हाइसवरून",
