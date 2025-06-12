@@ -45,6 +45,9 @@
     "backToTop": "Back to Top",
     "backToTopAria": "Scroll back to top",
     "confirmReload": "Are you sure you want to reload the page? Any unsaved changes might be lost.",
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update",
     "fileFilters": {
       "srtFiles": "SRT Files",
       "mediaFiles": "Media Files",

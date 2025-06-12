@@ -49,7 +49,10 @@
       "srtFiles": "SRT-bestanden",
       "mediaFiles": "Mediabestanden",
       "videoFiles": "Videobestanden"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Van je apparaat",

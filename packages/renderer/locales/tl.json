@@ -49,7 +49,10 @@
       "srtFiles": "Mga SRT File",
       "mediaFiles": "Mga Media File",
       "videoFiles": "Mga Video File"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Mula sa iyong device",

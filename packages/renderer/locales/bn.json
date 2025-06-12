@@ -49,7 +49,10 @@
       "srtFiles": "SRT ফাইল",
       "mediaFiles": "মিডিয়া ফাইল",
       "videoFiles": "ভিডিও ফাইল"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "আপনার ডিভাইস থেকে",

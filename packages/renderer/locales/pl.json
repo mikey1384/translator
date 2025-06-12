@@ -49,7 +49,10 @@
       "srtFiles": "Pliki SRT",
       "mediaFiles": "Pliki multimedialne",
       "videoFiles": "Pliki wideo"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Z twojego urządzenia",

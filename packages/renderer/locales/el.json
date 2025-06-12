@@ -49,7 +49,10 @@
       "srtFiles": "Αρχεία SRT",
       "mediaFiles": "Αρχεία Πολυμέσων",
       "videoFiles": "Αρχεία Βίντεο"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Από τη συσκευή σας",

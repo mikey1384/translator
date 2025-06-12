@@ -49,7 +49,10 @@
       "srtFiles": "Fișiere SRT",
       "mediaFiles": "Fișiere Media",
       "videoFiles": "Fișiere Video"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "De pe dispozitivul tău",

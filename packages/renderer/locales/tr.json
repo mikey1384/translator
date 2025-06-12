@@ -49,7 +49,10 @@
       "srtFiles": "SRT Dosyaları",
       "mediaFiles": "Medya Dosyaları",
       "videoFiles": "Video Dosyaları"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Cihazınızdan",

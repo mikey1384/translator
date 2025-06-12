@@ -49,7 +49,10 @@
       "srtFiles": "SRT-lêers",
       "mediaFiles": "Medialêers",
       "videoFiles": "Videolêers"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Van jou toestel",

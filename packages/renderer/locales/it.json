@@ -49,7 +49,10 @@
       "srtFiles": "File SRT",
       "mediaFiles": "File multimediali",
       "videoFiles": "File video"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Dal tuo dispositivo",

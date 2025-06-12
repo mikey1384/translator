@@ -49,7 +49,10 @@
       "srtFiles": "קבצי SRT",
       "mediaFiles": "קבצי מדיה",
       "videoFiles": "קבצי וידאו"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "מהמכשיר שלך",

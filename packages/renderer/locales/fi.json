@@ -49,7 +49,10 @@
       "srtFiles": "SRT-tiedostot",
       "mediaFiles": "Mediatiedostot",
       "videoFiles": "Videotiedostot"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Laitteeltasi",

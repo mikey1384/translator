@@ -141,7 +141,7 @@ export default function FloatingActionButtons({
     // Only show update button when download is complete and ready to install
     if (downloaded) {
       return {
-        title: '🚀 Restart to Update',
+        title: `🚀 ${t('common.installUpdate', 'Restart to Update')}`,
         variant: 'primary' as const,
         className: updateButtonStyles,
         icon: (

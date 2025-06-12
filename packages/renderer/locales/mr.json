@@ -49,7 +49,10 @@
       "srtFiles": "SRT फाईल्स",
       "mediaFiles": "मीडिया फाईल्स",
       "videoFiles": "व्हिडिओ फाईल्स"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "तुमच्या डिव्हाइसवरून",

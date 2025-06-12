@@ -49,7 +49,10 @@
       "srtFiles": "Berkas SRT",
       "mediaFiles": "Berkas Media",
       "videoFiles": "Berkas Video"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "Dari perangkat Anda",

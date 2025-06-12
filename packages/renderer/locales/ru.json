@@ -49,7 +49,10 @@
       "srtFiles": "SRT файлы",
       "mediaFiles": "Медиафайлы",
       "videoFiles": "Видеофайлы"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "С вашего устройства",

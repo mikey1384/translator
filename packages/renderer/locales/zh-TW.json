@@ -49,7 +49,10 @@
       "srtFiles": "SRT檔案",
       "mediaFiles": "媒體檔案",
       "videoFiles": "影片檔案"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "從您的裝置",

@@ -49,7 +49,10 @@
       "srtFiles": "SRT கோப்புகள்",
       "mediaFiles": "ஊடக கோப்புகள்",
       "videoFiles": "காணொளி கோப்புகள்"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "உங்கள் சாதனத்திலிருந்து",

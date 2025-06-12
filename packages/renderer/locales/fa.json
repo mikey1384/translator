@@ -49,7 +49,10 @@
       "srtFiles": "فایل‌های SRT",
       "mediaFiles": "فایل‌های رسانه",
       "videoFiles": "فایل‌های ویدیو"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "از دستگاه شما",

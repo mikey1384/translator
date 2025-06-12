@@ -49,7 +49,10 @@
       "srtFiles": "SRT 파일",
       "mediaFiles": "미디어 파일",
       "videoFiles": "비디오 파일"
-    }
+    },
+    "installUpdate": "Restart to Update",
+    "confirmInstallUpdate": "Install update and restart?",
+    "downloadUpdate": "Click to download update"
   },
   "input": {
     "fromDevice": "내 기기에서",
