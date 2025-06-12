@@ -648,6 +648,16 @@ app
   .whenReady()
   .then(async () => {
     log.info('[main.ts] App is ready.');
+
+    // Customize About panel
+    app.setAboutPanelOptions({
+      applicationName: 'Translator by Stage5',
+      applicationVersion: app.getVersion(),
+      version: app.getVersion(), // shows in parentheses
+      copyright: '© 2025 Mikey Lee',
+      credits: 'Powered by Stage5',
+    });
+
     try {
       const logDirPath = isDev ? '.' : app.getPath('logs');
       const logFileName = isDev ? 'dev-main.log' : 'main.log';

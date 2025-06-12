@@ -1,6 +1,6 @@
 {
   "appId": "tools.stage5.translator",
-  "productName": "Translator",
+  "productName": "Translator by Stage5",
   "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
   "icon": "assets/icon",
 
@@ -27,6 +27,8 @@
   ],
 
   "buildDependenciesFromSource": false,
+
+  "appCopyright": "© 2025 Mikey Lee",
 
   "afterPack": "scripts/sign-chromium.cjs",
 
