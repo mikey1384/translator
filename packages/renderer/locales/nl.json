@@ -50,9 +50,9 @@
       "mediaFiles": "Mediabestanden",
       "videoFiles": "Videobestanden"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Herstart voor Update",
+    "confirmInstallUpdate": "Update installeren en herstarten?",
+    "downloadUpdate": "Klik om update te downloaden"
   },
   "input": {
     "fromDevice": "Van je apparaat",

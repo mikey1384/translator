@@ -50,9 +50,9 @@
       "mediaFiles": "Medya Dosyaları",
       "videoFiles": "Video Dosyaları"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Güncellemek için Yeniden Başlat",
+    "confirmInstallUpdate": "Güncellemeyi yükleyip yeniden başlatılsın mı?",
+    "downloadUpdate": "Güncellemeyi indirmek için tıklayın"
   },
   "input": {
     "fromDevice": "Cihazınızdan",

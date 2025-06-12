@@ -50,9 +50,9 @@
       "mediaFiles": "File multimediali",
       "videoFiles": "File video"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "Riavvia per Aggiornare",
+    "confirmInstallUpdate": "Installare aggiornamento e riavviare?",
+    "downloadUpdate": "Clicca per scaricare aggiornamento"
   },
   "input": {
     "fromDevice": "Dal tuo dispositivo",

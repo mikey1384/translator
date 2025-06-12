@@ -50,9 +50,9 @@
       "mediaFiles": "ملفات الوسائط",
       "videoFiles": "ملفات الفيديو"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "إعادة التشغيل للتحديث",
+    "confirmInstallUpdate": "تثبيت التحديث وإعادة التشغيل؟",
+    "downloadUpdate": "انقر لتنزيل التحديث"
   },
   "input": {
     "fromDevice": "من جهازك",
