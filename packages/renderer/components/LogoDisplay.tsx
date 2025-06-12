@@ -33,7 +33,7 @@ export default function LogoDisplay() {
   return (
     <div className={logoContainerStyles}>
       <div className={translatorTextStyles}>translator</div>
-      <div className={bylineTextStyles}>by stage_5 • v1.0.6</div>
+      <div className={bylineTextStyles}>by stage_5</div>
     </div>
   );
 }
