@@ -20,6 +20,29 @@ const buttonContainerStyles = css`
   gap: 10px;
 `;
 
+// Eye-catching update button animation
+const updateButtonStyles = css`
+  animation: updatePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5) !important;
+
+  @keyframes updatePulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+    }
+  }
+
+  &:hover {
+    animation-play-state: paused;
+    transform: scale(1.05);
+  }
+`;
+
 export default function FloatingActionButtons({
   scrollThreshold = 300,
   onClick,
@@ -34,7 +57,6 @@ export default function FloatingActionButtons({
     download,
     install,
     check,
-    error,
   } = useUpdateStore();
 
   useEffect(() => {
@@ -51,11 +73,13 @@ export default function FloatingActionButtons({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [scrollThreshold]);
 
-  // Check for updates on component mount (only in production)
+  // Check for updates on mount and periodically (only in production)
   useEffect(() => {
-    if (window.env.isPackaged) {
-      check();
-    }
+    if (!window.env.isPackaged) return;
+
+    check(); // Initial check
+    const interval = setInterval(check, 10 * 60 * 1000); // Every 10 minutes
+    return () => clearInterval(interval);
   }, [check]);
 
   const handleBackToTopClick = () => {
@@ -89,8 +113,9 @@ export default function FloatingActionButtons({
       return;
     }
 
-    // If update is available but not downloaded, do nothing (auto-download handles this)
-    if (available) {
+    // If update is available but not downloaded, let user force download
+    if (available && !downloaded && !downloading) {
+      await download();
       return;
     }
 
@@ -111,12 +136,13 @@ export default function FloatingActionButtons({
     // Only show update button when download is complete and ready to install
     if (downloaded) {
       return {
-        title: t('common.installUpdate', 'Restart to Update'),
+        title: '🚀 Restart to Update',
         variant: 'primary' as const,
+        className: updateButtonStyles,
         icon: (
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -124,26 +150,96 @@ export default function FloatingActionButtons({
             <path
               d="M23 4v6h-6"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
               d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="12" cy="12" r="2" fill="currentColor" />
+            <circle cx="12" cy="12" r="2.5" fill="currentColor" />
           </svg>
         ),
       };
     }
 
-    // Hide button during download (happening silently in background)
-    if (downloading || available) {
-      return null; // Don't show any update-related button
+    // Show different states for available/downloading
+    if (available && !downloaded) {
+      if (downloading) {
+        return {
+          title: `Downloading update... ${Math.round(percent)}%`,
+          variant: 'secondary' as const,
+          icon: (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className={css`
+                animation: spin 1s linear infinite;
+                @keyframes spin {
+                  from {
+                    transform: rotate(0deg);
+                  }
+                  to {
+                    transform: rotate(360deg);
+                  }
+                }
+              `}
+            >
+              <path
+                d="M23 4v6h-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ),
+        };
+      } else {
+        return {
+          title: 'Click to download update',
+          variant: 'secondary' as const,
+          icon: (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M23 4v6h-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="12" r="1" fill="orange" />
+            </svg>
+          ),
+        };
+      }
     }
 
     // Default reload button
@@ -190,6 +286,7 @@ export default function FloatingActionButtons({
           variant={buttonProps.variant}
           disabled={downloading}
           icon={buttonProps.icon}
+          className={buttonProps.className}
         />
       )}
       {showScrollToTopButton && (

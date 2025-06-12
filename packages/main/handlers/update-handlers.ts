@@ -29,8 +29,20 @@ export function buildUpdateHandlers(opts: {
   autoUpdater.channel = 'latest'; // or 'beta', 'alpha', …
 
   /* 2️⃣  Event fan-out to renderer ----------------------------------- */
-  const send = (chan: string, payload?: any) =>
-    mainWindow.webContents.send(`update:${chan}`, payload);
+  const send = (chan: string, payload?: any) => {
+    if (
+      mainWindow &&
+      !mainWindow.isDestroyed() &&
+      mainWindow.webContents &&
+      !mainWindow.webContents.isDestroyed()
+    ) {
+      mainWindow.webContents.send(`update:${chan}`, payload);
+    } else {
+      log.warn(
+        `[update] Renderer window unavailable, dropping event: update:${chan}`
+      );
+    }
+  };
 
   autoUpdater.on('error', err => {
     log.error('[update] Error:', err);
