@@ -29,6 +29,7 @@ import * as renderWindowHandlers from './handlers/render-window-handlers/index.j
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
+import { buildUpdateHandlers } from './handlers/update-handlers.js';
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -513,6 +514,19 @@ async function createWindow() {
   });
 
   createApplicationMenu();
+
+  // Initialize update handlers after window is created
+  try {
+    const updateHandlers = buildUpdateHandlers({
+      mainWindow,
+      isDev,
+    });
+    if (updateHandlers) {
+      log.info('[main.ts] Update handlers initialized.');
+    }
+  } catch (err: any) {
+    log.error('[main.ts] Error initializing update handlers:', err);
+  }
 }
 
 function createApplicationMenu() {

@@ -13,7 +13,7 @@ import Header from './Header';
 import ProgressArea from '../components/ProgressAreas/ProgressArea';
 import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea';
 import TranslationProgressArea from '../components/ProgressAreas/TranslationProgressArea';
-import BackToTopButton from '../components/BackToTopButton';
+import FloatingActionButtons from '../components/FloatingActionButtons';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 
@@ -85,7 +85,7 @@ export default function AppContent() {
 
             {translation.inProgress && <TranslationProgressArea />}
 
-            <BackToTopButton />
+            <FloatingActionButtons />
           </>
         )}
       </div>

@@ -410,6 +410,15 @@ declare module '@shared-types/app' {
     ) => () => void;
     onCheckoutPending: (callback: () => void) => () => void;
     onCheckoutConfirmed: (callback: () => void) => () => void;
+
+    // Update System
+    updateCheck: () => Promise<any>;
+    updateDownload: () => Promise<void>;
+    updateInstall: () => Promise<void>;
+    onUpdateAvailable: (callback: (info: any) => void) => () => void;
+    onUpdateProgress: (callback: (percent: number) => void) => () => void;
+    onUpdateDownloaded: (callback: () => void) => () => void;
+    onUpdateError: (callback: (msg: string) => void) => () => void;
   }
 
   declare global {

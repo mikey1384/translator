@@ -4,6 +4,14 @@
   "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
   "icon": "assets/icon",
 
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "stage5",
+      "repo": "translator"
+    }
+  ],
+
   "directories": {
     "app": ".",
     "output": "dist"

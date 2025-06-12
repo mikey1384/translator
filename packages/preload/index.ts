@@ -272,6 +272,31 @@ const electronAPI = {
     ipcRenderer.on('checkout-confirmed', handler);
     return () => ipcRenderer.removeListener('checkout-confirmed', handler);
   },
+
+  // ---------------------- Update System ----------------------
+  updateCheck: () => ipcRenderer.invoke('update:check'),
+  updateDownload: () => ipcRenderer.invoke('update:download'),
+  updateInstall: () => ipcRenderer.invoke('update:install'),
+  onUpdateAvailable: (callback: (info: any) => void) => {
+    const handler = (_: any, info: any) => callback(info);
+    ipcRenderer.on('update:available', handler);
+    return () => ipcRenderer.removeListener('update:available', handler);
+  },
+  onUpdateProgress: (callback: (percent: number) => void) => {
+    const handler = (_: any, percent: number) => callback(percent);
+    ipcRenderer.on('update:progress', handler);
+    return () => ipcRenderer.removeListener('update:progress', handler);
+  },
+  onUpdateDownloaded: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('update:downloaded', handler);
+    return () => ipcRenderer.removeListener('update:downloaded', handler);
+  },
+  onUpdateError: (callback: (msg: string) => void) => {
+    const handler = (_: any, msg: string) => callback(msg);
+    ipcRenderer.on('update:error', handler);
+    return () => ipcRenderer.removeListener('update:error', handler);
+  },
 };
 
 try {
