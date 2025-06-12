@@ -22,7 +22,7 @@ export const MIN_CHUNK_DURATION_SEC = 8;
 export const MAX_CHUNK_DURATION_SEC = 15;
 
 // --- Concurrency Setting ---
-export const TRANSCRIPTION_BATCH_SIZE = 30;
+export const TRANSCRIPTION_BATCH_SIZE = 15;
 
 // --- Review/Polish constants ---
 export const REVIEW_BATCH_SIZE = 50;

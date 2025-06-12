@@ -84,15 +84,8 @@ export default function FloatingActionButtons({
 }: FloatingActionButtonsProps) {
   const { t } = useTranslation();
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
-  const {
-    available,
-    downloading,
-    percent,
-    downloaded,
-    download,
-    install,
-    check,
-  } = useUpdateStore();
+  const { available, downloading, percent, downloaded, install, check } =
+    useUpdateStore();
 
   useEffect(() => {
     const handleScroll = () => {
