@@ -50,9 +50,9 @@
       "mediaFiles": "미디어 파일",
       "videoFiles": "비디오 파일"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "재시작하여 업데이트",
+    "confirmInstallUpdate": "업데이트를 설치하고 재시작하시겠습니까?",
+    "downloadUpdate": "클릭하여 업데이트 다운로드"
   },
   "input": {
     "fromDevice": "내 기기에서",

@@ -50,9 +50,9 @@
       "mediaFiles": "メディアファイル",
       "videoFiles": "動画ファイル"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "再起動してアップデート",
+    "confirmInstallUpdate": "アップデートをインストールして再起動しますか？",
+    "downloadUpdate": "クリックしてアップデートをダウンロード"
   },
   "input": {
     "fromDevice": "デバイスから",

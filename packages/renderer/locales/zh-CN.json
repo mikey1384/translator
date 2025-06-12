@@ -50,9 +50,9 @@
       "mediaFiles": "媒体文件",
       "videoFiles": "视频文件"
     },
-    "installUpdate": "Restart to Update",
-    "confirmInstallUpdate": "Install update and restart?",
-    "downloadUpdate": "Click to download update"
+    "installUpdate": "重启以更新",
+    "confirmInstallUpdate": "安装更新并重启？",
+    "downloadUpdate": "点击下载更新"
   },
   "input": {
     "fromDevice": "从您的设备",
