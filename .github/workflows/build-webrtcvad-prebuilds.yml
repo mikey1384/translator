@@ -1,0 +1,86 @@
+name: Build webrtcvad Prebuilds
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'webrtcvad-fork/**'
+    branches:
+      - main
+      - windows
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-2022
+            arch: x64
+          - os: macos-14
+            arch: x64
+          - os: macos-14
+            arch: arm64
+          - os: ubuntu-22.04
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install VS Build Tools (Windows only)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          choco install visualstudio2022buildtools --quiet --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --norestart"
+
+      - name: Setup Python (for node-gyp)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Build webrtcvad prebuilds
+        working-directory: webrtcvad-fork
+        env:
+          PREBUILD_ARCH: ${{ matrix.arch }}
+        run: |
+          npm ci --ignore-scripts
+          npm run prebuild
+
+      - name: Upload prebuilds
+        uses: actions/upload-artifact@v4
+        with:
+          name: prebuilds-${{ matrix.os }}-${{ matrix.arch }}
+          path: webrtcvad-fork/prebuilds/**/*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/windows'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all prebuilds
+        uses: actions/download-artifact@v4
+        with:
+          path: prebuilds-artifacts
+          
+      - name: Organize prebuilds
+        run: |
+          mkdir -p webrtcvad-fork/prebuilds
+          find prebuilds-artifacts -name "*.tar.gz" -exec cp {} webrtcvad-fork/prebuilds/ \;
+          
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: webrtcvad-v1.0.1-stage5.${{ github.run_number }}
+          name: webrtcvad Prebuilds v1.0.1-stage5.${{ github.run_number }}
+          files: webrtcvad-fork/prebuilds/*.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
