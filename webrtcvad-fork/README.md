@@ -1,35 +1,56 @@
-# webrtcvad
+# @stage5/webrtcvad
 
-webrtcvad is a cross-platform, native [node.js](https://nodejs.org) [addon](http://nodejs.org/api/addons.html) for detecting speech in raw audio. webrtcvad provides node.js bindings for the native [WebRTC](https://webrtc.org) voice activity detection library.
+A fork of [webrtcvad](https://github.com/serenadeai/webrtcvad) with prebuilt binaries for Electron applications.
+
+## Why This Fork?
+
+The original `webrtcvad` package requires native compilation using node-gyp, which means:
+- Windows users need Visual Studio Build Tools with C++ workload (500+ MB download)
+- Compilation can fail due to missing dependencies
+- Installation is slow and error-prone
+
+This fork provides **prebuilt binaries** for:
+- ✅ Windows x64 (Electron 35.x)
+- ✅ macOS x64 (Electron 35.x) 
+- ✅ macOS ARM64 (Electron 35.x)
+- ✅ Linux x64 (Electron 35.x)
 
 ## Installation
 
-webrtcvad has been tested on Windows 10, macOS 10.14+, and Ubuntu 18.04+ (and may work on other platforms as well).
+```bash
+npm install @stage5/webrtcvad
+```
 
-To install webrtcvad, run:
-
-    yarn add webrtcvad
-
-If you're using this library with Electron, you should probably use [electron-rebuild](https://github.com/electron/electron-rebuild).
+**No Visual Studio Build Tools required!** The package will automatically use prebuilt binaries if available, falling back to compilation only if necessary.
 
 ## Usage
 
-webrtcvad works with single-channel, 16-bit, signed-integer linear PCM audio sampled at 8kHz, 16kHz, 32kHz, or 48kHz.
+Identical to the original webrtcvad package:
 
-You can create a voice activity detector (VAD) with:
+```javascript
+const vad = require('@stage5/webrtcvad');
 
-    import VAD from "webrtcvad";
+// Create VAD instance
+const vadInstance = vad.createVAD(vad.Mode.NORMAL);
 
-    const audio = ...; // Buffer containing exactly 10ms, 20ms, or 30ms of audio data
-    const vad = new VAD(16000, 3);
-    vad.process(audio);
+// Process audio buffer
+const isSpeech = vadInstance.processAudio(audioBuffer, sampleRate);
+```
 
-The `VAD` constructor accepts two arguments. The first is the sample rate (which must be one of the above), and the second is a VAD level, with `0` being the least aggressive (i.e., leading to the most false positives) and `3` being the most aggressive (i.e., leading to the least false positives, but possibly missing actual speech).
+## Electron Compatibility
 
-The `VAD` object has one method called `process` that returns `true` if the frame contains speech and `false` if not. It takes one argument, a `Buffer` containing exactly 10ms, 20ms, or 30ms of audio. For instance, if you're sampling at 16kHz, then the length of `audio` should be `160`, `320`, or `480`, since the audio must be single-channel, 16-bit.
+This fork is specifically built for Electron applications and targets:
+- Electron 35.0.0
+- Electron 35.5.1
 
-If you're looking to apply the VAD to live microphone data, take a look at [speech-recorder](https://github.com/serenadeai/speech-recorder), which uses webrtcvad to capture speech from a device's microphone.
+## Building Prebuilds
 
-## Credits
+Prebuilds are automatically generated using GitHub Actions. To build manually:
 
-This module is based on [py-webrtcvad](https://github.com/wiseman/py-webrtcvad).
+```bash
+npm run prebuild
+```
+
+## License
+
+MIT - Same as the original webrtcvad package.
