@@ -9,21 +9,8 @@ async function loadVadPkg() {
   if (vadPkgLoadAttempted) return vadPkg;
   vadPkgLoadAttempted = true;
   
-  // On Windows, try the prebuilt version first
-  if (process.platform === 'win32') {
-    try {
-      vadPkg = await import('@stage5/webrtcvad');
-      log.info('[utils.ts] Using prebuilt webrtcvad for Windows');
-      return vadPkg;
-    } catch (error) {
-      log.warn('[utils.ts] Prebuilt webrtcvad not available, trying original:', error instanceof Error ? error.message : String(error));
-    }
-  }
-  
-  // Fallback to original webrtcvad (for Mac/Linux or if prebuilt fails)
   try {
     vadPkg = await import('webrtcvad');
-    log.info('[utils.ts] Using original webrtcvad');
   } catch (error) {
     log.warn('[utils.ts] webrtcvad not available on this platform:', error instanceof Error ? error.message : String(error));
   }
