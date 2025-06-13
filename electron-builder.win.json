@@ -2,5 +2,20 @@
   "extends": "./electron-builder.base.json",
   "buildDependenciesFromSource": true,
   "npmRebuild": true,
-  "artifactName": "Translator-${version}-win32-${arch}.${ext}"
+  "artifactName": "Translator-${version}-win32-${arch}.${ext}",
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "fileAssociations": [
+      {
+        "ext": ["mp4", "mkv", "mov", "webm", "avi"],
+        "name": "Video File",
+        "description": "Video file opened with Translator",
+        "icon": "build/file_icon.ico"
+      }
+    ]
+  },
+  "forceCodeSigning": false,
+  "nsis": { 
+    "perMachine": true 
+  }
 } 
