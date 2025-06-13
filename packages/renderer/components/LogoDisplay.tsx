@@ -1,6 +1,5 @@
 import { css } from '@emotion/css';
-
-const logoTextColor = '#FAF0E6';
+import { colors } from '../styles';
 
 const logoContainerStyles = css`
   display: flex;
@@ -12,7 +11,7 @@ const translatorTextStyles = css`
   font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif;
   font-weight: 700;
   font-size: 1.1rem;
-  color: ${logoTextColor};
+  color: ${colors.dark};
   margin: 0;
   line-height: 1.1;
   text-align: center;
@@ -22,7 +21,7 @@ const bylineTextStyles = css`
   font-family: 'Montserrat', 'Nunito Sans', 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 0.7rem;
-  color: ${logoTextColor};
+  color: ${colors.dark};
   margin: 0;
   margin-top: 2px;
   line-height: 1;
