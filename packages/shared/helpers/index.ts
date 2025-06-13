@@ -66,6 +66,9 @@ export function buildSrt({
   if (!segments?.length) return '';
 
   return segments
+    .filter(
+      seg => seg && typeof seg.start === 'number' && typeof seg.end === 'number'
+    )
     .map((seg, i) => {
       const idx = seg.index ?? i + 1;
       const start = secondsToSrtTime(seg.start);
@@ -81,18 +84,22 @@ export function cueText(
   seg: SrtSegment,
   mode: 'original' | 'translation' | 'dual'
 ): string {
+  if (!seg) return '';
+
   const hasTrans = !!seg.translation && seg.translation.trim() !== '';
+  const original = seg.original || '';
+  const translation = seg.translation || '';
 
   switch (mode) {
     case 'original':
-      return seg.original || seg.translation || '';
+      return original || translation;
 
     case 'translation':
-      return hasTrans ? seg.translation! : seg.original;
+      return hasTrans ? translation : original;
 
     case 'dual':
     default:
-      return hasTrans ? `${seg.original}\n${seg.translation}` : seg.original;
+      return hasTrans ? `${original}\n${translation}` : original;
   }
 }
 
@@ -121,7 +128,8 @@ export function srtTimeToSeconds(timeString: string): number {
  * Convert seconds to SRT time format (00:00:00,000)
  */
 export function secondsToSrtTime(totalSeconds: number): string {
-  if (isNaN(totalSeconds) || totalSeconds < 0) return '00:00:00,000';
+  if (isNaN(totalSeconds) || totalSeconds < 0 || totalSeconds == null)
+    return '00:00:00,000';
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
