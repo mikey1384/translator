@@ -1,0 +1,6 @@
+{
+  "extends": "./electron-builder.base.json",
+  "buildDependenciesFromSource": true,
+  "npmRebuild": true,
+  "artifactName": "Translator-${version}-win32-${arch}.${ext}"
+} 
