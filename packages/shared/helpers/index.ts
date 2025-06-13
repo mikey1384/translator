@@ -66,9 +66,6 @@ export function buildSrt({
   if (!segments?.length) return '';
 
   return segments
-    .filter(
-      seg => seg && typeof seg.start === 'number' && typeof seg.end === 'number'
-    )
     .map((seg, i) => {
       const idx = seg.index ?? i + 1;
       const start = secondsToSrtTime(seg.start);
