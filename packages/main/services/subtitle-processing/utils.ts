@@ -1,9 +1,28 @@
 import { SrtSegment } from '@shared-types/app';
 import log from 'electron-log';
 import { callAIModel } from './ai-client.js';
-import vadPkg from 'webrtcvad';
 
-export function getVadCtor() {
+let vadPkg: any = null;
+let vadPkgLoadAttempted = false;
+
+async function loadVadPkg() {
+  if (vadPkgLoadAttempted) return vadPkg;
+  vadPkgLoadAttempted = true;
+  
+  try {
+    vadPkg = await import('webrtcvad');
+  } catch (error) {
+    log.warn('[utils.ts] webrtcvad not available on this platform:', error instanceof Error ? error.message : String(error));
+  }
+  return vadPkg;
+}
+
+export async function getVadCtor() {
+  await loadVadPkg();
+  if (!vadPkg) {
+    log.warn('[utils.ts] webrtcvad not available - voice activity detection will be disabled');
+    return null;
+  }
   return (vadPkg as any).default?.default ?? (vadPkg as any).default ?? vadPkg;
 }
 

@@ -21,14 +21,19 @@ export async function detectSpeechIntervals({
   signal?: AbortSignal;
   ffmpegPath?: string;
 }): Promise<Array<{ start: number; end: number }>> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     log.info(`[${operationId}] Starting streamed VAD for: ${inputPath}`);
     const sampleRate = 16_000;
     const bytesPerSample = 2;
     const frameSizeSamples = (sampleRate * frameMs) / 1000;
     const bytesPerFrame = frameSizeSamples * bytesPerSample;
 
-    const Vad = getVadCtor();
+    const Vad = await getVadCtor();
+    if (!Vad) {
+      log.warn(`[${operationId}] VAD not available - returning empty intervals`);
+      return resolve([]);
+    }
+    
     // Runtime sanity check (remove after testing)
     log.info(`[${operationId}] typeof Vad: ${typeof Vad}`);
     log.info(
