@@ -62,24 +62,41 @@ export async function initPuppeteer({
         );
 
         try {
-          // Navigate the nested structure: headless-arm64/chrome-headless-shell/mac_arm-*/chrome-headless-shell-mac-arm64/chrome-headless-shell
+          // Navigate the nested structure for different platforms
           const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
           if (fs.existsSync(chromeDir)) {
             const versionDirs = fs.readdirSync(chromeDir);
+            
+            // Platform-specific directory patterns
+            let versionDirPattern: string;
+            let binaryDirPattern: string;
+            let executableName: string;
+            
+            if (process.platform === 'win32') {
+              versionDirPattern = process.arch === 'arm64' ? 'win-arm64-' : 'win64-';
+              binaryDirPattern = 'chrome-headless-shell-win';
+              executableName = 'chrome-headless-shell.exe';
+            } else {
+              // macOS
+              versionDirPattern = process.arch === 'arm64' ? 'mac_arm-' : 'mac-';
+              binaryDirPattern = 'chrome-headless-shell-mac-';
+              executableName = 'chrome-headless-shell';
+            }
+            
             const versionDir = versionDirs.find(dir =>
-              dir.startsWith(process.arch === 'arm64' ? 'mac_arm-' : 'mac-')
+              dir.startsWith(versionDirPattern)
             );
             if (versionDir) {
               const platformDir = path.join(chromeDir, versionDir);
               const platformDirs = fs.readdirSync(platformDir);
               const binaryDir = platformDirs.find(dir =>
-                dir.startsWith('chrome-headless-shell-mac-')
+                dir.startsWith(binaryDirPattern)
               );
               if (binaryDir) {
                 return path.join(
                   platformDir,
                   binaryDir,
-                  'chrome-headless-shell'
+                  executableName
                 );
               }
             }
@@ -91,7 +108,8 @@ export async function initPuppeteer({
         }
 
         // Fallback to old path structure if new structure not found
-        return path.join(headlessDir, 'headless_shell');
+        const fallbackExecutable = process.platform === 'win32' ? 'headless_shell.exe' : 'headless_shell';
+        return path.join(headlessDir, fallbackExecutable);
       })();
   // ----------------------------------------------------------------------
 

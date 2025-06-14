@@ -28,17 +28,19 @@
     "dev:win": "npm run dev:init:win && npx concurrently -k -n electron,main,preload,renderer,hostRenderer \"npx electron .\" \"npm run --prefix packages/main build:watch\" \"npm run --prefix packages/preload dev\" \"npm run --prefix packages/renderer dev:win\" \"cd packages/renderer && npx esbuild render-host-script.tsx --bundle --platform=browser --format=esm --target=es2022 --external:electron --outfile=../../render-host-script.js --watch\"",
     "postinstall": "electron-builder install-app-deps",
     "package": "npm run package:arm && npm run package:intel",
-    "package:win": "npm run build:all:win && npx electron-builder --config electron-builder.win.json --win --x64 --publish onTag",
+    "package:win": "npm run create:icon-win && npm run download:headless-win && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true npm run build:all:win && npx electron-builder --config electron-builder.win.json --win --x64 --publish onTag",
     "package:mac": "npm run build:all && npx electron-builder --config electron-builder.base.json --mac --x64 --arm64 --publish onTag",
     "package:intel": "rm -rf node_modules && arch -x86_64 npm ci --no-audit --fund=false && arch -x86_64 npm run build:all && arch -x86_64 npx electron-builder --config electron-builder.x64.json --mac --x64",
     "package:arm": "npm ci --no-audit --fund=false && npm run build:all && npx electron-builder --config electron-builder.arm64.json --mac --arm64",
     "build:intel-native": "ARCHFLAGS='-arch x86_64' scripts/rebuild-native-x64.sh",
     "build:native-win": "scripts/rebuild-native-win.bat",
+    "download:headless-win": "cmd /c scripts\\download-headless-win.bat",
+    "create:icon-win": "powershell -ExecutionPolicy Bypass -File scripts/create-windows-icon.ps1",
     "verify:architectures": "bash scripts/verify-architectures.sh",
     "release:checklist": "bash scripts/release-checklist.sh",
     "test:intel": "arch -x86_64 open dist/mac/Translator.app",
     "test:arm": "open dist/mac-arm64/Translator.app",
-    "test:win": "start dist\\win-unpacked\\Translator.exe"
+    "test:win": "cmd /c scripts\\test-windows-package.bat"
   },
   "devDependencies": {
     "@electron/osx-sign": "^2.0.0",
