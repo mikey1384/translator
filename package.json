@@ -33,7 +33,7 @@
     "package:intel": "rm -rf node_modules && arch -x86_64 npm ci --no-audit --fund=false && arch -x86_64 npm run build:all && arch -x86_64 npx electron-builder --config electron-builder.x64.json --mac --x64",
     "package:arm": "npm ci --no-audit --fund=false && npm run build:all && npx electron-builder --config electron-builder.arm64.json --mac --arm64",
     "build:intel-native": "ARCHFLAGS='-arch x86_64' scripts/rebuild-native-x64.sh",
-    "build:native-win": "scripts/rebuild-native-win.bat",
+    "build:native-win": "scripts\\rebuild-native-win.bat",
     "download:headless-win": "cmd /c scripts\\download-headless-win.bat",
     "create:icon-win": "powershell -ExecutionPolicy Bypass -File scripts/create-windows-icon.ps1",
     "verify:architectures": "bash scripts/verify-architectures.sh",

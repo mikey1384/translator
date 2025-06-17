@@ -309,16 +309,34 @@ export async function transcribePass({
     overallSegments.sort((a, b) => a.start - b.start);
     const dedupedSegments = dedupeNearDuplicates(overallSegments);
 
+    // Handle case where no segments were produced
+    if (dedupedSegments.length === 0) {
+      log.warn(`[${operationId}] No segments produced after deduplication. Returning empty result.`);
+      return {
+        segments: [],
+        speechIntervals: merged.slice(),
+      };
+    }
+
     const anchors: SrtSegment[] = [];
     let tmpIdx = 0;
     for (let i = 1; i < dedupedSegments.length; i++) {
-      const gap = dedupedSegments[i].start - dedupedSegments[i - 1].end;
+      const prevSeg = dedupedSegments[i - 1];
+      const currSeg = dedupedSegments[i];
+      
+      // Add null checks to prevent undefined access
+      if (!prevSeg || !currSeg || typeof prevSeg.end !== 'number' || typeof currSeg.start !== 'number') {
+        log.warn(`[${operationId}] Skipping gap calculation due to invalid segments at index ${i}`);
+        continue;
+      }
+      
+      const gap = currSeg.start - prevSeg.end;
       if (gap > GAP_SEC) {
         anchors.push({
           id: crypto.randomUUID(),
           index: ++tmpIdx,
-          start: dedupedSegments[i - 1].end,
-          end: dedupedSegments[i - 1].end + 0.5,
+          start: prevSeg.end,
+          end: prevSeg.end + 0.5,
           original: '',
         });
       }

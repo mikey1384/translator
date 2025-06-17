@@ -4,14 +4,11 @@ setlocal enabledelayedexpansion
 set TARGET_ARCH=x64
 echo 🔨  Rebuilding native modules for %TARGET_ARCH% …
 
-REM 1. fresh production-only install
-if exist node_modules (
-    echo Removing existing node_modules...
-    rmdir /s /q node_modules
-)
-npm ci --production --no-audit --fund=false
+REM Skip node_modules deletion to avoid file locks
+echo Skipping node_modules removal to avoid file locks...
 
-REM 2. rebuild native add-ons
-npx @electron/rebuild --arch %TARGET_ARCH% --parallel --types prod,optional --force --module-dir node_modules
+REM Rebuild native add-ons with explicit Electron version and module directory
+echo Rebuilding native modules for Electron...
+npx @electron/rebuild --arch %TARGET_ARCH% --parallel --force --electron-version 35.5.1 --module-dir node_modules
 
 echo ✅  Native add-ons ready for %TARGET_ARCH% 
