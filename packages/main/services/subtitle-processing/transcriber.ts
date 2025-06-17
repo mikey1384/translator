@@ -55,6 +55,7 @@ export async function transcribeChunk({
       filePath: chunkPath,
       language,
       promptContext: `${promptContext ?? ''}\n\n<<<NOSPEECH>>>`,
+      signal,
     });
 
     const segments = (res as any)?.segments as Array<any> | undefined;

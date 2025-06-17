@@ -3,6 +3,41 @@ import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
 
+function parseTranslatedJSON(translation: string, batch: any): any[] {
+  log.info(`[parseTranslatedJSON] Parsing translation response`);
+  
+  const translationLines = translation
+    .split('\n')
+    .filter((line: string) => line.trim() !== '');
+  const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
+
+  let lastNonEmptyTranslation = '';
+  return batch.segments.map((segment: any, idx: number) => {
+    const absoluteIndex = batch.startIndex + idx;
+    let translatedText = segment.translation ?? '';
+    const originalSegmentText = segment.original;
+
+    for (const line of translationLines) {
+      const match = line.match(lineRegex);
+      if (match && parseInt(match[1]) === absoluteIndex + 1) {
+        const potentialTranslation = match[2].trim();
+        if (potentialTranslation === originalSegmentText) {
+          translatedText = lastNonEmptyTranslation;
+        } else {
+          translatedText = potentialTranslation || lastNonEmptyTranslation;
+        }
+        lastNonEmptyTranslation = translatedText;
+        break;
+      }
+    }
+
+    return {
+      ...segment,
+      translation: translatedText,
+    };
+  });
+}
+
 export async function translateBatch({
   batch,
   targetLang,
@@ -40,47 +75,14 @@ Translate EACH line individually, preserving the line order.
   while (retryCount < MAX_RETRIES) {
     try {
       log.info(`[${operationId}] Sending translation batch via callChatModel`);
-      const translation = await callAIModel({
+      const res = await callAIModel({
         messages: [{ role: 'user', content: combinedPrompt }],
         signal,
         operationId,
-        retryAttempts: 3,
+        retryAttempts: MAX_RETRIES,
       });
-      log.info(`[${operationId}] Received response for translation batch`);
-      log.info(
-        `[${operationId}] Received response for translation batch (Attempt ${retryCount + 1})`
-      );
-
-      const translationLines = translation
-        .split('\n')
-        .filter((line: string) => line.trim() !== '');
-      const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
-
-      let lastNonEmptyTranslation = '';
-      return batch.segments.map((segment, idx) => {
-        const absoluteIndex = batch.startIndex + idx;
-        let translatedText = segment.translation ?? '';
-        const originalSegmentText = segment.original;
-
-        for (const line of translationLines) {
-          const match = line.match(lineRegex);
-          if (match && parseInt(match[1]) === absoluteIndex + 1) {
-            const potentialTranslation = match[2].trim();
-            if (potentialTranslation === originalSegmentText) {
-              translatedText = lastNonEmptyTranslation;
-            } else {
-              translatedText = potentialTranslation || lastNonEmptyTranslation;
-            }
-            lastNonEmptyTranslation = translatedText;
-            break;
-          }
-        }
-
-        return {
-          ...segment,
-          translation: translatedText,
-        };
-      });
+      const translatedBatch = parseTranslatedJSON(res, batch);
+      return translatedBatch;
     } catch (err: any) {
       log.error(
         `[${operationId}] Error during translation batch (Attempt ${retryCount + 1}):`,
@@ -88,10 +90,12 @@ Translate EACH line individually, preserving the line order.
         err.message
       );
 
+      // Handle cancellation first - don't retry cancelled operations
       if (err.name === 'AbortError' || signal?.aborted) {
         log.info(
-          `[${operationId}] Translation batch detected cancellation signal/error.`
+          `[${operationId}] Translation batch cancelled, throwing error.`
         );
+        throw err; // Re-throw cancellation errors immediately
       }
 
       if (
@@ -106,6 +110,12 @@ Translate EACH line individually, preserving the line order.
         log.info(
           `[${operationId}] Retrying translation batch in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
+        
+        // Check for cancellation before delay
+        if (signal?.aborted) {
+          throw new DOMException('Operation cancelled', 'AbortError');
+        }
+        
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }

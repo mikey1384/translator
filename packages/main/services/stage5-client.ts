@@ -25,12 +25,19 @@ export async function transcribe({
   language,
   promptContext,
   model = 'whisper-1',
+  signal,
 }: {
   filePath: string;
   language?: string;
   promptContext?: string;
   model?: string;
+  signal?: AbortSignal;
 }) {
+  // Check if already cancelled before starting
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
   const fd = new FormData();
   fd.append('file', fs.createReadStream(filePath));
 
@@ -50,14 +57,22 @@ export async function transcribe({
         ...headers(),
         ...fd.getHeaders(), // Let form-data set the proper boundary
       },
+      signal, // Pass the AbortSignal to axios
     });
-
+    
     return response.data;
   } catch (error: any) {
+    // Handle cancellation specifically
+    if (error.name === 'AbortError' || error.code === 'ERR_CANCELED' || signal?.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+    
     // Handle insufficient credits with a friendly error message
     if (error.response?.status === 402) {
       throw new Error('insufficient-credits');
     }
+    
+    // Re-throw other errors as-is
     throw error;
   }
 }
@@ -66,24 +81,41 @@ export async function translate({
   messages,
   model = AI_MODELS.GPT,
   temperature = 0.4,
+  signal,
 }: {
   messages: any[];
   model?: string;
   temperature?: number;
+  signal?: AbortSignal;
 }) {
+  // Check if already cancelled before starting
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
   try {
     const response = await axios.post(
       `${API}/translate`,
       { messages, model, temperature },
-      { headers: headers() }
+      { 
+        headers: headers(),
+        signal, // Pass the AbortSignal to axios
+      }
     );
 
     return response.data;
   } catch (error: any) {
+    // Handle cancellation specifically
+    if (error.name === 'AbortError' || error.code === 'ERR_CANCELED' || signal?.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+    
     // Handle insufficient credits with a friendly error message
     if (error.response?.status === 402) {
       throw new Error('insufficient-credits');
     }
+    
+    // Re-throw other errors as-is
     throw error;
   }
 }

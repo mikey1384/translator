@@ -31,6 +31,7 @@ export async function callAIModel({
         messages,
         model: AI_MODELS.GPT,
         temperature: 0.4,
+        signal,
       });
 
       const content = completion.choices[0]?.message?.content;
