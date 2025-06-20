@@ -1,6 +1,7 @@
 import log from 'electron-log';
 import { spawn } from 'child_process';
 import { getVadCtor } from './utils.js';
+import { forceKillWindows } from '../../utils/process-killer.js';
 import {
   VAD_NORMALIZATION_MIN_GAP_SEC,
   VAD_NORMALIZATION_MIN_DURATION_SEC,
@@ -61,13 +62,39 @@ export async function detectSpeechIntervals({
     ]);
 
     if (signal) {
-      const killSig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
       const onAbort = () => {
         if (!ffmpeg.killed) {
           log.info(
             `[${operationId}] Killing VAD ffmpeg process due to abort signal`
           );
-          ffmpeg.kill(killSig);
+                     if (process.platform === 'win32' && ffmpeg.pid) {
+             // On Windows, use taskkill for reliable FFmpeg termination
+             log.info(`[${operationId}] Force-killing Windows FFmpeg process tree PID: ${ffmpeg.pid}`);
+             forceKillWindows({ 
+               pid: ffmpeg.pid, 
+               logPrefix: `audio-chunker ${operationId}` 
+             }).then(killed => {
+               if (!killed) {
+                 // Fallback to signal if taskkill fails
+                 log.warn(`[${operationId}] taskkill failed, trying SIGTERM fallback`);
+                 try {
+                   ffmpeg.kill('SIGTERM');
+                 } catch {
+                   // Ignore errors since process might already be dead
+                 }
+               }
+             }).catch(() => {
+               // Fallback to signal if taskkill throws
+               try {
+                 ffmpeg.kill('SIGTERM');
+               } catch {
+                 // Ignore errors since process might already be dead
+               }
+             });
+           } else {
+             // Non-Windows: use regular SIGINT
+             ffmpeg.kill('SIGINT');
+           }
         }
       };
       if (signal.aborted) {
