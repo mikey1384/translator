@@ -147,7 +147,28 @@ export async function cancelSafely(id: string): Promise<boolean> {
         entry.handle.abort();
         break;
       case 'download':
-        if (!entry.handle.killed) entry.handle.kill(sig);
+        if (!entry.handle.killed) {
+          if (process.platform === 'win32' && entry.handle.pid) {
+            // On Windows, use taskkill for reliable termination of yt-dlp
+            log.info(`[registry] Force-killing Windows process tree for ${id}, PID: ${entry.handle.pid}`);
+            const killed = await forceKillWindows(entry.handle.pid);
+            if (killed) {
+              // Mark the process as killed to help with error handling
+              try {
+                entry.handle.kill('SIGTERM');
+              } catch {
+                // Ignore errors since taskkill already terminated it
+              }
+            } else {
+              // Fallback to signal if taskkill fails
+              log.warn(`[registry] taskkill failed for ${id}, trying SIGTERM fallback`);
+              entry.handle.kill('SIGTERM');
+            }
+          } else {
+            // Non-Windows: use regular SIGTERM
+            entry.handle.kill(sig);
+          }
+        }
         break;
       case 'render':
         entry.handle.processes.forEach(p => {
@@ -163,6 +184,21 @@ export async function cancelSafely(id: string): Promise<boolean> {
     registry.delete(id);
   }
   return true;
+}
+
+// Windows-specific process killer using taskkill
+async function forceKillWindows(pid: number): Promise<boolean> {
+  try {
+    // Use taskkill with /F (force) and /T (tree) to kill the process and all children
+    await execa('taskkill', ['/PID', pid.toString(), '/T', '/F'], {
+      windowsHide: true,
+    });
+    log.info(`[registry] Successfully force-killed process tree PID ${pid} on Windows`);
+    return true;
+  } catch (error) {
+    log.error(`[registry] Failed to force-kill process PID ${pid}:`, error);
+    return false;
+  }
 }
 
 app.on('before-quit', () => {
