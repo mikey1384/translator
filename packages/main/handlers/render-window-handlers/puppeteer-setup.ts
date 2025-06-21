@@ -5,6 +5,7 @@ import url from 'node:url';
 import type { Browser, Page } from 'puppeteer-core';
 import { app } from 'electron';
 import log from 'electron-log';
+import { getHeadlessChromePath } from '../../services/headless-chrome-installer.js';
 
 /* ───────── helpers ───────── */
 
@@ -53,69 +54,12 @@ export async function initPuppeteer({
     ? await import('puppeteer')
     : await import('puppeteer-core');
 
-  const executablePath = isDev
-    ? undefined // dev → use Puppeteer's own Chrome
-    : (() => {
-        const headlessDir = path.join(
-          process.resourcesPath,
-          process.arch === 'arm64' ? 'headless-arm64' : 'headless-x64'
-        );
-
-        try {
-          // Navigate the nested structure for different platforms
-          const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
-          if (fs.existsSync(chromeDir)) {
-            const versionDirs = fs.readdirSync(chromeDir);
-            
-            // Platform-specific directory patterns
-            let versionDirPattern: string;
-            let binaryDirPattern: string;
-            let executableName: string;
-            
-            if (process.platform === 'win32') {
-              versionDirPattern = process.arch === 'arm64' ? 'win-arm64-' : 'win64-';
-              binaryDirPattern = 'chrome-headless-shell-win';
-              executableName = 'chrome-headless-shell.exe';
-            } else {
-              // macOS
-              versionDirPattern = process.arch === 'arm64' ? 'mac_arm-' : 'mac-';
-              binaryDirPattern = 'chrome-headless-shell-mac-';
-              executableName = 'chrome-headless-shell';
-            }
-            
-            const versionDir = versionDirs.find(dir =>
-              dir.startsWith(versionDirPattern)
-            );
-            if (versionDir) {
-              const platformDir = path.join(chromeDir, versionDir);
-              const platformDirs = fs.readdirSync(platformDir);
-              const binaryDir = platformDirs.find(dir =>
-                dir.startsWith(binaryDirPattern)
-              );
-              if (binaryDir) {
-                return path.join(
-                  platformDir,
-                  binaryDir,
-                  executableName
-                );
-              }
-            }
-          }
-        } catch (error) {
-          log.warn(
-            `[Puppeteer] Error finding headless shell in nested structure: ${error}`
-          );
-        }
-
-        // Fallback to old path structure if new structure not found
-        const fallbackExecutable = process.platform === 'win32' ? 'headless_shell.exe' : 'headless_shell';
-        return path.join(headlessDir, fallbackExecutable);
-      })();
+  const executablePath = await getHeadlessChromePath();
   // ----------------------------------------------------------------------
 
-  if (executablePath && !isDev)
+  if (executablePath)
     log.info(
-      `[Puppeteer:${operationId}] Using bundled headless_shell: ${executablePath}`
+      `[Puppeteer:${operationId}] Using headless Chrome: ${executablePath}`
     );
   else
     log.info(
@@ -123,7 +67,7 @@ export async function initPuppeteer({
     );
 
   const browser = (await puppeteer.launch({
-    executablePath,
+    ...(executablePath && { executablePath }),
     headless: true,
     args: [
       '--no-sandbox',

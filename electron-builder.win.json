@@ -16,6 +16,19 @@
   },
   "forceCodeSigning": false,
   "nsis": { 
-    "perMachine": true 
+    "include": "build/installer-override.nsh",
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "oneClick": false,
+    "allowElevation": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "runAfterFinish": false,
+    "menuCategory": "Video Tools",
+    "deleteAppDataOnUninstall": false,
+    "differentialPackage": false,
+    "artifactName": "${productName} Setup ${version}.${ext}",
+    "uninstallDisplayName": "${productName}",
+    "displayLanguageSelector": false
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "Translator",
   "private": true,
-  "version": "1.1.20",
+  "version": "1.1.27",
   "type": "module",
   "description": "Translator - AI-powered video translation tool",
   "author": "Mikey Lee",
@@ -77,6 +77,7 @@
   "dependencies": {
     "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
+    "@puppeteer/browsers": "^2.10.5",
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "@types/which": "^3.0.4",
