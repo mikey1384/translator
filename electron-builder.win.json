@@ -16,7 +16,7 @@
   },
   "forceCodeSigning": false,
   "nsis": { 
-    "include": "build/installer-override.nsh",
+    "include": "installer-override.nsh",
     "perMachine": true,
     "allowToChangeInstallationDirectory": true,
     "oneClick": false,
