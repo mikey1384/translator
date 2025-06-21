@@ -46,6 +46,8 @@ jobs:
           R2_ENDPOINT: https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com
           AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
