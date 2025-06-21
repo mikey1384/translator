@@ -189,22 +189,13 @@ async function downloadHeadlessChrome(headlessDir: string): Promise<void> {
     
     log.info(`[HeadlessChrome] Download completed: ${result.stdout}`);
     
-    // Create fallback executable path for compatibility
+    // Verify the nested executable exists and is accessible
     const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
     const nestedExecutable = await findExecutableInNestedStructure(chromeDir);
     
     if (nestedExecutable) {
-      const fallbackPath = process.platform === 'win32' 
-        ? path.join(headlessDir, 'headless_shell.exe')
-        : path.join(headlessDir, 'headless_shell');
-      
-      log.info(`[HeadlessChrome] Creating fallback executable at: ${fallbackPath}`);
-      await fs.copyFile(nestedExecutable, fallbackPath);
-      
-      // Make executable on Unix-like systems
-      if (process.platform !== 'win32') {
-        await fs.chmod(fallbackPath, 0o755);
-      }
+      log.info(`[HeadlessChrome] Verified nested executable at: ${nestedExecutable}`);
+      // Don't copy the executable - use it in place so it has access to supporting files
     } else {
       log.warn(`[HeadlessChrome] Could not find executable in nested structure`);
     }
@@ -221,17 +212,17 @@ async function downloadHeadlessChrome(headlessDir: string): Promise<void> {
 export async function ensureHeadlessChrome(): Promise<string> {
   const { headlessDir, chromeDir, executablePath, lockFile } = getHeadlessChromePaths();
   
-  // First check if fallback executable exists
-  if (await isHeadlessChromeBinaryValid(executablePath)) {
-    log.info(`[HeadlessChrome] Using existing binary: ${executablePath}`);
-    return executablePath;
-  }
-  
-  // Check if nested structure executable exists
+  // First check if nested structure executable exists (preferred)
   const nestedExecutable = await findExecutableInNestedStructure(chromeDir);
   if (nestedExecutable) {
     log.info(`[HeadlessChrome] Using nested binary: ${nestedExecutable}`);
     return nestedExecutable;
+  }
+  
+  // Fallback to simple executable (for backward compatibility)
+  if (await isHeadlessChromeBinaryValid(executablePath)) {
+    log.info(`[HeadlessChrome] Using fallback binary: ${executablePath}`);
+    return executablePath;
   }
   
   // Binary not found, need to download
@@ -268,17 +259,17 @@ export async function ensureHeadlessChrome(): Promise<string> {
     // Download headless Chrome
     await downloadHeadlessChrome(headlessDir);
     
-    // Verify installation
-    if (await isHeadlessChromeBinaryValid(executablePath)) {
-      log.info(`[HeadlessChrome] Installation successful: ${executablePath}`);
-      return executablePath;
-    }
-    
-    // Check nested structure again
+    // Verify installation - check nested structure first
     const finalNestedCheck = await findExecutableInNestedStructure(chromeDir);
     if (finalNestedCheck) {
       log.info(`[HeadlessChrome] Installation successful (nested): ${finalNestedCheck}`);
       return finalNestedCheck;
+    }
+    
+    // Fallback verification
+    if (await isHeadlessChromeBinaryValid(executablePath)) {
+      log.info(`[HeadlessChrome] Installation successful (fallback): ${executablePath}`);
+      return executablePath;
     }
     
     throw new Error('Headless Chrome installation completed but binary not found');
