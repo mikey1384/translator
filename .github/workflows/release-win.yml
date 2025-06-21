@@ -3,7 +3,9 @@ name: Release – Windows
 on:
   workflow_dispatch:
   push:
-    tags: ['v*']   # same trigger as macOS
+    tags: 
+      - 'v*-win'  # Windows-only releases
+      - 'v*'      # Full releases (both platforms)
 
 jobs:
   win-build:
@@ -23,11 +25,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 2) MSVC workload  (same one you installed locally)
-      - name: Install MSVC
-        run: choco install visualstudio2022buildtools `
-               --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools `
-               --includeRecommended --includeOptional --quiet --norestart"
+      # 2) Setup MSBuild (windows-2022 already has VS 2022 Enterprise with C++ tools)
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       # 3) Install deps *and* compile webrtcvad for Electron
       - name: Install deps + rebuild natives
