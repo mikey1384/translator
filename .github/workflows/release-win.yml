@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     tags: 
-      - 'v*-win'  # Windows-only releases
-      - 'v*'      # Full releases (both platforms)
+      - 'v*-win'                 # Windows-only releases
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # Full releases (both platforms) - pure SemVer only
 
 jobs:
   win-build:
