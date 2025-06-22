@@ -12,8 +12,7 @@ import type { IncomingMessage } from 'node:http';
 import { 
   findYtDlpBinary, 
   testBinary, 
-  getPreferredInstallPath, 
-  ensureExecutable 
+  getPreferredInstallPath
 } from './binary-locator.js';
 
 // Concurrent installation protection using file-based mutex
@@ -100,6 +99,7 @@ function fetchWithRedirect(url: string, maxRedirects = 4): Promise<IncomingMessa
       const location = response.headers.location;
       if ([301, 302, 303, 307, 308].includes(response.statusCode!) && location && maxRedirects > 0) {
         log.info(`[URLprocessor] Following redirect to: ${location}`);
+        response.resume(); // Prevent socket leak
         return resolve(fetchWithRedirect(location, maxRedirects - 1));
       }
       if (response.statusCode !== 200) {
@@ -161,6 +161,78 @@ async function fetchSha256ForRelease(downloadUrl: string): Promise<string | null
   }
 }
 
+// Shared helper: Make file executable on Unix systems
+async function ensureExecutable(binaryPath: string): Promise<void> {
+  if (process.platform !== 'win32') {
+    try {
+      await fsp.access(binaryPath, fs.constants.X_OK);
+    } catch {
+      try {
+        await execa('chmod', ['+x', binaryPath]);
+        log.info(`[URLprocessor] Made ${binaryPath} executable.`);
+      } catch (e) {
+        log.warn(`[URLprocessor] Failed to chmod +x ${binaryPath}:`, e);
+      }
+    }
+  }
+}
+
+// Guarantee that a writable copy exists before downloads start
+export async function ensureWritableBinary(): Promise<string> {
+  const exeExt = process.platform === 'win32' ? '.exe' : '';
+  const binaryName = `yt-dlp${exeExt}`;
+  const userBin = join(app.getPath('userData'), 'bin', binaryName);
+
+  // 1. If we already have a user copy, return it.
+  try { 
+    await fsp.access(userBin, fs.constants.X_OK); 
+    log.info(`[URLprocessor] Using existing writable binary: ${userBin}`);
+    return userBin; 
+  }
+  catch { /* fall through and create it */ }
+
+  // 2. Acquire lock to prevent race conditions
+  if (!(await acquireInstallLock())) {
+    log.warn('[URLprocessor] Binary copy already in progress by another process');
+    // Wait a bit and check if the binary now exists
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      await fsp.access(userBin, fs.constants.X_OK);
+      return userBin;
+    } catch {
+      throw new Error('Failed to create writable binary copy due to concurrent access');
+    }
+  }
+
+  try {
+    log.info(`[URLprocessor] Creating writable binary copy at: ${userBin}`);
+
+    // 3. Create the folder if needed.
+    await fsp.mkdir(dirname(userBin), { recursive: true });
+
+    // 4. Copy the bundled binary once (read-only → writable).
+    const bundled = join(process.resourcesPath, 'app.asar.unpacked',
+                         'node_modules', 'youtube-dl-exec', 'bin', binaryName);
+    
+    try {
+      await fsp.copyFile(bundled, userBin);
+      log.info(`[URLprocessor] Copied bundled binary to writable location`);
+    } catch (error) {
+      log.error(`[URLprocessor] Failed to copy bundled binary:`, error);
+      throw new Error(`Could not create writable yt-dlp copy: ${error}`);
+    }
+
+    // 5. Mark it executable (macOS / Linux).
+    if (process.platform !== 'win32') {
+      await fsp.chmod(userBin, 0o755);
+    }
+
+    return userBin;
+  } finally {
+    await releaseInstallLock();
+  }
+}
+
 /**
  * Ensures yt-dlp binary is available and up-to-date.
  * - If binary doesn't exist, installs it
@@ -172,10 +244,31 @@ export async function ensureYtDlpBinary({
 }: {
   skipUpdate?: boolean;
 } = {}): Promise<string | null> {
-  log.info('[URLprocessor] Ensuring yt-dlp binary is available...');
-
   try {
-    // First try to find existing binary
+    // For packaged apps, always use the writable binary approach
+    if (app.isPackaged) {
+      const writablePath = await ensureWritableBinary();
+      
+      // Test if it's working
+      if (await testBinary(writablePath)) {
+        // Binary works - now try to update it (unless explicitly skipped)
+        if (!skipUpdate) {
+          log.info('[URLprocessor] Attempting to update yt-dlp to latest version...');
+          const updateSuccess = await updateExistingBinary(writablePath);
+          if (!updateSuccess) {
+            log.warn('[URLprocessor] Update failed, but existing binary works, continuing...');
+          }
+        } else {
+          log.info('[URLprocessor] Skipping update as requested');
+        }
+        return writablePath;
+      } else {
+        log.warn('[URLprocessor] Writable binary is not working, will reinstall...');
+        return await installNewBinary();
+      }
+    }
+
+    // For dev environment, use existing logic
     const existingBinary = await findYtDlpBinary();
 
     if (existingBinary) {
@@ -212,23 +305,47 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
   try {
     log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
 
-    // Check if binary is writable before attempting update
+    // Get version before update for comparison
+    let versionBefore = '';
     try {
-      await fsp.access(binaryPath, fs.constants.W_OK);
-    } catch (error) {
-      log.warn(`[URLprocessor] Binary not writable, skipping update: ${binaryPath}`);
-      return false; // Return false since update did not occur
+      const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000 });
+      versionBefore = stdout.trim();
+    } catch {
+      // If we can't get version, proceed anyway
     }
 
-    const result = await execa(binaryPath, ['-U'], { timeout: 120000 });
+    // Since we now guarantee a writable binary, proceed directly to update
+    const result = await execa(binaryPath, ['-U', '--quiet'], { 
+      timeout: 120000,
+      detached: true, // Prevent file locking on Windows
+      windowsHide: true // Prevent console flash on Windows
+    });
 
     const success =
       result.stdout.includes('up to date') || 
       result.stdout.includes('updated') ||
-      result.stdout.includes('Successfully updated');
+      result.stdout.includes('Successfully updated') ||
+      result.exitCode === 0;
       
     if (success) {
       log.info('[URLprocessor] Binary update completed successfully');
+      
+      // Post-update sanity check: verify the binary was actually updated
+      if (versionBefore) {
+        try {
+          const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000 });
+          const versionAfter = stdout.trim();
+          if (versionBefore === versionAfter && !result.stdout.includes('up to date')) {
+            log.warn('[URLprocessor] Update claimed success but version unchanged - binary may still be locked');
+            return false;
+          }
+          log.info(`[URLprocessor] Version after update: ${versionAfter}`);
+        } catch {
+          // If we can't get version after update, assume it worked
+          log.warn('[URLprocessor] Could not verify version after update');
+        }
+      }
+      
       // Log version after update
       await testBinary(binaryPath);
     } else {
@@ -358,10 +475,9 @@ async function downloadBinaryDirectly(
     const fileStream = createWriteStream(targetPath);
     await pipeline(response, fileStream);
 
-    // Verify the download
-    const stats = await fsp.stat(targetPath);
-    if (stats.size < 5 * 1024 * 1024) { // Less than 5MB is suspicious
-      log.error(`[URLprocessor] Downloaded binary is too small: ${stats.size} bytes`);
+    // Verify the download using platform-specific size check
+    if (!(await verifyBinaryIntegrity(targetPath))) {
+      log.error('[URLprocessor] Downloaded binary failed integrity check');
       await fsp.unlink(targetPath).catch(() => {});
       return null;
     }
@@ -385,6 +501,8 @@ async function downloadBinaryDirectly(
     // Make executable on Unix systems
     await ensureExecutable(targetPath);
 
+    // Get file size for logging
+    const stats = await fsp.stat(targetPath);
     log.info(`[URLprocessor] Successfully downloaded yt-dlp to: ${targetPath} (${stats.size} bytes)`);
     return targetPath;
   } catch (error: any) {
@@ -406,4 +524,24 @@ async function downloadBinaryDirectly(
 // Legacy function for backward compatibility - now just calls ensureYtDlpBinary
 export async function installYtDlpBinary(): Promise<string | null> {
   return ensureYtDlpBinary();
+}
+
+async function verifyBinaryIntegrity(binaryPath: string): Promise<boolean> {
+  try {
+    const stats = await fsp.stat(binaryPath);
+    
+    // Platform-specific minimum size check
+    const minBytes = process.platform === 'win32' ? 10 * 1024 * 1024 : 2 * 1024 * 1024; // 10MB for Windows, 2MB for POSIX
+    
+    if (stats.size < minBytes) {
+      log.warn(`[URLprocessor] Binary too small: ${stats.size} bytes (minimum: ${minBytes})`);
+      return false;
+    }
+
+    // Verify the binary can be executed
+    return await testBinary(binaryPath);
+  } catch (error: any) {
+    log.error('[URLprocessor] Failed to verify binary integrity:', error);
+    return false;
+  }
 }
