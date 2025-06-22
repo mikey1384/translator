@@ -230,6 +230,11 @@
       "title": "Bearbetningen tar längre tid än vanligt.",
       "description": "Detta kan bero på hög efterfrågan eller problem med OpenAI:s servrar. Processen körs fortfarande i bakgrunden.",
       "checkStatus": "Kontrollera OpenAI-status"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

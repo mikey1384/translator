@@ -230,6 +230,11 @@
       "title": "Η επεξεργασία διαρκεί περισσότερο από το συνηθισμένο.",
       "description": "Αυτό μπορεί να οφείλεται σε μεγάλη ζήτηση ή προβλήματα με τους διακομιστές του OpenAI. Η διαδικασία εξακολουθεί να εκτελείται στο παρασκήνιο.",
       "checkStatus": "Έλεγχος κατάστασης OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

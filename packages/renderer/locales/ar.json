@@ -230,6 +230,11 @@
       "title": "المعالجة تستغرق وقتاً أطول من المعتاد.",
       "description": "قد يكون هذا بسبب الطلب العالي أو مشاكل في خوادم OpenAI. العملية لا تزال تعمل في الخلفية.",
       "checkStatus": "تحقق من حالة OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

@@ -240,6 +240,11 @@
       "title": "处理时间比平常更长。",
       "description": "这可能是由于高需求或OpenAI服务器问题造成的。处理过程仍在后台运行。",
       "checkStatus": "检查OpenAI状态"
+    },
+    "cancelDownloadConfirm": "取消下载？进度将丢失，您需要重新开始。",
+    "slowDownloadBanner": {
+      "title": "下载时间比平时更长。",
+      "description": "这可能是由于视频平台变更或新的保护措施造成的。您可能需要等待下一个应用版本来处理较新的视频。"
     }
   },
   "progress": {

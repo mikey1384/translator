@@ -240,6 +240,11 @@
       "title": "Die Verarbeitung dauert länger als gewöhnlich.",
       "description": "Dies könnte auf hohe Nachfrage oder Probleme mit OpenAIs Servern zurückzuführen sein. Der Prozess läuft weiterhin im Hintergrund.",
       "checkStatus": "OpenAI-Status prüfen"
+    },
+    "cancelDownloadConfirm": "Download abbrechen? Der Fortschritt geht verloren und Sie müssen von vorne beginnen.",
+    "slowDownloadBanner": {
+      "title": "Der Download dauert länger als gewöhnlich.",
+      "description": "Dies könnte auf Änderungen der Videoplattform oder neue Schutzmaßnahmen zurückzuführen sein. Möglicherweise müssen Sie auf die nächste App-Version warten, um neuere Videos verarbeiten zu können."
     }
   },
   "progress": {

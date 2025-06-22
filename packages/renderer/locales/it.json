@@ -230,6 +230,11 @@
       "title": "L'elaborazione sta richiedendo più tempo del solito.",
       "description": "Questo potrebbe essere dovuto a un'elevata richiesta o a problemi con i server di OpenAI. Il processo è ancora in esecuzione in background.",
       "checkStatus": "Controlla lo stato di OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

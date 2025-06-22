@@ -240,6 +240,11 @@
       "title": "Le traitement prend plus de temps que d'habitude.",
       "description": "Cela peut être dû à une forte demande ou à des problèmes avec les serveurs d'OpenAI. Le processus continue en arrière-plan.",
       "checkStatus": "Vérifier le statut d'OpenAI"
+    },
+    "cancelDownloadConfirm": "Annuler le téléchargement ? Le progrès sera perdu et vous devrez recommencer.",
+    "slowDownloadBanner": {
+      "title": "Le téléchargement prend plus de temps que d'habitude.",
+      "description": "Cela peut être dû à des changements de plateforme vidéo ou à de nouvelles mesures de protection. Vous devrez peut-être attendre la prochaine version de l'application pour gérer les vidéos plus récentes."
     }
   },
   "progress": {

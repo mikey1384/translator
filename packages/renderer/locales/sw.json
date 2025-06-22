@@ -230,6 +230,11 @@
       "title": "Uchakataji unachukua muda mrefu kuliko kawaida.",
       "description": "Hii inaweza kuwa kwa sababu ya mahitaji mengi au matatizo na seva za OpenAI. Mchakato bado unaendelea nyuma.",
       "checkStatus": "Angalia hali ya OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

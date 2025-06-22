@@ -230,6 +230,11 @@
       "title": "Verwerking duurt langer dan gewoonlijk.",
       "description": "Dit kan komen door hoge vraag of problemen met OpenAI's servers. Het proces loopt nog steeds op de achtergrond.",
       "checkStatus": "OpenAI status controleren"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

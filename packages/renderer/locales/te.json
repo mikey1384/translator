@@ -230,6 +230,11 @@
       "title": "ప్రాసెసింగ్ సాధారణం కంటే ఎక్కువ సమయం తీసుకుంటోంది.",
       "description": "ఇది అధిక డిమాండ్ లేదా OpenAI సర్వర్‌లతో సమస్యల వల్ల కావచ్చు. ప్రాసెస్ ఇప్పటికీ బ్యాక్‌గ్రౌండ్‌లో నడుస్తోంది.",
       "checkStatus": "OpenAI స్థితిని తనిఖీ చేయండి"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

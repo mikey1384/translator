@@ -230,6 +230,11 @@
       "title": "O processamento está demorando mais que o usual.",
       "description": "Isso pode ser devido à alta demanda ou problemas com os servidores da OpenAI. O processo ainda está rodando em segundo plano.",
       "checkStatus": "Verificar status da OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

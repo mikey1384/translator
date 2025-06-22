@@ -236,10 +236,15 @@
     "saveDownloadedFile": "Save the downloaded file: {{path}}",
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
     "slowProcessingBanner": {
       "title": "Processing is taking longer than usual.",
       "description": "This might be due to high demand or issues with OpenAI's servers. The process is still running in the background.",
       "checkStatus": "Check OpenAI status"
+    },
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

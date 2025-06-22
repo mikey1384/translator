@@ -230,6 +230,11 @@
       "title": "Mas matagal kaysa sa karaniwan ang processing.",
       "description": "Maaaring dahil sa mataas na demand o may problema sa mga server ng OpenAI. Patuloy pa ring tumatakbo ang proseso sa background.",
       "checkStatus": "I-check ang status ng OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

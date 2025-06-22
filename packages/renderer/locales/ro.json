@@ -230,6 +230,11 @@
       "title": "Procesarea durează mai mult decât de obicei.",
       "description": "Aceasta poate fi din cauza cererii mari sau problemelor cu serverele OpenAI. Procesul încă rulează în fundal.",
       "checkStatus": "Verifică starea OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

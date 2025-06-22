@@ -230,6 +230,11 @@
       "title": "İşleme normalden uzun sürüyor.",
       "description": "Bu yüksek talep veya OpenAI sunucularındaki sorunlardan kaynaklanıyor olabilir. İşlem arka planda devam ediyor.",
       "checkStatus": "OpenAI durumunu kontrol et"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

@@ -230,6 +230,11 @@
       "title": "செயலாக்கம் வழக்கத்தை விட அதிக நேரம் எடுக்கிறது.",
       "description": "இது அதிக தேவை அல்லது OpenAI சர்வர்களில் உள்ள சிக்கல்களால் இருக்கலாம். செயல்முறை இன்னும் பின்னணியில் இயங்கிக்கொண்டிருக்கிறது.",
       "checkStatus": "OpenAI நிலையைச் சரிபார்க்கவும்"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

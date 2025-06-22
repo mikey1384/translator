@@ -230,6 +230,11 @@
       "title": "Pemrosesan memakan waktu lebih lama dari biasanya.",
       "description": "Ini mungkin karena permintaan tinggi atau masalah dengan server OpenAI. Proses masih berjalan di latar belakang.",
       "checkStatus": "Periksa status OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

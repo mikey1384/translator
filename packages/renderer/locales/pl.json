@@ -230,6 +230,11 @@
       "title": "Przetwarzanie trwa dłużej niż zwykle.",
       "description": "Może to być spowodowane dużym zapotrzebowaniem lub problemami z serwerami OpenAI. Proces nadal działa w tle.",
       "checkStatus": "Sprawdź status OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

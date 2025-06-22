@@ -230,6 +230,11 @@
       "title": "پردازش بیشتر از حد معمول طول می‌کشد.",
       "description": "این ممکن است به دلیل تقاضای بالا یا مشکلات سرورهای OpenAI باشد. فرآیند همچنان در پس‌زمینه در حال اجرا است.",
       "checkStatus": "بررسی وضعیت OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

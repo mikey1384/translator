@@ -230,6 +230,11 @@
       "title": "प्रक्रिया नेहमीपेक्षा जास्त वेळ घेत आहे.",
       "description": "हे उच्च मागणी किंवा OpenAI च्या सर्व्हरच्या समस्यांमुळे असू शकते. प्रक्रिया अजूनही बॅकग्राउंडमध्ये चालू आहे.",
       "checkStatus": "OpenAI स्थिती तपासा"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {
