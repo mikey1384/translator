@@ -1,5 +1,6 @@
 export const AI_MODELS = {
   GPT: 'gpt-4.1',
+  O3: 'o3',
   WHISPER: { id: 'whisper-1' },
 } as const;
 

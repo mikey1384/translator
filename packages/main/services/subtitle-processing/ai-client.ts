@@ -6,11 +6,13 @@ import { AI_MODELS } from '../../../shared/constants/index.js';
 
 export async function callAIModel({
   messages,
+  model = AI_MODELS.GPT,
   signal,
   operationId,
   retryAttempts = 3,
 }: {
   messages: any[];
+  model?: string;
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
@@ -29,8 +31,7 @@ export async function callAIModel({
 
       const completion = await stage5Client.translate({
         messages,
-        model: AI_MODELS.GPT,
-        temperature: 0.4,
+        model,
       });
 
       const content = completion.choices[0]?.message?.content;
