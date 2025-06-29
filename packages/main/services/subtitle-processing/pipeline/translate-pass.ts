@@ -122,6 +122,22 @@ export async function translatePass({
       segmentsInProcess.length
     );
 
+    // Report progress BEFORE starting the batch review
+    const overall = (batchStart / segmentsInProcess.length) * 100;
+    progressCallback?.({
+      percent: scaleProgress(overall, Stage.REVIEW, Stage.FINAL),
+      stage: `Reviewing batch ${Math.ceil(batchStart / REVIEW_BATCH_SIZE) + 1} of ${Math.ceil(
+        segmentsInProcess.length / REVIEW_BATCH_SIZE
+      )}`,
+      partialResult: buildSrt({
+        segments: segmentsInProcess,
+        mode: 'dual',
+      }),
+      current: batchStart,
+      total: segmentsInProcess.length,
+      batchStartIndex: batchStart,
+    });
+
     const reviewSlice = segmentsInProcess.slice(batchStart, batchEnd);
     const contextBefore = segmentsInProcess.slice(
       Math.max(0, batchStart - REVIEW_OVERLAP_CTX),
@@ -157,21 +173,6 @@ export async function translatePass({
         };
       }
     }
-
-    const overall = (batchEnd / segmentsInProcess.length) * 100;
-    progressCallback?.({
-      percent: scaleProgress(overall, Stage.REVIEW, Stage.FINAL),
-      stage: `Reviewing batch ${Math.ceil(batchEnd / REVIEW_BATCH_SIZE)} of ${Math.ceil(
-        segmentsInProcess.length / REVIEW_BATCH_SIZE
-      )}`,
-      partialResult: buildSrt({
-        segments: segmentsInProcess,
-        mode: 'dual',
-      }),
-      current: batchEnd,
-      total: segmentsInProcess.length,
-      batchStartIndex: batchStart,
-    });
   }
 
   return segmentsInProcess;
