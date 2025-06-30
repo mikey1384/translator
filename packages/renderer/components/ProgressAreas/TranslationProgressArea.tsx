@@ -118,7 +118,7 @@ export default function TranslationProgressArea({
       if (timeSinceLastUpdate > 60000) {
         setShowSlowProgressBanner(true);
       }
-    }, 60000);
+    }, 100000);
 
     return () => clearTimeout(timer);
   }, [lastProgressUpdate, inProgress, stage]);

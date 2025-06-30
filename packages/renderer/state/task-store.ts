@@ -43,12 +43,25 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
       set(s => {
         Object.assign(s.translation, p);
         if (p.percent !== undefined) {
-          s.translation.inProgress = p.percent < 100;
+          // Only set inProgress to false when explicitly told it's complete
+          // (e.g., stage contains "complete" or "done") or when there's an error
+          const isComplete = p.percent >= 100 && 
+            (p.stage?.toLowerCase().includes('complete') || 
+             p.stage?.toLowerCase().includes('done') ||
+             p.stage?.toLowerCase().includes('error') ||
+             p.stage?.toLowerCase().includes('processing complete'));
+          s.translation.inProgress = p.percent < 100 || !isComplete;
           if (!s.translation.inProgress)
             s.translation.reviewedBatchStartIndex = null;
         }
         if (p.batchStartIndex !== undefined) {
           s.translation.reviewedBatchStartIndex = p.batchStartIndex;
+        }
+        if (p.inProgress === false) {
+          s.translation.reviewedBatchStartIndex = null;
+          s.translation.id = null;
+          s.translation.stage = '';
+          s.translation.percent = 0;
         }
       }),
     setMerge: p =>
