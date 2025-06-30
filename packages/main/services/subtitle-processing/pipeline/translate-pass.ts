@@ -50,7 +50,7 @@ export async function translatePass({
     batchStart += TRANSLATION_BATCH_SIZE
   ) {
     throwIfAborted(signal);
-    
+
     const batchEnd = Math.min(
       batchStart + TRANSLATION_BATCH_SIZE,
       totalSegments
@@ -81,7 +81,7 @@ export async function translatePass({
         if (signal?.aborted) {
           throw new DOMException('Operation cancelled', 'AbortError');
         }
-        
+
         for (let i = 0; i < translatedBatch.length; i++) {
           segmentsInProcess[batchStart + i] = translatedBatch[i];
         }
@@ -101,7 +101,7 @@ export async function translatePass({
           batchesDone * TRANSLATION_BATCH_SIZE,
           totalSegments
         );
-        
+
         if (!signal?.aborted) {
           progressCallback?.({
             percent: scaleProgress(
@@ -127,12 +127,14 @@ export async function translatePass({
     await Promise.all(batchPromises);
   } catch (error: any) {
     if (error.name === 'AbortError' || signal?.aborted) {
-      log.info(`[${operationId}] Translation cancelled during batch processing`);
+      log.info(
+        `[${operationId}] Translation cancelled during batch processing`
+      );
       throw error;
     }
     throw error;
   }
-  
+
   throwIfAborted(signal);
 
   for (
