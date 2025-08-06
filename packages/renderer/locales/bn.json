@@ -230,6 +230,11 @@
       "title": "প্রক্রিয়াকরণ স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
       "description": "এটি উচ্চ চাহিদা বা OpenAI সার্ভারের সমস্যার কারণে হতে পারে। প্রক্রিয়াটি এখনও পেছনে চলছে।",
       "checkStatus": "OpenAI স্ট্যাটাস চেক করুন"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

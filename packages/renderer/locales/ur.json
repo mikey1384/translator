@@ -230,6 +230,11 @@
       "title": "پروسیسنگ عام سے زیادہ وقت لے رہی ہے۔",
       "description": "یہ زیادہ مانگ یا OpenAI کے سرورز کے مسائل کی وجہ سے ہو سکتا ہے۔ پروسیس ابھی بھی بیک گراؤنڈ میں چل رہا ہے۔",
       "checkStatus": "OpenAI کی حالت چیک کریں"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

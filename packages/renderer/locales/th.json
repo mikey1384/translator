@@ -230,6 +230,11 @@
       "title": "การประมวลผลใช้เวลานานกว่าปกติ",
       "description": "อาจเนื่องจากความต้องการสูงหรือปัญหากับเซิร์ฟเวอร์ของ OpenAI กระบวนการยังคงทำงานอยู่เบื้องหลัง",
       "checkStatus": "ตรวจสอบสถานะ OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

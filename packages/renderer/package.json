@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist &&               npx esbuild ./index.tsx                    --bundle                    --format=esm                    --platform=browser                    --target=es2022                    --external:electron                    --outfile=dist/index.js &&               npm run copy-static",
+    "build:win": "if not exist dist mkdir dist &&               npx esbuild ./index.tsx                    --bundle                    --format=esm                    --platform=browser                    --target=es2022                    --external:electron                    --outfile=dist/index.js &&               npm run copy-static:win",
     "dev": "npx concurrently -n esbuild,static -c cyan,green                 \"npx esbuild ./index.tsx                      --bundle                      --format=esm                      --platform=browser                      --target=es2022                      --external:electron                      --outfile=dist/index.js                      --watch\"                 \"npx chokidar '../../index.html' '../../assets/**/*' -c 'npm run copy-static' --initial\"",
-    "copy-static": "mkdir -p dist && cp -f ../../index.html dist/ && cp -R ../../assets dist/"
+    "dev:win": "npx concurrently -n esbuild,static -c cyan,green                 \"npx esbuild ./index.tsx                      --bundle                      --format=esm                      --platform=browser                      --target=es2022                      --external:electron                      --outfile=dist/index.js                      --watch\"                 \"npx chokidar '../../index.html' '../../assets/**/*' -c 'npm run copy-static:win' --initial\"",
+    "copy-static": "mkdir -p dist && cp -f ../../index.html dist/ && cp -R ../../assets dist/",
+    "copy-static:win": "powershell -Command \"if (!(Test-Path 'dist')) { New-Item -ItemType Directory -Path 'dist' }; Copy-Item '../../index.html' 'dist/' -Force; if (Test-Path '../../assets') { Copy-Item '../../assets' 'dist/' -Recurse -Force }\""
   },
   "dependencies": {
     "react": "^19.0.0",

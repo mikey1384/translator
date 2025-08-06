@@ -230,6 +230,11 @@
       "title": "Quá trình xử lý mất nhiều thời gian hơn bình thường.",
       "description": "Điều này có thể do nhu cầu cao hoặc sự cố với máy chủ OpenAI. Quá trình vẫn đang chạy ở chế độ nền.",
       "checkStatus": "Kiểm tra trạng thái OpenAI"
+    },
+    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "slowDownloadBanner": {
+      "title": "Download is taking longer than usual.",
+      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     }
   },
   "progress": {

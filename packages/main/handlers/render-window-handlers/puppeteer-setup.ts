@@ -5,6 +5,7 @@ import url from 'node:url';
 import type { Browser, Page } from 'puppeteer-core';
 import { app } from 'electron';
 import log from 'electron-log';
+import { getHeadlessChromePath } from '../../services/headless-chrome-installer.js';
 
 /* ───────── helpers ───────── */
 
@@ -53,51 +54,12 @@ export async function initPuppeteer({
     ? await import('puppeteer')
     : await import('puppeteer-core');
 
-  const executablePath = isDev
-    ? undefined // dev → use Puppeteer's own Chrome
-    : (() => {
-        const headlessDir = path.join(
-          process.resourcesPath,
-          process.arch === 'arm64' ? 'headless-arm64' : 'headless-x64'
-        );
-
-        try {
-          // Navigate the nested structure: headless-arm64/chrome-headless-shell/mac_arm-*/chrome-headless-shell-mac-arm64/chrome-headless-shell
-          const chromeDir = path.join(headlessDir, 'chrome-headless-shell');
-          if (fs.existsSync(chromeDir)) {
-            const versionDirs = fs.readdirSync(chromeDir);
-            const versionDir = versionDirs.find(dir =>
-              dir.startsWith(process.arch === 'arm64' ? 'mac_arm-' : 'mac-')
-            );
-            if (versionDir) {
-              const platformDir = path.join(chromeDir, versionDir);
-              const platformDirs = fs.readdirSync(platformDir);
-              const binaryDir = platformDirs.find(dir =>
-                dir.startsWith('chrome-headless-shell-mac-')
-              );
-              if (binaryDir) {
-                return path.join(
-                  platformDir,
-                  binaryDir,
-                  'chrome-headless-shell'
-                );
-              }
-            }
-          }
-        } catch (error) {
-          log.warn(
-            `[Puppeteer] Error finding headless shell in nested structure: ${error}`
-          );
-        }
-
-        // Fallback to old path structure if new structure not found
-        return path.join(headlessDir, 'headless_shell');
-      })();
+  const executablePath = await getHeadlessChromePath();
   // ----------------------------------------------------------------------
 
-  if (executablePath && !isDev)
+  if (executablePath)
     log.info(
-      `[Puppeteer:${operationId}] Using bundled headless_shell: ${executablePath}`
+      `[Puppeteer:${operationId}] Using headless Chrome: ${executablePath}`
     );
   else
     log.info(
@@ -105,7 +67,7 @@ export async function initPuppeteer({
     );
 
   const browser = (await puppeteer.launch({
-    executablePath,
+    ...(executablePath && { executablePath }),
     headless: true,
     args: [
       '--no-sandbox',

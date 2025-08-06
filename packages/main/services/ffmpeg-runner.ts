@@ -5,6 +5,7 @@ import log from 'electron-log';
 import process from 'process';
 import which from 'which';
 import { app } from 'electron';
+import { forceKillWindows } from '../utils/process-killer.js';
 
 log.info(
   '[ffmpeg-runner] module loaded ***',
@@ -118,6 +119,8 @@ export async function findFfprobe(): Promise<string> {
 export const resolvedFfmpeg = () => _ffmpegCached;
 export const resolvedFfprobe = () => _ffprobeCached;
 
+
+
 export async function createFFmpegContext(
   tempDirPath: string
 ): Promise<FFmpegContext> {
@@ -217,8 +220,36 @@ export async function createFFmpegContext(
 
     if (signal) {
       const abort = () => {
-        if (!child.killed)
-          child.kill(process.platform === 'win32' ? 'SIGTERM' : 'SIGINT');
+        if (!child.killed) {
+                     if (process.platform === 'win32' && child.pid) {
+             // On Windows, use taskkill for reliable FFmpeg termination
+             log.info(`[ffmpeg-runner ${operationId ?? 'no-id'}] Force-killing Windows FFmpeg process tree PID: ${child.pid}`);
+             forceKillWindows({ 
+               pid: child.pid, 
+               logPrefix: `ffmpeg-runner ${operationId ?? 'no-id'}` 
+             }).then(killed => {
+               if (!killed) {
+                 // Fallback to signal if taskkill fails
+                 log.warn(`[ffmpeg-runner ${operationId ?? 'no-id'}] taskkill failed, trying SIGTERM fallback`);
+                 try {
+                   child.kill('SIGTERM');
+                 } catch {
+                   // Ignore errors since process might already be dead
+                 }
+               }
+             }).catch(() => {
+               // Fallback to signal if taskkill throws
+               try {
+                 child.kill('SIGTERM');
+               } catch {
+                 // Ignore errors since process might already be dead
+               }
+             });
+           } else {
+             // Non-Windows: use regular SIGINT
+             child.kill('SIGINT');
+           }
+        }
       };
       if (signal.aborted) {
         abort();

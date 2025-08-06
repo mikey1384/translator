@@ -3,7 +3,9 @@ name: Release – macOS (R2)
 on:
   workflow_dispatch: # manual trigger for testing
   push:
-    tags: ['v*'] # only version tags trigger releases
+    tags: 
+      - 'v*-mac'                 # Mac-only releases
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # Full releases (both platforms) - pure SemVer only
 
 concurrency:
   group: mac-release-${{ github.ref }}

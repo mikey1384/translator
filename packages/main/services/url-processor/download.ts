@@ -362,10 +362,24 @@ export async function downloadVideoFromPlatform(
     if (
       error.signal === 'SIGTERM' ||
       error.signal === 'SIGINT' ||
-      error.killed
+      error.killed ||
+      // Windows taskkill generates exit code 1 with specific error messages
+      (process.platform === 'win32' && error.exitCode === 1 && 
+       (error.message?.includes('was terminated') || 
+        error.message?.includes('Command failed') ||
+        rawErrorMessage.includes('taskkill'))) ||
+      // Also check for common Windows termination patterns
+      (process.platform === 'win32' && 
+       (rawErrorMessage.includes('The process was terminated') ||
+        rawErrorMessage.includes('The operation was terminated') ||
+        rawErrorMessage.includes('process terminated') ||
+        rawErrorMessage.includes('Terminated by user') ||
+        // yt-dlp specific termination messages
+        rawErrorMessage.includes('KeyboardInterrupt') ||
+        rawErrorMessage.includes('Interrupted by user')))
     ) {
       log.info(
-        `[URLprocessor] Download cancelled by user (Op ID: ${operationId})`
+        `[URLprocessor] Download cancelled by user (Op ID: ${operationId}) - Signal: ${error.signal}, ExitCode: ${error.exitCode}`
       );
       progressCallback?.({
         percent: 0,

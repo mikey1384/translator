@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import os from 'os';
 import log from 'electron-log';
+import { forceKillWindows } from '../../utils/process-killer.js';
 
 interface DirectMergeOptions {
   concatListPath: string;
@@ -20,6 +21,8 @@ interface DirectMergeOptions {
   registerProcess?: (c: ChildProcess) => void;
   signal?: AbortSignal;
 }
+
+
 
 export async function directMerge(
   opts: DirectMergeOptions
@@ -127,8 +130,34 @@ export async function directMerge(
       const onAbort = () => {
         if (!ff.killed) {
           try {
-            const sig = process.platform === 'win32' ? 'SIGTERM' : 'SIGINT';
-            ff.kill(sig);
+            if (process.platform === 'win32' && ff.pid) {
+              // On Windows, use taskkill for reliable FFmpeg termination
+              log.info(`[ffmpeg-direct-merge ${operationId}] Force-killing Windows FFmpeg process tree PID: ${ff.pid}`);
+              forceKillWindows({ 
+                pid: ff.pid, 
+                logPrefix: `ffmpeg-direct-merge ${operationId}` 
+              }).then(killed => {
+                if (!killed) {
+                  // Fallback to signal if taskkill fails
+                  log.warn(`[ffmpeg-direct-merge ${operationId}] taskkill failed, trying SIGTERM fallback`);
+                  try {
+                    ff.kill('SIGTERM');
+                  } catch {
+                    // Ignore errors since process might already be dead
+                  }
+                }
+              }).catch(() => {
+                // Fallback to signal if taskkill throws
+                try {
+                  ff.kill('SIGTERM');
+                } catch {
+                  // Ignore errors since process might already be dead
+                }
+              });
+            } else {
+              // Non-Windows: use regular SIGINT
+              ff.kill('SIGINT');
+            }
           } catch {
             /* already exited */
           }

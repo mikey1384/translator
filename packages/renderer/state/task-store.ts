@@ -45,11 +45,12 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         if (p.percent !== undefined) {
           // Only set inProgress to false when explicitly told it's complete
           // (e.g., stage contains "complete" or "done") or when there's an error
-          const isComplete = p.percent >= 100 && 
-            (p.stage?.toLowerCase().includes('complete') || 
-             p.stage?.toLowerCase().includes('done') ||
-             p.stage?.toLowerCase().includes('error') ||
-             p.stage?.toLowerCase().includes('processing complete'));
+          const isComplete =
+            p.percent >= 100 &&
+            (p.stage?.toLowerCase().includes('complete') ||
+              p.stage?.toLowerCase().includes('done') ||
+              p.stage?.toLowerCase().includes('error') ||
+              p.stage?.toLowerCase().includes('processing complete'));
           s.translation.inProgress = p.percent < 100 || !isComplete;
           if (!s.translation.inProgress)
             s.translation.reviewedBatchStartIndex = null;

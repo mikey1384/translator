@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles';
 import ProgressArea from './ProgressArea';
+import ProcessingBanner from '../ProcessingBanner';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
 import { css } from '@emotion/css';
@@ -166,53 +167,14 @@ export default function TranslationProgressArea({
 
   return (
     <>
-      {showSlowProgressBanner && (
-        <div
-          className={css`
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1200;
-            background-color: #fff3cd;
-            border-bottom: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 12px 16px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          `}
-        >
-          <span
-            className={css`
-              font-size: 16px;
-            `}
-          >
-            ⏳
-          </span>
-          <div>
-            <strong>{t('dialogs.slowProcessingBanner.title')}</strong>
-            <br />
-            {t('dialogs.slowProcessingBanner.description')}{' '}
-            <a
-              href="https://status.openai.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={css`
-                color: #856404;
-                text-decoration: underline;
-                cursor: pointer;
-                &:hover {
-                  text-decoration: none;
-                }
-              `}
-            >
-              {t('dialogs.slowProcessingBanner.checkStatus')}
-            </a>
-          </div>
-        </div>
-      )}
+      <ProcessingBanner
+        isVisible={showSlowProgressBanner}
+        titleKey="dialogs.slowProcessingBanner.title"
+        descriptionKey="dialogs.slowProcessingBanner.description"
+        linkHref="https://status.openai.com"
+        linkTextKey="dialogs.slowProcessingBanner.checkStatus"
+        onClose={handleClose}
+      />
       <div
         className={css`
           margin-top: ${showSlowProgressBanner

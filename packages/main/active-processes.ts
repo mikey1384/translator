@@ -3,6 +3,7 @@ import { execa } from 'execa';
 import log from 'electron-log';
 import type { WebContents } from 'electron';
 import { app } from 'electron';
+import { forceKillWindows } from './utils/process-killer.js';
 
 export type DownloadProcess = ReturnType<typeof execa>;
 export type RenderJob = {
@@ -147,12 +148,53 @@ export async function cancelSafely(id: string): Promise<boolean> {
         entry.handle.abort();
         break;
       case 'download':
-        if (!entry.handle.killed) entry.handle.kill(sig);
+        if (!entry.handle.killed) {
+          if (process.platform === 'win32' && entry.handle.pid) {
+            // On Windows, use taskkill for reliable termination of yt-dlp
+            log.info(`[registry] Force-killing Windows process tree for ${id}, PID: ${entry.handle.pid}`);
+            const killed = await forceKillWindows({ pid: entry.handle.pid, logPrefix: `registry-download-${id}` });
+            if (killed) {
+              // Mark the process as killed to help with error handling
+              try {
+                entry.handle.kill('SIGTERM');
+              } catch {
+                // Ignore errors since taskkill already terminated it
+              }
+            } else {
+              // Fallback to signal if taskkill fails
+              log.warn(`[registry] taskkill failed for ${id}, trying SIGTERM fallback`);
+              entry.handle.kill('SIGTERM');
+            }
+          } else {
+            // Non-Windows: use regular SIGTERM
+            entry.handle.kill(sig);
+          }
+        }
         break;
       case 'render':
-        entry.handle.processes.forEach(p => {
-          if (!p.killed) p.kill(sig);
-        });
+        // Terminate child processes (FFmpeg, etc.) with Windows-specific handling
+        for (const p of entry.handle.processes) {
+          if (!p.killed) {
+            if (process.platform === 'win32' && p.pid) {
+              // On Windows, use taskkill for reliable termination of FFmpeg processes
+              log.info(`[registry] Force-killing Windows render process PID: ${p.pid} for ${id}`);
+              const killed = await forceKillWindows({ pid: p.pid, logPrefix: `registry-render-${id}` });
+              if (!killed) {
+                // Fallback to signal if taskkill fails
+                log.warn(`[registry] taskkill failed for render process ${id}, trying SIGTERM fallback`);
+                try {
+                  p.kill('SIGTERM');
+                } catch {
+                  // Ignore errors since process might already be dead
+                }
+              }
+            } else {
+              // Non-Windows: use regular signal
+              p.kill(sig);
+            }
+          }
+        }
+        // Close Puppeteer browser (this handles browser process termination properly)
         await entry.handle.browser?.close().catch(() => {});
         break;
       case 'generic':
@@ -164,6 +206,8 @@ export async function cancelSafely(id: string): Promise<boolean> {
   }
   return true;
 }
+
+
 
 app.on('before-quit', () => {
   for (const id of registry.keys()) {

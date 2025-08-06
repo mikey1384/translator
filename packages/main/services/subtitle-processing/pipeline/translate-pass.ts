@@ -49,6 +49,8 @@ export async function translatePass({
     batchStart < totalSegments;
     batchStart += TRANSLATION_BATCH_SIZE
   ) {
+    throwIfAborted(signal);
+
     const batchEnd = Math.min(
       batchStart + TRANSLATION_BATCH_SIZE,
       totalSegments
@@ -76,13 +78,22 @@ export async function translatePass({
         operationId,
         signal,
       }).then(translatedBatch => {
+        if (signal?.aborted) {
+          throw new DOMException('Operation cancelled', 'AbortError');
+        }
+
         for (let i = 0; i < translatedBatch.length; i++) {
           segmentsInProcess[batchStart + i] = translatedBatch[i];
         }
       })
     )
       .catch(err => {
-        log.error(`[${operationId}] translate batch failed`, err);
+        if (err.name !== 'AbortError' && !signal?.aborted) {
+          log.error(`[${operationId}] translate batch failed`, err);
+        } else {
+          log.info(`[${operationId}] translate batch cancelled`);
+        }
+        throw err;
       })
       .finally(() => {
         batchesDone++;
@@ -90,26 +101,40 @@ export async function translatePass({
           batchesDone * TRANSLATION_BATCH_SIZE,
           totalSegments
         );
-        progressCallback?.({
-          percent: scaleProgress(
-            (doneSoFar / totalSegments) * 100,
-            Stage.TRANSLATE,
-            Stage.REVIEW
-          ),
-          stage: `Translating ${doneSoFar}/${totalSegments}`,
-          partialResult: buildSrt({
-            segments: segmentsInProcess,
-            mode: 'dual',
-          }),
-          current: doneSoFar,
-          total: totalSegments,
-        });
+
+        if (!signal?.aborted) {
+          progressCallback?.({
+            percent: scaleProgress(
+              (doneSoFar / totalSegments) * 100,
+              Stage.TRANSLATE,
+              Stage.REVIEW
+            ),
+            stage: `Translating ${doneSoFar}/${totalSegments}`,
+            partialResult: buildSrt({
+              segments: segmentsInProcess,
+              mode: 'dual',
+            }),
+            current: doneSoFar,
+            total: totalSegments,
+          });
+        }
       });
 
     batchPromises.push(promise);
   }
 
-  await Promise.all(batchPromises);
+  try {
+    await Promise.all(batchPromises);
+  } catch (error: any) {
+    if (error.name === 'AbortError' || signal?.aborted) {
+      log.info(
+        `[${operationId}] Translation cancelled during batch processing`
+      );
+      throw error;
+    }
+    throw error;
+  }
+
   throwIfAborted(signal);
 
   for (

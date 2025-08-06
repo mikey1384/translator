@@ -619,17 +619,7 @@ function createApplicationMenu() {
           : [{ role: 'close' }]) as MenuItemConstructorOptions[]),
       ],
     },
-    {
-      role: 'help',
-      submenu: [
-        {
-          label: 'Learn More (Example)',
-          click: async () => {
-            await shell.openExternal('https://github.com/your-repo');
-          },
-        },
-      ],
-    },
+
   ];
 
   const menu = Menu.buildFromTemplate(template);

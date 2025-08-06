@@ -1,0 +1,39 @@
+{
+  "extends": "./electron-builder.base.json",
+  "buildDependenciesFromSource": true,
+  "npmRebuild": true,
+  "artifactName": "Translator-${version}-win32-${arch}.${ext}",
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "signtoolOptions": {
+      "certificateSubjectName": "Stage5 Tools LLC",
+      "signingHashAlgorithms": ["sha256"],
+      "timeStampServer": "http://timestamp.digicert.com"
+    },
+    "fileAssociations": [
+      {
+        "ext": ["mp4", "mkv", "mov", "webm", "avi"],
+        "name": "Video File",
+        "description": "Video file opened with Translator",
+        "icon": "build/file_icon.ico"
+      }
+    ]
+  },
+  "forceCodeSigning": true,
+  "nsis": { 
+    "include": "installer-override.nsh",
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "oneClick": false,
+    "allowElevation": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "runAfterFinish": false,
+    "menuCategory": "Video Tools",
+    "deleteAppDataOnUninstall": false,
+    "differentialPackage": false,
+    "artifactName": "${productName} Setup ${version}.${ext}",
+    "uninstallDisplayName": "${productName}",
+    "displayLanguageSelector": false
+  }
+}
