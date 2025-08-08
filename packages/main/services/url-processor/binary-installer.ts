@@ -633,6 +633,9 @@ export async function installYtDlpBinary(): Promise<string | null> {
 
 async function verifyBinaryIntegrity(binaryPath: string): Promise<boolean> {
   try {
+    // Ensure executable bit is set before attempting to run the binary on POSIX systems
+    await ensureExecutable(binaryPath);
+
     const stats = await fsp.stat(binaryPath);
 
     // Platform-specific minimum size check
