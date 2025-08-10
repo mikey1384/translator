@@ -15,6 +15,7 @@ import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
+import { app } from 'electron';
 
 export async function downloadVideoFromPlatform(
   url: string,
@@ -38,8 +39,15 @@ export async function downloadVideoFromPlatform(
     stage: 'Warming up...',
   });
 
-  // Ensure yt-dlp binary is available and working (installs if missing, can update if needed)
-  const ytDlpPath = await ensureYtDlpBinary();
+  // Ensure yt-dlp binary is available and working (installs if missing)
+  // For a brand-new install, skip self-update on first run to avoid initial lock/scan delays
+  const firstRunFlag = join(app.getPath('userData'), 'bin', '.yt-dlp-initialized');
+  const hasInitialized = await fsp
+    .access(firstRunFlag)
+    .then(() => true)
+    .catch(() => false);
+
+  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: !hasInitialized });
 
   if (!ytDlpPath) {
     progressCallback?.({
@@ -133,6 +141,14 @@ export async function downloadVideoFromPlatform(
     tempFilenamePattern,
     '--format',
     formatString,
+    // Network reliability guards to reduce initial stalls
+    '--socket-timeout',
+    '10',
+    '--retries',
+    '2',
+    '--retry-sleep',
+    '1',
+    '--force-ipv4',
     '--progress',
     '--newline',
     '--no-check-certificates',
@@ -205,8 +221,12 @@ export async function downloadVideoFromPlatform(
 
     // --- Stream Processing ---
     if (subprocess.all) {
+      let firstOutputSeen = false;
       subprocess.all.on('data', (chunk: Buffer) => {
         const chunkString = chunk.toString();
+        if (!firstOutputSeen) {
+          firstOutputSeen = true;
+        }
         // Normalize carriage returns to newlines to handle progress lines that use \r
         stdoutBuffer += chunkString.replace(/\r/g, '\n');
 
@@ -270,6 +290,13 @@ export async function downloadVideoFromPlatform(
               });
               lastPct = pct;
             }
+          } else if (/Downloading webpage|Extracting|Downloading player|Downloading m3u8|Downloading MPD/i.test(line)) {
+            // Early warmup feedback before numeric progress appears
+            const prepPercent = Math.max(PROGRESS.WARMUP_END, PROGRESS.WARMUP_END + 1);
+            progressCallback?.({
+              percent: prepPercent,
+              stage: 'Fetching video info…',
+            });
           } else if (/Merging formats/i.test(line) || /merging/i.test(line)) {
             // When yt-dlp is merging formats, downloading is complete
             const mergePercent = Math.min(
@@ -313,16 +340,19 @@ export async function downloadVideoFromPlatform(
     }
 
     // Wait for the process to finish, but guard against long stalls with a heartbeat
-    const result = await Promise.race([
+    const result: any = await Promise.race([
       subprocess,
       new Promise((_, reject) => {
         // If no progress lines for a long time, fail fast so UI can retry
-        const stallMs = 120_000; // 2 minutes without any output considered stalled
-        let lastTick = Date.now();
+        const stallMs = 30_000; // 30s without any output considered stalled
+        let lastTick: number | null = null; // start monitoring only after first output
         const interval = setInterval(() => {
-          if (Date.now() - lastTick > stallMs) {
+          if (lastTick !== null && Date.now() - lastTick > stallMs) {
             clearInterval(interval);
-            reject(new Error('Download appears stalled (no progress for 120s)'));
+            try {
+              subprocess?.kill('SIGTERM');
+            } catch {}
+            reject(new Error('Download appears stalled (no progress for 30s)'));
           }
         }, 5_000);
         // Update heartbeat whenever data arrives
@@ -395,6 +425,18 @@ export async function downloadVideoFromPlatform(
     log.info(
       `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
     );
+
+    // After first successful download, mark initialized and trigger background self-update
+    if (!hasInitialized) {
+      try {
+        await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
+        await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
+      } catch {}
+      try {
+        // Fire-and-forget update; do not block user flow
+        execa(ytDlpPath, ['-U', '--quiet'], { windowsHide: true, timeout: 120_000 }).catch(() => {});
+      } catch {}
+    }
 
     return { filepath: finalFilepath, info: downloadInfo, proc: subprocess! };
   } catch (error: any) {
@@ -474,7 +516,7 @@ export async function downloadVideoFromPlatform(
     });
 
     throw new Error(
-      `Download failed: ${rawErrorMessage}. Check logs or contact support at mikey@stage5society.com`
+      `Download failed: ${rawErrorMessage}. Check logs or contact support at mikey@stage5.tools`
     );
   } finally {
     if (removeDownloadProcess(operationId)) {
