@@ -40,14 +40,14 @@ export async function downloadVideoFromPlatform(
   });
 
   // Ensure yt-dlp binary is available and working (installs if missing)
-  // For a brand-new install, skip self-update on first run to avoid initial lock/scan delays
+  // Always skip pre-download self-update to avoid blocking; we will trigger background update after success
   const firstRunFlag = join(app.getPath('userData'), 'bin', '.yt-dlp-initialized');
   const hasInitialized = await fsp
     .access(firstRunFlag)
     .then(() => true)
     .catch(() => false);
 
-  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: !hasInitialized });
+  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: true });
 
   if (!ytDlpPath) {
     progressCallback?.({
@@ -180,16 +180,24 @@ export async function downloadVideoFromPlatform(
   let phase: 'dl1' | 'dl2' = 'dl1'; // Track download phase
   let lastPct = 0; // Track last reported percentage outside subprocess
 
+  // Wrap download attempt flow
   try {
-    subprocess = execa(ytDlpPath, args, {
-      windowsHide: true,
-      encoding: 'utf8',
-      all: true,
-    });
+  let attempt = 1;
+  const maxAttempts = 2;
+  let lastError: any = null;
 
-    if (subprocess) {
-      registerDownloadProcess(operationId, subprocess);
-      log.info(`[URLprocessor] Added download process ${operationId} to map.`);
+  while (attempt <= maxAttempts) {
+    let startupTimeoutFired = false;
+    try {
+      subprocess = execa(ytDlpPath, args, {
+        windowsHide: true,
+        encoding: 'utf8',
+        all: true,
+      });
+
+      if (subprocess) {
+        registerDownloadProcess(operationId, subprocess);
+        log.info(`[URLprocessor] Added download process ${operationId} to map.`);
 
       subprocess.on('error', (err: any) => {
         log.error(
@@ -219,16 +227,28 @@ export async function downloadVideoFromPlatform(
       throw new Error('Could not start yt-dlp process.');
     }
 
-    // --- Stream Processing ---
-    if (subprocess.all) {
-      let firstOutputSeen = false;
-      subprocess.all.on('data', (chunk: Buffer) => {
-        const chunkString = chunk.toString();
-        if (!firstOutputSeen) {
-          firstOutputSeen = true;
-        }
-        // Normalize carriage returns to newlines to handle progress lines that use \r
-        stdoutBuffer += chunkString.replace(/\r/g, '\n');
+      // --- Stream Processing ---
+      if (subprocess.all) {
+        let firstOutputSeen = false;
+        // Startup watchdog: if no output within 30s of launch, kill once and retry
+        const startupTimer = setTimeout(() => {
+          if (!firstOutputSeen) {
+            startupTimeoutFired = true;
+            try {
+              subprocess?.kill('SIGTERM');
+            } catch {}
+            log.error('[URLprocessor] Startup stall: no output from yt-dlp for 30s, will retry once');
+          }
+        }, 30_000);
+
+        subprocess.all.on('data', (chunk: Buffer) => {
+          const chunkString = chunk.toString();
+          if (!firstOutputSeen) {
+            firstOutputSeen = true;
+            clearTimeout(startupTimer);
+          }
+          // Normalize carriage returns to newlines to handle progress lines that use \r
+          stdoutBuffer += chunkString.replace(/\r/g, '\n');
 
         // Process lines
         let newlineIndex;
@@ -331,16 +351,16 @@ export async function downloadVideoFromPlatform(
             );
           }
         }
-      });
-    } else {
-      log.error(
-        `[URLprocessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
-      );
-      throw new Error('Could not access yt-dlp output stream.');
-    }
+        });
+      } else {
+        log.error(
+          `[URLprocessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
+        );
+        throw new Error('Could not access yt-dlp output stream.');
+      }
 
-    // Wait for the process to finish, but guard against long stalls with a heartbeat
-    const result: any = await Promise.race([
+      // Wait for the process to finish, but guard against long stalls with a heartbeat
+      const result: any = await Promise.race([
       subprocess,
       new Promise((_, reject) => {
         // If no progress lines for a long time, fail fast so UI can retry
@@ -362,10 +382,10 @@ export async function downloadVideoFromPlatform(
       }),
     ]);
 
-    log.info(
-      `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
-    );
-    // Process any remaining data in the buffer
+      log.info(
+        `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
+      );
+      // Process any remaining data in the buffer
     if (
       stdoutBuffer.trim().startsWith('{') &&
       stdoutBuffer.trim().endsWith('}')
@@ -406,7 +426,7 @@ export async function downloadVideoFromPlatform(
       stage: 'Download complete, verifying...',
     });
 
-    // --- File Verification ---
+      // --- File Verification ---
     if (!fs.existsSync(finalFilepath)) {
       log.error(
         `[URLprocessor] Downloaded file not found at path: ${finalFilepath}`
@@ -426,20 +446,36 @@ export async function downloadVideoFromPlatform(
       `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
     );
 
-    // After first successful download, mark initialized and trigger background self-update
-    if (!hasInitialized) {
-      try {
-        await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
-        await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
-      } catch {}
-      try {
-        // Fire-and-forget update; do not block user flow
-        execa(ytDlpPath, ['-U', '--quiet'], { windowsHide: true, timeout: 120_000 }).catch(() => {});
-      } catch {}
-    }
+    // After successful download, mark initialized and trigger background self-update for future runs
+    try {
+      await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
+      await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
+    } catch {}
+    try {
+      // Fire-and-forget update; do not block user flow
+      execa(ytDlpPath, ['-U', '--quiet'], { windowsHide: true, timeout: 120_000 }).catch(() => {});
+    } catch {}
 
-    return { filepath: finalFilepath, info: downloadInfo, proc: subprocess! };
-  } catch (error: any) {
+      return { filepath: finalFilepath, info: downloadInfo, proc: subprocess! };
+    } catch (error: any) {
+      lastError = error;
+      const wasStartupStall = (error?.message || '').includes('no progress for 30s') || startupTimeoutFired;
+      if (wasStartupStall && attempt < maxAttempts) {
+        log.warn(`[URLprocessor] Retrying download due to startup stall (attempt ${attempt + 1}/${maxAttempts})`);
+        attempt += 1;
+        continue;
+      }
+      throw error;
+    }
+  }
+  // If we exit loop without return, throw last error
+  try {
+    throw lastError || new Error('Download failed after retries');
+  } catch (e) {
+    // fall-through to generic catch below
+    throw e;
+  }
+} catch (error: any) {
     const rawErrorMessage = error.message || String(error);
     let userFriendlyErrorMessage = rawErrorMessage;
 
