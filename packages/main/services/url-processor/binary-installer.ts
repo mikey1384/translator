@@ -185,7 +185,7 @@ async function ensureExecutable(binaryPath: string): Promise<void> {
       await fsp.access(binaryPath, fs.constants.X_OK);
     } catch {
       try {
-        await execa('chmod', ['+x', binaryPath]);
+        await execa('chmod', ['+x', binaryPath], { windowsHide: true });
         log.info(`[URLprocessor] Made ${binaryPath} executable.`);
       } catch (e) {
         log.warn(`[URLprocessor] Failed to chmod +x ${binaryPath}:`, e);
@@ -365,9 +365,7 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
     // Get version before update for comparison
     let versionBefore = '';
     try {
-      const { stdout } = await execa(binaryPath, ['--version'], {
-        timeout: 10000,
-      });
+      const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000, windowsHide: true });
       versionBefore = stdout.trim();
     } catch {
       // If we can't get version, proceed anyway
@@ -392,9 +390,7 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
       // Post-update sanity check: verify the binary was actually updated
       if (versionBefore) {
         try {
-          const { stdout } = await execa(binaryPath, ['--version'], {
-            timeout: 10000,
-          });
+          const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000, windowsHide: true });
           const versionAfter = stdout.trim();
           if (
             versionBefore === versionAfter &&
@@ -515,6 +511,7 @@ async function tryPostinstallScript(
     const result = await execa('node', [postinstallScript], {
       cwd: join(packageRoot, 'node_modules', 'youtube-dl-exec'),
       timeout: 120000,
+      windowsHide: true,
     });
 
     log.info('[URLprocessor] Postinstall script completed:', result.stdout);

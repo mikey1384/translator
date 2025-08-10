@@ -14,7 +14,7 @@ async function ensureExecutable(binaryPath: string): Promise<void> {
       await fsp.access(binaryPath, fs.constants.X_OK);
     } catch {
       try {
-        await execa('chmod', ['+x', binaryPath]);
+        await execa('chmod', ['+x', binaryPath], { windowsHide: true });
         log.info(`[URLprocessor] Made ${binaryPath} executable.`);
       } catch (e) {
         log.warn(`[URLprocessor] Failed to chmod +x ${binaryPath}:`, e);
@@ -114,7 +114,7 @@ export async function findYtDlpBinary(): Promise<string | null> {
 // Test if binary is working
 export async function testBinary(binaryPath: string): Promise<boolean> {
   try {
-    const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000 });
+    const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000, windowsHide: true });
     log.info(`[URLprocessor] yt-dlp version detected: ${stdout.trim()}`);
     return true;
   } catch {

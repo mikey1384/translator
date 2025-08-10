@@ -63,7 +63,7 @@ export async function downloadVideoFromPlatform(
   } catch {
     log.warn(`[URLprocessor] yt-dlp not executable, attempting chmod +x`);
     try {
-      await execa('chmod', ['+x', ytDlpPath]);
+      await execa('chmod', ['+x', ytDlpPath], { windowsHide: true });
       log.info(`[URLprocessor] chmod +x successful.`);
     } catch (e) {
       log.warn('[URLprocessor] Could not make yt-dlp executable:', e);

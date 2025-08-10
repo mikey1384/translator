@@ -184,7 +184,8 @@ async function downloadHeadlessChrome(headlessDir: string): Promise<void> {
       headlessDir
     ], {
       timeout: 300000, // 5 minutes timeout
-      env: { ...process.env }
+      env: { ...process.env },
+      windowsHide: true
     });
     
     log.info(`[HeadlessChrome] Download completed: ${result.stdout}`);
