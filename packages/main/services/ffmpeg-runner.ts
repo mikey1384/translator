@@ -150,6 +150,7 @@ export async function createFFmpegContext(
     const spawnOpts = {
       env: env ?? process.env,
       cwd: cwd ?? tempDir,
+      windowsHide: true as const,
     } as const;
 
     log.info(
@@ -305,7 +306,7 @@ export async function createFFmpegContext(
         'default=noprint_wrappers=1:nokey=1',
         file,
       ];
-      const p = spawn(ffprobePath, args);
+      const p = spawn(ffprobePath, args, { windowsHide: true });
       let out = '';
       p.stdout.on('data', d => (out += d));
       p.stderr.on('data', d => log.debug(`[ffprobe] ${d}`));
@@ -341,7 +342,7 @@ export async function createFFmpegContext(
         '-of',
         'csv=s=x:p=0',
         file,
-      ]);
+      ], { windowsHide: true });
       let out = '';
       p.stdout.on('data', d => (out += d));
       p.on('close', () => res(out.trim().length > 0));
@@ -358,7 +359,7 @@ export async function createFFmpegContext(
         '-of',
         'json',
         file,
-      ]);
+      ], { windowsHide: true });
       let json = '';
       p.stdout?.on('data', d => (json += d));
       p.on('close', code => {

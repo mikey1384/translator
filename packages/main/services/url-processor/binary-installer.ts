@@ -374,7 +374,6 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
     // Since we now guarantee a writable binary, proceed directly to update
     const result = await execa(binaryPath, ['-U', '--quiet'], {
       timeout: 120000,
-      detached: true, // Prevent file locking on Windows
       windowsHide: true, // Prevent console flash on Windows
     });
 

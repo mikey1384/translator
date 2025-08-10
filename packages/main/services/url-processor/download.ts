@@ -207,12 +207,14 @@ export async function downloadVideoFromPlatform(
     if (subprocess.all) {
       subprocess.all.on('data', (chunk: Buffer) => {
         const chunkString = chunk.toString();
-        stdoutBuffer += chunkString;
+        // Normalize carriage returns to newlines to handle progress lines that use \r
+        stdoutBuffer += chunkString.replace(/\r/g, '\n');
 
         // Process lines
         let newlineIndex;
         while ((newlineIndex = stdoutBuffer.indexOf('\n')) >= 0) {
-          const line = stdoutBuffer.substring(0, newlineIndex).trim();
+          const rawLine = stdoutBuffer.substring(0, newlineIndex);
+          const line = rawLine.trim();
           stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
 
           if (line.startsWith('{') && line.endsWith('}')) {
@@ -268,6 +270,30 @@ export async function downloadVideoFromPlatform(
               });
               lastPct = pct;
             }
+          } else if (/Merging formats/i.test(line) || /merging/i.test(line)) {
+            // When yt-dlp is merging formats, downloading is complete
+            const mergePercent = Math.min(
+              PROGRESS.FINAL_END - 2,
+              Math.max(PROGRESS.FINAL_START, PROGRESS.FINAL_START + 5)
+            );
+            progressCallback?.({
+              percent: mergePercent,
+              stage: 'Merging formats…',
+            });
+          } else if (/Post-?processing/i.test(line) || /Fixing/i.test(line)) {
+            // Post-processing stage near the end
+            const ppPercent = Math.min(PROGRESS.FINAL_END - 1, PROGRESS.FINAL_START + 8);
+            progressCallback?.({
+              percent: ppPercent,
+              stage: 'Post-processing…',
+            });
+          } else if (/Destination:/i.test(line)) {
+            // Early indication that output file path is determined
+            const destPercent = Math.max(PROGRESS.WARMUP_END + 2, PROGRESS.WARMUP_END);
+            progressCallback?.({
+              percent: destPercent,
+              stage: 'Preparing download…',
+            });
           } else if (
             line.startsWith(outputDir) &&
             line.match(/\.(mp4|mkv|webm|m4a)$/i)
@@ -286,8 +312,25 @@ export async function downloadVideoFromPlatform(
       throw new Error('Could not access yt-dlp output stream.');
     }
 
-    // Wait for the process to finish
-    const result = await subprocess;
+    // Wait for the process to finish, but guard against long stalls with a heartbeat
+    const result = await Promise.race([
+      subprocess,
+      new Promise((_, reject) => {
+        // If no progress lines for a long time, fail fast so UI can retry
+        const stallMs = 120_000; // 2 minutes without any output considered stalled
+        let lastTick = Date.now();
+        const interval = setInterval(() => {
+          if (Date.now() - lastTick > stallMs) {
+            clearInterval(interval);
+            reject(new Error('Download appears stalled (no progress for 120s)'));
+          }
+        }, 5_000);
+        // Update heartbeat whenever data arrives
+        subprocess?.all?.on('data', () => (lastTick = Date.now()));
+        // Cleanup when finished
+        subprocess?.then?.(() => clearInterval(interval)).catch(() => clearInterval(interval));
+      }),
+    ]);
 
     log.info(
       `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
