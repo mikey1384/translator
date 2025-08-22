@@ -311,7 +311,9 @@ export async function transcribePass({
 
     // Handle case where no segments were produced
     if (dedupedSegments.length === 0) {
-      log.warn(`[${operationId}] No segments produced after deduplication. Returning empty result.`);
+      log.warn(
+        `[${operationId}] No segments produced after deduplication. Returning empty result.`
+      );
       return {
         segments: [],
         speechIntervals: merged.slice(),
@@ -323,13 +325,20 @@ export async function transcribePass({
     for (let i = 1; i < dedupedSegments.length; i++) {
       const prevSeg = dedupedSegments[i - 1];
       const currSeg = dedupedSegments[i];
-      
+
       // Add null checks to prevent undefined access
-      if (!prevSeg || !currSeg || typeof prevSeg.end !== 'number' || typeof currSeg.start !== 'number') {
-        log.warn(`[${operationId}] Skipping gap calculation due to invalid segments at index ${i}`);
+      if (
+        !prevSeg ||
+        !currSeg ||
+        typeof prevSeg.end !== 'number' ||
+        typeof currSeg.start !== 'number'
+      ) {
+        log.warn(
+          `[${operationId}] Skipping gap calculation due to invalid segments at index ${i}`
+        );
         continue;
       }
-      
+
       const gap = currSeg.start - prevSeg.end;
       if (gap > GAP_SEC) {
         anchors.push({
