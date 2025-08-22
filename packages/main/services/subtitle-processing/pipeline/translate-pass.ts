@@ -25,7 +25,7 @@ export async function translatePass({
   progressCallback?: GenerateProgressCallback;
   operationId: string;
   signal: AbortSignal;
-}): Promise<SrtSegment[]> {
+}) {
   if (targetLang === 'original') {
     return segments;
   }
@@ -147,7 +147,6 @@ export async function translatePass({
       segmentsInProcess.length
     );
 
-    // Report progress BEFORE starting the batch review
     const overall = (batchStart / segmentsInProcess.length) * 100;
     progressCallback?.({
       percent: scaleProgress(overall, Stage.REVIEW, Stage.FINAL),
@@ -205,26 +204,69 @@ export async function translatePass({
 
 function fuseOrphans(segments: SrtSegment[]): SrtSegment[] {
   const MIN_WORDS = 4;
+  const MAX_DURATION_SEC = 7.0;
+  const MIN_DURATION_SEC = 1.0;
+  const MAX_CHARS_PER_LINE = 42;
+  const MAX_TOTAL_CHARS = 84; // proxy for two lines
+  const MAX_CPS = 17; // characters per second
 
   if (!segments.length) return [];
 
   const fused: SrtSegment[] = [];
 
+  const safeJoin = (a: string, b: string) => {
+    const left = a.trim();
+    const right = b.trim();
+    if (!left) return right;
+    if (!right) return left;
+    const needsSpace =
+      /[\p{L}\p{N}]$/u.test(left) && /^[\p{L}\p{N}]/u.test(right);
+    return needsSpace ? `${left} ${right}` : `${left}${right}`;
+  };
+
+  const computeCps = (text: string, start: number, end: number) => {
+    const duration = Math.max(0.001, end - start);
+    const chars = text.replace(/\n/g, '').length;
+    return chars / duration;
+  };
+
   for (const seg of segments) {
-    const wordCount = seg.original.trim().split(/\s+/).length;
+    const wordCount = seg.original.trim().split(/\s+/).filter(Boolean).length;
 
     if (wordCount < MIN_WORDS && fused.length) {
       const prev = fused[fused.length - 1];
       const gap = seg.start - prev.end;
 
       if (gap < MAX_GAP_TO_FUSE) {
-        prev.end = seg.end;
-        prev.original = `${prev.original} ${seg.original}`.trim();
-        continue;
+        const newStart = prev.start;
+        const newEnd = seg.end;
+        const joinedText = safeJoin(prev.original, seg.original);
+
+        const durationOk =
+          newEnd - newStart <= MAX_DURATION_SEC &&
+          newEnd - newStart >= MIN_DURATION_SEC;
+        const lengthOk = joinedText.length <= MAX_TOTAL_CHARS;
+        const cpsOk = computeCps(joinedText, newStart, newEnd) <= MAX_CPS;
+
+        if (durationOk && lengthOk && cpsOk) {
+          prev.end = newEnd;
+          prev.original = joinedText;
+          continue;
+        }
       }
     }
 
     fused.push({ ...seg });
+  }
+
+  // Final sanity: ensure cues are not excessively long by trimming whitespace
+  for (const s of fused) {
+    s.original = s.original.trim();
+    const duration = Math.max(0.001, s.end - s.start);
+    const cps = s.original.length / duration;
+    if (cps > 1.5 * 17 || s.original.length > 2 * MAX_CHARS_PER_LINE) {
+      s.original = s.original.replace(/\s+/g, ' ').trim();
+    }
   }
 
   return fused.map((s, i) => ({ ...s, index: i + 1 }));

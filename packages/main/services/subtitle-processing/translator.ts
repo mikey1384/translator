@@ -5,7 +5,7 @@ import { TranslateBatchArgs } from '@shared-types/app';
 
 function parseTranslatedJSON(translation: string, batch: any): any[] {
   log.info(`[parseTranslatedJSON] Parsing translation response`);
-  
+
   const translationLines = translation
     .split('\n')
     .filter((line: string) => line.trim() !== '');
@@ -110,12 +110,12 @@ Translate EACH line individually, preserving the line order.
         log.info(
           `[${operationId}] Retrying translation batch in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
-        
+
         // Check for cancellation before delay
         if (signal?.aborted) {
           throw new DOMException('Operation cancelled', 'AbortError');
         }
-        
+
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }

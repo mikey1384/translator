@@ -23,7 +23,31 @@ export function extendShortSubtitleGaps({
 }
 
 export function fillBlankTranslations(segments: SrtSegment[]): SrtSegment[] {
-  return segments;
+  if (!segments || segments.length === 0) return segments;
+  const out = segments.slice();
+  for (let i = 0; i < out.length; i++) {
+    const s = out[i];
+    const hasOriginal = (s.original ?? '').trim() !== '';
+    const hasTranslation = (s.translation ?? '').trim() !== '';
+    if (hasOriginal && !hasTranslation) {
+      // Prefer previous non-empty translation
+      let donor: string | undefined;
+      if (i > 0) {
+        const prev = out[i - 1];
+        if ((prev.translation ?? '').trim() !== '')
+          donor = prev.translation!.trim();
+      }
+      if (!donor && i + 1 < out.length) {
+        const next = out[i + 1];
+        if ((next.translation ?? '').trim() !== '')
+          donor = next.translation!.trim();
+      }
+      if (donor) {
+        s.translation = donor;
+      }
+    }
+  }
+  return out;
 }
 
 export function enforceMinDuration(segs: SrtSegment[]): SrtSegment[] {

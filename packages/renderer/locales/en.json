@@ -250,7 +250,9 @@
   "progress": {
     "transcribedChunks": "Transcribed & scrubbed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "File saved:\n{{path}}",

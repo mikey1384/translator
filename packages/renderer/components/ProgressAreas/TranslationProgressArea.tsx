@@ -41,6 +41,16 @@ function translateBackendMessage(
       const total = parseInt(parts[3], 10);
       return t('progress.transcribedChunks', { done, total });
     }
+    case 'scrubbing_hallucinations': {
+      const done = parseInt(parts[2], 10) || 0;
+      const total = parseInt(parts[3], 10) || 0;
+      return t('progress.scrubbingHallucinations', { done, total });
+    }
+    case 'translation_cleanup': {
+      const done = parseInt(parts[2], 10) || 0;
+      const total = parseInt(parts[3], 10) || 0;
+      return t('progress.translationCleanup', { done, total });
+    }
     case 'repairing_captions': {
       const iteration = parseInt(parts[2], 10);
       const maxIterations = parseInt(parts[3], 10);

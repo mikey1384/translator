@@ -40,6 +40,7 @@ import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 import pLimit from 'p-limit';
 import { throwIfAborted } from '../utils.js';
 import { refineOvershoots } from '../gap-repair.js';
+import { scrubHallucinationsBatch } from '../utils.js';
 
 export async function transcribePass({
   audioPath,
@@ -60,6 +61,8 @@ export async function transcribePass({
   const overallSegments: SrtSegment[] = [];
   const tempDir = path.dirname(audioPath);
   const createdChunkPaths: string[] = [];
+
+  // anti-duplicate helpers are defined below (near repair loop)
 
   try {
     if (!services?.ffmpeg) {
@@ -93,8 +96,11 @@ export async function transcribePass({
     });
     if (signal?.aborted) throw new Error('Cancelled');
 
-    const cleaned = normalizeSpeechIntervals({ intervals: raw });
-    const merged = mergeAdjacentIntervals(cleaned, MERGE_GAP_SEC).flatMap(iv =>
+    const cleanedIntervals = normalizeSpeechIntervals({ intervals: raw });
+    const merged = mergeAdjacentIntervals(
+      cleanedIntervals,
+      MERGE_GAP_SEC
+    ).flatMap(iv =>
       iv.end - iv.start > MAX_SPEECHLESS_SEC
         ? chunkSpeechInterval({ interval: iv, duration: MAX_SPEECHLESS_SEC })
         : [iv]
@@ -214,7 +220,6 @@ export async function transcribePass({
             signal,
             operationId: operationId ?? '',
             promptContext: promptForSlice,
-            mediaDuration: duration,
           });
 
           if (signal?.aborted) throw new Error('Cancelled');
@@ -385,6 +390,7 @@ export async function transcribePass({
 
     let iteration = 1;
     const maxIterations = 2;
+    // --- END anti-duplicate helpers ---
 
     while (
       repairGaps.length > 0 &&
@@ -431,7 +437,6 @@ export async function transcribePass({
               signal,
               ffmpeg,
               createdChunkPaths,
-              mediaDuration: duration,
             }
           );
           const filteredNewSegs = newSegs.filter(
@@ -524,25 +529,51 @@ export async function transcribePass({
       });
     }
 
-    const finalSrt = buildSrt({
-      segments: finalDedupedSegments,
-      mode: 'original',
+    if (signal?.aborted) {
+      throwIfAborted(signal);
+    }
+
+    // 1) AI scrub (repetition-aware) with progress allocated across TRANSCRIBE→TRANSLATE window
+    const totalToScrub = finalDedupedSegments.length;
+    progressCallback?.({
+      percent: scaleProgress(0, Stage.TRANSCRIBE, Stage.TRANSLATE),
+      stage: `__i18n__:scrubbing_hallucinations:0:${totalToScrub}`,
     });
+    const cleaned = await scrubHallucinationsBatch({
+      segments: finalDedupedSegments,
+      operationId,
+      signal,
+      mediaDuration: duration,
+      onProgress: (done, total) => {
+        progressCallback?.({
+          percent: scaleProgress(
+            (done / Math.max(1, total)) * 100,
+            Stage.TRANSCRIBE,
+            Stage.TRANSLATE
+          ),
+          stage: `__i18n__:scrubbing_hallucinations:${done}:${total}`,
+          current: done,
+          total,
+        });
+      },
+    });
+
+    cleaned
+      .sort((a, b) => a.start - b.start)
+      .forEach((s, i) => (s.index = i + 1));
+
+    const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
     await fs.promises.writeFile(
       path.join(tempDir, `${operationId}_final_after_repair.srt`),
       finalSrt,
       'utf8'
     );
     log.info(
-      `[${operationId}] ✏️  Wrote debug SRT with ${finalDedupedSegments.length} segments`
+      `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
     );
 
-    if (signal?.aborted) {
-      throwIfAborted(signal);
-    }
-
     return {
-      segments: finalDedupedSegments,
+      segments: cleaned,
       speechIntervals: merged.slice(),
     };
   } catch (error: any) {
@@ -621,31 +652,73 @@ export async function transcribePass({
     segs: SrtSegment[],
     { textTol = 0.85, timeTol = 0.35 } = {}
   ): SrtSegment[] {
-    const norm = (s: string) =>
+    const normalize = (s: string) =>
       s
         .toLowerCase()
         .replace(/[^\p{L}\p{N}]+/gu, ' ')
         .trim();
 
-    const sim = (a: string, b: string) => {
-      const aw = new Set(norm(a).split(/\s+/));
-      const bw = new Set(norm(b).split(/\s+/));
+    const jaccard = (a: string, b: string) => {
+      const aw = new Set(normalize(a).split(/\s+/).filter(Boolean));
+      const bw = new Set(normalize(b).split(/\s+/).filter(Boolean));
       const inter = [...aw].filter(w => bw.has(w)).length;
-      return inter / Math.max(1, Math.max(aw.size, bw.size));
+      const denom = Math.max(1, new Set([...aw, ...bw]).size);
+      return inter / denom;
     };
+
+    const charSimilarity = (a: string, b: string) => {
+      const as = normalize(a);
+      const bs = normalize(b);
+      if (!as || !bs) return 0;
+      const m = as.length;
+      const n = bs.length;
+      const dp = Array.from({ length: m + 1 }, () =>
+        new Array<number>(n + 1).fill(0)
+      );
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] =
+            as[i - 1] === bs[j - 1]
+              ? dp[i - 1][j - 1] + 1
+              : Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+      const lcs = dp[m][n];
+      return lcs / Math.max(m, n);
+    };
+
+    // No diarization: no speaker guard
 
     const out: SrtSegment[] = [];
     for (const seg of segs) {
       const last = out.at(-1);
-      const dup =
-        last &&
-        Math.abs(last.start - seg.start) < timeTol &&
-        sim(last.original, seg.original) >= textTol;
+      if (!last) {
+        out.push(seg);
+        continue;
+      }
 
-      if (!dup) out.push(seg);
-      else {
-        if (seg.end - seg.start > last.end - last.start)
-          out[out.length - 1] = seg;
+      const startsClose = Math.abs(last.start - seg.start) <= timeTol;
+      const overlap = Math.max(
+        0,
+        Math.min(last.end, seg.end) - Math.max(last.start, seg.start)
+      );
+      const timeOverlap = overlap > 0;
+      const textSimOk =
+        jaccard(last.original, seg.original) >= textTol ||
+        charSimilarity(last.original, seg.original) >= 0.8;
+      const isDuplicate = startsClose && timeOverlap && textSimOk;
+
+      if (!isDuplicate) {
+        out.push(seg);
+      } else {
+        // Keep the one with longer duration; if equal, prefer higher avg_logprob
+        const lastDur = last.end - last.start;
+        const currDur = seg.end - seg.start;
+        const preferCurr =
+          currDur > lastDur ||
+          (currDur === lastDur &&
+            (seg.avg_logprob ?? -Infinity) > (last.avg_logprob ?? -Infinity));
+        if (preferCurr) out[out.length - 1] = seg;
       }
     }
     return out.map((s, i) => ({ ...s, index: i + 1 }));

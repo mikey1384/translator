@@ -62,7 +62,6 @@ export async function transcribeGapAudioWithRetry(
     signal,
     ffmpeg,
     createdChunkPaths,
-    mediaDuration,
   }: {
     audioPath: string;
     tempDir: string;
@@ -70,7 +69,6 @@ export async function transcribeGapAudioWithRetry(
     signal: AbortSignal;
     ffmpeg: FFmpegContext;
     createdChunkPaths: string[];
-    mediaDuration: number;
   }
 ): Promise<SrtSegment[]> {
   throwIfAborted(signal);
@@ -107,7 +105,6 @@ export async function transcribeGapAudioWithRetry(
       gapDuration <= MIN_DURATION_FOR_RETRY_SPLIT_SEC
         ? promptForOriginalGap
         : undefined,
-    mediaDuration,
   });
 
   const goodSegs = segments.filter(isGood);
@@ -186,7 +183,6 @@ export async function transcribeGapAudioWithRetry(
           signal,
           operationId,
           promptContext: promptForOriginalGap,
-          mediaDuration,
         });
         retriedSegmentsFromHalves.push(...segmentsFromHalf.filter(isGood));
       }
@@ -233,7 +229,6 @@ export async function transcribeGapAudioWithRetry(
           signal,
           operationId,
           promptContext: promptForOriginalGap,
-          mediaDuration,
         });
         retriedSegmentsFromHalves.push(...segmentsFromInterval.filter(isGood));
         intervalIndex++;

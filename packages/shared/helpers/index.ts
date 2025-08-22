@@ -65,12 +65,44 @@ export function buildSrt({
 }): string {
   if (!segments?.length) return '';
 
+  const wrapSingle = (text: string): string => {
+    const MAX_LINE = 42;
+    if (!text) return '';
+    const clean = text.replace(/\s+/g, ' ').trim();
+    if (clean.length <= MAX_LINE) return clean;
+    // Try soft wrap at punctuation or space near midpoint
+    const target = Math.min(clean.length, MAX_LINE * 2);
+    const midpoint = Math.min(target, Math.floor(clean.length / 2));
+    const candidates = [',', ';', ':', ' — ', ' - ', ' '];
+    let splitIdx = -1;
+    for (const c of candidates) {
+      const left = clean.lastIndexOf(c, Math.max(0, midpoint + 10));
+      const right = clean.indexOf(c, Math.max(0, midpoint - 10));
+      const pick = Math.max(left, right);
+      if (pick !== -1) {
+        splitIdx = pick + (c.trim() ? c.length : 1);
+        break;
+      }
+    }
+    if (splitIdx <= 0 || splitIdx >= clean.length)
+      splitIdx = Math.min(MAX_LINE, clean.length);
+    const left = clean.slice(0, splitIdx).trim();
+    const right = clean.slice(splitIdx).trim();
+    const leftTrim = left.slice(0, MAX_LINE).trim();
+    const rightTrim = right.slice(0, MAX_LINE).trim();
+    return `${leftTrim}\n${rightTrim}`;
+  };
+
   return segments
     .map((seg, i) => {
       const idx = seg.index ?? i + 1;
       const start = secondsToSrtTime(seg.start);
       const end = secondsToSrtTime(seg.end);
-      const cue = cueText(seg, mode);
+      let cue = cueText(seg, mode);
+      if (mode !== 'dual') {
+        // Enforce <= 2 lines and <= 42 chars/line for single-language outputs
+        cue = wrapSingle(cue);
+      }
 
       return `${idx}\n${start} --> ${end}\n${cue}`;
     })
@@ -229,5 +261,3 @@ export const validateSubtitleTimings = (
     return fixed;
   });
 };
-
-
