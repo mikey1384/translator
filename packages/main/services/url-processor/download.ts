@@ -39,13 +39,11 @@ export async function downloadVideoFromPlatform(
     stage: 'Warming up...',
   });
 
-  // Ensure yt-dlp binary is available and working (installs if missing)
-  // Always skip pre-download self-update to avoid blocking; we will trigger background update after success
-  const firstRunFlag = join(app.getPath('userData'), 'bin', '.yt-dlp-initialized');
-  const hasInitialized = await fsp
-    .access(firstRunFlag)
-    .then(() => true)
-    .catch(() => false);
+  const firstRunFlag = join(
+    app.getPath('userData'),
+    'bin',
+    '.yt-dlp-initialized'
+  );
 
   const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: true });
 
@@ -182,300 +180,352 @@ export async function downloadVideoFromPlatform(
 
   // Wrap download attempt flow
   try {
-  let attempt = 1;
-  const maxAttempts = 2;
-  let lastError: any = null;
+    let attempt = 1;
+    const maxAttempts = 2;
+    let lastError: any = null;
 
-  while (attempt <= maxAttempts) {
-    let startupTimeoutFired = false;
-    try {
-      subprocess = execa(ytDlpPath, args, {
-        windowsHide: true,
-        encoding: 'utf8',
-        all: true,
-      });
+    while (attempt <= maxAttempts) {
+      let startupTimeoutFired = false;
+      try {
+        subprocess = execa(ytDlpPath, args, {
+          windowsHide: true,
+          encoding: 'utf8',
+          all: true,
+        });
 
-      if (subprocess) {
-        registerDownloadProcess(operationId, subprocess);
-        log.info(`[URLprocessor] Added download process ${operationId} to map.`);
-
-      subprocess.on('error', (err: any) => {
-        log.error(
-          `[URLprocessor] Subprocess ${operationId} emitted error:`,
-          err
-        );
-        if (removeDownloadProcess(operationId)) {
+        if (subprocess) {
+          registerDownloadProcess(operationId, subprocess);
           log.info(
-            `[URLprocessor] Removed download process ${operationId} from map due to subprocess error event.`
+            `[URLprocessor] Added download process ${operationId} to map.`
           );
-        }
-      });
-      subprocess.on('exit', (code: number, signal: string) => {
-        log.info(
-          `[URLprocessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
-        );
-        if (removeDownloadProcess(operationId)) {
-          log.info(
-            `[URLprocessor] Removed download process ${operationId} from map due to subprocess exit event.`
-          );
-        }
-      });
-    } else {
-      log.error(
-        `[URLprocessor] Failed to create subprocess (Op ID: ${operationId}).`
-      );
-      throw new Error('Could not start yt-dlp process.');
-    }
 
-      // --- Stream Processing ---
-      if (subprocess.all) {
-        let firstOutputSeen = false;
-        // Startup watchdog: if no output within 30s of launch, kill once and retry
-        const startupTimer = setTimeout(() => {
-          if (!firstOutputSeen) {
-            startupTimeoutFired = true;
-            try {
-              subprocess?.kill('SIGTERM');
-            } catch {}
-            log.error('[URLprocessor] Startup stall: no output from yt-dlp for 30s, will retry once');
-          }
-        }, 30_000);
-
-        subprocess.all.on('data', (chunk: Buffer) => {
-          const chunkString = chunk.toString();
-          if (!firstOutputSeen) {
-            firstOutputSeen = true;
-            clearTimeout(startupTimer);
-          }
-          // Normalize carriage returns to newlines to handle progress lines that use \r
-          stdoutBuffer += chunkString.replace(/\r/g, '\n');
-
-        // Process lines
-        let newlineIndex;
-        while ((newlineIndex = stdoutBuffer.indexOf('\n')) >= 0) {
-          const rawLine = stdoutBuffer.substring(0, newlineIndex);
-          const line = rawLine.trim();
-          stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
-
-          if (line.startsWith('{') && line.endsWith('}')) {
-            // Assume this is the final JSON output
-            finalJsonOutput = line;
-            log.info('[URLprocessor] Received potential JSON output.');
-            // Try parsing immediately to validate
-            try {
-              downloadInfo = JSON.parse(finalJsonOutput);
-              finalFilepath = downloadInfo?._filename;
+          subprocess.on('error', (err: any) => {
+            log.error(
+              `[URLprocessor] Subprocess ${operationId} emitted error:`,
+              err
+            );
+            if (removeDownloadProcess(operationId)) {
               log.info(
-                `[URLprocessor] Parsed final filename from JSON: ${finalFilepath}`
+                `[URLprocessor] Removed download process ${operationId} from map due to subprocess error event.`
               );
-            } catch (jsonError) {
-              log.warn(
-                `[URLprocessor] Failed to parse line as JSON immediately: ${line}`,
-                jsonError
-              );
-              finalJsonOutput = ''; // Reset if parsing failed
-              downloadInfo = null;
-              finalFilepath = null;
             }
-          } else if (line.startsWith('[download]')) {
-            const progressMatch = line.match(/([\d.]+)%/);
-            if (progressMatch && progressMatch[1]) {
-              const pct = parseFloat(progressMatch[1]);
+          });
+          subprocess.on('exit', (code: number, signal: string) => {
+            log.info(
+              `[URLprocessor] Subprocess ${operationId} exited with code ${code}, signal ${signal}.`
+            );
+            if (removeDownloadProcess(operationId)) {
+              log.info(
+                `[URLprocessor] Removed download process ${operationId} from map due to subprocess exit event.`
+              );
+            }
+          });
+        } else {
+          log.error(
+            `[URLprocessor] Failed to create subprocess (Op ID: ${operationId}).`
+          );
+          throw new Error('Could not start yt-dlp process.');
+        }
 
-              // Phase detection using external lastPct
-              if (pct < 1 && phase === 'dl1' && lastPct > 90 && !didAutoLift) {
-                // Detect reset near 0 after potentially hitting 100
-                phase = 'dl2';
-                didAutoLift = true;
+        // --- Stream Processing ---
+        if (subprocess.all) {
+          let firstOutputSeen = false;
+          // Startup watchdog: if no output within 30s of launch, kill once and retry
+          const startupTimer = setTimeout(() => {
+            if (!firstOutputSeen) {
+              startupTimeoutFired = true;
+              try {
+                subprocess?.kill('SIGTERM');
+              } catch {
+                // fall through
+              }
+              log.error(
+                '[URLprocessor] Startup stall: no output from yt-dlp for 30s, will retry once'
+              );
+            }
+          }, 30_000);
+
+          subprocess.all.on('data', (chunk: Buffer) => {
+            const chunkString = chunk.toString();
+            if (!firstOutputSeen) {
+              firstOutputSeen = true;
+              clearTimeout(startupTimer);
+            }
+            // Normalize carriage returns to newlines to handle progress lines that use \r
+            stdoutBuffer += chunkString.replace(/\r/g, '\n');
+
+            // Process lines
+            let newlineIndex;
+            while ((newlineIndex = stdoutBuffer.indexOf('\n')) >= 0) {
+              const rawLine = stdoutBuffer.substring(0, newlineIndex);
+              const line = rawLine.trim();
+              stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
+
+              if (line.startsWith('{') && line.endsWith('}')) {
+                // Assume this is the final JSON output
+                finalJsonOutput = line;
+                log.info('[URLprocessor] Received potential JSON output.');
+                // Try parsing immediately to validate
+                try {
+                  downloadInfo = JSON.parse(finalJsonOutput);
+                  finalFilepath = downloadInfo?._filename;
+                  log.info(
+                    `[URLprocessor] Parsed final filename from JSON: ${finalFilepath}`
+                  );
+                } catch (jsonError) {
+                  log.warn(
+                    `[URLprocessor] Failed to parse line as JSON immediately: ${line}`,
+                    jsonError
+                  );
+                  finalJsonOutput = ''; // Reset if parsing failed
+                  downloadInfo = null;
+                  finalFilepath = null;
+                }
+              } else if (line.startsWith('[download]')) {
+                const progressMatch = line.match(/([\d.]+)%/);
+                if (progressMatch && progressMatch[1]) {
+                  const pct = parseFloat(progressMatch[1]);
+
+                  // Phase detection using external lastPct
+                  if (
+                    pct < 1 &&
+                    phase === 'dl1' &&
+                    lastPct > 90 &&
+                    !didAutoLift
+                  ) {
+                    // Detect reset near 0 after potentially hitting 100
+                    phase = 'dl2';
+                    didAutoLift = true;
+                    log.info(
+                      `[URLprocessor] Phase transition detected: dl1 -> dl2 (Op ID: ${operationId})`
+                    );
+                  }
+
+                  const overall =
+                    phase === 'dl1'
+                      ? PROGRESS.DL1_START +
+                        (pct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100
+                      : PROGRESS.FINAL_START +
+                        (pct * (PROGRESS.FINAL_END - PROGRESS.FINAL_START)) /
+                          100;
+
+                  const displayPercent = Math.min(
+                    PROGRESS.FINAL_END - 1,
+                    Math.max(PROGRESS.WARMUP_END, overall)
+                  );
+
+                  progressCallback?.({
+                    percent: displayPercent,
+                    stage: 'Downloading...',
+                  });
+                  lastPct = pct;
+                }
+              } else if (
+                /Downloading webpage|Extracting|Downloading player|Downloading m3u8|Downloading MPD/i.test(
+                  line
+                )
+              ) {
+                // Early warmup feedback before numeric progress appears
+                const prepPercent = Math.max(
+                  PROGRESS.WARMUP_END,
+                  PROGRESS.WARMUP_END + 1
+                );
+                progressCallback?.({
+                  percent: prepPercent,
+                  stage: 'Fetching video info…',
+                });
+              } else if (
+                /Merging formats/i.test(line) ||
+                /merging/i.test(line)
+              ) {
+                // When yt-dlp is merging formats, downloading is complete
+                const mergePercent = Math.min(
+                  PROGRESS.FINAL_END - 2,
+                  Math.max(PROGRESS.FINAL_START, PROGRESS.FINAL_START + 5)
+                );
+                progressCallback?.({
+                  percent: mergePercent,
+                  stage: 'Merging formats…',
+                });
+              } else if (
+                /Post-?processing/i.test(line) ||
+                /Fixing/i.test(line)
+              ) {
+                // Post-processing stage near the end
+                const ppPercent = Math.min(
+                  PROGRESS.FINAL_END - 1,
+                  PROGRESS.FINAL_START + 8
+                );
+                progressCallback?.({
+                  percent: ppPercent,
+                  stage: 'Post-processing…',
+                });
+              } else if (/Destination:/i.test(line)) {
+                // Early indication that output file path is determined
+                const destPercent = Math.max(
+                  PROGRESS.WARMUP_END + 2,
+                  PROGRESS.WARMUP_END
+                );
+                progressCallback?.({
+                  percent: destPercent,
+                  stage: 'Preparing download…',
+                });
+              } else if (
+                line.startsWith(outputDir) &&
+                line.match(/\.(mp4|mkv|webm|m4a)$/i)
+              ) {
+                finalFilepath = line.trim();
                 log.info(
-                  `[URLprocessor] Phase transition detected: dl1 -> dl2 (Op ID: ${operationId})`
+                  `[URLprocessor] Got final filepath from --print: ${finalFilepath}`
                 );
               }
-
-              const overall =
-                phase === 'dl1'
-                  ? PROGRESS.DL1_START +
-                    (pct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100
-                  : PROGRESS.FINAL_START +
-                    (pct * (PROGRESS.FINAL_END - PROGRESS.FINAL_START)) / 100;
-
-              const displayPercent = Math.min(
-                PROGRESS.FINAL_END - 1,
-                Math.max(PROGRESS.WARMUP_END, overall)
-              );
-
-              progressCallback?.({
-                percent: displayPercent,
-                stage: 'Downloading...',
-              });
-              lastPct = pct;
             }
-          } else if (/Downloading webpage|Extracting|Downloading player|Downloading m3u8|Downloading MPD/i.test(line)) {
-            // Early warmup feedback before numeric progress appears
-            const prepPercent = Math.max(PROGRESS.WARMUP_END, PROGRESS.WARMUP_END + 1);
-            progressCallback?.({
-              percent: prepPercent,
-              stage: 'Fetching video info…',
-            });
-          } else if (/Merging formats/i.test(line) || /merging/i.test(line)) {
-            // When yt-dlp is merging formats, downloading is complete
-            const mergePercent = Math.min(
-              PROGRESS.FINAL_END - 2,
-              Math.max(PROGRESS.FINAL_START, PROGRESS.FINAL_START + 5)
-            );
-            progressCallback?.({
-              percent: mergePercent,
-              stage: 'Merging formats…',
-            });
-          } else if (/Post-?processing/i.test(line) || /Fixing/i.test(line)) {
-            // Post-processing stage near the end
-            const ppPercent = Math.min(PROGRESS.FINAL_END - 1, PROGRESS.FINAL_START + 8);
-            progressCallback?.({
-              percent: ppPercent,
-              stage: 'Post-processing…',
-            });
-          } else if (/Destination:/i.test(line)) {
-            // Early indication that output file path is determined
-            const destPercent = Math.max(PROGRESS.WARMUP_END + 2, PROGRESS.WARMUP_END);
-            progressCallback?.({
-              percent: destPercent,
-              stage: 'Preparing download…',
-            });
-          } else if (
-            line.startsWith(outputDir) &&
-            line.match(/\.(mp4|mkv|webm|m4a)$/i)
-          ) {
-            finalFilepath = line.trim();
-            log.info(
-              `[URLprocessor] Got final filepath from --print: ${finalFilepath}`
-            );
-          }
+          });
+        } else {
+          log.error(
+            `[URLprocessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
+          );
+          throw new Error('Could not access yt-dlp output stream.');
         }
-        });
-      } else {
-        log.error(
-          `[URLprocessor] Failed to access subprocess output stream (Op ID: ${operationId}).`
-        );
-        throw new Error('Could not access yt-dlp output stream.');
-      }
 
-      // Wait for the process to finish, but guard against long stalls with a heartbeat
-      const result: any = await Promise.race([
-      subprocess,
-      new Promise((_, reject) => {
-        // If no progress lines for a long time, fail fast so UI can retry
-        const stallMs = 30_000; // 30s without any output considered stalled
-        let lastTick: number | null = null; // start monitoring only after first output
-        const interval = setInterval(() => {
-          if (lastTick !== null && Date.now() - lastTick > stallMs) {
-            clearInterval(interval);
-            try {
-              subprocess?.kill('SIGTERM');
-            } catch {}
-            reject(new Error('Download appears stalled (no progress for 30s)'));
-          }
-        }, 5_000);
-        // Update heartbeat whenever data arrives
-        subprocess?.all?.on('data', () => (lastTick = Date.now()));
-        // Cleanup when finished
-        subprocess?.then?.(() => clearInterval(interval)).catch(() => clearInterval(interval));
-      }),
-    ]);
+        // Wait for the process to finish, but guard against long stalls with a heartbeat
+        const result: any = await Promise.race([
+          subprocess,
+          new Promise((_, reject) => {
+            // If no progress lines for a long time, fail fast so UI can retry
+            const stallMs = 30_000; // 30s without any output considered stalled
+            let lastTick: number | null = null; // start monitoring only after first output
+            const interval = setInterval(() => {
+              if (lastTick !== null && Date.now() - lastTick > stallMs) {
+                clearInterval(interval);
+                try {
+                  subprocess?.kill('SIGTERM');
+                } catch {
+                  // fall through
+                }
+                reject(
+                  new Error('Download appears stalled (no progress for 30s)')
+                );
+              }
+            }, 5_000);
+            // Update heartbeat whenever data arrives
+            subprocess?.all?.on('data', () => (lastTick = Date.now()));
+            // Cleanup when finished
+            subprocess
+              ?.then?.(() => clearInterval(interval))
+              .catch(() => clearInterval(interval));
+          }),
+        ]);
 
-      log.info(
-        `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
-      );
-      // Process any remaining data in the buffer
-    if (
-      stdoutBuffer.trim().startsWith('{') &&
-      stdoutBuffer.trim().endsWith('}')
-    ) {
-      finalJsonOutput = stdoutBuffer.trim();
-      log.info('[URLprocessor] Processing remaining buffer as JSON.');
-      try {
-        downloadInfo = JSON.parse(finalJsonOutput);
-        finalFilepath = downloadInfo?._filename;
         log.info(
-          `[URLprocessor] Parsed filename from final buffer: ${finalFilepath}`
+          `[URLprocessor] yt-dlp process finished with code ${result.exitCode}`
         );
-      } catch (jsonError) {
-        log.error(
-          '[URLprocessor] Error parsing final JSON from buffer:',
-          jsonError
+        // Process any remaining data in the buffer
+        if (
+          stdoutBuffer.trim().startsWith('{') &&
+          stdoutBuffer.trim().endsWith('}')
+        ) {
+          finalJsonOutput = stdoutBuffer.trim();
+          log.info('[URLprocessor] Processing remaining buffer as JSON.');
+          try {
+            downloadInfo = JSON.parse(finalJsonOutput);
+            finalFilepath = downloadInfo?._filename;
+            log.info(
+              `[URLprocessor] Parsed filename from final buffer: ${finalFilepath}`
+            );
+          } catch (jsonError) {
+            log.error(
+              '[URLprocessor] Error parsing final JSON from buffer:',
+              jsonError
+            );
+            log.error(`[URLprocessor] Final buffer content: ${stdoutBuffer}`);
+            throw new Error('Failed to parse final JSON output from yt-dlp.');
+          }
+        } else if (!finalFilepath && stdoutBuffer.trim()) {
+          // Log remaining buffer if it wasn't JSON and we don't have a path yet
+          log.warn(
+            `[URLprocessor] yt-dlp finished with non-JSON remaining buffer: ${stdoutBuffer.trim().substring(0, 500)}...`
+          );
+        }
+
+        if (!finalFilepath) {
+          log.error(
+            '[URLprocessor] Final filename not found in yt-dlp output.'
+          );
+          log.error(`[URLprocessor] Final JSON attempted: ${finalJsonOutput}`);
+          throw new Error('yt-dlp did not provide a final filename in JSON.');
+        }
+
+        log.info(`[URLprocessor] Final file path determined: ${finalFilepath}`);
+
+        progressCallback?.({
+          percent: PROGRESS.FINAL_END - 5, // Use constant
+          stage: 'Download complete, verifying...',
+        });
+
+        // --- File Verification ---
+        if (!fs.existsSync(finalFilepath)) {
+          log.error(
+            `[URLprocessor] Downloaded file not found at path: ${finalFilepath}`
+          );
+          throw new Error(`Downloaded file not found: ${finalFilepath}`);
+        }
+        const stats = await fsp.stat(finalFilepath);
+        if (!stats.size) {
+          log.error(
+            `[URLprocessor] Downloaded file is empty: ${finalFilepath}`
+          );
+          await fsp.unlink(finalFilepath); // Clean up empty file
+          throw new Error(`Downloaded file is empty: ${finalFilepath}`);
+        }
+        log.info(
+          `[URLprocessor] File verified: ${finalFilepath}, Size: ${stats.size}`
         );
-        log.error(`[URLprocessor] Final buffer content: ${stdoutBuffer}`);
-        throw new Error('Failed to parse final JSON output from yt-dlp.');
+        log.info(
+          `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
+        );
+
+        // After successful download, mark initialized and trigger background self-update for future runs
+        try {
+          await fsp.mkdir(join(app.getPath('userData'), 'bin'), {
+            recursive: true,
+          });
+          await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
+        } catch {
+          // fall through
+        }
+        try {
+          // Fire-and-forget update; do not block user flow
+          execa(ytDlpPath, ['-U', '--quiet'], {
+            windowsHide: true,
+            timeout: 120_000,
+          }).catch(() => {});
+        } catch {
+          // fall through
+        }
+
+        return {
+          filepath: finalFilepath,
+          info: downloadInfo,
+          proc: subprocess!,
+        };
+      } catch (error: any) {
+        lastError = error;
+        const wasStartupStall =
+          (error?.message || '').includes('no progress for 30s') ||
+          startupTimeoutFired;
+        if (wasStartupStall && attempt < maxAttempts) {
+          log.warn(
+            `[URLprocessor] Retrying download due to startup stall (attempt ${attempt + 1}/${maxAttempts})`
+          );
+          attempt += 1;
+          continue;
+        }
+        throw error;
       }
-    } else if (!finalFilepath && stdoutBuffer.trim()) {
-      // Log remaining buffer if it wasn't JSON and we don't have a path yet
-      log.warn(
-        `[URLprocessor] yt-dlp finished with non-JSON remaining buffer: ${stdoutBuffer.trim().substring(0, 500)}...`
-      );
     }
-
-    if (!finalFilepath) {
-      log.error('[URLprocessor] Final filename not found in yt-dlp output.');
-      log.error(`[URLprocessor] Final JSON attempted: ${finalJsonOutput}`);
-      throw new Error('yt-dlp did not provide a final filename in JSON.');
-    }
-
-    log.info(`[URLprocessor] Final file path determined: ${finalFilepath}`);
-
-    progressCallback?.({
-      percent: PROGRESS.FINAL_END - 5, // Use constant
-      stage: 'Download complete, verifying...',
-    });
-
-      // --- File Verification ---
-    if (!fs.existsSync(finalFilepath)) {
-      log.error(
-        `[URLprocessor] Downloaded file not found at path: ${finalFilepath}`
-      );
-      throw new Error(`Downloaded file not found: ${finalFilepath}`);
-    }
-    const stats = await fsp.stat(finalFilepath);
-    if (!stats.size) {
-      log.error(`[URLprocessor] Downloaded file is empty: ${finalFilepath}`);
-      await fsp.unlink(finalFilepath); // Clean up empty file
-      throw new Error(`Downloaded file is empty: ${finalFilepath}`);
-    }
-    log.info(
-      `[URLprocessor] File verified: ${finalFilepath}, Size: ${stats.size}`
-    );
-    log.info(
-      `[URLprocessor] Download successful, returning filepath: ${finalFilepath}`
-    );
-
-    // After successful download, mark initialized and trigger background self-update for future runs
-    try {
-      await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
-      await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
-    } catch {}
-    try {
-      // Fire-and-forget update; do not block user flow
-      execa(ytDlpPath, ['-U', '--quiet'], { windowsHide: true, timeout: 120_000 }).catch(() => {});
-    } catch {}
-
-      return { filepath: finalFilepath, info: downloadInfo, proc: subprocess! };
-    } catch (error: any) {
-      lastError = error;
-      const wasStartupStall = (error?.message || '').includes('no progress for 30s') || startupTimeoutFired;
-      if (wasStartupStall && attempt < maxAttempts) {
-        log.warn(`[URLprocessor] Retrying download due to startup stall (attempt ${attempt + 1}/${maxAttempts})`);
-        attempt += 1;
-        continue;
-      }
-      throw error;
-    }
-  }
-  // If we exit loop without return, throw last error
-  try {
     throw lastError || new Error('Download failed after retries');
-  } catch (e) {
-    // fall-through to generic catch below
-    throw e;
-  }
-} catch (error: any) {
+  } catch (error: any) {
     const rawErrorMessage = error.message || String(error);
     let userFriendlyErrorMessage = rawErrorMessage;
 
