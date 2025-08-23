@@ -249,17 +249,9 @@ export async function transcribePass({
         .flat()
         .sort((a, b) => a.start - b.start);
 
-      // Clean newly generated transcription segments for this batch
-      const cleanedBatch = await cleanTranscriptBatch({
-        segments: thisBatchSegments,
-        operationId,
-        signal,
-        mediaDuration: duration,
-      });
+      overallSegments.push(...thisBatchSegments);
 
-      overallSegments.push(...cleanedBatch);
-
-      const orderedText = cleanedBatch.map(s => s.original).join(' ');
+      const orderedText = thisBatchSegments.map(s => s.original).join(' ');
       batchContext += ' ' + orderedText;
       batchContext = buildPrompt(batchContext);
 
@@ -401,13 +393,6 @@ export async function transcribePass({
           const filteredNewSegs = newSegs.filter(
             seg => seg.end > gap.start && seg.start < gap.end
           );
-          // Clean segments produced during gap repair before returning
-          const cleanedNewSegs = await cleanTranscriptBatch({
-            segments: filteredNewSegs,
-            operationId,
-            signal,
-            mediaDuration: duration,
-          });
 
           processedInPass += 1;
           if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
@@ -427,9 +412,9 @@ export async function transcribePass({
 
           if (signal?.aborted) {
             throwIfAborted(signal);
-            return cleanedNewSegs;
+            return filteredNewSegs;
           }
-          return cleanedNewSegs;
+          return filteredNewSegs;
         })
       );
 
@@ -499,6 +484,7 @@ export async function transcribePass({
       throwIfAborted(signal);
     }
 
+    // 1) AI scrub (repetition-aware) with progress allocated across TRANSCRIBE→TRANSLATE window
     const totalToScrub = overallSegments.length;
     progressCallback?.({
       percent: scaleProgress(0, Stage.TRANSCRIBE, Stage.TRANSLATE),
