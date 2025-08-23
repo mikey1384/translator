@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { SrtSegment } from '@shared-types/app';
 import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
-import { throwIfAborted } from './utils.js';
+import { scrubHallucinationsBatch, throwIfAborted } from './utils.js';
 import * as stage5Client from '../stage5-client.js';
 
 export const VALID_SEG_MARGIN = 0.05;
@@ -16,6 +16,7 @@ export async function transcribeChunk({
   operationId,
   promptContext,
   language,
+  mediaDuration,
 }: {
   chunkIndex: number | string;
   chunkPath: string;
@@ -24,6 +25,7 @@ export async function transcribeChunk({
   operationId: string;
   promptContext?: string;
   language?: string;
+  mediaDuration?: number;
 }): Promise<SrtSegment[]> {
   throwIfAborted(signal);
 
@@ -205,9 +207,16 @@ export async function transcribeChunk({
       } as SrtSegment);
     }
 
+    const cleanSegs = await scrubHallucinationsBatch({
+      segments: srtSegments,
+      operationId,
+      signal,
+      mediaDuration,
+    });
+
     const norm = (w: string) => w.replace(/[\p{Cf}\p{P}\p{S}]+$/u, '');
     const lastJSONWord = words.at(-1)?.word?.trim();
-    const lastCaptionWord = srtSegments.at(-1)?.original.split(/\s+/).at(-1);
+    const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
     if (
       lastJSONWord &&
       lastCaptionWord &&
@@ -217,7 +226,7 @@ export async function transcribeChunk({
         `[${operationId}] ⚠️ tail-word mismatch: "${lastJSONWord}" ➜ "${lastCaptionWord}"`
       );
     }
-    return srtSegments;
+    return cleanSegs;
   } catch (error: any) {
     if (
       error.name === 'AbortError' ||

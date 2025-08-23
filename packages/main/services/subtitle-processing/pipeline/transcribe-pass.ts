@@ -484,29 +484,8 @@ export async function transcribePass({
       throwIfAborted(signal);
     }
 
-    // 1) AI scrub (repetition-aware) with progress allocated across TRANSCRIBE→TRANSLATE window
-    const totalToScrub = overallSegments.length;
-    progressCallback?.({
-      percent: scaleProgress(0, Stage.TRANSCRIBE, Stage.TRANSLATE),
-      stage: `__i18n__:scrubbing_hallucinations:0:${totalToScrub}`,
-    });
-    const cleaned = await cleanTranscriptBatch({
+    const cleaned = cleanTranscriptBatch({
       segments: overallSegments,
-      operationId,
-      signal,
-      mediaDuration: duration,
-      onProgress: (done, total) => {
-        progressCallback?.({
-          percent: scaleProgress(
-            (done / Math.max(1, total)) * 100,
-            Stage.TRANSCRIBE,
-            Stage.TRANSLATE
-          ),
-          stage: `__i18n__:scrubbing_hallucinations:${done}:${total}`,
-          current: done,
-          total,
-        });
-      },
     });
 
     cleaned

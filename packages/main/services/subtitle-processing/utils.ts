@@ -211,200 +211,206 @@ output → @@LINE@@ 25: The budget is 1,250,000 dollars.
   }
 }
 
-export async function cleanTranscriptBatch({
-  segments,
-  operationId,
-  signal,
-  mediaDuration = 0,
-  onProgress,
-}: {
-  segments: SrtSegment[];
-  operationId: string;
-  signal?: AbortSignal;
-  mediaDuration?: number;
-  onProgress?: (done: number, total: number) => void;
-}): Promise<SrtSegment[]> {
-  const BATCH_SIZE = 20;
-  const cleanedSegments: SrtSegment[] = [];
+export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
+  const TERM_RE = /[.!?…]$/u;
+  const cleanNoise = (txt: string): string => {
+    let t = txt ?? '';
+    // remove emojis
+    t = t.replace(/\p{Extended_Pictographic}/gu, '');
+    // collapse long runs of odd symbols (keep single)
+    t = t.replace(/([^\p{L}\p{N}\s.,'"-–—(){}[\]%:;!?…])\1{2,}/gu, '$1');
+    // normalize whitespace
+    t = t.replace(/\s{2,}/g, ' ').trim();
+    return t;
+  };
+  const normalise = (txt: string): string =>
+    (txt ?? '')
+      .replace(/[\uFF0C\u066B\u066C\uFE50]/g, ',') // exotic comma variants
+      .trim();
 
-  const SYSTEM_PROMPT_TEMPLATE = `
-You are a subtitle noise-filter.
+  const normForCompare = (s: string): string =>
+    (s ?? '')
+      .toLowerCase()
+      .normalize('NFKC')
+      .replace(/[“”„‟"«»’‘‚‛'`´]/g, "'")
+      .replace(/[‐-‒–—―]/g, '-') // dashes
+      .replace(/[(){}$begin:math:display$$end:math:display$]/g, ' ')
+      .replace(/[^ \p{L}\p{N}'-]+/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-VIDEO_LENGTH_SEC = \${VIDEO_LENGTH_SEC}
-An outro is only valid if caption.start_sec > 0.9 * VIDEO_LENGTH_SEC.
-*** PRESERVING PUNCTUATION IS CRITICAL. DO NOT DELETE OR ALTER STANDARD PUNCTUATION unless it is part of a clear noise pattern (e.g., 'text...???!!!'). ***
-The following characters are ALWAYS allowed and never count as noise:
-. , ? ! … : ; " ' - – — ( ) [ ] { } %
-NOTE: Commas inside digit-groups (e.g. 1,234) are standard punctuation and must be preserved.
+  const tokenize = (s: string) => normForCompare(s).split(' ').filter(Boolean);
 
-TASK
-────
-For every caption, decide whether to:
-  • clean  – Remove only clear noise such as emojis, repeated special characters (e.g., ★★★★, ░░░), premature promotional phrases early in the video, and **immediate repetitions** (see REPETITION RULES).
-  • delete – Remove the caption entirely if it contains no meaningful words, is a premature outro, or if it is **wholly duplicated** by its neighbor with no new content.
-  • keep as is – If the caption is meaningful and does not contain noise or unwanted repetition, preserve it exactly, including punctuation.
+  const jaccard = (a: string, b: string): number => {
+    const A = new Set(tokenize(a));
+    const B = new Set(tokenize(b));
+    if (!A.size && !B.size) return 1;
+    let inter = 0;
+    for (const x of A) if (B.has(x)) inter++;
+    return inter / (A.size + B.size - inter || 1);
+  };
 
-REPETITION RULES
-────────────────
-A. Adjacent repetition across captions:
-   - If caption i begins by repeating a phrase from the end of caption i-1 (e.g., the first few words of i match the last words of i-1), **remove the repeated phrase from the start of caption i**.
-   - If caption i is entirely a repetition of i-1 (same sentence or same meaning with trivial rewording), prefer a **SOFT MERGE** (see below) using the better phrasing, rather than deleting, unless one line is pure noise.
+  const safeJoin = (a: string, b: string) => {
+    const left = a.trim();
+    const right = b.trim();
+    if (!left) return right;
+    if (!right) return left;
+    const needsSpace =
+      /[\p{L}\p{N}]$/u.test(left) && /^[\p{L}\p{N}]/u.test(right);
+    return needsSpace ? `${left} ${right}` : `${left}${right}`;
+  };
 
-B. Within-caption repetition:
-   - If a caption repeats a phrase immediately (e.g., "a lot of Greco Roman a lot of Greco Roman style techniques"), remove the repeated earlier occurrence so the sentence reads once and naturally.
-
-SOFT MERGE (De-dup across adjacent captions)
-────────────────────────────────────────────
-When two adjacent captions clearly form one sentence/phrase or are near-duplicates with no new information, perform a **SOFT MERGE**:
-  • Construct the merged best version of the sentence/phrase.
-  • **SOFT MERGE OUTPUT RULE:** write the **same merged text for both** indices (i-1 and i). This keeps line count/order unchanged while extending on-screen persistence.
-  • Do not merge across unrelated content; if one line is noise/gibberish, delete it instead.
-
-OUTPUT (exactly one line per input, same order)
-  @@LINE@@ <index>: <clean text>
-If the caption should be deleted, output nothing after the colon.
-
-RULES (Strictly Follow)
-────────────────────
-1. **Preserve Standard Punctuation** unless it is part of a noise pattern (excessive '...???!!!').
-2. **Detecting Premature Outros:** If closing phrases appear and start_sec < 0.9 * VIDEO_LENGTH_SEC, delete.
-3. **Spam or Gibberish:** Delete meaningless noise.
-4. **Meaningful but Awkward:** Keep unless cleaning obvious noise or repetition per above.
-5. **Timestamp Parsing:** Input lines appear as '<index> @ <start_sec>: <text>' in chronological order. Use adjacency to apply A above.
-6. **Preserve Commas in Numbers.**
-7. **Unrealistic Timing:** If a caption duration is very short (e.g., < 0.8s) but contains multiple sentences or excessive text density, delete it as non-usable; do not invent splits.
-
-EXAMPLES
-────────
-input  → 17: ★★★★★★★★★★
-output → @@LINE@@ 17:
-
-input  → 18: Thanks for watching!!! 👍👍👍 @ 30.5
-output → @@LINE@@ 18:
-
-input  → 19: Thanks for watching! See you next time. @ 950.0
-output → @@LINE@@ 19: Thanks for watching! See you next time.
-
-input  → 20: In their earlier matches you could see a lot of Greco Roman @ 12.3
-          21: a lot of Greco Roman style techniques being @ 14.0
-output → @@LINE@@ 20: In their earlier matches you could see a lot of Greco Roman
-         @@LINE@@ 21: style techniques being
-
-input  → 22: a lot of Greco Roman a lot of Greco Roman style techniques @ 15.0
-output → @@LINE@@ 22: a lot of Greco Roman style techniques
-
-input  → 23: The budget is 1,250,000 dollars. @ 950.0
-output → @@LINE@@ 23: The budget is 1,250,000 dollars.
-
-input  → 30: Thanks for watching! @ 100.0
-          31: watching! See you next time @ 101.2
-output → @@LINE@@ 30: Thanks for watching!
-         @@LINE@@ 31: Thanks for watching!
-
-# NEW — soft merge for one sentence split unnaturally
-input  → 32: This is absolutely @ 120.0
-          33: incredible. @ 121.0
-output → @@LINE@@ 32: This is absolutely incredible.
-         @@LINE@@ 33: This is absolutely incredible.
-
-# NEW — delete if one is pure noise
-input  → 34: Follow and subscribe!!! @ 10.0
-          35: Follow and subscribe!!! 👍👍 @ 10.7
-output → @@LINE@@ 34:
-         @@LINE@@ 35:
-`;
-
-  for (let i = 0; i < segments.length; i += BATCH_SIZE) {
-    const batch = segments.slice(i, i + BATCH_SIZE);
-    const batchResult = await scrubHallucinationsBatchInner({
-      segments: batch,
-      operationId,
-      signal,
-      mediaDuration,
-    });
-    cleanedSegments.push(...batchResult);
-    try {
-      onProgress?.(
-        Math.min(i + batch.length, segments.length),
-        segments.length
-      );
-    } catch {
-      // ignore progress errors
+  // longest suffix of prev that equals prefix of curr (by tokens), up to maxK
+  const overlapTokens = (prev: string, curr: string, maxK = 6) => {
+    const ta = tokenize(prev);
+    const tb = tokenize(curr);
+    const max = Math.min(maxK, ta.length, tb.length);
+    for (let k = max; k >= 2; k--) {
+      const suf = ta.slice(-k).join(' ');
+      const pre = tb.slice(0, k).join(' ');
+      if (suf === pre) return k;
     }
-  }
-  return cleanedSegments;
+    return 0;
+  };
 
-  async function scrubHallucinationsBatchInner({
-    segments,
-    operationId,
-    signal,
-    mediaDuration = 0,
-  }: {
-    segments: SrtSegment[];
-    operationId: string;
-    signal?: AbortSignal;
-    mediaDuration?: number;
-  }): Promise<SrtSegment[]> {
-    const videoLen =
-      mediaDuration > 0
-        ? Math.round(mediaDuration)
-        : (segments.at(-1)?.end ?? 0);
-    const systemPrompt = SYSTEM_PROMPT_TEMPLATE.replace(
-      '${VIDEO_LENGTH_SEC}',
-      videoLen.toString()
-    );
+  const cps = (text: string, start: number, end: number) => {
+    const dur = Math.max(0.001, (end ?? 0) - (start ?? 0)); // seconds
+    const chars = (text || '').replace(/\s*\n\s*/g, '').length;
+    return chars / dur;
+  };
 
-    const normalise = (txt: string): string =>
-      txt.replace(/[\uFF0C\u066B\u066C\uFE50]/g, ',');
+  const PROGRAMMATIC = {
+    MAX_GAP_TO_MERGE_SEC: 1.0,
+    SHORT_TAIL_MAX_WORDS: 2,
+    DUP_JACCARD: 0.9,
+    CPS_MAX: 17,
+    MIN_DUR_FOR_DENSE: 0.8,
+  };
 
-    const userPayload = segments
-      .map(
-        s =>
-          `${s.index} @ ${s.start.toFixed(1)}: ${normalise(s.original.trim())}`
-      )
-      .join('\n');
+  function preCleanSoftMergePass(input: SrtSegment[]): string[] {
+    // seed with noise-stripped, normalized text (no structural changes yet)
+    const out = input.map(s => normalise(cleanNoise(s.original)));
 
-    const raw = await callAIModel({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPayload },
-      ],
-      operationId,
-      signal,
-    });
-
-    const lineRE = /^@@LINE@@\s+(\d+)\s*:\s*(.*)$/;
-    const modelMap = new Map<number, string>();
-    raw.split('\n').forEach(row => {
-      const m = row.match(lineRE);
-      if (m) modelMap.set(Number(m[1]), (m[2] ?? '').trim());
-    });
-
-    const stripNoise = (txt: string): string => {
-      txt = txt.replace(/\p{Extended_Pictographic}/gu, '');
-
-      txt = txt.replace(/([^\w\s.,'"])\1{2,}/gu, '$1');
-
-      return txt.replace(/\s{2,}/g, ' ').trim();
-    };
-
-    const cleanedSegments: SrtSegment[] = [];
-
-    segments.forEach(seg => {
-      let out = modelMap.has(seg.index)
-        ? modelMap.get(seg.index)!
-        : seg.original;
-      out = stripNoise(out);
-      out = normalise(out);
-      out = out.replace(/(\d)(?:[\s\u202F])(\d{3})(?=(?:\D|$))/g, '$1,$2');
-
-      if (out !== '') {
-        cleanedSegments.push({ ...seg, original: out });
+    // 1) Boundary repetition trim (remove duplicate phrase at start of i)
+    for (let i = 1; i < input.length; i++) {
+      const prev = out[i - 1];
+      const curr = out[i];
+      if (!prev || !curr) continue;
+      const k = overlapTokens(prev, curr);
+      if (k > 0) {
+        // remove first k tokens from curr
+        const tb = tokenize(curr);
+        const trimmed = tb.slice(k).join(' ');
+        if (trimmed) out[i] = trimmed;
+        // if nothing left, we’ll handle as near-duplicate in step 2
       }
-    });
+    }
 
-    return cleanedSegments;
+    // 2) Near-duplicate soft merge (keep longer/better)
+    for (let i = 1; i < input.length; i++) {
+      const a = out[i - 1];
+      const b = out[i];
+      if (!a || !b) continue;
+      const na = normForCompare(a);
+      const nb = normForCompare(b);
+      const dupish =
+        na === nb ||
+        na.includes(nb) ||
+        nb.includes(na) ||
+        jaccard(a, b) >= PROGRAMMATIC.DUP_JACCARD;
+
+      if (dupish) {
+        const merged = a.length >= b.length ? a : b;
+        out[i - 1] = merged;
+        out[i] = merged;
+      }
+    }
+
+    // 3) Tiny tail merge (one/two-word continuation into previous)
+    for (let i = 1; i < input.length; i++) {
+      const prev = out[i - 1];
+      const curr = out[i];
+      const prevSeg = input[i - 1];
+      const currSeg = input[i];
+      if (!prev || !curr) continue;
+
+      const words = tokenize(curr).length;
+      const gap = (currSeg.start ?? 0) - (prevSeg.end ?? prevSeg.start ?? 0);
+      const prevEndsSentence = TERM_RE.test(prev);
+
+      if (
+        words <= PROGRAMMATIC.SHORT_TAIL_MAX_WORDS &&
+        gap <= PROGRAMMATIC.MAX_GAP_TO_MERGE_SEC &&
+        !prevEndsSentence
+      ) {
+        const merged = safeJoin(prev, curr);
+        out[i - 1] = merged;
+        out[i] = merged;
+      }
+    }
+
+    // 4) Dense short line: if curr is very dense, try merging into prev
+    for (let i = 1; i < input.length; i++) {
+      const prev = out[i - 1];
+      const curr = out[i];
+      const prevSeg = input[i - 1];
+      const currSeg = input[i];
+      if (!prev || !curr) continue;
+
+      const currDur =
+        (currSeg.end ?? currSeg.start ?? 0) - (currSeg.start ?? 0);
+      const currCps = cps(curr, currSeg.start, currSeg.end);
+      const gap = (currSeg.start ?? 0) - (prevSeg.end ?? prevSeg.start ?? 0);
+
+      if (
+        currDur > 0 &&
+        currDur < PROGRAMMATIC.MIN_DUR_FOR_DENSE &&
+        currCps > PROGRAMMATIC.CPS_MAX &&
+        gap <= PROGRAMMATIC.MAX_GAP_TO_MERGE_SEC
+      ) {
+        const merged = safeJoin(prev, curr);
+        out[i - 1] = merged;
+        out[i] = merged;
+      }
+    }
+
+    // 5) Triple pattern: A, A (dup), short tail → merge all three to A+tail
+    for (let i = 0; i + 2 < input.length; i++) {
+      const a = out[i],
+        b = out[i + 1],
+        c = out[i + 2];
+      if (!a || !b || !c) continue;
+      const sameAB =
+        normForCompare(a) === normForCompare(b) || jaccard(a, b) >= 0.95;
+      const tailWords = tokenize(c).length;
+      const gapBC =
+        (input[i + 2].start ?? 0) -
+        (input[i + 1].end ?? input[i + 1].start ?? 0);
+
+      if (
+        sameAB &&
+        tailWords <= PROGRAMMATIC.SHORT_TAIL_MAX_WORDS &&
+        gapBC <= PROGRAMMATIC.MAX_GAP_TO_MERGE_SEC
+      ) {
+        const merged = safeJoin(a, c);
+        out[i] = merged;
+        out[i + 1] = merged;
+        out[i + 2] = merged;
+      }
+    }
+
+    return out.map(t =>
+      // final pass: normalize number groupings like "1 234" → "1,234"
+      t.replace(/(\d)(?:[\s\u202F])(\d{3})(?=(?:\D|$))/g, '$1,$2')
+    );
   }
+  const cleaned = (() => {
+    // preserve indices/durations; only change text
+    const texts = preCleanSoftMergePass(segments);
+    return segments.map((s, i) => ({ ...s, original: texts[i] }));
+  })();
+
+  return cleaned;
 }
 
 export async function cleanupTranslatedCaptions({
