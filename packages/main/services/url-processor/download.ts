@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, isAbsolute, normalize } from 'node:path';
 import { execa } from 'execa';
 import log from 'electron-log';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
@@ -16,6 +16,58 @@ import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
+
+// Warmup helpers for Windows first-run delays
+async function unblockIfMarked(filePath: string): Promise<void> {
+  if (process.platform !== 'win32') return;
+  try {
+    await execa(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-Command',
+        `if (Get-Item -LiteralPath '${filePath.replace(/'/g, "''")}' -Stream Zone.Identifier -ErrorAction SilentlyContinue) { Unblock-File -LiteralPath '${filePath.replace(/'/g, "''")}'; }`,
+      ],
+      { windowsHide: true, timeout: 30_000 }
+    ).catch(() => {});
+  } catch {
+    // ignore
+  }
+}
+
+async function warmupYtDlp(ytDlpPath: string): Promise<void> {
+  try {
+    await unblockIfMarked(ytDlpPath);
+    await execa(ytDlpPath, ['--version'], { windowsHide: true, timeout: 120_000 });
+    log.info('[URLprocessor] yt-dlp warmup complete');
+  } catch (e: any) {
+    log.warn('[URLprocessor] yt-dlp warmup failed (continuing):', e?.message || e);
+  }
+}
+
+async function warmupFfmpeg(ffmpegPath: string): Promise<void> {
+  try {
+    await unblockIfMarked(ffmpegPath);
+    await execa(ffmpegPath, ['-version'], { windowsHide: true, timeout: 60_000 });
+    log.info('[URLprocessor] ffmpeg warmup complete');
+  } catch (e: any) {
+    log.warn('[URLprocessor] ffmpeg warmup failed (continuing):', e?.message || e);
+  }
+}
+
+function hardKill(proc: any): void {
+  try {
+    proc?.kill('SIGTERM');
+  } catch {
+    // ignore
+  }
+  if (process.platform === 'win32' && proc?.pid) {
+    execa('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { windowsHide: true }).catch(() => {});
+  }
+}
 
 export async function downloadVideoFromPlatform(
   url: string,
@@ -58,21 +110,51 @@ export async function downloadVideoFromPlatform(
 
   log.info(`[URLprocessor] yt-dlp ready at: ${ytDlpPath}`);
 
-  progressCallback?.({
-    percent: PROGRESS.WARMUP_START + 3,
-    stage: 'Making binary executable…',
-  });
+  // Detect first run on Windows and pre-warm to avoid SmartScreen/Defender delay
+  const isWindows = process.platform === 'win32';
+  const wasFirstRun = isWindows
+    ? !(await fsp
+        .access(firstRunFlag)
+        .then(() => true)
+        .catch(() => false))
+    : false;
+  let isFirstRun = wasFirstRun;
 
-  try {
-    fs.accessSync(ytDlpPath, fs.constants.X_OK);
-    log.info(`[URLprocessor] yt-dlp is executable.`);
-  } catch {
-    log.warn(`[URLprocessor] yt-dlp not executable, attempting chmod +x`);
+  if (isWindows && wasFirstRun) {
+    progressCallback?.({
+      percent: PROGRESS.WARMUP_START + 2,
+      stage: 'Preparing video engine…',
+    });
     try {
-      await execa('chmod', ['+x', ytDlpPath], { windowsHide: true });
-      log.info(`[URLprocessor] chmod +x successful.`);
-    } catch (e) {
-      log.warn('[URLprocessor] Could not make yt-dlp executable:', e);
+      await warmupYtDlp(ytDlpPath);
+      const ffmpegPathWarm = await findFfmpeg();
+      await warmupFfmpeg(ffmpegPathWarm);
+      // Mark initialized right after successful warmup so later timeouts are normal
+      await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
+      await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
+      isFirstRun = false; // ensure subsequent logic in this session uses normal timeouts
+    } catch {
+      // continue; we'll still use relaxed timeouts this run
+    }
+  }
+
+  if (!isWindows) {
+    progressCallback?.({
+      percent: PROGRESS.WARMUP_START + 3,
+      stage: 'Making binary executable…',
+    });
+
+    try {
+      fs.accessSync(ytDlpPath, fs.constants.X_OK);
+      log.info(`[URLprocessor] yt-dlp is executable.`);
+    } catch {
+      log.warn(`[URLprocessor] yt-dlp not executable, attempting chmod +x`);
+      try {
+        await execa('chmod', ['+x', ytDlpPath], { windowsHide: true });
+        log.info(`[URLprocessor] chmod +x successful.`);
+      } catch (e) {
+        log.warn('[URLprocessor] Could not make yt-dlp executable:', e);
+      }
     }
   }
 
@@ -144,15 +226,15 @@ export async function downloadVideoFromPlatform(
     'mp4',
     // Network reliability guards to reduce initial stalls
     '--socket-timeout',
-    '10',
+    '5',
     '--retries',
-    '2',
+    '3',
     '--retry-sleep',
     '1',
     '--force-ipv4',
     '--progress',
     '--newline',
-    '--no-check-certificates',
+    // Allow TLS verification (safer). Only disable if you hit a specific edge case.
     '--no-warnings',
     '--print',
     'after_move:%(filepath)s',
@@ -194,6 +276,13 @@ export async function downloadVideoFromPlatform(
           windowsHide: true,
           encoding: 'utf8',
           all: true,
+          buffer: false,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: '1',
+            PYTHONIOENCODING: 'utf-8',
+          },
         });
 
         if (subprocess) {
@@ -233,20 +322,17 @@ export async function downloadVideoFromPlatform(
         // --- Stream Processing ---
         if (subprocess.all) {
           let firstOutputSeen = false;
-          // Startup watchdog: if no output within 30s of launch, kill once and retry
+          // Startup watchdog: adapt timeout on first Windows run
+          const STARTUP_TIMEOUT_MS = isWindows && isFirstRun ? 60_000 : 15_000;
           const startupTimer = setTimeout(() => {
             if (!firstOutputSeen) {
               startupTimeoutFired = true;
-              try {
-                subprocess?.kill('SIGTERM');
-              } catch {
-                // fall through
-              }
+              hardKill(subprocess);
               log.error(
-                '[URLprocessor] Startup stall: no output from yt-dlp for 30s, will retry once'
+                `[URLprocessor] Startup stall: no output from yt-dlp for ${STARTUP_TIMEOUT_MS / 1000}s, will retry once`
               );
             }
-          }, 30_000);
+          }, STARTUP_TIMEOUT_MS);
 
           subprocess.all.on('data', (chunk: Buffer) => {
             const chunkString = chunk.toString();
@@ -373,14 +459,14 @@ export async function downloadVideoFromPlatform(
                   percent: destPercent,
                   stage: 'Preparing download…',
                 });
-              } else if (
-                line.startsWith(outputDir) &&
-                line.match(/\.(mp4|mkv|webm|m4a)$/i)
-              ) {
-                finalFilepath = line.trim();
-                log.info(
-                  `[URLprocessor] Got final filepath from --print: ${finalFilepath}`
-                );
+              } else if (/\.(mp4|mkv|webm|m4a)$/i.test(line)) {
+                const maybePath = line.trim();
+                if (isAbsolute(maybePath)) {
+                  finalFilepath = normalize(maybePath);
+                  log.info(
+                    `[URLprocessor] Got final filepath from --print: ${finalFilepath}`
+                  );
+                }
               }
             }
           });
@@ -392,22 +478,20 @@ export async function downloadVideoFromPlatform(
         }
 
         // Wait for the process to finish, but guard against long stalls with a heartbeat
+        // Adapt stall heartbeat for first Windows run
+        const STALL_MS = isWindows && isFirstRun ? 90_000 : 30_000;
         const result: any = await Promise.race([
           subprocess,
           new Promise((_, reject) => {
             // If no progress lines for a long time, fail fast so UI can retry
-            const stallMs = 30_000; // 30s without any output considered stalled
+            const stallMs = STALL_MS; // adaptive without any output considered stalled
             let lastTick: number | null = null; // start monitoring only after first output
             const interval = setInterval(() => {
               if (lastTick !== null && Date.now() - lastTick > stallMs) {
                 clearInterval(interval);
-                try {
-                  subprocess?.kill('SIGTERM');
-                } catch {
-                  // fall through
-                }
+                hardKill(subprocess);
                 reject(
-                  new Error('Download appears stalled (no progress for 30s)')
+                  new Error(`Download appears stalled (no progress for ${Math.round(stallMs / 1000)}s)`) 
                 );
               }
             }, 5_000);
@@ -499,10 +583,16 @@ export async function downloadVideoFromPlatform(
         }
         try {
           // Fire-and-forget update; do not block user flow
-          execa(ytDlpPath, ['-U', '--quiet'], {
-            windowsHide: true,
-            timeout: 120_000,
-          }).catch(() => {});
+          // Delay the update by a few seconds to ensure file handles are released
+          setTimeout(() => {
+            execa(ytDlpPath, ['-U', '--quiet'], {
+              windowsHide: true,
+              timeout: 120_000,
+              detached: true,
+            }).catch((error) => {
+              log.debug('[URLprocessor] Background update failed:', error.message);
+            });
+          }, 3000);
         } catch {
           // fall through
         }
@@ -515,7 +605,7 @@ export async function downloadVideoFromPlatform(
       } catch (error: any) {
         lastError = error;
         const wasStartupStall =
-          (error?.message || '').includes('no progress for 30s') ||
+          (error?.message || '').includes('Download appears stalled (no progress for') ||
           startupTimeoutFired;
         if (wasStartupStall && attempt < maxAttempts) {
           log.warn(
