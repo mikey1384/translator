@@ -69,6 +69,38 @@ function hardKill(proc: any): void {
   }
 }
 
+// Sanitize child process environment for packaged runs to avoid proxy/CA/Python pollution
+function childEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  for (const key of [
+    'HTTP_PROXY',
+    'HTTPS_PROXY',
+    'ALL_PROXY',
+    'NO_PROXY',
+    'http_proxy',
+    'https_proxy',
+    'all_proxy',
+    'no_proxy',
+  ]) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete env[key];
+  }
+  for (const key of ['REQUESTS_CA_BUNDLE', 'SSL_CERT_FILE', 'CURL_CA_BUNDLE']) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete env[key];
+  }
+  for (const key of ['PYTHONHOME', 'PYTHONPATH', 'PYTHONSTARTUP']) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete env[key];
+  }
+  // Node/npm flags that can affect child runtime/proxying in packaged builds
+  for (const key of ['NODE_OPTIONS', 'NPM_CONFIG_PROXY', 'NPM_CONFIG_HTTPS_PROXY']) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete env[key];
+  }
+  return env;
+}
+
 export async function downloadVideoFromPlatform(
   url: string,
   outputDir: string,
@@ -213,9 +245,48 @@ export async function downloadVideoFromPlatform(
   );
 
   const ffmpegPath = await findFfmpeg();
+  // Ensure binaries are unblocked on Windows every run (cheap + idempotent)
+  try { await unblockIfMarked(ytDlpPath); } catch {}
+  try { await unblockIfMarked(ffmpegPath); } catch {}
+  log.info(`[URLprocessor] ffmpeg at ${ffmpegPath} exists=${fs.existsSync(ffmpegPath)}`);
+
+  // Re-warm binaries when their mtime changes (e.g., after app update)
+  try {
+    const stampPath = join(app.getPath('userData'), 'bin', '.binary-stamp.json');
+    const [ytStat, ffStat] = await Promise.all([
+      fsp.stat(ytDlpPath).catch(() => null),
+      fsp.stat(ffmpegPath).catch(() => null),
+    ]);
+    const currentStamp = {
+      ytDlpMtimeMs: ytStat?.mtimeMs ?? 0,
+      ffmpegMtimeMs: ffStat?.mtimeMs ?? 0,
+    };
+    let prevStamp: { ytDlpMtimeMs: number; ffmpegMtimeMs: number } | null = null;
+    try {
+      const raw = await fsp.readFile(stampPath, 'utf8');
+      prevStamp = JSON.parse(raw);
+    } catch {
+      prevStamp = null;
+    }
+    const changed =
+      !prevStamp ||
+      prevStamp.ytDlpMtimeMs !== currentStamp.ytDlpMtimeMs ||
+      prevStamp.ffmpegMtimeMs !== currentStamp.ffmpegMtimeMs;
+    if (changed) {
+      try {
+        await warmupYtDlp(ytDlpPath);
+      } catch {}
+      try {
+        await warmupFfmpeg(ffmpegPath);
+      } catch {}
+      await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
+      await fsp.writeFile(stampPath, JSON.stringify(currentStamp), 'utf8');
+    }
+  } catch {}
 
   const baseArgs = [
     url,
+    '--ignore-config',
     '--no-playlist',
     '--output',
     tempFilenamePattern,
@@ -231,6 +302,8 @@ export async function downloadVideoFromPlatform(
     '3',
     '--retry-sleep',
     '1',
+    '--color',
+    'never',
     '--progress',
     '--newline',
     // Allow TLS verification (safer). Only disable if you hit a specific edge case.
@@ -239,6 +312,7 @@ export async function downloadVideoFromPlatform(
     'after_move:%(filepath)s',
     '--ffmpeg-location',
     ffmpegPath,
+    '--no-cache-dir',
     ...extraArgs,
   ];
 
@@ -269,6 +343,7 @@ export async function downloadVideoFromPlatform(
   let subprocess: DownloadProcessType | null = null;
   let phase: 'dl1' | 'dl2' = 'dl1'; // Track download phase
   let lastPct = 0; // Track last reported percentage outside subprocess
+  let addNoCheckCertificates = false; // enable on final retry only if TLS errors suspected
 
   // Wrap download attempt flow
   try {
@@ -278,8 +353,19 @@ export async function downloadVideoFromPlatform(
 
     while (attempt <= maxAttempts) {
       let startupTimeoutFired = false;
-      const args = withIpArgs(ipMode);
-      
+      const firstAttemptExtra = attempt === 1 ? ['--verbose'] : [];
+      const lastResortExtra = attempt === maxAttempts
+        ? [
+            '--concurrent-fragments',
+            '1',
+            '--http-chunk-size',
+            '1M',
+            ...(addNoCheckCertificates ? ['--no-check-certificates'] : []),
+          ]
+        : [];
+      const args = [...withIpArgs(ipMode), ...firstAttemptExtra, ...lastResortExtra];
+      log.info(`[URLprocessor] Spawning yt-dlp with cwd=${outputDir}`);
+
       log.info(
         `[URLprocessor] Executing yt-dlp (attempt ${attempt}, IP mode: ${ipMode}): ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
       );
@@ -291,12 +377,17 @@ export async function downloadVideoFromPlatform(
           all: true,
           buffer: false,
           stdio: ['pipe', 'pipe', 'pipe'],
+          cwd: outputDir,
           env: {
-            ...process.env,
+            ...childEnv(),
             PYTHONUNBUFFERED: '1',
             PYTHONIOENCODING: 'utf-8',
           },
         });
+
+        if (subprocess?.pid) {
+          log.info(`[URLprocessor] yt-dlp PID: ${subprocess.pid}`);
+        }
 
         if (subprocess) {
           registerDownloadProcess(operationId, subprocess);
@@ -335,8 +426,9 @@ export async function downloadVideoFromPlatform(
         // --- Stream Processing ---
         if (subprocess.all) {
           let firstOutputSeen = false;
-          // Startup watchdog: adapt timeout on first Windows run, relaxed for new socket timeout
-          const STARTUP_TIMEOUT_MS = isWindows && isFirstRun ? 60_000 : 20_000;
+          let debugLines = 0;
+          // Startup watchdog: adapt timeout on first Windows run; allow more time in packaged env
+          const STARTUP_TIMEOUT_MS = isWindows && isFirstRun ? 60_000 : 35_000;
           const startupTimer = setTimeout(() => {
             if (!firstOutputSeen) {
               startupTimeoutFired = true;
@@ -363,7 +455,16 @@ export async function downloadVideoFromPlatform(
               const line = rawLine.trim();
               stdoutBuffer = stdoutBuffer.substring(newlineIndex + 1);
 
-              if (line.startsWith('{') && line.endsWith('}')) {
+              if (attempt === 1 && debugLines < 3 && line) {
+                log.debug(`[yt-dlp:first] ${line}`);
+                debugLines++;
+              }
+
+              if (
+                line.startsWith('{') &&
+                line.endsWith('}') &&
+                /"_filename"|"_type"|"_version"/.test(line)
+              ) {
                 // Assume this is the final JSON output
                 finalJsonOutput = line;
                 log.info('[URLprocessor] Received potential JSON output.');
@@ -491,8 +592,8 @@ export async function downloadVideoFromPlatform(
         }
 
         // Wait for the process to finish, but guard against long stalls with a heartbeat
-        // Adapt stall heartbeat for first Windows run, adjusted for new socket timeout
-        const STALL_MS = isWindows && isFirstRun ? 90_000 : 25_000;
+        // Adapt stall heartbeat for first Windows run; keep ahead of startup timeout to avoid races
+        const STALL_MS = isWindows && isFirstRun ? 90_000 : 40_000;
         const result: any = await Promise.race([
           subprocess,
           new Promise((_, reject) => {
@@ -620,6 +721,12 @@ export async function downloadVideoFromPlatform(
         const wasStartupStall =
           (error?.message || '').includes('Download appears stalled (no progress for') ||
           startupTimeoutFired;
+        // If we suspect TLS/certificate issues, enable no-check-certificates for the final retry
+        const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}`;
+        const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(errorBlob);
+        if (looksLikeTLSError) {
+          addNoCheckCertificates = true;
+        }
         if (wasStartupStall && attempt < maxAttempts) {
           // Flip IP strategy: auto → v6 → v4
           ipMode = ipMode === 'auto' ? 'v6' : ipMode === 'v6' ? 'v4' : 'v4';
