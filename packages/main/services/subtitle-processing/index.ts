@@ -78,8 +78,6 @@ export async function extractSubtitlesFromMedia({
       fileManager,
       progressCallback,
       operationId,
-      targetLang,
-      signal,
     });
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);

@@ -52,7 +52,7 @@ export function throwIfAborted(signal?: AbortSignal): void {
   }
 }
 
-export async function scrubHallucinationsBatch({
+export async function cleanTranscriptBatch({
   segments,
   operationId,
   signal,
@@ -89,10 +89,17 @@ REPETITION RULES
 ────────────────
 A. Adjacent repetition across captions:
    - If caption i begins by repeating a phrase from the end of caption i-1 (e.g., the first few words of i match the last words of i-1), **remove the repeated phrase from the start of caption i**.
-   - If caption i is entirely a repetition of i-1 (same sentence in slightly different wording with no new info), **delete caption i**.
+   - If caption i is entirely a repetition of i-1 (same sentence or same meaning with trivial rewording), prefer a **SOFT MERGE** (see below) using the better phrasing, rather than deleting, unless one line is pure noise.
 
 B. Within-caption repetition:
    - If a caption repeats a phrase immediately (e.g., "a lot of Greco Roman a lot of Greco Roman style techniques"), remove the repeated earlier occurrence so the sentence reads once and naturally.
+
+SOFT MERGE (De-dup across adjacent captions)
+────────────────────────────────────────────
+When two adjacent captions clearly form one sentence/phrase or are near-duplicates with no new information, perform a **SOFT MERGE**:
+  • Construct the merged best version of the sentence/phrase.
+  • **SOFT MERGE OUTPUT RULE:** write the **same merged text for both** indices (i-1 and i). This keeps line count/order unchanged while extending on-screen persistence.
+  • Do not merge across unrelated content; if one line is noise/gibberish, delete it instead.
 
 OUTPUT (exactly one line per input, same order)
   @@LINE@@ <index>: <clean text>
@@ -129,6 +136,23 @@ output → @@LINE@@ 22: a lot of Greco Roman style techniques
 
 input  → 23: The budget is 1,250,000 dollars. @ 950.0
 output → @@LINE@@ 23: The budget is 1,250,000 dollars.
+
+input  → 30: Thanks for watching! @ 100.0
+          31: watching! See you next time @ 101.2
+output → @@LINE@@ 30: Thanks for watching!
+         @@LINE@@ 31: Thanks for watching!
+
+# NEW — soft merge for one sentence split unnaturally
+input  → 32: This is absolutely @ 120.0
+          33: incredible. @ 121.0
+output → @@LINE@@ 32: This is absolutely incredible.
+         @@LINE@@ 33: This is absolutely incredible.
+
+# NEW — delete if one is pure noise
+input  → 34: Follow and subscribe!!! @ 10.0
+          35: Follow and subscribe!!! 👍👍 @ 10.7
+output → @@LINE@@ 34:
+         @@LINE@@ 35:
 `;
 
   for (let i = 0; i < segments.length; i += BATCH_SIZE) {
@@ -243,34 +267,52 @@ export async function cleanupTranslatedCaptions({
   const result: SrtSegment[] = [];
 
   const SYSTEM_PROMPT = `
-TASK
-────
-You are a caption cleanup and de-duplication engine. If two adjacent captions carry essentially the same translated sentence, or if the later one is already contained in the earlier one - including sentences with different wordings but basically the same meaning - keep the earlier one and remove the later one. Also, if a caption is a *single word* caption that does not flow well with the previous and the next caption, remove it. Output in ${targetLang} only.
+You are a caption cleanup and de-duplication engine working into ${targetLang}.
 
-OUTPUT FORMAT
-─────────────
-@@LINE@@ <index>: <possibly-updated translation>
-Leave blank after colon if this caption was removed.
+You will receive a list of caption items. Each item includes:
+  • index and duration
+  • SRC: the ORIGINAL (source-language) text
+  • TGT: the current TRANSLATION (target-language) text
+
+GOAL
+────
+Decide, for each item, whether to:
+  • keep TGT exactly as is,
+  • lightly adjust TGT (e.g., remove obvious immediate duplication or dangling fragments),
+  • remove the caption (output blank) if it is redundant with its neighbor(s) or is a low-value single-word item that does not flow.
+
+IMPORTANT
+─────────
+1) Use **SRC** to judge semantics. If two adjacent captions convey essentially the same idea in SRC (even with different wording), keep the **earlier** one and delete the later one.
+2) If TGTs look similar but SRCs are **not** semantically redundant, **keep both** (possibly trim overlap at boundaries).
+3) If a later caption’s TGT is fully contained at the end of the previous caption’s TGT (classic carry-over), delete the later one.
+4) Remove low-value **single-word** TGT captions only if they do not read naturally with neighbors (again, check SRC for intent like interjections).
+5) Preserve standard punctuation in TGT; do not rewrite style beyond light trimming needed for de-duplication.
+
+OUTPUT (exactly one line per input, same order)
+  @@LINE@@ <index>: <final TGT>
+Leave blank after the colon to delete the caption.
 `;
 
+  // Work in batches to keep token usage reasonable.
   for (let i = 0; i < segments.length; i += BATCH_SIZE) {
     const batch = segments.slice(i, i + BATCH_SIZE);
+
     const videoLen =
       mediaDuration > 0
         ? Math.round(mediaDuration)
         : (segments.at(-1)?.end ?? 0);
-    const sys = SYSTEM_PROMPT.replace(
-      '${VIDEO_LENGTH_SEC}',
-      videoLen.toString()
-    );
+
+    const sys = SYSTEM_PROMPT.replace('${VIDEO_LENGTH_SEC}', String(videoLen));
 
     const payload = batch
       .map(s => {
-        const dur = (s.end - s.start).toFixed(2);
-        const text = (s.translation ?? '').trim();
-        return `${s.index} @ ${dur}s: ${text}`;
+        const dur = Math.max(0, s.end - s.start).toFixed(2);
+        const src = (s.original ?? '').trim();
+        const tgt = (s.translation ?? '').trim();
+        return `${s.index} @ ${dur}s\nSRC: ${src}\nTGT: ${tgt}`;
       })
-      .join('\n');
+      .join('\n\n');
 
     const raw = await callAIModel({
       messages: [
@@ -281,6 +323,7 @@ Leave blank after colon if this caption was removed.
       signal,
     });
 
+    // Parse model output
     const lineRE = /^@@LINE@@\s+(\d+)\s*:\s*(.*)$/;
     const map = new Map<number, string>();
     raw.split('\n').forEach(row => {
@@ -288,10 +331,14 @@ Leave blank after colon if this caption was removed.
       if (m) map.set(Number(m[1]), (m[2] ?? '').trim());
     });
 
+    // Fallback safety: if output is obviously incomplete, keep originals for that batch
+    const expected = batch.length;
+    const have = [...map.keys()].filter(k => map.has(k)).length;
+    const tooFew = have / Math.max(1, expected) < 0.8;
+
     batch.forEach(s => {
-      const updated = map.has(s.index)
-        ? map.get(s.index)!
-        : (s.translation ?? '');
+      const updated =
+        !tooFew && map.has(s.index) ? map.get(s.index)! : (s.translation ?? '');
       result.push({ ...s, translation: updated });
     });
 
@@ -304,6 +351,8 @@ Leave blank after colon if this caption was removed.
       // ignore progress errors
     }
   }
+
+  // Keep stable ordering & reindex
   return result
     .sort((a, b) => a.start - b.start)
     .map((s, i) => ({ ...s, index: i + 1 }));

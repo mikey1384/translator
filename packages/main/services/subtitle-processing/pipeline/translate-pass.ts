@@ -137,6 +137,12 @@ export async function translatePass({
 
   throwIfAborted(signal);
 
+  const totalToClean = segmentsInProcess.length;
+  progressCallback?.({
+    percent: scaleProgress(0, Stage.REVIEW, Stage.FINAL),
+    stage: `__i18n__:translation_cleanup:0:${totalToClean}`,
+  });
+
   for (
     let batchStart = 0;
     batchStart < segmentsInProcess.length;

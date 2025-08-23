@@ -153,30 +153,80 @@ export async function reviewTranslationBatch({
     `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
   );
 
-  const batchItemsWithContext = batch.segments.map((seg, idx) => ({
-    index: batch.startIndex + idx + 1,
-    original: seg.original.trim(),
-    translation: (seg.translation ?? seg.original).trim(),
-    isPartOfBatch: true,
-  }));
+  const clean = (s: string) => (s ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
+
+  const batchItemsWithContext = batch.segments.map((seg, idx) => {
+    const index =
+      typeof seg.index === 'number' ? seg.index : batch.startIndex + idx + 1;
+    const start =
+      typeof (seg as any).start === 'number' ? (seg as any).start : undefined; // seconds
+    const end =
+      typeof (seg as any).end === 'number' ? (seg as any).end : undefined; // seconds
+    const duration =
+      typeof start === 'number' && typeof end === 'number' && end > start
+        ? end - start
+        : undefined; // seconds
+
+    const original = clean(seg.original ?? '');
+    const translation = clean(seg.translation ?? seg.original ?? '');
+
+    return {
+      index,
+      original,
+      translation,
+      start,
+      end,
+      duration, // seconds
+      charsOriginal: original.length,
+      charsTranslation: translation.length,
+    };
+  });
 
   const originalTexts = batchItemsWithContext
-    .map(i => `[${i.index}] ${i.original}`)
+    .map(i => {
+      const dur =
+        typeof i.duration === 'number'
+          ? ` (dur=${i.duration.toFixed(2)}s)`
+          : '';
+      return `[${i.index}]${dur} ${i.original}`;
+    })
     .join('\n');
+
   const translatedTexts = batchItemsWithContext
-    .map(i => `[${i.index}] ${i.translation}`)
+    .map(i => {
+      const dur =
+        typeof i.duration === 'number' ? `dur=${i.duration.toFixed(2)}s, ` : '';
+      return `[${i.index}] (${dur}chars=${i.charsTranslation}) ${i.translation}`;
+    })
     .join('\n');
 
   const beforeContext = batch.contextBefore
-    .map(seg => `[${seg.index}] ${seg.original}`)
+    .map(seg => {
+      const start = (seg as any).start,
+        end = (seg as any).end;
+      const dur =
+        typeof start === 'number' && typeof end === 'number' && end > start
+          ? ` (dur=${(end - start).toFixed(2)}s)`
+          : '';
+      return `CTX(${seg.index})${dur}: ${clean(seg.original)}`;
+    })
     .join('\n');
+
   const afterContext = batch.contextAfter
-    .map(seg => `[${seg.index}] ${seg.original}`)
+    .map(seg => {
+      const start = (seg as any).start,
+        end = (seg as any).end;
+      const dur =
+        typeof start === 'number' && typeof end === 'number' && end > start
+          ? ` (dur=${(end - start).toFixed(2)}s)`
+          : '';
+      return `CTX(${seg.index})${dur}: ${clean(seg.original)}`;
+    })
     .join('\n');
 
   const prompt = `
-You are an **assertive subtitle editor** working into ${batch.targetLang}.  
-Your goal: every line must read like it was **originally written** in ${batch.targetLang} by a native speaker.
+You are an **assertive subtitle reviewer** working into ${batch.targetLang}.
+Your job: ensure every line reads like native ${batch.targetLang}, while respecting timing and readability.
 
 ══════════ Context (may help with pronouns, jokes, carries) ══════════
 ${beforeContext}
@@ -187,27 +237,38 @@ ${originalTexts}
 ══════════ Following context ══════════
 ${afterContext}
 
-══════════ Draft translations to edit ══════════
+══════════ Draft translations to edit (one-to-one with source) ══════════
 ${translatedTexts}
 
 ******************** HOW TO EDIT ********************
-1. **Line-by-line**: keep the *count* and *order* of lines exactly the same.
-2. **Be bold**: You may change word choice, syntax, tone, register.
-3. **Terminology & style** must stay consistent inside this batch.
-4. **Quality bar**: every final line must be fluent at CEFR C1+ level.  
-   If the draft already meets that bar, you may leave it unchanged.
-5. **You may NOT merge, split, reorder, add, or delete lines.**
-6. For languages with varying politeness levels, ensure that narrations use the polite/formal form.
+1) **One line out per line in.** Keep the *count* and *order* of lines exactly the same.
+2) **Be bold.** You may change word choice, syntax, tone, register to read naturally at CEFR C1+ level.
+3) **Consistency.** Keep terminology/style consistent inside the batch.
+4) **Soft merge - for translations only**
+   • When a translated line exceeds constraints (length/CPS), or if the next translated line basically a repetition of the previous translated line (either identical or worded differently with the same meaning), you may perform a **SOFT MERGE** across those two lines - in case of duplication make sure to choose the better phrase of the two and drop the other.
+   • **SOFT MERGE OUTPUT RULE:** write the **same merged text** for **both** IDs involved (duplicate), so the text persists across both cues.
+     Example (translation duplication):
+       [12] 아버지께서는 안녕하세요?
+       [13] 아빠 안녕하셨어요?
+     => output:
+       @@SUB_LINE@@ 12: 아버지께서는 안녕하세요?
+       @@SUB_LINE@@ 13: 아버지께서는 안녕하세요?
+    
+    Example (length/CPS):
+       [12] 아버지께서는 
+       [13] 안녕하세요?
+     => output:
+       @@SUB_LINE@@ 12: 아버지께서는 안녕하세요?
+       @@SUB_LINE@@ 13: 아버지께서는 안녕하세요?
 
 ******************** OUTPUT ********************
 • Output **one line per input line**.
-• **Prefix every line** with \`@@SUB_LINE@@ <ABS_INDEX>:\` (even blank ones).
+• **Prefix every line** with \`@@SUB_LINE@@ <ABS_INDEX>:\`
   For example: \`@@SUB_LINE@@ 123: 이것은 번역입니다\`
   (A blank line is: \`@@SUB_LINE@@ 124:  \`)
-• No extra commentary, no blank lines except those required by rule 3.
 
 Now provide the reviewed translations for the ${batch.segments.length} lines above:
-`;
+`.trim();
 
   try {
     const reviewedContent = await callAIModel({
@@ -224,40 +285,43 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
       return batch.segments;
     }
 
-    const lines = reviewedContent.split('@@SUB_LINE@@').slice(1);
-
-    const map = new Map<number, string>();
+    const parts = reviewedContent.split('@@SUB_LINE@@').slice(1);
+    const rawMap = new Map<number, string>();
     const lineRE = /^\s*(\d+)\s*:\s*([\s\S]*)$/;
 
-    for (const raw of lines) {
+    for (const raw of parts) {
       const m = raw.match(lineRE);
       if (!m) continue;
       const id = Number(m[1]);
       const txt = (m[2] ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
-      map.set(id, txt);
+      rawMap.set(id, txt);
     }
 
-    // Optional: reject batches that look fishy
-    const ids = [...map.keys()];
-    const hasDupes = ids.length !== new Set(ids).size;
-    if (hasDupes || map.size / batch.segments.length < 0.9) {
+    const expectedIds = new Set(batchItemsWithContext.map(i => i.index));
+    const map = new Map<number, string>();
+    for (const id of expectedIds) {
+      if (rawMap.has(id)) map.set(id, rawMap.get(id)!);
+    }
+
+    const hasDupes = map.size !== new Set(map.keys()).size; // unlikely now, but keep
+    const coverageOk = map.size / batch.segments.length >= 0.9;
+
+    if (hasDupes || !coverageOk) {
       log.warn(
         `[Review] Duplicate or missing IDs in review batch – falling back.`
       );
       return batch.segments;
     }
 
-    const reviewedSegments = batch.segments.map(seg => ({
-      ...seg,
-      translation: map.has(seg.index)
-        ? map.get(seg.index)!
-        : (seg.translation ?? seg.original),
-    }));
-
-    reviewedSegments.forEach((s, i, arr) => {
-      if (!s.translation?.trim() && arr[i].original.trim().length > 0) {
-        log.debug(`[SYNC-CHECK] Blank at #${s.index}: "${arr[i].original}"`);
-      }
+    const reviewedSegments = batch.segments.map((seg, idx) => {
+      const id =
+        typeof seg.index === 'number' ? seg.index : batch.startIndex + idx + 1;
+      return {
+        ...seg,
+        translation: map.has(id)
+          ? map.get(id)!
+          : (seg.translation ?? seg.original ?? ''),
+      };
     });
 
     return reviewedSegments;
