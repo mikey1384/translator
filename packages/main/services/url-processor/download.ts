@@ -214,7 +214,7 @@ export async function downloadVideoFromPlatform(
 
   const ffmpegPath = await findFfmpeg();
 
-  const args = [
+  const baseArgs = [
     url,
     '--no-playlist',
     '--output',
@@ -226,12 +226,11 @@ export async function downloadVideoFromPlatform(
     'mp4',
     // Network reliability guards to reduce initial stalls
     '--socket-timeout',
-    '5',
+    '3', // Reduced from 5 to surface issues faster than watchdog
     '--retries',
     '3',
     '--retry-sleep',
     '1',
-    '--force-ipv4',
     '--progress',
     '--newline',
     // Allow TLS verification (safer). Only disable if you hit a specific edge case.
@@ -243,9 +242,17 @@ export async function downloadVideoFromPlatform(
     ...extraArgs,
   ];
 
-  log.info(
-    `[URLprocessor] Executing yt-dlp: ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
-  );
+  // Respect user-supplied --force-ipv4/--force-ipv6 if present in extraArgs.
+  // Otherwise, start with no forcing (let OS decide).
+  let ipMode: 'auto' | 'v4' | 'v6' = extraArgs.some(a => a === '--force-ipv4') ? 'v4'
+    : extraArgs.some(a => a === '--force-ipv6') ? 'v6'
+    : 'auto';
+
+  function withIpArgs(mode: typeof ipMode) {
+    const ipArgs = mode === 'v4' ? ['--force-ipv4'] : mode === 'v6' ? ['--force-ipv6'] : [];
+    return [...baseArgs.filter(a => a !== '--force-ipv4' && a !== '--force-ipv6'), ...ipArgs];
+  }
+
   log.info(`[URLprocessor] yt-dlp intended output directory: ${outputDir}`);
 
   progressCallback?.({
@@ -266,11 +273,17 @@ export async function downloadVideoFromPlatform(
   // Wrap download attempt flow
   try {
     let attempt = 1;
-    const maxAttempts = 2;
+    const maxAttempts = 3; // Give ourselves one extra try for IP fallback
     let lastError: any = null;
 
     while (attempt <= maxAttempts) {
       let startupTimeoutFired = false;
+      const args = withIpArgs(ipMode);
+      
+      log.info(
+        `[URLprocessor] Executing yt-dlp (attempt ${attempt}, IP mode: ${ipMode}): ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
+      );
+      
       try {
         subprocess = execa(ytDlpPath, args, {
           windowsHide: true,
@@ -322,8 +335,8 @@ export async function downloadVideoFromPlatform(
         // --- Stream Processing ---
         if (subprocess.all) {
           let firstOutputSeen = false;
-          // Startup watchdog: adapt timeout on first Windows run
-          const STARTUP_TIMEOUT_MS = isWindows && isFirstRun ? 60_000 : 15_000;
+          // Startup watchdog: adapt timeout on first Windows run, relaxed for new socket timeout
+          const STARTUP_TIMEOUT_MS = isWindows && isFirstRun ? 60_000 : 20_000;
           const startupTimer = setTimeout(() => {
             if (!firstOutputSeen) {
               startupTimeoutFired = true;
@@ -478,8 +491,8 @@ export async function downloadVideoFromPlatform(
         }
 
         // Wait for the process to finish, but guard against long stalls with a heartbeat
-        // Adapt stall heartbeat for first Windows run
-        const STALL_MS = isWindows && isFirstRun ? 90_000 : 30_000;
+        // Adapt stall heartbeat for first Windows run, adjusted for new socket timeout
+        const STALL_MS = isWindows && isFirstRun ? 90_000 : 25_000;
         const result: any = await Promise.race([
           subprocess,
           new Promise((_, reject) => {
@@ -608,8 +621,10 @@ export async function downloadVideoFromPlatform(
           (error?.message || '').includes('Download appears stalled (no progress for') ||
           startupTimeoutFired;
         if (wasStartupStall && attempt < maxAttempts) {
+          // Flip IP strategy: auto → v6 → v4
+          ipMode = ipMode === 'auto' ? 'v6' : ipMode === 'v6' ? 'v4' : 'v4';
           log.warn(
-            `[URLprocessor] Retrying download due to startup stall (attempt ${attempt + 1}/${maxAttempts})`
+            `[URLprocessor] Startup stall; retrying with IP mode: ${ipMode} (attempt ${attempt + 1}/${maxAttempts})`
           );
           attempt += 1;
           continue;
