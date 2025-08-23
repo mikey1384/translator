@@ -234,7 +234,9 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
       .normalize('NFKC')
       .replace(/[“”„‟"«»’‘‚‛'`´]/g, "'")
       .replace(/[‐-‒–—―]/g, '-') // dashes
-      .replace(/[(){}$begin:math:display$$end:math:display$]/g, ' ')
+      .replace(/[(){}]/g, ' ')
+      .replace(/\$begin:math:display\$/g, ' ')
+      .replace(/\$end:math:display\$/g, ' ')
       .replace(/[^ \p{L}\p{N}'-]+/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -247,7 +249,8 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
     if (!A.size && !B.size) return 1;
     let inter = 0;
     for (const x of A) if (B.has(x)) inter++;
-    return inter / (A.size + B.size - inter || 1);
+    const union = Math.max(1, A.size + B.size - inter);
+    return inter / union;
   };
 
   const safeJoin = (a: string, b: string) => {
@@ -255,13 +258,28 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
     const right = b.trim();
     if (!left) return right;
     if (!right) return left;
+    // Avoid doubling up essentially identical content
+    const nl = normForCompare(left);
+    const nr = normForCompare(right);
+    if (
+      nl === nr ||
+      nr.startsWith(nl) ||
+      nl.startsWith(nr) ||
+      jaccard(left, right) >= 0.95
+    ) {
+      return left;
+    }
     const needsSpace =
       /[\p{L}\p{N}]$/u.test(left) && /^[\p{L}\p{N}]/u.test(right);
     return needsSpace ? `${left} ${right}` : `${left}${right}`;
   };
 
   // longest suffix of prev that equals prefix of curr (by tokens), up to maxK
-  const overlapTokens = (prev: string, curr: string, maxK = 6) => {
+  const overlapTokens = (
+    prev: string,
+    curr: string,
+    maxK = Number.POSITIVE_INFINITY
+  ) => {
     const ta = tokenize(prev);
     const tb = tokenize(curr);
     const max = Math.min(maxK, ta.length, tb.length);
@@ -306,7 +324,7 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
       }
     }
 
-    // 2) Near-duplicate soft merge (keep longer/better)
+    // 2) Near-duplicate soft merge (keep earlier, blank later)
     for (let i = 1; i < input.length; i++) {
       const a = out[i - 1];
       const b = out[i];
@@ -320,9 +338,10 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
         jaccard(a, b) >= PROGRAMMATIC.DUP_JACCARD;
 
       if (dupish) {
-        const merged = a.length >= b.length ? a : b;
-        out[i - 1] = merged;
-        out[i] = merged;
+        // remove full prefix overlap; keep only non-duplicate tail of later
+        const k = overlapTokens(a, b, Number.POSITIVE_INFINITY);
+        const remainder = tokenize(b).slice(k).join(' ');
+        out[i] = remainder ? remainder : '';
       }
     }
 
@@ -345,7 +364,7 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
       ) {
         const merged = safeJoin(prev, curr);
         out[i - 1] = merged;
-        out[i] = merged;
+        out[i] = '';
       }
     }
 
@@ -370,7 +389,7 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
       ) {
         const merged = safeJoin(prev, curr);
         out[i - 1] = merged;
-        out[i] = merged;
+        out[i] = '';
       }
     }
 
@@ -397,6 +416,11 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
         out[i + 1] = merged;
         out[i + 2] = merged;
       }
+    }
+
+    // 6) Final tidy: collapse consecutive duplicates by blanking later
+    for (let i = 1; i < out.length; i++) {
+      if (normForCompare(out[i]) === normForCompare(out[i - 1])) out[i] = '';
     }
 
     return out.map(t =>
