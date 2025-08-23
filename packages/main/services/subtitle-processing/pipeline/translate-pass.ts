@@ -148,11 +148,16 @@ export async function translatePass({
     );
 
     const overall = (batchStart / segmentsInProcess.length) * 100;
+    // Accurate batch counters accounting for overlap and step
+    const reviewBatchIndex = Math.floor(batchStart / REVIEW_STEP) + 1;
+    const reviewTotalBatches =
+      Math.ceil(
+        Math.max(0, segmentsInProcess.length - REVIEW_BATCH_SIZE) /
+          Math.max(1, REVIEW_STEP)
+      ) + 1;
     progressCallback?.({
       percent: scaleProgress(overall, Stage.REVIEW, Stage.FINAL),
-      stage: `Reviewing batch ${Math.ceil(batchStart / REVIEW_BATCH_SIZE) + 1} of ${Math.ceil(
-        segmentsInProcess.length / REVIEW_BATCH_SIZE
-      )}`,
+      stage: `Reviewing batch ${reviewBatchIndex} of ${reviewTotalBatches}`,
       partialResult: buildSrt({
         segments: segmentsInProcess,
         mode: 'dual',

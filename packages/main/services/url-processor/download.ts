@@ -139,6 +139,9 @@ export async function downloadVideoFromPlatform(
     tempFilenamePattern,
     '--format',
     formatString,
+    // Prefer MP4 output when possible; yt-dlp will fall back to MKV if needed
+    '--merge-output-format',
+    'mp4',
     // Network reliability guards to reduce initial stalls
     '--socket-timeout',
     '10',
