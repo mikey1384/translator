@@ -702,7 +702,8 @@ export async function downloadVideoFromPlatform(
             execa(ytDlpPath, ['-U', '--quiet'], {
               windowsHide: true,
               timeout: 120_000,
-              detached: true,
+              stdio: 'ignore',
+              shell: false,
             }).catch((error) => {
               log.debug('[URLprocessor] Background update failed:', error.message);
             });
