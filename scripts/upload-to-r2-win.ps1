@@ -6,7 +6,10 @@ Param(
   [string]$SrcPath = "dist/Translator Setup $Version.exe",
 
   [Parameter(Mandatory = $false)]
-  [string]$BucketBase = 'r2-upload:ai-translator-downloads/win'
+  [string]$BucketBase = 'r2-upload:ai-translator-downloads/win',
+
+  [Parameter(Mandatory = $false)]
+  [switch]$Force
 )
 
 Set-StrictMode -Version Latest
@@ -27,6 +30,7 @@ function Resolve-SourcePath {
 
 Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
+Write-Host "Force re-upload: $Force"
 
 $src = Resolve-SourcePath -p $SrcPath
 Write-Host "Source: $src"
@@ -50,7 +54,15 @@ function Invoke-RcloneCopyTo {
     [string]$to
   )
   Write-Host "rclone copyto -> $to"
-  & rclone copyto --progress --transfers 4 --retries 3 --retries-sleep 2s --size-only -- $from $to
+  $rcloneArgs = @('copyto', '--progress', '--transfers', '4', '--retries', '3', '--retries-sleep', '2s')
+  if ($Force) {
+    # Force transfer even if size and times match
+    $rcloneArgs += '--ignore-times'
+  } else {
+    # Fast path: skip if same size
+    $rcloneArgs += '--size-only'
+  }
+  & rclone @rcloneArgs -- $from $to
 }
 
 # Upload installer (versioned and latest)
