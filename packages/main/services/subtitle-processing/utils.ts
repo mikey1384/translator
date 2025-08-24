@@ -314,12 +314,27 @@ export function cleanTranscriptBatch({ segments }: { segments: SrtSegment[] }) {
       const prev = out[i - 1];
       const curr = out[i];
       if (!prev || !curr) continue;
-      const k = overlapTokens(prev, curr);
+
+      const tb = tokenize(curr);
+      // allow 1-token overlap only if current is a tiny tail (<= SHORT_TAIL_MAX_WORDS)
+      const minK = tb.length <= PROGRAMMATIC.SHORT_TAIL_MAX_WORDS ? 1 : 2;
+
+      // compute longest token overlap between end of prev and start of curr, honoring minK
+      const ta = tokenize(prev);
+      const max = Math.min(ta.length, tb.length);
+      let k = 0;
+      for (let kk = max; kk >= minK; kk--) {
+        const suf = ta.slice(-kk).join(' ');
+        const pre = tb.slice(0, kk).join(' ');
+        if (suf === pre) {
+          k = kk;
+          break;
+        }
+      }
+
       if (k > 0) {
-        // remove first k tokens from curr
-        const tb = tokenize(curr);
         const trimmed = tb.slice(k).join(' ');
-        if (trimmed) out[i] = trimmed;
+        out[i] = trimmed ? trimmed : '';
         // if nothing left, we’ll handle as near-duplicate in step 2
       }
     }

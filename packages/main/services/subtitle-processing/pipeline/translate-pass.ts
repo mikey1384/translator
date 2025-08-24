@@ -27,6 +27,16 @@ export async function translatePass({
   signal: AbortSignal;
 }) {
   if (targetLang === 'original') {
+    // Explicitly mark translation as skipped to keep UI progress accurate
+    try {
+      progressCallback?.({
+        percent: scaleProgress(100, Stage.TRANSLATE, Stage.REVIEW),
+        stage: 'Skipping translation (same language)',
+        partialResult: buildSrt({ segments, mode: 'dual' }),
+      });
+    } catch {
+      // ignore progress errors
+    }
     return segments;
   }
 

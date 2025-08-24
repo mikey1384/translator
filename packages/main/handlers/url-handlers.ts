@@ -133,28 +133,34 @@ export async function handleProcessUrl(
       if (!result.proc.killed) {
         if (process.platform === 'win32' && result.proc.pid) {
           // On Windows, use taskkill for reliable yt-dlp termination
-          log.info(`[url-handler] Force-killing Windows yt-dlp process PID: ${result.proc.pid} for early cancelled ${operationId}`);
-          forceKillWindows({ 
-            pid: result.proc.pid, 
-            logPrefix: `url-handler-early-${operationId}` 
-          }).then(killed => {
-            if (!killed) {
-              // Fallback to signal if taskkill fails
-              log.warn(`[url-handler] taskkill failed for early cancel ${operationId}, trying SIGTERM fallback`);
+          log.info(
+            `[url-handler] Force-killing Windows yt-dlp process PID: ${result.proc.pid} for early cancelled ${operationId}`
+          );
+          forceKillWindows({
+            pid: result.proc.pid,
+            logPrefix: `url-handler-early-${operationId}`,
+          })
+            .then(killed => {
+              if (!killed) {
+                // Fallback to signal if taskkill fails
+                log.warn(
+                  `[url-handler] taskkill failed for early cancel ${operationId}, trying SIGTERM fallback`
+                );
+                try {
+                  result.proc.kill('SIGTERM');
+                } catch {
+                  // Ignore errors since process might already be dead
+                }
+              }
+            })
+            .catch(() => {
+              // Fallback to signal if taskkill throws
               try {
                 result.proc.kill('SIGTERM');
               } catch {
                 // Ignore errors since process might already be dead
               }
-            }
-          }).catch(() => {
-            // Fallback to signal if taskkill throws
-            try {
-              result.proc.kill('SIGTERM');
-            } catch {
-              // Ignore errors since process might already be dead
-            }
-          });
+            });
         } else {
           // Non-Windows: use regular SIGINT
           result.proc.kill('SIGINT');
