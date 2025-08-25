@@ -8,20 +8,17 @@ import {
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { SUBTITLE_GAP_THRESHOLD } from '../constants.js';
 import { Stage, scaleProgress } from './progress.js';
-import log from 'electron-log';
 
 export async function finalizePass({
   segments,
   speechIntervals,
   fileManager,
   progressCallback,
-  operationId,
 }: {
   segments: void | SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
   fileManager: FileManager;
   progressCallback?: GenerateProgressCallback;
-  operationId: string;
 }): Promise<GenerateSubtitlesFullResult> {
   progressCallback?.({
     percent: scaleProgress(0, Stage.FINAL, Stage.FINAL + 5),
@@ -35,19 +32,12 @@ export async function finalizePass({
     end: Number(block.end),
   }));
 
-  extendShortSubtitleGaps({
+  const extended = extendShortSubtitleGaps({
     segments: indexedSegments,
     threshold: SUBTITLE_GAP_THRESHOLD,
   });
 
-  log.debug(
-    `[${operationId}] Segments AFTER IN-PLACE gap fill, BEFORE blank fill (indices 25-27):`,
-    indexedSegments.length > 25
-      ? JSON.stringify(indexedSegments.slice(25, 28), null, 2)
-      : 'Segment count less than 25'
-  );
-
-  const filled = fillBlankTranslations(indexedSegments);
+  const filled = fillBlankTranslations(extended);
 
   const finalSrtContent = buildSrt({
     segments: filled,

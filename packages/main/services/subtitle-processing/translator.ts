@@ -327,16 +327,18 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
     return reviewedSegments;
   } catch (error: any) {
     log.error(
-      `[Review] Error during initial review batch (${operationId}):`, // Updated log message slightly
-      error.name,
-      error.message
+      `[Review] Error during initial review batch (${operationId}):`,
+      error?.name,
+      error?.message || String(error)
     );
     if (error.name === 'AbortError' || signal?.aborted) {
       log.info(`[Review] Review batch (${operationId}) cancelled. Rethrowing.`);
       throw error;
     }
     log.error(
-      `[Review] Unhandled error in reviewTranslationBatch (${operationId}). Falling back to original batch segments.`
+      `[Review] Unhandled error in reviewTranslationBatch (${operationId}): ${
+        error?.message || String(error)
+      }. Falling back to original batch segments.`
     );
     return batch.segments;
   }

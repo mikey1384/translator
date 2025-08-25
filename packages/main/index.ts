@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { pathToFileURL } from 'url';
 import { esmDirname } from '@shared/esm-paths';
 
 const __dirname = esmDirname(import.meta.url);
@@ -16,7 +15,6 @@ import {
   BrowserWindow,
   ipcMain,
   Menu,
-  shell,
   dialog,
   MenuItemConstructorOptions,
 } from 'electron';
@@ -619,7 +617,6 @@ function createApplicationMenu() {
           : [{ role: 'close' }]) as MenuItemConstructorOptions[]),
       ],
     },
-
   ];
 
   const menu = Menu.buildFromTemplate(template);

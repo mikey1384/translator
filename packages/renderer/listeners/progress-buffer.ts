@@ -10,7 +10,6 @@ type ProgressPayload = Parameters<
 
 let queued: ProgressPayload | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
-const MIN_PARSE_INTERVAL = 1500;
 let lastParsed = 0;
 
 function flush() {
@@ -19,10 +18,18 @@ function flush() {
   const {
     stage = '',
     percent = 0,
-    partialResult,
     operationId,
     batchStartIndex,
+    partialResult,
   } = queued;
+
+  // Only accept updates for the active translation operation
+  const active = useTaskStore.getState().translation.id;
+  const inProgress = useTaskStore.getState().translation.inProgress;
+  if (active && operationId && operationId !== active) {
+    queued = null;
+    return;
+  }
 
   useTaskStore.getState().setTranslation({
     stage,
@@ -31,9 +38,30 @@ function flush() {
     batchStartIndex,
   });
 
-  if (partialResult?.trim() && Date.now() - lastParsed > MIN_PARSE_INTERVAL) {
-    useSubStore.getState().load(parseSrt(partialResult));
-    lastParsed = Date.now();
+  const isComplete = percent >= 100 || /processing complete/i.test(stage ?? '');
+
+  // Apply partial SRT updates during processing (throttled), and load immediately on completion
+  if (partialResult?.trim()) {
+    if (isComplete || Date.now() - lastParsed > 1500) {
+      useSubStore.getState().load(parseSrt(partialResult));
+      lastParsed = Date.now();
+    }
+  }
+
+  // After completion, stop applying any further queued updates
+  if (isComplete) {
+    queued = null;
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+    return;
+  }
+
+  // If the task has been marked complete (inProgress=false), ignore any late non-final updates
+  if (!inProgress) {
+    queued = null;
+    return;
   }
 
   // Refresh credit balance during AI processing phases when credits are being consumed

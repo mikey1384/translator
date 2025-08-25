@@ -19,39 +19,78 @@ export function parseSrt(srtString: string): SrtSegment[] {
 
   const out: SrtSegment[] = [];
 
-  const blocks = srtString
-    .trim()
-    .split(/\r?\n\r?\n/)
-    .filter(Boolean);
+  const lines = srtString
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n');
 
-  blocks.forEach((block, fallbackIdx) => {
-    const lines = block.trim().split(/\r?\n/);
-    if (lines.length < 3) return;
+  const timeRe = /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/;
+  let i = 0;
+  let fallbackIdx = 0;
 
-    /* header */
-    const index = Number(lines[0].trim()) || fallbackIdx + 1;
-    const timeMatch = lines[1].match(
-      /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/
-    );
-    if (!timeMatch) return;
+  while (i < lines.length) {
+    // find index line
+    while (i < lines.length && !/^\s*\d+\s*$/.test(lines[i])) i++;
+    if (i >= lines.length) break;
+    const index = Number(lines[i].trim()) || ++fallbackIdx;
+    i++;
 
-    const start = srtTimeToSeconds(timeMatch[1]);
-    const end = srtTimeToSeconds(timeMatch[2]);
-    if (isNaN(start) || isNaN(end)) return;
+    // find time line
+    if (i >= lines.length) break;
+    const tm = lines[i].match(timeRe);
+    if (!tm) {
+      // malformed block; skip to next blank
+      while (i < lines.length && lines[i].trim() !== '') i++;
+      i++;
+      continue;
+    }
+    const start = srtTimeToSeconds(tm[1]);
+    const end = srtTimeToSeconds(tm[2]);
+    i++;
 
-    const textLines = lines.slice(2).map(l => l.replace(/\\n/g, '\n').trim());
+    // collect text lines until separator: a blank line followed by next numeric index+time, or EOF
+    const textLines: string[] = [];
+    while (i < lines.length) {
+      const line = lines[i];
+      const next = lines[i + 1];
+      const next2 = lines[i + 2];
+      const blank = line.trim() === '';
+      const looksLikeNextBlock =
+        blank &&
+        typeof next === 'string' &&
+        /^\s*\d+\s*$/.test(next) &&
+        typeof next2 === 'string' &&
+        timeRe.test(next2);
+      if (looksLikeNextBlock) {
+        // consume the blank separator and break
+        i++; // skip blank line
+        break;
+      }
+      // normal text line (including empty text lines inside the cue)
+      textLines.push(line.replace(/\\n/g, '\n').trim());
+      i++;
+      // stop if EOF or single blank followed by EOF
+      if (i >= lines.length) break;
+      if (lines[i].trim() === '' && i + 1 >= lines.length) {
+        i++;
+        break;
+      }
+    }
+
     const original = textLines[0] ?? '';
-    const translation = textLines.length === 2 ? textLines[1] : undefined;
+    const translation = textLines.length >= 2 ? textLines[1] : undefined;
 
-    out.push({
-      id: crypto.randomUUID(),
-      index,
-      start,
-      end,
-      original,
-      translation,
-    });
-  });
+    if (!isNaN(start) && !isNaN(end)) {
+      out.push({
+        id: crypto.randomUUID(),
+        index,
+        start,
+        end,
+        original,
+        translation,
+      });
+    }
+  }
 
   return out;
 }

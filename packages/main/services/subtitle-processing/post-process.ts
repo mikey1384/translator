@@ -10,15 +10,66 @@ export function extendShortSubtitleGaps({
 }): SrtSegment[] {
   if (!segments || segments.length < 2) return segments;
 
-  for (let i = 0; i < segments.length - 1; i++) {
-    const currentEnd = segments[i].end;
-    const nextStart = segments[i + 1].start;
-    const gap = nextStart - currentEnd;
+  const EPS = 1e-3; // 1 ms for float jitter
 
-    if (gap > 0 && gap < threshold) {
-      segments[i].end = nextStart;
+  // 1) Ensure strict start-time order (stable by original index if present)
+  segments.sort((a, b) => a.start - b.start || (a.index ?? 0) - (b.index ?? 0));
+
+  // 2) Walk clusters and close the *post-cluster* gap
+  let i = 0;
+  while (i < segments.length - 1) {
+    const clusterStartIdx = i;
+    let clusterEndIdx = i;
+    let clusterEnd = segments[i].end;
+
+    // grow cluster while next starts before (or essentially at) current cluster end
+    while (
+      clusterEndIdx + 1 < segments.length &&
+      segments[clusterEndIdx + 1].start <= clusterEnd + EPS
+    ) {
+      clusterEndIdx++;
+      if (segments[clusterEndIdx].end > clusterEnd) {
+        clusterEnd = segments[clusterEndIdx].end;
+      }
     }
+
+    const nextIdx = clusterEndIdx + 1;
+    if (nextIdx < segments.length) {
+      const nextStart = segments[nextIdx].start;
+      const gap = nextStart - clusterEnd;
+
+      if (gap > EPS && gap <= threshold + EPS) {
+        // extend the cue that ends last within the cluster,
+        // preferring one that has non-empty original/translation
+        let extendIdx = clusterEndIdx;
+        let fallbackIdx = clusterEndIdx;
+        for (let k = clusterEndIdx; k >= clusterStartIdx; k--) {
+          const endsLast = Math.abs(segments[k].end - clusterEnd) <= EPS;
+          if (endsLast) {
+            fallbackIdx = k; // remember last-in-cluster that ends at clusterEnd
+            const hasText =
+              (segments[k].original?.trim()?.length ?? 0) > 0 ||
+              (segments[k].translation?.trim()?.length ?? 0) > 0;
+            if (hasText) {
+              extendIdx = k;
+              break;
+            }
+          }
+        }
+        // if none of the last-ending cues had text, fall back to the last one
+        if (
+          (segments[extendIdx].original?.trim()?.length ?? 0) === 0 &&
+          (segments[extendIdx].translation?.trim()?.length ?? 0) === 0
+        ) {
+          extendIdx = fallbackIdx;
+        }
+        segments[extendIdx].end = nextStart;
+      }
+    }
+
+    i = Math.max(i + 1, clusterEndIdx + 1);
   }
+
   return segments;
 }
 

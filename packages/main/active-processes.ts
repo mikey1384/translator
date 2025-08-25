@@ -151,8 +151,13 @@ export async function cancelSafely(id: string): Promise<boolean> {
         if (!entry.handle.killed) {
           if (process.platform === 'win32' && entry.handle.pid) {
             // On Windows, use taskkill for reliable termination of yt-dlp
-            log.info(`[registry] Force-killing Windows process tree for ${id}, PID: ${entry.handle.pid}`);
-            const killed = await forceKillWindows({ pid: entry.handle.pid, logPrefix: `registry-download-${id}` });
+            log.info(
+              `[registry] Force-killing Windows process tree for ${id}, PID: ${entry.handle.pid}`
+            );
+            const killed = await forceKillWindows({
+              pid: entry.handle.pid,
+              logPrefix: `registry-download-${id}`,
+            });
             if (killed) {
               // Mark the process as killed to help with error handling
               try {
@@ -162,7 +167,9 @@ export async function cancelSafely(id: string): Promise<boolean> {
               }
             } else {
               // Fallback to signal if taskkill fails
-              log.warn(`[registry] taskkill failed for ${id}, trying SIGTERM fallback`);
+              log.warn(
+                `[registry] taskkill failed for ${id}, trying SIGTERM fallback`
+              );
               entry.handle.kill('SIGTERM');
             }
           } else {
@@ -177,11 +184,18 @@ export async function cancelSafely(id: string): Promise<boolean> {
           if (!p.killed) {
             if (process.platform === 'win32' && p.pid) {
               // On Windows, use taskkill for reliable termination of FFmpeg processes
-              log.info(`[registry] Force-killing Windows render process PID: ${p.pid} for ${id}`);
-              const killed = await forceKillWindows({ pid: p.pid, logPrefix: `registry-render-${id}` });
+              log.info(
+                `[registry] Force-killing Windows render process PID: ${p.pid} for ${id}`
+              );
+              const killed = await forceKillWindows({
+                pid: p.pid,
+                logPrefix: `registry-render-${id}`,
+              });
               if (!killed) {
                 // Fallback to signal if taskkill fails
-                log.warn(`[registry] taskkill failed for render process ${id}, trying SIGTERM fallback`);
+                log.warn(
+                  `[registry] taskkill failed for render process ${id}, trying SIGTERM fallback`
+                );
                 try {
                   p.kill('SIGTERM');
                 } catch {
@@ -206,8 +220,6 @@ export async function cancelSafely(id: string): Promise<boolean> {
   }
   return true;
 }
-
-
 
 app.on('before-quit', () => {
   for (const id of registry.keys()) {

@@ -26,12 +26,13 @@ export async function callAIModel({
     try {
       // Check if operation was cancelled
       if (signal?.aborted) {
-        throw new Error('Operation cancelled');
+        throw new DOMException('Operation cancelled', 'AbortError');
       }
 
       const completion = await stage5Client.translate({
         messages,
         model,
+        signal,
       });
 
       const content = completion.choices[0]?.message?.content;
@@ -41,19 +42,29 @@ export async function callAIModel({
         throw new Error('Unexpected response format from Stage5 API.');
       }
     } catch (error: any) {
-      if (signal?.aborted || error.name === 'AbortError') {
-        throw new Error('Operation cancelled');
+      if (signal?.aborted || error?.name === 'AbortError') {
+        throw new DOMException('Operation cancelled', 'AbortError');
       }
 
-      // Retry on certain errors
-      if (
-        (error.message && error.message.includes('timeout')) ||
-        (error.response && [429, 500, 503].includes(error.response.status))
-      ) {
+      // Retry on transient errors (timeouts, rate limits, server errors, connection resets)
+      const isTransientStatus =
+        !!error?.response && [429, 500, 503].includes(error.response.status);
+      const msg: string = String(error?.message || '');
+      const code: string = String(error?.code || '');
+      const isTransientCode =
+        code === 'ECONNRESET' ||
+        code === 'ECONNABORTED' ||
+        code === 'ETIMEDOUT';
+      const isTransientMsg =
+        msg.includes('timeout') ||
+        msg.includes('ECONNRESET') ||
+        msg.includes('ECONNABORTED');
+
+      if (isTransientStatus || isTransientCode || isTransientMsg) {
         if (currentAttempt < retryAttempts) {
           const delay = 1000 * Math.pow(2, currentAttempt);
           log.debug(
-            `[${operationId}] Retrying in ${delay}ms (attempt ${currentAttempt}/${retryAttempts})`
+            `[${operationId}] Transient error (${code || msg}). Retrying in ${delay}ms (attempt ${currentAttempt}/${retryAttempts})`
           );
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
@@ -61,14 +72,14 @@ export async function callAIModel({
       }
 
       // Handle specific error cases
-      if (error.message === 'insufficient-credits') {
+      if (error?.message === 'insufficient-credits') {
         throw new SubtitleProcessingError(
           'Insufficient credits. Please purchase more credits to continue.'
         );
       }
 
       throw new Error(
-        `Stage5 API call failed: ${error.message || String(error)}`
+        `Stage5 API call failed: ${error?.message || String(error)}`
       );
     }
   }
