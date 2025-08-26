@@ -52,7 +52,7 @@ export async function transcribeChunk({
     const res: any = await stage5Client.transcribe({
       filePath: chunkPath,
       language,
-      promptContext: `${promptContext ?? ''}\n\n<<<NOSPEECH>>>`,
+      promptContext,
       signal,
     });
 

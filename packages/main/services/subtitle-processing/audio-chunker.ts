@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 import log from 'electron-log';
 import { spawn } from 'child_process';
 import { getVadCtor } from './utils.js';
@@ -31,10 +32,12 @@ export async function detectSpeechIntervals({
 
     const Vad = await getVadCtor();
     if (!Vad) {
-      log.warn(`[${operationId}] VAD not available - returning empty intervals`);
+      log.warn(
+        `[${operationId}] VAD not available - returning empty intervals`
+      );
       return resolve([]);
     }
-    
+
     // Runtime sanity check (remove after testing)
     log.info(`[${operationId}] typeof Vad: ${typeof Vad}`);
     log.info(
@@ -67,34 +70,40 @@ export async function detectSpeechIntervals({
           log.info(
             `[${operationId}] Killing VAD ffmpeg process due to abort signal`
           );
-                     if (process.platform === 'win32' && ffmpeg.pid) {
-             // On Windows, use taskkill for reliable FFmpeg termination
-             log.info(`[${operationId}] Force-killing Windows FFmpeg process tree PID: ${ffmpeg.pid}`);
-             forceKillWindows({ 
-               pid: ffmpeg.pid, 
-               logPrefix: `audio-chunker ${operationId}` 
-             }).then(killed => {
-               if (!killed) {
-                 // Fallback to signal if taskkill fails
-                 log.warn(`[${operationId}] taskkill failed, trying SIGTERM fallback`);
-                 try {
-                   ffmpeg.kill('SIGTERM');
-                 } catch {
-                   // Ignore errors since process might already be dead
-                 }
-               }
-             }).catch(() => {
-               // Fallback to signal if taskkill throws
-               try {
-                 ffmpeg.kill('SIGTERM');
-               } catch {
-                 // Ignore errors since process might already be dead
-               }
-             });
-           } else {
-             // Non-Windows: use regular SIGINT
-             ffmpeg.kill('SIGINT');
-           }
+          if (process.platform === 'win32' && ffmpeg.pid) {
+            // On Windows, use taskkill for reliable FFmpeg termination
+            log.info(
+              `[${operationId}] Force-killing Windows FFmpeg process tree PID: ${ffmpeg.pid}`
+            );
+            forceKillWindows({
+              pid: ffmpeg.pid,
+              logPrefix: `audio-chunker ${operationId}`,
+            })
+              .then(killed => {
+                if (!killed) {
+                  // Fallback to signal if taskkill fails
+                  log.warn(
+                    `[${operationId}] taskkill failed, trying SIGTERM fallback`
+                  );
+                  try {
+                    ffmpeg.kill('SIGTERM');
+                  } catch {
+                    // Ignore errors since process might already be dead
+                  }
+                }
+              })
+              .catch(() => {
+                // Fallback to signal if taskkill throws
+                try {
+                  ffmpeg.kill('SIGTERM');
+                } catch {
+                  // Ignore errors since process might already be dead
+                }
+              });
+          } else {
+            // Non-Windows: use regular SIGINT
+            ffmpeg.kill('SIGINT');
+          }
         }
       };
       if (signal.aborted) {
