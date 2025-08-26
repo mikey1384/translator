@@ -1,7 +1,7 @@
 export const AI_MODELS = {
   GPT: 'gpt-4.1',
   O3: 'o3',
-  WHISPER: { id: 'whisper-1' },
+  WHISPER: 'whisper-large-v3',
 } as const;
 
 export const subtitleVideoPlayer = {

@@ -24,7 +24,7 @@ export async function transcribe({
   filePath,
   language,
   promptContext,
-  model = 'whisper-1',
+  model = AI_MODELS.WHISPER,
   signal,
 }: {
   filePath: string;

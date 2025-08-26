@@ -19,7 +19,7 @@ export const GAP_SEC = 3;
 
 // --- Chunking constants ---
 export const MIN_CHUNK_DURATION_SEC = 8;
-export const MAX_CHUNK_DURATION_SEC = 15;
+export const MAX_CHUNK_DURATION_SEC = 300;
 
 // --- Concurrency Setting ---
 export const TRANSCRIPTION_BATCH_SIZE = 15;
