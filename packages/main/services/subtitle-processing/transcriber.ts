@@ -3,10 +3,8 @@ import crypto from 'crypto';
 import { SrtSegment } from '@shared-types/app';
 import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
 import fs from 'fs';
-import { scrubHallucinationsBatch, throwIfAborted } from './utils.js';
+import { throwIfAborted } from './utils.js';
 import * as stage5Client from '../stage5-client.js';
-
-export const VALID_SEG_MARGIN = 0.05;
 
 export async function transcribeChunk({
   chunkIndex,
@@ -16,7 +14,6 @@ export async function transcribeChunk({
   operationId,
   promptContext,
   language,
-  mediaDuration,
 }: {
   chunkIndex: number | string;
   chunkPath: string;
@@ -25,20 +22,8 @@ export async function transcribeChunk({
   operationId: string;
   promptContext?: string;
   language?: string;
-  mediaDuration?: number;
 }): Promise<SrtSegment[]> {
   throwIfAborted(signal);
-
-  function isWordInValidSegment(
-    word: any,
-    validSegments: Array<{ start: number; end: number }>,
-    startTime: number
-  ) {
-    if (!validSegments.length) return true;
-    const wStart = word.start + startTime;
-    const wEnd = word.end + startTime;
-    return validSegments.some(seg => wStart >= seg.start && wEnd <= seg.end);
-  }
 
   try {
     log.debug(
@@ -57,13 +42,7 @@ export async function transcribeChunk({
     });
 
     const segments = (res as any)?.segments as Array<any> | undefined;
-    const words = (res as any)?.words as Array<any> | undefined;
-    if (!Array.isArray(words) || words.length === 0) {
-      log.warn(
-        `[] ⚠️ Mismatch between last JSON word "" and last caption word ""`
-      );
-      return [];
-    }
+    const words = ((res as any)?.words as Array<any> | undefined) || [];
 
     const validSegments: Array<{ start: number; end: number }> = [];
     if (Array.isArray(segments)) {
@@ -73,8 +52,8 @@ export async function transcribeChunk({
           seg.avg_logprob > LOG_PROB_THRESHOLD
         ) {
           validSegments.push({
-            start: seg.start + startTime - VALID_SEG_MARGIN,
-            end: seg.end + startTime + VALID_SEG_MARGIN,
+            start: seg.start,
+            end: seg.end,
           });
         }
       }
@@ -98,7 +77,6 @@ export async function transcribeChunk({
 
     for (let i = 0; i < words.length; ++i) {
       const w = words[i];
-      if (!isWordInValidSegment(w, validSegments, startTime)) continue;
       const wStart = w.start + startTime;
       const wEnd = w.end + startTime;
       if (currentWords.length === 0) {
@@ -120,23 +98,7 @@ export async function transcribeChunk({
         }
         let text = '';
         for (let j = 0; j < currentWords.length; ++j) {
-          const word = currentWords[j].word;
-          const isPunctuation = /^[\p{P}$+<=>^`|~]/u.test(word);
-          if (j > 0 && !isPunctuation) {
-            text += ' ';
-          }
-          text += word;
-        }
-        let avgLogprob = 0;
-        let noSpeechProb = 0;
-        if (Array.isArray(segments)) {
-          const matchingSegment = segments.find(
-            seg => Math.abs(seg.end + startTime - (groupEnd || 0)) < 0.1
-          );
-          if (matchingSegment) {
-            avgLogprob = matchingSegment.avg_logprob || 0;
-            noSpeechProb = matchingSegment.no_speech_prob || 0;
-          }
+          text += ` ${currentWords[j].word}`;
         }
         const segmentRelativeWords = currentWords.map(cw => {
           const absoluteWordStart = cw.start + startTime;
@@ -152,9 +114,7 @@ export async function transcribeChunk({
           index: segIdx++,
           start: groupStart || 0,
           end: groupEnd || 0,
-          original: text.trim(),
-          avg_logprob: avgLogprob,
-          no_speech_prob: noSpeechProb,
+          original: text,
           words: segmentRelativeWords,
         } as SrtSegment);
         if (!isLastWord) {
@@ -168,12 +128,7 @@ export async function transcribeChunk({
     if (currentWords.length) {
       let text = '';
       for (let j = 0; j < currentWords.length; ++j) {
-        const word = currentWords[j].word;
-        const isPunctuation = /^[\p{P}$+<=>^`|~]/u.test(word);
-        if (j > 0 && !isPunctuation) {
-          text += ' ';
-        }
-        text += word;
+        text += ` ${currentWords[j].word}`;
       }
       const finalSegmentRelativeWords = currentWords.map(cw => {
         const absoluteWordStart = cw.start + startTime;
@@ -200,33 +155,14 @@ export async function transcribeChunk({
         index: segIdx++,
         start: groupStart || 0,
         end: groupEnd || 0,
-        original: text.trim(),
+        original: text,
         avg_logprob: avgLogprob,
         no_speech_prob: noSpeechProb,
         words: finalSegmentRelativeWords,
       } as SrtSegment);
     }
 
-    const cleanSegs = await scrubHallucinationsBatch({
-      segments: srtSegments,
-      operationId,
-      signal,
-      mediaDuration,
-    });
-
-    const norm = (w: string) => w.replace(/[\p{Cf}\p{P}\p{S}]+$/u, '');
-    const lastJSONWord = words.at(-1)?.word?.trim();
-    const lastCaptionWord = cleanSegs.at(-1)?.original.split(/\s+/).at(-1);
-    if (
-      lastJSONWord &&
-      lastCaptionWord &&
-      norm(lastJSONWord) !== norm(lastCaptionWord)
-    ) {
-      log.warn(
-        `[${operationId}] ⚠️ tail-word mismatch: "${lastJSONWord}" ➜ "${lastCaptionWord}"`
-      );
-    }
-    return cleanSegs;
+    return srtSegments;
   } catch (error: any) {
     if (
       error.name === 'AbortError' ||

@@ -1,7 +1,7 @@
 export const AI_MODELS = {
   GPT: 'gpt-4.1',
   O3: 'o3',
-  WHISPER: 'whisper-large-v3',
+  WHISPER: 'whisper-large-v3-turbo',
 } as const;
 
 export const subtitleVideoPlayer = {
@@ -43,28 +43,31 @@ export const languages = [
 ];
 
 // Credit system constants
-export const CREDITS_PER_AUDIO_HOUR = 100_000;
+export const CREDITS_PER_AUDIO_HOUR = 50_000;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
-// Credit pack configurations
+const STARTER_CREDITS = 150_000;
+const STANDARD_CREDITS = 350_000;
+const PRO_CREDITS = 2_400_000;
+
 export const CREDIT_PACKS = {
   STARTER: {
     id: 'STARTER' as const,
     price: 5,
-    hours: 1.5,
-    credits: 150_000,
+    hours: STARTER_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: STARTER_CREDITS,
   },
   STANDARD: {
     id: 'STANDARD' as const,
     price: 10,
-    hours: 3.5,
-    credits: 350_000,
+    hours: STANDARD_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: STANDARD_CREDITS,
   },
   PRO: {
     id: 'PRO' as const,
     price: 50,
-    hours: 24,
-    credits: 2_400_000,
+    hours: PRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: PRO_CREDITS,
   },
 } as const;
 

@@ -143,16 +143,13 @@ async function openStripeCheckout(sessionUrl: string): Promise<void> {
     win.webContents.on('will-navigate', handleRedirect); // Extra safety net for Windows/Linux
 
     // Handle network failures to prevent freezing
-    win.webContents.on(
-      'did-fail-load',
-      (event, errorCode, errorDescription) => {
-        log.error(
-          `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
-        );
-        win.close();
-        resolve();
-      }
-    );
+    win.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
+      log.error(
+        `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
+      );
+      win.close();
+      resolve();
+    });
 
     win.on('closed', () => {
       resolve();

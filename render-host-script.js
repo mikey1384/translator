@@ -1362,8 +1362,31 @@ var SUBTITLE_STYLE_PRESETS = {
 var BASELINE_FONT_SIZE = 30;
 
 // ../shared/constants/index.ts
-var CREDITS_PER_AUDIO_HOUR = 1e5;
+var CREDITS_PER_AUDIO_HOUR = 5e4;
 var CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3600;
+var STARTER_CREDITS = 15e4;
+var STANDARD_CREDITS = 35e4;
+var PRO_CREDITS = 24e5;
+var CREDIT_PACKS = {
+  STARTER: {
+    id: "STARTER",
+    price: 5,
+    hours: STARTER_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: STARTER_CREDITS
+  },
+  STANDARD: {
+    id: "STANDARD",
+    price: 10,
+    hours: STANDARD_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: STANDARD_CREDITS
+  },
+  PRO: {
+    id: "PRO",
+    price: 50,
+    hours: PRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: PRO_CREDITS
+  }
+};
 
 // ../shared/helpers/subtitle-style-util.ts
 function assColorToRgba(ass) {

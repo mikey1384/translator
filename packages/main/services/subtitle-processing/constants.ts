@@ -2,8 +2,8 @@
 export const SAVE_WHISPER_CHUNKS = false;
 export const VAD_NORMALIZATION_MIN_GAP_SEC = 0.5;
 export const VAD_NORMALIZATION_MIN_DURATION_SEC = 0.2;
-export const PRE_PAD_SEC = 0;
-export const POST_PAD_SEC = 1.2;
+export const PRE_PAD_SEC = 0.2;
+export const POST_PAD_SEC = 0.2;
 export const MERGE_GAP_SEC = 0.5;
 export const MAX_SPEECHLESS_SEC = 15;
 export const NO_SPEECH_PROB_THRESHOLD = 0.7;
@@ -18,11 +18,11 @@ export const MAX_GAP_TO_FUSE = 0.3;
 export const GAP_SEC = 3;
 
 // --- Chunking constants ---
-export const MIN_CHUNK_DURATION_SEC = 8;
-export const MAX_CHUNK_DURATION_SEC = 15;
+export const MIN_CHUNK_DURATION_SEC = 3;
+export const MAX_CHUNK_DURATION_SEC = 5;
 
 // --- Concurrency Setting ---
-export const TRANSCRIPTION_BATCH_SIZE = 15;
+export const TRANSCRIPTION_BATCH_SIZE = 1;
 
 // --- Review/Polish constants ---
 export const REVIEW_BATCH_SIZE = 50;

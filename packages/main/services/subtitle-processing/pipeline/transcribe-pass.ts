@@ -30,13 +30,10 @@ import {
   MERGE_GAP_SEC,
   PROGRESS_ANALYSIS_DONE,
   TRANSCRIPTION_BATCH_SIZE,
-  MAX_PROMPT_CHARS,
 } from '../constants.js';
-import { WHISPER_PARALLEL } from '../../../../shared/constants/runtime-config.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage, scaleProgress } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
-import pLimit from 'p-limit';
 import { throwIfAborted } from '../utils.js';
 import { refineOvershoots } from '../gap-repair.js';
 import { cleanTranscriptBatch } from '../utils.js';
@@ -116,11 +113,6 @@ export async function transcribePass({
       const e = Math.min(duration, blk.end + POST_PAD_SEC);
 
       if (e <= s) {
-        log.warn(
-          `[${operationId}] Skipping zero/negative duration VAD block after padding: ${s.toFixed(
-            2
-          )}-${e.toFixed(2)}`
-        );
         continue;
       }
 
@@ -167,9 +159,6 @@ export async function transcribePass({
     let batchContext = '';
 
     let done = 0;
-    const CONCURRENCY = Math.max(1, WHISPER_PARALLEL);
-    const limit = pLimit(CONCURRENCY);
-    signal?.addEventListener('abort', () => limit.clearQueue());
     for (let b = 0; b < chunks.length; b += TRANSCRIPTION_BATCH_SIZE) {
       throwIfAborted(signal);
       const slice = chunks.slice(b, b + TRANSCRIPTION_BATCH_SIZE);
@@ -244,7 +233,12 @@ export async function transcribePass({
         }
       });
 
-      const segArrays = await Promise.all(segArraysPromises);
+      // Process sequentially, one at a time
+      const segArrays: SrtSegment[][] = [];
+      for (const task of segArraysPromises) {
+        const segs = await task;
+        segArrays.push(segs);
+      }
       const thisBatchSegments = segArrays
         .flat()
         .sort((a, b) => a.start - b.start);
@@ -363,64 +357,62 @@ export async function transcribePass({
       }
 
       repairGaps.sort((a, b) => a.end - a.start - (b.end - b.start));
-      const tasks = repairGaps.map((gap, i) =>
-        limit(async () => {
+      const tasks = repairGaps.map((gap, i) => async () => {
+        throwIfAborted(signal);
+        if (signal?.aborted) return [];
+
+        const gapIndex = i + 1;
+        const baseLogIdx = 10000 * iteration + gapIndex;
+
+        const contextSegmentsForThisGap = [
+          ...overallSegments,
+          ...newlyRepairedSegments,
+        ].sort((a, b) => a.start - b.start);
+
+        const newSegs = await transcribeGapAudioWithRetry(
+          gap,
+          baseLogIdx,
+          `repair_gap_iter_${iteration}`,
+          contextSegmentsForThisGap,
+          {
+            audioPath,
+            tempDir,
+            operationId,
+            signal,
+            ffmpeg,
+            createdChunkPaths,
+          }
+        );
+        const filteredNewSegs = newSegs.filter(
+          seg => seg.end > gap.start && seg.start < gap.end
+        );
+
+        processedInPass += 1;
+        if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
+          const calcPct = scaleProgress(
+            (processedInPass / totalGaps) * 100,
+            Stage.TRANSCRIBE,
+            Stage.TRANSLATE
+          );
+          const cappedPct = Math.min(calcPct, 99);
+          progressCallback?.({
+            percent: cappedPct,
+            stage: `__i18n__:gap_repair:${iteration}:${processedInPass}:${totalGaps}`,
+            current: processedInPass,
+            total: totalGaps,
+          });
+        }
+
+        if (signal?.aborted) {
           throwIfAborted(signal);
-          if (signal?.aborted) return [];
-
-          const gapIndex = i + 1;
-          const baseLogIdx = 10000 * iteration + gapIndex;
-
-          const contextSegmentsForThisGap = [
-            ...overallSegments,
-            ...newlyRepairedSegments,
-          ].sort((a, b) => a.start - b.start);
-
-          const newSegs = await transcribeGapAudioWithRetry(
-            gap,
-            baseLogIdx,
-            `repair_gap_iter_${iteration}`,
-            contextSegmentsForThisGap,
-            {
-              audioPath,
-              tempDir,
-              operationId,
-              signal,
-              ffmpeg,
-              createdChunkPaths,
-            }
-          );
-          const filteredNewSegs = newSegs.filter(
-            seg => seg.end > gap.start && seg.start < gap.end
-          );
-
-          processedInPass += 1;
-          if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
-            const calcPct = scaleProgress(
-              (processedInPass / totalGaps) * 100,
-              Stage.TRANSCRIBE,
-              Stage.TRANSLATE
-            );
-            const cappedPct = Math.min(calcPct, 99);
-            progressCallback?.({
-              percent: cappedPct,
-              stage: `__i18n__:gap_repair:${iteration}:${processedInPass}:${totalGaps}`,
-              current: processedInPass,
-              total: totalGaps,
-            });
-          }
-
-          if (signal?.aborted) {
-            throwIfAborted(signal);
-            return filteredNewSegs;
-          }
           return filteredNewSegs;
-        })
-      );
+        }
+        return filteredNewSegs;
+      });
 
       try {
-        const results = await Promise.all(tasks);
-        for (const segs of results) {
+        for (const task of tasks) {
+          const segs = await task();
           if (segs) {
             appendRepaired(overallSegments, segs);
             newlyRepairedSegments.push(...segs);
@@ -549,9 +541,9 @@ export async function transcribePass({
   }
 
   function buildPrompt(history: string) {
-    return history.length <= MAX_PROMPT_CHARS
-      ? history
-      : history.slice(-MAX_PROMPT_CHARS);
+    const words = history.trim().split(/\s+/).filter(Boolean);
+    const lastFive = words.slice(-5).join(' ');
+    return lastFive;
   }
 
   function appendRepaired(arr: SrtSegment[], repaired: SrtSegment[]) {

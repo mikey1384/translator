@@ -101,11 +101,7 @@ export async function transcribeGapAudioWithRetry(
     startTime: gapToProcess.start,
     signal,
     operationId,
-    mediaDuration: gapDuration,
-    promptContext:
-      gapDuration <= MIN_DURATION_FOR_RETRY_SPLIT_SEC
-        ? promptForOriginalGap
-        : undefined,
+    promptContext: promptForOriginalGap,
   });
 
   const goodSegs = segments.filter(isGood);
@@ -183,7 +179,6 @@ export async function transcribeGapAudioWithRetry(
           startTime: half.start,
           signal,
           operationId,
-          mediaDuration: halfDur,
           promptContext: promptForOriginalGap,
         });
         retriedSegmentsFromHalves.push(...segmentsFromHalf.filter(isGood));
@@ -228,7 +223,6 @@ export async function transcribeGapAudioWithRetry(
           chunkIndex: intervalLogIdx,
           chunkPath: intervalAudioFilePath,
           startTime: intervalStart,
-          mediaDuration: intervalDur,
           signal,
           operationId,
           promptContext: promptForOriginalGap,
@@ -376,7 +370,7 @@ export async function refineOvershoots({
 function buildContextPrompt(
   allSegments: SrtSegment[],
   gap: { start: number; end: number },
-  wordsPerSide = 80
+  wordsPerSide = 5
 ): string {
   const collect = (segs: SrtSegment[], takeLast: boolean): string => {
     let words: string[] = [];
@@ -496,7 +490,6 @@ async function transcribeTailDirect({
       segIndex * 1000000 + Number(process.hrtime.bigint() % BigInt(1000000)),
     chunkPath: outPath,
     startTime: start,
-    mediaDuration: end - start,
     signal,
     operationId,
     promptContext,
