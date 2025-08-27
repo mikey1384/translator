@@ -36,6 +36,10 @@ const electronAPI = {
     return ipcRenderer.invoke('generate-subtitles', processedOptions);
   },
 
+  translateSubtitles: async (options: any) => {
+    return ipcRenderer.invoke('translate-subtitles', options);
+  },
+
   onGenerateSubtitlesProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return;
     const listener = (_: any, progress: any) => {

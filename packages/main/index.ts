@@ -273,6 +273,37 @@ try {
     }
   });
 
+  ipcMain.handle('translate-subtitles', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `translate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(
+      `[main.ts/translate-subtitles] Starting operation: ${operationId}`
+    );
+    try {
+      const result = await subtitleHandlers.handleTranslateSubtitles(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/translate-subtitles] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/translate-subtitles] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/translate-subtitles] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('process-url', handleProcessUrl);
 
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {

@@ -73,7 +73,10 @@
     "downloadFromUrl": "ウェブからダウンロード",
     "webDescription": "YouTube、TikTok、Instagramの動画リンク、またはウェブページの動画ファイルリンクを貼り付け",
     "chooseFile": "ファイルを選択",
-    "fileSelected": "ファイルが選択されました"
+    "fileSelected": "ファイルが選択されました",
+    "transcribeOnly": "音声を文字起こし",
+    "srtLoaded": "文字起こし完了",
+    "translationComingSoon": "翻訳コントロールは近日公開..."
   },
   "subtitles": {
     "outputLanguage": "出力言語",

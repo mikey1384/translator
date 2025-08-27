@@ -73,7 +73,10 @@
     "downloadFromUrl": "Download from web",
     "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
     "chooseFile": "Choose File",
-    "fileSelected": "File selected"
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "translationComingSoon": "Translation controls coming soon..."
   },
   "subtitles": {
     "outputLanguage": "Output Language",

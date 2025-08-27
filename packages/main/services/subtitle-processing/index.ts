@@ -11,6 +11,8 @@ import { prepareAudio } from './pipeline/prepare-audio.js';
 import { transcribePass } from './pipeline/transcribe-pass.js';
 import { translatePass } from './pipeline/translate-pass.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
+import { parseSrt } from '../../../shared/helpers/index.js';
+import { buildSrt } from '../../../shared/helpers/index.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -115,4 +117,39 @@ export async function extractSubtitlesFromMedia({
       }
     }
   }
+}
+
+/**
+ * Translates an existing SRT (provided as string) into the target language, using the
+ * same translate pipeline used during end-to-end generation. Returns the translated
+ * SRT content (dual mode by default so original + translation are preserved for UI).
+ */
+export async function translateSubtitlesFromSrt({
+  srtContent,
+  targetLanguage,
+  operationId,
+  signal,
+  progressCallback,
+}: {
+  srtContent: string;
+  targetLanguage: string;
+  operationId: string;
+  signal: AbortSignal;
+  progressCallback?: GenerateProgressCallback;
+}): Promise<{ subtitles: string }> {
+  // Parse provided SRT into segments
+  const segments = parseSrt(srtContent);
+
+  // Run translation-only pass
+  const translatedSegments = await translatePass({
+    segments,
+    targetLang: targetLanguage,
+    progressCallback,
+    operationId,
+    signal,
+  });
+
+  // Build final SRT (dual mode keeps original + translation)
+  const out = buildSrt({ segments: translatedSegments, mode: 'dual' });
+  return { subtitles: out };
 }

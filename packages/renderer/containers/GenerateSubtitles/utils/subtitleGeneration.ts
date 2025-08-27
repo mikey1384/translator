@@ -1,5 +1,6 @@
 import { useTaskStore, useSubStore } from '../../../state';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
+import { buildSrt } from '../../../../shared/helpers';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 
@@ -14,6 +15,29 @@ export interface GenerateSubtitlesResult {
   success: boolean;
   cancelled?: boolean;
   subtitles?: string;
+}
+
+export async function executeSrtTranslation({
+  segments,
+  targetLanguage,
+  operationId,
+}: {
+  segments: any[];
+  targetLanguage: string;
+  operationId: string;
+}): Promise<{ success: boolean; subtitles?: string; cancelled?: boolean }> {
+  const srtContent = buildSrt({ segments, mode: 'dual' });
+  const res = await SubtitlesIPC.translateSubtitles({
+    subtitles: srtContent,
+    targetLanguage,
+    operationId,
+  });
+  if (res?.translatedSubtitles) {
+    const finalSegments = parseSrt(res.translatedSubtitles);
+    useSubStore.getState().load(finalSegments);
+    return { success: true, subtitles: res.translatedSubtitles };
+  }
+  return { success: false };
 }
 
 export async function executeSubtitleGeneration({

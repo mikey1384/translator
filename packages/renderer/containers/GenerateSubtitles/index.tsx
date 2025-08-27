@@ -1,18 +1,20 @@
-import { useEffect } from 'react';
-import { css } from '@emotion/css';
-import { colors } from '../../styles.js';
-
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
-import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
 import ProgressDisplay from './ProgressDisplay.js';
 import ErrorBanner from '../../components/ErrorBanner.js';
-import { useUIStore, useVideoStore, useTaskStore } from '../../state';
+import {
+  useUIStore,
+  useVideoStore,
+  useTaskStore,
+  useSubStore,
+} from '../../state';
 import { useUrlStore } from '../../state/url-store';
 import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
 import UrlCookieBanner from './UrlCookieBanner';
 import MediaInputSection from './components/MediaInputSection.js';
+import TranscribeOnlyPanel from './components/TranscribeOnlyPanel.js';
+import SrtMountedPanel from './components/SrtMountedPanel.js';
 
 // Custom hooks
 import { useVideoMetadata } from './hooks/useVideoMetadata';
@@ -32,13 +34,7 @@ export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
   // UI State
-  const {
-    targetLanguage,
-    showOriginalText,
-    setTargetLanguage,
-    setShowOriginalText,
-    toggleSettings,
-  } = useUIStore();
+  const { toggleSettings } = useUIStore();
 
   // URL processing state
   const {
@@ -60,13 +56,17 @@ export default function GenerateSubtitles() {
   } = useVideoStore();
 
   // Task state
-  const { translation, merge } = useTaskStore();
+  const { translation } = useTaskStore();
+
+  // Subtitle state
+  const subStore = useSubStore();
+  const hasSrtMounted = subStore.order.length > 0;
+  const isTranscriptionComplete =
+    !translation.inProgress && translation.percent === 100 && hasSrtMounted;
 
   // Custom hooks for business logic (after videoFilePath is declared)
-  const { durationSecs, hoursNeeded, costStr } =
-    useVideoMetadata(videoFilePath);
-  const { showCreditWarning, isButtonDisabled, refreshCreditState } =
-    useCreditSystem();
+  const { durationSecs, hoursNeeded } = useVideoMetadata(videoFilePath);
+  const { showCreditWarning, isButtonDisabled } = useCreditSystem();
 
   return (
     <Section title={t('subtitles.generate')}>
@@ -83,23 +83,24 @@ export default function GenerateSubtitles() {
         downloadedVideoPath={videoFilePath}
         onSaveOriginalVideo={handleSaveOriginalVideo}
         didDownloadFromUrl={!!download.id}
+        inputMode={'file'}
       />
 
-      {/* Show translation controls when video is loaded or being processed */}
+      {/* Show appropriate panel based on transcription status */}
       {(videoFile || download.inProgress) && (
-        <GenerateSubtitlesPanel
-          targetLanguage={targetLanguage}
-          setTargetLanguage={setTargetLanguage}
-          isTranslationInProgress={translation.inProgress}
-          showOriginalText={showOriginalText}
-          onShowOriginalTextChange={setShowOriginalText}
-          videoFile={videoFile}
-          videoFilePath={videoFilePath}
-          isProcessingUrl={download.inProgress}
-          handleGenerateSubtitles={handleGenerateSubtitles}
-          isMergingInProgress={merge.inProgress}
-          disabledKey={isButtonDisabled || hoursNeeded == null}
-        />
+        <>
+          {!isTranscriptionComplete ? (
+            /* Show transcribe-only when transcription is not complete */
+            <TranscribeOnlyPanel
+              onTranscribe={handleTranscribeOnly}
+              isTranscribing={translation.inProgress}
+              disabled={isButtonDisabled || hoursNeeded == null}
+            />
+          ) : (
+            /* Show SRT mounted panel when transcription is actually complete */
+            <SrtMountedPanel srtPath={subStore.originalPath} />
+          )}
+        </>
       )}
 
       <MediaInputSection
@@ -116,7 +117,7 @@ export default function GenerateSubtitles() {
     </Section>
   );
 
-  async function handleGenerateSubtitles() {
+  async function handleTranscribeOnly() {
     // Validate inputs
     const validation = validateGenerationInputs(
       videoFile,
@@ -149,12 +150,12 @@ export default function GenerateSubtitles() {
       }
     }
 
-    // Generate subtitles - backend will handle credit deduction on success
-    const operationId = `generate-${Date.now()}`;
+    // Generate transcription only (no translation)
+    const operationId = `transcribe-${Date.now()}`;
     await executeSubtitleGeneration({
       videoFile,
       videoFilePath,
-      targetLanguage,
+      targetLanguage: 'original', // Use 'original' for transcription-only
       operationId,
     });
   }

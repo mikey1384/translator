@@ -73,7 +73,10 @@
     "downloadFromUrl": "从网络下载",
     "webDescription": "粘贴YouTube、TikTok、Instagram视频链接，或网页中的直接视频文件链接",
     "chooseFile": "选择文件",
-    "fileSelected": "文件已选择"
+    "fileSelected": "文件已选择",
+    "transcribeOnly": "转录音频",
+    "srtLoaded": "转录完成",
+    "translationComingSoon": "翻译控件即将推出..."
   },
   "subtitles": {
     "outputLanguage": "输出语言",

@@ -3,7 +3,10 @@ import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
-import { extractSubtitlesFromMedia } from '../services/subtitle-processing/index.js';
+import {
+  extractSubtitlesFromMedia,
+  translateSubtitlesFromSrt,
+} from '../services/subtitle-processing/index.js';
 import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
@@ -161,6 +164,62 @@ export async function handleGenerateSubtitles(
     } catch (err) {
       log.warn(`Failed to delete temp video file: ${tempVideoPath}`, err);
     }
+  }
+}
+
+export async function handleTranslateSubtitles(
+  event: IpcMainInvokeEvent,
+  options: {
+    subtitles: string;
+    sourceLanguage?: string;
+    targetLanguage: string;
+  },
+  operationId: string
+): Promise<{
+  success: boolean;
+  translatedSubtitles?: string;
+  cancelled?: boolean;
+  error?: string;
+  operationId: string;
+}> {
+  const { ffmpeg, fileManager } = checkServicesInitialized();
+  void ffmpeg; // not used for pure text translation
+  void fileManager; // not used for pure text translation
+
+  try {
+    const controller = new AbortController();
+    registerAutoCancel(operationId, event.sender, () => controller.abort());
+    addSubtitle(operationId, controller);
+
+    const result = await translateSubtitlesFromSrt({
+      srtContent: options.subtitles,
+      targetLanguage: options.targetLanguage,
+      operationId,
+      signal: controller.signal,
+      progressCallback: progress => {
+        event.sender.send('generate-subtitles-progress', {
+          ...progress,
+          operationId,
+        });
+      },
+    });
+
+    return {
+      success: true,
+      translatedSubtitles: result.subtitles,
+      operationId,
+    };
+  } catch (error: any) {
+    const isCancel =
+      error?.name === 'AbortError' || error?.message === 'Operation cancelled';
+    return {
+      success: !isCancel,
+      cancelled: isCancel,
+      error: isCancel ? undefined : error?.message || String(error),
+      operationId,
+    };
+  } finally {
+    registryFinish(operationId);
   }
 }
 

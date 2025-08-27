@@ -55,6 +55,25 @@ export function setTargetLanguage(
   return window.electron.setSubtitleTargetLanguage(lang);
 }
 
+export function translateSubtitles(options: {
+  subtitles: string;
+  sourceLanguage?: string;
+  targetLanguage: string;
+  operationId?: string;
+}): Promise<{ translatedSubtitles: string; error?: string }> {
+  // Ensure sourceLanguage is a string for type contract if not provided
+  const payload = {
+    sourceLanguage: '',
+    ...options,
+  } as {
+    subtitles: string;
+    sourceLanguage: string;
+    targetLanguage: string;
+    operationId?: string;
+  };
+  return window.electron.translateSubtitles(payload);
+}
+
 export const cancelPngRender = (operationId: string): void => {
   window.electron.cancelPngRender(operationId);
 };
