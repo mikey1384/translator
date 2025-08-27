@@ -127,5 +127,8 @@
     "puppeteer",
     "webrtcvad",
     "youtube-dl-exec"
-  ]
+  ],
+  "overrides": {
+    "tmp": "^0.2.5"
+  }
 }
