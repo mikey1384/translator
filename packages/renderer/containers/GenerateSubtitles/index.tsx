@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
-import UrlInputSection from './UrlInputSection.js';
-import InputModeToggle from './InputModeToggle.js';
+
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
 import GenerateSubtitlesPanel from './GenerateSubtitlesPanel.js';
@@ -13,6 +12,7 @@ import { useUrlStore } from '../../state/url-store';
 import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
 import UrlCookieBanner from './UrlCookieBanner';
+import MediaInputSection from './components/MediaInputSection.js';
 
 // Custom hooks
 import { useVideoMetadata } from './hooks/useVideoMetadata';
@@ -20,7 +20,6 @@ import { useCreditSystem } from './hooks/useCreditSystem';
 
 // Components
 import CreditWarningBanner from './components/CreditWarningBanner';
-import FileInputSection from './components/FileInputSection';
 
 // Utilities
 import { checkSufficientCredits } from './utils/creditCheck';
@@ -34,10 +33,8 @@ export default function GenerateSubtitles() {
 
   // UI State
   const {
-    inputMode,
     targetLanguage,
     showOriginalText,
-    setInputMode,
     setTargetLanguage,
     setShowOriginalText,
     toggleSettings,
@@ -71,19 +68,6 @@ export default function GenerateSubtitles() {
   const { showCreditWarning, isButtonDisabled, refreshCreditState } =
     useCreditSystem();
 
-  // Auto-set input mode when file is selected
-  useEffect(() => {
-    if (videoFile) {
-      const isLocalFileSelection =
-        !(videoFile instanceof File) || !(videoFile as any)._originalPath;
-
-      if (isLocalFileSelection) {
-        setInputMode('file');
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoFile]);
-
   return (
     <Section title={t('subtitles.generate')}>
       {showCreditWarning && (
@@ -98,46 +82,20 @@ export default function GenerateSubtitles() {
         downloadComplete={!download.inProgress && download.percent === 100}
         downloadedVideoPath={videoFilePath}
         onSaveOriginalVideo={handleSaveOriginalVideo}
-        inputMode={inputMode}
         didDownloadFromUrl={!!download.id}
       />
 
-      <InputModeToggle
-        inputMode={inputMode}
-        onSetInputMode={setInputMode}
+      <MediaInputSection
+        videoFile={videoFile}
+        onOpenFileDialog={openFileDialog}
+        isDownloadInProgress={download.inProgress}
         isTranslationInProgress={translation.inProgress}
-        isProcessingUrl={download.inProgress}
+        urlInput={urlInput}
+        setUrlInput={setUrlInput}
+        downloadQuality={downloadQuality}
+        setDownloadQuality={setDownloadQuality}
+        handleProcessUrl={downloadMedia}
       />
-
-      {inputMode === 'file' && (
-        <FileInputSection
-          videoFile={videoFile}
-          onOpenFileDialog={openFileDialog}
-          isDownloadInProgress={download.inProgress}
-          isTranslationInProgress={translation.inProgress}
-        />
-      )}
-
-      {inputMode === 'url' && (
-        <div
-          className={css`
-            padding: 20px;
-            border: 1px solid ${colors.border};
-            border-radius: 6px;
-            background-color: ${colors.light};
-          `}
-        >
-          <UrlInputSection
-            urlInput={urlInput}
-            setUrlInput={setUrlInput}
-            downloadQuality={downloadQuality}
-            setDownloadQuality={setDownloadQuality}
-            handleProcessUrl={downloadMedia}
-            isProcessingUrl={download.inProgress}
-            isTranslationInProgress={translation.inProgress}
-          />
-        </div>
-      )}
 
       {videoFile && (
         <GenerateSubtitlesPanel

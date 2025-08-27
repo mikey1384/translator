@@ -67,7 +67,13 @@
     "selectFile": "ファイルを選択",
     "selectVideoFile": "動画ファイルを選択",
     "selectVideoAudioFile": "動画/音声ファイルを選択",
-    "saveOriginalVideo": "元の動画を保存"
+    "saveOriginalVideo": "元の動画を保存",
+    "localFileDescription": "コンピュータから動画または音声ファイルをアップロードしてください",
+    "selectLocalFile": "コンピュータからアップロード",
+    "downloadFromUrl": "ウェブからダウンロード",
+    "webDescription": "YouTube、TikTok、Instagramの動画リンク、またはウェブページの動画ファイルリンクを貼り付け",
+    "chooseFile": "ファイルを選択",
+    "fileSelected": "ファイルが選択されました"
   },
   "subtitles": {
     "outputLanguage": "出力言語",

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import Section from '../../components/Section';
 import ErrorBanner from '../../components/ErrorBanner';
 import Button from '../../components/Button';
-import FileInputButton from '../../components/FileInputButton';
 
 import SubtitleList from './SubtitleList';
 import MergeMenu from './MergeMenu';
@@ -147,19 +146,6 @@ export default function EditSubtitles({
 
       {(!videoFile || subtitles.length === 0) && (
         <div style={{ marginTop: 30 }}>
-          {!videoFile && (
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: 10,
-              }}
-            >
-              <FileInputButton onClick={handleSelectVideoClick}>
-                {t('input.selectVideoAudioFile')}
-              </FileInputButton>
-            </div>
-          )}
           <div
             style={{
               display: 'flex',
@@ -348,35 +334,6 @@ export default function EditSubtitles({
     }
     if (res.segments) {
       subStore.load(res.segments, res.filePath ?? null);
-    }
-  }
-
-  async function handleSelectVideoClick() {
-    const result = await FileIPC.open({
-      properties: ['openFile'],
-      filters: [
-        {
-          name: t('common.fileFilters.mediaFiles'),
-          extensions: [
-            'mp4',
-            'mkv',
-            'avi',
-            'mov',
-            'webm',
-            'mp3',
-            'wav',
-            'aac',
-            'ogg',
-            'flac',
-          ],
-        },
-      ],
-    });
-    if (!result.canceled && result.filePaths.length) {
-      await useVideoStore.getState().setFile({
-        name: result.filePaths[0].split(/[\\/]/).pop() || 'media',
-        path: result.filePaths[0],
-      });
     }
   }
 

@@ -67,7 +67,13 @@
     "selectFile": "选择文件",
     "selectVideoFile": "选择视频文件",
     "selectVideoAudioFile": "选择视频/音频文件",
-    "saveOriginalVideo": "保存原始视频"
+    "saveOriginalVideo": "保存原始视频",
+    "localFileDescription": "从您的计算机上传视频或音频文件",
+    "selectLocalFile": "从计算机上传",
+    "downloadFromUrl": "从网络下载",
+    "webDescription": "粘贴YouTube、TikTok、Instagram视频链接，或网页中的直接视频文件链接",
+    "chooseFile": "选择文件",
+    "fileSelected": "文件已选择"
   },
   "subtitles": {
     "outputLanguage": "输出语言",

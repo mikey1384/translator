@@ -67,7 +67,13 @@
     "selectFile": "Select File",
     "selectVideoFile": "Select Video File",
     "selectVideoAudioFile": "Select Video / Audio File",
-    "saveOriginalVideo": "Save Original Video"
+    "saveOriginalVideo": "Save Original Video",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected"
   },
   "subtitles": {
     "outputLanguage": "Output Language",
