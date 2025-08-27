@@ -85,19 +85,8 @@ export default function GenerateSubtitles() {
         didDownloadFromUrl={!!download.id}
       />
 
-      <MediaInputSection
-        videoFile={videoFile}
-        onOpenFileDialog={openFileDialog}
-        isDownloadInProgress={download.inProgress}
-        isTranslationInProgress={translation.inProgress}
-        urlInput={urlInput}
-        setUrlInput={setUrlInput}
-        downloadQuality={downloadQuality}
-        setDownloadQuality={setDownloadQuality}
-        handleProcessUrl={downloadMedia}
-      />
-
-      {videoFile && (
+      {/* Show translation controls when video is loaded or being processed */}
+      {(videoFile || download.inProgress) && (
         <GenerateSubtitlesPanel
           targetLanguage={targetLanguage}
           setTargetLanguage={setTargetLanguage}
@@ -112,6 +101,18 @@ export default function GenerateSubtitles() {
           disabledKey={isButtonDisabled || hoursNeeded == null}
         />
       )}
+
+      <MediaInputSection
+        videoFile={videoFile}
+        onOpenFileDialog={openFileDialog}
+        isDownloadInProgress={download.inProgress}
+        isTranslationInProgress={translation.inProgress}
+        urlInput={urlInput}
+        setUrlInput={setUrlInput}
+        downloadQuality={downloadQuality}
+        setDownloadQuality={setDownloadQuality}
+        handleProcessUrl={downloadMedia}
+      />
     </Section>
   );
 
