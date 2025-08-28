@@ -54,7 +54,7 @@ export async function executeSrtTranslation({
     }
     useTaskStore.getState().setTranslation({ inProgress: false });
     return { success: false };
-  } catch (e: any) {
+  } catch {
     useTaskStore.getState().setTranslation({
       stage: i18n.t('generateSubtitles.status.error'),
       percent: 100,
@@ -70,10 +70,12 @@ export async function executeSubtitleGeneration({
   targetLanguage,
   operationId,
 }: GenerateSubtitlesParams): Promise<GenerateSubtitlesResult> {
-  const { setTranslation } = useTaskStore.getState();
+  const { setTranscription } = useTaskStore.getState();
+  // Ensure translation slice is not considered active during transcription-only
+  useTaskStore.getState().setTranslation({ inProgress: false });
 
-  // Initialize progress tracking
-  setTranslation({
+  // Initialize progress tracking (transcription-only)
+  setTranscription({
     id: operationId,
     stage: i18n.t('generateSubtitles.status.starting'),
     percent: 0,
@@ -98,7 +100,7 @@ export async function executeSubtitleGeneration({
       const finalSegments = parseSrt(result.subtitles);
       useSubStore.getState().load(finalSegments);
 
-      setTranslation({
+      setTranscription({
         id: operationId,
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
@@ -113,7 +115,7 @@ export async function executeSubtitleGeneration({
         : i18n.t('generateSubtitles.status.error');
       const percent = result.cancelled ? 0 : 100;
 
-      setTranslation({
+      setTranscription({
         id: operationId,
         stage,
         percent,
@@ -125,7 +127,7 @@ export async function executeSubtitleGeneration({
   } catch (error) {
     console.error('Error generating subtitles:', error);
 
-    setTranslation({
+    setTranscription({
       id: operationId,
       stage: i18n.t('generateSubtitles.status.error'),
       percent: 100,

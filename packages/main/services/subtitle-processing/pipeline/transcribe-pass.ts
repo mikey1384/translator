@@ -233,12 +233,11 @@ export async function transcribePass({
         }
       });
 
-      // Process sequentially, one at a time
-      const segArrays: SrtSegment[][] = [];
-      for (const task of segArraysPromises) {
-        const segs = await task;
-        segArrays.push(segs);
-      }
+      // Process the batch concurrently
+      const segArraysSettled = await Promise.allSettled(segArraysPromises);
+      const segArrays: SrtSegment[][] = segArraysSettled.map(r =>
+        r.status === 'fulfilled' ? r.value : []
+      );
       const thisBatchSegments = segArrays
         .flat()
         .sort((a, b) => a.start - b.start);

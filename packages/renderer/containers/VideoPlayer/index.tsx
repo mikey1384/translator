@@ -1,12 +1,11 @@
-import * as VideoIPC from '../../ipc/video';
 import {
   useState,
   useEffect,
+  useMemo,
   useRef,
   KeyboardEvent,
   ChangeEvent,
   useLayoutEffect,
-  useCallback,
 } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +28,7 @@ import {
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { useUrlStore } from '../../state/url-store';
+import { getPlaybackPosition, savePlaybackPosition } from '../../ipc/video';
 
 const commonOverlayControlsStyles = css`
   position: absolute;
@@ -302,12 +302,23 @@ export default function VideoPlayer() {
   const selectVideo = useVideoStore(s => s.openFileDialog);
   const isAudioOnly = useVideoStore(s => s.isAudioOnly);
   const videoPath = useVideoStore(s => s.path);
-  const { merge, translation } = useTaskStore();
+  const { merge, translation, transcription } = useTaskStore();
   const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
 
-  const isProgressBarVisible =
-    merge.inProgress || download.inProgress || translation.inProgress;
+  const isProgressBarVisible = useMemo(() => {
+    return (
+      merge.inProgress ||
+      download.inProgress ||
+      translation.inProgress ||
+      transcription.inProgress
+    );
+  }, [
+    merge.inProgress,
+    download.inProgress,
+    translation.inProgress,
+    transcription.inProgress,
+  ]);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -324,40 +335,44 @@ export default function VideoPlayer() {
   const speedBtnRef = useRef<HTMLButtonElement>(null);
 
   const [progressBarH, setProgressBarH] = useState(0);
+  const isFullScreenRef = useRef(false);
+  useEffect(() => {
+    isFullScreenRef.current = isFullScreen;
+  }, [isFullScreen]);
 
-  const restartHideTimer = useCallback(() => {
+  function restartHideTimer() {
     if (activityTimeout.current) clearTimeout(activityTimeout.current);
     setCursorHidden(false);
     setShowFsControls(true);
-    if (!isFullScreen) setShowOverlay(true);
+    if (!isFullScreenRef.current) setShowOverlay(true);
 
     activityTimeout.current = setTimeout(() => {
-      if (!isFullScreen) {
+      if (!isFullScreenRef.current) {
         setShowOverlay(false);
         if (activityTimeout.current) clearTimeout(activityTimeout.current);
       }
       setCursorHidden(true);
       setShowFsControls(false);
     }, HIDE_DELAY);
-  }, [isFullScreen]);
+  }
 
   useEffect(() => {
     setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
   }, [isProgressBarVisible]);
 
-  const syncVisibleHeight = useCallback(() => {
+  function syncVisibleHeight() {
     const getHeight = () =>
-      isFullScreen
+      isFullScreenRef.current
         ? window.innerHeight
         : (playerDivRef.current?.getBoundingClientRect().height ??
           BASELINE_HEIGHT);
     getHeight();
-  }, [isFullScreen]);
+  }
 
   useEffect(() => {
     window.addEventListener('resize', syncVisibleHeight);
     return () => window.removeEventListener('resize', syncVisibleHeight);
-  }, [syncVisibleHeight]);
+  }, []);
 
   useLayoutEffect(() => {
     const el = playerDivRef.current;
@@ -365,7 +380,7 @@ export default function VideoPlayer() {
     const ro = new ResizeObserver(syncVisibleHeight);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [syncVisibleHeight]);
+  }, []);
 
   useEffect(() => {
     const attachListeners = () => {
@@ -485,7 +500,7 @@ export default function VideoPlayer() {
       if (activityTimeout.current) clearTimeout(activityTimeout.current);
     }
     return () => window.removeEventListener('mousemove', restartHideTimer);
-  }, [isFullScreen, restartHideTimer]);
+  }, [isFullScreen]);
 
   useEffect(() => {
     if (!isFullScreen && cursorHidden) {
@@ -500,21 +515,14 @@ export default function VideoPlayer() {
     []
   );
 
-  const pokeFsControls = () => {
-    if (!isFullScreen) return;
-    restartHideTimer();
-  };
-
   // Load saved position when component mounts if not already loaded
   useEffect(() => {
-    if (!videoPath || resumeAt !== null) {
-      return;
-    }
-    let cancelled = false;
-    (async () => {
+    const loadSavedPosition = async () => {
+      if (!videoPath || resumeAt !== null) return;
+
       try {
-        const saved = await VideoIPC.getPlaybackPosition(videoPath);
-        if (!cancelled && saved != null) {
+        const saved = await getPlaybackPosition(videoPath);
+        if (saved != null) {
           useVideoStore.setState({ resumeAt: saved });
         }
       } catch (err) {
@@ -523,19 +531,18 @@ export default function VideoPlayer() {
           err
         );
       }
-    })();
-    return () => {
-      cancelled = true;
     };
-  }, [videoPath, resumeAt]);
 
+    loadSavedPosition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoPath]);
   // Save current position immediately when component unmounts
   useEffect(() => {
     return () => {
       const v = getNativePlayerInstance();
       if (v && videoPath && v.currentTime > 0) {
         // Force save current position immediately on unmount
-        VideoIPC.savePlaybackPosition(videoPath, v.currentTime).catch(err => {
+        savePlaybackPosition(videoPath, v.currentTime).catch(err => {
           console.error(
             '[VideoPlayer] Failed to save position on unmount:',
             err
@@ -545,9 +552,30 @@ export default function VideoPlayer() {
     };
   }, [videoPath]);
 
+  const pokeFsControls = () => {
+    if (!isFullScreen) return;
+    restartHideTimer();
+  };
+
   if (!videoUrl) return null;
 
   const pct = duration ? (currentTime / duration) * 100 : 0;
+
+  const applyRate = (rate: (typeof SPEED_STEPS)[number]) => {
+    const v = getNativePlayerInstance();
+    if (!v) return;
+    v.playbackRate = rate;
+    setPlaybackRate(rate);
+  };
+
+  const stepRate = (dir: 'up' | 'down') => {
+    const idx = SPEED_STEPS.indexOf(playbackRate);
+    const next =
+      dir === 'up'
+        ? SPEED_STEPS[Math.min(idx + 1, SPEED_STEPS.length - 1)]
+        : SPEED_STEPS[Math.max(idx - 1, 0)];
+    applyRate(next);
+  };
 
   return (
     <div style={{ position: 'relative' }}>
@@ -741,20 +769,4 @@ export default function VideoPlayer() {
       </div>
     </div>
   );
-
-  function applyRate(rate: (typeof SPEED_STEPS)[number]) {
-    const v = getNativePlayerInstance();
-    if (!v) return;
-    v.playbackRate = rate;
-    setPlaybackRate(rate);
-  }
-
-  function stepRate(dir: 'up' | 'down') {
-    const idx = SPEED_STEPS.indexOf(playbackRate);
-    const next =
-      dir === 'up'
-        ? SPEED_STEPS[Math.min(idx + 1, SPEED_STEPS.length - 1)]
-        : SPEED_STEPS[Math.max(idx - 1, 0)];
-    applyRate(next);
-  }
 }

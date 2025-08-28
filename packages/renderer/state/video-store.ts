@@ -106,13 +106,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           playingId: null,
           originalPath: null,
         });
-        // Reset translation progress
+        // Reset translation and transcription progress
         useTaskStore.getState().setTranslation({
           id: null,
           stage: '',
           percent: 0,
           inProgress: false,
           batchStartIndex: undefined,
+        });
+        useTaskStore.getState().setTranscription({
+          id: null,
+          stage: '',
+          percent: 0,
+          inProgress: false,
         });
       } catch (e) {
         console.error('[video-store] pre-clear/save/reset error', e);

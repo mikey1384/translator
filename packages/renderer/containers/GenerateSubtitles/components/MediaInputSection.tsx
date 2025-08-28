@@ -1,6 +1,6 @@
 import React from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../../../styles.js';
+import { colors, selectStyles } from '../../../styles.js';
 import { FileButton } from '../../../components/design-system/index.js';
 import Button from '../../../components/Button.js';
 import { VideoQuality } from '@shared-types/app';
@@ -35,6 +35,7 @@ const optionCardStyles = css`
   background-color: ${colors.light};
   transition: all 0.3s ease;
   position: relative;
+  text-align: center;
 
   &:hover {
     border-color: ${colors.primary};
@@ -50,6 +51,7 @@ const optionCardStyles = css`
 const optionHeaderStyles = css`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 16px;
   font-size: 1.1rem;
@@ -75,28 +77,45 @@ const descriptionStyles = css`
   margin-bottom: 16px;
   font-size: 0.9rem;
   line-height: 1.4;
+  text-align: center;
 `;
 
 const fileInputAreaStyles = css`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
 `;
 
 const urlInputAreaStyles = css`
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
 `;
 
 const urlInputRowStyles = css`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
+
+  input[type='url'] {
+    flex-shrink: 1;
+  }
+  select {
+    flex-shrink: 0;
+  }
+  button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 `;
 
 const urlInputStyles = css`
-  flex: 1;
+  width: 100%;
+  max-width: 560px;
   padding: 10px 14px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
@@ -115,22 +134,7 @@ const urlInputStyles = css`
   }
 `;
 
-const qualitySelectStyles = css`
-  min-width: 140px;
-  padding: 10px 14px;
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  background-color: white;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-    box-shadow: 0 0 0 3px ${colors.primary}20;
-  }
-`;
+// Removed local qualitySelectStyles in favor of shared dark selectStyles
 
 export default function MediaInputSection({
   videoFile,
@@ -221,7 +225,7 @@ export default function MediaInputSection({
               disabled={isTranslationInProgress || isDownloadInProgress}
             />
             <select
-              className={qualitySelectStyles}
+              className={selectStyles}
               value={downloadQuality}
               onChange={e => setDownloadQuality(e.target.value as VideoQuality)}
               disabled={isDownloadInProgress || isTranslationInProgress}

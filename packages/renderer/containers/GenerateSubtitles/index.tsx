@@ -57,14 +57,14 @@ export default function GenerateSubtitles() {
   } = useVideoStore();
 
   // Task state
-  const { translation } = useTaskStore();
+  const { translation, transcription } = useTaskStore();
 
   // Subtitle state
   const subStore = useSubStore();
-  const hasSrtMounted = subStore.order.length > 0;
+  const isTranscriptionDone = Boolean(transcription.isCompleted);
   const isTranscribing =
-    !!translation.inProgress &&
-    (translation.id?.startsWith('transcribe-') ?? false);
+    !!transcription.inProgress &&
+    (transcription.id?.startsWith('transcribe-') ?? false);
   const isTranslating =
     !!translation.inProgress &&
     (translation.id?.startsWith('translate-') ?? false);
@@ -91,10 +91,10 @@ export default function GenerateSubtitles() {
         inputMode={'file'}
       />
 
-      {/* Show appropriate panel: only show transcribe panel when no SRT is mounted and not translating */}
+      {/* Show appropriate panel: only show transcribe panel until transcription completes */}
       {(videoFile || download.inProgress) && (
         <>
-          {!hasSrtMounted && !isTranslating ? (
+          {!isTranscriptionDone && !isTranslating ? (
             <TranscribeOnlyPanel
               onTranscribe={handleTranscribeOnly}
               isTranscribing={isTranscribing}

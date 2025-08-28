@@ -27,6 +27,8 @@ export default function TranscribeOnlyPanel({
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-direction: column;
+        gap: 10px;
       `}
     >
       <Button
@@ -36,10 +38,21 @@ export default function TranscribeOnlyPanel({
         variant="primary"
         isLoading={isTranscribing}
       >
-        {isTranscribing
-          ? t('subtitles.generating')
-          : t('subtitles.transcribeOnly', 'Transcribe Audio')}
+        {isTranscribing ? t('subtitles.generating') : t('input.transcribeOnly')}
       </Button>
+
+      <div
+        className={css`
+          font-size: 0.9rem;
+          color: ${colors.gray};
+          text-align: center;
+        `}
+      >
+        {t(
+          'input.featuresUnlockAfterTranscription',
+          'After transcription, translation and other controls will appear.'
+        )}
+      </div>
     </div>
   );
 }

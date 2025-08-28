@@ -23,20 +23,52 @@ function flush() {
     partialResult,
   } = queued;
 
-  // Only accept updates for the active translation operation
-  const active = useTaskStore.getState().translation.id;
-  const inProgress = useTaskStore.getState().translation.inProgress;
-  if (active && operationId && operationId !== active) {
-    queued = null;
-    return;
-  }
+  // Route updates based on operationId prefix
+  const isTranscribe = operationId?.startsWith('transcribe-');
+  const isTranslate = operationId?.startsWith('translate-');
 
-  useTaskStore.getState().setTranslation({
-    stage,
-    percent,
-    id: operationId ?? null,
-    batchStartIndex,
-  });
+  if (isTranslate) {
+    const active = useTaskStore.getState().translation.id;
+    const inProgress = useTaskStore.getState().translation.inProgress;
+    if (active && operationId && operationId !== active) {
+      queued = null;
+      return;
+    }
+    useTaskStore.getState().setTranslation({
+      stage,
+      percent,
+      id: operationId ?? null,
+      batchStartIndex,
+    });
+    // After completion, stop applying any further queued updates
+    const isComplete =
+      percent >= 100 || /processing complete/i.test(stage ?? '');
+    if (isComplete) {
+      queued = null;
+      if (flushTimer) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+      }
+      return;
+    }
+    // If the task has been marked complete (inProgress=false), ignore any late non-final updates
+    if (!inProgress) {
+      queued = null;
+      return;
+    }
+  } else if (isTranscribe) {
+    const active = useTaskStore.getState().transcription.id;
+    if (active && operationId && operationId !== active) {
+      queued = null;
+      return;
+    }
+    useTaskStore.getState().setTranscription({
+      stage,
+      percent,
+      id: operationId ?? null,
+      batchStartIndex,
+    });
+  }
 
   const isComplete = percent >= 100 || /processing complete/i.test(stage ?? '');
 
@@ -55,12 +87,6 @@ function flush() {
       clearTimeout(flushTimer);
       flushTimer = null;
     }
-    return;
-  }
-
-  // If the task has been marked complete (inProgress=false), ignore any late non-final updates
-  if (!inProgress) {
-    queued = null;
     return;
   }
 
