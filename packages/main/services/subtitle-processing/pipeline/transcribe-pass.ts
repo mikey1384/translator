@@ -152,7 +152,7 @@ export async function transcribePass({
     });
 
     progressCallback?.({
-      percent: scaleProgress(20, Stage.TRANSCRIBE, Stage.TRANSLATE),
+      percent: 0,
       stage: `Starting transcription of ${chunks.length} chunks...`,
     });
 
@@ -249,11 +249,7 @@ export async function transcribePass({
       batchContext = buildPrompt(batchContext);
 
       done += slice.length;
-      const p = scaleProgress(
-        (done / chunks.length) * 100,
-        Stage.TRANSCRIBE,
-        Stage.TRANSLATE
-      );
+      const p = Math.round((done / chunks.length) * 80);
 
       const intermediateSrt = buildSrt({
         segments: overallSegments.slice().sort((a, b) => a.start - b.start),
@@ -267,7 +263,7 @@ export async function transcribePass({
         )}", Percent: ${Math.round(p)}`
       );
       progressCallback?.({
-        percent: Math.round(p),
+        percent: Math.min(p, 79),
         stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
         current: done,
         total: chunks.length,
@@ -350,7 +346,7 @@ export async function transcribePass({
 
       if (repairGaps.length > 0) {
         progressCallback?.({
-          percent: scaleProgress(90, Stage.TRANSCRIBE, Stage.TRANSLATE),
+          percent: 80,
           stage: `__i18n__:repairing_captions:${iteration}:${maxIterations}:0:${repairGaps.length}`,
         });
       }
@@ -388,12 +384,8 @@ export async function transcribePass({
 
         processedInPass += 1;
         if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
-          const calcPct = scaleProgress(
-            (processedInPass / totalGaps) * 100,
-            Stage.TRANSCRIBE,
-            Stage.TRANSLATE
-          );
-          const cappedPct = Math.min(calcPct, 99);
+          const pct = 80 + Math.round((processedInPass / totalGaps) * 20);
+          const cappedPct = Math.min(pct, 99);
           progressCallback?.({
             percent: cappedPct,
             stage: `__i18n__:gap_repair:${iteration}:${processedInPass}:${totalGaps}`,
@@ -417,15 +409,9 @@ export async function transcribePass({
             newlyRepairedSegments.push(...segs);
           }
         }
+        const pct = 80 + Math.round((processedInPass / totalGaps) * 20);
         progressCallback?.({
-          percent: Math.min(
-            scaleProgress(
-              (processedInPass / totalGaps) * 100,
-              Stage.TRANSCRIBE,
-              Stage.TRANSLATE
-            ),
-            99
-          ),
+          percent: Math.min(pct, 99),
           stage: `Gap repair #${iteration}/${maxIterations}`,
           current: processedInPass,
           total: totalGaps,
@@ -466,7 +452,7 @@ export async function transcribePass({
 
     if (repairGaps.length > 0) {
       progressCallback?.({
-        percent: scaleProgress(100, Stage.TRANSCRIBE, Stage.TRANSLATE),
+        percent: 100,
         stage: 'Gap-repair pass complete',
       });
     }
