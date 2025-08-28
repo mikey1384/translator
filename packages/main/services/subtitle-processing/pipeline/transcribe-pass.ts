@@ -28,11 +28,10 @@ import {
   MIN_CHUNK_DURATION_SEC,
   GAP_SEC,
   MERGE_GAP_SEC,
-  PROGRESS_ANALYSIS_DONE,
   TRANSCRIPTION_BATCH_SIZE,
 } from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
-import { Stage, scaleProgress } from './progress.js';
+import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 import { throwIfAborted } from '../utils.js';
 import { refineOvershoots } from '../gap-repair.js';
@@ -143,16 +142,13 @@ export async function transcribePass({
       `[${operationId}] VAD grouping produced ${chunks.length} chunk(s) (≥${MIN_CHUNK_DURATION_SEC}s).`
     );
     progressCallback?.({
-      percent: scaleProgress(
-        PROGRESS_ANALYSIS_DONE,
-        Stage.TRANSCRIBE,
-        Stage.TRANSCRIBE
-      ),
+      percent: Stage.TRANSCRIBE,
       stage: `Chunked audio into ${chunks.length} parts`,
     });
 
+    // Keep progress continuous: transcription spans 10%..70%
     progressCallback?.({
-      percent: 0,
+      percent: Stage.TRANSCRIBE,
       stage: `Starting transcription of ${chunks.length} chunks...`,
     });
 
@@ -249,7 +245,8 @@ export async function transcribePass({
       batchContext = buildPrompt(batchContext);
 
       done += slice.length;
-      const p = Math.round((done / chunks.length) * 80);
+      // Map local transcription progress (0..100) to global 10..70 range
+      const p = 10 + Math.round((done / chunks.length) * 60);
 
       const intermediateSrt = buildSrt({
         segments: overallSegments.slice().sort((a, b) => a.start - b.start),
@@ -263,7 +260,7 @@ export async function transcribePass({
         )}", Percent: ${Math.round(p)}`
       );
       progressCallback?.({
-        percent: Math.min(p, 79),
+        percent: Math.min(p, 69),
         stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
         current: done,
         total: chunks.length,
@@ -346,7 +343,7 @@ export async function transcribePass({
 
       if (repairGaps.length > 0) {
         progressCallback?.({
-          percent: 80,
+          percent: 70,
           stage: `__i18n__:repairing_captions:${iteration}:${maxIterations}:0:${repairGaps.length}`,
         });
       }
@@ -384,7 +381,7 @@ export async function transcribePass({
 
         processedInPass += 1;
         if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
-          const pct = 80 + Math.round((processedInPass / totalGaps) * 20);
+          const pct = 70 + Math.round((processedInPass / totalGaps) * 30);
           const cappedPct = Math.min(pct, 99);
           progressCallback?.({
             percent: cappedPct,
@@ -409,7 +406,7 @@ export async function transcribePass({
             newlyRepairedSegments.push(...segs);
           }
         }
-        const pct = 80 + Math.round((processedInPass / totalGaps) * 20);
+        const pct = 70 + Math.round((processedInPass / totalGaps) * 30);
         progressCallback?.({
           percent: Math.min(pct, 99),
           stage: `Gap repair #${iteration}/${maxIterations}`,
@@ -424,11 +421,7 @@ export async function transcribePass({
 
       if (newlyRepairedSegments.length) {
         progressCallback?.({
-          percent: scaleProgress(
-            90 + (iteration - 1) * 5,
-            Stage.TRANSCRIBE,
-            Stage.TRANSLATE
-          ),
+          percent: Math.min(99, 70 + iteration * 10),
           stage: `Gap-repair pass ${iteration}/${maxIterations}`,
         });
       }
@@ -452,7 +445,7 @@ export async function transcribePass({
 
     if (repairGaps.length > 0) {
       progressCallback?.({
-        percent: 100,
+        percent: 99,
         stage: 'Gap-repair pass complete',
       });
     }

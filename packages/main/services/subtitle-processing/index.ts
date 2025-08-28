@@ -45,36 +45,9 @@ export async function extractSubtitlesFromMedia({
   }
 
   const { ffmpeg, fileManager } = services;
-  const targetLang = options.targetLanguage.toLowerCase();
-  const transcribeOnly = targetLang === 'original';
 
-  // Progress adapter so that, when running transcription-only, the progress bar spans 0..100 for transcription phase
-  const adaptedProgress: GenerateProgressCallback | undefined = progressCallback
-    ? p => {
-        if (!transcribeOnly) {
-          return progressCallback?.(p);
-        }
-        let mapped = p.percent ?? 0;
-        if (mapped <= Stage.TRANSCRIBE) {
-          mapped = 0;
-        } else if (mapped < Stage.TRANSLATE) {
-          mapped = Math.max(
-            0,
-            Math.min(
-              100,
-              Math.round(
-                ((mapped - Stage.TRANSCRIBE) /
-                  (Stage.TRANSLATE - Stage.TRANSCRIBE)) *
-                  100
-              )
-            )
-          );
-        } else {
-          mapped = 100;
-        }
-        progressCallback?.({ ...p, percent: mapped });
-      }
-    : undefined;
+  const adaptedProgress: GenerateProgressCallback | undefined =
+    progressCallback;
 
   let audioPath: string | null = null;
 
@@ -96,8 +69,6 @@ export async function extractSubtitlesFromMedia({
       signal,
     });
 
-    // Always finalize using the segments produced by transcription/gap-repair.
-    // Translation is handled separately via translateSubtitlesFromSrt.
     return await finalizePass({
       segments,
       speechIntervals,

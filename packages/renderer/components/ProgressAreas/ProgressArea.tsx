@@ -151,8 +151,12 @@ export default function ProgressArea({
     return null;
   }
 
-  // Check if this is a translation/transcription operation (blue progress bar)
-  const isTranslationOperation = progressBarColor === colors.progressTranslate;
+  // Show credit balance for AI operations identified by operationId prefix
+  const shouldShowCreditBalance = Boolean(
+    operationId &&
+      (operationId.startsWith('translate-') ||
+        operationId.startsWith('transcribe-'))
+  );
 
   return (
     <div className={progressContainerStyles}>
@@ -165,7 +169,7 @@ export default function ProgressArea({
           `}
         >
           <h3>{title}</h3>
-          {isTranslationOperation && <CreditBalance />}
+          {shouldShowCreditBalance && <CreditBalance />}
         </div>
         <button
           className={closeButtonStyles}
