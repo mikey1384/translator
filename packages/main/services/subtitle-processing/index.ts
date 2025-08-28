@@ -96,18 +96,10 @@ export async function extractSubtitlesFromMedia({
       signal,
     });
 
-    const translatedSegments = transcribeOnly
-      ? segments
-      : await translatePass({
-          segments,
-          targetLang,
-          progressCallback,
-          operationId,
-          signal,
-        });
-
+    // Always finalize using the segments produced by transcription/gap-repair.
+    // Translation is handled separately via translateSubtitlesFromSrt.
     return await finalizePass({
-      segments: translatedSegments,
+      segments,
       speechIntervals,
       fileManager,
       progressCallback,
