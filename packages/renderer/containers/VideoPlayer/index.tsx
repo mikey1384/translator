@@ -1,3 +1,4 @@
+import * as VideoIPC from '../../ipc/video';
 import {
   useState,
   useEffect,
@@ -504,36 +505,16 @@ export default function VideoPlayer() {
     restartHideTimer();
   };
 
-  if (!videoUrl) return null;
-
-  const pct = duration ? (currentTime / duration) * 100 : 0;
-
-  const applyRate = (rate: (typeof SPEED_STEPS)[number]) => {
-    const v = getNativePlayerInstance();
-    if (!v) return;
-    v.playbackRate = rate;
-    setPlaybackRate(rate);
-  };
-
-  const stepRate = (dir: 'up' | 'down') => {
-    const idx = SPEED_STEPS.indexOf(playbackRate);
-    const next =
-      dir === 'up'
-        ? SPEED_STEPS[Math.min(idx + 1, SPEED_STEPS.length - 1)]
-        : SPEED_STEPS[Math.max(idx - 1, 0)];
-    applyRate(next);
-  };
-
   // Load saved position when component mounts if not already loaded
   useEffect(() => {
-    const loadSavedPosition = async () => {
-      if (!videoPath || resumeAt !== null) return;
-
+    if (!videoPath || resumeAt !== null) {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
       try {
-        const saved = await import('../../ipc/video').then(m =>
-          m.getPlaybackPosition(videoPath)
-        );
-        if (saved != null) {
+        const saved = await VideoIPC.getPlaybackPosition(videoPath);
+        if (!cancelled && saved != null) {
           useVideoStore.setState({ resumeAt: saved });
         }
       } catch (err) {
@@ -542,10 +523,11 @@ export default function VideoPlayer() {
           err
         );
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    loadSavedPosition();
-  }, [videoPath]);
+  }, [videoPath, resumeAt]);
 
   // Save current position immediately when component unmounts
   useEffect(() => {
@@ -553,17 +535,19 @@ export default function VideoPlayer() {
       const v = getNativePlayerInstance();
       if (v && videoPath && v.currentTime > 0) {
         // Force save current position immediately on unmount
-        import('../../ipc/video').then(m => {
-          m.savePlaybackPosition(videoPath, v.currentTime).catch(err => {
-            console.error(
-              '[VideoPlayer] Failed to save position on unmount:',
-              err
-            );
-          });
+        VideoIPC.savePlaybackPosition(videoPath, v.currentTime).catch(err => {
+          console.error(
+            '[VideoPlayer] Failed to save position on unmount:',
+            err
+          );
         });
       }
     };
   }, [videoPath]);
+
+  if (!videoUrl) return null;
+
+  const pct = duration ? (currentTime / duration) * 100 : 0;
 
   return (
     <div style={{ position: 'relative' }}>
@@ -757,4 +741,20 @@ export default function VideoPlayer() {
       </div>
     </div>
   );
+
+  function applyRate(rate: (typeof SPEED_STEPS)[number]) {
+    const v = getNativePlayerInstance();
+    if (!v) return;
+    v.playbackRate = rate;
+    setPlaybackRate(rate);
+  }
+
+  function stepRate(dir: 'up' | 'down') {
+    const idx = SPEED_STEPS.indexOf(playbackRate);
+    const next =
+      dir === 'up'
+        ? SPEED_STEPS[Math.min(idx + 1, SPEED_STEPS.length - 1)]
+        : SPEED_STEPS[Math.max(idx - 1, 0)];
+    applyRate(next);
+  }
 }

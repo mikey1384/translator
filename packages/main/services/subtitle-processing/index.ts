@@ -13,6 +13,7 @@ import { translatePass } from './pipeline/translate-pass.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
+import { Stage } from './pipeline/progress.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -45,6 +46,35 @@ export async function extractSubtitlesFromMedia({
 
   const { ffmpeg, fileManager } = services;
   const targetLang = options.targetLanguage.toLowerCase();
+  const transcribeOnly = targetLang === 'original';
+
+  // Progress adapter so that, when running transcription-only, the progress bar spans 0..100 for transcription phase
+  const adaptedProgress: GenerateProgressCallback | undefined = progressCallback
+    ? p => {
+        if (!transcribeOnly) {
+          return progressCallback?.(p);
+        }
+        let mapped = p.percent ?? 0;
+        if (mapped <= Stage.TRANSCRIBE) {
+          mapped = 0;
+        } else if (mapped < Stage.TRANSLATE) {
+          mapped = Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(
+                ((mapped - Stage.TRANSCRIBE) /
+                  (Stage.TRANSLATE - Stage.TRANSCRIBE)) *
+                  100
+              )
+            )
+          );
+        } else {
+          mapped = 100;
+        }
+        progressCallback?.({ ...p, percent: mapped });
+      }
+    : undefined;
 
   let audioPath: string | null = null;
 
@@ -52,7 +82,7 @@ export async function extractSubtitlesFromMedia({
     const { audioPath: extractedAudioPath } = await prepareAudio({
       videoPath: options.videoPath,
       services: { ffmpeg },
-      progressCallback,
+      progressCallback: adaptedProgress ?? progressCallback,
       operationId,
       signal,
     });
@@ -61,18 +91,20 @@ export async function extractSubtitlesFromMedia({
     const { segments, speechIntervals } = await transcribePass({
       audioPath: audioPath,
       services: { ffmpeg },
-      progressCallback,
+      progressCallback: adaptedProgress ?? progressCallback,
       operationId,
       signal,
     });
 
-    const translatedSegments = await translatePass({
-      segments,
-      targetLang,
-      progressCallback,
-      operationId,
-      signal,
-    });
+    const translatedSegments = transcribeOnly
+      ? segments
+      : await translatePass({
+          segments,
+          targetLang,
+          progressCallback,
+          operationId,
+          signal,
+        });
 
     return await finalizePass({
       segments: translatedSegments,
@@ -140,11 +172,36 @@ export async function translateSubtitlesFromSrt({
   // Parse provided SRT into segments
   const segments = parseSrt(srtContent);
 
+  // When running translation as a standalone pipeline, the underlying translate pass
+  // reports progress on the multi-stage scale (TRANSLATE..FINAL). Remap that to 0..100.
+  const adaptedProgress: GenerateProgressCallback | undefined = progressCallback
+    ? p => {
+        let mapped = p.percent ?? 0;
+        if (mapped <= Stage.TRANSLATE) {
+          mapped = 0;
+        } else if (mapped < Stage.FINAL) {
+          mapped = Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(
+                ((mapped - Stage.TRANSLATE) / (Stage.FINAL - Stage.TRANSLATE)) *
+                  100
+              )
+            )
+          );
+        } else {
+          mapped = 100;
+        }
+        progressCallback?.({ ...p, percent: mapped });
+      }
+    : undefined;
+
   // Run translation-only pass
   const translatedSegments = await translatePass({
     segments,
     targetLang: targetLanguage,
-    progressCallback,
+    progressCallback: adaptedProgress ?? progressCallback,
     operationId,
     signal,
   });

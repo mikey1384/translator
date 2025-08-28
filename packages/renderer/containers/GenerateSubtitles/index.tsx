@@ -27,6 +27,7 @@ import CreditWarningBanner from './components/CreditWarningBanner';
 import { checkSufficientCredits } from './utils/creditCheck';
 import {
   executeSubtitleGeneration,
+  executeSrtTranslation,
   validateGenerationInputs,
 } from './utils/subtitleGeneration';
 
@@ -34,7 +35,7 @@ export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
   // UI State
-  const { toggleSettings } = useUIStore();
+  const { toggleSettings, targetLanguage, setTargetLanguage } = useUIStore();
 
   // URL processing state
   const {
@@ -61,8 +62,12 @@ export default function GenerateSubtitles() {
   // Subtitle state
   const subStore = useSubStore();
   const hasSrtMounted = subStore.order.length > 0;
-  const isTranscriptionComplete =
-    !translation.inProgress && translation.percent === 100 && hasSrtMounted;
+  const isTranscribing =
+    !!translation.inProgress &&
+    (translation.id?.startsWith('transcribe-') ?? false);
+  const isTranslating =
+    !!translation.inProgress &&
+    (translation.id?.startsWith('translate-') ?? false);
 
   // Custom hooks for business logic (after videoFilePath is declared)
   const { durationSecs, hoursNeeded } = useVideoMetadata(videoFilePath);
@@ -86,19 +91,24 @@ export default function GenerateSubtitles() {
         inputMode={'file'}
       />
 
-      {/* Show appropriate panel based on transcription status */}
+      {/* Show appropriate panel: only show transcribe panel when no SRT is mounted and not translating */}
       {(videoFile || download.inProgress) && (
         <>
-          {!isTranscriptionComplete ? (
-            /* Show transcribe-only when transcription is not complete */
+          {!hasSrtMounted && !isTranslating ? (
             <TranscribeOnlyPanel
               onTranscribe={handleTranscribeOnly}
-              isTranscribing={translation.inProgress}
+              isTranscribing={isTranscribing}
               disabled={isButtonDisabled || hoursNeeded == null}
             />
           ) : (
-            /* Show SRT mounted panel when transcription is actually complete */
-            <SrtMountedPanel srtPath={subStore.originalPath} />
+            <SrtMountedPanel
+              srtPath={subStore.originalPath}
+              onTranslate={handleTranslate}
+              isTranslating={isTranslating}
+              disabled={isButtonDisabled || hoursNeeded == null}
+              targetLanguage={targetLanguage}
+              onTargetLanguageChange={setTargetLanguage}
+            />
           )}
         </>
       )}
@@ -156,6 +166,31 @@ export default function GenerateSubtitles() {
       videoFile,
       videoFilePath,
       targetLanguage: 'original', // Use 'original' for transcription-only
+      operationId,
+    });
+  }
+
+  async function handleTranslate() {
+    const currentSegments = subStore.order.map(id => subStore.segments[id]);
+    if (currentSegments.length === 0) {
+      useUrlStore.getState().setError('No SRT file available for translation');
+      return;
+    }
+
+    if (durationSecs) {
+      const creditCheck = checkSufficientCredits(durationSecs);
+      if (!creditCheck.hasSufficientCredits) {
+        await SystemIPC.showMessage(
+          `Not enough credits. This translation needs ~${creditCheck.estimatedCredits.toLocaleString()} credits, but you only have ${creditCheck.currentBalance.toLocaleString()}.`
+        );
+        return;
+      }
+    }
+
+    const operationId = `translate-${Date.now()}`;
+    await executeSrtTranslation({
+      segments: currentSegments,
+      targetLanguage,
       operationId,
     });
   }

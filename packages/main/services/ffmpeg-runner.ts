@@ -104,22 +104,16 @@ export async function findFfmpeg(): Promise<string> {
   return ffmpegPath;
 }
 
-let _ffprobeCached: string | null = null;
 export async function findFfprobe(): Promise<string> {
-  if (_ffprobeCached) return _ffprobeCached;
   const ffprobePath = await pickBinary(async () => {
     const mod = await import('ffmpeg-ffprobe-static');
     return mod.ffprobePath as string;
   }, 'ffprobe');
-  _ffprobeCached = ffprobePath;
   log.info(`[ffmpeg-runner] final ffprobe path => ${ffprobePath}`);
   return ffprobePath;
 }
 
 export const resolvedFfmpeg = () => _ffmpegCached;
-export const resolvedFfprobe = () => _ffprobeCached;
-
-
 
 export async function createFFmpegContext(
   tempDirPath: string
@@ -222,34 +216,40 @@ export async function createFFmpegContext(
     if (signal) {
       const abort = () => {
         if (!child.killed) {
-                     if (process.platform === 'win32' && child.pid) {
-             // On Windows, use taskkill for reliable FFmpeg termination
-             log.info(`[ffmpeg-runner ${operationId ?? 'no-id'}] Force-killing Windows FFmpeg process tree PID: ${child.pid}`);
-             forceKillWindows({ 
-               pid: child.pid, 
-               logPrefix: `ffmpeg-runner ${operationId ?? 'no-id'}` 
-             }).then(killed => {
-               if (!killed) {
-                 // Fallback to signal if taskkill fails
-                 log.warn(`[ffmpeg-runner ${operationId ?? 'no-id'}] taskkill failed, trying SIGTERM fallback`);
-                 try {
-                   child.kill('SIGTERM');
-                 } catch {
-                   // Ignore errors since process might already be dead
-                 }
-               }
-             }).catch(() => {
-               // Fallback to signal if taskkill throws
-               try {
-                 child.kill('SIGTERM');
-               } catch {
-                 // Ignore errors since process might already be dead
-               }
-             });
-           } else {
-             // Non-Windows: use regular SIGINT
-             child.kill('SIGINT');
-           }
+          if (process.platform === 'win32' && child.pid) {
+            // On Windows, use taskkill for reliable FFmpeg termination
+            log.info(
+              `[ffmpeg-runner ${operationId ?? 'no-id'}] Force-killing Windows FFmpeg process tree PID: ${child.pid}`
+            );
+            forceKillWindows({
+              pid: child.pid,
+              logPrefix: `ffmpeg-runner ${operationId ?? 'no-id'}`,
+            })
+              .then(killed => {
+                if (!killed) {
+                  // Fallback to signal if taskkill fails
+                  log.warn(
+                    `[ffmpeg-runner ${operationId ?? 'no-id'}] taskkill failed, trying SIGTERM fallback`
+                  );
+                  try {
+                    child.kill('SIGTERM');
+                  } catch {
+                    // Ignore errors since process might already be dead
+                  }
+                }
+              })
+              .catch(() => {
+                // Fallback to signal if taskkill throws
+                try {
+                  child.kill('SIGTERM');
+                } catch {
+                  // Ignore errors since process might already be dead
+                }
+              });
+          } else {
+            // Non-Windows: use regular SIGINT
+            child.kill('SIGINT');
+          }
         }
       };
       if (signal.aborted) {
@@ -332,17 +332,21 @@ export async function createFFmpegContext(
 
   function hasVideoTrack(file: string): Promise<boolean> {
     return new Promise(res => {
-      const p = spawn(ffprobePath, [
-        '-v',
-        'error',
-        '-select_streams',
-        'v:0',
-        '-show_entries',
-        'stream=index',
-        '-of',
-        'csv=s=x:p=0',
-        file,
-      ], { windowsHide: true });
+      const p = spawn(
+        ffprobePath,
+        [
+          '-v',
+          'error',
+          '-select_streams',
+          'v:0',
+          '-show_entries',
+          'stream=index',
+          '-of',
+          'csv=s=x:p=0',
+          file,
+        ],
+        { windowsHide: true }
+      );
       let out = '';
       p.stdout.on('data', d => (out += d));
       p.on('close', () => res(out.trim().length > 0));
@@ -351,15 +355,19 @@ export async function createFFmpegContext(
 
   function getVideoMetadata(file: string): Promise<VideoMeta> {
     return new Promise((resolve, reject) => {
-      const p = execFile(ffprobePath, [
-        '-v',
-        'error',
-        '-show_entries',
-        'stream=index,codec_type,width,height,r_frame_rate:format=duration',
-        '-of',
-        'json',
-        file,
-      ], { windowsHide: true });
+      const p = execFile(
+        ffprobePath,
+        [
+          '-v',
+          'error',
+          '-show_entries',
+          'stream=index,codec_type,width,height,r_frame_rate:format=duration',
+          '-of',
+          'json',
+          file,
+        ],
+        { windowsHide: true }
+      );
       let json = '';
       p.stdout?.on('data', d => (json += d));
       p.on('close', code => {

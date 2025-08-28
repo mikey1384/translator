@@ -1,12 +1,25 @@
 import { css } from '@emotion/css';
-import { colors } from '../../../styles.js';
+import { colors, selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
+import Button from '../../../components/Button.js';
 
 interface SrtMountedPanelProps {
   srtPath?: string | null;
+  onTranslate?: () => void;
+  isTranslating?: boolean;
+  disabled?: boolean;
+  targetLanguage?: string;
+  onTargetLanguageChange?: (lang: string) => void;
 }
 
-export default function SrtMountedPanel({ srtPath }: SrtMountedPanelProps) {
+export default function SrtMountedPanel({
+  srtPath,
+  onTranslate,
+  isTranslating = false,
+  disabled = false,
+  targetLanguage,
+  onTargetLanguageChange,
+}: SrtMountedPanelProps) {
   const { t } = useTranslation();
 
   return (
@@ -63,14 +76,51 @@ export default function SrtMountedPanel({ srtPath }: SrtMountedPanelProps) {
 
       <div
         className={css`
-          color: ${colors.gray};
-          font-style: italic;
+          display: flex;
+          align-items: center;
+          gap: 12px;
         `}
       >
-        {t(
-          'input.translationComingSoon',
-          'Translation controls coming soon...'
-        )}
+        <label
+          className={css`
+            margin-right: 6px;
+          `}
+        >
+          {t('subtitles.outputLanguage')}:
+        </label>
+        <select
+          className={selectStyles}
+          value={targetLanguage}
+          onChange={e => onTargetLanguageChange?.(e.target.value)}
+          disabled={disabled || isTranslating}
+        >
+          <option value="english">{t('languages.english')}</option>
+          <option value="korean">{t('languages.korean')}</option>
+          <option value="japanese">{t('languages.japanese')}</option>
+          <option value="chinese_simplified">
+            {t('languages.chinese_simplified')}
+          </option>
+          <option value="chinese_traditional">
+            {t('languages.chinese_traditional')}
+          </option>
+          <option value="spanish">{t('languages.spanish')}</option>
+          <option value="french">{t('languages.french')}</option>
+          <option value="german">{t('languages.german')}</option>
+          <option value="portuguese">{t('languages.portuguese')}</option>
+          <option value="russian">{t('languages.russian')}</option>
+          <option value="vietnamese">{t('languages.vietnamese')}</option>
+          <option value="turkish">{t('languages.turkish')}</option>
+        </select>
+
+        <Button
+          variant="primary"
+          size="md"
+          onClick={onTranslate}
+          disabled={disabled || isTranslating}
+          isLoading={isTranslating}
+        >
+          {t('subtitles.generate', 'Translate')}
+        </Button>
       </div>
     </div>
   );

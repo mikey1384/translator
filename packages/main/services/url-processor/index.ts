@@ -1,9 +1,8 @@
-import { execa } from 'execa';
 import log from 'electron-log';
 import fsp from 'node:fs/promises';
 import { ProgressCallback, VideoQuality } from './types.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
-import { findYtDlpBinary } from './binary-locator.js';
+import { ensureYtDlpBinary } from './binary-installer.js';
 import { downloadVideoFromPlatform } from './download.js';
 import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
@@ -14,7 +13,6 @@ import { defaultBrowserHint } from './utils.js';
 
 export async function updateYtDlp(): Promise<boolean> {
   try {
-    const { ensureYtDlpBinary } = await import('./binary-installer.js');
     // Force update by not skipping it (skipUpdate: false is the default)
     const binPath = await ensureYtDlpBinary();
     return binPath !== null;

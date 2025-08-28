@@ -3,6 +3,9 @@ import { immer } from 'zustand/middleware/immer';
 import { getNativePlayerInstance } from '../native-player';
 import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
+import { buildSrt } from '../../shared/helpers';
+import { useSubStore } from './subtitle-store';
+import { useTaskStore } from './task-store';
 import throttle from 'lodash/throttle';
 
 type Meta = {
@@ -77,6 +80,43 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     async setFile(fd: File | { name: string; path: string } | null) {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
+      try {
+        const hasSubs = useSubStore.getState().order.length > 0;
+        if (hasSubs) {
+          const confirmMsg = 'You have an unsaved SRT. Save before switching?';
+          const shouldSave = window.confirm(confirmMsg);
+          if (shouldSave) {
+            const segs = useSubStore
+              .getState()
+              .order.map(id => useSubStore.getState().segments[id]);
+            const srtContent = buildSrt({ segments: segs, mode: 'original' });
+            await FileIPC.save({
+              title: 'Save SRT File As',
+              defaultPath: 'subtitles.srt',
+              content: srtContent,
+              filters: [{ name: 'SRT Files', extensions: ['srt'] }],
+            } as any);
+          }
+        }
+        // Clear subtitles
+        useSubStore.setState({
+          segments: {},
+          order: [],
+          activeId: null,
+          playingId: null,
+          originalPath: null,
+        });
+        // Reset translation progress
+        useTaskStore.getState().setTranslation({
+          id: null,
+          stage: '',
+          percent: 0,
+          inProgress: false,
+          batchStartIndex: undefined,
+        });
+      } catch (e) {
+        console.error('[video-store] pre-clear/save/reset error', e);
+      }
       set(initial);
 
       if (!fd) return;

@@ -27,17 +27,41 @@ export async function executeSrtTranslation({
   operationId: string;
 }): Promise<{ success: boolean; subtitles?: string; cancelled?: boolean }> {
   const srtContent = buildSrt({ segments, mode: 'dual' });
-  const res = await SubtitlesIPC.translateSubtitles({
-    subtitles: srtContent,
-    targetLanguage,
-    operationId,
+
+  // Initialize translation task so progress-buffer accepts progress updates
+  useTaskStore.getState().setTranslation({
+    id: operationId,
+    stage: i18n.t('generateSubtitles.status.starting'),
+    percent: 0,
+    inProgress: true,
   });
-  if (res?.translatedSubtitles) {
-    const finalSegments = parseSrt(res.translatedSubtitles);
-    useSubStore.getState().load(finalSegments);
-    return { success: true, subtitles: res.translatedSubtitles };
+
+  try {
+    const res = await SubtitlesIPC.translateSubtitles({
+      subtitles: srtContent,
+      targetLanguage,
+      operationId,
+    });
+    if (res?.translatedSubtitles) {
+      const finalSegments = parseSrt(res.translatedSubtitles);
+      useSubStore.getState().load(finalSegments);
+      useTaskStore.getState().setTranslation({
+        stage: i18n.t('generateSubtitles.status.completed'),
+        percent: 100,
+        inProgress: false,
+      });
+      return { success: true, subtitles: res.translatedSubtitles };
+    }
+    useTaskStore.getState().setTranslation({ inProgress: false });
+    return { success: false };
+  } catch (e: any) {
+    useTaskStore.getState().setTranslation({
+      stage: i18n.t('generateSubtitles.status.error'),
+      percent: 100,
+      inProgress: false,
+    });
+    return { success: false };
   }
-  return { success: false };
 }
 
 export async function executeSubtitleGeneration({

@@ -23,6 +23,9 @@ export default function AppContent() {
   const { setDownload } = useUrlStore();
   const { url: videoUrl } = useVideoStore();
   const { merge, translation } = useTaskStore();
+  const isTranslating =
+    !!translation.inProgress &&
+    (translation.id?.startsWith('translate-') ?? false);
   const download = useUrlStore(s => s.download);
 
   // Cleanup credit store listeners on unmount
@@ -83,7 +86,7 @@ export default function AppContent() {
 
             {merge.inProgress && <MergingProgressArea />}
 
-            {translation.inProgress && <TranslationProgressArea />}
+            {isTranslating && <TranslationProgressArea />}
 
             <FloatingActionButtons />
           </>
