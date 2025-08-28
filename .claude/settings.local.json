@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for file in *.json)",
+      "Bash(do if [ \"$file\" != \"en.json\" ])",
+      "Bash(then echo \"=== $file ===\")",
+      "Bash(jq:*)",
+      "Bash(echo:*)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(node:*)",
+      "Bash(for lang in de es fr)",
+      "Bash(do echo \"=== Missing in $lang.json ===\")",
+      "Bash(grep:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

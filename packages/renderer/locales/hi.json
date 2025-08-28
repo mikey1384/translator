@@ -67,7 +67,16 @@
     "selectFile": "फ़ाइल चुनें",
     "selectVideoFile": "वीडियो फ़ाइल चुनें",
     "selectVideoAudioFile": "वीडियो / ऑडियो फ़ाइल चुनें",
-    "saveOriginalVideo": "मूल वीडियो सहेजें"
+    "saveOriginalVideo": "मूल वीडियो सहेजें",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "ट्रांसक्राइब्ड और स्क्रब्ड {{done}}/{{total}} चंक्स",
     "gapRepair": "गैप रिपेयर #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "लापता कैप्शन की मरम्मत (पुनरावृत्ति {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "लापता कैप्शन की मरम्मत (पुनरावृत्ति {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "फ़ाइल सहेजी गई:\n{{path}}",

@@ -76,7 +76,7 @@
     "fileSelected": "文件已选择",
     "transcribeOnly": "转录音频",
     "srtLoaded": "转录完成",
-    "translationComingSoon": "翻译控件即将推出..."
+    "featuresUnlockAfterTranscription": "转录完成后将显示翻译和其他菜单。"
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -259,7 +259,9 @@
   "progress": {
     "transcribedChunks": "已转录和清理 {{done}}/{{total}} 片段",
     "gapRepair": "间隙修复 #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}"
+    "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}",
+    "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
+    "translationCleanup": "清理翻译字幕中 ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "文件已保存：\n{{path}}",

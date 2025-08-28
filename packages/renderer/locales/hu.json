@@ -67,7 +67,16 @@
     "selectFile": "Fájl kiválasztása",
     "selectVideoFile": "Videófájl kiválasztása",
     "selectVideoAudioFile": "Videó / hangfájl kiválasztása",
-    "saveOriginalVideo": "Eredeti videó mentése"
+    "saveOriginalVideo": "Eredeti videó mentése",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Átírt és megtisztított {{done}}/{{total}} részlet",
     "gapRepair": "Rés javítás #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Hiányzó feliratok javítása ({{iteration}}/{{maxIterations}} iteráció) {{done}} / {{total}}"
+    "repairingCaptions": "Hiányzó feliratok javítása ({{iteration}}/{{maxIterations}} iteráció) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Fájl mentve:\n{{path}}",

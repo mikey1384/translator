@@ -67,7 +67,16 @@
     "selectFile": "ফাইল নির্বাচন করুন",
     "selectVideoFile": "ভিডিও ফাইল নির্বাচন করুন",
     "selectVideoAudioFile": "ভিডিও / অডিও ফাইল নির্বাচন করুন",
-    "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন"
+    "saveOriginalVideo": "মূল ভিডিও সংরক্ষণ করুন",
+    "localFileDescription": "আপনার কম্পিউটার থেকে একটি ভিডিও বা অডিও ফাইল আপলোড করুন",
+    "selectLocalFile": "কম্পিউটার থেকে আপলোড",
+    "downloadFromUrl": "ওয়েব থেকে ডাউনলোড",
+    "webDescription": "YouTube, TikTok, Instagram ভিডিও লিঙ্ক, বা ওয়েব পেজ থেকে সরাসরি ভিডিও ফাইল URL পেস্ট করুন",
+    "chooseFile": "ফাইল নির্বাচন করুন",
+    "fileSelected": "ফাইল নির্বাচিত",
+    "transcribeOnly": "অডিও ট্রান্সক্রাইব",
+    "srtLoaded": "ট্রান্সক্রিপশন সম্পূর্ণ",
+    "featuresUnlockAfterTranscription": "ট্রান্সক্রিপশন সম্পূর্ণ হলে অনুবাদ এবং অন্যান্য মেনু প্রদর্শিত হবে।"
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
@@ -231,16 +240,18 @@
       "description": "এটি উচ্চ চাহিদা বা OpenAI সার্ভারের সমস্যার কারণে হতে পারে। প্রক্রিয়াটি এখনও পেছনে চলছে।",
       "checkStatus": "OpenAI স্ট্যাটাস চেক করুন"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "ডাউনলোড বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "ডাউনলোড স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
+      "description": "এটি ভিডিও প্ল্যাটফর্ম পরিবর্তন বা নতুন সুরক্ষা ব্যবস্থার কারণে হতে পারে। নতুন ভিডিওগুলি হ্যান্ডেল করতে আপনাকে পরবর্তী অ্যাপ সংস্করণের জন্য অপেক্ষা করতে হতে পারে।"
     }
   },
   "progress": {
     "transcribedChunks": "ট্রান্সক্রাইব ও পরিষ্কার করা হয়েছে {{done}}/{{total}} অংশ",
     "gapRepair": "গ্যাপ মেরামত #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "অনুপস্থিত ক্যাপশন মেরামত করা হচ্ছে (পুনরাবৃত্তি {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "অনুপস্থিত ক্যাপশন মেরামত করা হচ্ছে (পুনরাবৃত্তি {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "ক্যাপশন পরিষ্কার করা হচ্ছে ({{done}}/{{total}})",
+    "translationCleanup": "অনুবাদিত ক্যাপশন পরিষ্কার করা হচ্ছে ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "ফাইল সংরক্ষিত হয়েছে:\n{{path}}",

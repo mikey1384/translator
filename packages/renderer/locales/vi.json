@@ -67,7 +67,16 @@
     "selectFile": "Chọn Tệp",
     "selectVideoFile": "Chọn Tệp Video",
     "selectVideoAudioFile": "Chọn Tệp Video / Âm thanh",
-    "saveOriginalVideo": "Lưu Video Gốc"
+    "saveOriginalVideo": "Lưu Video Gốc",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Đã phiên âm & làm sạch {{done}}/{{total}} đoạn",
     "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Đang sửa phụ đề bị thiếu (Lần {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Đang sửa phụ đề bị thiếu (Lần {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Tệp đã được lưu:\n{{path}}",

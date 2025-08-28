@@ -67,7 +67,16 @@
     "selectFile": "Επιλογή Αρχείου",
     "selectVideoFile": "Επιλογή Αρχείου Βίντεο",
     "selectVideoAudioFile": "Επιλογή Αρχείου Βίντεο / Ήχου",
-    "saveOriginalVideo": "Αποθήκευση Αρχικού Βίντεο"
+    "saveOriginalVideo": "Αποθήκευση Αρχικού Βίντεο",
+    "localFileDescription": "Μεταφορτώστε ένα αρχείο βίντεο ή ήχου από τον υπολογιστή σας",
+    "selectLocalFile": "Μεταφόρτωση από υπολογιστή",
+    "downloadFromUrl": "Λήψη από το διαδίκτυο",
+    "webDescription": "Επικολλήστε συνδέσμους βίντεο YouTube, TikTok, Instagram ή άμεσες διευθύνσεις URL αρχείων βίντεο από ιστοσελίδες",
+    "chooseFile": "Επιλογή Αρχείου",
+    "fileSelected": "Αρχείο επιλέχτηκε",
+    "transcribeOnly": "Μετατροπή Ήχου",
+    "srtLoaded": "Μετατροπή Ολοκληρώθηκε",
+    "featuresUnlockAfterTranscription": "Η μετάφραση και άλλα μενού θα εμφανιστούν αφού ολοκληρωθεί η μετατροπή."
   },
   "subtitles": {
     "outputLanguage": "Γλώσσα Εξόδου",
@@ -231,16 +240,18 @@
       "description": "Αυτό μπορεί να οφείλεται σε μεγάλη ζήτηση ή προβλήματα με τους διακομιστές του OpenAI. Η διαδικασία εξακολουθεί να εκτελείται στο παρασκήνιο.",
       "checkStatus": "Έλεγχος κατάστασης OpenAI"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Ακύρωση λήψης; Η πρόοδος θα χαθεί και θα χρειαστεί να ξεκινήσετε ξανά.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Η λήψη διαρκεί περισσότερο από το συνηθισμένο.",
+      "description": "Αυτό μπορεί να οφείλεται σε αλλαγές της πλατφόρμας βίντεο ή νέα μέτρα προστασίας. Μπορεί να χρειαστεί να περιμένετε την επόμενη έκδοση της εφαρμογής για να χειριστεί νεότερα βίντεο."
     }
   },
   "progress": {
     "transcribedChunks": "Μεταγράφηκαν και καθαρίστηκαν {{done}}/{{total}} τμήματα",
     "gapRepair": "Επισκευή κενών #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Επισκευή υποτίτλων που λείπουν (Επανάληψη {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Επισκευή υποτίτλων που λείπουν (Επανάληψη {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Καθαρισμός υποτίτλων ({{done}}/{{total}})",
+    "translationCleanup": "Καθαρισμός μεταφρασμένων υποτίτλων ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Αρχείο αποθηκεύτηκε:\n{{path}}",

@@ -67,7 +67,16 @@
     "selectFile": "Kies Lêer",
     "selectVideoFile": "Kies Videolêer",
     "selectVideoAudioFile": "Kies Video / Audio Lêer",
-    "saveOriginalVideo": "Stoor Oorspronklike Video"
+    "saveOriginalVideo": "Stoor Oorspronklike Video",
+    "localFileDescription": "Laai 'n video- of klanklêer op vanaf jou rekenaar",
+    "selectLocalFile": "Laai op vanaf rekenaar",
+    "downloadFromUrl": "Laai af vanaf web",
+    "webDescription": "Plak YouTube, TikTok, Instagram video skakels, of direkte video lêer URL's van webbladsye",
+    "chooseFile": "Kies Lêer",
+    "fileSelected": "Lêer gekies",
+    "transcribeOnly": "Transkribeer Klank",
+    "srtLoaded": "Transkripsie Voltooi",
+    "featuresUnlockAfterTranscription": "Vertaling en ander kieslyste sal verskyn nadat transkripsie voltooi is."
   },
   "subtitles": {
     "outputLanguage": "Uittree-taal",
@@ -231,16 +240,18 @@
       "description": "Dit kan wees as gevolg van hoë aanvraag of probleme met OpenAI se bedieners. Die proses loop nog steeds op die agtergrond.",
       "checkStatus": "Kontroleer OpenAI-status"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Kanselleer aflaai? Vordering sal verlore gaan en jy sal weer moet begin.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Aflaai neem langer as gewoonlik.",
+      "description": "Dit kan wees as gevolg van video platform veranderinge of nuwe beskermingsmaatreëls. Jy mag dalk moet wag vir die volgende toepassing weergawe om nuwer videos te hanteer."
     }
   },
   "progress": {
     "transcribedChunks": "Getranskribeer en skoongevee {{done}}/{{total}} stukkies",
     "gapRepair": "Gaping herstel #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Herstel ontbrekende onderskrifte (Iterasie {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Herstel ontbrekende onderskrifte (Iterasie {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Skoonmaak van onderskrifte ({{done}}/{{total}})",
+    "translationCleanup": "Skoonmaak van vertaalde onderskrifte ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Lêer gestoor:\n{{path}}",

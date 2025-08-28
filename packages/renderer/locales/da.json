@@ -67,7 +67,16 @@
     "selectFile": "Vælg fil",
     "selectVideoFile": "Vælg videofil",
     "selectVideoAudioFile": "Vælg video / lydfil",
-    "saveOriginalVideo": "Gem original video"
+    "saveOriginalVideo": "Gem original video",
+    "localFileDescription": "Upload en video- eller lydfil fra din computer",
+    "selectLocalFile": "Upload fra computer",
+    "downloadFromUrl": "Download fra web",
+    "webDescription": "Indsæt YouTube, TikTok, Instagram video links, eller direkte video fil URLs fra websider",
+    "chooseFile": "Vælg fil",
+    "fileSelected": "Fil valgt",
+    "transcribeOnly": "Transskriber lyd",
+    "srtLoaded": "Transskription fuldført",
+    "featuresUnlockAfterTranscription": "Oversættelse og andre menuer vil vises efter transskriptionen er fuldført."
   },
   "subtitles": {
     "outputLanguage": "Outputsprog",
@@ -231,16 +240,18 @@
       "description": "Dette skyldes muligvis høj efterspørgsel eller problemer med OpenAI's servere. Processen kører stadig i baggrunden.",
       "checkStatus": "Tjek OpenAI status"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Annuller download? Fremskridt vil gå tabt og du skal starte forfra.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Download tager længere tid end sædvanligt.",
+      "description": "Dette kan skyldes video platform ændringer eller nye beskyttelsesforanstaltninger. Du skal muligvis vente på den næste app version for at håndtere nyere videoer."
     }
   },
   "progress": {
     "transcribedChunks": "Transskriberet og redigeret {{done}}/{{total}} dele",
     "gapRepair": "Hul-reparation #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Reparerer manglende undertekster (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Reparerer manglende undertekster (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Renser undertekster ({{done}}/{{total}})",
+    "translationCleanup": "Renser oversatte undertekster ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Fil gemt:\n{{path}}",

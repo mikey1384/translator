@@ -76,7 +76,7 @@
     "fileSelected": "파일 선택됨",
     "transcribeOnly": "오디오 전사",
     "srtLoaded": "전사 완료",
-    "translationComingSoon": "번역 컨트롤 곧 제공될 예정..."
+    "featuresUnlockAfterTranscription": "전사가 완료되면 번역 및 기타 메뉴가 표시됩니다."
   },
   "subtitles": {
     "outputLanguage": "출력 언어",
@@ -259,7 +259,9 @@
   "progress": {
     "transcribedChunks": "{{done}}/{{total}} 전사 완료",
     "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}"
+    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
+    "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
+    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "파일 저장됨:\n{{path}}",

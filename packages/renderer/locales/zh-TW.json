@@ -67,7 +67,16 @@
     "selectFile": "選擇檔案",
     "selectVideoFile": "選擇影片檔案",
     "selectVideoAudioFile": "選擇影片/音訊檔案",
-    "saveOriginalVideo": "保存原始影片"
+    "saveOriginalVideo": "保存原始影片",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "輸出語言",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "已轉錄並清理 {{done}}/{{total}} 個片段",
     "gapRepair": "間隙修復 #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "修復遺失的字幕 (第{{iteration}}/{{maxIterations}}次迭代) {{done}} / {{total}}"
+    "repairingCaptions": "修復遺失的字幕 (第{{iteration}}/{{maxIterations}}次迭代) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "檔案已儲存：\n{{path}}",

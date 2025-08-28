@@ -67,7 +67,16 @@
     "selectFile": "கோப்பைத் தேர்ந்தெடுக்கவும்",
     "selectVideoFile": "காணொளி கோப்பைத் தேர்ந்தெடுக்கவும்",
     "selectVideoAudioFile": "காணொளி / ஒலி கோப்பைத் தேர்ந்தெடுக்கவும்",
-    "saveOriginalVideo": "அசல் காணொளியை சேமி"
+    "saveOriginalVideo": "அசல் காணொளியை சேமி",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "வெளியீட்டு மொழி",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "டிரான்ஸ்கிரைப் செய்யப்பட்டு சுத்தப்படுத்தப்பட்டது {{done}}/{{total}} பகுதிகள்",
     "gapRepair": "இடைவெளி பழுதுபார்ப்பு #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "காணாமல் போன துணைத் தலைப்புகளை சரிசெய்கிறது (மறுமுறை {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "காணாமல் போன துணைத் தலைப்புகளை சரிசெய்கிறது (மறுமுறை {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "கோப்பு சேமிக்கப்பட்டது:\n{{path}}",

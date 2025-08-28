@@ -67,7 +67,16 @@
     "selectFile": "Seleccionar archivo",
     "selectVideoFile": "Seleccionar archivo de video",
     "selectVideoAudioFile": "Seleccionar archivo de video / audio",
-    "saveOriginalVideo": "Guardar video original"
+    "saveOriginalVideo": "Guardar video original",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
@@ -250,7 +259,9 @@
   "progress": {
     "transcribedChunks": "Transcrito y limpiado {{done}}/{{total}} fragmentos",
     "gapRepair": "Reparación de huecos #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Reparando subtítulos faltantes (Iteración {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Reparando subtítulos faltantes (Iteración {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Archivo guardado:\n{{path}}",

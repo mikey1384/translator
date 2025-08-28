@@ -67,7 +67,16 @@
     "selectFile": "انتخاب فایل",
     "selectVideoFile": "انتخاب فایل ویدیو",
     "selectVideoAudioFile": "انتخاب فایل ویدیو / صوت",
-    "saveOriginalVideo": "ذخیره ویدیو اصلی"
+    "saveOriginalVideo": "ذخیره ویدیو اصلی",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "زبان خروجی",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "رونویسی و پاکسازی شده {{done}}/{{total}} قطعه",
     "gapRepair": "تعمیر شکاف #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "تعمیر زیرنویس‌های گمشده (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "تعمیر زیرنویس‌های گمشده (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "فایل ذخیره شد:\n{{path}}",

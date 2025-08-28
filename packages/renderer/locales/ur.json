@@ -67,7 +67,16 @@
     "selectFile": "فائل منتخب کریں",
     "selectVideoFile": "ویڈیو فائل منتخب کریں",
     "selectVideoAudioFile": "ویڈیو / آئوڈیو فائل منتخب کریں",
-    "saveOriginalVideo": "اصل ویڈیو محفوظ کریں"
+    "saveOriginalVideo": "اصل ویڈیو محفوظ کریں",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "آؤٹ پٹ زبان",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "ٹرانسکرائب اور صاف شدہ {{done}}/{{total}} حصے",
     "gapRepair": "گیپ ریپیئر #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "غائب کیپشنز کی مرمت (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "غائب کیپشنز کی مرمت (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "فائل محفوظ ہو گئی:\n{{path}}",

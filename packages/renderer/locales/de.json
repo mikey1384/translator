@@ -67,7 +67,16 @@
     "selectFile": "Datei auswählen",
     "selectVideoFile": "Videodatei auswählen",
     "selectVideoAudioFile": "Video / Audio-Datei auswählen",
-    "saveOriginalVideo": "Originalvideo speichern"
+    "saveOriginalVideo": "Originalvideo speichern",
+    "localFileDescription": "Laden Sie eine Video- oder Audiodatei von Ihrem Computer hoch",
+    "selectLocalFile": "Vom Computer hochladen",
+    "downloadFromUrl": "Aus dem Web herunterladen",
+    "webDescription": "Fügen Sie YouTube-, TikTok-, Instagram-Videolinks oder direkte Videodatei-URLs von Webseiten ein",
+    "chooseFile": "Datei auswählen",
+    "fileSelected": "Datei ausgewählt",
+    "transcribeOnly": "Audio transkribieren",
+    "srtLoaded": "Transkription abgeschlossen",
+    "featuresUnlockAfterTranscription": "Übersetzung und andere Menüs werden nach Abschluss der Transkription angezeigt."
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -250,7 +259,9 @@
   "progress": {
     "transcribedChunks": "{{done}}/{{total}} Abschnitte transkribiert und bereinigt",
     "gapRepair": "Lückenreparatur #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Fehlende Untertitel werden repariert (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Fehlende Untertitel werden repariert (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Untertitel bereinigen ({{done}}/{{total}})",
+    "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",

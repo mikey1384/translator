@@ -76,7 +76,7 @@
     "fileSelected": "ファイルが選択されました",
     "transcribeOnly": "音声を文字起こし",
     "srtLoaded": "文字起こし完了",
-    "translationComingSoon": "翻訳コントロールは近日公開..."
+    "featuresUnlockAfterTranscription": "文字起こし完了後に翻訳や他のメニューが表示されます。"
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -259,7 +259,9 @@
   "progress": {
     "transcribedChunks": "{{done}}/{{total}} チャンクを文字起こし・クリーニング済み",
     "gapRepair": "ギャップ修復 #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}"
+    "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}",
+    "scrubbingHallucinations": "字幕のクリーニング中 ({{done}}/{{total}})",
+    "translationCleanup": "翻訳字幕のクリーンアップ中 ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "ファイルを保存しました:\n{{path}}",

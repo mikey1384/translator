@@ -67,7 +67,16 @@
     "selectFile": "Pumili ng File",
     "selectVideoFile": "Pumili ng Video File",
     "selectVideoAudioFile": "Pumili ng Video / Audio File",
-    "saveOriginalVideo": "I-save ang orihinal na video"
+    "saveOriginalVideo": "I-save ang orihinal na video",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Wika ng Output",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Na-transcribe at na-linis na {{done}}/{{total}} chunks",
     "gapRepair": "Pag-aayos ng gap #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Inaayos ang mga nawawalang caption (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Inaayos ang mga nawawalang caption (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Na-save ang file:\n{{path}}",

@@ -67,7 +67,16 @@
     "selectFile": "Выбрать файл",
     "selectVideoFile": "Выбрать видеофайл",
     "selectVideoAudioFile": "Выбрать видеофайл / аудиофайл",
-    "saveOriginalVideo": "Сохранить оригинальное видео"
+    "saveOriginalVideo": "Сохранить оригинальное видео",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Язык вывода",
@@ -250,7 +259,9 @@
   "progress": {
     "transcribedChunks": "Транскрибировано и очищено {{done}}/{{total}} фрагментов",
     "gapRepair": "Восстановление пропусков #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Файл сохранен:\n{{path}}",

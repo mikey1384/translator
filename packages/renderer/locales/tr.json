@@ -67,7 +67,16 @@
     "selectFile": "Dosya Seç",
     "selectVideoFile": "Video Dosyası Seç",
     "selectVideoAudioFile": "Video / Ses Dosyası Seç",
-    "saveOriginalVideo": "Orijinal Video Kaydet"
+    "saveOriginalVideo": "Orijinal Video Kaydet",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Çıktı Dili",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Metne çevrildi ve temizlendi {{done}}/{{total}} parça",
     "gapRepair": "Boşluk onarımı #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Eksik altyazılar onarılıyor (Tekrar {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Eksik altyazılar onarılıyor (Tekrar {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Dosya kaydedildi:\n{{path}}",

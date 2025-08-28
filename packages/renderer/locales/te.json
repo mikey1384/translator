@@ -67,7 +67,16 @@
     "selectFile": "ఫైల్ ఎంచుకోండి",
     "selectVideoFile": "వీడియో ఫైల్‌ను ఎంచుకోండి",
     "selectVideoAudioFile": "వీడియో / ఆడియో ఫైల్ ఎంచుకోండి",
-    "saveOriginalVideo": "అసలు వీడియో సేవ్ చేయండి"
+    "saveOriginalVideo": "అసలు వీడియో సేవ్ చేయండి",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "అవుట్‌పుట్ భాష",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "ట్రాన్స్‌క్రైబ్ మరియు క్లీన్ చేయబడిన {{done}}/{{total}} భాగాలు",
     "gapRepair": "గ్యాప్ రిపెయర్ #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "తప్పిపోయిన క్యాప్షన్‌లను రిపెయర్ చేస్తోంది (ఇటరేషన్ {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "తప్పిపోయిన క్యాప్షన్‌లను రిపెయర్ చేస్తోంది (ఇటరేషన్ {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "ఫైల్ సేవ్ చేయబడింది:\n{{path}}",

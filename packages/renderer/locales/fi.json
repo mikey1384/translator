@@ -67,7 +67,16 @@
     "selectFile": "Valitse tiedosto",
     "selectVideoFile": "Valitse videotiedosto",
     "selectVideoAudioFile": "Valitse video / äänitiedosto",
-    "saveOriginalVideo": "Tallenna alkuperäinen video"
+    "saveOriginalVideo": "Tallenna alkuperäinen video",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Tulostuskieli",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Litteroitu ja käsitelty {{done}}/{{total}} osaa",
     "gapRepair": "Aukkojen korjaus #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Korjataan puuttuvia tekstityksiä (Kierros {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Korjataan puuttuvia tekstityksiä (Kierros {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Tiedosto tallennettu:\n{{path}}",

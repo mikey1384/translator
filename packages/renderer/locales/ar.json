@@ -67,7 +67,16 @@
     "selectFile": "اختر ملف",
     "selectVideoFile": "اختر ملف الفيديو",
     "selectVideoAudioFile": "اختر ملف الفيديو / الصوت",
-    "saveOriginalVideo": "حفظ الفيديو الأصلي"
+    "saveOriginalVideo": "حفظ الفيديو الأصلي",
+    "localFileDescription": "ارفع ملف فيديو أو صوت من جهاز الكمبيوتر الخاص بك",
+    "selectLocalFile": "رفع من الكمبيوتر",
+    "downloadFromUrl": "تحميل من الويب",
+    "webDescription": "الصق روابط فيديو YouTube أو TikTok أو Instagram، أو روابط ملفات الفيديو المباشرة من صفحات الويب",
+    "chooseFile": "اختر ملف",
+    "fileSelected": "تم اختيار الملف",
+    "transcribeOnly": "نسخ الصوت",
+    "srtLoaded": "اكتمل النسخ",
+    "featuresUnlockAfterTranscription": "ستظهر الترجمة والقوائم الأخرى بعد اكتمال النسخ."
   },
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
@@ -231,16 +240,18 @@
       "description": "قد يكون هذا بسبب الطلب العالي أو مشاكل في خوادم OpenAI. العملية لا تزال تعمل في الخلفية.",
       "checkStatus": "تحقق من حالة OpenAI"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "إلغاء التحميل؟ سيضيع التقدم وستحتاج إلى البدء من جديد.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "التحميل يستغرق وقتا أطول من المعتاد.",
+      "description": "قد يكون هذا بسبب تغييرات منصة الفيديو أو إجراءات حماية جديدة. قد تحتاج إلى انتظار إصدار التطبيق التالي للتعامل مع مقاطع الفيديو الأحدث."
     }
   },
   "progress": {
     "transcribedChunks": "تم نسخ وتنظيف {{done}}/{{total}} من المقاطع",
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "تنظيف التعليقات ({{done}}/{{total}})",
+    "translationCleanup": "تنظيف التعليقات المترجمة ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "تم حفظ الملف:\n{{path}}",

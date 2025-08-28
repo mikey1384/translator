@@ -67,7 +67,16 @@
     "selectFile": "Selectează Fișier",
     "selectVideoFile": "Selectează Fișier Video",
     "selectVideoAudioFile": "Selectează Fișier Video / Audio",
-    "saveOriginalVideo": "Salvează Video Original"
+    "saveOriginalVideo": "Salvează Video Original",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Limba de ieșire",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Transcrise și curățate {{done}}/{{total}} fragmente",
     "gapRepair": "Repararea golurilor #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Repararea subtitrărilor lipsă (Iterația {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Repararea subtitrărilor lipsă (Iterația {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Fișier salvat:\n{{path}}",

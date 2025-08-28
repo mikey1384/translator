@@ -67,7 +67,16 @@
     "selectFile": "Vybrat soubor",
     "selectVideoFile": "Vybrat video soubor",
     "selectVideoAudioFile": "Vybrat video / audio soubor",
-    "saveOriginalVideo": "Uložit původní video"
+    "saveOriginalVideo": "Uložit původní video",
+    "localFileDescription": "Nahrajte video nebo audio soubor z vašeho počítače",
+    "selectLocalFile": "Nahrát z počítače",
+    "downloadFromUrl": "Stáhnout z webu",
+    "webDescription": "Vložte odkazy na videa z YouTube, TikTok, Instagram nebo přímé URL video souborů z webových stránek",
+    "chooseFile": "Vybrat soubor",
+    "fileSelected": "Soubor vybrán",
+    "transcribeOnly": "Přepsat audio",
+    "srtLoaded": "Přepis dokončen",
+    "featuresUnlockAfterTranscription": "Překlad a další nabídky se zobrazí po dokončení přepisu."
   },
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
@@ -231,16 +240,18 @@
       "description": "To může být způsobeno vysokou poptávkou nebo problémy se servery OpenAI. Proces stále běží na pozadí.",
       "checkStatus": "Zkontrolovat stav OpenAI"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Zrušit stahování? Pokrok bude ztracen a budete muset začít znovu.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Stahování trvá déle než obvykle.",
+      "description": "To může být způsobeno změnami video platformy nebo novými ochrannými opatřeními. Možná budete muset počkat na další verzi aplikace pro zpracování novějších videí."
     }
   },
   "progress": {
     "transcribedChunks": "Přepsáno a vyčištěno {{done}}/{{total}} úseků",
     "gapRepair": "Oprava mezer #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Oprava chybějících titulků (Iterace {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Oprava chybějících titulků (Iterace {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Čištění titulků ({{done}}/{{total}})",
+    "translationCleanup": "Čištění přeložených titulků ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Soubor uložen:\n{{path}}",

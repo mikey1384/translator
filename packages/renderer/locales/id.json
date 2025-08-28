@@ -67,7 +67,16 @@
     "selectFile": "Pilih Berkas",
     "selectVideoFile": "Pilih Berkas Video",
     "selectVideoAudioFile": "Pilih Berkas Video / Audio",
-    "saveOriginalVideo": "Simpan Video Asli"
+    "saveOriginalVideo": "Simpan Video Asli",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Bahasa Keluaran",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Ditranskripsi & dibersihkan {{done}}/{{total}} bagian",
     "gapRepair": "Perbaikan celah #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Memperbaiki subtitle yang hilang (Iterasi {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Memperbaiki subtitle yang hilang (Iterasi {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Berkas disimpan:\n{{path}}",

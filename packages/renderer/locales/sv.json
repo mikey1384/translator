@@ -67,7 +67,16 @@
     "selectFile": "Välj fil",
     "selectVideoFile": "Välj videofil",
     "selectVideoAudioFile": "Välj videofil / ljudfil",
-    "saveOriginalVideo": "Spara originalvideo"
+    "saveOriginalVideo": "Spara originalvideo",
+    "localFileDescription": "Upload a video or audio file from your computer",
+    "selectLocalFile": "Upload from computer",
+    "downloadFromUrl": "Download from web",
+    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
+    "chooseFile": "Choose File",
+    "fileSelected": "File selected",
+    "transcribeOnly": "Transcribe Audio",
+    "srtLoaded": "Transcription Complete",
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
     "outputLanguage": "Utmatningsspråk",
@@ -240,7 +249,9 @@
   "progress": {
     "transcribedChunks": "Transkriberade och rensade {{done}}/{{total}} delar",
     "gapRepair": "Luckreparation #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "Reparerar saknade undertexter (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}"
+    "repairingCaptions": "Reparerar saknade undertexter (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
+    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "Fil sparad:\n{{path}}",
