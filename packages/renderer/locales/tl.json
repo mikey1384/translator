@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "Na-load ang SRT",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "I-save ang Na-download na Video Bilang",
     "downloadInProgress": "May Kasalukuyang Download",
     "saveDownloadedFile": "I-save ang na-download na file: {{path}}",
+    "transcriptionInProgress": "May Kasalukuyang Transcription",
     "translationInProgress": "May Kasalukuyang Translation",
     "cancelTranslationConfirm": "Kanselahin ang translation? Mawawala ang progress at kailangan mong magsimula ulit.",
     "slowProcessingBanner": {

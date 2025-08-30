@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT завантажено",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Зберегти завантажене відео як",
     "downloadInProgress": "Завантаження триває",
     "saveDownloadedFile": "Зберегти завантажений файл: {{path}}",
+    "transcriptionInProgress": "Транскрипція триває",
     "translationInProgress": "Переклад триває",
     "cancelTranslationConfirm": "Скасувати переклад? Прогрес буде втрачено, і доведеться почати спочатку.",
     "slowProcessingBanner": {

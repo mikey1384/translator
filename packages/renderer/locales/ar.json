@@ -76,6 +76,7 @@
     "fileSelected": "تم اختيار الملف",
     "transcribeOnly": "نسخ الصوت",
     "srtLoaded": "اكتمل النسخ",
+    "srtFileLoaded": "تم تحميل SRT",
     "featuresUnlockAfterTranscription": "ستظهر الترجمة والقوائم الأخرى بعد اكتمال النسخ."
   },
   "subtitles": {

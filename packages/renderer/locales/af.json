@@ -76,6 +76,7 @@
     "fileSelected": "Lêer gekies",
     "transcribeOnly": "Transkribeer Klank",
     "srtLoaded": "Transkripsie Voltooi",
+    "srtFileLoaded": "SRT gelaai",
     "featuresUnlockAfterTranscription": "Vertaling en ander kieslyste sal verskyn nadat transkripsie voltooi is."
   },
   "subtitles": {

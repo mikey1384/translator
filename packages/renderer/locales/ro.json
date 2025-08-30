@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT încărcat",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Salvează Video Descărcat Ca",
     "downloadInProgress": "Descărcare în Curs",
     "saveDownloadedFile": "Salvează fișierul descărcat: {{path}}",
+    "transcriptionInProgress": "Transcriere în Curs",
     "translationInProgress": "Traducere în Curs",
     "cancelTranslationConfirm": "Anulezi traducerea? Progresul va fi pierdut și va trebui să începi din nou.",
     "slowProcessingBanner": {

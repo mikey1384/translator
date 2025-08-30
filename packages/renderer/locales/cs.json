@@ -76,6 +76,7 @@
     "fileSelected": "Soubor vybrán",
     "transcribeOnly": "Přepsat audio",
     "srtLoaded": "Přepis dokončen",
+    "srtFileLoaded": "SRT načteno",
     "featuresUnlockAfterTranscription": "Překlad a další nabídky se zobrazí po dokončení přepisu."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Uložit stažené video jako",
     "downloadInProgress": "Probíhá stahování",
     "saveDownloadedFile": "Uložit stažený soubor: {{path}}",
+    "transcriptionInProgress": "Probíhá přepis",
     "translationInProgress": "Probíhá překlad",
     "cancelTranslationConfirm": "Zrušit překlad? Pokrok bude ztracen a budete muset začít znovu.",
     "slowProcessingBanner": {

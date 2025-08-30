@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT נטען",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {

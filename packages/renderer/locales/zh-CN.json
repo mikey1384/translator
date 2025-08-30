@@ -76,6 +76,7 @@
     "fileSelected": "文件已选择",
     "transcribeOnly": "转录音频",
     "srtLoaded": "转录完成",
+    "srtFileLoaded": "已加载 SRT",
     "featuresUnlockAfterTranscription": "转录完成后将显示翻译和其他菜单。"
   },
   "subtitles": {
@@ -243,6 +244,7 @@
     "saveDownloadedVideoAs": "另存下载的视频为",
     "downloadInProgress": "正在下载",
     "saveDownloadedFile": "保存下载的文件：{{path}}",
+    "transcriptionInProgress": "正在转录",
     "translationInProgress": "正在翻译",
     "cancelTranslationConfirm": "取消翻译？进度将丢失，您需要重新开始。",
     "slowProcessingBanner": {

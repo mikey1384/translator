@@ -15,6 +15,7 @@ import UrlCookieBanner from './UrlCookieBanner';
 import MediaInputSection from './components/MediaInputSection.js';
 import TranscribeOnlyPanel from './components/TranscribeOnlyPanel.js';
 import SrtMountedPanel from './components/SrtMountedPanel.js';
+import SrtLoadedPanel from './components/SrtLoadedPanel.js';
 
 // Custom hooks
 import { useVideoMetadata } from './hooks/useVideoMetadata';
@@ -61,6 +62,7 @@ export default function GenerateSubtitles() {
 
   // Subtitle state
   const subStore = useSubStore();
+  const hasMountedSrt = Boolean(subStore.originalPath && subStore.order.length > 0);
   const isTranscriptionDone = Boolean(transcription.isCompleted);
   const isTranscribing =
     !!transcription.inProgress &&
@@ -111,6 +113,18 @@ export default function GenerateSubtitles() {
             />
           )}
         </>
+      )}
+
+      {/* If an SRT was manually loaded (no video mounted), show a dedicated translate panel */}
+      {!videoFile && !download.inProgress && hasMountedSrt && (
+        <SrtLoadedPanel
+          srtPath={subStore.originalPath}
+          onTranslate={handleTranslate}
+          isTranslating={isTranslating}
+          disabled={isButtonDisabled}
+          targetLanguage={targetLanguage}
+          onTargetLanguageChange={setTargetLanguage}
+        />
       )}
 
       <MediaInputSection

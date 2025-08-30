@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT geladen",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Gedownloade video opslaan als",
     "downloadInProgress": "Download bezig",
     "saveDownloadedFile": "Het gedownloade bestand opslaan: {{path}}",
+    "transcriptionInProgress": "Transcriptie bezig",
     "translationInProgress": "Vertaling bezig",
     "cancelTranslationConfirm": "Vertaling annuleren? Voortgang gaat verloren en je moet opnieuw beginnen.",
     "slowProcessingBanner": {

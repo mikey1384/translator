@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT लोड किया गया",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "डाउनलोड किए गए वीडियो को इस रूप में सहेजें",
     "downloadInProgress": "डाउनलोड प्रगति में",
     "saveDownloadedFile": "डाउनलोड की गई फ़ाइल सहेजें: {{path}}",
+    "transcriptionInProgress": "प्रतिलेखन प्रगति में",
     "translationInProgress": "अनुवाद प्रगति में",
     "cancelTranslationConfirm": "अनुवाद रद्द करें? प्रगति खो जाएगी और आपको फिर से शुरू करना होगा।",
     "slowProcessingBanner": {

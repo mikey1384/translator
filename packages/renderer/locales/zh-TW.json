@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "已載入 SRT",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "另存下載的影片為",
     "downloadInProgress": "下載進行中",
     "saveDownloadedFile": "儲存下載的檔案：{{path}}",
+    "transcriptionInProgress": "轉錄進行中",
     "translationInProgress": "翻譯進行中",
     "cancelTranslationConfirm": "取消翻譯？進度將遺失，您需要重新開始。",
     "slowProcessingBanner": {

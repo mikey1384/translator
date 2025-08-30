@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT Dimuat",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Simpan Video yang Dimuat Turun Sebagai",
     "downloadInProgress": "Muat Turun Sedang Berlangsung",
     "saveDownloadedFile": "Simpan fail yang dimuat turun: {{path}}",
+    "transcriptionInProgress": "Transkripsi Sedang Berlangsung",
     "translationInProgress": "Terjemahan Sedang Berlangsung",
     "cancelTranslationConfirm": "Batalkan terjemahan? Kemajuan akan hilang dan anda perlu bermula semula.",
     "slowProcessingBanner": {

@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "โหลด SRT แล้ว",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "บันทึกวิดีโอที่ดาวน์โหลดเป็น",
     "downloadInProgress": "กำลังดาวน์โหลด",
     "saveDownloadedFile": "บันทึกไฟล์ที่ดาวน์โหลด: {{path}}",
+    "transcriptionInProgress": "กำลังถอดความ",
     "translationInProgress": "กำลังแปล",
     "cancelTranslationConfirm": "ยกเลิกการแปล? ความคืบหน้าจะหายไปและคุณจะต้องเริ่มใหม่",
     "slowProcessingBanner": {

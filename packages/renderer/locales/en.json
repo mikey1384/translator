@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT Loaded",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -243,6 +244,7 @@
     "saveDownloadedVideoAs": "Save Downloaded Video As",
     "downloadInProgress": "Download in Progress",
     "saveDownloadedFile": "Save the downloaded file: {{path}}",
+    "transcriptionInProgress": "Transcription in Progress",
     "translationInProgress": "Translation in Progress",
     "cancelTranslationConfirm": "Cancel translation? Progress will be lost and you'll need to start again.",
     "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",

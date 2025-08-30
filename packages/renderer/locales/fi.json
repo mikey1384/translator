@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT ladattu",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Tallenna ladattu video nimellä",
     "downloadInProgress": "Lataus meneillään",
     "saveDownloadedFile": "Tallenna ladattu tiedosto: {{path}}",
+    "transcriptionInProgress": "Transkriptio meneillään",
     "translationInProgress": "Käännös meneillään",
     "cancelTranslationConfirm": "Peruuta käännös? Edistyminen menetetään ja sinun täytyy aloittaa uudelleen.",
     "slowProcessingBanner": {

@@ -76,6 +76,7 @@
     "fileSelected": "Αρχείο επιλέχτηκε",
     "transcribeOnly": "Μετατροπή Ήχου",
     "srtLoaded": "Μετατροπή Ολοκληρώθηκε",
+    "srtFileLoaded": "Φορτώθηκε SRT",
     "featuresUnlockAfterTranscription": "Η μετάφραση και άλλα μενού θα εμφανιστούν αφού ολοκληρωθεί η μετατροπή."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Αποθήκευση Ληφθέντος Βίντεο Ως",
     "downloadInProgress": "Λήψη σε Εξέλιξη",
     "saveDownloadedFile": "Αποθήκευση του ληφθέντος αρχείου: {{path}}",
+    "transcriptionInProgress": "Απομαγνητοφώνηση σε Εξέλιξη",
     "translationInProgress": "Μετάφραση σε Εξέλιξη",
     "cancelTranslationConfirm": "Ακύρωση μετάφρασης; Η πρόοδος θα χαθεί και θα χρειαστεί να ξεκινήσετε ξανά.",
     "slowProcessingBanner": {

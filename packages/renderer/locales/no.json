@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT lastet inn",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Lagre nedlastet video som",
     "downloadInProgress": "Nedlasting pågår",
     "saveDownloadedFile": "Lagre den nedlastede filen: {{path}}",
+    "transcriptionInProgress": "Transkribering pågår",
     "translationInProgress": "Oversettelse pågår",
     "cancelTranslationConfirm": "Avbryt oversettelse? Fremgang vil gå tapt og du må starte på nytt.",
     "slowProcessingBanner": {

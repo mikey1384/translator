@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT Yüklendi",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "İndirilen Videoyu Farklı Kaydet",
     "downloadInProgress": "İndirme Devam Ediyor",
     "saveDownloadedFile": "İndirilen dosyayı kaydet: {{path}}",
+    "transcriptionInProgress": "Transkripsiyon Devam Ediyor",
     "translationInProgress": "Çeviri Devam Ediyor",
     "cancelTranslationConfirm": "Çeviri iptal edilsin mi? İlerleme kaybedilecek ve yeniden başlamanız gerekecek.",
     "slowProcessingBanner": {

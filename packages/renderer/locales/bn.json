@@ -76,6 +76,7 @@
     "fileSelected": "ফাইল নির্বাচিত",
     "transcribeOnly": "অডিও ট্রান্সক্রাইব",
     "srtLoaded": "ট্রান্সক্রিপশন সম্পূর্ণ",
+    "srtFileLoaded": "SRT লোড হয়েছে",
     "featuresUnlockAfterTranscription": "ট্রান্সক্রিপশন সম্পূর্ণ হলে অনুবাদ এবং অন্যান্য মেনু প্রদর্শিত হবে।"
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "ডাউনলোড করা ভিডিও এভাবে সংরক্ষণ করুন",
     "downloadInProgress": "ডাউনলোড চলমান",
     "saveDownloadedFile": "ডাউনলোড করা ফাইল সংরক্ষণ করুন: {{path}}",
+    "transcriptionInProgress": "ট্রান্সক্রিপশন চলমান",
     "translationInProgress": "অনুবাদ চলমান",
     "cancelTranslationConfirm": "অনুবাদ বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
     "slowProcessingBanner": {

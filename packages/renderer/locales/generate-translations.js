@@ -178,7 +178,9 @@ const newKeys = {
   'dialogs.saveDownloadedVideoAs': 'Save Downloaded Video As',
   'dialogs.downloadInProgress': 'Download in Progress',
   'dialogs.saveDownloadedFile': 'Save the downloaded file: {{path}}',
+  'dialogs.transcriptionInProgress': 'Transcription in Progress',
   'dialogs.translationInProgress': 'Translation in Progress',
+  'input.srtFileLoaded': 'SRT Loaded',
   'dialogs.cancelTranslationConfirm':
     "Cancel translation? Progress will be lost and you'll need to start again.",
   'progress.transcribedChunks':

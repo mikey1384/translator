@@ -76,6 +76,7 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
+    "srtFileLoaded": "SRT betöltve",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
   },
   "subtitles": {
@@ -233,6 +234,7 @@
     "saveDownloadedVideoAs": "Letöltött videó mentése másként",
     "downloadInProgress": "Letöltés folyamatban",
     "saveDownloadedFile": "A letöltött fájl mentése: {{path}}",
+    "transcriptionInProgress": "Átirat készítése folyamatban",
     "translationInProgress": "Fordítás folyamatban",
     "cancelTranslationConfirm": "Megszakítja a fordítást? A haladás elvész és újra kell kezdenie.",
     "slowProcessingBanner": {
