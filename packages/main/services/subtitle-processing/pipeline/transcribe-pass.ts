@@ -18,6 +18,7 @@ import {
   identifyGaps,
   trimPhantomTail,
   sanityScan,
+  refineOvershoots,
 } from '../gap-repair.js';
 import {
   SAVE_WHISPER_CHUNKS,
@@ -34,7 +35,6 @@ import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 import { throwIfAborted } from '../utils.js';
-import { refineOvershoots } from '../gap-repair.js';
 import { cleanTranscriptBatch } from '../utils.js';
 
 export async function transcribePass({
@@ -297,6 +297,31 @@ export async function transcribePass({
     });
 
     overallSegments.sort((a, b) => a.start - b.start);
+
+    // Legacy gap-repair phase removed: finalize after transcription/overshoot refinement
+    {
+      if (signal?.aborted) {
+        throwIfAborted(signal);
+      }
+
+      const cleaned = cleanTranscriptBatch({ segments: overallSegments });
+
+      cleaned
+        .sort((a, b) => a.start - b.start)
+        .forEach((s, i) => (s.index = i + 1));
+
+      const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
+      await fs.promises.writeFile(
+        path.join(tempDir, `${operationId}_final.srt`),
+        finalSrt,
+        'utf8'
+      );
+      log.info(
+        `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
+      );
+
+      return { segments: cleaned, speechIntervals: merged.slice() };
+    }
 
     const additionalGaps = sanityScan({
       vadIntervals: merged,
