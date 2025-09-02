@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
+import { useCreditStore } from '../../state/credit-store';
+import {
+  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
+  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
+} from '../../../shared/constants';
 import CreditBalance from '../CreditBalance';
 
 interface ProgressAreaProps {
@@ -14,6 +19,7 @@ interface ProgressAreaProps {
   autoCloseDelay?: number;
   isCancelling?: boolean;
   onClose: () => void;
+  subLabel?: string;
 }
 
 export const PROGRESS_BAR_HEIGHT = 150;
@@ -113,7 +119,22 @@ export default function ProgressArea({
   isCancelling,
   onClose,
   autoCloseDelay = 4000,
+  subLabel,
 }: ProgressAreaProps) {
+  // Compute remaining hours (integer) to show next to credits in header
+  const { credits } = useCreditStore();
+  let remainingHours: number | null = null;
+  if (operationId?.startsWith('translate-')) {
+    remainingHours =
+      typeof credits === 'number'
+        ? Math.floor(credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR)
+        : null;
+  } else if (operationId?.startsWith('transcribe-')) {
+    remainingHours =
+      typeof credits === 'number'
+        ? Math.floor(credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR)
+        : null;
+  }
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
     if (isVisible && progress >= 100) {
@@ -169,7 +190,21 @@ export default function ProgressArea({
           `}
         >
           <h3>{title}</h3>
-          {shouldShowCreditBalance && <CreditBalance />}
+          {shouldShowCreditBalance && (
+            <>
+              <CreditBalance />
+              {typeof remainingHours === 'number' && (
+                <span
+                  className={css`
+                    color: ${colors.textDim};
+                    font-size: 0.85rem;
+                  `}
+                >
+                  ({remainingHours}h)
+                </span>
+              )}
+            </>
+          )}
         </div>
         <button
           className={closeButtonStyles}
@@ -185,6 +220,18 @@ export default function ProgressArea({
           <span>{stage}</span>
           {progress > 0 && <span>{progress.toFixed(1)}%</span>}
         </div>
+        {subLabel && (
+          <div
+            className={css`
+              margin-top: 4px;
+              margin-bottom: 6px;
+              font-size: 0.85rem;
+              color: ${colors.grayDark};
+            `}
+          >
+            {subLabel}
+          </div>
+        )}
         <div className={progressBarContainerStyles}>
           <div
             className={css`

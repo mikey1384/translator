@@ -83,9 +83,7 @@ export default function CreditBalance() {
         >
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        <span className={creditText}>
-          {credits.toLocaleString()} ({hours.toFixed(1)}h)
-        </span>
+        <span className={creditText}>{credits.toLocaleString()}</span>
       </div>
     );
   }

@@ -3,6 +3,7 @@ import ProgressArea from './ProgressArea';
 import { colors } from '../../styles';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '../../ipc/operation';
+// Remaining hours are computed and shown in ProgressArea header next to credits
 
 function translateBackendMessage(
   stage: string,

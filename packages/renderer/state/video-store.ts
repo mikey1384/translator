@@ -5,6 +5,7 @@ import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
 import { buildSrt } from '../../shared/helpers';
 import { useSubStore } from './subtitle-store';
+import { useUIStore } from './ui-store';
 import { useTaskStore } from './task-store';
 import throttle from 'lodash/throttle';
 
@@ -89,7 +90,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
             const segs = useSubStore
               .getState()
               .order.map(id => useSubStore.getState().segments[id]);
-            const srtContent = buildSrt({ segments: segs, mode: 'original' });
+            const showOriginal = useUIStore.getState().showOriginalText;
+            const mode = showOriginal ? 'dual' : 'translation';
+            const srtContent = buildSrt({ segments: segs, mode });
             await FileIPC.save({
               title: 'Save SRT File As',
               defaultPath: 'subtitles.srt',

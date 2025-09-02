@@ -4,7 +4,10 @@ import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
 import AdminResetButton from './AdminResetButton';
 import { colors } from '../styles';
-import { CREDIT_PACKS } from '../../shared/constants';
+import {
+  CREDIT_PACKS,
+  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
+} from '../../shared/constants';
 
 const card = css`
   background: rgba(40, 40, 40, 0.6);
@@ -27,6 +30,10 @@ const balanceTxt = css`
 export default function CreditCard() {
   const { t } = useTranslation();
   const { credits, hours, loading, error, checkoutPending } = useCreditStore();
+  const translateHoursRemaining =
+    credits !== null
+      ? Math.floor(credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR)
+      : null;
 
   return (
     <section className={card}>
@@ -50,7 +57,12 @@ export default function CreditCard() {
             </span>
             <span style={{ fontSize: '1rem', color: colors.textDim }}>
               {' '}
-              ({hours.toFixed(1)} {t('credits.hours')})
+              (
+              {`${t('input.transcribeOnly')} ${Math.floor(hours)} ${t('credits.hours')}`}
+              {typeof translateHoursRemaining === 'number'
+                ? ` · ${t('subtitles.translation')} ${translateHoursRemaining} ${t('credits.hours')}`
+                : ''}
+              )
             </span>
           </span>
 
@@ -60,15 +72,23 @@ export default function CreditCard() {
           >
             <BuyCreditsButton
               packId={CREDIT_PACKS.STARTER.id}
-              label={`$${CREDIT_PACKS.STARTER.price} · ${CREDIT_PACKS.STARTER.hours} h (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
+              label={`$${CREDIT_PACKS.STARTER.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.STARTER.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.floor(
+                CREDIT_PACKS.STARTER.credits /
+                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              )} ${t('credits.hours')} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STANDARD.id}
-              label={`$${CREDIT_PACKS.STANDARD.price} · ${CREDIT_PACKS.STANDARD.hours} h (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
+              label={`$${CREDIT_PACKS.STANDARD.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.STANDARD.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.floor(
+                CREDIT_PACKS.STANDARD.credits /
+                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              )} ${t('credits.hours')} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.PRO.id}
-              label={`$${CREDIT_PACKS.PRO.price} · ${CREDIT_PACKS.PRO.hours} h (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
+              label={`$${CREDIT_PACKS.PRO.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.PRO.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.floor(
+                CREDIT_PACKS.PRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              )} ${t('credits.hours')} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
             />
           </div>
 
@@ -94,11 +114,11 @@ export default function CreditCard() {
           >
             {t('credits.description', {
               pack1Price: CREDIT_PACKS.STARTER.price,
-              pack1Hours: CREDIT_PACKS.STARTER.hours,
+              pack1Hours: Math.floor(CREDIT_PACKS.STARTER.hours),
               pack2Price: CREDIT_PACKS.STANDARD.price,
-              pack2Hours: CREDIT_PACKS.STANDARD.hours,
+              pack2Hours: Math.floor(CREDIT_PACKS.STANDARD.hours),
               pack3Price: CREDIT_PACKS.PRO.price,
-              pack3Hours: CREDIT_PACKS.PRO.hours,
+              pack3Hours: Math.floor(CREDIT_PACKS.PRO.hours),
             })}
           </p>
         </>

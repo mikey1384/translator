@@ -162,7 +162,9 @@ export async function extractAudio(
           });
         }
       },
-      cwd: path.dirname(videoPath),
+      // Use tempDir as working directory to avoid macOS TCC / external volume permission issues
+      // when the source file's folder is restricted.
+      cwd: ctx.tempDir,
       signal,
     });
 
@@ -225,7 +227,8 @@ export async function extractAudioSegment(
   }
   args.push(output);
 
-  await ctx.run(args, { operationId, cwd: path.dirname(input), signal });
+  // Run from tempDir to avoid restricted working directories (e.g., external drives, iCloud)
+  await ctx.run(args, { operationId, cwd: ctx.tempDir, signal });
   if (!fs.existsSync(output) || fs.statSync(output).size === 0) {
     throw new FFmpegError('empty slice output');
   }

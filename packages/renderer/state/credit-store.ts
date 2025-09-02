@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
+import { CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR } from '../../shared/constants';
 
 interface CreditState {
   credits: number | null;
@@ -13,15 +14,14 @@ interface CreditState {
 }
 
 export const useCreditStore = create<CreditState>((set, get) => {
-  const unsubCredits = SystemIPC.onCreditsUpdated(
-    ({ creditBalance, hoursBalance }) => {
-      set({
-        credits: creditBalance,
-        hours: hoursBalance,
-        checkoutPending: false,
-      });
-    }
-  );
+  const unsubCredits = SystemIPC.onCreditsUpdated(({ creditBalance }) => {
+    const credits = creditBalance ?? null;
+    const hours =
+      typeof credits === 'number'
+        ? credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR
+        : null;
+    set({ credits, hours, checkoutPending: false });
+  });
 
   // Set up listeners for checkout status
   const unsubPending = SystemIPC.onCheckoutPending(() => {
@@ -56,12 +56,12 @@ export const useCreditStore = create<CreditState>((set, get) => {
 
       const res = await SystemIPC.getCreditBalance();
       if (res.success) {
-        set({
-          credits: res.creditBalance ?? get().credits, // Keep previous if missing
-          hours: res.balanceHours ?? get().hours, // Keep previous if missing
-          loading: false,
-          error: undefined,
-        });
+        const credits = res.creditBalance ?? get().credits ?? 0;
+        const hours =
+          typeof credits === 'number'
+            ? credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR
+            : get().hours;
+        set({ credits, hours, loading: false, error: undefined });
       } else {
         set({ error: res.error, loading: false });
       }

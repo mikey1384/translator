@@ -6,6 +6,7 @@ import ProcessingBanner from '../ProcessingBanner';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
 import { css } from '@emotion/css';
+// Remaining hours are computed and shown in ProgressArea header next to credits
 
 /* ------------------------------------------------------------------ */
 /* 📐  Constants & helpers                                             */
@@ -85,9 +86,7 @@ export default function TranslationProgressArea({
   autoCloseDelay = 3_000,
 }: { autoCloseDelay?: number } = {}) {
   const { t } = useTranslation();
-  /* -------------------------------------------------------------- */
-  /* 1 ️⃣  read from zustand                                        */
-  /* -------------------------------------------------------------- */
+  const { credits } = useCreditStore();
   const {
     translation: { inProgress, percent, stage, id },
     setTranslation: patchTranslation,
@@ -99,9 +98,6 @@ export default function TranslationProgressArea({
     setTranslation: (p: Partial<TranslationSlice>) => void;
   };
 
-  /* -------------------------------------------------------------- */
-  /* 2 ️⃣  local UI state                                           */
-  /* -------------------------------------------------------------- */
   const [isCancelling, setIsCancelling] = useState(false);
   const [showSlowProgressBanner, setShowSlowProgressBanner] = useState(false);
   const [lastProgressUpdate, setLastProgressUpdate] = useState<number | null>(

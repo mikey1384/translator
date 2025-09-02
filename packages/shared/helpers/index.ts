@@ -96,6 +96,81 @@ export function parseSrt(srtString: string): SrtSegment[] {
   return out;
 }
 
+// Parse SRT but place the entire cue text (all lines) in `original` and leave `translation` undefined.
+// Use this when loading user-provided SRT files so we don't misinterpret line breaks as dual-language splits.
+export function parseSrtOriginalOnly(srtString: string): SrtSegment[] {
+  if (!srtString?.trim()) return [];
+
+  const out: SrtSegment[] = [];
+  const lines = srtString
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n');
+
+  const timeRe = /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/;
+  let i = 0;
+  let fallbackIdx = 0;
+
+  while (i < lines.length) {
+    // find index line
+    while (i < lines.length && !/^\s*\d+\s*$/.test(lines[i])) i++;
+    if (i >= lines.length) break;
+    const index = Number(lines[i].trim()) || ++fallbackIdx;
+    i++;
+
+    // find time line
+    if (i >= lines.length) break;
+    const tm = lines[i].match(timeRe);
+    if (!tm) {
+      while (i < lines.length && lines[i].trim() !== '') i++;
+      i++;
+      continue;
+    }
+    const start = srtTimeToSeconds(tm[1]);
+    const end = srtTimeToSeconds(tm[2]);
+    i++;
+
+    // collect all text lines in the cue
+    const textLines: string[] = [];
+    while (i < lines.length) {
+      const line = lines[i];
+      const next = lines[i + 1];
+      const next2 = lines[i + 2];
+      const blank = line.trim() === '';
+      const looksLikeNextBlock =
+        blank &&
+        typeof next === 'string' &&
+        /^\s*\d+\s*$/.test(next) &&
+        typeof next2 === 'string' &&
+        timeRe.test(next2);
+      if (looksLikeNextBlock) {
+        i++; // skip blank separator
+        break;
+      }
+      textLines.push(line.replace(/\\n/g, '\n'));
+      i++;
+      if (i >= lines.length) break;
+      if (lines[i].trim() === '' && i + 1 >= lines.length) {
+        i++;
+        break;
+      }
+    }
+
+    const fullText = textLines.join('\n').trim();
+    if (!isNaN(start) && !isNaN(end)) {
+      out.push({
+        id: crypto.randomUUID(),
+        index,
+        start,
+        end,
+        original: fullText,
+      } as SrtSegment);
+    }
+  }
+
+  return out;
+}
+
 export function buildSrt({
   segments,
   mode = 'dual',
@@ -274,7 +349,9 @@ export async function openSubtitleWithElectron(): Promise<{
     localStorage.setItem('originalSrtPath', filePath);
     localStorage.setItem('originalLoadPath', filePath);
 
-    const segments = parseSrt(content);
+    // When loading user SRT from disk, do NOT interpret line breaks as dual-language splits.
+    // Treat the entire cue text as original only.
+    const segments = parseSrtOriginalOnly(content);
 
     return {
       file,

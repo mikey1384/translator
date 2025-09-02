@@ -42,8 +42,60 @@ export const languages = [
   { code: 'hi', name: 'Hindi' },
 ];
 
-// Credit system constants
-export const CREDITS_PER_AUDIO_HOUR = 50_000;
+// Credit system constants (computed below using model pricing)
+
+// Translation pricing estimate (client-side mirror of backend pricing)
+// USD per credit based on $10 -> 350,000 credits
+export const USD_PER_CREDIT = 10 / 350_000;
+// Match backend pricing margin
+export const PRICE_MARGIN = 2;
+
+// GPT-4.1 tokenizer costs (USD per token)
+export const GPT4_1_USD_PER_TOKEN_IN = 2 / 1_000_000; // $0.002 / 1M
+export const GPT4_1_USD_PER_TOKEN_OUT = 8 / 1_000_000; // $0.008 / 1M
+
+// Credits per 1k tokens (estimated)
+// Apply backend token calibration to align with actual deduction
+export const TOKEN_CREDIT_CALIBRATION_UI = 0.7;
+export const CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
+  (PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT *
+    TOKEN_CREDIT_CALIBRATION_UI
+); // ≈ 98 when PRICE_MARGIN=2, calibration=0.7
+export const CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
+  (PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT *
+    TOKEN_CREDIT_CALIBRATION_UI
+); // ≈ 392 when PRICE_MARGIN=2, calibration=0.7
+
+// Estimated tokens produced per 1 hour of audio transcript (prompt ~= completion)
+// Tweakable after measurement; 16k strikes a practical balance across languages.
+export const TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT = 16_000;
+export const TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION = 16_000;
+
+// Credits required to translate 1 hour of audio-equivalent text (prompt + completion)
+const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR =
+  Math.ceil(
+    (TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1000) *
+      CREDITS_PER_1K_TOKENS_PROMPT +
+      (TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1000) *
+        CREDITS_PER_1K_TOKENS_COMPLETION
+  );
+
+// Review pass overhead: translation includes a review/edit pass with overlapping windows.
+// This multiplier captures extra prompt+completion tokens used by review.
+export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.8; // adjust with telemetry
+
+export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
+  BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
+);
+
+// Transcription: compute credits/hour from model USD rate with margin and calibration
+export const WHISPER_TURBO_USD_PER_HOUR = 0.04; // groq whisper-large-v3-turbo
+export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = Math.ceil(
+  ((PRICE_MARGIN * WHISPER_TURBO_USD_PER_HOUR) / USD_PER_CREDIT) * 0.3
+); // ≈ 840 credits/hour with PRICE_MARGIN=2 and calibration=0.3
+
+// Set the generic transcription constants used across UI
+export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
 const STARTER_CREDITS = 150_000;
