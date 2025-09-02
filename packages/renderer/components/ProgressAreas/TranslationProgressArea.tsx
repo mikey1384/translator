@@ -86,7 +86,6 @@ export default function TranslationProgressArea({
   autoCloseDelay = 3_000,
 }: { autoCloseDelay?: number } = {}) {
   const { t } = useTranslation();
-  const { credits } = useCreditStore();
   const {
     translation: { inProgress, percent, stage, id },
     setTranslation: patchTranslation,
@@ -133,9 +132,6 @@ export default function TranslationProgressArea({
     devLog('[TransPA] op id →', id);
   }, [id]);
 
-  /* -------------------------------------------------------------- */
-  /* 3 ️⃣  handlers                                                */
-  /* -------------------------------------------------------------- */
   const handleCancel = useCallback(async () => {
     if (!id) {
       console.warn('[TransPA] no operation id – nothing to cancel');

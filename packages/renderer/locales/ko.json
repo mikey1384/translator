@@ -54,7 +54,25 @@
     "confirmInstallUpdate": "업데이트를 설치하고 재시작하시겠습니까?",
     "downloadUpdate": "클릭하여 업데이트 다운로드"
   },
+  "errors": {
+    "needCookies": "YouTube에서 사람이 맞는지 확인을 요청했습니다. 브라우저 쿠키로 다시 시도하세요.",
+    "unexpected": "예기치 않은 오류가 발생했습니다.",
+    "unexpectedRemove": "키 제거 중 예기치 않은 오류가 발생했습니다.",
+    "unexpectedSave": "저장 중 예기치 않은 오류가 발생했습니다.",
+    "unexpectedLoad": "불러오기 중 예기치 않은 오류가 발생했습니다.",
+    "renderFailed": "렌더링에 실패했습니다",
+    "creditReservationFailed": "크레딧 예약에 실패했습니다",
+    "invalidRenderOptions": "잘못된 렌더 옵션입니다",
+    "missingVideoMetadata": "비디오 메타데이터 누락 ({{missing}})",
+    "noSourceVideo": "원본 비디오가 없습니다",
+    "noSubtitlesLoaded": "불러온 자막이 없습니다",
+    "failedToLoadSRT": "SRT 파일을 불러오지 못했습니다"
+  },
   "input": {
+    "retryWithCookies": "브라우저 쿠키로 다시 시도",
+    "selectBrowser": "브라우저",
+    "cookieHelp": "선택한 브라우저에서 YouTube에 로그인되어 있는지 확인하세요. 동의 화면이 보이면 해당 브라우저에서 youtube.com에 방문해 동의한 뒤 여기서 다시 시도하세요.",
+    "cookieAdvice": "선택한 브라우저가 YouTube에 로그인해 사용하는 브라우저인지 확인하세요.",
     "fromDevice": "내 기기에서",
     "fromWeb": "웹에서",
     "downloadVideo": "비디오 다운로드",

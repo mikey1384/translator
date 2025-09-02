@@ -13,12 +13,9 @@ export type SettingsStoreType = Store<{
   subtitleTargetLanguage: string;
   apiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
+  preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
 }>;
 
-/* ----------------------------------------------------------
- * A single factory that returns IPC-ready handlers.
- * No extra "initialize…" call needed.
- * -------------------------------------------------------- */
 export function buildSettingsHandlers(opts: {
   store: SettingsStoreType;
   isDev: boolean;
@@ -134,5 +131,19 @@ export function buildSettingsHandlers(opts: {
     setSubtitleTargetLanguage,
     saveVideoPlaybackPosition,
     getVideoPlaybackPosition,
+    // yt-dlp auto update is always on
+
+    // Persisted cookie browser preference
+    getPreferredCookiesBrowser: () =>
+      (store.get('preferredCookiesBrowser') as string | undefined) || '',
+    setPreferredCookiesBrowser: (_evt: any, v: string) => {
+      try {
+        if (typeof v !== 'string') throw new Error('Invalid browser value');
+        store.set('preferredCookiesBrowser', v);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err.message };
+      }
+    },
   };
 }

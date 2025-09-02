@@ -28,6 +28,7 @@ import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
 import { buildUpdateHandlers } from './handlers/update-handlers.js';
+import { defaultBrowserHint } from './services/url-processor/utils.js';
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -333,6 +334,9 @@ try {
     return app.getAppPath();
   });
 
+  // Provide default cookie browser hint to renderer
+  ipcMain.handle('get-default-cookie-browser', () => defaultBrowserHint());
+
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
@@ -343,6 +347,18 @@ try {
   ipcMain.handle(
     'get-admin-device-id',
     () => process.env.ADMIN_DEVICE_ID || null
+  );
+
+  // yt-dlp auto update is always on; no IPC settings
+
+  // Persisted cookies browser preference
+  ipcMain.handle(
+    'settings:getPreferredCookiesBrowser',
+    settingsHandlers.getPreferredCookiesBrowser
+  );
+  ipcMain.handle(
+    'settings:setPreferredCookiesBrowser',
+    settingsHandlers.setPreferredCookiesBrowser
   );
 
   // Handle Stripe checkout completion messages from embedded window

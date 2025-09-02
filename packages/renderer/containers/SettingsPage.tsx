@@ -50,6 +50,8 @@ export default function SettingsPage() {
         </p>
       </header>
 
+      {/* Previously had a yt-dlp auto-update toggle; behavior is now always on. */}
+
       {/* —————————————————  CREDIT CARD  ————————————————— */}
       <CreditCard />
     </div>

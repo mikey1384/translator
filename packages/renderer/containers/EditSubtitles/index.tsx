@@ -59,6 +59,8 @@ export default function EditSubtitles({
   const { merge: mergeTask, translation } = useTaskStore();
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
+  const sourceId = useSubStore(s => s.sourceId);
+  const origin = useSubStore(s => s.origin);
 
   const { originalPath } = useSubStore();
   const canSaveDirectly = !!originalPath;
@@ -137,6 +139,40 @@ export default function EditSubtitles({
   }, [subtitles]);
 
   const getSrtMode = () => (showOriginalText ? 'dual' : 'translation');
+
+  // Prompt once after a fresh translation to choose display mode (Dual vs Translation Only)
+  const lastPromptedRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      origin === 'fresh' &&
+      translation.isCompleted &&
+      !translation.inProgress &&
+      subtitles.length > 0 &&
+      lastPromptedRef.current !== sourceId
+    ) {
+      const hasTranslation = subtitles.some(
+        s => (s.translation ?? '').trim().length > 0
+      );
+      if (hasTranslation) {
+        const msg =
+          `${t('subtitles.translation')} – ${t(
+            'subtitles.showOriginalText'
+          )} ?\n` +
+          `${t('common.confirm')}: ${t('subtitles.showOriginalText')} (Dual)\n` +
+          `${t('common.cancel')}: ${t('subtitles.translation')} Only`;
+        const dual = window.confirm(msg);
+        useUIStore.getState().setShowOriginalText(!!dual);
+        lastPromptedRef.current = sourceId;
+      }
+    }
+  }, [
+    origin,
+    translation.isCompleted,
+    translation.inProgress,
+    sourceId,
+    subtitles,
+    t,
+  ]);
 
   return (
     <Section title={t('editSubtitles.title')} overflowVisible>

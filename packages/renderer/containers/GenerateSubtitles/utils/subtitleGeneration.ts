@@ -44,7 +44,8 @@ export async function executeSrtTranslation({
     });
     if (res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
-      useSubStore.getState().load(finalSegments);
+
+      useSubStore.getState().load(finalSegments, null, 'fresh');
       useTaskStore.getState().setTranslation({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,

@@ -22,6 +22,7 @@ interface UrlState {
   error: string | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
+  cookiesBrowser: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
@@ -30,6 +31,7 @@ interface UrlState {
   setDownload: (patch: Partial<DownloadTask>) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
+  setCookiesBrowser: (v: string) => void;
   retryWithCookies: () => Promise<ProcessUrlResult | void>;
   onDownloadProgress: ({
     percent,
@@ -58,6 +60,7 @@ export const useUrlStore = create<UrlState>()(
     error: null as string | null,
     inputMode: 'url',
     needCookies: false,
+    cookiesBrowser: '',
 
     setUrlInput: urlInput => {
       set(state => {
@@ -80,8 +83,7 @@ export const useUrlStore = create<UrlState>()(
     retryWithCookies: async () => {
       set((state: UrlState) => {
         state.needCookies = false;
-        state.download = initialDownload;
-        state.download.percent = 1;
+        state.download = { ...initialDownload, percent: 1 };
         state.error = null;
       });
       return downloadMediaInternal(set, get, { useCookies: true });
@@ -95,6 +97,8 @@ export const useUrlStore = create<UrlState>()(
     setInputMode: mode => set({ inputMode: mode }),
 
     setNeedCookies: v => set({ needCookies: v }),
+
+    setCookiesBrowser: v => set({ cookiesBrowser: v }),
 
     onDownloadProgress: ({
       percent,
@@ -133,6 +137,7 @@ async function downloadMediaInternal(
   opts: { useCookies?: boolean } = {}
 ): Promise<ProcessUrlResult | void> {
   const { urlInput, downloadQuality } = get();
+  let cookiesBrowser = get().cookiesBrowser;
   if (!urlInput.trim()) {
     set((state: UrlState) => {
       state.error = 'Please enter a valid URL';
@@ -153,7 +158,14 @@ async function downloadMediaInternal(
 
   const offProgress = UrlIPC.onProgress(p => {
     if (p.operationId !== opId) return;
-    if (p.stage === 'NeedCookies') return;
+    if (p.stage === 'NeedCookies') {
+      set((state: UrlState) => {
+        state.needCookies = true;
+        state.download.inProgress = false;
+        state.download.stage = 'NeedCookies';
+      });
+      return;
+    }
     set((state: UrlState) => {
       state.download.percent = p.percent ?? 0;
       state.download.stage = p.stage ?? '';
@@ -166,11 +178,32 @@ async function downloadMediaInternal(
   });
 
   try {
+    // If a preferred browser was saved, default to using cookies
+    try {
+      const preferred = await (
+        window as any
+      ).electron.getPreferredCookiesBrowser();
+      if (preferred && typeof preferred === 'string') {
+        if (!cookiesBrowser) {
+          cookiesBrowser = preferred;
+          set((state: UrlState) => {
+            state.cookiesBrowser = preferred;
+          });
+        }
+        // Only auto-use cookies if not explicitly overridden by caller
+        if (opts.useCookies === undefined) {
+          opts.useCookies = true;
+        }
+      }
+    } catch {
+      // ignore preference errors
+    }
     const res = await UrlIPC.download({
       url: urlInput,
       quality: downloadQuality,
       operationId: opId,
       useCookies: opts.useCookies ?? false,
+      cookiesBrowser,
     });
 
     const finalPath = res.videoPath ?? res.filePath;
@@ -196,17 +229,39 @@ async function downloadMediaInternal(
       state.download.percent = 100;
       state.download.inProgress = false;
     });
+    // Persist cookie browser preference if we used cookies for this run
+    try {
+      if (opts.useCookies) {
+        const currentBrowser = get().cookiesBrowser || cookiesBrowser;
+        if (currentBrowser) {
+          await (window as any).electron.setPreferredCookiesBrowser(
+            currentBrowser
+          );
+        }
+      }
+    } catch {
+      // ignore persistence errors
+    }
     set((state: UrlState) => {
       state.urlInput = '';
     });
     return res;
   } catch (err: any) {
-    set((state: UrlState) => {
-      state.error = err.message || String(err);
-      state.download.stage = 'Error';
-      state.download.percent = 100;
-      state.download.inProgress = false;
-    });
+    const { needCookies } = get();
+    if (needCookies) {
+      // Do not mark as error; show cookies banner and stop the spinner
+      set((state: UrlState) => {
+        state.download.inProgress = false;
+        state.download.stage = 'NeedCookies';
+      });
+    } else {
+      set((state: UrlState) => {
+        state.error = err.message || String(err);
+        state.download.stage = 'Error';
+        state.download.percent = 100;
+        state.download.inProgress = false;
+      });
+    }
   } finally {
     offProgress();
   }

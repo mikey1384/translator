@@ -12,14 +12,7 @@ import {
 } from '../audio-chunker.js';
 import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
-import {
-  RepairableGap,
-  transcribeGapAudioWithRetry,
-  identifyGaps,
-  trimPhantomTail,
-  sanityScan,
-  refineOvershoots,
-} from '../gap-repair.js';
+import { trimPhantomTail, refineOvershoots } from '../gap-repair.js';
 import {
   SAVE_WHISPER_CHUNKS,
   PRE_PAD_SEC,
@@ -27,7 +20,6 @@ import {
   MAX_SPEECHLESS_SEC,
   MAX_CHUNK_DURATION_SEC,
   MIN_CHUNK_DURATION_SEC,
-  GAP_SEC,
   MERGE_GAP_SEC,
   TRANSCRIPTION_BATCH_SIZE,
 } from '../constants.js';
@@ -319,188 +311,9 @@ export async function transcribePass({
       log.info(
         `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
       );
-
+      progressCallback?.({ percent: 100, stage: 'Completed' });
       return { segments: cleaned, speechIntervals: merged.slice() };
     }
-
-    const additionalGaps = sanityScan({
-      vadIntervals: merged,
-      segments: overallSegments,
-      minGap: GAP_SEC,
-    });
-    log.info(
-      `[${operationId}] Sanity scan found ${additionalGaps.length} additional gaps.`
-    );
-
-    const repairGapsInput = [
-      ...identifyGaps(overallSegments, GAP_SEC),
-      ...additionalGaps,
-    ];
-
-    let repairGaps = dedupeGaps(repairGapsInput);
-
-    log.info(
-      `[${operationId}] Found ${repairGaps.length} big gap(s) in speech (after deduplication). Attempting to fill...`
-    );
-
-    if (repairGaps.length === 0) {
-      return {
-        segments: overallSegments,
-        speechIntervals: merged.slice(),
-      };
-    }
-
-    let iteration = 1;
-    const maxIterations = 2;
-    // --- END anti-duplicate helpers ---
-
-    while (
-      repairGaps.length > 0 &&
-      iteration <= maxIterations &&
-      !signal?.aborted
-    ) {
-      let processedInPass = 0;
-      const totalGaps = repairGaps.length;
-      const newlyRepairedSegments: SrtSegment[] = [];
-      log.info(
-        `[${operationId}] Starting gap repair iteration ${iteration}/${maxIterations} with ${repairGaps.length} gaps to repair.`
-      );
-
-      if (repairGaps.length > 0) {
-        progressCallback?.({
-          percent: 70,
-          stage: `__i18n__:repairing_captions:${iteration}:${maxIterations}:0:${repairGaps.length}`,
-        });
-      }
-
-      repairGaps.sort((a, b) => a.end - a.start - (b.end - b.start));
-      const tasks = repairGaps.map((gap, i) => async () => {
-        throwIfAborted(signal);
-        if (signal?.aborted) return [];
-
-        const gapIndex = i + 1;
-        const baseLogIdx = 10000 * iteration + gapIndex;
-
-        const contextSegmentsForThisGap = [
-          ...overallSegments,
-          ...newlyRepairedSegments,
-        ].sort((a, b) => a.start - b.start);
-
-        const newSegs = await transcribeGapAudioWithRetry(
-          gap,
-          baseLogIdx,
-          `repair_gap_iter_${iteration}`,
-          contextSegmentsForThisGap,
-          {
-            audioPath,
-            tempDir,
-            operationId,
-            signal,
-            ffmpeg,
-            createdChunkPaths,
-          }
-        );
-        const filteredNewSegs = newSegs.filter(
-          seg => seg.end > gap.start && seg.start < gap.end
-        );
-
-        processedInPass += 1;
-        if (processedInPass % 3 === 0 || processedInPass === totalGaps) {
-          const pct = 70 + Math.round((processedInPass / totalGaps) * 30);
-          const cappedPct = Math.min(pct, 99);
-          progressCallback?.({
-            percent: cappedPct,
-            stage: `__i18n__:gap_repair:${iteration}:${processedInPass}:${totalGaps}`,
-            current: processedInPass,
-            total: totalGaps,
-          });
-        }
-
-        if (signal?.aborted) {
-          throwIfAborted(signal);
-          return filteredNewSegs;
-        }
-        return filteredNewSegs;
-      });
-
-      try {
-        for (const task of tasks) {
-          const segs = await task();
-          if (segs) {
-            appendRepaired(overallSegments, segs);
-            newlyRepairedSegments.push(...segs);
-          }
-        }
-        const pct = 70 + Math.round((processedInPass / totalGaps) * 30);
-        progressCallback?.({
-          percent: Math.min(pct, 99),
-          stage: `Gap repair #${iteration}/${maxIterations}`,
-          current: processedInPass,
-          total: totalGaps,
-        });
-      } catch (error) {
-        log.error(`[${operationId}] Error in gap repair tasks:`, error);
-      }
-
-      overallSegments.sort((a, b) => a.start - b.start);
-
-      if (newlyRepairedSegments.length) {
-        progressCallback?.({
-          percent: Math.min(99, 70 + iteration * 10),
-          stage: `Gap-repair pass ${iteration}/${maxIterations}`,
-        });
-      }
-
-      iteration++;
-      repairGaps = dedupeGaps(identifyGaps(overallSegments, GAP_SEC));
-      log.info(
-        `[${operationId}] After iteration ${iteration - 1}, found ${repairGaps.length} remaining gap(s) for next pass.`
-      );
-    }
-
-    if (iteration > maxIterations) {
-      log.warn(
-        `[${operationId}] Reached maximum gap repair iterations (${maxIterations}). ${repairGaps.length} gap(s) may remain unfilled.`
-      );
-    }
-
-    overallSegments.forEach((segment, index) => {
-      segment.index = index + 1;
-    });
-
-    if (repairGaps.length > 0) {
-      progressCallback?.({
-        percent: 99,
-        stage: 'Gap-repair pass complete',
-      });
-    }
-
-    if (signal?.aborted) {
-      throwIfAborted(signal);
-    }
-
-    const cleaned = cleanTranscriptBatch({
-      segments: overallSegments,
-    });
-
-    cleaned
-      .sort((a, b) => a.start - b.start)
-      .forEach((s, i) => (s.index = i + 1));
-
-    const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
-    await fs.promises.writeFile(
-      path.join(tempDir, `${operationId}_final_after_repair.srt`),
-      finalSrt,
-      'utf8'
-    );
-    log.info(
-      `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
-    );
-
-    return {
-      segments: cleaned,
-      speechIntervals: merged.slice(),
-    };
   } catch (error: any) {
     console.error(
       `[${operationId}] Error in transcribePass:`,
@@ -531,11 +344,15 @@ export async function transcribePass({
     if (!SAVE_WHISPER_CHUNKS) {
       await Promise.allSettled(
         createdChunkPaths.map(p =>
-          fsp.unlink(p).catch(err => {
-            log.warn(
-              `[${operationId}] Failed to delete temp chunk file ${p}:`,
-              err?.message || err
-            );
+          fsp.unlink(p).catch((err: any) => {
+            if (err?.code === 'ENOENT') {
+              log.debug(`[${operationId}] Temp chunk already removed: ${p}`);
+            } else {
+              log.warn(
+                `[${operationId}] Failed to delete temp chunk file ${p}:`,
+                err?.message || err
+              );
+            }
           })
         )
       );
@@ -547,29 +364,5 @@ export async function transcribePass({
     const words = history.trim().split(/\s+/).filter(Boolean);
     const lastFive = words.slice(-5).join(' ');
     return lastFive;
-  }
-
-  function appendRepaired(arr: SrtSegment[], repaired: SrtSegment[]) {
-    let nextIdx = (arr.at(-1)?.index ?? 0) + 1;
-    for (const seg of repaired) {
-      seg.index = nextIdx++;
-      arr.push(seg);
-    }
-  }
-
-  function dedupeGaps(gaps: RepairableGap[]) {
-    if (!gaps.length) return [];
-    const sortedGaps = [...gaps].sort((a, b) => a.start - b.start);
-    if (sortedGaps.length === 0) return [];
-    const deduped: RepairableGap[] = [sortedGaps[0]];
-    for (let i = 1; i < sortedGaps.length; i++) {
-      const g = sortedGaps[i];
-      if (g.start <= deduped.at(-1)!.end + 0.01) {
-        deduped.at(-1)!.end = Math.max(deduped.at(-1)!.end, g.end);
-      } else {
-        deduped.push(g);
-      }
-    }
-    return deduped;
   }
 }

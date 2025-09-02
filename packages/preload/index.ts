@@ -301,6 +301,20 @@ const electronAPI = {
     ipcRenderer.on('update:error', handler);
     return () => ipcRenderer.removeListener('update:error', handler);
   },
+
+  // --- Utilities ---
+  getDefaultCookieBrowser: (): Promise<string> =>
+    ipcRenderer.invoke('get-default-cookie-browser'),
+
+  // --- Cookie preference ---
+  getPreferredCookiesBrowser: (): Promise<string> =>
+    ipcRenderer.invoke('settings:getPreferredCookiesBrowser'),
+  setPreferredCookiesBrowser: (
+    v: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('settings:setPreferredCookiesBrowser', v),
+
+  // yt-dlp auto-update is always on; no setting exposed
 };
 
 try {

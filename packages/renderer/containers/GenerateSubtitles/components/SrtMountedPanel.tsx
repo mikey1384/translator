@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import { colors, selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
+import { useUIStore } from '../../../state/ui-store';
 
 interface SrtMountedPanelProps {
   srtPath?: string | null;
@@ -21,6 +22,8 @@ export default function SrtMountedPanel({
   onTargetLanguageChange,
 }: SrtMountedPanelProps) {
   const { t } = useTranslation();
+  const showOriginalText = useUIStore(s => s.showOriginalText);
+  const setShowOriginalText = useUIStore(s => s.setShowOriginalText);
 
   return (
     <div
@@ -111,6 +114,31 @@ export default function SrtMountedPanel({
           <option value="vietnamese">{t('languages.vietnamese')}</option>
           <option value="turkish">{t('languages.turkish')}</option>
         </select>
+
+        <div
+          className={css`
+            margin-top: 8px;
+          `}
+        >
+          <label
+            className={css`
+              display: inline-flex;
+              align-items: center;
+              cursor: pointer;
+            `}
+          >
+            <input
+              type="checkbox"
+              checked={showOriginalText}
+              onChange={e => setShowOriginalText(e.target.checked)}
+              className={css`
+                margin-right: 6px;
+                accent-color: #4361ee;
+              `}
+            />
+            {t('subtitles.showOriginalText')}
+          </label>
+        </div>
 
         <Button
           variant="primary"

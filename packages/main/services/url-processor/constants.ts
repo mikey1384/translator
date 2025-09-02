@@ -4,10 +4,11 @@ export const PROGRESS = {
   WARMUP_START: 0,
   WARMUP_END: 10,
 
+  // Map yt-dlp reported percent once across 10→95
   DL1_START: 10,
-  DL1_END: 40,
+  DL1_END: 95,
 
-  FINAL_START: 40,
+  FINAL_START: 95,
   FINAL_END: 100,
 } as const;
 

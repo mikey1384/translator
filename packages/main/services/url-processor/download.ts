@@ -41,20 +41,32 @@ async function unblockIfMarked(filePath: string): Promise<void> {
 async function warmupYtDlp(ytDlpPath: string): Promise<void> {
   try {
     await unblockIfMarked(ytDlpPath);
-    await execa(ytDlpPath, ['--version'], { windowsHide: true, timeout: 120_000 });
+    await execa(ytDlpPath, ['--version'], {
+      windowsHide: true,
+      timeout: 120_000,
+    });
     log.info('[URLprocessor] yt-dlp warmup complete');
   } catch (e: any) {
-    log.warn('[URLprocessor] yt-dlp warmup failed (continuing):', e?.message || e);
+    log.warn(
+      '[URLprocessor] yt-dlp warmup failed (continuing):',
+      e?.message || e
+    );
   }
 }
 
 async function warmupFfmpeg(ffmpegPath: string): Promise<void> {
   try {
     await unblockIfMarked(ffmpegPath);
-    await execa(ffmpegPath, ['-version'], { windowsHide: true, timeout: 60_000 });
+    await execa(ffmpegPath, ['-version'], {
+      windowsHide: true,
+      timeout: 60_000,
+    });
     log.info('[URLprocessor] ffmpeg warmup complete');
   } catch (e: any) {
-    log.warn('[URLprocessor] ffmpeg warmup failed (continuing):', e?.message || e);
+    log.warn(
+      '[URLprocessor] ffmpeg warmup failed (continuing):',
+      e?.message || e
+    );
   }
 }
 
@@ -65,7 +77,9 @@ function hardKill(proc: any): void {
     // ignore
   }
   if (process.platform === 'win32' && proc?.pid) {
-    execa('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { windowsHide: true }).catch(() => {});
+    execa('taskkill', ['/PID', String(proc.pid), '/T', '/F'], {
+      windowsHide: true,
+    }).catch(() => {});
   }
 }
 
@@ -94,7 +108,11 @@ function childEnv(): NodeJS.ProcessEnv {
     delete env[key];
   }
   // Node/npm flags that can affect child runtime/proxying in packaged builds
-  for (const key of ['NODE_OPTIONS', 'NPM_CONFIG_PROXY', 'NPM_CONFIG_HTTPS_PROXY']) {
+  for (const key of [
+    'NODE_OPTIONS',
+    'NPM_CONFIG_PROXY',
+    'NPM_CONFIG_HTTPS_PROXY',
+  ]) {
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete env[key];
   }
@@ -118,9 +136,12 @@ export async function downloadVideoFromPlatform(
     throw new Error('FFmpegContext is required for downloadVideoFromPlatform');
   }
 
+  // Preflight: Check/update yt-dlp
   progressCallback?.({
-    percent: PROGRESS.WARMUP_START,
-    stage: 'Warming up...',
+    percent: PROGRESS.WARMUP_START + 1,
+    stage: app.isPackaged
+      ? 'Checking yt-dlp…'
+      : 'Skipping yt-dlp update (dev)…',
   });
 
   const firstRunFlag = join(
@@ -129,7 +150,7 @@ export async function downloadVideoFromPlatform(
     '.yt-dlp-initialized'
   );
 
-  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: true });
+  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: !app.isPackaged });
 
   if (!ytDlpPath) {
     progressCallback?.({
@@ -141,6 +162,12 @@ export async function downloadVideoFromPlatform(
   }
 
   log.info(`[URLprocessor] yt-dlp ready at: ${ytDlpPath}`);
+
+  // Continue warmup flow
+  progressCallback?.({
+    percent: PROGRESS.WARMUP_START + 2,
+    stage: 'Warming up…',
+  });
 
   // Detect first run on Windows and pre-warm to avoid SmartScreen/Defender delay
   const isWindows = process.platform === 'win32';
@@ -162,7 +189,9 @@ export async function downloadVideoFromPlatform(
       const ffmpegPathWarm = await findFfmpeg();
       await warmupFfmpeg(ffmpegPathWarm);
       // Mark initialized right after successful warmup so later timeouts are normal
-      await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
+      await fsp.mkdir(join(app.getPath('userData'), 'bin'), {
+        recursive: true,
+      });
       await fsp.writeFile(firstRunFlag, new Date().toISOString(), 'utf8');
       isFirstRun = false; // ensure subsequent logic in this session uses normal timeouts
     } catch {
@@ -246,13 +275,27 @@ export async function downloadVideoFromPlatform(
 
   const ffmpegPath = await findFfmpeg();
   // Ensure binaries are unblocked on Windows every run (cheap + idempotent)
-  try { await unblockIfMarked(ytDlpPath); } catch {}
-  try { await unblockIfMarked(ffmpegPath); } catch {}
-  log.info(`[URLprocessor] ffmpeg at ${ffmpegPath} exists=${fs.existsSync(ffmpegPath)}`);
+  try {
+    await unblockIfMarked(ytDlpPath);
+  } catch {
+    // ignore
+  }
+  try {
+    await unblockIfMarked(ffmpegPath);
+  } catch {
+    // ignore
+  }
+  log.info(
+    `[URLprocessor] ffmpeg at ${ffmpegPath} exists=${fs.existsSync(ffmpegPath)}`
+  );
 
   // Re-warm binaries when their mtime changes (e.g., after app update)
   try {
-    const stampPath = join(app.getPath('userData'), 'bin', '.binary-stamp.json');
+    const stampPath = join(
+      app.getPath('userData'),
+      'bin',
+      '.binary-stamp.json'
+    );
     const [ytStat, ffStat] = await Promise.all([
       fsp.stat(ytDlpPath).catch(() => null),
       fsp.stat(ffmpegPath).catch(() => null),
@@ -261,7 +304,8 @@ export async function downloadVideoFromPlatform(
       ytDlpMtimeMs: ytStat?.mtimeMs ?? 0,
       ffmpegMtimeMs: ffStat?.mtimeMs ?? 0,
     };
-    let prevStamp: { ytDlpMtimeMs: number; ffmpegMtimeMs: number } | null = null;
+    let prevStamp: { ytDlpMtimeMs: number; ffmpegMtimeMs: number } | null =
+      null;
     try {
       const raw = await fsp.readFile(stampPath, 'utf8');
       prevStamp = JSON.parse(raw);
@@ -275,14 +319,22 @@ export async function downloadVideoFromPlatform(
     if (changed) {
       try {
         await warmupYtDlp(ytDlpPath);
-      } catch {}
+      } catch {
+        // ignore
+      }
       try {
         await warmupFfmpeg(ffmpegPath);
-      } catch {}
-      await fsp.mkdir(join(app.getPath('userData'), 'bin'), { recursive: true });
+      } catch {
+        // ignore
+      }
+      await fsp.mkdir(join(app.getPath('userData'), 'bin'), {
+        recursive: true,
+      });
       await fsp.writeFile(stampPath, JSON.stringify(currentStamp), 'utf8');
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
 
   const baseArgs = [
     url,
@@ -297,7 +349,7 @@ export async function downloadVideoFromPlatform(
     'mp4',
     // Network reliability guards to reduce initial stalls
     '--socket-timeout',
-    '3', // Reduced from 5 to surface issues faster than watchdog
+    '10',
     '--retries',
     '3',
     '--retry-sleep',
@@ -318,13 +370,19 @@ export async function downloadVideoFromPlatform(
 
   // Respect user-supplied --force-ipv4/--force-ipv6 if present in extraArgs.
   // Otherwise, start with no forcing (let OS decide).
-  let ipMode: 'auto' | 'v4' | 'v6' = extraArgs.some(a => a === '--force-ipv4') ? 'v4'
-    : extraArgs.some(a => a === '--force-ipv6') ? 'v6'
-    : 'auto';
+  let ipMode: 'auto' | 'v4' | 'v6' = extraArgs.some(a => a === '--force-ipv4')
+    ? 'v4'
+    : extraArgs.some(a => a === '--force-ipv6')
+      ? 'v6'
+      : 'auto';
 
   function withIpArgs(mode: typeof ipMode) {
-    const ipArgs = mode === 'v4' ? ['--force-ipv4'] : mode === 'v6' ? ['--force-ipv6'] : [];
-    return [...baseArgs.filter(a => a !== '--force-ipv4' && a !== '--force-ipv6'), ...ipArgs];
+    const ipArgs =
+      mode === 'v4' ? ['--force-ipv4'] : mode === 'v6' ? ['--force-ipv6'] : [];
+    return [
+      ...baseArgs.filter(a => a !== '--force-ipv4' && a !== '--force-ipv6'),
+      ...ipArgs,
+    ];
   }
 
   log.info(`[URLprocessor] yt-dlp intended output directory: ${outputDir}`);
@@ -336,12 +394,11 @@ export async function downloadVideoFromPlatform(
 
   let finalJsonOutput = '';
   let stdoutBuffer = '';
+  let diagnosticLog = '';
   let finalFilepath: string | null = null;
   let downloadInfo: any = null;
-  let didAutoLift = false;
 
   let subprocess: DownloadProcessType | null = null;
-  let phase: 'dl1' | 'dl2' = 'dl1'; // Track download phase
   let lastPct = 0; // Track last reported percentage outside subprocess
   let addNoCheckCertificates = false; // enable on final retry only if TLS errors suspected
 
@@ -354,22 +411,27 @@ export async function downloadVideoFromPlatform(
     while (attempt <= maxAttempts) {
       let startupTimeoutFired = false;
       const firstAttemptExtra = attempt === 1 ? ['--verbose'] : [];
-      const lastResortExtra = attempt === maxAttempts
-        ? [
-            '--concurrent-fragments',
-            '1',
-            '--http-chunk-size',
-            '1M',
-            ...(addNoCheckCertificates ? ['--no-check-certificates'] : []),
-          ]
-        : [];
-      const args = [...withIpArgs(ipMode), ...firstAttemptExtra, ...lastResortExtra];
+      const lastResortExtra =
+        attempt === maxAttempts
+          ? [
+              '--concurrent-fragments',
+              '1',
+              '--http-chunk-size',
+              '1M',
+              ...(addNoCheckCertificates ? ['--no-check-certificates'] : []),
+            ]
+          : [];
+      const args = [
+        ...withIpArgs(ipMode),
+        ...firstAttemptExtra,
+        ...lastResortExtra,
+      ];
       log.info(`[URLprocessor] Spawning yt-dlp with cwd=${outputDir}`);
 
       log.info(
         `[URLprocessor] Executing yt-dlp (attempt ${attempt}, IP mode: ${ipMode}): ${ytDlpPath} ${args.join(' ')} (Op ID: ${operationId})`
       );
-      
+
       try {
         subprocess = execa(ytDlpPath, args, {
           windowsHide: true,
@@ -446,7 +508,9 @@ export async function downloadVideoFromPlatform(
               clearTimeout(startupTimer);
             }
             // Normalize carriage returns to newlines to handle progress lines that use \r
-            stdoutBuffer += chunkString.replace(/\r/g, '\n');
+            const normalized = chunkString.replace(/\r/g, '\n');
+            stdoutBuffer += normalized;
+            diagnosticLog += normalized;
 
             // Process lines
             let newlineIndex;
@@ -488,40 +552,23 @@ export async function downloadVideoFromPlatform(
                 const progressMatch = line.match(/([\d.]+)%/);
                 if (progressMatch && progressMatch[1]) {
                   const pct = parseFloat(progressMatch[1]);
-
-                  // Phase detection using external lastPct
-                  if (
-                    pct < 1 &&
-                    phase === 'dl1' &&
-                    lastPct > 90 &&
-                    !didAutoLift
-                  ) {
-                    // Detect reset near 0 after potentially hitting 100
-                    phase = 'dl2';
-                    didAutoLift = true;
-                    log.info(
-                      `[URLprocessor] Phase transition detected: dl1 -> dl2 (Op ID: ${operationId})`
-                    );
-                  }
-
-                  const overall =
-                    phase === 'dl1'
-                      ? PROGRESS.DL1_START +
-                        (pct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100
-                      : PROGRESS.FINAL_START +
-                        (pct * (PROGRESS.FINAL_END - PROGRESS.FINAL_START)) /
-                          100;
-
+                  // Single-phase mapping: 10 → 95 (monotonic)
+                  const mapped =
+                    PROGRESS.DL1_START +
+                    (pct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100;
                   const displayPercent = Math.min(
-                    PROGRESS.FINAL_END - 1,
-                    Math.max(PROGRESS.WARMUP_END, overall)
+                    PROGRESS.DL1_END,
+                    Math.max(PROGRESS.WARMUP_END, mapped)
                   );
 
-                  progressCallback?.({
-                    percent: displayPercent,
-                    stage: 'Downloading...',
-                  });
-                  lastPct = pct;
+                  // Monotonic guard
+                  if (displayPercent > lastPct) {
+                    lastPct = displayPercent;
+                    progressCallback?.({
+                      percent: displayPercent,
+                      stage: 'Downloading...',
+                    });
+                  }
                 }
               } else if (
                 /Downloading webpage|Extracting|Downloading player|Downloading m3u8|Downloading MPD/i.test(
@@ -543,8 +590,8 @@ export async function downloadVideoFromPlatform(
               ) {
                 // When yt-dlp is merging formats, downloading is complete
                 const mergePercent = Math.min(
-                  PROGRESS.FINAL_END - 2,
-                  Math.max(PROGRESS.FINAL_START, PROGRESS.FINAL_START + 5)
+                  PROGRESS.FINAL_START + 2,
+                  PROGRESS.FINAL_END - 2
                 );
                 progressCallback?.({
                   percent: mergePercent,
@@ -556,8 +603,8 @@ export async function downloadVideoFromPlatform(
               ) {
                 // Post-processing stage near the end
                 const ppPercent = Math.min(
-                  PROGRESS.FINAL_END - 1,
-                  PROGRESS.FINAL_START + 8
+                  PROGRESS.FINAL_START + 4,
+                  PROGRESS.FINAL_END - 1
                 );
                 progressCallback?.({
                   percent: ppPercent,
@@ -565,10 +612,7 @@ export async function downloadVideoFromPlatform(
                 });
               } else if (/Destination:/i.test(line)) {
                 // Early indication that output file path is determined
-                const destPercent = Math.max(
-                  PROGRESS.WARMUP_END + 2,
-                  PROGRESS.WARMUP_END
-                );
+                const destPercent = PROGRESS.WARMUP_END + 2;
                 progressCallback?.({
                   percent: destPercent,
                   stage: 'Preparing download…',
@@ -605,7 +649,9 @@ export async function downloadVideoFromPlatform(
                 clearInterval(interval);
                 hardKill(subprocess);
                 reject(
-                  new Error(`Download appears stalled (no progress for ${Math.round(stallMs / 1000)}s)`) 
+                  new Error(
+                    `Download appears stalled (no progress for ${Math.round(stallMs / 1000)}s)`
+                  )
                 );
               }
             }, 5_000);
@@ -660,7 +706,7 @@ export async function downloadVideoFromPlatform(
         log.info(`[URLprocessor] Final file path determined: ${finalFilepath}`);
 
         progressCallback?.({
-          percent: PROGRESS.FINAL_END - 5, // Use constant
+          percent: PROGRESS.FINAL_START + 3,
           stage: 'Download complete, verifying...',
         });
 
@@ -704,13 +750,19 @@ export async function downloadVideoFromPlatform(
               timeout: 120_000,
               stdio: 'ignore',
               shell: false,
-            }).catch((error) => {
-              log.debug('[URLprocessor] Background update failed:', error.message);
+            }).catch(error => {
+              log.debug(
+                '[URLprocessor] Background update failed:',
+                error.message
+              );
             });
           }, 3000);
         } catch {
           // fall through
         }
+
+        // Final 100% tick
+        progressCallback?.({ percent: 100, stage: 'Completed' });
 
         return {
           filepath: finalFilepath,
@@ -719,12 +771,21 @@ export async function downloadVideoFromPlatform(
         };
       } catch (error: any) {
         lastError = error;
+        try {
+          (error as any).all = diagnosticLog;
+          (error as any).stdout = diagnosticLog;
+        } catch {
+          // ignore
+        }
         const wasStartupStall =
-          (error?.message || '').includes('Download appears stalled (no progress for') ||
-          startupTimeoutFired;
+          (error?.message || '').includes(
+            'Download appears stalled (no progress for'
+          ) || startupTimeoutFired;
         // If we suspect TLS/certificate issues, enable no-check-certificates for the final retry
         const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}`;
-        const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(errorBlob);
+        const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(
+          errorBlob
+        );
         if (looksLikeTLSError) {
           addNoCheckCertificates = true;
         }
@@ -776,7 +837,7 @@ export async function downloadVideoFromPlatform(
       throw new CancelledError();
     }
 
-    // If it wasn't killed, it's a real error. NOW log details and send failure progress.
+    // If it wasn't killed, it's a real error. NOW log details.
     log.error(
       `[URLprocessor] Handling non-cancellation error for Op ID ${operationId}`
     );
@@ -795,10 +856,11 @@ export async function downloadVideoFromPlatform(
       `[URLprocessor] Handling non-termination error for Op ID ${operationId}`
     );
 
-    // Use mapErrorToUserFriendly for error mapping
+    // Use mapErrorToUserFriendly for error mapping (prefer combined stream)
     userFriendlyErrorMessage = mapErrorToUserFriendly({
       rawErrorMessage,
-      stderrContent: error.stderr || '',
+      stderrContent:
+        (error.all as string) || error.stderr || diagnosticLog || '',
     });
 
     log.info(
@@ -811,15 +873,18 @@ export async function downloadVideoFromPlatform(
     log.error(`[URLprocessor] Raw error message: ${rawErrorMessage}`);
     if (error.stderr) log.error(`[URLprocessor] Error stderr: ${error.stderr}`);
     if (error.stack) log.error(`[URLprocessor] Error stack: ${error.stack}`);
-    progressCallback?.({
-      percent: 0,
-      stage: 'Error',
-      error: userFriendlyErrorMessage,
-    });
-
-    throw new Error(
-      `Download failed: ${rawErrorMessage}. Check logs or contact support at mikey@stage5.tools`
-    );
+    if ((error as any).all || diagnosticLog)
+      log.error(
+        `[URLprocessor] Error ALL: ${(error as any).all || diagnosticLog}`
+      );
+    // Re-throw original ExecaError so upstream can inspect combined output
+    error.userFriendly = userFriendlyErrorMessage;
+    try {
+      (error as any).all = (error as any).all || diagnosticLog;
+    } catch {
+      // ignore
+    }
+    throw error;
   } finally {
     if (removeDownloadProcess(operationId)) {
       log.info(

@@ -125,7 +125,8 @@ export async function handleProcessUrl(
         fileManager,
         ffmpeg,
       },
-      options.useCookies || false
+      options.useCookies || false,
+      options.cookiesBrowser
     );
 
     // Check if cancellation was requested early before proceeding
@@ -224,14 +225,18 @@ export async function handleProcessUrl(
     }
 
     const rawErrorMessage =
-      error.message ||
+      error?.message ||
       (typeof error === 'string' ? error : 'An unknown error occurred');
 
-    sendProgress({
-      percent: 0,
-      stage: 'Error',
-      error: 'Download failed...',
-    });
+    // If upstream flagged NeedCookies, surface that stage instead of generic error
+    if (rawErrorMessage === 'NeedCookies') {
+      sendProgress({ percent: 0, stage: 'NeedCookies' });
+      registryFinish(operationId);
+      return { success: false, error: 'NeedCookies', operationId };
+    }
+
+    // Generic error fallback
+    sendProgress({ percent: 0, stage: 'Error', error: 'Download failed...' });
 
     registryFinish(operationId);
     return {

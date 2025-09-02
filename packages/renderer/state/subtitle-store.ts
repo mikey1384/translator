@@ -16,10 +16,15 @@ interface State {
   _abortPlayListener?: () => void;
   sourceId: number;
   originalPath: string | null;
+  origin: 'fresh' | 'disk' | null;
 }
 
 interface Actions {
-  load: (segs: SrtSegment[], srcPath?: string | null) => void;
+  load: (
+    segs: SrtSegment[],
+    srcPath?: string | null,
+    origin?: 'fresh' | 'disk' | null
+  ) => void;
   update: (id: string, patch: Partial<SrtSegment>) => void;
   insertAfter: (id: string) => string | null;
   remove: (id: string) => void;
@@ -42,13 +47,14 @@ const initialState: State = {
   _abortPlayListener: undefined,
   sourceId: 0,
   originalPath: null,
+  origin: null,
 };
 
 export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
       ...initialState,
-      load: (segs, srcPath = null) => {
+      load: (segs, srcPath = null, loadOrigin = null) => {
         set(s => {
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
@@ -57,6 +63,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.order = segs.map(cue => cue.id);
           s.sourceId += 1;
           s.originalPath = srcPath;
+          s.origin = loadOrigin ?? (srcPath ? 'disk' : null);
         });
       },
 

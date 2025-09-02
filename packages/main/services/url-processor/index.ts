@@ -8,7 +8,6 @@ import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
-import { mapErrorToUserFriendly } from './error-map.js';
 import { defaultBrowserHint } from './utils.js';
 
 export async function updateYtDlp(): Promise<boolean> {
@@ -31,7 +30,8 @@ export async function processVideoUrl(
     fileManager: FileManager;
     ffmpeg: FFmpegContext;
   },
-  useCookies: boolean = false
+  useCookies: boolean = false,
+  cookiesBrowser?: string
 ): Promise<{
   videoPath: string;
   filename: string;
@@ -56,14 +56,42 @@ export async function processVideoUrl(
   const { ffmpeg } = services;
 
   try {
+    // Normalize YouTube Shorts to watch URL to improve extractor stability
+    try {
+      const u = new URL(url);
+      if (
+        /(^|\.)youtube\.com$/.test(u.hostname) &&
+        /^\/shorts\//.test(u.pathname)
+      ) {
+        const id = u.pathname.split('/')[2];
+        if (id) {
+          url = `https://www.youtube.com/watch?v=${id}`;
+          log.info(`[URLprocessor] Rewrote Shorts URL to watch: ${url}`);
+        }
+      }
+    } catch {
+      // ignore
+    }
     new URL(url);
   } catch {
     throw new Error('Invalid URL provided.');
   }
 
-  const extra = useCookies
-    ? ['--cookies-from-browser', defaultBrowserHint()]
-    : [];
+  let extra: string[] = [];
+  if (useCookies) {
+    extra = [
+      '--cookies-from-browser',
+      cookiesBrowser && cookiesBrowser !== 'auto'
+        ? cookiesBrowser
+        : defaultBrowserHint(),
+    ];
+    // When using cookies, prefer the web client so cookies apply correctly
+  } else {
+    // For non-cookie attempts, a more permissive client can help for Shorts or rate-limited IPs
+    if (/youtube\.com/.test(url)) {
+      extra = ['--extractor-args', 'youtube:player_client=android'];
+    }
+  }
 
   // --- 1st attempt: use cookies if specified ---
   try {
@@ -92,56 +120,28 @@ export async function processVideoUrl(
       proc: downloadResult.proc,
     };
   } catch (err: any) {
-    const friendly = mapErrorToUserFriendly({
-      rawErrorMessage: err.message ?? String(err),
-      stderrContent: err.stderr ?? '',
-    });
+    const combined = `${err?.message ?? ''}\n${err?.stderr ?? ''}\n${
+      err?.stdout ?? ''
+    }\n${err?.all ?? ''}`;
+    const combinedLC = combined.toLowerCase();
 
-    // Detect 429 / suspicious block
-    if (
-      /429|too\s+many\s+requests|rate[- ]?limiting|looks\s+suspicious|verify\s+you\s+are\s+human/i.test(
-        friendly
-      ) &&
-      !useCookies
-    ) {
+    // Detect 429 / captcha / login-required bot checks
+    const looksSuspicious = /429|too\s*many\s*requests|rate[- ]?limit/.test(
+      combinedLC
+    );
+    const needsLoginBotCheck =
+      /login_required|sign\s*in\s*to\s*confirm|not\s*a\s*bot|verify\s*(you|you'?re)\s*not\s*(a\s*)?bot|consent/.test(
+        combinedLC
+      );
+
+    const isYouTube = /(^|\.)youtube\.com/.test(new URL(url).hostname);
+    if ((looksSuspicious || needsLoginBotCheck || isYouTube) && !useCookies) {
       progressCallback?.({
         percent: PROGRESS.WARMUP_END,
-        stage: 'Retrying with browser cookies...',
+        stage: 'NeedCookies',
       });
-
-      try {
-        // Recursive retry with cookies
-        progressCallback?.({
-          percent: 10,
-          stage: 'Using cookies',
-        });
-        const result = await processVideoUrl(
-          url,
-          quality,
-          progressCallback,
-          operationId,
-          services,
-          true
-        );
-        return result;
-      } catch (err2: any) {
-        const friendly2 = mapErrorToUserFriendly({
-          rawErrorMessage: err2.message ?? String(err2),
-          stderrContent: err2.stderr ?? '',
-        });
-        if (
-          /429|too\s+many\s+requests|rate[- ]?limiting|looks\s+suspicious|verify\s+you\s+are\s+human/i.test(
-            friendly2
-          )
-        ) {
-          progressCallback?.({
-            percent: 0,
-            stage: 'NeedCookies',
-          });
-          throw err2; // Prevent infinite recursion on repeated 429
-        }
-        throw err2;
-      }
+      // Surface to UI; do not auto-retry with cookies here to avoid friction
+      throw new Error('NeedCookies');
     }
 
     throw err; // not a 429 or already using cookies ⇒ let normal error flow handle it
