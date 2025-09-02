@@ -3,7 +3,10 @@ import { colors, selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
 import { useUIStore } from '../../../state/ui-store';
-import { TRANSLATION_LANGUAGES } from '../../../constants/translation-languages';
+import {
+  TRANSLATION_LANGUAGES_BASE,
+  TRANSLATION_LANGUAGE_GROUPS,
+} from '../../../constants/translation-languages';
 import { useTaskStore } from '../../../state/task-store';
 
 interface SrtMountedPanelProps {
@@ -101,10 +104,19 @@ export default function SrtMountedPanel({
           onChange={e => onTargetLanguageChange?.(e.target.value)}
           disabled={isDisabled}
         >
-          {TRANSLATION_LANGUAGES.map(opt => (
+          {TRANSLATION_LANGUAGES_BASE.map(opt => (
             <option key={opt.value} value={opt.value}>
               {t(opt.labelKey)}
             </option>
+          ))}
+          {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+            <optgroup key={group.labelKey} label={t(group.labelKey)}>
+              {group.options.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {t(opt.labelKey)}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
 

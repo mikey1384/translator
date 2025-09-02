@@ -17,7 +17,10 @@ import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
 import { colors, selectStyles } from '../../styles';
-import { TRANSLATION_LANGUAGES } from '../../constants/translation-languages';
+import {
+  TRANSLATION_LANGUAGE_GROUPS,
+  TRANSLATION_LANGUAGES_BASE,
+} from '../../constants/translation-languages';
 
 import {
   useUIStore,
@@ -87,10 +90,21 @@ function EditHeaderTranslateBar({
         onChange={e => setTargetLanguage(e.target.value)}
         disabled={disabled}
       >
-        {TRANSLATION_LANGUAGES.map(opt => (
+        {/* Base/common languages first */}
+        {TRANSLATION_LANGUAGES_BASE.map(opt => (
           <option key={opt.value} value={opt.value}>
             {t(opt.labelKey)}
           </option>
+        ))}
+        {/* Then grouped by region */}
+        {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+          <optgroup key={group.labelKey} label={t(group.labelKey)}>
+            {group.options.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {t(opt.labelKey)}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
 

@@ -9,7 +9,10 @@ import {
 } from '../../state';
 import { useTranslation } from 'react-i18next';
 import { openSubtitleWithElectron } from '../../../shared/helpers';
-import { TRANSLATION_LANGUAGES } from '../../constants/translation-languages';
+import {
+  TRANSLATION_LANGUAGES_BASE,
+  TRANSLATION_LANGUAGE_GROUPS,
+} from '../../constants/translation-languages';
 import { translateMissingUntranslated } from '../../utils/translateMissing';
 import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
 
@@ -212,10 +215,19 @@ export default function SideMenu({
             value={targetLanguage}
             onChange={e => setTargetLanguage(e.target.value)}
           >
-            {TRANSLATION_LANGUAGES.map(opt => (
+            {TRANSLATION_LANGUAGES_BASE.map(opt => (
               <option key={opt.value} value={opt.value}>
                 {t(opt.labelKey)}
               </option>
+            ))}
+            {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+              <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                {group.options.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
 
