@@ -3,6 +3,7 @@ import { colors, selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
 import { useUIStore } from '../../../state/ui-store';
+import { TRANSLATION_LANGUAGES } from '../../../constants/translation-languages';
 import { useTaskStore } from '../../../state/task-store';
 
 interface SrtLoadedPanelProps {
@@ -100,22 +101,11 @@ export default function SrtLoadedPanel({
           onChange={e => onTargetLanguageChange?.(e.target.value)}
           disabled={isDisabled}
         >
-          <option value="english">{t('languages.english')}</option>
-          <option value="korean">{t('languages.korean')}</option>
-          <option value="japanese">{t('languages.japanese')}</option>
-          <option value="chinese_simplified">
-            {t('languages.chinese_simplified')}
-          </option>
-          <option value="chinese_traditional">
-            {t('languages.chinese_traditional')}
-          </option>
-          <option value="spanish">{t('languages.spanish')}</option>
-          <option value="french">{t('languages.french')}</option>
-          <option value="german">{t('languages.german')}</option>
-          <option value="portuguese">{t('languages.portuguese')}</option>
-          <option value="russian">{t('languages.russian')}</option>
-          <option value="vietnamese">{t('languages.vietnamese')}</option>
-          <option value="turkish">{t('languages.turkish')}</option>
+          {TRANSLATION_LANGUAGES.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {t(opt.labelKey)}
+            </option>
+          ))}
         </select>
 
         <div
