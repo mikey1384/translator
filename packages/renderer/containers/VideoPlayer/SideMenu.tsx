@@ -15,8 +15,13 @@ import {
   secondsToSrtTime,
 } from '../../../shared/helpers';
 import * as SubtitlesIPC from '../../ipc/subtitles';
+import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
 
-export default function SideMenu() {
+export default function SideMenu({
+  isFullScreen = false,
+}: {
+  isFullScreen?: boolean;
+}) {
   const { t } = useTranslation();
   const hasSubs = useSubStore(s => s.order.length > 0);
   const { order, segments, originalPath, scrollToCurrent } = useSubStore(s => ({
@@ -26,9 +31,16 @@ export default function SideMenu() {
     scrollToCurrent: s.scrollToCurrent,
   }));
   const setTranslation = useTaskStore(s => s.setTranslation);
+  const { transcription, translation } = useTaskStore(s => ({
+    transcription: s.transcription,
+    translation: s.translation,
+  }));
   const targetLanguage = useUIStore(s => s.targetLanguage || 'english');
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
   const openVideo = useVideoStore(s => s.openFileDialogPreserveSubs);
+  const videoFile = useVideoStore(s => s.file);
+  const videoFilePath = useVideoStore(s => s.path);
+  const meta = useVideoStore(s => s.meta);
 
   const hasUntranslated = hasSubs
     ? order.some(id => {
@@ -104,8 +116,22 @@ export default function SideMenu() {
       useSubStore.getState().load(res.segments, res.filePath ?? null);
     }
   }
+  async function handleTranscribe() {
+    const operationId = `transcribe-${Date.now()}`;
+    const durationSecs = meta?.duration ?? null;
+    const hoursNeeded = durationSecs != null ? durationSecs / 3600 : null;
+    await startTranscriptionFlow({
+      videoFile: (videoFile as any) ?? null,
+      videoFilePath: videoFilePath ?? null,
+      durationSecs,
+      hoursNeeded,
+      operationId,
+    });
+  }
 
-  if (!hasSubs) return null;
+  // Hide completely in fullscreen mode
+  if (isFullScreen) return null;
+  // Always render side menu when video is mounted; buttons show/hide contextually
 
   return (
     <div
@@ -177,34 +203,54 @@ export default function SideMenu() {
           : t('videoPlayer.mountSrt', 'Mount SRT')}
       </Button>
 
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={() => scrollToCurrent()}
-        title={t(
-          'videoPlayer.scrollToCurrentSubtitle',
-          'Scroll to current subtitle'
-        )}
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ marginRight: 8 }}
+      {hasSubs && (
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => scrollToCurrent()}
+          title={t(
+            'videoPlayer.scrollToCurrentSubtitle',
+            'Scroll to current subtitle'
+          )}
         >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19 12a7 7 0 0 1-7 7" />
-          <path d="M12 5a7 7 0 0 1 7 7" />
-          <path d="M5 12a7 7 0 0 1 7-7" />
-          <path d="M12 19a7 7 0 0 1-7-7" />
-        </svg>
-        {t('videoPlayer.scrollToCurrentSubtitle', 'Scroll to current subtitle')}
-      </Button>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ marginRight: 8 }}
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19 12a7 7 0 0 1-7 7" />
+            <path d="M12 5a 7 7 0 0 1 7 7" />
+            <path d="M5 12a7 7 0 0 1 7-7" />
+            <path d="M12 19a7 7 0 0 1-7-7" />
+          </svg>
+          {t(
+            'videoPlayer.scrollToCurrentSubtitle',
+            'Scroll to current subtitle'
+          )}
+        </Button>
+      )}
+
+      {/* Transcribe appears only when Generate panel shows it: not completed and not translating */}
+      {!transcription.isCompleted && !translation.inProgress && (
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={handleTranscribe}
+          isLoading={!!transcription.inProgress}
+          title={t('input.transcribeOnly')}
+        >
+          {transcription.inProgress
+            ? t('subtitles.generating')
+            : t('input.transcribeOnly')}
+        </Button>
+      )}
 
       {hasUntranslated && (
         <div
@@ -212,17 +258,9 @@ export default function SideMenu() {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            margin-top: 4px;
+            margin-top: 10px;
           `}
         >
-          <label
-            className={css`
-              color: ${colors.light};
-              font-size: 0.9rem;
-            `}
-          >
-            {t('subtitles.outputLanguage')}
-          </label>
           <select
             className={selectStyles}
             value={targetLanguage}

@@ -1,8 +1,13 @@
-import { useTaskStore, useSubStore } from '../../../state';
+import { useTaskStore } from '../../../state';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
-import { buildSrt } from '../../../../shared/helpers';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
+import * as SystemIPC from '../../../ipc/system';
+import { checkSufficientCredits } from '../utils/creditCheck';
+import * as FileIPC from '../../../ipc/file';
+import { buildSrt } from '../../../../shared/helpers';
+import { useSubStore, useUIStore } from '../../../state';
+import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -137,6 +142,118 @@ export async function executeSubtitleGeneration({
 
     return { success: false };
   }
+}
+
+export async function startTranscriptionFlow({
+  videoFile,
+  videoFilePath,
+  durationSecs,
+  hoursNeeded,
+  operationId,
+}: {
+  videoFile: File | null;
+  videoFilePath: string | null;
+  durationSecs: number | null;
+  hoursNeeded: number | null;
+  operationId: string;
+}): Promise<GenerateSubtitlesResult> {
+  // If there are mounted subtitles, prompt to save/discard before proceeding
+  const hasMounted = useSubStore.getState().order.length > 0;
+  if (hasMounted) {
+    const choice = await openUnsavedSrtConfirm();
+    if (choice === 'cancel') return { success: false };
+    if (choice === 'save') {
+      const saved = await saveMountedSrtShared();
+      if (!saved) return { success: false };
+    }
+    clearMountedSrtShared();
+  }
+
+  // Validate inputs
+  const validation = validateGenerationInputs(
+    videoFile,
+    videoFilePath,
+    durationSecs,
+    hoursNeeded
+  );
+
+  if (!validation.isValid) {
+    const msg =
+      validation.errorMessage || i18n.t('generateSubtitles.calculatingCost');
+    await SystemIPC.showMessage(msg);
+    return { success: false };
+  }
+
+  // Credits check
+  if (durationSecs) {
+    const creditCheck = checkSufficientCredits(durationSecs);
+    if (!creditCheck.hasSufficientCredits) {
+      await SystemIPC.showMessage(
+        `Not enough credits. This video needs ~${creditCheck.estimatedCredits.toLocaleString()} credits, but you only have ${creditCheck.currentBalance.toLocaleString()}.`
+      );
+      return { success: false };
+    }
+  }
+
+  return executeSubtitleGeneration({
+    videoFile,
+    videoFilePath,
+    targetLanguage: 'original',
+    operationId,
+  });
+}
+
+async function saveMountedSrtShared(): Promise<boolean> {
+  const store = useSubStore.getState();
+  const segments = store.order.map(id => store.segments[id]);
+  if (segments.length === 0) return true;
+
+  const showOriginal = useUIStore.getState().showOriginalText;
+  const mode = showOriginal ? 'dual' : 'translation';
+  const srtContent = buildSrt({ segments, mode });
+  try {
+    const { filePath, error } = await FileIPC.save({
+      title: i18n.t('dialogs.saveSrtFileAs'),
+      defaultPath: 'subtitles.srt',
+      content: srtContent,
+      filters: [
+        { name: i18n.t('common.fileFilters.srtFiles'), extensions: ['srt'] },
+      ],
+    } as any);
+    if (error) {
+      if (!String(error).toLowerCase().includes('canceled')) {
+        await SystemIPC.showMessage(String(error));
+      }
+      return false;
+    }
+    return !!filePath;
+  } catch (err) {
+    console.error('[startTranscriptionFlow] Failed to save mounted SRT:', err);
+    return false;
+  }
+}
+
+function clearMountedSrtShared() {
+  useSubStore.setState({
+    segments: {},
+    order: [],
+    activeId: null,
+    playingId: null,
+    originalPath: null,
+  } as any);
+  useTaskStore.getState().setTranslation({
+    id: null,
+    stage: '',
+    percent: 0,
+    inProgress: false,
+    batchStartIndex: undefined,
+  });
+  useTaskStore.getState().setTranscription({
+    id: null,
+    stage: '',
+    percent: 0,
+    inProgress: false,
+  });
 }
 
 export function validateGenerationInputs(

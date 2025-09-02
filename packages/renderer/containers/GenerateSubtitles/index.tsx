@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
 import ProgressDisplay from './ProgressDisplay.js';
@@ -12,11 +11,9 @@ import {
 import { useUrlStore } from '../../state/url-store';
 import * as FileIPC from '../../ipc/file';
 import * as SystemIPC from '../../ipc/system';
-import { buildSrt } from '../../../shared/helpers';
 import UrlCookieBanner from './UrlCookieBanner';
 import MediaInputSection from './components/MediaInputSection.js';
 import TranscribeOnlyPanel from './components/TranscribeOnlyPanel.js';
-import ConfirmReplaceSrtDialog from './components/ConfirmReplaceSrtDialog.js';
 import SrtMountedPanel from './components/SrtMountedPanel.js';
 import SrtLoadedPanel from './components/SrtLoadedPanel.js';
 
@@ -30,9 +27,8 @@ import CreditWarningBanner from './components/CreditWarningBanner';
 // Utilities
 import { checkSufficientCredits } from './utils/creditCheck';
 import {
-  executeSubtitleGeneration,
   executeSrtTranslation,
-  validateGenerationInputs,
+  startTranscriptionFlow,
 } from './utils/subtitleGeneration';
 
 export default function GenerateSubtitles() {
@@ -81,30 +77,11 @@ export default function GenerateSubtitles() {
   const { showCreditWarning, isButtonDisabled } = useCreditSystem();
 
   // Local UI state for confirm dialog when an SRT is already mounted
-  const [showReplaceDialog, setShowReplaceDialog] = useState(false);
+  // Replaced local dialog with global modal; see GlobalModals
 
   return (
     <Section title={t('subtitles.generate')}>
-      <ConfirmReplaceSrtDialog
-        open={showReplaceDialog}
-        onCancel={() => setShowReplaceDialog(false)}
-        onDiscardAndTranscribe={async () => {
-          setShowReplaceDialog(false);
-          await clearMountedSrt();
-          await proceedTranscribe();
-        }}
-        onSaveAndTranscribe={async () => {
-          const saved = await saveMountedSrt();
-          if (!saved) {
-            // Treat cancel of save dialog as cancel transcription
-            setShowReplaceDialog(false);
-            return;
-          }
-          setShowReplaceDialog(false);
-          await clearMountedSrt();
-          await proceedTranscribe();
-        }}
-      />
+      {/* Global confirmations are rendered via <GlobalModals /> */}
       {showCreditWarning && (
         <CreditWarningBanner onSettingsClick={() => toggleSettings(true)} />
       )}
@@ -171,109 +148,18 @@ export default function GenerateSubtitles() {
 
   async function handleTranscribeOnly() {
     // If an SRT is already mounted, prompt user before proceeding
-    const hasMounted = subStore.order.length > 0;
-    if (hasMounted) {
-      setShowReplaceDialog(true);
-      return;
-    }
-
     await proceedTranscribe();
   }
 
   async function proceedTranscribe() {
-    // Validate inputs
-    const validation = validateGenerationInputs(
+    const operationId = `transcribe-${Date.now()}`;
+    await startTranscriptionFlow({
       videoFile,
       videoFilePath,
       durationSecs,
-      hoursNeeded
-    );
-
-    if (!validation.isValid) {
-      if (validation.errorMessage === 'Please select a video') {
-        useUrlStore.getState().setError(validation.errorMessage);
-      } else {
-        SystemIPC.showMessage(
-          t('generateSubtitles.calculatingCost') ||
-            validation.errorMessage ||
-            t('common.error.unexpected')
-        );
-      }
-      return;
-    }
-
-    // Guard: Check if we have sufficient credits before starting
-    if (durationSecs) {
-      const creditCheck = checkSufficientCredits(durationSecs);
-      if (!creditCheck.hasSufficientCredits) {
-        await SystemIPC.showMessage(
-          `Not enough credits. This video needs ~${creditCheck.estimatedCredits.toLocaleString()} credits, but you only have ${creditCheck.currentBalance.toLocaleString()}.`
-        );
-        return;
-      }
-    }
-
-    // Generate transcription only (no translation)
-    const operationId = `transcribe-${Date.now()}`;
-    await executeSubtitleGeneration({
-      videoFile,
-      videoFilePath,
-      targetLanguage: 'original', // Use 'original' for transcription-only
+      hoursNeeded,
       operationId,
     });
-  }
-
-  async function clearMountedSrt() {
-    // Clear subtitles and reset tasks similar to previous video change behavior
-    useSubStore.setState({
-      segments: {},
-      order: [],
-      activeId: null,
-      playingId: null,
-      originalPath: null,
-    });
-    useTaskStore.getState().setTranslation({
-      id: null,
-      stage: '',
-      percent: 0,
-      inProgress: false,
-      batchStartIndex: undefined,
-    });
-    useTaskStore.getState().setTranscription({
-      id: null,
-      stage: '',
-      percent: 0,
-      inProgress: false,
-    });
-  }
-
-  async function saveMountedSrt(): Promise<boolean> {
-    const segments = subStore.order.map(id => subStore.segments[id]);
-    if (segments.length === 0) return true;
-    const showOriginal = useUIStore.getState().showOriginalText;
-    const mode = showOriginal ? 'dual' : 'translation';
-    const srtContent = buildSrt({ segments, mode });
-    try {
-      const { filePath, error } = await FileIPC.save({
-        title: t('dialogs.saveSrtFileAs'),
-        defaultPath: 'subtitles.srt',
-        content: srtContent,
-        filters: [
-          { name: t('common.fileFilters.srtFiles'), extensions: ['srt'] },
-        ],
-      } as any);
-      if (error) {
-        if (!String(error).includes('canceled')) {
-          await SystemIPC.showMessage(String(error));
-        }
-        return false;
-      }
-      if (!filePath) return false;
-      return true;
-    } catch (err) {
-      console.error('[GenerateSubtitles] Failed to save mounted SRT:', err);
-      return false;
-    }
   }
 
   async function handleTranslate() {

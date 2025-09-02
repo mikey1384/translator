@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore, useVideoStore, useTaskStore } from '../state';
+import * as SystemIPC from '../ipc/system';
+import * as SubtitlesIPC from '../ipc/subtitles';
 import { useCreditStore } from '../state';
 import { useUrlStore } from '../state/url-store';
 
@@ -15,6 +17,7 @@ import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea
 import TranslationProgressArea from '../components/ProgressAreas/TranslationProgressArea';
 import TranscriptionProgressArea from '../components/ProgressAreas/TranscriptionProgressArea';
 import FloatingActionButtons from '../components/FloatingActionButtons';
+import GlobalModals from '../components/GlobalModals';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
@@ -38,6 +41,81 @@ export default function AppContent() {
     return () => {
       useCreditStore.getState().cleanup();
     };
+  }, []);
+
+  // Initialize default target translation language from user preference (once)
+  useEffect(() => {
+    const current = useUIStore.getState().targetLanguage;
+    if (current && current !== 'original') return; // user already chose
+
+    const mapToTarget = (pref: string | null): string => {
+      const p = (pref || '').toLowerCase();
+      const m: Record<string, string> = {
+        en: 'english',
+        es: 'spanish',
+        fr: 'french',
+        de: 'german',
+        it: 'italian',
+        pt: 'portuguese',
+        ru: 'russian',
+        ja: 'japanese',
+        ko: 'korean',
+        zh: 'chinese_simplified',
+        ar: 'arabic',
+        hi: 'hindi',
+        id: 'indonesian',
+        vi: 'vietnamese',
+        tr: 'turkish',
+        nl: 'dutch',
+        pl: 'polish',
+        sv: 'swedish',
+        no: 'norwegian',
+        da: 'danish',
+        fi: 'finnish',
+        el: 'greek',
+        cs: 'czech',
+        hu: 'hungarian',
+        ro: 'romanian',
+        uk: 'ukrainian',
+        he: 'hebrew',
+        fa: 'farsi',
+        th: 'thai',
+        ms: 'malay',
+        sw: 'swahili',
+        af: 'afrikaans',
+        bn: 'bengali',
+        ta: 'tamil',
+        te: 'telugu',
+        mr: 'marathi',
+        tl: 'tagalog',
+        ur: 'urdu',
+      };
+      return m[p] || 'english';
+    };
+
+    (async () => {
+      try {
+        // Prefer a previously saved target language from main settings
+        const saved = await SubtitlesIPC.getTargetLanguage();
+        if (saved && saved !== 'original') {
+          useUIStore.getState().setTargetLanguage(saved);
+          return;
+        }
+        const pref = await SystemIPC.getLanguagePreference();
+        const target = mapToTarget(pref);
+        useUIStore.getState().setTargetLanguage(target);
+        await SubtitlesIPC.setTargetLanguage(target);
+      } catch {
+        // Fallback to English if anything fails
+        const target = 'english';
+        useUIStore.getState().setTargetLanguage(target);
+        try {
+          await SubtitlesIPC.setTargetLanguage(target);
+        } catch {
+          // Do nothing
+        }
+      }
+    })();
   }, []);
 
   const handleCancelDownload = () => {
@@ -99,6 +177,7 @@ export default function AppContent() {
           </>
         )}
       </div>
+      <GlobalModals />
     </div>
   );
 }

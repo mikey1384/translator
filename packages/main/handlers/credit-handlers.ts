@@ -28,7 +28,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   try {
     // Get credit balance from the API
     const response = await axios.get(
-      `https://api.stage5.tools/credits/${getDeviceId()}`,
+      `https://api.stage5.tools/credits/${getDeviceId()}?isNewPricing=true`,
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
 
@@ -275,7 +275,7 @@ export async function handleStripeSuccess(
     let response = null;
     for (let i = 0; i < 3; i++) {
       response = await axios.get(
-        `https://api.stage5.tools/credits/${getDeviceId()}`,
+        `https://api.stage5.tools/credits/${getDeviceId()}?isNewPricing=true`,
         { headers: { Authorization: `Bearer ${getDeviceId()}` } }
       );
       if (response.data?.creditBalance !== undefined) break;

@@ -237,8 +237,8 @@ export async function transcribePass({
       batchContext = buildPrompt(batchContext);
 
       done += slice.length;
-      // Map local transcription progress (0..100) to global 10..70 range
-      const p = 10 + Math.round((done / chunks.length) * 60);
+      // Map local transcription progress (0..100) to global 10..95 range
+      const p = 10 + Math.round((done / chunks.length) * 85);
 
       const intermediateSrt = buildSrt({
         segments: overallSegments.slice().sort((a, b) => a.start - b.start),
@@ -252,7 +252,7 @@ export async function transcribePass({
         )}", Percent: ${Math.round(p)}`
       );
       progressCallback?.({
-        percent: Math.min(p, 69),
+        percent: Math.min(p, 95),
         stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
         current: done,
         total: chunks.length,

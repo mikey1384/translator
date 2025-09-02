@@ -724,7 +724,7 @@ export default function VideoPlayer() {
           </div>
         </div>
 
-        <SideMenu />
+        <SideMenu isFullScreen={isFullScreen} />
       </div>
     </div>
   );

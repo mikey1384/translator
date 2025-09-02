@@ -79,9 +79,7 @@ const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
       CREDITS_PER_1K_TOKENS_COMPLETION
 );
 
-// Review pass overhead: translation includes a review/edit pass with overlapping windows.
-// This multiplier captures extra prompt+completion tokens used by review.
-export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.8; // adjust with telemetry
+export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 3.06; // was 1.8
 
 export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
   BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR *
@@ -97,6 +95,9 @@ export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = Math.ceil(
 // Set the generic transcription constants used across UI
 export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
+
+// New pricing display fallback for transcription (aligns with backend deduction ~2,800 credits/hour)
+export const NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = 2_800;
 
 const MICRO_CREDITS = 15_000; // $1 entry pack
 const STARTER_CREDITS = 150_000;

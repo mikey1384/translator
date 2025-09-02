@@ -136,11 +136,13 @@ export async function translate({
   model = AI_MODELS.GPT,
   temperature = 0.4,
   signal,
+  isNewPricing = true,
 }: {
   messages: any[];
   model?: string;
   temperature?: number;
   signal?: AbortSignal;
+  isNewPricing?: boolean;
 }) {
   // Check if already cancelled before starting
   if (signal?.aborted) {
@@ -150,7 +152,7 @@ export async function translate({
   try {
     const response = await axios.post(
       `${API}/translate`,
-      { messages, model, temperature },
+      { messages, model, temperature, isNewPricing },
       {
         headers: headers(),
         signal, // Pass the AbortSignal to axios
