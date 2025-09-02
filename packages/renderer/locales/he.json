@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "היכנס למסך מלא",
-    "exitFullscreen": "צא ממסך מלא"
+    "exitFullscreen": "צא ממסך מלא",
+    "scrollToCurrentSubtitle": "גלול לכתובית הנוכחית",
+    "changeVideo": "החלף וידאו",
+    "mountSrt": "טען SRT",
+    "changeSrt": "החלף SRT"
   },
   "regions": {
     "eastAsia": "מזרח אסיה",

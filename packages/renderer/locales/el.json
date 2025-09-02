@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Είσοδος σε πλήρη οθόνη",
-    "exitFullscreen": "Έξοδος από πλήρη οθόνη"
+    "exitFullscreen": "Έξοδος από πλήρη οθόνη",
+    "scrollToCurrentSubtitle": "Κύλιση στον τρέχοντα υπότιτλο",
+    "changeVideo": "Αλλαγή βίντεο",
+    "mountSrt": "Φόρτωση SRT",
+    "changeSrt": "Αλλαγή SRT"
   },
   "regions": {
     "eastAsia": "Ανατολική Ασία",

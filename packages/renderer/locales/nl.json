@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Volledig scherm",
-    "exitFullscreen": "Volledig scherm verlaten"
+    "exitFullscreen": "Volledig scherm verlaten",
+    "scrollToCurrentSubtitle": "Scroll naar huidige ondertitel",
+    "changeVideo": "Video wijzigen",
+    "mountSrt": "SRT laden",
+    "changeSrt": "SRT wijzigen"
   },
   "regions": {
     "eastAsia": "Oost-Azië",

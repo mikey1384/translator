@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "పూర్తి స్క్రీన్‌లోకి వెళ్లండి",
-    "exitFullscreen": "పూర్తి స్క్రీన్ నుండి నిష్క్రమించండి"
+    "exitFullscreen": "పూర్తి స్క్రీన్ నుండి నిష్క్రమించండి",
+    "scrollToCurrentSubtitle": "ప్రస్తుత సబ్‌టైటిల్‌కు స్క్రోల్ చేయండి",
+    "changeVideo": "వీడియో మార్చండి",
+    "mountSrt": "SRT లోడ్ చేయండి",
+    "changeSrt": "SRT మార్చండి"
   },
   "regions": {
     "eastAsia": "తూర్పు ఆసియా",

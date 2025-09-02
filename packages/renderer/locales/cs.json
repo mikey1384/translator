@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Vstup do celé obrazovky",
-    "exitFullscreen": "Opustit celou obrazovku"
+    "exitFullscreen": "Opustit celou obrazovku",
+    "scrollToCurrentSubtitle": "Posunout na aktuální titulek",
+    "changeVideo": "Změnit video",
+    "mountSrt": "Načíst SRT",
+    "changeSrt": "Změnit SRT"
   },
   "regions": {
     "eastAsia": "Východní Asie",

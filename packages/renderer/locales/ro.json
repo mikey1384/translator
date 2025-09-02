@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Intră în ecran complet",
-    "exitFullscreen": "Ieși din ecran complet"
+    "exitFullscreen": "Ieși din ecran complet",
+    "scrollToCurrentSubtitle": "Derulează la subtitrarea curentă",
+    "changeVideo": "Schimbă video",
+    "mountSrt": "Încarcă SRT",
+    "changeSrt": "Schimbă SRT"
   },
   "regions": {
     "eastAsia": "Asia de Est",

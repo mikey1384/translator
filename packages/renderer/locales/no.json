@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Gå til fullskjerm",
-    "exitFullscreen": "Avslutt fullskjerm"
+    "exitFullscreen": "Avslutt fullskjerm",
+    "scrollToCurrentSubtitle": "Rull til gjeldende undertekst",
+    "changeVideo": "Bytt video",
+    "mountSrt": "Last SRT",
+    "changeSrt": "Bytt SRT"
   },
   "regions": {
     "eastAsia": "Øst-Asia",

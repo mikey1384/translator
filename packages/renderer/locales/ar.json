@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "دخول وضع الشاشة الكاملة",
-    "exitFullscreen": "الخروج من وضع الشاشة الكاملة"
+    "exitFullscreen": "الخروج من وضع الشاشة الكاملة",
+    "scrollToCurrentSubtitle": "انتقل إلى الترجمة الحالية",
+    "changeVideo": "تغيير الفيديو",
+    "mountSrt": "تحميل SRT",
+    "changeSrt": "تغيير SRT"
   },
   "regions": {
     "eastAsia": "شرق آسيا",

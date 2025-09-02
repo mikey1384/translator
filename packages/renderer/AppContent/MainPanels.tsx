@@ -1,9 +1,9 @@
 import EditSubtitles from '../containers/EditSubtitles';
 import GenerateSubtitles from '../containers/GenerateSubtitles';
-import { useTaskStore } from '../state';
+import { useTaskStore, useUIStore } from '../state';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import type { RenderSubtitlesOptions } from '@shared-types/app';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { i18n } from '../i18n';
 import { css } from '@emotion/css';
 import { colors } from '../styles';
@@ -11,9 +11,12 @@ import { useTranslation } from 'react-i18next';
 
 export default function MainPanels() {
   const { t } = useTranslation();
-  // Keep both sections mounted, but initially show CTA panels that transform into content
-  const [isGenerateOpen, setGenerateOpen] = useState(false);
-  const [isEditOpen, setEditOpen] = useState(false);
+  // Keep both sections mounted; panel open states are persisted in global UI store
+  const isGenerateOpen = useUIStore(s => s.showGeneratePanel);
+  const isEditOpen = useUIStore(s => s.showEditPanel);
+  const setGenerateOpen = (v: boolean) =>
+    useUIStore.getState().setGeneratePanelOpen(v);
+  const setEditOpen = (v: boolean) => useUIStore.getState().setEditPanelOpen(v);
 
   const setMergeStage = useTaskStore(s => s.setMerge);
   const setMergeOperationId = (id: string | null) =>

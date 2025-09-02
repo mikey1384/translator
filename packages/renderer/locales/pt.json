@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Entrar em Tela Cheia",
-    "exitFullscreen": "Sair da Tela Cheia"
+    "exitFullscreen": "Sair da Tela Cheia",
+    "scrollToCurrentSubtitle": "Ir para o subtítulo atual",
+    "changeVideo": "Alterar vídeo",
+    "mountSrt": "Carregar SRT",
+    "changeSrt": "Alterar SRT"
   },
   "regions": {
     "eastAsia": "Leste Asiático",

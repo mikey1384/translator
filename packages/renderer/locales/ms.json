@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Masuk Skrin Penuh",
-    "exitFullscreen": "Keluar Skrin Penuh"
+    "exitFullscreen": "Keluar Skrin Penuh",
+    "scrollToCurrentSubtitle": "Tatal ke sari kata semasa",
+    "changeVideo": "Tukar video",
+    "mountSrt": "Muatkan SRT",
+    "changeSrt": "Tukar SRT"
   },
   "regions": {
     "eastAsia": "Asia Timur",

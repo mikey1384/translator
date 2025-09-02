@@ -140,7 +140,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "フルスクリーン",
-    "exitFullscreen": "フルスクリーン終了"
+    "exitFullscreen": "フルスクリーン終了",
+    "scrollToCurrentSubtitle": "現在の字幕へスクロール",
+    "changeVideo": "動画を変更",
+    "mountSrt": "SRT を読み込む",
+    "changeSrt": "SRT を変更"
   },
   "regions": {
     "eastAsia": "東アジア",

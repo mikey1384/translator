@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "ورود به حالت تمام صفحه",
-    "exitFullscreen": "خروج از حالت تمام صفحه"
+    "exitFullscreen": "خروج از حالت تمام صفحه",
+    "scrollToCurrentSubtitle": "پیمایش به زیرنویس فعلی",
+    "changeVideo": "تغییر ویدیو",
+    "mountSrt": "بارگذاری SRT",
+    "changeSrt": "تغییر SRT"
   },
   "regions": {
     "eastAsia": "شرق آسیا",

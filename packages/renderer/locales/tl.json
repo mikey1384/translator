@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Pumasok sa Fullscreen",
-    "exitFullscreen": "Lumabas sa Fullscreen"
+    "exitFullscreen": "Lumabas sa Fullscreen",
+    "scrollToCurrentSubtitle": "Mag-scroll sa kasalukuyang subtitle",
+    "changeVideo": "Palitan ang video",
+    "mountSrt": "I-load ang SRT",
+    "changeSrt": "Palitan ang SRT"
   },
   "regions": {
     "eastAsia": "Silangang Asya",

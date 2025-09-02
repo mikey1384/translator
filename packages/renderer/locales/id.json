@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Masuk Layar Penuh",
-    "exitFullscreen": "Keluar dari Layar Penuh"
+    "exitFullscreen": "Keluar dari Layar Penuh",
+    "scrollToCurrentSubtitle": "Gulir ke subtitle saat ini",
+    "changeVideo": "Ganti video",
+    "mountSrt": "Muat SRT",
+    "changeSrt": "Ganti SRT"
   },
   "regions": {
     "eastAsia": "Asia Timur",

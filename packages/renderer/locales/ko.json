@@ -166,7 +166,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "전체화면 진입",
-    "exitFullscreen": "전체화면 종료"
+    "exitFullscreen": "전체화면 종료",
+    "scrollToCurrentSubtitle": "현재 자막으로 이동",
+    "changeVideo": "비디오 변경",
+    "mountSrt": "SRT 불러오기",
+    "changeSrt": "SRT 변경"
   },
   "regions": {
     "eastAsia": "동아시아",

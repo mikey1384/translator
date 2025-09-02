@@ -182,6 +182,10 @@ const newKeys = {
   'dialogs.saveDownloadedFile': 'Save the downloaded file: {{path}}',
   'dialogs.transcriptionInProgress': 'Transcription in Progress',
   'dialogs.translationInProgress': 'Translation in Progress',
+  'videoPlayer.scrollToCurrentSubtitle': 'Scroll to current subtitle',
+  'videoPlayer.changeVideo': 'Change Video',
+  'videoPlayer.mountSrt': 'Mount SRT',
+  'videoPlayer.changeSrt': 'Change SRT',
   // New: Unsaved SRT confirmation on transcribe
   'dialogs.unsavedSrtOnTranscribe.title':
     'Save current subtitles before transcribing?',

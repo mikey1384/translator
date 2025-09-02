@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "進入全螢幕",
-    "exitFullscreen": "離開全螢幕"
+    "exitFullscreen": "離開全螢幕",
+    "scrollToCurrentSubtitle": "捲動到目前字幕",
+    "changeVideo": "更換影片",
+    "mountSrt": "載入 SRT",
+    "changeSrt": "更換 SRT"
   },
   "regions": {
     "eastAsia": "東亞",

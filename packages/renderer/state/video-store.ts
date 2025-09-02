@@ -89,6 +89,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Do not prompt or clear subtitles on video change.
       // Unmounting subtitles (with save prompt) now happens on transcribe.
       set(initial);
+      // Reset prior transcription completion state so UI doesn't show
+      // "Transcription Complete" for the newly mounted video.
+      useTaskStore.getState().setTranscription({ inProgress: false });
 
       if (!fd) return;
 
@@ -250,6 +253,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       // Stop position saving for previous video
       get().stopPositionSaving();
+
+      // Reset transcription completion when mounting a new source
+      useTaskStore.getState().setTranscription({ inProgress: false });
 
       if ('path' in fd) {
         const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;

@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "فل اسکرین میں جائیں",
-    "exitFullscreen": "فل اسکرین سے باہر نکلیں"
+    "exitFullscreen": "فل اسکرین سے باہر نکلیں",
+    "scrollToCurrentSubtitle": "موجودہ ذیلی عنوان پر اسکرول کریں",
+    "changeVideo": "ویڈیو تبدیل کریں",
+    "mountSrt": "SRT لوڈ کریں",
+    "changeSrt": "SRT تبدیل کریں"
   },
   "regions": {
     "eastAsia": "مشرقی ایشیا",

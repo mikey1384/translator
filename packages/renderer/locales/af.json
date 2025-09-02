@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Gaan na Volskerm",
-    "exitFullscreen": "Verlaat Volskerm"
+    "exitFullscreen": "Verlaat Volskerm",
+    "scrollToCurrentSubtitle": "Rol na huidige onderskrif",
+    "changeVideo": "Verander video",
+    "mountSrt": "Laai SRT",
+    "changeSrt": "Verander SRT"
   },
   "regions": {
     "eastAsia": "Oos-Asië",

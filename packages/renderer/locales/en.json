@@ -166,7 +166,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    "exitFullscreen": "Exit Fullscreen",
+    "scrollToCurrentSubtitle": "Scroll to current subtitle",
+    "changeVideo": "Change Video",
+    "mountSrt": "Mount SRT",
+    "changeSrt": "Change SRT"
   },
   "regions": {
     "eastAsia": "East Asia",

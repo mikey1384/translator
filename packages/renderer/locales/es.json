@@ -140,7 +140,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Pantalla completa",
-    "exitFullscreen": "Salir pantalla completa"
+    "exitFullscreen": "Salir pantalla completa",
+    "scrollToCurrentSubtitle": "Desplazarse al subtítulo actual",
+    "changeVideo": "Cambiar video",
+    "mountSrt": "Cargar SRT",
+    "changeSrt": "Cambiar SRT"
   },
   "regions": {
     "eastAsia": "Asia Oriental",

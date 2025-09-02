@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Ingia Skrini Kamili",
-    "exitFullscreen": "Toka Skrini Kamili"
+    "exitFullscreen": "Toka Skrini Kamili",
+    "scrollToCurrentSubtitle": "Sogeza hadi tafsiri ya sasa",
+    "changeVideo": "Badilisha video",
+    "mountSrt": "Pakia SRT",
+    "changeSrt": "Badilisha SRT"
   },
   "regions": {
     "eastAsia": "Asia ya Mashariki",

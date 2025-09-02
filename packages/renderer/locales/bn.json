@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "পূর্ণস্ক্রীনে প্রবেশ করুন",
-    "exitFullscreen": "পূর্ণস্ক্রীন থেকে বেরিয়ে আসুন"
+    "exitFullscreen": "পূর্ণস্ক্রীন থেকে বেরিয়ে আসুন",
+    "scrollToCurrentSubtitle": "বর্তমান সাবটাইটেলে স্ক্রোল করুন",
+    "changeVideo": "ভিডিও পরিবর্তন করুন",
+    "mountSrt": "SRT লোড করুন",
+    "changeSrt": "SRT পরিবর্তন করুন"
   },
   "regions": {
     "eastAsia": "পূর্ব এশিয়া",

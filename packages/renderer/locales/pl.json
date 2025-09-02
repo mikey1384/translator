@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Przejdź na pełny ekran",
-    "exitFullscreen": "Wyjdź z pełnego ekranu"
+    "exitFullscreen": "Wyjdź z pełnego ekranu",
+    "scrollToCurrentSubtitle": "Przewiń do bieżących napisów",
+    "changeVideo": "Zmień wideo",
+    "mountSrt": "Wczytaj SRT",
+    "changeSrt": "Zmień SRT"
   },
   "regions": {
     "eastAsia": "Azja Wschodnia",

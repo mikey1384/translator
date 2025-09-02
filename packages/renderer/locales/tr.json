@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Tam Ekrana Geç",
-    "exitFullscreen": "Tam Ekrandan Çık"
+    "exitFullscreen": "Tam Ekrandan Çık",
+    "scrollToCurrentSubtitle": "Geçerli altyazıya kaydır",
+    "changeVideo": "Videoyu değiştir",
+    "mountSrt": "SRT yükle",
+    "changeSrt": "SRT değiştir"
   },
   "regions": {
     "eastAsia": "Doğu Asya",

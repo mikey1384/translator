@@ -8,8 +8,12 @@ import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
 import {
   secondsToSrtTime,
   srtStringToSeconds,
+  buildSrt,
+  parseSrt,
 } from '../../../../../../shared/helpers/index.js';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
+import * as SubtitlesIPC from '../../../../../ipc/subtitles';
+import { useUIStore, useTaskStore } from '../../../../../state';
 
 const timeInputStyles = css`
   width: 150px;
@@ -49,6 +53,8 @@ export default function SubtitleEditor({
   const { t } = useTranslation();
   const { subtitle, isPlaying } = useSubtitleRow(id);
   const actions = useRowActions(id);
+  const targetLanguage = useUIStore(s => s.targetLanguage);
+  const setTranslationState = useTaskStore(s => s.setTranslation);
   const [shiftAmount, setShiftAmount] = useState('0');
   const [localStart, setLocalStart] = useState(
     subtitle ? secondsToSrtTime(subtitle.start) : '00:00:00,000'
@@ -56,6 +62,7 @@ export default function SubtitleEditor({
   const [localEnd, setLocalEnd] = useState(
     subtitle ? secondsToSrtTime(subtitle.end) : '00:00:00,000'
   );
+  const [isTranslatingOne, setIsTranslatingOne] = useState(false);
 
   useEffect(() => {
     if (subtitle) {
@@ -95,6 +102,61 @@ export default function SubtitleEditor({
       actions.remove();
     }
   };
+
+  async function handleTranslateOneLine() {
+    if (!subtitle?.original?.trim()) return;
+    try {
+      setIsTranslatingOne(true);
+      const operationId = `translate-missing-${Date.now()}-${id}`;
+      setTranslationState({
+        id: operationId,
+        stage: t('generateSubtitles.status.starting', 'Starting...'),
+        percent: 0,
+        inProgress: true,
+      });
+
+      const srtContent = buildSrt({
+        segments: [
+          {
+            id: subtitle.id,
+            index: 1,
+            start: subtitle.start,
+            end: subtitle.end,
+            original: subtitle.original,
+          },
+        ],
+        mode: 'original',
+      });
+
+      const res = await SubtitlesIPC.translateSubtitles({
+        subtitles: srtContent,
+        targetLanguage: targetLanguage || 'english',
+        operationId,
+      });
+
+      if (res?.translatedSubtitles) {
+        const segs = parseSrt(res.translatedSubtitles);
+        const translated = segs[0]?.translation?.trim();
+        if (translated) actions.update({ translation: translated });
+        setTranslationState({
+          stage: t('generateSubtitles.status.completed', 'Completed'),
+          percent: 100,
+          inProgress: false,
+        });
+      } else {
+        setTranslationState({ inProgress: false });
+      }
+    } catch (err) {
+      console.error('[SubtitleEditor] single-line translate error:', err);
+      setTranslationState({
+        stage: t('generateSubtitles.status.error', 'Error'),
+        percent: 100,
+        inProgress: false,
+      });
+    } finally {
+      setIsTranslatingOne(false);
+    }
+  }
 
   return (
     <div
@@ -166,6 +228,20 @@ export default function SubtitleEditor({
               </svg>
             )}
           </Button>
+          {!(subtitle.translation ?? '').trim() && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleTranslateOneLine}
+              disabled={isTranslatingOne || !(subtitle.original ?? '').trim()}
+              isLoading={isTranslatingOne}
+              title={t('subtitles.translate')}
+            >
+              {isTranslatingOne
+                ? t('generateSubtitles.status.starting')
+                : t('subtitles.translate')}
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="sm"

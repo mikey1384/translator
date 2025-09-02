@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "पूर्ण स्क्रीनमध्ये जा",
-    "exitFullscreen": "पूर्ण स्क्रीनमधून बाहेर पडा"
+    "exitFullscreen": "पूर्ण स्क्रीनमधून बाहेर पडा",
+    "scrollToCurrentSubtitle": "चालू उपशीर्षकावर स्क्रोल करा",
+    "changeVideo": "व्हिडिओ बदला",
+    "mountSrt": "SRT लोड करा",
+    "changeSrt": "SRT बदला"
   },
   "regions": {
     "eastAsia": "पूर्व आशिया",

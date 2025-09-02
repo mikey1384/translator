@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
 import SpeedMenu from './SpeedMenu';
+import SideMenu from './SideMenu';
 
 import { colors } from '../../styles';
 import Button from '../../components/Button';
@@ -723,7 +724,7 @@ export default function VideoPlayer() {
           </div>
         </div>
 
-        {/* Side menu removed */}
+        <SideMenu />
       </div>
     </div>
   );

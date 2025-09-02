@@ -140,7 +140,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Во весь экран",
-    "exitFullscreen": "Выйти из полноэкранного режима"
+    "exitFullscreen": "Выйти из полноэкранного режима",
+    "scrollToCurrentSubtitle": "Прокрутить к текущим субтитрам",
+    "changeVideo": "Сменить видео",
+    "mountSrt": "Загрузить SRT",
+    "changeSrt": "Сменить SRT"
   },
   "regions": {
     "eastAsia": "Восточная Азия",

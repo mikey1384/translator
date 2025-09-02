@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Vào Toàn màn hình",
-    "exitFullscreen": "Thoát Toàn màn hình"
+    "exitFullscreen": "Thoát Toàn màn hình",
+    "scrollToCurrentSubtitle": "Cuộn đến phụ đề hiện tại",
+    "changeVideo": "Thay đổi video",
+    "mountSrt": "Tải SRT",
+    "changeSrt": "Thay đổi SRT"
   },
   "regions": {
     "eastAsia": "Đông Á",

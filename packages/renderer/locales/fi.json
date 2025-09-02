@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Siirry koko näytön tilaan",
-    "exitFullscreen": "Poistu koko näytön tilasta"
+    "exitFullscreen": "Poistu koko näytön tilasta",
+    "scrollToCurrentSubtitle": "Vieritä nykyiseen tekstitykseen",
+    "changeVideo": "Vaihda video",
+    "mountSrt": "Lataa SRT",
+    "changeSrt": "Vaihda SRT"
   },
   "regions": {
     "eastAsia": "Itä-Aasia",

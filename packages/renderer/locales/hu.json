@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Teljes képernyős mód",
-    "exitFullscreen": "Kilépés a teljes képernyős módból"
+    "exitFullscreen": "Kilépés a teljes képernyős módból",
+    "scrollToCurrentSubtitle": "Görgetés az aktuális felirathoz",
+    "changeVideo": "Videó cseréje",
+    "mountSrt": "SRT betöltése",
+    "changeSrt": "SRT módosítása"
   },
   "regions": {
     "eastAsia": "Kelet-Ázsia",

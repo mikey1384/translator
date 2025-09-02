@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Aktivera helskärm",
-    "exitFullscreen": "Avsluta helskärm"
+    "exitFullscreen": "Avsluta helskärm",
+    "scrollToCurrentSubtitle": "Rulla till aktuell undertext",
+    "changeVideo": "Byt video",
+    "mountSrt": "Ladda SRT",
+    "changeSrt": "Byt SRT"
   },
   "regions": {
     "eastAsia": "Östasien",

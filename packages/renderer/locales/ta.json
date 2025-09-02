@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "முழுத்திரையில் நுழை",
-    "exitFullscreen": "முழுத்திரையிலிருந்து வெளியேறு"
+    "exitFullscreen": "முழுத்திரையிலிருந்து வெளியேறு",
+    "scrollToCurrentSubtitle": "நடப்பு வசனத்துக்கு ஸ்க்ரோள் செய்யவும்",
+    "changeVideo": "வீடியோவை மாற்று",
+    "mountSrt": "SRT ஏற்று",
+    "changeSrt": "SRT மாற்று"
   },
   "regions": {
     "eastAsia": "கிழக்கு ஆசியா",

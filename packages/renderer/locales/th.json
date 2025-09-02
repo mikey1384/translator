@@ -130,7 +130,11 @@
   },
   "videoPlayer": {
     "enterFullscreen": "เข้าสู่โหมดเต็มจอ",
-    "exitFullscreen": "ออกจากโหมดเต็มจอ"
+    "exitFullscreen": "ออกจากโหมดเต็มจอ",
+    "scrollToCurrentSubtitle": "เลื่อนไปที่คำบรรยายปัจจุบัน",
+    "changeVideo": "เปลี่ยนวิดีโอ",
+    "mountSrt": "โหลด SRT",
+    "changeSrt": "เปลี่ยน SRT"
   },
   "regions": {
     "eastAsia": "เอเชียตะวันออก",
