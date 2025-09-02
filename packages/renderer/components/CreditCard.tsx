@@ -32,7 +32,7 @@ export default function CreditCard() {
   const { credits, hours, loading, error, checkoutPending } = useCreditStore();
   const translateHoursRemaining =
     credits !== null
-      ? Math.floor(credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR)
+      ? Math.round(credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR)
       : null;
 
   return (
@@ -58,7 +58,7 @@ export default function CreditCard() {
             <span style={{ fontSize: '1rem', color: colors.textDim }}>
               {' '}
               (
-              {`${t('input.transcribeOnly')} ${Math.floor(hours)} ${t('credits.hours')}`}
+              {`${t('input.transcribeOnly')} ${Math.round(hours)} ${t('credits.hours')}`}
               {typeof translateHoursRemaining === 'number'
                 ? ` · ${t('subtitles.translation')} ${translateHoursRemaining} ${t('credits.hours')}`
                 : ''}
@@ -71,22 +71,28 @@ export default function CreditCard() {
             style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
           >
             <BuyCreditsButton
+              packId={CREDIT_PACKS.MICRO.id}
+              label={`$${CREDIT_PACKS.MICRO.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.MICRO.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.round(
+                CREDIT_PACKS.MICRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              )} ${t('credits.hours')} (${CREDIT_PACKS.MICRO.credits.toLocaleString()} cr)`}
+            />
+            <BuyCreditsButton
               packId={CREDIT_PACKS.STARTER.id}
-              label={`$${CREDIT_PACKS.STARTER.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.STARTER.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.floor(
+              label={`$${CREDIT_PACKS.STARTER.price} · ${t('input.transcribeOnly')} ${Math.round(CREDIT_PACKS.STARTER.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.round(
                 CREDIT_PACKS.STARTER.credits /
                   CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STANDARD.id}
-              label={`$${CREDIT_PACKS.STANDARD.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.STANDARD.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.floor(
+              label={`$${CREDIT_PACKS.STANDARD.price} · ${t('input.transcribeOnly')} ${Math.round(CREDIT_PACKS.STANDARD.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.round(
                 CREDIT_PACKS.STANDARD.credits /
                   CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.PRO.id}
-              label={`$${CREDIT_PACKS.PRO.price} · ${t('input.transcribeOnly')} ${Math.floor(CREDIT_PACKS.PRO.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.floor(
+              label={`$${CREDIT_PACKS.PRO.price} · ${t('input.transcribeOnly')} ${Math.round(CREDIT_PACKS.PRO.hours)} ${t('credits.hours')} · ${t('subtitles.translation')} ${Math.round(
                 CREDIT_PACKS.PRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
             />
@@ -113,12 +119,24 @@ export default function CreditCard() {
             style={{ fontSize: '.85rem', color: colors.grayDark }}
           >
             {t('credits.description', {
+              packMicroPrice: CREDIT_PACKS.MICRO.price,
+              packMicroHours: Math.round(
+                CREDIT_PACKS.MICRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              ),
               pack1Price: CREDIT_PACKS.STARTER.price,
-              pack1Hours: Math.floor(CREDIT_PACKS.STARTER.hours),
+              pack1Hours: Math.round(
+                CREDIT_PACKS.STARTER.credits /
+                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              ),
               pack2Price: CREDIT_PACKS.STANDARD.price,
-              pack2Hours: Math.floor(CREDIT_PACKS.STANDARD.hours),
+              pack2Hours: Math.round(
+                CREDIT_PACKS.STANDARD.credits /
+                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              ),
               pack3Price: CREDIT_PACKS.PRO.price,
-              pack3Hours: Math.floor(CREDIT_PACKS.PRO.hours),
+              pack3Hours: Math.round(
+                CREDIT_PACKS.PRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              ),
             })}
           </p>
         </>

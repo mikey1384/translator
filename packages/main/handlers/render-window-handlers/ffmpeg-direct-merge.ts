@@ -22,8 +22,6 @@ interface DirectMergeOptions {
   signal?: AbortSignal;
 }
 
-
-
 export async function directMerge(
   opts: DirectMergeOptions
 ): Promise<{ success: boolean; finalOutputPath: string; error?: string }> {
@@ -132,28 +130,34 @@ export async function directMerge(
           try {
             if (process.platform === 'win32' && ff.pid) {
               // On Windows, use taskkill for reliable FFmpeg termination
-              log.info(`[ffmpeg-direct-merge ${operationId}] Force-killing Windows FFmpeg process tree PID: ${ff.pid}`);
-              forceKillWindows({ 
-                pid: ff.pid, 
-                logPrefix: `ffmpeg-direct-merge ${operationId}` 
-              }).then(killed => {
-                if (!killed) {
-                  // Fallback to signal if taskkill fails
-                  log.warn(`[ffmpeg-direct-merge ${operationId}] taskkill failed, trying SIGTERM fallback`);
+              log.info(
+                `[ffmpeg-direct-merge ${operationId}] Force-killing Windows FFmpeg process tree PID: ${ff.pid}`
+              );
+              forceKillWindows({
+                pid: ff.pid,
+                logPrefix: `ffmpeg-direct-merge ${operationId}`,
+              })
+                .then(killed => {
+                  if (!killed) {
+                    // Fallback to signal if taskkill fails
+                    log.warn(
+                      `[ffmpeg-direct-merge ${operationId}] taskkill failed, trying SIGTERM fallback`
+                    );
+                    try {
+                      ff.kill('SIGTERM');
+                    } catch {
+                      // Ignore errors since process might already be dead
+                    }
+                  }
+                })
+                .catch(() => {
+                  // Fallback to signal if taskkill throws
                   try {
                     ff.kill('SIGTERM');
                   } catch {
                     // Ignore errors since process might already be dead
                   }
-                }
-              }).catch(() => {
-                // Fallback to signal if taskkill throws
-                try {
-                  ff.kill('SIGTERM');
-                } catch {
-                  // Ignore errors since process might already be dead
-                }
-              });
+                });
             } else {
               // Non-Windows: use regular SIGINT
               ff.kill('SIGINT');

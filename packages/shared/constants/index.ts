@@ -58,11 +58,11 @@ export const GPT4_1_USD_PER_TOKEN_OUT = 8 / 1_000_000; // $0.008 / 1M
 // Apply backend token calibration to align with actual deduction
 export const TOKEN_CREDIT_CALIBRATION_UI = 0.7;
 export const CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
-  (PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT *
+  ((PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
 ); // ≈ 98 when PRICE_MARGIN=2, calibration=0.7
 export const CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
-  (PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT *
+  ((PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
 ); // ≈ 392 when PRICE_MARGIN=2, calibration=0.7
 
@@ -72,20 +72,20 @@ export const TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT = 16_000;
 export const TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION = 16_000;
 
 // Credits required to translate 1 hour of audio-equivalent text (prompt + completion)
-const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR =
-  Math.ceil(
-    (TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1000) *
-      CREDITS_PER_1K_TOKENS_PROMPT +
-      (TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1000) *
-        CREDITS_PER_1K_TOKENS_COMPLETION
-  );
+const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
+  (TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1000) *
+    CREDITS_PER_1K_TOKENS_PROMPT +
+    (TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1000) *
+      CREDITS_PER_1K_TOKENS_COMPLETION
+);
 
 // Review pass overhead: translation includes a review/edit pass with overlapping windows.
 // This multiplier captures extra prompt+completion tokens used by review.
 export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.8; // adjust with telemetry
 
 export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
-  BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
+  BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR *
+    TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
 );
 
 // Transcription: compute credits/hour from model USD rate with margin and calibration
@@ -98,11 +98,18 @@ export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = Math.ceil(
 export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
+const MICRO_CREDITS = 15_000; // $1 entry pack
 const STARTER_CREDITS = 150_000;
 const STANDARD_CREDITS = 350_000;
 const PRO_CREDITS = 2_400_000;
 
 export const CREDIT_PACKS = {
+  MICRO: {
+    id: 'MICRO' as const,
+    price: 1,
+    hours: MICRO_CREDITS / CREDITS_PER_AUDIO_HOUR,
+    credits: MICRO_CREDITS,
+  },
   STARTER: {
     id: 'STARTER' as const,
     price: 5,

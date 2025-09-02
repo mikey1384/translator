@@ -130,7 +130,7 @@
     "hours": "時間",
     "buyCredits": "クレジットを購入",
     "redirectingToPayment": "安全な決済を開いています…",
-    "description": "${{pack1Price}}（{{pack1Hours}}時間）、${{pack2Price}}（{{pack2Hours}}時間）、または${{pack3Price}}（{{pack3Hours}}時間）のクレジットパックからお選びください",
+    "description": "${{packMicroPrice}}（{{packMicroHours}}時間）、${{pack1Price}}（{{pack1Hours}}時間）、${{pack2Price}}（{{pack2Hours}}時間）、または${{pack3Price}}（{{pack3Hours}}時間）のクレジットパックからお選びください",
     "notEnough": "クレジットが不足しています。続行するにはクレジットを購入してください。"
   },
   "videoPlayer": {
@@ -268,5 +268,17 @@
   "messages": {
     "fileSaved": "ファイルを保存しました:\n{{path}}",
     "videoSaved": "動画を保存しました:\n{{path}}"
+  },
+  "cta": {
+    "generate": {
+      "title": "動画から字幕を取得",
+      "subtitle": "デバイスまたはリンクからの書き起こし/翻訳"
+    },
+    "edit": {
+      "title": "既存の字幕を編集",
+      "subtitle": "SRT を読み込み、編集、書き出し",
+      "pillOpen": ".srt を開く",
+      "pillMerge": "動画に結合"
+    }
   }
 }

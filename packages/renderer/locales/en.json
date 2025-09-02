@@ -148,8 +148,20 @@
     "hours": "hours",
     "buyCredits": "Buy Credits",
     "redirectingToPayment": "Opening secure checkout…",
-    "description": "Choose from ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), or ${{pack3Price}} ({{pack3Hours}}h) credit packs",
+    "description": "Choose from ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), or ${{pack3Price}} ({{pack3Hours}}h) credit packs",
     "notEnough": "Insufficient credits. Please purchase more credits to continue."
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "Enter Fullscreen",

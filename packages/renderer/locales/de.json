@@ -130,7 +130,7 @@
     "hours": "Stunden",
     "buyCredits": "Credits kaufen",
     "redirectingToPayment": "Sichere Zahlung öffnen…",
-    "description": "Wählen Sie aus ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), oder ${{pack3Price}} ({{pack3Hours}}h) Credit-Paketen",
+    "description": "Wählen Sie aus ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), oder ${{pack3Price}} ({{pack3Hours}}h) Credit-Paketen",
     "notEnough": "Unzureichende Credits. Bitte kaufen Sie mehr Credits, um fortzufahren."
   },
   "videoPlayer": {
@@ -268,5 +268,17 @@
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",
     "videoSaved": "Video gespeichert unter:\n{{path}}"
+  },
+  "cta": {
+    "generate": {
+      "title": "Untertitel aus einem Video erstellen",
+      "subtitle": "Transkribieren/Übersetzen von Gerät oder Link"
+    },
+    "edit": {
+      "title": "Vorhandene Untertitel bearbeiten",
+      "subtitle": "SRT laden, bearbeiten und exportieren",
+      "pillOpen": ".srt öffnen",
+      "pillMerge": "Mit Video zusammenführen"
+    }
   }
 }

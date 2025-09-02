@@ -67,7 +67,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
 
 export async function handleCreateCheckoutSession(
   _evt: Electron.IpcMainInvokeEvent,
-  packId: 'STARTER' | 'STANDARD' | 'PRO'
+  packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
 ): Promise<string | null> {
   try {
     const apiUrl = 'https://api.stage5.tools/payments/create-session';

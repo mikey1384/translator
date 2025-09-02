@@ -266,7 +266,19 @@
     "hours": "ore",
     "buyCredits": "Acquista crediti",
     "redirectingToPayment": "Apertura pagamento sicuro…",
-    "description": "Scegli tra pacchetti da ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), o ${{pack3Price}} ({{pack3Hours}}h)",
+    "description": "Scegli tra pacchetti da ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), o ${{pack3Price}} ({{pack3Hours}}h)",
     "notEnough": "Crediti insufficienti. Acquista più crediti per continuare."
+  },
+  "cta": {
+    "generate": {
+      "title": "Ottenere sottotitoli da un video",
+      "subtitle": "Trascrivere/tradurre da dispositivo o link"
+    },
+    "edit": {
+      "title": "Modificare un sottotitolo esistente",
+      "subtitle": "Caricare, modificare ed esportare SRT",
+      "pillOpen": "Apri .srt",
+      "pillMerge": "Unisci al video"
+    }
   }
 }

@@ -390,7 +390,7 @@ declare module '@shared-types/app' {
 
     getCreditBalance: () => Promise<CreditBalanceResult>;
     createCheckoutSession: (
-      packId: 'STARTER' | 'STANDARD' | 'PRO'
+      packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
     ) => Promise<string | null>;
     resetCredits: () => Promise<{
       success: boolean;

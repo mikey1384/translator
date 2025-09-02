@@ -234,7 +234,7 @@ const electronAPI = {
   getCreditBalance: (): Promise<CreditBalanceResult> =>
     ipcRenderer.invoke('get-credit-balance'),
 
-  createCheckoutSession: (packId: 'STARTER' | 'STANDARD' | 'PRO') =>
+  createCheckoutSession: (packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO') =>
     ipcRenderer.invoke('create-checkout-session', packId),
 
   // Admin credit reset function

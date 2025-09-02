@@ -130,7 +130,7 @@
     "hours": "小时",
     "buyCredits": "购买积分",
     "redirectingToPayment": "正在打开安全支付…",
-    "description": "选择${{pack1Price}}（{{pack1Hours}}小时）、${{pack2Price}}（{{pack2Hours}}小时）或${{pack3Price}}（{{pack3Hours}}小时）积分包",
+    "description": "选择 ${{packMicroPrice}}（{{packMicroHours}}小时）、${{pack1Price}}（{{pack1Hours}}小时）、${{pack2Price}}（{{pack2Hours}}小时）或 ${{pack3Price}}（{{pack3Hours}}小时）积分包",
     "notEnough": "积分不足。请购买更多积分以继续。"
   },
   "videoPlayer": {
@@ -268,5 +268,17 @@
   "messages": {
     "fileSaved": "文件已保存：\n{{path}}",
     "videoSaved": "视频已保存到：\n{{path}}"
+  },
+  "cta": {
+    "generate": {
+      "title": "从视频获取字幕",
+      "subtitle": "从设备或链接进行转写/翻译"
+    },
+    "edit": {
+      "title": "编辑现有字幕",
+      "subtitle": "加载、编辑并导出 SRT",
+      "pillOpen": "打开 .srt",
+      "pillMerge": "与视频合成"
+    }
   }
 }

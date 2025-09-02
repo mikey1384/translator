@@ -130,7 +130,7 @@
     "hours": "часы",
     "buyCredits": "Купить кредиты",
     "redirectingToPayment": "Открытие безопасной оплаты…",
-    "description": "Выберите из пакетов ${{pack1Price}} ({{pack1Hours}}ч), ${{pack2Price}} ({{pack2Hours}}ч), или ${{pack3Price}} ({{pack3Hours}}ч) кредитов",
+    "description": "Выберите из пакетов ${{packMicroPrice}} ({{packMicroHours}}ч), ${{pack1Price}} ({{pack1Hours}}ч), ${{pack2Price}} ({{pack2Hours}}ч), или ${{pack3Price}} ({{pack3Hours}}ч) кредитов",
     "notEnough": "Недостаточно кредитов. Пожалуйста, купите больше кредитов для продолжения."
   },
   "videoPlayer": {
@@ -268,5 +268,17 @@
   "messages": {
     "fileSaved": "Файл сохранен:\n{{path}}",
     "videoSaved": "Видео сохранено в:\n{{path}}"
+  },
+  "cta": {
+    "generate": {
+      "title": "Получить субтитры из видео",
+      "subtitle": "Транскрибировать/перевести с устройства или по ссылке"
+    },
+    "edit": {
+      "title": "Редактировать существующие субтитры",
+      "subtitle": "Загрузить, отредактировать и экспортировать SRT",
+      "pillOpen": "Открыть .srt",
+      "pillMerge": "Объединить с видео"
+    }
   }
 }

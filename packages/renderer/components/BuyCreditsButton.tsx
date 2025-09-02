@@ -4,7 +4,7 @@ import * as SystemIPC from '@ipc/system';
 import { useCreditStore } from '../state';
 
 interface BuyCreditsButtonProps {
-  packId: 'STARTER' | 'STANDARD' | 'PRO';
+  packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO';
   label: string;
 }
 

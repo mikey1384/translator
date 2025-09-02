@@ -266,7 +266,19 @@
     "hours": "horas",
     "buyCredits": "Comprar Créditos",
     "redirectingToPayment": "Abrindo checkout seguro…",
-    "description": "Escolha entre pacotes de ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), ou ${{pack3Price}} ({{pack3Hours}}h) de créditos",
+    "description": "Escolha entre pacotes de ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), ou ${{pack3Price}} ({{pack3Hours}}h) de créditos",
     "notEnough": "Créditos insuficientes. Por favor, compre mais créditos para continuar."
+  },
+  "cta": {
+    "generate": {
+      "title": "Obter legendas de um vídeo",
+      "subtitle": "Transcrever/traduzir do dispositivo ou link"
+    },
+    "edit": {
+      "title": "Editar uma legenda existente",
+      "subtitle": "Carregar, editar e exportar SRT",
+      "pillOpen": "Abrir .srt",
+      "pillMerge": "Mesclar com o vídeo"
+    }
   }
 }

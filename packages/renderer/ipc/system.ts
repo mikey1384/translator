@@ -32,7 +32,7 @@ export function getVideoMetadata(
 }
 
 export function createCheckoutSession(
-  packId: 'STARTER' | 'STANDARD' | 'PRO'
+  packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
 ): Promise<string | null> {
   return window.electron.createCheckoutSession(packId);
 }

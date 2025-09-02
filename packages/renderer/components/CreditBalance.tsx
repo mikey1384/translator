@@ -1,4 +1,5 @@
 import { css } from '@emotion/css';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCreditStore } from '../state';
 import { colors } from '../styles';
@@ -37,7 +38,12 @@ const errorText = css`
   font-size: 0.8rem;
 `;
 
-export default function CreditBalance() {
+interface CreditBalanceProps {
+  // Optional suffix shown inside the pill, e.g. "(6h)"
+  suffixText?: ReactNode;
+}
+
+export default function CreditBalance({ suffixText }: CreditBalanceProps) {
   const { t } = useTranslation();
   const { credits, hours, loading, error, checkoutPending } = useCreditStore();
 
@@ -84,6 +90,17 @@ export default function CreditBalance() {
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
         <span className={creditText}>{credits.toLocaleString()}</span>
+        {suffixText && (
+          <span
+            className={css`
+              color: ${colors.textDim};
+              font-weight: 400;
+              font-size: 0.85rem;
+            `}
+          >
+            {suffixText}
+          </span>
+        )}
       </div>
     );
   }

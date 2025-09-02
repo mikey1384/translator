@@ -191,19 +191,13 @@ export default function ProgressArea({
         >
           <h3>{title}</h3>
           {shouldShowCreditBalance && (
-            <>
-              <CreditBalance />
-              {typeof remainingHours === 'number' && (
-                <span
-                  className={css`
-                    color: ${colors.textDim};
-                    font-size: 0.85rem;
-                  `}
-                >
-                  ({remainingHours}h)
-                </span>
-              )}
-            </>
+            <CreditBalance
+              suffixText={
+                typeof remainingHours === 'number'
+                  ? `(${remainingHours.toLocaleString()}h)`
+                  : undefined
+              }
+            />
           )}
         </div>
         <button
