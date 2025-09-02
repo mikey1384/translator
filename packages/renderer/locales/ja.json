@@ -135,24 +135,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "フルスクリーン",
-    "exitFullscreen": "フルスクリーン終了",
-    "sideMenu": {
-      "changeVideo": "動画を変更",
-      "changeVideoAudio": "動画/音声を変更",
-      "enterUrlPlaceholder": "URLを入力...",
-      "qualityLow": "低",
-      "qualityMid": "中",
-      "qualityHigh": "高",
-      "load": "読み込み",
-      "loadVideoFromUrl": "URLから動画を読み込み",
-      "loadSrtFile": "SRTファイルを読み込み",
-      "loadDifferentSrtFile": "別のSRTファイルを読み込み",
-      "changeSrt": "SRTを変更",
-      "addSrt": "SRTを追加",
-      "scrollToCurrent": "現在の位置にスクロール",
-      "shiftLabel": "シフト:",
-      "applyShift": "適用"
-    }
+    "exitFullscreen": "フルスクリーン終了"
   },
   "regions": {
     "eastAsia": "東アジア",

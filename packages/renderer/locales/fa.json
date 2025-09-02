@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "ورود به حالت تمام صفحه",
-    "exitFullscreen": "خروج از حالت تمام صفحه",
-    "sideMenu": {
-      "changeVideo": "تغییر ویدیو",
-      "changeVideoAudio": "تغییر ویدیو / صوت",
-      "enterUrlPlaceholder": "آدرس را وارد کنید...",
-      "qualityLow": "پایین",
-      "qualityMid": "متوسط",
-      "qualityHigh": "بالا",
-      "load": "بارگذاری",
-      "loadVideoFromUrl": "بارگذاری ویدیو از آدرس",
-      "loadSrtFile": "بارگذاری فایل SRT",
-      "loadDifferentSrtFile": "بارگذاری فایل SRT دیگر",
-      "changeSrt": "تغییر SRT",
-      "addSrt": "افزودن SRT",
-      "scrollToCurrent": "پیمایش به موقعیت فعلی",
-      "shiftLabel": "جابجایی:",
-      "applyShift": "اعمال"
-    }
+    "exitFullscreen": "خروج از حالت تمام صفحه"
   },
   "regions": {
     "eastAsia": "شرق آسیا",

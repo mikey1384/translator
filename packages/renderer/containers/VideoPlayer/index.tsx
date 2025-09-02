@@ -11,7 +11,6 @@ import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
-import SideMenu from './SideMenu';
 import SpeedMenu from './SpeedMenu';
 
 import { colors } from '../../styles';
@@ -19,12 +18,7 @@ import Button from '../../components/Button';
 import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea';
 import { BASELINE_HEIGHT } from '../../../shared/constants';
 
-import {
-  useVideoStore,
-  useTaskStore,
-  useSubStore,
-  useSubtitlePrefs,
-} from '../../state';
+import { useVideoStore, useTaskStore, useSubtitlePrefs } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { useUrlStore } from '../../state/url-store';
@@ -255,30 +249,7 @@ const playerWrapperStyles = (isFullScreen: boolean) => css`
   ${isFullScreen ? 'height: 100%;' : ''}
 `;
 
-const controlsWrapperStyles = (isFullScreen: boolean) => css`
-  flex-shrink: 0;
-  transition: background-color 0.3s ease;
-  ${isFullScreen
-    ? `
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100px;
-    background-color: transparent;
-    border-top: none;
-    z-index: 10;
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.95);
-      border-top: 1px solid ${colors.border};
-    }
-  `
-    : `
-    width: 240px;
-    border-top: 1px solid ${colors.border};
-  `}
-`;
+// Side menu removed; no separate controls column needed
 
 const fmt = (s: number) => {
   if (Number.isNaN(s)) return '00:00';
@@ -299,7 +270,7 @@ export default function VideoPlayer() {
   const videoUrl = useVideoStore(s => s.url);
   const resumeAt = useVideoStore(s => s.resumeAt);
   const togglePlay = useVideoStore(s => s.handleTogglePlay);
-  const selectVideo = useVideoStore(s => s.openFileDialog);
+  // Side menu removed; no need for file dialog here
   const isAudioOnly = useVideoStore(s => s.isAudioOnly);
   const videoPath = useVideoStore(s => s.path);
   const { merge, translation, transcription } = useTaskStore();
@@ -552,10 +523,7 @@ export default function VideoPlayer() {
     };
   }, [videoPath]);
 
-  const pokeFsControls = () => {
-    if (!isFullScreen) return;
-    restartHideTimer();
-  };
+  // Side menu removed; no need to manually poke fullscreen controls
 
   if (!videoUrl) return null;
 
@@ -755,17 +723,7 @@ export default function VideoPlayer() {
           </div>
         </div>
 
-        {!isFullScreen && (
-          <div className={controlsWrapperStyles(false)}>
-            <SideMenu
-              onShiftAllSubtitles={useSubStore.getState().shiftAll}
-              onScrollToCurrentSubtitle={useSubStore.getState().scrollToCurrent}
-              onSelectVideoClick={selectVideo}
-              onSetSubtitleSegments={useSubStore.getState().load}
-              onUiInteraction={pokeFsControls}
-            />
-          </div>
-        )}
+        {/* Side menu removed */}
       </div>
     </div>
   );

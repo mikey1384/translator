@@ -37,6 +37,11 @@ interface Actions {
   togglePlay(): Promise<void>;
   handleTogglePlay(): void;
   openFileDialog(): Promise<void>;
+  // New: mount a video without resetting current subtitles
+  openFileDialogPreserveSubs(): Promise<void>;
+  mountFilePreserveSubs(
+    file: File | { name: string | undefined; path: string }
+  ): Promise<void>;
   markReady(): void;
   reset(): void;
   savePosition(position: number): void;
@@ -246,6 +251,107 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       import('../state/ui-store').then(m =>
         m.useUIStore.getState().setInputMode('file')
       );
+    },
+
+    async openFileDialogPreserveSubs() {
+      const res = await FileIPC.open({
+        properties: ['openFile'],
+        filters: [
+          {
+            name: 'Media',
+            extensions: [
+              'mp4',
+              'mkv',
+              'avi',
+              'mov',
+              'webm',
+              'mp3',
+              'wav',
+              'aac',
+              'ogg',
+              'flac',
+            ],
+          },
+        ],
+      });
+      if (res.canceled || !res.filePaths.length) return;
+      const p = res.filePaths[0];
+      try {
+        await get().mountFilePreserveSubs({ name: p.split(/[\\/]/).pop()!, path: p });
+      } catch (err) {
+        console.error('[video-store] Error mounting file (preserve subs):', err);
+      }
+      import('../state/ui-store').then(m =>
+        m.useUIStore.getState().setInputMode('file')
+      );
+    },
+
+    async mountFilePreserveSubs(fd: File | { name: string; path: string }) {
+      const prev = get();
+      // Clean up previous blob URL if any
+      if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
+
+      // Stop position saving for previous video
+      get().stopPositionSaving();
+
+      if ('path' in fd) {
+        const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;
+        set(s => {
+          s.file = fd as any;
+          s.path = fd.path;
+          s.url = url;
+          s.resumeAt = null;
+        });
+        await analyse(fd.path);
+        if (fd.path) {
+          try {
+            const saved = await VideoIPC.getPlaybackPosition(fd.path);
+            if (saved != null) set({ resumeAt: saved });
+          } catch (err) {
+            console.error('[video-store] Failed to load saved position:', err);
+          }
+          attachSaver(fd.path);
+          get().startPositionSaving();
+        }
+        return;
+      }
+
+      // Fallback: support File object mounting
+      if ((fd as any)._blobUrl) {
+        const b = fd as any;
+        set(s => {
+          s.file = b;
+          s.path = b._originalPath ?? null;
+          s.url = b._blobUrl;
+          s.resumeAt = null;
+        });
+        if (b._originalPath) {
+          await analyse(b._originalPath);
+          try {
+            const saved = await VideoIPC.getPlaybackPosition(b._originalPath);
+            if (saved != null) set({ resumeAt: saved });
+          } catch (err) {
+            console.error('[video-store] Failed to load saved position:', err);
+          }
+          attachSaver(b._originalPath);
+          get().startPositionSaving();
+        }
+        return;
+      }
+
+      const blobUrl = URL.createObjectURL(fd as File);
+      set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null, resumeAt: null });
+      if ((fd as any).path) {
+        await analyse((fd as any).path);
+        try {
+          const saved = await VideoIPC.getPlaybackPosition((fd as any).path);
+          if (saved != null) set({ resumeAt: saved });
+        } catch (err) {
+          console.error('[video-store] Failed to load saved position:', err);
+        }
+        attachSaver((fd as any).path);
+        get().startPositionSaving();
+      }
     },
 
     markReady() {

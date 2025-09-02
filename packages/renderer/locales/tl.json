@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Pumasok sa Fullscreen",
-    "exitFullscreen": "Lumabas sa Fullscreen",
-    "sideMenu": {
-      "changeVideo": "Baguhin ang Video",
-      "changeVideoAudio": "Baguhin ang Video / Audio",
-      "enterUrlPlaceholder": "Ilagay ang URL...",
-      "qualityLow": "Mababa",
-      "qualityMid": "Katamtaman",
-      "qualityHigh": "Mataas",
-      "load": "I-load",
-      "loadVideoFromUrl": "I-load ang video mula sa URL",
-      "loadSrtFile": "I-load ang SRT file",
-      "loadDifferentSrtFile": "I-load ang ibang SRT file",
-      "changeSrt": "Baguhin ang SRT",
-      "addSrt": "Dagdagan ng SRT",
-      "scrollToCurrent": "Mag-scroll sa kasalukuyan",
-      "shiftLabel": "Shift:",
-      "applyShift": "I-apply"
-    }
+    "exitFullscreen": "Lumabas sa Fullscreen"
   },
   "regions": {
     "eastAsia": "Silangang Asya",

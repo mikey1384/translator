@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Gaan na Volskerm",
-    "exitFullscreen": "Verlaat Volskerm",
-    "sideMenu": {
-      "changeVideo": "Verander Video",
-      "changeVideoAudio": "Verander Video / Audio",
-      "enterUrlPlaceholder": "Voer URL in...",
-      "qualityLow": "Laag",
-      "qualityMid": "Medium",
-      "qualityHigh": "Hoog",
-      "load": "Laai",
-      "loadVideoFromUrl": "Laai video van URL",
-      "loadSrtFile": "Laai 'n SRT-lêer",
-      "loadDifferentSrtFile": "Laai 'n ander SRT-lêer",
-      "changeSrt": "Verander SRT",
-      "addSrt": "Voeg SRT by",
-      "scrollToCurrent": "Rol na huidige",
-      "shiftLabel": "Skuif:",
-      "applyShift": "Pas toe"
-    }
+    "exitFullscreen": "Verlaat Volskerm"
   },
   "regions": {
     "eastAsia": "Oos-Asië",

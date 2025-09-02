@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "進入全螢幕",
-    "exitFullscreen": "離開全螢幕",
-    "sideMenu": {
-      "changeVideo": "更換影片",
-      "changeVideoAudio": "更換影片/音訊",
-      "enterUrlPlaceholder": "輸入網址...",
-      "qualityLow": "低",
-      "qualityMid": "中",
-      "qualityHigh": "高",
-      "load": "載入",
-      "loadVideoFromUrl": "從網址載入影片",
-      "loadSrtFile": "載入SRT檔案",
-      "loadDifferentSrtFile": "載入不同的SRT檔案",
-      "changeSrt": "更換SRT",
-      "addSrt": "添加SRT",
-      "scrollToCurrent": "滾動到當前位置",
-      "shiftLabel": "偏移:",
-      "applyShift": "套用"
-    }
+    "exitFullscreen": "離開全螢幕"
   },
   "regions": {
     "eastAsia": "東亞",

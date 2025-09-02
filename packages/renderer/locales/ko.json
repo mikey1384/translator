@@ -165,24 +165,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "전체화면 진입",
-    "exitFullscreen": "전체화면 종료",
-    "sideMenu": {
-      "changeVideo": "비디오 변경",
-      "changeVideoAudio": "비디오/오디오 변경",
-      "enterUrlPlaceholder": "URL 입력...",
-      "qualityLow": "저",
-      "qualityMid": "중",
-      "qualityHigh": "고",
-      "load": "로드",
-      "loadVideoFromUrl": "URL에서 비디오 로드",
-      "loadSrtFile": "SRT 파일 로드",
-      "loadDifferentSrtFile": "다른 SRT 파일 로드",
-      "changeSrt": "SRT 변경",
-      "addSrt": "SRT 추가",
-      "scrollToCurrent": "현재 자막으로 스크롤",
-      "shiftLabel": "모든 자막 이동 (초):",
-      "applyShift": "이동 적용"
-    }
+    "exitFullscreen": "전체화면 종료"
   },
   "regions": {
     "eastAsia": "동아시아",

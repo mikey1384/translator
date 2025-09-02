@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Ingia Skrini Kamili",
-    "exitFullscreen": "Toka Skrini Kamili",
-    "sideMenu": {
-      "changeVideo": "Badilisha Video",
-      "changeVideoAudio": "Badilisha Video / Audio",
-      "enterUrlPlaceholder": "Ingiza URL...",
-      "qualityLow": "Chini",
-      "qualityMid": "Kati",
-      "qualityHigh": "Juu",
-      "load": "Pakia",
-      "loadVideoFromUrl": "Pakia video kutoka URL",
-      "loadSrtFile": "Pakia faili ya SRT",
-      "loadDifferentSrtFile": "Pakia faili tofauti ya SRT",
-      "changeSrt": "Badilisha SRT",
-      "addSrt": "Ongeza SRT",
-      "scrollToCurrent": "Sogeza hadi ya sasa",
-      "shiftLabel": "Sogeza:",
-      "applyShift": "Tumia"
-    }
+    "exitFullscreen": "Toka Skrini Kamili"
   },
   "regions": {
     "eastAsia": "Asia ya Mashariki",

@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Είσοδος σε πλήρη οθόνη",
-    "exitFullscreen": "Έξοδος από πλήρη οθόνη",
-    "sideMenu": {
-      "changeVideo": "Αλλαγή Βίντεο",
-      "changeVideoAudio": "Αλλαγή Βίντεο / Ήχου",
-      "enterUrlPlaceholder": "Εισαγωγή URL...",
-      "qualityLow": "Χαμηλή",
-      "qualityMid": "Μεσαία",
-      "qualityHigh": "Υψηλή",
-      "load": "Φόρτωση",
-      "loadVideoFromUrl": "Φόρτωση βίντεο από URL",
-      "loadSrtFile": "Φόρτωση αρχείου SRT",
-      "loadDifferentSrtFile": "Φόρτωση διαφορετικού αρχείου SRT",
-      "changeSrt": "Αλλαγή SRT",
-      "addSrt": "Προσθήκη SRT",
-      "scrollToCurrent": "Κύλιση στο τρέχον",
-      "shiftLabel": "Μετατόπιση:",
-      "applyShift": "Εφαρμογή"
-    }
+    "exitFullscreen": "Έξοδος από πλήρη οθόνη"
   },
   "regions": {
     "eastAsia": "Ανατολική Ασία",

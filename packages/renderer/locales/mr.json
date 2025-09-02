@@ -124,24 +124,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "पूर्ण स्क्रीनमध्ये जा",
-    "exitFullscreen": "पूर्ण स्क्रीनमधून बाहेर पडा",
-    "sideMenu": {
-      "changeVideo": "व्हिडिओ बदला",
-      "changeVideoAudio": "व्हिडिओ / ऑडिओ बदला",
-      "enterUrlPlaceholder": "URL टाका...",
-      "qualityLow": "कमी",
-      "qualityMid": "मध्यम",
-      "qualityHigh": "उच्च",
-      "load": "लोड करा",
-      "loadVideoFromUrl": "URL वरून व्हिडिओ लोड करा",
-      "loadSrtFile": "SRT फाईल लोड करा",
-      "loadDifferentSrtFile": "वेगळी SRT फाईल लोड करा",
-      "changeSrt": "SRT बदला",
-      "addSrt": "SRT जोडा",
-      "scrollToCurrent": "सध्याच्या स्थानावर स्क्रोल करा",
-      "shiftLabel": "शिफ्ट:",
-      "applyShift": "लागू करा"
-    }
+    "exitFullscreen": "पूर्ण स्क्रीनमधून बाहेर पडा"
   },
   "regions": {
     "eastAsia": "पूर्व आशिया",

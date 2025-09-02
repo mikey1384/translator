@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "পূর্ণস্ক্রীনে প্রবেশ করুন",
-    "exitFullscreen": "পূর্ণস্ক্রীন থেকে বেরিয়ে আসুন",
-    "sideMenu": {
-      "changeVideo": "ভিডিও পরিবর্তন করুন",
-      "changeVideoAudio": "ভিডিও/অডিও পরিবর্তন করুন",
-      "enterUrlPlaceholder": "URL লিখুন...",
-      "qualityLow": "নিম্ন",
-      "qualityMid": "মধ্য",
-      "qualityHigh": "উচ্চ",
-      "load": "লোড",
-      "loadVideoFromUrl": "URL থেকে ভিডিও লোড করুন",
-      "loadSrtFile": "একটি SRT ফাইল লোড করুন",
-      "loadDifferentSrtFile": "একটি ভিন্ন SRT ফাইল লোড করুন",
-      "changeSrt": "SRT পরিবর্তন করুন",
-      "addSrt": "SRT যোগ করুন",
-      "scrollToCurrent": "বর্তমানে স্ক্রোল করুন",
-      "shiftLabel": "শিফট:",
-      "applyShift": "প্রয়োগ করুন"
-    }
+    "exitFullscreen": "পূর্ণস্ক্রীন থেকে বেরিয়ে আসুন"
   },
   "regions": {
     "eastAsia": "পূর্ব এশিয়া",

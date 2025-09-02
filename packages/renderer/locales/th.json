@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "เข้าสู่โหมดเต็มจอ",
-    "exitFullscreen": "ออกจากโหมดเต็มจอ",
-    "sideMenu": {
-      "changeVideo": "เปลี่ยนวิดีโอ",
-      "changeVideoAudio": "เปลี่ยนวิดีโอ / เสียง",
-      "enterUrlPlaceholder": "ป้อน URL...",
-      "qualityLow": "ต่ำ",
-      "qualityMid": "ปานกลาง",
-      "qualityHigh": "สูง",
-      "load": "โหลด",
-      "loadVideoFromUrl": "โหลดวิดีโอจาก URL",
-      "loadSrtFile": "โหลดไฟล์ SRT",
-      "loadDifferentSrtFile": "โหลดไฟล์ SRT อื่น",
-      "changeSrt": "เปลี่ยน SRT",
-      "addSrt": "เพิ่ม SRT",
-      "scrollToCurrent": "เลื่อนไปยังปัจจุบัน",
-      "shiftLabel": "เลื่อน:",
-      "applyShift": "นำไปใช้"
-    }
+    "exitFullscreen": "ออกจากโหมดเต็มจอ"
   },
   "regions": {
     "eastAsia": "เอเชียตะวันออก",

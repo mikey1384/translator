@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Siirry koko näytön tilaan",
-    "exitFullscreen": "Poistu koko näytön tilasta",
-    "sideMenu": {
-      "changeVideo": "Vaihda video",
-      "changeVideoAudio": "Vaihda video / ääni",
-      "enterUrlPlaceholder": "Syötä URL...",
-      "qualityLow": "Matala",
-      "qualityMid": "Keskitaso",
-      "qualityHigh": "Korkea",
-      "load": "Lataa",
-      "loadVideoFromUrl": "Lataa video URL-osoitteesta",
-      "loadSrtFile": "Lataa SRT-tiedosto",
-      "loadDifferentSrtFile": "Lataa eri SRT-tiedosto",
-      "changeSrt": "Vaihda SRT",
-      "addSrt": "Lisää SRT",
-      "scrollToCurrent": "Vieritä nykyiseen kohtaan",
-      "shiftLabel": "Siirrä:",
-      "applyShift": "Käytä"
-    }
+    "exitFullscreen": "Poistu koko näytön tilasta"
   },
   "regions": {
     "eastAsia": "Itä-Aasia",

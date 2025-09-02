@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Volledig scherm",
-    "exitFullscreen": "Volledig scherm verlaten",
-    "sideMenu": {
-      "changeVideo": "Video wijzigen",
-      "changeVideoAudio": "Video / Audio wijzigen",
-      "enterUrlPlaceholder": "URL invoeren...",
-      "qualityLow": "Laag",
-      "qualityMid": "Gemiddeld",
-      "qualityHigh": "Hoog",
-      "load": "Laden",
-      "loadVideoFromUrl": "Video van URL laden",
-      "loadSrtFile": "Een SRT-bestand laden",
-      "loadDifferentSrtFile": "Een ander SRT-bestand laden",
-      "changeSrt": "SRT wijzigen",
-      "addSrt": "SRT toevoegen",
-      "scrollToCurrent": "Naar huidige scrollen",
-      "shiftLabel": "Verschuiven:",
-      "applyShift": "Toepassen"
-    }
+    "exitFullscreen": "Volledig scherm verlaten"
   },
   "regions": {
     "eastAsia": "Oost-Azië",

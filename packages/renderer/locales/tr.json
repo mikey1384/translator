@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Tam Ekrana Geç",
-    "exitFullscreen": "Tam Ekrandan Çık",
-    "sideMenu": {
-      "changeVideo": "Videoyu Değiştir",
-      "changeVideoAudio": "Video / Audio Değiştir",
-      "enterUrlPlaceholder": "URL girin...",
-      "qualityLow": "Düşük",
-      "qualityMid": "Orta",
-      "qualityHigh": "Yüksek",
-      "load": "Yükle",
-      "loadVideoFromUrl": "URL'den video yükle",
-      "loadSrtFile": "SRT dosyası yükle",
-      "loadDifferentSrtFile": "Farklı bir SRT dosyası yükle",
-      "changeSrt": "SRT Değiştir",
-      "addSrt": "SRT Ekle",
-      "scrollToCurrent": "Şimdiki konuma kaydır",
-      "shiftLabel": "Kaydır:",
-      "applyShift": "Uygula"
-    }
+    "exitFullscreen": "Tam Ekrandan Çık"
   },
   "regions": {
     "eastAsia": "Doğu Asya",

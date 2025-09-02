@@ -638,6 +638,49 @@ export const mergeButtonStyles = css`
   ${buttonGradientStyles.purple}
 `;
 
+// Tasteful, dark-theme friendly accent button
+export const subtleAccentButton = css`
+  position: relative;
+  color: ${colors.dark} !important;
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(0, 0, 0, 0.12)
+    ),
+    rgba(28, 28, 28, 0.85);
+  /* Always show a faint blue edge */
+  border: 1px solid ${colors.primary}2A; /* subtle blue trace */
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 2px ${colors.primary}14; /* faint outer ring */
+  backdrop-filter: blur(6px);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.06s ease;
+
+  &:hover:not(:disabled) {
+    border-color: ${colors.primary};
+    box-shadow:
+      0 6px 22px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 0 4px ${colors.primary}33; /* stronger glow */
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px ${colors.primary}33;
+  }
+`;
+
 export const noMarginStyle = css`
   margin-bottom: 0;
 `;

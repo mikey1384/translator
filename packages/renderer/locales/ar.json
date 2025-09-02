@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "دخول وضع الشاشة الكاملة",
-    "exitFullscreen": "الخروج من وضع الشاشة الكاملة",
-    "sideMenu": {
-      "changeVideo": "تغيير الفيديو",
-      "changeVideoAudio": "تغيير الفيديو / الصوت",
-      "enterUrlPlaceholder": "أدخل الرابط...",
-      "qualityLow": "منخفضة",
-      "qualityMid": "متوسطة",
-      "qualityHigh": "عالية",
-      "load": "تحميل",
-      "loadVideoFromUrl": "تحميل فيديو من الرابط",
-      "loadSrtFile": "تحميل ملف SRT",
-      "loadDifferentSrtFile": "تحميل ملف SRT مختلف",
-      "changeSrt": "تغيير SRT",
-      "addSrt": "إضافة SRT",
-      "scrollToCurrent": "التمرير إلى الحالي",
-      "shiftLabel": "تحريك:",
-      "applyShift": "تطبيق"
-    }
+    "exitFullscreen": "الخروج من وضع الشاشة الكاملة"
   },
   "regions": {
     "eastAsia": "شرق آسيا",

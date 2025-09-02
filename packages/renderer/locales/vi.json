@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Vào Toàn màn hình",
-    "exitFullscreen": "Thoát Toàn màn hình",
-    "sideMenu": {
-      "changeVideo": "Thay đổi video",
-      "changeVideoAudio": "Thay đổi video / âm thanh",
-      "enterUrlPlaceholder": "Nhập URL...",
-      "qualityLow": "Thấp",
-      "qualityMid": "Trung bình",
-      "qualityHigh": "Cao",
-      "load": "Tải",
-      "loadVideoFromUrl": "Tải video từ URL",
-      "loadSrtFile": "Tải tệp SRT",
-      "loadDifferentSrtFile": "Tải tệp SRT khác",
-      "changeSrt": "Thay đổi SRT",
-      "addSrt": "Thêm SRT",
-      "scrollToCurrent": "Cuộn đến hiện tại",
-      "shiftLabel": "Dịch chuyển:",
-      "applyShift": "Áp dụng"
-    }
+    "exitFullscreen": "Thoát Toàn màn hình"
   },
   "regions": {
     "eastAsia": "Đông Á",

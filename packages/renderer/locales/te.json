@@ -124,24 +124,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "పూర్తి స్క్రీన్‌లోకి వెళ్లండి",
-    "exitFullscreen": "పూర్తి స్క్రీన్ నుండి నిష్క్రమించండి",
-    "sideMenu": {
-      "changeVideo": "వీడియోను మార్చండి",
-      "changeVideoAudio": "వీడియో / ఆడియో మార్చండి",
-      "enterUrlPlaceholder": "URL ను నమోదు చేయండి...",
-      "qualityLow": "తక్కువ",
-      "qualityMid": "మధ్యస్థం",
-      "qualityHigh": "అధిక",
-      "load": "లోడ్ చేయండి",
-      "loadVideoFromUrl": "URL నుండి వీడియోను లోడ్ చేయండి",
-      "loadSrtFile": "SRT ఫైల్‌ను లోడ్ చేయండి",
-      "loadDifferentSrtFile": "వేరొక SRT ఫైల్‌ను లోడ్ చేయండి",
-      "changeSrt": "SRT ను మార్చండి",
-      "addSrt": "SRT ను జోడించండి",
-      "scrollToCurrent": "ప్రస్తుత స్థానానికి స్క్రోల్ చేయండి",
-      "shiftLabel": "షిఫ్ట్:",
-      "applyShift": "వర్తించు"
-    }
+    "exitFullscreen": "పూర్తి స్క్రీన్ నుండి నిష్క్రమించండి"
   },
   "regions": {
     "eastAsia": "తూర్పు ఆసియా",

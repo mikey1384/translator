@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Увійти в повноекранний режим",
-    "exitFullscreen": "Вийти з повноекранного режиму",
-    "sideMenu": {
-      "changeVideo": "Змінити відео",
-      "changeVideoAudio": "Змінити відео / аудіо",
-      "enterUrlPlaceholder": "Введіть URL...",
-      "qualityLow": "Низька",
-      "qualityMid": "Середня",
-      "qualityHigh": "Висока",
-      "load": "Завантажити",
-      "loadVideoFromUrl": "Завантажити відео з URL",
-      "loadSrtFile": "Завантажити файл SRT",
-      "loadDifferentSrtFile": "Завантажити інший файл SRT",
-      "changeSrt": "Змінити SRT",
-      "addSrt": "Додати SRT",
-      "scrollToCurrent": "Прокрутити до поточного",
-      "shiftLabel": "Зсув:",
-      "applyShift": "Застосувати"
-    }
+    "exitFullscreen": "Вийти з повноекранного режиму"
   },
   "regions": {
     "eastAsia": "Східна Азія",

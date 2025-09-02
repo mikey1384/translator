@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Intră în ecran complet",
-    "exitFullscreen": "Ieși din ecran complet",
-    "sideMenu": {
-      "changeVideo": "Schimbă Video",
-      "changeVideoAudio": "Schimbă Video / Audio",
-      "enterUrlPlaceholder": "Introduceți URL...",
-      "qualityLow": "Joasă",
-      "qualityMid": "Medie",
-      "qualityHigh": "Înaltă",
-      "load": "Încarcă",
-      "loadVideoFromUrl": "Încarcă video din URL",
-      "loadSrtFile": "Încarcă un fișier SRT",
-      "loadDifferentSrtFile": "Încarcă un fișier SRT diferit",
-      "changeSrt": "Schimbă SRT",
-      "addSrt": "Adaugă SRT",
-      "scrollToCurrent": "Derulează la cel curent",
-      "shiftLabel": "Decalaj:",
-      "applyShift": "Aplică"
-    }
+    "exitFullscreen": "Ieși din ecran complet"
   },
   "regions": {
     "eastAsia": "Asia de Est",

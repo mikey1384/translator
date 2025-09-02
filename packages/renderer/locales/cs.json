@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Vstup do celé obrazovky",
-    "exitFullscreen": "Opustit celou obrazovku",
-    "sideMenu": {
-      "changeVideo": "Změnit video",
-      "changeVideoAudio": "Změnit video / audio",
-      "enterUrlPlaceholder": "Zadejte URL...",
-      "qualityLow": "Nízká",
-      "qualityMid": "Střední",
-      "qualityHigh": "Vysoká",
-      "load": "Načíst",
-      "loadVideoFromUrl": "Načíst video z URL",
-      "loadSrtFile": "Načíst SRT soubor",
-      "loadDifferentSrtFile": "Načíst jiný SRT soubor",
-      "changeSrt": "Změnit SRT",
-      "addSrt": "Přidat SRT",
-      "scrollToCurrent": "Přejít na aktuální",
-      "shiftLabel": "Posun:",
-      "applyShift": "Použít"
-    }
+    "exitFullscreen": "Opustit celou obrazovku"
   },
   "regions": {
     "eastAsia": "Východní Asie",

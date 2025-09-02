@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Teljes képernyős mód",
-    "exitFullscreen": "Kilépés a teljes képernyős módból",
-    "sideMenu": {
-      "changeVideo": "Videó cseréje",
-      "changeVideoAudio": "Videó / hang csere",
-      "enterUrlPlaceholder": "URL megadása...",
-      "qualityLow": "Alacsony",
-      "qualityMid": "Közepes",
-      "qualityHigh": "Magas",
-      "load": "Betöltés",
-      "loadVideoFromUrl": "Videó betöltése URL-ből",
-      "loadSrtFile": "SRT fájl betöltése",
-      "loadDifferentSrtFile": "Másik SRT fájl betöltése",
-      "changeSrt": "SRT cseréje",
-      "addSrt": "SRT hozzáadása",
-      "scrollToCurrent": "Görgetés az aktuálishoz",
-      "shiftLabel": "Eltolás:",
-      "applyShift": "Alkalmazás"
-    }
+    "exitFullscreen": "Kilépés a teljes képernyős módból"
   },
   "regions": {
     "eastAsia": "Kelet-Ázsia",

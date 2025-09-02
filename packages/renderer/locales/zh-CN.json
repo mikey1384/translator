@@ -135,24 +135,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "进入全屏",
-    "exitFullscreen": "退出全屏",
-    "sideMenu": {
-      "changeVideo": "更换视频",
-      "changeVideoAudio": "更换视频/音频",
-      "enterUrlPlaceholder": "输入网址...",
-      "qualityLow": "低",
-      "qualityMid": "中",
-      "qualityHigh": "高",
-      "load": "加载",
-      "loadVideoFromUrl": "从网址加载视频",
-      "loadSrtFile": "加载SRT文件",
-      "loadDifferentSrtFile": "加载不同的SRT文件",
-      "changeSrt": "更换SRT",
-      "addSrt": "添加SRT",
-      "scrollToCurrent": "滚动到当前位置",
-      "shiftLabel": "偏移:",
-      "applyShift": "应用"
-    }
+    "exitFullscreen": "退出全屏"
   },
   "regions": {
     "eastAsia": "东亚",

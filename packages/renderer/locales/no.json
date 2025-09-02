@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Gå til fullskjerm",
-    "exitFullscreen": "Avslutt fullskjerm",
-    "sideMenu": {
-      "changeVideo": "Bytt video",
-      "changeVideoAudio": "Bytt video / audio",
-      "enterUrlPlaceholder": "Skriv inn URL...",
-      "qualityLow": "Lav",
-      "qualityMid": "Medium",
-      "qualityHigh": "Høy",
-      "load": "Last",
-      "loadVideoFromUrl": "Last video fra URL",
-      "loadSrtFile": "Last en SRT-fil",
-      "loadDifferentSrtFile": "Last en annen SRT-fil",
-      "changeSrt": "Bytt SRT",
-      "addSrt": "Legg til SRT",
-      "scrollToCurrent": "Rull til nåværende",
-      "shiftLabel": "Forskyv:",
-      "applyShift": "Bruk"
-    }
+    "exitFullscreen": "Avslutt fullskjerm"
   },
   "regions": {
     "eastAsia": "Øst-Asia",

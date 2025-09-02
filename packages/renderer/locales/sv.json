@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Aktivera helskärm",
-    "exitFullscreen": "Avsluta helskärm",
-    "sideMenu": {
-      "changeVideo": "Byt video",
-      "changeVideoAudio": "Byt video / ljud",
-      "enterUrlPlaceholder": "Ange URL...",
-      "qualityLow": "Låg",
-      "qualityMid": "Mellan",
-      "qualityHigh": "Hög",
-      "load": "Ladda",
-      "loadVideoFromUrl": "Ladda video från URL",
-      "loadSrtFile": "Ladda en SRT-fil",
-      "loadDifferentSrtFile": "Ladda en annan SRT-fil",
-      "changeSrt": "Byt SRT",
-      "addSrt": "Lägg till SRT",
-      "scrollToCurrent": "Bläddra till aktuell",
-      "shiftLabel": "Förskjutning:",
-      "applyShift": "Tillämpa"
-    }
+    "exitFullscreen": "Avsluta helskärm"
   },
   "regions": {
     "eastAsia": "Östasien",

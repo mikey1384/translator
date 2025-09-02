@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Masuk Layar Penuh",
-    "exitFullscreen": "Keluar dari Layar Penuh",
-    "sideMenu": {
-      "changeVideo": "Ubah Video",
-      "changeVideoAudio": "Ubah Video / Audio",
-      "enterUrlPlaceholder": "Masukkan URL...",
-      "qualityLow": "Rendah",
-      "qualityMid": "Sedang",
-      "qualityHigh": "Tinggi",
-      "load": "Muat",
-      "loadVideoFromUrl": "Muat video dari URL",
-      "loadSrtFile": "Muat berkas SRT",
-      "loadDifferentSrtFile": "Muat berkas SRT yang berbeda",
-      "changeSrt": "Ubah SRT",
-      "addSrt": "Tambah SRT",
-      "scrollToCurrent": "Gulir ke saat ini",
-      "shiftLabel": "Geser:",
-      "applyShift": "Terapkan"
-    }
+    "exitFullscreen": "Keluar dari Layar Penuh"
   },
   "regions": {
     "eastAsia": "Asia Timur",

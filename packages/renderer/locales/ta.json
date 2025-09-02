@@ -124,24 +124,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "முழுத்திரையில் நுழை",
-    "exitFullscreen": "முழுத்திரையிலிருந்து வெளியேறு",
-    "sideMenu": {
-      "changeVideo": "காணொளியை மாற்று",
-      "changeVideoAudio": "காணொளி / ஒலியை மாற்று",
-      "enterUrlPlaceholder": "URL ஐ உள்ளிடுக...",
-      "qualityLow": "குறைவு",
-      "qualityMid": "நடுத்தரம்",
-      "qualityHigh": "உயர்",
-      "load": "ஏற்று",
-      "loadVideoFromUrl": "URL இலிருந்து காணொளியை ஏற்று",
-      "loadSrtFile": "SRT கோப்பை ஏற்று",
-      "loadDifferentSrtFile": "வேறு SRT கோப்பை ஏற்று",
-      "changeSrt": "SRT ஐ மாற்று",
-      "addSrt": "SRT ஐச் சேர்",
-      "scrollToCurrent": "தற்போதைய இடத்திற்குச் செல்",
-      "shiftLabel": "நகர்த்து:",
-      "applyShift": "பயன்படுத்து"
-    }
+    "exitFullscreen": "முழுத்திரையிலிருந்து வெளியேறு"
   },
   "regions": {
     "eastAsia": "கிழக்கு ஆசியா",

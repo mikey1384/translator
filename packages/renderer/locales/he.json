@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "היכנס למסך מלא",
-    "exitFullscreen": "צא ממסך מלא",
-    "sideMenu": {
-      "changeVideo": "החלף וידאו",
-      "changeVideoAudio": "החלף וידאו / שונה",
-      "enterUrlPlaceholder": "הזן כתובת URL...",
-      "qualityLow": "נמוכה",
-      "qualityMid": "בינונית",
-      "qualityHigh": "גבוהה",
-      "load": "טען",
-      "loadVideoFromUrl": "טען וידאו מכתובת URL",
-      "loadSrtFile": "טען קובץ SRT",
-      "loadDifferentSrtFile": "טען קובץ SRT אחר",
-      "changeSrt": "שנה SRT",
-      "addSrt": "הוסף SRT",
-      "scrollToCurrent": "גלול אל הנוכחי",
-      "shiftLabel": "הזז:",
-      "applyShift": "החל"
-    }
+    "exitFullscreen": "צא ממסך מלא"
   },
   "regions": {
     "eastAsia": "מזרח אסיה",

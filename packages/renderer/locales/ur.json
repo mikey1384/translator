@@ -124,24 +124,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "فل اسکرین میں جائیں",
-    "exitFullscreen": "فل اسکرین سے باہر نکلیں",
-    "sideMenu": {
-      "changeVideo": "ویڈیو تبدیل کریں",
-      "changeVideoAudio": "ویڈیو / آئوڈیو تبدیل کریں",
-      "enterUrlPlaceholder": "URL درج کریں...",
-      "qualityLow": "کم",
-      "qualityMid": "درمیانہ",
-      "qualityHigh": "اعلی",
-      "load": "لوڈ کریں",
-      "loadVideoFromUrl": "URL سے ویڈیو لوڈ کریں",
-      "loadSrtFile": "SRT فائل لوڈ کریں",
-      "loadDifferentSrtFile": "مختلف SRT فائل لوڈ کریں",
-      "changeSrt": "SRT تبدیل کریں",
-      "addSrt": "SRT شامل کریں",
-      "scrollToCurrent": "موجودہ پر سکرول کریں",
-      "shiftLabel": "شفٹ:",
-      "applyShift": "لاگو کریں"
-    }
+    "exitFullscreen": "فل اسکرین سے باہر نکلیں"
   },
   "regions": {
     "eastAsia": "مشرقی ایشیا",

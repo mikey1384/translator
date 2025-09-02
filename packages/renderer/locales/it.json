@@ -125,24 +125,7 @@
   },
   "videoPlayer": {
     "enterFullscreen": "Entra a schermo intero",
-    "exitFullscreen": "Esci da schermo intero",
-    "sideMenu": {
-      "changeVideo": "Cambia video",
-      "changeVideoAudio": "Cambia video / audio",
-      "enterUrlPlaceholder": "Inserisci URL...",
-      "qualityLow": "Bassa",
-      "qualityMid": "Media",
-      "qualityHigh": "Alta",
-      "load": "Carica",
-      "loadVideoFromUrl": "Carica video da URL",
-      "loadSrtFile": "Carica un file SRT",
-      "loadDifferentSrtFile": "Carica un file SRT diverso",
-      "changeSrt": "Cambia SRT",
-      "addSrt": "Aggiungi SRT",
-      "scrollToCurrent": "Scorri fino a quello attuale",
-      "shiftLabel": "Sposta:",
-      "applyShift": "Applica"
-    }
+    "exitFullscreen": "Esci da schermo intero"
   },
   "regions": {
     "eastAsia": "Asia orientale",
