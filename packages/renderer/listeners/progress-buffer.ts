@@ -1,4 +1,4 @@
-import { parseSrt } from '../../shared/helpers';
+import { parseSrt, secondsToSrtTime } from '../../shared/helpers';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
@@ -74,7 +74,38 @@ function flush() {
 
   // Apply partial SRT updates during processing (throttled), and load immediately on completion
   if (partialResult?.trim()) {
-    if (isComplete || Date.now() - lastParsed > 1500) {
+    const isTranslateMissing = operationId?.startsWith('translate-missing-');
+    if (isTranslateMissing) {
+      // Incrementally apply translations only to matching timecodes
+      try {
+        const partSegs = parseSrt(partialResult);
+        if (partSegs.length) {
+          const store = useSubStore.getState();
+          const current = useSubStore.getState();
+          // Build lookup by time key
+          const byTimeKey = new Map<string, string>(); // key -> id
+          for (const id of current.order) {
+            const s = current.segments[id];
+            const key = `${secondsToSrtTime(s.start)}-->${secondsToSrtTime(
+              s.end
+            )}`;
+            if (!byTimeKey.has(key)) byTimeKey.set(key, id);
+          }
+          for (const seg of partSegs) {
+            const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
+              seg.end
+            )}`;
+            const matchId = byTimeKey.get(key);
+            const translated = seg.translation?.trim();
+            if (matchId && translated) {
+              store.update(matchId, { translation: translated });
+            }
+          }
+        }
+      } catch {
+        // Ignore parse/apply errors for partial updates
+      }
+    } else if (isComplete || Date.now() - lastParsed > 1500) {
       useSubStore.getState().load(parseSrt(partialResult));
       lastParsed = Date.now();
     }

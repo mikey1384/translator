@@ -11,12 +11,17 @@ import SubtitleList from './SubtitleList';
 import MergeMenu from './MergeMenu';
 import SaveMenu from './SaveMenu';
 
-import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
+import {
+  buildSrt,
+  parseSrt,
+  secondsToSrtTime,
+  openSubtitleWithElectron,
+} from '../../../shared/helpers';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
-import { colors } from '../../styles';
+import { colors, selectStyles } from '../../styles';
 
 import {
   useUIStore,
@@ -30,6 +35,7 @@ import * as FileIPC from '@ipc/file';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { getNativePlayerInstance } from '../../native-player';
 import { sameArray } from '../../utils/array';
+import * as SubtitlesIPC from '../../ipc/subtitles';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -41,6 +47,78 @@ export interface EditSubtitlesProps {
     scrollToCurrentSubtitle: () => void;
     scrollToSubtitleIndex: (idx: number) => void;
   }>;
+}
+
+function EditHeaderTranslateBar({
+  disabled,
+  onTranslate,
+}: {
+  disabled?: boolean;
+  onTranslate: () => void;
+}) {
+  const { t } = useTranslation();
+  const targetLanguage = useUIStore(s => s.targetLanguage);
+  const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
+
+  // Use a distinct accent color (not green/blue)
+  const borderColor = colors.progressDownload; // yellow
+  const bgColor = `${colors.progressDownload}20`; // light translucent
+
+  return (
+    <div
+      className={css`
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid ${borderColor};
+        border-radius: 6px;
+        background: ${bgColor};
+      `}
+    >
+      <label
+        className={css`
+          margin-right: 4px;
+          color: ${colors.dark};
+          font-size: 0.95rem;
+        `}
+      >
+        {t('subtitles.outputLanguage')}:
+      </label>
+      <select
+        className={selectStyles}
+        value={targetLanguage}
+        onChange={e => setTargetLanguage(e.target.value)}
+        disabled={disabled}
+      >
+        <option value="english">{t('languages.english')}</option>
+        <option value="korean">{t('languages.korean')}</option>
+        <option value="japanese">{t('languages.japanese')}</option>
+        <option value="chinese_simplified">
+          {t('languages.chinese_simplified')}
+        </option>
+        <option value="chinese_traditional">
+          {t('languages.chinese_traditional')}
+        </option>
+        <option value="spanish">{t('languages.spanish')}</option>
+        <option value="french">{t('languages.french')}</option>
+        <option value="german">{t('languages.german')}</option>
+        <option value="portuguese">{t('languages.portuguese')}</option>
+        <option value="russian">{t('languages.russian')}</option>
+        <option value="vietnamese">{t('languages.vietnamese')}</option>
+        <option value="turkish">{t('languages.turkish')}</option>
+      </select>
+
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={onTranslate}
+        disabled={disabled}
+      >
+        {t('subtitles.generate', 'Translate')}
+      </Button>
+    </div>
+  );
 }
 
 export default function EditSubtitles({
@@ -175,8 +253,90 @@ export default function EditSubtitles({
     t,
   ]);
 
+  async function handleTranslateMissing() {
+    try {
+      const targetLanguage = useUIStore.getState().targetLanguage || 'english';
+      // Collect only segments that need translation
+      const missing = subtitles.filter(
+        s => (s.original || '').trim() && !(s.translation || '').trim()
+      );
+      if (!missing.length) return;
+
+      const srtContent = buildSrt({ segments: missing, mode: 'original' });
+      const operationId = `translate-missing-${Date.now()}`;
+
+      // Initialize translation task progress
+      useTaskStore.getState().setTranslation({
+        id: operationId,
+        stage: t('generateSubtitles.status.starting', 'Starting...'),
+        percent: 0,
+        inProgress: true,
+      });
+
+      const res = await SubtitlesIPC.translateSubtitles({
+        subtitles: srtContent,
+        targetLanguage,
+        operationId,
+      });
+
+      if (res?.translatedSubtitles) {
+        const translatedSegs = parseSrt(res.translatedSubtitles);
+        // Build map by time key -> translated text
+        const byTimeKey = new Map<string, string | undefined>();
+        for (const seg of translatedSegs) {
+          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
+            seg.end
+          )}`;
+          byTimeKey.set(key, seg.translation);
+        }
+
+        // Apply translations back to store for only missing ones
+        const store = useSubStore.getState();
+        for (const seg of missing) {
+          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
+            seg.end
+          )}`;
+          const translated = byTimeKey.get(key);
+          if (translated && translated.trim()) {
+            store.update(seg.id, { translation: translated });
+          }
+        }
+
+        useTaskStore.getState().setTranslation({
+          stage: t('generateSubtitles.status.completed', 'Completed'),
+          percent: 100,
+          inProgress: false,
+        });
+      } else {
+        useTaskStore.getState().setTranslation({ inProgress: false });
+      }
+    } catch (err) {
+      console.error('[EditSubtitles] translate missing error:', err);
+      useTaskStore.getState().setTranslation({
+        stage: t('generateSubtitles.status.error', 'Error'),
+        percent: 100,
+        inProgress: false,
+      });
+    }
+  }
+
+  const hasUntranslated = subtitles.some(
+    s => (s.original || '').trim() && !(s.translation || '').trim()
+  );
+
+  const headerRight = hasUntranslated ? (
+    <EditHeaderTranslateBar
+      disabled={translation.inProgress}
+      onTranslate={handleTranslateMissing}
+    />
+  ) : null;
+
   return (
-    <Section title={t('editSubtitles.title')} overflowVisible>
+    <Section
+      title={t('editSubtitles.title')}
+      headerRight={headerRight}
+      overflowVisible
+    >
       {saveError && (
         <ErrorBanner message={saveError} onClose={() => setSaveError('')} />
       )}

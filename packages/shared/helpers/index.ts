@@ -78,8 +78,12 @@ export function parseSrt(srtString: string): SrtSegment[] {
       }
     }
 
+    // Preserve full multi-line translation content if present by joining all
+    // lines after the first. Many translation outputs may wrap or include
+    // soft-merged text spanning multiple lines; keeping them avoids truncation.
     const original = textLines[0] ?? '';
-    const translation = textLines.length >= 2 ? textLines[1] : undefined;
+    const translation =
+      textLines.length >= 2 ? textLines.slice(1).join('\n') : undefined;
 
     if (!isNaN(start) && !isNaN(end)) {
       out.push({

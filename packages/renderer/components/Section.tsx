@@ -6,6 +6,7 @@ import { colors } from '../styles.js';
 interface SectionProps {
   children: ReactNode;
   title?: string;
+  headerRight?: ReactNode;
   className?: string;
   contentClassName?: string;
   noMargin?: boolean;
@@ -44,14 +45,21 @@ const subSectionStyles = css`
   border-radius: 6px;
 `;
 
+const headerRowStyles = css`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid ${colors.border};
+`;
+
 const titleStyles = css`
   font-size: 1.4em;
   font-weight: 600;
   color: ${colors.dark};
-  margin-top: 0;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid ${colors.border};
+  margin: 0;
 `;
 
 const subTitleStyles = css`
@@ -65,6 +73,7 @@ const subTitleStyles = css`
 export default function Section({
   children,
   title,
+  headerRight,
   className,
   contentClassName,
   noMargin = false,
@@ -86,9 +95,14 @@ export default function Section({
       )}
       style={{ paddingTop: title ? undefined : '0.75rem' }}
     >
-      <h2 className={cx(titleStyles, isSubSection && subTitleStyles)}>
-        {title}
-      </h2>
+      {title ? (
+        <div className={headerRowStyles}>
+          <h2 className={cx(titleStyles, isSubSection && subTitleStyles)}>
+            {title}
+          </h2>
+          {headerRight}
+        </div>
+      ) : null}
       <div className={contentClassName}>{children}</div>
     </section>
   );
