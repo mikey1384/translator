@@ -8,13 +8,8 @@ import {
   useVideoStore,
 } from '../../state';
 import { useTranslation } from 'react-i18next';
-import {
-  openSubtitleWithElectron,
-  buildSrt,
-  parseSrt,
-  secondsToSrtTime,
-} from '../../../shared/helpers';
-import * as SubtitlesIPC from '../../ipc/subtitles';
+import { openSubtitleWithElectron } from '../../../shared/helpers';
+import { translateMissingUntranslated } from '../../utils/translateMissing';
 import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
 
 export default function SideMenu({
@@ -35,6 +30,7 @@ export default function SideMenu({
     transcription: s.transcription,
     translation: s.translation,
   }));
+  const isTranscribing = !!transcription.inProgress;
   const targetLanguage = useUIStore(s => s.targetLanguage || 'english');
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
   const openVideo = useVideoStore(s => s.openFileDialogPreserveSubs);
@@ -51,55 +47,7 @@ export default function SideMenu({
 
   async function handleTranslateMissing() {
     try {
-      const missing = order
-        .map(id => segments[id])
-        .filter(
-          s => (s.original || '').trim() && !(s.translation || '').trim()
-        );
-      if (!missing.length) return;
-
-      const srtContent = buildSrt({ segments: missing, mode: 'original' });
-      const operationId = `translate-missing-${Date.now()}`;
-
-      setTranslation({
-        id: operationId,
-        stage: t('generateSubtitles.status.starting', 'Starting...'),
-        percent: 0,
-        inProgress: true,
-      });
-
-      const res = await SubtitlesIPC.translateSubtitles({
-        subtitles: srtContent,
-        targetLanguage,
-        operationId,
-      });
-
-      if (res?.translatedSubtitles) {
-        const translatedSegs = parseSrt(res.translatedSubtitles);
-        const byTimeKey = new Map<string, string | undefined>();
-        for (const seg of translatedSegs) {
-          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-          byTimeKey.set(key, seg.translation);
-        }
-
-        // Apply translations back to store for only missing ones
-        const store = useSubStore.getState();
-        for (const seg of missing) {
-          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-          const translated = byTimeKey.get(key);
-          if (translated && translated.trim()) {
-            store.update(seg.id, { translation: translated });
-          }
-        }
-
-        setTranslation({
-          stage: t('generateSubtitles.status.completed', 'Completed'),
-          percent: 100,
-          inProgress: false,
-        });
-      } else {
-        setTranslation({ inProgress: false });
-      }
+      await translateMissingUntranslated();
     } catch (err) {
       console.error('[SideMenu] translate missing error:', err);
       setTranslation({
@@ -131,15 +79,10 @@ export default function SideMenu({
 
   // Hide completely in fullscreen mode
   if (isFullScreen) return null;
-  // Always render side menu when video is mounted; buttons show/hide contextually
-
+  // Render as a dedicated column next to the video (grid area); not overlayed
   return (
     <div
       className={css`
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        z-index: 11;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -148,6 +91,8 @@ export default function SideMenu({
         border-radius: 6px;
         padding: 8px;
         backdrop-filter: blur(4px);
+        height: 100%;
+        overflow: auto;
       `}
       aria-label="Video side actions"
     >
@@ -288,6 +233,7 @@ export default function SideMenu({
             size="sm"
             variant="primary"
             onClick={handleTranslateMissing}
+            disabled={isTranscribing || translation.inProgress}
             title={t('subtitles.translate', 'Translate')}
           >
             <svg

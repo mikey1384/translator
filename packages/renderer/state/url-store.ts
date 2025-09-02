@@ -116,7 +116,7 @@ export const useUrlStore = create<UrlState>()(
         });
         return;
       }
-      if (stage === 'Completed' || stage === 'Error') {
+      if (stage === 'Completed' || stage === 'Error' || stage === 'Cancelled') {
         set(state => {
           state.needCookies = false;
         });
@@ -166,6 +166,15 @@ async function downloadMediaInternal(
       });
       return;
     }
+    if (p.stage === 'Cancelled') {
+      set((state: UrlState) => {
+        state.needCookies = false;
+        state.download.inProgress = false;
+        state.download.stage = 'Cancelled';
+        state.download.percent = 100;
+      });
+      return;
+    }
     set((state: UrlState) => {
       state.download.percent = p.percent ?? 0;
       state.download.stage = p.stage ?? '';
@@ -211,6 +220,7 @@ async function downloadMediaInternal(
 
     if (res.cancelled || !finalPath || !filename) {
       set((state: UrlState) => {
+        state.needCookies = false;
         state.download.inProgress = false;
         state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
         state.download.percent = 100;

@@ -83,16 +83,20 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
     setTranscription: p =>
       set(s => {
         Object.assign(s.transcription, p);
+        const stageNow = (p.stage ?? s.transcription.stage ?? '').toLowerCase();
+        const pctNow = p.percent ?? s.transcription.percent ?? 0;
+        const isCancelled = /cancel/.test(stageNow);
         if (p.inProgress !== undefined) {
           s.transcription.inProgress = p.inProgress;
+        } else if (isCancelled) {
+          // Explicitly stop showing the panel on cancellation
+          s.transcription.inProgress = false;
         } else if (p.percent !== undefined) {
-          s.transcription.inProgress = p.percent < 100;
+          s.transcription.inProgress = pctNow < 100;
         }
         if (p.percent !== undefined || p.stage !== undefined) {
-          const st = p.stage ?? s.transcription.stage;
-          const pct = p.percent ?? s.transcription.percent;
           s.transcription.isCompleted =
-            pct >= 100 || /processing complete|complete|done/i.test(st ?? '');
+            !isCancelled && (pctNow >= 100 || /processing complete|complete|done/i.test(stageNow));
         }
         if (p.inProgress === false) {
           s.transcription.id = null;

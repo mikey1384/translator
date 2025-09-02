@@ -26,12 +26,14 @@ export async function transcribe({
   promptContext,
   model = AI_MODELS.WHISPER,
   signal,
+  isNewPricing = true,
 }: {
   filePath: string;
   language?: string;
   promptContext?: string;
   model?: string;
   signal?: AbortSignal;
+  isNewPricing?: boolean;
 }) {
   // Check if already cancelled before starting
   if (signal?.aborted) {
@@ -50,6 +52,7 @@ export async function transcribe({
   }
 
   fd.append('model', model);
+  fd.append('isNewPricing', String(isNewPricing));
 
   try {
     // Step 1: Submit the transcription job

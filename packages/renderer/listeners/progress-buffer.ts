@@ -2,6 +2,7 @@ import { parseSrt, secondsToSrtTime } from '../../shared/helpers';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
+import { useUIStore } from '../state/ui-store';
 import { useCreditStore } from '../state/credit-store';
 
 type ProgressPayload = Parameters<
@@ -68,6 +69,13 @@ function flush() {
       id: operationId ?? null,
       batchStartIndex,
     });
+
+    // Surface progress to the user by opening the Edit panel automatically
+    // when transcription is underway so the incremental results are visible.
+    try {
+      const { showEditPanel, setEditPanelOpen } = useUIStore.getState();
+      if (!showEditPanel) setEditPanelOpen(true);
+    } catch {}
   }
 
   const isComplete = percent >= 100 || /processing complete/i.test(stage ?? '');

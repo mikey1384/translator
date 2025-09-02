@@ -4,10 +4,10 @@ import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 import * as SystemIPC from '../../../ipc/system';
 import { checkSufficientCredits } from '../utils/creditCheck';
-import * as FileIPC from '../../../ipc/file';
 import { buildSrt } from '../../../../shared/helpers';
 import { useSubStore, useUIStore } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
+import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -31,6 +31,10 @@ export async function executeSrtTranslation({
   targetLanguage: string;
   operationId: string;
 }): Promise<{ success: boolean; subtitles?: string; cancelled?: boolean }> {
+  // Prevent translation while transcription is in progress
+  if (useTaskStore.getState().transcription.inProgress) {
+    return { success: false };
+  }
   const srtContent = buildSrt({ segments, mode: 'dual' });
 
   // Initialize translation task so progress-buffer accepts progress updates
@@ -157,13 +161,21 @@ export async function startTranscriptionFlow({
   hoursNeeded: number | null;
   operationId: string;
 }): Promise<GenerateSubtitlesResult> {
+  // Ensure the Edit panel is visible so users can see live updates
+  try {
+    const { setEditPanelOpen } = useUIStore.getState();
+    setEditPanelOpen(true);
+  } catch {
+    // Do nothing
+  }
+
   // If there are mounted subtitles, prompt to save/discard before proceeding
   const hasMounted = useSubStore.getState().order.length > 0;
   if (hasMounted) {
     const choice = await openUnsavedSrtConfirm();
     if (choice === 'cancel') return { success: false };
     if (choice === 'save') {
-      const saved = await saveMountedSrtShared();
+      const saved = await saveCurrentSubtitles();
       if (!saved) return { success: false };
     }
     clearMountedSrtShared();
@@ -203,35 +215,7 @@ export async function startTranscriptionFlow({
   });
 }
 
-async function saveMountedSrtShared(): Promise<boolean> {
-  const store = useSubStore.getState();
-  const segments = store.order.map(id => store.segments[id]);
-  if (segments.length === 0) return true;
-
-  const showOriginal = useUIStore.getState().showOriginalText;
-  const mode = showOriginal ? 'dual' : 'translation';
-  const srtContent = buildSrt({ segments, mode });
-  try {
-    const { filePath, error } = await FileIPC.save({
-      title: i18n.t('dialogs.saveSrtFileAs'),
-      defaultPath: 'subtitles.srt',
-      content: srtContent,
-      filters: [
-        { name: i18n.t('common.fileFilters.srtFiles'), extensions: ['srt'] },
-      ],
-    } as any);
-    if (error) {
-      if (!String(error).toLowerCase().includes('canceled')) {
-        await SystemIPC.showMessage(String(error));
-      }
-      return false;
-    }
-    return !!filePath;
-  } catch (err) {
-    console.error('[startTranscriptionFlow] Failed to save mounted SRT:', err);
-    return false;
-  }
-}
+// Removed old inline save; centralized in utils/saveSubtitles.ts
 
 function clearMountedSrtShared() {
   useSubStore.setState({

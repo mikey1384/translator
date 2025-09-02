@@ -92,10 +92,10 @@
     "webDescription": "YouTube, TikTok, Instagram의 영상 링크, 혹은 영상파일 링크를 붙여넣으세요",
     "chooseFile": "파일 선택",
     "fileSelected": "파일 선택됨",
-    "transcribeOnly": "오디오 전사",
-    "srtLoaded": "전사 완료",
+    "transcribeOnly": "원문 자막 생성",
+    "srtLoaded": "원문 자막 생성 완료",
     "srtFileLoaded": "SRT 불러옴",
-    "featuresUnlockAfterTranscription": "전사가 완료되면 번역 및 기타 메뉴가 표시됩니다."
+    "featuresUnlockAfterTranscription": "원문 자막 생성이 완료되면 번역 및 기타 메뉴가 표시됩니다."
   },
   "subtitles": {
     "outputLanguage": "출력 언어",

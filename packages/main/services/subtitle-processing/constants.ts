@@ -32,6 +32,13 @@ export const REVIEW_STEP = REVIEW_BATCH_SIZE - REVIEW_OVERLAP_CTX;
 // Progress constants for transcription
 export const PROGRESS_ANALYSIS_DONE = 5;
 
+// --- Readability / Segmentation constraints (applied using Whisper word timings)
+// Aim: keep cues readable without deviating far from Whisper output.
+export const MAX_FINAL_SEGMENT_DURATION_SEC = 6.0; // hard limit per cue
+export const TARGET_FINAL_SEGMENT_DURATION_SEC = 3.5; // preferred split point
+export const MIN_FINAL_SEGMENT_DURATION_SEC = 1.2; // avoid overly tiny cues
+export const SPLIT_AT_PAUSE_GAP_SEC = 0.35; // prefer splits on natural pauses
+
 // --- ASR Output Format Configuration ---
 import {
   ASR_USE_FLAC,

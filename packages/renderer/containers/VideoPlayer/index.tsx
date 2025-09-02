@@ -30,7 +30,8 @@ const commonOverlayControlsStyles = css`
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  /* Ensure controls sit above the side menu in windowed mode */
+  z-index: 1000;
   display: flex;
   align-items: center;
   gap: 15px;
@@ -188,11 +189,7 @@ const fixedVideoContainerBaseStyles = css`
   background-color: rgba(30, 30, 30, 0.75);
   backdrop-filter: blur(12px);
   border: 1px solid ${colors.border};
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 15px;
-  overflow: visible;
+  overflow: hidden;
   transition: all 0.3s ease-out;
   &:focus,
   &:focus-visible {
@@ -205,9 +202,15 @@ const fixedVideoContainerBaseStyles = css`
   }
 
   video {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
+    display: block;
   }
 `;
 
@@ -226,28 +229,38 @@ const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
     border-radius: 0;
     z-index: 9999;
     background-color: black;
-    gap: 0;
+    display: flex;
     flex-direction: column;
+    gap: 0;
   `
     : `
     width: calc(95% - 30px);
-    max-height: 35vh;
+    height: 35vh;
     padding: 10px;
     border-radius: 0 0 8px 8px;
     margin-bottom: 0;
+    display: grid;
+    /* Wider symmetric side columns so video narrows proportionally */
+    grid-template-columns: 28% 1fr 28%;
+    grid-auto-rows: 1fr;
+    column-gap: 12px;
+    align-items: stretch;
 
     @media (max-height: 700px) {
-      max-height: 30vh;
+      height: 30vh;
     }
   `}
 `;
 
-const playerWrapperStyles = (isFullScreen: boolean) => css`
-  flex-grow: 1;
-  flex-shrink: 1;
+const playerWrapperStyles = () => css`
   min-width: 0;
   position: relative;
-  ${isFullScreen ? 'height: 100%;' : ''}
+  height: 100%;
+`;
+
+const leftSpacerStyles = css`
+  /* Empty spacer column to visually balance the side menu */
+  pointer-events: none;
 `;
 
 // Side menu removed; no separate controls column needed
@@ -559,8 +572,9 @@ export default function VideoPlayer() {
         ].join(' ')}
         style={{ top: isFullScreen ? 0 : progressBarH }}
       >
+        {!isFullScreen && <div aria-hidden className={leftSpacerStyles} />}
         <div
-          className={playerWrapperStyles(isFullScreen)}
+          className={playerWrapperStyles()}
           onMouseEnter={() => {
             setShowOverlay(true);
             restartHideTimer();

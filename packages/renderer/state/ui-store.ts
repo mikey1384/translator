@@ -18,7 +18,7 @@ interface State {
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
   navTick: number;
-  // Panel open states
+  // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
   showEditPanel: boolean;
 }
@@ -44,8 +44,7 @@ interface Actions {
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
-const SHOW_GENERATE_PANEL_KEY = 'ui:showGeneratePanel';
-const SHOW_EDIT_PANEL_KEY = 'ui:showEditPanel';
+// Note: We intentionally do NOT persist panel open states across reloads.
 
 const initial: State = {
   showSettings: false,
@@ -63,12 +62,8 @@ const initial: State = {
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
     'Default',
-  showGeneratePanel: localStorage.getItem(SHOW_GENERATE_PANEL_KEY)
-    ? localStorage.getItem(SHOW_GENERATE_PANEL_KEY) === 'true'
-    : false,
-  showEditPanel: localStorage.getItem(SHOW_EDIT_PANEL_KEY)
-    ? localStorage.getItem(SHOW_EDIT_PANEL_KEY) === 'true'
-    : false,
+  showGeneratePanel: false,
+  showEditPanel: false,
 };
 
 const resetSearchState = (s: Draft<State>) => {
@@ -183,12 +178,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         },
 
         setGeneratePanelOpen(open) {
-          localStorage.setItem(SHOW_GENERATE_PANEL_KEY, String(open));
           set({ showGeneratePanel: open });
         },
 
         setEditPanelOpen(open) {
-          localStorage.setItem(SHOW_EDIT_PANEL_KEY, String(open));
           set({ showEditPanel: open });
         },
       };

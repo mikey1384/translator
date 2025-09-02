@@ -78,9 +78,6 @@ export function parseSrt(srtString: string): SrtSegment[] {
       }
     }
 
-    // Preserve full multi-line translation content if present by joining all
-    // lines after the first. Many translation outputs may wrap or include
-    // soft-merged text spanning multiple lines; keeping them avoids truncation.
     const original = textLines[0] ?? '';
     const translation =
       textLines.length >= 2 ? textLines.slice(1).join('\n') : undefined;
@@ -178,9 +175,11 @@ export function parseSrtOriginalOnly(srtString: string): SrtSegment[] {
 export function buildSrt({
   segments,
   mode = 'dual',
+  noWrap = false,
 }: {
   segments: SrtSegment[];
   mode?: 'original' | 'translation' | 'dual';
+  noWrap?: boolean;
 }): string {
   if (!segments?.length) return '';
 
@@ -218,7 +217,7 @@ export function buildSrt({
       const start = secondsToSrtTime(seg.start);
       const end = secondsToSrtTime(seg.end);
       let cue = cueText(seg, mode);
-      if (mode !== 'dual') {
+      if (mode !== 'dual' && !noWrap) {
         // Enforce <= 2 lines and <= 42 chars/line for single-language outputs
         cue = wrapSingle(cue);
       }

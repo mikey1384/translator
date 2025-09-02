@@ -88,9 +88,9 @@ export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 
 // Transcription: compute credits/hour from model USD rate with margin and calibration
 export const WHISPER_TURBO_USD_PER_HOUR = 0.04; // groq whisper-large-v3-turbo
-export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = Math.ceil(
-  ((PRICE_MARGIN * WHISPER_TURBO_USD_PER_HOUR) / USD_PER_CREDIT) * 0.3
-); // ≈ 840 credits/hour with PRICE_MARGIN=2 and calibration=0.3
+// Align transcription credits/hour with backend deduction for whisper-large-v3-turbo
+// Backend math: $0.04/h × margin(2) = $0.08/h; $0.08 / (10/350k) = 2,800 credits/hour
+export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = 2_800;
 
 // Set the generic transcription constants used across UI
 export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;

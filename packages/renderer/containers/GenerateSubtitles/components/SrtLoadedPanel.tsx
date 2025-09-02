@@ -3,6 +3,7 @@ import { colors, selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
 import { useUIStore } from '../../../state/ui-store';
+import { useTaskStore } from '../../../state/task-store';
 
 interface SrtLoadedPanelProps {
   srtPath?: string | null;
@@ -24,6 +25,8 @@ export default function SrtLoadedPanel({
   const { t } = useTranslation();
   const showOriginalText = useUIStore(s => s.showOriginalText);
   const setShowOriginalText = useUIStore(s => s.setShowOriginalText);
+  const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+  const isDisabled = disabled || isTranslating || isTranscribing;
 
   return (
     <div
@@ -95,7 +98,7 @@ export default function SrtLoadedPanel({
           className={selectStyles}
           value={targetLanguage}
           onChange={e => onTargetLanguageChange?.(e.target.value)}
-          disabled={disabled || isTranslating}
+          disabled={isDisabled}
         >
           <option value="english">{t('languages.english')}</option>
           <option value="korean">{t('languages.korean')}</option>
@@ -144,7 +147,7 @@ export default function SrtLoadedPanel({
           variant="primary"
           size="md"
           onClick={onTranslate}
-          disabled={disabled || isTranslating}
+          disabled={isDisabled}
           isLoading={isTranslating}
         >
           {t('subtitles.translate', 'Translate')}

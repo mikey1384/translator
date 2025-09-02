@@ -11,12 +11,7 @@ import SubtitleList from './SubtitleList';
 import MergeMenu from './MergeMenu';
 import SaveMenu from './SaveMenu';
 
-import {
-  buildSrt,
-  parseSrt,
-  secondsToSrtTime,
-  openSubtitleWithElectron,
-} from '../../../shared/helpers';
+import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
@@ -35,7 +30,7 @@ import * as FileIPC from '@ipc/file';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { getNativePlayerInstance } from '../../native-player';
 import { sameArray } from '../../utils/array';
-import * as SubtitlesIPC from '../../ipc/subtitles';
+import { translateMissingUntranslated } from '../../utils/translateMissing';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -170,6 +165,19 @@ export default function EditSubtitles({
   );
 
   useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (canSaveDirectly) void handleSaveSrt();
+        else void handleSaveEditedSrtAs();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown as any);
+    return () => window.removeEventListener('keydown', onKeyDown as any);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSaveDirectly, originalPath, subtitles]);
+
+  useEffect(() => {
     if (editorRef?.current) {
       editorRef.current.scrollToCurrentSubtitle = scrollToCurrentSubtitle;
       editorRef.current.scrollToSubtitleIndex = scrollToSubtitleIndex;
@@ -255,61 +263,7 @@ export default function EditSubtitles({
 
   async function handleTranslateMissing() {
     try {
-      const targetLanguage = useUIStore.getState().targetLanguage || 'english';
-      // Collect only segments that need translation
-      const missing = subtitles.filter(
-        s => (s.original || '').trim() && !(s.translation || '').trim()
-      );
-      if (!missing.length) return;
-
-      const srtContent = buildSrt({ segments: missing, mode: 'original' });
-      const operationId = `translate-missing-${Date.now()}`;
-
-      // Initialize translation task progress
-      useTaskStore.getState().setTranslation({
-        id: operationId,
-        stage: t('generateSubtitles.status.starting', 'Starting...'),
-        percent: 0,
-        inProgress: true,
-      });
-
-      const res = await SubtitlesIPC.translateSubtitles({
-        subtitles: srtContent,
-        targetLanguage,
-        operationId,
-      });
-
-      if (res?.translatedSubtitles) {
-        const translatedSegs = parseSrt(res.translatedSubtitles);
-        // Build map by time key -> translated text
-        const byTimeKey = new Map<string, string | undefined>();
-        for (const seg of translatedSegs) {
-          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
-            seg.end
-          )}`;
-          byTimeKey.set(key, seg.translation);
-        }
-
-        // Apply translations back to store for only missing ones
-        const store = useSubStore.getState();
-        for (const seg of missing) {
-          const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
-            seg.end
-          )}`;
-          const translated = byTimeKey.get(key);
-          if (translated && translated.trim()) {
-            store.update(seg.id, { translation: translated });
-          }
-        }
-
-        useTaskStore.getState().setTranslation({
-          stage: t('generateSubtitles.status.completed', 'Completed'),
-          percent: 100,
-          inProgress: false,
-        });
-      } else {
-        useTaskStore.getState().setTranslation({ inProgress: false });
-      }
+      await translateMissingUntranslated();
     } catch (err) {
       console.error('[EditSubtitles] translate missing error:', err);
       useTaskStore.getState().setTranslation({
@@ -324,9 +278,11 @@ export default function EditSubtitles({
     s => (s.original || '').trim() && !(s.translation || '').trim()
   );
 
+  const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+
   const headerRight = hasUntranslated ? (
     <EditHeaderTranslateBar
-      disabled={translation.inProgress}
+      disabled={translation.inProgress || isTranscribing}
       onTranslate={handleTranslateMissing}
     />
   ) : null;
@@ -504,7 +460,12 @@ export default function EditSubtitles({
       filters: [
         { name: t('common.fileFilters.srtFiles'), extensions: ['srt'] },
       ],
-      content: buildSrt({ segments: subtitles, mode: getSrtMode() }),
+      // Preserve exactly what the user sees (do not auto-wrap lines)
+      content: buildSrt({
+        segments: subtitles,
+        mode: getSrtMode(),
+        noWrap: true,
+      }),
     });
     if (res.error && !res.error.includes('canceled')) {
       setSaveError(res.error);
@@ -517,7 +478,12 @@ export default function EditSubtitles({
   async function writeSrt(path: string) {
     const result = await FileIPC.save({
       filePath: path,
-      content: buildSrt({ segments: subtitles, mode: getSrtMode() }),
+      // Preserve exactly what the user sees (do not auto-wrap lines)
+      content: buildSrt({
+        segments: subtitles,
+        mode: getSrtMode(),
+        noWrap: true,
+      }),
     });
     if (result.error) {
       setSaveError(result.error);

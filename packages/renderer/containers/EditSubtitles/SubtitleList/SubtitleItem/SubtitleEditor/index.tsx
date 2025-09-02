@@ -63,6 +63,7 @@ export default function SubtitleEditor({
     subtitle ? secondsToSrtTime(subtitle.end) : '00:00:00,000'
   );
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
+  const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
 
   useEffect(() => {
     if (subtitle) {
@@ -105,6 +106,7 @@ export default function SubtitleEditor({
 
   async function handleTranslateOneLine() {
     if (!subtitle?.original?.trim()) return;
+    if (useTaskStore.getState().transcription.inProgress) return;
     try {
       setIsTranslatingOne(true);
       const operationId = `translate-missing-${Date.now()}-${id}`;
@@ -233,7 +235,11 @@ export default function SubtitleEditor({
               variant="primary"
               size="sm"
               onClick={handleTranslateOneLine}
-              disabled={isTranslatingOne || !(subtitle.original ?? '').trim()}
+              disabled={
+                isTranscribing ||
+                isTranslatingOne ||
+                !(subtitle.original ?? '').trim()
+              }
               isLoading={isTranslatingOne}
               title={t('subtitles.translate')}
             >

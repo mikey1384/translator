@@ -122,18 +122,21 @@ export default function ProgressArea({
   subLabel,
 }: ProgressAreaProps) {
   // Compute remaining hours (integer) to show next to credits in header
-  const { credits } = useCreditStore();
+  const { credits, creditsPerHour } = useCreditStore();
   let remainingHours: number | null = null;
   if (operationId?.startsWith('translate-')) {
+    // Translation hours use the translation credits/hour constant
     remainingHours =
       typeof credits === 'number'
-        ? Math.floor(credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR)
+        ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
         : null;
   } else if (operationId?.startsWith('transcribe-')) {
-    remainingHours =
-      typeof credits === 'number'
-        ? Math.floor(credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR)
-        : null;
+    // Transcription hours should match Settings: prefer backend per-hour if available
+    const perHour =
+      creditsPerHour && creditsPerHour > 0
+        ? creditsPerHour
+        : CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
+    remainingHours = typeof credits === 'number' ? credits / perHour : null;
   }
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -194,7 +197,7 @@ export default function ProgressArea({
             <CreditBalance
               suffixText={
                 typeof remainingHours === 'number'
-                  ? `(${remainingHours.toLocaleString()}h)`
+                  ? `(${Math.floor(remainingHours).toLocaleString()}h)`
                   : undefined
               }
             />

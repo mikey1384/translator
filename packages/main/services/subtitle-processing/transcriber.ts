@@ -1,7 +1,14 @@
 import log from 'electron-log';
 import crypto from 'crypto';
 import { SrtSegment } from '@shared-types/app';
-import { NO_SPEECH_PROB_THRESHOLD, LOG_PROB_THRESHOLD } from './constants.js';
+import {
+  NO_SPEECH_PROB_THRESHOLD,
+  LOG_PROB_THRESHOLD,
+  MAX_FINAL_SEGMENT_DURATION_SEC,
+  MIN_FINAL_SEGMENT_DURATION_SEC,
+  TARGET_FINAL_SEGMENT_DURATION_SEC,
+  SPLIT_AT_PAUSE_GAP_SEC,
+} from './constants.js';
 import fs from 'fs';
 import { throwIfAborted } from './utils.js';
 import * as stage5Client from '../stage5-client.js';
@@ -44,125 +51,100 @@ export async function transcribeChunk({
     const segments = (res as any)?.segments as Array<any> | undefined;
     const words = ((res as any)?.words as Array<any> | undefined) || [];
 
-    const validSegments: Array<{ start: number; end: number }> = [];
-    if (Array.isArray(segments)) {
-      for (const seg of segments) {
-        if (
-          seg.no_speech_prob < NO_SPEECH_PROB_THRESHOLD &&
-          seg.avg_logprob > LOG_PROB_THRESHOLD
-        ) {
-          validSegments.push({
-            start: seg.start,
-            end: seg.end,
-          });
-        }
-      }
-    }
-
-    const MAX_SEG_LEN = 8;
-    const MAX_WORDS = 12;
-    const MIN_WORDS = 3;
+    // Simple, Whisper-faithful mapping: one SRT segment per Whisper segment.
     const srtSegments: SrtSegment[] = [];
-    let currentWords: any[] = [];
-    let groupStart: number | null = null;
-    let groupEnd: number | null = null;
-    let segIdx = 1;
-
-    const segmentEnds = new Set<number>();
-    if (Array.isArray(segments)) {
+    if (Array.isArray(segments) && segments.length > 0) {
+      let segIdx = 1;
       for (const seg of segments) {
-        segmentEnds.add(Number((seg.end + startTime).toFixed(3)));
-      }
-    }
+        // Basic quality gate (still permissive to match Whisper closely)
+        const ok =
+          (seg?.no_speech_prob ?? 1) < NO_SPEECH_PROB_THRESHOLD &&
+          (seg?.avg_logprob ?? 0) > LOG_PROB_THRESHOLD &&
+          typeof seg?.start === 'number' &&
+          typeof seg?.end === 'number' &&
+          seg.end > seg.start;
+        if (!ok) continue;
 
-    for (let i = 0; i < words.length; ++i) {
-      const w = words[i];
-      const wStart = w.start + startTime;
-      const wEnd = w.end + startTime;
-      if (currentWords.length === 0) {
-        groupStart = wStart;
-      }
-      currentWords.push(w);
-      groupEnd = wEnd;
-      const isSegmentEnd = segmentEnds.has(Number(wEnd.toFixed(3)));
-      const isLastWord = i === words.length - 1;
-      const groupDuration = (groupEnd || 0) - (groupStart || 0);
-      const groupWordCount = currentWords.length;
-      const hardBoundary = isSegmentEnd || isLastWord;
-      const sizeBoundary =
-        groupDuration >= MAX_SEG_LEN || groupWordCount >= MAX_WORDS;
-      if (groupWordCount < MIN_WORDS && !hardBoundary) continue;
-      if (hardBoundary || sizeBoundary) {
-        if (groupWordCount < MIN_WORDS && !hardBoundary) {
-          continue;
+        const absStart = (seg.start ?? 0) + startTime;
+        const absEnd = (seg.end ?? 0) + startTime;
+
+        // Prefer Whisper-provided text, fall back to joining words inside the segment
+        let text: string = (seg.text ?? '').trim();
+        if (!text) {
+          const segWords = words.filter(
+            (w: any) =>
+              typeof w?.start === 'number' &&
+              typeof w?.end === 'number' &&
+              w.start >= (seg.start ?? 0) - 1e-3 &&
+              w.end <= (seg.end ?? 0) + 1e-3
+          );
+          text = segWords.map((w: any) => String(w.word ?? '')).join(' ');
+          text = text.replace(/\s{2,}/g, ' ').trim();
         }
-        let text = '';
-        for (let j = 0; j < currentWords.length; ++j) {
-          text += ` ${currentWords[j].word}`;
-        }
-        const segmentRelativeWords = currentWords.map(cw => {
-          const absoluteWordStart = cw.start + startTime;
-          const absoluteWordEnd = cw.end + startTime;
-          return {
-            ...cw,
-            start: absoluteWordStart - (groupStart as number),
-            end: absoluteWordEnd - (groupStart as number),
-          };
-        });
-        srtSegments.push({
+
+        // Map words to be relative to segment start (if provided)
+        const relWords = words
+          .filter(
+            (w: any) =>
+              typeof w?.start === 'number' &&
+              typeof w?.end === 'number' &&
+              w.start >= (seg.start ?? 0) - 1e-3 &&
+              w.end <= (seg.end ?? 0) + 1e-3
+          )
+          .map((w: any) => ({
+            ...w,
+            start: (w.start ?? 0) - (seg.start ?? 0),
+            end: (w.end ?? 0) - (seg.start ?? 0),
+          }));
+
+        // Build base segment and apply smart splitting using Whisper word timings
+        const baseSeg: SrtSegment = {
           id: crypto.randomUUID(),
-          index: segIdx++,
-          start: groupStart || 0,
-          end: groupEnd || 0,
+          index: segIdx, // temporary; reindexed below
+          start: absStart,
+          end: absEnd,
           original: text,
-          words: segmentRelativeWords,
-        } as SrtSegment);
-        if (!isLastWord) {
-          groupStart = null;
-          groupEnd = null;
-          currentWords = [];
+          avg_logprob: seg.avg_logprob,
+          no_speech_prob: seg.no_speech_prob,
+          words: relWords,
+        } as SrtSegment;
+
+        const splitSegs = smartSplitByWords(baseSeg);
+        for (const ss of splitSegs) {
+          ss.index = segIdx++;
+          srtSegments.push(ss);
         }
       }
+      return srtSegments;
     }
 
-    if (currentWords.length) {
-      let text = '';
-      for (let j = 0; j < currentWords.length; ++j) {
-        text += ` ${currentWords[j].word}`;
-      }
-      const finalSegmentRelativeWords = currentWords.map(cw => {
-        const absoluteWordStart = cw.start + startTime;
-        const absoluteWordEnd = cw.end + startTime;
-        return {
-          ...cw,
-          start: absoluteWordStart - (groupStart as number),
-          end: absoluteWordEnd - (groupStart as number),
-        };
-      });
-      let avgLogprob = 0;
-      let noSpeechProb = 0;
-      if (Array.isArray(segments)) {
-        const matchingSegment = segments.find(
-          seg => Math.abs(seg.end + startTime - (groupEnd || 0)) < 0.1
-        );
-        if (matchingSegment) {
-          avgLogprob = matchingSegment.avg_logprob || 0;
-          noSpeechProb = matchingSegment.no_speech_prob || 0;
-        }
-      }
-      srtSegments.push({
-        id: crypto.randomUUID(),
-        index: segIdx++,
-        start: groupStart || 0,
-        end: groupEnd || 0,
-        original: text,
-        avg_logprob: avgLogprob,
-        no_speech_prob: noSpeechProb,
-        words: finalSegmentRelativeWords,
-      } as SrtSegment);
+    // Fallback: if no segment list, build a single segment from all words
+    if (words.length > 0) {
+      const absStart = (words[0].start ?? 0) + startTime;
+      const absEnd = (words[words.length - 1].end ?? 0) + startTime;
+      const text = words
+        .map((w: any) => String(w.word ?? ''))
+        .join(' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      const relWords = words.map((w: any) => ({
+        ...w,
+        start: (w.start ?? 0) - (words[0].start ?? 0),
+        end: (w.end ?? 0) - (words[0].start ?? 0),
+      }));
+      return [
+        {
+          id: crypto.randomUUID(),
+          index: 1,
+          start: absStart,
+          end: absEnd,
+          original: text,
+          words: relWords,
+        } as SrtSegment,
+      ];
     }
 
-    return srtSegments;
+    return [];
   } catch (error: any) {
     if (
       error.name === 'AbortError' ||
@@ -181,4 +163,109 @@ export async function transcribeChunk({
       return [];
     }
   }
+}
+
+function joinWords(tokens: string[]): string {
+  if (!tokens.length) return '';
+  const hasCjk = tokens.some(t =>
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(t)
+  );
+  let out = '';
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i] ?? '';
+    if (!tok) continue;
+    // No space before common trailing punctuation and closing brackets
+    const noSpaceBefore = /^(?:[.,!?…:;%)\]}])/.test(tok);
+    let needSpace = out.length > 0 && !noSpaceBefore;
+    if (hasCjk) {
+      const prev = out[out.length - 1] || '';
+      const prevAscii = /[A-Za-z0-9]$/.test(prev);
+      const nextAscii = /^[A-Za-z0-9]/.test(tok);
+      // In CJK contexts, only space between ASCII words
+      needSpace = out.length > 0 && !noSpaceBefore && prevAscii && nextAscii;
+    }
+    out += (needSpace ? ' ' : '') + tok;
+  }
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
+function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
+  const totalDur = Math.max(0, seg.end - seg.start);
+  const words = Array.isArray((seg as any).words)
+    ? ((seg as any).words as any[])
+    : [];
+  if (totalDur <= MAX_FINAL_SEGMENT_DURATION_SEC || words.length === 0) {
+    return [seg];
+  }
+
+  const makeSub = (startIdx: number, endIdx: number): SrtSegment => {
+    const first = words[startIdx];
+    const last = words[endIdx];
+    const absStart = seg.start + (first?.start ?? 0);
+    const absEnd = seg.start + (last?.end ?? 0);
+    const relSlice = words.slice(startIdx, endIdx + 1);
+    const text = joinWords(relSlice.map(w => String(w.word ?? '')));
+    const remap = relSlice.map(w => ({
+      ...w,
+      start: (w.start ?? 0) - (first?.start ?? 0),
+      end: (w.end ?? 0) - (first?.start ?? 0),
+    }));
+    return {
+      ...seg,
+      id: crypto.randomUUID(),
+      start: absStart,
+      end: absEnd,
+      original: text,
+      words: remap as any,
+    } as SrtSegment;
+  };
+
+  const out: SrtSegment[] = [];
+  let i = 0;
+  while (i < words.length) {
+    let j = i;
+    let lastGoodCut = -1; // strong punctuation .?!…:;
+    let lastPauseCut = -1; // comma or pause gap
+
+    const baseStart = words[i].start ?? 0;
+    while (j < words.length) {
+      const curDur = (words[j].end ?? 0) - baseStart;
+
+      const token = String(words[j].word ?? '');
+      if (/[.?!…:;]$/.test(token)) lastGoodCut = j;
+      else if (/,+$/.test(token)) lastPauseCut = j;
+
+      if (j + 1 < words.length) {
+        const gap = (words[j + 1].start ?? 0) - (words[j].end ?? 0);
+        if (gap >= SPLIT_AT_PAUSE_GAP_SEC) lastPauseCut = j;
+      }
+
+      const targetReached = curDur >= TARGET_FINAL_SEGMENT_DURATION_SEC;
+      const maxReached = curDur >= MAX_FINAL_SEGMENT_DURATION_SEC;
+      if (targetReached || maxReached) {
+        let cut = -1;
+        if (lastGoodCut >= i) cut = lastGoodCut;
+        else if (lastPauseCut >= i) cut = lastPauseCut;
+        else cut = j;
+
+        // Avoid too-short segments
+        const cutDur = (words[cut].end ?? 0) - baseStart;
+        if (cutDur < MIN_FINAL_SEGMENT_DURATION_SEC && cut + 1 < words.length) {
+          cut = Math.min(words.length - 1, cut + 1);
+        }
+
+        out.push(makeSub(i, cut));
+        i = cut + 1;
+        break;
+      }
+      j++;
+    }
+
+    if (j >= words.length) {
+      out.push(makeSub(i, words.length - 1));
+      break;
+    }
+  }
+
+  return out.length ? out : [seg];
 }

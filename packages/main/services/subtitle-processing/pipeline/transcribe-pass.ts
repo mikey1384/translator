@@ -12,7 +12,6 @@ import {
 } from '../audio-chunker.js';
 import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
-import { trimPhantomTail, refineOvershoots } from '../gap-repair.js';
 import {
   SAVE_WHISPER_CHUNKS,
   PRE_PAD_SEC,
@@ -27,7 +26,6 @@ import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 import { throwIfAborted } from '../utils.js';
-import { cleanTranscriptBatch } from '../utils.js';
 
 export async function transcribePass({
   audioPath,
@@ -275,18 +273,7 @@ export async function transcribePass({
     );
     overallSegments.length = 0;
     overallSegments.push(...filteredSegments);
-    overallSegments.forEach(trimPhantomTail);
-
-    await refineOvershoots({
-      segments: overallSegments,
-      signal,
-      operationId,
-      mediaDuration: duration,
-      ffmpeg,
-      audioPath,
-      tempDir,
-      createdChunkPaths,
-    });
+    // Keep Whisper timings exactly; skip trimming trailing silence.
 
     overallSegments.sort((a, b) => a.start - b.start);
 
@@ -296,11 +283,14 @@ export async function transcribePass({
         throwIfAborted(signal);
       }
 
-      const cleaned = cleanTranscriptBatch({ segments: overallSegments });
-
-      cleaned
+      const cleaned = overallSegments
+        .filter(s => (s.original ?? '').trim() !== '')
         .sort((a, b) => a.start - b.start)
-        .forEach((s, i) => (s.index = i + 1));
+        .map((s, i) => ({
+          ...s,
+          index: i + 1,
+          original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
+        }));
 
       const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
       await fs.promises.writeFile(

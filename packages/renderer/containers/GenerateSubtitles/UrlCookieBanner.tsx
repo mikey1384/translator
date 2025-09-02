@@ -13,6 +13,7 @@ export default function UrlCookieBanner() {
   const cookiesBrowser = useUrlStore(s => s.cookiesBrowser);
   const setCookiesBrowser = useUrlStore(s => s.setCookiesBrowser);
   const downloadInProgress = useUrlStore(s => s.download.inProgress);
+  const downloadStage = useUrlStore(s => s.download.stage);
 
   useEffect(() => {
     if (downloadInProgress) {
@@ -50,7 +51,9 @@ export default function UrlCookieBanner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needCookies]);
 
-  if (!needCookies) return null;
+  // Hide if cancelled or running; banner is only relevant when explicitly requested
+  if (!needCookies || downloadInProgress || downloadStage === 'Cancelled')
+    return null;
 
   return (
     <div
