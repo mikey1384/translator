@@ -77,7 +77,11 @@
     "transcribeOnly": "Μετατροπή Ήχου",
     "srtLoaded": "Μετατροπή Ολοκληρώθηκε",
     "srtFileLoaded": "Φορτώθηκε SRT",
-    "featuresUnlockAfterTranscription": "Η μετάφραση και άλλα μενού θα εμφανιστούν αφού ολοκληρωθεί η μετατροπή."
+    "featuresUnlockAfterTranscription": "Η μετάφραση και άλλα μενού θα εμφανιστούν αφού ολοκληρωθεί η μετατροπή.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "Γλώσσα Εξόδου",
@@ -229,6 +233,13 @@
     "slowDownloadBanner": {
       "title": "Η λήψη διαρκεί περισσότερο από το συνηθισμένο.",
       "description": "Αυτό μπορεί να οφείλεται σε αλλαγές της πλατφόρμας βίντεο ή νέα μέτρα προστασίας. Μπορεί να χρειαστεί να περιμένετε την επόμενη έκδοση της εφαρμογής για να χειριστεί νεότερα βίντεο."
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "Αποθήκευση των τρεχόντων υποτίτλων πριν την απομαγνητοφώνηση;",
+      "message": "Έχετε ήδη φορτωμένους υπότιτλους. Η απομαγνητοφώνηση θα τους αντικαταστήσει. Τι θέλετε να κάνετε;",
+      "saveAndTranscribe": "Αποθήκευση και απομαγνητοφώνηση",
+      "discardAndTranscribe": "Απόρριψη και απομαγνητοφώνηση",
+      "cancel": "Ακύρωση"
     }
   },
   "progress": {
@@ -251,5 +262,31 @@
     "redirectingToPayment": "Άνοιγμα ασφαλούς πληρωμής…",
     "description": "Επιλέξτε από πακέτα ${{pack1Price}} ({{pack1Hours}}ω), ${{pack2Price}} ({{pack2Hours}}ω), ή ${{pack3Price}} ({{pack3Hours}}ω)",
     "notEnough": "Ανεπαρκείς πιστώσεις. Παρακαλώ αγοράστε περισσότερες πιστώσεις για να συνεχίσετε."
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

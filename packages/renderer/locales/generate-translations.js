@@ -180,6 +180,15 @@ const newKeys = {
   'dialogs.saveDownloadedFile': 'Save the downloaded file: {{path}}',
   'dialogs.transcriptionInProgress': 'Transcription in Progress',
   'dialogs.translationInProgress': 'Translation in Progress',
+  // New: Unsaved SRT confirmation on transcribe
+  'dialogs.unsavedSrtOnTranscribe.title':
+    'Save current subtitles before transcribing?',
+  'dialogs.unsavedSrtOnTranscribe.message':
+    'You already have subtitles mounted. Transcribing will replace them. What would you like to do?',
+  'dialogs.unsavedSrtOnTranscribe.saveAndTranscribe': 'Save and Transcribe',
+  'dialogs.unsavedSrtOnTranscribe.discardAndTranscribe':
+    'Discard and Transcribe',
+  'dialogs.unsavedSrtOnTranscribe.cancel': 'Cancel',
   'input.srtFileLoaded': 'SRT Loaded',
   'dialogs.cancelTranslationConfirm':
     "Cancel translation? Progress will be lost and you'll need to start again.",

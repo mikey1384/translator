@@ -76,7 +76,12 @@
     "fileSelected": "File selected",
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
-    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "srtFileLoaded": "SRT Loaded"
   },
   "subtitles": {
     "outputLanguage": "అవుట్‌పుట్ భాష",
@@ -227,7 +232,15 @@
     "slowDownloadBanner": {
       "title": "Download is taking longer than usual.",
       "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
-    }
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "ట్రాన్స్‌క్రైబ్ చేయడానికి ముందు ప్రస్తుత ఉపశీర్షికలను సేవ్ చేయాలా?",
+      "message": "మీ వద్ద ఇప్పటికే ఉపశీర్షికలు లోడ్ అయ్యాయి. ట్రాన్స్‌క్రిప్షన్ వాటిని ప్రత్యామ్నాయం చేస్తుంది. మీరు ఏమి చేయాలనుకుంటున్నారు?",
+      "saveAndTranscribe": "సేవ్ చేసి ట్రాన్స్‌క్రైబ్ చేయి",
+      "discardAndTranscribe": "సేవ్ చేయకుండా ట్రాన్స్‌క్రైబ్ చేయి",
+      "cancel": "రద్దు"
+    },
+    "transcriptionInProgress": "Transcription in Progress"
   },
   "progress": {
     "transcribedChunks": "ట్రాన్స్‌క్రైబ్ మరియు క్లీన్ చేయబడిన {{done}}/{{total}} భాగాలు",
@@ -249,5 +262,31 @@
     "redirectingToPayment": "సురక్షిత చెక్‌అవుట్ తెరుస్తోంది…",
     "description": "${{pack1Price}} ({{pack1Hours}}గంటలు), ${{pack2Price}} ({{pack2Hours}}గంటలు), లేదా ${{pack3Price}} ({{pack3Hours}}గంటలు) క్రెడిట్ ప్యాక్‌లలో నుండి ఎంచుకోండి",
     "notEnough": "తగినంత క్రెడిట్‌లు లేవు. కొనసాగడానికి దయచేసి మరింత క్రెడిట్‌లను కొనుగోలు చేయండి."
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

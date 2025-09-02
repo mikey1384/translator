@@ -77,7 +77,11 @@
     "transcribeOnly": "转录音频",
     "srtLoaded": "转录完成",
     "srtFileLoaded": "已加载 SRT",
-    "featuresUnlockAfterTranscription": "转录完成后将显示翻译和其他菜单。"
+    "featuresUnlockAfterTranscription": "转录完成后将显示翻译和其他菜单。",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -239,6 +243,13 @@
     "slowDownloadBanner": {
       "title": "下载时间比平时更长。",
       "description": "这可能是由于视频平台变更或新的保护措施造成的。您可能需要等待下一个应用版本来处理较新的视频。"
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "转写前是否保存当前字幕？",
+      "message": "你已加载了字幕。开始转写后将会替换当前字幕。你想要怎么做？",
+      "saveAndTranscribe": "保存并转写",
+      "discardAndTranscribe": "不保存并转写",
+      "cancel": "取消"
     }
   },
   "progress": {
@@ -263,5 +274,19 @@
       "pillOpen": "打开 .srt",
       "pillMerge": "与视频合成"
     }
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
   }
 }

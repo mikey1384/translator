@@ -77,7 +77,11 @@
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT cargado",
-    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
@@ -239,6 +243,13 @@
     "slowDownloadBanner": {
       "title": "La descarga está tardando más de lo habitual.",
       "description": "Esto puede deberse a cambios en la plataforma de video o nuevas medidas de protección. Es posible que necesites esperar a la próxima versión de la aplicación para manejar videos más nuevos."
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "¿Guardar los subtítulos actuales antes de transcribir?",
+      "message": "Ya tienes subtítulos cargados. La transcripción los reemplazará. ¿Qué quieres hacer?",
+      "saveAndTranscribe": "Guardar y transcribir",
+      "discardAndTranscribe": "Descartar y transcribir",
+      "cancel": "Cancelar"
     }
   },
   "progress": {
@@ -263,5 +274,19 @@
       "pillOpen": "Abrir .srt",
       "pillMerge": "Combinar con video"
     }
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
   }
 }

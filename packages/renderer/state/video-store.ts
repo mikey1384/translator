@@ -86,51 +86,8 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     async setFile(fd: File | { name: string; path: string } | null) {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
-      try {
-        const hasSubs = useSubStore.getState().order.length > 0;
-        if (hasSubs) {
-          const confirmMsg = 'You have an unsaved SRT. Save before switching?';
-          const shouldSave = window.confirm(confirmMsg);
-          if (shouldSave) {
-            const segs = useSubStore
-              .getState()
-              .order.map(id => useSubStore.getState().segments[id]);
-            const showOriginal = useUIStore.getState().showOriginalText;
-            const mode = showOriginal ? 'dual' : 'translation';
-            const srtContent = buildSrt({ segments: segs, mode });
-            await FileIPC.save({
-              title: 'Save SRT File As',
-              defaultPath: 'subtitles.srt',
-              content: srtContent,
-              filters: [{ name: 'SRT Files', extensions: ['srt'] }],
-            } as any);
-          }
-        }
-        // Clear subtitles
-        useSubStore.setState({
-          segments: {},
-          order: [],
-          activeId: null,
-          playingId: null,
-          originalPath: null,
-        });
-        // Reset translation and transcription progress
-        useTaskStore.getState().setTranslation({
-          id: null,
-          stage: '',
-          percent: 0,
-          inProgress: false,
-          batchStartIndex: undefined,
-        });
-        useTaskStore.getState().setTranscription({
-          id: null,
-          stage: '',
-          percent: 0,
-          inProgress: false,
-        });
-      } catch (e) {
-        console.error('[video-store] pre-clear/save/reset error', e);
-      }
+      // Do not prompt or clear subtitles on video change.
+      // Unmounting subtitles (with save prompt) now happens on transcribe.
       set(initial);
 
       if (!fd) return;

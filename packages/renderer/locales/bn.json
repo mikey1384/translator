@@ -77,7 +77,11 @@
     "transcribeOnly": "অডিও ট্রান্সক্রাইব",
     "srtLoaded": "ট্রান্সক্রিপশন সম্পূর্ণ",
     "srtFileLoaded": "SRT লোড হয়েছে",
-    "featuresUnlockAfterTranscription": "ট্রান্সক্রিপশন সম্পূর্ণ হলে অনুবাদ এবং অন্যান্য মেনু প্রদর্শিত হবে।"
+    "featuresUnlockAfterTranscription": "ট্রান্সক্রিপশন সম্পূর্ণ হলে অনুবাদ এবং অন্যান্য মেনু প্রদর্শিত হবে।",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
@@ -229,6 +233,13 @@
     "slowDownloadBanner": {
       "title": "ডাউনলোড স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
       "description": "এটি ভিডিও প্ল্যাটফর্ম পরিবর্তন বা নতুন সুরক্ষা ব্যবস্থার কারণে হতে পারে। নতুন ভিডিওগুলি হ্যান্ডেল করতে আপনাকে পরবর্তী অ্যাপ সংস্করণের জন্য অপেক্ষা করতে হতে পারে।"
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "ট্রান্সক্রাইব করার আগে বর্তমান সাবটাইটেল সংরক্ষণ করবেন?",
+      "message": "আপনার কাছে ইতিমধ্যে সাবটাইটেল লোড করা আছে। ট্রান্সক্রাইব করলে সেগুলো প্রতিস্থাপিত হবে। আপনি কী করতে চান?",
+      "saveAndTranscribe": "সংরক্ষণ করে ট্রান্সক্রাইব করুন",
+      "discardAndTranscribe": "সংরক্ষণ না করে ট্রান্সক্রাইব করুন",
+      "cancel": "বাতিল"
     }
   },
   "progress": {
@@ -251,5 +262,31 @@
     "redirectingToPayment": "নিরাপদ চেকআউট খোলা হচ্ছে...",
     "description": "${{pack1Price}} ({{pack1Hours}} ঘন্টা), ${{pack2Price}} ({{pack2Hours}} ঘন্টা), বা ${{pack3Price}} ({{pack3Hours}} ঘন্টা) ক্রেডিট প্যাক থেকে বেছে নিন",
     "notEnough": "অপর্যাপ্ত ক্রেডিট। অব্যাহত রাখতে অনুগ্রহ করে আরো ক্রেডিট কিনুন।"
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

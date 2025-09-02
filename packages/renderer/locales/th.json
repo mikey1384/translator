@@ -77,7 +77,11 @@
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "โหลด SRT แล้ว",
-    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",
@@ -229,6 +233,13 @@
     "slowDownloadBanner": {
       "title": "Download is taking longer than usual.",
       "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "บันทึกคำบรรยายปัจจุบันก่อนถอดความหรือไม่?",
+      "message": "คุณมีคำบรรยายถูกโหลดอยู่แล้ว การถอดความจะเขียนทับคำบรรยายเหล่านั้น คุณต้องการทำอย่างไร?",
+      "saveAndTranscribe": "บันทึกและถอดความ",
+      "discardAndTranscribe": "ไม่บันทึกและถอดความ",
+      "cancel": "ยกเลิก"
     }
   },
   "progress": {
@@ -251,5 +262,31 @@
     "redirectingToPayment": "กำลังเปิดหน้าชำระเงินที่ปลอดภัย...",
     "description": "เลือกจากแพ็กเครดิต ${{pack1Price}} ({{pack1Hours}} ชั่วโมง), ${{pack2Price}} ({{pack2Hours}} ชั่วโมง), หรือ ${{pack3Price}} ({{pack3Hours}} ชั่วโมง)",
     "notEnough": "เครดิตไม่เพียงพอ กรุณาซื้อเครดิตเพิ่มเติมเพื่อดำเนินการต่อ"
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

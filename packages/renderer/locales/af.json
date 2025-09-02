@@ -77,7 +77,11 @@
     "transcribeOnly": "Transkribeer Klank",
     "srtLoaded": "Transkripsie Voltooi",
     "srtFileLoaded": "SRT gelaai",
-    "featuresUnlockAfterTranscription": "Vertaling en ander kieslyste sal verskyn nadat transkripsie voltooi is."
+    "featuresUnlockAfterTranscription": "Vertaling en ander kieslyste sal verskyn nadat transkripsie voltooi is.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "Uittree-taal",
@@ -228,7 +232,15 @@
     "slowDownloadBanner": {
       "title": "Aflaai neem langer as gewoonlik.",
       "description": "Dit kan wees as gevolg van video platform veranderinge of nuwe beskermingsmaatreëls. Jy mag dalk moet wag vir die volgende toepassing weergawe om nuwer videos te hanteer."
-    }
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "Stoor huidige onderskrifte voordat jy transkribeer?",
+      "message": "Jy het reeds onderskrifte gelaai. Transkribering sal dit vervang. Wat wil jy doen?",
+      "saveAndTranscribe": "Stoor en transkribeer",
+      "discardAndTranscribe": "Verwerp en transkribeer",
+      "cancel": "Kanselleer"
+    },
+    "transcriptionInProgress": "Transcription in Progress"
   },
   "progress": {
     "transcribedChunks": "Getranskribeer en skoongevee {{done}}/{{total}} stukkies",
@@ -250,5 +262,31 @@
     "redirectingToPayment": "Maak veilige uitklok oop...",
     "description": "Kies uit ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) kredietpakkette",
     "notEnough": "Onvoldoende krediet. Koop asseblief meer krediet om voort te gaan."
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

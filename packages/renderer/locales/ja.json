@@ -77,7 +77,11 @@
     "transcribeOnly": "音声を文字起こし",
     "srtLoaded": "文字起こし完了",
     "srtFileLoaded": "SRT を読み込みました",
-    "featuresUnlockAfterTranscription": "文字起こし完了後に翻訳や他のメニューが表示されます。"
+    "featuresUnlockAfterTranscription": "文字起こし完了後に翻訳や他のメニューが表示されます。",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -239,6 +243,13 @@
     "slowDownloadBanner": {
       "title": "ダウンロードに通常より時間がかかっています。",
       "description": "動画プラットフォームの変更や新しい保護対策が原因である可能性があります。新しい動画を処理するには、次のアプリバージョンをお待ちいただく必要があるかもしれません。"
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "文字起こしの前に現在の字幕を保存しますか？",
+      "message": "すでに字幕が読み込まれています。文字起こしを開始すると、現在の字幕は置き換えられます。どうしますか？",
+      "saveAndTranscribe": "保存して文字起こし",
+      "discardAndTranscribe": "保存せずに文字起こし",
+      "cancel": "キャンセル"
     }
   },
   "progress": {
@@ -263,5 +274,19 @@
       "pillOpen": ".srt を開く",
       "pillMerge": "動画に結合"
     }
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
   }
 }

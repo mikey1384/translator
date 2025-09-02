@@ -77,7 +77,11 @@
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT Imepakiwa",
-    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "Lugha ya Matokeo",
@@ -228,7 +232,15 @@
     "slowDownloadBanner": {
       "title": "Download is taking longer than usual.",
       "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
-    }
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "Hifadhi manukuu ya sasa kabla ya kunakili?",
+      "message": "Tayari una manukuu yaliyopakiwa. Kunakili kutayabadilisha. Ungependa kufanya nini?",
+      "saveAndTranscribe": "Hifadhi na nakili",
+      "discardAndTranscribe": "Usihifadhi na unakili",
+      "cancel": "Ghairi"
+    },
+    "transcriptionInProgress": "Transcription in Progress"
   },
   "progress": {
     "transcribedChunks": "Imeandikwa na kusafishwa {{done}}/{{total}} vipande",
@@ -250,5 +262,31 @@
     "redirectingToPayment": "Inafungua malipo salama...",
     "description": "Chagua kutoka kwa paketi za ${{pack1Price}} (masaa {{pack1Hours}}), ${{pack2Price}} (masaa {{pack2Hours}}), au ${{pack3Price}} (masaa {{pack3Hours}})",
     "notEnough": "Mikopo haitoshi. Tafadhali nunua mikopo zaidi ili kuendelea."
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

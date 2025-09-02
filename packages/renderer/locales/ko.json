@@ -269,6 +269,13 @@
     "slowDownloadBanner": {
       "title": "다운로드가 평소보다 오래 걸리고 있습니다.",
       "description": "동영상 플랫폼의 변경사항이나 새로운 보호 조치로 인한 것일 수 있습니다. 새로운 동영상을 처리하려면 다음 앱 버전을 기다려야 할 수 있습니다."
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "전사 시작 전에 현재 자막을 저장하시겠습니까?",
+      "message": "이미 자막이 로드되어 있습니다. 전사를 시작하면 현재 자막이 교체됩니다.",
+      "saveAndTranscribe": "저장하고 전사하기",
+      "discardAndTranscribe": "저장하지 않고 전사하기",
+      "cancel": "취소"
     }
   },
   "progress": {

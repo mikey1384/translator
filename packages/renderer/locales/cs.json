@@ -77,7 +77,11 @@
     "transcribeOnly": "Přepsat audio",
     "srtLoaded": "Přepis dokončen",
     "srtFileLoaded": "SRT načteno",
-    "featuresUnlockAfterTranscription": "Překlad a další nabídky se zobrazí po dokončení přepisu."
+    "featuresUnlockAfterTranscription": "Překlad a další nabídky se zobrazí po dokončení přepisu.",
+    "retryWithCookies": "Retry with browser cookies",
+    "selectBrowser": "Browser",
+    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
   },
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
@@ -229,6 +233,13 @@
     "slowDownloadBanner": {
       "title": "Stahování trvá déle než obvykle.",
       "description": "To může být způsobeno změnami video platformy nebo novými ochrannými opatřeními. Možná budete muset počkat na další verzi aplikace pro zpracování novějších videí."
+    },
+    "unsavedSrtOnTranscribe": {
+      "title": "Uložit současné titulky před přepisem?",
+      "message": "Titulky jsou již načtené. Přepis je nahradí. Co si přejete udělat?",
+      "saveAndTranscribe": "Uložit a přepsat",
+      "discardAndTranscribe": "Neukládat a přepsat",
+      "cancel": "Zrušit"
     }
   },
   "progress": {
@@ -251,5 +262,31 @@
     "redirectingToPayment": "Otevírání zabezpečené pokladny…",
     "description": "Vyberte z balíčků ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), nebo ${{pack3Price}} ({{pack3Hours}}h)",
     "notEnough": "Nedostatek kreditů. Prosím zakupte více kreditů pro pokračování."
+  },
+  "errors": {
+    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "unexpected": "An unexpected error occurred.",
+    "unexpectedRemove": "An unexpected error occurred while removing the key.",
+    "unexpectedSave": "An unexpected error occurred while saving.",
+    "unexpectedLoad": "An unexpected error occurred while loading.",
+    "renderFailed": "Render failed",
+    "creditReservationFailed": "Credit reservation failed",
+    "invalidRenderOptions": "Invalid render options provided",
+    "missingVideoMetadata": "Missing video metadata ({{missing}})",
+    "noSourceVideo": "No source video",
+    "noSubtitlesLoaded": "No subtitles loaded",
+    "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "cta": {
+    "generate": {
+      "title": "Get subtitles from a video",
+      "subtitle": "Transcribe/translate from device or link"
+    },
+    "edit": {
+      "title": "Edit an existing subtitle",
+      "subtitle": "Load, edit, and export SRT",
+      "pillOpen": "Open .srt",
+      "pillMerge": "Merge to video"
+    }
   }
 }

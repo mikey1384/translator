@@ -255,6 +255,13 @@
   "dialogs": {
     "saveSrtFileAs": "Save SRT File As",
     "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "unsavedSrtOnTranscribe": {
+      "title": "Save current subtitles before transcribing?",
+      "message": "You already have subtitles mounted. Transcribing will replace them. What would you like to do?",
+      "saveAndTranscribe": "Save and Transcribe",
+      "discardAndTranscribe": "Discard and Transcribe",
+      "cancel": "Cancel"
+    },
     "downloadInProgress": "Download in Progress",
     "saveDownloadedFile": "Save the downloaded file: {{path}}",
     "transcriptionInProgress": "Transcription in Progress",
