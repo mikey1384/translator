@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Bahasa Output",
     "showOriginalText": "Tunjukkan teks asal",
+    "translate": "Terjemah",
     "generate": "Jana Sarikata",
     "generating": "Menjana...",
     "generateNow": "Jana Sarikata Sekarang",

@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Γλώσσα Εξόδου",
     "showOriginalText": "Εμφάνιση αρχικού κειμένου",
+    "translate": "Μετάφραση",
     "generate": "Δημιουργία Υποτίτλων",
     "generating": "Δημιουργία...",
     "generateNow": "Δημιουργία Υποτίτλων Τώρα",

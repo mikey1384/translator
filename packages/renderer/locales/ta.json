@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "வெளியீட்டு மொழி",
     "showOriginalText": "அசல் உரையைக் காட்டு",
+    "translate": "மொழிபெயர்",
     "generate": "துணைத் தலைப்புகளை உருவாக்கு",
     "generating": "உருவாக்குகிறது...",
     "generateNow": "துணைத் தலைப்புகளை இப்போது உருவாக்கு",

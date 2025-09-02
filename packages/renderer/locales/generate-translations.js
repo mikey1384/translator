@@ -167,6 +167,8 @@ languagesToCreate.forEach(lang => {
 
 // New translation keys that need to be added to all languages
 const newKeys = {
+  // New translate button label used across Edit and Generate panels
+  'subtitles.translate': 'Translate',
   'common.error.missingVideoMetadata': 'Missing video metadata ({{missing}})',
   'common.error.noSourceVideo': 'No source video',
   'common.error.noSubtitlesLoaded': 'No subtitles loaded',

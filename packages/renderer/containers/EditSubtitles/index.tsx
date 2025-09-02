@@ -115,7 +115,7 @@ function EditHeaderTranslateBar({
         onClick={onTranslate}
         disabled={disabled}
       >
-        {t('subtitles.generate', 'Translate')}
+        {t('subtitles.translate', 'Translate')}
       </Button>
     </div>
   );

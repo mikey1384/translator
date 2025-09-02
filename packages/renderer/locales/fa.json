@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "زبان خروجی",
     "showOriginalText": "نمایش متن اصلی",
+    "translate": "ترجمه",
     "generate": "تولید زیرنویس",
     "generating": "در حال تولید...",
     "generateNow": "تولید زیرنویس اکنون",

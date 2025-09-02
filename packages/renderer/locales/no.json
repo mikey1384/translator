@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Utdataspråk",
     "showOriginalText": "Vis originaltekst",
+    "translate": "Oversett",
     "generate": "Generer undertekster",
     "generating": "Genererer...",
     "generateNow": "Generer undertekster nå",

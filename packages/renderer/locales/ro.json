@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Limba de ieșire",
     "showOriginalText": "Arată textul original",
+    "translate": "Traduce",
     "generate": "Generează Subtitrări",
     "generating": "Se generează...",
     "generateNow": "Generează Subtitrări Acum",

@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
     "showOriginalText": "Eredeti szöveg megjelenítése",
+    "translate": "Fordítás",
     "generate": "Feliratok generálása",
     "generating": "Generálás...",
     "generateNow": "Feliratok generálása most",

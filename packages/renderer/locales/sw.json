@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Lugha ya Matokeo",
     "showOriginalText": "Onyesha maandishi ya asili",
+    "translate": "Tafsiri",
     "generate": "Tengeneza Manukuu",
     "generating": "Inatengeneza...",
     "generateNow": "Tengeneza Manukuu Sasa",

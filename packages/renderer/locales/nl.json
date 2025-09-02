@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
     "showOriginalText": "Toon originele tekst",
+    "translate": "Vertalen",
     "generate": "Ondertitels genereren",
     "generating": "Genereren...",
     "generateNow": "Genereer ondertitels nu",

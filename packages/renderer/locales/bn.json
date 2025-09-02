@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
     "showOriginalText": "মূল টেক্সট দেখান",
+    "translate": "অনুবাদ করুন",
     "generate": "সাবটাইটেল তৈরি করুন",
     "generating": "তৈরি করা হচ্ছে...",
     "generateNow": "এখন সাবটাইটেল তৈরি করুন",

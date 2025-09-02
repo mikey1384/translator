@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Çıktı Dili",
     "showOriginalText": "Orijinal metni göster",
+    "translate": "Çevir",
     "generate": "Altyazı Oluştur",
     "generating": "Oluşturuluyor...",
     "generateNow": "Şimdi Altyazı Oluştur",

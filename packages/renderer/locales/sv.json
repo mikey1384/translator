@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Utmatningsspråk",
     "showOriginalText": "Visa originaltext",
+    "translate": "Översätt",
     "generate": "Generera undertexter",
     "generating": "Genererar...",
     "generateNow": "Generera undertexter nu",

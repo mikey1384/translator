@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Tulostuskieli",
     "showOriginalText": "Näytä alkuperäinen teksti",
+    "translate": "Käännä",
     "generate": "Luo tekstitykset",
     "generating": "Luodaan...",
     "generateNow": "Luo tekstitykset nyt",

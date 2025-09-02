@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
     "showOriginalText": "Hiển thị văn bản gốc",
+    "translate": "Dịch",
     "generate": "Tạo Phụ đề",
     "generating": "Đang tạo...",
     "generateNow": "Tạo Phụ đề Ngay",

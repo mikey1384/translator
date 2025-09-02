@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Język wyjściowy",
     "showOriginalText": "Pokaż oryginalny tekst",
+    "translate": "Przetłumacz",
     "generate": "Generuj napisy",
     "generating": "Generowanie...",
     "generateNow": "Generuj napisy teraz",

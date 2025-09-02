@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Wika ng Output",
     "showOriginalText": "Ipakita ang orihinal na teksto",
+    "translate": "Isalin",
     "generate": "Bumuo ng Subtitle",
     "generating": "Bumubuo...",
     "generateNow": "Bumuo ng Subtitle Ngayon",

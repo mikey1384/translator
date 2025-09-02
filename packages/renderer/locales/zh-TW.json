@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "輸出語言",
     "showOriginalText": "顯示原文",
+    "translate": "翻譯",
     "generate": "生成字幕",
     "generating": "生成中...",
     "generateNow": "立即生成字幕",

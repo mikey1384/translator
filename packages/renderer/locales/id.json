@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Bahasa Keluaran",
     "showOriginalText": "Tampilkan teks asli",
+    "translate": "Terjemahkan",
     "generate": "Hasilkan Subtitle",
     "generating": "Menghasilkan...",
     "generateNow": "Hasilkan Subtitle Sekarang",

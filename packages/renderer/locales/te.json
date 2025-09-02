@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "అవుట్‌పుట్ భాష",
     "showOriginalText": "అసలు టెక్స్ట్ చూపించు",
+    "translate": "అనువదించండి",
     "generate": "ఉపశీర్షికలను రూపొందించండి",
     "generating": "జనరేట్ చేస్తోంది...",
     "generateNow": "ఇప్పుడు ఉపశీర్షికలను రూపొందించండి",

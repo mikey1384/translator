@@ -147,7 +147,7 @@ export default function SrtLoadedPanel({
           disabled={disabled || isTranslating}
           isLoading={isTranslating}
         >
-          {t('subtitles.generate', 'Translate')}
+          {t('subtitles.translate', 'Translate')}
         </Button>
       </div>
     </div>

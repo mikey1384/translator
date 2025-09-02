@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
     "showOriginalText": "عرض النص الأصلي",
+    "translate": "ترجم",
     "generate": "إنشاء الترجمات",
     "generating": "جارٍ الإنشاء...",
     "generateNow": "إنشاء الترجمات الآن",

@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",
     "showOriginalText": "แสดงข้อความต้นฉบับ",
+    "translate": "แปล",
     "generate": "สร้างคำบรรยาย",
     "generating": "กำลังสร้าง...",
     "generateNow": "สร้างคำบรรยายเดี๋ยวนี้",

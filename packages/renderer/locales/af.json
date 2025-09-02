@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Uittree-taal",
     "showOriginalText": "Wys oorspronklike teks",
+    "translate": "Vertaal",
     "generate": "Genereer Onderskrifte",
     "generating": "Besig om te genereer...",
     "generateNow": "Genereer Onderskrifte Nou",

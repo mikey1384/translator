@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Мова виведення",
     "showOriginalText": "Показати оригінальний текст",
+    "translate": "Перекласти",
     "generate": "Згенерувати субтитри",
     "generating": "Генерація...",
     "generateNow": "Згенерувати субтитри зараз",

@@ -100,6 +100,7 @@
   "subtitles": {
     "outputLanguage": "Output Language",
     "showOriginalText": "Show original text",
+    "translate": "Translate",
     "generate": "Generate Subtitles",
     "generating": "Generating...",
     "generateNow": "Generate Subtitles Now",

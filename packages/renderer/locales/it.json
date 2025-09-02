@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Lingua di output",
     "showOriginalText": "Mostra testo originale",
+    "translate": "Traduci",
     "generate": "Genera sottotitoli",
     "generating": "Generazione in corso...",
     "generateNow": "Genera sottotitoli ora",

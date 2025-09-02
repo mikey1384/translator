@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "שפת פלט",
     "showOriginalText": "הצג טקסט מקורי",
+    "translate": "תרגם",
     "generate": "צור כתוביות",
     "generating": "יוצר כתוביות...",
     "generateNow": "צור כתוביות עכשיו",

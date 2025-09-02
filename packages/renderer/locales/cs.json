@@ -86,6 +86,7 @@
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
     "showOriginalText": "Zobrazit původní text",
+    "translate": "Přeložit",
     "generate": "Generovat titulky",
     "generating": "Generování...",
     "generateNow": "Generovat titulky nyní",
