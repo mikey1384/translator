@@ -9,7 +9,7 @@ export function useCreditSystem() {
   }, [refresh]);
 
   const showCreditWarning = (hours ?? 0) <= 0 && !creditLoading;
-  const isButtonDisabled = (hours ?? 0) <= 0;
+  const isButtonDisabled = false;
 
   return {
     balance: hours,

@@ -3,7 +3,6 @@ import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 import * as SystemIPC from '../../../ipc/system';
-import { checkSufficientCredits } from '../utils/creditCheck';
 import { buildSrt } from '../../../../shared/helpers';
 import { useSubStore, useUIStore } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
@@ -194,17 +193,6 @@ export async function startTranscriptionFlow({
       validation.errorMessage || i18n.t('generateSubtitles.calculatingCost');
     await SystemIPC.showMessage(msg);
     return { success: false };
-  }
-
-  // Credits check
-  if (durationSecs) {
-    const creditCheck = checkSufficientCredits(durationSecs);
-    if (!creditCheck.hasSufficientCredits) {
-      await SystemIPC.showMessage(
-        `Not enough credits. This video needs ~${creditCheck.estimatedCredits.toLocaleString()} credits, but you only have ${creditCheck.currentBalance.toLocaleString()}.`
-      );
-      return { success: false };
-    }
   }
 
   return executeSubtitleGeneration({

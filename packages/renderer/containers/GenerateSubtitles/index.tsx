@@ -24,7 +24,6 @@ import { useCreditSystem } from './hooks/useCreditSystem';
 import CreditWarningBanner from './components/CreditWarningBanner';
 
 // Utilities
-import { checkSufficientCredits } from './utils/creditCheck';
 import {
   executeSrtTranslation,
   startTranscriptionFlow,
@@ -151,16 +150,6 @@ export default function GenerateSubtitles() {
     if (currentSegments.length === 0) {
       useUrlStore.getState().setError('No SRT file available for translation');
       return;
-    }
-
-    if (durationSecs) {
-      const creditCheck = checkSufficientCredits(durationSecs);
-      if (!creditCheck.hasSufficientCredits) {
-        await SystemIPC.showMessage(
-          `Not enough credits. This translation needs ~${creditCheck.estimatedCredits.toLocaleString()} credits, but you only have ${creditCheck.currentBalance.toLocaleString()}.`
-        );
-        return;
-      }
     }
 
     const operationId = `translate-${Date.now()}`;

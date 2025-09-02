@@ -73,9 +73,8 @@ export async function callAIModel({
 
       // Handle specific error cases
       if (error?.message === 'insufficient-credits') {
-        throw new SubtitleProcessingError(
-          'Insufficient credits. Please purchase more credits to continue.'
-        );
+        // Treat insufficient credits as a cancellation so the UI can resume later.
+        throw new DOMException('Operation cancelled', 'AbortError');
       }
 
       throw new Error(

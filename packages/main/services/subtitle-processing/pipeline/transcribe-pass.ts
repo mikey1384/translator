@@ -200,6 +200,13 @@ export async function transcribePass({
 
           return segs;
         } catch (chunkError: any) {
+          // If credits ran out, abort the entire transcription flow.
+          if (
+            chunkError?.message === 'insufficient-credits' ||
+            /Insufficient credits/i.test(String(chunkError?.message || chunkError))
+          ) {
+            throw chunkError;
+          }
           if (chunkError?.message === 'Cancelled') {
             log.info(
               `[${operationId}] Chunk ${meta.index} processing cancelled.`
@@ -221,6 +228,17 @@ export async function transcribePass({
 
       // Process the batch concurrently
       const segArraysSettled = await Promise.allSettled(segArraysPromises);
+      // If any chunk failed due to insufficient credits, cancel the process
+      const outOfCredits = segArraysSettled.some(r =>
+        r.status === 'rejected' &&
+        ((r.reason &&
+          (r.reason.message === 'insufficient-credits' ||
+            /Insufficient credits/i.test(String(r.reason.message || r.reason))))
+        )
+      );
+      if (outOfCredits) {
+        throw new DOMException('Operation cancelled', 'AbortError');
+      }
       const segArrays: SrtSegment[][] = segArraysSettled.map(r =>
         r.status === 'fulfilled' ? r.value : []
       );

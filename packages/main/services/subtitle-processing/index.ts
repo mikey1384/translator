@@ -81,6 +81,9 @@ export async function extractSubtitlesFromMedia({
     const isCancel =
       error.name === 'AbortError' ||
       (error instanceof Error && error.message === 'Operation cancelled') ||
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      ) ||
       signal.aborted;
 
     if (isCancel) {

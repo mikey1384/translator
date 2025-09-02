@@ -146,6 +146,13 @@ export async function transcribeChunk({
 
     return [];
   } catch (error: any) {
+    // If credits ran out, propagate a recognizable error upstream
+    if (
+      error?.message === 'insufficient-credits' ||
+      /Insufficient credits/i.test(String(error?.message || error))
+    ) {
+      throw error;
+    }
     if (
       error.name === 'AbortError' ||
       (error instanceof Error && error.message === 'Cancelled') ||

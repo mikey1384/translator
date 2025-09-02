@@ -23,6 +23,7 @@ function flush() {
     batchStartIndex,
     partialResult,
   } = queued;
+  const stageLower = (stage ?? '').toLowerCase();
 
   // Route updates based on operationId prefix
   const isTranscribe = operationId?.startsWith('transcribe-');
@@ -75,7 +76,9 @@ function flush() {
     try {
       const { showEditPanel, setEditPanelOpen } = useUIStore.getState();
       if (!showEditPanel) setEditPanelOpen(true);
-    } catch {}
+    } catch {
+      // Do nothing
+    }
   }
 
   const isComplete = percent >= 100 || /processing complete/i.test(stage ?? '');
@@ -121,6 +124,14 @@ function flush() {
 
   // After completion, stop applying any further queued updates
   if (isComplete) {
+    // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
+    if (/cancel/.test(stageLower)) {
+      try {
+        useCreditStore.getState().refresh();
+      } catch {
+        // Do nothing
+      }
+    }
     queued = null;
     if (flushTimer) {
       clearTimeout(flushTimer);
@@ -130,7 +141,7 @@ function flush() {
   }
 
   // Refresh credit balance during AI processing phases when credits are being consumed
-  const stageLower = stage.toLowerCase();
+  // stageLower declared earlier
   const isActiveAIPhase =
     stageLower.includes('transcrib') ||
     stageLower.includes('translat') ||

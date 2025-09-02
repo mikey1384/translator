@@ -110,7 +110,10 @@ export async function handleGenerateSubtitles(
     const isCancel =
       controller.signal.aborted ||
       error.name === 'AbortError' ||
-      error.message === 'Operation cancelled';
+      error.message === 'Operation cancelled' ||
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
     if (tempVideoPath && !isCancel) {
       await cleanupTempFile(tempVideoPath);
     }
@@ -211,7 +214,24 @@ export async function handleTranslateSubtitles(
     };
   } catch (error: any) {
     const isCancel =
-      error?.name === 'AbortError' || error?.message === 'Operation cancelled';
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled' ||
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
+    // Emit a final progress event so renderer updates status appropriately
+    try {
+      event.sender.send('generate-subtitles-progress', {
+        percent: 100,
+        stage: isCancel
+          ? 'Process cancelled'
+          : `Error: ${error?.message || String(error)}`,
+        error: isCancel ? undefined : error?.message || String(error),
+        operationId,
+      });
+    } catch {
+      // Do nothing
+    }
     return {
       success: !isCancel,
       cancelled: isCancel,
