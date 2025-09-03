@@ -9,7 +9,8 @@ export type LogKind =
   | 'progress'
   | 'error'
   | 'system'
-  | 'ui';
+  | 'ui'
+  | 'network';
 
 export interface LogEntry {
   id: string;
@@ -33,9 +34,9 @@ interface Actions {
 }
 
 export const useLogsStore = createWithEqualityFn<State & Actions>()(
-  immer(set => ({
-    logs: [],
-    max: 100,
+  immer<State & Actions>((set, get) => ({
+    logs: [] as LogEntry[],
+    max: 200,
 
     add(entry) {
       set(s => {
@@ -55,11 +56,13 @@ export const useLogsStore = createWithEqualityFn<State & Actions>()(
     },
 
     clear() {
-      set({ logs: [] });
+      set(s => {
+        s.logs = [];
+      });
     },
 
     recent(n = 30) {
-      const all = (useLogsStore.getState().logs || []).slice();
+      const all = (get().logs || []).slice();
       return all.slice(Math.max(0, all.length - n));
     },
   }))

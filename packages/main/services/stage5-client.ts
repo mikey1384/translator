@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { BrowserWindow } from 'electron';
 import Store from 'electron-store';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
@@ -6,6 +7,21 @@ import FormData from 'form-data';
 import { AI_MODELS } from '../../shared/constants/index.js';
 
 const API = 'https://api.stage5.tools';
+
+function sendNetLog(
+  level: 'info' | 'warn' | 'error',
+  message: string,
+  meta?: any
+) {
+  try {
+    const payload = { level, kind: 'network', message, meta };
+    BrowserWindow.getAllWindows().forEach(w =>
+      w.webContents.send('app:log', payload)
+    );
+  } catch {
+    // Do nothing
+  }
+}
 
 const idStore = new Store<{ deviceId?: string }>({ name: 'device-config' });
 
@@ -67,6 +83,11 @@ export async function transcribe({
       },
       signal, // Pass the AbortSignal to axios
     });
+    sendNetLog('info', `POST /transcribe -> ${submitResponse.status}`, {
+      url: `${API}/transcribe`,
+      method: 'POST',
+      status: submitResponse.status,
+    });
 
     // Handle 202 response with job ID
     if (submitResponse.status === 202) {
@@ -89,6 +110,15 @@ export async function transcribe({
           {
             headers: headers(),
             signal,
+          }
+        );
+        sendNetLog(
+          'info',
+          `GET /transcribe/result/${jobId} -> ${resultResponse.status}`,
+          {
+            url: `${API}/transcribe/result/${jobId}`,
+            method: 'GET',
+            status: resultResponse.status,
           }
         );
 
@@ -133,7 +163,26 @@ export async function transcribe({
       throw new Error('insufficient-credits');
     }
 
-    // Re-throw other errors as-is
+    // Log HTTP errors then re-throw
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        {
+          status: error.response.status,
+          url: error.config?.url,
+          method: error.config?.method,
+        }
+      );
+    } else if (error.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        { url: error.config?.url, method: error.config?.method }
+      );
+    } else {
+      sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
+    }
     throw error;
   }
 }
@@ -169,6 +218,11 @@ export async function translate({
         signal, // Pass the AbortSignal to axios
       }
     );
+    sendNetLog('info', `POST /translate -> ${response.status}`, {
+      url: `${API}/translate`,
+      method: 'POST',
+      status: response.status,
+    });
 
     return response.data;
   } catch (error: any) {
@@ -186,7 +240,26 @@ export async function translate({
       throw new Error('insufficient-credits');
     }
 
-    // Re-throw other errors as-is
+    // Log HTTP errors then re-throw
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        {
+          status: error.response.status,
+          url: error.config?.url,
+          method: error.config?.method,
+        }
+      );
+    } else if (error.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        { url: error.config?.url, method: error.config?.method }
+      );
+    } else {
+      sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
+    }
     throw error;
   }
 }

@@ -310,6 +310,7 @@
     "copied": "클립보드에 복사됨",
     "copyFailed": "복사 실패",
     "emailSubject": "Stage5 디버그 로그",
-    "emailBodyPrefix": "안녕하세요,\n\n아래는 문제 해결을 위한 최근 로그입니다.\n\n"
+    "emailBodyPrefix": "안녕하세요,\n\n아래는 문제 해결을 위한 최근 로그입니다.\n\n",
+    "deviceInfoHeader": "장치 정보"
   }
 }

@@ -32,13 +32,12 @@ export default function SideMenu({
     scrollToCurrent: s.scrollToCurrent,
   }));
   const setTranslation = useTaskStore(s => s.setTranslation);
-  const { transcription, translation, merge } = useTaskStore(s => ({
-    transcription: s.transcription,
-    translation: s.translation,
-    merge: s.merge,
-  }));
-  const isTranscribing = !!transcription.inProgress;
-  const isMerging = !!merge.inProgress;
+  const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+  const isMerging = useTaskStore(s => !!s.merge.inProgress);
+  const transcriptionIsCompleted = useTaskStore(
+    s => !!s.transcription.isCompleted
+  );
+  const translationInProgress = useTaskStore(s => !!s.translation.inProgress);
   const targetLanguage = useUIStore(s => s.targetLanguage || 'english');
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
 
@@ -138,7 +137,7 @@ export default function SideMenu({
             openChangeVideo();
           }}
           title={t('videoPlayer.changeVideo', 'Change Video')}
-          disabled={isTranscribing || translation.inProgress || isMerging}
+          disabled={isTranscribing || translationInProgress || isMerging}
         >
           <svg
             width="14"
@@ -161,7 +160,7 @@ export default function SideMenu({
           size="sm"
           variant="secondary"
           onClick={handleMountOrChangeSrt}
-          disabled={isTranscribing || translation.inProgress || isMerging}
+          disabled={isTranscribing || translationInProgress || isMerging}
           title={
             originalPath
               ? t('videoPlayer.changeSrt', 'Change SRT')
@@ -222,15 +221,15 @@ export default function SideMenu({
         )}
 
         {/* Transcribe appears only when Generate panel shows it: not completed and not translating */}
-        {!transcription.isCompleted && !translation.inProgress && (
+        {!transcriptionIsCompleted && !translationInProgress && (
           <Button
             size="sm"
             variant="primary"
             onClick={handleTranscribe}
-            isLoading={!!transcription.inProgress}
+            isLoading={isTranscribing}
             title={t('input.transcribeOnly')}
           >
-            {transcription.inProgress
+            {isTranscribing
               ? t('subtitles.generating')
               : t('input.transcribeOnly')}
           </Button>
@@ -270,7 +269,7 @@ export default function SideMenu({
               size="sm"
               variant="primary"
               onClick={handleTranslateMissing}
-              disabled={isTranscribing || translation.inProgress}
+              disabled={isTranscribing || translationInProgress}
               title={t('subtitles.translate', 'Translate')}
             >
               <svg

@@ -17,7 +17,6 @@ import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
 import { colors, selectStyles } from '../../styles';
-import { logButton, logError, logTask } from '../../utils/logger';
 import {
   TRANSLATION_LANGUAGE_GROUPS,
   TRANSLATION_LANGUAGES_BASE,
@@ -136,7 +135,9 @@ export default function EditSubtitles({
     meta,
   } = useVideoStore();
   const { t } = useTranslation();
-  const { merge: mergeTask, translation } = useTaskStore();
+  const translationCompleted = useTaskStore(s => !!s.translation.isCompleted);
+  const translationInProgress = useTaskStore(s => !!s.translation.inProgress);
+  const mergeInProgress = useTaskStore(s => !!s.merge.inProgress);
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
   const sourceId = useSubStore(s => s.sourceId);
@@ -206,7 +207,7 @@ export default function EditSubtitles({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navTick]);
 
-  const rbs = translation.reviewedBatchStartIndex;
+  const rbs = useTaskStore(s => s.translation.reviewedBatchStartIndex);
   useEffect(() => {
     if (rbs == null || rbs === prevReviewedBatchRef.current) return;
 
@@ -239,8 +240,8 @@ export default function EditSubtitles({
   useEffect(() => {
     if (
       origin === 'fresh' &&
-      translation.isCompleted &&
-      !translation.inProgress &&
+      translationCompleted &&
+      !translationInProgress &&
       subtitles.length > 0 &&
       lastPromptedRef.current !== sourceId
     ) {
@@ -261,8 +262,8 @@ export default function EditSubtitles({
     }
   }, [
     origin,
-    translation.isCompleted,
-    translation.inProgress,
+    translationCompleted,
+    translationInProgress,
     sourceId,
     subtitles,
     t,
@@ -291,7 +292,7 @@ export default function EditSubtitles({
 
   const headerRight = hasUntranslated ? (
     <EditHeaderTranslateBar
-      disabled={translation.inProgress || isTranscribing}
+      disabled={translationInProgress || isTranscribing}
       onTranslate={handleTranslateMissing}
     />
   ) : null;
@@ -321,7 +322,9 @@ export default function EditSubtitles({
               onClick={handleLoadSrtLocal}
               className={subtleAccentButton}
               title={t('subtitles.chooseSrtFile')}
-              disabled={isTranscribing || translation.inProgress || mergeTask.inProgress}
+              disabled={
+                isTranscribing || translationInProgress || mergeInProgress
+              }
             >
               <div
                 className={css`
@@ -418,9 +421,11 @@ export default function EditSubtitles({
             />
 
             {/* Continue Transcribing button (append remaining) */}
-            {videoPath && subtitles.length > 0 &&
+            {videoPath &&
+              subtitles.length > 0 &&
               typeof videoDuration === 'number' &&
-              videoDuration - (subtitles[subtitles.length - 1]?.end ?? 0) >= 60 && (
+              videoDuration - (subtitles[subtitles.length - 1]?.end ?? 0) >=
+                60 && (
                 <div
                   className={css`
                     display: flex;
@@ -433,8 +438,13 @@ export default function EditSubtitles({
                     size="lg"
                     className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
                     onClick={handleContinueTranscribing}
-                    disabled={isTranscribing || translation.inProgress || mergeTask.inProgress}
-                    title={t('subtitles.continueTranscribing', 'Continue transcribing')}
+                    disabled={
+                      isTranscribing || translationInProgress || mergeInProgress
+                    }
+                    title={t(
+                      'subtitles.continueTranscribing',
+                      'Continue transcribing'
+                    )}
                   >
                     <div
                       className={css`
@@ -458,7 +468,10 @@ export default function EditSubtitles({
                         <path d="M12 5l7 7-7 7" />
                       </svg>
                       <span>
-                        {t('subtitles.continueTranscribing', 'Continue transcribing')}
+                        {t(
+                          'subtitles.continueTranscribing',
+                          'Continue transcribing'
+                        )}
                       </span>
                     </div>
                   </Button>
@@ -495,10 +508,10 @@ export default function EditSubtitles({
 
           <MergeMenu
             onMergeMediaWithSubtitles={handleMerge}
-            isMergingInProgress={mergeTask.inProgress}
+            isMergingInProgress={mergeInProgress}
             videoFileExists={!!videoPath}
             subtitlesExist={subtitles.length > 0}
-            isTranslationInProgress={translation.inProgress}
+            isTranslationInProgress={translationInProgress}
           />
         </div>
       )}
@@ -507,7 +520,11 @@ export default function EditSubtitles({
 
   async function handleSaveSrt() {
     if (!originalPath) return handleSaveEditedSrtAs();
-    try { logButton('save_srt'); } catch {}
+    try {
+      logButton('save_srt');
+    } catch {
+      // Do nothing
+    }
     await writeSrt(originalPath);
   }
 
@@ -527,9 +544,17 @@ export default function EditSubtitles({
           percent: 0,
           inProgress: true,
         });
-        logTask('start', 'transcription', { operationId, mode: 'continue-tail', start });
-      } catch {}
-      const res = await (await import('../../ipc/subtitles')).transcribeRemaining({
+        logTask('start', 'transcription', {
+          operationId,
+          mode: 'continue-tail',
+          start,
+        });
+      } catch {
+        // Do nothing
+      }
+      const res = await (
+        await import('../../ipc/subtitles')
+      ).transcribeRemaining({
         videoPath,
         start,
         operationId,
@@ -537,7 +562,11 @@ export default function EditSubtitles({
       const segs = (res as any)?.segments as any[];
       if (Array.isArray(segs) && segs.length > 0) {
         useSubStore.getState().appendSegments(
-          segs.map(s => ({ start: s.start, end: s.end, original: s.original }))
+          segs.map(s => ({
+            start: s.start,
+            end: s.end,
+            original: s.original,
+          }))
         );
       }
       // Mark completion explicitly (progress-buffer will also send final 100%)
@@ -548,7 +577,9 @@ export default function EditSubtitles({
           inProgress: false,
         });
         logTask('complete', 'transcription', { operationId });
-      } catch {}
+      } catch {
+        // Do nothing
+      }
     } catch (err) {
       console.error('[EditSubtitles] continue transcribing error:', err);
       // Surface error state to progress UI
@@ -558,13 +589,19 @@ export default function EditSubtitles({
           percent: 100,
           inProgress: false,
         });
-      } catch {}
+      } catch {
+        // Do nothing
+      }
       logError('continue_transcribing', err as any);
     }
   }
 
   async function handleSaveEditedSrtAs() {
-    try { logButton('save_srt_as'); } catch {}
+    try {
+      logButton('save_srt_as');
+    } catch {
+      // Do nothing
+    }
     const suggestion = originalPath || 'subtitles.srt';
     const res = await FileIPC.save({
       title: t('dialogs.saveSrtFileAs'),
@@ -609,12 +646,20 @@ export default function EditSubtitles({
       logButton('merge_start');
       if (!videoPath) {
         setSaveError(t('common.error.noSourceVideo'));
-        try { logError('merge', 'no_source_video'); } catch {}
+        try {
+          logError('merge', 'no_source_video');
+        } catch {
+          // Do nothing
+        }
         return;
       }
       if (subtitles.length === 0) {
         setSaveError(t('common.error.noSubtitlesLoaded'));
-        try { logError('merge', 'no_subtitles_loaded'); } catch {}
+        try {
+          logError('merge', 'no_subtitles_loaded');
+        } catch {
+          // Do nothing
+        }
         return;
       }
       if (!isAudioOnly) {
@@ -667,23 +712,39 @@ export default function EditSubtitles({
       const res = await onStartPngRenderRequest(opts);
       if (!res.success) {
         setSaveError(res.error || t('common.error.renderFailed'));
-        try { logError('merge', (res.error as any) || 'render_failed'); } catch {}
+        try {
+          logError('merge', (res.error as any) || 'render_failed');
+        } catch {
+          // Do nothing
+        }
         setMergeStage('Error');
         onSetMergeOperationId(null);
       }
     } finally {
       useTaskStore.getState().doneMerge();
-      try { logTask('complete', 'merge', {} as any); } catch {}
+      try {
+        logTask('complete', 'merge', {} as any);
+      } catch {
+        // Do nothing
+      }
     }
   }
 
   async function handleLoadSrtLocal() {
-    try { logButton('choose_srt_from_device'); } catch {}
+    try {
+      logButton('choose_srt_from_device');
+    } catch {
+      // Do nothing
+    }
     setSaveError('');
     const res = await openSubtitleWithElectron();
     if (res.error && !res.error.includes('canceled')) {
       setSaveError(res.error);
-      try { logError('open_srt', res.error as any); } catch {}
+      try {
+        logError('open_srt', res.error as any);
+      } catch {
+        // Do nothing
+      }
       return;
     }
     if (res.segments) {

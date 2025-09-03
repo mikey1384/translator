@@ -46,6 +46,16 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
 
     setTranslation: p =>
       set(s => {
+        const t = s.translation;
+        const same =
+          (p.stage === undefined || p.stage === t.stage) &&
+          (p.percent === undefined ||
+            Math.round(p.percent) === Math.round(t.percent)) &&
+          (p.id === undefined || p.id === t.id) &&
+          (p.inProgress === undefined || p.inProgress === t.inProgress) &&
+          (p.batchStartIndex === undefined ||
+            p.batchStartIndex === t.reviewedBatchStartIndex);
+        if (same) return;
         Object.assign(s.translation, p);
         const stageNow = (p.stage ?? s.translation.stage ?? '').toLowerCase();
         const pctNow = p.percent ?? s.translation.percent ?? 0;
@@ -79,16 +89,22 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           s.translation.reviewedBatchStartIndex = p.batchStartIndex;
         }
         if (p.inProgress === false) {
+          // Mark not in progress, but preserve final percent/stage and completion flag
+          s.translation.inProgress = false;
           s.translation.reviewedBatchStartIndex = null;
           s.translation.id = null;
-          s.translation.stage = '';
-          s.translation.percent = 0;
-          s.translation.inProgress = false;
-          s.translation.isCompleted = false;
         }
       }),
     setTranscription: p =>
       set(s => {
+        const t = s.transcription;
+        const same =
+          (p.stage === undefined || p.stage === t.stage) &&
+          (p.percent === undefined ||
+            Math.round(p.percent) === Math.round(t.percent)) &&
+          (p.id === undefined || p.id === t.id) &&
+          (p.inProgress === undefined || p.inProgress === t.inProgress);
+        if (same) return;
         Object.assign(s.transcription, p);
         const stageNow = (p.stage ?? s.transcription.stage ?? '').toLowerCase();
         const pctNow = p.percent ?? s.transcription.percent ?? 0;
@@ -103,14 +119,14 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
         }
         if (p.percent !== undefined || p.stage !== undefined) {
           s.transcription.isCompleted =
-            !isCancelled && (pctNow >= 100 || /processing complete|complete|done/i.test(stageNow));
+            !isCancelled &&
+            (pctNow >= 100 ||
+              /processing complete|complete|done/i.test(stageNow));
         }
         if (p.inProgress === false) {
-          s.transcription.id = null;
-          s.transcription.stage = '';
-          s.transcription.percent = 0;
+          // Mark not in progress, but preserve final percent/stage and completion flag
           s.transcription.inProgress = false;
-          s.transcription.isCompleted = false;
+          s.transcription.id = null;
         }
       }),
     setMerge: p =>

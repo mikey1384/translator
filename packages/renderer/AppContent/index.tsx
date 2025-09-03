@@ -31,13 +31,17 @@ export default function AppContent() {
   const { showSettings } = useUIStore();
   const { setDownload } = useUrlStore();
   const { url: videoUrl } = useVideoStore();
-  const { merge, translation, transcription } = useTaskStore();
-  const isTranslating =
-    !!translation.inProgress &&
-    (translation.id?.startsWith('translate-') ?? false);
-  const isTranscribing =
-    !!transcription.inProgress &&
-    (transcription.id?.startsWith('transcribe-') ?? false);
+  const isTranslating = useTaskStore(
+    s =>
+      !!s.translation.inProgress &&
+      (s.translation.id?.startsWith('translate-') ?? false)
+  );
+  const isTranscribing = useTaskStore(
+    s =>
+      !!s.transcription.inProgress &&
+      (s.transcription.id?.startsWith('transcribe-') ?? false)
+  );
+  const mergeInProgress = useTaskStore(s => s.merge.inProgress);
   const download = useUrlStore(s => s.download);
   const { showCreditWarning } = useCreditSystem();
 
@@ -145,13 +149,13 @@ export default function AppContent() {
   }, [isTranslating]);
 
   useEffect(() => {
-    const now = !!merge.inProgress;
+    const now = !!mergeInProgress;
     const prev = prevMergingRef.current;
     if (prev !== now) {
       logProgress(now ? 'open' : 'close', 'merge');
       prevMergingRef.current = now;
     }
-  }, [merge.inProgress]);
+  }, [mergeInProgress]);
 
   const handleCancelDownload = () => {
     if (!download.id) return;
@@ -161,7 +165,9 @@ export default function AppContent() {
       // Suppress cookie banner after cancel to ignore late NeedCookies events
       try {
         (useUrlStore as any).setState({ cookieBannerSuppressed: true });
-      } catch {}
+      } catch {
+        // Do nothing
+      }
       useUrlStore.getState().setDownload({
         inProgress: false,
         percent: 100,
@@ -169,7 +175,9 @@ export default function AppContent() {
       });
       // Remove any lingering error message (e.g., NeedCookies)
       useUrlStore.getState().clearError();
-    } catch {}
+    } catch {
+      // Do nothing
+    }
     OperationIPC.cancel(download.id!);
   };
 
@@ -226,7 +234,7 @@ export default function AppContent() {
               }
             />
 
-            {merge.inProgress && <MergingProgressArea />}
+            {mergeInProgress && <MergingProgressArea />}
 
             {isTranscribing && <TranscriptionProgressArea />}
 

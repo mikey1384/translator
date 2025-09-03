@@ -310,6 +310,7 @@
     "copied": "Registros copiados al portapapeles",
     "copyFailed": "Error al copiar",
     "emailSubject": "Registros de depuración Stage5",
-    "emailBodyPrefix": "Hola,\n\nAdjunto mis registros recientes para ayudar con el problema.\n\n"
+    "emailBodyPrefix": "Hola,\n\nAdjunto mis registros recientes para ayudar con el problema.\n\n",
+    "deviceInfoHeader": "Información del dispositivo"
   }
 }

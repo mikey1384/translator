@@ -296,22 +296,24 @@ export default function VideoPlayer() {
   // Side menu removed; no need for file dialog here
   const isAudioOnly = useVideoStore(s => s.isAudioOnly);
   const videoPath = useVideoStore(s => s.path);
-  const { merge, translation, transcription } = useTaskStore();
+  const mergeInProgress = useTaskStore(s => s.merge.inProgress);
+  const translationInProgress = useTaskStore(s => s.translation.inProgress);
+  const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
   const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
 
   const isProgressBarVisible = useMemo(() => {
     return (
-      merge.inProgress ||
+      mergeInProgress ||
       download.inProgress ||
-      translation.inProgress ||
-      transcription.inProgress
+      translationInProgress ||
+      transcriptionInProgress
     );
   }, [
-    merge.inProgress,
+    mergeInProgress,
     download.inProgress,
-    translation.inProgress,
-    transcription.inProgress,
+    translationInProgress,
+    transcriptionInProgress,
   ]);
 
   const [isFullScreen, setIsFullScreen] = useState(false);

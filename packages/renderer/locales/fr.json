@@ -310,6 +310,7 @@
     "copied": "Journaux copiés dans le presse-papiers",
     "copyFailed": "Échec de la copie",
     "emailSubject": "Journaux de débogage Stage5",
-    "emailBodyPrefix": "Bonjour,\n\nVoici mes journaux récents pour aider au diagnostic.\n\n"
+    "emailBodyPrefix": "Bonjour,\n\nVoici mes journaux récents pour aider au diagnostic.\n\n",
+    "deviceInfoHeader": "Informations sur l’appareil"
   }
 }

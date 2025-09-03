@@ -311,6 +311,7 @@
     "copied": "Logs copied to clipboard",
     "copyFailed": "Copy failed",
     "emailSubject": "Stage5 Debug Logs",
-    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n"
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }

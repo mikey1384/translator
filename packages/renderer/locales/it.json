@@ -310,6 +310,7 @@
     "copied": "Log copiati negli appunti",
     "copyFailed": "Copia non riuscita",
     "emailSubject": "Log di debug Stage5",
-    "emailBodyPrefix": "Ciao,\n\nQui sotto i miei log recenti per il debug.\n\n"
+    "emailBodyPrefix": "Ciao,\n\nQui sotto i miei log recenti per il debug.\n\n",
+    "deviceInfoHeader": "Informazioni dispositivo"
   }
 }

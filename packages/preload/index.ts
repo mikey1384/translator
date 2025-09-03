@@ -296,6 +296,13 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('checkout-confirmed', handler);
   },
 
+  // App log channel (network/status messages from main)
+  onAppLog: (callback: (payload: any) => void) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('app:log', handler);
+    return () => ipcRenderer.removeListener('app:log', handler);
+  },
+
   // ---------------------- Update System ----------------------
   updateCheck: () => ipcRenderer.invoke('update:check'),
   updateDownload: () => ipcRenderer.invoke('update:download'),

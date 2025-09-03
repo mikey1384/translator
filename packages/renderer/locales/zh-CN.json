@@ -310,6 +310,7 @@
     "copied": "日志已复制到剪贴板",
     "copyFailed": "复制失败",
     "emailSubject": "Stage5 调试日志",
-    "emailBodyPrefix": "您好，\n\n以下为最近的日志以便排查问题。\n\n"
+    "emailBodyPrefix": "您好，\n\n以下为最近的日志以便排查问题。\n\n",
+    "deviceInfoHeader": "设备信息"
   }
 }

@@ -55,10 +55,12 @@ export default function GenerateSubtitles() {
 
   // Task state
   const { translation, transcription } = useTaskStore();
+  const hasSubsMounted = useSubStore(s => s.order.length > 0);
 
   // Subtitle state
   const subStore = useSubStore();
-  const isTranscriptionDone = Boolean(transcription.isCompleted);
+  const isTranscriptionDone =
+    Boolean(transcription.isCompleted) || hasSubsMounted;
   const isTranscribing =
     !!transcription.inProgress &&
     (transcription.id?.startsWith('transcribe-') ?? false);
@@ -90,7 +92,7 @@ export default function GenerateSubtitles() {
       />
 
       {/* Show appropriate panel: only show transcribe panel until transcription completes */}
-      {(videoFile || download.inProgress) && (
+      {(videoFile || videoFilePath || download.inProgress) && (
         <>
           {!isTranscriptionDone && !isTranslating ? (
             <TranscribeOnlyPanel

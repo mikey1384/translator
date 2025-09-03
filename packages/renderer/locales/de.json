@@ -310,6 +310,7 @@
     "copied": "Protokolle in die Zwischenablage kopiert",
     "copyFailed": "Kopieren fehlgeschlagen",
     "emailSubject": "Stage5 Debug-Protokolle",
-    "emailBodyPrefix": "Hallo,\n\nAnbei meine aktuellen Protokolle zur Fehleranalyse.\n\n"
+    "emailBodyPrefix": "Hallo,\n\nAnbei meine aktuellen Protokolle zur Fehleranalyse.\n\n",
+    "deviceInfoHeader": "Geräteinformationen"
   }
 }

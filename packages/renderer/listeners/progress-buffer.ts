@@ -4,6 +4,7 @@ import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useCreditStore } from '../state/credit-store';
+import { i18n } from '../i18n';
 import { logTask, logPhase } from '../utils/logger';
 import { openCreditRanOut } from '../state/modal-store';
 
@@ -24,178 +25,213 @@ function flush() {
   try {
     if (!queued) return;
 
-  const {
-    stage = '',
-    percent = 0,
-    operationId,
-    batchStartIndex,
-    partialResult,
-    error,
-  } = queued as any;
-  const stageLower = (stage ?? '').toLowerCase();
-
-  // If we detect credits exhaustion, trigger the global modal once
-  if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
-    try {
-      openCreditRanOut();
-    } catch {}
-  }
-
-  // Route updates based on operationId prefix
-  const isTranscribe = operationId?.startsWith('transcribe-');
-  const isTranslate = operationId?.startsWith('translate-');
-
-  if (isTranslate) {
-    const active = useTaskStore.getState().translation.id;
-    const inProgress = useTaskStore.getState().translation.inProgress;
-    if (active && operationId && operationId !== active) {
-      queued = null;
-      return;
-    }
-    // Log start of translation task when operation changes
-    if (operationId && lastTranslate.id !== operationId) {
-      try { logTask('start', 'translation', { operationId }); } catch {}
-      lastTranslate = { id: operationId, stage: '' };
-    }
-    useTaskStore.getState().setTranslation({
-      stage,
-      percent,
-      id: operationId ?? null,
+    const {
+      stage = '',
+      percent = 0,
+      operationId,
       batchStartIndex,
-    });
-    // Log phase changes (stage string transitions)
-    if (stage && operationId && lastTranslate.stage !== stage) {
-      try { logPhase('translation', stage, percent, { operationId }); } catch {}
-      lastTranslate.stage = stage;
+      partialResult,
+      error,
+    } = queued as any;
+    const stageLower = (stage ?? '').toLowerCase();
+
+    // If we detect credits exhaustion, trigger the global modal once
+    if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
+      try {
+        openCreditRanOut();
+      } catch {
+        // Do nothing
+      }
     }
-    // After completion, stop applying any further queued updates
+
+    // Route updates based on operationId prefix
+    const isTranscribe = operationId?.startsWith('transcribe-');
+    const isTranslate = operationId?.startsWith('translate-');
+
+    if (isTranslate) {
+      const active = useTaskStore.getState().translation.id;
+      const inProgress = useTaskStore.getState().translation.inProgress;
+      if (active && operationId && operationId !== active) {
+        queued = null;
+        return;
+      }
+      // Log start of translation task when operation changes
+      if (operationId && lastTranslate.id !== operationId) {
+        try {
+          logTask('start', 'translation', { operationId });
+        } catch {
+          // Do nothing
+        }
+        lastTranslate = { id: operationId, stage: '' };
+      }
+      useTaskStore.getState().setTranslation({
+        stage,
+        percent,
+        id: operationId ?? null,
+        batchStartIndex,
+      });
+      // Log phase changes (stage string transitions)
+      if (stage && operationId && lastTranslate.stage !== stage) {
+        try {
+          logPhase(
+            'translation',
+            translateBackendStage(stage, i18n.t.bind(i18n)),
+            percent,
+            { operationId }
+          );
+        } catch {
+          // Do nothing
+        }
+        lastTranslate.stage = stage;
+      }
+      // After completion, stop applying any further queued updates
+      const isComplete =
+        percent >= 100 || /processing complete/i.test(stage ?? '');
+      if (isComplete) {
+        queued = null;
+        if (flushTimer) {
+          clearTimeout(flushTimer);
+          flushTimer = null;
+        }
+        try {
+          if (operationId) logTask('complete', 'translation', { operationId });
+        } catch {
+          // Do nothing
+        }
+        return;
+      }
+      // If the task has been marked complete (inProgress=false), ignore any late non-final updates
+      if (!inProgress) {
+        queued = null;
+        return;
+      }
+    } else if (isTranscribe) {
+      const active = useTaskStore.getState().transcription.id;
+      if (active && operationId && operationId !== active) {
+        queued = null;
+        return;
+      }
+      // Log start of transcription task when operation changes
+      if (operationId && lastTranscribe.id !== operationId) {
+        try {
+          logTask('start', 'transcription', { operationId });
+        } catch {
+          // Do nothing
+        }
+        lastTranscribe = { id: operationId, stage: '' };
+      }
+      useTaskStore.getState().setTranscription({
+        stage,
+        percent,
+        id: operationId ?? null,
+        batchStartIndex,
+      });
+      // Log phase changes (stage string transitions)
+      if (stage && operationId && lastTranscribe.stage !== stage) {
+        try {
+          logPhase(
+            'transcription',
+            translateBackendStage(stage, i18n.t.bind(i18n)),
+            percent,
+            { operationId }
+          );
+        } catch {
+          // Do nothing
+        }
+        lastTranscribe.stage = stage;
+      }
+
+      // Surface progress to the user by opening the Edit panel automatically
+      // when transcription is underway so the incremental results are visible.
+      try {
+        const { showEditPanel, setEditPanelOpen } = useUIStore.getState();
+        if (!showEditPanel) setEditPanelOpen(true);
+      } catch {
+        // Do nothing
+      }
+    }
+
     const isComplete =
       percent >= 100 || /processing complete/i.test(stage ?? '');
+
+    // Apply partial SRT updates during processing (throttled), and load immediately on completion
+    if (partialResult?.trim()) {
+      const isTranslateMissing = operationId?.startsWith('translate-missing-');
+      if (isTranslateMissing) {
+        // Incrementally apply translations only to matching timecodes
+        try {
+          const partSegs = parseSrt(partialResult);
+          if (partSegs.length) {
+            const store = useSubStore.getState();
+            const current = useSubStore.getState();
+            // Build lookup by time key
+            const byTimeKey = new Map<string, string>(); // key -> id
+            for (const id of current.order) {
+              const s = current.segments[id];
+              const key = `${secondsToSrtTime(s.start)}-->${secondsToSrtTime(
+                s.end
+              )}`;
+              if (!byTimeKey.has(key)) byTimeKey.set(key, id);
+            }
+            for (const seg of partSegs) {
+              const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
+                seg.end
+              )}`;
+              const matchId = byTimeKey.get(key);
+              const translated = seg.translation?.trim();
+              if (matchId && translated) {
+                store.update(matchId, { translation: translated });
+              }
+            }
+          }
+        } catch {
+          // Ignore parse/apply errors for partial updates
+        }
+      } else if (isComplete || Date.now() - lastParsed > 1500) {
+        useSubStore.getState().load(parseSrt(partialResult));
+        lastParsed = Date.now();
+      }
+    }
+
+    // After completion, stop applying any further queued updates
     if (isComplete) {
+      // Explicitly clear active transcription id so future operations aren't dropped
+      if (isTranscribe) {
+        try {
+          useTaskStore.getState().setTranscription({ inProgress: false });
+        } catch {
+          // Do nothing
+        }
+      }
+      // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
+      if (/cancel/.test(stageLower)) {
+        try {
+          useCreditStore.getState().refresh();
+        } catch {
+          // Do nothing
+        }
+      }
       queued = null;
       if (flushTimer) {
         clearTimeout(flushTimer);
         flushTimer = null;
       }
-      try { if (operationId) logTask('complete', 'translation', { operationId }); } catch {}
       return;
     }
-    // If the task has been marked complete (inProgress=false), ignore any late non-final updates
-    if (!inProgress) {
-      queued = null;
-      return;
-    }
-  } else if (isTranscribe) {
-    const active = useTaskStore.getState().transcription.id;
-    if (active && operationId && operationId !== active) {
-      queued = null;
-      return;
-    }
-    // Log start of transcription task when operation changes
-    if (operationId && lastTranscribe.id !== operationId) {
-      try { logTask('start', 'transcription', { operationId }); } catch {}
-      lastTranscribe = { id: operationId, stage: '' };
-    }
-    useTaskStore.getState().setTranscription({
-      stage,
-      percent,
-      id: operationId ?? null,
-      batchStartIndex,
-    });
-    // Log phase changes (stage string transitions)
-    if (stage && operationId && lastTranscribe.stage !== stage) {
-      try { logPhase('transcription', stage, percent, { operationId }); } catch {}
-      lastTranscribe.stage = stage;
+
+    // Refresh credit balance during AI processing phases when credits are being consumed
+    // stageLower declared earlier
+    const isActiveAIPhase =
+      stageLower.includes('transcrib') ||
+      stageLower.includes('translat') ||
+      stageLower.includes('reviewing') ||
+      stageLower.includes('__i18n__:transcribed');
+
+    if (isActiveAIPhase && percent > 0 && percent <= 100) {
+      useCreditStore.getState().refresh();
     }
 
-    // Surface progress to the user by opening the Edit panel automatically
-    // when transcription is underway so the incremental results are visible.
-    try {
-      const { showEditPanel, setEditPanelOpen } = useUIStore.getState();
-      if (!showEditPanel) setEditPanelOpen(true);
-    } catch {
-      // Do nothing
-    }
-  }
-
-  const isComplete = percent >= 100 || /processing complete/i.test(stage ?? '');
-
-  // Apply partial SRT updates during processing (throttled), and load immediately on completion
-  if (partialResult?.trim()) {
-    const isTranslateMissing = operationId?.startsWith('translate-missing-');
-    if (isTranslateMissing) {
-      // Incrementally apply translations only to matching timecodes
-      try {
-        const partSegs = parseSrt(partialResult);
-        if (partSegs.length) {
-          const store = useSubStore.getState();
-          const current = useSubStore.getState();
-          // Build lookup by time key
-          const byTimeKey = new Map<string, string>(); // key -> id
-          for (const id of current.order) {
-            const s = current.segments[id];
-            const key = `${secondsToSrtTime(s.start)}-->${secondsToSrtTime(
-              s.end
-            )}`;
-            if (!byTimeKey.has(key)) byTimeKey.set(key, id);
-          }
-          for (const seg of partSegs) {
-            const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
-              seg.end
-            )}`;
-            const matchId = byTimeKey.get(key);
-            const translated = seg.translation?.trim();
-            if (matchId && translated) {
-              store.update(matchId, { translation: translated });
-            }
-          }
-        }
-      } catch {
-        // Ignore parse/apply errors for partial updates
-      }
-    } else if (isComplete || Date.now() - lastParsed > 1500) {
-      useSubStore.getState().load(parseSrt(partialResult));
-      lastParsed = Date.now();
-    }
-  }
-
-  // After completion, stop applying any further queued updates
-  if (isComplete) {
-    // Explicitly clear active transcription id so future operations aren't dropped
-    if (isTranscribe) {
-      try {
-        useTaskStore.getState().setTranscription({ inProgress: false });
-      } catch {}
-    }
-    // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
-    if (/cancel/.test(stageLower)) {
-      try {
-        useCreditStore.getState().refresh();
-      } catch {
-        // Do nothing
-      }
-    }
     queued = null;
-    if (flushTimer) {
-      clearTimeout(flushTimer);
-      flushTimer = null;
-    }
-    return;
-  }
-
-  // Refresh credit balance during AI processing phases when credits are being consumed
-  // stageLower declared earlier
-  const isActiveAIPhase =
-    stageLower.includes('transcrib') ||
-    stageLower.includes('translat') ||
-    stageLower.includes('reviewing') ||
-    stageLower.includes('__i18n__:transcribed');
-
-  if (isActiveAIPhase && percent > 0 && percent <= 100) {
-    useCreditStore.getState().refresh();
-  }
-
-  queued = null;
   } finally {
     isFlushing = false;
   }
@@ -226,3 +262,54 @@ document.addEventListener('visibilitychange', () => {
     flush();
   }
 });
+
+// Map backend i18n stage tokens to localized, human-readable strings for logs
+function translateBackendStage(
+  stage: string,
+  t: (key: string, opts?: any) => string
+): string {
+  if (!stage?.startsWith('__i18n__:')) return stage;
+  const parts = stage.split(':');
+  const messageType = parts[1];
+  try {
+    switch (messageType) {
+      case 'transcribed_chunks': {
+        const done = parseInt(parts[2], 10) || 0;
+        const total = parseInt(parts[3], 10) || 0;
+        return t('progress.transcribedChunks', { done, total });
+      }
+      case 'scrubbing_hallucinations': {
+        const done = parseInt(parts[2], 10) || 0;
+        const total = parseInt(parts[3], 10) || 0;
+        return t('progress.scrubbingHallucinations', { done, total });
+      }
+      case 'translation_cleanup': {
+        const done = parseInt(parts[2], 10) || 0;
+        const total = parseInt(parts[3], 10) || 0;
+        return t('progress.translationCleanup', { done, total });
+      }
+      case 'repairing_captions': {
+        const iteration = parseInt(parts[2], 10) || 0;
+        const maxIterations = parseInt(parts[3], 10) || 0;
+        const done = parseInt(parts[4], 10) || 0;
+        const total = parseInt(parts[5], 10) || 0;
+        return t('progress.repairingCaptions', {
+          iteration,
+          maxIterations,
+          done,
+          total,
+        });
+      }
+      case 'gap_repair': {
+        const iteration = parseInt(parts[2], 10) || 0;
+        const done = parseInt(parts[3], 10) || 0;
+        const total = parseInt(parts[4], 10) || 0;
+        return t('progress.gapRepair', { iteration, done, total });
+      }
+      default:
+        return stage;
+    }
+  } catch {
+    return stage;
+  }
+}

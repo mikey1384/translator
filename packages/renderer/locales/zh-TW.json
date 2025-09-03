@@ -310,6 +310,7 @@
     "copied": "記錄已複製到剪貼簿",
     "copyFailed": "複製失敗",
     "emailSubject": "Stage5 除錯記錄",
-    "emailBodyPrefix": "您好，\n\n以下是我最近的記錄，供除錯參考。\n\n"
+    "emailBodyPrefix": "您好，\n\n以下是我最近的記錄，供除錯參考。\n\n",
+    "deviceInfoHeader": "裝置資訊"
   }
 }

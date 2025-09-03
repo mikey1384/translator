@@ -15,7 +15,7 @@ export default function LogsModal({
   const logs = useLogsStore(s => s.logs);
   const last30 = useMemo(() => {
     const copy = logs.slice();
-    return copy.slice(Math.max(0, copy.length - 30));
+    return copy.slice(Math.max(0, copy.length - 200));
   }, [logs]);
 
   if (!open) return null;
@@ -24,7 +24,23 @@ export default function LogsModal({
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(textBlob);
+      let deviceInfo: any = null;
+      try {
+        deviceInfo = await (window as any).electron?.getSystemInfo?.();
+      } catch {
+        // Do nothing
+      }
+      if (!deviceInfo) {
+        const ua = navigator.userAgent;
+        const platform =
+          (navigator as any).userAgentData?.platform || navigator.platform;
+        deviceInfo = { platform, ua } as any;
+      }
+      const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
+${JSON.stringify(deviceInfo)}
+
+`;
+      await navigator.clipboard.writeText(header + textBlob);
       alert(t('logs.copied', 'Logs copied to clipboard'));
     } catch (err) {
       console.error('[LogsModal] copy failed', err);
@@ -33,14 +49,34 @@ export default function LogsModal({
   };
 
   const emailToDev = () => {
-    const subject = encodeURIComponent(t('logs.emailSubject', 'Stage5 Debug Logs'));
+    const subject = encodeURIComponent(
+      t('logs.emailSubject', 'Stage5 Debug Logs')
+    );
     const prefix = t(
       'logs.emailBodyPrefix',
       'Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n'
     );
-    const body = encodeURIComponent(prefix + textBlob);
-    const mailto = `mailto:mikey@stage5.tools?subject=${subject}&body=${body}`;
-    window.location.href = mailto;
+    (async () => {
+      let deviceInfo: any = null;
+      try {
+        deviceInfo = await (window as any).electron?.getSystemInfo?.();
+      } catch {
+        // Do nothing
+      }
+      if (!deviceInfo) {
+        const ua = navigator.userAgent;
+        const platform =
+          (navigator as any).userAgentData?.platform || navigator.platform;
+        deviceInfo = { platform, ua } as any;
+      }
+      const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
+${JSON.stringify(deviceInfo)}
+
+`;
+      const body = encodeURIComponent(prefix + header + textBlob);
+      const mailto = `mailto:mikey@stage5.tools?subject=${subject}&body=${body}`;
+      window.location.href = mailto;
+    })();
   };
 
   return (
@@ -107,7 +143,9 @@ export default function LogsModal({
                 margin: 0;
                 white-space: pre-wrap;
                 word-break: break-word;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+                font-family:
+                  ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                  'Liberation Mono', 'Courier New', monospace;
                 font-size: 12px;
                 color: ${colors.dark};
               `}

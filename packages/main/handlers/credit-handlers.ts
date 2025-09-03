@@ -19,6 +19,20 @@ export function getDeviceId(): string {
   return id;
 }
 
+function sendNetLog(
+  level: 'info' | 'warn' | 'error',
+  message: string,
+  meta?: any
+) {
+  try {
+    const payload = { level, kind: 'network', message, meta };
+    BrowserWindow.getAllWindows().forEach(w =>
+      w.webContents.send('app:log', payload)
+    );
+  } catch {
+    // Do nothing
+  }
+}
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
   defaults: { balanceCredits: 0, creditsPerHour: 100_000 },
@@ -49,6 +63,11 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       `https://api.stage5.tools/credits/${getDeviceId()}?isNewPricing=true`,
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
+    sendNetLog('info', `GET /credits -> ${response.status}`, {
+      url: 'https://api.stage5.tools/credits',
+      method: 'GET',
+      status: response.status,
+    });
 
     if (
       response.data &&
@@ -69,6 +88,23 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       throw new Error('Invalid response format from credit balance API');
     }
   } catch (err: any) {
+    if (err.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${err.response.status} GET https://api.stage5.tools/credits`,
+        {
+          status: err.response.status,
+          url: err.config?.url,
+          method: err.config?.method,
+        }
+      );
+    } else if (err.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE GET https://api.stage5.tools/credits`,
+        { url: err.config?.url, method: err.config?.method }
+      );
+    }
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     const cachedBal = store.get('balanceCredits', 0);
     const cachedPerHour = store.get('creditsPerHour', 100_000);
@@ -96,6 +132,11 @@ export async function handleCreateCheckoutSession(
       packId,
       deviceId: getDeviceId(),
     });
+    sendNetLog('info', `POST /payments/create-session -> ${response.status}`, {
+      url: apiUrl,
+      method: 'POST',
+      status: response.status,
+    });
 
     // Expecting backend to respond with { url: 'https://checkout.stripe.com/…' }
     if (response.data?.url) {
@@ -119,6 +160,23 @@ export async function handleCreateCheckoutSession(
     );
     return null;
   } catch (err: any) {
+    if (err.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${err.response.status} POST https://api.stage5.tools/payments/create-session`,
+        {
+          status: err.response.status,
+          url: err.config?.url,
+          method: err.config?.method,
+        }
+      );
+    } else if (err.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE POST https://api.stage5.tools/payments/create-session`,
+        { url: err.config?.url, method: err.config?.method }
+      );
+    }
     log.error('[credit-handler] handleCreateCheckoutSession error:', err);
     return null;
   }

@@ -310,6 +310,7 @@
     "copied": "ログをクリップボードにコピーしました",
     "copyFailed": "コピーに失敗しました",
     "emailSubject": "Stage5 デバッグログ",
-    "emailBodyPrefix": "こんにちは。\n\n不具合調査のため、最近のログを送付します。\n\n"
+    "emailBodyPrefix": "こんにちは。\n\n不具合調査のため、最近のログを送付します。\n\n",
+    "deviceInfoHeader": "デバイス情報"
   }
 }
