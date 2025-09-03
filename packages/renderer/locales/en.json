@@ -123,7 +123,8 @@
       "applyShift": "Apply Shift",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Subtitle text",
-      "confirmRemove": "Are you sure you want to remove this subtitle block? This action cannot be undone."
+      "confirmRemove": "Are you sure you want to remove this subtitle block? This action cannot be undone.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Save",

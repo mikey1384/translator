@@ -57,10 +57,6 @@ export default function BaseSubtitleDisplay({
           document.body.removeChild(tempSpan);
 
           hasWrapped = textIntrinsicWidth > containerWidth + 1;
-        } else {
-          console.log(
-            '[BaseSubtitleDisplay Effect] Container width or styles not ready for measurement.'
-          );
         }
       } catch (e) {
         console.error(
@@ -69,9 +65,6 @@ export default function BaseSubtitleDisplay({
         );
       } finally {
         const finalIsMultiLine = hasExplicitNewline || hasWrapped;
-        console.log(
-          `[BaseSubtitleDisplay Effect] HasExplicitNewline: ${hasExplicitNewline}, HasWrapped: ${hasWrapped}, Final isMultiLine: ${finalIsMultiLine}`
-        );
         setIsMultiLine(finalIsMultiLine);
       }
     } else if (!text) {

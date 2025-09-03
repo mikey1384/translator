@@ -109,7 +109,8 @@
       "applyShift": "Aplicar Deslocamento",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Texto da legenda",
-      "confirmRemove": "Tem certeza que deseja remover este bloco de legendas? Esta ação não pode ser desfeita."
+      "confirmRemove": "Tem certeza que deseja remover este bloco de legendas? Esta ação não pode ser desfeita.",
+      "transcribeThisLine": "Transcrever linha"
     },
     "header": {
       "save": "Salvar",

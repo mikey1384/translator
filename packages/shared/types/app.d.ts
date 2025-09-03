@@ -231,6 +231,34 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  // Single-line translate with explicit context
+  export interface TranslateOneLineOptions {
+    segment: SrtSegment;
+    contextBefore?: SrtSegment[];
+    contextAfter?: SrtSegment[];
+    targetLanguage: string;
+    operationId?: string;
+  }
+
+  export interface TranslateOneLineResult {
+    translation: string;
+    error?: string;
+  }
+
+  // Single-line transcription with context and precise audio segment
+  export interface TranscribeOneLineOptions {
+    videoPath: string;
+    segment: { start: number; end: number };
+    promptContext?: string;
+    operationId?: string;
+  }
+
+  export interface TranscribeOneLineResult {
+    transcript: string;
+    segments?: SrtSegment[];
+    error?: string;
+  }
+
   interface TranslateBatchArgs {
     batch: {
       segments: any[];
@@ -349,6 +377,12 @@ declare module '@shared-types/app' {
     translateSubtitles: (
       options: TranslateSubtitlesOptions
     ) => Promise<TranslateSubtitlesResult>;
+    translateOneLine: (
+      options: TranslateOneLineOptions
+    ) => Promise<TranslateOneLineResult>;
+    transcribeOneLine: (
+      options: TranscribeOneLineOptions
+    ) => Promise<TranscribeOneLineResult>;
 
     sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
     onPngRenderResult: (

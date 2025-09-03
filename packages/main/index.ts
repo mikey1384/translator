@@ -305,6 +305,68 @@ try {
     }
   });
 
+  ipcMain.handle('translate-one-line', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `translate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(
+      `[main.ts/translate-one-line] Starting operation: ${operationId}`
+    );
+    try {
+      const result = await subtitleHandlers.handleTranslateOneLine(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/translate-one-line] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/translate-one-line] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/translate-one-line] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
+  ipcMain.handle('transcribe-one-line', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `transcribe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(
+      `[main.ts/transcribe-one-line] Starting operation: ${operationId}`
+    );
+    try {
+      const result = await subtitleHandlers.handleTranscribeOneLine(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/transcribe-one-line] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/transcribe-one-line] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/transcribe-one-line] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('process-url', handleProcessUrl);
 
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {

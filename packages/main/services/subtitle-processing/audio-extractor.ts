@@ -206,7 +206,7 @@ export async function extractAudioSegment(
     '-i',
     input,
     '-map',
-    '0:a:0?',
+    `0:a:${audioIdx}?`,
     '-vn',
     '-ar',
     String(ASR_SAMPLE_RATE),

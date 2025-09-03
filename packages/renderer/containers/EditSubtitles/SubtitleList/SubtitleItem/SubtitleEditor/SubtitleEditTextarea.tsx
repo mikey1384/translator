@@ -93,6 +93,20 @@ export default function SubtitleEditTextarea({
 
       refreshHighlight();
 
+      // If the user cleared the field completely (e.g., Cmd/Ctrl+X or Delete),
+      // commit immediately so the UI reflects the empty value without waiting
+      // for the debounce timer.
+      if (draftRef.current.length === 0) {
+        if (idleTimer.current) {
+          clearTimeout(idleTimer.current);
+          idleTimer.current = null as any;
+        }
+        // Update highlight immediately for a crisp UI
+        setHighlightHtml(getHighlightedHtml('', searchTerm));
+        commit();
+        return;
+      }
+
       if (idleTimer.current) {
         clearTimeout(idleTimer.current);
       }
@@ -119,6 +133,21 @@ export default function SubtitleEditTextarea({
     highlightRef.current.scrollTop = textareaRef?.current.scrollTop;
     highlightRef.current.scrollLeft = textareaRef?.current.scrollLeft;
   }, []);
+
+  const handleFocus = useCallback(() => {
+    setIsTyping(true);
+  }, []);
+
+  const handleKeyUp = useCallback(() => {
+    // After any key press, if the field is empty commit immediately so
+    // the overlay/highlight clears without waiting for debounce.
+    const cur = textareaRef.current?.value ?? '';
+    if (cur.length === 0) {
+      draftRef.current = '';
+      setHighlightHtml(getHighlightedHtml('', searchTerm));
+      commit();
+    }
+  }, [commit, searchTerm]);
 
   useEffect(() => {
     return () => {
@@ -189,6 +218,8 @@ export default function SubtitleEditTextarea({
         defaultValue={value}
         onChange={handleInput}
         onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyUp={handleKeyUp}
         onScroll={handleScroll}
       />
     </div>

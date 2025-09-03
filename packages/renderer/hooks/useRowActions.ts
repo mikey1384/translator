@@ -10,20 +10,16 @@ export function useRowActions(id: string) {
   return useMemo(
     () => ({
       update: (patch: Partial<SrtSegment>) => {
-        console.log('UPDATE called for id:', id);
         return update(id, patch);
       },
       shift: (secs: number) => {
-        console.log('SHIFT called for id:', id, 'with seconds:', secs);
         return shift(id, secs);
       },
 
       remove: () => {
-        console.log('REMOVE called for id:', id);
         return remove(id);
       },
       insertAfter: () => {
-        console.log('INSERT AFTER called for id:', id);
         const newId = insertAfter(id);
         if (newId) {
           requestAnimationFrame(() => {
@@ -40,16 +36,13 @@ export function useRowActions(id: string) {
       },
 
       seek: () => {
-        console.log('SEEK called for id:', id);
         return seek(id);
       },
       play: () => {
-        console.log('PLAY called for id:', id);
         return play(id);
       },
       pause,
       setActive: () => {
-        console.log('SET ACTIVE called for id:', id);
         return setActive(id);
       },
     }),

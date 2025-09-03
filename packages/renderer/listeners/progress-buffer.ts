@@ -137,6 +137,12 @@ function flush() {
 
   // After completion, stop applying any further queued updates
   if (isComplete) {
+    // Explicitly clear active transcription id so future operations aren't dropped
+    if (isTranscribe) {
+      try {
+        useTaskStore.getState().setTranscription({ inProgress: false });
+      } catch {}
+    }
     // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
     if (/cancel/.test(stageLower)) {
       try {

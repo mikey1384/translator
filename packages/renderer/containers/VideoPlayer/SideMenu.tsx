@@ -7,6 +7,7 @@ import {
   useUIStore,
   useVideoStore,
 } from '../../state';
+import { openChangeVideo } from '../../state/modal-store';
 import { useTranslation } from 'react-i18next';
 import { openSubtitleWithElectron } from '../../../shared/helpers';
 import {
@@ -37,10 +38,11 @@ export default function SideMenu({
   const isTranscribing = !!transcription.inProgress;
   const targetLanguage = useUIStore(s => s.targetLanguage || 'english');
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
-  const openVideo = useVideoStore(s => s.openFileDialogPreserveSubs);
+
   const videoFile = useVideoStore(s => s.file);
   const videoFilePath = useVideoStore(s => s.path);
   const meta = useVideoStore(s => s.meta);
+  // no local modal state; handled globally
 
   const hasUntranslated = hasSubs
     ? order.some(id => {
@@ -66,6 +68,18 @@ export default function SideMenu({
     const res = await openSubtitleWithElectron();
     if (res?.segments) {
       useSubStore.getState().load(res.segments, res.filePath ?? null);
+      // Ensure the Edit Subtitles panel is visible so users immediately see loaded SRT
+      try {
+        useUIStore.getState().setEditPanelOpen(true);
+      } catch {
+        // Do nothing
+      }
+      // Optionally scroll to current cue for immediate context
+      try {
+        useSubStore.getState().scrollToCurrent();
+      } catch {
+        // Do nothing
+      }
     }
   }
   async function handleTranscribe() {
@@ -85,82 +99,34 @@ export default function SideMenu({
   if (isFullScreen) return null;
   // Render as a dedicated column next to the video (grid area); not overlayed
   return (
-    <div
-      className={css`
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        background: rgba(0, 0, 0, 0.35);
-        border: 1px solid ${colors.border};
-        border-radius: 6px;
-        padding: 8px;
-        backdrop-filter: blur(4px);
-        height: 100%;
-        overflow: auto;
-      `}
-      aria-label="Video side actions"
-    >
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={() => openVideo()}
-        title={t('videoPlayer.changeVideo', 'Change Video')}
+    <>
+      <div
+        className={css`
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end; /* anchor items to bottom when there's space */
+          gap: 8px;
+          background: rgba(0, 0, 0, 0.35);
+          border: 1px solid ${colors.border};
+          border-radius: 6px;
+          padding: 8px 8px;
+          backdrop-filter: blur(4px);
+          height: 100%;
+          overflow: auto;
+        `}
+        aria-label="Video side actions"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ marginRight: 8 }}
-        >
-          <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
-          <path d="M7 9l5 3-5 3z" />
-        </svg>
-        {t('videoPlayer.changeVideo', 'Change Video')}
-      </Button>
-
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={handleMountOrChangeSrt}
-        title={
-          originalPath
-            ? t('videoPlayer.changeSrt', 'Change SRT')
-            : t('videoPlayer.mountSrt', 'Mount SRT')
-        }
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ marginRight: 8 }}
-        >
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6" />
-        </svg>
-        {originalPath
-          ? t('videoPlayer.changeSrt', 'Change SRT')
-          : t('videoPlayer.mountSrt', 'Mount SRT')}
-      </Button>
-
-      {hasSubs && (
+        {/* Spacer pushes actions toward the bottom when there is vertical room */}
+        <div
+          className={css`
+            flex: 1 1 auto;
+          `}
+        />
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => scrollToCurrent()}
-          title={t(
-            'videoPlayer.scrollToCurrentSubtitle',
-            'Scroll to current subtitle'
-          )}
+          onClick={() => openChangeVideo()}
+          title={t('videoPlayer.changeVideo', 'Change Video')}
         >
           <svg
             width="14"
@@ -173,70 +139,50 @@ export default function SideMenu({
             strokeLinejoin="round"
             style={{ marginRight: 8 }}
           >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19 12a7 7 0 0 1-7 7" />
-            <path d="M12 5a 7 7 0 0 1 7 7" />
-            <path d="M5 12a7 7 0 0 1 7-7" />
-            <path d="M12 19a7 7 0 0 1-7-7" />
+            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
+            <path d="M7 9l5 3-5 3z" />
           </svg>
-          {t(
-            'videoPlayer.scrollToCurrentSubtitle',
-            'Scroll to current subtitle'
-          )}
+          {t('videoPlayer.changeVideo', 'Change Video')}
         </Button>
-      )}
 
-      {/* Transcribe appears only when Generate panel shows it: not completed and not translating */}
-      {!transcription.isCompleted && !translation.inProgress && (
         <Button
           size="sm"
-          variant="primary"
-          onClick={handleTranscribe}
-          isLoading={!!transcription.inProgress}
-          title={t('input.transcribeOnly')}
+          variant="secondary"
+          onClick={handleMountOrChangeSrt}
+          title={
+            originalPath
+              ? t('videoPlayer.changeSrt', 'Change SRT')
+              : t('videoPlayer.mountSrt', 'Mount SRT')
+          }
         >
-          {transcription.inProgress
-            ? t('subtitles.generating')
-            : t('input.transcribeOnly')}
-        </Button>
-      )}
-
-      {hasUntranslated && (
-        <div
-          className={css`
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 10px;
-          `}
-        >
-          <select
-            className={selectStyles}
-            value={targetLanguage}
-            onChange={e => setTargetLanguage(e.target.value)}
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ marginRight: 8 }}
           >
-            {TRANSLATION_LANGUAGES_BASE.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {t(opt.labelKey)}
-              </option>
-            ))}
-            {TRANSLATION_LANGUAGE_GROUPS.map(group => (
-              <optgroup key={group.labelKey} label={t(group.labelKey)}>
-                {group.options.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.labelKey)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+          </svg>
+          {originalPath
+            ? t('videoPlayer.changeSrt', 'Change SRT')
+            : t('videoPlayer.mountSrt', 'Mount SRT')}
+        </Button>
 
+        {hasSubs && (
           <Button
             size="sm"
-            variant="primary"
-            onClick={handleTranslateMissing}
-            disabled={isTranscribing || translation.inProgress}
-            title={t('subtitles.translate', 'Translate')}
+            variant="secondary"
+            onClick={() => scrollToCurrent()}
+            title={t(
+              'videoPlayer.scrollToCurrentSubtitle',
+              'Scroll to current subtitle'
+            )}
           >
             <svg
               width="14"
@@ -249,15 +195,97 @@ export default function SideMenu({
               strokeLinejoin="round"
               style={{ marginRight: 8 }}
             >
-              <path d="M4 7h16" />
-              <path d="M9 7c0 7 6 7 6 14" />
-              <path d="M12 20l4-4" />
-              <path d="M20 20l-4-4" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19 12a7 7 0 0 1-7 7" />
+              <path d="M12 5a 7 7 0 0 1 7 7" />
+              <path d="M5 12a7 7 0 0 1 7-7" />
+              <path d="M12 19a7 7 0 0 1-7-7" />
             </svg>
-            {t('subtitles.translate', 'Translate')}
+            {t(
+              'videoPlayer.scrollToCurrentSubtitle',
+              'Scroll to current subtitle'
+            )}
           </Button>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Transcribe appears only when Generate panel shows it: not completed and not translating */}
+        {!transcription.isCompleted && !translation.inProgress && (
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={handleTranscribe}
+            isLoading={!!transcription.inProgress}
+            title={t('input.transcribeOnly')}
+          >
+            {transcription.inProgress
+              ? t('subtitles.generating')
+              : t('input.transcribeOnly')}
+          </Button>
+        )}
+
+        {hasUntranslated && (
+          <div
+            className={css`
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+              margin-top: 10px;
+            `}
+          >
+            <select
+              className={selectStyles}
+              value={targetLanguage}
+              onChange={e => setTargetLanguage(e.target.value)}
+            >
+              {TRANSLATION_LANGUAGES_BASE.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {t(opt.labelKey)}
+                </option>
+              ))}
+              {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+                <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                  {group.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleTranslateMissing}
+              disabled={isTranscribing || translation.inProgress}
+              title={t('subtitles.translate', 'Translate')}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: 8 }}
+              >
+                <path d="M4 7h16" />
+                <path d="M9 7c0 7 6 7 6 14" />
+                <path d="M12 20l4-4" />
+                <path d="M20 20l-4-4" />
+              </svg>
+              {t('subtitles.translate', 'Translate')}
+            </Button>
+          </div>
+        )}
+        <div
+          className={css`
+            height: 2px;
+          `}
+        />
+      </div>
+    </>
   );
 }

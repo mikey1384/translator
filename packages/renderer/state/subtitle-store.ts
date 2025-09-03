@@ -37,6 +37,10 @@ interface Actions {
   pause: () => void;
   incSourceId: () => void;
   replaceAll: (find: string, replace: string) => void;
+  replaceWithSegments: (
+    id: string,
+    segs: Array<{ start: number; end: number; original: string }>
+  ) => void;
 }
 
 const initialState: State = {
@@ -242,6 +246,44 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.sourceId += 1;
         });
       },
+
+      replaceWithSegments: (id, segs) =>
+        set(s => {
+          if (!Array.isArray(segs) || segs.length === 0) return;
+          const i = s.order.findIndex(cueId => cueId === id);
+          if (i === -1) return;
+          const first = segs[0];
+          const base = s.segments[id];
+          if (!base) return;
+          base.start = first.start;
+          base.end = first.end;
+          base.original = first.original;
+          // Clear translation when replacing transcription
+          base.translation = base.translation ?? '';
+
+          // Insert remaining pieces after the base
+          let insertPos = i + 1;
+          for (let k = 1; k < segs.length; k++) {
+            const p = segs[k];
+            const newId = crypto.randomUUID();
+            const newCue: SrtSegment = {
+              id: newId,
+              index: insertPos + 1,
+              start: p.start,
+              end: p.end,
+              original: p.original,
+              translation: '',
+            } as SrtSegment;
+            s.segments[newId] = newCue;
+            s.order.splice(insertPos, 0, newId);
+            insertPos++;
+          }
+
+          // Reindex all cues after original position
+          for (let j = i; j < s.order.length; j++) {
+            s.segments[s.order[j]].index = j + 1;
+          }
+        }),
     }))
   )
 );

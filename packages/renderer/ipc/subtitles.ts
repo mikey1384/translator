@@ -74,6 +74,25 @@ export function translateSubtitles(options: {
   return window.electron.translateSubtitles(payload);
 }
 
+export function translateOneLine(options: {
+  segment: import('@shared-types/app').SrtSegment;
+  contextBefore?: import('@shared-types/app').SrtSegment[];
+  contextAfter?: import('@shared-types/app').SrtSegment[];
+  targetLanguage: string;
+  operationId?: string;
+}): Promise<{ translation: string; error?: string }> {
+  return (window.electron as any).translateOneLine(options);
+}
+
+export function transcribeOneLine(options: {
+  videoPath: string;
+  segment: { start: number; end: number };
+  promptContext?: string;
+  operationId?: string;
+}): Promise<{ transcript: string; error?: string }> {
+  return (window.electron as any).transcribeOneLine(options);
+}
+
 export const cancelPngRender = (operationId: string): void => {
   window.electron.cancelPngRender(operationId);
 };

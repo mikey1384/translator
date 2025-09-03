@@ -9,6 +9,8 @@ interface State {
   // Credit ran out modal
   creditRanOutOpen: boolean;
   _creditResolver?: (choice: 'settings' | 'ok') => void;
+  // Change video modal
+  changeVideoOpen: boolean;
 }
 
 interface Actions {
@@ -16,6 +18,8 @@ interface Actions {
   resolveUnsavedSrt: (choice: UnsavedChoice) => void;
   openCreditRanOut: () => Promise<'settings' | 'ok'>;
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
+  openChangeVideo: () => void;
+  closeChangeVideo: () => void;
 }
 
 export const useModalStore = createWithEqualityFn<State & Actions>()(
@@ -24,6 +28,7 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     _resolver: undefined,
     creditRanOutOpen: false,
     _creditResolver: undefined,
+    changeVideoOpen: false,
 
     openUnsavedSrtConfirm: () =>
       new Promise<UnsavedChoice>(resolve => {
@@ -58,6 +63,15 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
         s._creditResolver = undefined;
       });
     },
+
+    openChangeVideo: () =>
+      set(s => {
+        s.changeVideoOpen = true;
+      }),
+    closeChangeVideo: () =>
+      set(s => {
+        s.changeVideoOpen = false;
+      }),
   }))
 );
 
@@ -75,4 +89,12 @@ export async function openCreditRanOut(): Promise<'settings' | 'ok'> {
 
 export function resolveCreditRanOut(choice: 'settings' | 'ok') {
   return useModalStore.getState().resolveCreditRanOut(choice);
+}
+
+export function openChangeVideo() {
+  return useModalStore.getState().openChangeVideo();
+}
+
+export function closeChangeVideo() {
+  return useModalStore.getState().closeChangeVideo();
 }

@@ -111,17 +111,19 @@ export default function GenerateSubtitles() {
         </>
       )}
 
-      <MediaInputSection
-        videoFile={videoFile}
-        onOpenFileDialog={openFileDialog}
-        isDownloadInProgress={download.inProgress}
-        isTranslationInProgress={translation.inProgress}
-        urlInput={urlInput}
-        setUrlInput={setUrlInput}
-        downloadQuality={downloadQuality}
-        setDownloadQuality={setDownloadQuality}
-        handleProcessUrl={downloadMedia}
-      />
+      {!videoFilePath && !videoFile && (
+        <MediaInputSection
+          videoFile={videoFile}
+          onOpenFileDialog={openFileDialog}
+          isDownloadInProgress={download.inProgress}
+          isTranslationInProgress={translation.inProgress}
+          urlInput={urlInput}
+          setUrlInput={setUrlInput}
+          downloadQuality={downloadQuality}
+          setDownloadQuality={setDownloadQuality}
+          handleProcessUrl={downloadMedia}
+        />
+      )}
     </Section>
   );
 

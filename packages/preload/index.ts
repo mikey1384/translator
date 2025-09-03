@@ -40,6 +40,14 @@ const electronAPI = {
     return ipcRenderer.invoke('translate-subtitles', options);
   },
 
+  translateOneLine: async (options: any) => {
+    return ipcRenderer.invoke('translate-one-line', options);
+  },
+
+  transcribeOneLine: async (options: any) => {
+    return ipcRenderer.invoke('transcribe-one-line', options);
+  },
+
   onGenerateSubtitlesProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return;
     const listener = (_: any, progress: any) => {

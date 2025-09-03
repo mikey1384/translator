@@ -8,6 +8,11 @@ import {
   translateSubtitlesFromSrt,
 } from '../services/subtitle-processing/index.js';
 import {
+  translateBatch,
+  reviewTranslationBatch,
+} from '../services/subtitle-processing/translator.js';
+import type { ReviewBatch } from '../services/subtitle-processing/types.js';
+import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
 } from '@shared-types/app';
@@ -17,6 +22,12 @@ import {
   finish as registryFinish,
 } from '../active-processes.js';
 import type { FFmpegContext } from '../services/ffmpeg-runner.js';
+import {
+  extractAudioSegment,
+  mkTempAudioName,
+} from '../services/subtitle-processing/audio-extractor.js';
+import * as stage5Client from '../services/stage5-client.js';
+import { transcribePass } from '../services/subtitle-processing/pipeline/transcribe-pass.js';
 
 let fileManagerInstance: FileManager | null = null;
 let ffmpegCtx: FFmpegContext | null = null;
@@ -111,7 +122,9 @@ export async function handleGenerateSubtitles(
       controller.signal.aborted ||
       error.name === 'AbortError' ||
       error.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(String(error?.message || ''));
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
     const creditCancel = /insufficient-credits|Insufficient credits/i.test(
       String(error?.message || '')
     );
@@ -221,7 +234,9 @@ export async function handleTranslateSubtitles(
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(String(error?.message || ''));
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
     const creditCancel = /insufficient-credits|Insufficient credits/i.test(
       String(error?.message || '')
     );
@@ -249,6 +264,330 @@ export async function handleTranslateSubtitles(
       operationId,
     };
   } finally {
+    registryFinish(operationId);
+  }
+}
+
+export async function handleTranslateOneLine(
+  event: IpcMainInvokeEvent,
+  options: {
+    segment: import('@shared-types/app').SrtSegment;
+    contextBefore?: import('@shared-types/app').SrtSegment[];
+    contextAfter?: import('@shared-types/app').SrtSegment[];
+    targetLanguage: string;
+  },
+  operationId: string
+): Promise<{
+  success: boolean;
+  translation?: string;
+  cancelled?: boolean;
+  error?: string;
+  operationId: string;
+}> {
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+  addSubtitle(operationId, controller);
+
+  try {
+    const seg = options.segment;
+    const ctxBefore = options.contextBefore ?? [];
+    const ctxAfter = options.contextAfter ?? [];
+
+    // Initial progress
+    event.sender.send('generate-subtitles-progress', {
+      percent: 0,
+      stage: 'Starting...',
+      operationId,
+    });
+
+    // 1) Rough translation
+    const rough = await translateBatch({
+      batch: {
+        segments: [seg],
+        startIndex: 0,
+        endIndex: 1,
+        contextBefore: [],
+        contextAfter: [],
+        targetLang: options.targetLanguage,
+      },
+      targetLang: options.targetLanguage,
+      operationId,
+      signal: controller.signal,
+    });
+
+    event.sender.send('generate-subtitles-progress', {
+      percent: 40,
+      stage: 'Translating 1/1',
+      operationId,
+      partialResult: '',
+    });
+
+    // 2) Review with context to improve quality
+    const reviewBatch: ReviewBatch = {
+      segments: rough,
+      startIndex: 0,
+      endIndex: rough.length,
+      targetLang: options.targetLanguage,
+      contextBefore: ctxBefore,
+      contextAfter: ctxAfter,
+    };
+    const reviewed = await reviewTranslationBatch({
+      batch: reviewBatch,
+      operationId,
+      signal: controller.signal,
+    });
+
+    const translation = (reviewed[0]?.translation ?? '').trim();
+
+    event.sender.send('generate-subtitles-progress', {
+      percent: 100,
+      stage: 'Completed',
+      operationId,
+    });
+
+    return { success: true, translation, operationId };
+  } catch (error: any) {
+    const isCancel =
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled' ||
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
+    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
+      String(error?.message || '')
+    );
+    try {
+      event.sender.send('generate-subtitles-progress', {
+        percent: 100,
+        stage: isCancel
+          ? 'Process cancelled'
+          : `Error: ${error?.message || String(error)}`,
+        error: creditCancel
+          ? 'insufficient-credits'
+          : isCancel
+            ? undefined
+            : error?.message || String(error),
+        operationId,
+      });
+    } catch {
+      // Do nothing
+    }
+    return {
+      success: !isCancel,
+      cancelled: isCancel,
+      error: isCancel ? undefined : error?.message || String(error),
+      operationId,
+    };
+  } finally {
+    registryFinish(operationId);
+  }
+}
+
+export async function handleTranscribeOneLine(
+  event: IpcMainInvokeEvent,
+  options: {
+    videoPath: string;
+    segment: { start: number; end: number };
+    promptContext?: string;
+  },
+  operationId: string
+): Promise<{
+  success: boolean;
+  transcript?: string;
+  segments?: import('@shared-types/app').SrtSegment[];
+  cancelled?: boolean;
+  error?: string;
+  operationId: string;
+}> {
+  const { ffmpeg } = checkServicesInitialized();
+
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+  addSubtitle(operationId, controller);
+
+  let tempAudioPath: string | null = null;
+  try {
+    const { videoPath, segment, promptContext } = options;
+    if (!videoPath || !segment || segment.end <= segment.start) {
+      throw new Error('Invalid transcribe-one-line options');
+    }
+    const baseStart = Math.max(0, segment.start);
+    const baseDur = Math.max(0.05, segment.end - segment.start);
+    const LONG_SEGMENT_SEC = 20;
+
+    let transcriptText = '';
+    let segsOut: import('@shared-types/app').SrtSegment[] | undefined;
+
+    if (baseDur >= LONG_SEGMENT_SEC) {
+      // Segmentation path using full pipeline on sliced audio
+      const pad = 0.2;
+      const start = Math.max(0, baseStart - pad);
+      const duration = baseDur + pad * 2;
+
+      const baseName = mkTempAudioName(`${operationId}_slice`);
+      tempAudioPath = path.isAbsolute(baseName)
+        ? baseName
+        : path.join(ffmpeg.tempDir, baseName);
+
+      event.sender.send('generate-subtitles-progress', {
+        percent: 10,
+        stage: 'Extracting audio segment...',
+        operationId,
+      });
+      await extractAudioSegment(ffmpeg, {
+        input: videoPath,
+        output: tempAudioPath,
+        start,
+        duration,
+        operationId,
+        signal: controller.signal,
+      });
+
+      event.sender.send('generate-subtitles-progress', {
+        percent: 30,
+        stage: 'Transcribing 1/1',
+        operationId,
+      });
+
+      const res = await transcribePass({
+        audioPath: tempAudioPath,
+        services: { ffmpeg },
+        progressCallback: p => {
+          const mapped = Math.min(95, Math.max(35, p.percent));
+          // Do NOT forward partialResult for one-line transcribe to avoid replacing the entire store
+          event.sender.send('generate-subtitles-progress', {
+            percent: mapped,
+            stage: p.stage,
+            current: p.current,
+            total: p.total,
+            operationId,
+          });
+        },
+        operationId,
+        signal: controller.signal,
+      });
+      const offset = start;
+      segsOut = res.segments.map(s => ({
+        ...s,
+        start: s.start + offset,
+        end: s.end + offset,
+      })) as any;
+      transcriptText = (segsOut || [])
+        .map(s => String((s as any).original ?? ''))
+        .join(' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    } else {
+      // Short segment: direct whisper with small padding retries
+      const paddings = [0, 0.3, 0.6];
+      for (let i = 0; i < paddings.length; i++) {
+        const pad = paddings[i];
+        const start = Math.max(0, baseStart - pad);
+        const duration = baseDur + pad * 2;
+
+        if (tempAudioPath) {
+          try {
+            await fs.unlink(tempAudioPath);
+          } catch {
+            // Do nothing
+          }
+          tempAudioPath = null;
+        }
+        const baseName = mkTempAudioName(`${operationId}_seg_${i}`);
+        tempAudioPath = path.isAbsolute(baseName)
+          ? baseName
+          : path.join(ffmpeg.tempDir, baseName);
+
+        event.sender.send('generate-subtitles-progress', {
+          percent: 10 + i * 10,
+          stage: 'Extracting audio segment...',
+          operationId,
+        });
+        await extractAudioSegment(ffmpeg, {
+          input: videoPath,
+          output: tempAudioPath,
+          start,
+          duration,
+          operationId,
+          signal: controller.signal,
+        });
+
+        event.sender.send('generate-subtitles-progress', {
+          percent: 25 + i * 20,
+          stage: 'Transcribing 1/1',
+          operationId,
+        });
+        const resp: any = await stage5Client.transcribe({
+          filePath: tempAudioPath,
+          promptContext,
+          signal: controller.signal,
+        });
+        if (Array.isArray(resp?.segments) && resp.segments.length > 0) {
+          transcriptText = resp.segments
+            .map((s: any) => String(s?.text ?? ''))
+            .join(' ');
+        } else if (Array.isArray(resp?.words)) {
+          transcriptText = resp.words
+            .map((w: any) => String(w?.word ?? ''))
+            .join(' ');
+        }
+        transcriptText = (transcriptText || '').replace(/\s{2,}/g, ' ').trim();
+        if (transcriptText) break;
+      }
+    }
+
+    event.sender.send('generate-subtitles-progress', {
+      percent: 100,
+      stage: 'Completed',
+      operationId,
+    });
+
+    return {
+      success: true,
+      transcript: transcriptText,
+      segments: segsOut,
+      operationId,
+    };
+  } catch (error: any) {
+    const isCancel =
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled' ||
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
+    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
+      String(error?.message || '')
+    );
+    try {
+      event.sender.send('generate-subtitles-progress', {
+        percent: 100,
+        stage: isCancel
+          ? 'Process cancelled'
+          : `Error: ${error?.message || String(error)}`,
+        error: creditCancel
+          ? 'insufficient-credits'
+          : isCancel
+            ? undefined
+            : error?.message || String(error),
+        operationId,
+      });
+    } catch {
+      // Do nothing
+    }
+    return {
+      success: !isCancel,
+      cancelled: isCancel,
+      error: isCancel ? undefined : error?.message || String(error),
+      operationId,
+    };
+  } finally {
+    if (tempAudioPath) {
+      try {
+        await fs.unlink(tempAudioPath);
+      } catch {
+        // Do nothing
+      }
+    }
     registryFinish(operationId);
   }
 }

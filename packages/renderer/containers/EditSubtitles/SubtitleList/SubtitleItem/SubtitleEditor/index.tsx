@@ -13,7 +13,10 @@ import {
 } from '../../../../../../shared/helpers/index.js';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
 import * as SubtitlesIPC from '../../../../../ipc/subtitles';
-import { useUIStore, useTaskStore } from '../../../../../state';
+import { useUIStore, useTaskStore, useVideoStore } from '../../../../../state';
+import { transcribeOneLine } from '../../../../../ipc/subtitles';
+import * as SystemIPC from '../../../../../ipc/system';
+import { useSubStore } from '../../../../../state/subtitle-store';
 
 const timeInputStyles = css`
   width: 150px;
@@ -64,6 +67,8 @@ export default function SubtitleEditor({
   );
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+  const videoPath = useVideoStore(s => s.path);
+  const [isTranscribingOne, setIsTranscribingOne] = useState(false);
 
   useEffect(() => {
     if (subtitle) {
@@ -104,6 +109,50 @@ export default function SubtitleEditor({
     }
   };
 
+  async function handleTranscribeThisLine() {
+    if (!videoPath || !subtitle) return;
+    try {
+      setIsTranscribingOne(true);
+      const operationId = `transcribe-${Date.now()}-${id}`;
+      // Build simple prompt from neighbors
+      const store = useSubStore.getState();
+      const order = store.order;
+      const idx = order.indexOf(id);
+      const prev = idx > 0 ? store.segments[order[idx - 1]] : undefined;
+      const next = idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
+      const flatten = (s: string) => (s || '').replace(/\s*\n+\s*/g, ' ').trim();
+      const promptParts = [] as string[];
+      if (prev?.original) promptParts.push(`Prev: ${flatten(prev.original)}`);
+      if (next?.original) promptParts.push(`Next: ${flatten(next.original)}`);
+      const prompt = promptParts.join(' \n ');
+
+      const res = await transcribeOneLine({
+        videoPath,
+        segment: { start: subtitle.start, end: subtitle.end },
+        promptContext: prompt,
+        operationId,
+      });
+
+      const segs = (res as any)?.segments as any[] | undefined;
+      if (Array.isArray(segs) && segs.length > 0) {
+        // Atomically replace current cue with segmented cues using the store helper
+        useSubStore.getState().replaceWithSegments(
+          id,
+          segs.map(s => ({ start: s.start, end: s.end, original: s.original }))
+        );
+      } else {
+        const text = (res as any)?.transcript?.trim();
+        if (typeof text === 'string' && text.length > 0) {
+          actions.update({ original: text });
+        }
+      }
+    } catch (err) {
+      console.error('[SubtitleEditor] single-line transcribe error:', err);
+    } finally {
+      setIsTranscribingOne(false);
+    }
+  }
+
   async function handleTranslateOneLine() {
     if (!subtitle?.original?.trim()) return;
     if (useTaskStore.getState().transcription.inProgress) return;
@@ -117,37 +166,58 @@ export default function SubtitleEditor({
         inProgress: true,
       });
 
-      const srtContent = buildSrt({
-        segments: [
-          {
-            id: subtitle.id,
-            index: 1,
-            start: subtitle.start,
-            end: subtitle.end,
-            original: subtitle.original,
-          },
-        ],
-        mode: 'original',
-      });
+      // Build context: take up to 2 previous and 2 next segments for context
+      const store = useSubStore.getState();
+      const order = store.order;
+      const idx = order.indexOf(id);
+      const pick = (k: number) => store.segments[order[k]];
+      const flatten = (s: string) => (s || '').replace(/\s*\n+\s*/g, ' ').trim();
+      const ctxBefore = [] as any[];
+      const ctxAfter = [] as any[];
+      for (let k = Math.max(0, idx - 2); k < idx; k++) {
+        const s = pick(k);
+        if (!s) continue;
+        ctxBefore.push({
+          id: s.id,
+          index: s.index,
+          start: s.start,
+          end: s.end,
+          original: flatten(s.original || ''),
+        });
+      }
+      for (let k = idx + 1; k <= Math.min(order.length - 1, idx + 2); k++) {
+        const s = pick(k);
+        if (!s) continue;
+        ctxAfter.push({
+          id: s.id,
+          index: s.index,
+          start: s.start,
+          end: s.end,
+          original: flatten(s.original || ''),
+        });
+      }
 
-      const res = await SubtitlesIPC.translateSubtitles({
-        subtitles: srtContent,
+      const res = await SubtitlesIPC.translateOneLine({
+        segment: {
+          id: subtitle.id,
+          index: subtitle.index,
+          start: subtitle.start,
+          end: subtitle.end,
+          original: flatten(subtitle.original),
+        } as any,
+        contextBefore: ctxBefore as any,
+        contextAfter: ctxAfter as any,
         targetLanguage: targetLanguage || 'english',
         operationId,
       });
 
-      if (res?.translatedSubtitles) {
-        const segs = parseSrt(res.translatedSubtitles);
-        const translated = segs[0]?.translation?.trim();
-        if (translated) actions.update({ translation: translated });
-        setTranslationState({
-          stage: t('generateSubtitles.status.completed', 'Completed'),
-          percent: 100,
-          inProgress: false,
-        });
-      } else {
-        setTranslationState({ inProgress: false });
-      }
+      const translated = (res as any)?.translation?.trim();
+      if (translated) actions.update({ translation: translated });
+      setTranslationState({
+        stage: t('generateSubtitles.status.completed', 'Completed'),
+        percent: 100,
+        inProgress: false,
+      });
     } catch (err) {
       console.error('[SubtitleEditor] single-line translate error:', err);
       setTranslationState({
@@ -328,13 +398,28 @@ export default function SubtitleEditor({
         </div>
       )}
 
-      <SubtitleEditTextarea
-        value={subtitle.translation ?? ''}
-        searchTerm={searchText || ''}
-        onChange={v => actions.update({ translation: v })}
-        rows={4}
-        placeholder={t('editSubtitles.item.subtitlePlaceholder')}
-      />
+      {(!subtitle.original || !subtitle.original.trim()) && videoPath ? (
+        <div className={css`display: flex; justify-content: center;`}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleTranscribeThisLine}
+            disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
+            isLoading={isTranscribingOne}
+            title={t('input.transcribeOnly', 'Transcribe Audio')}
+          >
+            {t('input.transcribeOnly', 'Transcribe Audio')}
+          </Button>
+        </div>
+      ) : (
+        <SubtitleEditTextarea
+          value={subtitle.translation ?? ''}
+          searchTerm={searchText || ''}
+          onChange={v => actions.update({ translation: v })}
+          rows={4}
+          placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+        />
+      )}
 
       <div
         className={css`
@@ -401,4 +486,4 @@ export default function SubtitleEditor({
       </div>
     </div>
   );
-}
+  }
