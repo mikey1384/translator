@@ -38,7 +38,7 @@ interface Actions {
   handleTogglePlay(): void;
   openFileDialog(): Promise<void>;
   // New: mount a video without resetting current subtitles
-  openFileDialogPreserveSubs(): Promise<void>;
+  openFileDialogPreserveSubs(): Promise<{ canceled: boolean; selectedPath?: string } | void>;
   mountFilePreserveSubs(
     file: File | { name: string | undefined; path: string }
   ): Promise<void>;
@@ -234,7 +234,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           },
         ],
       });
-      if (res.canceled || !res.filePaths.length) return;
+      if (res.canceled || !res.filePaths.length) return { canceled: true } as const;
       const p = res.filePaths[0];
       try {
         await get().mountFilePreserveSubs({ name: p.split(/[\\/]/).pop()!, path: p });
@@ -244,6 +244,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       import('../state/ui-store').then(m =>
         m.useUIStore.getState().setInputMode('file')
       );
+      return { canceled: false, selectedPath: p } as const;
     },
 
     async mountFilePreserveSubs(fd: File | { name: string; path: string }) {

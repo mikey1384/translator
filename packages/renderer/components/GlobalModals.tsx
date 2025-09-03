@@ -111,7 +111,16 @@ export default function GlobalModals() {
             </button>
             <MediaInputSection
               videoFile={null}
-              onOpenFileDialog={() => openFileDialogPreserveSubs()}
+              onOpenFileDialog={async () => {
+                try {
+                  const res = await openFileDialogPreserveSubs();
+                  if (res && !(res as any).canceled) {
+                    closeChangeVideo();
+                  }
+                } catch (err) {
+                  console.error('[GlobalModals] change-video selection error:', err);
+                }
+              }}
               isDownloadInProgress={download.inProgress}
               isTranslationInProgress={translation.inProgress}
               urlInput={urlInput}
