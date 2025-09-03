@@ -429,10 +429,11 @@ export default function EditSubtitles({
                   `}
                 >
                   <Button
-                    variant="success"
+                    variant="primary"
                     size="lg"
-                    className={`${buttonGradientStyles.base} ${buttonGradientStyles.success}`}
+                    className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
                     onClick={handleContinueTranscribing}
+                    disabled={isTranscribing || translation.inProgress || mergeTask.inProgress}
                     title={t('subtitles.continueTranscribing', 'Continue transcribing')}
                   >
                     <div
