@@ -4,6 +4,7 @@ import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useCreditStore } from '../state/credit-store';
+import { logTask, logPhase } from '../utils/logger';
 import { openCreditRanOut } from '../state/modal-store';
 
 type ProgressPayload = Parameters<
@@ -14,6 +15,8 @@ let queued: ProgressPayload | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
 let isFlushing = false;
 let lastParsed = 0;
+let lastTranscribe = { id: null as string | null, stage: '' };
+let lastTranslate = { id: null as string | null, stage: '' };
 
 function flush() {
   if (isFlushing) return;
@@ -49,22 +52,33 @@ function flush() {
       queued = null;
       return;
     }
+    // Log start of translation task when operation changes
+    if (operationId && lastTranslate.id !== operationId) {
+      try { logTask('start', 'translation', { operationId }); } catch {}
+      lastTranslate = { id: operationId, stage: '' };
+    }
     useTaskStore.getState().setTranslation({
       stage,
       percent,
       id: operationId ?? null,
       batchStartIndex,
     });
+    // Log phase changes (stage string transitions)
+    if (stage && operationId && lastTranslate.stage !== stage) {
+      try { logPhase('translation', stage, percent, { operationId }); } catch {}
+      lastTranslate.stage = stage;
+    }
     // After completion, stop applying any further queued updates
     const isComplete =
       percent >= 100 || /processing complete/i.test(stage ?? '');
     if (isComplete) {
-  queued = null;
-  if (flushTimer) {
-    clearTimeout(flushTimer);
-    flushTimer = null;
-  }
-  return;
+      queued = null;
+      if (flushTimer) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+      }
+      try { if (operationId) logTask('complete', 'translation', { operationId }); } catch {}
+      return;
     }
     // If the task has been marked complete (inProgress=false), ignore any late non-final updates
     if (!inProgress) {
@@ -77,12 +91,22 @@ function flush() {
       queued = null;
       return;
     }
+    // Log start of transcription task when operation changes
+    if (operationId && lastTranscribe.id !== operationId) {
+      try { logTask('start', 'transcription', { operationId }); } catch {}
+      lastTranscribe = { id: operationId, stage: '' };
+    }
     useTaskStore.getState().setTranscription({
       stage,
       percent,
       id: operationId ?? null,
       batchStartIndex,
     });
+    // Log phase changes (stage string transitions)
+    if (stage && operationId && lastTranscribe.stage !== stage) {
+      try { logPhase('transcription', stage, percent, { operationId }); } catch {}
+      lastTranscribe.stage = stage;
+    }
 
     // Surface progress to the user by opening the Edit panel automatically
     // when transcription is underway so the incremental results are visible.

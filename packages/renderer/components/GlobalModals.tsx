@@ -1,6 +1,6 @@
 import ConfirmReplaceSrtDialog from '../containers/GenerateSubtitles/components/ConfirmReplaceSrtDialog';
 import CreditRanOutDialog from '../containers/GenerateSubtitles/components/CreditRanOutDialog';
-import { useModalStore, resolveUnsavedSrt, resolveCreditRanOut, closeChangeVideo } from '../state/modal-store';
+import { useModalStore, resolveUnsavedSrt, resolveCreditRanOut, closeChangeVideo, closeLogs } from '../state/modal-store';
 import { useUIStore } from '../state/ui-store';
 import MediaInputSection from '../containers/GenerateSubtitles/components/MediaInputSection';
 import { useUrlStore } from '../state/url-store';
@@ -8,11 +8,13 @@ import { useVideoStore, useTaskStore } from '../state';
 import { css } from '@emotion/css';
 import { colors } from '../styles';
 import { useEffect, useRef } from 'react';
+import LogsModal from './LogsModal';
 
 export default function GlobalModals() {
   const unsavedOpen = useModalStore(s => s.unsavedSrtOpen);
   const creditOpen = useModalStore(s => s.creditRanOutOpen);
   const changeVideoOpen = useModalStore(s => s.changeVideoOpen);
+  const logsOpen = useModalStore(s => s.logsOpen);
   const toggleSettings = useUIStore(s => s.toggleSettings);
 
   // Reuse existing stores for MediaInputSection
@@ -135,6 +137,8 @@ export default function GlobalModals() {
           </div>
         </div>
       )}
+
+      <LogsModal open={logsOpen} onClose={() => closeLogs()} />
     </>
   );
 }

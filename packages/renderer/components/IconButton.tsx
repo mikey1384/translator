@@ -1,6 +1,7 @@
 import React, { ButtonHTMLAttributes } from 'react';
 import { css, cx } from '@emotion/css';
 import { colors } from '../styles.js';
+import { logButton } from '../utils/logger.js';
 
 // Define the button variants and sizes
 type IconButtonVariant = 'primary' | 'secondary' | 'transparent';
@@ -138,6 +139,17 @@ export default function IconButton({
   disabled,
   ...props
 }: IconButtonProps) {
+  const userOnClick = (props as any).onClick as
+    | ((e: React.MouseEvent<HTMLButtonElement>) => void)
+    | undefined;
+  const { 'data-log': dataLog, title, 'aria-label': ariaLabel } = props as any;
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    try {
+      const name = dataLog || ariaLabel || title || 'icon_button';
+      logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
+    } catch {}
+    userOnClick?.(e);
+  };
   return (
     <button
       className={cx(
@@ -148,6 +160,7 @@ export default function IconButton({
         className
       )}
       disabled={isLoading || disabled}
+      onClick={handleClick}
       {...props}
     >
       {isLoading ? (

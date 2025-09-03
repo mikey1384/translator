@@ -8,6 +8,7 @@ import { i18n } from '../i18n';
 import { css } from '@emotion/css';
 import { colors } from '../styles';
 import { useTranslation } from 'react-i18next';
+import { logButton } from '../utils/logger';
 
 export default function MainPanels() {
   const { t } = useTranslation();
@@ -59,8 +60,16 @@ export default function MainPanels() {
             role="button"
             tabIndex={0}
             className={css(ctaOverlayCard)}
-            onClick={() => setGenerateOpen(true)}
-            onKeyDown={e => onKeyToggle(e, () => setGenerateOpen(true))}
+            onClick={() => {
+              logButton('open_generate_panel');
+              setGenerateOpen(true);
+            }}
+            onKeyDown={e =>
+              onKeyToggle(e, () => {
+                logButton('open_generate_panel');
+                setGenerateOpen(true);
+              })
+            }
           >
             <div className={overlayHeaderStyles}>
               <div className={overlayIconStyles}>🎬</div>
@@ -102,8 +111,16 @@ export default function MainPanels() {
             role="button"
             tabIndex={0}
             className={css(ctaOverlayCard)}
-            onClick={() => setEditOpen(true)}
-            onKeyDown={e => onKeyToggle(e, () => setEditOpen(true))}
+            onClick={() => {
+              logButton('open_edit_panel');
+              setEditOpen(true);
+            }}
+            onKeyDown={e =>
+              onKeyToggle(e, () => {
+                logButton('open_edit_panel');
+                setEditOpen(true);
+              })
+            }
           >
             <div className={overlayHeaderStyles}>
               <div className={overlayIconStyles}>📝</div>

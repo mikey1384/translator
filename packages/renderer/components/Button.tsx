@@ -1,6 +1,7 @@
 import React, { useRef, ChangeEvent, ReactNode, forwardRef } from 'react';
 import { css, cx } from '@emotion/css';
 import { colors, breakpoints } from '../styles.js';
+import { logButton } from '../utils/logger.js';
 // import LoadingSpinner from './LoadingSpinner'; // Comment out for now
 
 // Define the button variants and sizes
@@ -224,6 +225,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const handleButtonClick = async (
       event: React.MouseEvent<HTMLButtonElement>
     ) => {
+      try {
+        const name =
+          (rest as any)['data-log'] ||
+          (rest as any)['aria-label'] ||
+          (rest as any).title ||
+          (typeof children === 'string' ? children : 'button');
+        logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
+      } catch {}
       if (asFileInput && inputRef.current) {
         inputRef.current.click();
       } else if (onClick) {

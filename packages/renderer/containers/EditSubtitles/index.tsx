@@ -17,6 +17,7 @@ import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
 import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
 import { colors, selectStyles } from '../../styles';
+import { logButton, logError, logTask } from '../../utils/logger';
 import {
   TRANSLATION_LANGUAGE_GROUPS,
   TRANSLATION_LANGUAGES_BASE,
@@ -35,6 +36,7 @@ import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { getNativePlayerInstance } from '../../native-player';
 import { sameArray } from '../../utils/array';
 import { translateMissingUntranslated } from '../../utils/translateMissing';
+import { logButton, logTask, logError } from '../../utils/logger.js';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -268,9 +270,11 @@ export default function EditSubtitles({
 
   async function handleTranslateMissing() {
     try {
+      logButton('translate_missing');
       await translateMissingUntranslated();
     } catch (err) {
       console.error('[EditSubtitles] translate missing error:', err);
+      logError('translate_missing', err as any);
       useTaskStore.getState().setTranslation({
         stage: t('generateSubtitles.status.error', 'Error'),
         percent: 100,
@@ -502,11 +506,13 @@ export default function EditSubtitles({
 
   async function handleSaveSrt() {
     if (!originalPath) return handleSaveEditedSrtAs();
+    try { logButton('save_srt'); } catch {}
     await writeSrt(originalPath);
   }
 
   async function handleContinueTranscribing() {
     try {
+      logButton('continue_transcribing');
       const videoPath = useVideoStore.getState().path;
       if (!videoPath || subtitles.length === 0) return;
       const start = subtitles[subtitles.length - 1].end;
@@ -520,6 +526,7 @@ export default function EditSubtitles({
           percent: 0,
           inProgress: true,
         });
+        logTask('start', 'transcription', { operationId, mode: 'continue-tail', start });
       } catch {}
       const res = await (await import('../../ipc/subtitles')).transcribeRemaining({
         videoPath,
@@ -539,6 +546,7 @@ export default function EditSubtitles({
           percent: 100,
           inProgress: false,
         });
+        logTask('complete', 'transcription', { operationId });
       } catch {}
     } catch (err) {
       console.error('[EditSubtitles] continue transcribing error:', err);
@@ -550,10 +558,12 @@ export default function EditSubtitles({
           inProgress: false,
         });
       } catch {}
+      logError('continue_transcribing', err as any);
     }
   }
 
   async function handleSaveEditedSrtAs() {
+    try { logButton('save_srt_as'); } catch {}
     const suggestion = originalPath || 'subtitles.srt';
     const res = await FileIPC.save({
       title: t('dialogs.saveSrtFileAs'),
@@ -595,12 +605,15 @@ export default function EditSubtitles({
 
   async function handleMerge() {
     try {
+      logButton('merge_start');
       if (!videoPath) {
         setSaveError(t('common.error.noSourceVideo'));
+        try { logError('merge', 'no_source_video'); } catch {}
         return;
       }
       if (subtitles.length === 0) {
         setSaveError(t('common.error.noSubtitlesLoaded'));
+        try { logError('merge', 'no_subtitles_loaded'); } catch {}
         return;
       }
       if (!isAudioOnly) {
@@ -653,19 +666,23 @@ export default function EditSubtitles({
       const res = await onStartPngRenderRequest(opts);
       if (!res.success) {
         setSaveError(res.error || t('common.error.renderFailed'));
+        try { logError('merge', (res.error as any) || 'render_failed'); } catch {}
         setMergeStage('Error');
         onSetMergeOperationId(null);
       }
     } finally {
       useTaskStore.getState().doneMerge();
+      try { logTask('complete', 'merge', {} as any); } catch {}
     }
   }
 
   async function handleLoadSrtLocal() {
+    try { logButton('choose_srt_from_device'); } catch {}
     setSaveError('');
     const res = await openSubtitleWithElectron();
     if (res.error && !res.error.includes('canceled')) {
       setSaveError(res.error);
+      try { logError('open_srt', res.error as any); } catch {}
       return;
     }
     if (res.segments) {

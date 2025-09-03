@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import { useCreditStore } from '../../state/credit-store';
+import { logButton, logTask } from '../../utils/logger.js';
 import {
   CREDITS_PER_TRANSLATION_AUDIO_HOUR,
   CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
@@ -149,6 +150,19 @@ export default function ProgressArea({
   }, [progress, isVisible, onClose, autoCloseDelay]);
 
   const handleCloseOrCancelClick = async () => {
+    try {
+      const isCancel = progress < 100;
+      const action = isCancel ? 'progress_cancel' : 'progress_close';
+      logButton(action, { title, operationId: operationId ?? undefined });
+      if (isCancel && operationId) {
+        const kind = operationId.startsWith('transcribe-')
+          ? 'transcription'
+          : operationId.startsWith('translate-')
+            ? 'translation'
+            : 'merge';
+        logTask('cancel', kind as any, { operationId });
+      }
+    } catch {}
     if (progress < 100) {
       if (!operationId) {
         console.warn(

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useUIStore } from '../state';
+import { logButton } from '../utils/logger';
 
 export default function useGlobalHotkeys() {
   const { setFindBarVisible, toggleSettings } = useUIStore();
@@ -8,10 +9,13 @@ export default function useGlobalHotkeys() {
       if (e.ctrlKey && e.key === 'f') {
         e.preventDefault();
         setFindBarVisible(true);
+        try { logButton('findbar_open'); } catch {}
       }
       if (e.key === 'Escape') {
         setFindBarVisible(false);
+        try { logButton('findbar_close'); } catch {}
         toggleSettings(false);
+        try { logButton('close_settings'); } catch {}
       }
     };
     window.addEventListener('keydown', onKey);

@@ -11,6 +11,8 @@ interface State {
   _creditResolver?: (choice: 'settings' | 'ok') => void;
   // Change video modal
   changeVideoOpen: boolean;
+  // Logs modal
+  logsOpen: boolean;
 }
 
 interface Actions {
@@ -29,6 +31,7 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     creditRanOutOpen: false,
     _creditResolver: undefined,
     changeVideoOpen: false,
+    logsOpen: false,
 
     openUnsavedSrtConfirm: () =>
       new Promise<UnsavedChoice>(resolve => {
@@ -72,6 +75,15 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       set(s => {
         s.changeVideoOpen = false;
       }),
+    // Logs modal controls
+    openLogs: () =>
+      set(s => {
+        s.logsOpen = true;
+      }),
+    closeLogs: () =>
+      set(s => {
+        s.logsOpen = false;
+      }),
   }))
 );
 
@@ -97,4 +109,12 @@ export function openChangeVideo() {
 
 export function closeChangeVideo() {
   return useModalStore.getState().closeChangeVideo();
+}
+
+export function openLogs() {
+  return (useModalStore.getState() as any).openLogs();
+}
+
+export function closeLogs() {
+  return (useModalStore.getState() as any).closeLogs();
 }

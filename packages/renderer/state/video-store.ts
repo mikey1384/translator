@@ -8,6 +8,7 @@ import { useSubStore } from './subtitle-store';
 import { useUIStore } from './ui-store';
 import { useTaskStore } from './task-store';
 import throttle from 'lodash/throttle';
+import { logButton, logVideo } from '../utils/logger';
 
 type Meta = {
   duration: number;
@@ -103,6 +104,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.url = url;
         });
         await analyse(fd.path);
+        try { logVideo('video_mounted', { path: fd.path }); } catch {}
         if (fd.path) {
           try {
             const saved = await VideoIPC.getPlaybackPosition(fd.path);
@@ -126,6 +128,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
         });
+        try { logVideo('video_mounted', { path: b._originalPath ?? '(blob)' }); } catch {}
         if (b._originalPath) {
           await analyse(b._originalPath);
           try {
@@ -148,6 +151,10 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       const blobUrl = URL.createObjectURL(fd as File);
       set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null });
+      try {
+        const p = (fd as any).path ?? '(blob)';
+        logVideo('video_mounted', { path: p });
+      } catch {}
       if ((fd as any).path) {
         await analyse((fd as any).path);
         try {
@@ -181,6 +188,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     },
 
     async openFileDialog() {
+      try { logButton('open_file_dialog'); } catch {}
       const res = await FileIPC.open({
         properties: ['openFile'],
         filters: [
@@ -203,6 +211,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       });
       if (res.canceled || !res.filePaths.length) return;
       const p = res.filePaths[0];
+      try { logVideo('video_selected', { path: p }); } catch {}
       try {
         await get().setFile({ name: p.split(/[\\/]/).pop()!, path: p });
       } catch (err) {

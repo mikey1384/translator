@@ -8,6 +8,7 @@ import {
   componentSizes,
   shadows,
 } from './tokens.js';
+import { logButton } from '../../utils/logger.js';
 
 export type ButtonVariant =
   | 'primary'
@@ -217,6 +218,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const { onClick, ...restProps } = props;
+    const handleClick: React.MouseEventHandler<HTMLButtonElement> = e => {
+      try {
+        const name =
+          (restProps as any)['data-log'] ||
+          (restProps as any)['aria-label'] ||
+          (restProps as any).title ||
+          (typeof children === 'string' ? children : 'button');
+        logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
+      } catch {}
+      onClick?.(e);
+    };
+
     return (
       <button
         ref={ref}
@@ -228,7 +242,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={isLoading || disabled}
-        {...props}
+        onClick={handleClick}
+        {...restProps}
       >
         {isLoading ? (
           <>

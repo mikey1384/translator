@@ -122,7 +122,7 @@ export default function SpeedMenu({
             padding: 6px 12px;
             color: ${r === current ? '#fff' : '#aaa'};
             font-weight: ${r === current ? 600 : 400};
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
             &:hover {
               background: #333;

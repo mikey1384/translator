@@ -3,6 +3,7 @@ import { css } from '@emotion/css';
 import { colors, selectStyles } from '../../../styles.js';
 import { FileButton } from '../../../components/design-system/index.js';
 import Button from '../../../components/Button.js';
+import { logButton } from '../../../utils/logger';
 import { VideoQuality } from '@shared-types/app';
 import { useTranslation } from 'react-i18next';
 
@@ -176,7 +177,10 @@ export default function MediaInputSection({
 
         <div className={fileInputAreaStyles}>
           <FileButton
-            onFileSelect={onOpenFileDialog}
+            onFileSelect={() => {
+              logButton('select_file_from_device');
+              onOpenFileDialog();
+            }}
             disabled={isDownloadInProgress || isTranslationInProgress}
           >
             {videoFile

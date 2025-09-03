@@ -5,6 +5,8 @@ import IconButton from './IconButton.js';
 import { useTranslation } from 'react-i18next';
 import { useTaskStore, useUpdateStore } from '../state';
 import * as SubtitleIPC from '@ipc/subtitles';
+import { openLogs } from '../state/modal-store';
+import { logButton } from '../utils/logger';
 
 interface FloatingActionButtonsProps {
   scrollThreshold?: number;
@@ -322,6 +324,34 @@ export default function FloatingActionButtons({
 
   return (
     <div className={buttonContainerStyles}>
+      {/* Logs Button */}
+      <IconButton
+        onClick={() => {
+          logButton('open_logs');
+          openLogs();
+        }}
+        aria-label={t('common.logs', 'Open logs')}
+        size="lg"
+        variant="secondary"
+        icon={
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Document with folded corner */}
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Bulleted log lines */}
+            <circle cx="9" cy="11" r="1" fill="currentColor" />
+            <line x1="12" y1="11" x2="18" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="9" cy="15" r="1" fill="currentColor" />
+            <line x1="12" y1="15" x2="18" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        }
+      />
       {buttonProps &&
         (available || downloaded ? (
           <button
@@ -382,8 +412,10 @@ export default function FloatingActionButtons({
             const rect = el.getBoundingClientRect();
             const midY = rect.top + rect.height / 2;
             if (e.clientY <= midY) {
+              logButton('scroll_top');
               if (showScrollToTopButton) handleBackToTopClick();
             } else {
+              logButton('scroll_bottom');
               if (showScrollToBottomButton) handleScrollToBottomClick();
             }
           }}

@@ -266,6 +266,13 @@ const electronAPI = {
   getDeviceId: (): Promise<string> => ipcRenderer.invoke('get-device-id'),
   getAdminDeviceId: (): Promise<string | null> =>
     ipcRenderer.invoke('get-admin-device-id'),
+  getSystemInfo: (): Promise<{
+    platform: string;
+    arch: string;
+    release?: string;
+    cpu?: string;
+    isAppleSilicon?: boolean;
+  }> => ipcRenderer.invoke('get-system-info'),
 
   // Listen for credit balance updates from the main process
   onCreditsUpdated: (

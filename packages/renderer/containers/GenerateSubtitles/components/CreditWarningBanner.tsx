@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Alert } from '../../../components/design-system/index.js';
+import { logButton } from '../../../utils/logger.js';
 
 interface CreditWarningBannerProps {
   onSettingsClick: () => void;
@@ -28,7 +29,10 @@ export default function CreditWarningBanner({
                 color: 'white',
                 cursor: 'pointer',
               }}
-              onClick={onSettingsClick}
+              onClick={() => {
+              try { logButton('open_settings'); } catch {}
+              onSettingsClick();
+            }}
             />
           ),
         }}

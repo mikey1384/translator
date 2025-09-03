@@ -23,6 +23,8 @@ import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCredit
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
+import { logProgress } from '../utils/logger';
+import { useRef } from 'react';
 
 export default function AppContent() {
   const { t } = useTranslation();
@@ -120,6 +122,36 @@ export default function AppContent() {
       }
     })();
   }, []);
+
+  // Log progress area visibility transitions (avoid duplicates)
+  const prevTranscribingRef = useRef<boolean>(false);
+  const prevTranslatingRef = useRef<boolean>(false);
+  const prevMergingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const prev = prevTranscribingRef.current;
+    if (prev !== isTranscribing) {
+      logProgress(isTranscribing ? 'open' : 'close', 'transcription');
+      prevTranscribingRef.current = isTranscribing;
+    }
+  }, [isTranscribing]);
+
+  useEffect(() => {
+    const prev = prevTranslatingRef.current;
+    if (prev !== isTranslating) {
+      logProgress(isTranslating ? 'open' : 'close', 'translation');
+      prevTranslatingRef.current = isTranslating;
+    }
+  }, [isTranslating]);
+
+  useEffect(() => {
+    const now = !!merge.inProgress;
+    const prev = prevMergingRef.current;
+    if (prev !== now) {
+      logProgress(now ? 'open' : 'close', 'merge');
+      prevMergingRef.current = now;
+    }
+  }, [merge.inProgress]);
 
   const handleCancelDownload = () => {
     if (!download.id) return;

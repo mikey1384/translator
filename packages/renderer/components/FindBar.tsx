@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../styles.js';
 import { useUIStore } from '../state/ui-store.js';
 import { useSubStore } from '../state/subtitle-store.js';
+import { logButton } from '../utils/logger.js';
 
 const findBarStyles = css`
   position: fixed;
@@ -190,7 +191,10 @@ export default function FindBar() {
       </span>
       <button
         className={buttonStyles}
-        onClick={findNext}
+        onClick={() => {
+          try { logButton('findbar_next'); } catch {}
+          findNext();
+        }}
         disabled={!hasMatches}
         title={t('findBar.nextMatch')}
         aria-label={t('findBar.nextMatchAria')}
@@ -199,7 +203,10 @@ export default function FindBar() {
       </button>
       <button
         className={buttonStyles}
-        onClick={findPrev}
+        onClick={() => {
+          try { logButton('findbar_prev'); } catch {}
+          findPrev();
+        }}
         disabled={!hasMatches}
         title={t('findBar.previousMatch')}
         aria-label={t('findBar.previousMatchAria')}
@@ -208,9 +215,10 @@ export default function FindBar() {
       </button>
       <button
         className={buttonStyles}
-        onClick={() =>
-          useSubStore.getState().replaceAll(searchText, replaceText)
-        }
+        onClick={() => {
+          try { logButton('findbar_replace_all'); } catch {}
+          useSubStore.getState().replaceAll(searchText, replaceText);
+        }}
         disabled={!searchText || !replaceText}
         title={t('findBar.replaceAllTitle')}
         aria-label={t('findBar.replaceAllAria')}
@@ -219,7 +227,10 @@ export default function FindBar() {
       </button>
       <button
         className={closeButtonStyles}
-        onClick={hideFindBar}
+        onClick={() => {
+          try { logButton('findbar_close'); } catch {}
+          hideFindBar();
+        }}
         title={t('findBar.closeTitle')}
         aria-label={t('findBar.closeAria')}
       >

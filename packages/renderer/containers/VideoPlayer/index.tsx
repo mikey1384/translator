@@ -232,6 +232,15 @@ const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
     display: flex;
     flex-direction: column;
     gap: 0;
+
+    /* In fullscreen, allow the video to fill the screen area
+       without being constrained by object-fit: contain */
+    video {
+      width: 100% !important;
+      height: 100% !important;
+      /* Preserve full frame with letterboxing as needed (no cropping) */
+      object-fit: contain !important;
+    }
   `
     : `
     width: calc(95% - 30px);
@@ -699,7 +708,7 @@ export default function VideoPlayer() {
                     setShowOverlay(false);
                     speedBtnRef.current?.focus();
                   }}
-                  placement={isFullScreen ? 'up' : 'down'}
+                  placement={'up'}
                 />
               )}
             </div>

@@ -22,6 +22,7 @@ import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
+import os from 'os';
 import Store from 'electron-store';
 import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
@@ -441,6 +442,18 @@ try {
     'get-admin-device-id',
     () => process.env.ADMIN_DEVICE_ID || null
   );
+  ipcMain.handle('get-system-info', () => {
+    try {
+      const platform = process.platform;
+      const arch = process.arch;
+      const release = os.release();
+      const cpu = os.cpus()?.[0]?.model ?? '';
+      const isAppleSilicon = platform === 'darwin' && arch === 'arm64';
+      return { platform, arch, release, cpu, isAppleSilicon };
+    } catch (e: any) {
+      return { platform: process.platform, arch: process.arch } as any;
+    }
+  });
 
   // yt-dlp auto update is always on; no IPC settings
 

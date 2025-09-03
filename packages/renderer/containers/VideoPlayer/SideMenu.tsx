@@ -8,6 +8,7 @@ import {
   useVideoStore,
 } from '../../state';
 import { openChangeVideo } from '../../state/modal-store';
+import { logButton, logVideo, logError } from '../../utils/logger';
 import { useTranslation } from 'react-i18next';
 import { openSubtitleWithElectron } from '../../../shared/helpers';
 import {
@@ -67,9 +68,11 @@ export default function SideMenu({
   }
 
   async function handleMountOrChangeSrt() {
+    logButton('mount_or_change_srt');
     const res = await openSubtitleWithElectron();
     if (res?.segments) {
       useSubStore.getState().load(res.segments, res.filePath ?? null);
+      logVideo('srt_loaded', { path: res.filePath ?? '' });
       // Ensure the Edit Subtitles panel is visible so users immediately see loaded SRT
       try {
         useUIStore.getState().setEditPanelOpen(true);
@@ -82,6 +85,9 @@ export default function SideMenu({
       } catch {
         // Do nothing
       }
+    }
+    if (res?.error) {
+      logError('srt_load', res.error);
     }
   }
   async function handleTranscribe() {
@@ -127,7 +133,10 @@ export default function SideMenu({
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => openChangeVideo()}
+          onClick={() => {
+            logButton('change_video');
+            openChangeVideo();
+          }}
           title={t('videoPlayer.changeVideo', 'Change Video')}
           disabled={isTranscribing || translation.inProgress || isMerging}
         >

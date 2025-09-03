@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
 import { useUIStore } from '../state';
+import { logButton } from '../utils/logger';
 import LogoDisplay from '../components/LogoDisplay';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -42,7 +43,10 @@ export default function Header() {
       {showSettings ? (
         <button
           className={settingsButton}
-          onClick={() => toggleSettings(false)}
+          onClick={() => {
+            try { logButton('close_settings'); } catch {}
+            toggleSettings(false);
+          }}
         >
           {t('common.backToApp')}
         </button>
@@ -58,7 +62,10 @@ export default function Header() {
           <CreditBalance />
           <button
             className={settingsButton}
-            onClick={() => toggleSettings(true)}
+            onClick={() => {
+            try { logButton('open_settings'); } catch {}
+            toggleSettings(true);
+          }}
           >
             {t('common.settings')}
           </button>
