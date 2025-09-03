@@ -255,6 +255,12 @@
       "saveAndTranscribe": "保存して文字起こし",
       "discardAndTranscribe": "保存せずに文字起こし",
       "cancel": "キャンセル"
+    },
+    "creditRanOut": {
+      "title": "クレジットがなくなりました",
+      "message": "AIクレジットがなくなりました。設定でチャージしてから、続きから再開してください。",
+      "openSettings": "設定を開く",
+      "ok": "OK"
     }
   },
   "progress": {

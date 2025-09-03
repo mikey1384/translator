@@ -81,10 +81,11 @@ export async function extractSubtitlesFromMedia({
     const isCancel =
       error.name === 'AbortError' ||
       (error instanceof Error && error.message === 'Operation cancelled') ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      ) ||
+      /insufficient-credits|Insufficient credits/i.test(String(error?.message || '')) ||
       signal.aborted;
+    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
+      String(error?.message || '')
+    );
 
     if (isCancel) {
       progressCallback?.({
@@ -98,7 +99,11 @@ export async function extractSubtitlesFromMedia({
         stage: isCancel
           ? 'Process cancelled'
           : `Error: ${error?.message || String(error)}`,
-        error: !isCancel ? error?.message || String(error) : undefined,
+        error: creditCancel
+          ? 'insufficient-credits'
+          : !isCancel
+            ? error?.message || String(error)
+            : undefined,
       });
     }
 

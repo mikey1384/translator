@@ -255,6 +255,12 @@
       "saveAndTranscribe": "Speichern und transkribieren",
       "discardAndTranscribe": "Verwerfen und transkribieren",
       "cancel": "Abbrechen"
+    },
+    "creditRanOut": {
+      "title": "Guthaben aufgebraucht",
+      "message": "Ihr KI‑Guthaben ist aufgebraucht. Laden Sie es in den Einstellungen auf und setzen Sie anschließend dort fort, wo Sie aufgehört haben.",
+      "openSettings": "Einstellungen öffnen",
+      "ok": "OK"
     }
   },
   "progress": {

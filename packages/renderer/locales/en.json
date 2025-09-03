@@ -281,6 +281,12 @@
     "slowDownloadBanner": {
       "title": "Download is taking longer than usual.",
       "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+    },
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
     }
   },
   "progress": {

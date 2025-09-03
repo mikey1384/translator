@@ -111,17 +111,22 @@ export async function handleGenerateSubtitles(
       controller.signal.aborted ||
       error.name === 'AbortError' ||
       error.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
+      /insufficient-credits|Insufficient credits/i.test(String(error?.message || ''));
+    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
+      String(error?.message || '')
+    );
     if (tempVideoPath && !isCancel) {
       await cleanupTempFile(tempVideoPath);
     }
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: isCancel ? 'Generation cancelled' : `Error: ${error.message}`,
-      error: isCancel ? null : error.message || String(error),
+      stage: isCancel ? 'Process cancelled' : `Error: ${error.message}`,
+      error: creditCancel
+        ? 'insufficient-credits'
+        : isCancel
+          ? undefined
+          : error.message || String(error),
       cancelled: isCancel,
       operationId,
     });
@@ -216,9 +221,10 @@ export async function handleTranslateSubtitles(
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
+      /insufficient-credits|Insufficient credits/i.test(String(error?.message || ''));
+    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
+      String(error?.message || '')
+    );
     // Emit a final progress event so renderer updates status appropriately
     try {
       event.sender.send('generate-subtitles-progress', {
@@ -226,7 +232,11 @@ export async function handleTranslateSubtitles(
         stage: isCancel
           ? 'Process cancelled'
           : `Error: ${error?.message || String(error)}`,
-        error: isCancel ? undefined : error?.message || String(error),
+        error: creditCancel
+          ? 'insufficient-credits'
+          : isCancel
+            ? undefined
+            : error?.message || String(error),
         operationId,
       });
     } catch {

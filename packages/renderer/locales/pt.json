@@ -239,6 +239,12 @@
       "title": "Download is taking longer than usual.",
       "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
     },
+    "creditRanOut": {
+      "title": "Créditos esgotados",
+      "message": "Seus créditos de IA acabaram. Recarregue em Configurações e depois retome de onde parou.",
+      "openSettings": "Abrir Configurações",
+      "ok": "OK"
+    },
     "unsavedSrtOnTranscribe": {
       "title": "Salvar as legendas atuais antes de transcrever?",
       "message": "Você já tem legendas carregadas. A transcrição irá substituí-las. O que deseja fazer?",

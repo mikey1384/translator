@@ -45,7 +45,8 @@ export async function translatePass({
   const CONCURRENT_TRANSLATIONS = Math.min(4, MAX_AI_PARALLEL);
   const limit = pLimit(CONCURRENT_TRANSLATIONS);
 
-  const batchPromises = [];
+  const batchPromises = [] as Promise<void>[];
+  let aborted = false;
 
   let batchesDone = 0;
 
@@ -87,21 +88,29 @@ export async function translatePass({
       })
     )
       .catch(err => {
-        if (err.name !== 'AbortError' && !signal?.aborted) {
-          log.error(`[${operationId}] translate batch failed`, err);
-        } else {
+        if (err?.name === 'AbortError' || signal?.aborted) {
+          aborted = true;
           log.info(`[${operationId}] translate batch cancelled`);
+        } else {
+          const msg = String(err?.message || err || '');
+          if (/insufficient-credits/i.test(msg)) {
+            aborted = true;
+            log.info(`[${operationId}] translate batch aborted (credits)`);
+          } else {
+            log.error(`[${operationId}] translate batch failed`, err);
+          }
         }
         throw err;
       })
       .finally(() => {
+        if (aborted || signal?.aborted) return; // suppress progress updates after abort
         batchesDone++;
         const doneSoFar = Math.min(
           batchesDone * TRANSLATION_BATCH_SIZE,
           totalSegments
         );
 
-        if (!signal?.aborted) {
+        if (!signal?.aborted && !aborted) {
           progressCallback?.({
             percent: scaleProgress(
               (doneSoFar / totalSegments) * 100,

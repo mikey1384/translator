@@ -255,6 +255,12 @@
       "saveAndTranscribe": "保存并转写",
       "discardAndTranscribe": "不保存并转写",
       "cancel": "取消"
+    },
+    "creditRanOut": {
+      "title": "积分已用完",
+      "message": "您的 AI 积分已用完。请在“设置”中充值，然后从上次中断处继续。",
+      "openSettings": "打开设置",
+      "ok": "确定"
     }
   },
   "progress": {

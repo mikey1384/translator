@@ -245,6 +245,12 @@
       "discardAndTranscribe": "Không lưu và chuyển âm",
       "cancel": "Hủy"
     },
+    "creditRanOut": {
+      "title": "Hết tín dụng",
+      "message": "Tín dụng AI của bạn đã hết. Vào Cài đặt để nạp thêm, sau đó tiếp tục từ nơi bạn dừng lại.",
+      "openSettings": "Mở Cài đặt",
+      "ok": "OK"
+    },
     "transcriptionInProgress": "Transcription in Progress"
   },
   "progress": {

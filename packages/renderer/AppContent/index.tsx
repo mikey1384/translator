@@ -18,6 +18,8 @@ import TranslationProgressArea from '../components/ProgressAreas/TranslationProg
 import TranscriptionProgressArea from '../components/ProgressAreas/TranscriptionProgressArea';
 import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
+import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
+import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
@@ -35,6 +37,7 @@ export default function AppContent() {
     !!transcription.inProgress &&
     (transcription.id?.startsWith('transcribe-') ?? false);
   const download = useUrlStore(s => s.download);
+  const { showCreditWarning } = useCreditSystem();
 
   // Cleanup credit store listeners on unmount
   useEffect(() => {
@@ -133,6 +136,15 @@ export default function AppContent() {
 
       <div className={containerStyles}>
         <Header />
+
+        {/* Top-level credit warning banner (hidden on Settings page) */}
+        {showCreditWarning && !showSettings && (
+          <div style={{ marginBottom: '12px' }}>
+            <CreditWarningBanner
+              onSettingsClick={() => useUIStore.getState().toggleSettings(true)}
+            />
+          </div>
+        )}
 
         {showSettings ? (
           <SettingsPage />

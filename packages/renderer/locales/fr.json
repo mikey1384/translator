@@ -255,6 +255,12 @@
       "saveAndTranscribe": "Enregistrer et transcrire",
       "discardAndTranscribe": "Ignorer et transcrire",
       "cancel": "Annuler"
+    },
+    "creditRanOut": {
+      "title": "Crédits épuisés",
+      "message": "Vos crédits d’IA sont épuisés. Rechargez‑les dans Paramètres, puis reprenez là où vous vous étiez arrêté.",
+      "openSettings": "Ouvrir les paramètres",
+      "ok": "OK"
     }
   },
   "progress": {

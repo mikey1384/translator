@@ -98,6 +98,11 @@ Translate EACH line individually, preserving the line order.
         throw err; // Re-throw cancellation errors immediately
       }
 
+      // If credits ran out, propagate this upward to cancel the whole pipeline
+      if (typeof err?.message === 'string' && err.message === 'insufficient-credits') {
+        throw err;
+      }
+
       if (
         err.message &&
         (err.message.includes('timeout') ||
@@ -333,6 +338,13 @@ Now provide the reviewed translations for the ${batch.segments.length} lines abo
     );
     if (error.name === 'AbortError' || signal?.aborted) {
       log.info(`[Review] Review batch (${operationId}) cancelled. Rethrowing.`);
+      throw error;
+    }
+    if (
+      typeof error?.message === 'string' &&
+      error.message === 'insufficient-credits'
+    ) {
+      // Propagate credit exhaustion to cancel the pipeline
       throw error;
     }
     log.error(

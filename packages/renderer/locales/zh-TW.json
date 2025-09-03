@@ -245,6 +245,12 @@
       "saveAndTranscribe": "儲存並轉寫",
       "discardAndTranscribe": "不儲存並轉寫",
       "cancel": "取消"
+    },
+    "creditRanOut": {
+      "title": "積分已用完",
+      "message": "您的 AI 積分已用完。請至「設定」中儲值，然後從中斷處繼續。",
+      "openSettings": "開啟設定",
+      "ok": "確定"
     }
   },
   "progress": {

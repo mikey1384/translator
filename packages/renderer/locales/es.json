@@ -255,6 +255,12 @@
       "saveAndTranscribe": "Guardar y transcribir",
       "discardAndTranscribe": "Descartar y transcribir",
       "cancel": "Cancelar"
+    },
+    "creditRanOut": {
+      "title": "Créditos agotados",
+      "message": "Tus créditos de IA se han agotado. Recarga en Configuración y luego continúa desde donde lo dejaste.",
+      "openSettings": "Abrir Configuración",
+      "ok": "Aceptar"
     }
   },
   "progress": {

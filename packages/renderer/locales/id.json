@@ -245,6 +245,12 @@
       "saveAndTranscribe": "Simpan dan Transkripsi",
       "discardAndTranscribe": "Abaikan dan Transkripsi",
       "cancel": "Batal"
+    },
+    "creditRanOut": {
+      "title": "Kredit habis",
+      "message": "Kredit AI Anda telah habis. Isi ulang di Pengaturan, lalu lanjutkan dari tempat Anda berhenti.",
+      "openSettings": "Buka Pengaturan",
+      "ok": "OK"
     }
   },
   "progress": {

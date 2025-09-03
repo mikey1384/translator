@@ -4,6 +4,7 @@ import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useCreditStore } from '../state/credit-store';
+import { openCreditRanOut } from '../state/modal-store';
 
 type ProgressPayload = Parameters<
   Parameters<typeof SubtitlesIPC.onGenerateProgress>[0]
@@ -11,10 +12,14 @@ type ProgressPayload = Parameters<
 
 let queued: ProgressPayload | null = null;
 let flushTimer: NodeJS.Timeout | null = null;
+let isFlushing = false;
 let lastParsed = 0;
 
 function flush() {
-  if (!queued) return;
+  if (isFlushing) return;
+  isFlushing = true;
+  try {
+    if (!queued) return;
 
   const {
     stage = '',
@@ -22,8 +27,16 @@ function flush() {
     operationId,
     batchStartIndex,
     partialResult,
-  } = queued;
+    error,
+  } = queued as any;
   const stageLower = (stage ?? '').toLowerCase();
+
+  // If we detect credits exhaustion, trigger the global modal once
+  if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
+    try {
+      openCreditRanOut();
+    } catch {}
+  }
 
   // Route updates based on operationId prefix
   const isTranscribe = operationId?.startsWith('transcribe-');
@@ -46,12 +59,12 @@ function flush() {
     const isComplete =
       percent >= 100 || /processing complete/i.test(stage ?? '');
     if (isComplete) {
-      queued = null;
-      if (flushTimer) {
-        clearTimeout(flushTimer);
-        flushTimer = null;
-      }
-      return;
+  queued = null;
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+  return;
     }
     // If the task has been marked complete (inProgress=false), ignore any late non-final updates
     if (!inProgress) {
@@ -153,6 +166,9 @@ function flush() {
   }
 
   queued = null;
+  } finally {
+    isFlushing = false;
+  }
 }
 
 SubtitlesIPC.onGenerateProgress(progress => {

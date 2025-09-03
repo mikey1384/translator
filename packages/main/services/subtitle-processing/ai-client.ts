@@ -73,8 +73,9 @@ export async function callAIModel({
 
       // Handle specific error cases
       if (error?.message === 'insufficient-credits') {
-        // Treat insufficient credits as a cancellation so the UI can resume later.
-        throw new DOMException('Operation cancelled', 'AbortError');
+        // Preserve the specific error so the renderer can show a credit-ran-out modal,
+        // while the main handler still treats it as a cancellation for UX.
+        throw new Error('insufficient-credits');
       }
 
       throw new Error(

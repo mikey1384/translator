@@ -47,26 +47,33 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
     setTranslation: p =>
       set(s => {
         Object.assign(s.translation, p);
+        const stageNow = (p.stage ?? s.translation.stage ?? '').toLowerCase();
+        const pctNow = p.percent ?? s.translation.percent ?? 0;
+        const isCancelled = /cancel/.test(stageNow);
+
         // Respect explicit inProgress override first
         if (p.inProgress !== undefined) {
           s.translation.inProgress = p.inProgress;
+        } else if (isCancelled) {
+          // Explicitly stop showing the panel on cancellation
+          s.translation.inProgress = false;
         } else if (p.percent !== undefined) {
           // Derive inProgress from percent/stage when not explicitly provided
           const isComplete =
-            p.percent >= 100 &&
-            (p.stage?.toLowerCase().includes('complete') ||
-              p.stage?.toLowerCase().includes('done') ||
-              p.stage?.toLowerCase().includes('error') ||
-              p.stage?.toLowerCase().includes('processing complete'));
-          s.translation.inProgress = p.percent < 100 || !isComplete;
+            pctNow >= 100 &&
+            (stageNow.includes('complete') ||
+              stageNow.includes('done') ||
+              stageNow.includes('error') ||
+              stageNow.includes('processing complete'));
+          s.translation.inProgress = pctNow < 100 || !isComplete;
           if (!s.translation.inProgress)
             s.translation.reviewedBatchStartIndex = null;
         }
         if (p.percent !== undefined || p.stage !== undefined) {
-          const st = p.stage ?? s.translation.stage;
-          const pct = p.percent ?? s.translation.percent;
           s.translation.isCompleted =
-            pct >= 100 || /processing complete|complete|done/i.test(st ?? '');
+            !isCancelled &&
+            (pctNow >= 100 ||
+              /processing complete|complete|done/i.test(stageNow ?? ''));
         }
         if (p.batchStartIndex !== undefined) {
           s.translation.reviewedBatchStartIndex = p.batchStartIndex;

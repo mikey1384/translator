@@ -35,6 +35,10 @@ export async function transcribe({
   signal?: AbortSignal;
   isNewPricing?: boolean;
 }) {
+  // Dev: simulate zero credits without hitting the network
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error('insufficient-credits');
+  }
   // Check if already cancelled before starting
   if (signal?.aborted) {
     throw new DOMException('Operation cancelled', 'AbortError');
@@ -147,6 +151,10 @@ export async function translate({
   signal?: AbortSignal;
   isNewPricing?: boolean;
 }) {
+  // Dev: simulate zero credits without hitting the network
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error('insufficient-credits');
+  }
   // Check if already cancelled before starting
   if (signal?.aborted) {
     throw new DOMException('Operation cancelled', 'AbortError');

@@ -237,7 +237,7 @@ export async function transcribePass({
         )
       );
       if (outOfCredits) {
-        throw new DOMException('Operation cancelled', 'AbortError');
+        throw new Error('insufficient-credits');
       }
       const segArrays: SrtSegment[][] = segArraysSettled.map(r =>
         r.status === 'fulfilled' ? r.value : []

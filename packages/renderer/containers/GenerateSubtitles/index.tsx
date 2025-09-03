@@ -21,7 +21,6 @@ import { useVideoMetadata } from './hooks/useVideoMetadata';
 import { useCreditSystem } from './hooks/useCreditSystem';
 
 // Components
-import CreditWarningBanner from './components/CreditWarningBanner';
 
 // Utilities
 import {
@@ -33,7 +32,7 @@ export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
   // UI State
-  const { toggleSettings, targetLanguage, setTargetLanguage } = useUIStore();
+  const { targetLanguage, setTargetLanguage } = useUIStore();
 
   // URL processing state
   const {
@@ -69,7 +68,7 @@ export default function GenerateSubtitles() {
 
   // Custom hooks for business logic (after videoFilePath is declared)
   const { durationSecs, hoursNeeded } = useVideoMetadata(videoFilePath);
-  const { showCreditWarning, isButtonDisabled } = useCreditSystem();
+  const { isButtonDisabled } = useCreditSystem();
 
   // Local UI state for confirm dialog when an SRT is already mounted
   // Replaced local dialog with global modal; see GlobalModals
@@ -77,9 +76,6 @@ export default function GenerateSubtitles() {
   return (
     <Section title={t('subtitles.generate')}>
       {/* Global confirmations are rendered via <GlobalModals /> */}
-      {showCreditWarning && (
-        <CreditWarningBanner onSettingsClick={() => toggleSettings(true)} />
-      )}
 
       <UrlCookieBanner />
 

@@ -95,7 +95,6 @@ export const TRANSLATION_LANGUAGE_GROUPS: TranslationLanguageGroup[] = [
       { value: 'hungarian', labelKey: 'languages.hungarian' },
       { value: 'romanian', labelKey: 'languages.romanian' },
       { value: 'ukrainian', labelKey: 'languages.ukrainian' },
-      { value: 'dutch', labelKey: 'languages.dutch' },
     ],
   },
   {

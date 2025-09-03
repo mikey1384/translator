@@ -245,6 +245,12 @@
       "discardAndTranscribe": "تجاهل والبدء بالنسخ",
       "cancel": "إلغاء"
     },
+    "creditRanOut": {
+      "title": "نفدت النقاط",
+      "message": "لقد نفدت نقاط الذكاء الاصطناعي لديك. أعد الشحن من الإعدادات ثم تابع من حيث توقفت.",
+      "openSettings": "فتح الإعدادات",
+      "ok": "حسناً"
+    },
     "transcriptionInProgress": "Transcription in Progress"
   },
   "progress": {

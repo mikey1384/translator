@@ -25,6 +25,24 @@ const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
 });
 
 export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
+  // Dev override to simulate credit state without hitting the API
+  const overrideRaw = process.env.CREDIT_BALANCE_OVERRIDE;
+  const forceZero = process.env.FORCE_ZERO_CREDITS === '1';
+  const perHourOverrideRaw = process.env.CREDITS_PER_HOUR_OVERRIDE;
+  if (forceZero || (overrideRaw && overrideRaw.length > 0)) {
+    const credits = forceZero ? 0 : Math.max(0, Number(overrideRaw) || 0);
+    const creditsPerHour = Math.max(1, Number(perHourOverrideRaw) || 2800);
+    store.set('balanceCredits', credits);
+    store.set('creditsPerHour', creditsPerHour);
+    return {
+      success: true,
+      creditBalance: credits,
+      balanceHours: credits / creditsPerHour,
+      creditsPerHour,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   try {
     // Get credit balance from the API
     const response = await axios.get(

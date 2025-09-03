@@ -245,6 +245,12 @@
       "saveAndTranscribe": "Salva e trascrivi",
       "discardAndTranscribe": "Scarta e trascrivi",
       "cancel": "Annulla"
+    },
+    "creditRanOut": {
+      "title": "Crediti esauriti",
+      "message": "I tuoi crediti IA sono esauriti. Ricaricali in Impostazioni, quindi riprendi da dove avevi interrotto.",
+      "openSettings": "Apri Impostazioni",
+      "ok": "OK"
     }
   },
   "progress": {
