@@ -88,7 +88,10 @@ function compactAndFormatLogs(entries: LogEntry[]): string {
   for (const e of entries) {
     const parsed = tryParsePhase(e);
     if (!parsed) {
-      flushPhase();
+      // Do NOT flush the current phase group when non-phase logs arrive.
+      // This lets us aggregate a single phase (e.g., "Transcribed chunks")
+      // across interleaved network logs, and then emit one summarized line
+      // with a percent range once the phase actually changes.
       appendNonPhase(e);
       continue;
     }

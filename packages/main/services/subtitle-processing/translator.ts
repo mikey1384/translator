@@ -63,12 +63,9 @@ function parseTranslatedResponse(translation: string, batch: any): any[] {
       txt = ordered[idx];
     }
 
-    // Fallbacks: if model echoed source or produced empty, keep original
-    const cleanOrig = (segment.original ?? '').trim();
+    // Do NOT substitute original when missing; keep blanks so we can repair/fill later
     const cleanTxt = (txt ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
-
-    const finalText =
-      !cleanTxt || cleanTxt === cleanOrig ? cleanOrig : cleanTxt;
+    const finalText = cleanTxt; // may be '' if missing
 
     return {
       ...segment,
@@ -77,6 +74,52 @@ function parseTranslatedResponse(translation: string, batch: any): any[] {
   });
 
   return out;
+}
+
+// Helper: parse an LLM response into both an id->text map and an ordered list
+function parseIdAndOrdered(translation: string): {
+  byId: Map<number, string>;
+  ordered: string[];
+} {
+  const lines = (translation || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const matchers: Array<(s: string) => { id: number; text: string } | null> = [
+    (s: string) => {
+      const m = s.match(/^@@SUB_LINE@@\s*(\d+)\s*:\s*([\s\S]*)$/);
+      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
+    },
+    (s: string) => {
+      const m = s.match(/^Line\s*(\d+)\s*[:-]\s*([\s\S]*)$/i);
+      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
+    },
+    (s: string) => {
+      const m = s.match(/^(\d+)\s*[:-]\s*([\s\S]*)$/);
+      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
+    },
+  ];
+
+  const ordered: string[] = [];
+  const byId = new Map<number, string>();
+  for (const raw of lines) {
+    let hit: { id: number; text: string } | null = null;
+    for (const fn of matchers) {
+      hit = fn(raw);
+      if (hit) break;
+    }
+    if (hit) {
+      const clean = hit.text.replace(/[\uFEFF\u200B]/g, '').trim();
+      if (!byId.has(hit.id)) byId.set(hit.id, clean);
+      ordered.push(clean);
+    } else {
+      ordered.push(raw);
+    }
+  }
+  return { byId, ordered };
 }
 
 export async function translateBatch({
@@ -116,6 +159,10 @@ export async function translateBatch({
     )
     .join('\n');
 
+  const SYSTEM_PROMPT = `You are a subtitle translator. Output exactly ${
+    batch.segments.length
+  } lines, each formatted as @@SUB_LINE@@ <ABS_NUMBER>: <text>. Do not add any commentary, headers, or extra lines. Do not translate or alter any CTX sections.`;
+
   const combinedPrompt = `
 You are a professional subtitle translator. Translate the following subtitles into natural, fluent ${targetLang}.
 
@@ -145,12 +192,69 @@ Output format (exactly ${batch.segments.length} lines):
     try {
       log.info(`[${operationId}] Sending translation batch via callChatModel`);
       const res = await callAIModel({
-        messages: [{ role: 'user', content: combinedPrompt }],
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: combinedPrompt },
+        ],
         signal,
         operationId,
         retryAttempts: MAX_RETRIES,
       });
-      const translatedBatch = parseTranslatedResponse(res, batch);
+      let translatedBatch = parseTranslatedResponse(res, batch);
+
+      // Repair pass: if any translations are missing (''), request only those IDs
+      const missing = translatedBatch
+        .map((s, i) => ({ idx: i, abs: batch.startIndex + i + 1, seg: s }))
+        .filter(x => !x.seg.translation || x.seg.translation.trim() === '');
+
+      if (missing.length > 0) {
+        const repairSystem = `You are a subtitle translator. Output exactly ${missing.length} lines, each formatted as @@SUB_LINE@@ <ABS_NUMBER>: <text>. No commentary or extra text.`;
+        const missingList = missing
+          .map(m => formatLine(m.abs, batch.segments[m.idx].original ?? ''))
+          .join('\n');
+        const repairPrompt = `
+Translate ONLY the following lines into natural, fluent ${targetLang}. Do not include any other lines.
+
+LINES TO TRANSLATE:
+${missingList}
+
+Output format (exactly ${missing.length} lines):
+@@SUB_LINE@@ <ABS_NUMBER>: <translation>
+Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
+`;
+
+        try {
+          const repairRes = await callAIModel({
+            messages: [
+              { role: 'system', content: repairSystem },
+              { role: 'user', content: repairPrompt },
+            ],
+            signal,
+            operationId,
+            retryAttempts: 2,
+          });
+          // Parse repair results by ABS ids with ordered fallback
+          const { byId: repairMap, ordered: repairOrdered } =
+            parseIdAndOrdered(repairRes);
+          translatedBatch = translatedBatch.map((s, i) => {
+            const abs = batch.startIndex + i + 1;
+            if (!s.translation || s.translation.trim() === '') {
+              let fix = repairMap.get(abs);
+              if (!fix) {
+                const missingPos = missing.findIndex(m => m.idx === i);
+                if (missingPos >= 0 && missingPos < repairOrdered.length) {
+                  fix = (repairOrdered[missingPos] || '').trim();
+                }
+              }
+              if (fix && fix.trim()) return { ...s, translation: fix.trim() };
+            }
+            return s;
+          });
+        } catch {
+          log.warn(`[${operationId}] Repair pass failed or skipped.`);
+        }
+      }
+
       return translatedBatch;
     } catch (err: any) {
       log.error(
