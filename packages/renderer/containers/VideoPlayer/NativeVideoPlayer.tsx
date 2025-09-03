@@ -229,6 +229,7 @@ export default function NativeVideoPlayer({
     } else if (nextText) {
       setSubtitleVisible(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subSourceId, showOriginalText]);
 
   useEffect(() => {

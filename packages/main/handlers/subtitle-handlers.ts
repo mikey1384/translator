@@ -615,9 +615,13 @@ export async function handleTranscribeRemaining(
     if (!videoPath || typeof start !== 'number') {
       throw new Error('Invalid transcribe-remaining options');
     }
-    const durationFull = await ffmpeg.getMediaDuration(videoPath, controller.signal);
+    const durationFull = await ffmpeg.getMediaDuration(
+      videoPath,
+      controller.signal
+    );
     const sliceStart = Math.max(0, start);
-    const sliceEnd = typeof end === 'number' ? Math.min(end, durationFull) : durationFull;
+    const sliceEnd =
+      typeof end === 'number' ? Math.min(end, durationFull) : durationFull;
     const sliceDur = Math.max(0, sliceEnd - sliceStart);
     if (sliceDur <= 0.05) {
       return { success: true, segments: [], operationId };
@@ -682,18 +686,28 @@ export async function handleTranscribeRemaining(
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(String(error?.message || ''));
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      );
     const creditCancel = /insufficient-credits|Insufficient credits/i.test(
       String(error?.message || '')
     );
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel ? 'Process cancelled' : `Error: ${error?.message || String(error)}`,
-        error: creditCancel ? 'insufficient-credits' : isCancel ? undefined : error?.message || String(error),
+        stage: isCancel
+          ? 'Process cancelled'
+          : `Error: ${error?.message || String(error)}`,
+        error: creditCancel
+          ? 'insufficient-credits'
+          : isCancel
+            ? undefined
+            : error?.message || String(error),
         operationId,
       });
-    } catch {}
+    } catch {
+      // Do nothing
+    }
     return {
       success: !isCancel,
       cancelled: isCancel,
@@ -704,7 +718,9 @@ export async function handleTranscribeRemaining(
     if (tempAudioPath) {
       try {
         await fs.unlink(tempAudioPath);
-      } catch {}
+      } catch {
+        // Do nothing
+      }
     }
     registryFinish(operationId);
   }

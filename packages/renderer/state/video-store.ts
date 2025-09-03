@@ -3,9 +3,6 @@ import { immer } from 'zustand/middleware/immer';
 import { getNativePlayerInstance } from '../native-player';
 import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
-import { buildSrt } from '../../shared/helpers';
-import { useSubStore } from './subtitle-store';
-import { useUIStore } from './ui-store';
 import { useTaskStore } from './task-store';
 import throttle from 'lodash/throttle';
 import { logButton, logVideo } from '../utils/logger';
@@ -39,7 +36,10 @@ interface Actions {
   handleTogglePlay(): void;
   openFileDialog(): Promise<void>;
   // New: mount a video without resetting current subtitles
-  openFileDialogPreserveSubs(): Promise<{ canceled: boolean; selectedPath?: string } | void>;
+  openFileDialogPreserveSubs(): Promise<{
+    canceled: boolean;
+    selectedPath?: string;
+  } | void>;
   mountFilePreserveSubs(
     file: File | { name: string | undefined; path: string }
   ): Promise<void>;
@@ -90,9 +90,15 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Do not prompt or clear subtitles on video change.
       // Unmounting subtitles (with save prompt) now happens on transcribe.
       set(initial);
-      // Reset prior transcription completion state so UI doesn't show
+      // Reset prior transcription state so UI doesn't show
       // "Transcription Complete" for the newly mounted video.
-      useTaskStore.getState().setTranscription({ inProgress: false });
+      useTaskStore.getState().setTranscription({
+        inProgress: false,
+        percent: 0,
+        stage: '',
+        isCompleted: false,
+        id: null,
+      });
 
       if (!fd) return;
 
@@ -104,7 +110,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.url = url;
         });
         await analyse(fd.path);
-        try { logVideo('video_mounted', { path: fd.path }); } catch {}
+        try {
+          logVideo('video_mounted', { path: fd.path });
+        } catch {
+          // Do nothing
+        }
         if (fd.path) {
           try {
             const saved = await VideoIPC.getPlaybackPosition(fd.path);
@@ -128,7 +138,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
         });
-        try { logVideo('video_mounted', { path: b._originalPath ?? '(blob)' }); } catch {}
+        try {
+          logVideo('video_mounted', { path: b._originalPath ?? '(blob)' });
+        } catch {
+          // Do nothing
+        }
         if (b._originalPath) {
           await analyse(b._originalPath);
           try {
@@ -154,7 +168,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       try {
         const p = (fd as any).path ?? '(blob)';
         logVideo('video_mounted', { path: p });
-      } catch {}
+      } catch {
+        // Do nothing
+      }
       if ((fd as any).path) {
         await analyse((fd as any).path);
         try {
@@ -188,7 +204,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     },
 
     async openFileDialog() {
-      try { logButton('open_file_dialog'); } catch {}
+      try {
+        logButton('open_file_dialog');
+      } catch {
+        // Do nothing
+      }
       const res = await FileIPC.open({
         properties: ['openFile'],
         filters: [
@@ -211,7 +231,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       });
       if (res.canceled || !res.filePaths.length) return;
       const p = res.filePaths[0];
-      try { logVideo('video_selected', { path: p }); } catch {}
+      try {
+        logVideo('video_selected', { path: p });
+      } catch {
+        // Do nothing
+      }
       try {
         await get().setFile({ name: p.split(/[\\/]/).pop()!, path: p });
       } catch (err) {
@@ -243,12 +267,19 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           },
         ],
       });
-      if (res.canceled || !res.filePaths.length) return { canceled: true } as const;
+      if (res.canceled || !res.filePaths.length)
+        return { canceled: true } as const;
       const p = res.filePaths[0];
       try {
-        await get().mountFilePreserveSubs({ name: p.split(/[\\/]/).pop()!, path: p });
+        await get().mountFilePreserveSubs({
+          name: p.split(/[\\/]/).pop()!,
+          path: p,
+        });
       } catch (err) {
-        console.error('[video-store] Error mounting file (preserve subs):', err);
+        console.error(
+          '[video-store] Error mounting file (preserve subs):',
+          err
+        );
       }
       import('../state/ui-store').then(m =>
         m.useUIStore.getState().setInputMode('file')
@@ -264,8 +295,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Stop position saving for previous video
       get().stopPositionSaving();
 
-      // Reset transcription completion when mounting a new source
-      useTaskStore.getState().setTranscription({ inProgress: false });
+      // Reset transcription state when mounting a new source
+      useTaskStore.getState().setTranscription({
+        inProgress: false,
+        percent: 0,
+        stage: '',
+        isCompleted: false,
+        id: null,
+      });
 
       if ('path' in fd) {
         const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;
@@ -313,7 +350,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       }
 
       const blobUrl = URL.createObjectURL(fd as File);
-      set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null, resumeAt: null });
+      set({
+        file: fd as File,
+        url: blobUrl,
+        path: (fd as any).path ?? null,
+        resumeAt: null,
+      });
       if ((fd as any).path) {
         await analyse((fd as any).path);
         try {

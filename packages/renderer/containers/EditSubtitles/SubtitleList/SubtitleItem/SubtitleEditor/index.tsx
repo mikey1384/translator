@@ -8,14 +8,11 @@ import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
 import {
   secondsToSrtTime,
   srtStringToSeconds,
-  buildSrt,
-  parseSrt,
 } from '../../../../../../shared/helpers/index.js';
 import { useRowActions } from '../../../../../hooks/useRowActions.js';
 import * as SubtitlesIPC from '../../../../../ipc/subtitles';
 import { useUIStore, useTaskStore, useVideoStore } from '../../../../../state';
 import { transcribeOneLine } from '../../../../../ipc/subtitles';
-import * as SystemIPC from '../../../../../ipc/system';
 import { useSubStore } from '../../../../../state/subtitle-store';
 
 const timeInputStyles = css`
@@ -121,8 +118,10 @@ export default function SubtitleEditor({
       const order = store.order;
       const idx = order.indexOf(id);
       const prev = idx > 0 ? store.segments[order[idx - 1]] : undefined;
-      const next = idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
-      const flatten = (s: string) => (s || '').replace(/\s*\n+\s*/g, ' ').trim();
+      const next =
+        idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
+      const flatten = (s: string) =>
+        (s || '').replace(/\s*\n+\s*/g, ' ').trim();
       const promptParts = [] as string[];
       if (prev?.original) promptParts.push(`Prev: ${flatten(prev.original)}`);
       if (next?.original) promptParts.push(`Next: ${flatten(next.original)}`);
@@ -173,7 +172,8 @@ export default function SubtitleEditor({
       const order = store.order;
       const idx = order.indexOf(id);
       const pick = (k: number) => store.segments[order[k]];
-      const flatten = (s: string) => (s || '').replace(/\s*\n+\s*/g, ' ').trim();
+      const flatten = (s: string) =>
+        (s || '').replace(/\s*\n+\s*/g, ' ').trim();
       const ctxBefore = [] as any[];
       const ctxAfter = [] as any[];
       for (let k = Math.max(0, idx - 2); k < idx; k++) {
@@ -185,6 +185,7 @@ export default function SubtitleEditor({
           start: s.start,
           end: s.end,
           original: flatten(s.original || ''),
+          translation: flatten(s.translation || ''),
         });
       }
       for (let k = idx + 1; k <= Math.min(order.length - 1, idx + 2); k++) {
@@ -196,6 +197,7 @@ export default function SubtitleEditor({
           start: s.start,
           end: s.end,
           original: flatten(s.original || ''),
+          translation: flatten(s.translation || ''),
         });
       }
 
@@ -402,7 +404,12 @@ export default function SubtitleEditor({
       )}
 
       {(!subtitle.original || !subtitle.original.trim()) && videoPath ? (
-        <div className={css`display: flex; justify-content: center;`}>
+        <div
+          className={css`
+            display: flex;
+            justify-content: center;
+          `}
+        >
           <Button
             variant="primary"
             size="sm"
@@ -490,4 +497,4 @@ export default function SubtitleEditor({
       </div>
     </div>
   );
-  }
+}

@@ -99,7 +99,10 @@ Translate EACH line individually, preserving the line order.
       }
 
       // If credits ran out, propagate this upward to cancel the whole pipeline
-      if (typeof err?.message === 'string' && err.message === 'insufficient-credits') {
+      if (
+        typeof err?.message === 'string' &&
+        err.message === 'insufficient-credits'
+      ) {
         throw err;
       }
 

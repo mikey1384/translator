@@ -192,7 +192,12 @@ export async function translateSubtitlesFromSrt({
       const { reviewTranslationBatch } = await import('./translator.js');
 
       const total = translatedSegments.length;
-      const BATCH = 10;
+      // Review window design:
+      // - 30 target lines to review per request
+      // - 15 lines of context before and 15 after (not counted toward progress)
+      const BATCH = 30; // target lines per review call
+      const BEFORE_CTX = 15;
+      const AFTER_CTX = 15;
       const limit = pLimit(Math.min(4, MAX_AI_PARALLEL));
       const work: Promise<void>[] = [];
       let done = 0;
@@ -200,12 +205,12 @@ export async function translateSubtitlesFromSrt({
       for (let start = 0; start < total; start += BATCH) {
         const end = Math.min(start + BATCH, total);
         const contextBefore = translatedSegments.slice(
-          Math.max(0, start - 3),
+          Math.max(0, start - BEFORE_CTX),
           start
         );
         const contextAfter = translatedSegments.slice(
           end,
-          Math.min(end + 3, total)
+          Math.min(end + AFTER_CTX, total)
         );
         const batch = {
           segments: translatedSegments.slice(start, end),
