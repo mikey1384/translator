@@ -3,39 +3,80 @@ import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
 
-function parseTranslatedJSON(translation: string, batch: any): any[] {
-  log.info(`[parseTranslatedJSON] Parsing translation response`);
+function parseTranslatedResponse(translation: string, batch: any): any[] {
+  log.info(`[parseTranslatedResponse] Parsing translation response`);
 
-  const translationLines = translation
+  // Split into non-empty trimmed lines
+  const lines = (translation || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
     .split('\n')
-    .filter((line: string) => line.trim() !== '');
-  const lineRegex = /^Line\s+(\d+):\s*(.*)$/;
+    .map(l => l.trim())
+    .filter(Boolean);
 
-  let lastNonEmptyTranslation = '';
-  return batch.segments.map((segment: any, idx: number) => {
-    const absoluteIndex = batch.startIndex + idx;
-    let translatedText = segment.translation ?? '';
-    const originalSegmentText = segment.original;
+  // Accept several common formats for safety
+  const matchers: Array<(s: string) => { id: number; text: string } | null> = [
+    // @@SUB_LINE@@ 123: text
+    (s: string) => {
+      const m = s.match(/^@@SUB_LINE@@\s*(\d+)\s*:\s*([\s\S]*)$/);
+      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
+    },
+    // Line 123: text
+    (s: string) => {
+      const m = s.match(/^Line\s*(\d+)\s*[:-]\s*([\s\S]*)$/i);
+      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
+    },
+    // 123: text
+    (s: string) => {
+      const m = s.match(/^(\d+)\s*[:-]\s*([\s\S]*)$/);
+      return m ? { id: Number(m[1]), text: (m[2] || '').trim() } : null;
+    },
+  ];
 
-    for (const line of translationLines) {
-      const match = line.match(lineRegex);
-      if (match && parseInt(match[1]) === absoluteIndex + 1) {
-        const potentialTranslation = match[2].trim();
-        if (potentialTranslation === originalSegmentText) {
-          translatedText = lastNonEmptyTranslation;
-        } else {
-          translatedText = potentialTranslation || lastNonEmptyTranslation;
-        }
-        lastNonEmptyTranslation = translatedText;
-        break;
-      }
+  const ordered: string[] = [];
+  const byId = new Map<number, string>();
+  for (const raw of lines) {
+    let hit: { id: number; text: string } | null = null;
+    for (const fn of matchers) {
+      hit = fn(raw);
+      if (hit) break;
     }
+    if (hit) {
+      const clean = hit.text.replace(/[\uFEFF\u200B]/g, '').trim();
+      if (!byId.has(hit.id)) byId.set(hit.id, clean);
+      ordered.push(clean);
+    } else {
+      // Fallback: treat plain line as next ordered entry
+      ordered.push(raw);
+    }
+  }
+
+  // Map each incoming segment to the best-available text
+  const out = batch.segments.map((segment: any, idx: number) => {
+    const absoluteIndex = batch.startIndex + idx + 1; // 1-based absolute index
+    let txt: string | undefined = undefined;
+
+    if (byId.has(absoluteIndex)) {
+      txt = byId.get(absoluteIndex)!;
+    } else if (ordered.length >= batch.segments.length) {
+      // If counts align, take the entry at the same relative position
+      txt = ordered[idx];
+    }
+
+    // Fallbacks: if model echoed source or produced empty, keep original
+    const cleanOrig = (segment.original ?? '').trim();
+    const cleanTxt = (txt ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
+
+    const finalText =
+      !cleanTxt || cleanTxt === cleanOrig ? cleanOrig : cleanTxt;
 
     return {
       ...segment,
-      translation: translatedText,
+      translation: finalText,
     };
   });
+
+  return out;
 }
 
 export async function translateBatch({
@@ -70,6 +111,9 @@ Translate EACH line individually, preserving the line order.
   prefixed by "Line X:" where X is the line number.
 - If you're unsure, err on the side of literal translations.
 - For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
+IMPORTANT: Use the EXACT line numbers shown above (do NOT renumber or restart at 1). Output exactly ${
+    batch.segments.length
+  } lines, each starting with "Line <ABS_NUMBER>: " and nothing else.
 `;
 
   while (retryCount < MAX_RETRIES) {
@@ -81,7 +125,7 @@ Translate EACH line individually, preserving the line order.
         operationId,
         retryAttempts: MAX_RETRIES,
       });
-      const translatedBatch = parseTranslatedJSON(res, batch);
+      const translatedBatch = parseTranslatedResponse(res, batch);
       return translatedBatch;
     } catch (err: any) {
       log.error(

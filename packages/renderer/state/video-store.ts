@@ -87,11 +87,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     async setFile(fd: File | { name: string; path: string } | null) {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
-      // Do not prompt or clear subtitles on video change.
-      // Unmounting subtitles (with save prompt) now happens on transcribe.
       set(initial);
-      // Reset prior transcription state so UI doesn't show
-      // "Transcription Complete" for the newly mounted video.
       useTaskStore.getState().setTranscription({
         inProgress: false,
         percent: 0,
