@@ -39,12 +39,43 @@ export async function transcribeChunk({
     );
 
     log.debug(`[${operationId}] Using Stage5 API for transcription`);
-    const res: any = await stage5Client.transcribe({
-      filePath: chunkPath,
-      language,
-      promptContext,
-      signal,
-    });
+    // Retry up to 3 attempts on transient failures
+    const maxAttempts = 3;
+    let lastErr: any = null;
+    let res: any = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      throwIfAborted(signal);
+      try {
+        res = await stage5Client.transcribe({
+          filePath: chunkPath,
+          language,
+          promptContext,
+          signal,
+        });
+        break; // success
+      } catch (err: any) {
+        // Propagate immediately on cancellation or insufficient credits
+        if (
+          err?.name === 'AbortError' ||
+          err?.message === 'insufficient-credits' ||
+          /Insufficient credits/i.test(String(err?.message || err)) ||
+          signal?.aborted
+        ) {
+          throw err;
+        }
+        lastErr = err;
+        log.warn(
+          `[${operationId}] Transcription attempt ${attempt}/${maxAttempts} failed for chunk ${chunkIndex}: ${String(
+            err?.message || err
+          )}`
+        );
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, attempt * 300));
+          continue;
+        }
+        // Exhausted retries; fall through to parsing with null response
+      }
+    }
 
     const segments = (res as any)?.segments as Array<any> | undefined;
     const words = ((res as any)?.words as Array<any> | undefined) || [];
@@ -140,6 +171,13 @@ export async function transcribeChunk({
       ];
     }
 
+    // If no result after retries, return empty.
+    if (lastErr) {
+      log.error(
+        `[${operationId}] Giving up after ${maxAttempts} attempts for chunk ${chunkIndex}:`,
+        lastErr?.message || lastErr
+      );
+    }
     return [];
   } catch (error: any) {
     // If credits ran out, propagate a recognizable error upstream

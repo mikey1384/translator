@@ -142,8 +142,9 @@ export async function transcribePass({
       stage: `Starting transcription of ${chunks.length} chunks...`,
     });
 
-    // Maintain a rolling, char-capped textual context for prompts
-    let batchContext = '';
+    // We delay providing prompt context until at least 5 segments
+    // have been transcribed. After that, provide the previous 2 lines
+    // as context for subsequent transcriptions.
 
     // Process chunks sequentially for maximum contextual correctness
     let done = 0;
@@ -160,7 +161,18 @@ export async function transcribePass({
         continue;
       }
 
-      const promptForChunk = buildPrompt(batchContext);
+      // Build prompt context from previously transcribed segments.
+      // Only start after we have at least 5 segments; then include
+      // the previous 2 lines.
+      const priorSegs = overallSegments
+        .filter(s => (s.original ?? '').trim() !== '')
+        .slice()
+        .sort((a, b) => a.start - b.start);
+      let promptForChunk = '';
+      if (priorSegs.length >= 5) {
+        const lastTwo = priorSegs.slice(-2).map(s => s.original.trim());
+        promptForChunk = buildPrompt(lastTwo.join('\n'));
+      }
 
       const chunkAudioPath = mkTempAudioName(
         path.join(tempDir, `chunk_${meta.index}_${operationId}`)
@@ -193,9 +205,8 @@ export async function transcribePass({
         const ordered = (segs || []).slice().sort((a, b) => a.start - b.start);
         overallSegments.push(...ordered);
 
-        // Update rolling context with the new text, capped by MAX_PROMPT_CHARS
-        const orderedText = ordered.map(s => s.original).join(' ');
-        batchContext = buildPrompt((batchContext + ' ' + orderedText).trim());
+        // Accumulate segments; prompt context will be built from the
+        // last 2 segments on the next iteration (if >= 5 total exist).
       } catch (chunkError: any) {
         // If credits ran out, abort the entire transcription flow.
         if (

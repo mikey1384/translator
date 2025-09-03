@@ -517,11 +517,43 @@ export async function handleTranscribeOneLine(
           stage: 'Transcribing 1/1',
           operationId,
         });
-        const resp: any = await stage5Client.transcribe({
-          filePath: tempAudioPath,
-          promptContext,
-          signal: controller.signal,
-        });
+        // Retry the network transcription up to 3 attempts before moving on
+        const resp: any = await (async () => {
+          const maxAttempts = 3;
+          let lastErr: any = null;
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            if (controller.signal?.aborted) {
+              throw new DOMException('Operation cancelled', 'AbortError');
+            }
+            try {
+              return await stage5Client.transcribe({
+                filePath: tempAudioPath,
+                promptContext,
+                signal: controller.signal,
+              });
+            } catch (err: any) {
+              if (
+                err?.name === 'AbortError' ||
+                err?.message === 'insufficient-credits' ||
+                /Insufficient credits/i.test(String(err?.message || err))
+              ) {
+                throw err;
+              }
+              lastErr = err;
+              log.warn(
+                `[${operationId}] One-line transcription attempt ${attempt}/${maxAttempts} failed: ${String(
+                  err?.message || err
+                )}`
+              );
+              if (attempt < maxAttempts) {
+                await new Promise(r => setTimeout(r, attempt * 300));
+                continue;
+              }
+            }
+          }
+          if (lastErr) throw lastErr;
+          return null;
+        })();
         if (Array.isArray(resp?.segments) && resp.segments.length > 0) {
           transcriptText = resp.segments
             .map((s: any) => String(s?.text ?? ''))
@@ -657,13 +689,16 @@ export async function handleTranscribeRemaining(
       services: { ffmpeg },
       progressCallback: p => {
         const mapped = Math.min(95, Math.max(35, p.percent));
-        // Do not forward partialResult to avoid replacing entire subtitle list
+        // Forward partialResult with an absolute time offset so renderer can append tail incrementally
         event.sender.send('generate-subtitles-progress', {
           percent: mapped,
           stage: p.stage,
           current: p.current,
           total: p.total,
+          partialResult: (p as any).partialResult,
           operationId,
+          startOffset: sliceStart,
+          tailMode: true,
         });
       },
       operationId,

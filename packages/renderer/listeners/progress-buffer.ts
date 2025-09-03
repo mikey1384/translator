@@ -19,6 +19,8 @@ let lastParsed = 0;
 let lastTranscribe = { id: null as string | null, stage: '' };
 let lastTranslate = { id: null as string | null, stage: '' };
 let lastCreditsRefreshTs = 0;
+// Track how many tail-segments have been appended per operation
+const tailCounts: Record<string, number> = Object.create(null);
 
 function flush() {
   if (isFlushing) return;
@@ -71,6 +73,43 @@ function flush() {
       }
     }
 
+    // After completion, stop applying any further queued updates
+    const isComplete =
+      percent >= 100 || /processing complete/i.test(stage ?? '');
+
+    // Tail continuation: when startOffset is provided, partialResult SRT is
+    // relative to the tail slice; append new cues incrementally with offset.
+    if (isTranscribe) {
+      const startOffset = (queued as any)?.startOffset;
+      if (typeof startOffset === 'number' && isFinite(startOffset)) {
+        const srt = (queued as any)?.partialResult as string | undefined;
+        if (srt && (isComplete || Date.now() - lastParsed > 1500)) {
+          try {
+            const partSegs = parseSrt(srt);
+            if (partSegs.length) {
+              // Track per-operation how many tail segments we've already appended
+              tailCounts[operationId!] = tailCounts[operationId!] ?? 0;
+              const already = tailCounts[operationId!];
+              // Offset times to absolute timeline
+              const adjusted = partSegs.map(s => ({
+                start: (s.start || 0) + startOffset,
+                end: (s.end || 0) + startOffset,
+                original: String(s.original || ''),
+              }));
+              if (adjusted.length > already) {
+                const news = adjusted.slice(already);
+                useSubStore.getState().appendSegments(news);
+                tailCounts[operationId!] = adjusted.length;
+              }
+            }
+          } catch {
+            // ignore parse errors
+          }
+          lastParsed = Date.now();
+        }
+      }
+    }
+
     if (isTranslate) {
       const active = useTaskStore.getState().translation.id;
       const inProgress = useTaskStore.getState().translation.inProgress;
@@ -107,9 +146,6 @@ function flush() {
         }
         lastTranslate.stage = stage;
       }
-      // After completion, stop applying any further queued updates
-      const isComplete =
-        percent >= 100 || /processing complete/i.test(stage ?? '');
       if (isComplete) {
         queued = null;
         if (flushTimer) {
@@ -174,27 +210,28 @@ function flush() {
       }
     }
 
-    const isComplete =
-      percent >= 100 || /processing complete/i.test(stage ?? '');
-
-    // Apply partial SRT updates during processing. For translation flows, patch translations in-place
-    // by matching timecodes to avoid full-store reloads; for transcription, keep existing behavior.
+    // Apply partial SRT updates during processing.
+    // - Translation flows: patch translations in-place
+    // - Full transcription (non-tail): append via applyTranscriptionProgress
     if (partialResult?.trim()) {
       if (isTranscribe) {
-        // Transcription flow: append only new cues based on running SRT length
-        if (isComplete || Date.now() - lastParsed > 1500) {
-          try {
-            const partSegs = parseSrt(partialResult);
-            if (partSegs.length) {
-              useSubStore.getState().applyTranscriptionProgress(partSegs);
+        const startOffset = (queued as any)?.startOffset;
+        if (!(typeof startOffset === 'number' && isFinite(startOffset))) {
+          // Full transcription stream (not tail)
+          if (isComplete || Date.now() - lastParsed > 1500) {
+            try {
+              const partSegs = parseSrt(partialResult);
+              if (partSegs.length) {
+                useSubStore.getState().applyTranscriptionProgress(partSegs);
+              }
+            } catch {
+              // ignore parse errors
             }
-          } catch {
-            // ignore parse errors
+            lastParsed = Date.now();
           }
-          lastParsed = Date.now();
         }
       } else if (isComplete || Date.now() - lastParsed > 1500) {
-        // Other flows: reload full list occasionally
+        // Translation: reload occasionally
         try {
           useSubStore.getState().load(parseSrt(partialResult));
         } catch {
@@ -221,6 +258,10 @@ function flush() {
         } catch {
           // Do nothing
         }
+      }
+      // Clear tail counters for completed operations
+      if (isTranscribe && operationId) {
+        delete tailCounts[operationId];
       }
       queued = null;
       if (flushTimer) {
