@@ -300,5 +300,16 @@
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
     "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "logs": {
+    "title": "Aktuelle Protokolle",
+    "copy": "Kopieren",
+    "email": "E-Mail an Entwickler",
+    "close": "Schließen",
+    "empty": "Keine Protokolle.",
+    "copied": "Protokolle in die Zwischenablage kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "emailSubject": "Stage5 Debug-Protokolle",
+    "emailBodyPrefix": "Hallo,\n\nAnbei meine aktuellen Protokolle zur Fehleranalyse.\n\n"
   }
 }

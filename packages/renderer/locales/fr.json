@@ -300,5 +300,16 @@
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
     "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "logs": {
+    "title": "Journaux récents",
+    "copy": "Copier",
+    "email": "Envoyer au dev",
+    "close": "Fermer",
+    "empty": "Aucun journal.",
+    "copied": "Journaux copiés dans le presse-papiers",
+    "copyFailed": "Échec de la copie",
+    "emailSubject": "Journaux de débogage Stage5",
+    "emailBodyPrefix": "Bonjour,\n\nVoici mes journaux récents pour aider au diagnostic.\n\n"
   }
 }

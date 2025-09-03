@@ -300,5 +300,16 @@
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
     "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "logs": {
+    "title": "最新のログ",
+    "copy": "コピー",
+    "email": "開発者にメール",
+    "close": "閉じる",
+    "empty": "ログはありません。",
+    "copied": "ログをクリップボードにコピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "emailSubject": "Stage5 デバッグログ",
+    "emailBodyPrefix": "こんにちは。\n\n不具合調査のため、最近のログを送付します。\n\n"
   }
 }

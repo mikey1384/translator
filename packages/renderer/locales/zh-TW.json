@@ -300,5 +300,16 @@
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
     "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "logs": {
+    "title": "最新記錄",
+    "copy": "複製",
+    "email": "寄給開發者",
+    "close": "關閉",
+    "empty": "目前沒有記錄。",
+    "copied": "記錄已複製到剪貼簿",
+    "copyFailed": "複製失敗",
+    "emailSubject": "Stage5 除錯記錄",
+    "emailBodyPrefix": "您好，\n\n以下是我最近的記錄，供除錯參考。\n\n"
   }
 }

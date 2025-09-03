@@ -300,5 +300,16 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "logs": {
+    "title": "السجلات الأخيرة",
+    "copy": "نسخ",
+    "email": "إرسال للمطور",
+    "close": "إغلاق",
+    "empty": "لا توجد سجلات.",
+    "copied": "تم نسخ السجلات إلى الحافظة",
+    "copyFailed": "فشل النسخ",
+    "emailSubject": "سجلات تصحيح Stage5",
+    "emailBodyPrefix": "مرحبًا،\n\nأرسل سجلاتي الأخيرة للمساعدة في التشخيص.\n\n"
   }
 }

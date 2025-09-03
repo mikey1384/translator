@@ -300,5 +300,16 @@
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
     "failedToLoadSRT": "Failed to load SRT file"
+  },
+  "logs": {
+    "title": "最新日志",
+    "copy": "复制",
+    "email": "发送给开发者",
+    "close": "关闭",
+    "empty": "暂无日志。",
+    "copied": "日志已复制到剪贴板",
+    "copyFailed": "复制失败",
+    "emailSubject": "Stage5 调试日志",
+    "emailBodyPrefix": "您好，\n\n以下为最近的日志以便排查问题。\n\n"
   }
 }
