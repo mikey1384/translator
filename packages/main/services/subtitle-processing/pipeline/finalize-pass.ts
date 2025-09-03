@@ -28,8 +28,27 @@ export async function finalizePass({
     end: Number(block.end),
   }));
 
+  const GAP_EXTEND_THRESHOLD_SEC = 5.0;
+  const extendedSegments = indexedSegments
+    .slice()
+    .sort((a, b) => a.start - b.start)
+    .map(s => ({ ...s }));
+
+  for (let i = 0; i < extendedSegments.length - 1; i++) {
+    const curr = extendedSegments[i];
+    const next = extendedSegments[i + 1];
+    const gap = next.start - curr.end;
+    if (gap > 0 && gap < GAP_EXTEND_THRESHOLD_SEC) {
+      curr.end = Math.min(next.start, Math.max(curr.end, curr.start + 4));
+    }
+  }
+  // Reindex to keep indices sequential after any ordering normalization
+  for (let i = 0; i < extendedSegments.length; i++) {
+    extendedSegments[i].index = i + 1;
+  }
+
   const finalSrtContent = buildSrt({
-    segments: indexedSegments,
+    segments: extendedSegments,
     mode: 'dual',
   });
 
@@ -45,7 +64,7 @@ export async function finalizePass({
 
   return {
     subtitles: finalSrtContent,
-    segments: indexedSegments,
+    segments: extendedSegments,
     speechIntervals: speechIntervals,
   };
 }

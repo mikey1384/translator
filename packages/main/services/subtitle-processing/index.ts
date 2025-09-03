@@ -185,10 +185,6 @@ export async function translateSubtitlesFromSrt({
     try {
       // Batch review with light context, mapped to REVIEW..FINAL progress
       const { scaleProgress, Stage } = await import('./pipeline/progress.js');
-      const { default: pLimit } = await import('p-limit');
-      const { MAX_AI_PARALLEL } = await import(
-        '../../../shared/constants/runtime-config.js'
-      );
       const { reviewTranslationBatch } = await import('./translator.js');
 
       const total = translatedSegments.length;
@@ -198,8 +194,6 @@ export async function translateSubtitlesFromSrt({
       const BATCH = 30; // target lines per review call
       const BEFORE_CTX = 15;
       const AFTER_CTX = 15;
-      const limit = pLimit(Math.min(4, MAX_AI_PARALLEL));
-      const work: Promise<void>[] = [];
       let done = 0;
 
       for (let start = 0; start < total; start += BATCH) {
@@ -221,9 +215,10 @@ export async function translateSubtitlesFromSrt({
           contextAfter,
         } as any;
 
-        const job = limit(async () => {
-          if (signal?.aborted)
-            throw new DOMException('Operation cancelled', 'AbortError');
+        if (signal?.aborted)
+          throw new DOMException('Operation cancelled', 'AbortError');
+
+        try {
           const reviewed = await reviewTranslationBatch({
             batch,
             operationId,
@@ -233,38 +228,32 @@ export async function translateSubtitlesFromSrt({
           for (let i = 0; i < reviewed.length; i++) {
             reviewedSegments[start + i] = reviewed[i];
           }
-        })
-          .catch(err => {
-            // If cancelled or credits exhausted, propagate
-            if (
-              err?.name === 'AbortError' ||
-              String(err?.message).includes('insufficient-credits')
-            ) {
-              throw err;
-            }
-            // Otherwise, keep original translated segs
-          })
-          .finally(() => {
-            done += Math.min(BATCH, end - start);
-            const pctLocal = Math.round((done / total) * 100);
-            const percent = scaleProgress(pctLocal, Stage.REVIEW, Stage.FINAL);
-            const stage = `Reviewing ${done}/${total}`;
-            const partialResult = buildSrt({
-              segments: reviewedSegments,
-              mode: 'dual',
-            });
-            (adaptedProgress ?? progressCallback)?.({
-              percent,
-              stage,
-              partialResult,
-              current: done,
-              total,
-            });
-          });
-        work.push(job);
+        } catch (err: any) {
+          if (
+            err?.name === 'AbortError' ||
+            String(err?.message).includes('insufficient-credits')
+          ) {
+            throw err;
+          }
+          // Otherwise, keep original translated segs for this batch
+        }
+        // Progress after this sequential batch
+        done += Math.min(BATCH, end - start);
+        const pctLocal = Math.round((done / total) * 100);
+        const percent = scaleProgress(pctLocal, Stage.REVIEW, Stage.FINAL);
+        const stage = `Reviewing ${done}/${total}`;
+        const partialResult = buildSrt({
+          segments: reviewedSegments,
+          mode: 'dual',
+        });
+        (adaptedProgress ?? progressCallback)?.({
+          percent,
+          stage,
+          partialResult,
+          current: done,
+          total,
+        });
       }
-
-      await Promise.all(work);
     } catch {
       // If review fails (network, etc.), continue with translatedSegments
     }

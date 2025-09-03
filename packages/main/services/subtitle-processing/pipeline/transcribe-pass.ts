@@ -228,8 +228,19 @@ export async function transcribePass({
       // Map local transcription progress (0..100) to global 10..95 range
       const p = 10 + Math.round((done / chunks.length) * 85);
 
+      const partialSegs = overallSegments
+        .slice()
+        .sort((a, b) => a.start - b.start)
+        .filter(
+          s =>
+            (s.original ?? '').trim() !== '' &&
+            !isLikelyHallucination({
+              s,
+              merged,
+            })
+        );
       const intermediateSrt = buildSrt({
-        segments: overallSegments.slice().sort((a, b) => a.start - b.start),
+        segments: partialSegs,
         mode: 'dual',
       });
 
@@ -258,8 +269,16 @@ export async function transcribePass({
 
     overallSegments.sort((a, b) => a.start - b.start);
 
-    const filteredSegments = overallSegments.filter(
+    // Drop empty segments first
+    let filteredSegments = overallSegments.filter(
       s => s.original.trim() !== ''
+    );
+    filteredSegments = filteredSegments.filter(
+      s =>
+        !isLikelyHallucination({
+          s,
+          merged,
+        })
     );
     overallSegments.length = 0;
     overallSegments.push(...filteredSegments);
@@ -337,6 +356,42 @@ export async function transcribePass({
       );
     }
     log.info(`[${operationId}] Finished cleaning up temporary chunk files.`);
+  }
+
+  function isLikelyHallucination({
+    s,
+    merged,
+  }: {
+    s: SrtSegment;
+    merged: Array<{ start: number; end: number }>;
+  }): boolean {
+    const text = (s.original || '').trim();
+    if (!text) return true;
+
+    const noSpeech =
+      typeof s.no_speech_prob === 'number' ? s.no_speech_prob : -1;
+    const avgLog = typeof s.avg_logprob === 'number' ? s.avg_logprob : 0;
+    const overlap = intervalOverlap(s, merged);
+
+    if (noSpeech >= 0.92 && overlap < 0.15 && avgLog <= -1.3) return true;
+
+    return false;
+  }
+
+  function intervalOverlap(
+    s: { start: number; end: number },
+    intervals: Array<{ start: number; end: number }>
+  ): number {
+    const dur = Math.max(0, s.end - s.start);
+    if (dur <= 0) return 0;
+    let ov = 0;
+    for (const iv of intervals) {
+      const a = Math.max(s.start, iv.start);
+      const b = Math.min(s.end, iv.end);
+      if (b > a) ov += b - a;
+      if (iv.start > s.end) break;
+    }
+    return ov / dur;
   }
 
   function buildPrompt(history: string) {

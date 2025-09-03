@@ -277,6 +277,7 @@ export async function reviewTranslationBatch({
     })
     .join('\n');
 
+  // Build BEFORE/AFTER context including current translations when available
   const beforeContext = batch.contextBefore
     .map(seg => {
       const start = (seg as any).start,
@@ -285,7 +286,11 @@ export async function reviewTranslationBatch({
         typeof start === 'number' && typeof end === 'number' && end > start
           ? ` (dur=${(end - start).toFixed(2)}s)`
           : '';
-      return `CTX(${seg.index})${dur}: ${clean(seg.original)}`;
+      const orig = `CTX(${seg.index})${dur}: ${clean(seg.original)}`;
+      const tgt = (seg.translation ?? '').trim()
+        ? `\nCTX_TGT(${seg.index}): ${clean(seg.translation ?? '')}`
+        : '';
+      return `${orig}${tgt}`;
     })
     .join('\n');
 
@@ -297,59 +302,52 @@ export async function reviewTranslationBatch({
         typeof start === 'number' && typeof end === 'number' && end > start
           ? ` (dur=${(end - start).toFixed(2)}s)`
           : '';
-      return `CTX(${seg.index})${dur}: ${clean(seg.original)}`;
+      const orig = `CTX(${seg.index})${dur}: ${clean(seg.original)}`;
+      const tgt = (seg.translation ?? '').trim()
+        ? `\nCTX_TGT(${seg.index}): ${clean(seg.translation ?? '')}`
+        : '';
+      return `${orig}${tgt}`;
     })
     .join('\n');
 
+  const SYSTEM_PROMPT = `You are a subtitle review engine. Output exactly ${
+    batch.segments.length
+  } lines, each formatted as @@SUB_LINE@@ <ABS_INDEX>: <text>. Do not add any commentary, headers, or extra lines. Do not translate or alter any CTX/CTX_TGT lines.`;
+
   const prompt = `
-You are an **assertive subtitle reviewer** working into ${batch.targetLang}.
-Your job: ensure every line reads like native ${batch.targetLang}, while respecting timing and readability.
+You are reviewing draft subtitle translations into ${batch.targetLang}. Improve clarity and naturalness while preserving meaning and respecting timing.
 
-══════════ Context (may help with pronouns, jokes, carries) ══════════
-${beforeContext}
+CONTEXT BEFORE (do not translate):
+${beforeContext || '(none)'}
 
-══════════ Parallel batch to review (source ⇄ draft) ══════════
+PARALLEL BATCH (source ⇄ draft):
 ${originalTexts}
 
-══════════ Following context ══════════
-${afterContext}
+CONTEXT AFTER (do not translate):
+${afterContext || '(none)'}
 
-══════════ Draft translations to edit (one-to-one with source) ══════════
+DRAFT TRANSLATIONS (one-to-one with source):
 ${translatedTexts}
 
-******************** HOW TO EDIT ********************
-1) **One line out per line in.** Keep the *count* and *order* of lines exactly the same.
-2) **Be bold.** You may change word choice, syntax, tone, register to read naturally at CEFR C1+ level.
-3) **Consistency.** Keep terminology/style consistent inside the batch.
-4) **Soft merge - for translations only**
-   • When a translated line exceeds constraints (length/CPS), or if the next translated line basically a repetition of the previous translated line (either identical or worded differently with the same meaning), you may perform a **SOFT MERGE** across those two lines - in case of duplication make sure to choose the better phrase of the two and drop the other.
-   • **SOFT MERGE OUTPUT RULE:** write the **same merged text** for **both** IDs involved (duplicate), so the text persists across both cues.
-     Example (translation duplication):
-       [12] 아버지께서는 안녕하세요?
-       [13] 아빠 안녕하셨어요?
-     => output:
-       @@SUB_LINE@@ 12: 아버지께서는 안녕하세요?
-       @@SUB_LINE@@ 13: 아버지께서는 안녕하세요?
-    
-    Example (length/CPS):
-       [12] 아버지께서는 
-       [13] 안녕하세요?
-     => output:
-       @@SUB_LINE@@ 12: 아버지께서는 안녕하세요?
-       @@SUB_LINE@@ 13: 아버지께서는 안녕하세요?
+REQUIREMENTS
+1) One line out per line in, same order and IDs.
+2) Be concise and natural; do not add new information.
+3) Consistency: honor terminology and pronouns with context (CTX/CTX_TGT).
+4) Readability: aim CPS limits — Latin ≤ 17, CJK ≤ 13, Thai ≤ 15. If over, compress wording; do not change timestamps or split/merge cues.
+5) Soft merge for duplicates only: when two adjacent translations are essentially the same, write the SAME best text for BOTH IDs (duplicate) instead of two variants.
 
-******************** OUTPUT ********************
-• Output **one line per input line**.
-• **Prefix every line** with \`@@SUB_LINE@@ <ABS_INDEX>:\`
-  For example: \`@@SUB_LINE@@ 123: 이것은 번역입니다\`
-  (A blank line is: \`@@SUB_LINE@@ 124:  \`)
-
-Now provide the reviewed translations for the ${batch.segments.length} lines above:
+OUTPUT (exactly ${batch.segments.length} lines):
+@@SUB_LINE@@ <ABS_INDEX>: <final translation>
+Example: @@SUB_LINE@@ ${batch.startIndex + 1}: <your translation>
+Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}: 
 `.trim();
 
   try {
     const reviewedContent = await callAIModel({
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
       signal,
       operationId,
       retryAttempts: 3,

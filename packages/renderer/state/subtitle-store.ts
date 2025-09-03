@@ -320,26 +320,33 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           }
         }),
 
-      // Batch-apply translations using timecode matching to avoid full reloads
+      // Batch-apply translations using timecode matching, with index fallback
       applyTranslations: segs =>
         set(s => {
           if (!Array.isArray(segs) || segs.length === 0) return;
-          // Build quick lookup for incoming translations by time key
-          const incoming = new Map<string, string>();
+          // Build quick lookups for incoming translations by time key and by index
+          const byTime = new Map<string, string>();
+          const byIndex = new Map<number, string>();
           for (const seg of segs) {
             const t = (seg.translation ?? '').trim();
             if (!t) continue;
-            const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-            if (!incoming.has(key)) incoming.set(key, t);
+            const timeKey = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
+            if (!byTime.has(timeKey)) byTime.set(timeKey, t);
+            if (typeof seg.index === 'number' && seg.index > 0) {
+              if (!byIndex.has(seg.index)) byIndex.set(seg.index, t);
+            }
           }
-          if (incoming.size === 0) return;
+          if (byTime.size === 0 && byIndex.size === 0) return;
 
           // Walk current order once; update only changed entries
           for (const id of s.order) {
             const cue = s.segments[id];
             if (!cue) continue;
             const key = `${secondsToSrtTime(cue.start)}-->${secondsToSrtTime(cue.end)}`;
-            const next = incoming.get(key);
+            let next = byTime.get(key);
+            if (!next && typeof cue.index === 'number' && cue.index > 0) {
+              next = byIndex.get(cue.index);
+            }
             if (next && (cue.translation ?? '').trim() !== next) {
               cue.translation = next;
             }
