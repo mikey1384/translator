@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Instellingen",
-    "creditsDescription": "Koop of vul AI-gebruiksuren hier aan."
+    "creditsDescription": "Koop credits. Het aantal getoonde uren is een schatting van de totale videoduur die je kunt transcriberen of vertalen. Voorbeeld: een video van 3 uur transcriberen en vertalen kost ongeveer 6 uur (≈140.000 credits)."
   },
   "videoPlayer": {
     "enterFullscreen": "Volledig scherm",

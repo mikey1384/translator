@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Beállítások",
-    "creditsDescription": "Itt vásárolhat vagy tölthet fel AI használati órákat."
+    "creditsDescription": "Vásároljon krediteket. A megjelenített órák becslést jelentenek arra, hogy összesen mennyi videóidőt tud leírni vagy lefordítani. Példa: egy 3 órás videó átírása és fordítása kb. 6 órát (≈140 000 kredit) használ fel."
   },
   "videoPlayer": {
     "enterFullscreen": "Teljes képernyős mód",

@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Cài đặt",
-    "creditsDescription": "Mua hoặc nạp thêm giờ sử dụng AI tại đây."
+    "creditsDescription": "Mua credits. Số giờ hiển thị là ước tính tổng thời lượng video bạn có thể chép lời hoặc dịch. Ví dụ: chép lời và dịch một video 3 giờ sẽ tốn khoảng 6 giờ (≈140.000 credits)."
   },
   "videoPlayer": {
     "enterFullscreen": "Vào Toàn màn hình",

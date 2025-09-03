@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Inställningar",
-    "creditsDescription": "Köp eller ladda på AI-användningstimmar här."
+    "creditsDescription": "Köp krediter. Antalet timmar som visas är en uppskattning av den totala videolängd du kan transkribera eller översätta. Exempel: att transkribera och översätta en 3‑timmars video använder cirka 6 timmar (≈140 000 krediter)."
   },
   "videoPlayer": {
     "enterFullscreen": "Aktivera helskärm",

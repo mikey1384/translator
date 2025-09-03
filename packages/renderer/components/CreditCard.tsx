@@ -4,10 +4,7 @@ import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
 import AdminResetButton from './AdminResetButton';
 import { colors } from '../styles';
-import {
-  CREDIT_PACKS,
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
-} from '../../shared/constants';
+import { CREDIT_PACKS, CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../shared/constants';
 
 const card = css`
   background: rgba(40, 40, 40, 0.6);
@@ -29,7 +26,7 @@ const balanceTxt = css`
 
 export default function CreditCard() {
   const { t } = useTranslation();
-  const { credits, hours, loading, error, checkoutPending, creditsPerHour } =
+  const { credits, hours, loading, error, checkoutPending } =
     useCreditStore();
   const fmtHours = (v: number | null | undefined) =>
     typeof v === 'number'
@@ -38,7 +35,7 @@ export default function CreditCard() {
           maximumFractionDigits: 1,
         })
       : '';
-  const translateHoursRemaining =
+  const sharedHoursRemaining =
     credits !== null ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR : null;
 
   return (
@@ -64,10 +61,7 @@ export default function CreditCard() {
             <span style={{ fontSize: '1rem', color: colors.textDim }}>
               {' '}
               (
-              {`${t('input.transcribeOnly')} ${fmtHours(hours)} ${t('credits.hours')}`}
-              {typeof translateHoursRemaining === 'number'
-                ? ` · ${t('subtitles.translation')} ${fmtHours(translateHoursRemaining)} ${t('credits.hours')}`
-                : ''}
+              {`${fmtHours(sharedHoursRemaining)} ${t('credits.hours')}`}
               )
             </span>
           </span>
@@ -78,43 +72,25 @@ export default function CreditCard() {
           >
             <BuyCreditsButton
               packId={CREDIT_PACKS.MICRO.id}
-              label={`$${CREDIT_PACKS.MICRO.price} · ${t('input.transcribeOnly')} ${fmtHours(
-                creditsPerHour
-                  ? CREDIT_PACKS.MICRO.credits / creditsPerHour
-                  : CREDIT_PACKS.MICRO.hours
-              )} ${t('credits.hours')} · ${t('subtitles.translation')} ${fmtHours(
+              label={`$${CREDIT_PACKS.MICRO.price} · ${fmtHours(
                 CREDIT_PACKS.MICRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.MICRO.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STARTER.id}
-              label={`$${CREDIT_PACKS.STARTER.price} · ${t('input.transcribeOnly')} ${fmtHours(
-                creditsPerHour
-                  ? CREDIT_PACKS.STARTER.credits / creditsPerHour
-                  : CREDIT_PACKS.STARTER.hours
-              )} ${t('credits.hours')} · ${t('subtitles.translation')} ${fmtHours(
-                CREDIT_PACKS.STARTER.credits /
-                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              label={`$${CREDIT_PACKS.STARTER.price} · ${fmtHours(
+                CREDIT_PACKS.STARTER.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STANDARD.id}
-              label={`$${CREDIT_PACKS.STANDARD.price} · ${t('input.transcribeOnly')} ${fmtHours(
-                creditsPerHour
-                  ? CREDIT_PACKS.STANDARD.credits / creditsPerHour
-                  : CREDIT_PACKS.STANDARD.hours
-              )} ${t('credits.hours')} · ${t('subtitles.translation')} ${fmtHours(
-                CREDIT_PACKS.STANDARD.credits /
-                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
+              label={`$${CREDIT_PACKS.STANDARD.price} · ${fmtHours(
+                CREDIT_PACKS.STANDARD.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.PRO.id}
-              label={`$${CREDIT_PACKS.PRO.price} · ${t('input.transcribeOnly')} ${fmtHours(
-                creditsPerHour
-                  ? CREDIT_PACKS.PRO.credits / creditsPerHour
-                  : CREDIT_PACKS.PRO.hours
-              )} ${t('credits.hours')} · ${t('subtitles.translation')} ${fmtHours(
+              label={`$${CREDIT_PACKS.PRO.price} · ${fmtHours(
                 CREDIT_PACKS.PRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
             />

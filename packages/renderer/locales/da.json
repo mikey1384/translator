@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Indstillinger",
-    "creditsDescription": "Køb eller påfyld AI-timer her."
+    "creditsDescription": "Køb kreditter. De viste timer er et estimat af den samlede videolængde, du kan transskribere eller oversætte. Eksempel: at transskribere og oversætte en 3-timers video bruger ca. 6 timer (≈140.000 kreditter)."
   },
   "videoPlayer": {
     "enterFullscreen": "Gå til fuldskærm",

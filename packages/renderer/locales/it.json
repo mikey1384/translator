@@ -127,7 +127,7 @@
   },
   "settings": {
     "title": "Impostazioni",
-    "creditsDescription": "Acquista o ricarica le ore di utilizzo AI qui."
+    "creditsDescription": "Acquista crediti. Le ore mostrate sono una stima della durata totale dei video che puoi trascrivere o tradurre. Esempio: trascrivere e tradurre un video di 3 ore richiede circa 6 ore (≈140.000 crediti)."
   },
   "videoPlayer": {
     "enterFullscreen": "Entra a schermo intero",

@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Setări",
-    "creditsDescription": "Cumpărați sau reîncărcați orele de utilizare AI aici."
+    "creditsDescription": "Cumpărați credite. Orele afișate sunt o estimare a duratei totale de video pe care o puteți transcrie sau traduce. Exemplu: transcrierea și traducerea unui videoclip de 3 ore consumă aproximativ 6 ore (≈140.000 credite)."
   },
   "videoPlayer": {
     "enterFullscreen": "Intră în ecran complet",

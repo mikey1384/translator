@@ -142,7 +142,7 @@
   },
   "settings": {
     "title": "Settings",
-    "creditsDescription": "Buy or top-up AI usage hours here."
+    "creditsDescription": "Buy credits. The hours shown are an estimate of the total video duration you can transcribe or translate. Example: transcribing and translating a 3‑hour video uses about 6 hours (≈140,000 credits)."
   },
   "credits": {
     "title": "AI Credits",

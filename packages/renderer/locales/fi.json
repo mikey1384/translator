@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Asetukset",
-    "creditsDescription": "Osta tai lataa AI-käyttötunteja täältä."
+    "creditsDescription": "Osta krediittejä. Näytetyt tunnit ovat arvio videon kokonaiskestosta, jonka voit puhtaaksikirjoittaa tai kääntää. Esimerkki: 3 tunnin videon transkriptio ja käännös kuluttaa noin 6 tuntia (≈140 000 krediittiä)."
   },
   "videoPlayer": {
     "enterFullscreen": "Siirry koko näytön tilaan",

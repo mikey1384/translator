@@ -127,7 +127,7 @@
   },
   "settings": {
     "title": "Paramètres",
-    "creditsDescription": "Achetez ou rechargez vos heures d'utilisation IA ici."
+    "creditsDescription": "Achetez des crédits. Les heures affichées sont une estimation de la durée totale de vidéo que vous pouvez transcrire ou traduire. Exemple : transcrire et traduire une vidéo de 3 heures consomme environ 6 heures (≈ 140 000 crédits)."
   },
   "credits": {
     "title": "Heures d'utilisation IA",

@@ -127,7 +127,7 @@
   },
   "settings": {
     "title": "设置",
-    "creditsDescription": "在此购买或充值AI使用时长。"
+    "creditsDescription": "购买积分。显示的小时数是您可转录或翻译的视频总时长的估算。示例：转录并翻译一段 3 小时视频，大约需要 6 小时（约 140,000 积分）。"
   },
   "credits": {
     "title": "AI使用时长",

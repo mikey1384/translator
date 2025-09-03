@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Ayarlar",
-    "creditsDescription": "AI kullanım saatlerini buradan satın alın veya yükleyin."
+    "creditsDescription": "Kredi satın alın. Görüntülenen saatler, transkripsiyon veya çeviri yapabileceğiniz toplam video süresinin tahminidir. Örnek: 3 saatlik bir videoyu yazıya döküp çevirmek yaklaşık 6 saat (≈140.000 kredi) kullanır."
   },
   "videoPlayer": {
     "enterFullscreen": "Tam Ekrana Geç",

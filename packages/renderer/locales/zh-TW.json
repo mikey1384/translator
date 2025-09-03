@@ -127,7 +127,7 @@
   },
   "settings": {
     "title": "設定",
-    "creditsDescription": "在此購買或加值AI使用時數。"
+    "creditsDescription": "購買點數。顯示的時數是您可用於轉錄或翻譯之影片總時長的估算。範例：轉錄並翻譯一支 3 小時的影片，約需 6 小時（約 140,000 點數）。"
   },
   "videoPlayer": {
     "enterFullscreen": "進入全螢幕",

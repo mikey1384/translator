@@ -3,10 +3,7 @@ import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import { useCreditStore } from '../../state/credit-store';
 import { logButton, logTask } from '../../utils/logger.js';
-import {
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
-  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
-} from '../../../shared/constants';
+import { CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../../shared/constants';
 import CreditBalance from '../CreditBalance';
 
 interface ProgressAreaProps {
@@ -123,21 +120,17 @@ export default function ProgressArea({
   subLabel,
 }: ProgressAreaProps) {
   // Compute remaining hours (integer) to show next to credits in header
-  const { credits, creditsPerHour } = useCreditStore();
+  const { credits } = useCreditStore();
   let remainingHours: number | null = null;
-  if (operationId?.startsWith('translate-')) {
-    // Translation hours use the translation credits/hour constant
+  if (
+    operationId?.startsWith('translate-') ||
+    operationId?.startsWith('transcribe-')
+  ) {
+    // Unify both translation and transcription hour estimates
     remainingHours =
       typeof credits === 'number'
         ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
         : null;
-  } else if (operationId?.startsWith('transcribe-')) {
-    // Transcription hours should match Settings: prefer backend per-hour if available
-    const perHour =
-      creditsPerHour && creditsPerHour > 0
-        ? creditsPerHour
-        : CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
-    remainingHours = typeof credits === 'number' ? credits / perHour : null;
   }
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;

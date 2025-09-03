@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Pengaturan",
-    "creditsDescription": "Beli atau isi ulang jam penggunaan AI di sini."
+    "creditsDescription": "Beli kredit. Jam yang ditampilkan merupakan perkiraan total durasi video yang dapat Anda transkripsi atau terjemahkan. Contoh: mentranskripsi dan menerjemahkan video 3 jam memerlukan sekitar 6 jam (≈140.000 kredit)."
   },
   "videoPlayer": {
     "enterFullscreen": "Masuk Layar Penuh",

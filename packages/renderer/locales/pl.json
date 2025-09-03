@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Ustawienia",
-    "creditsDescription": "Tutaj kup lub doładuj godziny użytkowania AI."
+    "creditsDescription": "Kup kredyty. Wyświetlane godziny to szacunek łącznego czasu wideo, które możesz transkrybować lub tłumaczyć. Przykład: transkrypcja i tłumaczenie 3‑godzinnego wideo zużywa około 6 godzin (≈140 000 kredytów)."
   },
   "videoPlayer": {
     "enterFullscreen": "Przejdź na pełny ekran",

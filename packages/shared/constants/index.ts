@@ -1,7 +1,7 @@
 export const AI_MODELS = {
   GPT: 'gpt-4.1',
   O3: 'o3',
-  WHISPER: 'whisper-large-v3-turbo',
+  WHISPER: 'whisper-1',
 } as const;
 
 export const subtitleVideoPlayer = {
@@ -90,14 +90,18 @@ export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 export const WHISPER_TURBO_USD_PER_HOUR = 0.04; // groq whisper-large-v3-turbo
 // Align transcription credits/hour with backend deduction for whisper-large-v3-turbo
 // Backend math: $0.04/h × margin(2) = $0.08/h; $0.08 / (10/350k) = 2,800 credits/hour
-export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = 2_800;
+// Historical transcription estimate kept for reference only.
+// We now unify hour estimation with translation.
+export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
+  CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 
-// Set the generic transcription constants used across UI
-export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
+// Set the generic credits/hour constant used across UI to the translation-based estimate
+export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
-// New pricing display fallback for transcription (aligns with backend deduction ~2,800 credits/hour)
-export const NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = 2_800;
+// Keep a single source of truth for "new pricing" as well
+export const NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
+  CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 
 const MICRO_CREDITS = 15_000; // $1 entry pack
 const STARTER_CREDITS = 150_000;

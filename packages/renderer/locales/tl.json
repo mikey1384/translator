@@ -126,7 +126,7 @@
   },
   "settings": {
     "title": "Mga Setting",
-    "creditsDescription": "Bumili o mag-top-up ng AI usage hours dito."
+    "creditsDescription": "Bumili ng credits. Ang ipinapakitang oras ay tantiya ng kabuuang haba ng video na maaari mong i-transcribe o isalin. Halimbawa: ang pag-transcribe at pagsasalin ng 3-oras na video ay gagamit ng humigit‑kumulang 6 na oras (≈140,000 credits)."
   },
   "videoPlayer": {
     "enterFullscreen": "Pumasok sa Fullscreen",

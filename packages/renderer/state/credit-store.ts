@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
-import {
-  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
-  NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
-} from '../../shared/constants';
+import { CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../shared/constants';
 
 interface CreditState {
   credits: number | null;
@@ -21,13 +18,11 @@ export const useCreditStore = create<CreditState>((set, get) => {
   const unsubCredits = SystemIPC.onCreditsUpdated(
     ({ creditBalance, hoursBalance }) => {
       const credits = creditBalance ?? null;
-      // Prefer hours sent from backend if present
+      // Unify: compute hours using the translation-based estimate
       const hours =
-        typeof hoursBalance === 'number'
-          ? hoursBalance
-          : typeof credits === 'number'
-            ? credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR
-            : null;
+        typeof credits === 'number'
+          ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+          : null;
       set({ credits, hours, checkoutPending: false });
     }
   );
@@ -67,21 +62,9 @@ export const useCreditStore = create<CreditState>((set, get) => {
       const res = await SystemIPC.getCreditBalance();
       if (res.success) {
         const credits = res.creditBalance ?? get().credits ?? 0;
-        // Choose per-hour rate with backward-compatible fallback
-        let perHour = res.creditsPerHour ?? null;
-        if (!perHour || perHour <= 0) {
-          perHour = NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR; // assume new pricing client
-        }
-        // If server returns legacy 50,000 (old clients), prefer new client display
-        if (perHour === 50_000) {
-          perHour = NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
-        }
-        const hours =
-          typeof res.balanceHours === 'number'
-            ? res.balanceHours
-            : typeof credits === 'number' && perHour
-              ? credits / perHour
-              : get().hours;
+        // Unify: always use translation-based credits/hour for estimates
+        const perHour = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+        const hours = typeof credits === 'number' ? credits / perHour : get().hours;
         set({
           credits,
           hours,
