@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { css } from '@emotion/css';
+import { colors } from '../../../../../styles.js';
 
 interface SubtitleEditTextareaProps {
   value: string;
@@ -7,6 +8,7 @@ interface SubtitleEditTextareaProps {
   onChange: (newValue: string) => void;
   rows?: number;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
 function escapeRegExp(text: string) {
@@ -47,6 +49,7 @@ export default function SubtitleEditTextarea({
   onChange,
   rows = 5,
   placeholder = '',
+  readOnly = false,
 }: SubtitleEditTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -88,6 +91,7 @@ export default function SubtitleEditTextarea({
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (readOnly) return;
       draftRef.current = e.target.value;
       setIsTyping(true);
 
@@ -135,10 +139,12 @@ export default function SubtitleEditTextarea({
   }, []);
 
   const handleFocus = useCallback(() => {
+    if (readOnly) return;
     setIsTyping(true);
-  }, []);
+  }, [readOnly]);
 
   const handleKeyUp = useCallback(() => {
+    if (readOnly) return;
     // After any key press, if the field is empty commit immediately so
     // the overlay/highlight clears without waiting for debounce.
     const cur = textareaRef.current?.value ?? '';
@@ -147,7 +153,7 @@ export default function SubtitleEditTextarea({
       setHighlightHtml(getHighlightedHtml('', searchTerm));
       commit();
     }
-  }, [commit, searchTerm]);
+  }, [commit, searchTerm, readOnly]);
 
   useEffect(() => {
     return () => {
@@ -186,15 +192,16 @@ export default function SubtitleEditTextarea({
     z-index: 1;
   `;
 
-  const textareaStyles = (typing: boolean) => css`
+  const textareaStyles = (typing: boolean, ro: boolean) => css`
     ${commonStyles}
     position: relative;
     background: transparent;
     resize: none;
-    border: 1px solid #555;
+    border: ${ro ? '1px solid transparent' : '1px solid #555'};
     color: ${typing ? '#fff' : 'transparent'};
-    caret-color: #fff;
+    caret-color: ${ro ? 'transparent' : '#fff'};
     z-index: 2;
+    cursor: ${ro ? 'not-allowed' : 'text'};
   `;
 
   return (
@@ -203,8 +210,53 @@ export default function SubtitleEditTextarea({
         position: relative;
         width: 100%;
         min-height: calc(${rows} * 1.4em + 16px);
+        ${readOnly
+          ? `
+          border: 1px dashed ${colors.border};
+          border-radius: 6px;
+          background: rgba(255,255,255,0.03);
+        `
+          : ''}
       `}
     >
+      {readOnly && (
+        <div
+          className={css`
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            pointer-events: none;
+          `}
+          aria-hidden
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={css`
+              stroke: currentColor;
+              stroke-width: 2;
+              stroke-linecap: round;
+              stroke-linejoin: round;
+            `}
+          >
+            <rect x="5" y="11" width="14" height="8" rx="2" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+          <span>Locked</span>
+        </div>
+      )}
       <div
         ref={highlightRef}
         className={highlightStyles}
@@ -212,7 +264,7 @@ export default function SubtitleEditTextarea({
       />
       <textarea
         ref={textareaRef}
-        className={textareaStyles(isTyping)}
+        className={textareaStyles(!readOnly && isTyping, readOnly)}
         placeholder={placeholder}
         rows={rows}
         defaultValue={value}
@@ -221,6 +273,9 @@ export default function SubtitleEditTextarea({
         onFocus={handleFocus}
         onKeyUp={handleKeyUp}
         onScroll={handleScroll}
+        readOnly={readOnly}
+        aria-readonly={readOnly}
+        title={readOnly ? 'Locked while processing' : undefined}
       />
     </div>
   );

@@ -31,11 +31,13 @@ export default function SideMenu({
     scrollToCurrent: s.scrollToCurrent,
   }));
   const setTranslation = useTaskStore(s => s.setTranslation);
-  const { transcription, translation } = useTaskStore(s => ({
+  const { transcription, translation, merge } = useTaskStore(s => ({
     transcription: s.transcription,
     translation: s.translation,
+    merge: s.merge,
   }));
   const isTranscribing = !!transcription.inProgress;
+  const isMerging = !!merge.inProgress;
   const targetLanguage = useUIStore(s => s.targetLanguage || 'english');
   const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
 
@@ -127,6 +129,7 @@ export default function SideMenu({
           variant="secondary"
           onClick={() => openChangeVideo()}
           title={t('videoPlayer.changeVideo', 'Change Video')}
+          disabled={isTranscribing || translation.inProgress || isMerging}
         >
           <svg
             width="14"
@@ -149,6 +152,7 @@ export default function SideMenu({
           size="sm"
           variant="secondary"
           onClick={handleMountOrChangeSrt}
+          disabled={isTranscribing || translation.inProgress || isMerging}
           title={
             originalPath
               ? t('videoPlayer.changeSrt', 'Change SRT')

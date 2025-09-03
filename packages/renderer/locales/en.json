@@ -101,6 +101,7 @@
     "outputLanguage": "Output Language",
     "showOriginalText": "Show original text",
     "translate": "Translate",
+    "continueTranscribing": "Continue transcribing",
     "generate": "Generate Subtitles",
     "generating": "Generating...",
     "generateNow": "Generate Subtitles Now",

@@ -48,6 +48,10 @@ const electronAPI = {
     return ipcRenderer.invoke('transcribe-one-line', options);
   },
 
+  transcribeRemaining: async (options: any) => {
+    return ipcRenderer.invoke('transcribe-remaining', options);
+  },
+
   onGenerateSubtitlesProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return;
     const listener = (_: any, progress: any) => {

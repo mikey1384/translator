@@ -41,6 +41,9 @@ interface Actions {
     id: string,
     segs: Array<{ start: number; end: number; original: string }>
   ) => void;
+  appendSegments: (
+    segs: Array<{ start: number; end: number; original: string }>
+  ) => void;
 }
 
 const initialState: State = {
@@ -282,6 +285,27 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           // Reindex all cues after original position
           for (let j = i; j < s.order.length; j++) {
             s.segments[s.order[j]].index = j + 1;
+          }
+        }),
+
+      appendSegments: segs =>
+        set(s => {
+          if (!Array.isArray(segs) || segs.length === 0) return;
+          let insertPos = s.order.length;
+          for (let k = 0; k < segs.length; k++) {
+            const p = segs[k];
+            const newId = crypto.randomUUID();
+            const newCue: SrtSegment = {
+              id: newId,
+              index: insertPos + 1,
+              start: p.start,
+              end: p.end,
+              original: p.original,
+              translation: '',
+            } as SrtSegment;
+            s.segments[newId] = newCue;
+            s.order.push(newId);
+            insertPos++;
           }
         }),
     }))

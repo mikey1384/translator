@@ -93,6 +93,15 @@ export function transcribeOneLine(options: {
   return (window.electron as any).transcribeOneLine(options);
 }
 
+export function transcribeRemaining(options: {
+  videoPath: string;
+  start: number;
+  end?: number;
+  operationId?: string;
+}): Promise<{ segments: any[]; error?: string }> {
+  return (window.electron as any).transcribeRemaining(options);
+}
+
 export const cancelPngRender = (operationId: string): void => {
   window.electron.cancelPngRender(operationId);
 };

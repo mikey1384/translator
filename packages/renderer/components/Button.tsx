@@ -10,6 +10,7 @@ type ButtonVariant =
   | 'text'
   | 'danger'
   | 'success'
+  | 'warning'
   | 'link';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
@@ -125,6 +126,15 @@ const buttonVariants: Record<ButtonVariant, string> = {
     &:hover:not(:disabled) {
       background-color: #c82333;
       border-color: #bd2130;
+    }
+  `,
+  warning: css`
+    color: #1e1e1e;
+    background-color: ${colors.progressDownload};
+    border-color: ${colors.progressDownload};
+    &:hover:not(:disabled) {
+      background-color: #e6a93e; /* slightly darker */
+      border-color: #e6a93e;
     }
   `,
   success: css`

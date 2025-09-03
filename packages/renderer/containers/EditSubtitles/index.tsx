@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Section from '../../components/Section';
 import ErrorBanner from '../../components/ErrorBanner';
 import Button from '../../components/Button';
-import { subtleAccentButton } from '../../styles.js';
+import { subtleAccentButton, buttonGradientStyles } from '../../styles.js';
 
 import SubtitleList from './SubtitleList';
 import MergeMenu from './MergeMenu';
@@ -142,6 +142,7 @@ export default function EditSubtitles({
 
   const { originalPath } = useSubStore();
   const canSaveDirectly = !!originalPath;
+  const videoDuration = useVideoStore(s => s.meta?.duration ?? null);
 
   const [saveError, setSaveError] = useState('');
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
@@ -316,6 +317,7 @@ export default function EditSubtitles({
               onClick={handleLoadSrtLocal}
               className={subtleAccentButton}
               title={t('subtitles.chooseSrtFile')}
+              disabled={isTranscribing || translation.inProgress || mergeTask.inProgress}
             >
               <div
                 className={css`
@@ -410,6 +412,53 @@ export default function EditSubtitles({
               searchText={searchText}
               affectedRows={affectedRows}
             />
+
+            {/* Continue Transcribing button (append remaining) */}
+            {videoPath && subtitles.length > 0 &&
+              typeof videoDuration === 'number' &&
+              videoDuration - (subtitles[subtitles.length - 1]?.end ?? 0) >= 60 && (
+                <div
+                  className={css`
+                    display: flex;
+                    justify-content: center;
+                    margin-top: 8px;
+                  `}
+                >
+                  <Button
+                    variant="success"
+                    size="lg"
+                    className={`${buttonGradientStyles.base} ${buttonGradientStyles.success}`}
+                    onClick={handleContinueTranscribing}
+                    title={t('subtitles.continueTranscribing', 'Continue transcribing')}
+                  >
+                    <div
+                      className={css`
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 10px;
+                      `}
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <path d="M5 12h7" />
+                        <path d="M12 5l7 7-7 7" />
+                      </svg>
+                      <span>
+                        {t('subtitles.continueTranscribing', 'Continue transcribing')}
+                      </span>
+                    </div>
+                  </Button>
+                </div>
+              )}
           </div>
         </>
       )}
@@ -454,6 +503,54 @@ export default function EditSubtitles({
   async function handleSaveSrt() {
     if (!originalPath) return handleSaveEditedSrtAs();
     await writeSrt(originalPath);
+  }
+
+  async function handleContinueTranscribing() {
+    try {
+      const videoPath = useVideoStore.getState().path;
+      if (!videoPath || subtitles.length === 0) return;
+      const start = subtitles[subtitles.length - 1].end;
+      const operationId = `transcribe-${Date.now()}-tail`;
+
+      // Initialize progress so the UI reflects live updates (like full transcription)
+      try {
+        useTaskStore.getState().setTranscription({
+          id: operationId,
+          stage: t('generateSubtitles.status.starting', 'Starting...'),
+          percent: 0,
+          inProgress: true,
+        });
+      } catch {}
+      const res = await (await import('../../ipc/subtitles')).transcribeRemaining({
+        videoPath,
+        start,
+        operationId,
+      });
+      const segs = (res as any)?.segments as any[];
+      if (Array.isArray(segs) && segs.length > 0) {
+        useSubStore.getState().appendSegments(
+          segs.map(s => ({ start: s.start, end: s.end, original: s.original }))
+        );
+      }
+      // Mark completion explicitly (progress-buffer will also send final 100%)
+      try {
+        useTaskStore.getState().setTranscription({
+          stage: t('generateSubtitles.status.completed', 'Completed'),
+          percent: 100,
+          inProgress: false,
+        });
+      } catch {}
+    } catch (err) {
+      console.error('[EditSubtitles] continue transcribing error:', err);
+      // Surface error state to progress UI
+      try {
+        useTaskStore.getState().setTranscription({
+          stage: t('generateSubtitles.status.error', 'Error'),
+          percent: 100,
+          inProgress: false,
+        });
+      } catch {}
+    }
   }
 
   async function handleSaveEditedSrtAs() {

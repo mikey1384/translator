@@ -1,6 +1,6 @@
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
-import ProgressDisplay from './ProgressDisplay.js';
+import SaveOriginalVideoButton from './SaveOriginalVideoButton.js';
 import ErrorBanner from '../../components/ErrorBanner.js';
 import {
   useUIStore,
@@ -81,7 +81,7 @@ export default function GenerateSubtitles() {
 
       {error && <ErrorBanner message={error} onClose={() => clearError()} />}
 
-      <ProgressDisplay
+      <SaveOriginalVideoButton
         downloadComplete={!download.inProgress && download.percent === 100}
         downloadedVideoPath={videoFilePath}
         onSaveOriginalVideo={handleSaveOriginalVideo}

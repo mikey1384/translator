@@ -1,7 +1,7 @@
 import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
 
-interface ProgressDisplayProps {
+interface SaveOriginalVideoButtonProps {
   downloadComplete: boolean;
   downloadedVideoPath: string | null;
   onSaveOriginalVideo: () => void;
@@ -9,19 +9,19 @@ interface ProgressDisplayProps {
   didDownloadFromUrl: boolean;
 }
 
-export default function ProgressDisplay({
+export default function SaveOriginalVideoButton({
   downloadComplete,
   downloadedVideoPath,
   onSaveOriginalVideo,
   didDownloadFromUrl,
-}: ProgressDisplayProps) {
+}: SaveOriginalVideoButtonProps) {
   const { t } = useTranslation();
 
   if (didDownloadFromUrl && downloadComplete && downloadedVideoPath) {
     return (
       <div style={{ marginBottom: '15px', textAlign: 'center' }}>
         <Button
-          variant="success"
+          variant="warning"
           size="sm"
           onClick={onSaveOriginalVideo}
           title={`Save the downloaded file: ${downloadedVideoPath}`}

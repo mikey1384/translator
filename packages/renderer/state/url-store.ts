@@ -23,6 +23,7 @@ interface UrlState {
   inputMode: 'url' | 'file';
   needCookies: boolean;
   cookiesBrowser: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
+  cookieBannerSuppressed: boolean;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
@@ -61,6 +62,7 @@ export const useUrlStore = create<UrlState>()(
     inputMode: 'url',
     needCookies: false,
     cookiesBrowser: '',
+    cookieBannerSuppressed: false,
 
     setUrlInput: urlInput => {
       set(state => {
@@ -76,7 +78,7 @@ export const useUrlStore = create<UrlState>()(
     setError: msg => set({ error: msg }),
 
     async downloadMedia() {
-      set({ needCookies: false });
+      set({ needCookies: false, cookieBannerSuppressed: false });
       return downloadMediaInternal(set, get);
     },
 
@@ -112,13 +114,20 @@ export const useUrlStore = create<UrlState>()(
       console.log('[url-store] download progress', { percent, stage });
       if (stage === 'NeedCookies') {
         set(state => {
-          state.needCookies = true;
+          if (!state.cookieBannerSuppressed) {
+            state.needCookies = true;
+            state.download.inProgress = false;
+            state.download.stage = 'NeedCookies';
+            state.download.percent = 100;
+          }
         });
         return;
       }
       if (stage === 'Completed' || stage === 'Error' || stage === 'Cancelled') {
         set(state => {
           state.needCookies = false;
+          if (stage === 'Cancelled') state.cookieBannerSuppressed = true;
+          if (stage === 'Cancelled') state.error = null;
         });
       }
       set(state => {
@@ -218,13 +227,22 @@ async function downloadMediaInternal(
     const finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 
-    if (res.cancelled || !finalPath || !filename) {
+  if (res.cancelled || !finalPath || !filename) {
       set((state: UrlState) => {
         state.needCookies = false;
         state.download.inProgress = false;
+      // Preserve NeedCookies stage if backend returned that special case
+      if (res.error === 'NeedCookies') {
+        state.needCookies = true;
+        state.download.stage = 'NeedCookies';
+      } else {
         state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
-        state.download.percent = 100;
-        if (!res.cancelled) state.error = res.error || 'Failed to process URL';
+      }
+      state.download.percent = 100;
+      if (res.cancelled) state.error = null;
+      else if (res.error === 'NeedCookies') state.error = null; // banner handles it
+      else state.error = res.error || 'Failed to process URL';
+      if (res.cancelled) state.cookieBannerSuppressed = true;
       });
       return res;
     }
@@ -262,7 +280,7 @@ async function downloadMediaInternal(
       // Do not mark as error; show cookies banner and stop the spinner
       set((state: UrlState) => {
         state.download.inProgress = false;
-        state.download.stage = 'NeedCookies';
+        if (!state.cookieBannerSuppressed) state.download.stage = 'NeedCookies';
       });
     } else {
       set((state: UrlState) => {

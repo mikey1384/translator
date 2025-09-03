@@ -87,6 +87,7 @@
     "outputLanguage": "Язык вывода",
     "showOriginalText": "Показать исходный текст",
     "translate": "Перевести",
+    "continueTranscribing": "Продолжить расшифровку",
     "generate": "Создать субтитры",
     "generating": "Создание...",
     "generateNow": "Создать субтитры сейчас",

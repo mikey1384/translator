@@ -367,6 +367,37 @@ try {
     }
   });
 
+  ipcMain.handle('transcribe-remaining', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `transcribe-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(
+      `[main.ts/transcribe-remaining] Starting operation: ${operationId}`
+    );
+    try {
+      const res = await subtitleHandlers.handleTranscribeRemaining(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/transcribe-remaining] Operation ${operationId} completed.`
+      );
+      return res;
+    } catch (error) {
+      log.error(
+        `[main.ts/transcribe-remaining] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/transcribe-remaining] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('process-url', handleProcessUrl);
 
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {

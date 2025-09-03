@@ -87,6 +87,7 @@
     "outputLanguage": "Langue de sortie",
     "showOriginalText": "Afficher le texte original",
     "translate": "Traduire",
+    "continueTranscribing": "Continuer la transcription",
     "generate": "Générer les sous-titres",
     "generating": "Génération...",
     "generateNow": "Générer les sous-titres maintenant",

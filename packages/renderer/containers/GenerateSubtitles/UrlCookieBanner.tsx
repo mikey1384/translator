@@ -8,6 +8,7 @@ import { css } from '@emotion/css';
 export default function UrlCookieBanner() {
   const { t } = useTranslation();
   const needCookies = useUrlStore(s => s.needCookies);
+  const suppressed = useUrlStore(s => s.cookieBannerSuppressed);
   const setNeedCookies = useUrlStore(s => s.setNeedCookies);
   const retryWithCookies = useUrlStore(s => s.retryWithCookies);
   const cookiesBrowser = useUrlStore(s => s.cookiesBrowser);
@@ -52,7 +53,7 @@ export default function UrlCookieBanner() {
   }, [needCookies]);
 
   // Hide if cancelled or running; banner is only relevant when explicitly requested
-  if (!needCookies || downloadInProgress || downloadStage === 'Cancelled')
+  if (!needCookies || suppressed || downloadInProgress || downloadStage === 'Cancelled')
     return null;
 
   return (

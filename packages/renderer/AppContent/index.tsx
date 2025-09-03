@@ -123,6 +123,21 @@ export default function AppContent() {
 
   const handleCancelDownload = () => {
     if (!download.id) return;
+    try {
+      // Clear any cookie banner and mark as cancelled immediately
+      useUrlStore.getState().setNeedCookies(false);
+      // Suppress cookie banner after cancel to ignore late NeedCookies events
+      try {
+        (useUrlStore as any).setState({ cookieBannerSuppressed: true });
+      } catch {}
+      useUrlStore.getState().setDownload({
+        inProgress: false,
+        percent: 100,
+        stage: 'Cancelled',
+      });
+      // Remove any lingering error message (e.g., NeedCookies)
+      useUrlStore.getState().clearError();
+    } catch {}
     OperationIPC.cancel(download.id!);
   };
 

@@ -259,6 +259,19 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  // Transcribe remaining portion of a video (append-mode)
+  export interface TranscribeRemainingOptions {
+    videoPath: string;
+    start: number;
+    end?: number;
+    operationId?: string;
+  }
+
+  export interface TranscribeRemainingResult {
+    segments: SrtSegment[];
+    error?: string;
+  }
+
   interface TranslateBatchArgs {
     batch: {
       segments: any[];
@@ -383,6 +396,9 @@ declare module '@shared-types/app' {
     transcribeOneLine: (
       options: TranscribeOneLineOptions
     ) => Promise<TranscribeOneLineResult>;
+    transcribeRemaining: (
+      options: TranscribeRemainingOptions
+    ) => Promise<TranscribeRemainingResult>;
 
     sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
     onPngRenderResult: (

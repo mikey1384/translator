@@ -67,8 +67,10 @@ export default function SubtitleEditor({
   );
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+  const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
   const videoPath = useVideoStore(s => s.path);
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
+  const editingLocked = isTranscribing || isTranslatingGlobal;
 
   useEffect(() => {
     if (subtitle) {
@@ -374,6 +376,7 @@ export default function SubtitleEditor({
         onChange={v => actions.update({ original: v })}
         rows={4}
         placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+        readOnly={editingLocked}
       />
 
       {temporaryAffectedText && (
@@ -418,6 +421,7 @@ export default function SubtitleEditor({
           onChange={v => actions.update({ translation: v })}
           rows={4}
           placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+          readOnly={editingLocked}
         />
       )}
 

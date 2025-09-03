@@ -87,6 +87,7 @@
     "outputLanguage": "出力言語",
     "showOriginalText": "原文を表示",
     "translate": "翻訳",
+    "continueTranscribing": "文字起こしを続行",
     "generate": "字幕を生成",
     "generating": "生成中...",
     "generateNow": "今すぐ字幕を生成",

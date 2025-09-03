@@ -87,6 +87,7 @@
     "outputLanguage": "لغة الإخراج",
     "showOriginalText": "عرض النص الأصلي",
     "translate": "ترجم",
+    "continueTranscribing": "متابعة النسخ",
     "generate": "إنشاء الترجمات",
     "generating": "جارٍ الإنشاء...",
     "generateNow": "إنشاء الترجمات الآن",

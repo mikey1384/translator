@@ -592,6 +592,124 @@ export async function handleTranscribeOneLine(
   }
 }
 
+export async function handleTranscribeRemaining(
+  event: IpcMainInvokeEvent,
+  options: { videoPath: string; start: number; end?: number },
+  operationId: string
+): Promise<{
+  success: boolean;
+  segments?: import('@shared-types/app').SrtSegment[];
+  cancelled?: boolean;
+  error?: string;
+  operationId: string;
+}> {
+  const { ffmpeg } = checkServicesInitialized();
+
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+  addSubtitle(operationId, controller);
+
+  let tempAudioPath: string | null = null;
+  try {
+    const { videoPath, start, end } = options;
+    if (!videoPath || typeof start !== 'number') {
+      throw new Error('Invalid transcribe-remaining options');
+    }
+    const durationFull = await ffmpeg.getMediaDuration(videoPath, controller.signal);
+    const sliceStart = Math.max(0, start);
+    const sliceEnd = typeof end === 'number' ? Math.min(end, durationFull) : durationFull;
+    const sliceDur = Math.max(0, sliceEnd - sliceStart);
+    if (sliceDur <= 0.05) {
+      return { success: true, segments: [], operationId };
+    }
+
+    const baseName = mkTempAudioName(`${operationId}_tail`);
+    tempAudioPath = path.isAbsolute(baseName)
+      ? baseName
+      : path.join(ffmpeg.tempDir, baseName);
+
+    event.sender.send('generate-subtitles-progress', {
+      percent: 10,
+      stage: 'Extracting audio segment...',
+      operationId,
+    });
+    await extractAudioSegment(ffmpeg, {
+      input: videoPath,
+      output: tempAudioPath,
+      start: sliceStart,
+      duration: sliceDur,
+      operationId,
+      signal: controller.signal,
+    });
+
+    event.sender.send('generate-subtitles-progress', {
+      percent: 30,
+      stage: 'Transcribing 1/1',
+      operationId,
+    });
+
+    const res = await transcribePass({
+      audioPath: tempAudioPath,
+      services: { ffmpeg },
+      progressCallback: p => {
+        const mapped = Math.min(95, Math.max(35, p.percent));
+        // Do not forward partialResult to avoid replacing entire subtitle list
+        event.sender.send('generate-subtitles-progress', {
+          percent: mapped,
+          stage: p.stage,
+          current: p.current,
+          total: p.total,
+          operationId,
+        });
+      },
+      operationId,
+      signal: controller.signal,
+    });
+
+    const segsOut = res.segments.map(s => ({
+      ...s,
+      start: s.start + sliceStart,
+      end: s.end + sliceStart,
+    })) as any;
+
+    event.sender.send('generate-subtitles-progress', {
+      percent: 100,
+      stage: 'Completed',
+      operationId,
+    });
+    return { success: true, segments: segsOut, operationId };
+  } catch (error: any) {
+    const isCancel =
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled' ||
+      /insufficient-credits|Insufficient credits/i.test(String(error?.message || ''));
+    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
+      String(error?.message || '')
+    );
+    try {
+      event.sender.send('generate-subtitles-progress', {
+        percent: 100,
+        stage: isCancel ? 'Process cancelled' : `Error: ${error?.message || String(error)}`,
+        error: creditCancel ? 'insufficient-credits' : isCancel ? undefined : error?.message || String(error),
+        operationId,
+      });
+    } catch {}
+    return {
+      success: !isCancel,
+      cancelled: isCancel,
+      error: isCancel ? undefined : error?.message || String(error),
+      operationId,
+    };
+  } finally {
+    if (tempAudioPath) {
+      try {
+        await fs.unlink(tempAudioPath);
+      } catch {}
+    }
+    registryFinish(operationId);
+  }
+}
+
 export async function handleGetVideoMetadata(_event: any, filePath: string) {
   if (!ffmpegCtx) {
     log.error('[getVideoMetadata] FFmpegContext not initialized.');

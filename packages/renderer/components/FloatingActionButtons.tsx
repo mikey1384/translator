@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { css, cx } from '@emotion/css';
+import { colors } from '../styles';
 import IconButton from './IconButton.js';
 import { useTranslation } from 'react-i18next';
 import { useTaskStore, useUpdateStore } from '../state';
@@ -78,22 +79,45 @@ const downloadSpinnerStyles = css`
   }
 `;
 
+// SVG triangle styles for hover scaling
+const svgTriangleBase = css`
+  fill: #fff;
+  stroke: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 120ms ease;
+  transform: scale(1.25);
+`;
+
+const svgTriangleScaled = css`
+  transform: scale(1.3);
+`;
+
 export default function FloatingActionButtons({
   scrollThreshold = 300,
   onClick,
 }: FloatingActionButtonsProps) {
   const { t } = useTranslation();
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
+  const [showScrollToBottomButton, setShowScrollToBottomButton] = useState(false);
+  const [hoverHalf, setHoverHalf] = useState<null | 'top' | 'bottom'>(null);
   const { available, downloading, percent, downloaded, install, check } =
     useUpdateStore();
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > scrollThreshold) {
-        setShowScrollToTopButton(true);
-      } else {
-        setShowScrollToTopButton(false);
-      }
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.documentElement.clientHeight
+      );
+      const viewportBottom = scrollTop + window.innerHeight;
+
+      setShowScrollToTopButton(scrollTop > scrollThreshold);
+      setShowScrollToBottomButton(docHeight - viewportBottom > scrollThreshold);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -121,6 +145,17 @@ export default function FloatingActionButtons({
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+  };
+
+  const handleScrollToBottomClick = () => {
+    const docHeight = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight,
+      document.documentElement.clientHeight
+    );
+    window.scrollTo({ top: docHeight, behavior: 'smooth' });
   };
 
   const handleReloadClick = async () => {
@@ -338,17 +373,99 @@ export default function FloatingActionButtons({
             className={buttonProps.className}
           />
         ))}
-      {showScrollToTopButton && (
+      {(showScrollToTopButton || showScrollToBottomButton) && (
+        // Split scroll button with two-tone background (top/bottom)
         <IconButton
-          onClick={handleBackToTopClick}
-          title={t('common.backToTop')}
-          aria-label={t('common.backToTopAria')}
+          variant="transparent"
+          onClick={e => {
+            const el = e.currentTarget as HTMLElement;
+            const rect = el.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            if (e.clientY <= midY) {
+              if (showScrollToTopButton) handleBackToTopClick();
+            } else {
+              if (showScrollToBottomButton) handleScrollToBottomClick();
+            }
+          }}
+          onMouseMove={e => {
+            const el = e.currentTarget as HTMLElement;
+            const rect = el.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            setHoverHalf(e.clientY <= midY ? 'top' : 'bottom');
+          }}
+          onMouseLeave={() => setHoverHalf(null)}
+          onKeyDown={e => {
+            if (e.key === 'ArrowUp' || e.key === 'Home') {
+              e.preventDefault();
+              if (showScrollToTopButton) handleBackToTopClick();
+            } else if (e.key === 'ArrowDown' || e.key === 'End') {
+              e.preventDefault();
+              if (showScrollToBottomButton) handleScrollToBottomClick();
+            }
+          }}
+          aria-label={t(
+            'common.splitScrollButtonAria',
+            'Scroll to top (upper half) or bottom (lower half)'
+          )}
           size="lg"
+          className={css`
+            position: relative;
+            border: 1px solid ${colors.border};
+            /* Two-tone background split equally: Up=orange-red, Down=ocean-blue (no inversion) */
+            ${(() => {
+              const upColor = '#FF6B3D'; /* orange-red */
+              const downColor = '#1E90FF'; /* ocean-blue */
+              return `background: linear-gradient(to bottom, ${upColor} 0%, ${upColor} 50%, ${downColor} 50%, ${downColor} 100%) !important;`;
+            })()}
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15) inset;
+            transition: box-shadow 0.15s ease;
+
+            /* Dim unavailable half without affecting legibility */
+            &::after {
+              content: '';
+              position: absolute;
+              inset: 0;
+              border-radius: 50%;
+              background:
+                /* top overlay */
+                linear-gradient(
+                  to bottom,
+                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 0%,
+                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 50%,
+                  transparent 50%,
+                  transparent 100%
+                ),
+                /* bottom overlay */
+                linear-gradient(
+                  to bottom,
+                  transparent 0%,
+                  transparent 50%,
+                  ${showScrollToBottomButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 50%,
+                  ${showScrollToBottomButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 100%
+                );
+              pointer-events: none;
+            }
+
+            /* Light up hovered half (top/bottom) without moving the button */
+            &::before {
+              content: '';
+              position: absolute;
+              inset: 0;
+              border-radius: 50%;
+              background:
+                ${hoverHalf === 'top' && showScrollToTopButton
+                  ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.22) 50%, transparent 50%, transparent 100%)`
+                  : hoverHalf === 'bottom' && showScrollToBottomButton
+                    ? `linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.22) 100%)`
+                    : 'none'};
+              pointer-events: none;
+            }
+          `}
           icon={
             <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className={css`
@@ -358,7 +475,26 @@ export default function FloatingActionButtons({
                 stroke-linejoin: round;
               `}
             >
-              <path d="M8 12V4M8 4L4 8M8 4L12 8" />
+              {/* Divider line */}
+              <line x1="4" y1="12" x2="20" y2="12" opacity="0.4" />
+              {/* Up triangle (top half) */}
+              <polygon
+                className={cx(
+                  svgTriangleBase,
+                  hoverHalf === 'top' ? svgTriangleScaled : undefined
+                )}
+                opacity={showScrollToTopButton ? 1 : 0.35}
+                points="12,2 5,8 19,8"
+              />
+              {/* Down triangle (bottom half) */}
+              <polygon
+                className={cx(
+                  svgTriangleBase,
+                  hoverHalf === 'bottom' ? svgTriangleScaled : undefined
+                )}
+                opacity={showScrollToBottomButton ? 1 : 0.35}
+                points="12,22 5,16 19,16"
+              />
             </svg>
           }
         />
