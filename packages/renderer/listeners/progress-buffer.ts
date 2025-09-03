@@ -1,4 +1,4 @@
-import { parseSrt, secondsToSrtTime } from '../../shared/helpers';
+import { parseSrt } from '../../shared/helpers';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
@@ -18,6 +18,7 @@ let isFlushing = false;
 let lastParsed = 0;
 let lastTranscribe = { id: null as string | null, stage: '' };
 let lastTranslate = { id: null as string | null, stage: '' };
+let lastCreditsRefreshTs = 0;
 
 function flush() {
   if (isFlushing) return;
@@ -154,41 +155,44 @@ function flush() {
     const isComplete =
       percent >= 100 || /processing complete/i.test(stage ?? '');
 
-    // Apply partial SRT updates during processing (throttled), and load immediately on completion
+    // Apply partial SRT updates during processing. For translation flows, patch translations in-place
+    // by matching timecodes to avoid full-store reloads; for transcription, keep existing behavior.
     if (partialResult?.trim()) {
       const isTranslateMissing = operationId?.startsWith('translate-missing-');
-      if (isTranslateMissing) {
-        // Incrementally apply translations only to matching timecodes
-        try {
-          const partSegs = parseSrt(partialResult);
-          if (partSegs.length) {
-            const store = useSubStore.getState();
-            const current = useSubStore.getState();
-            // Build lookup by time key
-            const byTimeKey = new Map<string, string>(); // key -> id
-            for (const id of current.order) {
-              const s = current.segments[id];
-              const key = `${secondsToSrtTime(s.start)}-->${secondsToSrtTime(
-                s.end
-              )}`;
-              if (!byTimeKey.has(key)) byTimeKey.set(key, id);
+      const isTranslateRelated = isTranslate || isTranslateMissing;
+      if (isTranslateRelated) {
+        // Throttle heavy parsing to at most once per 1s unless completion
+        if (isComplete || Date.now() - lastParsed > 1000) {
+          try {
+            const partSegs = parseSrt(partialResult);
+            if (partSegs.length) {
+              useSubStore.getState().applyTranslations(partSegs);
             }
-            for (const seg of partSegs) {
-              const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(
-                seg.end
-              )}`;
-              const matchId = byTimeKey.get(key);
-              const translated = seg.translation?.trim();
-              if (matchId && translated) {
-                store.update(matchId, { translation: translated });
-              }
-            }
+          } catch {
+            // Ignore parse/apply errors for partial updates
           }
-        } catch {
-          // Ignore parse/apply errors for partial updates
+          lastParsed = Date.now();
+        }
+      } else if (isTranscribe) {
+        // Transcription flow: append only new cues based on running SRT length
+        if (isComplete || Date.now() - lastParsed > 1500) {
+          try {
+            const partSegs = parseSrt(partialResult);
+            if (partSegs.length) {
+              useSubStore.getState().applyTranscriptionProgress(partSegs);
+            }
+          } catch {
+            // ignore parse errors
+          }
+          lastParsed = Date.now();
         }
       } else if (isComplete || Date.now() - lastParsed > 1500) {
-        useSubStore.getState().load(parseSrt(partialResult));
+        // Other flows: reload full list occasionally
+        try {
+          useSubStore.getState().load(parseSrt(partialResult));
+        } catch {
+          // Do nothing
+        }
         lastParsed = Date.now();
       }
     }
@@ -228,7 +232,15 @@ function flush() {
       stageLower.includes('__i18n__:transcribed');
 
     if (isActiveAIPhase && percent > 0 && percent <= 100) {
-      useCreditStore.getState().refresh();
+      const now = Date.now();
+      if (now - lastCreditsRefreshTs > 5000) {
+        try {
+          useCreditStore.getState().refresh();
+        } catch {
+          // Do nothing
+        }
+        lastCreditsRefreshTs = now;
+      }
     }
 
     queued = null;

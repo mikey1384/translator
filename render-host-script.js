@@ -1438,15 +1438,14 @@ function getSubtitleStyles(opts) {
   const primaryRgba = assColorToRgba(style.primaryColor);
   const outlineRgba = assColorToRgba(style.outlineColor);
   const shadowRgba = assColorToRgba(style.backColor);
-  const position2 = "fixed";
+  const position2 = isFullScreen ? "fixed" : "absolute";
   let bottomValue;
   if (isMultiLine) {
     bottomValue = isFullScreen ? "5%" : "2.5%";
   } else {
     bottomValue = isFullScreen ? "10%" : "5%";
   }
-  const maxWidth = "100%";
-  const right = isFullScreen ? "5%" : void 0;
+  const maxWidth = isFullScreen ? "100%" : "100%";
   let textShadow = "none";
   let backgroundColor = "transparent";
   let boxShadowValue = "none";
@@ -1501,8 +1500,7 @@ function getSubtitleStyles(opts) {
   return css`
     position: ${position2};
     bottom: ${bottomValue};
-    left: ${isFullScreen ? "5%" : "50%"};
-    right: ${right};
+    ${isFullScreen ? "left: 5%; right: 5%;" : "left: 0; right: 0;"}
     padding: ${containerPadding};
     background-color: ${backgroundColor};
     color: ${primaryRgba};
@@ -1525,10 +1523,10 @@ function getSubtitleStyles(opts) {
     opacity: 0;
     transition: ${transitionValue};
     max-width: ${maxWidth};
+    width: ${isFullScreen ? "auto" : "100%"};
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
-    ${!isFullScreen ? "transform: translateX(-50%);" : ""}
     ${isFullScreen ? "margin: 0 auto;" : ""}
 
     &.visible {
@@ -1584,10 +1582,8 @@ function initializeSubtitleDisplay() {
       subtitleEl.id = "subtitle";
       subtitleEl.style.position = "absolute";
       subtitleEl.style.bottom = "10px";
-      subtitleEl.style.left = "50%";
-      subtitleEl.style.transform = "translateX(-50%)";
       subtitleEl.style.textAlign = "center";
-      subtitleEl.style.width = "90%";
+      subtitleEl.style.pointerEvents = "none";
       rootElement.appendChild(subtitleEl);
     }
     applyPresetStyles(subtitleEl);
@@ -1600,10 +1596,8 @@ function initializeSubtitleDisplay() {
       subtitleEl.id = "subtitle";
       subtitleEl.style.position = "absolute";
       subtitleEl.style.bottom = "10px";
-      subtitleEl.style.left = "50%";
-      subtitleEl.style.transform = "translateX(-50%)";
       subtitleEl.style.textAlign = "center";
-      subtitleEl.style.width = "90%";
+      subtitleEl.style.pointerEvents = "none";
       document.body.appendChild(subtitleEl);
     }
     applyPresetStyles(subtitleEl);

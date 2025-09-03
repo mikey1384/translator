@@ -365,7 +365,10 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
     // Get version before update for comparison
     let versionBefore = '';
     try {
-      const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000, windowsHide: true });
+      const { stdout } = await execa(binaryPath, ['--version'], {
+        timeout: 10000,
+        windowsHide: true,
+      });
       versionBefore = stdout.trim();
     } catch {
       // If we can't get version, proceed anyway
@@ -389,7 +392,10 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
       // Post-update sanity check: verify the binary was actually updated
       if (versionBefore) {
         try {
-          const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000, windowsHide: true });
+          const { stdout } = await execa(binaryPath, ['--version'], {
+            timeout: 10000,
+            windowsHide: true,
+          });
           const versionAfter = stdout.trim();
           if (
             versionBefore === versionAfter &&
@@ -548,10 +554,17 @@ async function downloadBinaryDirectly(
     log.info('[URLprocessor] Attempting direct download from GitHub...');
 
     // Determine the download URL based on platform
-    const downloadUrl =
+    // Use platform-specific assets to avoid requiring a system Python on macOS/Linux
+    // - Windows: yt-dlp.exe (PE executable)
+    // - macOS: yt-dlp_macos (universal, self-contained)
+    // - Linux/other Unix: yt-dlp (self-contained)
+    const assetName =
       process.platform === 'win32'
-        ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
-        : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
+        ? 'yt-dlp.exe'
+        : process.platform === 'darwin'
+          ? 'yt-dlp_macos'
+          : 'yt-dlp';
+    const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
 
     log.info(`[URLprocessor] Downloading from: ${downloadUrl}`);
 

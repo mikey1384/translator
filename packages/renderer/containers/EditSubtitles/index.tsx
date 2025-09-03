@@ -135,13 +135,10 @@ export default function EditSubtitles({
     meta,
   } = useVideoStore();
   const { t } = useTranslation();
-  const translationCompleted = useTaskStore(s => !!s.translation.isCompleted);
   const translationInProgress = useTaskStore(s => !!s.translation.inProgress);
   const mergeInProgress = useTaskStore(s => !!s.merge.inProgress);
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
-  const sourceId = useSubStore(s => s.sourceId);
-  const origin = useSubStore(s => s.origin);
 
   const { originalPath } = useSubStore();
   const canSaveDirectly = !!originalPath;
@@ -235,39 +232,7 @@ export default function EditSubtitles({
 
   const getSrtMode = () => (showOriginalText ? 'dual' : 'translation');
 
-  // Prompt once after a fresh translation to choose display mode (Dual vs Translation Only)
-  const lastPromptedRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (
-      origin === 'fresh' &&
-      translationCompleted &&
-      !translationInProgress &&
-      subtitles.length > 0 &&
-      lastPromptedRef.current !== sourceId
-    ) {
-      const hasTranslation = subtitles.some(
-        s => (s.translation ?? '').trim().length > 0
-      );
-      if (hasTranslation) {
-        const msg =
-          `${t('subtitles.translation')} – ${t(
-            'subtitles.showOriginalText'
-          )} ?\n` +
-          `${t('common.confirm')}: ${t('subtitles.showOriginalText')} (Dual)\n` +
-          `${t('common.cancel')}: ${t('subtitles.translation')} Only`;
-        const dual = window.confirm(msg);
-        useUIStore.getState().setShowOriginalText(!!dual);
-        lastPromptedRef.current = sourceId;
-      }
-    }
-  }, [
-    origin,
-    translationCompleted,
-    translationInProgress,
-    sourceId,
-    subtitles,
-    t,
-  ]);
+  // Removed post-translation display-mode popup; user controls this via the bottom toggle.
 
   async function handleTranslateMissing() {
     try {

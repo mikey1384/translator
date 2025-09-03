@@ -20,6 +20,7 @@ import {
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 
 import { useVideoStore, useSubStore } from '../../state';
+import { useSubSourceId } from '../../state/subtitle-store';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
 import { fontScale } from '../../../shared/constants';
 
@@ -82,7 +83,6 @@ export default function NativeVideoPlayer({
   isAudioOnly,
 }: NativeVideoPlayerProps) {
   const { url: videoUrl, togglePlay } = useVideoStore();
-  const subtitles = useSubStore(s => s.order.map(id => s.segments[id]));
 
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
@@ -96,6 +96,7 @@ export default function NativeVideoPlayer({
   const [showInd, setShowInd] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const subSourceId = useSubSourceId();
 
   const recomputeScale = useCallback(() => {
     const v = videoRef.current;
@@ -161,7 +162,27 @@ export default function NativeVideoPlayer({
 
     const onTime = () => {
       const t = v.currentTime;
-      const seg = subtitles.find(s => t >= +s.start && t <= +s.end);
+      // Resolve current segment via a quick search using current store state
+      const state = useSubStore.getState();
+      const { segments, order } = state;
+      // Binary search over sorted order (by start time)
+      let lo = 0,
+        hi = order.length - 1,
+        foundIdx = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const s = segments[order[mid]];
+        if (!s) break;
+        if (t < s.start) {
+          hi = mid - 1;
+        } else if (t > s.end) {
+          lo = mid + 1;
+        } else {
+          foundIdx = mid;
+          break;
+        }
+      }
+      const seg = foundIdx >= 0 ? segments[order[foundIdx]] : undefined;
       const txt = seg
         ? cueText(seg, showOriginalText ? 'dual' : 'translation')
         : '';
@@ -173,7 +194,42 @@ export default function NativeVideoPlayer({
 
     v.addEventListener('timeupdate', onTime);
     return () => v.removeEventListener('timeupdate', onTime);
-  }, [subtitles, showOriginalText, activeSubtitle]);
+  }, [showOriginalText, activeSubtitle]);
+
+  // Refresh subtitle immediately when subtitle source changes (e.g., translation completed)
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const t = v.currentTime;
+    const state = useSubStore.getState();
+    const { segments, order } = state;
+    let lo = 0,
+      hi = order.length - 1,
+      foundIdx = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = segments[order[mid]];
+      if (!s) break;
+      if (t < s.start) {
+        hi = mid - 1;
+      } else if (t > s.end) {
+        lo = mid + 1;
+      } else {
+        foundIdx = mid;
+        break;
+      }
+    }
+    const seg = foundIdx >= 0 ? segments[order[foundIdx]] : undefined;
+    const nextText = seg
+      ? cueText(seg, showOriginalText ? 'dual' : 'translation')
+      : '';
+    if (nextText !== activeSubtitle) {
+      if (activeSubtitle) setSubtitleVisible(false);
+      setActiveSubtitle(nextText);
+    } else if (nextText) {
+      setSubtitleVisible(true);
+    }
+  }, [subSourceId, showOriginalText]);
 
   useEffect(() => {
     if (!activeSubtitle) {

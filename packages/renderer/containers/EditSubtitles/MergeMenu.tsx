@@ -8,17 +8,19 @@ import { useUIStore } from '../../state/ui-store.js';
 
 const mergeOptionsStyles = css`
   display: flex;
-  align-items: center;
+  align-items: center; /* vertically center everything */
   gap: 1rem;
   flex-wrap: wrap;
 `;
 
 const fontSizeInputStyles = css`
-  padding: 0.5rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   border: 1px solid ${colors.border};
   border-radius: 4px;
   font-size: 1rem;
-  width: 80px;
+  width: 56px; /* keep this compact */
+  max-width: 64px;
+  text-align: center;
   background-color: ${colors.light};
   color: ${colors.dark};
   &:focus {
@@ -91,6 +93,11 @@ export default function MergeMenu({
     s.setSubtitleStyle,
   ]);
 
+  const [showOriginal, setShowOriginal] = useUIStore(s => [
+    s.showOriginalText,
+    s.setShowOriginalText,
+  ]);
+
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const stringValue = e.target.value;
     if (stringValue === '') {
@@ -122,37 +129,78 @@ export default function MergeMenu({
 
   return (
     <div className={mergeOptionsStyles}>
-      <label className={fontSizeLabelStyles} htmlFor="mergeFontSizeInput">
-        {t('editSubtitles.mergeControls.fontSizeLabel')}
+      {/* Stack font size and style vertically to save horizontal space */}
+      <div
+        className={css`
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          min-width: 180px;
+        `}
+      >
+        <div
+          className={css`
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          `}
+        >
+          <label className={fontSizeLabelStyles} htmlFor="mergeFontSizeInput">
+            {t('editSubtitles.mergeControls.fontSizeLabel')}
+          </label>
+          <input
+            id="mergeFontSizeInput"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className={fontSizeInputStyles}
+            value={mergeFontSize || ''}
+            onChange={handleFontSizeChange}
+            onBlur={handleFontSizeBlur}
+          />
+        </div>
+
+        <div
+          className={css`
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          `}
+        >
+          <label
+            className={fontSizeLabelStyles}
+            htmlFor="mergeStylePresetSelect"
+          >
+            {t('editSubtitles.mergeControls.styleLabel')}
+          </label>
+          <select
+            id="mergeStylePresetSelect"
+            className={styleSelectStyles}
+            value={mergeStylePreset}
+            onChange={e =>
+              setMergeStylePreset(e.target.value as SubtitleStylePresetKey)
+            }
+          >
+            {stylePresetOrder.map(key => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Show Original toggle kept compact */}
+      <label className={fontSizeLabelStyles} htmlFor="mergeShowOriginalToggle">
+        {t('subtitles.showOriginalText')}
       </label>
       <input
-        id="mergeFontSizeInput"
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        className={fontSizeInputStyles}
-        value={mergeFontSize || ''}
-        onChange={handleFontSizeChange}
-        onBlur={handleFontSizeBlur}
+        id="mergeShowOriginalToggle"
+        type="checkbox"
+        checked={showOriginal}
+        onChange={e => setShowOriginal(e.target.checked)}
+        aria-label={t('subtitles.showOriginalText')}
       />
-
-      <label className={fontSizeLabelStyles} htmlFor="mergeStylePresetSelect">
-        {t('editSubtitles.mergeControls.styleLabel')}
-      </label>
-      <select
-        id="mergeStylePresetSelect"
-        className={styleSelectStyles}
-        value={mergeStylePreset}
-        onChange={e =>
-          setMergeStylePreset(e.target.value as SubtitleStylePresetKey)
-        }
-      >
-        {stylePresetOrder.map(key => (
-          <option key={key} value={key}>
-            {key}
-          </option>
-        ))}
-      </select>
 
       <Button
         onClick={onMergeMediaWithSubtitles}

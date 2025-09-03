@@ -5,6 +5,7 @@ import { SrtSegment } from '@shared-types/app';
 import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
+import { secondsToSrtTime } from '../../shared/helpers';
 
 type SegmentMap = Record<string, SrtSegment>;
 
@@ -44,6 +45,16 @@ interface Actions {
   appendSegments: (
     segs: Array<{ start: number; end: number; original: string }>
   ) => void;
+  // Efficiently patch many translations at once by matching segments via timecodes
+  applyTranslations: (
+    segs: Array<{
+      start: number;
+      end: number;
+      translation?: string | undefined;
+    }>
+  ) => void;
+  // Append-only progress for transcription partials (no full reloads)
+  applyTranscriptionProgress: (segs: SrtSegment[]) => void;
 }
 
 const initialState: State = {
@@ -302,6 +313,56 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
               end: p.end,
               original: p.original,
               translation: '',
+            } as SrtSegment;
+            s.segments[newId] = newCue;
+            s.order.push(newId);
+            insertPos++;
+          }
+        }),
+
+      // Batch-apply translations using timecode matching to avoid full reloads
+      applyTranslations: segs =>
+        set(s => {
+          if (!Array.isArray(segs) || segs.length === 0) return;
+          // Build quick lookup for incoming translations by time key
+          const incoming = new Map<string, string>();
+          for (const seg of segs) {
+            const t = (seg.translation ?? '').trim();
+            if (!t) continue;
+            const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
+            if (!incoming.has(key)) incoming.set(key, t);
+          }
+          if (incoming.size === 0) return;
+
+          // Walk current order once; update only changed entries
+          for (const id of s.order) {
+            const cue = s.segments[id];
+            if (!cue) continue;
+            const key = `${secondsToSrtTime(cue.start)}-->${secondsToSrtTime(cue.end)}`;
+            const next = incoming.get(key);
+            if (next && (cue.translation ?? '').trim() !== next) {
+              cue.translation = next;
+            }
+          }
+        }),
+
+      // Efficiently append only the newly produced cues from a full SRT snapshot
+      applyTranscriptionProgress: segs =>
+        set(s => {
+          if (!Array.isArray(segs) || segs.length === 0) return;
+          const have = s.order.length;
+          if (segs.length <= have) return; // nothing new
+          let insertPos = have;
+          for (let i = have; i < segs.length; i++) {
+            const p = segs[i];
+            const newId = crypto.randomUUID();
+            const newCue: SrtSegment = {
+              id: newId,
+              index: insertPos + 1,
+              start: p.start,
+              end: p.end,
+              original: p.original,
+              translation: p.translation ?? '',
             } as SrtSegment;
             s.segments[newId] = newCue;
             s.order.push(newId);

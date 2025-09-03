@@ -117,7 +117,6 @@ export async function initPuppeteer({
       #subtitle.visible {
         transition: none !important;
         opacity: 1   !important;
-        transform: translateX(-50%) !important;
       }
     `,
   });

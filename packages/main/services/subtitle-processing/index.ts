@@ -81,7 +81,9 @@ export async function extractSubtitlesFromMedia({
     const isCancel =
       error.name === 'AbortError' ||
       (error instanceof Error && error.message === 'Operation cancelled') ||
-      /insufficient-credits|Insufficient credits/i.test(String(error?.message || '')) ||
+      /insufficient-credits|Insufficient credits/i.test(
+        String(error?.message || '')
+      ) ||
       signal.aborted;
     const creditCancel = /insufficient-credits|Insufficient credits/i.test(
       String(error?.message || '')
@@ -168,7 +170,7 @@ export async function translateSubtitlesFromSrt({
       }
     : undefined;
 
-  // Run translation-only pass
+  // Run translation pass
   const translatedSegments = await translatePass({
     segments,
     targetLang: targetLanguage,
@@ -177,7 +179,92 @@ export async function translateSubtitlesFromSrt({
     signal,
   });
 
-  // Build final SRT (dual mode keeps original + translation)
-  const out = buildSrt({ segments: translatedSegments, mode: 'dual' });
+  // Optionally run review pass (skip when target is 'original')
+  const reviewedSegments = translatedSegments;
+  if (targetLanguage !== 'original') {
+    try {
+      // Batch review with light context, mapped to REVIEW..FINAL progress
+      const { scaleProgress, Stage } = await import('./pipeline/progress.js');
+      const { default: pLimit } = await import('p-limit');
+      const { MAX_AI_PARALLEL } = await import(
+        '../../../shared/constants/runtime-config.js'
+      );
+      const { reviewTranslationBatch } = await import('./translator.js');
+
+      const total = translatedSegments.length;
+      const BATCH = 10;
+      const limit = pLimit(Math.min(4, MAX_AI_PARALLEL));
+      const work: Promise<void>[] = [];
+      let done = 0;
+
+      for (let start = 0; start < total; start += BATCH) {
+        const end = Math.min(start + BATCH, total);
+        const contextBefore = translatedSegments.slice(
+          Math.max(0, start - 3),
+          start
+        );
+        const contextAfter = translatedSegments.slice(
+          end,
+          Math.min(end + 3, total)
+        );
+        const batch = {
+          segments: translatedSegments.slice(start, end),
+          startIndex: start,
+          endIndex: end,
+          targetLang: targetLanguage,
+          contextBefore,
+          contextAfter,
+        } as any;
+
+        const job = limit(async () => {
+          if (signal?.aborted)
+            throw new DOMException('Operation cancelled', 'AbortError');
+          const reviewed = await reviewTranslationBatch({
+            batch,
+            operationId,
+            signal,
+          });
+          // splice results back in place
+          for (let i = 0; i < reviewed.length; i++) {
+            reviewedSegments[start + i] = reviewed[i];
+          }
+        })
+          .catch(err => {
+            // If cancelled or credits exhausted, propagate
+            if (
+              err?.name === 'AbortError' ||
+              String(err?.message).includes('insufficient-credits')
+            ) {
+              throw err;
+            }
+            // Otherwise, keep original translated segs
+          })
+          .finally(() => {
+            done += Math.min(BATCH, end - start);
+            const pctLocal = Math.round((done / total) * 100);
+            const percent = scaleProgress(pctLocal, Stage.REVIEW, Stage.FINAL);
+            const stage = `Reviewing ${done}/${total}`;
+            const partialResult = buildSrt({
+              segments: reviewedSegments,
+              mode: 'dual',
+            });
+            (adaptedProgress ?? progressCallback)?.({
+              percent,
+              stage,
+              partialResult,
+              current: done,
+              total,
+            });
+          });
+        work.push(job);
+      }
+
+      await Promise.all(work);
+    } catch {
+      // If review fails (network, etc.), continue with translatedSegments
+    }
+  }
+
+  const out = buildSrt({ segments: reviewedSegments, mode: 'dual' });
   return { subtitles: out };
 }

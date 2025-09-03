@@ -55,12 +55,11 @@ function initializeSubtitleDisplay() {
       );
       subtitleEl = document.createElement('div');
       subtitleEl.id = 'subtitle';
+      // Minimal inline styles; the dynamic class will control layout
       subtitleEl.style.position = 'absolute';
       subtitleEl.style.bottom = '10px';
-      subtitleEl.style.left = '50%';
-      subtitleEl.style.transform = 'translateX(-50%)';
       subtitleEl.style.textAlign = 'center';
-      subtitleEl.style.width = '90%';
+      subtitleEl.style.pointerEvents = 'none';
       rootElement.appendChild(subtitleEl);
     }
     // Apply default preset on init
@@ -74,10 +73,8 @@ function initializeSubtitleDisplay() {
       subtitleEl.id = 'subtitle';
       subtitleEl.style.position = 'absolute';
       subtitleEl.style.bottom = '10px';
-      subtitleEl.style.left = '50%';
-      subtitleEl.style.transform = 'translateX(-50%)';
       subtitleEl.style.textAlign = 'center';
-      subtitleEl.style.width = '90%';
+      subtitleEl.style.pointerEvents = 'none';
       document.body.appendChild(subtitleEl);
     }
     applyPresetStyles(subtitleEl);

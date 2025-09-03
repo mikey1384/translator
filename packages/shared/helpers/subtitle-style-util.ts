@@ -37,7 +37,9 @@ export function getSubtitleStyles(opts: {
   const outlineRgba = assColorToRgba(style.outlineColor);
   const shadowRgba = assColorToRgba(style.backColor);
 
-  const position: 'fixed' | 'absolute' = 'fixed';
+  // In fullscreen, use fixed to span the viewport with side padding.
+  // In docked mode, position absolutely within the video wrapper so width matches the video.
+  const position: 'fixed' | 'absolute' = isFullScreen ? 'fixed' : 'absolute';
 
   let bottomValue: string;
   if (isMultiLine) {
@@ -46,8 +48,7 @@ export function getSubtitleStyles(opts: {
     bottomValue = isFullScreen ? '10%' : '5%';
   }
 
-  const maxWidth = '100%';
-  const right: string | number | undefined = isFullScreen ? '5%' : undefined;
+  const maxWidth = isFullScreen ? '100%' : '100%';
 
   let textShadow = 'none';
   let backgroundColor = 'transparent';
@@ -107,8 +108,7 @@ export function getSubtitleStyles(opts: {
   return css`
     position: ${position};
     bottom: ${bottomValue};
-    left: ${isFullScreen ? '5%' : '50%'};
-    right: ${right};
+    ${isFullScreen ? 'left: 5%; right: 5%;' : 'left: 0; right: 0;'}
     padding: ${containerPadding};
     background-color: ${backgroundColor};
     color: ${primaryRgba};
@@ -131,10 +131,10 @@ export function getSubtitleStyles(opts: {
     opacity: 0;
     transition: ${transitionValue};
     max-width: ${maxWidth};
+    width: ${isFullScreen ? 'auto' : '100%'};
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
-    ${!isFullScreen ? 'transform: translateX(-50%);' : ''}
     ${isFullScreen ? 'margin: 0 auto;' : ''}
 
     &.visible {
