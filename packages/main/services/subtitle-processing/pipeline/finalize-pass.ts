@@ -1,7 +1,7 @@
 import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
 import { FileManager } from '../../file-manager.js';
 import { GenerateSubtitlesFullResult } from '../types.js';
-// Keep segments as Whisper produced; avoid gap extension or translation filling.
+
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { Stage, scaleProgress } from './progress.js';
 

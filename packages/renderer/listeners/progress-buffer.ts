@@ -48,6 +48,28 @@ function flush() {
     // Route updates based on operationId prefix
     const isTranscribe = operationId?.startsWith('transcribe-');
     const isTranslate = operationId?.startsWith('translate-');
+    const looksLikeReview = /\breviewing\b/i.test(stage ?? '');
+    const isTranslateMissing = operationId?.startsWith('translate-missing-');
+
+    // Apply translation deltas as early as possible to avoid being
+    // short-circuited by completion guards or racey progress ordering.
+    if (partialResult?.trim()) {
+      const isTranslateRelated =
+        isTranslate || isTranslateMissing || looksLikeReview;
+      if (isTranslateRelated) {
+        if (percent >= 100 || Date.now() - lastParsed > 1000) {
+          try {
+            const partSegs = parseSrt(partialResult);
+            if (partSegs.length) {
+              useSubStore.getState().applyTranslations(partSegs);
+            }
+          } catch {
+            // Ignore parse/apply errors for partial updates
+          }
+          lastParsed = Date.now();
+        }
+      }
+    }
 
     if (isTranslate) {
       const active = useTaskStore.getState().translation.id;
@@ -158,22 +180,7 @@ function flush() {
     // Apply partial SRT updates during processing. For translation flows, patch translations in-place
     // by matching timecodes to avoid full-store reloads; for transcription, keep existing behavior.
     if (partialResult?.trim()) {
-      const isTranslateMissing = operationId?.startsWith('translate-missing-');
-      const isTranslateRelated = isTranslate || isTranslateMissing;
-      if (isTranslateRelated) {
-        // Throttle heavy parsing to at most once per 1s unless completion
-        if (isComplete || Date.now() - lastParsed > 1000) {
-          try {
-            const partSegs = parseSrt(partialResult);
-            if (partSegs.length) {
-              useSubStore.getState().applyTranslations(partSegs);
-            }
-          } catch {
-            // Ignore parse/apply errors for partial updates
-          }
-          lastParsed = Date.now();
-        }
-      } else if (isTranscribe) {
+      if (isTranscribe) {
         // Transcription flow: append only new cues based on running SRT length
         if (isComplete || Date.now() - lastParsed > 1500) {
           try {

@@ -91,29 +91,54 @@ export async function translateBatch({
 
   const MAX_RETRIES = 3;
   let retryCount = 0;
-  const batchContextPrompt = batch.segments.map((segment, idx) => {
-    const absoluteIndex = batch.startIndex + idx;
-    return `Line ${absoluteIndex + 1}: ${segment.original}`;
-  });
+  const formatLine = (absIndex: number, text: string) =>
+    `Line ${absIndex}: ${text}`;
+
+  const beforeList = batch.contextBefore || [];
+  const afterList = batch.contextAfter || [];
+  const beforeCtx = beforeList
+    .map((segment, i) =>
+      formatLine(
+        batch.startIndex - (beforeList.length - i) + 1,
+        segment.original ?? ''
+      )
+    )
+    .join('\n');
+  const afterCtx = afterList
+    .map((segment, i) =>
+      formatLine(batch.endIndex + i + 1, segment.original ?? '')
+    )
+    .join('\n');
+
+  const toTranslate = batch.segments
+    .map((segment, idx) =>
+      formatLine(batch.startIndex + idx + 1, segment.original ?? '')
+    )
+    .join('\n');
 
   const combinedPrompt = `
-You are a professional subtitle translator. Translate the following subtitles
-into natural, fluent ${targetLang}.
+You are a professional subtitle translator. Translate the following subtitles into natural, fluent ${targetLang}.
 
-Here are the subtitles to translate:
-${batchContextPrompt.join('\n')}
+CONTEXT BEFORE (do not translate):
+${beforeCtx || '(none)'}
 
-Translate EACH line individually, preserving the line order.
+SUBTITLES TO TRANSLATE:
+${toTranslate}
+
+CONTEXT AFTER (do not translate):
+${afterCtx || '(none)'}
+
+Instructions:
+- Translate EACH listed line individually, preserving the line order.
 - Never skip, omit, or merge lines.
 - Always finish translating the given line and do NOT defer to the next line.
-- You may leave a line blank only if that entire thought (not just a few repeated words) is already in the previous line.
-- Provide exactly one translation for every line, in the same order, 
-  prefixed by "Line X:" where X is the line number.
-- If you're unsure, err on the side of literal translations.
-- For languages with different politeness levels, ALWAYS use polite/formal style for narrations.
-IMPORTANT: Use the EXACT line numbers shown above (do NOT renumber or restart at 1). Output exactly ${
-    batch.segments.length
-  } lines, each starting with "Line <ABS_NUMBER>: " and nothing else.
+- If unsure, prefer literal over creative.
+- Use a polite/formal register unless clearly conversational.
+
+Output format (exactly ${batch.segments.length} lines):
+- Prefix every line with "@@SUB_LINE@@ <ABS_NUMBER>: ".
+  Example: @@SUB_LINE@@ ${batch.startIndex + 1}: <your translation here>
+  Use the exact ABS_NUMBER shown above. No extra commentary.
 `;
 
   while (retryCount < MAX_RETRIES) {

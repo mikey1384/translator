@@ -55,12 +55,11 @@ export default function GenerateSubtitles() {
 
   // Task state
   const { translation, transcription } = useTaskStore();
-  const hasSubsMounted = useSubStore(s => s.order.length > 0);
 
   // Subtitle state
   const subStore = useSubStore();
-  const isTranscriptionDone =
-    Boolean(transcription.isCompleted) || hasSubsMounted;
+  // Decouple transcription completion from subtitle presence
+  const isTranscriptionDone = Boolean(transcription.isCompleted);
   const isTranscribing =
     !!transcription.inProgress &&
     (transcription.id?.startsWith('transcribe-') ?? false);

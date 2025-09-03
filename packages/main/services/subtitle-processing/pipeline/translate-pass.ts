@@ -41,6 +41,9 @@ export async function translatePass({
   }));
   const totalSegments = segmentsInProcess.length;
   const TRANSLATION_BATCH_SIZE = 10;
+  // Provide local textual context around each batch for correctness
+  const CONTEXT_BEFORE = 12;
+  const CONTEXT_AFTER = 12;
 
   const CONCURRENT_TRANSLATIONS = Math.min(4, MAX_AI_PARALLEL);
   const limit = pLimit(CONCURRENT_TRANSLATIONS);
@@ -62,8 +65,14 @@ export async function translatePass({
       totalSegments
     );
     const currentBatchOriginals = segmentsInProcess.slice(batchStart, batchEnd);
-    const contextBefore: SrtSegment[] = [];
-    const contextAfter: SrtSegment[] = [];
+    const contextBefore: SrtSegment[] = segmentsInProcess.slice(
+      Math.max(0, batchStart - CONTEXT_BEFORE),
+      batchStart
+    );
+    const contextAfter: SrtSegment[] = segmentsInProcess.slice(
+      batchEnd,
+      Math.min(totalSegments, batchEnd + CONTEXT_AFTER)
+    );
 
     const promise = limit(() =>
       translateBatch({

@@ -2,8 +2,6 @@ import log from 'electron-log';
 import crypto from 'crypto';
 import { SrtSegment } from '@shared-types/app';
 import {
-  NO_SPEECH_PROB_THRESHOLD,
-  LOG_PROB_THRESHOLD,
   MAX_FINAL_SEGMENT_DURATION_SEC,
   MIN_FINAL_SEGMENT_DURATION_SEC,
   TARGET_FINAL_SEGMENT_DURATION_SEC,
@@ -58,8 +56,6 @@ export async function transcribeChunk({
       for (const seg of segments) {
         // Basic quality gate (still permissive to match Whisper closely)
         const ok =
-          (seg?.no_speech_prob ?? 1) < NO_SPEECH_PROB_THRESHOLD &&
-          (seg?.avg_logprob ?? 0) > LOG_PROB_THRESHOLD &&
           typeof seg?.start === 'number' &&
           typeof seg?.end === 'number' &&
           seg.end > seg.start;

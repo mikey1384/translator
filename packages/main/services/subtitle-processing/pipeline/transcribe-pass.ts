@@ -20,7 +20,7 @@ import {
   MAX_CHUNK_DURATION_SEC,
   MIN_CHUNK_DURATION_SEC,
   MERGE_GAP_SEC,
-  TRANSCRIPTION_BATCH_SIZE,
+  MAX_PROMPT_CHARS,
 } from '../constants.js';
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
@@ -142,77 +142,76 @@ export async function transcribePass({
       stage: `Starting transcription of ${chunks.length} chunks...`,
     });
 
+    // Maintain a rolling, char-capped textual context for prompts
     let batchContext = '';
 
+    // Process chunks sequentially for maximum contextual correctness
     let done = 0;
-    for (let b = 0; b < chunks.length; b += TRANSCRIPTION_BATCH_SIZE) {
+    for (const meta of chunks) {
       throwIfAborted(signal);
-      const slice = chunks.slice(b, b + TRANSCRIPTION_BATCH_SIZE);
 
-      log.info(
-        `[${operationId}] Processing transcription batch ${Math.ceil(
-          (b + slice.length) / TRANSCRIPTION_BATCH_SIZE
-        )}/${Math.ceil(chunks.length / TRANSCRIPTION_BATCH_SIZE)} (Chunks ${
-          b + 1
-        }-${b + slice.length})`
-      );
-
-      const promptForSlice = buildPrompt(batchContext);
-
-      const segArraysPromises = slice.map(async meta => {
-        throwIfAborted(signal);
-        if (meta.end <= meta.start) {
-          log.warn(
-            `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(
-              2
-            )}-${meta.end.toFixed(2)}`
-          );
-          return [];
-        }
-
-        const chunkAudioPath = mkTempAudioName(
-          path.join(tempDir, `chunk_${meta.index}_${operationId}`)
+      if (meta.end <= meta.start) {
+        log.warn(
+          `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(
+            2
+          )}-${meta.end.toFixed(2)}`
         );
-        createdChunkPaths.push(chunkAudioPath);
+        done++;
+        continue;
+      }
 
-        try {
-          await extractAudioSegment(ffmpeg, {
-            input: audioPath,
-            output: chunkAudioPath,
-            start: meta.start,
-            duration: meta.end - meta.start,
-            operationId: operationId ?? '',
-            signal,
-          });
+      const promptForChunk = buildPrompt(batchContext);
 
-          if (signal?.aborted) throw new Error('Cancelled');
+      const chunkAudioPath = mkTempAudioName(
+        path.join(tempDir, `chunk_${meta.index}_${operationId}`)
+      );
+      createdChunkPaths.push(chunkAudioPath);
 
-          const segs = await transcribeChunk({
-            chunkIndex: meta.index,
-            chunkPath: chunkAudioPath,
-            startTime: meta.start,
-            signal,
-            operationId: operationId ?? '',
-            promptContext: promptForSlice,
-          });
+      try {
+        await extractAudioSegment(ffmpeg, {
+          input: audioPath,
+          output: chunkAudioPath,
+          start: meta.start,
+          duration: meta.end - meta.start,
+          operationId: operationId ?? '',
+          signal,
+        });
 
-          if (signal?.aborted) throw new Error('Cancelled');
+        if (signal?.aborted) throw new Error('Cancelled');
 
-          return segs;
-        } catch (chunkError: any) {
-          // If credits ran out, abort the entire transcription flow.
-          if (
-            chunkError?.message === 'insufficient-credits' ||
-            /Insufficient credits/i.test(String(chunkError?.message || chunkError))
-          ) {
-            throw chunkError;
-          }
-          if (chunkError?.message === 'Cancelled') {
-            log.info(
-              `[${operationId}] Chunk ${meta.index} processing cancelled.`
-            );
-            return [];
-          }
+        const segs = await transcribeChunk({
+          chunkIndex: meta.index,
+          chunkPath: chunkAudioPath,
+          startTime: meta.start,
+          signal,
+          operationId: operationId ?? '',
+          promptContext: promptForChunk,
+        });
+
+        if (signal?.aborted) throw new Error('Cancelled');
+
+        const ordered = (segs || []).slice().sort((a, b) => a.start - b.start);
+        overallSegments.push(...ordered);
+
+        // Update rolling context with the new text, capped by MAX_PROMPT_CHARS
+        const orderedText = ordered.map(s => s.original).join(' ');
+        batchContext = buildPrompt((batchContext + ' ' + orderedText).trim());
+      } catch (chunkError: any) {
+        // If credits ran out, abort the entire transcription flow.
+        if (
+          chunkError?.message === 'insufficient-credits' ||
+          /Insufficient credits/i.test(
+            String(chunkError?.message || chunkError)
+          )
+        ) {
+          throw chunkError;
+        }
+        if (chunkError?.message === 'Cancelled') {
+          log.info(
+            `[${operationId}] Chunk ${meta.index} processing cancelled.`
+          );
+          // Respect cancellation by propagating after progress update below
+        } else {
           log.error(
             `[${operationId}] Error processing chunk ${meta.index}:`,
             chunkError?.message || chunkError
@@ -222,37 +221,10 @@ export async function transcribePass({
             stage: `Error in chunk ${meta.index}`,
             error: chunkError?.message || String(chunkError),
           });
-          return [];
         }
-      });
-
-      // Process the batch concurrently
-      const segArraysSettled = await Promise.allSettled(segArraysPromises);
-      // If any chunk failed due to insufficient credits, cancel the process
-      const outOfCredits = segArraysSettled.some(r =>
-        r.status === 'rejected' &&
-        ((r.reason &&
-          (r.reason.message === 'insufficient-credits' ||
-            /Insufficient credits/i.test(String(r.reason.message || r.reason))))
-        )
-      );
-      if (outOfCredits) {
-        throw new Error('insufficient-credits');
       }
-      const segArrays: SrtSegment[][] = segArraysSettled.map(r =>
-        r.status === 'fulfilled' ? r.value : []
-      );
-      const thisBatchSegments = segArrays
-        .flat()
-        .sort((a, b) => a.start - b.start);
 
-      overallSegments.push(...thisBatchSegments);
-
-      const orderedText = thisBatchSegments.map(s => s.original).join(' ');
-      batchContext += ' ' + orderedText;
-      batchContext = buildPrompt(batchContext);
-
-      done += slice.length;
+      done++;
       // Map local transcription progress (0..100) to global 10..95 range
       const p = 10 + Math.round((done / chunks.length) * 85);
 
@@ -291,7 +263,6 @@ export async function transcribePass({
     );
     overallSegments.length = 0;
     overallSegments.push(...filteredSegments);
-    // Keep Whisper timings exactly; skip trimming trailing silence.
 
     overallSegments.sort((a, b) => a.start - b.start);
 
@@ -369,8 +340,10 @@ export async function transcribePass({
   }
 
   function buildPrompt(history: string) {
-    const words = history.trim().split(/\s+/).filter(Boolean);
-    const lastFive = words.slice(-5).join(' ');
-    return lastFive;
+    // Normalize whitespace but keep non-Latin scripts intact; cap by characters
+    const normalized = (history || '').replace(/\s{2,}/g, ' ').trim();
+    if (!normalized) return '';
+    if (normalized.length <= MAX_PROMPT_CHARS) return normalized;
+    return normalized.slice(-MAX_PROMPT_CHARS);
   }
 }
