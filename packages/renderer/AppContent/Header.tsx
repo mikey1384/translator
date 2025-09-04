@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { useUIStore } from '../state';
+import { useUIStore, useCreditStore } from '../state';
 import { logButton } from '../utils/logger';
 import LogoDisplay from '../components/LogoDisplay';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,11 @@ const settingsButton = css`
 export default function Header() {
   const { t } = useTranslation();
   const { showSettings, toggleSettings } = useUIStore();
+  const { hours } = useCreditStore();
+  const suffix =
+    typeof hours === 'number'
+      ? `(${Math.floor(hours).toLocaleString()}h)`
+      : undefined;
 
   return (
     <div className={headerRow}>
@@ -59,7 +64,7 @@ export default function Header() {
 
       {!showSettings && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
-          <CreditBalance />
+          <CreditBalance suffixText={suffix} />
           <button
             className={settingsButton}
             onClick={() => {
