@@ -439,10 +439,10 @@ REQUIREMENTS
 0) The initial translation draft may be incomplete or missing some lines. Please fill in any gaps accurately based on context.
 1) Prioritize smooth flow: Ensure translated caption segments connect naturally and logically, even if the original source text feels disjointed.
 2) Maintain structure: Output one line per input line, preserving the exact order and IDs without alterations.
-3) Be concise and natural: Refine for fluency without adding, omitting, or altering information from the source.
-4) Ensure consistency: Adhere to established terminology, pronouns, and contextual elements (e.g., CTX/CTX_TGT) throughout.
-5) Leverage expertise: Draw on your knowledge and experience to enhance translation quality while staying faithful to the source.
-6) Align with source order: Match the original text's sequence as closely as possible to avoid disorienting viewers during video playback.
+3) Refine for fluency without adding, omitting, or altering information from the source.
+4) Be mindful of the length of the original text. If the original text is long then the translation for that line should be long. If the original text is short, then the translation for that line should be short.
+5) Align with source order: Match the original text's sequence as closely as possible to avoid disorienting viewers during video playback.
+6) Leverage expertise: Draw on your knowledge and experience to enhance translation quality while staying faithful to the source.
 7) Optimize readability: Target CPS (characters per second) limits — Latin ≤ 17, CJK ≤ 13, Thai ≤ 15. If exceeded, compress phrasing succinctly; avoid modifying timestamps or splitting/merging cues.
 8) Handle duplicates softly: For adjacent lines with essentially identical content, use the same optimized text for both IDs instead of variations.
 
@@ -458,10 +458,7 @@ Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}:
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: prompt },
       ],
-      model: 'gpt-5',
-      reasoning: {
-        effort: 'medium',
-      },
+      model: 'gpt-4.1',
       signal,
       operationId,
       retryAttempts: 3,
