@@ -63,11 +63,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       `https://api.stage5.tools/credits/${getDeviceId()}`,
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
-    sendNetLog('info', `GET /credits -> ${response.status}`, {
-      url: 'https://api.stage5.tools/credits',
-      method: 'GET',
-      status: response.status,
-    });
+    // Intentionally avoid logging successful GET /credits to reduce noise in the UI log modal
 
     const credits = Number(response.data?.creditBalance ?? 0);
     const perHour = Math.max(1, Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800);
