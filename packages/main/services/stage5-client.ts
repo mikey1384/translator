@@ -42,14 +42,12 @@ export async function transcribe({
   promptContext,
   model = AI_MODELS.WHISPER,
   signal,
-  isNewPricing = true,
 }: {
   filePath: string;
   language?: string;
   promptContext?: string;
   model?: string;
   signal?: AbortSignal;
-  isNewPricing?: boolean;
 }) {
   // Dev: simulate zero credits without hitting the network
   if (process.env.FORCE_ZERO_CREDITS === '1') {
@@ -72,7 +70,6 @@ export async function transcribe({
   }
 
   fd.append('model', model);
-  fd.append('isNewPricing', String(isNewPricing));
 
   try {
     // Step 1: Submit the transcription job
@@ -192,13 +189,11 @@ export async function translate({
   model = AI_MODELS.GPT,
   temperature = 0.4,
   signal,
-  isNewPricing = true,
 }: {
   messages: any[];
   model?: string;
   temperature?: number;
   signal?: AbortSignal;
-  isNewPricing?: boolean;
 }) {
   // Dev: simulate zero credits without hitting the network
   if (process.env.FORCE_ZERO_CREDITS === '1') {
@@ -212,7 +207,7 @@ export async function translate({
   try {
     const response = await axios.post(
       `${API}/translate`,
-      { messages, model, temperature, isNewPricing },
+      { messages, model, temperature },
       {
         headers: headers(),
         signal, // Pass the AbortSignal to axios

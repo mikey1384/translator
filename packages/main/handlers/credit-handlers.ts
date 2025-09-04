@@ -58,9 +58,9 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   }
 
   try {
-    // Get credit balance from the API
+    // Get credit balance from the API (server returns creditBalance and updatedAt)
     const response = await axios.get(
-      `https://api.stage5.tools/credits/${getDeviceId()}?isNewPricing=true`,
+      `https://api.stage5.tools/credits/${getDeviceId()}`,
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
     sendNetLog('info', `GET /credits -> ${response.status}`, {
@@ -69,24 +69,18 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       status: response.status,
     });
 
-    if (
-      response.data &&
-      typeof response.data.creditBalance === 'number' &&
-      typeof response.data.hoursBalance === 'number'
-    ) {
-      const { creditBalance, hoursBalance, creditsPerHour } = response.data;
-      store.set('balanceCredits', creditBalance); // Update cache
-      store.set('creditsPerHour', creditsPerHour); // Cache the conversion rate
-      return {
-        success: true,
-        creditBalance,
-        balanceHours: hoursBalance, // Use API's calculation directly
-        creditsPerHour,
-        updatedAt: new Date().toISOString(),
-      };
-    } else {
-      throw new Error('Invalid response format from credit balance API');
-    }
+    const credits = Number(response.data?.creditBalance ?? 0);
+    const perHour = Math.max(1, Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800);
+    const hours = credits / perHour;
+    store.set('balanceCredits', credits);
+    store.set('creditsPerHour', perHour); // Cache the conversion rate
+    return {
+      success: true,
+      creditBalance: credits,
+      balanceHours: hours,
+      creditsPerHour: perHour,
+      updatedAt: new Date().toISOString(),
+    };
   } catch (err: any) {
     if (err.response) {
       sendNetLog(
@@ -107,7 +101,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     }
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', 100_000);
+    const cachedPerHour = store.get('creditsPerHour', 2800);
     return {
       success: false,
       error: err.message,
@@ -348,10 +342,10 @@ export async function handleStripeSuccess(
     log.info(`[credit-handler] Processing successful payment: ${sessionId}`);
 
     // Refresh the credit balance from the server with retry logic for webhook race conditions
-    let response = null;
+    let response: any = null;
     for (let i = 0; i < 3; i++) {
       response = await axios.get(
-        `https://api.stage5.tools/credits/${getDeviceId()}?isNewPricing=true`,
+        `https://api.stage5.tools/credits/${getDeviceId()}`,
         { headers: { Authorization: `Bearer ${getDeviceId()}` } }
       );
       if (response.data?.creditBalance !== undefined) break;
@@ -361,26 +355,20 @@ export async function handleStripeSuccess(
       await new Promise(r => setTimeout(r, 2_000)); // wait 2 seconds
     }
 
-    if (
-      response?.data &&
-      typeof response.data.creditBalance === 'number' &&
-      typeof response.data.hoursBalance === 'number'
-    ) {
-      const { creditBalance, hoursBalance, creditsPerHour } = response.data;
-      store.set('balanceCredits', creditBalance);
-      store.set('creditsPerHour', creditsPerHour); // Cache the conversion rate
-      log.info(
-        `[credit-handler] Updated credit balance: ${creditBalance} credits (${hoursBalance} hours)`
-      );
+    if (response?.data && typeof response.data.creditBalance === 'number') {
+      const credits = Number(response.data.creditBalance) || 0;
+      const perHour = Math.max(1, Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800);
+      const hours = credits / perHour;
+      store.set('balanceCredits', credits);
+      store.set('creditsPerHour', perHour);
+      log.info(`[credit-handler] Updated credit balance: ${credits} credits (${hours} hours)`);
 
-      // Notify the renderer process about the updated balance using API's hours calculation
       const mainWindow = BrowserWindow.getAllWindows()[0];
       if (mainWindow) {
         mainWindow.webContents.send('credits-updated', {
-          creditBalance,
-          hoursBalance,
+          creditBalance: credits,
+          hoursBalance: hours,
         });
-        // Emit checkout-confirmed to indicate the payment processing is complete
         mainWindow.webContents.send('checkout-confirmed');
       }
     }
