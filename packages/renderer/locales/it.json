@@ -92,8 +92,24 @@
     "generating": "Generazione in corso...",
     "generateNow": "Genera sottotitoli ora",
     "translation": "Traduzione",
+    "improveTranscription": "Migliora trascrizione",
+    "improveTranslation": "Migliora traduzione",
     "chooseSrtFile": "Scegli file SRT",
     "cancel_confirmation": "Sei sicuro di voler annullare il processo di traduzione dei sottotitoli? Qualsiasi progresso sarà perso e dovrai ricominciare."
+  },
+  "panel": {
+    "gaps": {
+      "title": "Intervalli",
+      "none": "Nessun grande intervallo rilevato"
+    },
+    "confidence": {
+      "title": "Bassa confidenza",
+      "none": "Nessuna riga a bassa confidenza",
+      "count": "{{count}} righe"
+    }
+  },
+  "progress": {
+    "beginningReview": "Avvio della revisione..."
   },
   "editSubtitles": {
     "title": "Modifica sottotitoli",

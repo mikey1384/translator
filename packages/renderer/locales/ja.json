@@ -92,8 +92,24 @@
     "generating": "生成中...",
     "generateNow": "今すぐ字幕を生成",
     "translation": "翻訳",
+    "improveTranscription": "文字起こしを改善",
+    "improveTranslation": "翻訳を改善",
     "chooseSrtFile": "SRTファイルを選択",
     "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。"
+  },
+  "panel": {
+    "gaps": {
+      "title": "ギャップ",
+      "none": "大きなギャップはありません"
+    },
+    "confidence": {
+      "title": "信頼度が低い",
+      "none": "低信頼の行はありません",
+      "count": "{{count}} 行"
+    }
+  },
+  "progress": {
+    "beginningReview": "レビューを開始しています..."
   },
   "editSubtitles": {
     "title": "字幕を編集",

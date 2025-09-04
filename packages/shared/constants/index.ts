@@ -14,7 +14,8 @@ export const colors = {
   primaryLight: '#4895ef',
   primaryDark: '#3a0ca3',
   secondary: '#3f37c9',
-  success: '#4cc9f0',
+  // Use a deeper, more neutral green for success actions
+  success: '#28a745',
   info: '#4895ef',
   warning: '#f72585',
   danger: '#e63946',

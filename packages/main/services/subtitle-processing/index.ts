@@ -199,7 +199,7 @@ export async function translateSubtitlesFromSrt({
       // Announce review start before the first batch arrives
       {
         const percent = scaleProgress(0, Stage.REVIEW, Stage.FINAL);
-        const stage = 'Beginning review...';
+        const stage = '__i18n__:beginning_review';
         const partialResult = buildSrt({ segments: reviewedSegments, mode: 'dual' });
         (adaptedProgress ?? progressCallback)?.({
           percent,

@@ -250,6 +250,11 @@ function flush() {
         } catch {
           // Do nothing
         }
+        // Bridge gaps immediately after transcription completes so the editor
+        // has explicit placeholders users can click or fill.
+        try {
+          useSubStore.getState().bridgeGaps(3);
+        } catch {}
       }
       // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
       if (/cancel/.test(stageLower)) {

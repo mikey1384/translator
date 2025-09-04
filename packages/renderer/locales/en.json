@@ -106,8 +106,24 @@
     "generating": "Generating...",
     "generateNow": "Generate Subtitles Now",
     "translation": "Translation",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
     "chooseSrtFile": "Choose SRT File",
     "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "progress": {
+    "beginningReview": "Beginning review..."
   },
   "editSubtitles": {
     "title": "Edit Subtitles",

@@ -92,8 +92,24 @@
     "generating": "Gerando...",
     "generateNow": "Gerar Legendas Agora",
     "translation": "Tradução",
+    "improveTranscription": "Melhorar transcrição",
+    "improveTranslation": "Melhorar tradução",
     "chooseSrtFile": "Escolher Arquivo SRT",
     "cancel_confirmation": "Tem certeza que deseja cancelar o processo de tradução de legendas? Qualquer progresso será perdido e você precisará começar novamente."
+  },
+  "panel": {
+    "gaps": {
+      "title": "Lacunas",
+      "none": "Nenhuma lacuna grande detectada"
+    },
+    "confidence": {
+      "title": "Baixa confiança",
+      "none": "Nenhuma linha de baixa confiança",
+      "count": "{{count}} linhas"
+    }
+  },
+  "progress": {
+    "beginningReview": "Iniciando revisão..."
   },
   "editSubtitles": {
     "title": "Editar Legendas",

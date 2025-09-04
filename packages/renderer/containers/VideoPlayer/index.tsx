@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import GapList from './GapList';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
 import SpeedMenu from './SpeedMenu';
@@ -583,7 +584,7 @@ export default function VideoPlayer() {
         ].join(' ')}
         style={{ top: isFullScreen ? 0 : progressBarH }}
       >
-        {!isFullScreen && <div aria-hidden className={leftSpacerStyles} />}
+        {!isFullScreen && <GapList />}
         <div
           className={playerWrapperStyles()}
           onMouseEnter={() => {

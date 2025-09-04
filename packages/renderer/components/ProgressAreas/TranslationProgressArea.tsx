@@ -70,6 +70,9 @@ function translateBackendMessage(
       const total = parseInt(parts[4], 10);
       return t('progress.gapRepair', { iteration, done, total });
     }
+    case 'beginning_review': {
+      return t('progress.beginningReview');
+    }
     default:
       return stage; // Fallback to original
   }

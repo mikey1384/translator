@@ -92,8 +92,24 @@
     "generating": "Generando...",
     "generateNow": "Generar subtítulos ahora",
     "translation": "Traducción",
+    "improveTranscription": "Mejorar transcripción",
+    "improveTranslation": "Mejorar traducción",
     "chooseSrtFile": "Elegir archivo SRT",
     "cancel_confirmation": "¿Estás seguro de que quieres cancelar el proceso de traducción de subtítulos? Se perderá todo el progreso y tendrás que empezar de nuevo."
+  },
+  "panel": {
+    "gaps": {
+      "title": "Huecos",
+      "none": "No se detectaron huecos grandes"
+    },
+    "confidence": {
+      "title": "Baja confianza",
+      "none": "No se detectaron líneas de baja confianza",
+      "count": "{{count}} líneas"
+    }
+  },
+  "progress": {
+    "beginningReview": "Iniciando revisión..."
   },
   "editSubtitles": {
     "title": "Editar subtítulos",

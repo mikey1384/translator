@@ -420,160 +420,63 @@ export async function handleTranscribeOneLine(
     }
     const baseStart = Math.max(0, segment.start);
     const baseDur = Math.max(0.05, segment.end - segment.start);
-    const LONG_SEGMENT_SEC = 20;
+    const pad = 0.2;
+    const start = Math.max(0, baseStart - pad);
+    const duration = baseDur + pad * 2;
 
-    let transcriptText = '';
-    let segsOut: import('@shared-types/app').SrtSegment[] | undefined;
+    const baseName = mkTempAudioName(`${operationId}_slice_fill`);
+    tempAudioPath = path.isAbsolute(baseName)
+      ? baseName
+      : path.join(ffmpeg.tempDir, baseName);
 
-    if (baseDur >= LONG_SEGMENT_SEC) {
-      // Segmentation path using full pipeline on sliced audio
-      const pad = 0.2;
-      const start = Math.max(0, baseStart - pad);
-      const duration = baseDur + pad * 2;
+    event.sender.send('generate-subtitles-progress', {
+      percent: 10,
+      stage: 'Extracting audio segment...',
+      operationId,
+    });
+    await extractAudioSegment(ffmpeg, {
+      input: videoPath,
+      output: tempAudioPath,
+      start,
+      duration,
+      operationId,
+      signal: controller.signal,
+    });
 
-      const baseName = mkTempAudioName(`${operationId}_slice`);
-      tempAudioPath = path.isAbsolute(baseName)
-        ? baseName
-        : path.join(ffmpeg.tempDir, baseName);
+    event.sender.send('generate-subtitles-progress', {
+      percent: 30,
+      stage: 'Transcribing 1/1',
+      operationId,
+    });
 
-      event.sender.send('generate-subtitles-progress', {
-        percent: 10,
-        stage: 'Extracting audio segment...',
-        operationId,
-      });
-      await extractAudioSegment(ffmpeg, {
-        input: videoPath,
-        output: tempAudioPath,
-        start,
-        duration,
-        operationId,
-        signal: controller.signal,
-      });
-
-      event.sender.send('generate-subtitles-progress', {
-        percent: 30,
-        stage: 'Transcribing 1/1',
-        operationId,
-      });
-
-      const res = await transcribePass({
-        audioPath: tempAudioPath,
-        services: { ffmpeg },
-        progressCallback: p => {
-          const mapped = Math.min(95, Math.max(35, p.percent));
-          // Do NOT forward partialResult for one-line transcribe to avoid replacing the entire store
-          event.sender.send('generate-subtitles-progress', {
-            percent: mapped,
-            stage: p.stage,
-            current: p.current,
-            total: p.total,
-            operationId,
-          });
-        },
-        operationId,
-        signal: controller.signal,
-      });
-      const offset = start;
-      segsOut = res.segments.map(s => ({
-        ...s,
-        start: s.start + offset,
-        end: s.end + offset,
-      })) as any;
-      transcriptText = (segsOut || [])
-        .map(s => String((s as any).original ?? ''))
-        .join(' ')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-    } else {
-      // Short segment: direct whisper with small padding retries
-      const paddings = [0, 0.3, 0.6];
-      for (let i = 0; i < paddings.length; i++) {
-        const pad = paddings[i];
-        const start = Math.max(0, baseStart - pad);
-        const duration = baseDur + pad * 2;
-
-        if (tempAudioPath) {
-          try {
-            await fs.unlink(tempAudioPath);
-          } catch {
-            // Do nothing
-          }
-          tempAudioPath = null;
-        }
-        const baseName = mkTempAudioName(`${operationId}_seg_${i}`);
-        tempAudioPath = path.isAbsolute(baseName)
-          ? baseName
-          : path.join(ffmpeg.tempDir, baseName);
-
+    const res = await transcribePass({
+      audioPath: tempAudioPath,
+      services: { ffmpeg },
+      progressCallback: p => {
+        const mapped = Math.min(95, Math.max(35, p.percent));
+        // Do NOT forward partialResult for one-line transcribe to avoid replacing the entire store
         event.sender.send('generate-subtitles-progress', {
-          percent: 10 + i * 10,
-          stage: 'Extracting audio segment...',
+          percent: mapped,
+          stage: p.stage,
+          current: p.current,
+          total: p.total,
           operationId,
         });
-        await extractAudioSegment(ffmpeg, {
-          input: videoPath,
-          output: tempAudioPath,
-          start,
-          duration,
-          operationId,
-          signal: controller.signal,
-        });
-
-        event.sender.send('generate-subtitles-progress', {
-          percent: 25 + i * 20,
-          stage: 'Transcribing 1/1',
-          operationId,
-        });
-        // Retry the network transcription up to 3 attempts before moving on
-        const resp: any = await (async () => {
-          const maxAttempts = 3;
-          let lastErr: any = null;
-          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            if (controller.signal?.aborted) {
-              throw new DOMException('Operation cancelled', 'AbortError');
-            }
-            try {
-              return await stage5Client.transcribe({
-                filePath: tempAudioPath,
-                promptContext,
-                signal: controller.signal,
-              });
-            } catch (err: any) {
-              if (
-                err?.name === 'AbortError' ||
-                err?.message === 'insufficient-credits' ||
-                /Insufficient credits/i.test(String(err?.message || err))
-              ) {
-                throw err;
-              }
-              lastErr = err;
-              log.warn(
-                `[${operationId}] One-line transcription attempt ${attempt}/${maxAttempts} failed: ${String(
-                  err?.message || err
-                )}`
-              );
-              if (attempt < maxAttempts) {
-                await new Promise(r => setTimeout(r, attempt * 300));
-                continue;
-              }
-            }
-          }
-          if (lastErr) throw lastErr;
-          return null;
-        })();
-        if (Array.isArray(resp?.segments) && resp.segments.length > 0) {
-          transcriptText = resp.segments
-            .map((s: any) => String(s?.text ?? ''))
-            .join(' ');
-        } else if (Array.isArray(resp?.words)) {
-          transcriptText = resp.words
-            .map((w: any) => String(w?.word ?? ''))
-            .join(' ');
-        }
-        transcriptText = (transcriptText || '').replace(/\s{2,}/g, ' ').trim();
-        if (transcriptText) break;
-      }
-    }
+      },
+      operationId,
+      signal: controller.signal,
+    });
+    const offset = start;
+    const segsOut = res.segments.map(s => ({
+      ...s,
+      start: s.start + offset,
+      end: s.end + offset,
+    })) as any;
+    const transcriptText = (segsOut || [])
+      .map(s => String((s as any).original ?? ''))
+      .join(' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,

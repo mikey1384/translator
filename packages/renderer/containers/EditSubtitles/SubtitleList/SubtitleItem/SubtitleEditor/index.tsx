@@ -141,17 +141,51 @@ export default function SubtitleEditor({
           id,
           segs.map(s => ({ start: s.start, end: s.end, original: s.original }))
         );
+        // After replacing with multiple segments, immediately bridge any gaps
+        try {
+          useSubStore.getState().bridgeGaps(3);
+        } catch {}
       } else {
         const text = (res as any)?.transcript?.trim();
         if (typeof text === 'string' && text.length > 0) {
           actions.update({ original: text });
         }
+        // Even if only text was updated, run a quick bridge to ensure placeholders exist
+        try {
+          useSubStore.getState().bridgeGaps(3);
+        } catch {}
       }
     } catch (err) {
       console.error('[SubtitleEditor] single-line transcribe error:', err);
     } finally {
       setIsTranscribingOne(false);
     }
+  }
+
+  // Improve transcription by expanding this cue to bridge between its
+  // neighbors, clearing existing text, then running the same transcribe flow.
+  async function handleImproveTranscription() {
+    if (!videoPath || !subtitle) return;
+    // Determine neighbor-aware window
+    const store = useSubStore.getState();
+    const order = store.order;
+    const idx = order.indexOf(id);
+    const prev = idx > 0 ? store.segments[order[idx - 1]] : undefined;
+    const next = idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
+    const newStart = Math.max(0, typeof prev?.end === 'number' ? prev.end : subtitle.start);
+    const newEnd = typeof next?.start === 'number' ? next.start : subtitle.end;
+
+    // If window is invalid or tiny, fall back to simple path
+    if (!(newEnd - newStart > 0.05)) {
+      await handleTranscribeThisLine();
+      return;
+    }
+
+    // Clear current text and expand the cue window to bridge neighbors
+    actions.update({ start: newStart, end: newEnd, original: '', translation: '' });
+
+    // Reuse the same transcribe flow (now using expanded times and empty text)
+    await handleTranscribeThisLine();
   }
 
   async function handleTranslateOneLine() {
@@ -231,6 +265,18 @@ export default function SubtitleEditor({
       });
     } finally {
       setIsTranslatingOne(false);
+    }
+  }
+
+  async function handleImproveTranslation() {
+    if (!subtitle?.original?.trim()) return;
+    if (useTaskStore.getState().transcription.inProgress) return;
+    try {
+      // Clear current translation so user sees fresh result intent
+      actions.update({ translation: '' });
+      await handleTranslateOneLine();
+    } catch (e) {
+      // no-op, underlying handler logs
     }
   }
 
@@ -372,14 +418,68 @@ export default function SubtitleEditor({
         </div>
       </div>
 
-      <SubtitleEditTextarea
-        value={subtitle.original}
-        searchTerm={searchText || ''}
-        onChange={v => actions.update({ original: v })}
-        rows={4}
-        placeholder={t('editSubtitles.item.subtitlePlaceholder')}
-        readOnly={editingLocked}
-      />
+      <div
+        className={css`
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        `}
+      >
+        <div
+          className={css`
+            flex: 1 1 auto;
+            min-width: 0;
+          `}
+        >
+          <SubtitleEditTextarea
+            value={subtitle.original}
+            searchTerm={searchText || ''}
+            onChange={v => actions.update({ original: v })}
+            rows={4}
+            placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+            readOnly={editingLocked}
+          />
+        </div>
+        {(!subtitle.original || !subtitle.original.trim()) && videoPath && (
+          <div
+            className={css`
+              display: flex;
+              align-items: center;
+            `}
+          >
+            <Button
+              variant="success"
+              size="lg"
+              onClick={handleTranscribeThisLine}
+              disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
+              isLoading={isTranscribingOne}
+              title={t('input.transcribeOnly', 'Transcribe Audio')}
+            >
+              {t('input.transcribeOnly', 'Transcribe Audio')}
+            </Button>
+          </div>
+        )}
+
+        {subtitle.original && subtitle.original.trim() && videoPath && (
+          <div
+            className={css`
+              display: flex;
+              align-items: center;
+            `}
+          >
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleImproveTranscription}
+              disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
+              isLoading={isTranscribingOne}
+              title={t('subtitles.improveTranscription', 'Improve Transcription')}
+            >
+              {t('subtitles.improveTranscription', 'Improve Transcription')}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {temporaryAffectedText && (
         <div
@@ -403,34 +503,48 @@ export default function SubtitleEditor({
         </div>
       )}
 
-      {(!subtitle.original || !subtitle.original.trim()) && videoPath ? (
+      {subtitle.original && subtitle.original.trim() ? (
         <div
           className={css`
             display: flex;
-            justify-content: center;
+            align-items: flex-start;
+            gap: 12px;
           `}
         >
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleTranscribeThisLine}
-            disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
-            isLoading={isTranscribingOne}
-            title={t('input.transcribeOnly', 'Transcribe Audio')}
+          <div
+            className={css`
+              flex: 1 1 auto;
+              min-width: 0;
+            `}
           >
-            {t('input.transcribeOnly', 'Transcribe Audio')}
-          </Button>
+            <SubtitleEditTextarea
+              value={subtitle.translation ?? ''}
+              searchTerm={searchText || ''}
+              onChange={v => actions.update({ translation: v })}
+              rows={4}
+              placeholder={t('editSubtitles.item.subtitlePlaceholder')}
+              readOnly={editingLocked}
+            />
+          </div>
+          <div
+            className={css`
+              display: flex;
+              align-items: center;
+            `}
+          >
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleImproveTranslation}
+              disabled={isTranscribing || isTranslatingOne}
+              isLoading={isTranslatingOne}
+              title={t('subtitles.improveTranslation', 'Improve Translation')}
+            >
+              {t('subtitles.improveTranslation', 'Improve Translation')}
+            </Button>
+          </div>
         </div>
-      ) : (
-        <SubtitleEditTextarea
-          value={subtitle.translation ?? ''}
-          searchTerm={searchText || ''}
-          onChange={v => actions.update({ translation: v })}
-          rows={4}
-          placeholder={t('editSubtitles.item.subtitlePlaceholder')}
-          readOnly={editingLocked}
-        />
-      )}
+      ) : null}
 
       <div
         className={css`

@@ -51,10 +51,14 @@ interface Actions {
       start: number;
       end: number;
       translation?: string | undefined;
+      index?: number;
     }>
   ) => void;
   // Append-only progress for transcription partials (no full reloads)
   applyTranscriptionProgress: (segs: SrtSegment[]) => void;
+  // Bridge gaps by inserting single empty placeholder segments and collapsing
+  // any existing empty runs; called after transcription completes.
+  bridgeGaps: (thresholdSec?: number) => void;
 }
 
 const initialState: State = {
@@ -375,6 +379,106 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             s.order.push(newId);
             insertPos++;
           }
+        }),
+
+      bridgeGaps: (thresholdSec = 3) =>
+        set(s => {
+          const outOrder: string[] = [];
+          const outSegments: SegmentMap = {} as any;
+
+          const pushCue = (cue: SrtSegment) => {
+            const id = cue.id ?? crypto.randomUUID();
+            const norm: SrtSegment = { ...cue, id } as any;
+            outSegments[id] = norm;
+            outOrder.push(id);
+          };
+          let lastEnd: number | null = null;
+          for (let i = 0; i < s.order.length; ) {
+            const id = s.order[i];
+            const cue = s.segments[id];
+            if (!cue) {
+              i++;
+              continue;
+            }
+            const isEmpty = !String(cue.original || '').trim();
+
+            if (isEmpty) {
+              // Collapse consecutive empties and extend to next non-empty start if there's a hole
+              const runStart = cue.start;
+              let runEnd = cue.end;
+              let j = i + 1;
+              while (j < s.order.length) {
+                const cid = s.order[j];
+                const c = s.segments[cid];
+                if (!c) {
+                  j++;
+                  continue;
+                }
+                const empty = !String(c.original || '').trim();
+                if (empty) {
+                  runEnd = Math.max(runEnd, c.end);
+                  j++;
+                  continue;
+                }
+                // Extend to next non-empty start if there's a time hole
+                const extra = Math.max(0, c.start - runEnd);
+                const finalEnd = extra > 0 ? c.start : runEnd;
+                if (finalEnd - runStart >= thresholdSec) {
+                  pushCue({
+                    id: crypto.randomUUID(),
+                    index: 0,
+                    start: runStart,
+                    end: finalEnd,
+                    original: '',
+                    translation: '',
+                  } as any);
+                  lastEnd = finalEnd;
+                }
+                break;
+              }
+              if (j >= s.order.length) {
+                // Trailing empty run
+                if (runEnd - runStart >= thresholdSec) {
+                  pushCue({
+                    id: crypto.randomUUID(),
+                    index: 0,
+                    start: runStart,
+                    end: runEnd,
+                    original: '',
+                    translation: '',
+                  } as any);
+                  lastEnd = runEnd;
+                }
+              }
+              i = j;
+              continue;
+            }
+
+            if (lastEnd != null) {
+              const gap = Math.max(0, cue.start - lastEnd);
+              if (gap >= thresholdSec) {
+                pushCue({
+                  id: crypto.randomUUID(),
+                  index: 0,
+                  start: lastEnd,
+                  end: cue.start,
+                  original: '',
+                  translation: '',
+                } as any);
+              }
+            }
+
+            pushCue(cue);
+            lastEnd = cue.end;
+            i++;
+          }
+
+          for (let k = 0; k < outOrder.length; k++) {
+            outSegments[outOrder[k]].index = k + 1;
+          }
+          s.segments = outSegments;
+          s.order = outOrder;
+          s.sourceId += 1;
         }),
     }))
   )

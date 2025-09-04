@@ -92,8 +92,24 @@
     "generating": "Wird generiert...",
     "generateNow": "Untertitel jetzt generieren",
     "translation": "Übersetzung",
+    "improveTranscription": "Transkription verbessern",
+    "improveTranslation": "Übersetzung verbessern",
     "chooseSrtFile": "SRT-Datei auswählen",
     "cancel_confirmation": "Sind Sie sicher, dass Sie den Untertitel-Übersetzungsprozess abbrechen möchten? Jeder Fortschritt geht verloren und Sie müssen neu beginnen."
+  },
+  "panel": {
+    "gaps": {
+      "title": "Lücken",
+      "none": "Keine großen Lücken erkannt"
+    },
+    "confidence": {
+      "title": "Geringe Zuverlässigkeit",
+      "none": "Keine Zeilen mit geringer Zuverlässigkeit",
+      "count": "{{count}} Zeilen"
+    }
+  },
+  "progress": {
+    "beginningReview": "Überprüfung wird gestartet..."
   },
   "editSubtitles": {
     "title": "Untertitel bearbeiten",

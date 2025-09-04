@@ -92,8 +92,24 @@
     "generating": "生成中...",
     "generateNow": "立即生成字幕",
     "translation": "翻译",
+    "improveTranscription": "改进转录",
+    "improveTranslation": "改进翻译",
     "chooseSrtFile": "选择SRT文件",
     "cancel_confirmation": "确定要取消字幕翻译过程吗？所有进度将丢失，您需要重新开始。"
+  },
+  "panel": {
+    "gaps": {
+      "title": "间隙",
+      "none": "未检测到较大的间隙"
+    },
+    "confidence": {
+      "title": "低置信度",
+      "none": "未检测到低置信度的行",
+      "count": "{{count}} 行"
+    }
+  },
+  "progress": {
+    "beginningReview": "开始审阅..."
   },
   "editSubtitles": {
     "title": "编辑字幕",

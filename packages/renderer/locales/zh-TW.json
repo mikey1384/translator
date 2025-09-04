@@ -92,8 +92,24 @@
     "generating": "生成中...",
     "generateNow": "立即生成字幕",
     "translation": "翻譯",
+    "improveTranscription": "改善轉錄",
+    "improveTranslation": "改善翻譯",
     "chooseSrtFile": "選擇SRT檔案",
     "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。"
+  },
+  "panel": {
+    "gaps": {
+      "title": "間隔",
+      "none": "未偵測到大型間隔"
+    },
+    "confidence": {
+      "title": "低信心",
+      "none": "未偵測到低信心的行",
+      "count": "{{count}} 行"
+    }
+  },
+  "progress": {
+    "beginningReview": "開始審閱..."
   },
   "editSubtitles": {
     "title": "編輯字幕",
