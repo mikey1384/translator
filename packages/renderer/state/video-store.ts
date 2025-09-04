@@ -4,6 +4,7 @@ import { getNativePlayerInstance } from '../native-player';
 import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
 import { useTaskStore } from './task-store';
+import { useUIStore } from './ui-store';
 import throttle from 'lodash/throttle';
 import { logButton, logVideo } from '../utils/logger';
 
@@ -88,6 +89,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       set(initial);
+      // Reset session-only UI state for exclamation markers when video changes
+      try {
+        useUIStore.getState().resetExclamationState();
+      } catch {
+        // no-op
+      }
       useTaskStore.getState().setTranscription({
         inProgress: false,
         percent: 0,
@@ -290,6 +297,13 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       // Stop position saving for previous video
       get().stopPositionSaving();
+
+      // Reset session-only UI state for exclamation markers when video changes
+      try {
+        useUIStore.getState().resetExclamationState();
+      } catch {
+        // no-op
+      }
 
       // Reset transcription state when mounting a new source
       useTaskStore.getState().setTranscription({

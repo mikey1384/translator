@@ -14,6 +14,11 @@ import * as SubtitlesIPC from '../../../../../ipc/subtitles';
 import { useUIStore, useTaskStore, useVideoStore } from '../../../../../state';
 import { transcribeOneLine } from '../../../../../ipc/subtitles';
 import { useSubStore } from '../../../../../state/subtitle-store';
+import {
+  flattenText,
+  groupUncertainRanges,
+  synthesizePlaceholdersWithinWindow,
+} from '../../../../../utils/subtitle-heuristics.js';
 
 const timeInputStyles = css`
   width: 150px;
@@ -65,7 +70,10 @@ export default function SubtitleEditor({
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
-  const videoPath = useVideoStore(s => s.path);
+  const { path: videoPath } = useVideoStore(s => ({
+    path: s.path,
+    url: s.url,
+  }));
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
   const editingLocked = isTranscribing || isTranslatingGlobal;
 
@@ -108,43 +116,71 @@ export default function SubtitleEditor({
     }
   };
 
-  async function handleTranscribeThisLine() {
+  async function handleTranscribeThisLine(gapThresholdSec: number = 3) {
     if (!videoPath || !subtitle) return;
     try {
       setIsTranscribingOne(true);
       const operationId = `transcribe-${Date.now()}-${id}`;
-      // Build simple prompt from neighbors
+      // Build context from up to 3 previous, unflagged (unseen LC) segments + immediate next
       const store = useSubStore.getState();
       const order = store.order;
       const idx = order.indexOf(id);
-      const prev = idx > 0 ? store.segments[order[idx - 1]] : undefined;
       const next =
         idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
-      const flatten = (s: string) =>
-        (s || '').replace(/\s*\n+\s*/g, ' ').trim();
-      const promptParts = [] as string[];
-      if (prev?.original) promptParts.push(`Prev: ${flatten(prev.original)}`);
-      if (next?.original) promptParts.push(`Next: ${flatten(next.original)}`);
+
+      // Determine unseen low-confidence ranges for this session (same heuristics as GapList)
+      const seenLc = useUIStore.getState().seenLC;
+      const unseenRanges = groupUncertainRanges(order, store.segments).filter(
+        r => !seenLc.has(`${r.start}-${r.end}`)
+      );
+
+      const isInUnseenRange = (seg: any) =>
+        unseenRanges.some(r => seg && seg.start >= r.start && seg.end <= r.end);
+
+      // Collect up to 3 previous segments that are not flagged (i.e., not in unseen LC ranges)
+      const prevContexts: any[] = [];
+      for (let p = idx - 1; p >= 0 && prevContexts.length < 3; p--) {
+        const s = store.segments[order[p]];
+        if (!s) continue;
+        if (!flattenText(s.original).length) continue;
+        if (isInUnseenRange(s)) continue; // skip flagged
+        prevContexts.push(s);
+      }
+      prevContexts.reverse(); // older → newer for readability
+
+      const promptParts: string[] = [];
+      for (const pc of prevContexts)
+        promptParts.push(`Prev: ${flattenText(pc.original)}`);
+      if (next?.original)
+        promptParts.push(`Next: ${flattenText(next.original)}`);
       const prompt = promptParts.join(' \n ');
+
+      // Always fetch latest times from the store (e.g., improve flow just expanded the window)
+      const currentSeg = useSubStore.getState().segments[id];
+      const segStart = currentSeg?.start ?? subtitle.start;
+      const segEnd = currentSeg?.end ?? subtitle.end;
 
       const res = await transcribeOneLine({
         videoPath,
-        segment: { start: subtitle.start, end: subtitle.end },
+        segment: { start: segStart, end: segEnd },
         promptContext: prompt,
         operationId,
       });
 
       const segs = (res as any)?.segments as any[] | undefined;
       if (Array.isArray(segs) && segs.length > 0) {
-        // Atomically replace current cue with segmented cues using the store helper
-        useSubStore.getState().replaceWithSegments(
-          id,
-          segs.map(s => ({ start: s.start, end: s.end, original: s.original }))
+        // If improving with a tighter gap threshold, insert placeholders for any gaps >= threshold
+        const withPlaceholders = synthesizePlaceholdersWithinWindow(
+          segs.map(s => ({ start: s.start, end: s.end, original: s.original })),
+          segStart,
+          segEnd,
+          gapThresholdSec
         );
-        // After replacing with multiple segments, immediately bridge any gaps
-        try {
-          useSubStore.getState().bridgeGaps(3);
-        } catch {}
+
+        // Atomically replace current cue with segmented cues (including placeholders)
+        useSubStore.getState().replaceWithSegments(id, withPlaceholders);
+        // Do not call bridgeGaps(3) here; it would remove sub-3s placeholders
+        // that we intentionally added within the improve window.
       } else {
         const text = (res as any)?.transcript?.trim();
         if (typeof text === 'string' && text.length > 0) {
@@ -153,7 +189,9 @@ export default function SubtitleEditor({
         // Even if only text was updated, run a quick bridge to ensure placeholders exist
         try {
           useSubStore.getState().bridgeGaps(3);
-        } catch {}
+        } catch {
+          // no-op
+        }
       }
     } catch (err) {
       console.error('[SubtitleEditor] single-line transcribe error:', err);
@@ -171,21 +209,30 @@ export default function SubtitleEditor({
     const order = store.order;
     const idx = order.indexOf(id);
     const prev = idx > 0 ? store.segments[order[idx - 1]] : undefined;
-    const next = idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
-    const newStart = Math.max(0, typeof prev?.end === 'number' ? prev.end : subtitle.start);
+    const next =
+      idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
+    const newStart = Math.max(
+      0,
+      typeof prev?.end === 'number' ? prev.end : subtitle.start
+    );
     const newEnd = typeof next?.start === 'number' ? next.start : subtitle.end;
 
     // If window is invalid or tiny, fall back to simple path
     if (!(newEnd - newStart > 0.05)) {
-      await handleTranscribeThisLine();
+      await handleTranscribeThisLine(0.5);
       return;
     }
 
     // Clear current text and expand the cue window to bridge neighbors
-    actions.update({ start: newStart, end: newEnd, original: '', translation: '' });
+    actions.update({
+      start: newStart,
+      end: newEnd,
+      original: '',
+      translation: '',
+    });
 
     // Reuse the same transcribe flow (now using expanded times and empty text)
-    await handleTranscribeThisLine();
+    await handleTranscribeThisLine(0.5);
   }
 
   async function handleTranslateOneLine() {
@@ -206,8 +253,6 @@ export default function SubtitleEditor({
       const order = store.order;
       const idx = order.indexOf(id);
       const pick = (k: number) => store.segments[order[k]];
-      const flatten = (s: string) =>
-        (s || '').replace(/\s*\n+\s*/g, ' ').trim();
       const ctxBefore = [] as any[];
       const ctxAfter = [] as any[];
       for (let k = Math.max(0, idx - 2); k < idx; k++) {
@@ -218,8 +263,8 @@ export default function SubtitleEditor({
           index: s.index,
           start: s.start,
           end: s.end,
-          original: flatten(s.original || ''),
-          translation: flatten(s.translation || ''),
+          original: flattenText(s.original || ''),
+          translation: flattenText(s.translation || ''),
         });
       }
       for (let k = idx + 1; k <= Math.min(order.length - 1, idx + 2); k++) {
@@ -230,8 +275,8 @@ export default function SubtitleEditor({
           index: s.index,
           start: s.start,
           end: s.end,
-          original: flatten(s.original || ''),
-          translation: flatten(s.translation || ''),
+          original: flattenText(s.original || ''),
+          translation: flattenText(s.translation || ''),
         });
       }
 
@@ -241,7 +286,7 @@ export default function SubtitleEditor({
           index: subtitle.index,
           start: subtitle.start,
           end: subtitle.end,
-          original: flatten(subtitle.original),
+          original: flattenText(subtitle.original),
         } as any,
         contextBefore: ctxBefore as any,
         contextAfter: ctxAfter as any,
@@ -275,7 +320,7 @@ export default function SubtitleEditor({
       // Clear current translation so user sees fresh result intent
       actions.update({ translation: '' });
       await handleTranslateOneLine();
-    } catch (e) {
+    } catch {
       // no-op, underlying handler logs
     }
   }
@@ -450,7 +495,7 @@ export default function SubtitleEditor({
             <Button
               variant="success"
               size="lg"
-              onClick={handleTranscribeThisLine}
+              onClick={() => handleTranscribeThisLine()}
               disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
               isLoading={isTranscribingOne}
               title={t('input.transcribeOnly', 'Transcribe Audio')}
@@ -473,7 +518,10 @@ export default function SubtitleEditor({
               onClick={handleImproveTranscription}
               disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
               isLoading={isTranscribingOne}
-              title={t('subtitles.improveTranscription', 'Improve Transcription')}
+              title={t(
+                'subtitles.improveTranscription',
+                'Improve Transcription'
+              )}
             >
               {t('subtitles.improveTranscription', 'Improve Transcription')}
             </Button>

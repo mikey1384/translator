@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../../../../styles.js';
+import { useTranslation } from 'react-i18next';
 
 interface SubtitleEditTextareaProps {
   value: string;
@@ -51,6 +52,7 @@ export default function SubtitleEditTextarea({
   placeholder = '',
   readOnly = false,
 }: SubtitleEditTextareaProps) {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const draftRef = useRef(value);
@@ -238,7 +240,7 @@ export default function SubtitleEditTextarea({
           `}
           aria-hidden
         >
-          <svg
+        <svg
             width="12"
             height="12"
             viewBox="0 0 24 24"
@@ -254,7 +256,7 @@ export default function SubtitleEditTextarea({
             <rect x="5" y="11" width="14" height="8" rx="2" />
             <path d="M8 11V7a4 4 0 0 1 8 0v4" />
           </svg>
-          <span>Locked</span>
+          <span>{t('common.locked', 'Locked')}</span>
         </div>
       )}
       <div
@@ -275,7 +277,7 @@ export default function SubtitleEditTextarea({
         onScroll={handleScroll}
         readOnly={readOnly}
         aria-readonly={readOnly}
-        title={readOnly ? 'Locked while processing' : undefined}
+        title={readOnly ? t('common.lockedWhileProcessing', 'Locked while processing') : undefined}
       />
     </div>
   );

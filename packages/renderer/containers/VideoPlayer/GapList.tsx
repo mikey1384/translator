@@ -1,8 +1,9 @@
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
-import { useMemo, useEffect, useState, useRef } from 'react';
+import { groupUncertainRanges } from '../../utils/subtitle-heuristics';
+import { useMemo, useEffect, useState } from 'react';
 import { useSubStore } from '../../state/subtitle-store';
-import { useVideoStore } from '../../state';
+import { useVideoStore, useUIStore } from '../../state';
 import { useTranslation } from 'react-i18next';
 
 const container = css`
@@ -17,13 +18,6 @@ const container = css`
   backdrop-filter: blur(4px);
   height: 100%;
   overflow: auto;
-`;
-
-const header = css`
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin: 0 0 6px 0;
-  color: #fff;
 `;
 
 const item = css`
@@ -65,55 +59,47 @@ const fmt = (s: number) => {
 };
 
 const GAP_THRESHOLD_SEC = 3; // Show gaps >= 3s
-// Heuristics for low-confidence picks
-const UNCERTAIN_LOGPROB_MAX = -1.1; // avg_logprob <= -1.1
-const UNCERTAIN_NO_SPEECH_MIN = 0.5; // no_speech_prob >= 0.5
-// Readability density heuristics (characters per second)
-const CPS_HIGH = 20; // too dense
-const CPS_LOW = 1; // too sparse
-const LONG_DUR_SEC = 10; // slots >= 10s with very little text flagged
+// Low-confidence heuristics shared via utils
 
 export default function GapList() {
   const { t } = useTranslation();
-  const { order, segments, sourceId } = useSubStore(s => ({ order: s.order, segments: s.segments, sourceId: s.sourceId }));
+  const { order, segments } = useSubStore(s => ({
+    order: s.order,
+    segments: s.segments,
+  }));
   const { url, path } = useVideoStore(s => ({ url: s.url, path: s.path }));
   const hasVideo = Boolean(url || path);
   const hasSubs = (order?.length ?? 0) > 0;
   const showContent = hasVideo && hasSubs;
+  const seenGaps = useUIStore(s => s.seenGaps);
+  const seenLC = useUIStore(s => s.seenLC);
+  const markGapSeen = useUIStore(s => s.markGapSeen);
+  const markLCSeen = useUIStore(s => s.markLCSeen);
 
   // Tab state
   const [tab, setTab] = useState<'gaps' | 'confidence'>('gaps');
-
-  // Track which items were clicked (seen) per sourceId to reduce noise
-  const seenGapsRef = useRef<Set<string>>(new Set());
-  const seenLCRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    // Reset when source changes
-    const gapsKey = `seen_gaps_${sourceId}`;
-    const lcKey = `seen_lc_${sourceId}`;
-    try {
-      const a = JSON.parse(localStorage.getItem(gapsKey) || '[]');
-      const b = JSON.parse(localStorage.getItem(lcKey) || '[]');
-      seenGapsRef.current = new Set(Array.isArray(a) ? a : []);
-      seenLCRef.current = new Set(Array.isArray(b) ? b : []);
-    } catch {
-      seenGapsRef.current = new Set();
-      seenLCRef.current = new Set();
-    }
-  }, [sourceId]);
+    // Reset tab to default when video changes
+    setTab('gaps');
+  }, [path, url]);
+
+  // Track which items were clicked (seen) in session-only store
   const markSeen = (type: 'gaps' | 'lc', key: string) => {
-    const storageKey = type === 'gaps' ? `seen_gaps_${sourceId}` : `seen_lc_${sourceId}`;
-    const ref = type === 'gaps' ? seenGapsRef : seenLCRef;
-    ref.current.add(key);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(Array.from(ref.current)));
-    } catch {}
+    if (type === 'gaps') markGapSeen(key);
+    else markLCSeen(key);
   };
 
   const gaps = useMemo(() => {
-    const out: Array<{ start: number; end: number; dur: number; nextId?: string; prevId?: string }> = [];
+    const out: Array<{
+      start: number;
+      end: number;
+      dur: number;
+      nextId?: string;
+      prevId?: string;
+    }> = [];
     if (!showContent || !order || order.length < 1) return out;
-    const isEmpty = (id: string) => !String(segments[id]?.original || '').trim();
+    const isEmpty = (id: string) =>
+      !String(segments[id]?.original || '').trim();
     for (let i = 0; i < order.length; ) {
       const id = order[i];
       const a = segments[id];
@@ -134,7 +120,13 @@ export default function GapList() {
         const finalEnd = next && next.start > runEnd ? next.start : runEnd;
         const dur = finalEnd - start;
         if (dur >= GAP_THRESHOLD_SEC) {
-          out.push({ start, end: finalEnd, dur, nextId: next?.id, prevId: segments[order[i]]?.id });
+          out.push({
+            start,
+            end: finalEnd,
+            dur,
+            nextId: next?.id,
+            prevId: segments[order[i]]?.id,
+          });
         }
         i = j;
       } else {
@@ -143,7 +135,13 @@ export default function GapList() {
         if (next) {
           const gap = Math.max(0, next.start - a.end);
           if (gap >= GAP_THRESHOLD_SEC) {
-            out.push({ start: a.end, end: next.start, dur: gap, nextId: next.id, prevId: a.id });
+            out.push({
+              start: a.end,
+              end: next.start,
+              dur: gap,
+              nextId: next.id,
+              prevId: a.id,
+            });
           }
         }
         i++;
@@ -154,57 +152,15 @@ export default function GapList() {
 
   // Low-confidence segments grouped into contiguous ranges
   const lowConfidence = useMemo(() => {
-    const out: Array<{ start: number; end: number; count: number; firstId?: string }> = [];
-    if (!showContent || !order || order.length === 0) return out;
-    const isUncertain = (id: string) => {
-      const seg = segments[id];
-      if (!seg) return false;
-      const lp = typeof seg.avg_logprob === 'number' ? seg.avg_logprob! : 0;
-      const ns = typeof seg.no_speech_prob === 'number' ? seg.no_speech_prob! : 0;
-      const text = (seg.original || '').trim();
-      const len = text.length;
-      const dur = Math.max(0, (seg.end ?? 0) - (seg.start ?? 0));
-      const cps = dur > 0 ? len / dur : len > 0 ? Infinity : 0;
-      const tooDense = cps >= CPS_HIGH; // a lot of text in very short time
-      const tooSparse = (dur >= LONG_DUR_SEC && cps <= CPS_LOW) || (dur >= 60 && cps <= CPS_LOW * 2);
-      const short = len <= 2; // extremely short text
-      return (
-        lp <= UNCERTAIN_LOGPROB_MAX ||
-        ns >= UNCERTAIN_NO_SPEECH_MIN ||
-        tooDense ||
-        tooSparse ||
-        short
-      );
-    };
-
-    let i = 0;
-    while (i < order.length) {
-      const id = order[i];
-      if (!segments[id]) {
-        i++;
-        continue;
-      }
-      if (!isUncertain(id)) {
-        i++;
-        continue;
-      }
-      let start = segments[id]!.start;
-      let end = segments[id]!.end;
-      let count = 1;
-      const firstId = id;
-      let j = i + 1;
-      while (j < order.length && isUncertain(order[j])) {
-        const s = segments[order[j]]!;
-        start = Math.min(start, s.start);
-        end = Math.max(end, s.end);
-        count++;
-        j++;
-      }
-      out.push({ start, end, count, firstId });
-      i = j;
-    }
-    return out;
-  }, [order, segments]);
+    if (!showContent || !order || order.length === 0)
+      return [] as Array<{
+        start: number;
+        end: number;
+        count: number;
+        firstId?: string;
+      }>;
+    return groupUncertainRanges(order, segments as any);
+  }, [order, segments, showContent]);
 
   // Tab UI styles
   const tabBar = css`
@@ -222,12 +178,14 @@ export default function GapList() {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    &:hover { background: rgba(255,255,255,0.12); }
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
   `;
 
   const gapItems = gaps.map((g, idx) => {
     const key = `${g.start}-${g.end}`;
-    const unseen = !seenGapsRef.current.has(key);
+    const unseen = !seenGaps.has(key);
     return (
       <button
         key={`${key}-${idx}`}
@@ -240,14 +198,20 @@ export default function GapList() {
               st.seek(id);
               requestAnimationFrame(() => st.scrollToCurrent());
             }
-          } catch {}
+          } catch {
+            // no-op
+          }
           markSeen('gaps', key);
         }}
       >
-        <span>{fmt(g.start)} → {fmt(g.end)}</span>
+        <span>
+          {fmt(g.start)} → {fmt(g.end)}
+        </span>
         <span className={meta}>
           {unseen ? (
-            <span style={{ color: '#ff7a18', marginRight: 6 }} title="new">!</span>
+            <span style={{ color: '#ff7a18', marginRight: 6 }} title="new">
+              !
+            </span>
           ) : null}
           {Math.round(g.dur)}s
         </span>
@@ -257,7 +221,7 @@ export default function GapList() {
 
   const lcItems = lowConfidence.map((r, idx) => {
     const key = `${r.start}-${r.end}`;
-    const unseen = !seenLCRef.current.has(key);
+    const unseen = !seenLC.has(key);
     return (
       <button
         key={`lc-${key}-${idx}`}
@@ -269,7 +233,9 @@ export default function GapList() {
               st.seek(r.firstId);
               requestAnimationFrame(() => st.scrollToCurrent());
             }
-          } catch {}
+          } catch {
+            // no-op
+          }
           markSeen('lc', key);
         }}
       >
@@ -278,7 +244,9 @@ export default function GapList() {
         </span>
         <span className={meta}>
           {unseen ? (
-            <span style={{ color: '#ff7a18', marginRight: 6 }} title="new">!</span>
+            <span style={{ color: '#ff7a18', marginRight: 6 }} title="new">
+              !
+            </span>
           ) : null}
           {t('panel.confidence.count', { count: r.count })}
         </span>
@@ -286,19 +254,33 @@ export default function GapList() {
     );
   });
 
-  const hasUnseenGaps = gaps.some(g => !seenGapsRef.current.has(`${g.start}-${g.end}`));
-  const hasUnseenLC = lowConfidence.some(r => !seenLCRef.current.has(`${r.start}-${r.end}`));
+  const hasUnseenGaps = gaps.some(g => !seenGaps.has(`${g.start}-${g.end}`));
+  const hasUnseenLC = lowConfidence.some(
+    r => !seenLC.has(`${r.start}-${r.end}`)
+  );
 
   return (
     <div className={container}>
       {showContent ? (
         <>
           <div className={tabBar} role="tablist">
-            <button className={tabBtn(tab === 'gaps')} role="tab" aria-selected={tab === 'gaps'} onClick={() => setTab('gaps')}>
+            <button
+              className={tabBtn(tab === 'gaps')}
+              role="tab"
+              aria-selected={tab === 'gaps'}
+              onClick={() => setTab('gaps')}
+            >
               {t('panel.gaps.title', 'Gaps')}
-              {hasUnseenGaps ? <span style={{ color: '#ff7a18' }}>!</span> : null}
+              {hasUnseenGaps ? (
+                <span style={{ color: '#ff7a18' }}>!</span>
+              ) : null}
             </button>
-            <button className={tabBtn(tab === 'confidence')} role="tab" aria-selected={tab === 'confidence'} onClick={() => setTab('confidence')}>
+            <button
+              className={tabBtn(tab === 'confidence')}
+              role="tab"
+              aria-selected={tab === 'confidence'}
+              onClick={() => setTab('confidence')}
+            >
               {t('panel.confidence.title', 'Low Confidence')}
               {hasUnseenLC ? <span style={{ color: '#ff7a18' }}>!</span> : null}
             </button>
@@ -306,14 +288,18 @@ export default function GapList() {
 
           {tab === 'gaps' ? (
             gaps.length === 0 ? (
-              <div className={meta}>{t('panel.gaps.none', 'No large gaps detected')}</div>
+              <div className={meta}>
+                {t('panel.gaps.none', 'No large gaps detected')}
+              </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {gapItems}
               </div>
             )
           ) : lowConfidence.length === 0 ? (
-            <div className={meta}>{t('panel.confidence.none', 'No low-confidence lines detected')}</div>
+            <div className={meta}>
+              {t('panel.confidence.none', 'No low-confidence lines detected')}
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {lcItems}

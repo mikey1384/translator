@@ -1,6 +1,6 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
-import { Draft } from 'immer';
+import { Draft, enableMapSet } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
@@ -21,7 +21,13 @@ interface State {
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
   showEditPanel: boolean;
+  // Exclamation seen state (session-only; reset on video change)
+  seenGaps: Set<string>;
+  seenLC: Set<string>;
 }
+
+// Enable Set/Map support in Immer (used for seenGaps/seenLC)
+enableMapSet();
 
 interface Actions {
   toggleSettings(show?: boolean): void;
@@ -40,6 +46,10 @@ interface Actions {
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
   setEditPanelOpen(open: boolean): void;
+  // Exclamation helpers (session-only)
+  markGapSeen(key: string): void;
+  markLCSeen(key: string): void;
+  resetExclamationState(): void;
 }
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
@@ -64,6 +74,8 @@ const initial: State = {
     'Default',
   showGeneratePanel: false,
   showEditPanel: false,
+  seenGaps: new Set<string>(),
+  seenLC: new Set<string>(),
 };
 
 const resetSearchState = (s: Draft<State>) => {
@@ -183,6 +195,30 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setEditPanelOpen(open) {
           set({ showEditPanel: open });
+        },
+
+        // Exclamation helpers
+        markGapSeen(key: string) {
+          set(s => {
+            const next = new Set(s.seenGaps);
+            next.add(key);
+            s.seenGaps = next;
+          });
+        },
+
+        markLCSeen(key: string) {
+          set(s => {
+            const next = new Set(s.seenLC);
+            next.add(key);
+            s.seenLC = next;
+          });
+        },
+
+        resetExclamationState() {
+          set(s => {
+            s.seenGaps = new Set();
+            s.seenLC = new Set();
+          });
         },
       };
     })

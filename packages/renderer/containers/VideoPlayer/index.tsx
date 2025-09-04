@@ -268,11 +268,6 @@ const playerWrapperStyles = () => css`
   height: 100%;
 `;
 
-const leftSpacerStyles = css`
-  /* Empty spacer column to visually balance the side menu */
-  pointer-events: none;
-`;
-
 // Side menu removed; no separate controls column needed
 
 const fmt = (s: number) => {
@@ -584,7 +579,9 @@ export default function VideoPlayer() {
         ].join(' ')}
         style={{ top: isFullScreen ? 0 : progressBarH }}
       >
-        {!isFullScreen && <GapList />}
+        {!isFullScreen && (
+          <GapList key={(videoPath || videoUrl || 'none').toString()} />
+        )}
         <div
           className={playerWrapperStyles()}
           onMouseEnter={() => {

@@ -634,7 +634,7 @@ export default function EditSubtitles({
         }
       }
 
-      setMergeStage('Starting render…');
+      setMergeStage(t('progress.starting', 'Starting...'));
       const opId = `render-${Date.now()}`;
       onSetMergeOperationId(opId);
       useTaskStore.getState().startMerge();
@@ -673,7 +673,7 @@ export default function EditSubtitles({
         } catch {
           // Do nothing
         }
-        setMergeStage('Error');
+        setMergeStage(t('generateSubtitles.status.error', 'Error'));
         onSetMergeOperationId(null);
       }
     } finally {

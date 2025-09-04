@@ -66,7 +66,7 @@ export default function CreditBalance({ suffixText }: CreditBalanceProps) {
   if (checkoutPending) {
     return (
       <div className={creditBalanceContainer}>
-        <span className={creditText}>🔄 Processing...</span>
+        <span className={creditText}>🔄 {t('credits.redirectingToPayment', 'Opening secure checkout…')}</span>
       </div>
     );
   }
