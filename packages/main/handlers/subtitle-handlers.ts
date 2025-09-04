@@ -393,7 +393,6 @@ export async function handleTranscribeOneLine(
     videoPath: string;
     segment: { start: number; end: number };
     promptContext?: string;
-    language?: string;
   },
   operationId: string
 ): Promise<{
@@ -412,7 +411,7 @@ export async function handleTranscribeOneLine(
 
   let tempAudioPath: string | null = null;
   try {
-    const { videoPath, segment, promptContext, language } = options;
+    const { videoPath, segment, promptContext } = options;
     if (!videoPath || !segment || segment.end <= segment.start) {
       throw new Error('Invalid transcribe-one-line options');
     }
@@ -463,7 +462,6 @@ export async function handleTranscribeOneLine(
       },
       operationId,
       signal: controller.signal,
-      language: language,
       promptContext,
     });
     const offset = start;

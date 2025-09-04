@@ -70,7 +70,20 @@ export default function SideMenu({
     logButton('mount_or_change_srt');
     const res = await openSubtitleWithElectron();
     if (res?.segments) {
-      useSubStore.getState().load(res.segments, res.filePath ?? null);
+      // SRT loaded from disk; mark origin accordingly
+      useSubStore
+        .getState()
+        .load(res.segments, res.filePath ?? null, 'disk', null);
+      // Reset transcription completion state so Generate panel doesn't show stale 'Transcription Complete'
+      try {
+        useTaskStore.getState().setTranscription({
+          isCompleted: false,
+          inProgress: false,
+          id: null,
+          stage: '',
+          percent: 0,
+        });
+      } catch {}
       logVideo('srt_loaded', { path: res.filePath ?? '' });
       // Ensure the Edit Subtitles panel is visible so users immediately see loaded SRT
       try {

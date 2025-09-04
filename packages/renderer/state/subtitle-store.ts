@@ -19,6 +19,8 @@ interface State {
   sourceId: number;
   originalPath: string | null;
   origin: 'fresh' | 'disk' | null;
+  // When origin is 'fresh', record the video file path this set of subtitles was generated for
+  sourceVideoPath: string | null;
   gapsCache: Array<{
     start: number;
     end: number;
@@ -38,7 +40,8 @@ interface Actions {
   load: (
     segs: SrtSegment[],
     srcPath?: string | null,
-    origin?: 'fresh' | 'disk' | null
+    origin?: 'fresh' | 'disk' | null,
+    videoPathRef?: string | null
   ) => void;
   // Clear per-segment confidence telemetry (avg_logprob/no_speech_prob/words)
   clearConfidence: () => void;
@@ -90,6 +93,7 @@ const initialState: State = {
   sourceId: 0,
   originalPath: null,
   origin: null,
+  sourceVideoPath: null,
   gapsCache: [],
   lcRangesCache: [],
 };
@@ -98,7 +102,7 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
       ...initialState,
-      load: (segs, srcPath = null, loadOrigin = null) => {
+      load: (segs, srcPath = null, loadOrigin = null, videoPathRef = null) => {
         set(s => {
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
@@ -107,7 +111,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.order = segs.map(cue => cue.id);
           s.sourceId += 1;
           s.originalPath = srcPath;
-          s.origin = loadOrigin ?? (srcPath ? 'disk' : null);
+          // Preserve previous origin if not explicitly provided and no srcPath indicates disk
+          s.origin = loadOrigin ?? (srcPath ? 'disk' : (s.origin ?? null));
+          // Preserve previous sourceVideoPath unless explicitly overridden
+          s.sourceVideoPath =
+            (typeof videoPathRef === 'string' ? videoPathRef : null) ??
+            s.sourceVideoPath ??
+            null;
           // Do not auto-regenerate caches here; generated during transcription flows
           s.gapsCache = [];
           s.lcRangesCache = [];

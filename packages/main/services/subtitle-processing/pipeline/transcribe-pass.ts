@@ -34,7 +34,6 @@ export async function transcribePass({
   progressCallback,
   operationId,
   signal,
-  language,
   promptContext,
 }: {
   audioPath: string;
@@ -42,7 +41,6 @@ export async function transcribePass({
   progressCallback?: GenerateProgressCallback;
   operationId: string;
   signal: AbortSignal;
-  language?: string;
   promptContext?: string;
 }): Promise<{
   segments: SrtSegment[];
@@ -205,7 +203,6 @@ export async function transcribePass({
             signal,
             operationId: operationId ?? '',
             promptContext: promptForChunk,
-            language,
           });
 
           throwIfAborted(signal);

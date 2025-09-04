@@ -38,13 +38,11 @@ const headers = () => ({ Authorization: `Bearer ${getDeviceId()}` });
 
 export async function transcribe({
   filePath,
-  language,
   promptContext,
   model = AI_MODELS.WHISPER,
   signal,
 }: {
   filePath: string;
-  language?: string;
   promptContext?: string;
   model?: string;
   signal?: AbortSignal;
@@ -61,9 +59,7 @@ export async function transcribe({
   const fd = new FormData();
   fd.append('file', fs.createReadStream(filePath));
 
-  if (language) {
-    fd.append('language', language);
-  }
+  // Language hint removed; rely on auto-detection server-side
 
   if (promptContext) {
     fd.append('prompt', promptContext);

@@ -233,7 +233,16 @@ function flush() {
       } else if (isComplete || Date.now() - lastParsed > 1500) {
         // Translation: reload occasionally
         try {
-          useSubStore.getState().load(parseSrt(partialResult));
+          // Preserve origin/sourceVideoPath during translation progress updates
+          const prev = useSubStore.getState();
+          useSubStore
+            .getState()
+            .load(
+              parseSrt(partialResult),
+              undefined,
+              prev.origin ?? null,
+              prev.sourceVideoPath ?? null
+            );
         } catch {
           // Do nothing
         }
@@ -250,15 +259,18 @@ function flush() {
         } catch {
           // Do nothing
         }
-        // Bridge gaps immediately after transcription completes so the editor
-        // has explicit placeholders users can click or fill.
+
         try {
           useSubStore.getState().bridgeGaps(3);
-        } catch {}
+        } catch {
+          // Do nothing
+        }
         // Generate Gap/LC caches once per transcription process
         try {
           useSubStore.getState().recomputeCaches(3);
-        } catch {}
+        } catch {
+          // Do nothing
+        }
       }
       // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
       if (/cancel/.test(stageLower)) {

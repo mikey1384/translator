@@ -88,7 +88,6 @@ export function transcribeOneLine(options: {
   videoPath: string;
   segment: { start: number; end: number };
   promptContext?: string;
-  language?: string; // 'auto' omitted; pass known language token
   operationId?: string;
 }): Promise<{ transcript: string; error?: string }> {
   return (window.electron as any).transcribeOneLine(options);

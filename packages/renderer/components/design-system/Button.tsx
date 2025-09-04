@@ -9,6 +9,7 @@ import {
   shadows,
 } from './tokens.js';
 import { logButton } from '../../utils/logger.js';
+import { useTranslation } from 'react-i18next';
 
 export type ButtonVariant =
   | 'primary'
@@ -218,6 +219,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const { t } = useTranslation();
     const { onClick, ...restProps } = props;
     const handleClick: React.MouseEventHandler<HTMLButtonElement> = e => {
       try {
@@ -227,7 +229,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           (restProps as any).title ||
           (typeof children === 'string' ? children : 'button');
         logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
-      } catch {}
+      } catch {
+        // Do nothing
+      }
       onClick?.(e);
     };
 
@@ -248,7 +252,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading ? (
           <>
             <span className={loadingSpinnerStyle} aria-hidden="true" />
-            Loading...
+            {t('common.loading', 'Loading...')}
           </>
         ) : (
           <>

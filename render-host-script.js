@@ -1452,7 +1452,7 @@ function getSubtitleStyles(opts) {
   if (stylePreset === "LineBox") {
     backgroundColor = "transparent";
     boxShadowValue = "none";
-    containerPadding = "0 0 10px 0";
+    containerPadding = "0 12px 10px 12px";
     textShadow = "none";
   } else if (style.borderStyle === 1) {
     backgroundColor = "transparent";
@@ -1497,6 +1497,7 @@ function getSubtitleStyles(opts) {
     `;
   }
   return css`
+    box-sizing: border-box;
     position: ${position2};
     bottom: ${bottomValue};
     ${isFullScreen ? "left: 5%; right: 5%;" : "left: 0; right: 0;"}

@@ -53,12 +53,14 @@ export function getSubtitleStyles(opts: {
   let textShadow = 'none';
   let backgroundColor = 'transparent';
   let boxShadowValue = 'none';
+  // Default side padding helps prevent edge clipping during PNG capture
   let containerPadding = '10px 20px';
 
   if (stylePreset === 'LineBox') {
     backgroundColor = 'transparent';
     boxShadowValue = 'none';
-    containerPadding = '0 0 10px 0';
+    // Add small horizontal padding so per-line boxes don't get cut off at edges
+    containerPadding = '0 12px 10px 12px';
     textShadow = 'none';
   } else if (style.borderStyle === 1) {
     backgroundColor = 'transparent';
@@ -106,6 +108,7 @@ export function getSubtitleStyles(opts: {
   }
 
   return css`
+    box-sizing: border-box;
     position: ${position};
     bottom: ${bottomValue};
     ${isFullScreen ? 'left: 5%; right: 5%;' : 'left: 0; right: 0;'}

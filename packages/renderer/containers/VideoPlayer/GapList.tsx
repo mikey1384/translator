@@ -59,15 +59,22 @@ const fmt = (s: number) => {
 
 export default function GapList() {
   const { t } = useTranslation();
-  const { order, gaps, lcRanges } = useSubStore(s => ({
+  const { order, gaps, lcRanges, origin, sourceVideoPath } = useSubStore(s => ({
     order: s.order,
     gaps: s.gapsCache,
     lcRanges: s.lcRangesCache,
+    origin: s.origin,
+    sourceVideoPath: s.sourceVideoPath,
   }));
   const { url, path } = useVideoStore(s => ({ url: s.url, path: s.path }));
   const hasVideo = Boolean(url || path);
   const hasSubs = (order?.length ?? 0) > 0;
-  const showContent = hasVideo && hasSubs;
+  const isFreshForThisVideo =
+    origin === 'fresh' &&
+    !!path &&
+    !!sourceVideoPath &&
+    sourceVideoPath === path;
+  const showContent = hasVideo && hasSubs && isFreshForThisVideo;
   const seenGaps = useUIStore(s => s.seenGaps);
   const seenLC = useUIStore(s => s.seenLC);
   const markGapSeen = useUIStore(s => s.markGapSeen);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../../../../components/Button.js';
-import { colors, selectStyles } from '../../../../../styles.js';
+import { colors } from '../../../../../styles.js';
 import SubtitleEditTextarea from './SubtitleEditTextarea.js';
 import { useTranslation } from 'react-i18next';
 import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
@@ -19,10 +19,7 @@ import {
   groupUncertainRanges,
   synthesizePlaceholdersWithinWindow,
 } from '../../../../../utils/subtitle-heuristics.js';
-import {
-  TRANSLATION_LANGUAGE_GROUPS,
-  TRANSLATION_LANGUAGES_BASE,
-} from '../../../../../constants/translation-languages.js';
+// Language dropdown for transcription removed
 
 const timeInputStyles = css`
   width: 150px;
@@ -80,8 +77,7 @@ export default function SubtitleEditor({
   }));
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
   const editingLocked = isTranscribing || isTranslatingGlobal;
-  const transcriptionLanguage = useUIStore(s => s.transcriptionLanguage);
-  const setTranscriptionLanguage = useUIStore(s => s.setTranscriptionLanguage);
+  // No manual language selection for transcription
 
   useEffect(() => {
     if (subtitle) {
@@ -127,12 +123,10 @@ export default function SubtitleEditor({
     try {
       setIsTranscribingOne(true);
       const operationId = `transcribe-${Date.now()}-${id}`;
-      // Build context from up to 3 previous, unflagged (unseen LC) segments + immediate next
+      // Build context from up to 2 previous, unflagged (unseen LC) segments (no future text)
       const store = useSubStore.getState();
       const order = store.order;
       const idx = order.indexOf(id);
-      const next =
-        idx + 1 < order.length ? store.segments[order[idx + 1]] : undefined;
 
       // Determine unseen low-confidence ranges for this session (same heuristics as GapList)
       const seenLc = useUIStore.getState().seenLC;
@@ -143,9 +137,9 @@ export default function SubtitleEditor({
       const isInUnseenRange = (seg: any) =>
         unseenRanges.some(r => seg && seg.start >= r.start && seg.end <= r.end);
 
-      // Collect up to 3 previous segments that are not flagged (i.e., not in unseen LC ranges)
+      // Collect up to 2 previous segments that are not flagged (i.e., not in unseen LC ranges)
       const prevContexts: any[] = [];
-      for (let p = idx - 1; p >= 0 && prevContexts.length < 3; p--) {
+      for (let p = idx - 1; p >= 0 && prevContexts.length < 2; p--) {
         const s = store.segments[order[p]];
         if (!s) continue;
         if (!flattenText(s.original).length) continue;
@@ -157,8 +151,6 @@ export default function SubtitleEditor({
       const promptParts: string[] = [];
       for (const pc of prevContexts)
         promptParts.push(`Prev: ${flattenText(pc.original)}`);
-      if (next?.original)
-        promptParts.push(`Next: ${flattenText(next.original)}`);
       const prompt = promptParts.join(' \n ');
 
       // Always fetch latest times from the store (e.g., improve flow just expanded the window)
@@ -170,10 +162,6 @@ export default function SubtitleEditor({
         videoPath,
         segment: { start: segStart, end: segEnd },
         promptContext: `${prompt}`,
-        language:
-          transcriptionLanguage && transcriptionLanguage !== 'auto'
-            ? transcriptionLanguage
-            : undefined,
         operationId,
       });
 
@@ -405,24 +393,7 @@ export default function SubtitleEditor({
               </svg>
             )}
           </Button>
-          {!(subtitle.translation ?? '').trim() && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleTranslateOneLine}
-              disabled={
-                isTranscribing ||
-                isTranslatingOne ||
-                !(subtitle.original ?? '').trim()
-              }
-              isLoading={isTranslatingOne}
-              title={t('subtitles.translate')}
-            >
-              {isTranslatingOne
-                ? t('generateSubtitles.status.starting')
-                : t('subtitles.translate')}
-            </Button>
-          )}
+          {/* Removed small translate button next to the seek button */}
           <Button
             variant="secondary"
             size="sm"
@@ -515,27 +486,7 @@ export default function SubtitleEditor({
               {t('input.transcribeOnly', 'Transcribe Audio')}
             </Button>
 
-            <select
-              value={transcriptionLanguage}
-              onChange={e => setTranscriptionLanguage(e.target.value)}
-              className={selectStyles}
-            >
-              <option value="auto">{t('common.auto', 'Auto')}</option>
-              {TRANSLATION_LANGUAGES_BASE.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {t(opt.labelKey)}
-                </option>
-              ))}
-              {TRANSLATION_LANGUAGE_GROUPS.map(group => (
-                <optgroup key={group.labelKey} label={t(group.labelKey)}>
-                  {group.options.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {t(opt.labelKey)}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            {/* Language selection removed */}
           </div>
         )}
 
@@ -562,27 +513,7 @@ export default function SubtitleEditor({
               {t('subtitles.improveTranscription', 'Improve Transcription')}
             </Button>
 
-            <select
-              value={transcriptionLanguage}
-              onChange={e => setTranscriptionLanguage(e.target.value)}
-              className={selectStyles}
-            >
-              <option value="auto">{t('common.auto', 'Auto')}</option>
-              {TRANSLATION_LANGUAGES_BASE.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {t(opt.labelKey)}
-                </option>
-              ))}
-              {TRANSLATION_LANGUAGE_GROUPS.map(group => (
-                <optgroup key={group.labelKey} label={t(group.labelKey)}>
-                  {group.options.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {t(opt.labelKey)}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            {/* Language selection removed */}
           </div>
         )}
       </div>
@@ -644,9 +575,15 @@ export default function SubtitleEditor({
               onClick={handleImproveTranslation}
               disabled={isTranscribing || isTranslatingOne}
               isLoading={isTranslatingOne}
-              title={t('subtitles.improveTranslation', 'Improve Translation')}
+              title={
+                (subtitle.translation ?? '').trim()
+                  ? t('subtitles.improveTranslation', 'Improve Translation')
+                  : t('subtitles.translate', 'Translate')
+              }
             >
-              {t('subtitles.improveTranslation', 'Improve Translation')}
+              {(subtitle.translation ?? '').trim()
+                ? t('subtitles.improveTranslation', 'Improve Translation')
+                : t('subtitles.translate', 'Translate')}
             </Button>
           </div>
         </div>

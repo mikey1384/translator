@@ -35,7 +35,8 @@ export async function saveSubtitlesAs(): Promise<boolean> {
   });
   if (res.error || !res.filePath) return false;
   // Update originalPath to enable direct save next time
-  useSubStore.getState().load(segments, res.filePath);
+  // Mounting a saved file counts as a disk-origin SRT, not fresh
+  useSubStore.getState().load(segments, res.filePath, 'disk', null);
   return true;
 }
 

@@ -4,7 +4,7 @@ import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 import * as SystemIPC from '../../../ipc/system';
 import { buildSrt } from '../../../../shared/helpers';
-import { useSubStore, useUIStore } from '../../../state';
+import { useSubStore, useUIStore, useVideoStore } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 
@@ -52,8 +52,9 @@ export async function executeSrtTranslation({
     });
     if (res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
-
-      useSubStore.getState().load(finalSegments, null, 'fresh');
+      // Preserve linkage to the source video if present; do not invent a new one
+      const srcVideo = useSubStore.getState().sourceVideoPath ?? null;
+      useSubStore.getState().load(finalSegments, null, 'fresh', srcVideo);
       useTaskStore.getState().setTranslation({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
@@ -107,7 +108,9 @@ export async function executeSubtitleGeneration({
     if (result.subtitles) {
       // Success: Parse and load subtitles
       const finalSegments = parseSrt(result.subtitles);
-      useSubStore.getState().load(finalSegments);
+      // Mark as freshly generated for the current video
+      const vpath = videoFilePath ?? useVideoStore.getState().path ?? null;
+      useSubStore.getState().load(finalSegments, null, 'fresh', vpath);
 
       setTranscription({
         id: operationId,

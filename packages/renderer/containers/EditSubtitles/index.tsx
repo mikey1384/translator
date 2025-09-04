@@ -138,6 +138,8 @@ export default function EditSubtitles({
   const mergeInProgress = useTaskStore(s => !!s.merge.inProgress);
   const subStore = useSubStore();
   const subtitles = subStore.order.map(id => subStore.segments[id]);
+  const origin = useSubStore(s => s.origin);
+  const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
 
   const { originalPath } = useSubStore();
   const canSaveDirectly = !!originalPath;
@@ -254,7 +256,10 @@ export default function EditSubtitles({
 
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
 
-  const headerRight = hasUntranslated ? (
+  const isFreshForThisVideo =
+    origin === 'fresh' && !!videoPath && !!sourceVideoPath && sourceVideoPath === videoPath;
+
+  const headerRight = hasUntranslated && !isFreshForThisVideo ? (
     <EditHeaderTranslateBar
       disabled={translationInProgress || isTranscribing}
       onTranslate={handleTranslateMissing}
@@ -700,7 +705,17 @@ export default function EditSubtitles({
       return;
     }
     if (res.segments) {
-      subStore.load(res.segments, res.filePath ?? null);
+      subStore.load(res.segments, res.filePath ?? null, 'disk', null);
+      // Reset the 'Transcription Complete' state when user mounts a different SRT from disk
+      try {
+        useTaskStore.getState().setTranscription({
+          isCompleted: false,
+          inProgress: false,
+          id: null,
+          stage: '',
+          percent: 0,
+        });
+      } catch {}
     }
   }
 

@@ -2,6 +2,7 @@ import React, { useRef, ChangeEvent, ReactNode, forwardRef } from 'react';
 import { css, cx } from '@emotion/css';
 import { colors, breakpoints } from '../styles.js';
 import { logButton } from '../utils/logger.js';
+import { useTranslation } from 'react-i18next';
 // import LoadingSpinner from './LoadingSpinner'; // Comment out for now
 
 // Define the button variants and sizes
@@ -220,6 +221,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const { t } = useTranslation();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const handleButtonClick = async (
@@ -232,7 +234,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           (rest as any).title ||
           (typeof children === 'string' ? children : 'button');
         logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
-      } catch {}
+      } catch {
+        // Do nothing
+      }
       if (asFileInput && inputRef.current) {
         inputRef.current.click();
       } else if (onClick) {
@@ -255,7 +259,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading && (
           <div className={loadingOverlayStyles}>
             {/* <LoadingSpinner size={size === 'sm' ? 16 : 20} /> */}
-            <span>Loading...</span> {/* Placeholder */}
+            <span>{t('common.loading', 'Loading...')}</span> {/* Localized */}
           </div>
         )}
         <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>

@@ -1,8 +1,7 @@
 // Shared subtitle utilities for heuristics and gap handling
 
-export const UNCERTAIN_LOGPROB_MAX = -1.1; // avg_logprob <= -1.1
-export const UNCERTAIN_NO_SPEECH_MIN = 0.5; // no_speech_prob >= 0.5
-export const CPS_HIGH = 20; // characters per second considered too dense
+export const UNCERTAIN_NO_SPEECH_MIN = 0.9; // no_speech_prob >= 0.5
+export const CPS_HIGH = 200; // characters per second considered too dense
 export const CPS_LOW = 1; // characters per second considered too sparse
 export const LONG_DUR_SEC = 10; // long duration threshold for sparsity check
 
@@ -24,7 +23,6 @@ type AnySeg = {
 
 export function isUncertainSeg(seg: AnySeg | undefined | null): boolean {
   if (!seg) return false;
-  const lp = typeof seg.avg_logprob === 'number' ? seg.avg_logprob! : 0;
   const ns = typeof seg.no_speech_prob === 'number' ? seg.no_speech_prob! : 0;
   const text = flattenText(seg.original);
   const len = text.length;
@@ -35,13 +33,7 @@ export function isUncertainSeg(seg: AnySeg | undefined | null): boolean {
     (dur >= LONG_DUR_SEC && cps <= CPS_LOW) ||
     (dur >= 60 && cps <= CPS_LOW * 2);
   const short = len <= 2; // extremely short text
-  return (
-    lp <= UNCERTAIN_LOGPROB_MAX ||
-    ns >= UNCERTAIN_NO_SPEECH_MIN ||
-    tooDense ||
-    tooSparse ||
-    short
-  );
+  return ns >= UNCERTAIN_NO_SPEECH_MIN || tooDense || tooSparse || short;
 }
 
 export function groupUncertainRanges(

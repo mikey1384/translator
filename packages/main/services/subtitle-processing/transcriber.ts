@@ -18,7 +18,6 @@ export async function transcribeChunk({
   signal,
   operationId,
   promptContext,
-  language,
 }: {
   chunkIndex: number | string;
   chunkPath: string;
@@ -26,7 +25,6 @@ export async function transcribeChunk({
   signal?: AbortSignal;
   operationId: string;
   promptContext?: string;
-  language?: string;
 }): Promise<SrtSegment[]> {
   throwIfAborted(signal);
 
@@ -48,7 +46,6 @@ export async function transcribeChunk({
       try {
         res = await stage5Client.transcribe({
           filePath: chunkPath,
-          language,
           promptContext,
           signal,
         });
