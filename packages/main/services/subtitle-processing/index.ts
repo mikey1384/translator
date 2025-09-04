@@ -196,6 +196,20 @@ export async function translateSubtitlesFromSrt({
       const AFTER_CTX = 15;
       let done = 0;
 
+      // Announce review start before the first batch arrives
+      {
+        const percent = scaleProgress(0, Stage.REVIEW, Stage.FINAL);
+        const stage = 'Beginning review...';
+        const partialResult = buildSrt({ segments: reviewedSegments, mode: 'dual' });
+        (adaptedProgress ?? progressCallback)?.({
+          percent,
+          stage,
+          partialResult,
+          current: done,
+          total,
+        });
+      }
+
       for (let start = 0; start < total; start += BATCH) {
         const end = Math.min(start + BATCH, total);
         const contextBefore = translatedSegments.slice(

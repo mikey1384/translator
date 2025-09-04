@@ -159,6 +159,10 @@ export default function TranslationProgressArea({
     patchTranslation({ inProgress: false });
   }, [patchTranslation]);
 
+  const handleCloseBanner = useCallback(() => {
+    setShowSlowProgressBanner(false);
+  }, []);
+
   const progressBarColor = useMemo(() => {
     if (isCancelling) return colors.danger;
     if (percent >= 100) return colors.success;
@@ -175,7 +179,7 @@ export default function TranslationProgressArea({
         descriptionKey="dialogs.slowProcessingBanner.description"
         linkHref="https://status.openai.com"
         linkTextKey="dialogs.slowProcessingBanner.checkStatus"
-        onClose={handleClose}
+        onClose={handleCloseBanner}
       />
       <div
         className={css`

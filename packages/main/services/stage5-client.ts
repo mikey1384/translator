@@ -187,11 +187,15 @@ export async function transcribe({
 export async function translate({
   messages,
   model = AI_MODELS.GPT,
+  reasoning,
   temperature = 0.4,
   signal,
 }: {
   messages: any[];
   model?: string;
+  reasoning?: {
+    effort?: 'low' | 'medium' | 'high';
+  };
   temperature?: number;
   signal?: AbortSignal;
 }) {
@@ -205,14 +209,15 @@ export async function translate({
   }
 
   try {
-    const response = await axios.post(
-      `${API}/translate`,
-      { messages, model, temperature },
-      {
-        headers: headers(),
-        signal, // Pass the AbortSignal to axios
-      }
-    );
+    const isGpt5 = String(model).startsWith('gpt-5');
+    const payload: any = { messages, model, reasoning };
+    if (!isGpt5 && typeof temperature === 'number') {
+      payload.temperature = temperature;
+    }
+    const response = await axios.post(`${API}/translate`, payload, {
+      headers: headers(),
+      signal, // Pass the AbortSignal to axios
+    });
     sendNetLog('info', `POST /translate -> ${response.status}`, {
       url: `${API}/translate`,
       method: 'POST',

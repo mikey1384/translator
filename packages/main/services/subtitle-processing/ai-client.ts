@@ -7,12 +7,16 @@ import { AI_MODELS } from '../../../shared/constants/index.js';
 export async function callAIModel({
   messages,
   model = AI_MODELS.GPT,
+  reasoning,
   signal,
   operationId,
   retryAttempts = 3,
 }: {
   messages: any[];
   model?: string;
+  reasoning?: {
+    effort?: 'low' | 'medium' | 'high';
+  };
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
@@ -32,6 +36,7 @@ export async function callAIModel({
       const completion = await stage5Client.translate({
         messages,
         model,
+        reasoning,
         signal,
       });
 

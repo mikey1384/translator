@@ -322,6 +322,13 @@ export async function handleTranslateOneLine(
       partialResult: '',
     });
 
+    // Indicate review is about to begin for clearer UX
+    event.sender.send('generate-subtitles-progress', {
+      percent: 60,
+      stage: 'Beginning review...',
+      operationId,
+    });
+
     // 2) Review with context to improve quality
     const reviewBatch: ReviewBatch = {
       segments: rough,
