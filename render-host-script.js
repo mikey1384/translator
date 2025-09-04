@@ -1524,6 +1524,9 @@ function getSubtitleStyles(opts) {
     transition: ${transitionValue};
     max-width: ${maxWidth};
     width: ${isFullScreen ? "auto" : "100%"};
+    /* Prevent long, unbroken words from overflowing and getting clipped */
+    overflow-wrap: anywhere;
+    word-break: break-word;
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;
@@ -1614,7 +1617,7 @@ function initializeSubtitleDisplay() {
       const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").trim();
       if (text.trim()) {
         const html = text.split("\n").map(
-          (line2) => `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${esc(line2)}</span>`
+          (line2) => `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${esc(line2)}</span>`
         ).join("<br/>");
         el.innerHTML = html;
       } else {

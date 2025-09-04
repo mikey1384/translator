@@ -192,7 +192,11 @@ export default function FindBar() {
       <button
         className={buttonStyles}
         onClick={() => {
-          try { logButton('findbar_next'); } catch {}
+          try {
+            logButton('findbar_next');
+          } catch {
+            // Do nothing
+          }
           findNext();
         }}
         disabled={!hasMatches}
@@ -204,7 +208,11 @@ export default function FindBar() {
       <button
         className={buttonStyles}
         onClick={() => {
-          try { logButton('findbar_prev'); } catch {}
+          try {
+            logButton('findbar_prev');
+          } catch {
+            // Do nothing
+          }
           findPrev();
         }}
         disabled={!hasMatches}
@@ -216,7 +224,11 @@ export default function FindBar() {
       <button
         className={buttonStyles}
         onClick={() => {
-          try { logButton('findbar_replace_all'); } catch {}
+          try {
+            logButton('findbar_replace_all');
+          } catch {
+            // Do nothing
+          }
           useSubStore.getState().replaceAll(searchText, replaceText);
         }}
         disabled={!searchText || !replaceText}
@@ -228,7 +240,11 @@ export default function FindBar() {
       <button
         className={closeButtonStyles}
         onClick={() => {
-          try { logButton('findbar_close'); } catch {}
+          try {
+            logButton('findbar_close');
+          } catch {
+            // Do nothing
+          }
           hideFindBar();
         }}
         title={t('findBar.closeTitle')}

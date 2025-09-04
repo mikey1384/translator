@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { colors } from '../../styles.js';
 import ProgressArea from './ProgressArea.js';
+import { useTranslation } from 'react-i18next';
 import subtitleRendererClient from '../../clients/subtitle-renderer-client.js';
 import { useTaskStore } from '../../state';
 
@@ -27,6 +28,7 @@ type MergeSlice = {
 export default function MergingProgressArea({
   autoCloseDelay = 4_000,
 }: { autoCloseDelay?: number } = {}) {
+  const { t } = useTranslation();
   const {
     merge: { inProgress, percent, stage, id },
     setMerge: patchMerge,
@@ -79,7 +81,7 @@ export default function MergingProgressArea({
   return (
     <ProgressArea
       isVisible={inProgress}
-      title="Merging Video & Subtitles"
+      title={t('progress.mergingTitle', 'Merging Video & Subtitles')}
       progress={percent}
       stage={stage}
       progressBarColor={progressBarColor}

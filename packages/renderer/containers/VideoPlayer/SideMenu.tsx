@@ -16,7 +16,10 @@ import {
   TRANSLATION_LANGUAGE_GROUPS,
 } from '../../constants/translation-languages';
 import { translateMissingUntranslated } from '../../utils/translateMissing';
-import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
+import {
+  startTranscriptionFlow,
+  executeSrtTranslation,
+} from '../GenerateSubtitles/utils/subtitleGeneration';
 
 export default function SideMenu({
   isFullScreen = false,
@@ -33,6 +36,7 @@ export default function SideMenu({
   }));
   const setTranslation = useTaskStore(s => s.setTranslation);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
+  const isTranscriptionDone = useTaskStore(s => !!s.transcription.isCompleted);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
   const transcriptionIsCompleted = useTaskStore(
     s => !!s.transcription.isCompleted
@@ -44,6 +48,8 @@ export default function SideMenu({
   const videoFile = useVideoStore(s => s.file);
   const videoFilePath = useVideoStore(s => s.path);
   const meta = useVideoStore(s => s.meta);
+  const origin = useSubStore(s => s.origin);
+  const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
   // no local modal state; handled globally
 
   const hasUntranslated = hasSubs
@@ -58,6 +64,50 @@ export default function SideMenu({
       await translateMissingUntranslated();
     } catch (err) {
       console.error('[SideMenu] translate missing error:', err);
+      setTranslation({
+        stage: t('generateSubtitles.status.error', 'Error'),
+        percent: 100,
+        inProgress: false,
+      });
+    }
+  }
+
+  // Smart translate selector: prefer full SRT translation when the Generate panel's
+  // green box would be shown; otherwise, if the Edit panel yellow box is available,
+  // translate only missing lines.
+  async function handleTranslateSmart() {
+    try {
+      const hasSubs = useSubStore.getState().order.length > 0;
+      const greenShown = isTranscriptionDone && hasSubs && !translationInProgress;
+      const videoPathNow = useVideoStore.getState().path;
+      const isFreshForThisVideo =
+        origin === 'fresh' && !!videoPathNow && sourceVideoPath === videoPathNow;
+      const store = useSubStore.getState();
+      const segments = store.order.map(id => store.segments[id]);
+      const hasUntranslatedLocal = segments.some(
+        s => (s.original || '').trim() && !(s.translation || '').trim()
+      );
+      const yellowShown = hasUntranslatedLocal && !isFreshForThisVideo;
+
+      if (greenShown) {
+        const operationId = `translate-${Date.now()}`;
+        await executeSrtTranslation({
+          segments,
+          targetLanguage: useUIStore.getState().targetLanguage,
+          operationId,
+        });
+        return;
+      }
+
+      if (yellowShown) {
+        await handleTranslateMissing();
+        return;
+      }
+
+      // Fallback: no-op or translate missing
+      await handleTranslateMissing();
+    } catch (err) {
+      console.error('[SideMenu] smart translate error:', err);
       setTranslation({
         stage: t('generateSubtitles.status.error', 'Error'),
         percent: 100,
@@ -281,7 +331,7 @@ export default function SideMenu({
             <Button
               size="sm"
               variant="primary"
-              onClick={handleTranslateMissing}
+              onClick={handleTranslateSmart}
               disabled={isTranscribing || translationInProgress}
               title={t('subtitles.translate', 'Translate')}
             >

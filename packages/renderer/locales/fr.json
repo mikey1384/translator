@@ -279,6 +279,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "Fusion de la vidéo et des sous-titres",
     "beginningReview": "Démarrage de la relecture...",
     "starting": "Démarrage...",
     "completed": "Terminé",

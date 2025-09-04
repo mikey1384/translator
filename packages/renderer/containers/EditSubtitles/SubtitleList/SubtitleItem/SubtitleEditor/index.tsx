@@ -71,6 +71,7 @@ export default function SubtitleEditor({
   const [isTranslatingOne, setIsTranslatingOne] = useState(false);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
+  const isMerging = useTaskStore(s => !!s.merge.inProgress);
   const { path: videoPath } = useVideoStore(s => ({
     path: s.path,
     url: s.url,
@@ -150,7 +151,7 @@ export default function SubtitleEditor({
 
       const promptParts: string[] = [];
       for (const pc of prevContexts)
-        promptParts.push(`Prev: ${flattenText(pc.original)}`);
+        promptParts.push(`${flattenText(pc.original)}`);
       const prompt = promptParts.join(' \n ');
 
       // Always fetch latest times from the store (e.g., improve flow just expanded the window)
@@ -479,7 +480,13 @@ export default function SubtitleEditor({
               variant="success"
               size="lg"
               onClick={() => handleTranscribeThisLine()}
-              disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
+              disabled={
+                isTranscribing ||
+                isTranslatingOne ||
+                isTranscribingOne ||
+                isTranslatingGlobal ||
+                isMerging
+              }
               isLoading={isTranscribingOne}
               title={t('input.transcribeOnly', 'Transcribe Audio')}
             >
@@ -503,7 +510,13 @@ export default function SubtitleEditor({
               variant="primary"
               size="md"
               onClick={handleImproveTranscription}
-              disabled={isTranscribing || isTranslatingOne || isTranscribingOne}
+              disabled={
+                isTranscribing ||
+                isTranslatingOne ||
+                isTranscribingOne ||
+                isTranslatingGlobal ||
+                isMerging
+              }
               isLoading={isTranscribingOne}
               title={t(
                 'subtitles.improveTranscription',
@@ -573,7 +586,12 @@ export default function SubtitleEditor({
               variant="primary"
               size="md"
               onClick={handleImproveTranslation}
-              disabled={isTranscribing || isTranslatingOne}
+              disabled={
+                isTranscribing ||
+                isTranslatingOne ||
+                isTranslatingGlobal ||
+                isMerging
+              }
               isLoading={isTranslatingOne}
               title={
                 (subtitle.translation ?? '').trim()

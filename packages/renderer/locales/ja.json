@@ -279,6 +279,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "動画と字幕を結合中",
     "beginningReview": "レビューを開始しています...",
     "starting": "開始中...",
     "completed": "完了",

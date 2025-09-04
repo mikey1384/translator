@@ -102,6 +102,8 @@ export default function BaseSubtitleDisplay({
                   boxDecorationBreak: 'clone',
                   WebkitBoxDecorationBreak: 'clone',
                   lineHeight: '1.35',
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word',
                 }}
               >
                 {line}

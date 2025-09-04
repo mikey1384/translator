@@ -643,6 +643,8 @@ export default function EditSubtitles({
       const srtContent = buildSrt({
         segments: subtitles,
         mode: getSrtMode(),
+        // Important: preserve user-visible lines; let renderer wrap visually
+        noWrap: true,
       });
 
       const { baseFontSize, subtitleStyle } = useUIStore.getState();

@@ -270,6 +270,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "Combinando vídeo e legendas",
     "beginningReview": "Iniciando revisão...",
     "starting": "Iniciando...",
     "completed": "Concluído",

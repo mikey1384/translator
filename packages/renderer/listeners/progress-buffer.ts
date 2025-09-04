@@ -271,6 +271,13 @@ function flush() {
         } catch {
           // Do nothing
         }
+      } else {
+        // Translation completed: recompute caches to repopulate Gap/LC lists
+        try {
+          useSubStore.getState().recomputeCaches(3);
+        } catch {
+          // Do nothing
+        }
       }
       // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
       if (/cancel/.test(stageLower)) {

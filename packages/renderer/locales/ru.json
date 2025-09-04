@@ -279,6 +279,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "Объединение видео и субтитров",
     "beginningReview": "Начало проверки...",
     "starting": "Запуск...",
     "completed": "Готово",

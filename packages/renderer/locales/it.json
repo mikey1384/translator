@@ -269,6 +269,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "Unendo video e sottotitoli",
     "beginningReview": "Avvio della revisione...",
     "starting": "Avvio...",
     "completed": "Completato",

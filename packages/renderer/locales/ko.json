@@ -123,6 +123,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "비디오와 자막 병합 중",
     "beginningReview": "리뷰 시작 중...",
     "starting": "시작 중...",
     "completed": "완료",

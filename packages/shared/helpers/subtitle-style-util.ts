@@ -135,6 +135,9 @@ export function getSubtitleStyles(opts: {
     transition: ${transitionValue};
     max-width: ${maxWidth};
     width: ${isFullScreen ? 'auto' : '100%'};
+    /* Prevent long, unbroken words from overflowing and getting clipped */
+    overflow-wrap: anywhere;
+    word-break: break-word;
     pointer-events: none;
     white-space: pre-wrap;
     z-index: 1000;

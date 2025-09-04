@@ -269,6 +269,7 @@
     }
   },
   "progress": {
+    "mergingTitle": "正在合併影片與字幕",
     "beginningReview": "開始審閱...",
     "starting": "開始中...",
     "completed": "已完成",

@@ -310,6 +310,7 @@
     "starting": "Starting...",
     "completed": "Completed",
     "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
     "extractingAudio": "Extracting audio...",
     "transcribingOf": "Transcribing {{done}}/{{total}}",
     "error": "Error",

@@ -255,6 +255,7 @@
     "transcriptionInProgress": "Transcription in Progress"
   },
   "progress": {
+    "mergingTitle": "جارٍ دمج الفيديو والترجمات",
     "transcribedChunks": "تم نسخ وتنظيف {{done}}/{{total}} من المقاطع",
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
