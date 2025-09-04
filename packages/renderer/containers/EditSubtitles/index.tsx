@@ -8,8 +8,7 @@ import Button from '../../components/Button';
 import { subtleAccentButton, buttonGradientStyles } from '../../styles.js';
 
 import SubtitleList from './SubtitleList';
-import MergeMenu from './MergeMenu';
-import SaveMenu from './SaveMenu';
+import SaveAndMergeBar from './SaveAndMergeBar';
 
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
@@ -458,24 +457,21 @@ export default function EditSubtitles({
             backdrop-filter: blur(12px);
             border-top: 1px solid ${colors.border};
             display: flex;
+            flex-direction: column; /* two rows */
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
             z-index: 100;
           `}
         >
-          <SaveMenu
+          <SaveAndMergeBar
             onSave={handleSaveSrt}
             onSaveAs={handleSaveEditedSrtAs}
+            onMerge={handleMerge}
             canSaveDirectly={canSaveDirectly}
             subtitlesExist={subtitles.length > 0}
-          />
-
-          <MergeMenu
-            onMergeMediaWithSubtitles={handleMerge}
-            isMergingInProgress={mergeInProgress}
             videoFileExists={!!videoPath}
-            subtitlesExist={subtitles.length > 0}
+            isMergingInProgress={mergeInProgress}
             isTranslationInProgress={translationInProgress}
           />
         </div>

@@ -5,6 +5,7 @@ import * as VideoIPC from '../ipc/video';
 import * as FileIPC from '../ipc/file';
 import { useTaskStore } from './task-store';
 import { useUIStore } from './ui-store';
+import { useSubStore } from './subtitle-store';
 import throttle from 'lodash/throttle';
 import { logButton, logVideo } from '../utils/logger';
 
@@ -92,6 +93,10 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Reset session-only UI state for exclamation markers when video changes
       try {
         useUIStore.getState().resetExclamationState();
+        // Also clear per-segment confidence metrics so LC panel resets
+        useSubStore.getState().clearConfidence();
+        // Flush gap/LC caches on video change
+        useSubStore.getState().clearCaches();
       } catch {
         // no-op
       }
@@ -301,6 +306,10 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Reset session-only UI state for exclamation markers when video changes
       try {
         useUIStore.getState().resetExclamationState();
+        // Also clear per-segment confidence metrics so LC panel resets
+        useSubStore.getState().clearConfidence();
+        // Flush gap/LC caches on video change
+        useSubStore.getState().clearCaches();
       } catch {
         // no-op
       }

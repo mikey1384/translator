@@ -14,7 +14,7 @@ interface UpdateState {
   cleanup: () => void;
 }
 
-export const useUpdateStore = create<UpdateState>((set, get) => {
+export const useUpdateStore = create<UpdateState>(set => {
   const unsubAvailable = UpdateIPC.onUpdateAvailable(info => {
     set({ available: true, updateInfo: info, error: undefined });
   });

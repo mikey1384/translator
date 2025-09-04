@@ -16,7 +16,6 @@ const electronAPI = {
   generateSubtitles: async (options: any) => {
     const processedOptions = { ...options };
 
-    console.log('[preload] generateSubtitles options:', options);
     if (options.videoFile && !options.videoPath) {
       try {
         const fileData = await new Promise<ArrayBuffer>((resolve, reject) => {

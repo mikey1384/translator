@@ -6,6 +6,7 @@ import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
+import { groupUncertainRanges } from '../utils/subtitle-heuristics';
 
 type SegmentMap = Record<string, SrtSegment>;
 
@@ -18,6 +19,19 @@ interface State {
   sourceId: number;
   originalPath: string | null;
   origin: 'fresh' | 'disk' | null;
+  gapsCache: Array<{
+    start: number;
+    end: number;
+    dur: number;
+    nextId?: string;
+    prevId?: string;
+  }>;
+  lcRangesCache: Array<{
+    start: number;
+    end: number;
+    count: number;
+    firstId?: string;
+  }>;
 }
 
 interface Actions {
@@ -26,6 +40,12 @@ interface Actions {
     srcPath?: string | null,
     origin?: 'fresh' | 'disk' | null
   ) => void;
+  // Clear per-segment confidence telemetry (avg_logprob/no_speech_prob/words)
+  clearConfidence: () => void;
+  // Compute and cache Gap/LC once per transcription/improve flow
+  recomputeCaches: (gapThresholdSec?: number) => void;
+  // Flush cached Gap/LC (e.g., on video change)
+  clearCaches: () => void;
   update: (id: string, patch: Partial<SrtSegment>) => void;
   insertAfter: (id: string) => string | null;
   remove: (id: string) => void;
@@ -70,6 +90,8 @@ const initialState: State = {
   sourceId: 0,
   originalPath: null,
   origin: null,
+  gapsCache: [],
+  lcRangesCache: [],
 };
 
 export const useSubStore = createWithEqualityFn<State & Actions>()(
@@ -86,8 +108,97 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           s.sourceId += 1;
           s.originalPath = srcPath;
           s.origin = loadOrigin ?? (srcPath ? 'disk' : null);
+          // Do not auto-regenerate caches here; generated during transcription flows
+          s.gapsCache = [];
+          s.lcRangesCache = [];
         });
       },
+
+      clearConfidence: () =>
+        set(s => {
+          for (const id of s.order) {
+            const cue = s.segments[id];
+            if (!cue) continue;
+            // Remove fields used by low-confidence heuristics coming from transcription
+            delete (cue as any).avg_logprob;
+            delete (cue as any).no_speech_prob;
+            delete (cue as any).words;
+          }
+          // Nudge consumers to refresh
+          s.sourceId += 1;
+        }),
+
+      recomputeCaches: (gapThresholdSec = 3) =>
+        set(s => {
+          const order = s.order;
+          const segments = s.segments;
+          const gaps: Array<{
+            start: number;
+            end: number;
+            dur: number;
+            nextId?: string;
+            prevId?: string;
+          }> = [];
+          if (Array.isArray(order) && order.length > 0) {
+            const isEmpty = (id: string) =>
+              !String(segments[id]?.original || '').trim();
+            for (let i = 0; i < order.length; ) {
+              const id = order[i];
+              const a = segments[id];
+              if (!a) {
+                i++;
+                continue;
+              }
+              if (isEmpty(id)) {
+                const start = a.start;
+                let runEnd = a.end;
+                let j = i + 1;
+                while (j < order.length && isEmpty(order[j])) {
+                  runEnd = Math.max(runEnd, segments[order[j]]!.end);
+                  j++;
+                }
+                const next = j < order.length ? segments[order[j]] : undefined;
+                const finalEnd =
+                  next && next.start > runEnd ? next.start : runEnd;
+                const dur = finalEnd - start;
+                if (dur >= gapThresholdSec) {
+                  gaps.push({
+                    start,
+                    end: finalEnd,
+                    dur,
+                    nextId: next?.id,
+                    prevId: segments[order[i]]?.id,
+                  });
+                }
+                i = j;
+              } else {
+                const next =
+                  i + 1 < order.length ? segments[order[i + 1]] : undefined;
+                if (next) {
+                  const gap = Math.max(0, next.start - a.end);
+                  if (gap >= gapThresholdSec) {
+                    gaps.push({
+                      start: a.end,
+                      end: next.start,
+                      dur: gap,
+                      nextId: next.id,
+                      prevId: a.id,
+                    });
+                  }
+                }
+                i++;
+              }
+            }
+          }
+          s.gapsCache = gaps;
+          s.lcRangesCache = groupUncertainRanges(order, segments as any);
+        }),
+
+      clearCaches: () =>
+        set(s => {
+          s.gapsCache = [];
+          s.lcRangesCache = [];
+        }),
 
       incSourceId: () =>
         set(s => {
@@ -301,6 +412,71 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           for (let j = i; j < s.order.length; j++) {
             s.segments[s.order[j]].index = j + 1;
           }
+          // Update caches after improve/single-line transcribe
+          const order = s.order;
+          const segments = s.segments;
+          const GAP_THRESHOLD_SEC = 3;
+          const gaps: Array<{
+            start: number;
+            end: number;
+            dur: number;
+            nextId?: string;
+            prevId?: string;
+          }> = [];
+          if (Array.isArray(order) && order.length > 0) {
+            const isEmpty = (id2: string) =>
+              !String(segments[id2]?.original || '').trim();
+            for (let k = 0; k < order.length; ) {
+              const cid = order[k];
+              const a = segments[cid];
+              if (!a) {
+                k++;
+                continue;
+              }
+              if (isEmpty(cid)) {
+                const start = a.start;
+                let runEnd = a.end;
+                let j2 = k + 1;
+                while (j2 < order.length && isEmpty(order[j2])) {
+                  runEnd = Math.max(runEnd, segments[order[j2]]!.end);
+                  j2++;
+                }
+                const next =
+                  j2 < order.length ? segments[order[j2]] : undefined;
+                const finalEnd =
+                  next && next.start > runEnd ? next.start : runEnd;
+                const dur = finalEnd - start;
+                if (dur >= GAP_THRESHOLD_SEC) {
+                  gaps.push({
+                    start,
+                    end: finalEnd,
+                    dur,
+                    nextId: next?.id,
+                    prevId: segments[order[k]]?.id,
+                  });
+                }
+                k = j2;
+              } else {
+                const next =
+                  k + 1 < order.length ? segments[order[k + 1]] : undefined;
+                if (next) {
+                  const gap = Math.max(0, next.start - a.end);
+                  if (gap >= GAP_THRESHOLD_SEC) {
+                    gaps.push({
+                      start: a.end,
+                      end: next.start,
+                      dur: gap,
+                      nextId: next.id,
+                      prevId: a.id,
+                    });
+                  }
+                }
+                k++;
+              }
+            }
+          }
+          s.gapsCache = gaps;
+          s.lcRangesCache = groupUncertainRanges(order, segments as any);
         }),
 
       appendSegments: segs =>

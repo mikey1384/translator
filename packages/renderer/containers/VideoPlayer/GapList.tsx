@@ -1,7 +1,6 @@
 import { css } from '@emotion/css';
 import { colors } from '../../styles';
-import { groupUncertainRanges } from '../../utils/subtitle-heuristics';
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSubStore } from '../../state/subtitle-store';
 import { useVideoStore, useUIStore } from '../../state';
 import { useTranslation } from 'react-i18next';
@@ -58,14 +57,12 @@ const fmt = (s: number) => {
     : [m, sec].map(n => String(n).padStart(2, '0')).join(':');
 };
 
-const GAP_THRESHOLD_SEC = 3; // Show gaps >= 3s
-// Low-confidence heuristics shared via utils
-
 export default function GapList() {
   const { t } = useTranslation();
-  const { order, segments } = useSubStore(s => ({
+  const { order, gaps, lcRanges } = useSubStore(s => ({
     order: s.order,
-    segments: s.segments,
+    gaps: s.gapsCache,
+    lcRanges: s.lcRangesCache,
   }));
   const { url, path } = useVideoStore(s => ({ url: s.url, path: s.path }));
   const hasVideo = Boolean(url || path);
@@ -89,78 +86,7 @@ export default function GapList() {
     else markLCSeen(key);
   };
 
-  const gaps = useMemo(() => {
-    const out: Array<{
-      start: number;
-      end: number;
-      dur: number;
-      nextId?: string;
-      prevId?: string;
-    }> = [];
-    if (!showContent || !order || order.length < 1) return out;
-    const isEmpty = (id: string) =>
-      !String(segments[id]?.original || '').trim();
-    for (let i = 0; i < order.length; ) {
-      const id = order[i];
-      const a = segments[id];
-      if (!a) {
-        i++;
-        continue;
-      }
-      if (isEmpty(id)) {
-        // Merge consecutive empties and include any following time hole up to next non-empty
-        const start = a.start;
-        let runEnd = a.end;
-        let j = i + 1;
-        while (j < order.length && isEmpty(order[j])) {
-          runEnd = Math.max(runEnd, segments[order[j]]!.end);
-          j++;
-        }
-        const next = j < order.length ? segments[order[j]] : undefined;
-        const finalEnd = next && next.start > runEnd ? next.start : runEnd;
-        const dur = finalEnd - start;
-        if (dur >= GAP_THRESHOLD_SEC) {
-          out.push({
-            start,
-            end: finalEnd,
-            dur,
-            nextId: next?.id,
-            prevId: segments[order[i]]?.id,
-          });
-        }
-        i = j;
-      } else {
-        // Plain time hole between non-empty neighbors
-        const next = i + 1 < order.length ? segments[order[i + 1]] : undefined;
-        if (next) {
-          const gap = Math.max(0, next.start - a.end);
-          if (gap >= GAP_THRESHOLD_SEC) {
-            out.push({
-              start: a.end,
-              end: next.start,
-              dur: gap,
-              nextId: next.id,
-              prevId: a.id,
-            });
-          }
-        }
-        i++;
-      }
-    }
-    return out;
-  }, [order, segments]);
-
-  // Low-confidence segments grouped into contiguous ranges
-  const lowConfidence = useMemo(() => {
-    if (!showContent || !order || order.length === 0)
-      return [] as Array<{
-        start: number;
-        end: number;
-        count: number;
-        firstId?: string;
-      }>;
-    return groupUncertainRanges(order, segments as any);
-  }, [order, segments, showContent]);
+  const lowConfidence = lcRanges;
 
   // Tab UI styles
   const tabBar = css`

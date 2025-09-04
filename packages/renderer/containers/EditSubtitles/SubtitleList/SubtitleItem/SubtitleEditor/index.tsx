@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import Button from '../../../../../components/Button.js';
-import { colors } from '../../../../../styles.js';
+import { colors, selectStyles } from '../../../../../styles.js';
 import SubtitleEditTextarea from './SubtitleEditTextarea.js';
 import { useTranslation } from 'react-i18next';
 import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
@@ -19,6 +19,10 @@ import {
   groupUncertainRanges,
   synthesizePlaceholdersWithinWindow,
 } from '../../../../../utils/subtitle-heuristics.js';
+import {
+  TRANSLATION_LANGUAGE_GROUPS,
+  TRANSLATION_LANGUAGES_BASE,
+} from '../../../../../constants/translation-languages.js';
 
 const timeInputStyles = css`
   width: 150px;
@@ -76,6 +80,8 @@ export default function SubtitleEditor({
   }));
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
   const editingLocked = isTranscribing || isTranslatingGlobal;
+  const transcriptionLanguage = useUIStore(s => s.transcriptionLanguage);
+  const setTranscriptionLanguage = useUIStore(s => s.setTranscriptionLanguage);
 
   useEffect(() => {
     if (subtitle) {
@@ -163,7 +169,11 @@ export default function SubtitleEditor({
       const res = await transcribeOneLine({
         videoPath,
         segment: { start: segStart, end: segEnd },
-        promptContext: prompt,
+        promptContext: `${prompt}`,
+        language:
+          transcriptionLanguage && transcriptionLanguage !== 'auto'
+            ? transcriptionLanguage
+            : undefined,
         operationId,
       });
 
@@ -489,7 +499,9 @@ export default function SubtitleEditor({
           <div
             className={css`
               display: flex;
-              align-items: center;
+              flex-direction: column;
+              gap: 8px;
+              align-items: flex-start;
             `}
           >
             <Button
@@ -502,6 +514,28 @@ export default function SubtitleEditor({
             >
               {t('input.transcribeOnly', 'Transcribe Audio')}
             </Button>
+
+            <select
+              value={transcriptionLanguage}
+              onChange={e => setTranscriptionLanguage(e.target.value)}
+              className={selectStyles}
+            >
+              <option value="auto">{t('common.auto', 'Auto')}</option>
+              {TRANSLATION_LANGUAGES_BASE.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {t(opt.labelKey)}
+                </option>
+              ))}
+              {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+                <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                  {group.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
         )}
 
@@ -509,7 +543,9 @@ export default function SubtitleEditor({
           <div
             className={css`
               display: flex;
-              align-items: center;
+              flex-direction: column;
+              gap: 8px;
+              align-items: flex-start;
             `}
           >
             <Button
@@ -525,6 +561,28 @@ export default function SubtitleEditor({
             >
               {t('subtitles.improveTranscription', 'Improve Transcription')}
             </Button>
+
+            <select
+              value={transcriptionLanguage}
+              onChange={e => setTranscriptionLanguage(e.target.value)}
+              className={selectStyles}
+            >
+              <option value="auto">{t('common.auto', 'Auto')}</option>
+              {TRANSLATION_LANGUAGES_BASE.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {t(opt.labelKey)}
+                </option>
+              ))}
+              {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+                <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                  {group.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
         )}
       </div>

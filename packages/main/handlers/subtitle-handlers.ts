@@ -26,7 +26,6 @@ import {
   extractAudioSegment,
   mkTempAudioName,
 } from '../services/subtitle-processing/audio-extractor.js';
-import * as stage5Client from '../services/stage5-client.js';
 import { transcribePass } from '../services/subtitle-processing/pipeline/transcribe-pass.js';
 
 let fileManagerInstance: FileManager | null = null;
@@ -394,6 +393,7 @@ export async function handleTranscribeOneLine(
     videoPath: string;
     segment: { start: number; end: number };
     promptContext?: string;
+    language?: string;
   },
   operationId: string
 ): Promise<{
@@ -412,7 +412,7 @@ export async function handleTranscribeOneLine(
 
   let tempAudioPath: string | null = null;
   try {
-    const { videoPath, segment, promptContext } = options;
+    const { videoPath, segment, promptContext, language } = options;
     if (!videoPath || !segment || segment.end <= segment.start) {
       throw new Error('Invalid transcribe-one-line options');
     }
@@ -463,6 +463,8 @@ export async function handleTranscribeOneLine(
       },
       operationId,
       signal: controller.signal,
+      language: language,
+      promptContext,
     });
     const offset = start;
     const segsOut = res.segments.map(s => ({
@@ -471,7 +473,7 @@ export async function handleTranscribeOneLine(
       end: s.end + offset,
     })) as any;
     const transcriptText = (segsOut || [])
-      .map(s => String((s as any).original ?? ''))
+      .map((s: any) => String((s as any).original ?? ''))
       .join(' ')
       .replace(/\s{2,}/g, ' ')
       .trim();

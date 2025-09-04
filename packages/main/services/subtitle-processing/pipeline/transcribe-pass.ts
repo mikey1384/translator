@@ -34,12 +34,16 @@ export async function transcribePass({
   progressCallback,
   operationId,
   signal,
+  language,
+  promptContext,
 }: {
   audioPath: string;
   services: { ffmpeg: FFmpegContext };
   progressCallback?: GenerateProgressCallback;
   operationId: string;
   signal: AbortSignal;
+  language?: string;
+  promptContext?: string;
 }): Promise<{
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
@@ -156,54 +160,61 @@ export async function transcribePass({
       throwIfAborted(signal);
       const batchSize = firstWave ? 1 : PAR; // warm up context with one sequential chunk
       const batch = chunks.slice(i, Math.min(i + batchSize, chunks.length));
-      const tasks = batch.map(meta => (async () => {
-        if (meta.end <= meta.start) {
-          log.warn(
-            `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
+      const tasks = batch.map(meta =>
+        (async () => {
+          if (meta.end <= meta.start) {
+            log.warn(
+              `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
+            );
+            return [] as SrtSegment[];
+          }
+
+          // Build prompt context from previously transcribed segments (prior waves only)
+          const priorSegs = overallSegments
+            .filter(s => (s.original ?? '').trim() !== '')
+            .slice()
+            .sort((a, b) => a.start - b.start);
+          // If an explicit prompt was provided (e.g., one-line improve), use it for all chunks.
+          // Otherwise, build a light contextual prompt from prior segments.
+          let promptForChunk = promptContext || '';
+          if (!promptForChunk && priorSegs.length >= 5) {
+            const lastTwo = priorSegs.slice(-2).map(s => s.original.trim());
+            promptForChunk = buildPrompt(lastTwo.join('\n'));
+          }
+
+          const chunkAudioPath = mkTempAudioName(
+            path.join(tempDir, `chunk_${meta.index}_${operationId}`)
           );
-          return [] as SrtSegment[];
-        }
+          createdChunkPaths.push(chunkAudioPath);
 
-        // Build prompt context from previously transcribed segments (prior waves only)
-        const priorSegs = overallSegments
-          .filter(s => (s.original ?? '').trim() !== '')
-          .slice()
-          .sort((a, b) => a.start - b.start);
-        let promptForChunk = '';
-        if (priorSegs.length >= 5) {
-          const lastTwo = priorSegs.slice(-2).map(s => s.original.trim());
-          promptForChunk = buildPrompt(lastTwo.join('\n'));
-        }
+          await extractAudioSegment(ffmpeg, {
+            input: audioPath,
+            output: chunkAudioPath,
+            start: meta.start,
+            duration: meta.end - meta.start,
+            operationId: operationId ?? '',
+            signal,
+          });
 
-        const chunkAudioPath = mkTempAudioName(
-          path.join(tempDir, `chunk_${meta.index}_${operationId}`)
-        );
-        createdChunkPaths.push(chunkAudioPath);
+          throwIfAborted(signal);
 
-        await extractAudioSegment(ffmpeg, {
-          input: audioPath,
-          output: chunkAudioPath,
-          start: meta.start,
-          duration: meta.end - meta.start,
-          operationId: operationId ?? '',
-          signal,
-        });
+          const segs = await transcribeChunk({
+            chunkIndex: meta.index,
+            chunkPath: chunkAudioPath,
+            startTime: meta.start,
+            signal,
+            operationId: operationId ?? '',
+            promptContext: promptForChunk,
+            language,
+          });
 
-        throwIfAborted(signal);
-
-        const segs = await transcribeChunk({
-          chunkIndex: meta.index,
-          chunkPath: chunkAudioPath,
-          startTime: meta.start,
-          signal,
-          operationId: operationId ?? '',
-          promptContext: promptForChunk,
-        });
-
-        throwIfAborted(signal);
-        const ordered = (segs || []).slice().sort((a, b) => a.start - b.start);
-        return ordered;
-      })());
+          throwIfAborted(signal);
+          const ordered = (segs || [])
+            .slice()
+            .sort((a, b) => a.start - b.start);
+          return ordered;
+        })()
+      );
 
       const results = await Promise.allSettled(tasks);
       for (let k = 0; k < results.length; k++) {
@@ -221,8 +232,13 @@ export async function transcribePass({
           ) {
             throw err; // propagate credit exhaustion
           }
-          if (String(err?.message || err) === 'Cancelled' || err?.name === 'AbortError') {
-            log.info(`[${operationId}] Chunk ${meta.index} processing cancelled.`);
+          if (
+            String(err?.message || err) === 'Cancelled' ||
+            err?.name === 'AbortError'
+          ) {
+            log.info(
+              `[${operationId}] Chunk ${meta.index} processing cancelled.`
+            );
           } else {
             log.error(
               `[${operationId}] Error processing chunk ${meta.index}:`,
@@ -242,7 +258,11 @@ export async function transcribePass({
       const partialSegs = overallSegments
         .slice()
         .sort((a, b) => a.start - b.start)
-        .filter(s => (s.original ?? '').trim() !== '' && !isLikelyHallucination({ s, merged }));
+        .filter(
+          s =>
+            (s.original ?? '').trim() !== '' &&
+            !isLikelyHallucination({ s, merged })
+        );
       const intermediateSrt = buildSrt({ segments: partialSegs, mode: 'dual' });
       log.debug(
         `[Transcription Wave] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
@@ -322,11 +342,11 @@ export async function transcribePass({
       error.message === 'Cancelled' ||
       signal?.aborted;
 
-      progressCallback?.({
-        percent: 100,
-        stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
-        error: !isCancel ? error?.message || String(error) : undefined,
-      });
+    progressCallback?.({
+      percent: 100,
+      stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
+      error: !isCancel ? error?.message || String(error) : undefined,
+    });
 
     if (error instanceof SubtitleProcessingError || isCancel) {
       throw error;

@@ -227,22 +227,23 @@ async function downloadMediaInternal(
     const finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 
-  if (res.cancelled || !finalPath || !filename) {
+    if (res.cancelled || !finalPath || !filename) {
       set((state: UrlState) => {
         state.needCookies = false;
         state.download.inProgress = false;
-      // Preserve NeedCookies stage if backend returned that special case
-      if (res.error === 'NeedCookies') {
-        state.needCookies = true;
-        state.download.stage = 'NeedCookies';
-      } else {
-        state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
-      }
-      state.download.percent = 100;
-      if (res.cancelled) state.error = null;
-      else if (res.error === 'NeedCookies') state.error = null; // banner handles it
-      else state.error = res.error || 'Failed to process URL';
-      if (res.cancelled) state.cookieBannerSuppressed = true;
+        // Preserve NeedCookies stage if backend returned that special case
+        if (res.error === 'NeedCookies') {
+          state.needCookies = true;
+          state.download.stage = 'NeedCookies';
+        } else {
+          state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
+        }
+        state.download.percent = 100;
+        if (res.cancelled) state.error = null;
+        else if (res.error === 'NeedCookies')
+          state.error = null; // banner handles it
+        else state.error = res.error || 'Failed to process URL';
+        if (res.cancelled) state.cookieBannerSuppressed = true;
       });
       return res;
     }

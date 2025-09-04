@@ -24,6 +24,8 @@ interface State {
   // Exclamation seen state (session-only; reset on video change)
   seenGaps: Set<string>;
   seenLC: Set<string>;
+  // Transcription controls (session-only)
+  transcriptionLanguage: string; // 'auto' | language token
 }
 
 // Enable Set/Map support in Immer (used for seenGaps/seenLC)
@@ -50,6 +52,8 @@ interface Actions {
   markGapSeen(key: string): void;
   markLCSeen(key: string): void;
   resetExclamationState(): void;
+  // Transcription controls setters
+  setTranscriptionLanguage(lang: string): void;
 }
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
@@ -76,6 +80,7 @@ const initial: State = {
   showEditPanel: false,
   seenGaps: new Set<string>(),
   seenLC: new Set<string>(),
+  transcriptionLanguage: 'auto',
 };
 
 const resetSearchState = (s: Draft<State>) => {
@@ -219,6 +224,10 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
             s.seenGaps = new Set();
             s.seenLC = new Set();
           });
+        },
+
+        setTranscriptionLanguage(lang: string) {
+          set({ transcriptionLanguage: lang || 'auto' });
         },
       };
     })

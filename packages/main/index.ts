@@ -310,9 +310,7 @@ try {
     const operationId =
       options.operationId ||
       `translate-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    log.info(
-      `[main.ts/translate-one-line] Starting operation: ${operationId}`
-    );
+    log.info(`[main.ts/translate-one-line] Starting operation: ${operationId}`);
     try {
       const result = await subtitleHandlers.handleTranslateOneLine(
         event,
@@ -450,7 +448,7 @@ try {
       const cpu = os.cpus()?.[0]?.model ?? '';
       const isAppleSilicon = platform === 'darwin' && arch === 'arm64';
       return { platform, arch, release, cpu, isAppleSilicon };
-    } catch (e: any) {
+    } catch {
       return { platform: process.platform, arch: process.arch } as any;
     }
   });

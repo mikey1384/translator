@@ -255,6 +255,10 @@ function flush() {
         try {
           useSubStore.getState().bridgeGaps(3);
         } catch {}
+        // Generate Gap/LC caches once per transcription process
+        try {
+          useSubStore.getState().recomputeCaches(3);
+        } catch {}
       }
       // If process was cancelled (e.g., due to credit exhaustion), refresh credit state
       if (/cancel/.test(stageLower)) {
