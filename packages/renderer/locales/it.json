@@ -108,9 +108,7 @@
       "count": "{{count}} righe"
     }
   },
-  "progress": {
-    "beginningReview": "Avvio della revisione..."
-  },
+  
   "editSubtitles": {
     "title": "Modifica sottotitoli",
     "listTitle": "Sottotitoli ({{count}})",
@@ -271,6 +269,13 @@
     }
   },
   "progress": {
+    "beginningReview": "Avvio della revisione...",
+    "starting": "Avvio...",
+    "completed": "Completato",
+    "processCancelled": "Processo annullato",
+    "extractingAudio": "Estrazione audio...",
+    "transcribingOf": "Trascrizione {{done}}/{{total}}",
+    "error": "Errore",
     "transcribedChunks": "Trascritti e puliti {{done}}/{{total}} blocchi",
     "gapRepair": "Riparazione lacune #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Riparazione sottotitoli mancanti (Iterazione {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",

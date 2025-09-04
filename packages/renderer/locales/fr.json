@@ -108,9 +108,7 @@
       "count": "{{count}} lignes"
     }
   },
-  "progress": {
-    "beginningReview": "Démarrage de la relecture..."
-  },
+  
   "editSubtitles": {
     "title": "Modifier les sous-titres",
     "listTitle": "Sous-titres ({{count}})",
@@ -281,6 +279,13 @@
     }
   },
   "progress": {
+    "beginningReview": "Démarrage de la relecture...",
+    "starting": "Démarrage...",
+    "completed": "Terminé",
+    "processCancelled": "Processus annulé",
+    "extractingAudio": "Extraction de l'audio...",
+    "transcribingOf": "Transcription {{done}}/{{total}}",
+    "error": "Erreur",
     "transcribedChunks": "Transcrit et nettoyé {{done}}/{{total}} fragments",
     "gapRepair": "Réparation des lacunes #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Réparation des sous-titres manquants (Itération {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",

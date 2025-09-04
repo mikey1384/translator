@@ -108,9 +108,7 @@
       "count": "{{count}} 行"
     }
   },
-  "progress": {
-    "beginningReview": "レビューを開始しています..."
-  },
+  
   "editSubtitles": {
     "title": "字幕を編集",
     "listTitle": "字幕 ({{count}})",
@@ -281,6 +279,13 @@
     }
   },
   "progress": {
+    "beginningReview": "レビューを開始しています...",
+    "starting": "開始中...",
+    "completed": "完了",
+    "processCancelled": "処理がキャンセルされました",
+    "extractingAudio": "音声を抽出中...",
+    "transcribingOf": "文字起こし {{done}}/{{total}}",
+    "error": "エラー",
     "transcribedChunks": "{{done}}/{{total}} チャンクを文字起こし・クリーニング済み",
     "gapRepair": "ギャップ修復 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}",

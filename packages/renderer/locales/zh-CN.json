@@ -108,9 +108,7 @@
       "count": "{{count}} 行"
     }
   },
-  "progress": {
-    "beginningReview": "开始审阅..."
-  },
+  
   "editSubtitles": {
     "title": "编辑字幕",
     "listTitle": "字幕 ({{count}})",
@@ -281,6 +279,13 @@
     }
   },
   "progress": {
+    "beginningReview": "开始审阅...",
+    "starting": "开始中...",
+    "completed": "已完成",
+    "processCancelled": "进程已取消",
+    "extractingAudio": "正在提取音频...",
+    "transcribingOf": "转录 {{done}}/{{total}}",
+    "error": "错误",
     "transcribedChunks": "已转录和清理 {{done}}/{{total}} 片段",
     "gapRepair": "间隙修复 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}",

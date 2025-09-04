@@ -123,7 +123,18 @@
     }
   },
   "progress": {
-    "beginningReview": "리뷰 시작 중..."
+    "beginningReview": "리뷰 시작 중...",
+    "starting": "시작 중...",
+    "completed": "완료",
+    "processCancelled": "작업이 취소되었습니다",
+    "extractingAudio": "오디오 추출 중...",
+    "transcribingOf": "전사 중 {{done}}/{{total}}",
+    "error": "오류",
+    "transcribedChunks": "{{done}}/{{total}} 전사 완료",
+    "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
+    "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
+    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})"
   },
   "editSubtitles": {
     "title": "자막 편집",
@@ -305,13 +316,6 @@
       "openSettings": "설정 열기",
       "ok": "확인"
     }
-  },
-  "progress": {
-    "transcribedChunks": "{{done}}/{{total}} 전사 완료",
-    "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
-    "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
-    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})"
   },
   "messages": {
     "fileSaved": "파일 저장됨:\n{{path}}",

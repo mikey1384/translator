@@ -92,15 +92,13 @@ export async function extractSubtitlesFromMedia({
     if (isCancel) {
       progressCallback?.({
         percent: 100,
-        stage: 'Process cancelled',
+        stage: '__i18n__:process_cancelled',
       });
       log.info(`[${operationId}] Process cancelled by user.`);
     } else {
       progressCallback?.({
         percent: 100,
-        stage: isCancel
-          ? 'Process cancelled'
-          : `Error: ${error?.message || String(error)}`,
+        stage: '__i18n__:error',
         error: creditCancel
           ? 'insufficient-credits'
           : !isCancel

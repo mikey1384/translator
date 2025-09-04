@@ -48,6 +48,23 @@ function translateBackendMessage(
       const total = parseInt(parts[4], 10);
       return t('progress.gapRepair', { iteration, done, total });
     }
+    case 'beginning_review':
+      return t('progress.beginningReview');
+    case 'starting':
+      return t('progress.starting');
+    case 'completed':
+      return t('progress.completed');
+    case 'process_cancelled':
+      return t('progress.processCancelled');
+    case 'extracting_audio':
+      return t('progress.extractingAudio');
+    case 'transcribing_of': {
+      const done = parseInt(parts[2], 10) || 1;
+      const total = parseInt(parts[3], 10) || 1;
+      return t('progress.transcribingOf', { done, total });
+    }
+    case 'error':
+      return t('progress.error');
     default:
       return stage;
   }

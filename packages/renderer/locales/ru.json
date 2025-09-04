@@ -108,9 +108,7 @@
       "count": "{{count}} строк"
     }
   },
-  "progress": {
-    "beginningReview": "Начало проверки..."
-  },
+  
   "editSubtitles": {
     "title": "Редактировать субтитры",
     "listTitle": "Субтитры ({{count}})",
@@ -281,6 +279,13 @@
     }
   },
   "progress": {
+    "beginningReview": "Начало проверки...",
+    "starting": "Запуск...",
+    "completed": "Готово",
+    "processCancelled": "Процесс отменён",
+    "extractingAudio": "Извлечение аудио...",
+    "transcribingOf": "Транскрипция {{done}}/{{total}}",
+    "error": "Ошибка",
     "transcribedChunks": "Транскрибировано и очищено {{done}}/{{total}} фрагментов",
     "gapRepair": "Восстановление пропусков #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",

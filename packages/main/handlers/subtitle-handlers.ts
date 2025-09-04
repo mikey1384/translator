@@ -296,7 +296,7 @@ export async function handleTranslateOneLine(
     // Initial progress
     event.sender.send('generate-subtitles-progress', {
       percent: 0,
-      stage: 'Starting...',
+      stage: '__i18n__:starting',
       operationId,
     });
 
@@ -325,7 +325,7 @@ export async function handleTranslateOneLine(
     // Indicate review is about to begin for clearer UX
     event.sender.send('generate-subtitles-progress', {
       percent: 60,
-      stage: 'Beginning review...',
+      stage: '__i18n__:beginning_review',
       operationId,
     });
 
@@ -348,7 +348,7 @@ export async function handleTranslateOneLine(
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: 'Completed',
+      stage: '__i18n__:completed',
       operationId,
     });
 
@@ -366,9 +366,7 @@ export async function handleTranslateOneLine(
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel
-          ? 'Process cancelled'
-          : `Error: ${error?.message || String(error)}`,
+        stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
         error: creditCancel
           ? 'insufficient-credits'
           : isCancel
@@ -431,7 +429,7 @@ export async function handleTranscribeOneLine(
 
     event.sender.send('generate-subtitles-progress', {
       percent: 10,
-      stage: 'Extracting audio segment...',
+      stage: '__i18n__:extracting_audio',
       operationId,
     });
     await extractAudioSegment(ffmpeg, {
@@ -445,7 +443,7 @@ export async function handleTranscribeOneLine(
 
     event.sender.send('generate-subtitles-progress', {
       percent: 30,
-      stage: 'Transcribing 1/1',
+      stage: '__i18n__:transcribing_of:1:1',
       operationId,
     });
 
@@ -480,7 +478,7 @@ export async function handleTranscribeOneLine(
 
     event.sender.send('generate-subtitles-progress', {
       percent: 100,
-      stage: 'Completed',
+      stage: '__i18n__:completed',
       operationId,
     });
 
@@ -503,9 +501,7 @@ export async function handleTranscribeOneLine(
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
-        stage: isCancel
-          ? 'Process cancelled'
-          : `Error: ${error?.message || String(error)}`,
+        stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
         error: creditCancel
           ? 'insufficient-credits'
           : isCancel

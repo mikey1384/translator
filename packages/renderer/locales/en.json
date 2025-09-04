@@ -122,9 +122,7 @@
       "count": "{{count}} lines"
     }
   },
-  "progress": {
-    "beginningReview": "Beginning review..."
-  },
+  
   "editSubtitles": {
     "title": "Edit Subtitles",
     "listTitle": "Subtitles ({{count}})",
@@ -308,6 +306,13 @@
     }
   },
   "progress": {
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
     "transcribedChunks": "Transcribed {{done}}/{{total}} chunks",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",

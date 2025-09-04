@@ -309,7 +309,7 @@ export async function transcribePass({
       log.info(
         `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
       );
-      progressCallback?.({ percent: 100, stage: 'Completed' });
+      progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
       return { segments: cleaned, speechIntervals: merged.slice() };
     }
   } catch (error: any) {
@@ -322,13 +322,11 @@ export async function transcribePass({
       error.message === 'Cancelled' ||
       signal?.aborted;
 
-    progressCallback?.({
-      percent: 100,
-      stage: isCancel
-        ? 'Process cancelled'
-        : `Error: ${error?.message || String(error)}`,
-      error: !isCancel ? error?.message || String(error) : undefined,
-    });
+      progressCallback?.({
+        percent: 100,
+        stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
+        error: !isCancel ? error?.message || String(error) : undefined,
+      });
 
     if (error instanceof SubtitleProcessingError || isCancel) {
       throw error;

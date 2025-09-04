@@ -108,9 +108,7 @@
       "count": "{{count}} linhas"
     }
   },
-  "progress": {
-    "beginningReview": "Iniciando revisão..."
-  },
+  
   "editSubtitles": {
     "title": "Editar Legendas",
     "listTitle": "Legendas ({{count}})",
@@ -263,7 +261,7 @@
       "openSettings": "Abrir Configurações",
       "ok": "OK"
     },
-    "unsavedSrtOnTranscribe": {
+  "unsavedSrtOnTranscribe": {
       "title": "Salvar as legendas atuais antes de transcrever?",
       "message": "Você já tem legendas carregadas. A transcrição irá substituí-las. O que deseja fazer?",
       "saveAndTranscribe": "Salvar e transcrever",
@@ -272,6 +270,13 @@
     }
   },
   "progress": {
+    "beginningReview": "Iniciando revisão...",
+    "starting": "Iniciando...",
+    "completed": "Concluído",
+    "processCancelled": "Processo cancelado",
+    "extractingAudio": "Extraindo áudio...",
+    "transcribingOf": "Transcrevendo {{done}}/{{total}}",
+    "error": "Erro",
     "transcribedChunks": "Transcrito e limpo {{done}}/{{total}} fragmentos",
     "gapRepair": "Reparo de lacunas #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando legendas ausentes (Iteração {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
