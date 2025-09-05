@@ -49,18 +49,40 @@ export function buildSettingsHandlers(opts: {
 
   /* ─────────── language preference ─────────── */
   function getLanguagePreference() {
+    // 1) Respect saved preference
     if (store.has('app_language_preference')) {
       return store.get('app_language_preference', 'en');
     }
-    const sysLocale = (
-      app.getPreferredSystemLanguages?.()[0] ??
-      app.getLocale() ??
+
+    // 2) Detect system locale (keep region)
+    const raw = (
+      app.getPreferredSystemLanguages?.()[0] ||
+      app.getLocale() ||
       'en'
     )
-      .split('-')[0]
-      .toLowerCase();
+      .replace('_', '-')
+      .trim();
+    const ln = raw.toLowerCase();
 
-    return sysLocale || 'en';
+    // 3) Special handling for Chinese so we don't lose the script/region
+    if (ln.startsWith('zh')) {
+      // Map traditional locales to zh-TW; default to zh-CN otherwise
+      if (
+        ln.includes('tw') ||
+        ln.includes('hk') ||
+        ln.includes('mo') ||
+        ln.includes('hant')
+      ) {
+        return 'zh-TW';
+      }
+      return 'zh-CN';
+    }
+
+    // 4) Fall back to base language (en, es, fr, etc.)
+    const base = ln.split('-')[0];
+    // Capitalization for i18n keys isn't strictly needed here (renderer normalizes),
+    // but we keep the simple base code for non-Chinese languages.
+    return base || 'en';
   }
 
   async function setLanguagePreference(

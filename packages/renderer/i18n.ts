@@ -45,6 +45,83 @@ import * as SystemIPC from '@ipc/system';
 
 const LS_KEY = 'app_language_preference';
 
+// Languages bundled in this build (keys must match resource keys below)
+const SUPPORTED_LANGS = new Set([
+  'en',
+  'ko',
+  'ja',
+  'ms',
+  'pl',
+  'zh-CN',
+  'zh-TW',
+  'es',
+  'fr',
+  'de',
+  'it',
+  'pt',
+  'ru',
+  'nl',
+  'sv',
+  'tr',
+  'no',
+  'da',
+  'fi',
+  'el',
+  'cs',
+  'hu',
+  'ro',
+  'uk',
+  'hi',
+  'id',
+  'th',
+  'tl',
+  'bn',
+  'ta',
+  'te',
+  'mr',
+  'ur',
+  'ar',
+  'he',
+  'fa',
+  'sw',
+  'af',
+  'vi',
+]);
+
+function normalizeBrowserLang(input: string | null | undefined): string {
+  const raw = (input || 'en').replace('_', '-').trim();
+  const ln = raw.toLowerCase();
+  // Prefer exact match when we have it (case-sensitive keys later)
+  const exactCandidates = [
+    raw, // keep original casing first
+    raw.toLowerCase(),
+    raw.toUpperCase(),
+    // common normalized case like en-US
+    raw
+      .split('-')
+      .map((p, i) => (i === 0 ? p.toLowerCase() : p.toUpperCase()))
+      .join('-'),
+  ];
+  for (const c of exactCandidates) {
+    if (SUPPORTED_LANGS.has(c as any)) return c;
+  }
+  // Special-case Chinese
+  if (ln.startsWith('zh')) {
+    if (
+      ln.includes('tw') ||
+      ln.includes('hk') ||
+      ln.includes('mo') ||
+      ln.includes('hant')
+    )
+      return 'zh-TW';
+    return 'zh-CN';
+  }
+  // Fallback to base language if supported
+  const base = ln.split('-')[0] || 'en';
+  if (SUPPORTED_LANGS.has(base)) return base;
+  return 'en';
+}
+
 const getInitialLanguage = async (): Promise<string> => {
   try {
     const storedLang = await SystemIPC.getLanguagePreference();
@@ -52,28 +129,23 @@ const getInitialLanguage = async (): Promise<string> => {
       console.log(
         `[i18n] Retrieved language from Electron store: ${storedLang}`
       );
-      return storedLang;
+      // If main returned a Chinese base like 'zh', map to zh-CN/zh-TW
+      return normalizeBrowserLang(storedLang);
     }
     const storedLangLS = localStorage.getItem(LS_KEY);
     if (storedLangLS) {
       console.log(
         `[i18n] Retrieved language from localStorage fallback: ${storedLangLS}`
       );
-      return storedLangLS;
+      return normalizeBrowserLang(storedLangLS);
     }
   } catch (error) {
     console.error('[i18n] Error retrieving initial language:', error);
   }
 
-  const defaultLang = navigator.language.split('-')[0] || 'en';
-  if (!i18n.hasResourceBundle(defaultLang, 'translation')) {
-    console.log(
-      `[i18n] Default language ${defaultLang} not found in resources. Falling back to English.`
-    );
-    return 'en';
-  }
-  console.log(`[i18n] Using default language: ${defaultLang}`);
-  return defaultLang;
+  const picked = normalizeBrowserLang(navigator.language || 'en');
+  console.log(`[i18n] Using default language: ${picked}`);
+  return picked;
 };
 
 const initI18nPromise = (async () => {
