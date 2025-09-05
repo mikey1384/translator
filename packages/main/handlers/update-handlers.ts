@@ -26,6 +26,18 @@ export function buildUpdateHandlers(opts: {
   autoUpdater.autoDownload = true; // download automatically in background
   autoUpdater.disableWebInstaller = true; // VSCode-style in-place update
   autoUpdater.logger = log;
+  // Force Windows builds to use our Cloudflare generic feed going forward
+  try {
+    if (process.platform === 'win32') {
+      const url = 'https://downloads.stage5.tools/win/latest/';
+      // setFeedURL overrides provider selection from app-update.yml
+      // @ts-expect-error runtime accepts GenericServerOptions
+      autoUpdater.setFeedURL({ provider: 'generic', url });
+      log.info(`[update] Windows feed set to generic: ${url}`);
+    }
+  } catch (e) {
+    log.warn('[update] Failed to set Windows feed URL:', e);
+  }
   autoUpdater.channel = 'latest'; // or 'beta', 'alpha', …
 
   /* 2️⃣  Event fan-out to renderer ----------------------------------- */

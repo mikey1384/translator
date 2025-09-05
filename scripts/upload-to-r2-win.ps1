@@ -6,6 +6,9 @@ Param(
   [string]$SrcPath = "dist/Translator Setup $Version.exe",
 
   [Parameter(Mandatory = $false)]
+  [string]$LatestYamlPath = 'dist/latest.yml',
+
+  [Parameter(Mandatory = $false)]
   [string]$BucketBase = 'r2-upload:ai-translator-downloads/win',
 
   [Parameter(Mandatory = $false)]
@@ -28,12 +31,46 @@ function Resolve-SourcePath {
   throw "Source installer not found at '$p' and no matching 'Translator Setup *.exe' in dist/"
 }
 
+function Resolve-LatestYamlPath {
+  param([string]$p)
+  if (Test-Path -LiteralPath $p) {
+    return (Get-Item -LiteralPath $p).FullName
+  }
+  throw "latest.yml not found at '$p'. Build with electron-builder first."
+}
+
+function Resolve-OptionalPath {
+  param(
+    [string]$pattern
+  )
+  $exact = Join-Path -Path 'dist' -ChildPath $pattern
+  if (Test-Path -LiteralPath $exact) {
+    return (Get-Item -LiteralPath $exact).FullName
+  }
+  $candidates = Get-ChildItem -LiteralPath 'dist' -Filter $pattern -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+  if ($candidates -and $candidates.Count -gt 0) {
+    return $candidates[0].FullName
+  }
+  return $null
+}
+
 Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
 Write-Host "Force re-upload: $Force"
 
 $src = Resolve-SourcePath -p $SrcPath
 Write-Host "Source: $src"
+
+$latestYaml = Resolve-LatestYamlPath -p $LatestYamlPath
+Write-Host "latest.yml: $latestYaml"
+
+# Optional blockmap (present if differential metadata is generated)
+$blockmap = Resolve-OptionalPath -pattern "Translator Setup *.exe.blockmap"
+if ($null -ne $blockmap) {
+  Write-Host "blockmap:   $blockmap"
+} else {
+  Write-Host "blockmap:   (none found)"
+}
 
 # Compute SHA256 and write checksum file
 $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $src).Hash
@@ -47,6 +84,27 @@ $destVersion = "$BucketBase/$Version/Translator-x64.exe"
 $destLatest  = "$BucketBase/latest/Translator-x64.exe"
 $destVersionSha = "$BucketBase/$Version/Translator-x64.exe.sha256"
 $destLatestSha  = "$BucketBase/latest/Translator-x64.exe.sha256"
+
+# Also upload versioned-named installer expected by latest.yml
+$installerFileName = [System.IO.Path]::GetFileName($src)
+$destVersionedVersion = "$BucketBase/$Version/$installerFileName"
+$destVersionedLatest  = "$BucketBase/latest/$installerFileName"
+
+# Additionally upload a hyphenated alias to match latest.yml (which may replace spaces with '-')
+$installerHyphen = $installerFileName -replace ' ', '-'
+$destHyphenLatest  = "$BucketBase/latest/$installerHyphen"
+$destHyphenVersion = "$BucketBase/$Version/$installerHyphen"
+
+# latest.yml destinations (primarily used by auto-updater)
+$destLatestYaml  = "$BucketBase/latest/latest.yml"
+$destVersionYaml = "$BucketBase/$Version/latest.yml"
+
+# Blockmap destinations (match the installerFileName + .blockmap)
+if ($null -ne $blockmap) {
+  $blockmapFileName = "$installerFileName.blockmap"
+  $destBlockmapLatest  = "$BucketBase/latest/$blockmapFileName"
+  $destBlockmapVersion = "$BucketBase/$Version/$blockmapFileName"
+}
 
 function Invoke-RcloneCopyTo {
   param(
@@ -69,13 +127,35 @@ function Invoke-RcloneCopyTo {
 Invoke-RcloneCopyTo -from $src -to $destVersion
 Invoke-RcloneCopyTo -from $src -to $destLatest
 
+# Upload installer again with the original file name (so latest.yml can reference it)
+Invoke-RcloneCopyTo -from $src -to $destVersionedVersion
+Invoke-RcloneCopyTo -from $src -to $destVersionedLatest
+
+# Upload hyphenated alias to match latest.yml (Translator-Setup-<ver>.exe)
+Invoke-RcloneCopyTo -from $src -to $destHyphenLatest
+Invoke-RcloneCopyTo -from $src -to $destHyphenVersion
+
 # Upload checksum files
 Invoke-RcloneCopyTo -from $hashFile -to $destVersionSha
 Invoke-RcloneCopyTo -from $hashFile -to $destLatestSha
+
+# Upload latest.yml (both versioned and latest locations for traceability)
+Invoke-RcloneCopyTo -from $latestYaml -to $destLatestYaml
+Invoke-RcloneCopyTo -from $latestYaml -to $destVersionYaml
+
+# Upload blockmap if present (must live alongside the original-named installer)
+if ($null -ne $blockmap) {
+  Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapLatest
+  Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapVersion
+}
 
 Write-Host "Uploads complete."
 
 # Print public-ish hints (bucket path only)
 Write-Host "Versioned: $destVersion"
 Write-Host "Latest:   $destLatest"
+Write-Host "latest.yml: $destLatestYaml"
+if ($null -ne $blockmap) {
+  Write-Host "blockmap: $destBlockmapLatest"
+}
 

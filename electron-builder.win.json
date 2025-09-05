@@ -6,7 +6,7 @@
   "publish": [
     {
       "provider": "generic",
-      "url": "${env.WINDOWS_UPDATE_BASE_URL}"
+      "url": "https://downloads.stage5.tools/win/latest/"
     }
   ],
   "win": {

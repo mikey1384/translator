@@ -25,6 +25,7 @@ build/
 # Electron packaging files
 out/
 vendor/
+scripts/.secrets/
 
 # Testing
 coverage/
