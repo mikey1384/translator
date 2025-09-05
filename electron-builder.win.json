@@ -3,6 +3,12 @@
   "buildDependenciesFromSource": true,
   "npmRebuild": true,
   "artifactName": "Translator-${version}-win32-${arch}.${ext}",
+  "publish": [
+    {
+      "provider": "generic",
+      "url": "${env.WINDOWS_UPDATE_BASE_URL}"
+    }
+  ],
   "win": {
     "target": [{ "target": "nsis", "arch": ["x64"] }],
     "signtoolOptions": {
