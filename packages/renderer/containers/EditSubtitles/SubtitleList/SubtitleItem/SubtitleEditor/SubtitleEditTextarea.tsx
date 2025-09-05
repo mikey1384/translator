@@ -16,34 +16,6 @@ function escapeRegExp(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function getHighlightedHtml(text: string, searchTerm: string): string {
-  const buildRegex = (raw: string): RegExp | null => {
-    const trimmedRaw = raw.trim();
-    if (!trimmedRaw) return null;
-    try {
-      const pattern = escapeRegExp(trimmedRaw).replace(/\s+/g, '\\s+');
-      return new RegExp(pattern, 'gi');
-    } catch {
-      return null;
-    }
-  };
-
-  const regex = buildRegex(searchTerm);
-
-  if (!regex) {
-    return text.replace(/ /g, '&nbsp;').replace(/\n/g, '<br/>');
-  }
-
-  return text
-    .replace(/ /g, '&nbsp;')
-    .replace(/\n/g, '<br/>')
-    .replace(
-      regex,
-      match =>
-        `<mark style="background: yellow; color: black; border-radius: 3px; padding: 0 2px;">${match.trim()}</mark>`
-    );
-}
-
 export default function SubtitleEditTextarea({
   value,
   searchTerm,
@@ -55,84 +27,43 @@ export default function SubtitleEditTextarea({
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
-  const draftRef = useRef(value);
   const idleTimer = useRef<NodeJS.Timeout | null>(null);
   const rafIdRef = useRef<number | null>(null);
 
-  const [highlightHtml, setHighlightHtml] = useState(() =>
-    getHighlightedHtml(value, searchTerm)
-  );
-  const [isTyping, setIsTyping] = useState(false);
+  const [localValue, setLocalValue] = useState<string>(value);
 
   useEffect(() => {
-    draftRef.current = value;
-    if (textareaRef.current && textareaRef.current.value !== value) {
-      textareaRef.current.value = value;
-    }
-
-    setHighlightHtml(getHighlightedHtml(value, searchTerm));
-  }, [value, searchTerm]);
+    setLocalValue(value);
+  }, [value]);
 
   useEffect(() => {
     if (!highlightRef.current || !textareaRef.current) return;
     highlightRef.current.scrollTop = textareaRef.current.scrollTop;
     highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-  }, [highlightHtml]);
+  }, [localValue, searchTerm]);
 
-  const commit = useCallback(() => {
-    onChange(draftRef.current);
-  }, [onChange]);
-
-  const refreshHighlight = useCallback(() => {
-    if (rafIdRef.current) return;
-    rafIdRef.current = requestAnimationFrame(() => {
-      rafIdRef.current = null;
-      setHighlightHtml(getHighlightedHtml(draftRef.current, searchTerm));
-    });
-  }, [searchTerm, setHighlightHtml]);
+  const commit = useCallback((text: string) => onChange(text), [onChange]);
 
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       if (readOnly) return;
-      draftRef.current = e.target.value;
-      setIsTyping(true);
-
-      refreshHighlight();
-
-      // If the user cleared the field completely (e.g., Cmd/Ctrl+X or Delete),
-      // commit immediately so the UI reflects the empty value without waiting
-      // for the debounce timer.
-      if (draftRef.current.length === 0) {
-        if (idleTimer.current) {
-          clearTimeout(idleTimer.current);
-          idleTimer.current = null as any;
-        }
-        // Update highlight immediately for a crisp UI
-        setHighlightHtml(getHighlightedHtml('', searchTerm));
-        commit();
-        return;
-      }
-
-      if (idleTimer.current) {
-        clearTimeout(idleTimer.current);
-      }
+      const next = e.target.value;
+      setLocalValue(next);
+      if (idleTimer.current) clearTimeout(idleTimer.current);
       idleTimer.current = setTimeout(() => {
-        setIsTyping(false);
-        refreshHighlight();
-        commit();
+        commit(next);
       }, 200);
     },
-    [commit, refreshHighlight]
+    [commit, readOnly]
   );
 
   const handleBlur = useCallback(() => {
     if (idleTimer.current) {
       clearTimeout(idleTimer.current);
     }
-    setIsTyping(false);
-    refreshHighlight();
-    commit();
-  }, [commit, refreshHighlight]);
+    // Final commit on blur so parent store stays in sync
+    commit(localValue);
+  }, [commit, localValue]);
 
   const handleScroll = useCallback(() => {
     if (!highlightRef?.current || !textareaRef?.current) return;
@@ -142,20 +73,17 @@ export default function SubtitleEditTextarea({
 
   const handleFocus = useCallback(() => {
     if (readOnly) return;
-    setIsTyping(true);
+    // No-op; overlay reads from localValue directly
   }, [readOnly]);
 
   const handleKeyUp = useCallback(() => {
     if (readOnly) return;
-    // After any key press, if the field is empty commit immediately so
-    // the overlay/highlight clears without waiting for debounce.
+
     const cur = textareaRef.current?.value ?? '';
     if (cur.length === 0) {
-      draftRef.current = '';
-      setHighlightHtml(getHighlightedHtml('', searchTerm));
-      commit();
+      setLocalValue('');
     }
-  }, [commit, searchTerm, readOnly]);
+  }, [readOnly]);
 
   useEffect(() => {
     return () => {
@@ -194,13 +122,13 @@ export default function SubtitleEditTextarea({
     z-index: 1;
   `;
 
-  const textareaStyles = (typing: boolean, ro: boolean) => css`
+  const textareaStyles = (ro: boolean) => css`
     ${commonStyles}
     position: relative;
     background: transparent;
     resize: none;
     border: ${ro ? '1px solid transparent' : '1px solid #555'};
-    color: ${typing ? '#fff' : 'transparent'};
+    color: transparent;
     caret-color: ${ro ? 'transparent' : '#fff'};
     z-index: 2;
     cursor: ${ro ? 'not-allowed' : 'text'};
@@ -240,7 +168,7 @@ export default function SubtitleEditTextarea({
           `}
           aria-hidden
         >
-        <svg
+          <svg
             width="12"
             height="12"
             viewBox="0 0 24 24"
@@ -259,17 +187,52 @@ export default function SubtitleEditTextarea({
           <span>{t('common.locked', 'Locked')}</span>
         </div>
       )}
-      <div
-        ref={highlightRef}
-        className={highlightStyles}
-        dangerouslySetInnerHTML={{ __html: highlightHtml }}
-      />
+      <div ref={highlightRef} className={highlightStyles}>
+        {(() => {
+          const raw = localValue ?? '';
+          const buildRegex = (rawTerm: string): RegExp | null => {
+            const trimmed = rawTerm.trim();
+            if (!trimmed) return null;
+            try {
+              const pattern = escapeRegExp(trimmed).replace(/\s+/g, '\\s+');
+              return new RegExp(pattern, 'gi');
+            } catch {
+              return null;
+            }
+          };
+          const re = buildRegex(searchTerm);
+          if (!raw && placeholder && !readOnly) {
+            return <span style={{ color: '#9aa0a6' }}>{placeholder}</span>;
+          }
+          if (!re) return raw;
+          const nodes: React.ReactNode[] = [];
+          let last = 0;
+          let m: RegExpExecArray | null;
+          while ((m = re.exec(raw)) !== null) {
+            const start = m.index;
+            const end = start + m[0].length;
+            if (start > last) nodes.push(raw.slice(last, start));
+            nodes.push(
+              <span
+                key={`h-${start}-${end}`}
+                style={{ background: 'yellow', color: '#000' }}
+              >
+                {raw.slice(start, end)}
+              </span>
+            );
+            last = end;
+            if (m.index === re.lastIndex) re.lastIndex++;
+          }
+          if (last < raw.length) nodes.push(raw.slice(last));
+          return nodes;
+        })()}
+      </div>
       <textarea
         ref={textareaRef}
-        className={textareaStyles(!readOnly && isTyping, readOnly)}
+        className={textareaStyles(readOnly)}
         placeholder={placeholder}
         rows={rows}
-        defaultValue={value}
+        value={localValue}
         onChange={handleInput}
         onBlur={handleBlur}
         onFocus={handleFocus}
@@ -277,7 +240,11 @@ export default function SubtitleEditTextarea({
         onScroll={handleScroll}
         readOnly={readOnly}
         aria-readonly={readOnly}
-        title={readOnly ? t('common.lockedWhileProcessing', 'Locked while processing') : undefined}
+        title={
+          readOnly
+            ? t('common.lockedWhileProcessing', 'Locked while processing')
+            : undefined
+        }
       />
     </div>
   );
