@@ -85,12 +85,10 @@ $destLatest  = "$BucketBase/latest/Translator-x64.exe"
 $destVersionSha = "$BucketBase/$Version/Translator-x64.exe.sha256"
 $destLatestSha  = "$BucketBase/latest/Translator-x64.exe.sha256"
 
-# Also upload versioned-named installer expected by latest.yml
+# Also compute names expected by latest.yml
 $installerFileName = [System.IO.Path]::GetFileName($src)
-$destVersionedVersion = "$BucketBase/$Version/$installerFileName"
-$destVersionedLatest  = "$BucketBase/latest/$installerFileName"
 
-# Additionally upload a hyphenated alias to match latest.yml (which may replace spaces with '-')
+# Hyphenated canonical name to match latest.yml (which may replace spaces with '-')
 $installerHyphen = $installerFileName -replace ' ', '-'
 $destHyphenLatest  = "$BucketBase/latest/$installerHyphen"
 $destHyphenVersion = "$BucketBase/$Version/$installerHyphen"
@@ -123,27 +121,45 @@ function Invoke-RcloneCopyTo {
   & rclone @rcloneArgs -- $from $to
 }
 
-# Upload installer (versioned and latest)
-Invoke-RcloneCopyTo -from $src -to $destVersion
-Invoke-RcloneCopyTo -from $src -to $destLatest
+function Invoke-RcloneCopyRemote {
+  param(
+    [string]$fromRemote,
+    [string]$toRemote
+  )
+  Write-Host "rclone (remote->remote) copyto -> $toRemote"
+  $rcloneArgs = @('copyto', '--retries', '3', '--retries-sleep', '2s')
+  & rclone @rcloneArgs -- $fromRemote $toRemote
+}
 
-# Upload installer again with the original file name (so latest.yml can reference it)
-Invoke-RcloneCopyTo -from $src -to $destVersionedVersion
-Invoke-RcloneCopyTo -from $src -to $destVersionedLatest
+function Invoke-RcloneCopyAlways {
+  param(
+    [string]$from,
+    [string]$to
+  )
+  Write-Host "rclone copyto (force) -> $to"
+  $rcloneArgs = @('copyto', '--ignore-times', '--retries', '3', '--retries-sleep', '2s')
+  & rclone @rcloneArgs -- $from $to
+}
 
-# Upload hyphenated alias to match latest.yml (Translator-Setup-<ver>.exe)
+# Upload canonical installer to latest (hyphenated name matches latest.yml)
 Invoke-RcloneCopyTo -from $src -to $destHyphenLatest
+
+# Also upload directly to the versioned canonical path to guarantee folder presence
 Invoke-RcloneCopyTo -from $src -to $destHyphenVersion
 
-# Upload checksum files
-Invoke-RcloneCopyTo -from $hashFile -to $destVersionSha
-Invoke-RcloneCopyTo -from $hashFile -to $destLatestSha
+# Server-side copy canonical -> stable aliases (latest and versioned)
+Invoke-RcloneCopyRemote -fromRemote $destHyphenLatest -toRemote $destLatest
+Invoke-RcloneCopyRemote -fromRemote $destHyphenVersion -toRemote $destVersion
 
-# Upload latest.yml (both versioned and latest locations for traceability)
-Invoke-RcloneCopyTo -from $latestYaml -to $destLatestYaml
-Invoke-RcloneCopyTo -from $latestYaml -to $destVersionYaml
+# Upload checksum files (always overwrite small metadata)
+Invoke-RcloneCopyAlways -from $hashFile -to $destVersionSha
+Invoke-RcloneCopyAlways -from $hashFile -to $destLatestSha
 
-# Upload blockmap if present (must live alongside the original-named installer)
+# Upload latest.yml to latest (always overwrite), and also write a copy to versioned
+Invoke-RcloneCopyAlways -from $latestYaml -to $destLatestYaml
+Invoke-RcloneCopyAlways -from $latestYaml -to $destVersionYaml
+
+# Upload blockmap if present (place next to canonical and ensure versioned copy exists)
 if ($null -ne $blockmap) {
   Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapLatest
   Invoke-RcloneCopyTo -from $blockmap -to $destBlockmapVersion
@@ -152,10 +168,21 @@ if ($null -ne $blockmap) {
 Write-Host "Uploads complete."
 
 # Print public-ish hints (bucket path only)
-Write-Host "Versioned: $destVersion"
-Write-Host "Latest:   $destLatest"
+Write-Host "Canonical: $destHyphenLatest"
+Write-Host "Versioned canonical: $destHyphenVersion"
+Write-Host "Stable alias (latest): $destLatest"
 Write-Host "latest.yml: $destLatestYaml"
 if ($null -ne $blockmap) {
   Write-Host "blockmap: $destBlockmapLatest"
 }
+
+# Quick verify listing (best-effort)
+try {
+  Write-Host "--- Verify listing: latest/ ---"
+  & rclone lsf "$BucketBase/latest" | Out-Host
+} catch {}
+try {
+  Write-Host "--- Verify listing: $Version/ ---"
+  & rclone lsf "$BucketBase/$Version" | Out-Host
+} catch {}
 

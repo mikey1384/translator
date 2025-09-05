@@ -51,6 +51,9 @@ export const useUpdateStore = create<UpdateState>(set => {
 
     check: async () => {
       try {
+        // Avoid re-checking while a download is in progress or already downloaded
+        const s = useUpdateStore.getState();
+        if (s.downloading || s.downloaded) return;
         await UpdateIPC.checkForUpdates();
       } catch (err: any) {
         set({ error: err.message || 'Failed to check for updates' });

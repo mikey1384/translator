@@ -105,6 +105,7 @@ export default function FloatingActionButtons({
   const [hoverHalf, setHoverHalf] = useState<null | 'top' | 'bottom'>(null);
   const { available, downloading, percent, downloaded, install, check } =
     useUpdateStore();
+  const doDownload = () => useUpdateStore.getState().download();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -175,6 +176,16 @@ export default function FloatingActionButtons({
 
     // If update is downloading, do nothing (let it finish in background)
     if (downloading) {
+      return;
+    }
+
+    // If an update is available but not yet downloaded, kick off download
+    if (available && !downloaded) {
+      try {
+        await doDownload();
+      } catch {
+        // ignore; error surface handled by store
+      }
       return;
     }
 
