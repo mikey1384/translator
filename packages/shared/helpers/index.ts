@@ -1,4 +1,5 @@
 import { SrtSegment } from '@shared-types/app';
+import { autoSplitBilingualCues } from './bilingual';
 import { openFile as openFileIPC } from './electron-ipc';
 
 export function srtStringToSeconds(raw: string): number {
@@ -13,6 +14,11 @@ export class SubtitleProcessingError extends Error {
     super(message);
     this.name = 'SubtitleProcessingError';
   }
+}
+
+function flattenCueText(input?: string): string {
+  if (!input) return '';
+  return input.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 export function parseSrt(srtString: string): SrtSegment[] {
@@ -352,9 +358,18 @@ export async function openSubtitleWithElectron(): Promise<{
     localStorage.setItem('originalSrtPath', filePath);
     localStorage.setItem('originalLoadPath', filePath);
 
-    // When loading user SRT from disk, do NOT interpret line breaks as dual-language splits.
-    // Treat the entire cue text as original only.
-    const segments = parseSrtOriginalOnly(content);
+    // When loading user SRT from disk, we start by treating the entire cue text
+    // as original only, then attempt a safe, script-aware split if the file looks
+    // bilingual (e.g., Japanese+English). Falls back to original-only when unsure.
+    const originalOnly = parseSrtOriginalOnly(content);
+    const segments = autoSplitBilingualCues(originalOnly).map(seg => ({
+      ...seg,
+      original: flattenCueText(seg.original),
+      translation:
+        typeof seg.translation === 'string'
+          ? flattenCueText(seg.translation)
+          : seg.translation,
+    }));
 
     return {
       file,
