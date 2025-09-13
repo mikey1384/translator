@@ -17,6 +17,8 @@ import {
 import { createOperationTempDir, cleanupTempDir } from './temp-utils.js';
 import { initPuppeteer } from './puppeteer-setup.js';
 import { generateSubtitleEvents } from './srt-parser.js';
+import { parseSrt, buildSrt } from '../../../shared/helpers/index.js';
+import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pipeline/finalize-pass.js';
 import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
 import { probeFps } from './ffprobe-utils.js';
@@ -173,8 +175,17 @@ export function initializeRenderWindowHandlers({
         );
         options.frameRate = realFps;
 
+        // Finalize subtitles just before render: join <5s gaps and enforce >=3s per cue
+        sendProgress({ percent: 5, stage: 'Finalizing subtitles…' });
+        const parsedForFinalize = parseSrt(options.srtContent);
+        const normalizedSegs = normalizeSubtitleSegments(parsedForFinalize);
+        const finalizedSrt = buildSrt({
+          segments: normalizedSegs,
+          mode: 'dual',
+        });
+
         const uniqueEventsMs = generateSubtitleEvents({
-          srtContent: options.srtContent,
+          srtContent: finalizedSrt,
           outputMode: (options.outputMode ?? 'dual') as 'dual' | 'single',
           videoDuration: options.videoDuration,
           operationId,

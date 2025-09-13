@@ -5,22 +5,9 @@ import { GenerateSubtitlesFullResult } from '../types.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { Stage, scaleProgress } from './progress.js';
 
-export async function finalizePass({
-  segments,
-  speechIntervals,
-  fileManager,
-  progressCallback,
-}: {
-  segments: void | SrtSegment[];
-  speechIntervals: Array<{ start: number; end: number }>;
-  fileManager: FileManager;
-  progressCallback?: GenerateProgressCallback;
-}): Promise<GenerateSubtitlesFullResult> {
-  progressCallback?.({
-    percent: scaleProgress(0, Stage.FINAL, Stage.FINAL + 5),
-    stage: 'Applying final adjustments',
-  });
-
+export function normalizeSubtitleSegments(
+  segments: SrtSegment[]
+): SrtSegment[] {
   // Clone, normalize numeric times, and sort
   const items = (segments ?? [])
     .map((s, idx) => ({
@@ -33,7 +20,7 @@ export async function finalizePass({
     .map(s => ({ ...s }));
 
   // Policy constants
-  const MIN_DISPLAY_SEC = 3.0; // no subtitle shorter than this
+  const MIN_DISPLAY_SEC = 3.0; // prefer at least this long, without clashing
   const JOIN_GAP_LT_SEC = 5.0; // join gaps strictly less than this
 
   // Forward normalization pass:
@@ -59,19 +46,20 @@ export async function finalizePass({
       }
     }
 
-    // Enforce minimum display duration
+    // Enforce minimum display duration only if it doesn't clash with the next cue
+    // i.e., extend to 3s when there is room, otherwise leave as-is.
     const desiredEnd = cur.start + MIN_DISPLAY_SEC;
-    if (cur.end < desiredEnd) {
-      // Try to extend within available room up to next.start
-      const room = next ? Math.max(0, next.start - cur.end) : Infinity;
-      if (!next || cur.end + room >= desiredEnd) {
-        cur.end = Math.min(desiredEnd, next ? next.start : desiredEnd);
+    if (cur.end - cur.start < MIN_DISPLAY_SEC) {
+      if (!next) {
+        // No next cue; we can safely extend to desiredEnd
+        cur.end = Math.max(cur.end, desiredEnd);
       } else {
-        // Not enough room; push next.start forward to satisfy current min duration
-        cur.end = desiredEnd;
-        if (next && next.start < cur.end) {
-          next.start = cur.end;
-          if (next.end < next.start) next.end = next.start; // keep non-negative duration
+        const available = next.start - cur.start; // time window until next cue starts
+        if (available >= MIN_DISPLAY_SEC) {
+          cur.end = Math.max(cur.end, Math.min(desiredEnd, next.start));
+        } else {
+          // Not enough room; do not extend into next cue
+          if (cur.end > next.start) cur.end = next.start;
         }
       }
     }
@@ -89,6 +77,27 @@ export async function finalizePass({
 
   // Reindex sequentially
   for (let i = 0; i < items.length; i++) items[i].index = i + 1;
+
+  return items;
+}
+
+export async function finalizePass({
+  segments,
+  speechIntervals,
+  fileManager,
+  progressCallback,
+}: {
+  segments: void | SrtSegment[];
+  speechIntervals: Array<{ start: number; end: number }>;
+  fileManager: FileManager;
+  progressCallback?: GenerateProgressCallback;
+}): Promise<GenerateSubtitlesFullResult> {
+  progressCallback?.({
+    percent: scaleProgress(0, Stage.FINAL, Stage.FINAL + 5),
+    stage: 'Applying final adjustments',
+  });
+
+  const items = normalizeSubtitleSegments((segments ?? []) as SrtSegment[]);
 
   const finalSrtContent = buildSrt({ segments: items, mode: 'dual' });
 
