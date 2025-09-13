@@ -85,12 +85,6 @@ export async function processVideoUrl(
         ? cookiesBrowser
         : defaultBrowserHint(),
     ];
-    // When using cookies, prefer the web client so cookies apply correctly
-  } else {
-    // For non-cookie attempts, a more permissive client can help for Shorts or rate-limited IPs
-    if (/youtube\.com/.test(url)) {
-      extra = ['--extractor-args', 'youtube:player_client=android'];
-    }
   }
 
   // --- 1st attempt: use cookies if specified ---

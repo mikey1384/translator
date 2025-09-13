@@ -336,6 +336,11 @@ export async function downloadVideoFromPlatform(
     // ignore
   }
 
+  // Decide container behavior: for high quality, avoid forcing MP4 so we can fetch
+  // the truly highest formats (often VP9/AV1 in WebM/MKV). For mid/low, prefer MP4.
+  const containerArgs =
+    effectiveQuality === 'high' ? [] : ['--merge-output-format', 'mp4'];
+
   const baseArgs = [
     url,
     '--ignore-config',
@@ -344,9 +349,8 @@ export async function downloadVideoFromPlatform(
     tempFilenamePattern,
     '--format',
     formatString,
-    // Prefer MP4 output when possible; yt-dlp will fall back to MKV if needed
-    '--merge-output-format',
-    'mp4',
+    // Container preference (omit for high to avoid restricting format selection)
+    ...containerArgs,
     // Network reliability guards to reduce initial stalls
     '--socket-timeout',
     '10',
