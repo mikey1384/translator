@@ -222,6 +222,7 @@ export async function handleTranslateSubtitles(
           operationId,
         });
       },
+      fileManager,
     });
 
     return {

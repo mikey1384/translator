@@ -133,12 +133,14 @@ export async function translateSubtitlesFromSrt({
   operationId,
   signal,
   progressCallback,
+  fileManager,
 }: {
   srtContent: string;
   targetLanguage: string;
   operationId: string;
   signal: AbortSignal;
   progressCallback?: GenerateProgressCallback;
+  fileManager: FileManager;
 }): Promise<{ subtitles: string }> {
   // Parse provided SRT into segments
   const segments = parseSrt(srtContent);
@@ -198,7 +200,10 @@ export async function translateSubtitlesFromSrt({
       {
         const percent = scaleProgress(0, Stage.REVIEW, Stage.FINAL);
         const stage = '__i18n__:beginning_review';
-        const partialResult = buildSrt({ segments: reviewedSegments, mode: 'dual' });
+        const partialResult = buildSrt({
+          segments: reviewedSegments,
+          mode: 'dual',
+        });
         (adaptedProgress ?? progressCallback)?.({
           percent,
           stage,
@@ -271,6 +276,12 @@ export async function translateSubtitlesFromSrt({
     }
   }
 
-  const out = buildSrt({ segments: reviewedSegments, mode: 'dual' });
-  return { subtitles: out };
+  const finalized = await finalizePass({
+    segments: reviewedSegments,
+    speechIntervals: [],
+    fileManager,
+    progressCallback: adaptedProgress ?? progressCallback,
+  });
+
+  return { subtitles: finalized.subtitles };
 }
