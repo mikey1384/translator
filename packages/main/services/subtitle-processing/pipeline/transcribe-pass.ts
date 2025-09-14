@@ -25,7 +25,7 @@ import {
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
-import { WHISPER_PARALLEL } from '../../../../shared/constants/runtime-config.js';
+// Note: batching/parallelism is controlled here; we no longer rely on WHISPER_PARALLEL
 import { throwIfAborted } from '../utils.js';
 
 export async function transcribePass({
@@ -35,6 +35,7 @@ export async function transcribePass({
   operationId,
   signal,
   promptContext,
+  qualityTranscription,
 }: {
   audioPath: string;
   services: { ffmpeg: FFmpegContext };
@@ -42,6 +43,7 @@ export async function transcribePass({
   operationId: string;
   signal: AbortSignal;
   promptContext?: string;
+  qualityTranscription?: boolean;
 }): Promise<{
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
@@ -149,139 +151,226 @@ export async function transcribePass({
     // have been transcribed. After that, provide the previous 2 lines
     // as context for subsequent transcriptions.
 
-    // Process chunks in waves for higher throughput, preserving context from prior waves
-    const PAR = Math.max(1, WHISPER_PARALLEL || 3);
+    // Two modes:
+    // - qualityTranscription: strictly sequential, passing previous chunk's text as context
+    // - default: batched parallel (5 at a time) with light prior context
+    const useQuality = !!qualityTranscription;
+    const CONCURRENCY = useQuality ? 1 : 5;
     let done = 0;
-    let i = 0;
-    let firstWave = true;
-    while (i < chunks.length) {
-      throwIfAborted(signal);
-      const batchSize = firstWave ? 1 : PAR; // warm up context with one sequential chunk
-      const batch = chunks.slice(i, Math.min(i + batchSize, chunks.length));
-      const tasks = batch.map(meta =>
-        (async () => {
-          if (meta.end <= meta.start) {
-            log.warn(
-              `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
-            );
-            return [] as SrtSegment[];
-          }
 
-          // Build prompt context from previously transcribed segments (prior waves only)
-          const priorSegs = overallSegments
-            .filter(s => (s.original ?? '').trim() !== '')
-            .slice()
-            .sort((a, b) => a.start - b.start);
-          // If an explicit prompt was provided (e.g., one-line improve), use it for all chunks.
-          // Otherwise, build a light contextual prompt from prior segments.
-          let promptForChunk = promptContext || '';
-          if (!promptForChunk && priorSegs.length >= 5) {
-            const lastTwo = priorSegs.slice(-2).map(s => s.original.trim());
-            promptForChunk = buildPrompt(lastTwo.join('\n'));
-          }
-
-          const chunkAudioPath = mkTempAudioName(
-            path.join(tempDir, `chunk_${meta.index}_${operationId}`)
+    if (CONCURRENCY === 1) {
+      let rollingContext = promptContext || '';
+      for (const meta of chunks) {
+        throwIfAborted(signal);
+        if (meta.end <= meta.start) {
+          log.warn(
+            `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
           );
-          createdChunkPaths.push(chunkAudioPath);
-
-          await extractAudioSegment(ffmpeg, {
-            input: audioPath,
-            output: chunkAudioPath,
-            start: meta.start,
-            duration: meta.end - meta.start,
-            operationId: operationId ?? '',
-            signal,
-          });
-
-          throwIfAborted(signal);
-
-          const segs = await transcribeChunk({
-            chunkIndex: meta.index,
-            chunkPath: chunkAudioPath,
-            startTime: meta.start,
-            signal,
-            operationId: operationId ?? '',
-            promptContext: promptForChunk,
-          });
-
-          throwIfAborted(signal);
-          const ordered = (segs || [])
-            .slice()
-            .sort((a, b) => a.start - b.start);
-          return ordered;
-        })()
-      );
-
-      const results = await Promise.allSettled(tasks);
-      for (let k = 0; k < results.length; k++) {
-        const meta = batch[k];
-        const r = results[k];
-        if (r.status === 'fulfilled') {
-          const segs = r.value || [];
-          overallSegments.push(...segs);
           done++;
-        } else {
-          const err = r.reason;
-          if (
-            err?.message === 'insufficient-credits' ||
-            /Insufficient credits/i.test(String(err?.message || err))
-          ) {
-            throw err; // propagate credit exhaustion
-          }
-          if (
-            String(err?.message || err) === 'Cancelled' ||
-            err?.name === 'AbortError'
-          ) {
-            log.info(
-              `[${operationId}] Chunk ${meta.index} processing cancelled.`
-            );
-          } else {
-            log.error(
-              `[${operationId}] Error processing chunk ${meta.index}:`,
-              err?.message || err
-            );
-            progressCallback?.({
-              percent: -1,
-              stage: `Error in chunk ${meta.index}`,
-              error: err?.message || String(err),
-            });
-          }
+          continue;
+        }
+
+        const chunkAudioPath = mkTempAudioName(
+          path.join(tempDir, `chunk_${meta.index}_${operationId}`)
+        );
+        createdChunkPaths.push(chunkAudioPath);
+
+        await extractAudioSegment(ffmpeg, {
+          input: audioPath,
+          output: chunkAudioPath,
+          start: meta.start,
+          duration: meta.end - meta.start,
+          operationId: operationId ?? '',
+          signal,
+        });
+
+        throwIfAborted(signal);
+
+        const promptForChunk = buildPrompt(rollingContext || '');
+        const segs = await transcribeChunk({
+          chunkIndex: meta.index,
+          chunkPath: chunkAudioPath,
+          startTime: meta.start,
+          signal,
+          operationId: operationId ?? '',
+          promptContext: promptForChunk,
+        });
+
+        throwIfAborted(signal);
+        const ordered = (segs || []).slice().sort((a, b) => a.start - b.start);
+        overallSegments.push(...ordered);
+
+        const thisChunkText = ordered
+          .map(s => (s.original ?? '').trim())
+          .filter(Boolean)
+          .join(' ')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        rollingContext = thisChunkText;
+
+        done++;
+
+        const p = 10 + Math.round((done / chunks.length) * 85);
+        const partialSegs = overallSegments
+          .slice()
+          .sort((a, b) => a.start - b.start)
+          .filter(
+            s =>
+              (s.original ?? '').trim() !== '' &&
+              !isLikelyHallucination({ s, merged })
+          );
+        const intermediateSrt = buildSrt({
+          segments: partialSegs,
+          mode: 'dual',
+        });
+        log.debug(
+          `[Transcription Seq] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
+        );
+        progressCallback?.({
+          percent: Math.min(p, 95),
+          stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
+          current: done,
+          total: chunks.length,
+          partialResult: intermediateSrt,
+        });
+
+        if (signal?.aborted) {
+          throwIfAborted(signal);
+          return {
+            segments: overallSegments,
+            speechIntervals: merged.slice(),
+          };
         }
       }
-
-      // Map local transcription progress (0..100) to global 10..95 range
-      const p = 10 + Math.round((done / chunks.length) * 85);
-      const partialSegs = overallSegments
-        .slice()
-        .sort((a, b) => a.start - b.start)
-        .filter(
-          s =>
-            (s.original ?? '').trim() !== '' &&
-            !isLikelyHallucination({ s, merged })
-        );
-      const intermediateSrt = buildSrt({ segments: partialSegs, mode: 'dual' });
-      log.debug(
-        `[Transcription Wave] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
-      );
-      progressCallback?.({
-        percent: Math.min(p, 95),
-        stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
-        current: done,
-        total: chunks.length,
-        partialResult: intermediateSrt,
-      });
-
-      if (signal?.aborted) {
+    } else {
+      let i = 0;
+      while (i < chunks.length) {
         throwIfAborted(signal);
-        return {
-          segments: overallSegments,
-          speechIntervals: merged.slice(),
-        };
-      }
+        const batch = chunks.slice(i, Math.min(i + CONCURRENCY, chunks.length));
 
-      i += batch.length;
-      firstWave = false;
+        const priorSegs = overallSegments
+          .filter(s => (s.original ?? '').trim() !== '')
+          .slice()
+          .sort((a, b) => a.start - b.start);
+        let basePrompt = promptContext || '';
+        if (!basePrompt && priorSegs.length >= 5) {
+          const lastTwo = priorSegs.slice(-2).map(s => s.original.trim());
+          basePrompt = buildPrompt(lastTwo.join('\n'));
+        }
+
+        const tasks = batch.map(meta =>
+          (async () => {
+            if (meta.end <= meta.start) {
+              log.warn(
+                `[${operationId}] Skipping chunk ${meta.index} due to zero/negative duration: ${meta.start.toFixed(2)}-${meta.end.toFixed(2)}`
+              );
+              return [] as SrtSegment[];
+            }
+
+            const chunkAudioPath = mkTempAudioName(
+              path.join(tempDir, `chunk_${meta.index}_${operationId}`)
+            );
+            createdChunkPaths.push(chunkAudioPath);
+
+            await extractAudioSegment(ffmpeg, {
+              input: audioPath,
+              output: chunkAudioPath,
+              start: meta.start,
+              duration: meta.end - meta.start,
+              operationId: operationId ?? '',
+              signal,
+            });
+
+            throwIfAborted(signal);
+
+            const segs = await transcribeChunk({
+              chunkIndex: meta.index,
+              chunkPath: chunkAudioPath,
+              startTime: meta.start,
+              signal,
+              operationId: operationId ?? '',
+              promptContext: basePrompt,
+            });
+
+            throwIfAborted(signal);
+            const ordered = (segs || [])
+              .slice()
+              .sort((a, b) => a.start - b.start);
+            return ordered;
+          })()
+        );
+
+        const results = await Promise.allSettled(tasks);
+        for (let k = 0; k < results.length; k++) {
+          const meta = batch[k];
+          const r = results[k];
+          if (r.status === 'fulfilled') {
+            const segs = r.value || [];
+            overallSegments.push(...segs);
+            done++;
+          } else {
+            const err = r.reason;
+            if (
+              err?.message === 'insufficient-credits' ||
+              /Insufficient credits/i.test(String(err?.message || err))
+            ) {
+              throw err; // propagate credit exhaustion
+            }
+            if (
+              String(err?.message || err) === 'Cancelled' ||
+              err?.name === 'AbortError'
+            ) {
+              log.info(
+                `[${operationId}] Chunk ${meta.index} processing cancelled.`
+              );
+            } else {
+              log.error(
+                `[${operationId}] Error processing chunk ${meta.index}:`,
+                err?.message || err
+              );
+              progressCallback?.({
+                percent: -1,
+                stage: `Error in chunk ${meta.index}`,
+                error: err?.message || String(err),
+              });
+            }
+          }
+        }
+
+        const p = 10 + Math.round((done / chunks.length) * 85);
+        const partialSegs = overallSegments
+          .slice()
+          .sort((a, b) => a.start - b.start)
+          .filter(
+            s =>
+              (s.original ?? '').trim() !== '' &&
+              !isLikelyHallucination({ s, merged })
+          );
+        const intermediateSrt = buildSrt({
+          segments: partialSegs,
+          mode: 'dual',
+        });
+        log.debug(
+          `[Transcription Batch] Built intermediateSrt (first 100 chars): "${intermediateSrt.substring(0, 100)}", Percent: ${Math.round(p)}`
+        );
+        progressCallback?.({
+          percent: Math.min(p, 95),
+          stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
+          current: done,
+          total: chunks.length,
+          partialResult: intermediateSrt,
+        });
+
+        if (signal?.aborted) {
+          throwIfAborted(signal);
+          return {
+            segments: overallSegments,
+            speechIntervals: merged.slice(),
+          };
+        }
+
+        i += batch.length;
+      }
     }
 
     overallSegments.sort((a, b) => a.start - b.start);

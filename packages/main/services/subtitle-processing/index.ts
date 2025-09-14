@@ -13,7 +13,8 @@ import { translatePass } from './pipeline/translate-pass.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
-import { Stage } from './pipeline/progress.js';
+import { scaleProgress, Stage } from './pipeline/progress.js';
+import { reviewTranslationBatch } from './translator.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -67,6 +68,7 @@ export async function extractSubtitlesFromMedia({
       progressCallback: adaptedProgress ?? progressCallback,
       operationId,
       signal,
+      qualityTranscription: options?.qualityTranscription ?? false,
     });
 
     return await finalizePass({
@@ -134,6 +136,7 @@ export async function translateSubtitlesFromSrt({
   signal,
   progressCallback,
   fileManager,
+  qualityTranslation,
 }: {
   srtContent: string;
   targetLanguage: string;
@@ -141,6 +144,7 @@ export async function translateSubtitlesFromSrt({
   signal: AbortSignal;
   progressCallback?: GenerateProgressCallback;
   fileManager: FileManager;
+  qualityTranslation?: boolean;
 }): Promise<{ subtitles: string }> {
   // Parse provided SRT into segments
   const segments = parseSrt(srtContent);
@@ -181,12 +185,8 @@ export async function translateSubtitlesFromSrt({
 
   // Optionally run review pass (skip when target is 'original')
   const reviewedSegments = translatedSegments;
-  if (targetLanguage !== 'original') {
+  if (targetLanguage !== 'original' && (qualityTranslation ?? false)) {
     try {
-      // Batch review with light context, mapped to REVIEW..FINAL progress
-      const { scaleProgress, Stage } = await import('./pipeline/progress.js');
-      const { reviewTranslationBatch } = await import('./translator.js');
-
       const total = translatedSegments.length;
       // Review window design:
       // - 30 target lines to review per request
@@ -215,7 +215,9 @@ export async function translateSubtitlesFromSrt({
 
       for (let start = 0; start < total; start += BATCH) {
         const end = Math.min(start + BATCH, total);
-        const contextBefore = translatedSegments.slice(
+        // Important: use already-reviewed lines for BEFORE context to preserve continuity
+        // across batch boundaries. AFTER context still uses draft (not yet reviewed) lines.
+        const contextBefore = reviewedSegments.slice(
           Math.max(0, start - BEFORE_CTX),
           start
         );
@@ -258,7 +260,7 @@ export async function translateSubtitlesFromSrt({
         done += Math.min(BATCH, end - start);
         const pctLocal = Math.round((done / total) * 100);
         const percent = scaleProgress(pctLocal, Stage.REVIEW, Stage.FINAL);
-        const stage = `Reviewing ${done}/${total}`;
+        const stage = `__i18n__:reviewing_slow:${done}:${total}`;
         const partialResult = buildSrt({
           segments: reviewedSegments,
           mode: 'dual',
