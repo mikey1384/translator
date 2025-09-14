@@ -528,6 +528,7 @@ export default function EditSubtitles({
         videoPath,
         start,
         operationId,
+        qualityTranscription: useUIStore.getState().qualityTranscription,
       });
       // Tail segments are appended via progress listener (appendSegments payload)
       // Mark completion explicitly (progress-buffer will also send final 100%)

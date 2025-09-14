@@ -135,7 +135,8 @@
     "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
     "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
-    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})"
+    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})",
+    "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}"
   },
   "editSubtitles": {
     "title": "자막 편집",
@@ -169,7 +170,18 @@
   },
   "settings": {
     "title": "설정",
-    "creditsDescription": "크레딧을 구매하세요. 표시된 시간은 전사 또는 번역할 수 있는 총 영상 길이에 대한 추정치입니다. 예: 3시간짜리 영상을 전사하고 번역하면 약 6시간(≈140,000 크레딧)이 소모됩니다."
+    "creditsDescription": "크레딧을 구매하세요. 표시된 시간은 전사 또는 번역할 수 있는 총 영상 길이에 대한 추정치입니다. 예: 3시간짜리 영상을 전사하고 번역하면 약 6시간(≈140,000 크레딧)이 소모됩니다.",
+    "performanceQuality": {
+      "title": "성능 및 품질",
+      "qualityTranscription": {
+        "label": "고품질 전사",
+        "help": "켜짐: 이전 줄 컨텍스트를 사용하는 순차 처리. 꺼짐: 더 빠른 배치 모드."
+      },
+      "qualityTranslation": {
+        "label": "고품질 번역",
+        "help": "켜짐: 검토(리뷰) 단계 포함. 꺼짐: 속도를 위해 검토 생략."
+      }
+    }
   },
   "credits": {
     "title": "AI 크레딧",

@@ -207,6 +207,7 @@ declare module '@shared-types/app' {
     filters?: { name: string; extensions: string[] }[];
     multiple?: boolean;
     sourceLang?: string;
+    qualityTranscription?: boolean; // true = sequential/contextual, false = fast/batched
   }
 
   export interface GenerateSubtitlesResult {
@@ -224,6 +225,7 @@ declare module '@shared-types/app' {
     subtitles: string;
     sourceLanguage: string;
     targetLanguage: string;
+    qualityTranslation?: boolean; // true = include review, false = skip review
   }
 
   export interface TranslateSubtitlesResult {
@@ -265,6 +267,7 @@ declare module '@shared-types/app' {
     start: number;
     end?: number;
     operationId?: string;
+    qualityTranscription?: boolean;
   }
 
   export interface TranscribeRemainingResult {

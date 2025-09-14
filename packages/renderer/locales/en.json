@@ -156,7 +156,18 @@
   },
   "settings": {
     "title": "Settings",
-    "creditsDescription": "Buy credits. The hours shown are an estimate of the total video duration you can transcribe or translate. Example: transcribing and translating a 3‑hour video uses about 6 hours (≈140,000 credits)."
+    "creditsDescription": "Buy credits. The hours shown are an estimate of the total video duration you can transcribe or translate. Example: transcribing and translating a 3‑hour video uses about 6 hours (≈140,000 credits).",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    }
   },
   "credits": {
     "title": "AI Credits",
@@ -318,7 +329,8 @@
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "File saved:\n{{path}}",

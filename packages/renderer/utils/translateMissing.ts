@@ -45,6 +45,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     subtitles: srtContent,
     targetLanguage,
     operationId,
+    qualityTranslation: useUIStore.getState().qualityTranslation,
   });
 
   if (res?.translatedSubtitles) {

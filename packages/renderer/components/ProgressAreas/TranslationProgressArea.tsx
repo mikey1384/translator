@@ -52,6 +52,11 @@ function translateBackendMessage(
       const total = parseInt(parts[3], 10) || 0;
       return t('progress.translationCleanup', { done, total });
     }
+    case 'reviewing_slow': {
+      const done = parseInt(parts[2], 10) || 0;
+      const total = parseInt(parts[3], 10) || 0;
+      return t('progress.reviewingSlow', { done, total });
+    }
     case 'repairing_captions': {
       const iteration = parseInt(parts[2], 10);
       const maxIterations = parseInt(parts[3], 10);
@@ -129,19 +134,21 @@ export default function TranslationProgressArea({
     }
   }, [percent, stage, inProgress]);
 
-  // Show banner if AI processing has been stuck for too long
+  // Show banner if AI processing has been stuck for too long (review batches can take minutes)
   useEffect(() => {
     if (!inProgress || !lastProgressUpdate) {
       setShowSlowProgressBanner(false);
       return;
     }
 
+    const STALE_MS = 180_000; // 3 minutes without progress
+    const CHECK_DELAY_MS = 210_000; // check a bit after 3 minutes
     const timer = setTimeout(() => {
       const timeSinceLastUpdate = Date.now() - lastProgressUpdate;
-      if (timeSinceLastUpdate > 60000) {
+      if (timeSinceLastUpdate > STALE_MS) {
         setShowSlowProgressBanner(true);
       }
-    }, 100000);
+    }, CHECK_DELAY_MS);
 
     return () => clearTimeout(timer);
   }, [lastProgressUpdate, inProgress, stage]);

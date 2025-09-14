@@ -95,25 +95,27 @@ export async function transcribeChunk({
         // Prefer Whisper-provided text, fall back to joining words inside the segment
         let text: string = (seg.text ?? '').trim();
         if (!text) {
+          const BOUNDARY_TOL = 0.3; // seconds: include words that slightly cross segment edges
           const segWords = words.filter(
             (w: any) =>
               typeof w?.start === 'number' &&
               typeof w?.end === 'number' &&
-              w.start >= (seg.start ?? 0) - 1e-3 &&
-              w.end <= (seg.end ?? 0) + 1e-3
+              w.start >= (seg.start ?? 0) - BOUNDARY_TOL &&
+              w.end <= (seg.end ?? 0) + BOUNDARY_TOL
           );
           text = segWords.map((w: any) => String(w.word ?? '')).join(' ');
           text = text.replace(/\s{2,}/g, ' ').trim();
         }
 
         // Map words to be relative to segment start (if provided)
+        const BOUNDARY_TOL = 0.3; // seconds: include words that slightly cross segment edges
         const relWords = words
           .filter(
             (w: any) =>
               typeof w?.start === 'number' &&
               typeof w?.end === 'number' &&
-              w.start >= (seg.start ?? 0) - 1e-3 &&
-              w.end <= (seg.end ?? 0) + 1e-3
+              w.start >= (seg.start ?? 0) - BOUNDARY_TOL &&
+              w.end <= (seg.end ?? 0) + BOUNDARY_TOL
           )
           .map((w: any) => ({
             ...w,

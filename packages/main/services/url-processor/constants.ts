@@ -13,10 +13,11 @@ export const PROGRESS = {
 } as const;
 
 export const qualityFormatMap: Record<VideoQuality, string> = {
-  high: 'bv*+ba/b',
-  mid:
-    'bv*[height<=720]+ba/b[height<=720]/' +
-    'bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4]',
+  // Absolute best: do not restrict container/codec; let yt-dlp pick highest
+  high: 'bestvideo+bestaudio/best',
+  // Mid now uses previous "high" profile
+  mid: 'bv*+ba/b',
+  // Low keeps a conservative, broadly compatible profile
   low:
     'bv*[height<=480]+ba[abr<=128]/b[height<=480]/' +
     'bv*[height<=480][ext=mp4]+ba[ext=m4a][abr<=128]/b[height<=480][ext=mp4]',

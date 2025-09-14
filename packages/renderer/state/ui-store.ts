@@ -15,6 +15,9 @@ interface State {
   inputMode: 'file' | 'url';
   targetLanguage: string;
   showOriginalText: boolean;
+  // Quality toggles
+  qualityTranscription: boolean; // true = sequential/contextual
+  qualityTranslation: boolean; // true = include review phase
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
   navTick: number;
@@ -44,6 +47,8 @@ interface Actions {
   setInputMode(mode: 'file' | 'url'): void;
   setTargetLanguage(lang: string): void;
   setShowOriginalText(show: boolean): void;
+  setQualityTranscription(v: boolean): void;
+  setQualityTranslation(v: boolean): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
@@ -58,6 +63,8 @@ interface Actions {
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
+const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
+const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 // Note: We intentionally do NOT persist panel open states across reloads.
 
 const initial: State = {
@@ -71,6 +78,12 @@ const initial: State = {
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   showOriginalText: JSON.parse(
     localStorage.getItem(SHOW_ORIGINAL_KEY) ?? 'true'
+  ),
+  qualityTranscription: JSON.parse(
+    localStorage.getItem(QUALITY_TRANSCRIPTION_KEY) ?? 'false'
+  ),
+  qualityTranslation: JSON.parse(
+    localStorage.getItem(QUALITY_TRANSLATION_KEY) ?? 'false'
   ),
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
@@ -184,6 +197,16 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         setShowOriginalText(show) {
           localStorage.setItem(SHOW_ORIGINAL_KEY, JSON.stringify(show));
           set({ showOriginalText: show });
+        },
+
+        setQualityTranscription(v) {
+          localStorage.setItem(QUALITY_TRANSCRIPTION_KEY, JSON.stringify(v));
+          set({ qualityTranscription: v });
+        },
+
+        setQualityTranslation(v) {
+          localStorage.setItem(QUALITY_TRANSLATION_KEY, JSON.stringify(v));
+          set({ qualityTranslation: v });
         },
 
         setBaseFontSize(size) {

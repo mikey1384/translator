@@ -4,7 +4,10 @@ import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
 import AdminResetButton from './AdminResetButton';
 import { colors } from '../styles';
-import { CREDIT_PACKS, CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../shared/constants';
+import {
+  CREDIT_PACKS,
+  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
+} from '../../shared/constants';
 
 const card = css`
   background: rgba(40, 40, 40, 0.6);
@@ -26,8 +29,7 @@ const balanceTxt = css`
 
 export default function CreditCard() {
   const { t } = useTranslation();
-  const { credits, hours, loading, error, checkoutPending } =
-    useCreditStore();
+  const { credits, hours, loading, error, checkoutPending } = useCreditStore();
   const fmtHours = (v: number | null | undefined) =>
     typeof v === 'number'
       ? v.toLocaleString(undefined, {
@@ -60,9 +62,7 @@ export default function CreditCard() {
             </span>
             <span style={{ fontSize: '1rem', color: colors.textDim }}>
               {' '}
-              (
-              {`${fmtHours(sharedHoursRemaining)} ${t('credits.hours')}`}
-              )
+              ({`${fmtHours(sharedHoursRemaining)} ${t('credits.hours')}`})
             </span>
           </span>
 
@@ -79,13 +79,15 @@ export default function CreditCard() {
             <BuyCreditsButton
               packId={CREDIT_PACKS.STARTER.id}
               label={`$${CREDIT_PACKS.STARTER.price} · ${fmtHours(
-                CREDIT_PACKS.STARTER.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+                CREDIT_PACKS.STARTER.credits /
+                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STANDARD.id}
               label={`$${CREDIT_PACKS.STANDARD.price} · ${fmtHours(
-                CREDIT_PACKS.STANDARD.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
+                CREDIT_PACKS.STANDARD.credits /
+                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
               )} ${t('credits.hours')} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
@@ -95,6 +97,18 @@ export default function CreditCard() {
               )} ${t('credits.hours')} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
             />
           </div>
+
+          {/* Credits description under buttons */}
+          <p
+            style={{
+              marginTop: 4,
+              fontSize: '.95rem',
+              color: colors.textDim,
+              lineHeight: 1.4,
+            }}
+          >
+            {t('settings.creditsDescription')}
+          </p>
 
           {/* Admin reset button (only shows for admin device) */}
           <AdminResetButton />

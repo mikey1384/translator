@@ -193,6 +193,7 @@ export async function handleTranslateSubtitles(
     subtitles: string;
     sourceLanguage?: string;
     targetLanguage: string;
+    qualityTranslation?: boolean;
   },
   operationId: string
 ): Promise<{
@@ -223,6 +224,7 @@ export async function handleTranslateSubtitles(
         });
       },
       fileManager,
+      qualityTranslation: options.qualityTranslation,
     });
 
     return {
@@ -533,7 +535,12 @@ export async function handleTranscribeOneLine(
 
 export async function handleTranscribeRemaining(
   event: IpcMainInvokeEvent,
-  options: { videoPath: string; start: number; end?: number },
+  options: {
+    videoPath: string;
+    start: number;
+    end?: number;
+    qualityTranscription?: boolean;
+  },
   operationId: string
 ): Promise<{
   success: boolean;
@@ -610,6 +617,7 @@ export async function handleTranscribeRemaining(
       },
       operationId,
       signal: controller.signal,
+      qualityTranscription: options?.qualityTranscription ?? false,
     });
 
     const segsOut = res.segments.map(s => ({

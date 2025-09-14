@@ -45,10 +45,12 @@ export async function executeSrtTranslation({
   });
 
   try {
+    const { qualityTranslation } = useUIStore.getState();
     const res = await SubtitlesIPC.translateSubtitles({
       subtitles: srtContent,
       targetLanguage,
       operationId,
+      qualityTranslation,
     });
     if (res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
@@ -101,6 +103,12 @@ export async function executeSubtitleGeneration({
       opts.videoFile = videoFile;
     }
     opts.operationId = operationId;
+    // Quality vs speed toggle for transcription
+    try {
+      opts.qualityTranscription = useUIStore.getState().qualityTranscription;
+    } catch {
+      // do nothing
+    }
 
     // Generate subtitles
     const result = await SubtitlesIPC.generate(opts);

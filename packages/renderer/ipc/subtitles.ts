@@ -60,6 +60,7 @@ export function translateSubtitles(options: {
   sourceLanguage?: string;
   targetLanguage: string;
   operationId?: string;
+  qualityTranslation?: boolean;
 }): Promise<{ translatedSubtitles: string; error?: string }> {
   // Ensure sourceLanguage is a string for type contract if not provided
   const payload = {
@@ -70,6 +71,7 @@ export function translateSubtitles(options: {
     sourceLanguage: string;
     targetLanguage: string;
     operationId?: string;
+    qualityTranslation?: boolean;
   };
   return window.electron.translateSubtitles(payload);
 }
@@ -98,6 +100,7 @@ export function transcribeRemaining(options: {
   start: number;
   end?: number;
   operationId?: string;
+  qualityTranscription?: boolean;
 }): Promise<{ segments: any[]; error?: string }> {
   return (window.electron as any).transcribeRemaining(options);
 }

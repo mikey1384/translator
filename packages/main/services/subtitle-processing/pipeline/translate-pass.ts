@@ -32,7 +32,6 @@ export async function translatePass({
     return segments;
   }
 
-  // Preserve incoming segmentation exactly as produced by transcription/gap-repair
   const segmentsInProcess = segments.map((seg, i) => ({
     ...seg,
     index: i + 1,
@@ -137,6 +136,5 @@ export async function translatePass({
 
   throwIfAborted(signal);
 
-  // Skip AI review/cleanup; return raw translated segments as-is.
   return segmentsInProcess;
 }

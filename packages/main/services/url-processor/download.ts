@@ -136,12 +136,10 @@ export async function downloadVideoFromPlatform(
     throw new Error('FFmpegContext is required for downloadVideoFromPlatform');
   }
 
-  // Preflight: Check/update yt-dlp
+  // Preflight: generic warmup message (do not expose internals)
   progressCallback?.({
     percent: PROGRESS.WARMUP_START + 1,
-    stage: app.isPackaged
-      ? 'Checking yt-dlp…'
-      : 'Skipping yt-dlp update (dev)…',
+    stage: 'Warming up…',
   });
 
   const firstRunFlag = join(
@@ -341,6 +339,10 @@ export async function downloadVideoFromPlatform(
   const containerArgs =
     effectiveQuality === 'high' ? [] : ['--merge-output-format', 'mp4'];
 
+  // Prefer highest resolution/codec/fps explicitly for high quality
+  const sortArgs =
+    effectiveQuality === 'high' ? ['-S', 'res,codec:av1:vp9:avc,fps'] : [];
+
   const baseArgs = [
     url,
     '--ignore-config',
@@ -351,6 +353,8 @@ export async function downloadVideoFromPlatform(
     formatString,
     // Container preference (omit for high to avoid restricting format selection)
     ...containerArgs,
+    // Sorting preference for absolute best
+    ...sortArgs,
     // Network reliability guards to reduce initial stalls
     '--socket-timeout',
     '10',
