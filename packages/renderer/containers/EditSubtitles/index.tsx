@@ -257,14 +257,18 @@ export default function EditSubtitles({
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
 
   const isFreshForThisVideo =
-    origin === 'fresh' && !!videoPath && !!sourceVideoPath && sourceVideoPath === videoPath;
+    origin === 'fresh' &&
+    !!videoPath &&
+    !!sourceVideoPath &&
+    sourceVideoPath === videoPath;
 
-  const headerRight = hasUntranslated && !isFreshForThisVideo ? (
-    <EditHeaderTranslateBar
-      disabled={translationInProgress || isTranscribing}
-      onTranslate={handleTranslateMissing}
-    />
-  ) : null;
+  const headerRight =
+    hasUntranslated && !isFreshForThisVideo ? (
+      <EditHeaderTranslateBar
+        disabled={translationInProgress || isTranscribing}
+        onTranslate={handleTranslateMissing}
+      />
+    ) : null;
 
   return (
     <Section
@@ -717,7 +721,9 @@ export default function EditSubtitles({
           stage: '',
           percent: 0,
         });
-      } catch {}
+      } catch {
+        // Do nothing
+      }
     }
   }
 
@@ -758,7 +764,7 @@ export default function EditSubtitles({
 function collectMatchIndices(
   subs: SrtSegment[],
   term: string,
-  showOriginal: boolean
+  _showOriginal: boolean // intentionally ignored; always search both
 ) {
   if (!term.trim()) return [];
   const needle = term.toLowerCase();
@@ -766,9 +772,8 @@ function collectMatchIndices(
     .map((seg, idx) => {
       const originalText = seg.original || '';
       const translationText = seg.translation || '';
-      const haystack = showOriginal
-        ? `${originalText}\n${translationText}`.toLowerCase()
-        : (translationText || originalText).toLowerCase();
+      // Always search both original and translation so counts match highlights
+      const haystack = `${originalText}\n${translationText}`.toLowerCase();
       return haystack.includes(needle) ? idx : -1;
     })
     .filter(idx => idx !== -1);
