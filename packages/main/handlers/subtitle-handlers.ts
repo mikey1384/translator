@@ -27,6 +27,7 @@ import {
   mkTempAudioName,
 } from '../services/subtitle-processing/audio-extractor.js';
 import { transcribePass } from '../services/subtitle-processing/pipeline/transcribe-pass.js';
+import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 
 let fileManagerInstance: FileManager | null = null;
 let ffmpegCtx: FFmpegContext | null = null;
@@ -265,6 +266,70 @@ export async function handleTranslateSubtitles(
       error: isCancel ? undefined : error?.message || String(error),
       operationId,
     };
+  } finally {
+    registryFinish(operationId);
+  }
+}
+
+export async function handleGenerateTranscriptSummary(
+  event: IpcMainInvokeEvent,
+  options: {
+    segments: { start: number; end: number; text: string }[];
+    targetLanguage: string;
+  },
+  operationId: string
+): Promise<{
+  success: boolean;
+  summary?: string;
+  error?: string;
+  cancelled?: boolean;
+  operationId: string;
+}> {
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+
+  addSubtitle(operationId, controller);
+
+  try {
+    const { summary } = await generateTranscriptSummary({
+      segments: options.segments,
+      targetLanguage: options.targetLanguage,
+      signal: controller.signal,
+      operationId,
+      progressCallback: progress => {
+        event.sender.send('transcript-summary-progress', {
+          ...progress,
+          operationId,
+        });
+      },
+    });
+
+    return { success: true, summary, operationId };
+  } catch (error: any) {
+    const aborted =
+      controller.signal.aborted ||
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled';
+
+    const insufficientCredits =
+      !aborted && /insufficient-credits/i.test(String(error?.message ?? ''));
+
+    event.sender.send('transcript-summary-progress', {
+      percent: 100,
+      stage: aborted ? 'cancelled' : 'error',
+      error: insufficientCredits ? 'insufficient-credits' : error?.message,
+      operationId,
+    });
+
+    if (insufficientCredits) {
+      throw new Error('insufficient-credits');
+    }
+
+    if (aborted) {
+      return { success: false, cancelled: true, operationId };
+    }
+
+    throw error;
   } finally {
     registryFinish(operationId);
   }

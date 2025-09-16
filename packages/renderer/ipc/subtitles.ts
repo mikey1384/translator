@@ -76,6 +76,20 @@ export function translateSubtitles(options: {
   return window.electron.translateSubtitles(payload);
 }
 
+export function generateTranscriptSummary(options: {
+  segments: { start: number; end: number; text: string }[];
+  targetLanguage: string;
+  operationId?: string;
+}): Promise<{ summary?: string; success?: boolean; error?: string }> {
+  return (window.electron as any).generateTranscriptSummary(options);
+}
+
+export function onTranscriptSummaryProgress(
+  callback: ProgressEventCallback
+): () => void {
+  return (window.electron as any).onTranscriptSummaryProgress(callback);
+}
+
 export function translateOneLine(options: {
   segment: import('@shared-types/app').SrtSegment;
   contextBefore?: import('@shared-types/app').SrtSegment[];

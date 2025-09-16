@@ -39,6 +39,10 @@ const electronAPI = {
     return ipcRenderer.invoke('translate-subtitles', options);
   },
 
+  generateTranscriptSummary: async (options: any) => {
+    return ipcRenderer.invoke('generate-transcript-summary', options);
+  },
+
   translateOneLine: async (options: any) => {
     return ipcRenderer.invoke('translate-one-line', options);
   },
@@ -70,6 +74,20 @@ const electronAPI = {
     ipcRenderer.on('merge-subtitles-progress', handler);
     return () =>
       ipcRenderer.removeListener('merge-subtitles-progress', handler);
+  },
+
+  onTranscriptSummaryProgress: (callback: (progress: any) => void) => {
+    if (typeof callback !== 'function') return;
+    const handler = (_: any, progress: any) => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error('[preload] transcript-summary-progress error:', error);
+      }
+    };
+    ipcRenderer.on('transcript-summary-progress', handler);
+    return () =>
+      ipcRenderer.removeListener('transcript-summary-progress', handler);
   },
 
   // ---------------------- File Operations ----------------------

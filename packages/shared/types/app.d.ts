@@ -173,6 +173,33 @@ declare module '@shared-types/app' {
     fileManager: FileManager;
   }
 
+  export interface TranscriptSummarySegment {
+    start: number;
+    end: number;
+    text: string;
+  }
+
+  export interface TranscriptSummaryRequest {
+    segments: TranscriptSummarySegment[];
+    targetLanguage: string;
+    operationId?: string;
+  }
+
+  export interface TranscriptSummaryResult {
+    success: boolean;
+    summary?: string;
+    error?: string;
+    cancelled?: boolean;
+    operationId: string;
+  }
+
+  export interface TranscriptSummaryProgress {
+    percent: number;
+    stage: string;
+    error?: string;
+    partialSummary?: string;
+  }
+
   interface GenerateSubtitlesFromAudioArgs {
     inputAudioPath: string;
     progressCallback?: GenerateProgressCallback;

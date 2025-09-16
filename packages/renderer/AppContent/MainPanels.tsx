@@ -1,6 +1,8 @@
 import EditSubtitles from '../containers/EditSubtitles';
 import GenerateSubtitles from '../containers/GenerateSubtitles';
-import { useTaskStore, useUIStore } from '../state';
+import TranscriptSummaryPanel from '../components/TranscriptSummaryPanel';
+import { useTaskStore, useUIStore, useSubStore } from '../state';
+import type { SrtSegment } from '@shared-types/app';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import type { RenderSubtitlesOptions } from '@shared-types/app';
 import { useCallback } from 'react';
@@ -22,6 +24,10 @@ export default function MainPanels() {
   const setMergeStage = useTaskStore(s => s.setMerge);
   const setMergeOperationId = (id: string | null) =>
     useTaskStore.getState().setMerge({ id });
+  const summarySegments = useSubStore(s =>
+    s.order.map(id => s.segments[id]).filter((seg): seg is SrtSegment => !!seg)
+  );
+  const hasTranscript = summarySegments.length > 0;
 
   const handleRenderRequest = useCallback((options: unknown) => {
     if (!isRenderOpts(options)) {
@@ -93,6 +99,12 @@ export default function MainPanels() {
           </div>
         )}
       </div>
+
+      {hasTranscript && (
+        <div className={panelBlockStyles}>
+          <TranscriptSummaryPanel segments={summarySegments} />
+        </div>
+      )}
 
       {/* Edit Subtitles transforming container */}
       <div className={panelBlockStyles}>

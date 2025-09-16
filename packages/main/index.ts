@@ -306,6 +306,38 @@ try {
     }
   });
 
+  ipcMain.handle('generate-transcript-summary', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `summary-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(
+      `[main.ts/generate-transcript-summary] Starting operation: ${operationId}`
+    );
+
+    try {
+      const result = await subtitleHandlers.handleGenerateTranscriptSummary(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/generate-transcript-summary] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/generate-transcript-summary] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/generate-transcript-summary] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('translate-one-line', async (event, options) => {
     const operationId =
       options.operationId ||

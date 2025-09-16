@@ -14,6 +14,7 @@ interface State {
   matchedIndices: number[];
   inputMode: 'file' | 'url';
   targetLanguage: string;
+  summaryLanguage: string;
   showOriginalText: boolean;
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
@@ -46,6 +47,7 @@ interface Actions {
   handleReplaceAll(): void;
   setInputMode(mode: 'file' | 'url'): void;
   setTargetLanguage(lang: string): void;
+  setSummaryLanguage(lang: string): void;
   setShowOriginalText(show: boolean): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
@@ -62,6 +64,7 @@ interface Actions {
 }
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
+const SUMMARY_LANG_KEY = 'savedSummaryLanguage';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
@@ -76,6 +79,7 @@ const initial: State = {
   navTick: 0,
   inputMode: 'file',
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
+  summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
   showOriginalText: JSON.parse(
     localStorage.getItem(SHOW_ORIGINAL_KEY) ?? 'true'
   ),
@@ -192,6 +196,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         setTargetLanguage(lang) {
           localStorage.setItem(TARGET_LANG_KEY, lang);
           set({ targetLanguage: lang });
+        },
+
+        setSummaryLanguage(lang) {
+          localStorage.setItem(SUMMARY_LANG_KEY, lang);
+          set({ summaryLanguage: lang });
         },
 
         setShowOriginalText(show) {

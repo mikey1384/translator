@@ -15,12 +15,14 @@ interface State {
   translation: TranslationTask & { reviewedBatchStartIndex: number | null };
   transcription: TranslationTask;
   merge: TranslationTask;
+  summary: TranslationTask;
 }
 
 interface Actions {
   setTranslation(patch: Partial<TranslationTask>): void;
   setTranscription(patch: Partial<TranslationTask>): void;
   setMerge(patch: Partial<TranslationTask>): void;
+  setSummary(patch: Partial<TranslationTask>): void;
   startMerge(): void;
   doneMerge(): void;
 }
@@ -43,6 +45,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
     translation: { ...initialTranslation },
     transcription: { ...empty },
     merge: { ...empty },
+    summary: { ...empty },
 
     setTranslation: p =>
       set(s => {
@@ -127,6 +130,36 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           // Mark not in progress, but preserve final percent/stage and completion flag
           s.transcription.inProgress = false;
           s.transcription.id = null;
+        }
+      }),
+    setSummary: p =>
+      set(s => {
+        const t = s.summary;
+        const same =
+          (p.stage === undefined || p.stage === t.stage) &&
+          (p.percent === undefined ||
+            Math.round(p.percent) === Math.round(t.percent)) &&
+          (p.id === undefined || p.id === t.id) &&
+          (p.inProgress === undefined || p.inProgress === t.inProgress);
+        if (same) return;
+        Object.assign(s.summary, p);
+        const stageNow = (p.stage ?? s.summary.stage ?? '').toLowerCase();
+        const pctNow = p.percent ?? s.summary.percent ?? 0;
+        const isCancelled = /cancel/.test(stageNow);
+        if (p.inProgress !== undefined) {
+          s.summary.inProgress = p.inProgress;
+        } else if (isCancelled) {
+          s.summary.inProgress = false;
+        } else if (p.percent !== undefined) {
+          s.summary.inProgress = pctNow < 100;
+        }
+        if (p.percent !== undefined || p.stage !== undefined) {
+          s.summary.isCompleted =
+            !isCancelled && (pctNow >= 100 || /complete|done/.test(stageNow));
+        }
+        if (p.inProgress === false) {
+          s.summary.inProgress = false;
+          s.summary.id = null;
         }
       }),
     setMerge: p =>
