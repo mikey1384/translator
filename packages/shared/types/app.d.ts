@@ -113,6 +113,7 @@ declare module '@shared-types/app' {
     partialResult?: string;
     error?: string;
     batchStartIndex?: number;
+    operationId?: string;
   }) => void;
 
   // =========================================
@@ -223,6 +224,7 @@ declare module '@shared-types/app' {
       total?: number;
       error?: string;
       batchStartIndex?: number;
+      operationId?: string;
     });
   }
 
@@ -300,6 +302,47 @@ declare module '@shared-types/app' {
   export interface TranscribeRemainingResult {
     segments: SrtSegment[];
     error?: string;
+  }
+
+  // =========================================
+  // === Dubbing / Voice Synthesis
+  // =========================================
+
+  export interface DubSegmentPayload {
+    start: number;
+    end: number;
+    original?: string;
+    translation?: string;
+    index?: number;
+    targetDuration?: number;
+  }
+
+  export interface DubSubtitlesOptions {
+    segments: DubSegmentPayload[];
+    videoPath?: string | null;
+    targetLanguage?: string;
+    voice?: string;
+    quality?: 'standard' | 'high';
+    operationId: string;
+  }
+
+  export interface DubSubtitlesResult {
+    success: boolean;
+    audioPath?: string;
+    videoPath?: string;
+    cancelled?: boolean;
+    error?: string;
+    operationId: string;
+    segments?: Array<{
+      index: number;
+      audioBase64: string;
+      targetDuration?: number;
+    }>;
+    segmentCount?: number;
+    chunkCount?: number;
+    format?: string;
+    voice?: string;
+    model?: string;
   }
 
   interface TranslateBatchArgs {
@@ -416,10 +459,14 @@ declare module '@shared-types/app' {
     onMergeSubtitlesProgress: (
       callback: ProgressEventCallback | null
     ) => () => void;
+    onDubSubtitlesProgress: (
+      callback: ProgressEventCallback | null
+    ) => () => void;
 
     translateSubtitles: (
       options: TranslateSubtitlesOptions
     ) => Promise<TranslateSubtitlesResult>;
+    dubSubtitles: (options: DubSubtitlesOptions) => Promise<DubSubtitlesResult>;
     translateOneLine: (
       options: TranslateOneLineOptions
     ) => Promise<TranslateOneLineResult>;

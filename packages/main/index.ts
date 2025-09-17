@@ -306,6 +306,33 @@ try {
     }
   });
 
+  ipcMain.handle('dub-subtitles', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `dub-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(`[main.ts/dub-subtitles] Starting operation: ${operationId}`);
+    try {
+      const result = await subtitleHandlers.handleDubSubtitles(
+        event,
+        options,
+        operationId
+      );
+      log.info(`[main.ts/dub-subtitles] Operation ${operationId} completed.`);
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/dub-subtitles] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/dub-subtitles] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('generate-transcript-summary', async (event, options) => {
     const operationId =
       options.operationId ||

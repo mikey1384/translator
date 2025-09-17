@@ -2,11 +2,12 @@ import { useTaskStore } from '../../../state';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
-import * as SystemIPC from '../../../ipc/system';
 import { buildSrt } from '../../../../shared/helpers';
 import { useSubStore, useUIStore, useVideoStore } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
+import { useUrlStore } from '../../../state/url-store';
+import * as SystemIPC from '../../../ipc/system';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -68,6 +69,135 @@ export async function executeSrtTranslation({
     return { success: false };
   } catch {
     useTaskStore.getState().setTranslation({
+      stage: i18n.t('generateSubtitles.status.error'),
+      percent: 100,
+      inProgress: false,
+    });
+    return { success: false };
+  }
+}
+
+export async function executeDubGeneration({
+  segments,
+  operationId,
+  videoPath,
+  voice,
+}: {
+  segments: any[];
+  operationId: string;
+  videoPath?: string | null;
+  voice?: string;
+}): Promise<{
+  success: boolean;
+  videoPath?: string;
+  audioPath?: string;
+  cancelled?: boolean;
+}> {
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return { success: false };
+  }
+
+  // Prevent dubbing while transcription is running to avoid overload
+  if (useTaskStore.getState().transcription.inProgress) {
+    return { success: false };
+  }
+
+  useTaskStore.getState().setDubbing({
+    id: operationId,
+    stage: i18n.t('generateSubtitles.status.starting'),
+    percent: 0,
+    inProgress: true,
+  });
+
+  const payloadSegments = segments.map((seg: any, idx: number) => ({
+    start: Number(seg?.start ?? 0),
+    end: Number(seg?.end ?? 0),
+    original: String(seg?.original ?? ''),
+    translation: String(seg?.translation ?? ''),
+    index: typeof seg?.index === 'number' ? seg.index : idx + 1,
+    targetDuration:
+      typeof seg?.start === 'number' &&
+      typeof seg?.end === 'number' &&
+      Number.isFinite(seg.start) &&
+      Number.isFinite(seg.end) &&
+      seg.end > seg.start
+        ? Number(seg.end) - Number(seg.start)
+        : undefined,
+  }));
+
+  const { dubVoice } = useUIStore.getState();
+  const quality = 'standard';
+  const selectedVoice = voice ?? dubVoice ?? 'alloy';
+
+  try {
+    const res = await SubtitlesIPC.dubSubtitles({
+      segments: payloadSegments,
+      voice: selectedVoice,
+      operationId,
+      videoPath: videoPath ?? null,
+      quality,
+    });
+
+    if (res?.success) {
+      useTaskStore.getState().setDubbing({
+        stage: i18n.t('generateSubtitles.status.completed'),
+        percent: 100,
+        inProgress: false,
+      });
+
+      useVideoStore.getState().registerDubbedResult({
+        videoPath: res.videoPath ?? null,
+        audioPath: res.audioPath ?? null,
+      });
+
+      if (res.videoPath) {
+        try {
+          await useVideoStore.getState().setActiveTrack('dubbed');
+        } catch (err) {
+          console.error(
+            '[executeDubGeneration] Failed to activate dubbed track:',
+            err
+          );
+        }
+      }
+
+      return {
+        success: true,
+        videoPath: res.videoPath,
+        audioPath: res.audioPath,
+        cancelled: res.cancelled,
+      };
+    }
+
+    if (res?.error) {
+      try {
+        useUrlStore.getState().setError(res.error);
+      } catch {
+        // ignore store errors
+      }
+    }
+    useTaskStore.getState().setDubbing({
+      stage: res?.cancelled
+        ? i18n.t('generateSubtitles.status.cancelled')
+        : i18n.t('generateSubtitles.status.error'),
+      percent: 100,
+      inProgress: false,
+    });
+    return { success: false, cancelled: res?.cancelled };
+  } catch (error) {
+    console.error('[executeDubGeneration] Error:', error);
+    try {
+      useUrlStore
+        .getState()
+        .setError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate dubbed audio.'
+        );
+    } catch {
+      // ignore
+    }
+    useTaskStore.getState().setDubbing({
       stage: i18n.t('generateSubtitles.status.error'),
       percent: 100,
       inProgress: false,
@@ -189,6 +319,11 @@ export async function startTranscriptionFlow({
       if (!saved) return { success: false };
     }
     clearMountedSrtShared();
+    try {
+      useVideoStore.getState().clearDubbedMedia();
+    } catch {
+      // Ignore inability to clear dubbed media
+    }
   }
 
   // Validate inputs

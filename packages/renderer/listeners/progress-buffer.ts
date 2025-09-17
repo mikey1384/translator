@@ -341,6 +341,48 @@ SubtitlesIPC.onGenerateProgress(progress => {
   }
 });
 
+SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
+  try {
+    const progress = progressMaybe ?? eventOrProgress ?? {};
+    const stage = progress?.stage ?? '';
+    const percent =
+      typeof progress?.percent === 'number' ? progress.percent : 0;
+    const operationId =
+      typeof progress?.operationId === 'string' ? progress.operationId : null;
+    const error = (progress as any)?.error as string | undefined;
+
+    if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
+      try {
+        openCreditRanOut();
+      } catch {
+        // Do nothing
+      }
+    }
+
+    useTaskStore.getState().setDubbing({
+      stage,
+      percent,
+      id: operationId,
+    });
+
+    const lower = stage.toLowerCase();
+    if (
+      percent >= 100 ||
+      /complete|done/.test(lower) ||
+      /cancel/.test(lower) ||
+      typeof error === 'string'
+    ) {
+      useTaskStore.getState().setDubbing({
+        inProgress: false,
+        stage,
+        percent: percent >= 100 ? percent : 100,
+      });
+    }
+  } catch (err) {
+    console.error('[progress-buffer] dubbing progress error:', err);
+  }
+});
+
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     if (flushTimer) {

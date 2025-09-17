@@ -47,6 +47,9 @@ export default function SideMenu({
 
   const videoFile = useVideoStore(s => s.file);
   const videoFilePath = useVideoStore(s => s.path);
+  const activeTrack = useVideoStore(s => s.activeTrack);
+  const hasDubbedTrack = useVideoStore(s => !!s.dubbedUrl);
+  const setActiveTrack = useVideoStore(s => s.setActiveTrack);
   const meta = useVideoStore(s => s.meta);
   const origin = useSubStore(s => s.origin);
   const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
@@ -78,10 +81,13 @@ export default function SideMenu({
   async function handleTranslateSmart() {
     try {
       const hasSubs = useSubStore.getState().order.length > 0;
-      const greenShown = isTranscriptionDone && hasSubs && !translationInProgress;
+      const greenShown =
+        isTranscriptionDone && hasSubs && !translationInProgress;
       const videoPathNow = useVideoStore.getState().path;
       const isFreshForThisVideo =
-        origin === 'fresh' && !!videoPathNow && sourceVideoPath === videoPathNow;
+        origin === 'fresh' &&
+        !!videoPathNow &&
+        sourceVideoPath === videoPathNow;
       const store = useSubStore.getState();
       const segments = store.order.map(id => store.segments[id]);
       const hasUntranslatedLocal = segments.some(
@@ -133,7 +139,9 @@ export default function SideMenu({
           stage: '',
           percent: 0,
         });
-      } catch {}
+      } catch {
+        // Do nothing
+      }
       logVideo('srt_loaded', { path: res.filePath ?? '' });
       // Ensure the Edit Subtitles panel is visible so users immediately see loaded SRT
       try {
@@ -218,6 +226,30 @@ export default function SideMenu({
           </svg>
           {t('videoPlayer.changeVideo', 'Change Video')}
         </Button>
+        {hasDubbedTrack && (
+          <Button
+            size="sm"
+            variant={activeTrack === 'dubbed' ? 'primary' : 'secondary'}
+            onClick={async () => {
+              try {
+                await setActiveTrack(
+                  activeTrack === 'dubbed' ? 'original' : 'dubbed'
+                );
+              } catch (err) {
+                console.error('[SideMenu] Failed to switch audio track:', err);
+              }
+            }}
+            title={
+              activeTrack === 'dubbed'
+                ? t('videoPlayer.useOriginalAudio', 'Use Original Audio')
+                : t('videoPlayer.useDubbedAudio', 'Use Dubbed Audio')
+            }
+          >
+            {activeTrack === 'dubbed'
+              ? t('videoPlayer.useOriginalAudio', 'Use Original Audio')
+              : t('videoPlayer.useDubbedAudio', 'Use Dubbed Audio')}
+          </Button>
+        )}
 
         <Button
           size="sm"

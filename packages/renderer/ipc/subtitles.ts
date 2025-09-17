@@ -4,6 +4,8 @@ import type {
   ExposedRenderResult,
   ProgressEventCallback,
   GenerateSubtitlesResult,
+  DubSubtitlesOptions,
+  DubSubtitlesResult,
 } from '@shared-types/app';
 
 type PngRenderResult = {
@@ -37,6 +39,10 @@ export function onGenerateProgress(
 
 export function onMergeProgress(callback: ProgressEventCallback): () => void {
   return window.electron.onMergeSubtitlesProgress(callback);
+}
+
+export function onDubProgress(callback: ProgressEventCallback): () => void {
+  return window.electron.onDubSubtitlesProgress(callback);
 }
 
 export function onRenderPngResult(
@@ -74,6 +80,12 @@ export function translateSubtitles(options: {
     qualityTranslation?: boolean;
   };
   return window.electron.translateSubtitles(payload);
+}
+
+export function dubSubtitles(
+  options: DubSubtitlesOptions
+): Promise<DubSubtitlesResult> {
+  return (window.electron as any).dubSubtitles(options);
 }
 
 export function generateTranscriptSummary(options: {

@@ -210,17 +210,38 @@ export async function translate({
     if (!isGpt5 && typeof temperature === 'number') {
       payload.temperature = temperature;
     }
-    const response = await axios.post(`${API}/translate`, payload, {
+
+    const postResponse = await axios.post(`${API}/translate`, payload, {
       headers: headers(),
-      signal, // Pass the AbortSignal to axios
-    });
-    sendNetLog('info', `POST /translate -> ${response.status}`, {
-      url: `${API}/translate`,
-      method: 'POST',
-      status: response.status,
+      signal,
+      validateStatus: () => true,
     });
 
-    return response.data;
+    sendNetLog('info', `POST /translate -> ${postResponse.status}`, {
+      url: `${API}/translate`,
+      method: 'POST',
+      status: postResponse.status,
+    });
+
+    if (postResponse.status === 200) {
+      return postResponse.data;
+    }
+
+    if (postResponse.status === 202) {
+      const jobId = postResponse.data?.jobId;
+      if (!jobId) {
+        throw new Error('Translation job missing jobId');
+      }
+      return await pollTranslationJob({ jobId, signal });
+    }
+
+    if (postResponse.status === 402) {
+      throw new Error('insufficient-credits');
+    }
+
+    throw new Error(
+      postResponse.data?.message || 'Failed to submit translation job'
+    );
   } catch (error: any) {
     // Handle cancellation specifically
     if (
@@ -257,5 +278,205 @@ export async function translate({
       sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
     }
     throw error;
+  }
+}
+
+async function pollTranslationJob({
+  jobId,
+  signal,
+}: {
+  jobId: string;
+  signal?: AbortSignal;
+}): Promise<any> {
+  const pollIntervalMs = 2000;
+  const maxWaitMs = 600_000; // 10 minutes
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitMs) {
+    if (signal?.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+
+    const statusResponse = await axios.get(`${API}/translate/result/${jobId}`, {
+      headers: headers(),
+      signal,
+      validateStatus: () => true,
+    });
+
+    sendNetLog(
+      'info',
+      `GET /translate/result/${jobId} -> ${statusResponse.status}`,
+      {
+        url: `${API}/translate/result/${jobId}`,
+        method: 'GET',
+        status: statusResponse.status,
+      }
+    );
+
+    if (statusResponse.status === 202) {
+      continue;
+    }
+
+    if (statusResponse.status === 200) {
+      return statusResponse.data;
+    }
+
+    if (statusResponse.status === 402) {
+      throw new Error('insufficient-credits');
+    }
+
+    if (statusResponse.status === 404) {
+      throw new Error('translation-job-not-found');
+    }
+
+    const message =
+      statusResponse.data?.error ||
+      statusResponse.data?.message ||
+      `Translation job failed (status ${statusResponse.status})`;
+    throw new Error(message);
+  }
+
+  throw new Error('Translation job timed out after 10 minutes');
+}
+
+export async function synthesizeDub({
+  segments,
+  voice,
+  model,
+  format,
+  quality,
+  signal,
+}: {
+  segments: Array<{
+    start?: number;
+    end?: number;
+    original?: string;
+    translation?: string;
+    index?: number;
+  }>;
+  voice?: string;
+  model?: string;
+  format?: string;
+  quality?: 'standard' | 'high';
+  signal?: AbortSignal;
+}): Promise<{
+  audioBase64?: string;
+  format: string;
+  voice: string;
+  model: string;
+  segments?: Array<{
+    index: number;
+    audioBase64: string;
+    targetDuration?: number;
+  }>;
+  chunkCount?: number;
+  segmentCount?: number;
+}> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error('insufficient-credits');
+  }
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    const response = await axios.post(
+      `${API}/dub`,
+      {
+        segments,
+        voice,
+        model,
+        format,
+        quality,
+      },
+      {
+        headers: {
+          ...headers(),
+          'Content-Type': 'application/json',
+        },
+        signal,
+      }
+    );
+
+    sendNetLog('info', `POST /dub -> ${response.status}`, {
+      url: `${API}/dub`,
+      method: 'POST',
+      status: response.status,
+    });
+
+    const data = response.data as {
+      audioBase64?: string;
+      format?: string;
+      voice?: string;
+      model?: string;
+      segments?: Array<{
+        index: number;
+        audioBase64: string;
+        targetDuration?: number;
+      }>;
+      chunkCount?: number;
+      segmentCount?: number;
+    };
+
+    if (!data.audioBase64 && !data.segments?.length) {
+      throw new Error('Dub synthesis returned no audio segments');
+    }
+
+    return {
+      audioBase64: data.audioBase64,
+      format: data.format ?? 'mp3',
+      voice: data.voice ?? voice ?? 'alloy',
+      model: data.model ?? model ?? 'tts-1',
+      segments: data.segments,
+      chunkCount: data.chunkCount,
+      segmentCount: data.segmentCount,
+    };
+  } catch (error: any) {
+    if (
+      error?.name === 'AbortError' ||
+      error?.code === 'ERR_CANCELED' ||
+      signal?.aborted
+    ) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    if (error?.response?.status === 402) {
+      throw new Error('insufficient-credits');
+    }
+
+    let errToThrow: any = error;
+
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        {
+          status: error.response.status,
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.response.data,
+        }
+      );
+      const relayDetails = error.response.data?.details ?? error.response.data;
+      if (relayDetails) {
+        const message =
+          typeof relayDetails === 'string'
+            ? relayDetails
+            : JSON.stringify(relayDetails);
+        errToThrow = new Error(message);
+      }
+    } else if (error.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        { url: error.config?.url, method: error.config?.method }
+      );
+    } else {
+      sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
+    }
+
+    throw errToThrow;
   }
 }

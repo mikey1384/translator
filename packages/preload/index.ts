@@ -39,6 +39,10 @@ const electronAPI = {
     return ipcRenderer.invoke('translate-subtitles', options);
   },
 
+  dubSubtitles: async (options: any) => {
+    return ipcRenderer.invoke('dub-subtitles', options);
+  },
+
   generateTranscriptSummary: async (options: any) => {
     return ipcRenderer.invoke('generate-transcript-summary', options);
   },
@@ -67,6 +71,19 @@ const electronAPI = {
     ipcRenderer.on('generate-subtitles-progress', listener);
     return () =>
       ipcRenderer.removeListener('generate-subtitles-progress', listener);
+  },
+
+  onDubSubtitlesProgress: (callback: (progress: any) => void) => {
+    if (typeof callback !== 'function') return;
+    const listener = (_: any, progress: any) => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error('[preload] dub-subtitles-progress error:', error);
+      }
+    };
+    ipcRenderer.on('dub-subtitles-progress', listener);
+    return () => ipcRenderer.removeListener('dub-subtitles-progress', listener);
   },
 
   onMergeSubtitlesProgress: (cb: (p: any) => void) => {

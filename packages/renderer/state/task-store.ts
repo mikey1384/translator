@@ -16,6 +16,7 @@ interface State {
   transcription: TranslationTask;
   merge: TranslationTask;
   summary: TranslationTask;
+  dubbing: TranslationTask;
 }
 
 interface Actions {
@@ -23,6 +24,7 @@ interface Actions {
   setTranscription(patch: Partial<TranslationTask>): void;
   setMerge(patch: Partial<TranslationTask>): void;
   setSummary(patch: Partial<TranslationTask>): void;
+  setDubbing(patch: Partial<TranslationTask>): void;
   startMerge(): void;
   doneMerge(): void;
 }
@@ -46,6 +48,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
     transcription: { ...empty },
     merge: { ...empty },
     summary: { ...empty },
+    dubbing: { ...empty },
 
     setTranslation: p =>
       set(s => {
@@ -96,6 +99,44 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           s.translation.inProgress = false;
           s.translation.reviewedBatchStartIndex = null;
           s.translation.id = null;
+        }
+      }),
+    setDubbing: p =>
+      set(s => {
+        const task = s.dubbing;
+        const same =
+          (p.stage === undefined || p.stage === task.stage) &&
+          (p.percent === undefined ||
+            Math.round(p.percent) === Math.round(task.percent)) &&
+          (p.id === undefined || p.id === task.id) &&
+          (p.inProgress === undefined || p.inProgress === task.inProgress);
+        if (same) return;
+        Object.assign(s.dubbing, p);
+        const stageNow = (p.stage ?? s.dubbing.stage ?? '').toLowerCase();
+        const pctNow = p.percent ?? s.dubbing.percent ?? 0;
+        const isCancelled = /cancel/.test(stageNow);
+
+        if (p.inProgress !== undefined) {
+          s.dubbing.inProgress = p.inProgress;
+        } else if (isCancelled) {
+          s.dubbing.inProgress = false;
+        } else if (p.percent !== undefined) {
+          const isComplete =
+            pctNow >= 100 &&
+            (stageNow.includes('complete') ||
+              stageNow.includes('done') ||
+              stageNow.includes('error'));
+          s.dubbing.inProgress = pctNow < 100 || !isComplete;
+        }
+        if (p.percent !== undefined || p.stage !== undefined) {
+          s.dubbing.isCompleted =
+            !isCancelled &&
+            (pctNow >= 100 ||
+              /processing complete|complete|done/i.test(stageNow ?? ''));
+        }
+        if (p.inProgress === false) {
+          s.dubbing.inProgress = false;
+          s.dubbing.id = null;
         }
       }),
     setTranscription: p =>

@@ -19,6 +19,7 @@ interface State {
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
   qualityTranslation: boolean; // true = include review phase
+  dubVoice: string;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
   navTick: number;
@@ -51,6 +52,7 @@ interface Actions {
   setShowOriginalText(show: boolean): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
+  setDubVoice(voice: string): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
@@ -68,6 +70,17 @@ const SUMMARY_LANG_KEY = 'savedSummaryLanguage';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
+const DUB_VOICE_KEY = 'savedDubVoice';
+const DEFAULT_DUB_VOICE = 'alloy';
+
+const ALLOWED_DUB_VOICES = new Set([
+  'alloy',
+  'echo',
+  'fable',
+  'onyx',
+  'nova',
+  'shimmer',
+]);
 // Note: We intentionally do NOT persist panel open states across reloads.
 
 const initial: State = {
@@ -89,6 +102,12 @@ const initial: State = {
   qualityTranslation: JSON.parse(
     localStorage.getItem(QUALITY_TRANSLATION_KEY) ?? 'false'
   ),
+  dubVoice: (() => {
+    const stored = localStorage.getItem(DUB_VOICE_KEY);
+    return stored && ALLOWED_DUB_VOICES.has(stored)
+      ? stored
+      : DEFAULT_DUB_VOICE;
+  })(),
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
@@ -216,6 +235,14 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         setQualityTranslation(v) {
           localStorage.setItem(QUALITY_TRANSLATION_KEY, JSON.stringify(v));
           set({ qualityTranslation: v });
+        },
+
+        setDubVoice(voice) {
+          const next = ALLOWED_DUB_VOICES.has(voice)
+            ? voice
+            : DEFAULT_DUB_VOICE;
+          localStorage.setItem(DUB_VOICE_KEY, next);
+          set({ dubVoice: next });
         },
 
         setBaseFontSize(size) {

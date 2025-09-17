@@ -13,24 +13,31 @@ interface SrtMountedPanelProps {
   srtPath?: string | null;
   onTranslate?: () => void;
   isTranslating?: boolean;
+  onDub?: () => void;
+  isDubbing?: boolean;
   disabled?: boolean;
   targetLanguage?: string;
   onTargetLanguageChange?: (lang: string) => void;
+  disableDub?: boolean;
 }
 
 export default function SrtMountedPanel({
   srtPath,
   onTranslate,
   isTranslating = false,
+  onDub,
+  isDubbing = false,
   disabled = false,
   targetLanguage,
   onTargetLanguageChange,
+  disableDub = false,
 }: SrtMountedPanelProps) {
   const { t } = useTranslation();
   const showOriginalText = useUIStore(s => s.showOriginalText);
   const setShowOriginalText = useUIStore(s => s.setShowOriginalText);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isDisabled = disabled || isTranslating || isTranscribing;
+  const isDubDisabled = disabled || disableDub || isTranscribing || isDubbing;
 
   return (
     <div
@@ -153,6 +160,15 @@ export default function SrtMountedPanel({
           isLoading={isTranslating}
         >
           {t('subtitles.translate', 'Translate')}
+        </Button>
+        <Button
+          variant="secondary"
+          size="md"
+          onClick={onDub}
+          disabled={isDubDisabled}
+          isLoading={isDubbing}
+        >
+          {t('subtitles.dub', 'Dub Voice')}
         </Button>
       </div>
     </div>

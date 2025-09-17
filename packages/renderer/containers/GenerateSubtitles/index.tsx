@@ -26,6 +26,7 @@ import { useCreditSystem } from './hooks/useCreditSystem';
 import {
   executeSrtTranslation,
   startTranscriptionFlow,
+  executeDubGeneration,
 } from './utils/subtitleGeneration';
 
 export default function GenerateSubtitles() {
@@ -54,18 +55,22 @@ export default function GenerateSubtitles() {
   } = useVideoStore();
 
   // Task state
-  const { translation, transcription } = useTaskStore();
+  const { translation, transcription, dubbing } = useTaskStore();
 
   // Subtitle state
   const subStore = useSubStore();
+  const hasMountedSubtitles = subStore.order.length > 0;
   // Decouple transcription completion from subtitle presence
-  const isTranscriptionDone = Boolean(transcription.isCompleted);
+  const isTranscriptionDone =
+    Boolean(transcription.isCompleted) || hasMountedSubtitles;
   const isTranscribing =
     !!transcription.inProgress &&
     (transcription.id?.startsWith('transcribe-') ?? false);
   const isTranslating =
     !!translation.inProgress &&
     (translation.id?.startsWith('translate-') ?? false);
+  const isDubbing =
+    !!dubbing.inProgress && (dubbing.id?.startsWith('dub-') ?? false);
 
   // Custom hooks for business logic (after videoFilePath is declared)
   const { durationSecs, hoursNeeded } = useVideoMetadata(videoFilePath);
@@ -107,6 +112,9 @@ export default function GenerateSubtitles() {
               disabled={isButtonDisabled || hoursNeeded == null}
               targetLanguage={targetLanguage}
               onTargetLanguageChange={setTargetLanguage}
+              onDub={handleDub}
+              isDubbing={isDubbing}
+              disableDub={isButtonDisabled || hoursNeeded == null}
             />
           )}
         </>
@@ -198,5 +206,28 @@ export default function GenerateSubtitles() {
       console.error('[GenerateSubtitles] save original video error:', err);
       clearError();
     }
+  }
+
+  async function handleDub() {
+    const currentSegments = subStore.order.map(id => subStore.segments[id]);
+    if (currentSegments.length === 0) {
+      useUrlStore.getState().setError('No subtitles available for dubbing');
+      return;
+    }
+
+    const operationId = `dub-${Date.now()}`;
+    const sourceVideoPath =
+      subStore.sourceVideoPath ??
+      videoFilePath ??
+      useVideoStore.getState().path;
+
+    const dubVoice = useUIStore.getState().dubVoice;
+
+    await executeDubGeneration({
+      segments: currentSegments,
+      operationId,
+      videoPath: sourceVideoPath,
+      voice: dubVoice,
+    });
   }
 }

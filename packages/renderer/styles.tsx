@@ -32,6 +32,7 @@ export const colors = {
   progressDownload: '#FCBF49',
   progressMerge: '#F7559A',
   progressTranslate: '#5876F5',
+  progressDub: '#FF8C42',
 };
 
 // Advanced gradient system - Removed for flat design
@@ -642,11 +643,8 @@ export const mergeButtonStyles = css`
 export const subtleAccentButton = css`
   position: relative;
   color: ${colors.dark} !important;
-  background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.03),
-      rgba(0, 0, 0, 0.12)
-    ),
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.12)),
     rgba(28, 28, 28, 0.85);
   /* Always show a faint blue edge */
   border: 1px solid ${colors.primary}2A; /* subtle blue trace */

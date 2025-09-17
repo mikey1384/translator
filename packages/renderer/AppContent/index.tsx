@@ -16,6 +16,7 @@ import ProgressArea from '../components/ProgressAreas/ProgressArea';
 import MergingProgressArea from '../components/ProgressAreas/MergingProgressArea';
 import TranslationProgressArea from '../components/ProgressAreas/TranslationProgressArea';
 import TranscriptionProgressArea from '../components/ProgressAreas/TranscriptionProgressArea';
+import DubbingProgressArea from '../components/ProgressAreas/DubbingProgressArea';
 import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
@@ -42,6 +43,9 @@ export default function AppContent() {
       (s.transcription.id?.startsWith('transcribe-') ?? false)
   );
   const mergeInProgress = useTaskStore(s => s.merge.inProgress);
+  const isDubbing = useTaskStore(
+    s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
+  );
   const download = useUrlStore(s => s.download);
   const { showCreditWarning } = useCreditSystem();
 
@@ -239,6 +243,8 @@ export default function AppContent() {
             {isTranscribing && <TranscriptionProgressArea />}
 
             {isTranslating && <TranslationProgressArea />}
+
+            {isDubbing && <DubbingProgressArea />}
 
             <FloatingActionButtons />
           </>

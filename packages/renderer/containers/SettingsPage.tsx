@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import CreditCard from '../components/CreditCard';
-import { colors } from '../styles';
+import { colors, selectStyles } from '../styles';
 import { useCreditStore } from '../state/credit-store';
 import { useEffect } from 'react';
 import { useUIStore } from '../state/ui-store';
@@ -62,10 +62,77 @@ export default function SettingsPage() {
           {t('settings.performanceQuality.title', 'Performance & Quality')}
         </h2>
         <QualityToggles />
+        <DubbingVoiceSelector />
       </section>
 
       {/* —————————————————  CREDIT CARD  ————————————————— */}
       <CreditCard />
+    </div>
+  );
+}
+
+function DubbingVoiceSelector() {
+  const { t } = useTranslation();
+  const { dubVoice, setDubVoice } = useUIStore();
+
+  const voiceOptions = [
+    { value: 'alloy', fallback: 'Alloy' },
+    { value: 'echo', fallback: 'Echo' },
+    { value: 'fable', fallback: 'Fable' },
+    { value: 'onyx', fallback: 'Onyx' },
+    { value: 'nova', fallback: 'Nova' },
+    { value: 'shimmer', fallback: 'Shimmer' },
+  ] as const;
+
+  const options = voiceOptions.map(opt => ({
+    value: opt.value,
+    label: t(`settings.dubbing.voiceOptions.${opt.value}`, opt.fallback),
+  }));
+
+  const selectClass = css`
+    width: 100%;
+    max-width: none;
+    text-align: left;
+  `;
+
+  return (
+    <div
+      className={css`
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      `}
+    >
+      <div
+        className={css`
+          font-weight: 600;
+          color: ${colors.dark};
+        `}
+      >
+        {t('settings.dubbing.voiceLabel', 'Dubbed Voice')}
+      </div>
+      <select
+        className={`${selectStyles} ${selectClass}`}
+        value={dubVoice}
+        onChange={e => setDubVoice(e.target.value)}
+      >
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <div
+        className={css`
+          color: ${colors.gray};
+          font-size: 0.85rem;
+        `}
+      >
+        {t(
+          'settings.dubbing.voiceHelp',
+          'Choose the default voice for generated dubs.'
+        )}
+      </div>
     </div>
   );
 }

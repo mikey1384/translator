@@ -9,6 +9,13 @@ import { useSubStore } from './subtitle-store';
 import throttle from 'lodash/throttle';
 import { logButton, logVideo } from '../utils/logger';
 
+function toFileUrl(p: string): string {
+  if (!p) return p;
+  return p.startsWith('file://')
+    ? p
+    : `file://${encodeURI(p.replace(/\\/g, '/'))}`;
+}
+
 type Meta = {
   duration: number;
   width: number;
@@ -20,6 +27,12 @@ interface State {
   file: File | null;
   path: string | null;
   url: string | null;
+  originalPath: string | null;
+  originalUrl: string | null;
+  dubbedVideoPath: string | null;
+  dubbedAudioPath: string | null;
+  dubbedUrl: string | null;
+  activeTrack: 'original' | 'dubbed';
   meta: Meta;
   isAudioOnly: boolean;
   isReady: boolean;
@@ -50,12 +63,24 @@ interface Actions {
   savePosition(position: number): void;
   startPositionSaving(): void;
   stopPositionSaving(): void;
+  registerDubbedResult(args: {
+    videoPath?: string | null;
+    audioPath?: string | null;
+  }): void;
+  setActiveTrack(track: 'original' | 'dubbed'): Promise<void>;
+  clearDubbedMedia(): void;
 }
 
 const initial: State = {
   file: null,
   path: null,
   url: null,
+  originalPath: null,
+  originalUrl: null,
+  dubbedVideoPath: null,
+  dubbedAudioPath: null,
+  dubbedUrl: null,
+  activeTrack: 'original',
   meta: null,
   isAudioOnly: false,
   isReady: false,
@@ -111,11 +136,17 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (!fd) return;
 
       if ('path' in fd) {
-        const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;
+        const url = toFileUrl(fd.path);
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
           s.url = url;
+          s.originalPath = fd.path;
+          s.originalUrl = url;
+          s.dubbedVideoPath = null;
+          s.dubbedAudioPath = null;
+          s.dubbedUrl = null;
+          s.activeTrack = 'original';
         });
         await analyse(fd.path);
         try {
@@ -145,6 +176,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.file = b;
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
+          s.originalPath = b._originalPath ?? null;
+          s.originalUrl = b._blobUrl;
+          s.dubbedVideoPath = null;
+          s.dubbedAudioPath = null;
+          s.dubbedUrl = null;
+          s.activeTrack = 'original';
         });
         try {
           logVideo('video_mounted', { path: b._originalPath ?? '(blob)' });
@@ -173,6 +210,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       const blobUrl = URL.createObjectURL(fd as File);
       set({ file: fd as File, url: blobUrl, path: (fd as any).path ?? null });
+      set(s => {
+        s.originalUrl = blobUrl;
+        s.originalPath = (fd as any).path ?? null;
+        s.dubbedVideoPath = null;
+        s.dubbedAudioPath = null;
+        s.dubbedUrl = null;
+        s.activeTrack = 'original';
+      });
       try {
         const p = (fd as any).path ?? '(blob)';
         logVideo('video_mounted', { path: p });
@@ -324,11 +369,17 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       });
 
       if ('path' in fd) {
-        const url = `file://${encodeURI(fd.path.replace(/\\/g, '/'))}`;
+        const url = toFileUrl(fd.path);
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
           s.url = url;
+          s.originalPath = fd.path;
+          s.originalUrl = url;
+          s.dubbedVideoPath = null;
+          s.dubbedAudioPath = null;
+          s.dubbedUrl = null;
+          s.activeTrack = 'original';
           s.resumeAt = null;
         });
         await analyse(fd.path);
@@ -352,6 +403,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.file = b;
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
+          s.originalPath = b._originalPath ?? null;
+          s.originalUrl = b._blobUrl;
+          s.dubbedVideoPath = null;
+          s.dubbedAudioPath = null;
+          s.dubbedUrl = null;
+          s.activeTrack = 'original';
           s.resumeAt = null;
         });
         if (b._originalPath) {
@@ -448,6 +505,88 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           currentSaver.cancel();
         }
       }
+    },
+
+    registerDubbedResult({ videoPath, audioPath }) {
+      set(s => {
+        s.dubbedVideoPath = videoPath ?? null;
+        s.dubbedAudioPath = audioPath ?? null;
+        s.dubbedUrl = videoPath ? toFileUrl(videoPath) : null;
+      });
+    },
+
+    async setActiveTrack(track) {
+      const state = get();
+      const targetUrl =
+        track === 'dubbed'
+          ? (state.dubbedUrl ?? null)
+          : (state.originalUrl ?? null);
+      const targetPath =
+        track === 'dubbed'
+          ? (state.dubbedVideoPath ?? null)
+          : (state.originalPath ?? null);
+
+      if (
+        track === state.activeTrack &&
+        state.url === targetUrl &&
+        state.path === targetPath
+      ) {
+        return;
+      }
+
+      if (track === 'dubbed' && !state.dubbedUrl) {
+        console.warn('[video-store] No dubbed media to activate');
+        return;
+      }
+
+      const player = getNativePlayerInstance();
+      const currentTime = player?.currentTime ?? state.resumeAt ?? 0;
+      const wasPlaying = player ? !player.paused : false;
+
+      if (player) {
+        try {
+          player.pause();
+        } catch {
+          // ignore
+        }
+      }
+
+      set(s => {
+        s.activeTrack = track;
+        if (track === 'dubbed') {
+          s.url = state.dubbedUrl;
+          s.path = state.dubbedVideoPath ?? s.path;
+        } else {
+          s.url = s.originalUrl;
+          s.path = s.originalPath;
+        }
+        s.resumeAt = currentTime;
+      });
+
+      if (typeof window !== 'undefined') {
+        (window as any)._videoLastValidTime = currentTime;
+      }
+
+      if (wasPlaying) {
+        setTimeout(() => {
+          const inst = getNativePlayerInstance();
+          if (!inst) return;
+          inst.play().catch(() => undefined);
+        }, 200);
+      }
+    },
+
+    clearDubbedMedia() {
+      set(s => {
+        s.dubbedVideoPath = null;
+        s.dubbedAudioPath = null;
+        s.dubbedUrl = null;
+        if (s.activeTrack === 'dubbed') {
+          s.activeTrack = 'original';
+          s.url = s.originalUrl;
+          s.path = s.originalPath;
+        }
+      });
     },
   }))
 );
