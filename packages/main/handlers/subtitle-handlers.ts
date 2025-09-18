@@ -434,7 +434,7 @@ async function buildDubSegmentsFromSpeech({
     return [];
   }
 
-  const MAX_UTTERANCE_DURATION = 6; // seconds
+  const MAX_UTTERANCE_DURATION = 20;
 
   let speechWindows: Array<{ start: number; end: number }> = [];
   try {
@@ -560,105 +560,31 @@ async function buildDubSegmentsFromSpeech({
     });
   });
 
-  const MAX_TTS_CHAR_LENGTH = 300;
   const MIN_SEGMENT_DURATION = 0.6;
   const finalSegments: DubSegmentPayload[] = [];
 
   aggregated
     .sort((a, b) => a.start - b.start)
-    .forEach(seg => {
-      const baseText = (seg.translation ?? '').replace(/\s+/g, ' ').trim();
-      if (!baseText) return;
+    .forEach((seg, idx) => {
+      const translation = (seg.translation ?? '').replace(/\s+/g, ' ').trim();
+      if (!translation) return;
 
-      const totalDuration = Math.max(
-        MIN_SEGMENT_DURATION,
-        seg.targetDuration ?? seg.end - seg.start
-      );
-      const words = baseText.split(' ').filter(Boolean);
+      const baseStart = Number.isFinite(seg.start) ? Number(seg.start) : 0;
+      const start = Math.max(0, baseStart);
+      const expectedDuration = seg.targetDuration ?? seg.end - seg.start;
+      const duration = Math.max(MIN_SEGMENT_DURATION, expectedDuration || 0);
+      const end = start + duration;
+      const original = (seg.original ?? '').replace(/\s+/g, ' ').trim();
 
-      const chunks: string[] = [];
-      let current = '';
-      words.forEach(word => {
-        const candidate = current ? `${current} ${word}` : word;
-        if (candidate.length > MAX_TTS_CHAR_LENGTH && current) {
-          chunks.push(current);
-          current = word;
-        } else {
-          current = candidate;
-        }
-      });
-      if (current) {
-        chunks.push(current);
-      }
-
-      if (!chunks.length) return;
-
-      const totalChars = baseText.length;
-      const originalText = (seg.original ?? '').replace(/\s+/g, ' ').trim();
-      const originalLength = originalText.length;
-
-      let runningStart = seg.start ?? 0;
-      let consumedDuration = 0;
-      let originalIndex = 0;
-
-      chunks.forEach((chunk, chunkIdx) => {
-        const remainingChunks = chunks.length - chunkIdx;
-        const chunkChars = chunk.length;
-        let durationShare =
-          chunkIdx === chunks.length - 1
-            ? totalDuration - consumedDuration
-            : Math.max(
-                MIN_SEGMENT_DURATION,
-                (totalDuration * chunkChars) / Math.max(1, totalChars)
-              );
-
-        const remainingDuration = totalDuration - consumedDuration;
-        const minRemaining = MIN_SEGMENT_DURATION * (remainingChunks - 1);
-        if (durationShare > remainingDuration - minRemaining) {
-          durationShare = Math.max(
-            MIN_SEGMENT_DURATION,
-            remainingDuration - minRemaining
-          );
-        }
-        if (durationShare < MIN_SEGMENT_DURATION) {
-          durationShare = MIN_SEGMENT_DURATION;
-        }
-
-        const chunkStart = runningStart;
-        const chunkEnd = chunkStart + durationShare;
-        runningStart = chunkEnd;
-        consumedDuration += durationShare;
-
-        let originalChunk = '';
-        if (originalLength > 0) {
-          if (chunkIdx === chunks.length - 1) {
-            originalChunk = originalText.slice(originalIndex).trim();
-          } else {
-            const take = Math.floor(
-              (originalLength * chunkChars) / Math.max(1, totalChars)
-            );
-            originalChunk = originalText
-              .slice(originalIndex, originalIndex + take)
-              .trim();
-            originalIndex += take;
-          }
-        }
-
-        finalSegments.push({
-          start: chunkStart,
-          end: chunkEnd,
-          translation: chunk,
-          original: originalChunk,
-          targetDuration: chunkEnd - chunkStart,
-          index: 0,
-        });
+      finalSegments.push({
+        start,
+        end,
+        translation,
+        original,
+        targetDuration: duration,
+        index: idx + 1,
       });
     });
-
-  finalSegments.sort((a, b) => a.start - b.start);
-  finalSegments.forEach((seg, idx) => {
-    seg.index = idx + 1;
-  });
 
   log.info(
     `[${operationId}] Prepared ${finalSegments.length} dub segments from ${sortedSpeech.length} speech windows (source lines: ${sortedSubs.length}).`
