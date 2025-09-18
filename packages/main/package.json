@@ -13,7 +13,7 @@
     "start": "npx electron ."
   },
   "dependencies": {
-    "electron": "35.0.0"
+    "electron": "35.7.5"
   },
   "devDependencies": {
     "esbuild": "^0.25.5"
