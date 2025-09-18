@@ -4,6 +4,124 @@ import * as stage5Client from '../stage5-client.js';
 import log from 'electron-log';
 import { AI_MODELS } from '../../../shared/constants/index.js';
 
+function extractContentFromCompletion(completion: any): string | null {
+  if (!completion) {
+    return null;
+  }
+
+  if (typeof completion === 'string') {
+    return completion;
+  }
+
+  const firstChoice = completion?.choices?.[0];
+  if (firstChoice) {
+    const choiceMessage = firstChoice?.message;
+    if (choiceMessage) {
+      if (typeof choiceMessage.content === 'string') {
+        return choiceMessage.content;
+      }
+      if (Array.isArray(choiceMessage.content)) {
+        const combined = choiceMessage.content
+          .map((part: any) => {
+            if (!part) return '';
+            if (typeof part === 'string') return part;
+            if (typeof part?.text === 'string') return part.text;
+            if (typeof part?.content === 'string') return part.content;
+            return '';
+          })
+          .join('')
+          .trim();
+        if (combined) {
+          return combined;
+        }
+      }
+    }
+
+    if (typeof firstChoice.text === 'string' && firstChoice.text.trim()) {
+      return firstChoice.text;
+    }
+  }
+
+  const outputText = completion?.output_text;
+  if (typeof outputText === 'string' && outputText.trim()) {
+    return outputText;
+  }
+  if (Array.isArray(outputText)) {
+    const joined = outputText
+      .map((part: any) => (typeof part === 'string' ? part.trim() : ''))
+      .filter(Boolean)
+      .join('\n');
+    if (joined.trim()) {
+      return joined.trim();
+    }
+  }
+
+  if (Array.isArray(completion?.output)) {
+    const textParts: string[] = [];
+    for (const item of completion.output) {
+      if (!item) continue;
+      const content = item.content;
+      if (typeof content === 'string' && content.trim()) {
+        textParts.push(content.trim());
+        continue;
+      }
+      if (Array.isArray(content)) {
+        for (const part of content) {
+          if (!part) continue;
+          if (typeof part === 'string' && part.trim()) {
+            textParts.push(part.trim());
+          } else if (typeof part?.text === 'string' && part.text.trim()) {
+            textParts.push(part.text.trim());
+          } else if (typeof part?.content === 'string' && part.content.trim()) {
+            textParts.push(part.content.trim());
+          }
+        }
+      }
+    }
+    const combinedOutput = textParts.join('\n').trim();
+    if (combinedOutput) {
+      return combinedOutput;
+    }
+  }
+
+  if (typeof completion?.message?.content === 'string') {
+    const content = completion.message.content.trim();
+    if (content) {
+      return content;
+    }
+  }
+
+  if (Array.isArray(completion?.messages)) {
+    for (const msg of completion.messages) {
+      if (!msg || msg.role !== 'assistant') continue;
+      if (typeof msg.content === 'string' && msg.content.trim()) {
+        return msg.content.trim();
+      }
+      if (Array.isArray(msg.content)) {
+        const combined = msg.content
+          .map((part: any) => {
+            if (!part) return '';
+            if (typeof part === 'string') return part;
+            if (typeof part?.text === 'string') return part.text;
+            if (typeof part?.content === 'string') return part.content;
+            return '';
+          })
+          .join('')
+          .trim();
+        if (combined) {
+          return combined;
+        }
+      }
+    }
+  }
+
+  if (typeof completion?.content === 'string' && completion.content.trim()) {
+    return completion.content.trim();
+  }
+
+  return null;
+}
+
 export async function callAIModel({
   messages,
   model = AI_MODELS.GPT,
@@ -39,13 +157,28 @@ export async function callAIModel({
         reasoning,
         signal,
       });
+      const content = extractContentFromCompletion(completion);
 
-      const content = completion.choices[0]?.message?.content;
-      if (content) {
+      if (content && content.trim()) {
         return content;
-      } else {
-        throw new Error('Unexpected response format from Stage5 API.');
       }
+
+      const completionKeys =
+        completion && typeof completion === 'object'
+          ? Object.keys(completion)
+          : null;
+
+      log.error(
+        `[${operationId}] Unable to extract content from Stage5 response`,
+        {
+          type: typeof completion,
+          hasChoices: Array.isArray(completion?.choices),
+          hasOutputText: typeof completion?.output_text,
+          keys: completionKeys,
+        }
+      );
+
+      throw new Error('Unexpected response format from Stage5 API.');
     } catch (error: any) {
       if (signal?.aborted || error?.name === 'AbortError') {
         throw new DOMException('Operation cancelled', 'AbortError');
