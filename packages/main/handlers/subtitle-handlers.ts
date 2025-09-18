@@ -561,30 +561,83 @@ async function buildDubSegmentsFromSpeech({
   });
 
   const MIN_SEGMENT_DURATION = 0.6;
+  const MAX_SEGMENT_DURATION = 20;
+  const BASE_TEXT_DURATION = 0.55;
+  const PER_WORD_DURATION = 0.17;
+  const APPROX_CHARS_PER_WORD = 3;
+  const SILENCE_BUFFER = 0.15;
+
+  const computeDurationFloor = (text: string): number => {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    if (!normalized) {
+      return MIN_SEGMENT_DURATION;
+    }
+    const words = normalized.split(' ').filter(Boolean).length;
+    const charCount = normalized.replace(/\s+/g, '').length;
+    const approxWords = Math.max(words, Math.ceil(charCount / APPROX_CHARS_PER_WORD));
+    const estimated = BASE_TEXT_DURATION + Math.max(0, approxWords - 1) * PER_WORD_DURATION;
+    return Math.max(MIN_SEGMENT_DURATION, Math.min(MAX_SEGMENT_DURATION, estimated));
+  };
+
+  const sortedAggregated = [...aggregated].sort((a, b) => a.start - b.start);
   const finalSegments: DubSegmentPayload[] = [];
 
-  aggregated
-    .sort((a, b) => a.start - b.start)
-    .forEach((seg, idx) => {
-      const translation = (seg.translation ?? '').replace(/\s+/g, ' ').trim();
-      if (!translation) return;
+  sortedAggregated.forEach((seg, idx) => {
+    const translation = (seg.translation ?? '').replace(/\s+/g, ' ').trim();
+    if (!translation) return;
 
-      const baseStart = Number.isFinite(seg.start) ? Number(seg.start) : 0;
-      const start = Math.max(0, baseStart);
-      const expectedDuration = seg.targetDuration ?? seg.end - seg.start;
-      const duration = Math.max(MIN_SEGMENT_DURATION, expectedDuration || 0);
-      const end = start + duration;
-      const original = (seg.original ?? '').replace(/\s+/g, ' ').trim();
+    const original = (seg.original ?? '').replace(/\s+/g, ' ').trim();
+    const baseStart = Number.isFinite(seg.start) ? Number(seg.start) : 0;
+    let start = Math.max(0, baseStart);
+    const expectedDuration = seg.targetDuration ?? seg.end - seg.start;
+    let duration = Math.max(MIN_SEGMENT_DURATION, expectedDuration || 0);
+    const minDurationForText = computeDurationFloor(translation);
+    const desiredDuration = Math.min(MAX_SEGMENT_DURATION, Math.max(duration, minDurationForText));
+    let end = start + duration;
+    let extraNeeded = desiredDuration - duration;
 
-      finalSegments.push({
-        start,
-        end,
-        translation,
-        original,
-        targetDuration: duration,
-        index: idx + 1,
-      });
+    if (extraNeeded > 0) {
+      const prevSegment = finalSegments[finalSegments.length - 1];
+      const minStart = prevSegment ? prevSegment.end + SILENCE_BUFFER : 0;
+      const maxShiftEarlier = Math.max(0, start - minStart);
+      const shiftEarlier = Math.min(extraNeeded, maxShiftEarlier);
+      if (shiftEarlier > 0) {
+        start -= shiftEarlier;
+        duration += shiftEarlier;
+        end = start + duration;
+        extraNeeded -= shiftEarlier;
+      }
+
+      if (extraNeeded > 0) {
+        const nextStart = sortedAggregated[idx + 1]?.start;
+        let availableAfter = Number.POSITIVE_INFINITY;
+        if (Number.isFinite(nextStart)) {
+          availableAfter = Math.max(0, (nextStart as number) - SILENCE_BUFFER - end);
+        }
+        const extendAfter = Math.min(extraNeeded, availableAfter);
+        if (extendAfter > 0) {
+          duration += extendAfter;
+          end = start + duration;
+          extraNeeded -= extendAfter;
+        }
+
+        if (extraNeeded > 0 && !Number.isFinite(availableAfter)) {
+          duration += extraNeeded;
+          end = start + duration;
+          extraNeeded = 0;
+        }
+      }
+    }
+
+    finalSegments.push({
+      start,
+      end,
+      translation,
+      original,
+      targetDuration: duration,
+      index: idx + 1,
     });
+  });
 
   log.info(
     `[${operationId}] Prepared ${finalSegments.length} dub segments from ${sortedSpeech.length} speech windows (source lines: ${sortedSubs.length}).`
