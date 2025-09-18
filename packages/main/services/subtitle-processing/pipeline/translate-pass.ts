@@ -117,7 +117,7 @@ export async function translatePass({
         percent: scaleProgress(
           (doneSoFar / totalSegments) * 100,
           Stage.START,
-          qualityTranslation ? Stage.END : Stage.TRANSLATE
+          qualityTranslation ? Stage.TRANSLATE : Stage.END
         ),
         stage: `Translating ${doneSoFar}/${totalSegments}`,
         partialResult: buildSrt({
