@@ -77,6 +77,7 @@ function DubbingVoiceSelector() {
   const { dubVoice, setDubVoice } = useUIStore();
   const [isPreviewing, setIsPreviewing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
   const previewTokenRef = useRef(0);
 
   const voiceOptions = [
@@ -101,6 +102,10 @@ function DubbingVoiceSelector() {
         // Do nothing
       }
       audioRef.current = null;
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
     };
   }, []);
 
@@ -117,10 +122,20 @@ function DubbingVoiceSelector() {
         } catch {
           // Do nothing
         }
+        if (audioUrlRef.current) {
+          URL.revokeObjectURL(audioUrlRef.current);
+          audioUrlRef.current = null;
+        }
         const format = result.format ?? 'mp3';
-        const audio = new Audio(
-          `data:audio/${format};base64,${result.audioBase64}`
-        );
+        const binary = atob(result.audioBase64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const blob = new Blob([bytes.buffer], { type: `audio/${format}` });
+        const objectUrl = URL.createObjectURL(blob);
+        audioUrlRef.current = objectUrl;
+        const audio = new Audio(objectUrl);
         audioRef.current = audio;
         audio.play().catch(err => {
           console.warn('[SettingsPage] Voice preview playback failed:', err);
