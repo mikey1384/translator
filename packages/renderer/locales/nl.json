@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
@@ -92,7 +93,11 @@
     "generateNow": "Genereer ondertitels nu",
     "translation": "Vertaling",
     "chooseSrtFile": "Kies SRT bestand",
-    "cancel_confirmation": "Weet je zeker dat je het ondertitelvertaalproces wilt annuleren? Alle voortgang gaat verloren en je moet opnieuw beginnen."
+    "cancel_confirmation": "Weet je zeker dat je het ondertitelvertaalproces wilt annuleren? Alle voortgang gaat verloren en je moet opnieuw beginnen.",
+    "continueTranscribing": "Continue transcribing",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "Ondertitels bewerken",
@@ -109,7 +114,8 @@
       "applyShift": "Verschuiving toepassen",
       "originalTextPrefix": "Origineel:",
       "subtitlePlaceholder": "Ondertiteltekst",
-      "confirmRemove": "Weet je zeker dat je dit ondertitelblok wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+      "confirmRemove": "Weet je zeker dat je dit ondertitelblok wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Opslaan",
@@ -126,7 +132,30 @@
   },
   "settings": {
     "title": "Instellingen",
-    "creditsDescription": "Koop credits. Het aantal getoonde uren is een schatting van de totale videoduur die je kunt transcriberen of vertalen. Voorbeeld: een video van 3 uur transcriberen en vertalen kost ongeveer 6 uur (≈140.000 credits)."
+    "creditsDescription": "Koop credits. Het aantal getoonde uren is een schatting van de totale videoduur die je kunt transcriberen of vertalen. Voorbeeld: een video van 3 uur transcriberen en vertalen kost ongeveer 6 uur (≈140.000 credits).",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "Volledig scherm",
@@ -245,6 +274,16 @@
       "saveAndTranscribe": "Opslaan en transcriberen",
       "discardAndTranscribe": "Verwerpen en transcriberen",
       "cancel": "Annuleren"
+    },
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
     }
   },
   "progress": {
@@ -252,11 +291,21 @@
     "gapRepair": "Hiaat reparatie #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Ontbrekende ondertitels repareren (Iteratie {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Bestand opgeslagen:\n{{path}}",
-    "videoSaved": "Video opgeslagen naar:\n{{path}}"
+    "videoSaved": "Video opgeslagen naar:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "AI-gebruiksuren",
@@ -293,5 +342,50 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "logs": {
+    "title": "Recent Logs",
+    "copy": "Copy",
+    "email": "Email to Dev",
+    "close": "Close",
+    "empty": "No logs yet.",
+    "copied": "Logs copied to clipboard",
+    "copyFailed": "Copy failed",
+    "emailSubject": "Stage5 Debug Logs",
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }

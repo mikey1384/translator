@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Guardar video doblado"
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
@@ -95,7 +96,30 @@
     "improveTranscription": "Mejorar transcripción",
     "improveTranslation": "Mejorar traducción",
     "chooseSrtFile": "Elegir archivo SRT",
-    "cancel_confirmation": "¿Estás seguro de que quieres cancelar el proceso de traducción de subtítulos? Se perderá todo el progreso y tendrás que empezar de nuevo."
+    "cancel_confirmation": "¿Estás seguro de que quieres cancelar el proceso de traducción de subtítulos? Se perderá todo el progreso y tendrás que empezar de nuevo.",
+    "dub": "Generar voz doblada"
+  },
+  "summary": {
+    "title": "Resumen de la transcripción",
+    "ctaHelper": "Genera una vista general detallada. Los videos largos pueden tardar un momento.",
+    "languageLabel": "Idioma del resumen",
+    "generate": "Generar resumen",
+    "regenerate": "Regenerar resumen",
+    "placeholder": "Tu resumen con IA aparecerá aquí cuando se genere.",
+    "insufficientCredits": "No hay créditos suficientes para ejecutar el resumen.",
+    "error": "No pudimos crear el resumen. {{message}}",
+    "copy": "Copiar resumen",
+    "copied": "¡Copiado!",
+    "copyError": "No se pudo copiar el resumen al portapapeles.",
+    "status": {
+      "preparing": "Preparando transcripción…",
+      "chunk": "Resumiendo sección {{current}}/{{total}}",
+      "synthesizing": "Sintetizando resumen completo…",
+      "ready": "Resumen listo",
+      "error": "Error en el resumen",
+      "cancelled": "Resumen cancelado",
+      "inProgress": "Generando resumen…"
+    }
   },
   "panel": {
     "gaps": {
@@ -108,7 +132,6 @@
       "count": "{{count}} líneas"
     }
   },
-  
   "editSubtitles": {
     "title": "Editar subtítulos",
     "listTitle": "Subtítulos ({{count}})",
@@ -124,7 +147,8 @@
       "applyShift": "Aplicar desplazamiento",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Texto del subtítulo",
-      "confirmRemove": "¿Estás seguro de que quieres eliminar este bloque de subtítulos? Esta acción no se puede deshacer."
+      "confirmRemove": "¿Estás seguro de que quieres eliminar este bloque de subtítulos? Esta acción no se puede deshacer.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Guardar",
@@ -141,7 +165,30 @@
   },
   "settings": {
     "title": "Configuración",
-    "creditsDescription": "Compra créditos. Las horas mostradas son una estimación de la duración total de video que puedes transcribir o traducir. Ejemplo: transcribir y traducir un video de 3 horas consume aproximadamente 6 horas (≈140.000 créditos)."
+    "creditsDescription": "Compra créditos. Las horas mostradas son una estimación de la duración total de video que puedes transcribir o traducir. Ejemplo: transcribir y traducir un video de 3 horas consume aproximadamente 6 horas (≈140.000 créditos).",
+    "performanceQuality": {
+      "title": "Rendimiento y calidad",
+      "qualityTranscription": {
+        "label": "Transcripción de alta calidad",
+        "help": "Activado: secuencial, usa el contexto de la línea anterior. Desactivado: modo por lotes más rápido."
+      },
+      "qualityTranslation": {
+        "label": "Traducción de alta calidad",
+        "help": "Activado: incluye fase de revisión. Desactivado: omite la revisión para mayor velocidad."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Voz de doblaje",
+      "voiceHelp": "Elige la voz predeterminada que se usará al generar el audio doblado.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "credits": {
     "title": "Horas de uso de IA",
@@ -276,7 +323,11 @@
       "message": "Tus créditos de IA se han agotado. Recarga en Configuración y luego continúa desde donde lo dejaste.",
       "openSettings": "Abrir Configuración",
       "ok": "Aceptar"
-    }
+    },
+    "saveDubbedVideoAs": "Guardar video doblado como",
+    "dubbingInProgress": "Doblaje en progreso",
+    "dubbingWorking": "Generando audio doblado…",
+    "cancelDubbingConfirm": "¿Cancelar el doblaje? Se perderá el progreso y tendrás que empezar de nuevo."
   },
   "progress": {
     "mergingTitle": "Combinando video y subtítulos",
@@ -291,11 +342,13 @@
     "gapRepair": "Reparación de huecos #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando subtítulos faltantes (Iteración {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "reviewingSlow": "Revisando (esto puede tardar un poco...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Archivo guardado:\n{{path}}",
-    "videoSaved": "Video guardado en:\n{{path}}"
+    "videoSaved": "Video guardado en:\n{{path}}",
+    "dubbedVideoSaved": "Video doblado guardado en:\n{{path}}"
   },
   "cta": {
     "generate": {

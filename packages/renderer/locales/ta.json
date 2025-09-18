@@ -81,7 +81,8 @@
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
     "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
-    "srtFileLoaded": "SRT Loaded"
+    "srtFileLoaded": "SRT Loaded",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "வெளியீட்டு மொழி",
@@ -92,7 +93,11 @@
     "generateNow": "துணைத் தலைப்புகளை இப்போது உருவாக்கு",
     "translation": "மொழிபெயர்ப்பு",
     "chooseSrtFile": "SRT கோப்பைத் தேர்ந்தெடுக்கவும்",
-    "cancel_confirmation": "துணைத் தலைப்பு மொழிபெயர்ப்பு செயல்முறையை ரத்து செய்ய விரும்புகிறீர்களா? முன்னேற்றம் இழக்கப்படும் மற்றும் நீங்கள் மீண்டும் தொடங்க வேண்டும்."
+    "cancel_confirmation": "துணைத் தலைப்பு மொழிபெயர்ப்பு செயல்முறையை ரத்து செய்ய விரும்புகிறீர்களா? முன்னேற்றம் இழக்கப்படும் மற்றும் நீங்கள் மீண்டும் தொடங்க வேண்டும்.",
+    "continueTranscribing": "Continue transcribing",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "துணைத் தலைப்புகளைத் திருத்து",
@@ -109,7 +114,8 @@
       "applyShift": "நகர்வைப் பயன்படுத்து",
       "originalTextPrefix": "அசல்:",
       "subtitlePlaceholder": "துணைத் தலைப்பு உரை",
-      "confirmRemove": "இந்த துணைத் தலைப்புத் தொகுதியை நீக்க விரும்புகிறீர்களா? இந்த செயலை மீட்டெடுக்க முடியாது."
+      "confirmRemove": "இந்த துணைத் தலைப்புத் தொகுதியை நீக்க விரும்புகிறீர்களா? இந்த செயலை மீட்டெடுக்க முடியாது.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "சேமி",
@@ -126,7 +132,30 @@
   },
   "settings": {
     "title": "அமைப்புகள்",
-    "creditsDescription": "கிரெடிட்களை வாங்கவும். காண்பிக்கப்படும் மணிநேரங்கள் நீங்கள் உரை மாற்றம் செய்ய அல்லது மொழிபெயர்க்க முடியும் வீடியோவின் மொத்த நேரத்தின் கணிப்பாகும். உதாரணம்: 3 மணி நேர வீடியோவை உரை மாற்றம் செய்து மொழிபெயர்க்க சுமார் 6 மணி நேரம் (≈140,000 கிரெடிட்கள்) தேவைப்படும்."
+    "creditsDescription": "கிரெடிட்களை வாங்கவும். காண்பிக்கப்படும் மணிநேரங்கள் நீங்கள் உரை மாற்றம் செய்ய அல்லது மொழிபெயர்க்க முடியும் வீடியோவின் மொத்த நேரத்தின் கணிப்பாகும். உதாரணம்: 3 மணி நேர வீடியோவை உரை மாற்றம் செய்து மொழிபெயர்க்க சுமார் 6 மணி நேரம் (≈140,000 கிரெடிட்கள்) தேவைப்படும்.",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "முழுத்திரையில் நுழை",
@@ -245,18 +274,38 @@
       "discardAndTranscribe": "சேமிக்காமல் எழுத்துப்பெயர்ப்பு செய்",
       "cancel": "ரத்து"
     },
-    "transcriptionInProgress": "Transcription in Progress"
+    "transcriptionInProgress": "Transcription in Progress",
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
+    }
   },
   "progress": {
     "transcribedChunks": "டிரான்ஸ்கிரைப் செய்யப்பட்டு சுத்தப்படுத்தப்பட்டது {{done}}/{{total}} பகுதிகள்",
     "gapRepair": "இடைவெளி பழுதுபார்ப்பு #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "காணாமல் போன துணைத் தலைப்புகளை சரிசெய்கிறது (மறுமுறை {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "கோப்பு சேமிக்கப்பட்டது:\n{{path}}",
-    "videoSaved": "காணொளி சேமிக்கப்பட்ட இடம்:\n{{path}}"
+    "videoSaved": "காணொளி சேமிக்கப்பட்ட இடம்:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "AI பயன்பாட்டு நேரங்கள்",
@@ -293,5 +342,50 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "logs": {
+    "title": "Recent Logs",
+    "copy": "Copy",
+    "email": "Email to Dev",
+    "close": "Close",
+    "empty": "No logs yet.",
+    "copied": "Logs copied to clipboard",
+    "copyFailed": "Copy failed",
+    "emailSubject": "Stage5 Debug Logs",
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }

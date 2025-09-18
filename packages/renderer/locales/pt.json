@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Salvar vídeo dublado"
   },
   "subtitles": {
     "outputLanguage": "Idioma de Saída",
@@ -95,7 +96,30 @@
     "improveTranscription": "Melhorar transcrição",
     "improveTranslation": "Melhorar tradução",
     "chooseSrtFile": "Escolher Arquivo SRT",
-    "cancel_confirmation": "Tem certeza que deseja cancelar o processo de tradução de legendas? Qualquer progresso será perdido e você precisará começar novamente."
+    "cancel_confirmation": "Tem certeza que deseja cancelar o processo de tradução de legendas? Qualquer progresso será perdido e você precisará começar novamente.",
+    "dub": "Dublar voz"
+  },
+  "summary": {
+    "title": "Resumo da transcrição",
+    "ctaHelper": "Gere uma visão geral detalhada. Vídeos longos podem levar alguns instantes para processar.",
+    "languageLabel": "Idioma do resumo",
+    "generate": "Gerar resumo",
+    "regenerate": "Regenerar resumo",
+    "placeholder": "O resumo da IA aparecerá aqui assim que for gerado.",
+    "insufficientCredits": "Créditos insuficientes para executar o resumo.",
+    "error": "Não foi possível criar o resumo. {{message}}",
+    "copy": "Copiar resumo",
+    "copied": "Copiado!",
+    "copyError": "Não foi possível copiar o resumo para a área de transferência.",
+    "status": {
+      "preparing": "Preparando transcrição…",
+      "chunk": "Resumindo seção {{current}}/{{total}}",
+      "synthesizing": "Sintetizando resumo completo…",
+      "ready": "Resumo pronto",
+      "error": "Falha ao gerar o resumo",
+      "cancelled": "Resumo cancelado",
+      "inProgress": "Gerando resumo…"
+    }
   },
   "panel": {
     "gaps": {
@@ -108,7 +132,6 @@
       "count": "{{count}} linhas"
     }
   },
-  
   "editSubtitles": {
     "title": "Editar Legendas",
     "listTitle": "Legendas ({{count}})",
@@ -142,7 +165,30 @@
   },
   "settings": {
     "title": "Configurações",
-    "creditsDescription": "Compre créditos. As horas exibidas são uma estimativa da duração total de vídeo que você pode transcrever ou traduzir. Exemplo: transcrever e traduzir um vídeo de 3 horas consome cerca de 6 horas (≈140.000 créditos)."
+    "creditsDescription": "Compre créditos. As horas exibidas são uma estimativa da duração total de vídeo que você pode transcrever ou traduzir. Exemplo: transcrever e traduzir um vídeo de 3 horas consome cerca de 6 horas (≈140.000 créditos).",
+    "performanceQuality": {
+      "title": "Desempenho e qualidade",
+      "qualityTranscription": {
+        "label": "Transcrição de alta qualidade",
+        "help": "Ativo: sequencial, usa o contexto da linha anterior. Desativado: modo em lotes mais rápido."
+      },
+      "qualityTranslation": {
+        "label": "Tradução de alta qualidade",
+        "help": "Ativo: inclui etapa de revisão. Desativado: pula a revisão para ganhar velocidade."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Voz dublada",
+      "voiceHelp": "Escolha a voz padrão usada ao gerar o áudio dublado.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "Entrar em Tela Cheia",
@@ -261,13 +307,17 @@
       "openSettings": "Abrir Configurações",
       "ok": "OK"
     },
-  "unsavedSrtOnTranscribe": {
+    "unsavedSrtOnTranscribe": {
       "title": "Salvar as legendas atuais antes de transcrever?",
       "message": "Você já tem legendas carregadas. A transcrição irá substituí-las. O que deseja fazer?",
       "saveAndTranscribe": "Salvar e transcrever",
       "discardAndTranscribe": "Descartar e transcrever",
       "cancel": "Cancelar"
-    }
+    },
+    "saveDubbedVideoAs": "Salvar vídeo dublado como",
+    "dubbingInProgress": "Dublagem em andamento",
+    "dubbingWorking": "Gerando áudio dublado…",
+    "cancelDubbingConfirm": "Cancelar a dublagem? O progresso será perdido e você terá que recomeçar."
   },
   "progress": {
     "mergingTitle": "Combinando vídeo e legendas",
@@ -282,11 +332,25 @@
     "gapRepair": "Reparo de lacunas #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando legendas ausentes (Iteração {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "reviewingSlow": "Revisando (isso pode demorar um pouco...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Arquivo salvo:\n{{path}}",
-    "videoSaved": "Vídeo salvo em:\n{{path}}"
+    "videoSaved": "Vídeo salvo em:\n{{path}}",
+    "dubbedVideoSaved": "Vídeo dublado salvo em:\n{{path}}"
+  },
+  "logs": {
+    "title": "Logs recentes",
+    "copy": "Copiar",
+    "email": "Enviar e-mail para o desenvolvedor",
+    "close": "Fechar",
+    "empty": "Nenhum log ainda.",
+    "copied": "Logs copiados para a área de transferência",
+    "copyFailed": "Falha ao copiar",
+    "emailSubject": "Logs de depuração do Stage5",
+    "emailBodyPrefix": "Olá,\n\nSegue abaixo meus logs recentes para ajudar a depurar o problema.\n\n",
+    "deviceInfoHeader": "Informações do dispositivo"
   },
   "credits": {
     "title": "Horas de Uso de IA",

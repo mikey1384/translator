@@ -110,6 +110,7 @@
     "improveTranscription": "Improve Transcription",
     "improveTranslation": "Improve Translation",
     "chooseSrtFile": "Choose SRT File",
+    "dub": "Dub Voice",
     "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
   },
   "summary": {

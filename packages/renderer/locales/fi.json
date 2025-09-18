@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "Tulostuskieli",
@@ -92,7 +93,11 @@
     "generateNow": "Luo tekstitykset nyt",
     "translation": "Käännös",
     "chooseSrtFile": "Valitse SRT-tiedosto",
-    "cancel_confirmation": "Haluatko varmasti peruuttaa tekstitysten käännösprosessin? Kaikki edistyminen menetetään ja sinun on aloitettava uudelleen."
+    "cancel_confirmation": "Haluatko varmasti peruuttaa tekstitysten käännösprosessin? Kaikki edistyminen menetetään ja sinun on aloitettava uudelleen.",
+    "continueTranscribing": "Continue transcribing",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "Muokkaa tekstityksiä",
@@ -109,7 +114,8 @@
       "applyShift": "Käytä siirtoa",
       "originalTextPrefix": "Alkuperäinen:",
       "subtitlePlaceholder": "Tekstityksen teksti",
-      "confirmRemove": "Haluatko varmasti poistaa tämän tekstityslohkon? Tätä toimintoa ei voi kumota."
+      "confirmRemove": "Haluatko varmasti poistaa tämän tekstityslohkon? Tätä toimintoa ei voi kumota.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Tallenna",
@@ -126,7 +132,30 @@
   },
   "settings": {
     "title": "Asetukset",
-    "creditsDescription": "Osta krediittejä. Näytetyt tunnit ovat arvio videon kokonaiskestosta, jonka voit puhtaaksikirjoittaa tai kääntää. Esimerkki: 3 tunnin videon transkriptio ja käännös kuluttaa noin 6 tuntia (≈140 000 krediittiä)."
+    "creditsDescription": "Osta krediittejä. Näytetyt tunnit ovat arvio videon kokonaiskestosta, jonka voit puhtaaksikirjoittaa tai kääntää. Esimerkki: 3 tunnin videon transkriptio ja käännös kuluttaa noin 6 tuntia (≈140 000 krediittiä).",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "Siirry koko näytön tilaan",
@@ -245,6 +274,16 @@
       "saveAndTranscribe": "Tallenna ja transkriboi",
       "discardAndTranscribe": "Hylkää ja transkriboi",
       "cancel": "Peruuta"
+    },
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
     }
   },
   "progress": {
@@ -252,11 +291,21 @@
     "gapRepair": "Aukkojen korjaus #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Korjataan puuttuvia tekstityksiä (Kierros {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Tiedosto tallennettu:\n{{path}}",
-    "videoSaved": "Video tallennettu:\n{{path}}"
+    "videoSaved": "Video tallennettu:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "AI-käyttötunnit",
@@ -293,5 +342,50 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "logs": {
+    "title": "Recent Logs",
+    "copy": "Copy",
+    "email": "Email to Dev",
+    "close": "Close",
+    "empty": "No logs yet.",
+    "copied": "Logs copied to clipboard",
+    "copyFailed": "Copy failed",
+    "emailSubject": "Stage5 Debug Logs",
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }

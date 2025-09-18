@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "儲存配音影片"
   },
   "subtitles": {
     "outputLanguage": "輸出語言",
@@ -95,7 +96,30 @@
     "improveTranscription": "改善轉錄",
     "improveTranslation": "改善翻譯",
     "chooseSrtFile": "選擇SRT檔案",
-    "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。"
+    "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
+    "dub": "產生配音語音"
+  },
+  "summary": {
+    "title": "逐字稿摘要",
+    "ctaHelper": "產生深入的總覽。較長的影片可能需要一些時間。",
+    "languageLabel": "摘要語言",
+    "generate": "產生摘要",
+    "regenerate": "重新產生摘要",
+    "placeholder": "AI 摘要產生後會顯示在此。",
+    "insufficientCredits": "點數不足，無法執行摘要。",
+    "error": "無法建立摘要。{{message}}",
+    "copy": "複製摘要",
+    "copied": "已複製！",
+    "copyError": "無法將摘要複製到剪貼簿。",
+    "status": {
+      "preparing": "正在準備逐字稿…",
+      "chunk": "正在摘要第 {{current}}/{{total}} 段",
+      "synthesizing": "正在綜合完整摘要…",
+      "ready": "摘要已就緒",
+      "error": "摘要失敗",
+      "cancelled": "摘要已取消",
+      "inProgress": "正在產生摘要…"
+    }
   },
   "panel": {
     "gaps": {
@@ -108,7 +132,6 @@
       "count": "{{count}} 行"
     }
   },
-  
   "editSubtitles": {
     "title": "編輯字幕",
     "listTitle": "字幕 ({{count}})",
@@ -124,7 +147,8 @@
       "applyShift": "套用偏移",
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕文字",
-      "confirmRemove": "確定要移除此字幕區塊嗎？此操作無法撤銷。"
+      "confirmRemove": "確定要移除此字幕區塊嗎？此操作無法撤銷。",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "儲存",
@@ -141,7 +165,30 @@
   },
   "settings": {
     "title": "設定",
-    "creditsDescription": "購買點數。顯示的時數是您可用於轉錄或翻譯之影片總時長的估算。範例：轉錄並翻譯一支 3 小時的影片，約需 6 小時（約 140,000 點數）。"
+    "creditsDescription": "購買點數。顯示的時數是您可用於轉錄或翻譯之影片總時長的估算。範例：轉錄並翻譯一支 3 小時的影片，約需 6 小時（約 140,000 點數）。",
+    "performanceQuality": {
+      "title": "效能與品質",
+      "qualityTranscription": {
+        "label": "高品質轉錄",
+        "help": "開啟：逐行處理，使用前一行的上下文。關閉：更快的批次模式。"
+      },
+      "qualityTranslation": {
+        "label": "高品質翻譯",
+        "help": "開啟：包含審查階段。關閉：為了速度略過審查。"
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "配音語音",
+      "voiceHelp": "選擇產生配音音軌時使用的預設語音。",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "進入全螢幕",
@@ -266,7 +313,11 @@
       "message": "您的 AI 積分已用完。請至「設定」中儲值，然後從中斷處繼續。",
       "openSettings": "開啟設定",
       "ok": "確定"
-    }
+    },
+    "saveDubbedVideoAs": "將配音影片另存為",
+    "dubbingInProgress": "正在產生配音",
+    "dubbingWorking": "正在產生配音音軌…",
+    "cancelDubbingConfirm": "要取消配音嗎？進度將會遺失，您需要重新開始。"
   },
   "progress": {
     "mergingTitle": "正在合併影片與字幕",
@@ -281,11 +332,13 @@
     "gapRepair": "間隙修復 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "修復遺失的字幕 (第{{iteration}}/{{maxIterations}}次迭代) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "reviewingSlow": "檢查中（可能需要一點時間…）{{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "檔案已儲存：\n{{path}}",
-    "videoSaved": "影片已儲存至：\n{{path}}"
+    "videoSaved": "影片已儲存至：\n{{path}}",
+    "dubbedVideoSaved": "配音影片已儲存至:\n{{path}}"
   },
   "credits": {
     "title": "AI使用時數",

@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "吹き替え動画を保存"
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -95,7 +96,30 @@
     "improveTranscription": "文字起こしを改善",
     "improveTranslation": "翻訳を改善",
     "chooseSrtFile": "SRTファイルを選択",
-    "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。"
+    "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。",
+    "dub": "吹き替え音声を生成"
+  },
+  "summary": {
+    "title": "書き起こしの要約",
+    "ctaHelper": "詳細な概要を生成します。長い動画は処理に時間がかかる場合があります。",
+    "languageLabel": "要約の言語",
+    "generate": "要約を生成",
+    "regenerate": "要約を再生成",
+    "placeholder": "生成が完了すると、AIによる要約がここに表示されます。",
+    "insufficientCredits": "要約を実行するためのクレジットが足りません。",
+    "error": "要約を作成できませんでした。{{message}}",
+    "copy": "要約をコピー",
+    "copied": "コピーしました！",
+    "copyError": "要約をクリップボードにコピーできませんでした。",
+    "status": {
+      "preparing": "書き起こしを準備しています…",
+      "chunk": "セクション {{current}}/{{total}} を要約しています",
+      "synthesizing": "要約全体を生成しています…",
+      "ready": "要約の準備ができました",
+      "error": "要約に失敗しました",
+      "cancelled": "要約をキャンセルしました",
+      "inProgress": "要約を生成しています…"
+    }
   },
   "panel": {
     "gaps": {
@@ -108,7 +132,6 @@
       "count": "{{count}} 行"
     }
   },
-  
   "editSubtitles": {
     "title": "字幕を編集",
     "listTitle": "字幕 ({{count}})",
@@ -124,7 +147,8 @@
       "applyShift": "シフトを適用",
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕テキスト",
-      "confirmRemove": "この字幕ブロックを削除してもよろしいですか？この操作は元に戻せません。"
+      "confirmRemove": "この字幕ブロックを削除してもよろしいですか？この操作は元に戻せません。",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "保存",
@@ -141,7 +165,30 @@
   },
   "settings": {
     "title": "設定",
-    "creditsDescription": "クレジットを購入してください。表示される時間は、文字起こしまたは翻訳できる動画の合計再生時間の目安です。例：3時間の動画を文字起こしして翻訳すると、約6時間（約140,000クレジット）を消費します。"
+    "creditsDescription": "クレジットを購入してください。表示される時間は、文字起こしまたは翻訳できる動画の合計再生時間の目安です。例：3時間の動画を文字起こしして翻訳すると、約6時間（約140,000クレジット）を消費します。",
+    "performanceQuality": {
+      "title": "パフォーマンスと品質",
+      "qualityTranscription": {
+        "label": "高品質の書き起こし",
+        "help": "オン: 前の行の文脈を利用する逐次モード。オフ: より高速なバッチモード。"
+      },
+      "qualityTranslation": {
+        "label": "高品質の翻訳",
+        "help": "オン: レビュー工程を含みます。オフ: 速度優先でレビューを省略します。"
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "吹き替え音声",
+      "voiceHelp": "吹き替え音声を生成する際に使用する既定の声を選択します。",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "credits": {
     "title": "AI使用時間",
@@ -276,7 +323,11 @@
       "message": "AIクレジットがなくなりました。設定でチャージしてから、続きから再開してください。",
       "openSettings": "設定を開く",
       "ok": "OK"
-    }
+    },
+    "saveDubbedVideoAs": "吹き替え動画として保存",
+    "dubbingInProgress": "吹き替え処理中",
+    "dubbingWorking": "吹き替え音声を生成しています…",
+    "cancelDubbingConfirm": "吹き替えを中止しますか？進捗は失われ、最初からやり直す必要があります。"
   },
   "progress": {
     "mergingTitle": "動画と字幕を結合中",
@@ -291,11 +342,13 @@
     "gapRepair": "ギャップ修復 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}",
     "scrubbingHallucinations": "字幕のクリーニング中 ({{done}}/{{total}})",
-    "translationCleanup": "翻訳字幕のクリーンアップ中 ({{done}}/{{total}})"
+    "translationCleanup": "翻訳字幕のクリーンアップ中 ({{done}}/{{total}})",
+    "reviewingSlow": "レビュー中（しばらく時間がかかる場合があります）{{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "ファイルを保存しました:\n{{path}}",
-    "videoSaved": "動画を保存しました:\n{{path}}"
+    "videoSaved": "動画を保存しました:\n{{path}}",
+    "dubbedVideoSaved": "吹き替え動画を保存しました:\n{{path}}"
   },
   "cta": {
     "generate": {

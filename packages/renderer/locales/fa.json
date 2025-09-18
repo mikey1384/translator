@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "زبان خروجی",
@@ -92,7 +93,11 @@
     "generateNow": "تولید زیرنویس اکنون",
     "translation": "ترجمه",
     "chooseSrtFile": "انتخاب فایل SRT",
-    "cancel_confirmation": "آیا مطمئن هستید که می‌خواهید فرآیند ترجمه زیرنویس را لغو کنید؟ هر پیشرفتی از بین خواهد رفت و شما باید دوباره شروع کنید."
+    "cancel_confirmation": "آیا مطمئن هستید که می‌خواهید فرآیند ترجمه زیرنویس را لغو کنید؟ هر پیشرفتی از بین خواهد رفت و شما باید دوباره شروع کنید.",
+    "continueTranscribing": "Continue transcribing",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "ویرایش زیرنویس‌ها",
@@ -109,7 +114,8 @@
       "applyShift": "اعمال جابجایی",
       "originalTextPrefix": "اصلی:",
       "subtitlePlaceholder": "متن زیرنویس",
-      "confirmRemove": "آیا مطمئن هستید که می‌خواهید این بلوک زیرنویس را حذف کنید؟ این عمل قابل برگشت نیست."
+      "confirmRemove": "آیا مطمئن هستید که می‌خواهید این بلوک زیرنویس را حذف کنید؟ این عمل قابل برگشت نیست.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "ذخیره",
@@ -126,7 +132,30 @@
   },
   "settings": {
     "title": "تنظیمات",
-    "creditsDescription": "اعتبار بخرید. ساعات نمایش‌داده‌شده برآوردی از مجموع مدت‌زمان ویدیویی است که می‌توانید رونویسی یا ترجمه کنید. مثال: رونویسی و ترجمه یک ویدیوی ۳ ساعته حدود ۶ ساعت (≈۱۴۰٬۰۰۰ اعتبار) مصرف می‌کند."
+    "creditsDescription": "اعتبار بخرید. ساعات نمایش‌داده‌شده برآوردی از مجموع مدت‌زمان ویدیویی است که می‌توانید رونویسی یا ترجمه کنید. مثال: رونویسی و ترجمه یک ویدیوی ۳ ساعته حدود ۶ ساعت (≈۱۴۰٬۰۰۰ اعتبار) مصرف می‌کند.",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "ورود به حالت تمام صفحه",
@@ -245,18 +274,38 @@
       "discardAndTranscribe": "عدم ذخیره و رونویسی",
       "cancel": "انصراف"
     },
-    "transcriptionInProgress": "Transcription in Progress"
+    "transcriptionInProgress": "Transcription in Progress",
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
+    }
   },
   "progress": {
     "transcribedChunks": "رونویسی و پاکسازی شده {{done}}/{{total}} قطعه",
     "gapRepair": "تعمیر شکاف #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "تعمیر زیرنویس‌های گمشده (تکرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "فایل ذخیره شد:\n{{path}}",
-    "videoSaved": "ویدیو ذخیره شد در:\n{{path}}"
+    "videoSaved": "ویدیو ذخیره شد در:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "ساعات استفاده از هوش مصنوعی",
@@ -293,5 +342,50 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "logs": {
+    "title": "Recent Logs",
+    "copy": "Copy",
+    "email": "Email to Dev",
+    "close": "Close",
+    "empty": "No logs yet.",
+    "copied": "Logs copied to clipboard",
+    "copyFailed": "Copy failed",
+    "emailSubject": "Stage5 Debug Logs",
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }

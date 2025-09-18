@@ -8,6 +8,7 @@ import {
   TRANSLATION_LANGUAGE_GROUPS,
 } from '../../../constants/translation-languages';
 import { useTaskStore } from '../../../state/task-store';
+import { useUrlStore } from '../../../state/url-store';
 
 interface SrtMountedPanelProps {
   srtPath?: string | null;
@@ -36,8 +37,21 @@ export default function SrtMountedPanel({
   const showOriginalText = useUIStore(s => s.showOriginalText);
   const setShowOriginalText = useUIStore(s => s.setShowOriginalText);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
-  const isDisabled = disabled || isTranslating || isTranscribing;
-  const isDubDisabled = disabled || disableDub || isTranscribing || isDubbing;
+  const isTranslationTaskActive = useTaskStore(s => !!s.translation.inProgress);
+  const isMergeInProgress = useTaskStore(s => !!s.merge.inProgress);
+  const isSummaryInProgress = useTaskStore(s => !!s.summary.inProgress);
+  const isDownloadInProgress = useUrlStore(s => s.download.inProgress);
+  const isTranslationBusy = isTranslating || isTranslationTaskActive;
+  const isDisabled = disabled || isTranslationBusy || isTranscribing;
+  const isDubDisabled =
+    disabled ||
+    disableDub ||
+    isTranscribing ||
+    isTranslationBusy ||
+    isDubbing ||
+    isMergeInProgress ||
+    isSummaryInProgress ||
+    isDownloadInProgress;
 
   return (
     <div

@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Synchronisiertes Video speichern"
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -95,7 +96,30 @@
     "improveTranscription": "Transkription verbessern",
     "improveTranslation": "Übersetzung verbessern",
     "chooseSrtFile": "SRT-Datei auswählen",
-    "cancel_confirmation": "Sind Sie sicher, dass Sie den Untertitel-Übersetzungsprozess abbrechen möchten? Jeder Fortschritt geht verloren und Sie müssen neu beginnen."
+    "cancel_confirmation": "Sind Sie sicher, dass Sie den Untertitel-Übersetzungsprozess abbrechen möchten? Jeder Fortschritt geht verloren und Sie müssen neu beginnen.",
+    "dub": "Stimme synchronisieren"
+  },
+  "summary": {
+    "title": "Transkript-Zusammenfassung",
+    "ctaHelper": "Erstelle eine ausführliche Übersicht. Lange Videos benötigen möglicherweise etwas Zeit.",
+    "languageLabel": "Sprache der Zusammenfassung",
+    "generate": "Zusammenfassung erstellen",
+    "regenerate": "Zusammenfassung neu erstellen",
+    "placeholder": "Die KI-Zusammenfassung erscheint hier, sobald sie erstellt wurde.",
+    "insufficientCredits": "Nicht genug Credits, um die Zusammenfassung auszuführen.",
+    "error": "Die Zusammenfassung konnte nicht erstellt werden. {{message}}",
+    "copy": "Zusammenfassung kopieren",
+    "copied": "Kopiert!",
+    "copyError": "Zusammenfassung konnte nicht in die Zwischenablage kopiert werden.",
+    "status": {
+      "preparing": "Transkript wird vorbereitet…",
+      "chunk": "Abschnitt {{current}}/{{total}} wird zusammengefasst",
+      "synthesizing": "Umfassende Zusammenfassung wird erstellt…",
+      "ready": "Zusammenfassung fertig",
+      "error": "Zusammenfassung fehlgeschlagen",
+      "cancelled": "Zusammenfassung abgebrochen",
+      "inProgress": "Zusammenfassung wird erstellt…"
+    }
   },
   "panel": {
     "gaps": {
@@ -108,7 +132,6 @@
       "count": "{{count}} Zeilen"
     }
   },
-  
   "editSubtitles": {
     "title": "Untertitel bearbeiten",
     "listTitle": "Untertitel ({{count}})",
@@ -124,7 +147,8 @@
       "applyShift": "Verschiebung anwenden",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Untertiteltext",
-      "confirmRemove": "Sind Sie sicher, dass Sie diesen Untertitelblock entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+      "confirmRemove": "Sind Sie sicher, dass Sie diesen Untertitelblock entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Speichern",
@@ -141,7 +165,30 @@
   },
   "settings": {
     "title": "Einstellungen",
-    "creditsDescription": "Credits kaufen. Die angezeigten Stunden sind eine Schätzung der gesamten Videolaufzeit, die Sie transkribieren oder übersetzen können. Beispiel: Das Transkribieren und Übersetzen eines 3‑Stunden‑Videos verbraucht etwa 6 Stunden (≈140.000 Credits)."
+    "creditsDescription": "Credits kaufen. Die angezeigten Stunden sind eine Schätzung der gesamten Videolaufzeit, die Sie transkribieren oder übersetzen können. Beispiel: Das Transkribieren und Übersetzen eines 3‑Stunden‑Videos verbraucht etwa 6 Stunden (≈140.000 Credits).",
+    "performanceQuality": {
+      "title": "Leistung & Qualität",
+      "qualityTranscription": {
+        "label": "Hochwertige Transkription",
+        "help": "Ein: sequentiell, nutzt Kontext vorheriger Zeilen. Aus: schnellerer Stapelmodus."
+      },
+      "qualityTranslation": {
+        "label": "Hochwertige Übersetzung",
+        "help": "Ein: enthält Prüfphase. Aus: überspringt Prüfung für mehr Geschwindigkeit."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Synchronstimme",
+      "voiceHelp": "Wählen Sie die Standardstimme für die Erstellung der synchronisierten Audiospur.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "credits": {
     "title": "KI-Nutzungsstunden",
@@ -276,7 +323,11 @@
       "message": "Ihr KI‑Guthaben ist aufgebraucht. Laden Sie es in den Einstellungen auf und setzen Sie anschließend dort fort, wo Sie aufgehört haben.",
       "openSettings": "Einstellungen öffnen",
       "ok": "OK"
-    }
+    },
+    "saveDubbedVideoAs": "Synchronisiertes Video speichern unter",
+    "dubbingInProgress": "Dub-Erstellung läuft",
+    "dubbingWorking": "Synchronisierte Audiospur wird erstellt…",
+    "cancelDubbingConfirm": "Dub abbrechen? Der Fortschritt geht verloren und Sie müssen neu beginnen."
   },
   "progress": {
     "mergingTitle": "Video und Untertitel werden zusammengeführt",
@@ -291,11 +342,13 @@
     "gapRepair": "Lückenreparatur #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Fehlende Untertitel werden repariert (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Untertitel bereinigen ({{done}}/{{total}})",
-    "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})"
+    "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})",
+    "reviewingSlow": "Überprüfung (dies kann etwas dauern...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",
-    "videoSaved": "Video gespeichert unter:\n{{path}}"
+    "videoSaved": "Video gespeichert unter:\n{{path}}",
+    "dubbedVideoSaved": "Synchronisiertes Video gespeichert unter:\n{{path}}"
   },
   "cta": {
     "generate": {

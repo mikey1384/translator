@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Сохранить дубляж видео"
   },
   "subtitles": {
     "outputLanguage": "Язык вывода",
@@ -95,7 +96,30 @@
     "improveTranscription": "Улучшить транскрипцию",
     "improveTranslation": "Улучшить перевод",
     "chooseSrtFile": "Выбрать SRT файл",
-    "cancel_confirmation": "Вы уверены, что хотите отменить процесс перевода субтитров? Весь прогресс будет потерян, и вам придется начать заново."
+    "cancel_confirmation": "Вы уверены, что хотите отменить процесс перевода субтитров? Весь прогресс будет потерян, и вам придется начать заново.",
+    "dub": "Создать дубляж голоса"
+  },
+  "summary": {
+    "title": "Сводка транскрипта",
+    "ctaHelper": "Создайте подробный обзор. Обработка длинных видео может занять некоторое время.",
+    "languageLabel": "Язык сводки",
+    "generate": "Создать сводку",
+    "regenerate": "Пересоздать сводку",
+    "placeholder": "Когда сводка ИИ будет готова, она появится здесь.",
+    "insufficientCredits": "Недостаточно кредитов для запуска сводки.",
+    "error": "Не удалось создать сводку. {{message}}",
+    "copy": "Копировать сводку",
+    "copied": "Скопировано!",
+    "copyError": "Не удалось скопировать сводку в буфер обмена.",
+    "status": {
+      "preparing": "Подготовка транскрипта…",
+      "chunk": "Сводка раздела {{current}}/{{total}}",
+      "synthesizing": "Формирование полной сводки…",
+      "ready": "Сводка готова",
+      "error": "Сводка не выполнена",
+      "cancelled": "Сводка отменена",
+      "inProgress": "Создание сводки…"
+    }
   },
   "panel": {
     "gaps": {
@@ -108,7 +132,6 @@
       "count": "{{count}} строк"
     }
   },
-  
   "editSubtitles": {
     "title": "Редактировать субтитры",
     "listTitle": "Субтитры ({{count}})",
@@ -124,7 +147,8 @@
       "applyShift": "Применить сдвиг",
       "originalTextPrefix": "Оригинал:",
       "subtitlePlaceholder": "Текст субтитров",
-      "confirmRemove": "Вы уверены, что хотите удалить этот блок субтитров? Это действие нельзя отменить."
+      "confirmRemove": "Вы уверены, что хотите удалить этот блок субтитров? Это действие нельзя отменить.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Сохранить",
@@ -141,7 +165,30 @@
   },
   "settings": {
     "title": "Настройки",
-    "creditsDescription": "Купите кредиты. Отображаемые часы — это оценка общей продолжительности видео, которое вы можете транскрибировать или переводить. Пример: транскрибация и перевод 3‑часового видео займут около 6 часов (≈140 000 кредитов)."
+    "creditsDescription": "Купите кредиты. Отображаемые часы — это оценка общей продолжительности видео, которое вы можете транскрибировать или переводить. Пример: транскрибация и перевод 3‑часового видео займут около 6 часов (≈140 000 кредитов).",
+    "performanceQuality": {
+      "title": "Производительность и качество",
+      "qualityTranscription": {
+        "label": "Качественная транскрипция",
+        "help": "Вкл.: последовательно, использует контекст предыдущей строки. Выкл.: более быстрый пакетный режим."
+      },
+      "qualityTranslation": {
+        "label": "Качественный перевод",
+        "help": "Вкл.: включает этап проверки. Выкл.: пропускает проверку ради скорости."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Голос дубляжа",
+      "voiceHelp": "Выберите голос по умолчанию для генерации дубляжного аудио.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "credits": {
     "title": "Часы использования ИИ",
@@ -276,7 +323,11 @@
       "message": "Ваши кредиты ИИ закончились. Пополните их в настройках, затем продолжите с того места, где остановились.",
       "openSettings": "Открыть настройки",
       "ok": "ОК"
-    }
+    },
+    "saveDubbedVideoAs": "Сохранить дубляж видео как",
+    "dubbingInProgress": "Дублирование выполняется",
+    "dubbingWorking": "Создаем дубляж звука…",
+    "cancelDubbingConfirm": "Отменить дубляж? Прогресс будет потерян, и вам придется начать заново."
   },
   "progress": {
     "mergingTitle": "Объединение видео и субтитров",
@@ -291,11 +342,13 @@
     "gapRepair": "Восстановление пропусков #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "reviewingSlow": "Проверка (это может занять время...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Файл сохранен:\n{{path}}",
-    "videoSaved": "Видео сохранено в:\n{{path}}"
+    "videoSaved": "Видео сохранено в:\n{{path}}",
+    "dubbedVideoSaved": "Дубляж видео сохранен по адресу:\n{{path}}"
   },
   "cta": {
     "generate": {

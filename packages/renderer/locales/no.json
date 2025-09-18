@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "Utdataspråk",
@@ -92,7 +93,11 @@
     "generateNow": "Generer undertekster nå",
     "translation": "Oversettelse",
     "chooseSrtFile": "Velg SRT-fil",
-    "cancel_confirmation": "Er du sikker på at du vil avbryte undertekstoversettelsesprosessen? All fremgang vil gå tapt, og du må starte på nytt."
+    "cancel_confirmation": "Er du sikker på at du vil avbryte undertekstoversettelsesprosessen? All fremgang vil gå tapt, og du må starte på nytt.",
+    "continueTranscribing": "Continue transcribing",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "Rediger undertekster",
@@ -109,7 +114,8 @@
       "applyShift": "Bruk forskyvning",
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Underteksttekst",
-      "confirmRemove": "Er du sikker på at du vil fjerne denne undertekstblokken? Denne handlingen kan ikke angres."
+      "confirmRemove": "Er du sikker på at du vil fjerne denne undertekstblokken? Denne handlingen kan ikke angres.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "Lagre",
@@ -126,7 +132,30 @@
   },
   "settings": {
     "title": "Innstillinger",
-    "creditsDescription": "Kjøp kreditter. Timene som vises er et estimat av total videovarighet du kan transkribere eller oversette. Eksempel: å transkribere og oversette en 3-timers video bruker omtrent 6 timer (≈140 000 kreditter)."
+    "creditsDescription": "Kjøp kreditter. Timene som vises er et estimat av total videovarighet du kan transkribere eller oversette. Eksempel: å transkribere og oversette en 3-timers video bruker omtrent 6 timer (≈140 000 kreditter).",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "Gå til fullskjerm",
@@ -245,6 +274,16 @@
       "saveAndTranscribe": "Lagre og transkriber",
       "discardAndTranscribe": "Forkast og transkriber",
       "cancel": "Avbryt"
+    },
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
     }
   },
   "progress": {
@@ -252,11 +291,21 @@
     "gapRepair": "Gap-reparasjon #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparerer manglende undertekster (Iterasjon {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "Fil lagret:\n{{path}}",
-    "videoSaved": "Video lagret til:\n{{path}}"
+    "videoSaved": "Video lagret til:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "AI-brukstimer",
@@ -293,5 +342,50 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "logs": {
+    "title": "Recent Logs",
+    "copy": "Copy",
+    "email": "Email to Dev",
+    "close": "Close",
+    "empty": "No logs yet.",
+    "copied": "Logs copied to clipboard",
+    "copyFailed": "Copy failed",
+    "emailSubject": "Stage5 Debug Logs",
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }

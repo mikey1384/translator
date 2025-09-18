@@ -81,7 +81,8 @@
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on."
+    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
@@ -93,7 +94,10 @@
     "generateNow": "إنشاء الترجمات الآن",
     "translation": "الترجمة",
     "chooseSrtFile": "اختر ملف SRT",
-    "cancel_confirmation": "هل أنت متأكد أنك تريد إلغاء عملية ترجمة النص؟ ستفقد أي تقدم تم إحرازه وستحتاج إلى البدء من جديد."
+    "cancel_confirmation": "هل أنت متأكد أنك تريد إلغاء عملية ترجمة النص؟ ستفقد أي تقدم تم إحرازه وستحتاج إلى البدء من جديد.",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "تعديل الترجمات",
@@ -110,7 +114,8 @@
       "applyShift": "تطبيق التحريك",
       "originalTextPrefix": "الأصل:",
       "subtitlePlaceholder": "نص الترجمة",
-      "confirmRemove": "هل أنت متأكد أنك تريد إزالة كتلة الترجمة هذه؟ لا يمكن التراجع عن هذا الإجراء."
+      "confirmRemove": "هل أنت متأكد أنك تريد إزالة كتلة الترجمة هذه؟ لا يمكن التراجع عن هذا الإجراء.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "حفظ",
@@ -127,7 +132,30 @@
   },
   "settings": {
     "title": "الإعدادات",
-    "creditsDescription": "اشترِ أرصدة. الساعات المعروضة هي تقدير لإجمالي مدة الفيديو التي يمكنك تفريغها أو ترجمتها. مثال: تفريغ وترجمة فيديو مدته 3 ساعات يستهلك حوالي 6 ساعات (≈ 140,000 رصيدًا)."
+    "creditsDescription": "اشترِ أرصدة. الساعات المعروضة هي تقدير لإجمالي مدة الفيديو التي يمكنك تفريغها أو ترجمتها. مثال: تفريغ وترجمة فيديو مدته 3 ساعات يستهلك حوالي 6 ساعات (≈ 140,000 رصيدًا).",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "دخول وضع الشاشة الكاملة",
@@ -252,7 +280,11 @@
       "openSettings": "فتح الإعدادات",
       "ok": "حسناً"
     },
-    "transcriptionInProgress": "Transcription in Progress"
+    "transcriptionInProgress": "Transcription in Progress",
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again."
   },
   "progress": {
     "mergingTitle": "جارٍ دمج الفيديو والترجمات",
@@ -260,11 +292,20 @@
     "gapRepair": "إصلاح الفجوات #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "إصلاح الترجمات المفقودة (التكرار {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "تنظيف التعليقات ({{done}}/{{total}})",
-    "translationCleanup": "تنظيف التعليقات المترجمة ({{done}}/{{total}})"
+    "translationCleanup": "تنظيف التعليقات المترجمة ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "تم حفظ الملف:\n{{path}}",
-    "videoSaved": "تم حفظ الفيديو في:\n{{path}}"
+    "videoSaved": "تم حفظ الفيديو في:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "ساعات استخدام الذكاء الاصطناعي",
@@ -313,5 +354,38 @@
     "emailSubject": "سجلات تصحيح Stage5",
     "emailBodyPrefix": "مرحبًا،\n\nأرسل سجلاتي الأخيرة للمساعدة في التشخيص.\n\n",
     "deviceInfoHeader": "معلومات الجهاز"
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
   }
 }

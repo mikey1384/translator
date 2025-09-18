@@ -81,7 +81,8 @@
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
     "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
-    "srtFileLoaded": "SRT Loaded"
+    "srtFileLoaded": "SRT Loaded",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",
@@ -92,7 +93,11 @@
     "generateNow": "आता उपशीर्षके तयार करा",
     "translation": "अनुवाद",
     "chooseSrtFile": "SRT फाईल निवडा",
-    "cancel_confirmation": "तुम्हाला खात्री आहे की तुम्ही उपशीर्षक अनुवाद प्रक्रिया रद्द करू इच्छिता? कोणतीही प्रगती गमावली जाईल आणि तुम्हाला पुन्हा सुरू करावे लागेल."
+    "cancel_confirmation": "तुम्हाला खात्री आहे की तुम्ही उपशीर्षक अनुवाद प्रक्रिया रद्द करू इच्छिता? कोणतीही प्रगती गमावली जाईल आणि तुम्हाला पुन्हा सुरू करावे लागेल.",
+    "continueTranscribing": "Continue transcribing",
+    "improveTranscription": "Improve Transcription",
+    "improveTranslation": "Improve Translation",
+    "dub": "Dub Voice"
   },
   "editSubtitles": {
     "title": "उपशीर्षके संपादित करा",
@@ -109,7 +114,8 @@
       "applyShift": "शिफ्ट लागू करा",
       "originalTextPrefix": "मूळ:",
       "subtitlePlaceholder": "उपशीर्षक मजकूर",
-      "confirmRemove": "तुम्हाला खात्री आहे की तुम्ही हा उपशीर्षक ब्लॉक काढून टाकू इच्छिता? ही क्रिया पूर्ववत केली जाऊ शकत नाही."
+      "confirmRemove": "तुम्हाला खात्री आहे की तुम्ही हा उपशीर्षक ब्लॉक काढून टाकू इच्छिता? ही क्रिया पूर्ववत केली जाऊ शकत नाही.",
+      "transcribeThisLine": "Transcribe line"
     },
     "header": {
       "save": "सेव्ह करा",
@@ -126,7 +132,30 @@
   },
   "settings": {
     "title": "सेटिंग्ज",
-    "creditsDescription": "क्रेडिट खरेदी करा. दाखवलेले तास म्हणजे आपण ट्रान्सक्राइब किंवा भाषांतर करू शकणाऱ्या व्हिडिओच्या एकूण कालावधीचा अंदाज आहे. उदाहरण: 3 तासांच्या व्हिडिओचे ट्रान्सक्रिप्शन आणि भाषांतर करण्यास सुमारे 6 तास (≈140,000 क्रेडिट्स) लागतात."
+    "creditsDescription": "क्रेडिट खरेदी करा. दाखवलेले तास म्हणजे आपण ट्रान्सक्राइब किंवा भाषांतर करू शकणाऱ्या व्हिडिओच्या एकूण कालावधीचा अंदाज आहे. उदाहरण: 3 तासांच्या व्हिडिओचे ट्रान्सक्रिप्शन आणि भाषांतर करण्यास सुमारे 6 तास (≈140,000 क्रेडिट्स) लागतात.",
+    "performanceQuality": {
+      "title": "Performance & Quality",
+      "qualityTranscription": {
+        "label": "Quality Transcription",
+        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+      },
+      "qualityTranslation": {
+        "label": "Quality Translation",
+        "help": "On: includes review phase. Off: skip review for speed."
+      }
+    },
+    "dubbing": {
+      "voiceLabel": "Dubbed Voice",
+      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceOptions": {
+        "alloy": "Alloy",
+        "echo": "Echo",
+        "fable": "Fable",
+        "onyx": "Onyx",
+        "nova": "Nova",
+        "shimmer": "Shimmer"
+      }
+    }
   },
   "videoPlayer": {
     "enterFullscreen": "पूर्ण स्क्रीनमध्ये जा",
@@ -245,18 +274,38 @@
       "discardAndTranscribe": "जतन न करता ट्रान्सक्राइब करा",
       "cancel": "रद्द करा"
     },
-    "transcriptionInProgress": "Transcription in Progress"
+    "transcriptionInProgress": "Transcription in Progress",
+    "saveDubbedVideoAs": "Save Dubbed Video As",
+    "dubbingInProgress": "Dubbing in Progress",
+    "dubbingWorking": "Generating dubbed audio…",
+    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "creditRanOut": {
+      "title": "Credits ran out",
+      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
+      "openSettings": "Open Settings",
+      "ok": "OK"
+    }
   },
   "progress": {
     "transcribedChunks": "ट्रान्स्क्राइब आणि साफ केलेले {{done}}/{{total}} भाग",
     "gapRepair": "गॅप रिपेअर #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "गहाळ कॅप्शन्स दुरुस्त करत आहे (पुनरावृत्ती {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})"
+    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "beginningReview": "Beginning review...",
+    "starting": "Starting...",
+    "completed": "Completed",
+    "processCancelled": "Process cancelled",
+    "mergingTitle": "Merging Video & Subtitles",
+    "extractingAudio": "Extracting audio...",
+    "transcribingOf": "Transcribing {{done}}/{{total}}",
+    "error": "Error",
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
   },
   "messages": {
     "fileSaved": "फाईल सेव्ह केली:\n{{path}}",
-    "videoSaved": "व्हिडिओ येथे सेव्ह केला:\n{{path}}"
+    "videoSaved": "व्हिडिओ येथे सेव्ह केला:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "credits": {
     "title": "AI वापर तास",
@@ -293,5 +342,50 @@
       "pillOpen": "Open .srt",
       "pillMerge": "Merge to video"
     }
+  },
+  "summary": {
+    "title": "Transcript Summary",
+    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
+    "languageLabel": "Summary language",
+    "generate": "Generate summary",
+    "regenerate": "Regenerate summary",
+    "placeholder": "Your AI summary will appear here once generated.",
+    "insufficientCredits": "Not enough credits to run the summary.",
+    "error": "We couldn't create a summary. {{message}}",
+    "copy": "Copy summary",
+    "copied": "Copied!",
+    "copyError": "Couldn't copy summary to clipboard.",
+    "status": {
+      "preparing": "Preparing transcript…",
+      "chunk": "Summarizing section {{current}}/{{total}}",
+      "synthesizing": "Synthesizing comprehensive summary…",
+      "ready": "Summary ready",
+      "error": "Summary failed",
+      "cancelled": "Summary cancelled",
+      "inProgress": "Generating summary…"
+    }
+  },
+  "panel": {
+    "gaps": {
+      "title": "Gaps",
+      "none": "No large gaps detected"
+    },
+    "confidence": {
+      "title": "Low Confidence",
+      "none": "No low-confidence lines detected",
+      "count": "{{count}} lines"
+    }
+  },
+  "logs": {
+    "title": "Recent Logs",
+    "copy": "Copy",
+    "email": "Email to Dev",
+    "close": "Close",
+    "empty": "No logs yet.",
+    "copied": "Logs copied to clipboard",
+    "copyFailed": "Copy failed",
+    "emailSubject": "Stage5 Debug Logs",
+    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
+    "deviceInfoHeader": "Device Info"
   }
 }
