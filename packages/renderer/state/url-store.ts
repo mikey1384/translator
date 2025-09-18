@@ -248,10 +248,17 @@ async function downloadMediaInternal(
       return res;
     }
 
+    const { order: existingSubs, origin: subsOrigin } = useSubStore.getState();
+    const preserveMountedDiskSubs =
+      existingSubs.length > 0 && subsOrigin === 'disk';
+
     await useVideoStore
       .getState()
       .setFile({ path: finalPath!, name: filename! });
-    useSubStore.getState().load([]);
+
+    if (!preserveMountedDiskSubs) {
+      useSubStore.getState().load([]);
+    }
 
     set((state: UrlState) => {
       state.download.stage = 'Completed';

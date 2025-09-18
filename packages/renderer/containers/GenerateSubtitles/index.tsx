@@ -24,11 +24,8 @@ import { useCreditSystem } from './hooks/useCreditSystem';
 // Components
 
 // Utilities
-import {
-  executeSrtTranslation,
-  startTranscriptionFlow,
-  executeDubGeneration,
-} from './utils/subtitleGeneration';
+import { startTranscriptionFlow, executeDubGeneration } from './utils/subtitleGeneration';
+import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
@@ -160,17 +157,11 @@ export default function GenerateSubtitles() {
   }
 
   async function handleTranslate() {
-    const currentSegments = subStore.order.map(id => subStore.segments[id]);
-    if (currentSegments.length === 0) {
-      useUrlStore.getState().setError('No SRT file available for translation');
-      return;
-    }
-
-    const operationId = `translate-${Date.now()}`;
-    await executeSrtTranslation({
-      segments: currentSegments,
-      targetLanguage,
-      operationId,
+    await runFullSrtTranslation({
+      onNoSubtitles: () =>
+        useUrlStore
+          .getState()
+          .setError('No SRT file available for translation'),
     });
   }
 

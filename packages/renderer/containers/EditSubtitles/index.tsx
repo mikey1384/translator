@@ -33,7 +33,7 @@ import * as FileIPC from '@ipc/file';
 import { RenderSubtitlesOptions, SrtSegment } from '@shared-types/app';
 import { getNativePlayerInstance } from '../../native-player';
 import { sameArray } from '../../utils/array';
-import { translateMissingUntranslated } from '../../utils/translateMissing';
+import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 import { logButton, logTask, logError } from '../../utils/logger.js';
 
 export interface EditSubtitlesProps {
@@ -235,18 +235,13 @@ export default function EditSubtitles({
 
   // Removed post-translation display-mode popup; user controls this via the bottom toggle.
 
-  async function handleTranslateMissing() {
+  async function handleTranslateAll() {
     try {
-      logButton('translate_missing');
-      await translateMissingUntranslated();
+      logButton('translate_full');
+      await runFullSrtTranslation();
     } catch (err) {
-      console.error('[EditSubtitles] translate missing error:', err);
-      logError('translate_missing', err as any);
-      useTaskStore.getState().setTranslation({
-        stage: t('generateSubtitles.status.error', 'Error'),
-        percent: 100,
-        inProgress: false,
-      });
+      console.error('[EditSubtitles] translate error:', err);
+      logError('translate_full', err as any);
     }
   }
 
@@ -266,7 +261,7 @@ export default function EditSubtitles({
     hasUntranslated && !isFreshForThisVideo ? (
       <EditHeaderTranslateBar
         disabled={translationInProgress || isTranscribing}
-        onTranslate={handleTranslateMissing}
+        onTranslate={handleTranslateAll}
       />
     ) : null;
 
