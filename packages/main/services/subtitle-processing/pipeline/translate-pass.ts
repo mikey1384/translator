@@ -10,12 +10,14 @@ export async function translatePass({
   targetLang,
   progressCallback,
   operationId,
+  qualityTranslation,
   signal,
 }: {
   segments: SrtSegment[];
   targetLang: string;
   progressCallback?: GenerateProgressCallback;
   operationId: string;
+  qualityTranslation: boolean;
   signal: AbortSignal;
 }) {
   if (targetLang === 'original') {
@@ -115,7 +117,7 @@ export async function translatePass({
         percent: scaleProgress(
           (doneSoFar / totalSegments) * 100,
           Stage.START,
-          Stage.TRANSLATE
+          qualityTranslation ? Stage.END : Stage.TRANSLATE
         ),
         stage: `Translating ${doneSoFar}/${totalSegments}`,
         partialResult: buildSrt({

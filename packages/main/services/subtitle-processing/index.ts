@@ -156,6 +156,7 @@ export async function translateSubtitlesFromSrt({
     targetLang: targetLanguage,
     progressCallback: adaptedProgress ?? progressCallback,
     operationId,
+    qualityTranslation: qualityTranslation ?? false,
     signal,
   });
 
@@ -214,11 +215,7 @@ export async function translateSubtitlesFromSrt({
 
       for (let start = 0; start < total; start += BATCH) {
         const end = Math.min(start + BATCH, total);
-        // Announce the range being reviewed right now (ensures immediate UI update)
         emitRangeStage(start, end, done, false);
-
-        // Important: use already-reviewed lines for BEFORE context to preserve continuity
-        // across batch boundaries. AFTER context still uses draft (not yet reviewed) lines.
         const contextBefore = reviewedSegments.slice(
           Math.max(0, start - BEFORE_CTX),
           start
@@ -256,9 +253,7 @@ export async function translateSubtitlesFromSrt({
           ) {
             throw err;
           }
-          // Otherwise, keep original translated segs for this batch
         }
-        // Progress after this sequential batch
         done += Math.min(BATCH, end - start);
         const nextStart = done;
         const nextEnd = Math.min(done + BATCH, total);
