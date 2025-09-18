@@ -345,6 +345,18 @@ declare module '@shared-types/app' {
     model?: string;
   }
 
+  export interface PreviewDubVoiceOptions {
+    voice: string;
+    text?: string;
+  }
+
+  export interface PreviewDubVoiceResult {
+    success: boolean;
+    audioBase64?: string;
+    format?: string;
+    error?: string;
+  }
+
   interface TranslateBatchArgs {
     batch: {
       segments: any[];
@@ -467,6 +479,9 @@ declare module '@shared-types/app' {
       options: TranslateSubtitlesOptions
     ) => Promise<TranslateSubtitlesResult>;
     dubSubtitles: (options: DubSubtitlesOptions) => Promise<DubSubtitlesResult>;
+    previewDubVoice: (
+      options: PreviewDubVoiceOptions
+    ) => Promise<PreviewDubVoiceResult>;
     translateOneLine: (
       options: TranslateOneLineOptions
     ) => Promise<TranslateOneLineResult>;

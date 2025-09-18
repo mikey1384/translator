@@ -333,6 +333,10 @@ try {
     }
   });
 
+  ipcMain.handle('preview-dub-voice', async (_event, options) => {
+    return subtitleHandlers.previewDubVoice(options ?? {});
+  });
+
   ipcMain.handle('generate-transcript-summary', async (event, options) => {
     const operationId =
       options.operationId ||

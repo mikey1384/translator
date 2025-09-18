@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import CreditCard from '../components/CreditCard';
 import { colors, selectStyles } from '../styles';
 import { useCreditStore } from '../state/credit-store';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUIStore } from '../state/ui-store';
 import Switch from '../components/Switch';
+import * as SubtitlesIPC from '../ipc/subtitles';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -74,6 +75,9 @@ export default function SettingsPage() {
 function DubbingVoiceSelector() {
   const { t } = useTranslation();
   const { dubVoice, setDubVoice } = useUIStore();
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const previewTokenRef = useRef(0);
 
   const voiceOptions = [
     { value: 'alloy', fallback: 'Alloy' },
@@ -88,6 +92,52 @@ function DubbingVoiceSelector() {
     value: opt.value,
     label: t(`settings.dubbing.voiceOptions.${opt.value}`, opt.fallback),
   }));
+
+  useEffect(() => {
+    return () => {
+      try {
+        audioRef.current?.pause();
+      } catch {
+        // Do nothing
+      }
+      audioRef.current = null;
+    };
+  }, []);
+
+  const handleVoiceChange = async (value: string) => {
+    setDubVoice(value);
+    const token = ++previewTokenRef.current;
+    setIsPreviewing(true);
+    try {
+      const result = await SubtitlesIPC.previewDubVoice({ voice: value });
+      if (previewTokenRef.current !== token) return;
+      if (result?.success && result.audioBase64) {
+        try {
+          audioRef.current?.pause();
+        } catch {
+          // Do nothing
+        }
+        const format = result.format ?? 'mp3';
+        const audio = new Audio(
+          `data:audio/${format};base64,${result.audioBase64}`
+        );
+        audioRef.current = audio;
+        audio.play().catch(err => {
+          console.warn('[SettingsPage] Voice preview playback failed:', err);
+        });
+      } else if (result?.error) {
+        console.warn('[SettingsPage] Voice preview error:', result.error);
+      }
+    } catch (err) {
+      if (previewTokenRef.current === token) {
+        console.warn('[SettingsPage] Voice preview failed:', err);
+      }
+    } finally {
+      if (previewTokenRef.current === token) {
+        setIsPreviewing(false);
+      }
+    }
+  };
 
   const selectClass = css`
     width: 100%;
@@ -114,7 +164,8 @@ function DubbingVoiceSelector() {
       <select
         className={`${selectStyles} ${selectClass}`}
         value={dubVoice}
-        onChange={e => setDubVoice(e.target.value)}
+        onChange={e => handleVoiceChange(e.target.value)}
+        disabled={isPreviewing}
       >
         {options.map(opt => (
           <option key={opt.value} value={opt.value}>

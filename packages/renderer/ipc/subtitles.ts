@@ -88,6 +88,18 @@ export function dubSubtitles(
   return (window.electron as any).dubSubtitles(options);
 }
 
+export function previewDubVoice(options: {
+  voice: string;
+  text?: string;
+}): Promise<{
+  success: boolean;
+  audioBase64?: string;
+  format?: string;
+  error?: string;
+}> {
+  return (window.electron as any).previewDubVoice(options);
+}
+
 export function generateTranscriptSummary(options: {
   segments: { start: number; end: number; text: string }[];
   targetLanguage: string;

@@ -44,19 +44,22 @@ export async function generateDubbedMedia({
     } quality=${quality || 'standard'}`
   );
 
-  const payloadSegments = segments.map(seg => ({
-    start: typeof seg.start === 'number' ? seg.start : undefined,
-    end: typeof seg.end === 'number' ? seg.end : undefined,
-    original: seg.original ?? '',
-    translation: seg.translation ?? '',
-    index: typeof seg.index === 'number' ? seg.index : undefined,
-    targetDuration:
-      typeof seg.targetDuration === 'number' && seg.targetDuration > 0
+  const payloadSegments = segments.map<DubSegmentPayload>(seg => {
+    const start = Number.isFinite(seg.start) ? Number(seg.start) : 0;
+    const end = Number.isFinite(seg.end) ? Number(seg.end) : start;
+    const duration =
+      seg.targetDuration && seg.targetDuration > 0
         ? seg.targetDuration
-        : typeof seg.start === 'number' && typeof seg.end === 'number'
-          ? Math.max(0, seg.end - seg.start)
-          : undefined,
-  }));
+        : Math.max(0, end - start);
+    return {
+      start,
+      end,
+      original: seg.original ?? '',
+      translation: seg.translation ?? '',
+      index: typeof seg.index === 'number' ? seg.index : undefined,
+      targetDuration: duration,
+    };
+  });
 
   progressCallback?.({
     percent: Math.min(30, Math.max(20, payloadSegments.length / 2 + 20)),
@@ -501,12 +504,15 @@ export async function generateDubbedMedia({
       operationId,
     });
 
-    const backgroundVolume = voice ? 0.25 : 0.35;
+    const backgroundVolume = voice ? 0.18 : 0.28;
     const voiceVolume = 1.0;
+    const sidechainThreshold = 0.08;
+    const sidechainRatio = 8;
     const filterComplex =
-      `[0:a]volume=${backgroundVolume.toFixed(2)},equalizer=f=1500:width_type=q:width=1.0:g=-12[bg];` +
+      `[0:a]volume=${backgroundVolume.toFixed(2)},equalizer=f=1500:width_type=q:width=1.0:g=-12[bgpre];` +
       `[1:a]volume=${voiceVolume.toFixed(2)},adelay=0|0[voice];` +
-      `[bg][voice]amix=inputs=2:dropout_transition=0:normalize=0[aout]`;
+      `[bgpre][voice]sidechaincompress=threshold=${sidechainThreshold}:ratio=${sidechainRatio}:attack=10:release=250:makeup=0[bgduck];` +
+      `[bgduck][voice]amix=inputs=2:dropout_transition=0:normalize=0[aout]`;
 
     await ffmpeg.run(
       [

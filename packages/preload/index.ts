@@ -43,6 +43,10 @@ const electronAPI = {
     return ipcRenderer.invoke('dub-subtitles', options);
   },
 
+  previewDubVoice: async (options: any) => {
+    return ipcRenderer.invoke('preview-dub-voice', options);
+  },
+
   generateTranscriptSummary: async (options: any) => {
     return ipcRenderer.invoke('generate-transcript-summary', options);
   },

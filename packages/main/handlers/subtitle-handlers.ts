@@ -30,6 +30,7 @@ import {
 import { transcribePass } from '../services/subtitle-processing/pipeline/transcribe-pass.js';
 import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 import { generateDubbedMedia } from '../services/dubber.js';
+import { synthesizeDub } from '../services/stage5-client.js';
 import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
@@ -731,6 +732,56 @@ export async function handleGenerateTranscriptSummary(
     throw error;
   } finally {
     registryFinish(operationId);
+  }
+}
+
+export async function previewDubVoice({
+  voice,
+  text,
+}: {
+  voice: string;
+  text?: string;
+}): Promise<{
+  success: boolean;
+  audioBase64?: string;
+  format?: string;
+  error?: string;
+}> {
+  const phrase = (text ?? 'Hello').trim() || 'Hello';
+  try {
+    const result = await synthesizeDub({
+      segments: [
+        {
+          index: 1,
+          start: 0,
+          end: 1.5,
+          translation: phrase,
+          original: phrase,
+        },
+      ],
+      voice,
+      quality: 'standard',
+    });
+
+    const audioBase64 =
+      result.segments?.[0]?.audioBase64 ?? result.audioBase64 ?? null;
+    if (!audioBase64) {
+      return {
+        success: false,
+        error: 'Preview synthesis returned no audio',
+      };
+    }
+
+    return {
+      success: true,
+      audioBase64,
+      format: result.format ?? 'mp3',
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || String(err),
+    };
   }
 }
 

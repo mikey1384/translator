@@ -95,7 +95,8 @@
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT Loaded",
-    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes."
+    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
+    "saveDubbedVideo": "Save Dubbed Video"
   },
   "subtitles": {
     "outputLanguage": "Output Language",
@@ -321,6 +322,7 @@
   "dialogs": {
     "saveSrtFileAs": "Save SRT File As",
     "saveDownloadedVideoAs": "Save Downloaded Video As",
+    "saveDubbedVideoAs": "Save Dubbed Video As",
     "unsavedSrtOnTranscribe": {
       "title": "Save current subtitles before transcribing?",
       "message": "You already have subtitles mounted. Transcribing will replace them. What would you like to do?",
@@ -371,7 +373,8 @@
   },
   "messages": {
     "fileSaved": "File saved:\n{{path}}",
-    "videoSaved": "Video saved to:\n{{path}}"
+    "videoSaved": "Video saved to:\n{{path}}",
+    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
   },
   "logs": {
     "title": "Recent Logs",

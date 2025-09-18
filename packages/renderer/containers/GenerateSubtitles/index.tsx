@@ -1,6 +1,7 @@
 import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
 import SaveOriginalVideoButton from './SaveOriginalVideoButton.js';
+import SaveDubbedVideoButton from './SaveDubbedVideoButton.js';
 import ErrorBanner from '../../components/ErrorBanner.js';
 import {
   useUIStore,
@@ -33,7 +34,7 @@ export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
   // UI State
-  const { targetLanguage, setTargetLanguage } = useUIStore();
+  const { targetLanguage, setTargetLanguage, dubVoice } = useUIStore();
 
   // URL processing state
   const {
@@ -52,6 +53,7 @@ export default function GenerateSubtitles() {
     file: videoFile,
     path: videoFilePath,
     openFileDialog,
+    dubbedVideoPath,
   } = useVideoStore();
 
   // Task state
@@ -93,6 +95,11 @@ export default function GenerateSubtitles() {
         onSaveOriginalVideo={handleSaveOriginalVideo}
         didDownloadFromUrl={!!download.id}
         inputMode={'file'}
+      />
+      <SaveDubbedVideoButton
+        dubbedVideoPath={dubbedVideoPath}
+        onSaveDubbedVideo={handleSaveDubbedVideo}
+        disabled={isDubbing}
       />
 
       {/* Show appropriate panel: only show transcribe panel until transcription completes */}
@@ -229,5 +236,52 @@ export default function GenerateSubtitles() {
       videoPath: sourceVideoPath,
       voice: dubVoice,
     });
+  }
+
+  async function handleSaveDubbedVideo() {
+    if (!dubbedVideoPath) {
+      return;
+    }
+
+    const sourceName =
+      subStore.sourceVideoPath ?? videoFilePath ?? dubbedVideoPath;
+    const filename = sourceName.split(/[\\/]/).pop() ?? 'dubbed_video';
+    const baseName = filename.replace(/\.[^/.]+$/, '');
+    const voiceSuffix =
+      (dubVoice || 'voice').replace(/[^a-z0-9_-]/gi, '').toLowerCase() ||
+      'voice';
+    const extCandidate = (dubbedVideoPath.split('.').pop() || 'mp4')
+      .split('?')[0]
+      .toLowerCase();
+    const extension = extCandidate || 'mp4';
+    const suggestName = `${baseName}_dubbed_${voiceSuffix}.${extension}`;
+
+    try {
+      const { filePath, error } = await FileIPC.save({
+        title: t('dialogs.saveDubbedVideoAs'),
+        defaultPath: suggestName,
+        content: '',
+        filters: [
+          {
+            name: t('common.fileFilters.videoFiles'),
+            extensions: [extension],
+          },
+        ],
+      });
+
+      if (error) {
+        if (!error.includes('canceled')) clearError();
+        return;
+      }
+      if (!filePath) return;
+
+      const copyRes = await FileIPC.copy(dubbedVideoPath, filePath);
+      if (copyRes.error) throw new Error(copyRes.error);
+
+      SystemIPC.showMessage(t('messages.dubbedVideoSaved', { path: filePath }));
+    } catch (err: any) {
+      console.error('[GenerateSubtitles] save dubbed video error:', err);
+      clearError();
+    }
   }
 }
