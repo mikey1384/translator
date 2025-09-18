@@ -22,6 +22,7 @@ interface State {
   dubVoice: string;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
+  dubAmbientMix: number;
   navTick: number;
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
@@ -53,6 +54,7 @@ interface Actions {
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
   setDubVoice(voice: string): void;
+  setDubAmbientMix(value: number): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
@@ -71,6 +73,7 @@ const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 const DUB_VOICE_KEY = 'savedDubVoice';
+const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
 const DEFAULT_DUB_VOICE = 'alloy';
 
 const ALLOWED_DUB_VOICES = new Set([
@@ -107,6 +110,12 @@ const initial: State = {
     return stored && ALLOWED_DUB_VOICES.has(stored)
       ? stored
       : DEFAULT_DUB_VOICE;
+  })(),
+  dubAmbientMix: (() => {
+    const raw = localStorage.getItem(DUB_AMBIENT_MIX_KEY);
+    const parsed = raw != null ? Number(raw) : Number.NaN;
+    if (!Number.isFinite(parsed)) return 0.35;
+    return Math.min(1, Math.max(0, parsed));
   })(),
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
@@ -243,6 +252,13 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
             : DEFAULT_DUB_VOICE;
           localStorage.setItem(DUB_VOICE_KEY, next);
           set({ dubVoice: next });
+        },
+
+        setDubAmbientMix(value) {
+          if (!Number.isFinite(value)) return;
+          const clamped = Math.min(1, Math.max(0, value));
+          localStorage.setItem(DUB_AMBIENT_MIX_KEY, String(clamped));
+          set({ dubAmbientMix: clamped });
         },
 
         setBaseFontSize(size) {

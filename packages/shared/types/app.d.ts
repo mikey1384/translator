@@ -315,6 +315,7 @@ declare module '@shared-types/app' {
     translation?: string;
     index?: number;
     targetDuration?: number;
+    ambientMix?: number;
   }
 
   export interface DubSubtitlesOptions {
@@ -324,6 +325,7 @@ declare module '@shared-types/app' {
     voice?: string;
     quality?: 'standard' | 'high';
     operationId: string;
+    ambientMix?: number;
   }
 
   export interface DubSubtitlesResult {

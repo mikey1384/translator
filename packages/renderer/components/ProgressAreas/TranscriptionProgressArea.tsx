@@ -48,6 +48,12 @@ function translateBackendMessage(
       const total = parseInt(parts[4], 10);
       return t('progress.gapRepair', { iteration, done, total });
     }
+    case 'reviewing_range': {
+      const start = parseInt(parts[2], 10) || 0;
+      const end = parseInt(parts[3], 10) || start;
+      const total = parseInt(parts[4], 10) || end;
+      return t('progress.reviewingRange', { start, end, total });
+    }
     case 'beginning_review':
       return t('progress.beginningReview');
     case 'starting':

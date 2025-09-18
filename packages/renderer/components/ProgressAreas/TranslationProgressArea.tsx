@@ -57,6 +57,12 @@ function translateBackendMessage(
       const total = parseInt(parts[3], 10) || 0;
       return t('progress.reviewingSlow', { done, total });
     }
+    case 'reviewing_range': {
+      const start = parseInt(parts[2], 10) || 0;
+      const end = parseInt(parts[3], 10) || start;
+      const total = parseInt(parts[4], 10) || end;
+      return t('progress.reviewingRange', { start, end, total });
+    }
     case 'repairing_captions': {
       const iteration = parseInt(parts[2], 10);
       const maxIterations = parseInt(parts[3], 10);

@@ -14,6 +14,7 @@ interface GenerateDubArgs {
   videoPath?: string | null;
   voice?: string;
   quality?: 'standard' | 'high';
+  ambientMix?: number;
   operationId: string;
   signal: AbortSignal;
   progressCallback?: GenerateProgressCallback;
@@ -26,6 +27,7 @@ export async function generateDubbedMedia({
   videoPath,
   voice,
   quality,
+  ambientMix,
   operationId,
   signal,
   progressCallback,
@@ -498,21 +500,44 @@ export async function generateDubbedMedia({
   );
 
   try {
+    const audioStats = await fs.stat(processedAudioPath);
+    log.info(
+      `[${operationId}] Prepared dub track ${processedAudioPath} (${audioStats.size} bytes)`
+    );
+    if (audioStats.size < 1024) {
+      log.warn(
+        `[${operationId}] Dubbed audio is unusually small; verifying synthesis results.`
+      );
+    }
+  } catch (statErr) {
+    log.warn(
+      `[${operationId}] Unable to stat processed dub audio ${processedAudioPath}:`,
+      statErr
+    );
+  }
+
+  try {
     progressCallback?.({
       percent: 85,
       stage: 'Balancing audio tracks...',
       operationId,
     });
 
-    const backgroundVolume = voice ? 0.18 : 0.28;
-    const voiceVolume = 1.0;
-    const sidechainThreshold = 0.08;
-    const sidechainRatio = 8;
+    const mixValueRaw = typeof ambientMix === 'number' ? ambientMix : 0.35;
+    const mix = Math.min(1, Math.max(0, mixValueRaw));
+    log.info(
+      `[${operationId}] Ambient mix value received: ${mixValueRaw} (clamped: ${mix})`
+    );
+
+    const ambientWeight = 0.5 + mix; // 0.5 → 1.5
+    const voiceWeight = 2.0;
+    const backgroundVolume = 0.2 + mix * 0.35; // 0.2 → 0.55
+    const voiceVolume = 1.25 + (1 - mix) * 0.35; // 1.25 → 1.6
+
     const filterComplex =
-      `[0:a]volume=${backgroundVolume.toFixed(2)},equalizer=f=1500:width_type=q:width=1.0:g=-12[bgpre];` +
-      `[1:a]volume=${voiceVolume.toFixed(2)},adelay=0|0[voice];` +
-      `[bgpre][voice]sidechaincompress=threshold=${sidechainThreshold}:ratio=${sidechainRatio}:attack=10:release=250:makeup=0[bgduck];` +
-      `[bgduck][voice]amix=inputs=2:dropout_transition=0:normalize=0[aout]`;
+      `[0:a]volume=${backgroundVolume.toFixed(2)}[bg];` +
+      `[1:a]volume=${voiceVolume.toFixed(2)}[voice];` +
+      `[bg][voice]amix=inputs=2:weights=${ambientWeight.toFixed(2)} ${voiceWeight.toFixed(2)}:dropout_transition=0:normalize=0[aout]`;
 
     await ffmpeg.run(
       [
@@ -529,6 +554,8 @@ export async function generateDubbedMedia({
         '[aout]',
         '-c:v',
         'copy',
+        '-c:a',
+        'aac',
         '-shortest',
         outputPath,
       ],

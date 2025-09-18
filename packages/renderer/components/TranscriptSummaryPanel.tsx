@@ -216,6 +216,8 @@ export function TranscriptSummaryPanel({
     return null;
   }
 
+  const showProgressBar = isGenerating || activeOperationId !== null;
+
   return (
     <div className={panelStyles}>
       <div className={headerRowStyles}>
@@ -258,7 +260,7 @@ export function TranscriptSummaryPanel({
         </div>
       </div>
 
-      {(progressLabel || isGenerating) && (
+      {showProgressBar && (
         <div className={progressWrapperStyles}>
           <div className={progressHeaderStyles}>
             <span>{progressLabel || t('summary.status.inProgress')}</span>

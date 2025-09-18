@@ -125,7 +125,7 @@ export async function executeDubGeneration({
         : undefined,
   }));
 
-  const { dubVoice } = useUIStore.getState();
+  const { dubVoice, dubAmbientMix } = useUIStore.getState();
   const quality = 'standard';
   const selectedVoice = voice ?? dubVoice ?? 'alloy';
 
@@ -136,6 +136,7 @@ export async function executeDubGeneration({
       operationId,
       videoPath: videoPath ?? null,
       quality,
+      ambientMix: dubAmbientMix,
     });
 
     if (res?.success) {

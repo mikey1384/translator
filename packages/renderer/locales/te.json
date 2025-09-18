@@ -154,7 +154,11 @@
         "onyx": "Onyx",
         "nova": "Nova",
         "shimmer": "Shimmer"
-      }
+      },
+      "mixLabel": "Ambient vs Dub Balance",
+      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
+      "mixAmbient": "More ambient",
+      "mixVoice": "More voice"
     }
   },
   "videoPlayer": {
@@ -300,7 +304,9 @@
     "extractingAudio": "Extracting audio...",
     "transcribingOf": "Transcribing {{done}}/{{total}}",
     "error": "Error",
-    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}"
+    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}",
+    "reviewingBatch": "Reviewing {{done}}/{{total}}",
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
   },
   "messages": {
     "fileSaved": "ఫైల్ సేవ్ చేయబడింది:\n{{path}}",

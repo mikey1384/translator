@@ -187,7 +187,11 @@
         "onyx": "Onyx",
         "nova": "Nova",
         "shimmer": "Shimmer"
-      }
+      },
+      "mixLabel": "Ambient vs Dub Balance",
+      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
+      "mixAmbient": "More ambient",
+      "mixVoice": "More voice"
     }
   },
   "credits": {
@@ -343,7 +347,9 @@
     "repairingCaptions": "Fehlende Untertitel werden repariert (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Untertitel bereinigen ({{done}}/{{total}})",
     "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})",
-    "reviewingSlow": "Überprüfung (dies kann etwas dauern...) {{done}}/{{total}}"
+    "reviewingSlow": "Überprüfung (dies kann etwas dauern...) {{done}}/{{total}}",
+    "reviewingBatch": "Reviewing {{done}}/{{total}}",
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
   },
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",

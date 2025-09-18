@@ -187,7 +187,11 @@
         "onyx": "Onyx",
         "nova": "Nova",
         "shimmer": "Shimmer"
-      }
+      },
+      "mixLabel": "Ambient vs Dub Balance",
+      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
+      "mixAmbient": "More ambient",
+      "mixVoice": "More voice"
     }
   },
   "credits": {
@@ -343,7 +347,9 @@
     "repairingCaptions": "欠損字幕の修復中（{{iteration}}/{{maxIterations}}回目）{{done}} / {{total}}",
     "scrubbingHallucinations": "字幕のクリーニング中 ({{done}}/{{total}})",
     "translationCleanup": "翻訳字幕のクリーンアップ中 ({{done}}/{{total}})",
-    "reviewingSlow": "レビュー中（しばらく時間がかかる場合があります）{{done}}/{{total}}"
+    "reviewingSlow": "レビュー中（しばらく時間がかかる場合があります）{{done}}/{{total}}",
+    "reviewingBatch": "Reviewing {{done}}/{{total}}",
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
   },
   "messages": {
     "fileSaved": "ファイルを保存しました:\n{{path}}",

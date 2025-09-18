@@ -223,10 +223,12 @@ export default function GenerateSubtitles() {
     }
 
     const operationId = `dub-${Date.now()}`;
+    const videoStoreState = useVideoStore.getState();
     const sourceVideoPath =
+      videoStoreState.originalPath ??
       subStore.sourceVideoPath ??
       videoFilePath ??
-      useVideoStore.getState().path;
+      videoStoreState.path;
 
     const dubVoice = useUIStore.getState().dubVoice;
 

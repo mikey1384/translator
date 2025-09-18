@@ -187,7 +187,11 @@
         "onyx": "Onyx",
         "nova": "Nova",
         "shimmer": "Shimmer"
-      }
+      },
+      "mixLabel": "Ambient vs Dub Balance",
+      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
+      "mixAmbient": "More ambient",
+      "mixVoice": "More voice"
     }
   },
   "videoPlayer": {
@@ -333,7 +337,9 @@
     "repairingCaptions": "修復遺失的字幕 (第{{iteration}}/{{maxIterations}}次迭代) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
     "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
-    "reviewingSlow": "檢查中（可能需要一點時間…）{{done}}/{{total}}"
+    "reviewingSlow": "檢查中（可能需要一點時間…）{{done}}/{{total}}",
+    "reviewingBatch": "Reviewing {{done}}/{{total}}",
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
   },
   "messages": {
     "fileSaved": "檔案已儲存：\n{{path}}",

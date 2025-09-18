@@ -187,7 +187,11 @@
         "onyx": "Onyx",
         "nova": "Nova",
         "shimmer": "Shimmer"
-      }
+      },
+      "mixLabel": "Ambient vs Dub Balance",
+      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
+      "mixAmbient": "More ambient",
+      "mixVoice": "More voice"
     }
   },
   "credits": {
@@ -343,7 +347,9 @@
     "repairingCaptions": "修复缺失字幕（第{{iteration}}/{{maxIterations}}次迭代）{{done}} / {{total}}",
     "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
     "translationCleanup": "清理翻译字幕中 ({{done}}/{{total}})",
-    "reviewingSlow": "检查中（可能需要一些时间…）{{done}}/{{total}}"
+    "reviewingSlow": "检查中（可能需要一些时间…）{{done}}/{{total}}",
+    "reviewingBatch": "Reviewing {{done}}/{{total}}",
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
   },
   "messages": {
     "fileSaved": "文件已保存：\n{{path}}",

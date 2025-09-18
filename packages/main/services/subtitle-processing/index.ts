@@ -196,25 +196,42 @@ export async function translateSubtitlesFromSrt({
       const AFTER_CTX = 15;
       let done = 0;
 
-      // Announce review start before the first batch arrives
-      {
-        const percent = scaleProgress(0, Stage.REVIEW, Stage.FINAL);
-        const stage = '__i18n__:beginning_review';
-        const partialResult = buildSrt({
-          segments: reviewedSegments,
-          mode: 'dual',
-        });
-        (adaptedProgress ?? progressCallback)?.({
-          percent,
+      const emitRangeStage = (
+        startIndex: number,
+        endIndex: number,
+        completed: number,
+        includePartial: boolean
+      ) => {
+        if (total === 0) return;
+        const safeStartIndex = Math.max(0, Math.min(startIndex, total - 1));
+        const safeEndExclusive = Math.max(safeStartIndex + 1, endIndex);
+        const displayStart = Math.min(safeStartIndex + 1, total);
+        const displayEnd = Math.min(Math.max(safeEndExclusive, displayStart), total);
+        const stage = `__i18n__:reviewing_range:${displayStart}:${displayEnd}:${total}`;
+        const payload: any = {
+          percent: scaleProgress(completed, Stage.REVIEW, Stage.FINAL),
           stage,
-          partialResult,
-          current: done,
+          current: completed,
           total,
-        });
+        };
+        if (includePartial) {
+          payload.partialResult = buildSrt({
+            segments: reviewedSegments,
+            mode: 'dual',
+          });
+        }
+        (adaptedProgress ?? progressCallback)?.(payload);
+      };
+
+      if (total > 0) {
+        emitRangeStage(0, Math.min(BATCH, total), done, false);
       }
 
       for (let start = 0; start < total; start += BATCH) {
         const end = Math.min(start + BATCH, total);
+        // Announce the range being reviewed right now (ensures immediate UI update)
+        emitRangeStage(start, end, done, false);
+
         // Important: use already-reviewed lines for BEFORE context to preserve continuity
         // across batch boundaries. AFTER context still uses draft (not yet reviewed) lines.
         const contextBefore = reviewedSegments.slice(
@@ -258,20 +275,9 @@ export async function translateSubtitlesFromSrt({
         }
         // Progress after this sequential batch
         done += Math.min(BATCH, end - start);
-        const pctLocal = Math.round((done / total) * 100);
-        const percent = scaleProgress(pctLocal, Stage.REVIEW, Stage.FINAL);
-        const stage = `__i18n__:reviewing_slow:${done}:${total}`;
-        const partialResult = buildSrt({
-          segments: reviewedSegments,
-          mode: 'dual',
-        });
-        (adaptedProgress ?? progressCallback)?.({
-          percent,
-          stage,
-          partialResult,
-          current: done,
-          total,
-        });
+        const nextStart = done;
+        const nextEnd = Math.min(done + BATCH, total);
+        emitRangeStage(nextStart, nextEnd, done, true);
       }
     } catch {
       // If review fails (network, etc.), continue with translatedSegments

@@ -16,6 +16,7 @@ import {
   GenerateProgressCallback,
   GenerateSubtitlesOptions,
   DubSegmentPayload,
+  DubSubtitlesOptions,
 } from '@shared-types/app';
 import {
   addSubtitle,
@@ -282,13 +283,7 @@ export async function handleTranslateSubtitles(
 
 export async function handleDubSubtitles(
   event: IpcMainInvokeEvent,
-  options: {
-    segments: DubSegmentPayload[];
-    videoPath?: string | null;
-    targetLanguage?: string;
-    voice?: string;
-    quality?: 'standard' | 'high';
-  },
+  options: DubSubtitlesOptions,
   operationId: string
 ): Promise<{
   success: boolean;
@@ -376,6 +371,7 @@ export async function handleDubSubtitles(
       videoPath: normalizedVideoPath,
       voice: options.voice,
       quality: options.quality,
+      ambientMix: options.ambientMix,
       operationId,
       signal: controller.signal,
       progressCallback,
@@ -842,7 +838,7 @@ export async function handleTranslateOneLine(
     // Indicate review is about to begin for clearer UX
     event.sender.send('generate-subtitles-progress', {
       percent: 60,
-      stage: '__i18n__:beginning_review',
+      stage: '__i18n__:reviewing_range:1:1:1',
       operationId,
     });
 

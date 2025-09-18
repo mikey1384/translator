@@ -160,7 +160,9 @@
     "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
     "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
     "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})",
-    "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}"
+    "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}",
+    "reviewingBatch": "Reviewing {{done}}/{{total}}",
+    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
   },
   "editSubtitles": {
     "title": "자막 편집",
@@ -217,7 +219,11 @@
         "onyx": "Onyx",
         "nova": "Nova",
         "shimmer": "Shimmer"
-      }
+      },
+      "mixLabel": "Ambient vs Dub Balance",
+      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
+      "mixAmbient": "More ambient",
+      "mixVoice": "More voice"
     }
   },
   "credits": {
