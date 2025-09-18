@@ -6,11 +6,7 @@ import ProcessingBanner from '../ProcessingBanner';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
 import { css } from '@emotion/css';
-// Remaining hours are computed and shown in ProgressArea header next to credits
 
-/* ------------------------------------------------------------------ */
-/* 📐  Constants & helpers                                             */
-/* ------------------------------------------------------------------ */
 const TRANSLATION_PROGRESS_COLOR = colors.progressTranslate;
 
 const devLog = (...a: any[]) => {

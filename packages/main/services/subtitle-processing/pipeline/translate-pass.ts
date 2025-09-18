@@ -22,7 +22,7 @@ export async function translatePass({
     // Explicitly mark translation as skipped to keep UI progress accurate
     try {
       progressCallback?.({
-        percent: scaleProgress(100, Stage.TRANSLATE, Stage.REVIEW),
+        percent: scaleProgress(100, Stage.START, Stage.TRANSLATE),
         stage: 'Skipping translation (same language)',
         partialResult: buildSrt({ segments, mode: 'dual' }),
       });
@@ -114,8 +114,8 @@ export async function translatePass({
       progressCallback?.({
         percent: scaleProgress(
           (doneSoFar / totalSegments) * 100,
-          Stage.TRANSLATE,
-          Stage.REVIEW
+          Stage.START,
+          Stage.TRANSLATE
         ),
         stage: `Translating ${doneSoFar}/${totalSegments}`,
         partialResult: buildSrt({

@@ -93,7 +93,7 @@ export async function finalizePass({
   progressCallback?: GenerateProgressCallback;
 }): Promise<GenerateSubtitlesFullResult> {
   progressCallback?.({
-    percent: scaleProgress(0, Stage.FINAL, Stage.FINAL + 5),
+    percent: scaleProgress(0, Stage.REVIEW, Stage.FINAL),
     stage: 'Applying final adjustments',
   });
 
@@ -104,7 +104,12 @@ export async function finalizePass({
   await fileManager.writeTempFile(finalSrtContent, '.srt');
 
   progressCallback?.({
-    percent: scaleProgress(100, Stage.FINAL, Stage.FINAL + 5),
+    percent: scaleProgress(100, Stage.REVIEW, Stage.FINAL),
+    stage: 'Saved subtitles to workspace',
+  });
+
+  progressCallback?.({
+    percent: scaleProgress(100, Stage.FINAL, Stage.END),
     stage: 'Processing complete!',
     partialResult: finalSrtContent,
     current: items.length,

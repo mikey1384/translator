@@ -1,9 +1,10 @@
 export enum Stage {
-  AUDIO = 0,
+  START = 0,
   TRANSCRIBE = 10,
   TRANSLATE = 50,
-  REVIEW = 75,
-  FINAL = 95,
+  REVIEW = 95,
+  FINAL = 98,
+  END = 100,
 }
 
 export function scaleProgress(

@@ -17,7 +17,7 @@ export async function prepareAudio({
   signal: AbortSignal;
 }): Promise<{ audioPath: string }> {
   progressCallback?.({
-    percent: Stage.AUDIO,
+    percent: Stage.START,
     stage: 'Starting subtitle generation',
   });
 
@@ -29,7 +29,7 @@ export async function prepareAudio({
     signal,
     progress: ({ percent, stage }: { percent: number; stage?: string }) => {
       progressCallback?.({
-        percent: scaleProgress(percent, Stage.AUDIO, Stage.TRANSCRIBE),
+        percent: scaleProgress(percent, Stage.START, Stage.TRANSCRIBE),
         stage: stage ?? '',
       });
     },

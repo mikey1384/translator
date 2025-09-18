@@ -124,11 +124,6 @@ export async function extractSubtitlesFromMedia({
   }
 }
 
-/**
- * Translates an existing SRT (provided as string) into the target language, using the
- * same translate pipeline used during end-to-end generation. Returns the translated
- * SRT content (dual mode by default so original + translation are preserved for UI).
- */
 export async function translateSubtitlesFromSrt({
   srtContent,
   targetLanguage,
@@ -146,35 +141,16 @@ export async function translateSubtitlesFromSrt({
   fileManager: FileManager;
   qualityTranslation?: boolean;
 }): Promise<{ subtitles: string }> {
-  // Parse provided SRT into segments
   const segments = parseSrt(srtContent);
 
-  // When running translation as a standalone pipeline, the underlying translate pass
-  // reports progress on the multi-stage scale (TRANSLATE..FINAL). Remap that to 0..100.
   const adaptedProgress: GenerateProgressCallback | undefined = progressCallback
     ? p => {
-        let mapped = p.percent ?? 0;
-        if (mapped <= Stage.TRANSLATE) {
-          mapped = 0;
-        } else if (mapped < Stage.FINAL) {
-          mapped = Math.max(
-            0,
-            Math.min(
-              100,
-              Math.round(
-                ((mapped - Stage.TRANSLATE) / (Stage.FINAL - Stage.TRANSLATE)) *
-                  100
-              )
-            )
-          );
-        } else {
-          mapped = 100;
-        }
-        progressCallback?.({ ...p, percent: mapped });
+        const raw = typeof p.percent === 'number' ? p.percent : 0;
+        const clamped = Math.max(0, Math.min(100, Math.round(raw)));
+        progressCallback?.({ ...p, percent: clamped });
       }
     : undefined;
 
-  // Run translation pass
   const translatedSegments = await translatePass({
     segments,
     targetLang: targetLanguage,
@@ -206,10 +182,19 @@ export async function translateSubtitlesFromSrt({
         const safeStartIndex = Math.max(0, Math.min(startIndex, total - 1));
         const safeEndExclusive = Math.max(safeStartIndex + 1, endIndex);
         const displayStart = Math.min(safeStartIndex + 1, total);
-        const displayEnd = Math.min(Math.max(safeEndExclusive, displayStart), total);
+        const displayEnd = Math.min(
+          Math.max(safeEndExclusive, displayStart),
+          total
+        );
         const stage = `__i18n__:reviewing_range:${displayStart}:${displayEnd}:${total}`;
+        const reviewedRatio =
+          total > 0 ? Math.min(Math.max(completed / total, 0), 1) : 0;
         const payload: any = {
-          percent: scaleProgress(completed, Stage.REVIEW, Stage.FINAL),
+          percent: scaleProgress(
+            reviewedRatio * 100,
+            Stage.TRANSLATE,
+            Stage.REVIEW
+          ),
           stage,
           current: completed,
           total,
