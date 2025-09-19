@@ -9,6 +9,10 @@ import type {
 } from '@shared-types/app';
 import { synthesizeDub } from './stage5-client.js';
 
+const MIN_DUB_SILENCE_GAP_SEC = 0.15;
+const MAX_DUB_COMPRESSION_RATIO = 1.35;
+const COMPRESSION_TOLERANCE = 0.05;
+
 interface GenerateDubArgs {
   segments: DubSegmentPayload[];
   videoPath?: string | null;
@@ -46,22 +50,174 @@ export async function generateDubbedMedia({
     } quality=${quality || 'standard'}`
   );
 
+  const originalStartByIndex = new Map<number, number>();
+
   const payloadSegments = segments.map<DubSegmentPayload>(seg => {
     const start = Number.isFinite(seg.start) ? Number(seg.start) : 0;
     const end = Number.isFinite(seg.end) ? Number(seg.end) : start;
-    const duration =
+    const rawDuration =
       seg.targetDuration && seg.targetDuration > 0
         ? seg.targetDuration
         : Math.max(0, end - start);
+    const duration = Math.max(0.05, rawDuration);
+    if (typeof seg.index === 'number' && Number.isFinite(seg.index)) {
+      originalStartByIndex.set(seg.index, start);
+    }
     return {
       start,
-      end,
+      end: start + duration,
       original: seg.original ?? '',
       translation: seg.translation ?? '',
       index: typeof seg.index === 'number' ? seg.index : undefined,
       targetDuration: duration,
     };
   });
+
+  const payloadByIndex = new Map<number, DubSegmentPayload>();
+  const orderedIndexes: number[] = [];
+  payloadSegments.forEach(seg => {
+    if (typeof seg.index === 'number' && Number.isFinite(seg.index)) {
+      payloadByIndex.set(seg.index, seg);
+      orderedIndexes.push(seg.index);
+    }
+  });
+  orderedIndexes.sort((a, b) => a - b);
+
+  const durationForPlan = (plan?: DubSegmentPayload | null): number => {
+    if (!plan) return 0;
+    if (typeof plan.targetDuration === 'number' && plan.targetDuration > 0) {
+      return plan.targetDuration;
+    }
+    const start = Number(plan.start ?? 0);
+    const end = Number(plan.end ?? start);
+    return Math.max(0, end - start);
+  };
+
+  const setPlanDuration = (plan: DubSegmentPayload, duration: number) => {
+    const safeDuration = Math.max(0.05, duration);
+    plan.targetDuration = safeDuration;
+    const start = Number(plan.start ?? 0);
+    plan.end = start + safeDuration;
+  };
+
+  const getPrevIndex = (idx: number): number | undefined => {
+    const pos = orderedIndexes.indexOf(idx);
+    return pos > 0 ? orderedIndexes[pos - 1] : undefined;
+  };
+
+  const getNextIndex = (idx: number): number | undefined => {
+    const pos = orderedIndexes.indexOf(idx);
+    return pos >= 0 && pos + 1 < orderedIndexes.length
+      ? orderedIndexes[pos + 1]
+      : undefined;
+  };
+
+  const slideTimelineForward = (idx: number, delta: number): number => {
+    if (!Number.isFinite(delta) || delta <= 0) return 0;
+    const pos = orderedIndexes.indexOf(idx);
+    if (pos === -1) return 0;
+    const anchor = payloadByIndex.get(idx);
+    if (!anchor) return 0;
+
+    const currentDuration = durationForPlan(anchor);
+    setPlanDuration(anchor, currentDuration + delta);
+
+    let carriedShift = delta;
+    let prevEnd = Number(anchor.start ?? 0) + durationForPlan(anchor);
+
+    for (let i = pos + 1; i < orderedIndexes.length; i++) {
+      const nextIdx = orderedIndexes[i];
+      const seg = payloadByIndex.get(nextIdx);
+      if (!seg) continue;
+      const existingStart = Number(seg.start ?? 0);
+      const newStart = existingStart + carriedShift;
+      seg.start = newStart;
+
+      const segDuration = durationForPlan(seg);
+      if (segDuration > 0) {
+        seg.end = newStart + segDuration;
+      } else if (typeof seg.end === 'number') {
+        seg.end += carriedShift;
+      }
+
+      const requiredStart = prevEnd + MIN_DUB_SILENCE_GAP_SEC;
+      if (seg.start < requiredStart) {
+        const adjust = requiredStart - seg.start;
+        seg.start += adjust;
+        if (typeof seg.end === 'number') {
+          seg.end += adjust;
+        }
+        carriedShift += adjust;
+      }
+
+      prevEnd = Number(seg.start ?? 0) + durationForPlan(seg);
+    }
+
+    return delta;
+  };
+
+  const extendSegmentAllocation = (idx: number, extra: number): number => {
+    if (!Number.isFinite(idx) || !payloadByIndex.has(idx) || extra <= 0) {
+      return 0;
+    }
+    const plan = payloadByIndex.get(idx)!;
+    let remaining = extra;
+    let gained = 0;
+
+    const baseDuration = durationForPlan(plan);
+    let currentDuration = baseDuration;
+
+    const nextIdx = getNextIndex(idx);
+    if (nextIdx != null) {
+      const nextPlan = payloadByIndex.get(nextIdx);
+      if (nextPlan) {
+        const gap =
+          Number(nextPlan.start ?? 0) -
+          (Number(plan.start ?? 0) + currentDuration);
+        const available = Math.max(0, gap - MIN_DUB_SILENCE_GAP_SEC);
+        const use = Math.min(remaining, available);
+        if (use > 0) {
+          setPlanDuration(plan, currentDuration + use);
+          currentDuration = durationForPlan(plan);
+          remaining -= use;
+          gained += use;
+        }
+      }
+    }
+
+    if (remaining > 0) {
+      const prevIdx = getPrevIndex(idx);
+      const prevPlan = prevIdx != null ? payloadByIndex.get(prevIdx) : undefined;
+      const prevEnd = prevPlan
+        ? Number(prevPlan.start ?? 0) + durationForPlan(prevPlan)
+        : 0;
+      const baseStart =
+        originalStartByIndex.get(idx) ?? Number(plan.start ?? 0);
+      const minStart = prevPlan
+        ? Math.max(prevEnd + MIN_DUB_SILENCE_GAP_SEC, 0)
+        : Math.max(baseStart, 0);
+      const currentStart = Number(plan.start ?? 0);
+      const availableBefore = Math.max(0, currentStart - minStart);
+      const useBefore = Math.min(remaining, availableBefore);
+      if (useBefore > 0) {
+        plan.start = currentStart - useBefore;
+        setPlanDuration(plan, currentDuration + useBefore);
+        currentDuration = durationForPlan(plan);
+        remaining -= useBefore;
+        gained += useBefore;
+      }
+    }
+
+    if (remaining > 0) {
+      const shifted = slideTimelineForward(idx, remaining);
+      if (shifted > 0) {
+        gained += shifted;
+        remaining = Math.max(0, remaining - shifted);
+      }
+    }
+
+    return gained;
+  };
 
   progressCallback?.({
     percent: Math.min(30, Math.max(20, payloadSegments.length / 2 + 20)),
@@ -169,13 +325,6 @@ export async function generateDubbedMedia({
       operationId,
     });
 
-    const payloadByIndex = new Map<number, (typeof payloadSegments)[number]>();
-    payloadSegments.forEach(seg => {
-      if (typeof seg.index === 'number' && Number.isFinite(seg.index)) {
-        payloadByIndex.set(seg.index, seg);
-      }
-    });
-
     const preparedSegments: Array<{
       path: string;
       start: number;
@@ -184,9 +333,18 @@ export async function generateDubbedMedia({
     const tempSegmentPaths: Set<string> = new Set();
     let fallbackStart = 0;
 
-    const clipCount = synthResult.segments?.length ?? 0;
+    const stage5Segments = [...(synthResult.segments ?? [])].sort(
+      (a, b) => {
+        const ai = Number.isFinite(a?.index) ? Number(a.index) : Number.MAX_SAFE_INTEGER;
+        const bi = Number.isFinite(b?.index) ? Number(b.index) : Number.MAX_SAFE_INTEGER;
+        if (ai !== bi) return ai - bi;
+        return 0;
+      }
+    );
+
+    const clipCount = stage5Segments.length;
     for (let clipIdx = 0; clipIdx < clipCount; clipIdx++) {
-      const clip = synthResult.segments![clipIdx];
+      const clip = stage5Segments[clipIdx];
       if (signal.aborted) {
         throw new DOMException('Operation cancelled', 'AbortError');
       }
@@ -227,71 +385,144 @@ export async function generateDubbedMedia({
         );
       }
 
-      const fallbackDuration =
-        typeof meta?.end === 'number' && typeof meta?.start === 'number'
-          ? Math.max(0, meta.end - meta.start)
-          : undefined;
-      const targetDuration =
-        typeof clip?.targetDuration === 'number' && clip.targetDuration > 0
-          ? clip.targetDuration
-          : fallbackDuration;
+      let planStart = Number(meta?.start ?? fallbackStart);
+      if (!Number.isFinite(planStart)) {
+        planStart = fallbackStart;
+        if (meta) meta.start = planStart;
+      }
 
-      if (
-        targetDuration &&
-        targetDuration > 0.05 &&
-        actualDuration &&
-        actualDuration > targetDuration &&
-        Math.abs(actualDuration - targetDuration) / targetDuration > 0.05
-      ) {
-        const factor = actualDuration / targetDuration;
-        const atempoFilters = buildAtempoFilters(factor);
-        if (atempoFilters) {
-          const stretchedPath = path.join(
-            tmpDir,
-            `dub-seg-stretched-${operationId}-${targetIndex ?? 'unknown'}-${Date.now()}.${audioExt}`
+      let scheduledDuration = durationForPlan(meta);
+      if (scheduledDuration <= 0) {
+        const baseline =
+          actualDuration && actualDuration > 0.05 ? actualDuration : 0.6;
+        if (meta) {
+          setPlanDuration(meta, baseline);
+          scheduledDuration = durationForPlan(meta);
+        } else {
+          scheduledDuration = baseline;
+        }
+      }
+
+      if (meta && typeof meta.start !== 'number') {
+        meta.start = planStart;
+        setPlanDuration(meta, scheduledDuration);
+        scheduledDuration = durationForPlan(meta);
+      }
+
+      let effectiveDuration = scheduledDuration;
+      if (meta && actualDuration > 0.01) {
+        const desiredNoCompression = Math.max(effectiveDuration, actualDuration);
+        if (desiredNoCompression > effectiveDuration) {
+          const gained = extendSegmentAllocation(
+            targetIndex!,
+            desiredNoCompression - effectiveDuration
           );
-          try {
-            await ffmpeg.run(
-              [
-                '-y',
-                '-i',
-                finalPath,
-                '-filter:a',
-                atempoFilters,
-                stretchedPath,
-              ],
-              { operationId, signal }
+          if (gained > 0) {
+            effectiveDuration = durationForPlan(meta);
+            planStart = Number(meta?.start ?? planStart);
+          }
+        }
+
+        const minDuration = actualDuration / MAX_DUB_COMPRESSION_RATIO;
+        if (effectiveDuration < minDuration) {
+          const gained = extendSegmentAllocation(
+            targetIndex!,
+            minDuration - effectiveDuration
+          );
+          if (gained > 0) {
+            effectiveDuration = durationForPlan(meta);
+            planStart = Number(meta?.start ?? planStart);
+          }
+        }
+      } else if (!meta && actualDuration > 0.01) {
+        const minDuration = actualDuration / MAX_DUB_COMPRESSION_RATIO;
+        effectiveDuration = Math.max(effectiveDuration, minDuration);
+      }
+
+      let scheduledStart = meta ? Number(meta.start ?? planStart) : planStart;
+      let scheduledLength = meta ? durationForPlan(meta) : effectiveDuration;
+
+      let compressionRatio =
+        scheduledLength > 0 && actualDuration > 0
+          ? actualDuration / scheduledLength
+          : 1;
+
+      if (compressionRatio > 1 + COMPRESSION_TOLERANCE) {
+        const cappedRatio = Math.min(
+          compressionRatio,
+          MAX_DUB_COMPRESSION_RATIO
+        );
+        const cappedDuration =
+          cappedRatio > 0 ? actualDuration / cappedRatio : scheduledLength;
+
+        if (meta) {
+          if (cappedDuration > scheduledLength + 1e-6) {
+            const gained = extendSegmentAllocation(
+              targetIndex!,
+              cappedDuration - scheduledLength
             );
-            finalPath = stretchedPath;
-            tempSegmentPaths.add(stretchedPath);
-            actualDuration = targetDuration;
-          } catch (stretchErr) {
+            if (gained > 0) {
+              scheduledLength = durationForPlan(meta);
+              planStart = Number(meta?.start ?? planStart);
+            }
+          }
+        } else if (cappedDuration > scheduledLength) {
+          scheduledLength = cappedDuration;
+        }
+
+        compressionRatio =
+          scheduledLength > 0 && actualDuration > 0
+            ? actualDuration / scheduledLength
+            : 1;
+
+        if (compressionRatio > 1 + COMPRESSION_TOLERANCE) {
+          const atempoFilters = buildAtempoFilters(compressionRatio);
+          if (atempoFilters) {
+            const stretchedPath = path.join(
+              tmpDir,
+              `dub-seg-stretched-${operationId}-${targetIndex ?? 'unknown'}-${Date.now()}.${audioExt}`
+            );
+            try {
+              await ffmpeg.run(
+                [
+                  '-y',
+                  '-i',
+                  finalPath,
+                  '-filter:a',
+                  atempoFilters,
+                  stretchedPath,
+                ],
+                { operationId, signal }
+              );
+              finalPath = stretchedPath;
+              tempSegmentPaths.add(stretchedPath);
+              actualDuration = scheduledLength;
+            } catch (stretchErr) {
+              log.warn(
+                `[${operationId}] Failed to retime segment ${
+                  targetIndex ?? 'unknown'
+                } (factor=${compressionRatio.toFixed(3)}):`,
+                stretchErr
+              );
+            }
+          } else {
             log.warn(
-              `[${operationId}] Failed to retime segment ${targetIndex ?? 'unknown'} (factor=${factor.toFixed(3)}):`,
-              stretchErr
+              `[${operationId}] Unable to build atempo filters for ratio ${compressionRatio.toFixed(3)}; leaving audio uncompressed.`
             );
           }
         }
       }
 
-      const start =
-        typeof meta?.start === 'number' && Number.isFinite(meta.start)
-          ? meta.start
-          : fallbackStart;
-      const duration =
-        targetDuration && targetDuration > 0.01
-          ? targetDuration
-          : actualDuration && actualDuration > 0.01
-            ? actualDuration
-            : 0;
+      scheduledStart = meta ? Number(meta.start ?? planStart) : planStart;
+      scheduledLength = meta ? durationForPlan(meta) : scheduledLength;
 
       preparedSegments.push({
         path: finalPath,
-        start: Math.max(0, start),
-        duration,
+        start: Math.max(0, scheduledStart),
+        duration: scheduledLength,
       });
 
-      fallbackStart = Math.max(fallbackStart, start + duration);
+      fallbackStart = Math.max(fallbackStart, scheduledStart + scheduledLength);
 
       if (totalClips > 0) {
         const alignPercent =

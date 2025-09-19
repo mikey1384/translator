@@ -535,12 +535,39 @@ async function buildDubSegmentsFromSpeech({
     dialogueText = dialogueText.trim();
     if (!dialogueText) return;
 
+    const bucketStarts = bucket
+      .map(seg => (Number.isFinite(seg.start) ? Number(seg.start) : NaN))
+      .filter(n => !Number.isNaN(n));
+    const bucketEnds = bucket
+      .map(seg => (Number.isFinite(seg.end) ? Number(seg.end) : NaN))
+      .filter(n => !Number.isNaN(n));
+
+    let mergedStart = interval.start;
+    if (bucketStarts.length) {
+      const earliest = Math.min(...bucketStarts);
+      if (Number.isFinite(earliest)) {
+        mergedStart = Math.max(interval.start, earliest);
+      }
+    }
+
+    let mergedEnd = interval.end;
+    if (bucketEnds.length) {
+      const latest = Math.max(...bucketEnds);
+      if (Number.isFinite(latest)) {
+        mergedEnd = Math.max(interval.end, latest);
+      }
+    }
+    if (!Number.isFinite(mergedStart) || mergedStart < 0) mergedStart = interval.start;
+    if (!Number.isFinite(mergedEnd) || mergedEnd <= mergedStart) {
+      mergedEnd = mergedStart + Math.max(0.01, interval.end - interval.start);
+    }
+
     aggregated.push({
-      start: interval.start,
-      end: interval.end,
+      start: mergedStart,
+      end: mergedEnd,
       translation: dialogueText,
       original: originalParts.join(' '),
-      targetDuration: Math.max(0.01, interval.end - interval.start),
+      targetDuration: Math.max(0.01, mergedEnd - mergedStart),
       index: aggregated.length + 1,
     });
   });
@@ -588,7 +615,8 @@ async function buildDubSegmentsFromSpeech({
 
     const original = (seg.original ?? '').replace(/\s+/g, ' ').trim();
     const baseStart = Number.isFinite(seg.start) ? Number(seg.start) : 0;
-    let start = Math.max(0, baseStart);
+    const anchorStart = Math.max(0, baseStart);
+    let start = anchorStart;
     const expectedDuration = seg.targetDuration ?? seg.end - seg.start;
     let duration = Math.max(MIN_SEGMENT_DURATION, expectedDuration || 0);
     const minDurationForText = computeDurationFloor(translation);
@@ -597,35 +625,43 @@ async function buildDubSegmentsFromSpeech({
     let extraNeeded = desiredDuration - duration;
 
     if (extraNeeded > 0) {
-      const prevSegment = finalSegments[finalSegments.length - 1];
-      const minStart = prevSegment ? prevSegment.end + SILENCE_BUFFER : 0;
-      const maxShiftEarlier = Math.max(0, start - minStart);
-      const shiftEarlier = Math.min(extraNeeded, maxShiftEarlier);
-      if (shiftEarlier > 0) {
-        start -= shiftEarlier;
-        duration += shiftEarlier;
+      const nextStart = sortedAggregated[idx + 1]?.start;
+      let availableAfter = Number.POSITIVE_INFINITY;
+      if (Number.isFinite(nextStart)) {
+        availableAfter = Math.max(0, (nextStart as number) - SILENCE_BUFFER - end);
+      }
+      const extendAfter = Math.min(extraNeeded, availableAfter);
+      if (extendAfter > 0) {
+        duration += extendAfter;
         end = start + duration;
-        extraNeeded -= shiftEarlier;
+        extraNeeded -= extendAfter;
+      }
+
+      if (extraNeeded > 0 && !Number.isFinite(availableAfter)) {
+        duration += extraNeeded;
+        end = start + duration;
+        extraNeeded = 0;
       }
 
       if (extraNeeded > 0) {
-        const nextStart = sortedAggregated[idx + 1]?.start;
-        let availableAfter = Number.POSITIVE_INFINITY;
-        if (Number.isFinite(nextStart)) {
-          availableAfter = Math.max(0, (nextStart as number) - SILENCE_BUFFER - end);
-        }
-        const extendAfter = Math.min(extraNeeded, availableAfter);
-        if (extendAfter > 0) {
-          duration += extendAfter;
+        const prevSegment = finalSegments[finalSegments.length - 1];
+        const earliestStart = prevSegment
+          ? Math.max(prevSegment.end + SILENCE_BUFFER, anchorStart)
+          : anchorStart;
+        const maxShiftEarlier = Math.max(0, start - earliestStart);
+        const shiftEarlier = Math.min(extraNeeded, maxShiftEarlier);
+        if (shiftEarlier > 0) {
+          start -= shiftEarlier;
+          duration += shiftEarlier;
           end = start + duration;
-          extraNeeded -= extendAfter;
+          extraNeeded -= shiftEarlier;
         }
+      }
 
-        if (extraNeeded > 0 && !Number.isFinite(availableAfter)) {
-          duration += extraNeeded;
-          end = start + duration;
-          extraNeeded = 0;
-        }
+      if (extraNeeded > 0) {
+        duration += extraNeeded;
+        end = start + duration;
+        extraNeeded = 0;
       }
     }
 
