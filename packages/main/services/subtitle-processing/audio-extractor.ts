@@ -107,6 +107,7 @@ export async function extractAudio(
       throw new FFmpegError('No audio stream detected in input file');
     }
 
+    // Keep leading silence so VAD/Whisper timings stay aligned with the original media.
     const ffmpegArgs = [
       '-v',
       'error',
@@ -114,8 +115,6 @@ export async function extractAudio(
       'all',
       '-i',
       videoPath,
-      '-af',
-      'silenceremove=start_periods=1:start_silence=0.5:start_threshold=-50dB',
       '-map',
       `0:a:${audioIdx}?`,
       '-ar',
