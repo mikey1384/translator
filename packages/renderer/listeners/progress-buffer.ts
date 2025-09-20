@@ -4,6 +4,7 @@ import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
 import { useUIStore } from '../state/ui-store';
 import { useCreditStore } from '../state/credit-store';
+import { useAiStore } from '../state/ai-store';
 import { i18n } from '../i18n';
 import { logTask, logPhase } from '../utils/logger';
 import { openCreditRanOut } from '../state/modal-store';
@@ -41,7 +42,11 @@ function flush() {
     // If we detect credits exhaustion, trigger the global modal once
     if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
       try {
-        openCreditRanOut();
+        const s = useAiStore.getState();
+        const usingApiKey = Boolean(
+          s.useByo && s.byoUnlocked && (s.keyPresent || (s.keyValue || '').trim())
+        );
+        if (!usingApiKey) openCreditRanOut();
       } catch {
         // Do nothing
       }

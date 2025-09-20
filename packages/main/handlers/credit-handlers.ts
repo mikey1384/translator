@@ -306,9 +306,15 @@ async function openStripeCheckout(
     let completed = false;
 
     const cleanup = () => {
-      win.webContents.removeListener('will-redirect', handleRedirect);
-      win.webContents.removeListener('will-navigate', handleRedirect);
-      win.webContents.removeListener('did-fail-load', handleLoadFailure);
+      try {
+        if (!win.isDestroyed()) {
+          win.webContents.removeListener('will-redirect', handleRedirect);
+          win.webContents.removeListener('will-navigate', handleRedirect);
+          win.webContents.removeListener('did-fail-load', handleLoadFailure);
+        }
+      } catch (e) {
+        log.warn('[credit-handler] Cleanup after checkout encountered an issue:', e);
+      }
     };
 
     const finish = (cb?: () => void) => {
@@ -340,9 +346,16 @@ async function openStripeCheckout(
         log.error('[credit-handler] onSuccess handler threw:', err);
       } finally {
         finish();
-        if (!win.isDestroyed()) {
-          win.close();
-        }
+        // Defer close to avoid closing during navigation events (Windows safety)
+        setImmediate(() => {
+          try {
+            if (!win.isDestroyed()) {
+              win.close();
+            }
+          } catch (e) {
+            log.warn('[credit-handler] Error closing checkout window after success:', e);
+          }
+        });
       }
     };
 
@@ -364,9 +377,16 @@ async function openStripeCheckout(
         if (pathname.startsWith('/checkout/cancelled')) {
           event.preventDefault();
           finish(options.onCancel);
-          if (!win.isDestroyed()) {
-            win.close();
-          }
+          // Defer close to avoid lifecycle races on Windows
+          setImmediate(() => {
+            try {
+              if (!win.isDestroyed()) {
+                win.close();
+              }
+            } catch (e) {
+              log.warn('[credit-handler] Error closing checkout window after cancel:', e);
+            }
+          });
         }
       } catch (err) {
         log.error(
@@ -385,9 +405,15 @@ async function openStripeCheckout(
         `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
       );
       finish();
-      if (!win.isDestroyed()) {
-        win.close();
-      }
+      setImmediate(() => {
+        try {
+          if (!win.isDestroyed()) {
+            win.close();
+          }
+        } catch (e) {
+          log.warn('[credit-handler] Error closing checkout window after load failure:', e);
+        }
+      });
     };
 
     win.webContents.on('will-redirect', handleRedirect);

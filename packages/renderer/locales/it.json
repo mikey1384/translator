@@ -357,16 +357,6 @@
     "videoSaved": "Video salvato in:\n{{path}}",
     "dubbedVideoSaved": "Video doppiato salvato in:\n{{path}}"
   },
-  "credits": {
-    "title": "Ore di utilizzo AI",
-    "loading": "Caricamento...",
-    "credits": "crediti",
-    "hours": "ore",
-    "buyCredits": "Acquista crediti",
-    "redirectingToPayment": "Apertura pagamento sicuro…",
-    "description": "Scegli tra pacchetti da ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), o ${{pack3Price}} ({{pack3Hours}}h)",
-    "notEnough": "Crediti insufficienti. Acquista più crediti per continuare."
-  },
   "cta": {
     "generate": {
       "title": "Ottenere sottotitoli da un video",

@@ -357,16 +357,6 @@
     "videoSaved": "影片已儲存至：\n{{path}}",
     "dubbedVideoSaved": "配音影片已儲存至:\n{{path}}"
   },
-  "credits": {
-    "title": "AI使用時數",
-    "loading": "載入中...",
-    "credits": "點數",
-    "hours": "小時",
-    "buyCredits": "購買點數",
-    "redirectingToPayment": "開啟安全結帳中…",
-    "description": "選擇 ${{packMicroPrice}} ({{packMicroHours}}小時)、${{pack1Price}} ({{pack1Hours}}小時)、${{pack2Price}} ({{pack2Hours}}小時) 或 ${{pack3Price}} ({{pack3Hours}}小時) 點數包",
-    "notEnough": "點數不足。請購買更多點數以繼續。"
-  },
   "cta": {
     "generate": {
       "title": "從影片取得字幕",

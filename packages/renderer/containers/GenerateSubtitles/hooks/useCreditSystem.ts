@@ -8,13 +8,18 @@ export function useCreditSystem() {
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const keyPresent = useAiStore(s => s.keyPresent);
   const keyValue = useAiStore(s => s.keyValue);
-  const usingApiKey = Boolean(useByo && byoUnlocked && (keyPresent || (keyValue || '').trim()));
+  const aiInitialized = useAiStore(s => s.initialized);
+  const usingApiKey = Boolean(
+    useByo && byoUnlocked && (keyPresent || (keyValue || '').trim())
+  );
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  const showCreditWarning = !usingApiKey && (hours ?? 0) <= 0 && !creditLoading;
+  // Avoid flashing the warning before BYO state is initialized
+  const showCreditWarning =
+    aiInitialized && !usingApiKey && (hours ?? 0) <= 0 && !creditLoading;
   const isButtonDisabled = false;
 
   return {
