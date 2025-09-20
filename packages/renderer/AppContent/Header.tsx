@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { useUIStore, useCreditStore } from '../state';
+import { useUIStore, useCreditStore, useAiStore } from '../state';
 import { logButton } from '../utils/logger';
 import LogoDisplay from '../components/LogoDisplay';
 import { useTranslation } from 'react-i18next';
@@ -38,8 +38,13 @@ export default function Header() {
   const { t } = useTranslation();
   const { showSettings, toggleSettings } = useUIStore();
   const { hours } = useCreditStore();
+  const useByo = useAiStore(s => s.useByo);
+  const byoUnlocked = useAiStore(s => s.byoUnlocked);
+  const keyPresent = useAiStore(s => s.keyPresent);
+  const keyValue = useAiStore(s => s.keyValue);
+  const usingApiKey = Boolean(useByo && byoUnlocked && (keyPresent || (keyValue || '').trim()));
   const suffix =
-    typeof hours === 'number'
+    !usingApiKey && typeof hours === 'number'
       ? `(${Math.floor(hours).toLocaleString()}h)`
       : undefined;
 

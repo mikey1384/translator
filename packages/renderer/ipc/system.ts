@@ -37,6 +37,43 @@ export function createCheckoutSession(
   return window.electron.createCheckoutSession(packId);
 }
 
+export function createByoUnlockSession(): Promise<void> {
+  return window.electron.createByoUnlockSession();
+}
+
+export function getOpenAiApiKey(): Promise<string | null> {
+  return window.electron.getOpenAiApiKey();
+}
+
+export function setOpenAiApiKey(
+  apiKey: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setOpenAiApiKey(apiKey);
+}
+
+export function clearOpenAiApiKey(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return window.electron.clearOpenAiApiKey();
+}
+
+export function validateOpenAiApiKey(
+  apiKey?: string
+): Promise<{ ok: boolean; error?: string }> {
+  return window.electron.validateOpenAiApiKey(apiKey);
+}
+
+export function getByoProviderEnabled(): Promise<boolean> {
+  return window.electron.getByoProviderEnabled();
+}
+
+export function setByoProviderEnabled(
+  enabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoProviderEnabled(enabled);
+}
+
 export function onCreditsUpdated(
   callback: (payload: { creditBalance: number; hoursBalance: number }) => void
 ): () => void {
@@ -49,4 +86,60 @@ export function onCheckoutPending(callback: () => void): () => void {
 
 export function onCheckoutConfirmed(callback: () => void): () => void {
   return window.electron.onCheckoutConfirmed(callback);
+}
+
+export function onCheckoutCancelled(callback: () => void): () => void {
+  return window.electron.onCheckoutCancelled(callback);
+}
+
+export function getEntitlements(): Promise<{
+  byoOpenAi: boolean;
+  fetchedAt?: string;
+}> {
+  return window.electron.getEntitlements();
+}
+
+export function refreshEntitlements(): Promise<{
+  byoOpenAi: boolean;
+  fetchedAt?: string;
+}> {
+  return window.electron.refreshEntitlements();
+}
+
+export function onEntitlementsUpdated(
+  callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+): () => void {
+  return window.electron.onEntitlementsUpdated(callback);
+}
+
+export function onEntitlementsError(
+  callback: (payload: { message: string }) => void
+): () => void {
+  return window.electron.onEntitlementsError(callback);
+}
+
+export function onByoUnlockPending(callback: () => void): () => void {
+  return window.electron.onByoUnlockPending(callback);
+}
+
+export function onByoUnlockConfirmed(
+  callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+): () => void {
+  return window.electron.onByoUnlockConfirmed(callback);
+}
+
+export function onByoUnlockCancelled(callback: () => void): () => void {
+  return window.electron.onByoUnlockCancelled(callback);
+}
+
+export function onByoUnlockError(
+  callback: (payload: { message?: string }) => void
+): () => void {
+  return window.electron.onByoUnlockError(callback);
+}
+
+export function onOpenAiApiKeyChanged(
+  callback: (payload: { hasKey: boolean }) => void
+): () => void {
+  return window.electron.onOpenAiApiKeyChanged(callback);
 }

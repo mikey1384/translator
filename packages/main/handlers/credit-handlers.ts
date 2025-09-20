@@ -5,6 +5,7 @@ import axios from 'axios'; // Assuming axios is available
 import log from 'electron-log'; // Assuming electron-log is correctly configured
 
 import { v4 as uuidv4 } from 'uuid';
+import { syncEntitlements } from '../services/entitlements-manager.js';
 
 // Generate or retrieve device ID using proper UUID v4
 export function getDeviceId(): string {
@@ -66,7 +67,10 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     // Intentionally avoid logging successful GET /credits to reduce noise in the UI log modal
 
     const credits = Number(response.data?.creditBalance ?? 0);
-    const perHour = Math.max(1, Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800);
+    const perHour = Math.max(
+      1,
+      Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800
+    );
     const hours = credits / perHour;
     store.set('balanceCredits', credits);
     store.set('creditsPerHour', perHour); // Cache the conversion rate
@@ -141,7 +145,21 @@ export async function handleCreateCheckoutSession(
       }
 
       // Always open inside an Electron modal so we catch the redirect even in dev
-      await openStripeCheckout(response.data.url);
+      await openStripeCheckout({
+        sessionUrl: response.data.url,
+        defaultMode: 'credits',
+        onSuccess: async ({ sessionId, mode }) => {
+          await handleStripeSuccess(sessionId, {
+            mode,
+            window: mainWindow ?? null,
+          });
+        },
+        onCancel: () => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('checkout-cancelled');
+          }
+        },
+      });
       return null;
     }
     log.warn(
@@ -172,9 +190,105 @@ export async function handleCreateCheckoutSession(
   }
 }
 
+export async function handleCreateByoUnlockSession(): Promise<void> {
+  const mainWindow = BrowserWindow.getAllWindows()[0] ?? null;
+  const deviceId = getDeviceId();
+  const apiUrl = 'https://api.stage5.tools/payments/create-byo-unlock';
+
+  try {
+    log.info('[credit-handler] Initiating BYO OpenAI unlock checkout.');
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('byo-unlock-pending');
+    }
+
+    const response = await axios.post(apiUrl, { deviceId });
+    sendNetLog(
+      'info',
+      `POST /payments/create-byo-unlock -> ${response.status}`,
+      {
+        url: apiUrl,
+        method: 'POST',
+        status: response.status,
+      }
+    );
+
+    const checkoutUrl = response.data?.url;
+    if (!checkoutUrl) {
+      log.warn(
+        '[credit-handler] BYO unlock endpoint did not return a checkout URL.'
+      );
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('byo-unlock-cancelled');
+      }
+      return;
+    }
+
+    await openStripeCheckout({
+      sessionUrl: checkoutUrl,
+      defaultMode: 'byo',
+      onSuccess: async ({ sessionId, mode }) => {
+        await handleStripeSuccess(sessionId, {
+          mode,
+          window: mainWindow,
+        });
+      },
+      onCancel: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('byo-unlock-cancelled');
+        }
+      },
+      onClosed: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('byo-unlock-closed');
+        }
+      },
+    });
+  } catch (err: any) {
+    if (err?.response) {
+      sendNetLog('error', `HTTP ${err.response.status} POST ${apiUrl}`, {
+        status: err.response.status,
+        url: err.config?.url,
+        method: err.config?.method,
+        data: err.response?.data,
+      });
+    } else if (err?.request) {
+      sendNetLog('error', `HTTP NO_RESPONSE POST ${apiUrl}`, {
+        url: err.config?.url,
+        method: err.config?.method,
+      });
+    }
+
+    log.error('[credit-handler] Failed to initiate BYO unlock checkout:', err);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('byo-unlock-error', {
+        message:
+          err?.response?.data?.message || err?.message || 'Unable to start checkout',
+      });
+    }
+  }
+}
+
+type CheckoutMode = 'credits' | 'byo';
+
+interface StripeCheckoutOptions {
+  sessionUrl: string;
+  defaultMode: CheckoutMode;
+  onSuccess?: (payload: {
+    sessionId?: string | null;
+    mode: CheckoutMode;
+    url: string;
+  }) => void | Promise<void>;
+  onCancel?: () => void;
+  onClosed?: () => void;
+}
+
 // Function to open Stripe checkout in a BrowserWindow
-async function openStripeCheckout(sessionUrl: string): Promise<void> {
+async function openStripeCheckout(
+  options: StripeCheckoutOptions
+): Promise<void> {
   return new Promise(resolve => {
+    const parent = BrowserWindow.getAllWindows()[0];
     const win = new BrowserWindow({
       width: 800,
       height: 1000,
@@ -183,42 +297,105 @@ async function openStripeCheckout(sessionUrl: string): Promise<void> {
         contextIsolation: true,
         webSecurity: true,
       },
-      parent: BrowserWindow.getAllWindows()[0], // Use first available window as parent
+      parent,
       modal: true,
     });
 
-    win.loadURL(sessionUrl);
+    win.loadURL(options.sessionUrl);
 
-    // Handle redirect events (will-redirect is primary, will-navigate as safety net)
+    let completed = false;
+
+    const cleanup = () => {
+      win.webContents.removeListener('will-redirect', handleRedirect);
+      win.webContents.removeListener('will-navigate', handleRedirect);
+      win.webContents.removeListener('did-fail-load', handleLoadFailure);
+    };
+
+    const finish = (cb?: () => void) => {
+      if (completed) return;
+      completed = true;
+      cleanup();
+      try {
+        cb?.();
+      } catch (err) {
+        log.error('[credit-handler] Error during checkout callback:', err);
+      }
+      resolve();
+    };
+
+    const parseMode = (raw: string | null): CheckoutMode => {
+      return raw === 'byo' ? 'byo' : 'credits';
+    };
+
+    const handleSuccess = async (payload: {
+      sessionId?: string | null;
+      mode: CheckoutMode;
+      url: string;
+    }) => {
+      try {
+        if (options.onSuccess) {
+          await options.onSuccess(payload);
+        }
+      } catch (err) {
+        log.error('[credit-handler] onSuccess handler threw:', err);
+      } finally {
+        finish();
+        if (!win.isDestroyed()) {
+          win.close();
+        }
+      }
+    };
+
     const handleRedirect = (event: Electron.Event, url: string) => {
-      if (url.startsWith('https://stage5.tools/checkout/success')) {
-        event.preventDefault(); // stay on current page
-        const u = new URL(url);
-        const sessionId = u.searchParams.get('session_id');
-        handleStripeSuccess(sessionId);
+      try {
+        const targetUrl = new URL(url);
+        const pathname = targetUrl.pathname;
+
+        if (pathname.startsWith('/checkout/success')) {
+          event.preventDefault();
+          const mode = parseMode(
+            targetUrl.searchParams.get('mode') ?? options.defaultMode
+          );
+          const sessionId = targetUrl.searchParams.get('session_id');
+          handleSuccess({ sessionId, mode, url });
+          return;
+        }
+
+        if (pathname.startsWith('/checkout/cancelled')) {
+          event.preventDefault();
+          finish(options.onCancel);
+          if (!win.isDestroyed()) {
+            win.close();
+          }
+        }
+      } catch (err) {
+        log.error(
+          '[credit-handler] Failed to parse checkout redirect URL:',
+          err
+        );
+      }
+    };
+
+    const handleLoadFailure = (
+      _event: Electron.Event,
+      errorCode: number,
+      errorDescription: string
+    ) => {
+      log.error(
+        `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
+      );
+      finish();
+      if (!win.isDestroyed()) {
         win.close();
-        resolve();
-      } else if (url.startsWith('https://stage5.tools/checkout/cancelled')) {
-        event.preventDefault();
-        win.close();
-        resolve();
       }
     };
 
     win.webContents.on('will-redirect', handleRedirect);
     win.webContents.on('will-navigate', handleRedirect); // Extra safety net for Windows/Linux
-
-    // Handle network failures to prevent freezing
-    win.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
-      log.error(
-        `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
-      );
-      win.close();
-      resolve();
-    });
+    win.webContents.on('did-fail-load', handleLoadFailure);
 
     win.on('closed', () => {
-      resolve();
+      finish(options.onClosed);
     });
   });
 }
@@ -330,9 +507,44 @@ export async function handleResetCreditsToZero(): Promise<{
 }
 
 export async function handleStripeSuccess(
-  sessionId?: string | null
+  sessionId?: string | null,
+  opts: { mode?: CheckoutMode; window?: BrowserWindow | null } = {}
 ): Promise<void> {
-  if (!sessionId) return;
+  const mode = opts.mode ?? 'credits';
+  const targetWindow = opts.window ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+  if (mode === 'byo') {
+    try {
+      log.info(
+        '[credit-handler] BYO OpenAI unlock payment detected. Refreshing entitlements...'
+      );
+      const snapshot = await syncEntitlements({
+        window: targetWindow ?? undefined,
+      });
+      if (targetWindow && !targetWindow.isDestroyed()) {
+        targetWindow.webContents.send('byo-unlock-confirmed', snapshot);
+      }
+      log.info(
+        `[credit-handler] Entitlements synced. BYO unlocked: ${snapshot.byoOpenAi}`
+      );
+    } catch (error: any) {
+      log.error(
+        '[credit-handler] Failed to sync entitlements after BYO unlock:',
+        error
+      );
+      if (targetWindow && !targetWindow.isDestroyed()) {
+        targetWindow.webContents.send('byo-unlock-error', {
+          message: error?.message || 'Failed to refresh entitlements',
+        });
+      }
+    }
+    return;
+  }
+
+  if (!sessionId) {
+    log.warn('[credit-handler] Stripe success without sessionId for credits.');
+    return;
+  }
 
   try {
     log.info(`[credit-handler] Processing successful payment: ${sessionId}`);
@@ -353,19 +565,23 @@ export async function handleStripeSuccess(
 
     if (response?.data && typeof response.data.creditBalance === 'number') {
       const credits = Number(response.data.creditBalance) || 0;
-      const perHour = Math.max(1, Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800);
+      const perHour = Math.max(
+        1,
+        Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800
+      );
       const hours = credits / perHour;
       store.set('balanceCredits', credits);
       store.set('creditsPerHour', perHour);
-      log.info(`[credit-handler] Updated credit balance: ${credits} credits (${hours} hours)`);
+      log.info(
+        `[credit-handler] Updated credit balance: ${credits} credits (${hours} hours)`
+      );
 
-      const mainWindow = BrowserWindow.getAllWindows()[0];
-      if (mainWindow) {
-        mainWindow.webContents.send('credits-updated', {
+      if (targetWindow && !targetWindow.isDestroyed()) {
+        targetWindow.webContents.send('credits-updated', {
           creditBalance: credits,
           hoursBalance: hours,
         });
-        mainWindow.webContents.send('checkout-confirmed');
+        targetWindow.webContents.send('checkout-confirmed');
       }
     }
   } catch (error) {

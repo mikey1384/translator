@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useUIStore } from '../state/ui-store';
 import Switch from '../components/Switch';
 import * as SubtitlesIPC from '../ipc/subtitles';
+import { useAiStore } from '../state';
+import { logButton } from '../utils/logger';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -69,7 +71,436 @@ export default function SettingsPage() {
 
       {/* —————————————————  CREDIT CARD  ————————————————— */}
       <CreditCard />
+
+      <ByoOpenAiSection />
     </div>
+  );
+}
+
+const byoCardStyles = css`
+  background: rgba(40, 40, 40, 0.6);
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 660px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+`;
+
+function ByoOpenAiSection() {
+  const { t } = useTranslation();
+  const [showKey, setShowKey] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  const initialized = useAiStore(state => state.initialized);
+  const initialize = useAiStore(state => state.initialize);
+  const byoUnlocked = useAiStore(state => state.byoUnlocked);
+  const entitlementsLoading = useAiStore(state => state.entitlementsLoading);
+  const entitlementsError = useAiStore(state => state.entitlementsError);
+  const unlockPending = useAiStore(state => state.unlockPending);
+  const unlockError = useAiStore(state => state.unlockError);
+  const lastFetched = useAiStore(state => state.lastFetched);
+  const keyValue = useAiStore(state => state.keyValue);
+  const keyPresent = useAiStore(state => state.keyPresent);
+  const keyLoading = useAiStore(state => state.keyLoading);
+  const savingKey = useAiStore(state => state.savingKey);
+  const validatingKey = useAiStore(state => state.validatingKey);
+  const useByo = useAiStore(state => state.useByo);
+  const setKeyValue = useAiStore(state => state.setKeyValue);
+  const saveKey = useAiStore(state => state.saveKey);
+  const clearKey = useAiStore(state => state.clearKey);
+  const startUnlock = useAiStore(state => state.startUnlock);
+  const validateKey = useAiStore(state => state.validateKey);
+  const refreshEntitlements = useAiStore(state => state.refreshEntitlements);
+  const setUseByo = useAiStore(state => state.setUseByo);
+
+  useEffect(() => {
+    if (!initialized) {
+      initialize().catch(err => {
+        console.error('[ByoOpenAiSection] init failed', err);
+      });
+    }
+  }, [initialized, initialize]);
+
+  useEffect(() => {
+    setStatusMessage(null);
+    setStatusError(null);
+  }, [keyValue]);
+
+  const handleUnlock = async () => {
+    setStatusMessage(null);
+    setStatusError(null);
+    logButton('settings_byo_unlock_click');
+    await startUnlock();
+  };
+
+  const handleSave = async () => {
+    setStatusMessage(null);
+    setStatusError(null);
+    try {
+      const result = await saveKey();
+      if (result.success) {
+        setStatusMessage(
+          keyValue.trim()
+            ? t('settings.byoOpenAi.keySaved', 'API key saved locally.')
+            : t('settings.byoOpenAi.keyCleared', 'API key cleared.')
+        );
+        logButton('settings_byo_key_save', {
+          hasKey: Boolean(keyValue.trim()),
+        });
+      } else if (result.error) {
+        logButton('settings_byo_key_save_error', { error: result.error });
+        setStatusError(result.error);
+      }
+    } catch (err: any) {
+      logButton('settings_byo_key_save_exception');
+      setStatusError(err?.message || String(err));
+    }
+  };
+
+  const handleClear = async () => {
+    setStatusMessage(null);
+    setStatusError(null);
+    try {
+      const result = await clearKey();
+      if (result.success) {
+        setStatusMessage(
+          t('settings.byoOpenAi.keyCleared', 'API key cleared.')
+        );
+        logButton('settings_byo_key_clear');
+      } else if (result.error) {
+        logButton('settings_byo_key_clear_error', { error: result.error });
+        setStatusError(result.error);
+      }
+    } catch (err: any) {
+      logButton('settings_byo_key_clear_exception');
+      setStatusError(err?.message || String(err));
+    }
+  };
+
+  const handleTest = async () => {
+    setStatusMessage(null);
+    setStatusError(null);
+    try {
+      const result = await validateKey();
+      logButton('settings_byo_key_test', { ok: result.ok });
+      if (result.ok) {
+        setStatusMessage(
+          t('settings.byoOpenAi.keyValid', 'API key validated successfully.')
+        );
+      } else {
+        setStatusError(
+          result.error ||
+            t('settings.byoOpenAi.keyInvalid', 'API key validation failed.')
+        );
+      }
+    } catch (err: any) {
+      logButton('settings_byo_key_test_exception');
+      setStatusError(err?.message || String(err));
+    }
+  };
+
+  const handleToggleUseByo = async (value: boolean) => {
+    setStatusMessage(null);
+    setStatusError(null);
+    const result = await setUseByo(value);
+    if (!result.success) {
+      setStatusError(
+        result.error ||
+          t('settings.byoOpenAi.toggleError', 'Failed to update preference.')
+      );
+      return;
+    }
+    setStatusMessage(
+      value
+        ? t(
+            'settings.byoOpenAi.toggleOn',
+            'Using your OpenAI key for AI tasks.'
+          )
+        : t(
+            'settings.byoOpenAi.toggleOff',
+            'Using Stage5 credits for AI tasks.'
+          )
+    );
+  };
+
+  const renderLockedState = () => {
+    const loading = entitlementsLoading && !byoUnlocked;
+
+    return (
+      <>
+        <p
+          style={{
+            color: colors.textDim,
+            lineHeight: 1.5,
+            margin: 0,
+          }}
+        >
+          {t(
+            'settings.byoOpenAi.description',
+            'Unlock a one-time upgrade to use your own OpenAI API key. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your account instead of consuming Stage5 credits.'
+          )}
+        </p>
+
+        {entitlementsError && (
+          <div
+            style={{
+              background: 'rgba(255,36,66,0.1)',
+              border: `1px solid ${colors.danger}`,
+              borderRadius: 6,
+              padding: '12px 14px',
+              color: colors.danger,
+            }}
+          >
+            {entitlementsError}{' '}
+            <button
+              onClick={() => refreshEntitlements()}
+              style={{
+                color: colors.primary,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                marginLeft: 6,
+              }}
+            >
+              {t('common.retry', 'Retry')}
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={handleUnlock}
+          disabled={unlockPending || loading}
+          style={{
+            padding: '12px 16px',
+            fontWeight: 600,
+            background: colors.primary,
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            cursor: unlockPending || loading ? 'wait' : 'pointer',
+            opacity: unlockPending || loading ? 0.7 : 1,
+          }}
+        >
+          {unlockPending
+            ? t('settings.byoOpenAi.unlocking', 'Opening checkout…')
+            : t('settings.byoOpenAi.unlockCta', 'Unlock for $10')}
+        </button>
+
+        {unlockError && (
+          <p style={{ color: colors.danger, margin: 0 }}>{unlockError}</p>
+        )}
+
+        <p style={{ color: colors.textDim, fontSize: '.9rem', margin: 0 }}>
+          {t(
+            'settings.byoOpenAi.unlockHint',
+            'Once unlocked, add your OpenAI key here at any time to toggle direct billing on your account.'
+          )}
+        </p>
+      </>
+    );
+  };
+
+  const renderUnlockedState = () => {
+    return (
+      <>
+        <p
+          style={{
+            color: colors.textDim,
+            lineHeight: 1.5,
+            margin: 0,
+          }}
+        >
+          {t(
+            'settings.byoOpenAi.unlockedDescription',
+            'Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.'
+          )}
+        </p>
+
+        <label
+          style={{
+            color: colors.dark,
+            fontWeight: 600,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
+          <span>{t('settings.byoOpenAi.apiKeyLabel', 'OpenAI API Key')}</span>
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+            }}
+          >
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={keyValue}
+              onChange={e => setKeyValue(e.target.value)}
+              placeholder="sk-..."
+              disabled={keyLoading || savingKey}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 6,
+                border: `1px solid ${colors.border}`,
+                background: colors.light,
+                color: colors.dark,
+                fontFamily: 'monospace',
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey(v => !v)}
+              style={{
+                padding: '10px 12px',
+                background: colors.grayLight,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                cursor: 'pointer',
+              }}
+            >
+              {showKey
+                ? t('settings.byoOpenAi.hide', 'Hide')
+                : t('settings.byoOpenAi.show', 'Show')}
+            </button>
+          </div>
+        </label>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <button
+            onClick={handleSave}
+            disabled={savingKey || validatingKey}
+            style={{
+              padding: '10px 16px',
+              background: colors.primary,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              cursor: savingKey || validatingKey ? 'wait' : 'pointer',
+              opacity: savingKey || validatingKey ? 0.7 : 1,
+            }}
+          >
+            {savingKey
+              ? t('settings.byoOpenAi.saving', 'Saving…')
+              : t('common.save', 'Save')}
+          </button>
+          <button
+            onClick={handleTest}
+            disabled={validatingKey || !keyValue.trim()}
+            style={{
+              padding: '10px 16px',
+              background: colors.grayLight,
+              color: colors.dark,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 6,
+              cursor: validatingKey ? 'wait' : 'pointer',
+              opacity: validatingKey ? 0.7 : 1,
+            }}
+          >
+            {validatingKey
+              ? t('settings.byoOpenAi.testing', 'Testing…')
+              : t('settings.byoOpenAi.test', 'Test Key')}
+          </button>
+          <button
+            onClick={handleClear}
+            disabled={savingKey || validatingKey || (!keyPresent && !keyValue)}
+            style={{
+              padding: '10px 16px',
+              background: 'transparent',
+              color: colors.textDim,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 6,
+              cursor: savingKey || validatingKey ? 'wait' : 'pointer',
+            }}
+          >
+            {t('settings.byoOpenAi.clear', 'Clear Key')}
+          </button>
+        </div>
+
+        {keyLoading && (
+          <p style={{ color: colors.textDim, margin: 0 }}>
+            {t('settings.byoOpenAi.loadingKey', 'Loading saved key…')}
+          </p>
+        )}
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            padding: '12px 14px',
+            border: `1px solid ${colors.border}`,
+            borderRadius: 8,
+            background: colors.grayLight,
+            marginTop: 4,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              color: colors.dark,
+            }}
+          >
+            <span style={{ fontWeight: 600 }}>
+              {t('settings.byoOpenAi.toggleLabel', 'Use my OpenAI key')}
+            </span>
+            <span style={{ color: colors.textDim, fontSize: '.85rem' }}>
+              {t(
+                'settings.byoOpenAi.toggleHelp',
+                'When off, AI Credits are used.'
+              )}
+            </span>
+          </div>
+          <Switch
+            checked={useByo}
+            onChange={value => handleToggleUseByo(value)}
+            disabled={!keyPresent && !keyValue.trim()}
+            aria-label={t(
+              'settings.byoOpenAi.toggleAria',
+              'Toggle using your OpenAI key'
+            )}
+          />
+        </div>
+
+        {statusMessage && (
+          <p style={{ color: colors.primary, margin: 0 }}>{statusMessage}</p>
+        )}
+        {statusError && (
+          <p style={{ color: colors.danger, margin: 0 }}>{statusError}</p>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <section className={byoCardStyles}>
+      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>
+        {t('settings.byoOpenAi.title', 'Bring Your Own OpenAI Key')}
+      </h2>
+
+      {lastFetched && (
+        <span style={{ color: colors.textDim, fontSize: '.8rem' }}>
+          {t('settings.byoOpenAi.lastSynced', 'Last synced')}: {lastFetched}
+        </span>
+      )}
+
+      {byoUnlocked ? renderUnlockedState() : renderLockedState()}
+    </section>
   );
 }
 

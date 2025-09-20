@@ -47,8 +47,15 @@ import {
   handleResetCredits,
   handleResetCreditsToZero,
   handleStripeSuccess,
+  handleCreateByoUnlockSession,
   getDeviceId,
 } from './handlers/credit-handlers.js';
+import {
+  initEntitlementsManager,
+  getCachedEntitlements,
+  syncEntitlements,
+} from './services/entitlements-manager.js';
+import { initAiProvider, validateApiKey } from './services/ai-provider.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -59,6 +66,8 @@ const settingsStore = new Store<{
   subtitleTargetLanguage: string;
   apiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
+  byoOpenAiUnlocked: boolean;
+  useByoOpenAi: boolean;
 }>({
   name: 'app-settings',
   defaults: {
@@ -66,9 +75,14 @@ const settingsStore = new Store<{
     subtitleTargetLanguage: 'original',
     apiKey: null,
     videoPlaybackPositions: {},
+    byoOpenAiUnlocked: false,
+    useByoOpenAi: false,
   },
 });
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
+
+initEntitlementsManager(settingsStore);
+initAiProvider(settingsStore);
 
 if (!app.requestSingleInstanceLock()) {
   log.info('[main.ts] Another instance detected. Quitting this instance.');
@@ -496,6 +510,9 @@ try {
 
   ipcMain.handle('get-credit-balance', handleGetCreditBalance);
   ipcMain.handle('create-checkout-session', handleCreateCheckoutSession);
+  ipcMain.handle('create-byo-unlock-session', () =>
+    handleCreateByoUnlockSession()
+  );
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
   ipcMain.handle('get-device-id', () => getDeviceId());
@@ -523,6 +540,12 @@ try {
 
   // yt-dlp auto update is always on; no IPC settings
 
+  ipcMain.handle('get-entitlements', () => getCachedEntitlements());
+  ipcMain.handle('refresh-entitlements', async () => {
+    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    return syncEntitlements({ window: mainWin ?? undefined });
+  });
+
   // Persisted cookies browser preference
   ipcMain.handle(
     'settings:getPreferredCookiesBrowser',
@@ -533,10 +556,48 @@ try {
     settingsHandlers.setPreferredCookiesBrowser
   );
 
+  ipcMain.handle('get-openai-api-key', () => settingsHandlers.getApiKey());
+  ipcMain.handle('set-openai-api-key', async (event, apiKey: string) => {
+    const result = await settingsHandlers.setApiKey(event, apiKey);
+    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send('openai-api-key-changed', {
+        hasKey: result.success && Boolean(apiKey?.trim?.()),
+      });
+    }
+    return result;
+  });
+  ipcMain.handle('clear-openai-api-key', async () => {
+    const result = await settingsHandlers.clearApiKey();
+    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send('openai-api-key-changed', { hasKey: false });
+    }
+    return result;
+  });
+  ipcMain.handle('validate-openai-api-key', async (_event, apiKey?: string) => {
+    const provided = typeof apiKey === 'string' ? apiKey.trim() : '';
+    const keyToCheck = provided || settingsHandlers.getApiKey();
+    if (!keyToCheck) {
+      return { ok: false, error: 'Missing API key' };
+    }
+    return validateApiKey(keyToCheck);
+  });
+  ipcMain.handle('get-byo-provider-enabled', () =>
+    settingsHandlers.getUseByoOpenAi()
+  );
+  ipcMain.handle('set-byo-provider-enabled', (_event, value: boolean) =>
+    settingsHandlers.setUseByoOpenAi(Boolean(value))
+  );
+
   // Handle Stripe checkout completion messages from embedded window
   ipcMain.on('stripe-success', async (_event, data) => {
     log.info('[main.ts] Received stripe-success message:', data);
-    await handleStripeSuccess(data.sessionId);
+    const mode = data?.mode === 'byo' ? 'byo' : 'credits';
+    await handleStripeSuccess(data.sessionId, {
+      mode,
+      window: mainWindow,
+    });
   });
 
   ipcMain.on('stripe-cancelled', (_event, data) => {
@@ -744,6 +805,10 @@ async function createWindow() {
   } catch (err: any) {
     log.error('[main.ts] Error initializing update handlers:', err);
   }
+
+  syncEntitlements({ window: mainWindow, silent: true }).catch(err => {
+    log.warn('[main.ts] Initial entitlements sync failed:', err);
+  });
 }
 
 function createApplicationMenu() {

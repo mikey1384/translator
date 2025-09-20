@@ -198,6 +198,7 @@
     "title": "Часы использования ИИ",
     "loading": "Загрузка...",
     "credits": "кредиты",
+    "usingApiKey": "Используется API‑ключ",
     "hours": "часы",
     "buyCredits": "Купить кредиты",
     "redirectingToPayment": "Открытие безопасной оплаты…",

@@ -198,6 +198,7 @@
     "title": "Heures d'utilisation IA",
     "loading": "Chargement...",
     "credits": "crédits",
+    "usingApiKey": "Utilisation de la clé API",
     "hours": "heures",
     "buyCredits": "Acheter des crédits",
     "redirectingToPayment": "Ouverture paiement sécurisé…",

@@ -16,7 +16,7 @@ interface CreditState {
 
 export const useCreditStore = create<CreditState>((set, get) => {
   const unsubCredits = SystemIPC.onCreditsUpdated(
-    ({ creditBalance, hoursBalance }) => {
+    ({ creditBalance, hoursBalance: _hoursBalance }) => {
       const credits = creditBalance ?? null;
       // Unify: compute hours using the translation-based estimate
       const hours =
@@ -38,12 +38,17 @@ export const useCreditStore = create<CreditState>((set, get) => {
     get().refresh();
   });
 
+  const unsubCancelled = SystemIPC.onCheckoutCancelled(() => {
+    set({ checkoutPending: false });
+  });
+
   // Clean up on hot reload during development
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
       unsubCredits();
       unsubPending();
       unsubConfirmed();
+      unsubCancelled();
     });
   }
 
@@ -80,6 +85,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
       unsubCredits();
       unsubPending();
       unsubConfirmed();
+      unsubCancelled();
     },
   };
 });

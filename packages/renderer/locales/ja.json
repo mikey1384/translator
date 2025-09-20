@@ -198,6 +198,7 @@
     "title": "AI使用時間",
     "loading": "読み込み中...",
     "credits": "クレジット",
+    "usingApiKey": "APIキーを使用中",
     "hours": "時間",
     "buyCredits": "クレジットを購入",
     "redirectingToPayment": "安全な決済を開いています…",

@@ -286,6 +286,8 @@ const electronAPI = {
 
   createCheckoutSession: (packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO') =>
     ipcRenderer.invoke('create-checkout-session', packId),
+  createByoUnlockSession: (): Promise<void> =>
+    ipcRenderer.invoke('create-byo-unlock-session'),
 
   // Admin credit reset function
   resetCredits: (): Promise<{
@@ -299,6 +301,24 @@ const electronAPI = {
     success: boolean;
     error?: string;
   }> => ipcRenderer.invoke('reset-credits-to-zero'),
+  getOpenAiApiKey: (): Promise<string | null> =>
+    ipcRenderer.invoke('get-openai-api-key'),
+  setOpenAiApiKey: (
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-openai-api-key', apiKey),
+  clearOpenAiApiKey: (): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('clear-openai-api-key'),
+  validateOpenAiApiKey: (
+    apiKey?: string
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('validate-openai-api-key', apiKey),
+  getByoProviderEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-byo-provider-enabled'),
+  setByoProviderEnabled: (
+    enabled: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-provider-enabled', enabled),
 
   // Get device ID for admin button visibility
   getDeviceId: (): Promise<string> => ipcRenderer.invoke('get-device-id'),
@@ -332,6 +352,61 @@ const electronAPI = {
     const handler = () => callback();
     ipcRenderer.on('checkout-confirmed', handler);
     return () => ipcRenderer.removeListener('checkout-confirmed', handler);
+  },
+  onCheckoutCancelled: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('checkout-cancelled', handler);
+    return () => ipcRenderer.removeListener('checkout-cancelled', handler);
+  },
+
+  getEntitlements: (): Promise<{ byoOpenAi: boolean; fetchedAt?: string }> =>
+    ipcRenderer.invoke('get-entitlements'),
+  refreshEntitlements: (): Promise<{
+    byoOpenAi: boolean;
+    fetchedAt?: string;
+  }> => ipcRenderer.invoke('refresh-entitlements'),
+  onEntitlementsUpdated: (
+    callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+  ) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('entitlements-updated', handler);
+    return () => ipcRenderer.removeListener('entitlements-updated', handler);
+  },
+  onEntitlementsError: (callback: (payload: { message: string }) => void) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('entitlements-error', handler);
+    return () => ipcRenderer.removeListener('entitlements-error', handler);
+  },
+  onByoUnlockPending: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('byo-unlock-pending', handler);
+    return () => ipcRenderer.removeListener('byo-unlock-pending', handler);
+  },
+  onByoUnlockConfirmed: (
+    callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+  ) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('byo-unlock-confirmed', handler);
+    return () => ipcRenderer.removeListener('byo-unlock-confirmed', handler);
+  },
+  onByoUnlockCancelled: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('byo-unlock-cancelled', handler);
+    ipcRenderer.on('byo-unlock-closed', handler);
+    return () => {
+      ipcRenderer.removeListener('byo-unlock-cancelled', handler);
+      ipcRenderer.removeListener('byo-unlock-closed', handler);
+    };
+  },
+  onByoUnlockError: (callback: (payload: { message?: string }) => void) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('byo-unlock-error', handler);
+    return () => ipcRenderer.removeListener('byo-unlock-error', handler);
+  },
+  onOpenAiApiKeyChanged: (callback: (payload: { hasKey: boolean }) => void) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('openai-api-key-changed', handler);
+    return () => ipcRenderer.removeListener('openai-api-key-changed', handler);
   },
 
   // App log channel (network/status messages from main)

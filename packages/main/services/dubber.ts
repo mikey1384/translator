@@ -7,7 +7,7 @@ import type {
   DubSegmentPayload,
   GenerateProgressCallback,
 } from '@shared-types/app';
-import { synthesizeDub } from './stage5-client.js';
+import { synthesizeDub as synthesizeDubAi } from './ai-provider.js';
 
 const MIN_DUB_SILENCE_GAP_SEC = 0.15;
 const MAX_DUB_COMPRESSION_RATIO = 1.35;
@@ -263,7 +263,7 @@ export async function generateDubbedMedia({
         operationId,
       });
 
-      const result = await synthesizeDub({
+      const result = await synthesizeDubAi({
         segments: batchSegments,
         voice,
         quality: 'standard',

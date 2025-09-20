@@ -186,7 +186,8 @@ export default function ProgressArea({
   const shouldShowCreditBalance = Boolean(
     operationId &&
       (operationId.startsWith('translate-') ||
-        operationId.startsWith('transcribe-'))
+        operationId.startsWith('transcribe-') ||
+        operationId.startsWith('dub-'))
   );
 
   return (

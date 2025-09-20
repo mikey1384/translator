@@ -198,6 +198,7 @@
     "title": "AI使用时长",
     "loading": "加载中...",
     "credits": "积分",
+    "usingApiKey": "正在使用 API 密钥",
     "hours": "小时",
     "buyCredits": "购买积分",
     "redirectingToPayment": "正在打开安全支付…",

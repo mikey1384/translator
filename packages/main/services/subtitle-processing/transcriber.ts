@@ -9,7 +9,7 @@ import {
 } from './constants.js';
 import fs from 'fs';
 import { throwIfAborted } from './utils.js';
-import * as stage5Client from '../stage5-client.js';
+import { transcribe as transcribeAi } from '../ai-provider.js';
 
 export async function transcribeChunk({
   chunkIndex,
@@ -44,7 +44,7 @@ export async function transcribeChunk({
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       throwIfAborted(signal);
       try {
-        res = await stage5Client.transcribe({
+        res = await transcribeAi({
           filePath: chunkPath,
           promptContext,
           signal,
@@ -183,6 +183,12 @@ export async function transcribeChunk({
     if (
       error?.message === 'insufficient-credits' ||
       /Insufficient credits/i.test(String(error?.message || error))
+    ) {
+      throw error;
+    }
+    if (
+      error?.message === 'openai-key-invalid' ||
+      error?.message === 'openai-rate-limit'
     ) {
       throw error;
     }

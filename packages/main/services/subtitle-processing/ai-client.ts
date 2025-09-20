@@ -1,6 +1,6 @@
 import { SubtitleProcessingError } from './errors.js';
 import fs from 'fs';
-import * as stage5Client from '../stage5-client.js';
+import { translate as translateAi, getActiveProvider } from '../ai-provider.js';
 import log from 'electron-log';
 import { AI_MODELS } from '../../../shared/constants/index.js';
 
@@ -139,7 +139,9 @@ export async function callAIModel({
   operationId: string;
   retryAttempts?: number;
 }): Promise<string> {
-  log.debug(`[${operationId}] Using Stage5 API for translation`);
+  log.debug(
+    `[${operationId}] Using ${getActiveProvider()} provider for translation`
+  );
 
   let currentAttempt = 0;
   while (currentAttempt < retryAttempts) {
@@ -151,7 +153,7 @@ export async function callAIModel({
         throw new DOMException('Operation cancelled', 'AbortError');
       }
 
-      const completion = await stage5Client.translate({
+      const completion = await translateAi({
         messages,
         model,
         reasoning,

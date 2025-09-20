@@ -194,6 +194,17 @@
       "mixVoice": "More voice"
     }
   },
+  "credits": {
+    "title": "Ore di utilizzo IA",
+    "loading": "Caricamento...",
+    "credits": "crediti",
+    "usingApiKey": "Uso chiave API",
+    "hours": "ore",
+    "buyCredits": "Acquista crediti",
+    "redirectingToPayment": "Apertura pagamento sicuro…",
+    "description": "Scegli tra i pacchetti da ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h) o ${{pack3Price}} ({{pack3Hours}}h)",
+    "notEnough": "Crediti insufficienti. Acquista altri crediti per continuare."
+  },
   "videoPlayer": {
     "enterFullscreen": "Entra a schermo intero",
     "exitFullscreen": "Esci da schermo intero",

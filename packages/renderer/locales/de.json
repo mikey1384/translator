@@ -198,6 +198,7 @@
     "title": "KI-Nutzungsstunden",
     "loading": "Lädt...",
     "credits": "Credits",
+    "usingApiKey": "API‑Schlüssel wird verwendet",
     "hours": "Stunden",
     "buyCredits": "Credits kaufen",
     "redirectingToPayment": "Sichere Zahlung öffnen…",

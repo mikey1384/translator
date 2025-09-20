@@ -31,7 +31,7 @@ import {
 import { transcribePass } from '../services/subtitle-processing/pipeline/transcribe-pass.js';
 import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 import { generateDubbedMedia } from '../services/dubber.js';
-import { synthesizeDub } from '../services/stage5-client.js';
+import { synthesizeDub as synthesizeDubAi } from '../services/ai-provider.js';
 import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
@@ -760,7 +760,7 @@ export async function previewDubVoice({
 }> {
   const phrase = (text ?? 'Hello').trim() || 'Hello';
   try {
-    const result = await synthesizeDub({
+    const result = await synthesizeDubAi({
       segments: [
         {
           index: 1,

@@ -536,6 +536,7 @@ declare module '@shared-types/app' {
     createCheckoutSession: (
       packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
     ) => Promise<string | null>;
+    createByoUnlockSession: () => Promise<void>;
     resetCredits: () => Promise<{
       success: boolean;
       creditsAdded?: number;
@@ -547,6 +548,18 @@ declare module '@shared-types/app' {
     }>;
     getDeviceId: () => Promise<string>;
     getAdminDeviceId: () => Promise<string | null>;
+    getOpenAiApiKey: () => Promise<string | null>;
+    setOpenAiApiKey: (
+      apiKey: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    clearOpenAiApiKey: () => Promise<{ success: boolean; error?: string }>;
+    validateOpenAiApiKey: (
+      apiKey?: string
+    ) => Promise<{ ok: boolean; error?: string }>;
+    getByoProviderEnabled: () => Promise<boolean>;
+    setByoProviderEnabled: (
+      enabled: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
     onCreditsUpdated: (
       callback: (payload: {
         creditBalance: number;
@@ -555,6 +568,32 @@ declare module '@shared-types/app' {
     ) => () => void;
     onCheckoutPending: (callback: () => void) => () => void;
     onCheckoutConfirmed: (callback: () => void) => () => void;
+    onCheckoutCancelled: (callback: () => void) => () => void;
+    getEntitlements: () => Promise<{
+      byoOpenAi: boolean;
+      fetchedAt?: string;
+    }>;
+    refreshEntitlements: () => Promise<{
+      byoOpenAi: boolean;
+      fetchedAt?: string;
+    }>;
+    onEntitlementsUpdated: (
+      callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+    ) => () => void;
+    onEntitlementsError: (
+      callback: (payload: { message: string }) => void
+    ) => () => void;
+    onByoUnlockPending: (callback: () => void) => () => void;
+    onByoUnlockConfirmed: (
+      callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+    ) => () => void;
+    onByoUnlockCancelled: (callback: () => void) => () => void;
+    onByoUnlockError: (
+      callback: (payload: { message?: string }) => void
+    ) => () => void;
+    onOpenAiApiKeyChanged: (
+      callback: (payload: { hasKey: boolean }) => void
+    ) => () => void;
 
     // Update System
     updateCheck: () => Promise<any>;

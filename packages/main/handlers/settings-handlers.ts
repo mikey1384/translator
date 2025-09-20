@@ -13,6 +13,8 @@ export type SettingsStoreType = Store<{
   subtitleTargetLanguage: string;
   apiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
+  byoOpenAiUnlocked: boolean;
+  useByoOpenAi: boolean;
   preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
 }>;
 
@@ -144,6 +146,63 @@ export function buildSettingsHandlers(opts: {
     return typeof pos === 'number' && pos >= 0 ? pos : null;
   }
 
+  function getApiKey(): string | null {
+    try {
+      const key = store.get('apiKey', null);
+      return typeof key === 'string' && key.length > 0 ? key : null;
+    } catch (err) {
+      log.error('[settings] Failed to read stored API key:', err);
+      return null;
+    }
+  }
+
+  async function setApiKey(
+    _evt: any,
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (typeof apiKey !== 'string' || !apiKey.trim()) {
+        store.set('apiKey', null);
+        return { success: true };
+      }
+      const trimmed = apiKey.trim();
+      store.set('apiKey', trimmed);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist API key:', err);
+      return { success: false, error: err?.message || 'Failed to save key' };
+    }
+  }
+
+  async function clearApiKey(): Promise<{ success: boolean; error?: string }> {
+    try {
+      store.set('apiKey', null);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to clear API key:', err);
+      return { success: false, error: err?.message || 'Failed to clear key' };
+    }
+  }
+
+  function getUseByoOpenAi(): boolean {
+    try {
+      return Boolean(store.get('useByoOpenAi', false));
+    } catch (err) {
+      log.error('[settings] Failed to read BYO toggle:', err);
+      return false;
+    }
+  }
+
+  function setUseByoOpenAi(value: boolean): { success: boolean; error?: string } {
+    try {
+      store.set('useByoOpenAi', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist BYO toggle:', err);
+      return { success: false, error: err?.message || 'Failed to save toggle' };
+    }
+  }
+
   /* ------------------------------------------------ */
   return {
     getLocaleUrl,
@@ -153,6 +212,11 @@ export function buildSettingsHandlers(opts: {
     setSubtitleTargetLanguage,
     saveVideoPlaybackPosition,
     getVideoPlaybackPosition,
+    getApiKey,
+    setApiKey,
+    clearApiKey,
+    getUseByoOpenAi,
+    setUseByoOpenAi,
     // yt-dlp auto update is always on
 
     // Persisted cookie browser preference

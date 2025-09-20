@@ -21,6 +21,7 @@ import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
+import { useAiStore } from '../state';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
@@ -29,6 +30,12 @@ import { useRef } from 'react';
 
 export default function AppContent() {
   const { t } = useTranslation();
+  // Initialize BYO/OpenAI state at app load so pills reflect "Using API Key"
+  useEffect(() => {
+    try {
+      useAiStore.getState().initialize();
+    } catch {}
+  }, []);
   const { showSettings } = useUIStore();
   const { setDownload } = useUrlStore();
   const { url: videoUrl } = useVideoStore();

@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCreditStore } from '../state';
+import { useAiStore } from '../state';
 import { colors } from '../styles';
 
 const creditBalanceContainer = css`
@@ -46,6 +47,11 @@ interface CreditBalanceProps {
 export default function CreditBalance({ suffixText }: CreditBalanceProps) {
   const { t } = useTranslation();
   const { credits, hours, loading, error, checkoutPending } = useCreditStore();
+  const useByo = useAiStore(s => s.useByo);
+  const byoUnlocked = useAiStore(s => s.byoUnlocked);
+  const keyPresent = useAiStore(s => s.keyPresent);
+  const keyValue = useAiStore(s => s.keyValue);
+  const usingApiKey = Boolean(useByo && byoUnlocked && (keyPresent || (keyValue || '').trim()));
 
   if (loading) {
     return (
@@ -67,6 +73,14 @@ export default function CreditBalance({ suffixText }: CreditBalanceProps) {
     return (
       <div className={creditBalanceContainer}>
         <span className={creditText}>🔄 {t('credits.redirectingToPayment', 'Opening secure checkout…')}</span>
+      </div>
+    );
+  }
+
+  if (usingApiKey) {
+    return (
+      <div className={creditBalanceContainer}>
+        <span className={creditText}>🔑 {t('credits.usingApiKey', 'Using API Key')}</span>
       </div>
     );
   }
