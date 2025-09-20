@@ -181,6 +181,13 @@ export default function LogsModal({
           (navigator as any).userAgentData?.platform || navigator.platform;
         deviceInfo = { platform, ua } as any;
       }
+      // Ensure deviceId is present if available
+      try {
+        if (!deviceInfo?.deviceId) {
+          const id = await (window as any).electron?.getDeviceId?.();
+          if (id) deviceInfo = { ...deviceInfo, deviceId: id };
+        }
+      } catch {}
       const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
 ${JSON.stringify(deviceInfo)}
 
@@ -215,6 +222,13 @@ ${JSON.stringify(deviceInfo)}
           (navigator as any).userAgentData?.platform || navigator.platform;
         deviceInfo = { platform, ua } as any;
       }
+      // Ensure deviceId is present if available
+      try {
+        if (!deviceInfo?.deviceId) {
+          const id = await (window as any).electron?.getDeviceId?.();
+          if (id) deviceInfo = { ...deviceInfo, deviceId: id };
+        }
+      } catch {}
       const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
 ${JSON.stringify(deviceInfo)}
 

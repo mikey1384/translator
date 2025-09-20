@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useTaskStore, useUpdateStore } from '../state';
 import * as SubtitleIPC from '@ipc/subtitles';
 import { openLogs } from '../state/modal-store';
-import { logButton } from '../utils/logger';
+import { logButton, logSystem } from '../utils/logger';
 
 interface FloatingActionButtonsProps {
   scrollThreshold?: number;
@@ -62,11 +62,6 @@ const iconContainerStyles = css`
   gap: 4px;
 `;
 
-const iconTextStyles = css`
-  font-size: 11px;
-  font-weight: bold;
-`;
-
 const smallIconTextStyles = css`
   font-size: 10px;
   font-weight: bold;
@@ -101,7 +96,8 @@ export default function FloatingActionButtons({
 }: FloatingActionButtonsProps) {
   const { t } = useTranslation();
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
-  const [showScrollToBottomButton, setShowScrollToBottomButton] = useState(false);
+  const [showScrollToBottomButton, setShowScrollToBottomButton] =
+    useState(false);
   const [hoverHalf, setHoverHalf] = useState<null | 'top' | 'bottom'>(null);
   const { available, downloading, percent, downloaded, install, check } =
     useUpdateStore();
@@ -339,6 +335,15 @@ export default function FloatingActionButtons({
       <IconButton
         onClick={() => {
           logButton('open_logs');
+          // Log deviceId so it’s immediately visible in the logs panel
+          try {
+            (async () => {
+              const id = await (window as any).electron?.getDeviceId?.();
+              if (id) logSystem({ deviceId: id });
+            })();
+          } catch {
+            logSystem({ deviceId: 'unknown' });
+          }
           openLogs();
         }}
         aria-label={t('common.logs', 'Open logs')}
@@ -353,13 +358,41 @@ export default function FloatingActionButtons({
             xmlns="http://www.w3.org/2000/svg"
           >
             {/* Document with folded corner */}
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 2v6h6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
             {/* Bulleted log lines */}
             <circle cx="9" cy="11" r="1" fill="currentColor" />
-            <line x1="12" y1="11" x2="18" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <line
+              x1="12"
+              y1="11"
+              x2="18"
+              y2="11"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
             <circle cx="9" cy="15" r="1" fill="currentColor" />
-            <line x1="12" y1="15" x2="18" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <line
+              x1="12"
+              y1="15"
+              x2="18"
+              y2="15"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </svg>
         }
       />
@@ -473,19 +506,27 @@ export default function FloatingActionButtons({
                 /* top overlay */
                 linear-gradient(
                   to bottom,
-                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 0%,
-                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 50%,
+                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'}
+                    0%,
+                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'}
+                    50%,
                   transparent 50%,
                   transparent 100%
                 ),
                 /* bottom overlay */
-                linear-gradient(
-                  to bottom,
-                  transparent 0%,
-                  transparent 50%,
-                  ${showScrollToBottomButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 50%,
-                  ${showScrollToBottomButton ? 'transparent' : 'rgba(0,0,0,0.45)'} 100%
-                );
+                  linear-gradient(
+                    to bottom,
+                    transparent 0%,
+                    transparent 50%,
+                    ${showScrollToBottomButton
+                        ? 'transparent'
+                        : 'rgba(0,0,0,0.45)'}
+                      50%,
+                    ${showScrollToBottomButton
+                        ? 'transparent'
+                        : 'rgba(0,0,0,0.45)'}
+                      100%
+                  );
               pointer-events: none;
             }
 
@@ -495,12 +536,11 @@ export default function FloatingActionButtons({
               position: absolute;
               inset: 0;
               border-radius: 50%;
-              background:
-                ${hoverHalf === 'top' && showScrollToTopButton
-                  ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.22) 50%, transparent 50%, transparent 100%)`
-                  : hoverHalf === 'bottom' && showScrollToBottomButton
-                    ? `linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.22) 100%)`
-                    : 'none'};
+              background: ${hoverHalf === 'top' && showScrollToTopButton
+                ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.22) 50%, transparent 50%, transparent 100%)`
+                : hoverHalf === 'bottom' && showScrollToBottomButton
+                  ? `linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.22) 100%)`
+                  : 'none'};
               pointer-events: none;
             }
           `}

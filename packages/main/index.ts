@@ -510,9 +510,14 @@ try {
       const release = os.release();
       const cpu = os.cpus()?.[0]?.model ?? '';
       const isAppleSilicon = platform === 'darwin' && arch === 'arm64';
-      return { platform, arch, release, cpu, isAppleSilicon };
+      const deviceId = getDeviceId();
+      return { platform, arch, release, cpu, isAppleSilicon, deviceId };
     } catch {
-      return { platform: process.platform, arch: process.arch } as any;
+      return {
+        platform: process.platform,
+        arch: process.arch,
+        deviceId: getDeviceId(),
+      } as any;
     }
   });
 
