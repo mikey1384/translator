@@ -24,7 +24,10 @@ import { useCreditSystem } from './hooks/useCreditSystem';
 // Components
 
 // Utilities
-import { startTranscriptionFlow, executeDubGeneration } from './utils/subtitleGeneration';
+import {
+  startTranscriptionFlow,
+  executeDubGeneration,
+} from './utils/subtitleGeneration';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 
 export default function GenerateSubtitles() {

@@ -85,7 +85,7 @@ export async function transcribeWithOpenAi({
 
 export async function translateWithOpenAi({
   messages,
-  model = 'gpt-4o-mini',
+  model = 'gpt-4.1',
   temperature,
   apiKey,
   signal,

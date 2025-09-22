@@ -151,7 +151,8 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
   }
 
   const { segments, voice, model, format, signal } = options;
-  const chosenModel = model || (((options as any).quality === 'high') ? 'tts-1-hd' : 'tts-1');
+  const chosenModel =
+    model || ((options as any).quality === 'high' ? 'tts-1-hd' : 'tts-1');
 
   log.debug('[ai-provider] Using OpenAI direct TTS.');
   try {
