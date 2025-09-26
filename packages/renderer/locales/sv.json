@@ -155,7 +155,7 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Ambient vs Dub Balance",
+      "mixLabel": "Dubbing Volume vs Original Video Volume",
       "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
       "mixAmbient": "More ambient",
       "mixVoice": "More voice"

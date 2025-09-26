@@ -756,19 +756,26 @@ export async function generateDubbedMedia({
 
     const mixValueRaw = typeof ambientMix === 'number' ? ambientMix : 0.35;
     const mix = Math.min(1, Math.max(0, mixValueRaw));
-    log.info(
-      `[${operationId}] Ambient mix value received: ${mixValueRaw} (clamped: ${mix})`
-    );
+    const ambientRatio = mix;
+    const voiceRatio = 1 - mix;
+    const ambientActive = ambientRatio > 0.001;
+    const voiceActive = voiceRatio > 0.001;
 
-    const ambientWeight = 0.5 + mix; // 0.5 → 1.5
-    const voiceWeight = 2.0;
-    const backgroundVolume = 0.2 + mix * 0.35; // 0.2 → 0.55
-    const voiceVolume = 1.25 + (1 - mix) * 0.35; // 1.25 → 1.6
+    const backgroundVolume = ambientActive ? 0.2 + ambientRatio * 0.35 : 0; // 0.20 → 0.55
+    const voiceVolume = voiceActive ? 1.25 + voiceRatio * 0.35 : 0; // 1.25 → 1.60
+
+    const ambientWeight = ambientActive ? (0.5 + ambientRatio) * ambientRatio : 0; // scale down near 0
+    const voiceWeight = voiceActive ? 2.0 * voiceRatio : 0; // fade out as slider approaches 100% ambient
+    const normalize = ambientActive && voiceActive ? 1 : 0;
+
+    log.info(
+      `[${operationId}] Ambient mix value received: ${mixValueRaw} (clamped: ${mix}); weights bg=${ambientWeight.toFixed(3)} voice=${voiceWeight.toFixed(3)}; volumes bg=${backgroundVolume.toFixed(2)} voice=${voiceVolume.toFixed(2)}`
+    );
 
     const filterComplex =
       `[0:a]volume=${backgroundVolume.toFixed(2)}[bg];` +
       `[1:a]volume=${voiceVolume.toFixed(2)}[voice];` +
-      `[bg][voice]amix=inputs=2:weights=${ambientWeight.toFixed(2)} ${voiceWeight.toFixed(2)}:dropout_transition=0:normalize=0[aout]`;
+      `[bg][voice]amix=inputs=2:weights=${ambientWeight.toFixed(3)} ${voiceWeight.toFixed(3)}:dropout_transition=0:normalize=${normalize}[aout]`;
 
     await ffmpeg.run(
       [

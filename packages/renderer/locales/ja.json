@@ -188,10 +188,10 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Ambient vs Dub Balance",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixLabel": "吹き替え音量 vs 元の動画の音量",
+      "mixHelp": "吹き替え音声の下で再生する元のサウンドトラックの量を調整します。",
+      "mixAmbient": "環境音を大きく",
+      "mixVoice": "音声を大きく"
     }
   },
   "credits": {

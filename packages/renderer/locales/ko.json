@@ -220,10 +220,10 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Ambient vs Dub Balance",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixLabel": "더빙 음량 vs 원본 영상 음량",
+      "mixHelp": "더빙 음성 아래로 재생되는 원본 사운드트랙의 비율을 조절합니다.",
+      "mixAmbient": "배경음 더 크게",
+      "mixVoice": "목소리 더 크게"
     },
     "byoOpenAi": {
       "title": "내 OpenAI 키 사용",

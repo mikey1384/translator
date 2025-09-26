@@ -188,10 +188,10 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Ambient vs Dub Balance",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixLabel": "配音音量 vs 原始影片音量",
+      "mixHelp": "調整在配音語音下方播放的原始音軌比例。",
+      "mixAmbient": "更多環境聲",
+      "mixVoice": "更多人聲"
     }
   },
   "credits": {

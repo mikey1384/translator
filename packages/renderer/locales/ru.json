@@ -188,10 +188,10 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Ambient vs Dub Balance",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixLabel": "Громкость дубляжа vs громкость оригинального видео",
+      "mixHelp": "Настройте, сколько оригинальной звуковой дорожки будет звучать под дубляжной речью.",
+      "mixAmbient": "Больше фонового звука",
+      "mixVoice": "Больше голоса"
     }
   },
   "credits": {

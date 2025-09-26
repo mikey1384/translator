@@ -188,10 +188,10 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Ambient vs Dub Balance",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixLabel": "Volume du doublage vs volume de la vidéo originale",
+      "mixHelp": "Contrôlez la quantité de bande son originale jouée sous la voix doublée.",
+      "mixAmbient": "Plus d'ambiance",
+      "mixVoice": "Plus de voix"
     }
   },
   "credits": {
