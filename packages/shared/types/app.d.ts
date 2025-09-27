@@ -180,15 +180,27 @@ declare module '@shared-types/app' {
     text: string;
   }
 
+  export interface TranscriptHighlight {
+    start: number;
+    end: number;
+    title?: string;
+    description?: string;
+    score?: number;
+    videoPath?: string; // populated when server cuts clips
+  }
+
   export interface TranscriptSummaryRequest {
     segments: TranscriptSummarySegment[];
     targetLanguage: string;
     operationId?: string;
+    videoPath?: string | null;
+    maxHighlights?: number;
   }
 
   export interface TranscriptSummaryResult {
     success: boolean;
     summary?: string;
+    highlights?: TranscriptHighlight[];
     error?: string;
     cancelled?: boolean;
     operationId: string;
@@ -199,6 +211,9 @@ declare module '@shared-types/app' {
     stage: string;
     error?: string;
     partialSummary?: string;
+    partialHighlights?: TranscriptHighlight[];
+    current?: number;
+    total?: number;
   }
 
   interface GenerateSubtitlesFromAudioArgs {

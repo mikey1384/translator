@@ -11,9 +11,15 @@ import { logButton, logVideo } from '../utils/logger';
 
 function toFileUrl(p: string): string {
   if (!p) return p;
-  return p.startsWith('file://')
-    ? p
-    : `file://${encodeURI(p.replace(/\\/g, '/'))}`;
+  if (p.startsWith('file://')) return p;
+  const normalized = p.replace(/\\/g, '/');
+  if (/^[a-zA-Z]:\//.test(normalized)) {
+    return `file:///${encodeURI(normalized)}`;
+  }
+  if (normalized.startsWith('/')) {
+    return `file://${encodeURI(normalized)}`;
+  }
+  return `file://${encodeURI(`/${normalized}`)}`;
 }
 
 type Meta = {

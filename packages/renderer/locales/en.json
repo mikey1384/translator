@@ -118,6 +118,10 @@
     "title": "Transcript Summary",
     "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
     "languageLabel": "Summary language",
+    "tab": {
+      "summary": "Summary",
+      "highlights": "Highlights"
+    },
     "generate": "Generate summary",
     "regenerate": "Regenerate summary",
     "placeholder": "Your AI summary will appear here once generated.",
@@ -126,6 +130,9 @@
     "copy": "Copy summary",
     "copied": "Copied!",
     "copyError": "Couldn't copy summary to clipboard.",
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight",
     "status": {
       "preparing": "Preparing transcript…",
       "chunk": "Summarizing section {{current}}/{{total}}",

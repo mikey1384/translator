@@ -104,7 +104,14 @@ export function generateTranscriptSummary(options: {
   segments: { start: number; end: number; text: string }[];
   targetLanguage: string;
   operationId?: string;
-}): Promise<{ summary?: string; success?: boolean; error?: string }> {
+  videoPath?: string | null;
+  maxHighlights?: number;
+}): Promise<{
+  summary?: string;
+  highlights?: import('@shared-types/app').TranscriptHighlight[];
+  success?: boolean;
+  error?: string;
+}> {
   return (window.electron as any).generateTranscriptSummary(options);
 }
 

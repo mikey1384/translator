@@ -15,7 +15,7 @@ import {
   progressBarBackgroundStyles,
   progressBarFillStyles,
 } from '../styles';
-import { useUIStore, useTaskStore } from '../state';
+import { useUIStore, useTaskStore, useSubStore, useVideoStore } from '../state';
 import {
   generateTranscriptSummary,
   onTranscriptSummaryProgress,
@@ -33,6 +33,16 @@ export function TranscriptSummaryPanel({
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
 
   const [summary, setSummary] = useState<string>('');
+  const [highlights, setHighlights] = useState<
+    Array<{
+      start: number;
+      end: number;
+      title?: string;
+      description?: string;
+      score?: number;
+      videoPath?: string;
+    }>
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
@@ -41,6 +51,12 @@ export function TranscriptSummaryPanel({
     null
   );
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
+  const [activeTab, setActiveTab] = useState<'summary' | 'highlights'>(
+    'summary'
+  );
+
+  const originalVideoPath = useVideoStore(s => s.originalPath);
+  const fallbackVideoPath = useSubStore(s => s.sourceVideoPath);
 
   const usableSegments = useMemo(
     () =>
@@ -68,6 +84,10 @@ export function TranscriptSummaryPanel({
 
       if (typeof progress.partialSummary === 'string') {
         setSummary(progress.partialSummary.trim());
+      }
+
+      if (Array.isArray(progress.partialHighlights)) {
+        setHighlights(progress.partialHighlights);
       }
 
       if (progress.partialSummary) {
@@ -115,6 +135,7 @@ export function TranscriptSummaryPanel({
     setActiveOperationId(opId);
     setError(null);
     setSummary('');
+    setHighlights([]);
     setCopyStatus('idle');
     setProgressLabel(t('summary.status.preparing'));
     setProgressPercent(0);
@@ -130,6 +151,8 @@ export function TranscriptSummaryPanel({
         segments: usableSegments,
         targetLanguage: summaryLanguage,
         operationId: opId,
+        videoPath: originalVideoPath || fallbackVideoPath || null,
+        maxHighlights: 10,
       });
 
       if (result?.error) {
@@ -138,6 +161,9 @@ export function TranscriptSummaryPanel({
 
       if (result?.summary) {
         setSummary(result.summary.trim());
+      }
+      if (Array.isArray(result?.highlights)) {
+        setHighlights(result.highlights);
       }
 
       setProgressLabel(t('summary.status.ready'));
@@ -260,6 +286,24 @@ export function TranscriptSummaryPanel({
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className={tabsRowStyles}>
+        <button
+          className={tabButtonStyles(activeTab === 'summary')}
+          onClick={() => setActiveTab('summary')}
+          disabled={isGenerating}
+        >
+          {t('summary.tab.summary', 'Summary')}
+        </button>
+        <button
+          className={tabButtonStyles(activeTab === 'highlights')}
+          onClick={() => setActiveTab('highlights')}
+          disabled={isGenerating}
+        >
+          {t('summary.tab.highlights', 'Highlights')}
+        </button>
+      </div>
+
       {showProgressBar && (
         <div className={progressWrapperStyles}>
           <div className={progressHeaderStyles}>
@@ -280,7 +324,7 @@ export function TranscriptSummaryPanel({
         </div>
       )}
 
-      {summary && (
+      {activeTab === 'summary' && summary && (
         <>
           <div className={summaryHeaderStyles}>
             <Button
@@ -298,6 +342,44 @@ export function TranscriptSummaryPanel({
             <pre>{summary}</pre>
           </div>
         </>
+      )}
+
+      {activeTab === 'highlights' && (
+        <div className={highlightsGridStyles}>
+          {highlights.length === 0 && (
+            <div className={noHighlightsStyles}>
+              {t(
+                'summary.noHighlights',
+                'No highlights yet. Generate to detect punchlines.'
+              )}
+            </div>
+          )}
+          {highlights.map((h, idx) => (
+            <div key={`${h.start}-${h.end}-${idx}`} className={highlightCard}>
+              <div className={highlightHeader}>
+                <div className={highlightTitle}>{h.title || t('summary.highlight', 'Highlight')}</div>
+                <div className={highlightTime}>{formatRange(h.start, h.end)}</div>
+              </div>
+              {h.videoPath ? (
+                <video
+                  className={highlightVideo}
+                  controls
+                  src={toFileUrl(h.videoPath)}
+                />
+              ) : (
+                <div className={noVideoStyles}>
+                  {t(
+                    'summary.noVideoForHighlights',
+                    'Open the source video to cut highlight clips.'
+                  )}
+                </div>
+              )}
+              {h.description && (
+                <div className={highlightDesc}>{h.description}</div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -335,6 +417,42 @@ function translateStageLabel(
   return stage;
 }
 
+function toFileUrl(p: string): string {
+  if (!p) return p;
+  if (p.startsWith('file://')) return p;
+  const normalized = p.replace(/\\/g, '/');
+
+  if (/^[a-zA-Z]:\//.test(normalized)) {
+    // Windows absolute path → ensure triple slash
+    return `file:///${encodeURI(normalized)}`;
+  }
+
+  if (normalized.startsWith('/')) {
+    return `file://${encodeURI(normalized)}`;
+  }
+
+  return `file://${encodeURI(`/${normalized}`)}`;
+}
+
+function formatRange(a: number, b: number): string {
+  const s = Math.max(0, Math.floor(a || 0));
+  const e = Math.max(0, Math.floor(b || 0));
+  return `${formatHHMMSS(s)} – ${formatHHMMSS(e)}`;
+}
+
+function formatHHMMSS(total: number): string {
+  const hh = Math.floor(total / 3600)
+    .toString()
+    .padStart(2, '0');
+  const mm = Math.floor((total % 3600) / 60)
+    .toString()
+    .padStart(2, '0');
+  const ss = Math.floor(total % 60)
+    .toString()
+    .padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
 const panelStyles = css`
   border: 1px solid ${colors.border};
   border-radius: 10px;
@@ -344,6 +462,22 @@ const panelStyles = css`
   flex-direction: column;
   gap: 16px;
 `;
+
+const tabsRowStyles = css`
+  display: flex;
+  gap: 8px;
+`;
+
+const tabButtonStyles = (active: boolean) =>
+  css`
+    border: 1px solid ${active ? colors.primary : colors.border};
+    background: ${active ? colors.primary : colors.white};
+    color: ${active ? colors.white : colors.dark};
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  `;
 
 const headerRowStyles = css`
   display: flex;
@@ -423,6 +557,64 @@ const summaryBoxStyles = css`
     word-break: break-word;
     font-family: inherit;
   }
+`;
+
+const highlightsGridStyles = css`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+`;
+
+const noHighlightsStyles = css`
+  color: ${colors.gray};
+`;
+
+const highlightCard = css`
+  background: ${colors.white};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const highlightHeader = css`
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+`;
+
+const highlightTitle = css`
+  font-weight: 600;
+  color: ${colors.dark};
+`;
+
+const highlightTime = css`
+  color: ${colors.gray};
+  font-size: 0.85rem;
+`;
+
+const highlightVideo = css`
+  width: 100%;
+  border-radius: 6px;
+  background: #000;
+`;
+
+const noVideoStyles = css`
+  color: ${colors.gray};
+  font-size: 0.9rem;
+  background: ${colors.grayLight};
+  border: 1px dashed ${colors.border};
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+`;
+
+const highlightDesc = css`
+  color: ${colors.dark};
+  font-size: 0.95rem;
 `;
 
 const summaryHeaderStyles = css`

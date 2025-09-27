@@ -2,6 +2,7 @@ import { callAIModel } from './ai-client.js';
 import type {
   TranscriptSummarySegment,
   TranscriptSummaryProgress,
+  TranscriptHighlight,
 } from '@shared-types/app';
 
 interface GenerateTranscriptSummaryOptions {
@@ -14,6 +15,7 @@ interface GenerateTranscriptSummaryOptions {
 
 interface GenerateTranscriptSummaryResult {
   summary: string;
+  highlights: TranscriptHighlight[];
 }
 
 const MAX_CHARS_PER_CHUNK = 7_500;
@@ -71,6 +73,17 @@ export async function generateTranscriptSummary({
       partialSummary: aggregatedDraft,
     });
 
+    const highlights = await selectHighlightsFromChunks({
+      chunks,
+      languageName,
+      signal,
+      operationId,
+      maxHighlights: 10,
+      progressCallback,
+      startPercent: 70,
+      endPercent: 90,
+    });
+
     progressCallback?.({
       percent: 90,
       stage: 'Synthesizing comprehensive summary',
@@ -89,7 +102,7 @@ export async function generateTranscriptSummary({
       partialSummary: finalSummary,
     });
 
-    return { summary: finalSummary };
+    return { summary: finalSummary, highlights };
   }
 
   const chunkSummaries: string[] = [];
@@ -143,13 +156,24 @@ export async function generateTranscriptSummary({
   });
 
   const finalSummary = synthesis.trim();
+  const highlights = await selectHighlightsFromChunks({
+    chunks,
+    languageName,
+    signal,
+    operationId,
+    maxHighlights: 10,
+    progressCallback,
+    startPercent: 92,
+    endPercent: 98,
+  });
   progressCallback?.({
     percent: 100,
     stage: 'Summary ready',
     partialSummary: finalSummary,
+    partialHighlights: highlights,
   });
 
-  return { summary: finalSummary };
+  return { summary: finalSummary, highlights };
 }
 
 function buildChunks(segments: TranscriptSummarySegment[]): string[] {
@@ -303,4 +327,229 @@ function formatLanguage(value: string): string {
 
 function formatChunkDrafts(drafts: string[]): string {
   return drafts.map((text, idx) => `Section ${idx + 1}\n${text}`).join('\n\n');
+}
+
+async function selectHighlightsFromChunks({
+  chunks,
+  languageName,
+  signal,
+  operationId,
+  maxHighlights = 10,
+  progressCallback,
+  startPercent = 0,
+  endPercent = 5,
+}: {
+  chunks: string[];
+  languageName: string;
+  signal: AbortSignal;
+  operationId: string;
+  maxHighlights?: number;
+  progressCallback?: (progress: TranscriptSummaryProgress) => void;
+  startPercent?: number;
+  endPercent?: number;
+}): Promise<TranscriptHighlight[]> {
+  if (!Array.isArray(chunks) || chunks.length === 0) {
+    return [];
+  }
+
+  const total = chunks.length;
+  const perChunkLimit = Math.max(1, Math.ceil(maxHighlights / total));
+  const span = Math.max(0, endPercent - startPercent);
+
+  const candidates: TranscriptHighlight[] = [];
+  const seen = new Map<string, TranscriptHighlight>();
+
+  for (let i = 0; i < total; i++) {
+    if (signal.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    const chunk = chunks[i];
+    if (!chunk.trim()) continue;
+
+    const percent = startPercent + (span * i) / total;
+    progressCallback?.({
+      percent,
+      stage: `Selecting highlights section ${i + 1} of ${total}`,
+      current: i + 1,
+      total,
+    });
+
+    let chunkHighlights: TranscriptHighlight[] = [];
+    try {
+      chunkHighlights = await proposeHighlightsForChunk({
+        chunkText: chunk,
+        chunkIndex: i,
+        chunkCount: total,
+        languageName,
+        signal,
+        operationId,
+        perChunkLimit,
+      });
+    } catch (err) {
+      // Log but continue; a single chunk failure shouldn't abort the entire summary
+      console.warn(
+        `[${operationId}] highlight selection failed for chunk ${i + 1}:`,
+        err
+      );
+      continue;
+    }
+
+    for (const h of chunkHighlights) {
+      const start = Number(h.start);
+      const end = Number(h.end);
+      if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+      if (end - start < 2) continue;
+      const key = `${Math.round(start * 1000)}-${Math.round(end * 1000)}`;
+      if (seen.has(key)) {
+        const existing = seen.get(key)!;
+        const better = pickBetterHighlight(existing, h);
+        seen.set(key, better);
+      } else {
+        const sanitized: TranscriptHighlight = {
+          start: Math.max(0, start),
+          end: Math.max(0, end),
+          title: h.title,
+          description: h.description,
+          score: h.score,
+        };
+        seen.set(key, sanitized);
+      }
+    }
+
+    candidates.splice(0, candidates.length, ...seen.values());
+    progressCallback?.({
+      percent: startPercent + (span * (i + 1)) / total,
+      stage: `Section ${i + 1} highlights proposed`,
+      current: i + 1,
+      total,
+      partialHighlights: rankHighlights(candidates, maxHighlights),
+    });
+  }
+
+  const final = rankHighlights(Array.from(seen.values()), maxHighlights);
+  progressCallback?.({
+    percent: endPercent,
+    stage: `Selected ${final.length} highlights`,
+    partialHighlights: final,
+  });
+
+  return final;
+}
+
+async function proposeHighlightsForChunk({
+  chunkText,
+  chunkIndex,
+  chunkCount,
+  languageName,
+  signal,
+  operationId,
+  perChunkLimit,
+}: {
+  chunkText: string;
+  chunkIndex: number;
+  chunkCount: number;
+  languageName: string;
+  signal: AbortSignal;
+  operationId: string;
+  perChunkLimit: number;
+}): Promise<TranscriptHighlight[]> {
+  const limit = Math.max(1, Math.min(5, perChunkLimit));
+
+  const system = `You are an expert content editor who pinpoints the most electrifying, emotional, or shareable short clips inside transcripts. Always respond in strict JSON matching the requested schema.`;
+
+  const user = `This is section ${chunkIndex + 1} of ${chunkCount} from a longer transcript. Identify up to ${limit} short highlight clips within this section only. Each clip must:
+- Stay entirely within this section's timestamps.
+- Feel self-contained and compelling (punchline, reveal, powerful quote, emotional beat, etc.).
+- Prefer length 10–60 seconds, minimum 2 seconds.
+- Provide absolute start and end times in seconds.
+
+Return STRICT JSON ONLY (no markdown) of the form:
+{
+  "highlights": [
+    {"start": 123.0, "end": 141.5, "title": "...", "description": "...", "score": 0.0},
+    ...
+  ]
+}
+
+Transcript section (${languageName}):\n${chunkText}`;
+
+  const content = await callAIModel({
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+    model: 'gpt-5',
+    reasoning: { effort: 'medium' },
+    signal,
+    operationId,
+  });
+
+  const parsed = safeParseHighlights(content);
+  return parsed.map(h => ({
+    start: Number(h.start),
+    end: Number(h.end),
+    title: typeof h.title === 'string' ? h.title : undefined,
+    description:
+      typeof h.description === 'string' ? h.description : undefined,
+    score: typeof h.score === 'number' ? h.score : undefined,
+  }));
+}
+
+function pickBetterHighlight(
+  a: TranscriptHighlight,
+  b: TranscriptHighlight
+): TranscriptHighlight {
+  const scoreA = Number.isFinite(a.score ?? null) ? (a.score as number) : -Infinity;
+  const scoreB = Number.isFinite(b.score ?? null) ? (b.score as number) : -Infinity;
+  if (scoreB > scoreA) return { ...a, ...b };
+  return a;
+}
+
+function rankHighlights(
+  highlights: TranscriptHighlight[],
+  maxHighlights: number
+): TranscriptHighlight[] {
+  const sorted = [...highlights].sort((lhs, rhs) => {
+    const scoreA = Number.isFinite(lhs.score ?? null)
+      ? (lhs.score as number)
+      : 0;
+    const scoreB = Number.isFinite(rhs.score ?? null)
+      ? (rhs.score as number)
+      : 0;
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA;
+    }
+    return lhs.start - rhs.start;
+  });
+  return sorted.slice(0, Math.max(1, maxHighlights));
+}
+
+function safeParseHighlights(text: string): Array<{
+  start: number;
+  end: number;
+  title?: string;
+  description?: string;
+  score?: number;
+}> {
+  try {
+    // Try direct JSON parse
+    const obj = JSON.parse(text);
+    const arr = Array.isArray(obj?.highlights) ? obj.highlights : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    // Fallback: extract the first JSON object substring
+    const first = text.indexOf('{');
+    const last = text.lastIndexOf('}');
+    if (first !== -1 && last !== -1 && last > first) {
+      try {
+        const obj = JSON.parse(text.slice(first, last + 1));
+        const arr = Array.isArray(obj?.highlights) ? obj.highlights : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
 }

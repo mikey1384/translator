@@ -687,11 +687,14 @@ export async function handleGenerateTranscriptSummary(
   options: {
     segments: { start: number; end: number; text: string }[];
     targetLanguage: string;
+    videoPath?: string | null;
+    maxHighlights?: number;
   },
   operationId: string
 ): Promise<{
   success: boolean;
   summary?: string;
+  highlights?: import('@shared-types/app').TranscriptHighlight[];
   error?: string;
   cancelled?: boolean;
   operationId: string;
@@ -702,7 +705,8 @@ export async function handleGenerateTranscriptSummary(
   addSubtitle(operationId, controller);
 
   try {
-    const { summary } = await generateTranscriptSummary({
+    const { ffmpeg } = checkServicesInitialized();
+    const { summary, highlights } = await generateTranscriptSummary({
       segments: options.segments,
       targetLanguage: options.targetLanguage,
       signal: controller.signal,
@@ -715,7 +719,144 @@ export async function handleGenerateTranscriptSummary(
       },
     });
 
-    return { success: true, summary, operationId };
+    let cutHighlights:
+      | import('@shared-types/app').TranscriptHighlight[]
+      | undefined = undefined;
+
+    if (Array.isArray(highlights) && highlights.length > 0) {
+      cutHighlights = [];
+      const inputVideo = options.videoPath || null;
+      const toCut = highlights.slice(0, Math.min(10, highlights.length));
+
+      if (inputVideo) {
+        let totalDur = 0;
+        let durationKnown = false;
+        let videoAvailable = true;
+
+        try {
+          await fs.access(inputVideo);
+          totalDur = await ffmpeg.getMediaDuration(inputVideo, controller.signal);
+          durationKnown = Number.isFinite(totalDur) && totalDur > 0;
+        } catch (err) {
+          videoAvailable = false;
+          log.warn(
+            `[${operationId}] Highlight clipping skipped; video unavailable or duration probe failed for ${inputVideo}`,
+            err
+          );
+        }
+
+        if (videoAvailable) {
+          const basePercent = 95; // continue from selection stage
+          const step = toCut.length > 0 ? 5 / toCut.length : 5; // up to 100%
+
+          try {
+            for (let i = 0; i < toCut.length; i++) {
+              const h = toCut[i];
+              const rawStart = Number.isFinite(h.start)
+                ? Math.max(0, Number(h.start))
+                : 0;
+              const fallbackEnd = rawStart + 30;
+              const requestedEnd = Number.isFinite(h.end)
+                ? Math.max(rawStart + 2, Number(h.end))
+                : fallbackEnd;
+
+              const safeStart = durationKnown
+                ? Math.min(rawStart, Math.max(0, totalDur - 1))
+                : rawStart;
+
+              let safeEnd = durationKnown
+                ? Math.min(Math.max(safeStart + 2, requestedEnd), totalDur)
+                : Math.max(safeStart + 2, requestedEnd);
+
+              if (!Number.isFinite(safeEnd) || safeEnd <= safeStart) {
+                safeEnd = durationKnown
+                  ? Math.min(totalDur, safeStart + 15)
+                  : safeStart + 15;
+              }
+
+              const duration = Math.max(2, safeEnd - safeStart);
+
+              const outPath = path.join(
+                ffmpeg.tempDir,
+                `highlight-${operationId}-${i + 1}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
+              );
+
+              event.sender.send('transcript-summary-progress', {
+                percent: Math.min(100, basePercent + step * i),
+                stage: `Cutting highlight ${i + 1} of ${toCut.length}`,
+                operationId,
+                current: i + 1,
+                total: toCut.length,
+              });
+
+              const args = [
+                '-y',
+                '-ss',
+                String(safeStart),
+                '-i',
+                inputVideo,
+                '-t',
+                String(duration),
+                '-map', '0:v:0?',
+                '-map', '0:a:0?',
+                '-c:v', 'libx264',
+                '-preset', 'veryfast',
+                '-crf', '23',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-movflags', '+faststart',
+                outPath,
+              ];
+
+              await ffmpeg.run(args, { operationId, signal: controller.signal });
+
+              cutHighlights.push({
+                start: safeStart,
+                end: safeEnd,
+                title: h.title,
+                description: h.description,
+                score: h.score,
+                videoPath: outPath,
+              });
+            }
+
+            event.sender.send('transcript-summary-progress', {
+              percent: 100,
+              stage: 'Highlights ready',
+              operationId,
+              partialHighlights: cutHighlights,
+            });
+          } catch (err) {
+            log.warn(
+              `[${operationId}] Highlight clipping failed; returning metadata only`,
+              err
+            );
+            videoAvailable = false;
+          }
+        }
+
+        if (!videoAvailable) {
+          cutHighlights = toCut.map(h => ({ ...h }));
+          event.sender.send('transcript-summary-progress', {
+            percent: 100,
+            stage: 'Highlights metadata ready',
+            operationId,
+            partialHighlights: cutHighlights,
+          });
+        }
+      } else {
+        // No video available; return just the metadata
+        cutHighlights = toCut.map(h => ({ ...h }));
+        event.sender.send('transcript-summary-progress', {
+          percent: 100,
+          stage: 'Highlights metadata ready',
+          operationId,
+          partialHighlights: cutHighlights,
+        });
+      }
+    }
+
+    return { success: true, summary, highlights: cutHighlights, operationId };
   } catch (error: any) {
     const aborted =
       controller.signal.aborted ||
