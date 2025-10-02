@@ -159,15 +159,13 @@ export function TranscriptSummaryPanel({
         );
       }
 
-      if (pct >= 100) {
-        setActiveOperationId(null);
+      if (pct >= 100 && !/highlight/i.test(nextLabel)) {
         useTaskStore.getState().setSummary({
           stage: t('summary.status.ready'),
           percent: 100,
           inProgress: false,
-          id: null,
+          id: activeOperationId,
         });
-        setHighlightProgressPercent(100);
       }
     });
 
