@@ -11,6 +11,7 @@ interface GenerateTranscriptSummaryOptions {
   signal: AbortSignal;
   operationId: string;
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
+  maxHighlights?: number;
 }
 
 interface GenerateTranscriptSummaryResult {
@@ -26,6 +27,7 @@ export async function generateTranscriptSummary({
   signal,
   operationId,
   progressCallback,
+  maxHighlights,
 }: GenerateTranscriptSummaryOptions): Promise<GenerateTranscriptSummaryResult> {
   if (!Array.isArray(segments) || segments.length === 0) {
     throw new Error('No transcript segments available for summary');
@@ -45,6 +47,7 @@ export async function generateTranscriptSummary({
   }
 
   const languageName = formatLanguage(targetLanguage);
+  const highlightLimit = resolveHighlightLimit(maxHighlights);
 
   progressCallback?.({ percent: 5, stage: 'Preparing transcript slices' });
 
@@ -73,16 +76,21 @@ export async function generateTranscriptSummary({
       partialSummary: aggregatedDraft,
     });
 
-    const highlights = await selectHighlightsFromChunks({
-      chunks,
-      languageName,
-      signal,
-      operationId,
-      maxHighlights: 10,
-      progressCallback,
-      startPercent: 70,
-      endPercent: 90,
-    });
+    const highlights =
+      highlightLimit > 0
+        ? await selectHighlightsFromChunks({
+            chunks,
+            chunkSummaries: [chunkNote],
+            segments: cleanedSegments,
+            languageName,
+            signal,
+            operationId,
+            maxHighlights: highlightLimit,
+            progressCallback,
+            startPercent: 70,
+            endPercent: 90,
+          })
+        : [];
 
     progressCallback?.({
       percent: 90,
@@ -156,16 +164,21 @@ export async function generateTranscriptSummary({
   });
 
   const finalSummary = synthesis.trim();
-  const highlights = await selectHighlightsFromChunks({
-    chunks,
-    languageName,
-    signal,
-    operationId,
-    maxHighlights: 10,
-    progressCallback,
-    startPercent: 92,
-    endPercent: 98,
-  });
+  const highlights =
+    highlightLimit > 0
+      ? await selectHighlightsFromChunks({
+          chunks,
+          chunkSummaries,
+          segments: cleanedSegments,
+          languageName,
+          signal,
+          operationId,
+          maxHighlights: highlightLimit,
+          progressCallback,
+          startPercent: 92,
+          endPercent: 98,
+        })
+      : [];
   progressCallback?.({
     percent: 100,
     stage: 'Summary ready',
@@ -214,15 +227,16 @@ async function summarizeChunk({
   signal: AbortSignal;
   operationId: string;
 }): Promise<string> {
-  const systemPrompt = `You are an expert note-taker shaping transcript slices into vibrant, social-media-ready story beats. Always respond in ${languageName}.`;
+  const systemPrompt = `You are a meticulous academic researcher creating detailed source notes for university-level assignments. Always respond in ${languageName} using a formal, objective tone and plain-text formatting.`;
 
-  const userPrompt = `This is section ${chunkIndex + 1} of ${chunkCount} from a long transcript. Produce punchy notes in ${languageName} that will later become a shareable thread. Follow these rules:
+  const userPrompt = `This is section ${chunkIndex + 1} of ${chunkCount} from an extended transcript. Produce plain-text notes in ${languageName} that will later inform a formal introduction. Follow these instructions:
 
-- Start with one short line that pairs an expressive emoji with a localized section title.
-- Provide 3–6 Markdown bullets. Keep each bullet to at most two sentences and under roughly 30 words.
-- Only use timestamps when needed and always place them at the END inside parentheses, e.g., (00:01:34–00:02:10) or (00:08:42). Never use square brackets and never lead with the timestamp.
-- Bold key phrases to help skimmers, keep the tone energetic and factual, and translate every heading or connector into ${languageName}.
-- Capture moments, motivations, emotional turns, data points, and notable quotes that matter in this slice.
+- Write in complete sentences with no headings, bullet markers, numbering, emojis, or decorative symbols. Separate ideas with standard paragraph breaks only.
+- Open with 2–3 sentences that state who is speaking, the situational backdrop, and the intent of this portion of the recording.
+- Continue with 3–5 sentences that explain the major arguments or developments in the order they occur, highlighting key terminology or shifts in emphasis.
+- Conclude with 2–3 sentences that capture supporting evidence, illustrative examples, or quotations. Attribute speakers when possible.
+- Present timestamps only when essential, phrasing them inline as "at 00:04:12" or "from 00:04:12 to 00:05:01". Do not use parentheses or square brackets for times, and never start a sentence with a timestamp.
+- Maintain a scholarly, neutral tone throughout and avoid redundant phrasing.
 
 Transcript section ${chunkIndex + 1}:
 ${chunkText}`;
@@ -252,32 +266,19 @@ async function synthesizeFromChunkSummaries({
   signal: AbortSignal;
   operationId: string;
 }): Promise<string> {
-  const systemPrompt = `You are an experienced analyst who assembles irresistible social-media-ready summaries. Always respond in ${languageName}.`;
+  const systemPrompt = `You are an experienced academic writer who crafts comprehensive introductions for audiovisual sources used in college assignments. Always respond in ${languageName} with a formal, well-structured tone and plain-text presentation.`;
 
   const notes = chunkSummaries
     .map((summary, idx) => `Section ${idx + 1} notes:\n${summary}`)
     .join('\n\n');
 
-  const userPrompt = `Blend the section notes into a social-media-optimized summary in ${languageName}. Output Markdown the user can paste straight into a thread or post. Follow this structure:
+  const userPrompt = `Blend the section notes into a cohesive introductory overview in ${languageName} as though it were the opening section of a college assignment describing this video source. Adhere to the following requirements:
 
-1. <emoji + localized title for "Executive Overview">
-   - Two or three short bullets that hook the reader. Insert timestamps only when needed and always at the end in parentheses.
-2. <emoji + localized title for "Detailed Timeline">
-   - Chronological bullets with bold lead words. Stay under ~30 words per bullet, place timestamps at the end in parentheses, never use square brackets, and never begin a line with a timestamp.
-3. <emoji + localized title for "Insights & Analysis">
-   - Bullets highlighting themes, motivations, tensions, or lessons. Use timestamps only when calling out a precise moment and keep them at the end in parentheses.
-4. <emoji + localized title for "Action Items / Recommendations">
-   - Actionable steps, safeguards, or best practices implied by the story. Adapt if explicit actions are absent.
-5. <emoji + localized title for "Notable Quotes or Highlights">
-   - Quote-style bullets with attribution when possible, each finishing with its timestamp in parentheses.
-
-Final line: add 2–4 short hashtags (no punctuation) in ${languageName} or widely used transliterations, separated by spaces.
-
-Extra guidance:
-- Translate every heading, connector, and descriptive phrase into ${languageName}; avoid English unless globally standard.
-- Keep the tone punchy and ready for social sharing; remove repetition.
-- Absolutely avoid square brackets for timestamps; always use parentheses at the end.
-- Aim for concise, high-impact sentences sized for social feeds.
+- Produce 2–3 paragraphs of continuous prose with plain-text formatting. Paragraph one should situate the video (topic, speakers, context, platform, production details). Paragraph two should outline the major themes, sequence of ideas, and analytical framing. Add a third paragraph only if necessary to discuss methodology, intended audience, or broader significance.
+- Integrate timestamps sparingly for pivotal moments, phrasing them inline as "at 00:12:45" or "between 00:08:30 and 00:09:05". Do not wrap times in parentheses or brackets, and never open a sentence with a timestamp.
+- Maintain a formal, third-person tone. Avoid emojis, exclamations, hashtags, rhetorical questions, or typographic decorations.
+- Close with a single sentence that translates "Keywords" into ${languageName} and lists 4–6 thematically important terms separated by commas (e.g., "Palabras clave: término1, término2").
+- Ensure the narrative removes redundancy from the notes, emphasizes continuity, and transitions smoothly between ideas.
 
 Section notes:
 ${notes}`;
@@ -329,8 +330,18 @@ function formatChunkDrafts(drafts: string[]): string {
   return drafts.map((text, idx) => `Section ${idx + 1}\n${text}`).join('\n\n');
 }
 
+function resolveHighlightLimit(value?: number | null): number {
+  if (!Number.isFinite(value ?? null)) {
+    return 10;
+  }
+  const numeric = Math.floor(value as number);
+  return Math.max(0, numeric);
+}
+
 async function selectHighlightsFromChunks({
   chunks,
+  chunkSummaries,
+  segments,
   languageName,
   signal,
   operationId,
@@ -340,6 +351,8 @@ async function selectHighlightsFromChunks({
   endPercent = 5,
 }: {
   chunks: string[];
+  chunkSummaries: string[];
+  segments: TranscriptSummarySegment[];
   languageName: string;
   signal: AbortSignal;
   operationId: string;
@@ -355,8 +368,11 @@ async function selectHighlightsFromChunks({
   const total = chunks.length;
   const perChunkLimit = Math.max(1, Math.ceil(maxHighlights / total));
   const span = Math.max(0, endPercent - startPercent);
+  const sanitizedSummaries = Array.isArray(chunkSummaries)
+    ? chunkSummaries
+    : new Array(total).fill('');
+  const globalOutline = buildGlobalOutline(sanitizedSummaries);
 
-  const candidates: TranscriptHighlight[] = [];
   const seen = new Map<string, TranscriptHighlight>();
 
   for (let i = 0; i < total; i++) {
@@ -381,6 +397,8 @@ async function selectHighlightsFromChunks({
         chunkText: chunk,
         chunkIndex: i,
         chunkCount: total,
+        chunkSummary: sanitizedSummaries[i] ?? '',
+        globalOutline,
         languageName,
         signal,
         operationId,
@@ -412,22 +430,35 @@ async function selectHighlightsFromChunks({
           title: h.title,
           description: h.description,
           score: h.score,
+          confidence: h.confidence,
+          category: h.category,
+          justification: h.justification,
         };
         seen.set(key, sanitized);
       }
     }
 
-    candidates.splice(0, candidates.length, ...seen.values());
+    const refinedCandidates = refineAndScoreHighlights({
+      highlights: Array.from(seen.values()),
+      segments,
+    });
+    const ranked = rankHighlights(refinedCandidates, maxHighlights);
     progressCallback?.({
       percent: startPercent + (span * (i + 1)) / total,
       stage: `Section ${i + 1} highlights proposed`,
       current: i + 1,
       total,
-      partialHighlights: rankHighlights(candidates, maxHighlights),
+      partialHighlights: ranked,
     });
   }
 
-  const final = rankHighlights(Array.from(seen.values()), maxHighlights);
+  const final = rankHighlights(
+    refineAndScoreHighlights({
+      highlights: Array.from(seen.values()),
+      segments,
+    }),
+    maxHighlights
+  );
   progressCallback?.({
     percent: endPercent,
     stage: `Selected ${final.length} highlights`,
@@ -441,6 +472,8 @@ async function proposeHighlightsForChunk({
   chunkText,
   chunkIndex,
   chunkCount,
+  chunkSummary,
+  globalOutline,
   languageName,
   signal,
   operationId,
@@ -449,6 +482,8 @@ async function proposeHighlightsForChunk({
   chunkText: string;
   chunkIndex: number;
   chunkCount: number;
+  chunkSummary: string;
+  globalOutline: string;
   languageName: string;
   signal: AbortSignal;
   operationId: string;
@@ -456,23 +491,39 @@ async function proposeHighlightsForChunk({
 }): Promise<TranscriptHighlight[]> {
   const limit = Math.max(1, Math.min(5, perChunkLimit));
 
-  const system = `You are an expert content editor who pinpoints the most electrifying, emotional, or shareable short clips inside transcripts. Always respond in strict JSON matching the requested schema.`;
+  const system = `You are a senior editorial producer who selects short-form video moments that feel natural and gripping. Always respond in ${languageName}. Output strict JSON that matches the requested schema.`;
 
-  const user = `This is section ${chunkIndex + 1} of ${chunkCount} from a longer transcript. Identify up to ${limit} short highlight clips within this section only. Each clip must:
-- Stay entirely within this section's timestamps.
-- Feel self-contained and compelling (punchline, reveal, powerful quote, emotional beat, etc.).
-- Prefer length 10–60 seconds, minimum 2 seconds.
-- Provide absolute start and end times in seconds.
+  const user = `Review section ${chunkIndex + 1} of ${chunkCount} from a larger recording. Recommend up to ${limit} short clips only if they will play smoothly as isolated highlights. Follow these principles:
+- Keep clips entirely within this section's timestamps and anchor them at natural sentence boundaries.
+- Ideal runtime is 12–45 seconds. Never return under 6 seconds or over 75 seconds.
+- Focus on singular, high-impact beats: turning points, memorable quotes, emotional reactions, or concrete advice.
+- Add a short title and description in ${languageName} with plain text (no markdown, emojis, or formatting).
+- Provide a confidence score between 0 and 1, a concise category label (e.g., "reveal", "advice", "humor"), and a one-sentence justification referencing transcript evidence.
+- If this section lacks a strong candidate, respond with an empty highlights array.
 
-Return STRICT JSON ONLY (no markdown) of the form:
+Global outline of the recording:
+${globalOutline}
+
+Focused notes for this section:
+${chunkSummary || '(no notes provided)'}
+
+Transcript section (${languageName}):
+${chunkText}
+
+Return STRICT JSON ONLY (no markdown) using this shape:
 {
   "highlights": [
-    {"start": 123.0, "end": 141.5, "title": "...", "description": "...", "score": 0.0},
-    ...
+    {
+      "start": 123.0,
+      "end": 141.5,
+      "title": "...",
+      "description": "...",
+      "confidence": 0.82,
+      "category": "...",
+      "justification": "..."
+    }
   ]
-}
-
-Transcript section (${languageName}):\n${chunkText}`;
+}`;
 
   const content = await callAIModel({
     messages: [
@@ -490,18 +541,191 @@ Transcript section (${languageName}):\n${chunkText}`;
     start: Number(h.start),
     end: Number(h.end),
     title: typeof h.title === 'string' ? h.title : undefined,
-    description:
-      typeof h.description === 'string' ? h.description : undefined,
+    description: typeof h.description === 'string' ? h.description : undefined,
     score: typeof h.score === 'number' ? h.score : undefined,
+    confidence: typeof h.confidence === 'number' ? h.confidence : undefined,
+    category: typeof h.category === 'string' ? h.category : undefined,
+    justification:
+      typeof h.justification === 'string' ? h.justification : undefined,
   }));
+}
+
+function buildGlobalOutline(summaries: string[]): string {
+  if (!Array.isArray(summaries) || summaries.length === 0) {
+    return '(outline unavailable)';
+  }
+  return summaries
+    .map((summary, idx) => {
+      const clean =
+        typeof summary === 'string' ? summary.replace(/\s+/g, ' ').trim() : '';
+      if (!clean) {
+        return `Section ${idx + 1}: (no summary available)`;
+      }
+      return `Section ${idx + 1}: ${clean}`;
+    })
+    .join('\n');
+}
+
+function refineAndScoreHighlights({
+  highlights,
+  segments,
+  leadPadding = 0.6,
+  tailPadding = 0.75,
+}: {
+  highlights: TranscriptHighlight[];
+  segments: TranscriptSummarySegment[];
+  leadPadding?: number;
+  tailPadding?: number;
+}): TranscriptHighlight[] {
+  if (!Array.isArray(highlights) || highlights.length === 0) {
+    return [];
+  }
+
+  const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
+  const refined: TranscriptHighlight[] = [];
+  const minDuration = 6;
+  const maxDuration = 90;
+
+  for (const raw of highlights) {
+    const rawStart = Number(raw.start ?? NaN);
+    const rawEnd = Number(raw.end ?? NaN);
+    if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) continue;
+    if (rawEnd <= rawStart) continue;
+
+    const overlapSegments = findOverlappingSegments(
+      sortedSegments,
+      rawStart,
+      rawEnd
+    );
+    if (overlapSegments.length === 0) {
+      continue;
+    }
+
+    const firstSeg = overlapSegments[0];
+    const lastSeg = overlapSegments[overlapSegments.length - 1];
+    const snappedStart = Math.max(0, firstSeg.start);
+    const snappedEnd = Math.max(snappedStart + 0.5, lastSeg.end);
+
+    const paddedStart = Math.max(0, snappedStart - leadPadding);
+    const paddedEnd = snappedEnd + tailPadding;
+    const duration = paddedEnd - paddedStart;
+
+    if (duration < minDuration || duration > maxDuration) {
+      continue;
+    }
+
+    const normalizedConfidence = normalizeConfidenceValue(
+      Number.isFinite(raw.confidence ?? null)
+        ? (raw.confidence as number)
+        : Number.isFinite(raw.score ?? null)
+          ? (raw.score as number)
+          : undefined
+    );
+
+    const durationScore =
+      duration <= 0
+        ? 0
+        : duration >= 12 && duration <= 45
+          ? 1
+          : duration < 12
+            ? clamp(duration / 12, 0, 1)
+            : clamp(1 - (duration - 45) / 35, 0, 1);
+
+    const coverageScore = clamp(overlapSegments.length / 3, 0, 1);
+    const combinedScore = clamp(
+      normalizedConfidence * 0.5 + durationScore * 0.3 + coverageScore * 0.2,
+      0,
+      1
+    );
+
+    if (combinedScore < 0.35) {
+      continue;
+    }
+
+    refined.push({
+      ...raw,
+      start: Number(paddedStart.toFixed(3)),
+      end: Number(paddedEnd.toFixed(3)),
+      confidence: normalizedConfidence,
+      score: Number((combinedScore * 100).toFixed(2)),
+      title: raw.title?.trim() || raw.title,
+      description: raw.description?.trim() || raw.description,
+      justification: raw.justification?.trim() || raw.justification,
+      category: raw.category?.trim() || raw.category,
+    });
+  }
+
+  return dedupeHighlights(refined);
+}
+
+function findOverlappingSegments(
+  segments: TranscriptSummarySegment[],
+  start: number,
+  end: number
+): TranscriptSummarySegment[] {
+  const overlaps: TranscriptSummarySegment[] = [];
+  for (const seg of segments) {
+    if (seg.end <= start) continue;
+    if (seg.start >= end) break;
+    overlaps.push(seg);
+  }
+  return overlaps;
+}
+
+function dedupeHighlights(
+  highlights: TranscriptHighlight[]
+): TranscriptHighlight[] {
+  if (!Array.isArray(highlights) || highlights.length === 0) return [];
+  const sorted = [...highlights].sort((a, b) => a.start - b.start);
+  const result: TranscriptHighlight[] = [];
+
+  for (const current of sorted) {
+    const last = result[result.length - 1];
+    if (!last) {
+      result.push(current);
+      continue;
+    }
+
+    const overlap =
+      Math.min(last.end, current.end) - Math.max(last.start, current.start);
+    const shortest = Math.min(
+      last.end - last.start,
+      current.end - current.start
+    );
+
+    if (overlap > 0 && overlap / Math.max(shortest, 1) >= 0.6) {
+      const lastScore = getHighlightScore(last);
+      const currentScore = getHighlightScore(current);
+      if (currentScore > lastScore) {
+        result[result.length - 1] = current;
+      }
+    } else {
+      result.push(current);
+    }
+  }
+
+  return result;
+}
+
+function normalizeConfidenceValue(value?: number): number {
+  if (!Number.isFinite(value ?? null)) return 0.5;
+  const numeric = value as number;
+  if (numeric > 1) {
+    return clamp(numeric / 100, 0, 1);
+  }
+  return clamp(numeric, 0, 1);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
 function pickBetterHighlight(
   a: TranscriptHighlight,
   b: TranscriptHighlight
 ): TranscriptHighlight {
-  const scoreA = Number.isFinite(a.score ?? null) ? (a.score as number) : -Infinity;
-  const scoreB = Number.isFinite(b.score ?? null) ? (b.score as number) : -Infinity;
+  const scoreA = getHighlightScore(a);
+  const scoreB = getHighlightScore(b);
   if (scoreB > scoreA) return { ...a, ...b };
   return a;
 }
@@ -511,18 +735,33 @@ function rankHighlights(
   maxHighlights: number
 ): TranscriptHighlight[] {
   const sorted = [...highlights].sort((lhs, rhs) => {
-    const scoreA = Number.isFinite(lhs.score ?? null)
-      ? (lhs.score as number)
-      : 0;
-    const scoreB = Number.isFinite(rhs.score ?? null)
-      ? (rhs.score as number)
-      : 0;
+    const scoreA = getHighlightScore(lhs);
+    const scoreB = getHighlightScore(rhs);
     if (scoreA !== scoreB) {
       return scoreB - scoreA;
     }
+    const lengthA = lhs.end - lhs.start;
+    const lengthB = rhs.end - rhs.start;
+    if (lengthA !== lengthB) {
+      return lengthB - lengthA;
+    }
     return lhs.start - rhs.start;
   });
-  return sorted.slice(0, Math.max(1, maxHighlights));
+  if (maxHighlights <= 0) {
+    return [];
+  }
+  return sorted.slice(0, Math.min(maxHighlights, sorted.length));
+}
+
+function getHighlightScore(highlight: TranscriptHighlight | undefined): number {
+  if (!highlight) return 0;
+  if (Number.isFinite(highlight.score ?? null)) {
+    return highlight.score as number;
+  }
+  if (Number.isFinite(highlight.confidence ?? null)) {
+    return (highlight.confidence as number) * 100;
+  }
+  return 0;
 }
 
 function safeParseHighlights(text: string): Array<{
@@ -531,6 +770,9 @@ function safeParseHighlights(text: string): Array<{
   title?: string;
   description?: string;
   score?: number;
+  confidence?: number;
+  category?: string;
+  justification?: string;
 }> {
   try {
     // Try direct JSON parse

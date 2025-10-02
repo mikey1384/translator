@@ -17,6 +17,7 @@ import {
   GenerateSubtitlesOptions,
   DubSegmentPayload,
   DubSubtitlesOptions,
+  TranscriptHighlight,
 } from '@shared-types/app';
 import {
   addSubtitle,
@@ -72,6 +73,27 @@ function checkServicesInitialized(): {
     ffmpeg: ffmpegCtx,
     fileManager: fileManagerInstance,
   };
+}
+
+function extractHighlightScore(
+  highlight: TranscriptHighlight | undefined
+): number {
+  if (!highlight) return 0;
+  if (Number.isFinite(highlight.score ?? null)) {
+    return highlight.score as number;
+  }
+  if (Number.isFinite(highlight.confidence ?? null)) {
+    return (highlight.confidence as number) * 100;
+  }
+  return 0;
+}
+
+function resolveHighlightLimit(value?: number | null): number {
+  if (!Number.isFinite(value ?? null)) {
+    return 10;
+  }
+  const numeric = Math.floor(value as number);
+  return Math.max(0, numeric);
 }
 
 export async function handleGenerateSubtitles(
@@ -557,7 +579,8 @@ async function buildDubSegmentsFromSpeech({
         mergedEnd = Math.max(interval.end, latest);
       }
     }
-    if (!Number.isFinite(mergedStart) || mergedStart < 0) mergedStart = interval.start;
+    if (!Number.isFinite(mergedStart) || mergedStart < 0)
+      mergedStart = interval.start;
     if (!Number.isFinite(mergedEnd) || mergedEnd <= mergedStart) {
       mergedEnd = mergedStart + Math.max(0.01, interval.end - interval.start);
     }
@@ -601,9 +624,16 @@ async function buildDubSegmentsFromSpeech({
     }
     const words = normalized.split(' ').filter(Boolean).length;
     const charCount = normalized.replace(/\s+/g, '').length;
-    const approxWords = Math.max(words, Math.ceil(charCount / APPROX_CHARS_PER_WORD));
-    const estimated = BASE_TEXT_DURATION + Math.max(0, approxWords - 1) * PER_WORD_DURATION;
-    return Math.max(MIN_SEGMENT_DURATION, Math.min(MAX_SEGMENT_DURATION, estimated));
+    const approxWords = Math.max(
+      words,
+      Math.ceil(charCount / APPROX_CHARS_PER_WORD)
+    );
+    const estimated =
+      BASE_TEXT_DURATION + Math.max(0, approxWords - 1) * PER_WORD_DURATION;
+    return Math.max(
+      MIN_SEGMENT_DURATION,
+      Math.min(MAX_SEGMENT_DURATION, estimated)
+    );
   };
 
   const sortedAggregated = [...aggregated].sort((a, b) => a.start - b.start);
@@ -620,7 +650,10 @@ async function buildDubSegmentsFromSpeech({
     const expectedDuration = seg.targetDuration ?? seg.end - seg.start;
     let duration = Math.max(MIN_SEGMENT_DURATION, expectedDuration || 0);
     const minDurationForText = computeDurationFloor(translation);
-    const desiredDuration = Math.min(MAX_SEGMENT_DURATION, Math.max(duration, minDurationForText));
+    const desiredDuration = Math.min(
+      MAX_SEGMENT_DURATION,
+      Math.max(duration, minDurationForText)
+    );
     let end = start + duration;
     let extraNeeded = desiredDuration - duration;
 
@@ -628,7 +661,10 @@ async function buildDubSegmentsFromSpeech({
       const nextStart = sortedAggregated[idx + 1]?.start;
       let availableAfter = Number.POSITIVE_INFINITY;
       if (Number.isFinite(nextStart)) {
-        availableAfter = Math.max(0, (nextStart as number) - SILENCE_BUFFER - end);
+        availableAfter = Math.max(
+          0,
+          (nextStart as number) - SILENCE_BUFFER - end
+        );
       }
       const extendAfter = Math.min(extraNeeded, availableAfter);
       if (extendAfter > 0) {
@@ -706,11 +742,13 @@ export async function handleGenerateTranscriptSummary(
 
   try {
     const { ffmpeg } = checkServicesInitialized();
+    const highlightLimit = resolveHighlightLimit(options.maxHighlights);
     const { summary, highlights } = await generateTranscriptSummary({
       segments: options.segments,
       targetLanguage: options.targetLanguage,
       signal: controller.signal,
       operationId,
+      maxHighlights: highlightLimit,
       progressCallback: progress => {
         event.sender.send('transcript-summary-progress', {
           ...progress,
@@ -723,10 +761,23 @@ export async function handleGenerateTranscriptSummary(
       | import('@shared-types/app').TranscriptHighlight[]
       | undefined = undefined;
 
-    if (Array.isArray(highlights) && highlights.length > 0) {
+    if (
+      highlightLimit > 0 &&
+      Array.isArray(highlights) &&
+      highlights.length > 0
+    ) {
       cutHighlights = [];
       const inputVideo = options.videoPath || null;
-      const toCut = highlights.slice(0, Math.min(10, highlights.length));
+      const toCut = [...highlights]
+        .sort((a, b) => {
+          const scoreA = extractHighlightScore(a);
+          const scoreB = extractHighlightScore(b);
+          if (scoreA !== scoreB) {
+            return scoreB - scoreA;
+          }
+          return a.start - b.start;
+        })
+        .slice(0, Math.min(highlightLimit, highlights.length));
 
       if (inputVideo) {
         let totalDur = 0;
@@ -735,7 +786,10 @@ export async function handleGenerateTranscriptSummary(
 
         try {
           await fs.access(inputVideo);
-          totalDur = await ffmpeg.getMediaDuration(inputVideo, controller.signal);
+          totalDur = await ffmpeg.getMediaDuration(
+            inputVideo,
+            controller.signal
+          );
           durationKnown = Number.isFinite(totalDur) && totalDur > 0;
         } catch (err) {
           videoAvailable = false;
@@ -760,7 +814,7 @@ export async function handleGenerateTranscriptSummary(
                 ? Math.max(rawStart + 2, Number(h.end))
                 : fallbackEnd;
 
-              const safeStart = durationKnown
+              let safeStart = durationKnown
                 ? Math.min(rawStart, Math.max(0, totalDur - 1))
                 : rawStart;
 
@@ -774,7 +828,18 @@ export async function handleGenerateTranscriptSummary(
                   : safeStart + 15;
               }
 
+              // Apply small lead/tail padding to ensure natural breathing room
+              const leadPadding = 0.35;
+              const tailPadding = 0.45;
+              safeStart = Math.max(0, safeStart - leadPadding);
+              safeEnd = durationKnown
+                ? Math.min(totalDur, safeEnd + tailPadding)
+                : safeEnd + tailPadding;
+
               const duration = Math.max(2, safeEnd - safeStart);
+
+              const fadeDuration = Math.min(0.6, Math.max(0.25, duration / 12));
+              const fadeOutStart = Math.max(0.1, duration - fadeDuration);
 
               const outPath = path.join(
                 ffmpeg.tempDir,
@@ -797,18 +862,41 @@ export async function handleGenerateTranscriptSummary(
                 inputVideo,
                 '-t',
                 String(duration),
-                '-map', '0:v:0?',
-                '-map', '0:a:0?',
-                '-c:v', 'libx264',
-                '-preset', 'veryfast',
-                '-crf', '23',
-                '-c:a', 'aac',
-                '-b:a', '128k',
-                '-movflags', '+faststart',
-                outPath,
+                '-map',
+                '0:v:0?',
+                '-map',
+                '0:a:0?',
               ];
 
-              await ffmpeg.run(args, { operationId, signal: controller.signal });
+              if (duration > fadeDuration * 2) {
+                args.push(
+                  '-vf',
+                  `fade=t=in:st=0:d=${fadeDuration.toFixed(2)},fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`,
+                  '-af',
+                  `afade=t=in:st=0:d=${fadeDuration.toFixed(2)},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`
+                );
+              }
+
+              args.push(
+                '-c:v',
+                'libx264',
+                '-preset',
+                'veryfast',
+                '-crf',
+                '23',
+                '-c:a',
+                'aac',
+                '-b:a',
+                '128k',
+                '-movflags',
+                '+faststart',
+                outPath
+              );
+
+              await ffmpeg.run(args, {
+                operationId,
+                signal: controller.signal,
+              });
 
               cutHighlights.push({
                 start: safeStart,
@@ -816,6 +904,9 @@ export async function handleGenerateTranscriptSummary(
                 title: h.title,
                 description: h.description,
                 score: h.score,
+                confidence: h.confidence,
+                category: h.category,
+                justification: h.justification,
                 videoPath: outPath,
               });
             }

@@ -186,6 +186,9 @@ declare module '@shared-types/app' {
     title?: string;
     description?: string;
     score?: number;
+    confidence?: number;
+    category?: string;
+    justification?: string;
     videoPath?: string; // populated when server cuts clips
   }
 
