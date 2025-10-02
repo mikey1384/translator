@@ -65,7 +65,8 @@ export class SaveFileError extends Error {
 export interface SaveFileOptions {
   defaultPath?: string;
   filters?: { name: string; extensions: string[] }[];
-  content: string;
+  content?: string;
+  sourcePath?: string;
   filePath?: string;
   forceDialog?: boolean;
   title?: string;
@@ -103,10 +104,20 @@ export class SaveFileService {
 
   public async saveFile(options: SaveFileOptions): Promise<string> {
     try {
-      const { defaultPath, filters, content, filePath, forceDialog } = options;
+      const {
+        defaultPath,
+        filters,
+        content,
+        sourcePath,
+        filePath,
+        forceDialog,
+      } = options;
       let targetPath: string | undefined = undefined;
 
-      console.log('[saveFile] Received options:', options);
+      console.log('[saveFile] Received options:', {
+        ...options,
+        contentLength: typeof content === 'string' ? content.length : undefined,
+      });
 
       if (filePath && !forceDialog) {
         console.log('[saveFile] Direct save requested to:', filePath);
@@ -167,11 +178,21 @@ export class SaveFileService {
         throw new SaveFileError('No target path determined for saving.');
       }
 
-      console.log(
-        `[saveFile] Writing content (${content.length} bytes) to: ${targetPath}`
-      );
-      await fs.promises.writeFile(targetPath, content, 'utf8');
-      console.log(`[saveFile] File saved successfully to: ${targetPath}`);
+      if (sourcePath) {
+        await fs.promises.access(sourcePath, fs.constants.R_OK);
+        await fs.promises.copyFile(sourcePath, targetPath);
+        console.log(
+          `[saveFile] Copied file from ${sourcePath} to destination: ${targetPath}`
+        );
+      } else if (typeof content === 'string') {
+        console.log(
+          `[saveFile] Writing content (${content.length} bytes) to: ${targetPath}`
+        );
+        await fs.promises.writeFile(targetPath, content, 'utf8');
+        console.log(`[saveFile] File saved successfully to: ${targetPath}`);
+      } else {
+        throw new SaveFileError('No content or sourcePath provided for save');
+      }
       return targetPath;
     } catch (error: any) {
       const errorMessage =
@@ -181,6 +202,7 @@ export class SaveFileService {
       console.error('[saveFile] Error:', errorMessage, 'Options:', {
         ...options,
         content: '(omitted)',
+        sourcePath: options.sourcePath,
       });
 
       if (error instanceof SaveFileError) {

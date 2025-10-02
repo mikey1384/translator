@@ -103,6 +103,11 @@
     "title": "Resumen de la transcripción",
     "ctaHelper": "Genera una vista general detallada. Los videos largos pueden tardar un momento.",
     "languageLabel": "Idioma del resumen",
+    "tab": {
+      "summary": "Resumen",
+      "sections": "Notas detalladas",
+      "highlights": "Momentos destacados"
+    },
     "generate": "Generar resumen",
     "regenerate": "Regenerar resumen",
     "placeholder": "Tu resumen con IA aparecerá aquí cuando se genere.",
@@ -111,6 +116,15 @@
     "copy": "Copiar resumen",
     "copied": "¡Copiado!",
     "copyError": "No se pudo copiar el resumen al portapapeles.",
+    "downloadHighlight": "Descargar clip",
+    "downloadingHighlight": "Guardando…",
+    "highlightSaved": "¡Guardado!",
+    "highlightSaveError": "Error al guardar",
+    "downloadHighlightFailed": "Error al guardar el clip destacado: {{message}}",
+    "saveHighlightDialogTitle": "Guardar clip destacado",
+    "noSections": "Aún no hay notas de sección.",
+    "sectionHeading": "Sección {{index}}",
+    "highlightsInProgress": "Preparando clips destacados…",
     "status": {
       "preparing": "Preparando transcripción…",
       "chunk": "Resumiendo sección {{current}}/{{total}}",

@@ -117,6 +117,11 @@
     "title": "전사 요약",
     "ctaHelper": "자세한 개요를 생성합니다. 긴 영상은 처리에 시간이 걸릴 수 있습니다.",
     "languageLabel": "요약 언어",
+    "tab": {
+      "summary": "요약",
+      "sections": "상세 노트",
+      "highlights": "하이라이트"
+    },
     "generate": "요약 생성",
     "regenerate": "요약 다시 생성",
     "placeholder": "생성이 완료되면 AI 요약이 여기에 표시됩니다.",
@@ -125,6 +130,15 @@
     "copy": "요약 복사",
     "copied": "복사되었습니다!",
     "copyError": "요약을 클립보드로 복사하지 못했습니다.",
+    "downloadHighlight": "클립 다운로드",
+    "downloadingHighlight": "저장 중…",
+    "highlightSaved": "저장됨!",
+    "highlightSaveError": "저장 실패",
+    "downloadHighlightFailed": "하이라이트 클립 저장 실패: {{message}}",
+    "saveHighlightDialogTitle": "하이라이트 클립 저장",
+    "noSections": "섹션 노트가 아직 없습니다.",
+    "sectionHeading": "섹션 {{index}}",
+    "highlightsInProgress": "하이라이트 클립을 준비하는 중…",
     "status": {
       "preparing": "전사를 준비하는 중…",
       "chunk": "{{current}}/{{total}} 구간 요약 중",

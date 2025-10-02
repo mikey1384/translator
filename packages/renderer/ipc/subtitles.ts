@@ -109,6 +109,7 @@ export function generateTranscriptSummary(options: {
 }): Promise<{
   summary?: string;
   highlights?: import('@shared-types/app').TranscriptHighlight[];
+  sections?: import('@shared-types/app').TranscriptSummarySection[];
   success?: boolean;
   error?: string;
 }> {

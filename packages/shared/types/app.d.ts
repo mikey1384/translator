@@ -44,15 +44,18 @@ declare module '@shared-types/app' {
   }
 
   export interface SaveFileOptions {
-    content: string;
+    content?: string;
+    sourcePath?: string;
     defaultPath?: string;
     filters?: { name: string; extensions: string[] }[];
     filePath?: string;
+    forceDialog?: boolean;
     title?: string;
   }
 
   export interface SaveFileResult {
-    filePath: string;
+    success: boolean;
+    filePath?: string;
     error?: string;
   }
 
@@ -192,6 +195,12 @@ declare module '@shared-types/app' {
     videoPath?: string; // populated when server cuts clips
   }
 
+  export interface TranscriptSummarySection {
+    index: number;
+    title: string;
+    content: string;
+  }
+
   export interface TranscriptSummaryRequest {
     segments: TranscriptSummarySegment[];
     targetLanguage: string;
@@ -204,6 +213,7 @@ declare module '@shared-types/app' {
     success: boolean;
     summary?: string;
     highlights?: TranscriptHighlight[];
+    sections?: TranscriptSummarySection[];
     error?: string;
     cancelled?: boolean;
     operationId: string;
@@ -215,8 +225,10 @@ declare module '@shared-types/app' {
     error?: string;
     partialSummary?: string;
     partialHighlights?: TranscriptHighlight[];
+    partialSections?: TranscriptSummarySection[];
     current?: number;
     total?: number;
+    operationId?: string;
   }
 
   interface GenerateSubtitlesFromAudioArgs {

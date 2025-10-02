@@ -120,6 +120,7 @@
     "languageLabel": "Summary language",
     "tab": {
       "summary": "Summary",
+      "sections": "Detailed notes",
       "highlights": "Highlights"
     },
     "generate": "Generate summary",
@@ -133,6 +134,15 @@
     "noHighlights": "No highlights yet. Generate to detect punchlines.",
     "noVideoForHighlights": "Open the source video to cut highlight clips.",
     "highlight": "Highlight",
+    "downloadHighlight": "Download clip",
+    "downloadingHighlight": "Saving…",
+    "highlightSaved": "Saved!",
+    "highlightSaveError": "Save failed",
+    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
+    "saveHighlightDialogTitle": "Save highlight clip",
+    "noSections": "No section notes yet.",
+    "sectionHeading": "Section {{index}}",
+    "highlightsInProgress": "Preparing highlight clips…",
     "status": {
       "preparing": "Preparing transcript…",
       "chunk": "Summarizing section {{current}}/{{total}}",

@@ -3,6 +3,7 @@ import type {
   TranscriptSummarySegment,
   TranscriptSummaryProgress,
   TranscriptHighlight,
+  TranscriptSummarySection,
 } from '@shared-types/app';
 
 interface GenerateTranscriptSummaryOptions {
@@ -17,9 +18,42 @@ interface GenerateTranscriptSummaryOptions {
 interface GenerateTranscriptSummaryResult {
   summary: string;
   highlights: TranscriptHighlight[];
+  sections: TranscriptSummarySection[];
 }
 
 const MAX_CHARS_PER_CHUNK = 7_500;
+
+function createSectionSummaries(
+  summaries: string[]
+): TranscriptSummarySection[] {
+  return summaries.map((text, idx) => {
+    const content = (text ?? '').trim();
+    return {
+      index: idx + 1,
+      title: deriveSectionTitle(content, idx),
+      content,
+    };
+  });
+}
+
+function deriveSectionTitle(content: string, idx: number): string {
+  const fallback = `Section ${idx + 1}`;
+  if (!content) return fallback;
+
+  const firstParagraph = content
+    .split(/\n+/)
+    .find(part => part.trim())
+    ?.trim();
+  if (!firstParagraph) return fallback;
+
+  const sentenceMatch = firstParagraph.match(/^(.{0,140}?[.!?])(?:\s|$)/);
+  if (sentenceMatch && sentenceMatch[1]) {
+    return sentenceMatch[1].trim();
+  }
+
+  const snippet = firstParagraph.slice(0, 120).trim();
+  return snippet || fallback;
+}
 
 export async function generateTranscriptSummary({
   segments,
@@ -70,10 +104,12 @@ export async function generateTranscriptSummary({
     });
 
     const aggregatedDraft = formatChunkDrafts([chunkNote]);
+    const sectionNotes = createSectionSummaries([chunkNote]);
     progressCallback?.({
       percent: 60,
       stage: 'Section 1 of 1 summarized',
       partialSummary: aggregatedDraft,
+      partialSections: sectionNotes,
     });
 
     const highlights =
@@ -95,6 +131,7 @@ export async function generateTranscriptSummary({
     progressCallback?.({
       percent: 90,
       stage: 'Synthesizing comprehensive summary',
+      partialSections: sectionNotes,
     });
 
     const finalSummary = await synthesizeFromChunkSummaries({
@@ -108,9 +145,11 @@ export async function generateTranscriptSummary({
       percent: 100,
       stage: 'Summary ready',
       partialSummary: finalSummary,
+      partialHighlights: highlights,
+      partialSections: sectionNotes,
     });
 
-    return { summary: finalSummary, highlights };
+    return { summary: finalSummary, highlights, sections: sectionNotes };
   }
 
   const chunkSummaries: string[] = [];
@@ -139,11 +178,13 @@ export async function generateTranscriptSummary({
     chunkSummaries.push(summary.trim());
 
     const aggregatedDraft = formatChunkDrafts(chunkSummaries);
+    const partialSections = createSectionSummaries(chunkSummaries);
     const completePercent = 20 + perChunkProgress * (i + 1);
     progressCallback?.({
       percent: completePercent,
       stage: `Section ${i + 1} of ${chunks.length} summarized`,
       partialSummary: aggregatedDraft,
+      partialSections,
     });
   }
 
@@ -151,9 +192,12 @@ export async function generateTranscriptSummary({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
+  const sectionSummaries = createSectionSummaries(chunkSummaries);
+
   progressCallback?.({
     percent: 90,
     stage: 'Synthesizing comprehensive summary',
+    partialSections: sectionSummaries,
   });
 
   const synthesis = await synthesizeFromChunkSummaries({
@@ -184,9 +228,10 @@ export async function generateTranscriptSummary({
     stage: 'Summary ready',
     partialSummary: finalSummary,
     partialHighlights: highlights,
+    partialSections: sectionSummaries,
   });
 
-  return { summary: finalSummary, highlights };
+  return { summary: finalSummary, highlights, sections: sectionSummaries };
 }
 
 function buildChunks(segments: TranscriptSummarySegment[]): string[] {

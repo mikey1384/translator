@@ -103,6 +103,11 @@
     "title": "Transkript-Zusammenfassung",
     "ctaHelper": "Erstelle eine ausführliche Übersicht. Lange Videos benötigen möglicherweise etwas Zeit.",
     "languageLabel": "Sprache der Zusammenfassung",
+    "tab": {
+      "summary": "Zusammenfassung",
+      "sections": "Detaillierte Notizen",
+      "highlights": "Highlights"
+    },
     "generate": "Zusammenfassung erstellen",
     "regenerate": "Zusammenfassung neu erstellen",
     "placeholder": "Die KI-Zusammenfassung erscheint hier, sobald sie erstellt wurde.",
@@ -111,6 +116,15 @@
     "copy": "Zusammenfassung kopieren",
     "copied": "Kopiert!",
     "copyError": "Zusammenfassung konnte nicht in die Zwischenablage kopiert werden.",
+    "downloadHighlight": "Clip herunterladen",
+    "downloadingHighlight": "Wird gespeichert…",
+    "highlightSaved": "Gespeichert!",
+    "highlightSaveError": "Speichern fehlgeschlagen",
+    "downloadHighlightFailed": "Speichern des Highlight-Clips fehlgeschlagen: {{message}}",
+    "saveHighlightDialogTitle": "Highlight-Clip speichern",
+    "noSections": "Noch keine Abschnittsnotizen.",
+    "sectionHeading": "Abschnitt {{index}}",
+    "highlightsInProgress": "Highlight-Clips werden vorbereitet…",
     "status": {
       "preparing": "Transkript wird vorbereitet…",
       "chunk": "Abschnitt {{current}}/{{total}} wird zusammengefasst",

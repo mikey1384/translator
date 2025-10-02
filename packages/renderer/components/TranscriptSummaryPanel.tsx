@@ -1,8 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { JSX } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import type { SrtSegment } from '@shared-types/app';
+import type {
+  SrtSegment,
+  TranscriptHighlight,
+  TranscriptSummarySection,
+} from '@shared-types/app';
 import Button from './Button';
 import ErrorBanner from './ErrorBanner';
 import {
@@ -20,6 +30,7 @@ import {
   generateTranscriptSummary,
   onTranscriptSummaryProgress,
 } from '../ipc/subtitles';
+import { save as saveFile } from '../ipc/file';
 
 interface TranscriptSummaryPanelProps {
   segments: SrtSegment[];
@@ -33,27 +44,27 @@ export function TranscriptSummaryPanel({
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
 
   const [summary, setSummary] = useState<string>('');
-  const [highlights, setHighlights] = useState<
-    Array<{
-      start: number;
-      end: number;
-      title?: string;
-      description?: string;
-      score?: number;
-      videoPath?: string;
-    }>
-  >([]);
+  const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
+  const [highlightProgressLabel, setHighlightProgressLabel] = useState('');
+  const [highlightProgressPercent, setHighlightProgressPercent] = useState(0);
   const [activeOperationId, setActiveOperationId] = useState<string | null>(
     null
   );
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
-  const [activeTab, setActiveTab] = useState<'summary' | 'highlights'>(
-    'summary'
+  const [activeTab, setActiveTab] = useState<
+    'summary' | 'sections' | 'highlights'
+  >('summary');
+  const [downloadStatus, setDownloadStatus] = useState<
+    Record<string, 'idle' | 'saving' | 'saved' | 'error'>
+  >({});
+  const downloadTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {}
   );
+  const [sections, setSections] = useState<TranscriptSummarySection[]>([]);
 
   const originalVideoPath = useVideoStore(s => s.originalPath);
   const fallbackVideoPath = useSubStore(s => s.sourceVideoPath);
@@ -73,21 +84,59 @@ export function TranscriptSummaryPanel({
   const hasTranscript = usableSegments.length > 0;
 
   useEffect(() => {
+    return () => {
+      Object.values(downloadTimers.current).forEach(timer => {
+        clearTimeout(timer);
+      });
+      downloadTimers.current = {};
+    };
+  }, []);
+
+  useEffect(() => {
     if (!activeOperationId) return;
 
     const unsubscribe = onTranscriptSummaryProgress(progress => {
       if (progress.operationId !== activeOperationId) return;
       const nextLabel = translateStageLabel(progress.stage ?? '', t);
       const pct = typeof progress.percent === 'number' ? progress.percent : 0;
-      setProgressLabel(nextLabel);
-      setProgressPercent(Math.min(100, Math.max(0, pct)));
+      const clampedPercent = Math.min(100, Math.max(0, pct));
+      const isHighlightStage = /highlight/i.test(nextLabel);
+      if (isHighlightStage) {
+        setHighlightProgressLabel(nextLabel);
+        setHighlightProgressPercent(clampedPercent);
+      } else {
+        setProgressLabel(nextLabel);
+        setProgressPercent(clampedPercent);
+      }
 
       if (typeof progress.partialSummary === 'string') {
         setSummary(progress.partialSummary.trim());
       }
 
       if (Array.isArray(progress.partialHighlights)) {
-        setHighlights(progress.partialHighlights);
+        const partialHighlights =
+          progress.partialHighlights as TranscriptHighlight[];
+        setHighlights(partialHighlights);
+        setDownloadStatus(prev => {
+          const next: Record<string, 'idle' | 'saving' | 'saved' | 'error'> =
+            {};
+          partialHighlights.forEach((highlight, highlightIndex) => {
+            const key = getHighlightKey(highlight, highlightIndex);
+            if (prev[key]) {
+              next[key] = prev[key];
+            }
+          });
+          return next;
+        });
+      }
+
+      if (progress.partialHighlights || progress.stage === 'Highlights ready') {
+        setHighlightProgressLabel(nextLabel);
+        setHighlightProgressPercent(clampedPercent);
+      }
+
+      if (Array.isArray(progress.partialSections)) {
+        setSections(progress.partialSections as TranscriptSummarySection[]);
       }
 
       if (progress.partialSummary) {
@@ -118,6 +167,7 @@ export function TranscriptSummaryPanel({
           inProgress: false,
           id: null,
         });
+        setHighlightProgressPercent(100);
       }
     });
 
@@ -134,11 +184,17 @@ export function TranscriptSummaryPanel({
     setIsGenerating(true);
     setActiveOperationId(opId);
     setError(null);
+    Object.values(downloadTimers.current).forEach(timer => clearTimeout(timer));
+    downloadTimers.current = {};
     setSummary('');
     setHighlights([]);
+    setSections([]);
+    setDownloadStatus({});
     setCopyStatus('idle');
     setProgressLabel(t('summary.status.preparing'));
     setProgressPercent(0);
+    setHighlightProgressLabel('');
+    setHighlightProgressPercent(0);
     useTaskStore.getState().setSummary({
       id: opId,
       stage: t('summary.status.preparing'),
@@ -162,8 +218,23 @@ export function TranscriptSummaryPanel({
       if (result?.summary) {
         setSummary(result.summary.trim());
       }
+      if (Array.isArray(result?.sections)) {
+        setSections(result.sections as TranscriptSummarySection[]);
+      }
       if (Array.isArray(result?.highlights)) {
-        setHighlights(result.highlights);
+        const finalHighlights = result.highlights as TranscriptHighlight[];
+        setHighlights(finalHighlights);
+        setDownloadStatus(prev => {
+          const next: Record<string, 'idle' | 'saving' | 'saved' | 'error'> =
+            {};
+          finalHighlights.forEach((highlight, highlightIndex) => {
+            const key = getHighlightKey(highlight, highlightIndex);
+            if (prev[key]) {
+              next[key] = prev[key];
+            }
+          });
+          return next;
+        });
       }
 
       setProgressLabel(t('summary.status.ready'));
@@ -200,7 +271,66 @@ export function TranscriptSummaryPanel({
     usableSegments,
     t,
     progressPercent,
+    originalVideoPath,
+    fallbackVideoPath,
   ]);
+
+  const handleDownloadHighlight = useCallback(
+    async (highlight: TranscriptHighlight, index: number) => {
+      if (!highlight?.videoPath) return;
+      const key = getHighlightKey(highlight, index);
+
+      setDownloadStatus(prev => ({ ...prev, [key]: 'saving' }));
+
+      try {
+        const defaultName = buildHighlightFilename(highlight, index);
+        const result = await saveFile({
+          sourcePath: highlight.videoPath,
+          defaultPath: defaultName,
+          filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+          title: t('summary.saveHighlightDialogTitle', 'Save highlight clip'),
+        });
+
+        if (!result?.success || !result.filePath) {
+          throw new Error(result?.error || 'Unknown error');
+        }
+
+        setDownloadStatus(prev => ({ ...prev, [key]: 'saved' }));
+        if (downloadTimers.current[key]) {
+          clearTimeout(downloadTimers.current[key]);
+        }
+        downloadTimers.current[key] = setTimeout(() => {
+          setDownloadStatus(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+          delete downloadTimers.current[key];
+        }, 4000);
+      } catch (err: any) {
+        console.error('[TranscriptSummaryPanel] save highlight failed', err);
+        setDownloadStatus(prev => ({ ...prev, [key]: 'error' }));
+        if (downloadTimers.current[key]) {
+          clearTimeout(downloadTimers.current[key]);
+        }
+        downloadTimers.current[key] = setTimeout(() => {
+          setDownloadStatus(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+          delete downloadTimers.current[key];
+        }, 5000);
+
+        setError(
+          t('summary.downloadHighlightFailed', {
+            message: err?.message || String(err),
+          })
+        );
+      }
+    },
+    [t]
+  );
 
   const handleCopy = useCallback(async () => {
     if (!summary) return;
@@ -243,6 +373,9 @@ export function TranscriptSummaryPanel({
   }
 
   const showProgressBar = isGenerating || activeOperationId !== null;
+  const showHighlightProgress =
+    highlightProgressPercent > 0 &&
+    (isGenerating || activeOperationId !== null);
 
   return (
     <div className={panelStyles}>
@@ -296,6 +429,13 @@ export function TranscriptSummaryPanel({
           {t('summary.tab.summary', 'Summary')}
         </button>
         <button
+          className={tabButtonStyles(activeTab === 'sections')}
+          onClick={() => setActiveTab('sections')}
+          disabled={isGenerating}
+        >
+          {t('summary.tab.sections', 'Detailed notes')}
+        </button>
+        <button
           className={tabButtonStyles(activeTab === 'highlights')}
           onClick={() => setActiveTab('highlights')}
           disabled={isGenerating}
@@ -314,6 +454,23 @@ export function TranscriptSummaryPanel({
           </div>
           <div className={progressBarBackgroundStyles}>
             <div className={progressBarFillStyles(progressPercent)} />
+          </div>
+        </div>
+      )}
+
+      {showHighlightProgress && (
+        <div className={progressWrapperStyles}>
+          <div className={progressHeaderStyles}>
+            <span>
+              {highlightProgressLabel ||
+                t('summary.highlightsInProgress', 'Preparing highlight clips…')}
+            </span>
+            <span className={progressPercentStyles}>
+              {Math.round(highlightProgressPercent)}%
+            </span>
+          </div>
+          <div className={progressBarBackgroundStyles}>
+            <div className={progressBarFillStyles(highlightProgressPercent)} />
           </div>
         </div>
       )}
@@ -344,6 +501,49 @@ export function TranscriptSummaryPanel({
         </>
       )}
 
+      {activeTab === 'sections' && (
+        <div className={sectionsListStyles}>
+          {sections.length === 0 ? (
+            <div className={noHighlightsStyles}>
+              {t('summary.noSections', 'No section notes yet.')}
+            </div>
+          ) : (
+            sections.map(section => {
+              const paragraphs: string[] = section.content
+                .split(/\n{2,}/)
+                .map(part => part.trim())
+                .filter(part => part.length > 0);
+
+              return (
+                <div key={section.index} className={sectionCardStyles}>
+                  <div className={sectionHeaderStyles}>
+                    <span className={sectionIndexStyles}>
+                      {t('summary.sectionHeading', {
+                        index: section.index,
+                      })}
+                    </span>
+                    <span className={sectionTitleStyles}>{section.title}</span>
+                  </div>
+                  <div className={sectionContentStyles}>
+                    {paragraphs.length === 0 ? (
+                      <p className={sectionParagraphStyles}>
+                        {section.content}
+                      </p>
+                    ) : (
+                      paragraphs.map((paragraph, idx) => (
+                        <p key={idx} className={sectionParagraphStyles}>
+                          {paragraph}
+                        </p>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
       {activeTab === 'highlights' && (
         <div className={highlightsGridStyles}>
           {highlights.length === 0 && (
@@ -354,35 +554,88 @@ export function TranscriptSummaryPanel({
               )}
             </div>
           )}
-          {highlights.map((h, idx) => (
-            <div key={`${h.start}-${h.end}-${idx}`} className={highlightCard}>
-              <div className={highlightHeader}>
-                <div className={highlightTitle}>{h.title || t('summary.highlight', 'Highlight')}</div>
-                <div className={highlightTime}>{formatRange(h.start, h.end)}</div>
-              </div>
-              {h.videoPath ? (
-                <video
-                  className={highlightVideo}
-                  controls
-                  src={toFileUrl(h.videoPath)}
-                />
-              ) : (
-                <div className={noVideoStyles}>
-                  {t(
-                    'summary.noVideoForHighlights',
-                    'Open the source video to cut highlight clips.'
-                  )}
+          {highlights.map((h, idx) => {
+            const key = getHighlightKey(h, idx);
+            const status = downloadStatus[key] || 'idle';
+
+            return (
+              <div key={`${h.start}-${h.end}-${idx}`} className={highlightCard}>
+                <div className={highlightHeader}>
+                  <div className={highlightTitle}>
+                    {h.title || t('summary.highlight', 'Highlight')}
+                  </div>
+                  <div className={highlightTime}>
+                    {formatRange(h.start, h.end)}
+                  </div>
                 </div>
-              )}
-              {h.description && (
-                <div className={highlightDesc}>{h.description}</div>
-              )}
-            </div>
-          ))}
+                {h.videoPath ? (
+                  <video
+                    className={highlightVideo}
+                    controls
+                    src={toFileUrl(h.videoPath)}
+                  />
+                ) : (
+                  <div className={noVideoStyles}>
+                    {t(
+                      'summary.noVideoForHighlights',
+                      'Open the source video to cut highlight clips.'
+                    )}
+                  </div>
+                )}
+                {h.description && (
+                  <div className={highlightDesc}>{h.description}</div>
+                )}
+                {h.videoPath && (
+                  <div className={highlightActions}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDownloadHighlight(h, idx)}
+                      disabled={status === 'saving'}
+                    >
+                      {status === 'saving'
+                        ? t('summary.downloadingHighlight', 'Saving…')
+                        : t('summary.downloadHighlight', 'Download clip')}
+                    </Button>
+                    {status === 'saved' && (
+                      <span className={highlightStatusSuccess}>
+                        {t('summary.highlightSaved', 'Saved!')}
+                      </span>
+                    )}
+                    {status === 'error' && (
+                      <span className={highlightStatusError}>
+                        {t('summary.highlightSaveError', 'Save failed')}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
+}
+
+function getHighlightKey(h: TranscriptHighlight, index: number): string {
+  return `${h.videoPath || ''}-${index}`;
+}
+
+function buildHighlightFilename(h: TranscriptHighlight, index: number): string {
+  const base = h.title ? slugify(h.title) : `highlight-${index + 1}`;
+  const startSeconds = Math.max(0, Math.floor(h.start || 0));
+  const startStamp = formatHHMMSS(startSeconds).replace(/:/g, '-');
+  const safeBase = base || `highlight-${index + 1}`;
+  return `${safeBase}-${startStamp}.mp4`;
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 }
 
 function translateStageLabel(
@@ -468,16 +721,15 @@ const tabsRowStyles = css`
   gap: 8px;
 `;
 
-const tabButtonStyles = (active: boolean) =>
-  css`
-    border: 1px solid ${active ? colors.primary : colors.border};
-    background: ${active ? colors.primary : colors.white};
-    color: ${active ? colors.white : colors.dark};
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.9rem;
-    cursor: pointer;
-  `;
+const tabButtonStyles = (active: boolean) => css`
+  border: 1px solid ${active ? colors.primary : colors.border};
+  background: ${active ? colors.primary : colors.white};
+  color: ${active ? colors.white : colors.dark};
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+`;
 
 const headerRowStyles = css`
   display: flex;
@@ -615,6 +867,77 @@ const noVideoStyles = css`
 const highlightDesc = css`
   color: ${colors.dark};
   font-size: 0.95rem;
+`;
+
+const highlightActions = css`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+`;
+
+const highlightStatusSuccess = css`
+  font-size: 0.85rem;
+  color: ${colors.success};
+`;
+
+const highlightStatusError = css`
+  font-size: 0.85rem;
+  color: ${colors.danger};
+`;
+
+const sectionsListStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const sectionCardStyles = css`
+  background: ${colors.white};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const sectionHeaderStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  @media (min-width: 720px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+`;
+
+const sectionIndexStyles = css`
+  color: ${colors.gray};
+  font-size: 0.85rem;
+  font-weight: 600;
+`;
+
+const sectionTitleStyles = css`
+  color: ${colors.dark};
+  font-weight: 600;
+  font-size: 1rem;
+`;
+
+const sectionContentStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const sectionParagraphStyles = css`
+  margin: 0;
+  color: ${colors.dark};
+  line-height: 1.55;
+  white-space: pre-wrap;
 `;
 
 const summaryHeaderStyles = css`

@@ -103,6 +103,11 @@
     "title": "逐字稿摘要",
     "ctaHelper": "產生深入的總覽。較長的影片可能需要一些時間。",
     "languageLabel": "摘要語言",
+    "tab": {
+      "summary": "摘要",
+      "sections": "詳細筆記",
+      "highlights": "精華片段"
+    },
     "generate": "產生摘要",
     "regenerate": "重新產生摘要",
     "placeholder": "AI 摘要產生後會顯示在此。",
@@ -111,6 +116,15 @@
     "copy": "複製摘要",
     "copied": "已複製！",
     "copyError": "無法將摘要複製到剪貼簿。",
+    "downloadHighlight": "下載剪輯",
+    "downloadingHighlight": "儲存中…",
+    "highlightSaved": "已儲存！",
+    "highlightSaveError": "儲存失敗",
+    "downloadHighlightFailed": "儲存重點剪輯失敗：{{message}}",
+    "saveHighlightDialogTitle": "儲存重點剪輯",
+    "noSections": "尚未有章節筆記。",
+    "sectionHeading": "第 {{index}} 節",
+    "highlightsInProgress": "正在準備重點剪輯…",
     "status": {
       "preparing": "正在準備逐字稿…",
       "chunk": "正在摘要第 {{current}}/{{total}} 段",

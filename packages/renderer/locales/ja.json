@@ -103,6 +103,11 @@
     "title": "書き起こしの要約",
     "ctaHelper": "詳細な概要を生成します。長い動画は処理に時間がかかる場合があります。",
     "languageLabel": "要約の言語",
+    "tab": {
+      "summary": "要約",
+      "sections": "詳細メモ",
+      "highlights": "ハイライト"
+    },
     "generate": "要約を生成",
     "regenerate": "要約を再生成",
     "placeholder": "生成が完了すると、AIによる要約がここに表示されます。",
@@ -111,6 +116,15 @@
     "copy": "要約をコピー",
     "copied": "コピーしました！",
     "copyError": "要約をクリップボードにコピーできませんでした。",
+    "downloadHighlight": "クリップをダウンロード",
+    "downloadingHighlight": "保存中…",
+    "highlightSaved": "保存しました",
+    "highlightSaveError": "保存に失敗しました",
+    "downloadHighlightFailed": "ハイライトクリップの保存に失敗しました: {{message}}",
+    "saveHighlightDialogTitle": "ハイライトクリップを保存",
+    "noSections": "セクションメモはまだありません。",
+    "sectionHeading": "セクション {{index}}",
+    "highlightsInProgress": "ハイライトクリップを準備しています…",
     "status": {
       "preparing": "書き起こしを準備しています…",
       "chunk": "セクション {{current}}/{{total}} を要約しています",

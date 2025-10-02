@@ -731,6 +731,7 @@ export async function handleGenerateTranscriptSummary(
   success: boolean;
   summary?: string;
   highlights?: import('@shared-types/app').TranscriptHighlight[];
+  sections?: import('@shared-types/app').TranscriptSummarySection[];
   error?: string;
   cancelled?: boolean;
   operationId: string;
@@ -743,7 +744,7 @@ export async function handleGenerateTranscriptSummary(
   try {
     const { ffmpeg } = checkServicesInitialized();
     const highlightLimit = resolveHighlightLimit(options.maxHighlights);
-    const { summary, highlights } = await generateTranscriptSummary({
+    const { summary, highlights, sections } = await generateTranscriptSummary({
       segments: options.segments,
       targetLanguage: options.targetLanguage,
       signal: controller.signal,
@@ -916,6 +917,7 @@ export async function handleGenerateTranscriptSummary(
               stage: 'Highlights ready',
               operationId,
               partialHighlights: cutHighlights,
+              partialSections: sections,
             });
           } catch (err) {
             log.warn(
@@ -933,6 +935,7 @@ export async function handleGenerateTranscriptSummary(
             stage: 'Highlights metadata ready',
             operationId,
             partialHighlights: cutHighlights,
+            partialSections: sections,
           });
         }
       } else {
@@ -943,11 +946,18 @@ export async function handleGenerateTranscriptSummary(
           stage: 'Highlights metadata ready',
           operationId,
           partialHighlights: cutHighlights,
+          partialSections: sections,
         });
       }
     }
 
-    return { success: true, summary, highlights: cutHighlights, operationId };
+    return {
+      success: true,
+      summary,
+      highlights: cutHighlights,
+      sections,
+      operationId,
+    };
   } catch (error: any) {
     const aborted =
       controller.signal.aborted ||

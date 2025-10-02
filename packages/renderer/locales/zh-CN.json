@@ -103,6 +103,11 @@
     "title": "转录摘要",
     "ctaHelper": "生成深入的概述。较长的视频可能需要一些时间。",
     "languageLabel": "摘要语言",
+    "tab": {
+      "summary": "摘要",
+      "sections": "详细笔记",
+      "highlights": "精彩片段"
+    },
     "generate": "生成摘要",
     "regenerate": "重新生成摘要",
     "placeholder": "生成后，AI 摘要会显示在这里。",
@@ -111,6 +116,15 @@
     "copy": "复制摘要",
     "copied": "已复制！",
     "copyError": "无法将摘要复制到剪贴板。",
+    "downloadHighlight": "下载剪辑",
+    "downloadingHighlight": "保存中…",
+    "highlightSaved": "已保存！",
+    "highlightSaveError": "保存失败",
+    "downloadHighlightFailed": "保存高光剪辑失败：{{message}}",
+    "saveHighlightDialogTitle": "保存高光剪辑",
+    "noSections": "暂无章节笔记。",
+    "sectionHeading": "第 {{index}} 节",
+    "highlightsInProgress": "正在准备高光剪辑…",
     "status": {
       "preparing": "准备转录…",
       "chunk": "正在总结第 {{current}}/{{total}} 部分",
