@@ -148,7 +148,10 @@ export async function downloadVideoFromPlatform(
     '.yt-dlp-initialized'
   );
 
-  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: !app.isPackaged });
+  const skipUpdateEnv =
+    process.env.TRANSLATOR_YTDLP_SKIP_UPDATE === '1' ||
+    process.env.YTDLP_SKIP_UPDATE === '1';
+  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: skipUpdateEnv });
 
   if (!ytDlpPath) {
     progressCallback?.({
@@ -262,6 +265,8 @@ export async function downloadVideoFromPlatform(
     );
   }
 
+  let currentFormat = formatString;
+
   const safeTimestamp = Date.now();
   const tempFilenamePattern = join(
     outputDir,
@@ -336,45 +341,14 @@ export async function downloadVideoFromPlatform(
 
   // Decide container behavior: for high quality, avoid forcing MP4 so we can fetch
   // the truly highest formats (often VP9/AV1 in WebM/MKV). For mid/low, prefer MP4.
-  const containerArgs =
+  let containerArgs =
     effectiveQuality === 'high' ? [] : ['--merge-output-format', 'mp4'];
 
   // Prefer highest resolution/codec/fps explicitly for high quality
-  const sortArgs =
+  let sortArgs =
     effectiveQuality === 'high' ? ['-S', 'res,codec:av1:vp9:avc,fps'] : [];
-
-  const baseArgs = [
-    url,
-    '--ignore-config',
-    '--no-playlist',
-    '--output',
-    tempFilenamePattern,
-    '--format',
-    formatString,
-    // Container preference (omit for high to avoid restricting format selection)
-    ...containerArgs,
-    // Sorting preference for absolute best
-    ...sortArgs,
-    // Network reliability guards to reduce initial stalls
-    '--socket-timeout',
-    '10',
-    '--retries',
-    '3',
-    '--retry-sleep',
-    '1',
-    '--color',
-    'never',
-    '--progress',
-    '--newline',
-    // Allow TLS verification (safer). Only disable if you hit a specific edge case.
-    '--no-warnings',
-    '--print',
-    'after_move:%(filepath)s',
-    '--ffmpeg-location',
-    ffmpegPath,
-    '--no-cache-dir',
-    ...extraArgs,
-  ];
+  let extractorArgs: string[] = [];
+  let extractorMode: 'web' | 'ios' | 'android' = 'web';
 
   // Respect user-supplied --force-ipv4/--force-ipv6 if present in extraArgs.
   // Otherwise, start with no forcing (let OS decide).
@@ -384,13 +358,51 @@ export async function downloadVideoFromPlatform(
       ? 'v6'
       : 'auto';
 
+  function buildBaseArgs(): string[] {
+    return [
+      url,
+      '--ignore-config',
+      '--no-playlist',
+      '--output',
+      tempFilenamePattern,
+      '--format',
+      currentFormat,
+      // Container preference (omit for high to avoid restricting format selection)
+      ...containerArgs,
+      // Sorting preference for absolute best (may be cleared on fallback)
+      ...sortArgs,
+      // Fallback extractor tweaks (e.g., forcing iOS client)
+      ...extractorArgs,
+      // Network reliability guards to reduce initial stalls
+      '--socket-timeout',
+      '10',
+      '--retries',
+      '3',
+      '--retry-sleep',
+      '1',
+      '--color',
+      'never',
+      '--progress',
+      '--newline',
+      '--no-warnings',
+      '--print',
+      'after_move:%(filepath)s',
+      '--ffmpeg-location',
+      ffmpegPath,
+      '--no-cache-dir',
+      ...extraArgs,
+    ];
+  }
+
+  function stripIpOverrides(args: string[]): string[] {
+    return args.filter(arg => arg !== '--force-ipv4' && arg !== '--force-ipv6');
+  }
+
   function withIpArgs(mode: typeof ipMode) {
     const ipArgs =
       mode === 'v4' ? ['--force-ipv4'] : mode === 'v6' ? ['--force-ipv6'] : [];
-    return [
-      ...baseArgs.filter(a => a !== '--force-ipv4' && a !== '--force-ipv6'),
-      ...ipArgs,
-    ];
+    const base = stripIpOverrides(buildBaseArgs());
+    return [...base, ...ipArgs];
   }
 
   log.info(`[URLprocessor] yt-dlp intended output directory: ${outputDir}`);
@@ -413,7 +425,7 @@ export async function downloadVideoFromPlatform(
   // Wrap download attempt flow
   try {
     let attempt = 1;
-    const maxAttempts = 3; // Give ourselves one extra try for IP fallback
+    const maxAttempts = 5; // Baseline + ios + android + sort removal + format downgrade
     let lastError: any = null;
 
     while (attempt <= maxAttempts) {
@@ -749,24 +761,26 @@ export async function downloadVideoFromPlatform(
         } catch {
           // fall through
         }
-        try {
-          // Fire-and-forget update; do not block user flow
-          // Delay the update by a few seconds to ensure file handles are released
-          setTimeout(() => {
-            execa(ytDlpPath, ['-U', '--quiet'], {
-              windowsHide: true,
-              timeout: 120_000,
-              stdio: 'ignore',
-              shell: false,
-            }).catch(error => {
-              log.debug(
-                '[URLprocessor] Background update failed:',
-                error.message
-              );
-            });
-          }, 3000);
-        } catch {
-          // fall through
+        if (!skipUpdateEnv) {
+          try {
+            // Fire-and-forget update; do not block user flow
+            // Delay the update by a few seconds to ensure file handles are released
+            setTimeout(() => {
+              execa(ytDlpPath, ['-U', '--quiet'], {
+                windowsHide: true,
+                timeout: 120_000,
+                stdio: 'ignore',
+                shell: false,
+              }).catch(error => {
+                log.debug(
+                  '[URLprocessor] Background update failed:',
+                  error.message
+                );
+              });
+            }, 3000);
+          } catch {
+            // fall through
+          }
         }
 
         // Final 100% tick
@@ -796,6 +810,50 @@ export async function downloadVideoFromPlatform(
         );
         if (looksLikeTLSError) {
           addNoCheckCertificates = true;
+        }
+        const looksLikeNsigFailure =
+          /nsig/i.test(errorBlob) ||
+          /Initial JS player n function/i.test(errorBlob) ||
+          /Requested format is not available/i.test(errorBlob);
+        if (looksLikeNsigFailure && attempt < maxAttempts) {
+          if (extractorMode === 'web') {
+            extractorMode = 'ios';
+            extractorArgs = ['--extractor-args', 'youtube:player_client=ios'];
+            log.warn(
+              '[URLprocessor] Retrying with youtube:player_client=ios extractor fallback.'
+            );
+            attempt += 1;
+            continue;
+          }
+          if (extractorMode === 'ios') {
+            extractorMode = 'android';
+            extractorArgs = [
+              '--extractor-args',
+              'youtube:player_client=android,player_skip=1',
+            ];
+            log.warn(
+              '[URLprocessor] Retrying with youtube:player_client=android extractor fallback.'
+            );
+            attempt += 1;
+            continue;
+          }
+          if (sortArgs.length) {
+            sortArgs = [];
+            log.warn(
+              '[URLprocessor] Retrying without custom sort preference due to extractor failure.'
+            );
+            attempt += 1;
+            continue;
+          }
+          if (currentFormat === formatString) {
+            currentFormat = 'bestvideo[ext=mp4]+bestaudio/best[ext=mp4]/best';
+            containerArgs = ['--merge-output-format', 'mp4'];
+            log.warn(
+              '[URLprocessor] Retrying with simplified format selection (best MP4 fallback).'
+            );
+            attempt += 1;
+            continue;
+          }
         }
         if (wasStartupStall && attempt < maxAttempts) {
           // Flip IP strategy: auto → v6 → v4
