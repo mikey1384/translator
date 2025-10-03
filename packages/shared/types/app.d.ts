@@ -201,6 +201,41 @@ declare module '@shared-types/app' {
     content: string;
   }
 
+  export interface StylizedCaptionStyle {
+    id?: string;
+    fontFamily?: string;
+    fontSize?: number;
+    primaryColor?: string;
+    highlightColor?: string;
+    outlineColor?: string;
+    backgroundColor?: string;
+    alignment?: number;
+    position?: 'top' | 'middle' | 'bottom';
+  }
+
+  export interface StylizeHighlightRequest {
+    highlight: TranscriptHighlight;
+    words: Array<{ start: number; end: number; word: string }>;
+    style?: StylizedCaptionStyle;
+    operationId?: string;
+  }
+
+  export interface StylizeHighlightResult {
+    success: boolean;
+    videoPath?: string;
+    error?: string;
+    cancelled?: boolean;
+    operationId: string;
+  }
+
+  export interface StylizeHighlightProgress {
+    operationId: string;
+    percent: number;
+    stage: string;
+    error?: string;
+    videoPath?: string;
+  }
+
   export interface TranscriptSummaryRequest {
     segments: TranscriptSummarySegment[];
     targetLanguage: string;
@@ -523,6 +558,12 @@ declare module '@shared-types/app' {
     transcribeRemaining: (
       options: TranscribeRemainingOptions
     ) => Promise<TranscribeRemainingResult>;
+    stylizeHighlight: (
+      options: StylizeHighlightRequest
+    ) => Promise<StylizeHighlightResult>;
+    onStylizeHighlightProgress: (
+      callback: ((progress: StylizeHighlightProgress) => void) | null
+    ) => () => void;
 
     sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
     onPngRenderResult: (

@@ -51,6 +51,10 @@ const electronAPI = {
     return ipcRenderer.invoke('generate-transcript-summary', options);
   },
 
+  stylizeHighlight: async (options: any) => {
+    return ipcRenderer.invoke('stylize-highlight', options);
+  },
+
   translateOneLine: async (options: any) => {
     return ipcRenderer.invoke('translate-one-line', options);
   },
@@ -109,6 +113,20 @@ const electronAPI = {
     ipcRenderer.on('transcript-summary-progress', handler);
     return () =>
       ipcRenderer.removeListener('transcript-summary-progress', handler);
+  },
+
+  onStylizeHighlightProgress: (callback: (progress: any) => void) => {
+    if (typeof callback !== 'function') return;
+    const handler = (_: any, progress: any) => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error('[preload] stylize-highlight-progress error:', error);
+      }
+    };
+    ipcRenderer.on('stylize-highlight-progress', handler);
+    return () =>
+      ipcRenderer.removeListener('stylize-highlight-progress', handler);
   },
 
   // ---------------------- File Operations ----------------------

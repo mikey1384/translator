@@ -18,6 +18,9 @@ import {
   DubSegmentPayload,
   DubSubtitlesOptions,
   TranscriptHighlight,
+  StylizeHighlightRequest,
+  StylizeHighlightResult,
+  StylizeHighlightProgress,
 } from '@shared-types/app';
 import {
   addSubtitle,
@@ -39,6 +42,10 @@ import {
   mergeAdjacentIntervals,
   chunkSpeechInterval,
 } from '../services/subtitle-processing/audio-chunker.js';
+import {
+  DEFAULT_STYLIZED_CAPTION_STYLE,
+  renderStylizedHighlight,
+} from '../services/highlight-stylizer.js';
 
 let fileManagerInstance: FileManager | null = null;
 let ffmpegCtx: FFmpegContext | null = null;
@@ -977,6 +984,75 @@ export async function handleGenerateTranscriptSummary(
     if (insufficientCredits) {
       throw new Error('insufficient-credits');
     }
+
+    if (aborted) {
+      return { success: false, cancelled: true, operationId };
+    }
+
+    throw error;
+  } finally {
+    registryFinish(operationId);
+  }
+}
+
+export async function handleStylizeHighlight(
+  event: IpcMainInvokeEvent,
+  options: StylizeHighlightRequest,
+  operationId: string
+): Promise<StylizeHighlightResult> {
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+  addSubtitle(operationId, controller);
+
+  try {
+    const { ffmpeg } = checkServicesInitialized();
+    if (!options?.highlight?.videoPath) {
+      throw new Error(
+        'Highlight clip is not available. Generate highlights before stylizing.'
+      );
+    }
+
+    const progress = (update: StylizeHighlightProgress): void => {
+      event.sender.send('stylize-highlight-progress', {
+        ...update,
+        operationId,
+      });
+    };
+
+    progress({ percent: 5, stage: 'Preparing stylized captions', operationId });
+
+    const outputPath = await renderStylizedHighlight({
+      ffmpeg,
+      highlight: options.highlight,
+      words: options.words ?? [],
+      operationId,
+      signal: controller.signal,
+      style: options.style ?? DEFAULT_STYLIZED_CAPTION_STYLE,
+      progressCallback: update =>
+        progress({ ...update, operationId }),
+    });
+
+    progress({
+      percent: 100,
+      stage: 'Stylized highlight ready',
+      videoPath: outputPath,
+      operationId,
+    });
+
+    return { success: true, videoPath: outputPath, operationId };
+  } catch (error: any) {
+    const aborted =
+      controller.signal.aborted ||
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation aborted';
+
+    const message = error?.message || String(error);
+    event.sender.send('stylize-highlight-progress', {
+      percent: 100,
+      stage: aborted ? 'cancelled' : 'error',
+      error: message,
+      operationId,
+    });
 
     if (aborted) {
       return { success: false, cancelled: true, operationId };
