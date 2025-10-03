@@ -472,6 +472,7 @@ export default function EditSubtitles({
             onSave={handleSaveSrt}
             onSaveAs={handleSaveEditedSrtAs}
             onMerge={handleMerge}
+            onPreviewStylize={handlePreviewStylize}
             canSaveDirectly={canSaveDirectly}
             subtitlesExist={subtitles.length > 0}
             videoFileExists={!!videoPath}
@@ -581,6 +582,42 @@ export default function EditSubtitles({
     }
   }
 
+  async function handlePreviewStylize() {
+    try {
+      if (!videoPath || subtitles.length === 0) return;
+      const { baseFontSize, subtitleStyle, stylizeAspect } =
+        useUIStore.getState();
+
+      const targetHeight = meta?.height ?? BASELINE_HEIGHT;
+      const scaledPreviewFontSize = isAudioOnly
+        ? baseFontSize
+        : Math.max(1, Math.round(baseFontSize * fontScale(targetHeight)));
+
+      const opts = {
+        operationId: `preview-${Date.now()}`,
+        originalVideoPath: videoPath,
+        videoWidth: meta?.width ?? 1280,
+        videoHeight: meta?.height ?? 720,
+        videoDuration: meta?.duration ?? 0,
+        fontSizePx: scaledPreviewFontSize,
+        stylePreset: subtitleStyle,
+        outputMode: getSrtMode() as any,
+        overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+        stylizeAspect,
+        segmentsJson: subtitles.map(seg => ({
+          start: seg.start,
+          end: seg.end,
+          original: seg.original,
+          translation: seg.translation,
+          words: Array.isArray(seg.words) ? seg.words : undefined,
+        })),
+      };
+      await (await import('../../ipc/subtitles')).stylizeMergePreview(opts);
+    } catch (err) {
+      console.error('[EditSubtitles] preview stylize error:', err);
+    }
+  }
+
   async function writeSrt(path: string) {
     const result = await FileIPC.save({
       filePath: path,
@@ -666,6 +703,20 @@ export default function EditSubtitles({
         fontSizePx: scaledFontSize,
         stylePreset: subtitleStyle,
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+        outputMode: getSrtMode() as any,
+        stylizeKaraoke: useUIStore.getState().stylizeMerge,
+        stylizeAspect: useUIStore.getState().stylizeMerge
+          ? useUIStore.getState().stylizeAspect
+          : 'original',
+        segmentsJson: useUIStore.getState().stylizeMerge
+          ? subtitles.map(seg => ({
+              start: seg.start,
+              end: seg.end,
+              original: seg.original,
+              translation: seg.translation,
+              words: Array.isArray(seg.words) ? seg.words : undefined,
+            }))
+          : undefined,
       };
 
       const res = await onStartPngRenderRequest(opts);

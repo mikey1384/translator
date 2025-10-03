@@ -137,6 +137,14 @@ export function onStylizeHighlightProgress(
   return (window.electron as any).onStylizeHighlightProgress(callback);
 }
 
+export function stylizeMergePreview(options: any): Promise<{
+  success: boolean;
+  outputPath?: string;
+  error?: string;
+}> {
+  return (window.electron as any).stylizeMergePreview(options);
+}
+
 export function translateOneLine(options: {
   segment: import('@shared-types/app').SrtSegment;
   contextBefore?: import('@shared-types/app').SrtSegment[];

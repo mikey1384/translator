@@ -9,6 +9,7 @@ interface SaveAndMergeBarProps {
   onSave: () => Promise<void>;
   onSaveAs: () => Promise<void>;
   onMerge: () => void;
+  onPreviewStylize?: () => void;
   canSaveDirectly: boolean;
   subtitlesExist: boolean;
   videoFileExists: boolean;
@@ -39,13 +40,11 @@ export default function SaveAndMergeBar({
   videoFileExists,
   isMergingInProgress,
   isTranslationInProgress,
+  onPreviewStylize,
 }: SaveAndMergeBarProps) {
   const { t } = useTranslation();
 
-  const [fontSize, setFontSize] = useUIStore(s => [
-    s.baseFontSize,
-    s.setBaseFontSize,
-  ]);
+  const [fontSize] = useUIStore(s => [s.baseFontSize]);
   const [stylePreset, setStylePreset] = useUIStore(s => [
     s.subtitleStyle,
     s.setSubtitleStyle,
@@ -53,6 +52,14 @@ export default function SaveAndMergeBar({
   const [showOriginal, setShowOriginal] = useUIStore(s => [
     s.showOriginalText,
     s.setShowOriginalText,
+  ]);
+  const [stylizeMerge, setStylizeMerge] = useUIStore(s => [
+    s.stylizeMerge,
+    s.setStylizeMerge,
+  ]);
+  const [stylizeAspect, setStylizeAspect] = useUIStore(s => [
+    s.stylizeAspect,
+    s.setStylizeAspect,
   ]);
 
   if (!subtitlesExist) return null;
@@ -195,7 +202,13 @@ export default function SaveAndMergeBar({
         </div>
 
         {/* Row 2, Col 1: Merge button */}
-        <div>
+        <div
+          className={css`
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+          `}
+        >
           <Button
             onClick={onMerge}
             disabled={
@@ -236,6 +249,88 @@ export default function SaveAndMergeBar({
                 : t('editSubtitles.mergeControls.mergeButton')}
             </div>
           </Button>
+
+          <label
+            className={css`
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              font-weight: 500;
+              color: ${colors.grayDark};
+            `}
+            htmlFor="mergeStylizeToggle"
+            title={t(
+              'editSubtitles.mergeControls.stylizeHelp',
+              'Burn kinetic captions during merge'
+            )}
+          >
+            <input
+              id="mergeStylizeToggle"
+              type="checkbox"
+              checked={stylizeMerge}
+              onChange={e => setStylizeMerge(e.target.checked)}
+              aria-label={t(
+                'editSubtitles.mergeControls.stylizeLabel',
+                'Stylize'
+              )}
+            />
+            {t('editSubtitles.mergeControls.stylizeLabel', 'Stylize')}
+          </label>
+
+          {stylizeMerge && (
+            <div
+              className={css`
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+              `}
+            >
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onPreviewStylize}
+                disabled={isMergingInProgress}
+              >
+                {t('editSubtitles.mergeControls.previewStylized', 'Preview')}
+              </Button>
+              <label
+                className={css`
+                  font-weight: 500;
+                  color: ${colors.grayDark};
+                `}
+                htmlFor="mergeStylizeAspect"
+              >
+                {t('editSubtitles.mergeControls.aspectLabel', 'Aspect')}
+              </label>
+              <select
+                id="mergeStylizeAspect"
+                className={css`
+                  padding: 0.25rem 0.5rem;
+                  border: 1px solid ${colors.border};
+                  border-radius: 4px;
+                  background-color: ${colors.light};
+                  color: ${colors.dark};
+                `}
+                value={stylizeAspect}
+                onChange={e =>
+                  setStylizeAspect(
+                    (e.target.value as 'original' | 'vertical9x16') ||
+                      'original'
+                  )
+                }
+              >
+                <option value="original">
+                  {t('editSubtitles.mergeControls.aspectOriginal', 'Original')}
+                </option>
+                <option value="vertical9x16">
+                  {t(
+                    'editSubtitles.mergeControls.aspectVertical',
+                    'Vertical 9:16'
+                  )}
+                </option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Row 2, Col 2: Style select */}
@@ -271,13 +366,18 @@ export default function SaveAndMergeBar({
               setStylePreset(e.target.value as SubtitleStylePresetKey)
             }
           >
-            {(['Default', 'Classic', 'Boxed', 'LineBox'] as SubtitleStylePresetKey[]).map(
-              key => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              )
-            )}
+            {(
+              [
+                'Default',
+                'Classic',
+                'Boxed',
+                'LineBox',
+              ] as SubtitleStylePresetKey[]
+            ).map(key => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
           </select>
         </div>
 

@@ -478,6 +478,17 @@ declare module '@shared-types/app' {
     overlayMode?: 'overlayOnVideo' | 'blackVideo';
     stylePreset?: SubtitleStylePresetKey;
     outputMode?: 'original' | 'translation' | 'dual';
+    // When true, merge pipeline will burn kinetic/ASS subtitles directly via ffmpeg
+    stylizeKaraoke?: boolean;
+    stylizeAspect?: 'original' | 'vertical9x16';
+    // Optional full segments (for word timings) when stylize is enabled
+    segmentsJson?: Array<{
+      start: number;
+      end: number;
+      original: string;
+      translation?: string;
+      words?: { start: number; end: number; word: string }[];
+    }>;
   }
 
   export interface ExposedRenderResult {

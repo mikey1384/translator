@@ -223,7 +223,12 @@
       "fontSizeLabel": "글꼴 크기:",
       "styleLabel": "스타일:",
       "mergeButton": "자막 병합",
-      "mergingButton": "병합 중..."
+      "mergingButton": "병합 중...",
+      "stylizeLabel": "스타일",
+      "stylizeHelp": "병합 시 키네틱 자막을 입혀 저장",
+      "aspectLabel": "화면비",
+      "aspectOriginal": "원본",
+      "aspectVertical": "세로 9:16"
     }
   },
   "settings": {

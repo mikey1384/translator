@@ -191,7 +191,12 @@
       "fontSizeLabel": "フォントサイズ:",
       "styleLabel": "スタイル:",
       "mergeButton": "字幕を結合",
-      "mergingButton": "結合中..."
+      "mergingButton": "結合中...",
+      "stylizeLabel": "スタイリング",
+      "stylizeHelp": "結合時にキネティック字幕を焼き付ける",
+      "aspectLabel": "アスペクト",
+      "aspectOriginal": "オリジナル",
+      "aspectVertical": "縦 9:16"
     }
   },
   "settings": {

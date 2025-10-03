@@ -191,7 +191,12 @@
       "fontSizeLabel": "字体大小:",
       "styleLabel": "样式:",
       "mergeButton": "合并字幕",
-      "mergingButton": "合并中..."
+      "mergingButton": "合并中...",
+      "stylizeLabel": "风格化",
+      "stylizeHelp": "合并时烧录动效字幕",
+      "aspectLabel": "画幅",
+      "aspectOriginal": "原始",
+      "aspectVertical": "竖屏 9:16"
     }
   },
   "settings": {

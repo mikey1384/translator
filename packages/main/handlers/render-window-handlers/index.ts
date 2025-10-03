@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { ChildProcess } from 'child_process';
-import { ipcMain, BrowserWindow, dialog } from 'electron';
+import { ipcMain, BrowserWindow, dialog, shell } from 'electron';
 import log from 'electron-log';
 import { pathToFileURL } from 'url';
 
@@ -17,6 +17,11 @@ import {
 import { createOperationTempDir, cleanupTempDir } from './temp-utils.js';
 import { initPuppeteer } from './puppeteer-setup.js';
 import { generateSubtitleEvents } from './srt-parser.js';
+import {
+  DEFAULT_STYLIZED_CAPTION_STYLE,
+  createAssFromSegments,
+} from '../../services/highlight-stylizer.js';
+import { SUBTITLE_STYLE_PRESETS } from '../../../shared/constants/subtitle-styles.js';
 import { parseSrt, buildSrt } from '../../../shared/helpers/index.js';
 import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pipeline/finalize-pass.js';
 import { generateStatePngs } from './state-generator.js';
@@ -76,6 +81,37 @@ export function initializeRenderWindowHandlers({
     );
   }
 
+  function assToRgbaHex(ass: string): string {
+    const m = ass.match(/&H([0-9A-Fa-f]{8})/);
+    const raw = (m ? m[1] : '').toUpperCase();
+    if (raw.length !== 8) return '#FFFFFF';
+    const aa = raw.slice(0, 2);
+    const bb = raw.slice(2, 4);
+    const gg = raw.slice(4, 6);
+    const rr = raw.slice(6, 8);
+    return `#${aa}${rr}${gg}${bb}`;
+  }
+
+  function styleFromPreset(
+    presetKey: keyof typeof SUBTITLE_STYLE_PRESETS,
+    fontSizePx: number
+  ) {
+    const preset =
+      SUBTITLE_STYLE_PRESETS[presetKey] || SUBTITLE_STYLE_PRESETS.Default;
+    const size = Math.max(8, Math.round(fontSizePx || 24));
+    return {
+      id: preset.name,
+      fontFamily: preset.fontName,
+      fontSize: size,
+      primaryColor: assToRgbaHex(preset.primaryColor),
+      highlightColor: assToRgbaHex(preset.secondaryColor),
+      outlineColor: assToRgbaHex(preset.outlineColor),
+      backgroundColor: assToRgbaHex(preset.backColor),
+      alignment: preset.alignment,
+      position: 'bottom' as const,
+    };
+  }
+
   ipcMain.on(
     'render-subtitles-request',
     async (event, options: RenderSubtitlesOptions) => {
@@ -127,6 +163,219 @@ export function initializeRenderWindowHandlers({
       };
 
       try {
+        // Stylize/ASS path: bypass Puppeteer pipeline and burn ASS directly
+        if (options.stylizeKaraoke) {
+          sendProgress({ percent: 3, stage: 'Preparing stylized subtitles…' });
+
+          const style = options.stylePreset
+            ? (styleFromPreset(
+                options.stylePreset as any,
+                options.fontSizePx || 24
+              ) as any)
+            : (DEFAULT_STYLIZED_CAPTION_STYLE as any);
+          // Build segments from provided JSON (preferred) or from parsed SRT (fallback, no karaoke)
+          let segments: Array<{
+            start: number;
+            end: number;
+            text: string;
+            words?: Array<{ start: number; end: number; word: string }>;
+          }> = [];
+
+          if (
+            Array.isArray(options.segmentsJson) &&
+            options.segmentsJson.length
+          ) {
+            const useTranslationOnly = options.outputMode === 'translation';
+            const isDual = options.outputMode === 'dual';
+            segments = options.segmentsJson.map(s => ({
+              start: s.start,
+              end: s.end,
+              text: useTranslationOnly
+                ? s.translation || s.original || ''
+                : isDual
+                  ? `${s.original || ''}${s.translation ? String.fromCharCode(10) + s.translation : ''}`
+                  : s.original || s.translation || '',
+              words:
+                useTranslationOnly || isDual
+                  ? undefined
+                  : Array.isArray(s.words)
+                    ? s.words
+                    : undefined,
+            }));
+          } else {
+            const parsed = parseSrt(options.srtContent);
+            segments = parsed.map(s => ({
+              start: s.start,
+              end: s.end,
+              text:
+                options.outputMode === 'dual'
+                  ? `${s.original || ''}${s.translation ? String.fromCharCode(10) + s.translation : ''}`
+                  : s.original || '',
+            }));
+          }
+
+          const wantVertical = options.stylizeAspect === 'vertical9x16';
+          const outW = wantVertical
+            ? 1080
+            : Math.max(16, Math.floor(options.videoWidth));
+          const outH = wantVertical
+            ? 1920
+            : Math.max(16, Math.floor(options.videoHeight));
+          // Pull preset margins to drive exact positioning
+          const preset =
+            (options.stylePreset &&
+              (SUBTITLE_STYLE_PRESETS[options.stylePreset] as any)) ||
+            SUBTITLE_STYLE_PRESETS.Default;
+          const ass = createAssFromSegments({
+            style: style as any,
+            segments,
+            playResX: outW,
+            playResY: outH,
+            margins: {
+              L: Math.max(0, Math.floor(preset.marginLeft ?? 80)),
+              R: Math.max(0, Math.floor(preset.marginRight ?? 80)),
+              V: Math.max(0, Math.floor(preset.marginVertical ?? 120)),
+            },
+          });
+          const tempDirPath2 = await createOperationTempDir({ operationId });
+          tempDirPath = tempDirPath2; // store for cleanup
+          const assPath = path.join(tempDirPath2, `stylize_${operationId}.ass`);
+          await fs.writeFile(assPath, ass, 'utf8');
+
+          const outTmp = path.join(tempDirPath2, `merged_${operationId}.mp4`);
+
+          sendProgress({ percent: 10, stage: 'Rendering stylized subtitles…' });
+
+          const escapedAss = assPath
+            .replace(/\\/g, '\\\\')
+            .replace(/:/g, '\\:')
+            .replace(/,/g, '\\,')
+            .replace(/'/g, "\\'");
+          const vf = wantVertical
+            ? `scale=if(gt(a,0.5625),1080,-2):if(gt(a,0.5625),-2,1920),pad=1080:1920:(1080-iw)/2:(1920-ih)/2,subtitles='${escapedAss}'`
+            : `subtitles='${escapedAss}'`;
+
+          // If overlayMode is blackVideo (audio-only), synthesize a base video and mix audio
+          const audioOnly = options.overlayMode === 'blackVideo';
+          let ffArgs: string[];
+          if (audioOnly) {
+            const blackPath = path.join(
+              tempDirPath2,
+              `black_${operationId}.mp4`
+            );
+            await makeBlackVideo({
+              out: blackPath,
+              w: outW,
+              h: outH,
+              fps: Math.max(1, Math.floor(options.frameRate || 30)),
+              dur: options.videoDuration,
+            });
+            ffArgs = [
+              '-y',
+              '-i',
+              blackPath,
+              '-i',
+              options.originalVideoPath!,
+              '-vf',
+              vf,
+              '-map',
+              '0:v:0',
+              '-map',
+              '1:a:0',
+              '-shortest',
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-crf',
+              '18',
+              '-c:a',
+              'aac',
+              '-b:a',
+              '128k',
+              '-movflags',
+              '+faststart',
+              '-progress',
+              'pipe:1',
+              '-nostats',
+              outTmp,
+            ];
+          } else {
+            ffArgs = [
+              '-y',
+              '-i',
+              options.originalVideoPath!,
+              '-vf',
+              vf,
+              '-c:v',
+              'libx264',
+              '-preset',
+              'veryfast',
+              '-crf',
+              '18',
+              '-c:a',
+              'copy',
+              '-movflags',
+              '+faststart',
+              '-progress',
+              'pipe:1',
+              '-nostats',
+              outTmp,
+            ];
+          }
+
+          await ffmpeg.run(ffArgs, {
+            operationId,
+            totalDuration: options.videoDuration,
+            progress: pct =>
+              sendProgress({
+                percent: Math.max(10, Math.min(99, Math.round(pct))),
+                stage: 'Rendering stylized subtitles…',
+              }),
+            signal: controller.signal,
+          });
+
+          const win = BrowserWindow.getAllWindows()[0];
+          if (!win) {
+            throw new Error(
+              'Cannot show save dialog: No application window found.'
+            );
+          }
+          const suggestedName = `${path.basename(
+            options.originalVideoPath!,
+            path.extname(options.originalVideoPath!)
+          )}-merged.mp4`;
+
+          const { canceled, filePath: userPath } = await dialog.showSaveDialog(
+            win,
+            {
+              title: 'Save Merged Video As',
+              defaultPath: suggestedName,
+              filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+            }
+          );
+
+          if (canceled || !userPath) {
+            log.warn(`[${operationId}] User cancelled "save" dialog`);
+            await fs.unlink(outTmp).catch(() => void 0);
+            event.reply('render-subtitles-result', {
+              operationId,
+              success: false,
+              error: 'Save cancelled by user.',
+            });
+            return;
+          }
+
+          await fs.rename(outTmp, userPath);
+          sendProgress({ percent: 100, stage: 'Merge complete!' });
+          event.reply('render-subtitles-result', {
+            operationId,
+            success: true,
+            outputPath: userPath,
+          });
+          return; // stylize path done
+        }
+
         tempDirPath = await createOperationTempDir({ operationId });
 
         // Guard width/height to ensure they are not zero for audio-only files
@@ -316,6 +565,141 @@ export function initializeRenderWindowHandlers({
   ipcMain.on('render-subtitles-cancel', (_event, { operationId }) => {
     cancelRenderJob(operationId);
   });
+
+  ipcMain.handle(
+    'stylize-merge-preview',
+    async (_event, options: Partial<RenderSubtitlesOptions>) => {
+      const operationId =
+        options.operationId || `preview-${Date.now().toString(36)}`;
+      const wantVertical = options.stylizeAspect === 'vertical9x16';
+      const outW = wantVertical
+        ? 1080
+        : Math.max(16, Math.floor(options.videoWidth || 1280));
+      const outH = wantVertical
+        ? 1920
+        : Math.max(16, Math.floor(options.videoHeight || 720));
+      const style = options.stylePreset
+        ? (styleFromPreset(
+            options.stylePreset as any,
+            options.fontSizePx || 24
+          ) as any)
+        : (DEFAULT_STYLIZED_CAPTION_STYLE as any);
+
+      let tempDirPath: string | null = null;
+      try {
+        const useTranslationOnly = options.outputMode === 'translation';
+        const isDual = options.outputMode === 'dual';
+        const segments = (options.segmentsJson || []).map(s => ({
+          start: s.start!,
+          end: s.end!,
+          text: useTranslationOnly
+            ? s.translation || s.original || ''
+            : isDual
+              ? `${s.original || ''}${s.translation ? String.fromCharCode(10) + s.translation : ''}`
+              : s.original || s.translation || '',
+          words:
+            useTranslationOnly || isDual
+              ? undefined
+              : Array.isArray(s.words)
+                ? s.words
+                : undefined,
+        }));
+        // Use preset margins so preview matches final merge
+        const preset =
+          (options.stylePreset &&
+            (SUBTITLE_STYLE_PRESETS[options.stylePreset] as any)) ||
+          SUBTITLE_STYLE_PRESETS.Default;
+        const ass = createAssFromSegments({
+          style,
+          segments,
+          playResX: outW,
+          playResY: outH,
+          margins: {
+            L: Math.max(0, Math.floor(preset.marginLeft ?? 80)),
+            R: Math.max(0, Math.floor(preset.marginRight ?? 80)),
+            V: Math.max(0, Math.floor(preset.marginVertical ?? 120)),
+          },
+        });
+        tempDirPath = await createOperationTempDir({ operationId });
+        const assPath = path.join(tempDirPath, `stylize_${operationId}.ass`);
+        await fs.writeFile(assPath, ass, 'utf8');
+        const outTmp = path.join(tempDirPath, `preview_${operationId}.mp4`);
+        const escapedAss = assPath
+          .replace(/\\/g, '\\\\')
+          .replace(/:/g, '\\:')
+          .replace(/,/g, '\\,')
+          .replace(/'/g, "\\'");
+        const vf = wantVertical
+          ? `scale=if(gt(a,0.5625),1080,-2):if(gt(a,0.5625),-2,1920),pad=1080:1920:(1080-iw)/2:(1920-ih)/2,subtitles='${escapedAss}'`
+          : `subtitles='${escapedAss}'`;
+        const audioOnlyPrev = options.overlayMode === 'blackVideo';
+        let prevArgs: string[];
+        if (audioOnlyPrev) {
+          const blackPath = path.join(tempDirPath, `black_${operationId}.mp4`);
+          await makeBlackVideo({
+            out: blackPath,
+            w: outW,
+            h: outH,
+            fps: Math.max(1, Math.floor(options.frameRate || 30)),
+            dur: options.videoDuration || 5,
+          });
+          prevArgs = [
+            '-y',
+            '-i',
+            blackPath,
+            '-i',
+            options.originalVideoPath!,
+            '-vf',
+            vf,
+            '-map',
+            '0:v:0',
+            '-map',
+            '1:a:0',
+            '-shortest',
+            '-c:v',
+            'libx264',
+            '-preset',
+            'veryfast',
+            '-crf',
+            '20',
+            '-c:a',
+            'aac',
+            '-b:a',
+            '128k',
+            '-movflags',
+            '+faststart',
+            outTmp,
+          ];
+        } else {
+          prevArgs = [
+            '-y',
+            '-i',
+            options.originalVideoPath!,
+            '-vf',
+            vf,
+            '-c:v',
+            'libx264',
+            '-preset',
+            'veryfast',
+            '-crf',
+            '20',
+            '-c:a',
+            'copy',
+            '-movflags',
+            '+faststart',
+            outTmp,
+          ];
+        }
+        await ffmpeg.run(prevArgs, { operationId });
+        await shell.openPath(outTmp);
+        return { success: true, outputPath: outTmp };
+      } catch (err: any) {
+        return { success: false, error: err?.message || String(err) };
+      } finally {
+        // Do not cleanup temp so user can replay; OS temp will clear later
+      }
+    }
+  );
 
   log.info('[RenderWindowHandlers] IPC handlers ready');
 }

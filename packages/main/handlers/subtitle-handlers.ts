@@ -1028,8 +1028,7 @@ export async function handleStylizeHighlight(
       operationId,
       signal: controller.signal,
       style: options.style ?? DEFAULT_STYLIZED_CAPTION_STYLE,
-      progressCallback: update =>
-        progress({ ...update, operationId }),
+      progressCallback: update => progress({ ...update, operationId }),
     });
 
     progress({

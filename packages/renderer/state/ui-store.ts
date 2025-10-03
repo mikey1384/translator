@@ -23,6 +23,9 @@ interface State {
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
   dubAmbientMix: number;
+  // Merge options
+  stylizeMerge: boolean;
+  stylizeAspect: 'original' | 'vertical9x16';
   navTick: number;
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
@@ -55,6 +58,8 @@ interface Actions {
   setQualityTranslation(v: boolean): void;
   setDubVoice(voice: string): void;
   setDubAmbientMix(value: number): void;
+  setStylizeMerge(v: boolean): void;
+  setStylizeAspect(a: 'original' | 'vertical9x16'): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
@@ -117,6 +122,11 @@ const initial: State = {
     if (!Number.isFinite(parsed)) return 0.35;
     return Math.min(1, Math.max(0, parsed));
   })(),
+  stylizeMerge: JSON.parse(localStorage.getItem('savedStylizeMerge') ?? 'false'),
+  stylizeAspect:
+    (localStorage.getItem('savedStylizeAspect') as any) === 'vertical9x16'
+      ? 'vertical9x16'
+      : 'original',
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
@@ -261,6 +271,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ dubAmbientMix: clamped });
         },
 
+        setStylizeMerge(v) {
+          localStorage.setItem('savedStylizeMerge', JSON.stringify(!!v));
+          set({ stylizeMerge: !!v });
+        },
+
         setBaseFontSize(size) {
           set({ baseFontSize: size });
         },
@@ -303,6 +318,12 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setTranscriptionLanguage(lang: string) {
           set({ transcriptionLanguage: lang || 'auto' });
+        },
+
+        setStylizeAspect(a) {
+          const next = a === 'vertical9x16' ? 'vertical9x16' : 'original';
+          localStorage.setItem('savedStylizeAspect', next);
+          set({ stylizeAspect: next });
         },
       };
     })

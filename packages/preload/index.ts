@@ -129,6 +129,10 @@ const electronAPI = {
       ipcRenderer.removeListener('stylize-highlight-progress', handler);
   },
 
+  // Stylize merge preview (render to temp and open)
+  stylizeMergePreview: async (options: any) =>
+    ipcRenderer.invoke('stylize-merge-preview', options),
+
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),

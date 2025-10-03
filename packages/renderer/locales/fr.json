@@ -191,7 +191,12 @@
       "fontSizeLabel": "Taille de police :",
       "styleLabel": "Style :",
       "mergeButton": "Fusionner les sous-titres",
-      "mergingButton": "Fusion..."
+      "mergingButton": "Fusion...",
+      "stylizeLabel": "Styliser",
+      "stylizeHelp": "Graver des sous-titres cinétiques lors de la fusion",
+      "aspectLabel": "Format",
+      "aspectOriginal": "Original",
+      "aspectVertical": "Vertical 9:16"
     }
   },
   "settings": {

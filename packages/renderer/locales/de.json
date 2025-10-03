@@ -191,7 +191,12 @@
       "fontSizeLabel": "Schriftgröße:",
       "styleLabel": "Stil:",
       "mergeButton": "Untertitel zusammenführen",
-      "mergingButton": "Wird zusammengeführt..."
+      "mergingButton": "Wird zusammengeführt...",
+      "stylizeLabel": "Stilisieren",
+      "stylizeHelp": "Kinetische Untertitel beim Zusammenführen einbrennen",
+      "aspectLabel": "Seitenverhältnis",
+      "aspectOriginal": "Original",
+      "aspectVertical": "Vertikal 9:16"
     }
   },
   "settings": {

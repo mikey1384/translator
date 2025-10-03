@@ -210,7 +210,13 @@
       "fontSizeLabel": "Font Size:",
       "styleLabel": "Style:",
       "mergeButton": "Merge Subtitles",
-      "mergingButton": "Merging..."
+      "mergingButton": "Merging...",
+      "stylizeLabel": "Stylize",
+      "stylizeHelp": "Burn kinetic captions during merge",
+      "aspectLabel": "Aspect",
+      "aspectOriginal": "Original",
+      "aspectVertical": "Vertical 9:16"
+      ,"previewStylized": "Preview"
     }
   },
   "settings": {
