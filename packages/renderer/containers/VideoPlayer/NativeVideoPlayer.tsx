@@ -18,6 +18,7 @@ import {
 } from '../../native-player';
 
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
+import { useUIStore } from '../../state/ui-store';
 
 import { useVideoStore, useSubStore } from '../../state';
 import { useSubSourceId } from '../../state/subtitle-store';
@@ -83,6 +84,7 @@ export default function NativeVideoPlayer({
   isAudioOnly,
 }: NativeVideoPlayerProps) {
   const { url: videoUrl, togglePlay } = useVideoStore();
+  const stylizeOn = useUIStore(s => s.stylizeMerge);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
@@ -325,13 +327,15 @@ export default function NativeVideoPlayer({
         }}
       />
 
-      <BaseSubtitleDisplay
-        text={activeSubtitle}
-        isVisible={subtitleVisible}
-        displayFontSize={effFontSize}
-        isFullScreen={isFullyExpanded}
-        stylePreset={stylePreset}
-      />
+      {!stylizeOn && (
+        <BaseSubtitleDisplay
+          text={activeSubtitle}
+          isVisible={subtitleVisible}
+          displayFontSize={effFontSize}
+          isFullScreen={isFullyExpanded}
+          stylePreset={stylePreset}
+        />
+      )}
 
       {showInd && (
         <div

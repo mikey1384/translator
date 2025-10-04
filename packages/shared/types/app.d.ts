@@ -170,6 +170,9 @@ declare module '@shared-types/app' {
     avg_logprob?: number;
     no_speech_prob?: number;
     words?: { start: number; end: number; word: string }[];
+    // Explicit word timings for original (ASR) and translation lines
+    origWords?: { start: number; end: number; word: string }[];
+    transWords?: { start: number; end: number; word: string }[];
   }
 
   export interface SubtitleHandlerServices {
@@ -307,6 +310,8 @@ declare module '@shared-types/app' {
   export interface GenerateSubtitlesResult {
     cancelled?: boolean;
     subtitles?: string;
+    segments?: SrtSegment[];
+    speechIntervals?: Array<{ start: number; end: number }>;
     error?: string;
     success: boolean;
   }

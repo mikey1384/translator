@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import GapList from './GapList';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
+import KineticCaptionOverlay from '../../components/KineticCaptionOverlay';
 import SpeedMenu from './SpeedMenu';
 import SideMenu from './SideMenu';
 
@@ -20,7 +21,7 @@ import Button from '../../components/Button';
 import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea';
 import { BASELINE_HEIGHT } from '../../../shared/constants';
 
-import { useVideoStore, useTaskStore, useSubtitlePrefs } from '../../state';
+import { useVideoStore, useTaskStore, useSubtitlePrefs, useUIStore } from '../../state';
 
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { useUrlStore } from '../../state/url-store';
@@ -566,6 +567,40 @@ export default function VideoPlayer() {
     applyRate(next);
   };
 
+  const [stylizeAspect, setStylizeAspect] = useUIStore(s => [
+    s.stylizeAspect,
+    s.setStylizeAspect,
+  ]);
+  const stylizeMerge = useUIStore(s => s.stylizeMerge);
+
+  const aspectWrapperStyles = (vertical: boolean) => css`
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    ${vertical
+      ? `
+      & > .aspect-canvas {
+        height: 100%;
+        aspect-ratio: 9 / 16;
+        width: auto;
+        max-width: 100%;
+        position: relative;
+        background: black;
+      }
+    `
+      : `
+      & > .aspect-canvas {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+    `}
+  `;
+
+  const wantVertical = stylizeAspect === 'vertical9x16';
+
   return (
     <div style={{ position: 'relative' }}>
       <div
@@ -591,14 +626,21 @@ export default function VideoPlayer() {
           onMouseLeave={() => setShowOverlay(false)}
           onMouseMove={() => restartHideTimer()}
         >
-          <NativeVideoPlayer
-            parentRef={playerDivRef}
-            isFullyExpanded={isFullScreen}
-            baseFontSize={baseFontSize}
-            stylePreset={subtitleStyle}
-            showOriginalText={showOriginal}
-            isAudioOnly={isAudioOnly}
-          />
+          <div className={aspectWrapperStyles(!isFullScreen && wantVertical)}>
+            <div className="aspect-canvas">
+              <NativeVideoPlayer
+                parentRef={playerDivRef}
+                isFullyExpanded={isFullScreen}
+                baseFontSize={baseFontSize}
+                stylePreset={subtitleStyle}
+                showOriginalText={showOriginal}
+                isAudioOnly={isAudioOnly}
+              />
+              {stylizeMerge && (
+                <KineticCaptionOverlay stylePreset={subtitleStyle} isFullScreen={isFullScreen} />
+              )}
+            </div>
+          </div>
 
           <div
             className={
@@ -712,6 +754,29 @@ export default function VideoPlayer() {
                 />
               )}
             </div>
+
+            {/* Aspect selector (self-evident dropdown; no label) */}
+            <select
+              value={stylizeAspect}
+              onChange={e =>
+                setStylizeAspect(
+                  (e.target.value as 'original' | 'vertical9x16') || 'original'
+                )
+              }
+              className={isFullScreen ? fullscreenButtonStyles : transparentButtonStyles}
+              title="Aspect"
+              style={{
+                background: 'rgba(0,0,0,0.4)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: 4,
+                padding: '4px 6px',
+                marginLeft: 8,
+              }}
+            >
+              <option value="original">{t('editSubtitles.mergeControls.aspectOriginal', 'Original')}</option>
+              <option value="vertical9x16">{t('editSubtitles.mergeControls.aspectVertical', 'Vertical 9:16')}</option>
+            </select>
 
             <Button
               onClick={toggleFullscreen}

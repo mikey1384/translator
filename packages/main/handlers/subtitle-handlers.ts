@@ -21,6 +21,7 @@ import {
   StylizeHighlightRequest,
   StylizeHighlightResult,
   StylizeHighlightProgress,
+  GenerateSubtitlesResult,
 } from '@shared-types/app';
 import {
   addSubtitle,
@@ -103,17 +104,15 @@ function resolveHighlightLimit(value?: number | null): number {
   return Math.max(0, numeric);
 }
 
+type GenerateSubtitlesHandlerResult = GenerateSubtitlesResult & {
+  operationId: string;
+};
+
 export async function handleGenerateSubtitles(
   event: IpcMainInvokeEvent,
   options: GenerateSubtitlesOptions,
   operationId: string
-): Promise<{
-  success: boolean;
-  subtitles?: string;
-  cancelled?: boolean;
-  error?: string;
-  operationId: string;
-}> {
+): Promise<GenerateSubtitlesHandlerResult> {
   const { ffmpeg, fileManager } = checkServicesInitialized();
 
   log.info(`[handleGenerateSubtitles] Starting. Operation ID: ${operationId}`);
@@ -153,7 +152,24 @@ export async function handleGenerateSubtitles(
 
     await cleanupTempFile(tempVideoPath);
 
-    return { success: true, subtitles: result.subtitles, operationId };
+    try {
+      const segs: any[] = (result as any)?.segments || [];
+      const withOrig = segs.filter(
+        s =>
+          Array.isArray((s as any)?.origWords) &&
+          (s as any).origWords.length > 0
+      ).length;
+      log.info(
+        `[handleGenerateSubtitles ${operationId}] Returned segments=${segs.length}, withOrigWords=${withOrig}`
+      );
+    } catch {}
+    return {
+      success: true,
+      subtitles: result.subtitles,
+      segments: result.segments,
+      speechIntervals: result.speechIntervals,
+      operationId,
+    };
   } catch (error: any) {
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
@@ -183,10 +199,13 @@ export async function handleGenerateSubtitles(
       operationId,
     });
     return {
-      success: !isCancel,
+      success: false,
       cancelled: isCancel,
       operationId,
-    };
+      error: creditCancel
+        ? 'insufficient-credits'
+        : error?.message || String(error),
+    } as any;
   } finally {
     registryFinish(operationId);
   }

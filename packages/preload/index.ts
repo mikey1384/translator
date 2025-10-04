@@ -55,6 +55,8 @@ const electronAPI = {
     return ipcRenderer.invoke('stylize-highlight', options);
   },
 
+  // Removed heavy stylized preview; use in-player overlay instead (DRY)
+
   translateOneLine: async (options: any) => {
     return ipcRenderer.invoke('translate-one-line', options);
   },
@@ -129,9 +131,7 @@ const electronAPI = {
       ipcRenderer.removeListener('stylize-highlight-progress', handler);
   },
 
-  // Stylize merge preview (render to temp and open)
-  stylizeMergePreview: async (options: any) =>
-    ipcRenderer.invoke('stylize-merge-preview', options),
+  // Removed stylize merge preview
 
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),

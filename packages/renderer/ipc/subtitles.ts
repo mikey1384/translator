@@ -137,13 +137,7 @@ export function onStylizeHighlightProgress(
   return (window.electron as any).onStylizeHighlightProgress(callback);
 }
 
-export function stylizeMergePreview(options: any): Promise<{
-  success: boolean;
-  outputPath?: string;
-  error?: string;
-}> {
-  return (window.electron as any).stylizeMergePreview(options);
-}
+// Removed heavy stylized preview in favor of lightweight in-player overlay (DRY)
 
 export function translateOneLine(options: {
   segment: import('@shared-types/app').SrtSegment;

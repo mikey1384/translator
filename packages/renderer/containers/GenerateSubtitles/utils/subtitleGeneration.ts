@@ -244,23 +244,25 @@ export async function executeSubtitleGeneration({
     // Generate subtitles
     const result = await SubtitlesIPC.generate(opts);
 
-    if (result.subtitles) {
-      // Success: Parse and load subtitles
-      const finalSegments = parseSrt(result.subtitles);
+    if (Array.isArray((result as any).segments)) {
+      const segmentsWithWords = (result as any).segments as any[];
       // Mark as freshly generated for the current video
       const vpath = videoFilePath ?? useVideoStore.getState().path ?? null;
-      useSubStore.getState().load(finalSegments, null, 'fresh', vpath);
+      useSubStore.getState().load(segmentsWithWords, null, 'fresh', vpath);
 
       setTranscription({
         id: operationId,
-        stage: i18n.t('generateSubtitles.status.completed'),
+        stage:
+          segmentsWithWords.length === 0
+            ? i18n.t('generateSubtitles.status.completedNoSpeech', 'Completed (no speech detected)')
+            : i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
       });
 
       return { success: true, subtitles: result.subtitles };
     } else {
-      // Handle failure or cancellation
+      // No fallback: final segments must be present for strict stylize.
       const stage = result.cancelled
         ? i18n.t('generateSubtitles.status.cancelled')
         : i18n.t('generateSubtitles.status.error');
@@ -272,7 +274,13 @@ export async function executeSubtitleGeneration({
         percent,
         inProgress: false,
       });
-
+      // Surface the exact error reason if available
+      try {
+        const errMsg = (result as any)?.error || 'Subtitle generation did not return final segments with timings.';
+        useUrlStore.getState().setError(errMsg);
+      } catch {
+        // ignore
+      }
       return { success: false, cancelled: result.cancelled };
     }
   } catch (error) {

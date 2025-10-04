@@ -2,6 +2,7 @@ import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
+import { computeTranslationWordTimings } from './word-timings.js';
 
 function parseTranslatedResponse(translation: string, batch: any): any[] {
   log.info(`[parseTranslatedResponse] Parsing translation response`);
@@ -503,12 +504,46 @@ Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}:
     const reviewedSegments = batch.segments.map((seg, idx) => {
       const id =
         typeof seg.index === 'number' ? seg.index : batch.startIndex + idx + 1;
+      const translation = map.has(id)
+        ? map.get(id)!
+        : (seg.translation ?? seg.original ?? '');
+      const origWords = (seg as any).origWords || (seg as any).words;
+      let transWords = (seg as any).transWords as any[] | undefined;
+      if (translation.trim() && Array.isArray(origWords) && origWords.length > 0) {
+        const segStart = Number((seg as any).start) || 0;
+        const segDuration = Math.max(0, ((seg as any).end || 0) - ((seg as any).start || 0));
+        const segEnd = segStart + segDuration;
+        const numericWords = origWords
+          .map((w: any) => ({
+            start: Number(w.start),
+            end: Number(w.end),
+          }))
+          .filter(w => Number.isFinite(w.start) && Number.isFinite(w.end) && w.end > w.start);
+        const tol = 0.5;
+        let absHits = 0;
+        let relHits = 0;
+        for (const w of numericWords) {
+          const s = w.start;
+          const e = w.end;
+          if (s >= segStart - tol && e <= segEnd + tol) absHits++;
+          if (s >= -tol && e <= segDuration + tol) relHits++;
+        }
+        const treatAsAbsolute = absHits > relHits && absHits > 0;
+        transWords = computeTranslationWordTimings({
+          originalWords: numericWords.map(w => ({
+            start: Math.max(0, treatAsAbsolute ? w.start - segStart : w.start),
+            end: Math.max(0, treatAsAbsolute ? w.end - segStart : w.end),
+          })),
+          translatedText: translation,
+          segmentDuration: segDuration,
+          langHint: undefined,
+        });
+      }
       return {
         ...seg,
-        translation: map.has(id)
-          ? map.get(id)!
-          : (seg.translation ?? seg.original ?? ''),
-      };
+        translation,
+        transWords,
+      } as any;
     });
 
     return reviewedSegments;

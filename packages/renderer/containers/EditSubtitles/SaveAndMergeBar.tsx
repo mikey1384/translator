@@ -1,15 +1,16 @@
+import { useEffect, useMemo } from 'react';
 import Button from '../../components/Button.js';
 import { buttonGradientStyles, colors } from '../../styles.js';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
+import { useSubStore } from '../../state/subtitle-store.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 
 interface SaveAndMergeBarProps {
   onSave: () => Promise<void>;
   onSaveAs: () => Promise<void>;
   onMerge: () => void;
-  onPreviewStylize?: () => void;
   canSaveDirectly: boolean;
   subtitlesExist: boolean;
   videoFileExists: boolean;
@@ -31,6 +32,13 @@ const mergeButtonStyle = css`
   }
 `;
 
+const stylizeNoteStyle = css`
+  font-size: 0.85rem;
+  color: ${colors.grayDark};
+  max-width: 240px;
+  text-align: left;
+`;
+
 export default function SaveAndMergeBar({
   onSave,
   onSaveAs,
@@ -40,7 +48,6 @@ export default function SaveAndMergeBar({
   videoFileExists,
   isMergingInProgress,
   isTranslationInProgress,
-  onPreviewStylize,
 }: SaveAndMergeBarProps) {
   const { t } = useTranslation();
 
@@ -57,10 +64,76 @@ export default function SaveAndMergeBar({
     s.stylizeMerge,
     s.setStylizeMerge,
   ]);
-  const [stylizeAspect, setStylizeAspect] = useUIStore(s => [
-    s.stylizeAspect,
-    s.setStylizeAspect,
-  ]);
+  // Aspect selection moved to VideoPlayer; keep only toggle here
+
+  const segments = useSubStore(
+    s => s.order.map(id => s.segments[id])
+  );
+
+  const stylizeEligibility = useMemo(() => {
+    if (!segments.length) {
+      return {
+        available: false,
+        reason: t('editSubtitles.mergeControls.stylizeUnavailableNoSubs', 'Load subtitles to enable Stylize.'),
+      };
+    }
+
+    const hasTranslation = segments.some(seg => (seg?.translation || '').trim().length > 0);
+    const missingOrig = segments.some(
+      seg =>
+        (seg?.original || '').trim().length > 0 &&
+        !(Array.isArray((seg as any)?.origWords) && (seg as any).origWords.length > 0)
+    );
+    const missingTrans = segments.some(
+      seg =>
+        (seg?.translation || '').trim().length > 0 &&
+        !(Array.isArray((seg as any)?.transWords) && (seg as any).transWords.length > 0)
+    );
+
+    if (hasTranslation && showOriginal) {
+      if (missingOrig || missingTrans) {
+        return {
+          available: false,
+          reason: t(
+            'editSubtitles.mergeControls.stylizeUnavailableDual',
+            'Stylize needs per-word timings on both original and translated lines.'
+          ),
+        };
+      }
+      return { available: true, reason: '' };
+    }
+
+    if (hasTranslation && !showOriginal) {
+      if (missingTrans) {
+        return {
+          available: false,
+          reason: t(
+            'editSubtitles.mergeControls.stylizeUnavailableTranslation',
+            'Stylize needs per-word timings on the translated lines.'
+          ),
+        };
+      }
+      return { available: true, reason: '' };
+    }
+
+    if (missingOrig) {
+      return {
+        available: false,
+        reason: t(
+          'editSubtitles.mergeControls.stylizeUnavailableOriginal',
+          'Stylize needs per-word timings on the original lines.'
+        ),
+      };
+    }
+
+    return { available: true, reason: '' };
+  }, [segments, showOriginal, t]);
+
+  useEffect(() => {
+    if (stylizeMerge && !stylizeEligibility.available) {
+      setStylizeMerge(false);
+    }
+  }, [stylizeMerge, stylizeEligibility.available, setStylizeMerge]);
 
   if (!subtitlesExist) return null;
 
@@ -250,87 +323,47 @@ export default function SaveAndMergeBar({
             </div>
           </Button>
 
-          <label
+          <div
             className={css`
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              font-weight: 500;
-              color: ${colors.grayDark};
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              align-items: flex-start;
             `}
-            htmlFor="mergeStylizeToggle"
-            title={t(
-              'editSubtitles.mergeControls.stylizeHelp',
-              'Burn kinetic captions during merge'
-            )}
           >
-            <input
-              id="mergeStylizeToggle"
-              type="checkbox"
-              checked={stylizeMerge}
-              onChange={e => setStylizeMerge(e.target.checked)}
-              aria-label={t(
-                'editSubtitles.mergeControls.stylizeLabel',
-                'Stylize'
-              )}
-            />
-            {t('editSubtitles.mergeControls.stylizeLabel', 'Stylize')}
-          </label>
-
-          {stylizeMerge && (
-            <div
+            <label
               className={css`
                 display: inline-flex;
                 align-items: center;
                 gap: 6px;
+                font-weight: 500;
+                color: ${colors.grayDark};
               `}
+              htmlFor="mergeStylizeToggle"
+              title={t(
+                'editSubtitles.mergeControls.stylizeHelp',
+                'Burn kinetic captions during merge'
+              )}
             >
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onPreviewStylize}
-                disabled={isMergingInProgress}
-              >
-                {t('editSubtitles.mergeControls.previewStylized', 'Preview')}
-              </Button>
-              <label
-                className={css`
-                  font-weight: 500;
-                  color: ${colors.grayDark};
-                `}
-                htmlFor="mergeStylizeAspect"
-              >
-                {t('editSubtitles.mergeControls.aspectLabel', 'Aspect')}
-              </label>
-              <select
-                id="mergeStylizeAspect"
-                className={css`
-                  padding: 0.25rem 0.5rem;
-                  border: 1px solid ${colors.border};
-                  border-radius: 4px;
-                  background-color: ${colors.light};
-                  color: ${colors.dark};
-                `}
-                value={stylizeAspect}
-                onChange={e =>
-                  setStylizeAspect(
-                    (e.target.value as 'original' | 'vertical9x16') ||
-                      'original'
-                  )
-                }
-              >
-                <option value="original">
-                  {t('editSubtitles.mergeControls.aspectOriginal', 'Original')}
-                </option>
-                <option value="vertical9x16">
-                  {t(
-                    'editSubtitles.mergeControls.aspectVertical',
-                    'Vertical 9:16'
-                  )}
-                </option>
-              </select>
-            </div>
-          )}
+              <input
+                id="mergeStylizeToggle"
+                type="checkbox"
+                checked={stylizeMerge}
+                onChange={e => setStylizeMerge(e.target.checked)}
+                aria-label={t(
+                  'editSubtitles.mergeControls.stylizeLabel',
+                  'Stylize'
+                )}
+                disabled={!stylizeEligibility.available}
+              />
+              {t('editSubtitles.mergeControls.stylizeLabel', 'Stylize')}
+            </label>
+            {!stylizeEligibility.available && (
+              <span className={stylizeNoteStyle}>{stylizeEligibility.reason}</span>
+            )}
+          </div>
+
+          {/* Aspect selection moved to the VideoPlayer overlay for real-time preview */}
         </div>
 
         {/* Row 2, Col 2: Style select */}

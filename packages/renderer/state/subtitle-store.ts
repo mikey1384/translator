@@ -8,6 +8,92 @@ import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
 import { groupUncertainRanges } from '../utils/subtitle-heuristics';
 
+function tokenizeForLang(text: string): string[] {
+  const s = (text || '').replace(/\r\n|\r/g, '\n').trim();
+  if (!s) return [];
+  const hasCJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(s);
+  const hasThai = /[\u0E00-\u0E7F]/.test(s);
+  if (hasCJK || hasThai) {
+    return Array.from(s).filter(ch => !/[\s]/.test(ch));
+  }
+  const tokens = s.match(/([\p{L}\p{N}]+|[^\s])/gu) || [];
+  return tokens.filter(t => !/^\s+$/.test(t));
+}
+
+function computeTranslationWordTimings(args: {
+  origWords: Array<{ start: number; end: number; word: string }>;
+  translation: string;
+  duration: number;
+}): Array<{ start: number; end: number; word: string }> {
+  const { origWords, translation, duration } = args;
+  if (!Array.isArray(origWords) || !origWords.length) return [];
+  const beats = origWords
+    .filter(w => Number.isFinite(w?.start) && Number.isFinite(w?.end) && w.end > w.start)
+    .map(w => ({ start: Math.max(0, Number(w.start)), end: Math.max(0, Number(w.end)) }))
+    .sort((a, b) => a.start - b.start);
+  if (!beats.length) return [];
+
+  const toks = tokenizeForLang(translation);
+  if (!toks.length) return [];
+
+  const n = beats.length;
+  const m = toks.length;
+  const buckets: number[][] = Array.from({ length: n }, () => []);
+  for (let i = 0; i < m; i++) {
+    const idx = Math.min(n - 1, Math.floor((i * n) / m));
+    buckets[idx].push(i);
+  }
+
+  const out: Array<{ start: number; end: number; word: string }> = [];
+
+  for (let b = 0; b < n; b++) {
+    const beat = beats[b];
+    const indices = buckets[b];
+    if (!indices || !indices.length) continue;
+    const bStart = Math.max(0, Math.min(beat.start, duration));
+    const bEnd = Math.max(bStart, Math.min(beat.end, duration));
+    const weights = indices.map(i => Math.max(1, toks[i].length));
+    let totalW = weights.reduce((a, c) => a + c, 0);
+    let cursor = bStart;
+
+    for (let k = 0; k < indices.length; k++) {
+      const tokenIdx = indices[k];
+      const token = toks[tokenIdx];
+      const remainingTokens = indices.length - k;
+      const remainingLen = Math.max(0, bEnd - cursor);
+
+      let span = 0;
+      if (remainingTokens <= 1) {
+        span = remainingLen;
+      } else if (totalW > 0 && remainingLen > 0) {
+        span = (remainingLen * weights[k]) / totalW;
+      }
+      if (!Number.isFinite(span) || span < 0) span = 0;
+
+      let tokenStart = cursor;
+      let tokenEnd = cursor + span;
+      if (tokenEnd > bEnd || k === indices.length - 1) {
+        tokenEnd = bEnd;
+      }
+      if (tokenEnd < tokenStart) tokenEnd = tokenStart;
+
+      out.push({ start: tokenStart, end: tokenEnd, word: token });
+
+      cursor = tokenEnd;
+      totalW -= weights[k];
+    }
+  }
+
+  return out
+    .map(w => ({
+      start: Math.max(0, Math.min(w.start, duration)),
+      end: Math.max(0, Math.min(w.end, duration)),
+      word: w.word,
+    }))
+    .filter(w => w.end > w.start)
+    .sort((a, b) => a.start - b.start);
+}
+
 type SegmentMap = Record<string, SrtSegment>;
 
 interface State {
@@ -132,7 +218,6 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             // Remove fields used by low-confidence heuristics coming from transcription
             delete (cue as any).avg_logprob;
             delete (cue as any).no_speech_prob;
-            delete (cue as any).words;
           }
           // Nudge consumers to refresh
           s.sourceId += 1;
@@ -218,7 +303,25 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
       update: (id, patch) =>
         set(state => {
           const cue = state.segments[id];
-          if (cue) Object.assign(cue, patch);
+          if (!cue) return;
+          Object.assign(cue, patch);
+          if (Object.prototype.hasOwnProperty.call(patch, 'translation')) {
+            const translation = (patch.translation ?? cue.translation ?? '').trim();
+            if (
+              translation &&
+              Array.isArray((cue as any).origWords) &&
+              (cue as any).origWords.length > 0
+            ) {
+              const duration = Math.max(0, (cue.end ?? 0) - (cue.start ?? 0));
+              cue.transWords = computeTranslationWordTimings({
+                origWords: (cue as any).origWords,
+                translation,
+                duration,
+              });
+            } else {
+              delete (cue as any).transWords;
+            }
+          }
         }),
 
       insertAfter: (id: string) => {
@@ -539,6 +642,19 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             }
             if (next && (cue.translation ?? '').trim() !== next) {
               cue.translation = next;
+              if (
+                Array.isArray((cue as any).origWords) &&
+                (cue as any).origWords.length > 0
+              ) {
+                const duration = Math.max(0, cue.end - cue.start);
+                cue.transWords = computeTranslationWordTimings({
+                  origWords: (cue as any).origWords,
+                  translation: next,
+                  duration,
+                });
+              } else {
+                delete (cue as any).transWords;
+              }
             }
           }
         }),

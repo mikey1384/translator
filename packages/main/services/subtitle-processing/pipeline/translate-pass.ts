@@ -3,6 +3,7 @@ import log from 'electron-log';
 import { scaleProgress, Stage } from './progress.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
 import { translateBatch } from '../translator.js';
+import { computeTranslationWordTimings } from '../word-timings.js';
 import { throwIfAborted } from '../utils.js';
 
 export async function translatePass({
@@ -88,7 +89,47 @@ export async function translatePass({
       }
 
       for (let i = 0; i < translatedBatch.length; i++) {
-        segmentsInProcess[batchStart + i] = translatedBatch[i];
+        const upd = translatedBatch[i];
+        const idx = batchStart + i;
+        const base = segmentsInProcess[idx];
+        const translation = (upd.translation ?? '').trim();
+        const origWords = (base.origWords ?? base.words ?? []) as any[];
+        let transWords: Array<{ start: number; end: number; word: string }> | undefined = undefined;
+        if (translation && Array.isArray(origWords) && origWords.length > 0) {
+          const segStart = Number(base.start) || 0;
+          const segDuration = Math.max(0, (base.end || 0) - (base.start || 0));
+          const segEnd = segStart + segDuration;
+          const numericWords = origWords
+            .map(w => ({
+              start: Number(w.start),
+              end: Number(w.end),
+            }))
+            .filter(w => Number.isFinite(w.start) && Number.isFinite(w.end) && w.end > w.start);
+          const tol = 0.5;
+          let absHits = 0;
+          let relHits = 0;
+          for (const w of numericWords) {
+            const s = w.start;
+            const e = w.end;
+            if (s >= segStart - tol && e <= segEnd + tol) absHits++;
+            if (s >= -tol && e <= segDuration + tol) relHits++;
+          }
+          const treatAsAbsolute = absHits > relHits && absHits > 0;
+          transWords = computeTranslationWordTimings({
+            originalWords: numericWords.map(w => ({
+              start: Math.max(0, treatAsAbsolute ? w.start - segStart : w.start),
+              end: Math.max(0, treatAsAbsolute ? w.end - segStart : w.end),
+            })),
+            translatedText: translation,
+            segmentDuration: segDuration,
+            langHint: undefined,
+          });
+        }
+        segmentsInProcess[idx] = {
+          ...base,
+          ...upd,
+          transWords,
+        } as any;
       }
     } catch (err: any) {
       if (err?.name === 'AbortError' || signal?.aborted) {
