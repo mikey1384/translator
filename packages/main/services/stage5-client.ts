@@ -66,7 +66,6 @@ export async function transcribe({
   }
 
   fd.append('model', model);
-  // Request verbose output with per-word timestamps so downstream stylize works
   fd.append('response_format', 'verbose_json');
   fd.append('word_timestamps', 'true');
   fd.append('timestamp_granularities[]', 'word');

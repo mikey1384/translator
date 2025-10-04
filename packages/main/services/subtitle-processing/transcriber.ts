@@ -187,17 +187,20 @@ export async function transcribeChunk({
         start: (w.start ?? 0) - (words[0].start ?? 0),
         end: (w.end ?? 0) - (words[0].start ?? 0),
       }));
-      return [
-        {
-          id: crypto.randomUUID(),
-          index: 1,
-          start: absStart,
-          end: absEnd,
-          original: text,
-          words: relWords,
-          origWords: relWords.map(w => ({ ...w })),
-        } as SrtSegment,
-      ];
+      const baseSeg: SrtSegment = {
+        id: crypto.randomUUID(),
+        index: 1,
+        start: absStart,
+        end: absEnd,
+        original: text,
+        words: relWords,
+        origWords: relWords.map(w => ({ ...w })),
+      } as SrtSegment;
+      const splitFallback = smartSplitByWords(baseSeg).map((seg, idx) => ({
+        ...seg,
+        index: idx + 1,
+      }));
+      return splitFallback.length ? splitFallback : [baseSeg];
     }
 
     // If no result after retries, return empty.
