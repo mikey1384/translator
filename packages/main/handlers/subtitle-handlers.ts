@@ -162,7 +162,9 @@ export async function handleGenerateSubtitles(
       log.info(
         `[handleGenerateSubtitles ${operationId}] Returned segments=${segs.length}, withOrigWords=${withOrig}`
       );
-    } catch {}
+    } catch {
+      // Do nothing
+    }
     return {
       success: true,
       subtitles: result.subtitles,
