@@ -129,6 +129,10 @@
     "youtube-dl-exec"
   ],
   "overrides": {
-    "tmp": "^0.2.5"
+    "tmp": "^0.2.5",
+    "tar-fs": "^3.0.9",
+    "prebuild-install": {
+      "tar-fs": "^3.0.9"
+    }
   }
 }
