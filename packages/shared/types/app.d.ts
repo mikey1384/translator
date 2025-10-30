@@ -258,6 +258,53 @@ declare module '@shared-types/app' {
     });
   }
 
+  // =========================================
+  // === Learning Library
+  // =========================================
+
+  export type LearningSourceType = 'opened' | 'downloaded' | 'unknown';
+
+  export interface LearningEntry {
+    id: string;
+    title: string;
+    videoPath: string;
+    videoDir: string | null;
+    sourceType: LearningSourceType;
+    createdAt: string;
+    updatedAt: string;
+    transcriptLanguage: string;
+    transcriptPath: string | null;
+    translations: Record<string, string>;
+  }
+
+  export interface RecordTranscriptionPayload {
+    videoPath: string;
+    videoFilename: string;
+    sourceType: LearningSourceType;
+    transcript: string;
+    transcriptLanguage: string;
+  }
+
+  export interface RecordTranslationPayload {
+    videoPath: string;
+    targetLanguage: string;
+    translation: string;
+  }
+
+  export interface PathExistsResult {
+    exists: boolean;
+  }
+
+  export interface LearningLibraryApi {
+    recordTranscription(
+      payload: RecordTranscriptionPayload
+    ): Promise<LearningEntry>;
+    recordTranslation(
+      payload: RecordTranslationPayload
+    ): Promise<LearningEntry | null>;
+    listEntries(): Promise<LearningEntry[]>;
+  }
+
   export interface GenerateSubtitlesOptions {
     videoPath?: string;
     videoFile?: File;
@@ -485,6 +532,14 @@ declare module '@shared-types/app' {
     readFileContent: (
       filePath: string
     ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
+    pathExists: (filePath: string) => Promise<PathExistsResult>;
+    recordLearningTranscription: (
+      payload: RecordTranscriptionPayload
+    ) => Promise<LearningEntry>;
+    recordLearningTranslation: (
+      payload: RecordTranslationPayload
+    ) => Promise<LearningEntry | null>;
+    listLearningEntries: () => Promise<LearningEntry[]>;
 
     hasVideoTrack: (filePath: string) => Promise<boolean>;
     getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;

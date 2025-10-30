@@ -22,6 +22,8 @@ import GlobalModals from '../components/GlobalModals';
 import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 import { useAiStore } from '../state';
+import ShellSwitcher from '../components/ShellSwitcher';
+import LearningHub from '../containers/LearningHub';
 
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
@@ -34,9 +36,12 @@ export default function AppContent() {
   useEffect(() => {
     try {
       useAiStore.getState().initialize();
-    } catch {}
+    } catch {
+      // Do nothing
+    }
   }, []);
-  const { showSettings } = useUIStore();
+  const showSettings = useUIStore(s => s.showSettings);
+  const activeShell = useUIStore(s => s.activeShell);
   const { setDownload } = useUrlStore();
   const { url: videoUrl } = useVideoStore();
   const isTranslating = useTaskStore(
@@ -194,7 +199,7 @@ export default function AppContent() {
 
   return (
     <div className={pageWrapperStyles}>
-      {!showSettings && videoUrl && (
+      {!showSettings && activeShell === 'workspace' && videoUrl && (
         <div style={{ height: 'calc(35vh + 2rem)' }} />
       )}
 
@@ -202,6 +207,8 @@ export default function AppContent() {
 
       <div className={containerStyles}>
         <Header />
+
+        {!showSettings && <ShellSwitcher />}
 
         {/* Top-level credit warning banner (hidden on Settings page) */}
         {showCreditWarning && !showSettings && (
@@ -216,9 +223,14 @@ export default function AppContent() {
           <SettingsPage />
         ) : (
           <>
-            {videoUrl && <VideoPlayer />}
-
-            <MainPanels />
+            {activeShell === 'workspace' ? (
+              <>
+                {videoUrl && <VideoPlayer />}
+                <MainPanels />
+              </>
+            ) : (
+              <LearningHub />
+            )}
 
             <ProgressArea
               isVisible={

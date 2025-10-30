@@ -254,7 +254,7 @@ async function downloadMediaInternal(
 
     await useVideoStore
       .getState()
-      .setFile({ path: finalPath!, name: filename! });
+      .setFile({ path: finalPath!, name: filename!, sourceKind: 'downloaded' });
 
     if (!preserveMountedDiskSubs) {
       useSubStore.getState().load([]);

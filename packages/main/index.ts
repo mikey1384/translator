@@ -41,6 +41,11 @@ import * as fileHandlers from './handlers/file-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
 import type { FFmpegContext } from './services/ffmpeg-runner.js';
+import { LearningLibrary } from './services/learning-library.js';
+import type {
+  RecordTranscriptionPayload,
+  RecordTranslationPayload,
+} from '@shared-types/app';
 import {
   handleGetCreditBalance,
   handleCreateCheckoutSession,
@@ -151,6 +156,7 @@ let services: {
   saveFileService: SaveFileService;
   fileManager: FileManager;
   ffmpeg: FFmpegContext;
+  learningLibrary: LearningLibrary;
 } | null = null;
 let isQuitting = false;
 
@@ -194,7 +200,8 @@ try {
   const saveFileService = SaveFileService.getInstance();
   const fileManager = new FileManager(tempPath);
   const ffmpeg = await createFFmpegContext(tempPath);
-  services = { saveFileService, fileManager, ffmpeg };
+  const learningLibrary = new LearningLibrary();
+  services = { saveFileService, fileManager, ffmpeg, learningLibrary };
   log.info('[main.ts] Services Initialized.');
 
   log.info('[main.ts] Initializing Handlers...');
@@ -257,6 +264,7 @@ try {
   ipcMain.handle('copy-file', fileHandlers.handleCopyFile);
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
   ipcMain.handle('readFileContent', fileHandlers.handleReadFileContent);
+  ipcMain.handle('file:exists', fileHandlers.handlePathExists);
 
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const operationId =
@@ -539,6 +547,48 @@ try {
   });
 
   // yt-dlp auto update is always on; no IPC settings
+
+  ipcMain.handle(
+    'learning:record-transcription',
+    async (_event, payload: RecordTranscriptionPayload) => {
+      if (!services?.learningLibrary) {
+        throw new Error('Learning library not initialized');
+      }
+      try {
+        return await services.learningLibrary.recordTranscription(payload);
+      } catch (err) {
+        log.error('[main.ts] Failed to record transcription', err);
+        throw err;
+      }
+    }
+  );
+
+  ipcMain.handle(
+    'learning:record-translation',
+    async (_event, payload: RecordTranslationPayload) => {
+      if (!services?.learningLibrary) {
+        throw new Error('Learning library not initialized');
+      }
+      try {
+        return await services.learningLibrary.recordTranslation(payload);
+      } catch (err) {
+        log.error('[main.ts] Failed to record translation', err);
+        throw err;
+      }
+    }
+  );
+
+  ipcMain.handle('learning:list', async () => {
+    if (!services?.learningLibrary) {
+      throw new Error('Learning library not initialized');
+    }
+    try {
+      return await services.learningLibrary.listEntries();
+    } catch (err) {
+      log.error('[main.ts] Failed to list learning entries', err);
+      throw err;
+    }
+  });
 
   ipcMain.handle('get-entitlements', () => getCachedEntitlements());
   ipcMain.handle('refresh-entitlements', async () => {

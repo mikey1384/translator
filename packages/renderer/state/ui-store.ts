@@ -16,6 +16,7 @@ interface State {
   targetLanguage: string;
   summaryLanguage: string;
   showOriginalText: boolean;
+  activeShell: 'workspace' | 'learning';
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
   qualityTranslation: boolean; // true = include review phase
@@ -51,6 +52,7 @@ interface Actions {
   setTargetLanguage(lang: string): void;
   setSummaryLanguage(lang: string): void;
   setShowOriginalText(show: boolean): void;
+  setActiveShell(mode: 'workspace' | 'learning'): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
   setDubVoice(voice: string): void;
@@ -74,6 +76,7 @@ const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
+const ACTIVE_SHELL_KEY = 'savedActiveShell';
 const DEFAULT_DUB_VOICE = 'alloy';
 
 const ALLOWED_DUB_VOICES = new Set([
@@ -96,6 +99,9 @@ const initial: State = {
   inputMode: 'file',
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
+  activeShell:
+    (localStorage.getItem(ACTIVE_SHELL_KEY) as 'workspace' | 'learning') ??
+    'workspace',
   showOriginalText: JSON.parse(
     localStorage.getItem(SHOW_ORIGINAL_KEY) ?? 'true'
   ),
@@ -180,6 +186,19 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
               draft.activeMatchIndex = 0;
             }
           });
+        },
+
+        setActiveShell(mode) {
+          if (mode !== 'workspace' && mode !== 'learning') return;
+          if (get().activeShell === mode) return;
+          set(s => {
+            s.activeShell = mode;
+          });
+          try {
+            localStorage.setItem(ACTIVE_SHELL_KEY, mode);
+          } catch {
+            // ignore persistence errors
+          }
         },
 
         handleFindNext() {

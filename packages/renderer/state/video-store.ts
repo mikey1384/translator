@@ -35,6 +35,7 @@ interface State {
   url: string | null;
   originalPath: string | null;
   originalUrl: string | null;
+  sourceKind: 'opened' | 'downloaded' | 'unknown';
   dubbedVideoPath: string | null;
   dubbedAudioPath: string | null;
   dubbedUrl: string | null;
@@ -51,7 +52,14 @@ interface State {
 
 interface Actions {
   setFile(
-    file: File | { name: string | undefined; path: string } | null
+    file:
+      | File
+      | {
+          name: string | undefined;
+          path: string;
+          sourceKind?: 'opened' | 'downloaded' | 'unknown';
+        }
+      | null
   ): Promise<void>;
   togglePlay(): Promise<void>;
   handleTogglePlay(): void;
@@ -62,7 +70,13 @@ interface Actions {
     selectedPath?: string;
   } | void>;
   mountFilePreserveSubs(
-    file: File | { name: string | undefined; path: string }
+    file:
+      | File
+      | {
+          name: string | undefined;
+          path: string;
+          sourceKind?: 'opened' | 'downloaded' | 'unknown';
+        }
   ): Promise<void>;
   markReady(): void;
   reset(): void;
@@ -83,6 +97,7 @@ const initial: State = {
   url: null,
   originalPath: null,
   originalUrl: null,
+  sourceKind: 'unknown',
   dubbedVideoPath: null,
   dubbedAudioPath: null,
   dubbedUrl: null,
@@ -117,7 +132,16 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
     ...initial,
 
-    async setFile(fd: File | { name: string; path: string } | null) {
+    async setFile(
+      fd:
+        | File
+        | {
+            name: string | undefined;
+            path: string;
+            sourceKind?: 'opened' | 'downloaded' | 'unknown';
+          }
+        | null
+    ) {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
       set(initial);
@@ -143,12 +167,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       if ('path' in fd) {
         const url = toFileUrl(fd.path);
+        const sourceKind = (fd as any).sourceKind ?? 'opened';
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
           s.url = url;
           s.originalPath = fd.path;
           s.originalUrl = url;
+          s.sourceKind = sourceKind ?? 'opened';
           s.dubbedVideoPath = null;
           s.dubbedAudioPath = null;
           s.dubbedUrl = null;
@@ -178,12 +204,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       if ((fd as any)._blobUrl) {
         const b = fd as any;
+        const sourceKind = b.sourceKind ?? 'opened';
         set(s => {
           s.file = b;
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
           s.originalPath = b._originalPath ?? null;
           s.originalUrl = b._blobUrl;
+          s.sourceKind = sourceKind;
           s.dubbedVideoPath = null;
           s.dubbedAudioPath = null;
           s.dubbedUrl = null;
@@ -219,6 +247,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       set(s => {
         s.originalUrl = blobUrl;
         s.originalPath = (fd as any).path ?? null;
+        s.sourceKind = 'opened';
         s.dubbedVideoPath = null;
         s.dubbedAudioPath = null;
         s.dubbedUrl = null;
@@ -296,7 +325,11 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         // Do nothing
       }
       try {
-        await get().setFile({ name: p.split(/[\\/]/).pop()!, path: p });
+        await get().setFile({
+          name: p.split(/[\\/]/).pop()!,
+          path: p,
+          sourceKind: 'opened',
+        });
       } catch (err) {
         console.error('[video-store] Error setting file:', err);
       }
@@ -333,6 +366,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         await get().mountFilePreserveSubs({
           name: p.split(/[\\/]/).pop()!,
           path: p,
+          sourceKind: 'opened',
         });
       } catch (err) {
         console.error(
@@ -346,7 +380,15 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       return { canceled: false, selectedPath: p } as const;
     },
 
-    async mountFilePreserveSubs(fd: File | { name: string; path: string }) {
+    async mountFilePreserveSubs(
+      fd:
+        | File
+        | {
+            name: string;
+            path: string;
+            sourceKind?: 'opened' | 'downloaded' | 'unknown';
+          }
+    ) {
       const prev = get();
       // Clean up previous blob URL if any
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
@@ -376,12 +418,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
 
       if ('path' in fd) {
         const url = toFileUrl(fd.path);
+        const sourceKind = (fd as any).sourceKind ?? 'opened';
         set(s => {
           s.file = fd as any;
           s.path = fd.path;
           s.url = url;
           s.originalPath = fd.path;
           s.originalUrl = url;
+          s.sourceKind = sourceKind;
           s.dubbedVideoPath = null;
           s.dubbedAudioPath = null;
           s.dubbedUrl = null;
@@ -405,12 +449,14 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       // Fallback: support File object mounting
       if ((fd as any)._blobUrl) {
         const b = fd as any;
+        const sourceKind = b.sourceKind ?? 'opened';
         set(s => {
           s.file = b;
           s.path = b._originalPath ?? null;
           s.url = b._blobUrl;
           s.originalPath = b._originalPath ?? null;
           s.originalUrl = b._blobUrl;
+          s.sourceKind = sourceKind;
           s.dubbedVideoPath = null;
           s.dubbedAudioPath = null;
           s.dubbedUrl = null;
@@ -436,6 +482,7 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         file: fd as File,
         url: blobUrl,
         path: (fd as any).path ?? null,
+        sourceKind: 'opened',
         resumeAt: null,
       });
       if ((fd as any).path) {

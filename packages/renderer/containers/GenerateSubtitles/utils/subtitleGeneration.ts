@@ -8,6 +8,7 @@ import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
+import * as LearningIPC from '../../../ipc/learning';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -63,6 +64,17 @@ export async function executeSrtTranslation({
         percent: 100,
         inProgress: false,
       });
+      const videoPath =
+        srcVideo ?? useVideoStore.getState().path ?? null;
+      if (videoPath) {
+        void LearningIPC.recordTranslation({
+          videoPath,
+          targetLanguage,
+          translation: res.translatedSubtitles,
+        }).catch(err => {
+          console.error('[subtitleGeneration] Failed to record translation', err);
+        });
+      }
       return { success: true, subtitles: res.translatedSubtitles };
     }
     useTaskStore.getState().setTranslation({ inProgress: false });
@@ -257,6 +269,28 @@ export async function executeSubtitleGeneration({
         percent: 100,
         inProgress: false,
       });
+
+      if (vpath) {
+        const videoState = useVideoStore.getState();
+        const inferredName = (() => {
+          const rawName =
+            (videoState.file as any)?.name ??
+            (vpath.split(/[\\/]/).pop() ?? 'video');
+          return typeof rawName === 'string' && rawName.trim()
+            ? rawName.trim()
+            : 'video';
+        })();
+        const sourceType = videoState.sourceKind ?? 'unknown';
+        void LearningIPC.recordTranscription({
+          videoPath: vpath,
+          videoFilename: inferredName,
+          sourceType,
+          transcript: result.subtitles,
+          transcriptLanguage: 'original',
+        }).catch(err => {
+          console.error('[subtitleGeneration] Failed to record transcription', err);
+        });
+      }
 
       return { success: true, subtitles: result.subtitles };
     } else {

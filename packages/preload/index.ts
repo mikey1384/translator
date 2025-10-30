@@ -195,6 +195,14 @@ const electronAPI = {
   // ---------------------- Read File Content ----------------------
   readFileContent: (filePath: string) =>
     ipcRenderer.invoke('readFileContent', filePath),
+  pathExists: (filePath: string) => ipcRenderer.invoke('file:exists', filePath),
+
+  // ---------------------- Learning Library ----------------------
+  recordLearningTranscription: (payload: any) =>
+    ipcRenderer.invoke('learning:record-transcription', payload),
+  recordLearningTranslation: (payload: any) =>
+    ipcRenderer.invoke('learning:record-translation', payload),
+  listLearningEntries: () => ipcRenderer.invoke('learning:list'),
 
   // ---------------------- Find-in-Page ----------------------
   sendFindInPage: (opts: any) => ipcRenderer.send('find-in-page', opts),

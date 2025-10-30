@@ -160,3 +160,19 @@ export async function handleReadFileContent(
     };
   }
 }
+
+export async function handlePathExists(
+  _event: IpcMainInvokeEvent,
+  filePath: string
+): Promise<{ exists: boolean }> {
+  if (!filePath || typeof filePath !== 'string') {
+    return { exists: false };
+  }
+  try {
+    const normalizedPath = path.normalize(filePath);
+    await fs.access(normalizedPath);
+    return { exists: true };
+  } catch {
+    return { exists: false };
+  }
+}
