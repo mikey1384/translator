@@ -170,6 +170,9 @@ declare module '@shared-types/app' {
     avg_logprob?: number;
     no_speech_prob?: number;
     words?: { start: number; end: number; word: string }[];
+    // Explicit word timings for original (ASR) and translation lines
+    origWords?: { start: number; end: number; word: string }[];
+    transWords?: { start: number; end: number; word: string }[];
   }
 
   export interface SubtitleHandlerServices {
@@ -199,6 +202,41 @@ declare module '@shared-types/app' {
     index: number;
     title: string;
     content: string;
+  }
+
+  export interface StylizedCaptionStyle {
+    id?: string;
+    fontFamily?: string;
+    fontSize?: number;
+    primaryColor?: string;
+    highlightColor?: string;
+    outlineColor?: string;
+    backgroundColor?: string;
+    alignment?: number;
+    position?: 'top' | 'middle' | 'bottom';
+  }
+
+  export interface StylizeHighlightRequest {
+    highlight: TranscriptHighlight;
+    words: Array<{ start: number; end: number; word: string }>;
+    style?: StylizedCaptionStyle;
+    operationId?: string;
+  }
+
+  export interface StylizeHighlightResult {
+    success: boolean;
+    videoPath?: string;
+    error?: string;
+    cancelled?: boolean;
+    operationId: string;
+  }
+
+  export interface StylizeHighlightProgress {
+    operationId: string;
+    percent: number;
+    stage: string;
+    error?: string;
+    videoPath?: string;
   }
 
   export interface TranscriptSummaryRequest {
@@ -319,6 +357,8 @@ declare module '@shared-types/app' {
   export interface GenerateSubtitlesResult {
     cancelled?: boolean;
     subtitles?: string;
+    segments?: SrtSegment[];
+    speechIntervals?: Array<{ start: number; end: number }>;
     error?: string;
     success: boolean;
   }
@@ -490,6 +530,17 @@ declare module '@shared-types/app' {
     overlayMode?: 'overlayOnVideo' | 'blackVideo';
     stylePreset?: SubtitleStylePresetKey;
     outputMode?: 'original' | 'translation' | 'dual';
+    // When true, merge pipeline will burn kinetic/ASS subtitles directly via ffmpeg
+    stylizeKaraoke?: boolean;
+    stylizeAspect?: 'original' | 'vertical9x16';
+    // Optional full segments (for word timings) when stylize is enabled
+    segmentsJson?: Array<{
+      start: number;
+      end: number;
+      original: string;
+      translation?: string;
+      words?: { start: number; end: number; word: string }[];
+    }>;
   }
 
   export interface ExposedRenderResult {
@@ -578,6 +629,12 @@ declare module '@shared-types/app' {
     transcribeRemaining: (
       options: TranscribeRemainingOptions
     ) => Promise<TranscribeRemainingResult>;
+    stylizeHighlight: (
+      options: StylizeHighlightRequest
+    ) => Promise<StylizeHighlightResult>;
+    onStylizeHighlightProgress: (
+      callback: ((progress: StylizeHighlightProgress) => void) | null
+    ) => () => void;
 
     sendPngRenderRequest: (options: RenderSubtitlesOptions) => void;
     onPngRenderResult: (

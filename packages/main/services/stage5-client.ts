@@ -66,6 +66,9 @@ export async function transcribe({
   }
 
   fd.append('model', model);
+  fd.append('response_format', 'verbose_json');
+  fd.append('word_timestamps', 'true');
+  fd.append('timestamp_granularities[]', 'word');
 
   try {
     // Step 1: Submit the transcription job

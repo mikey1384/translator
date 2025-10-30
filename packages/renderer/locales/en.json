@@ -139,6 +139,23 @@
     "highlightSaved": "Saved!",
     "highlightSaveError": "Save failed",
     "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
+    "stylize": "Stylize clip",
+    "stylizing": "Stylizing…",
+    "restylize": "Re-stylize",
+    "stylizePreparing": "Preparing stylized captions…",
+    "stylizeReady": "Stylized clip ready",
+    "stylizeError": "Stylizing failed",
+    "stylizeErrorMessage": "Couldn't stylize highlight: {{message}}",
+    "stylizeStatusError": "Stylizing failed",
+    "stylizeCancelled": "Stylizing cancelled",
+    "stylizeCancelledShort": "Cancelled",
+    "stylizeMissingClip": "Stylized version requires a generated highlight clip first.",
+    "stylizeNoWords": "Not enough timing data to build stylized captions for this highlight.",
+    "stylizedPreviewLabel": "Stylized preview",
+    "downloadStylized": "Download stylized clip",
+    "downloadingStylized": "Saving…",
+    "saveStylizedDialogTitle": "Save stylized highlight",
+    "downloadStylizedFailed": "Failed to save stylized highlight: {{message}}",
     "saveHighlightDialogTitle": "Save highlight clip",
     "noSections": "No section notes yet.",
     "sectionHeading": "Section {{index}}",
@@ -193,7 +210,13 @@
       "fontSizeLabel": "Font Size:",
       "styleLabel": "Style:",
       "mergeButton": "Merge Subtitles",
-      "mergingButton": "Merging..."
+      "mergingButton": "Merging...",
+      "stylizeLabel": "Stylize",
+      "stylizeHelp": "Burn kinetic captions during merge",
+      "aspectLabel": "Aspect",
+      "aspectOriginal": "Original",
+      "aspectVertical": "Vertical 9:16"
+      ,"previewStylized": "Preview"
     }
   },
   "settings": {

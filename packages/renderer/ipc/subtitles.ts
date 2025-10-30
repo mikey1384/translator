@@ -6,6 +6,9 @@ import type {
   GenerateSubtitlesResult,
   DubSubtitlesOptions,
   DubSubtitlesResult,
+  StylizeHighlightRequest,
+  StylizeHighlightResult,
+  StylizeHighlightProgress,
 } from '@shared-types/app';
 
 type PngRenderResult = {
@@ -121,6 +124,20 @@ export function onTranscriptSummaryProgress(
 ): () => void {
   return (window.electron as any).onTranscriptSummaryProgress(callback);
 }
+
+export function stylizeHighlight(
+  options: StylizeHighlightRequest
+): Promise<StylizeHighlightResult> {
+  return (window.electron as any).stylizeHighlight(options);
+}
+
+export function onStylizeHighlightProgress(
+  callback: (progress: StylizeHighlightProgress) => void
+): () => void {
+  return (window.electron as any).onStylizeHighlightProgress(callback);
+}
+
+// Removed heavy stylized preview in favor of lightweight in-player overlay (DRY)
 
 export function translateOneLine(options: {
   segment: import('@shared-types/app').SrtSegment;

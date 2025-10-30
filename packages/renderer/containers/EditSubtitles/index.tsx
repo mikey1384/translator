@@ -472,6 +472,7 @@ export default function EditSubtitles({
             onSave={handleSaveSrt}
             onSaveAs={handleSaveEditedSrtAs}
             onMerge={handleMerge}
+            
             canSaveDirectly={canSaveDirectly}
             subtitlesExist={subtitles.length > 0}
             videoFileExists={!!videoPath}
@@ -517,14 +518,58 @@ export default function EditSubtitles({
       } catch {
         // Do nothing
       }
-      await (
-        await import('../../ipc/subtitles')
-      ).transcribeRemaining({
+      const { transcribeRemaining } = await import('../../ipc/subtitles');
+      const tailRes = await transcribeRemaining({
         videoPath,
         start,
         operationId,
         qualityTranscription: useUIStore.getState().qualityTranscription,
       });
+      try {
+        const segs = (tailRes as any)?.segments as Array<{
+          start: number;
+          end: number;
+          words?: Array<{ start: number; end: number; word: string }>;
+          origWords?: Array<{ start: number; end: number; word: string }>;
+        }> | undefined;
+        if (Array.isArray(segs) && segs.length) {
+          const store = useSubStore.getState();
+          const order = store.order.slice();
+          const map = store.segments as any;
+          const match = (a: number, b: number) => Math.abs(a - b) < 0.25;
+          for (const r of segs) {
+            const hasOrig = Array.isArray(r.origWords) && r.origWords.length > 0;
+            const hasWords = Array.isArray(r.words) && r.words.length > 0;
+            if (!hasOrig && !hasWords) continue;
+            let id: string | null = null;
+            for (let i = order.length - 1; i >= 0; i--) {
+              const cid = order[i];
+              const c = map[cid];
+              if (!c) continue;
+              if (match(c.start, r.start) && match(c.end, r.end)) {
+                id = cid;
+                break;
+              }
+            }
+            if (id) {
+              const patch: any = {};
+              if (hasWords) {
+                patch.words = r.words;
+              }
+              if (hasOrig) {
+                patch.origWords = r.origWords;
+              } else if (hasWords) {
+                patch.origWords = r.words;
+              }
+              if (Object.keys(patch).length > 0) {
+                store.update(id, patch);
+              }
+            }
+          }
+        }
+      } catch {
+        // ignore update errors
+      }
       // Tail segments are appended via progress listener (appendSegments payload)
       // Mark completion explicitly (progress-buffer will also send final 100%)
       try {
@@ -581,6 +626,8 @@ export default function EditSubtitles({
     }
   }
 
+  // Removed: heavy stylized preview (DRY with VideoPlayer simple overlay)
+
   async function writeSrt(path: string) {
     const result = await FileIPC.save({
       filePath: path,
@@ -609,6 +656,49 @@ export default function EditSubtitles({
           // Do nothing
         }
         return;
+      }
+      // Debug: dump full transcription snapshot (including per-word timings)
+      try {
+        const snapshot = subtitles.map((s, idx) => ({
+          i: idx + 1,
+          start: s.start,
+          end: s.end,
+          original: s.original,
+          translation: s.translation,
+          wordsLen: Array.isArray((s as any).words) ? (s as any).words.length : 0,
+          words: Array.isArray((s as any).words) ? (s as any).words : undefined,
+        }));
+        const missing = snapshot.filter(
+          x => ((x.original?.trim() || x.translation?.trim()) && x.wordsLen === 0)
+        );
+        // Collapsed group so it doesn't overwhelm the console by default
+        console.groupCollapsed(
+          `[StylizeDebug] Merge snapshot: total=${snapshot.length}, missingWordTimings=${missing.length}`
+        );
+        console.log('Missing samples:', missing.slice(0, 5));
+        console.log('All items:', snapshot);
+        console.groupEnd();
+      } catch (e) {
+        console.warn('[StylizeDebug] failed to log snapshot:', e);
+      }
+      // Fail fast for stylized merge if word timings are missing
+      if (useUIStore.getState().stylizeMerge && getSrtMode() !== 'translation') {
+        const missingSegments = subtitles.filter(seg => {
+          const words = (seg as any).words;
+          const hasWords = Array.isArray(words) && words.length > 0;
+          const text = `${seg.original || ''} ${seg.translation || ''}`.trim();
+          return !hasWords && text.length > 0;
+        });
+        if (missingSegments.length > 0) {
+          const sample = missingSegments.slice(0, 3).map(seg => seg.original?.slice(0, 60) || '').join(' | ');
+          setSaveError(
+            `${t(
+              'common.error.stylizeRequiresWordTimings',
+              'Stylize requires per-word timings for all segments. Disable Stylize or regenerate subtitles with word timings.'
+            )} (${missingSegments.length} missing; e.g. ${sample || '...'} )`
+          );
+          return;
+        }
       }
       if (subtitles.length === 0) {
         setSaveError(t('common.error.noSubtitlesLoaded'));
@@ -666,6 +756,39 @@ export default function EditSubtitles({
         fontSizePx: scaledFontSize,
         stylePreset: subtitleStyle,
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
+        outputMode: getSrtMode() as any,
+        stylizeKaraoke: useUIStore.getState().stylizeMerge,
+        stylizeAspect: useUIStore.getState().stylizeMerge
+          ? useUIStore.getState().stylizeAspect
+          : 'original',
+        segmentsJson: useUIStore.getState().stylizeMerge
+          ? subtitles.map(seg => ({
+              start: seg.start,
+              end: seg.end,
+              original: seg.original,
+              translation: seg.translation,
+              // Send both sets explicitly for strict stylize
+              origWords: Array.isArray((seg as any).origWords)
+                ? (seg as any).origWords
+                : Array.isArray((seg as any).words)
+                  ? (seg as any).words
+                  : undefined,
+              transWords: Array.isArray((seg as any).transWords)
+                ? (seg as any).transWords
+                : undefined,
+              // For single-line modes, also set `words` to the active line for compatibility
+              words:
+                (getSrtMode() as any) === 'translation'
+                  ? (Array.isArray((seg as any).transWords)
+                      ? (seg as any).transWords
+                      : undefined)
+                  : (Array.isArray((seg as any).origWords)
+                      ? (seg as any).origWords
+                      : Array.isArray((seg as any).words)
+                        ? (seg as any).words
+                        : undefined),
+            }))
+          : undefined,
       };
 
       const res = await onStartPngRenderRequest(opts);

@@ -1,8 +1,10 @@
+import { useEffect, useMemo } from 'react';
 import Button from '../../components/Button.js';
 import { buttonGradientStyles, colors } from '../../styles.js';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
+import { useSubStore } from '../../state/subtitle-store.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
 
 interface SaveAndMergeBarProps {
@@ -30,6 +32,13 @@ const mergeButtonStyle = css`
   }
 `;
 
+const stylizeNoteStyle = css`
+  font-size: 0.85rem;
+  color: ${colors.grayDark};
+  max-width: 240px;
+  text-align: left;
+`;
+
 export default function SaveAndMergeBar({
   onSave,
   onSaveAs,
@@ -42,10 +51,7 @@ export default function SaveAndMergeBar({
 }: SaveAndMergeBarProps) {
   const { t } = useTranslation();
 
-  const [fontSize, setFontSize] = useUIStore(s => [
-    s.baseFontSize,
-    s.setBaseFontSize,
-  ]);
+  const [fontSize] = useUIStore(s => [s.baseFontSize]);
   const [stylePreset, setStylePreset] = useUIStore(s => [
     s.subtitleStyle,
     s.setSubtitleStyle,
@@ -54,6 +60,80 @@ export default function SaveAndMergeBar({
     s.showOriginalText,
     s.setShowOriginalText,
   ]);
+  const [stylizeMerge, setStylizeMerge] = useUIStore(s => [
+    s.stylizeMerge,
+    s.setStylizeMerge,
+  ]);
+  // Aspect selection moved to VideoPlayer; keep only toggle here
+
+  const segments = useSubStore(
+    s => s.order.map(id => s.segments[id])
+  );
+
+  const stylizeEligibility = useMemo(() => {
+    if (!segments.length) {
+      return {
+        available: false,
+        reason: t('editSubtitles.mergeControls.stylizeUnavailableNoSubs', 'Load subtitles to enable Stylize.'),
+      };
+    }
+
+    const hasTranslation = segments.some(seg => (seg?.translation || '').trim().length > 0);
+    const missingOrig = segments.some(
+      seg =>
+        (seg?.original || '').trim().length > 0 &&
+        !(Array.isArray((seg as any)?.origWords) && (seg as any).origWords.length > 0)
+    );
+    const missingTrans = segments.some(
+      seg =>
+        (seg?.translation || '').trim().length > 0 &&
+        !(Array.isArray((seg as any)?.transWords) && (seg as any).transWords.length > 0)
+    );
+
+    if (hasTranslation && showOriginal) {
+      if (missingOrig || missingTrans) {
+        return {
+          available: false,
+          reason: t(
+            'editSubtitles.mergeControls.stylizeUnavailableDual',
+            'Stylize needs per-word timings on both original and translated lines.'
+          ),
+        };
+      }
+      return { available: true, reason: '' };
+    }
+
+    if (hasTranslation && !showOriginal) {
+      if (missingTrans) {
+        return {
+          available: false,
+          reason: t(
+            'editSubtitles.mergeControls.stylizeUnavailableTranslation',
+            'Stylize needs per-word timings on the translated lines.'
+          ),
+        };
+      }
+      return { available: true, reason: '' };
+    }
+
+    if (missingOrig) {
+      return {
+        available: false,
+        reason: t(
+          'editSubtitles.mergeControls.stylizeUnavailableOriginal',
+          'Stylize needs per-word timings on the original lines.'
+        ),
+      };
+    }
+
+    return { available: true, reason: '' };
+  }, [segments, showOriginal, t]);
+
+  useEffect(() => {
+    if (stylizeMerge && !stylizeEligibility.available) {
+      setStylizeMerge(false);
+    }
+  }, [stylizeMerge, stylizeEligibility.available, setStylizeMerge]);
 
   if (!subtitlesExist) return null;
 
@@ -195,7 +275,13 @@ export default function SaveAndMergeBar({
         </div>
 
         {/* Row 2, Col 1: Merge button */}
-        <div>
+        <div
+          className={css`
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+          `}
+        >
           <Button
             onClick={onMerge}
             disabled={
@@ -236,6 +322,48 @@ export default function SaveAndMergeBar({
                 : t('editSubtitles.mergeControls.mergeButton')}
             </div>
           </Button>
+
+          <div
+            className={css`
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              align-items: flex-start;
+            `}
+          >
+            <label
+              className={css`
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: 500;
+                color: ${colors.grayDark};
+              `}
+              htmlFor="mergeStylizeToggle"
+              title={t(
+                'editSubtitles.mergeControls.stylizeHelp',
+                'Burn kinetic captions during merge'
+              )}
+            >
+              <input
+                id="mergeStylizeToggle"
+                type="checkbox"
+                checked={stylizeMerge}
+                onChange={e => setStylizeMerge(e.target.checked)}
+                aria-label={t(
+                  'editSubtitles.mergeControls.stylizeLabel',
+                  'Stylize'
+                )}
+                disabled={!stylizeEligibility.available}
+              />
+              {t('editSubtitles.mergeControls.stylizeLabel', 'Stylize')}
+            </label>
+            {!stylizeEligibility.available && (
+              <span className={stylizeNoteStyle}>{stylizeEligibility.reason}</span>
+            )}
+          </div>
+
+          {/* Aspect selection moved to the VideoPlayer overlay for real-time preview */}
         </div>
 
         {/* Row 2, Col 2: Style select */}
@@ -271,13 +399,18 @@ export default function SaveAndMergeBar({
               setStylePreset(e.target.value as SubtitleStylePresetKey)
             }
           >
-            {(['Default', 'Classic', 'Boxed', 'LineBox'] as SubtitleStylePresetKey[]).map(
-              key => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              )
-            )}
+            {(
+              [
+                'Default',
+                'Classic',
+                'Boxed',
+                'LineBox',
+              ] as SubtitleStylePresetKey[]
+            ).map(key => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
           </select>
         </div>
 

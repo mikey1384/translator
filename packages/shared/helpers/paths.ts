@@ -9,5 +9,5 @@ export function getAssetsPath(...parts: string[]): string {
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'fonts', ...parts);
   }
-  return path.join(__dirname, '..', '..', 'fonts', ...parts);
+  return path.join(__dirname, '..', '..', '..', 'assets', 'fonts', ...parts);
 }

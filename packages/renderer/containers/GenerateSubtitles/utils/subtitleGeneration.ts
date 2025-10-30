@@ -9,6 +9,7 @@ import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
 import * as LearningIPC from '../../../ipc/learning';
+import type { SrtSegment } from '@shared-types/app';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -64,15 +65,17 @@ export async function executeSrtTranslation({
         percent: 100,
         inProgress: false,
       });
-      const videoPath =
-        srcVideo ?? useVideoStore.getState().path ?? null;
+      const videoPath = srcVideo ?? useVideoStore.getState().path ?? null;
       if (videoPath) {
         void LearningIPC.recordTranslation({
           videoPath,
           targetLanguage,
           translation: res.translatedSubtitles,
         }).catch(err => {
-          console.error('[subtitleGeneration] Failed to record translation', err);
+          console.error(
+            '[subtitleGeneration] Failed to record translation',
+            err
+          );
         });
       }
       return { success: true, subtitles: res.translatedSubtitles };
@@ -256,26 +259,69 @@ export async function executeSubtitleGeneration({
     // Generate subtitles
     const result = await SubtitlesIPC.generate(opts);
 
-    if (result.subtitles) {
-      // Success: Parse and load subtitles
-      const finalSegments = parseSrt(result.subtitles);
-      // Mark as freshly generated for the current video
+    const rawSegments = Array.isArray((result as any)?.segments)
+      ? ((result as any).segments as SrtSegment[])
+      : null;
+
+    let finalSegments: SrtSegment[] = [];
+
+    if (
+      typeof result.subtitles === 'string' &&
+      result.subtitles.trim().length > 0
+    ) {
+      try {
+        finalSegments = parseSrt(result.subtitles);
+      } catch (err) {
+        console.warn(
+          '[executeSubtitleGeneration] Failed to parse subtitles, falling back to raw segments.',
+          err
+        );
+      }
+    }
+
+    if (finalSegments.length === 0 && rawSegments?.length) {
+      finalSegments = rawSegments.map((seg, idx) =>
+        normalizeRawSegment(seg, idx)
+      );
+    }
+
+    if (rawSegments?.length) {
+      finalSegments = mergeWordTimingMetadata(finalSegments, rawSegments);
+    }
+
+    if (typeof result.subtitles === 'string' || Array.isArray(rawSegments)) {
       const vpath = videoFilePath ?? useVideoStore.getState().path ?? null;
       useSubStore.getState().load(finalSegments, null, 'fresh', vpath);
 
+      const segmentCount = finalSegments.length;
       setTranscription({
         id: operationId,
-        stage: i18n.t('generateSubtitles.status.completed'),
+        stage:
+          segmentCount === 0
+            ? i18n.t(
+                'generateSubtitles.status.completedNoSpeech',
+                'Completed (no speech detected)'
+              )
+            : i18n.t('generateSubtitles.status.completed'),
         percent: 100,
         inProgress: false,
       });
+
+      const transcriptContent =
+        typeof result.subtitles === 'string' &&
+        result.subtitles.trim().length > 0
+          ? result.subtitles
+          : finalSegments.length > 0
+            ? buildSrt({ segments: finalSegments, mode: 'dual' })
+            : '';
 
       if (vpath) {
         const videoState = useVideoStore.getState();
         const inferredName = (() => {
           const rawName =
             (videoState.file as any)?.name ??
-            (vpath.split(/[\\/]/).pop() ?? 'video');
+            vpath.split(/[\\/]/).pop() ??
+            'video';
           return typeof rawName === 'string' && rawName.trim()
             ? rawName.trim()
             : 'video';
@@ -285,30 +331,40 @@ export async function executeSubtitleGeneration({
           videoPath: vpath,
           videoFilename: inferredName,
           sourceType,
-          transcript: result.subtitles,
+          transcript: transcriptContent,
           transcriptLanguage: 'original',
         }).catch(err => {
-          console.error('[subtitleGeneration] Failed to record transcription', err);
+          console.error(
+            '[subtitleGeneration] Failed to record transcription',
+            err
+          );
         });
       }
 
-      return { success: true, subtitles: result.subtitles };
-    } else {
-      // Handle failure or cancellation
-      const stage = result.cancelled
-        ? i18n.t('generateSubtitles.status.cancelled')
-        : i18n.t('generateSubtitles.status.error');
-      const percent = result.cancelled ? 0 : 100;
-
-      setTranscription({
-        id: operationId,
-        stage,
-        percent,
-        inProgress: false,
-      });
-
-      return { success: false, cancelled: result.cancelled };
+      return { success: true, subtitles: transcriptContent };
     }
+
+    // Fallback: treat as failure so caller surfaces error to user
+    const stage = result.cancelled
+      ? i18n.t('generateSubtitles.status.cancelled')
+      : i18n.t('generateSubtitles.status.error');
+    const percent = result.cancelled ? 0 : 100;
+
+    setTranscription({
+      id: operationId,
+      stage,
+      percent,
+      inProgress: false,
+    });
+    try {
+      const errMsg =
+        (result as any)?.error ||
+        'Subtitle generation did not return final segments with timings.';
+      useUrlStore.getState().setError(errMsg);
+    } catch {
+      // ignore
+    }
+    return { success: false, cancelled: result.cancelled };
   } catch (error) {
     console.error('Error generating subtitles:', error);
 
@@ -321,6 +377,120 @@ export async function executeSubtitleGeneration({
 
     return { success: false };
   }
+}
+
+function normalizeRawSegment(seg: any, fallbackIdx: number): SrtSegment {
+  const makeId = () => {
+    const uuid =
+      typeof globalThis.crypto?.randomUUID === 'function'
+        ? globalThis.crypto.randomUUID()
+        : `seg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return uuid;
+  };
+
+  return {
+    id: typeof seg?.id === 'string' && seg.id.length ? seg.id : makeId(),
+    index: typeof seg?.index === 'number' ? seg.index : fallbackIdx + 1,
+    start: Number(seg?.start ?? 0),
+    end: Number(seg?.end ?? 0),
+    original: typeof seg?.original === 'string' ? seg.original : '',
+    translation:
+      typeof seg?.translation === 'string' ? seg.translation : undefined,
+    avg_logprob:
+      typeof seg?.avg_logprob === 'number' ? seg.avg_logprob : undefined,
+    no_speech_prob:
+      typeof seg?.no_speech_prob === 'number' ? seg.no_speech_prob : undefined,
+    words: Array.isArray(seg?.words) ? seg.words : undefined,
+  };
+}
+
+function mergeWordTimingMetadata(
+  parsed: SrtSegment[],
+  raw: SrtSegment[]
+): SrtSegment[] {
+  if (!parsed.length || !raw.length) {
+    return parsed;
+  }
+
+  const byIndex = new Map<number, SrtSegment>();
+  for (const seg of raw) {
+    if (seg && typeof seg.index === 'number' && !byIndex.has(seg.index)) {
+      byIndex.set(seg.index, seg);
+    }
+  }
+
+  const used = new WeakSet<object>();
+
+  const findCandidate = (segment: SrtSegment): SrtSegment | null => {
+    if (typeof segment.index === 'number') {
+      const indexed = byIndex.get(segment.index);
+      if (
+        indexed &&
+        !used.has(indexed) &&
+        timingsRoughlyMatch(indexed, segment)
+      ) {
+        used.add(indexed);
+        return indexed;
+      }
+    }
+
+    for (const candidate of raw) {
+      if (!candidate || used.has(candidate)) continue;
+      if (timingsRoughlyMatch(candidate, segment)) {
+        used.add(candidate);
+        return candidate;
+      }
+    }
+
+    return null;
+  };
+
+  return parsed.map(segment => {
+    const source = findCandidate(segment);
+    if (!source) return segment;
+
+    const merged: SrtSegment & {
+      origWords?: Array<{ start: number; end: number; word: string }>;
+      transWords?: Array<{ start: number; end: number; word: string }>;
+    } = { ...segment };
+
+    if (Array.isArray((source as any).words) && (source as any).words.length) {
+      merged.words = (source as any).words;
+    }
+
+    const origWords = Array.isArray((source as any).origWords)
+      ? (source as any).origWords
+      : Array.isArray((source as any).words)
+        ? (source as any).words
+        : undefined;
+    if (origWords?.length) {
+      merged.origWords = origWords;
+    }
+
+    if (
+      Array.isArray((source as any).transWords) &&
+      (source as any).transWords.length
+    ) {
+      merged.transWords = (source as any).transWords;
+    }
+
+    if (typeof (source as any).avg_logprob === 'number') {
+      merged.avg_logprob = (source as any).avg_logprob;
+    }
+    if (typeof (source as any).no_speech_prob === 'number') {
+      merged.no_speech_prob = (source as any).no_speech_prob;
+    }
+
+    return merged;
+  });
+}
+
+function timingsRoughlyMatch(a: SrtSegment, b: SrtSegment): boolean {
+  const tol = 0.4; // seconds
+  const aStart = Number(a?.start ?? NaN);
+  const aEnd = Number(a?.end ?? NaN);
+  if (!Number.isFinite(aStart) || !Number.isFinite(aEnd)) return false;
+  return Math.abs(aStart - b.start) <= tol && Math.abs(aEnd - b.end) <= tol;
 }
 
 export async function startTranscriptionFlow({

@@ -3,6 +3,8 @@ import { immer } from 'zustand/middleware/immer';
 import { Draft, enableMapSet } from 'immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
+import { useTaskStore } from './task-store';
+import { useUrlStore } from './url-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
 
@@ -24,6 +26,9 @@ interface State {
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
   dubAmbientMix: number;
+  // Merge options
+  stylizeMerge: boolean;
+  stylizeAspect: 'original' | 'vertical9x16';
   navTick: number;
   // Panel open states (session-only; not persisted)
   showGeneratePanel: boolean;
@@ -57,6 +62,8 @@ interface Actions {
   setQualityTranslation(v: boolean): void;
   setDubVoice(voice: string): void;
   setDubAmbientMix(value: number): void;
+  setStylizeMerge(v: boolean): void;
+  setStylizeAspect(a: 'original' | 'vertical9x16'): void;
   setBaseFontSize(size: number): void;
   setSubtitleStyle(p: SubtitleStylePresetKey): void;
   setGeneratePanelOpen(open: boolean): void;
@@ -123,6 +130,11 @@ const initial: State = {
     if (!Number.isFinite(parsed)) return 0.35;
     return Math.min(1, Math.max(0, parsed));
   })(),
+  stylizeMerge: JSON.parse(localStorage.getItem('savedStylizeMerge') ?? 'false'),
+  stylizeAspect:
+    (localStorage.getItem('savedStylizeAspect') as any) === 'vertical9x16'
+      ? 'vertical9x16'
+      : 'original',
   baseFontSize: Number(localStorage.getItem('savedMergeFontSize')) || 24,
   subtitleStyle:
     (localStorage.getItem('savedMergeStylePreset') as SubtitleStylePresetKey) ||
@@ -280,6 +292,62 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ dubAmbientMix: clamped });
         },
 
+        setStylizeMerge(v) {
+          if (v) {
+            // Strict gating: require completed transcription and required word timings
+            try {
+              const inProgress = useTaskStore.getState().transcription.inProgress;
+              if (inProgress) {
+                useUrlStore.getState().setError(
+                  'Stylize requires completed transcription with per-word timings.'
+                );
+                return;
+              }
+            } catch {}
+
+            const state = useSubStore.getState();
+            const segs = state.order.map(id => state.segments[id]);
+            const hasAnyTranslation = segs.some(s => (s.translation || '').trim().length > 0);
+            const showOriginal = get().showOriginalText;
+
+            const hasOrigWords = (s: any) => Array.isArray(s?.origWords) && s.origWords.length > 0;
+            const hasTransWords = (s: any) => Array.isArray(s?.transWords) && s.transWords.length > 0;
+
+            if (!hasAnyTranslation) {
+              // Transcription-only: require origWords on all segments with original text
+              const missing = segs.filter(s => (s.original || '').trim().length > 0 && !hasOrigWords(s));
+              if (missing.length) {
+                useUrlStore.getState().setError(
+                  `Stylize requires per-word timings for original lines. Missing on ${missing.length} segment(s).`
+                );
+                return;
+              }
+            } else if (showOriginal) {
+              // Dual mode: require both origWords and transWords where lines have text
+              const missOrig = segs.filter(s => (s.original || '').trim().length > 0 && !hasOrigWords(s));
+              const missTrans = segs.filter(s => (s.translation || '').trim().length > 0 && !hasTransWords(s));
+              if (missOrig.length || missTrans.length) {
+                useUrlStore.getState().setError(
+                  `Stylize (dual) requires per-word timings on both lines. Missing original=${missOrig.length}, translation=${missTrans.length}.`
+                );
+                return;
+              }
+            } else {
+              // Translation-only: require transWords on all segments with translation text
+              const missing = segs.filter(s => (s.translation || '').trim().length > 0 && !hasTransWords(s));
+              if (missing.length) {
+                useUrlStore.getState().setError(
+                  `Stylize requires per-word timings for translation lines. Missing on ${missing.length} segment(s).`
+                );
+                return;
+              }
+            }
+          }
+
+          localStorage.setItem('savedStylizeMerge', JSON.stringify(!!v));
+          set({ stylizeMerge: !!v });
+        },
+
         setBaseFontSize(size) {
           set({ baseFontSize: size });
         },
@@ -322,6 +390,12 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setTranscriptionLanguage(lang: string) {
           set({ transcriptionLanguage: lang || 'auto' });
+        },
+
+        setStylizeAspect(a) {
+          const next = a === 'vertical9x16' ? 'vertical9x16' : 'original';
+          localStorage.setItem('savedStylizeAspect', next);
+          set({ stylizeAspect: next });
         },
       };
     })

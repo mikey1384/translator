@@ -60,6 +60,7 @@ export async function transcribeWithOpenAi({
   form.append('file', fs.createReadStream(filePath));
   form.append('model', model);
   form.append('response_format', 'verbose_json');
+  form.append('timestamp_granularities[]', 'word');
   if (promptContext) {
     form.append('prompt', promptContext);
   }

@@ -55,27 +55,29 @@ export function parseSrt(srtString: string): SrtSegment[] {
     const end = srtTimeToSeconds(tm[2]);
     i++;
 
-    // collect text lines until separator: a blank line followed by next numeric index+time, or EOF
+    // collect text lines until separator: either a blank line preceding the next cue,
+    // the next cue starting immediately (no blank spacer), or EOF
     const textLines: string[] = [];
     while (i < lines.length) {
       const line = lines[i];
       const next = lines[i + 1];
       const next2 = lines[i + 2];
       const blank = line.trim() === '';
-      const looksLikeNextBlock =
-        blank &&
+      const nextIsCue =
         typeof next === 'string' &&
         /^\s*\d+\s*$/.test(next) &&
         typeof next2 === 'string' &&
         timeRe.test(next2);
-      if (looksLikeNextBlock) {
-        // consume the blank separator and break
-        i++; // skip blank line
+      if (blank && nextIsCue) {
+        i++; // skip blank separator
         break;
       }
       // normal text line (including empty text lines inside the cue)
       textLines.push(line.replace(/\\n/g, '\n').trim());
       i++;
+      if (nextIsCue) {
+        break; // next iteration will read the cue index line
+      }
       // stop if EOF or single blank followed by EOF
       if (i >= lines.length) break;
       if (lines[i].trim() === '' && i + 1 >= lines.length) {
@@ -137,25 +139,27 @@ export function parseSrtOriginalOnly(srtString: string): SrtSegment[] {
     const end = srtTimeToSeconds(tm[2]);
     i++;
 
-    // collect all text lines in the cue
+    // collect all text lines in the cue, tolerating missing blank separators
     const textLines: string[] = [];
     while (i < lines.length) {
       const line = lines[i];
       const next = lines[i + 1];
       const next2 = lines[i + 2];
       const blank = line.trim() === '';
-      const looksLikeNextBlock =
-        blank &&
+      const nextIsCue =
         typeof next === 'string' &&
         /^\s*\d+\s*$/.test(next) &&
         typeof next2 === 'string' &&
         timeRe.test(next2);
-      if (looksLikeNextBlock) {
+      if (blank && nextIsCue) {
         i++; // skip blank separator
         break;
       }
       textLines.push(line.replace(/\\n/g, '\n'));
       i++;
+      if (nextIsCue) {
+        break;
+      }
       if (i >= lines.length) break;
       if (lines[i].trim() === '' && i + 1 >= lines.length) {
         i++;

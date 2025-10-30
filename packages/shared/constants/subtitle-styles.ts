@@ -33,10 +33,10 @@ export const SUBTITLE_STYLE_PRESETS: Record<string, SubtitleStyle> = {
     name: 'Default',
     fontName: DEFAULT_FONT,
     fontSizePlaceholder: '%FONTSIZE%',
-    primaryColor: '&H00FFFFFF', // White
-    secondaryColor: '&H000000FF', // Red (Often unused, copy primary or set specific if needed)
+    primaryColor: '&H00202020', // Dark grey base
+    secondaryColor: '&H00FFB400', // Bright yellow-orange highlight (AABBGGRR)
     outlineColor: '&H00000000', // Black
-    backColor: '&H80000000', // Semi-transparent black (for shadow)
+    backColor: '&H64000000', // Semi-transparent black glow
     isBold: true,
     isItalic: false,
     isUnderline: false,
@@ -46,12 +46,12 @@ export const SUBTITLE_STYLE_PRESETS: Record<string, SubtitleStyle> = {
     spacing: 0,
     angle: 0,
     borderStyle: 1, // Outline + Shadow
-    outlineSize: 1.5,
-    shadowDepth: 0.5,
+    outlineSize: 4,
+    shadowDepth: 0,
     alignment: 2, // BottomCenter
     marginLeft: 10,
     marginRight: 10,
-    marginVertical: 15,
+    marginVertical: 60,
     encoding: 1,
   },
   Boxed: {

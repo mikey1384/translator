@@ -10,6 +10,7 @@ import {
 import fs from 'fs';
 import { throwIfAborted } from './utils.js';
 import { transcribe as transcribeAi } from '../ai-provider.js';
+import path from 'path';
 
 export async function transcribeChunk({
   chunkIndex,
@@ -49,6 +50,31 @@ export async function transcribeChunk({
           promptContext,
           signal,
         });
+        try {
+          const rawOut = {
+            operationId,
+            chunkIndex,
+            startTime,
+            providerSegments: Array.isArray((res as any)?.segments)
+              ? (res as any).segments.length
+              : 0,
+            providerWords: Array.isArray((res as any)?.words)
+              ? (res as any).words.length
+              : 0,
+            sampleSegment: (res as any)?.segments?.[0] || null,
+            sampleWords: ((res as any)?.words || []).slice(0, 10) || [],
+          } as any;
+          const debugPath = path.join(
+            path.dirname(chunkPath),
+            `${operationId}_raw_${String(chunkIndex)}.json`
+          );
+          fs.writeFileSync(debugPath, JSON.stringify(rawOut, null, 2), 'utf8');
+          log.info(
+            `[${operationId}] Raw transcription debug written: ${debugPath} (segs=${rawOut.providerSegments}, words=${rawOut.providerWords})`
+          );
+        } catch (e) {
+          log.warn(`[${operationId}] Failed to write raw transcription debug:`, e);
+        }
         break; // success
       } catch (err: any) {
         // Propagate immediately on cancellation or insufficient credits
@@ -94,34 +120,16 @@ export async function transcribeChunk({
 
         // Prefer Whisper-provided text, fall back to joining words inside the segment
         let text: string = (seg.text ?? '').trim();
-        if (!text) {
-          const BOUNDARY_TOL = 0.3; // seconds: include words that slightly cross segment edges
-          const segWords = words.filter(
-            (w: any) =>
-              typeof w?.start === 'number' &&
-              typeof w?.end === 'number' &&
-              w.start >= (seg.start ?? 0) - BOUNDARY_TOL &&
-              w.end <= (seg.end ?? 0) + BOUNDARY_TOL
-          );
-          text = segWords.map((w: any) => String(w.word ?? '')).join(' ');
-          text = text.replace(/\s{2,}/g, ' ').trim();
+        const relWords = collectSegmentWords({
+          segment: seg,
+          globalWords: words,
+          segStart: seg.start ?? 0,
+          segEnd: seg.end ?? 0,
+        });
+        if (!text && relWords.length) {
+          text = relWords.map(w => w.word).join(' ');
         }
-
-        // Map words to be relative to segment start (if provided)
-        const BOUNDARY_TOL = 0.3; // seconds: include words that slightly cross segment edges
-        const relWords = words
-          .filter(
-            (w: any) =>
-              typeof w?.start === 'number' &&
-              typeof w?.end === 'number' &&
-              w.start >= (seg.start ?? 0) - BOUNDARY_TOL &&
-              w.end <= (seg.end ?? 0) + BOUNDARY_TOL
-          )
-          .map((w: any) => ({
-            ...w,
-            start: (w.start ?? 0) - (seg.start ?? 0),
-            end: (w.end ?? 0) - (seg.start ?? 0),
-          }));
+        text = text.replace(/\s{2,}/g, ' ').trim();
 
         // Build base segment and apply smart splitting using Whisper word timings
         const baseSeg: SrtSegment = {
@@ -133,6 +141,7 @@ export async function transcribeChunk({
           avg_logprob: seg.avg_logprob,
           no_speech_prob: seg.no_speech_prob,
           words: relWords,
+          origWords: relWords.map(w => ({ ...w })),
         } as SrtSegment;
 
         const splitSegs = smartSplitByWords(baseSeg);
@@ -140,6 +149,26 @@ export async function transcribeChunk({
           ss.index = segIdx++;
           srtSegments.push(ss);
         }
+      }
+      try {
+        const withWords = srtSegments.filter((s: any) => Array.isArray(s?.origWords) && s.origWords.length > 0).length;
+        const dbg = {
+          operationId,
+          chunkIndex,
+          mappedSegments: srtSegments.length,
+          withOrigWords: withWords,
+          sample: srtSegments.slice(0, 3).map(s => ({ start: s.start, end: s.end, ow: (s as any).origWords?.length || 0 })),
+        } as any;
+        const debugPath = path.join(
+          path.dirname(chunkPath),
+          `${operationId}_mapped_${String(chunkIndex)}.json`
+        );
+        fs.writeFileSync(debugPath, JSON.stringify(dbg, null, 2), 'utf8');
+        log.info(
+          `[${operationId}] Mapped transcription debug: segs=${dbg.mappedSegments}, withOrigWords=${dbg.withOrigWords}`
+        );
+      } catch (e) {
+        log.warn(`[${operationId}] Failed to write mapped transcription debug:`, e);
       }
       return srtSegments;
     }
@@ -158,16 +187,20 @@ export async function transcribeChunk({
         start: (w.start ?? 0) - (words[0].start ?? 0),
         end: (w.end ?? 0) - (words[0].start ?? 0),
       }));
-      return [
-        {
-          id: crypto.randomUUID(),
-          index: 1,
-          start: absStart,
-          end: absEnd,
-          original: text,
-          words: relWords,
-        } as SrtSegment,
-      ];
+      const baseSeg: SrtSegment = {
+        id: crypto.randomUUID(),
+        index: 1,
+        start: absStart,
+        end: absEnd,
+        original: text,
+        words: relWords,
+        origWords: relWords.map(w => ({ ...w })),
+      } as SrtSegment;
+      const splitFallback = smartSplitByWords(baseSeg).map((seg, idx) => ({
+        ...seg,
+        index: idx + 1,
+      }));
+      return splitFallback.length ? splitFallback : [baseSeg];
     }
 
     // If no result after retries, return empty.
@@ -263,6 +296,7 @@ function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
       end: absEnd,
       original: text,
       words: remap as any,
+      origWords: remap as any,
     } as SrtSegment;
   };
 
@@ -314,4 +348,82 @@ function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
   }
 
   return out.length ? out : [seg];
+}
+function normalizeWordEntry(entry: any): { start: number; end: number; word: string } | null {
+  if (!entry) return null;
+  const rawWord =
+    entry.word ?? entry.text ?? entry.token ?? entry.content ?? entry.value ?? '';
+  if (!rawWord || !String(rawWord).trim()) return null;
+  const rawStart =
+    entry.start ??
+    entry.start_time ??
+    entry.from ??
+    entry.offset ??
+    entry.time ??
+    entry.begin ??
+    null;
+  const rawEnd =
+    entry.end ??
+    entry.end_time ??
+    entry.to ??
+    entry.offset_end ??
+    entry.time_end ??
+    entry.finish ??
+    null;
+  if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) return null;
+  const start = Number(rawStart);
+  const end = Number(rawEnd);
+  if (!(end > start)) return null;
+  return {
+    start,
+    end,
+    word: String(rawWord).replace(/\s+/g, ' ').trim(),
+  };
+}
+
+function collectSegmentWords(options: {
+  segment: any;
+  globalWords: any[];
+  segStart: number;
+  segEnd: number;
+}): Array<{ start: number; end: number; word: string }> {
+  const { segment, globalWords, segStart, segEnd } = options;
+  const out: Array<{ start: number; end: number; word: string }> = [];
+  const localLists = [segment?.words, segment?.tokens, segment?.word_timestamps];
+  for (const list of localLists) {
+    if (!Array.isArray(list) || !list.length) continue;
+    const normalized = list
+      .map(normalizeWordEntry)
+      .filter((x): x is { start: number; end: number; word: string } => !!x);
+    if (!normalized.length) continue;
+    const duration = Math.max(0, segEnd - segStart);
+    const treatAsAbsolute = normalized.some(
+      w => w.start >= duration + 0.25 || w.end >= duration + 0.25
+    );
+    const baseOffset = treatAsAbsolute ? segStart : 0;
+    for (const w of normalized) {
+      const relStart = w.start - baseOffset;
+      const relEnd = w.end - baseOffset;
+      if (relEnd <= relStart) continue;
+      out.push({ start: relStart, end: relEnd, word: w.word });
+    }
+    if (out.length) return out;
+  }
+
+  const tol = 0.35;
+  const normalizedGlobals = Array.isArray(globalWords)
+    ? globalWords
+        .map(normalizeWordEntry)
+        .filter((x): x is { start: number; end: number; word: string } => !!x)
+    : [];
+  for (const w of normalizedGlobals) {
+    if (
+      w.start >= segStart - tol &&
+      w.end <= segEnd + tol &&
+      w.end > segStart - tol
+    ) {
+      out.push({ start: w.start - segStart, end: w.end - segStart, word: w.word });
+    }
+  }
+  return out;
 }

@@ -406,12 +406,45 @@ export async function transcribePass({
           original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
         }));
 
+      const missingWordTimings = cleaned.filter((s: any) => {
+        const hasText = String(s.original || '').trim().length > 0;
+        const ow = Array.isArray(s?.origWords) ? s.origWords : [];
+        return hasText && ow.length === 0;
+      });
+      if (missingWordTimings.length > 0) {
+        const sample = missingWordTimings
+          .slice(0, 3)
+          .map(
+            (s: any) =>
+              `${s.start.toFixed(2)}s "${String(s.original || '').trim().slice(0, 60)}"`
+          )
+          .join('; ');
+        log.warn(
+          `[${operationId}] Missing per-word timings on ${missingWordTimings.length} segment(s); stylize features will stay disabled. Samples: ${sample}`
+        );
+      }
+
       const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
-      await fs.promises.writeFile(
-        path.join(tempDir, `${operationId}_final.srt`),
-        finalSrt,
-        'utf8'
-      );
+      await fs.promises.writeFile(path.join(tempDir, `${operationId}_final.srt`), finalSrt, 'utf8');
+      try {
+        const shape = {
+          operationId,
+          total: cleaned.length,
+          withOrigWords: cleaned.filter((s: any) => Array.isArray(s?.origWords) && s.origWords.length > 0).length,
+          missingOrigWords: missingWordTimings.length,
+          sample: cleaned.slice(0, 5).map((s: any) => ({ idx: s.index, start: s.start, end: s.end, ow: Array.isArray(s?.origWords) ? s.origWords.length : 0 })),
+        } as any;
+        await fs.promises.writeFile(
+          path.join(tempDir, `${operationId}_final_segments.json`),
+          JSON.stringify(shape, null, 2),
+          'utf8'
+        );
+        log.info(
+          `[${operationId}] ✔ Final transcription shape: segs=${shape.total}, withOrigWords=${shape.withOrigWords}`
+        );
+      } catch (e) {
+        log.warn(`[${operationId}] Failed to write final transcription shape:`, e);
+      }
       log.info(
         `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
       );

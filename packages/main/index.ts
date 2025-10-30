@@ -391,6 +391,35 @@ try {
     }
   });
 
+  ipcMain.handle('stylize-highlight', async (event, options) => {
+    const operationId =
+      options?.operationId ||
+      `stylize-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(`[main.ts/stylize-highlight] Starting operation: ${operationId}`);
+    try {
+      const result = await subtitleHandlers.handleStylizeHighlight(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/stylize-highlight] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/stylize-highlight] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/stylize-highlight] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('translate-one-line', async (event, options) => {
     const operationId =
       options.operationId ||
