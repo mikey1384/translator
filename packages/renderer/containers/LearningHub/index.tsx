@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import Section from '../../components/Section';
-import VideoPlayer from '../VideoPlayer';
 import { colors } from '../../styles';
 import type { LearningEntry } from '@shared-types/app';
 import * as LearningIPC from '../../ipc/learning';
@@ -128,6 +127,17 @@ const viewerStyles = css`
   gap: 12px;
 `;
 
+const previewVideoStyles = css`
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 16 / 9;
+  background: ${colors.grayLight};
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  object-fit: contain;
+`;
+
 type LanguageKey = 'transcript' | string;
 
 const formatTimestamp = (value: string, locale: string) => {
@@ -171,6 +181,7 @@ export default function LearningHub() {
   const [videoMissing, setVideoMissing] = useState(false);
   const [srtError, setSrtError] = useState<string | null>(null);
   const activeShell = useUIStore(s => s.activeShell);
+  const activeVideoUrl = useVideoStore(s => s.url);
 
   const refreshEntries = useCallback(async () => {
     setLoading(true);
@@ -224,6 +235,7 @@ export default function LearningHub() {
       }
 
       setSrtError(null);
+      setVideoMissing(false);
 
       try {
         const content = await (window as any).fileApi.readText(filePath);
@@ -454,7 +466,14 @@ export default function LearningHub() {
                   )}
                 </div>
               )}
-              <VideoPlayer />
+              {!videoMissing && activeVideoUrl ? (
+                <video
+                  key={`${selectedEntry.id}-${selected?.language ?? 'transcript'}`}
+                  className={previewVideoStyles}
+                  controls
+                  src={activeVideoUrl}
+                />
+              ) : null}
             </>
           ) : (
             <div className={emptyStateStyles}>
