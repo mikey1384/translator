@@ -3,7 +3,7 @@ import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import Section from '../../components/Section';
 import { colors } from '../../styles';
-import type { LearningEntry } from '@shared-types/app';
+import type { LearningEntry, SrtSegment } from '@shared-types/app';
 import * as LearningIPC from '../../ipc/learning';
 import { parseSrt } from '../../../shared/helpers';
 import { useSubStore, useUIStore, useVideoStore } from '../../state';
@@ -138,6 +138,45 @@ const previewVideoStyles = css`
   object-fit: contain;
 `;
 
+const transcriptListStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
+  background: ${colors.light};
+`;
+
+const segmentRowStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid ${colors.border};
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+`;
+
+const segmentTimeStyles = css`
+  font-size: 0.75rem;
+  color: ${colors.gray};
+`;
+
+const segmentTextStyles = css`
+  color: ${colors.dark};
+  font-size: 0.95rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+`;
+
 type LanguageKey = 'transcript' | string;
 
 const formatTimestamp = (value: string, locale: string) => {
@@ -169,6 +208,17 @@ const normalizeDir = (dir: string | null) => {
   return dir;
 };
 
+const formatTimestampForSegment = (value: number) => {
+  if (!Number.isFinite(value)) return '--:--';
+  const total = Math.max(0, Math.floor(value));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const pad = (v: number) => v.toString().padStart(2, '0');
+  const base = `${pad(minutes)}:${pad(seconds)}`;
+  return hours > 0 ? `${hours}:${base}` : base;
+};
+
 export default function LearningHub() {
   const { t, i18n } = useTranslation();
   const [entries, setEntries] = useState<LearningEntry[]>([]);
@@ -182,6 +232,15 @@ export default function LearningHub() {
   const [srtError, setSrtError] = useState<string | null>(null);
   const activeShell = useUIStore(s => s.activeShell);
   const activeVideoUrl = useVideoStore(s => s.url);
+  const transcriptSegments = useSubStore(
+    useCallback(
+      s =>
+        s.order
+          .map(id => s.segments[id])
+          .filter((seg): seg is SrtSegment => Boolean(seg)),
+      []
+    )
+  );
 
   const refreshEntries = useCallback(async () => {
     setLoading(true);
@@ -481,6 +540,26 @@ export default function LearningHub() {
                 'learningHub.selectPrompt',
                 'Select a saved video to review its subtitles and playback.'
               )}
+            </div>
+          )}
+          {selectedEntry && transcriptSegments.length > 0 && (
+            <div className={transcriptListStyles}>
+              {transcriptSegments.map(seg => {
+                const start = formatTimestampForSegment(seg.start);
+                const end = formatTimestampForSegment(seg.end);
+                const text =
+                  selected?.language === 'transcript' || !seg.translation
+                    ? seg.original
+                    : seg.translation;
+                return (
+                  <div key={seg.id} className={segmentRowStyles}>
+                    <span className={segmentTimeStyles}>
+                      {start} → {end}
+                    </span>
+                    <span className={segmentTextStyles}>{text || '—'}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
