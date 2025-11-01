@@ -38,33 +38,37 @@ function getBinarySearchPaths(): string[] {
 
   // 2. dev environment bin (for development)
   if (!isPackaged) {
-    paths.push(join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', binaryName));
+    paths.push(
+      join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', binaryName)
+    );
   }
 
   // 3. Legacy locations (for backwards compatibility)
   paths.push(
     // CWD node_modules/.bin
     join(process.cwd(), 'node_modules', '.bin', binaryName),
-    
+
     // Old packaged app paths
-    ...(isPackaged ? [
-      join(
-        process.resourcesPath,
-        'app.asar.unpacked',
-        'node_modules',
-        'youtube-dl-exec',
-        'bin',
-        binaryName
-      ),
-      join(
-        app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
-        'node_modules',
-        'youtube-dl-exec',
-        'bin',
-        binaryName
-      ),
-    ] : []),
-    
+    ...(isPackaged
+      ? [
+          join(
+            process.resourcesPath,
+            'app.asar.unpacked',
+            'node_modules',
+            'youtube-dl-exec',
+            'bin',
+            binaryName
+          ),
+          join(
+            app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
+            'node_modules',
+            'youtube-dl-exec',
+            'bin',
+            binaryName
+          ),
+        ]
+      : []),
+
     // Relative path from module (for development)
     join(
       esmDirname(import.meta.url),
@@ -89,7 +93,12 @@ export async function findYtDlpBinary(): Promise<string | null> {
     // Check filesystem paths
     const searchPaths = getBinarySearchPaths();
     for (const path of searchPaths) {
-      if (await fsp.access(path).then(() => true).catch(() => false)) {
+      if (
+        await fsp
+          .access(path)
+          .then(() => true)
+          .catch(() => false)
+      ) {
         log.info(`[URLprocessor] Found yt-dlp at: ${path}`);
         await ensureExecutable(path);
         return path;
@@ -98,28 +107,61 @@ export async function findYtDlpBinary(): Promise<string | null> {
 
     // Check system PATH
     const pathBinary = await which(binaryName).catch(() => null);
-    if (pathBinary && await fsp.access(pathBinary).then(() => true).catch(() => false)) {
+    if (
+      pathBinary &&
+      (await fsp
+        .access(pathBinary)
+        .then(() => true)
+        .catch(() => false))
+    ) {
       log.info(`[URLprocessor] Found yt-dlp in PATH: ${pathBinary}`);
       return pathBinary;
     }
 
-    log.error('[URLprocessor] yt-dlp binary could not be located in any expected location.');
+    log.error(
+      '[URLprocessor] yt-dlp binary could not be located in any expected location.'
+    );
     return null;
   } catch (error) {
-    log.error('[URLprocessor] Unexpected error during yt-dlp binary search:', error);
+    log.error(
+      '[URLprocessor] Unexpected error during yt-dlp binary search:',
+      error
+    );
     return null;
   }
 }
 
 // Test if binary is working
 export async function testBinary(binaryPath: string): Promise<boolean> {
-  try {
-    const { stdout } = await execa(binaryPath, ['--version'], { timeout: 10000, windowsHide: true });
-    log.info(`[URLprocessor] yt-dlp version detected: ${stdout.trim()}`);
-    return true;
-  } catch {
-    return false;
+  const baseTimeoutMs = 10_000;
+  const extendedTimeoutMs = app.isPackaged ? 120_000 : 30_000;
+  const timeouts =
+    extendedTimeoutMs > baseTimeoutMs
+      ? [baseTimeoutMs, extendedTimeoutMs]
+      : [baseTimeoutMs];
+
+  for (const timeout of timeouts) {
+    try {
+      const { stdout } = await execa(binaryPath, ['--version'], {
+        timeout,
+        windowsHide: true,
+      });
+      log.info(`[URLprocessor] yt-dlp version detected: ${stdout.trim()}`);
+      return true;
+    } catch (error: any) {
+      if (error?.timedOut && timeout < extendedTimeoutMs) {
+        log.warn(
+          `[URLprocessor] yt-dlp --version timed out after ${timeout}ms, retrying with extended timeout...`
+        );
+        continue;
+      }
+      const message = error?.shortMessage || error?.message || String(error);
+      log.warn(`[URLprocessor] yt-dlp --version failed: ${message}`);
+      return false;
+    }
   }
+
+  return false;
 }
 
 // Get preferred installation path
@@ -131,7 +173,13 @@ export function getPreferredInstallPath(): string {
   if (isPackaged) {
     return join(app.getPath('userData'), 'bin', binaryName);
   } else {
-    return join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', binaryName);
+    return join(
+      process.cwd(),
+      'node_modules',
+      'youtube-dl-exec',
+      'bin',
+      binaryName
+    );
   }
 }
 

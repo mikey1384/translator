@@ -10,7 +10,7 @@ import {
 } from '../../active-processes.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
-import { ensureYtDlpBinary } from './binary-installer.js';
+import { ensureYtDlpBinary, YtDlpSetupError } from './binary-installer.js';
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
@@ -151,15 +151,37 @@ export async function downloadVideoFromPlatform(
   const skipUpdateEnv =
     process.env.TRANSLATOR_YTDLP_SKIP_UPDATE === '1' ||
     process.env.YTDLP_SKIP_UPDATE === '1';
-  const ytDlpPath = await ensureYtDlpBinary({ skipUpdate: skipUpdateEnv });
+  let ytDlpPath: string;
+  try {
+    ytDlpPath = await ensureYtDlpBinary({ skipUpdate: skipUpdateEnv });
+  } catch (error: any) {
+    const baseMessage = error?.message || 'yt-dlp binary could not be set up.';
+    const attemptedUrl =
+      error instanceof YtDlpSetupError
+        ? error.attemptedUrl
+        : (error?.attemptedUrl as string | undefined);
+    const detailedMessage =
+      attemptedUrl && attemptedUrl.length > 0
+        ? `${baseMessage} (tried: ${attemptedUrl})`
+        : baseMessage;
 
-  if (!ytDlpPath) {
     progressCallback?.({
       percent: 0,
       stage: 'Failed',
-      error: 'yt-dlp binary could not be set up.',
+      error: detailedMessage,
     });
-    throw new Error('yt-dlp binary could not be set up.');
+    throw new Error(detailedMessage);
+  }
+
+  if (!ytDlpPath) {
+    const fallbackMessage =
+      'yt-dlp binary could not be set up. Please check the application logs for details.';
+    progressCallback?.({
+      percent: 0,
+      stage: 'Failed',
+      error: fallbackMessage,
+    });
+    throw new Error(fallbackMessage);
   }
 
   log.info(`[URLprocessor] yt-dlp ready at: ${ytDlpPath}`);
