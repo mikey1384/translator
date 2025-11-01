@@ -3,6 +3,96 @@ import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
 
+const NETWORK_RETRY_BASE_MS = 5_000;
+const NETWORK_RETRY_MAX_MS = 60_000;
+const NETWORK_RETRY_LIMIT = 8;
+const NETWORK_ERROR_HINTS = [
+  'network',
+  'fetch failed',
+  'socket hang up',
+  'enotfound',
+  'eai_again',
+  'econnreset',
+  'enetunreach',
+  'offline',
+  'dns',
+  'network timeout',
+  'temporarily unavailable',
+  'failed to fetch',
+  'getaddrinfo',
+];
+
+function normaliseErrorMessage(error: any): string {
+  if (!error) return '';
+  const parts = [
+    typeof error?.message === 'string' ? error.message : '',
+    typeof error?.name === 'string' ? error.name : '',
+    typeof (error?.cause as any)?.message === 'string'
+      ? (error.cause as any).message
+      : '',
+    typeof (error?.cause as any)?.name === 'string'
+      ? (error.cause as any).name
+      : '',
+    typeof error?.stack === 'string' ? error.stack : '',
+  ];
+  return parts.filter(Boolean).join(' ').toLowerCase();
+}
+
+function isLikelyNetworkError(error: any): boolean {
+  const msg = normaliseErrorMessage(error);
+  if (!msg) return false;
+  if (msg.includes('insufficient-credits') || msg.includes('invalid api key')) {
+    return false;
+  }
+  if (typeof error?.code === 'string') {
+    const code = error.code.toLowerCase();
+    if (
+      [
+        'enotfound',
+        'eai_again',
+        'econnreset',
+        'enetunreach',
+        'ehostunreach',
+      ].includes(code)
+    ) {
+      return true;
+    }
+  }
+  return NETWORK_ERROR_HINTS.some(hint => msg.includes(hint));
+}
+
+function delayWithAbort(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timeout);
+      reject(new DOMException('Operation cancelled', 'AbortError'));
+    };
+    if (signal) {
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+  });
+}
+
+async function waitForNetworkRetry(
+  attempt: number,
+  signal?: AbortSignal
+): Promise<void> {
+  const backoff =
+    NETWORK_RETRY_BASE_MS * Math.pow(1.5, Math.max(0, attempt - 1));
+  const delay = Math.min(NETWORK_RETRY_MAX_MS, Math.round(backoff));
+  log.warn(
+    `[Review] Network appears unavailable (attempt ${attempt}). Waiting ${delay}ms before retrying…`
+  );
+  await delayWithAbort(delay, signal);
+}
+
 function parseTranslatedResponse(translation: string, batch: any): any[] {
   log.info(`[parseTranslatedResponse] Parsing translation response`);
 
@@ -452,88 +542,110 @@ Example: @@SUB_LINE@@ ${batch.startIndex + 1}: <your translation>
 Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}: 
 `.trim();
 
-  try {
-    const reviewedContent = await callAIModel({
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt },
-      ],
-      model: 'gpt-5',
-      reasoning: { effort: 'high' },
-      signal,
-      operationId,
-      retryAttempts: 3,
-    });
-
-    if (!reviewedContent) {
-      log.warn(
-        '[Review] Review response content was empty or null. Using original translations.'
-      );
-      return batch.segments;
+  let attempt = 0;
+  let networkRetries = 0;
+  for (;;) {
+    if (signal?.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
     }
+    attempt += 1;
+    try {
+      const reviewedContent = await callAIModel({
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: prompt },
+        ],
+        model: 'gpt-5',
+        reasoning: { effort: 'high' },
+        signal,
+        operationId,
+        retryAttempts: 3,
+      });
 
-    const parts = reviewedContent.split('@@SUB_LINE@@').slice(1);
-    const rawMap = new Map<number, string>();
-    const lineRE = /^\s*(\d+)\s*:\s*([\s\S]*)$/;
+      if (!reviewedContent) {
+        log.warn(
+          '[Review] Review response content was empty or null. Using original translations.'
+        );
+        return batch.segments;
+      }
 
-    for (const raw of parts) {
-      const m = raw.match(lineRE);
-      if (!m) continue;
-      const id = Number(m[1]);
-      const txt = (m[2] ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
-      rawMap.set(id, txt);
-    }
+      const parts = reviewedContent.split('@@SUB_LINE@@').slice(1);
+      const rawMap = new Map<number, string>();
+      const lineRE = /^\s*(\d+)\s*:\s*([\s\S]*)$/;
 
-    const expectedIds = new Set(batchItemsWithContext.map(i => i.index));
-    const map = new Map<number, string>();
-    for (const id of expectedIds) {
-      if (rawMap.has(id)) map.set(id, rawMap.get(id)!);
-    }
+      for (const raw of parts) {
+        const m = raw.match(lineRE);
+        if (!m) continue;
+        const id = Number(m[1]);
+        const txt = (m[2] ?? '').replace(/[\uFEFF\u200B]/g, '').trim();
+        rawMap.set(id, txt);
+      }
 
-    const hasDupes = map.size !== new Set(map.keys()).size; // unlikely now, but keep
-    const coverageOk = map.size / batch.segments.length >= 0.9;
+      const expectedIds = new Set(batchItemsWithContext.map(i => i.index));
+      const map = new Map<number, string>();
+      for (const id of expectedIds) {
+        if (rawMap.has(id)) map.set(id, rawMap.get(id)!);
+      }
 
-    if (hasDupes || !coverageOk) {
-      log.warn(
-        `[Review] Duplicate or missing IDs in review batch – falling back.`
-      );
-      return batch.segments;
-    }
+      const hasDupes = map.size !== new Set(map.keys()).size; // unlikely now, but keep
+      const coverageOk = map.size / batch.segments.length >= 0.9;
 
-    const reviewedSegments = batch.segments.map((seg, idx) => {
-      const id =
-        typeof seg.index === 'number' ? seg.index : batch.startIndex + idx + 1;
-      return {
-        ...seg,
-        translation: map.has(id)
-          ? map.get(id)!
-          : (seg.translation ?? seg.original ?? ''),
-      };
-    });
+      if (hasDupes || !coverageOk) {
+        log.warn(
+          `[Review] Duplicate or missing IDs in review batch – falling back.`
+        );
+        return batch.segments;
+      }
 
-    return reviewedSegments;
-  } catch (error: any) {
-    log.error(
-      `[Review] Error during initial review batch (${operationId}):`,
-      error?.name,
-      error?.message || String(error)
-    );
-    if (error.name === 'AbortError' || signal?.aborted) {
-      log.info(`[Review] Review batch (${operationId}) cancelled. Rethrowing.`);
-      throw error;
-    }
-    if (
-      typeof error?.message === 'string' &&
-      error.message === 'insufficient-credits'
-    ) {
-      // Propagate credit exhaustion to cancel the pipeline
-      throw error;
-    }
-    log.error(
-      `[Review] Unhandled error in reviewTranslationBatch (${operationId}): ${
+      const reviewedSegments = batch.segments.map((seg, idx) => {
+        const id =
+          typeof seg.index === 'number'
+            ? seg.index
+            : batch.startIndex + idx + 1;
+        return {
+          ...seg,
+          translation: map.has(id)
+            ? map.get(id)!
+            : (seg.translation ?? seg.original ?? ''),
+        };
+      });
+
+      return reviewedSegments;
+    } catch (error: any) {
+      log.error(
+        `[Review] Error during review batch attempt ${attempt} (${operationId}):`,
+        error?.name,
         error?.message || String(error)
-      }. Falling back to original batch segments.`
-    );
-    return batch.segments;
+      );
+      if (error.name === 'AbortError' || signal?.aborted) {
+        log.info(
+          `[Review] Review batch (${operationId}) cancelled during attempt ${attempt}. Rethrowing.`
+        );
+        throw error;
+      }
+      if (
+        typeof error?.message === 'string' &&
+        error.message === 'insufficient-credits'
+      ) {
+        throw error;
+      }
+      if (isLikelyNetworkError(error)) {
+        networkRetries += 1;
+        if (networkRetries > NETWORK_RETRY_LIMIT) {
+          log.error(
+            `[Review] Network still unavailable after ${networkRetries} retries for batch ${batch.startIndex}-${batch.endIndex}. Falling back.`
+          );
+        } else {
+          await waitForNetworkRetry(networkRetries, signal);
+          continue;
+        }
+      }
+      log.error(
+        `[Review] Unhandled error in reviewTranslationBatch (${operationId}): ${
+          error?.message || String(error)
+        }. Falling back to original batch segments.`
+      );
+      return batch.segments;
+    }
   }
 }
