@@ -15,6 +15,22 @@ import {
   getPreferredInstallPath,
 } from './binary-locator.js';
 
+export class YtDlpSetupError extends Error {
+  attemptedUrl?: string;
+
+  constructor(
+    message: string,
+    options: { attemptedUrl?: string; cause?: unknown } = {}
+  ) {
+    super(message);
+    this.name = 'YtDlpSetupError';
+    this.attemptedUrl = options.attemptedUrl;
+    if ('cause' in options) {
+      (this as any).cause = options.cause;
+    }
+  }
+}
+
 // Concurrent installation protection using file-based mutex
 
 // Create a mutex file to prevent concurrent installations
@@ -254,15 +270,15 @@ export async function ensureWritableBinary(): Promise<string> {
           '[URLprocessor] Bundled yt-dlp not found. Falling back to direct download...'
         );
         const downloaded = await downloadBinaryDirectly(userBin);
-        if (downloaded) {
-          // Ensure executable permissions are set on POSIX systems
-          if (process.platform !== 'win32') {
-            await fsp.chmod(downloaded, 0o755).catch(() => {});
-          }
-          return downloaded;
+        // Ensure executable permissions are set on POSIX systems
+        if (process.platform !== 'win32') {
+          await fsp.chmod(downloaded, 0o755).catch(() => {});
         }
+        return downloaded;
       }
-      throw new Error(`Could not create writable yt-dlp copy: ${error}`);
+      throw new YtDlpSetupError(
+        `Could not create writable yt-dlp copy: ${error?.message ?? error}`
+      );
     }
 
     // 5. Mark it executable (macOS / Linux).
@@ -286,7 +302,7 @@ export async function ensureYtDlpBinary({
   skipUpdate = false,
 }: {
   skipUpdate?: boolean;
-} = {}): Promise<string | null> {
+} = {}): Promise<string> {
   try {
     // For packaged apps, always use the writable binary approach
     if (app.isPackaged) {
@@ -354,7 +370,12 @@ export async function ensureYtDlpBinary({
     return await installNewBinary();
   } catch (error: any) {
     log.error('[URLprocessor] Failed to ensure yt-dlp binary:', error);
-    return null;
+    if (error instanceof YtDlpSetupError) {
+      throw error;
+    }
+    throw new YtDlpSetupError(
+      `Failed to ensure yt-dlp binary: ${error?.message ?? error}`
+    );
   }
 }
 
@@ -428,13 +449,13 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
   }
 }
 
-async function installNewBinary(): Promise<string | null> {
+async function installNewBinary(): Promise<string> {
   // Acquire installation lock
   if (!(await acquireInstallLock())) {
-    log.warn(
-      '[URLprocessor] Installation already in progress by another process'
-    );
-    return null;
+    const message =
+      'Another Translator instance is already downloading yt-dlp. Please wait and try again.';
+    log.warn(`[URLprocessor] ${message}`);
+    throw new YtDlpSetupError(message);
   }
 
   try {
@@ -477,7 +498,12 @@ async function installNewBinary(): Promise<string | null> {
     }
   } catch (error: any) {
     log.error('[URLprocessor] Failed to install new binary:', error);
-    return null;
+    if (error instanceof YtDlpSetupError) {
+      throw error;
+    }
+    throw new YtDlpSetupError(
+      `Failed to install yt-dlp binary: ${error?.message ?? error}`
+    );
   } finally {
     await releaseInstallLock();
   }
@@ -547,57 +573,50 @@ async function tryPostinstallScript(
   }
 }
 
-async function downloadBinaryDirectly(
-  targetPath: string
-): Promise<string | null> {
+async function downloadBinaryDirectly(targetPath: string): Promise<string> {
+  log.info('[URLprocessor] Attempting direct download from GitHub...');
+
+  const assetName =
+    process.platform === 'win32'
+      ? 'yt-dlp.exe'
+      : process.platform === 'darwin'
+        ? 'yt-dlp_macos'
+        : 'yt-dlp';
+  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
+
+  log.info(`[URLprocessor] Downloading from: ${downloadUrl}`);
+
+  const targetDir = dirname(targetPath);
+  await fsp.mkdir(targetDir, { recursive: true });
+
   try {
-    log.info('[URLprocessor] Attempting direct download from GitHub...');
-
-    // Determine the download URL based on platform
-    // Use platform-specific assets to avoid requiring a system Python on macOS/Linux
-    // - Windows: yt-dlp.exe (PE executable)
-    // - macOS: yt-dlp_macos (universal, self-contained)
-    // - Linux/other Unix: yt-dlp (self-contained)
-    const assetName =
-      process.platform === 'win32'
-        ? 'yt-dlp.exe'
-        : process.platform === 'darwin'
-          ? 'yt-dlp_macos'
-          : 'yt-dlp';
-    const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
-
-    log.info(`[URLprocessor] Downloading from: ${downloadUrl}`);
-
-    // Ensure the target directory exists
-    const targetDir = dirname(targetPath);
-    await fsp.mkdir(targetDir, { recursive: true });
-
-    // Download with redirect following
     const response = await fetchWithRedirect(downloadUrl);
 
-    // Stream the response to the target file
     const fileStream = createWriteStream(targetPath);
     await pipeline(response, fileStream);
 
-    // Verify the download using platform-specific size check
     if (!(await verifyBinaryIntegrity(targetPath))) {
       log.error('[URLprocessor] Downloaded binary failed integrity check');
       await fsp.unlink(targetPath).catch(() => {});
-      return null;
+      throw new YtDlpSetupError(
+        'Downloaded yt-dlp failed integrity check. Please try again or check your network/antivirus settings.',
+        { attemptedUrl: downloadUrl }
+      );
     }
 
-    // Calculate SHA-256 and verify against GitHub's published hash
     const actualHash = await calculateSHA256(targetPath);
     log.info(`[URLprocessor] Downloaded binary SHA-256: ${actualHash}`);
 
-    // Fetch expected hash from GitHub
     const expectedHash = await fetchSha256ForRelease(downloadUrl);
     if (expectedHash && actualHash !== expectedHash) {
       log.error(
         `[URLprocessor] SHA-256 verification failed! Expected: ${expectedHash}, Got: ${actualHash}`
       );
       await fsp.unlink(targetPath).catch(() => {});
-      throw new Error('Downloaded yt-dlp failed SHA-256 verification');
+      throw new YtDlpSetupError(
+        `SHA-256 verification failed for yt-dlp (expected ${expectedHash}, got ${actualHash}).`,
+        { attemptedUrl: downloadUrl }
+      );
     } else if (expectedHash) {
       log.info('[URLprocessor] SHA-256 verification passed');
     } else {
@@ -606,37 +625,43 @@ async function downloadBinaryDirectly(
       );
     }
 
-    // Make executable on Unix systems
     await ensureExecutable(targetPath);
 
-    // Get file size for logging
     const stats = await fsp.stat(targetPath);
     log.info(
       `[URLprocessor] Successfully downloaded yt-dlp to: ${targetPath} (${stats.size} bytes)`
     );
     return targetPath;
   } catch (error: any) {
-    log.error('[URLprocessor] Failed to download binary directly:', error);
+    await fsp.unlink(targetPath).catch(() => {});
+    const message = error?.message ?? String(error);
+    log.error('[URLprocessor] Failed to download binary directly:', message);
 
-    // Provide specific error messages for common issues
-    if (error.message?.includes('No network connection')) {
+    if (message.includes('No network connection')) {
       log.error('[URLprocessor] Network error - check internet connection');
-    } else if (error.message?.includes('timeout')) {
+    } else if (message.includes('timeout')) {
       log.error(
         '[URLprocessor] Download timeout - GitHub may be slow or unreachable'
       );
-    } else if (error.message?.includes('SHA-256 verification')) {
+    } else if (message.includes('SHA-256 verification')) {
       log.error(
         '[URLprocessor] Security error - downloaded file may be corrupted or tampered with'
       );
     }
 
-    return null;
+    if (error instanceof YtDlpSetupError) {
+      throw error;
+    }
+
+    throw new YtDlpSetupError(
+      `Failed to download yt-dlp from ${downloadUrl}: ${message}`,
+      { attemptedUrl: downloadUrl, cause: error }
+    );
   }
 }
 
 // Legacy function for backward compatibility - now just calls ensureYtDlpBinary
-export async function installYtDlpBinary(): Promise<string | null> {
+export async function installYtDlpBinary(): Promise<string> {
   return ensureYtDlpBinary();
 }
 

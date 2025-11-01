@@ -12,9 +12,8 @@ import { defaultBrowserHint } from './utils.js';
 
 export async function updateYtDlp(): Promise<boolean> {
   try {
-    // Force update by not skipping it (skipUpdate: false is the default)
-    const binPath = await ensureYtDlpBinary();
-    return binPath !== null;
+    await ensureYtDlpBinary();
+    return true;
   } catch (error) {
     log.error('[URLprocessor] Failed to update yt-dlp:', error);
     return false;
