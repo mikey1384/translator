@@ -88,6 +88,8 @@ declare module '@shared-types/app' {
       frameRate: number;
     };
     error?: string;
+    code?: string;
+    details?: string;
   }
 
   // =========================================

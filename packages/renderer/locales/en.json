@@ -342,7 +342,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "processingDuration": "Video duration is being processed. Please try again shortly.",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "Starting...",

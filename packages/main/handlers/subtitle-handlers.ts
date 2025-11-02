@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
+import type { Stats } from 'fs';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
@@ -1449,6 +1450,28 @@ export async function handleGetVideoMetadata(_event: any, filePath: string) {
     log.error('[getVideoMetadata] FFmpegContext not initialized.');
     return { success: false, error: 'FFmpegContext not available.' };
   }
+
+  let statInfo: Stats | null = null;
+  try {
+    statInfo = await fs.stat(filePath);
+  } catch (statError: any) {
+    log.warn(
+      `[getVideoMetadata] Failed to stat ${filePath}:`,
+      statError?.message || statError
+    );
+  }
+
+  if (isLikelyICloudPlaceholder(statInfo)) {
+    log.warn(
+      `[getVideoMetadata] ${filePath} appears to be an iCloud placeholder (size=${statInfo?.size}, blocks=${(statInfo as any)?.blocks ?? 'n/a'})`
+    );
+    return {
+      success: false,
+      error: 'File is still downloading from iCloud.',
+      code: 'icloud-placeholder',
+    };
+  }
+
   try {
     const metadata = await ffmpegCtx.getVideoMetadata(filePath);
     return { success: true, metadata };
@@ -1457,9 +1480,43 @@ export async function handleGetVideoMetadata(_event: any, filePath: string) {
       `[getVideoMetadata] Error getting metadata for ${filePath}:`,
       error
     );
+    if (!statInfo) {
+      try {
+        statInfo = await fs.stat(filePath);
+      } catch {
+        // ignore second stat failure
+      }
+    }
+
+    const details: string | undefined =
+      typeof error?.details === 'string' ? error.details : undefined;
+    const placeholderAfterError = isLikelyICloudPlaceholder(statInfo);
+    const code = placeholderAfterError ? 'icloud-placeholder' : 'probe-error';
+    let message: string;
+
+    if (placeholderAfterError) {
+      message = 'File is still downloading from iCloud.';
+    } else if (code === 'probe-error') {
+      message =
+        'Unable to analyse video metadata. Please ensure the file is fully downloaded and accessible, then try again.';
+    } else {
+      message = error?.message || 'Failed to get video metadata.';
+    }
+
     return {
       success: false,
-      error: error.message || 'Failed to get video metadata.',
+      error: message,
+      code,
+      details,
     };
   }
+}
+
+function isLikelyICloudPlaceholder(stat: Stats | null): boolean {
+  if (!stat) return false;
+  if (process.platform !== 'darwin') return false;
+  if (typeof (stat as any).blocks !== 'number') return false;
+  if (stat.isDirectory()) return false;
+  if (stat.size <= 0) return false;
+  return (stat as any).blocks === 0;
 }

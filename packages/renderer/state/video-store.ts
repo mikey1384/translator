@@ -95,6 +95,7 @@ const initial: State = {
 };
 
 let currentSaver: ReturnType<typeof throttle> | null = null;
+const metadataRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 function attachSaver(path: string) {
   currentSaver?.cancel();
@@ -120,6 +121,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     async setFile(fd: File | { name: string; path: string } | null) {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
+      if (prev.path) {
+        clearMetadataRetry(prev.path);
+      }
       set(initial);
       // Reset session-only UI state for exclamation markers when video changes
       try {
@@ -458,6 +462,9 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
     reset() {
       const prev = get();
       if (prev.url?.startsWith('blob:')) URL.revokeObjectURL(prev.url);
+      if (prev.path) {
+        clearMetadataRetry(prev.path);
+      }
       set(initial);
       if (currentSaver) {
         currentSaver.cancel();
@@ -606,8 +613,52 @@ async function analyse(path: string) {
     useVideoStore.setState({ isAudioOnly: !hasVideo });
     if (metaRes.success && metaRes.metadata) {
       useVideoStore.setState({ meta: metaRes.metadata });
+      clearMetadataRetry(path);
+    }
+    if (!metaRes.success) {
+      scheduleMetadataRetry(path, 1);
     }
   } catch (err) {
     console.error('[video-store] analyse error', err);
   }
+}
+
+function clearMetadataRetry(path: string) {
+  const timer = metadataRetryTimers.get(path);
+  if (timer) {
+    clearTimeout(timer);
+    metadataRetryTimers.delete(path);
+  }
+}
+
+function scheduleMetadataRetry(path: string, attempt: number) {
+  const existing = metadataRetryTimers.get(path);
+  if (existing) {
+    clearTimeout(existing);
+  }
+  if (attempt > 300) {
+    metadataRetryTimers.delete(path);
+    return;
+  }
+  const delay = Math.min(5000, attempt * 1500);
+  const timer = setTimeout(async () => {
+    metadataRetryTimers.delete(path);
+    if (useVideoStore.getState().path !== path) {
+      return;
+    }
+    try {
+      const res = await VideoIPC.getMetadata(path);
+      if (res.success && res.metadata) {
+        useVideoStore.setState({ meta: res.metadata });
+        return;
+      }
+      if (res.code === 'icloud-placeholder') {
+        scheduleMetadataRetry(path, attempt + 1);
+      }
+    } catch (err) {
+      console.error('[video-store] metadata retry error', err);
+      scheduleMetadataRetry(path, attempt + 1);
+    }
+  }, delay);
+  metadataRetryTimers.set(path, timer);
 }

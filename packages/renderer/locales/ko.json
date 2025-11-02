@@ -355,7 +355,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "비디오를 선택해주세요",
-      "processingDuration": "비디오 길이를 처리 중입니다. 잠시 후 다시 시도해주세요."
+      "processingDuration": "비디오 길이를 처리 중입니다. 잠시 후 다시 시도해주세요.",
+      "icloudPlaceholder": "이 파일은 iCloud에 저장되어 있습니다. Finder에서 ‘다운로드’를 눌러 아이콘이 사라질 때까지 기다린 뒤 다시 시도해주세요."
     },
     "status": {
       "starting": "시작 중...",

@@ -295,12 +295,18 @@ export async function startTranscriptionFlow({
   durationSecs,
   hoursNeeded,
   operationId,
+  metadataStatus,
 }: {
   videoFile: File | null;
   videoFilePath: string | null;
   durationSecs: number | null;
   hoursNeeded: number | null;
   operationId: string;
+  metadataStatus?: {
+    status?: 'idle' | 'fetching' | 'waiting' | 'success' | 'failed';
+    code?: string;
+    message?: string;
+  };
 }): Promise<GenerateSubtitlesResult> {
   // Ensure the Edit panel is visible so users can see live updates
   try {
@@ -332,7 +338,8 @@ export async function startTranscriptionFlow({
     videoFile,
     videoFilePath,
     durationSecs,
-    hoursNeeded
+    hoursNeeded,
+    metadataStatus
   );
 
   if (!validation.isValid) {
@@ -379,13 +386,53 @@ export function validateGenerationInputs(
   videoFile: File | null,
   videoFilePath: string | null,
   durationSecs: number | null,
-  hoursNeeded: number | null
+  hoursNeeded: number | null,
+  metadataStatus?:
+    | {
+        status?: 'idle' | 'fetching' | 'waiting' | 'success' | 'failed';
+        code?: string;
+        message?: string;
+      }
+    | null
 ): { isValid: boolean; errorMessage?: string } {
   if (!videoFile && !videoFilePath) {
     return {
       isValid: false,
       errorMessage: i18n.t('generateSubtitles.validation.pleaseSelectVideo'),
     };
+  }
+
+  if (metadataStatus) {
+    if (metadataStatus.code === 'icloud-placeholder') {
+      return {
+        isValid: false,
+        errorMessage: i18n.t(
+          'generateSubtitles.validation.icloudPlaceholder',
+          'This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again.'
+        ),
+      };
+    }
+    if (
+      metadataStatus.status === 'fetching' ||
+      metadataStatus.status === 'waiting'
+    ) {
+      return {
+        isValid: false,
+        errorMessage: i18n.t(
+          'generateSubtitles.validation.processingDuration'
+        ),
+      };
+    }
+    if (
+      metadataStatus.status === 'failed' &&
+      metadataStatus.message &&
+      metadataStatus.message.trim().length > 0
+    ) {
+      return {
+        isValid: false,
+        errorMessage: metadataStatus.message,
+      };
+    }
   }
 
   if (durationSecs === null || durationSecs <= 0 || hoursNeeded === null) {

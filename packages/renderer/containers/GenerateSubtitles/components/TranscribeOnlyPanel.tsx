@@ -7,12 +7,14 @@ interface TranscribeOnlyPanelProps {
   onTranscribe: () => void;
   isTranscribing: boolean;
   disabled?: boolean;
+  statusMessage?: string | null;
 }
 
 export default function TranscribeOnlyPanel({
   onTranscribe,
   isTranscribing,
   disabled = false,
+  statusMessage = null,
 }: TranscribeOnlyPanelProps) {
   const { t } = useTranslation();
 
@@ -40,6 +42,19 @@ export default function TranscribeOnlyPanel({
       >
         {isTranscribing ? t('subtitles.generating') : t('input.transcribeOnly')}
       </Button>
+
+      {statusMessage && (
+        <div
+          className={css`
+            font-size: 0.9rem;
+            color: ${colors.warning};
+            text-align: center;
+            line-height: 1.4;
+          `}
+        >
+          {statusMessage}
+        </div>
+      )}
 
       <div
         className={css`
