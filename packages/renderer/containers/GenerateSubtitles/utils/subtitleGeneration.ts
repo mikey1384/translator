@@ -387,13 +387,11 @@ export function validateGenerationInputs(
   videoFilePath: string | null,
   durationSecs: number | null,
   hoursNeeded: number | null,
-  metadataStatus?:
-    | {
-        status?: 'idle' | 'fetching' | 'waiting' | 'success' | 'failed';
-        code?: string;
-        message?: string;
-      }
-    | null
+  metadataStatus?: {
+    status?: 'idle' | 'fetching' | 'waiting' | 'success' | 'failed';
+    code?: string;
+    message?: string;
+  } | null
 ): { isValid: boolean; errorMessage?: string } {
   if (!videoFile && !videoFilePath) {
     return {
@@ -418,9 +416,7 @@ export function validateGenerationInputs(
     ) {
       return {
         isValid: false,
-        errorMessage: i18n.t(
-          'generateSubtitles.validation.processingDuration'
-        ),
+        errorMessage: i18n.t('generateSubtitles.validation.processingDuration'),
       };
     }
     if (
