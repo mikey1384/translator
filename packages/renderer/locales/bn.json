@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "চালু: রিভিউ পর্যায় অন্তর্ভুক্ত (প্রায় 5× বেশি ক্রেডিট/সময় লাগে)। বন্ধ: রিভিউ এড়িয়ে যান।"
       }
     },
     "dubbing": {

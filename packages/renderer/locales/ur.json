@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "آن: جائزہ مرحلہ شامل ہے (تقریباً 5× زیادہ کریڈٹس/وقت استعمال کرتا ہے)۔ آف: جائزہ چھوڑ دیں۔"
       }
     },
     "dubbing": {

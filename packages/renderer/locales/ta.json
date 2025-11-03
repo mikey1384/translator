@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "இயக்கு: மதிப்பாய்வு கட்டம் உட்படும் (சுமார் 5× அதிக கிரெடிட்ஸ்/நேரம்). அணை: மதிப்பாய்வை தவிர்க்கவும்."
       }
     },
     "dubbing": {

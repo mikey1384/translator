@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "चालू: समीक्षा चरण शामिल है (लगभग 5× अधिक क्रेडिट/समय का उपयोग). बंद: समीक्षा छोड़ें."
       }
     },
     "dubbing": {

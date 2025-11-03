@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Wł.: obejmuje etap weryfikacji (ok. 5× więcej kredytów/czasu). Wył.: pomija weryfikację."
       }
     },
     "dubbing": {

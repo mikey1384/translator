@@ -75,8 +75,30 @@ export default function GenerateSubtitles() {
     !!dubbing.inProgress && (dubbing.id?.startsWith('dub-') ?? false);
 
   // Custom hooks for business logic (after videoFilePath is declared)
-  const { durationSecs, hoursNeeded } = useVideoMetadata(videoFilePath);
+  const {
+    durationSecs,
+    hoursNeeded,
+    metadataStatus,
+    metadataErrorCode,
+    metadataErrorMessage,
+    isMetadataPending,
+  } = useVideoMetadata(videoFilePath);
   const { isButtonDisabled } = useCreditSystem();
+
+  const metadataStatusMessage =
+    metadataErrorCode === 'icloud-placeholder'
+      ? t(
+          'generateSubtitles.validation.icloudPlaceholder',
+          'This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again.'
+        )
+      : metadataStatus === 'fetching' || metadataStatus === 'waiting'
+        ? t(
+            'generateSubtitles.validation.processingDuration',
+            'Video duration is being processed. Please try again shortly.'
+          )
+        : metadataStatus === 'failed' && metadataErrorMessage
+          ? metadataErrorMessage
+          : null;
 
   // Local UI state for confirm dialog when an SRT is already mounted
   // Replaced local dialog with global modal; see GlobalModals
@@ -109,7 +131,10 @@ export default function GenerateSubtitles() {
             <TranscribeOnlyPanel
               onTranscribe={handleTranscribeOnly}
               isTranscribing={isTranscribing}
-              disabled={isButtonDisabled || hoursNeeded == null}
+              disabled={
+                isButtonDisabled || hoursNeeded == null || isMetadataPending
+              }
+              statusMessage={metadataStatusMessage}
             />
           ) : (
             <SrtMountedPanel
@@ -156,6 +181,11 @@ export default function GenerateSubtitles() {
       durationSecs,
       hoursNeeded,
       operationId,
+      metadataStatus: {
+        status: metadataStatus,
+        code: metadataErrorCode,
+        message: metadataErrorMessage,
+      },
     });
   }
 

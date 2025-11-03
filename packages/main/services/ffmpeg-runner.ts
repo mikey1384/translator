@@ -13,9 +13,20 @@ log.info(
 );
 
 export class FFmpegError extends Error {
-  constructor(message: string) {
+  details?: string;
+
+  constructor(
+    message: string,
+    options: { details?: string; cause?: unknown } = {}
+  ) {
     super(message);
     this.name = 'FFmpegError';
+    if (options.details) {
+      this.details = options.details;
+    }
+    if (options.cause !== undefined) {
+      (this as any).cause = options.cause;
+    }
   }
 }
 
@@ -369,10 +380,16 @@ export async function createFFmpegContext(
         { windowsHide: true }
       );
       let json = '';
+      let stderr = '';
       p.stdout?.on('data', d => (json += d));
+      p.stderr?.on('data', d => (stderr += d));
       p.on('close', code => {
         if (code !== 0)
-          return reject(new FFmpegError(`ffprobe exited with ${code}`));
+          return reject(
+            new FFmpegError(`ffprobe exited with ${code}`, {
+              details: stderr.trim() || undefined,
+            })
+          );
         try {
           const data = JSON.parse(json);
           const v =
@@ -385,7 +402,11 @@ export async function createFFmpegContext(
             frameRate: +den ? +num / +den : 0,
           });
         } catch (e: any) {
-          reject(new FFmpegError(`parse ffprobe json failed: ${e.message}`));
+          reject(
+            new FFmpegError(`parse ffprobe json failed: ${e.message}`, {
+              details: stderr.trim() || json.trim() || undefined,
+            })
+          );
         }
       });
     });

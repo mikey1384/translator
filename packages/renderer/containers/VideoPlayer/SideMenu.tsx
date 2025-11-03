@@ -17,6 +17,7 @@ import {
 } from '../../constants/translation-languages';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
+import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
 
 export default function SideMenu({
   isFullScreen = false,
@@ -33,7 +34,6 @@ export default function SideMenu({
   }));
   const setTranslation = useTaskStore(s => s.setTranslation);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
-  const isTranscriptionDone = useTaskStore(s => !!s.transcription.isCompleted);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
   const transcriptionIsCompleted = useTaskStore(
     s => !!s.transcription.isCompleted
@@ -49,6 +49,40 @@ export default function SideMenu({
   const setActiveTrack = useVideoStore(s => s.setActiveTrack);
   const meta = useVideoStore(s => s.meta);
   // no local modal state; handled globally
+
+  const {
+    durationSecs: metadataDurationSecs,
+    hoursNeeded: metadataHoursNeeded,
+    metadataStatus,
+    metadataErrorCode,
+    metadataErrorMessage,
+    isMetadataPending,
+  } = useVideoMetadata(videoFilePath ?? null);
+
+  const metadataStatusMessage =
+    metadataErrorCode === 'icloud-placeholder'
+      ? t(
+          'generateSubtitles.validation.icloudPlaceholder',
+          'This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again.'
+        )
+      : isMetadataPending
+        ? t(
+            'generateSubtitles.validation.processingDuration',
+            'Video duration is being processed. Please try again shortly.'
+          )
+        : metadataStatus === 'failed' && metadataErrorMessage
+          ? metadataErrorMessage
+          : null;
+
+  const derivedDurationSecs =
+    metadataDurationSecs ??
+    (typeof meta?.duration === 'number' ? meta.duration : null);
+  const derivedHoursNeeded =
+    metadataHoursNeeded ??
+    (derivedDurationSecs != null ? derivedDurationSecs / 3600 : null);
+
+  const isTranscribeDisabled =
+    isTranscribing || derivedHoursNeeded == null || isMetadataPending;
 
   const hasUntranslated = hasSubs
     ? order.some(id => {
@@ -111,14 +145,17 @@ export default function SideMenu({
   }
   async function handleTranscribe() {
     const operationId = `transcribe-${Date.now()}`;
-    const durationSecs = meta?.duration ?? null;
-    const hoursNeeded = durationSecs != null ? durationSecs / 3600 : null;
     await startTranscriptionFlow({
       videoFile: (videoFile as any) ?? null,
       videoFilePath: videoFilePath ?? null,
-      durationSecs,
-      hoursNeeded,
+      durationSecs: derivedDurationSecs,
+      hoursNeeded: derivedHoursNeeded,
       operationId,
+      metadataStatus: {
+        status: metadataStatus,
+        code: metadataErrorCode,
+        message: metadataErrorMessage,
+      },
     });
   }
 
@@ -264,19 +301,32 @@ export default function SideMenu({
           </Button>
         )}
 
-        {/* Transcribe appears only when Generate panel shows it: not completed and not translating */}
         {!transcriptionIsCompleted && !translationInProgress && (
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={handleTranscribe}
-            isLoading={isTranscribing}
-            title={t('input.transcribeOnly')}
-          >
-            {isTranscribing
-              ? t('subtitles.generating')
-              : t('input.transcribeOnly')}
-          </Button>
+          <>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleTranscribe}
+              isLoading={isTranscribing}
+              disabled={isTranscribeDisabled}
+              title={metadataStatusMessage ?? t('input.transcribeOnly')}
+            >
+              {isTranscribing
+                ? t('subtitles.generating')
+                : t('input.transcribeOnly')}
+            </Button>
+            {metadataStatusMessage && !isTranscribing && (
+              <div
+                className={css`
+                  color: ${colors.dark};
+                  font-size: 12px;
+                  line-height: 1.4;
+                `}
+              >
+                {metadataStatusMessage}
+              </div>
+            )}
+          </>
         )}
 
         {hasUntranslated && (

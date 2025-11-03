@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Açık: inceleme aşamasını içerir (yaklaşık 5× daha fazla kredi/süre kullanır). Kapalı: incelemeyi atla."
       }
     },
     "dubbing": {

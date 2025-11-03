@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "On: may kasamang yugto ng rebisyon (gagamit ng humigit-kumulang 5× higit pang credits/oras). Off: laktawan ang rebisyon."
       }
     },
     "dubbing": {

@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Bật: bao gồm giai đoạn rà soát (dùng khoảng 5× nhiều tín dụng/thời gian). Tắt: bỏ qua rà soát."
       }
     },
     "dubbing": {

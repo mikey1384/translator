@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Aktif: menyertakan tahap peninjauan (menggunakan sekitar 5× lebih banyak kredit/waktu). Nonaktif: lewati peninjauan."
       }
     },
     "dubbing": {

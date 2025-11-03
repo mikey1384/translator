@@ -796,7 +796,7 @@ function QualityToggles() {
         setQualityTranslation,
         t(
           'settings.performanceQuality.qualityTranslation.help',
-          'On: includes review phase. Off: skip review for speed.'
+          'On: includes review phase (~5× more credits/time). Off: skip review.'
         )
       )}
     </div>

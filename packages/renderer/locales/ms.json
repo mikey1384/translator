@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Hidup: merangkumi fasa semakan (menggunakan kira-kira 5× lebih kredit/masa). Mati: langkau semakan."
       }
     },
     "dubbing": {

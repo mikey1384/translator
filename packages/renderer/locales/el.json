@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Ενεργό: περιλαμβάνει φάση αξιολόγησης (περίπου 5× περισσότερες μονάδες/χρόνος). Ανενεργό: παράλειψη αξιολόγησης."
       }
     },
     "dubbing": {

@@ -181,7 +181,6 @@
       "count": "{{count}} lines"
     }
   },
-
   "editSubtitles": {
     "title": "Edit Subtitles",
     "listTitle": "Subtitles ({{count}})",
@@ -230,7 +229,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "On: includes review phase (uses about 5× more credits/time). Off: skip review."
       }
     },
     "dubbing": {
@@ -365,7 +364,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "Please select a video",
-      "processingDuration": "Video duration is being processed. Please try again shortly."
+      "processingDuration": "Video duration is being processed. Please try again shortly.",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "Starting...",

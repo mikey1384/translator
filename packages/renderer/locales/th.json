@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "เปิด: มีขั้นตอนตรวจทาน (ใช้เครดิต/เวลาเพิ่มประมาณ 5×) ปิด: ข้ามการตรวจทาน"
       }
     },
     "dubbing": {
