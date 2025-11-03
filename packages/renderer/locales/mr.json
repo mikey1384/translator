@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "चालू: पुनरावलोकन चरण समाविष्ट (सुमारे 5× अधिक क्रेडिट/वेळ वापरतो). बंद: पुनरावलोकन वगळा."
       }
     },
     "dubbing": {

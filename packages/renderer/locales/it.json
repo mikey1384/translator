@@ -174,7 +174,7 @@
       },
       "qualityTranslation": {
         "label": "Traduzione di qualità",
-        "help": "Attivo: include una fase di revisione. Disattivo: salta la revisione per maggiore velocità."
+        "help": "Attivo: include una fase di revisione (circa 5× più crediti/tempo). Disattivo: salta la revisione."
       }
     },
     "dubbing": {

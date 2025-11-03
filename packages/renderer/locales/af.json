@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Aan: sluit herbeoordelingsfase in (gebruik ongeveer 5× meer krediete/tyd). Af: slaan herbeoordeling oor."
       }
     },
     "dubbing": {

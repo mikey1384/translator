@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "روشن: شامل مرحله بازبینی است (حدود ۵× اعتبار/زمان بیشتر). خاموش: بازبینی را رد کن."
       }
     },
     "dubbing": {

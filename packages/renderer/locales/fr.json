@@ -188,7 +188,7 @@
       },
       "qualityTranslation": {
         "label": "Traduction de qualité",
-        "help": "Activé : inclut une phase de revue. Désactivé : saute la revue pour gagner en vitesse."
+        "help": "Activé : inclut une phase de relecture (environ 5× plus de crédits/temps). Désactivé : saute la relecture."
       }
     },
     "dubbing": {

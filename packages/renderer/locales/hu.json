@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Be: tartalmaz ellenőrzési szakaszt (kb. 5× több kredit/idő). Ki: kihagyja az ellenőrzést."
       }
     },
     "dubbing": {

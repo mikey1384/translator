@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Увімкнено: включає етап перевірки (прибл. у 5× більше кредитів/часу). Вимкнено: пропустити перевірку."
       }
     },
     "dubbing": {

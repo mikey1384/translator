@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Zapnuto: zahrnuje fázi revize (asi 5× více kreditů/času). Vypnuto: přeskočit revizi."
       }
     },
     "dubbing": {

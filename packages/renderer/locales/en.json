@@ -164,7 +164,6 @@
       "count": "{{count}} lines"
     }
   },
-
   "editSubtitles": {
     "title": "Edit Subtitles",
     "listTitle": "Subtitles ({{count}})",
@@ -207,7 +206,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "On: includes review phase (uses about 5× more credits/time). Off: skip review."
       }
     },
     "dubbing": {

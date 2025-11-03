@@ -188,7 +188,7 @@
       },
       "qualityTranslation": {
         "label": "Traducción de alta calidad",
-        "help": "Activado: incluye fase de revisión. Desactivado: omite la revisión para mayor velocidad."
+        "help": "Activado: incluye fase de revisión (usa ~5× más créditos/tiempo). Desactivado: omite la revisión."
       }
     },
     "dubbing": {

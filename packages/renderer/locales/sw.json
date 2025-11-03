@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Washa: inajumuisha awamu ya uhakiki (hutumia takriban 5× zaidi ya krediti/muda). Zima: ruka uhakiki."
       }
     },
     "dubbing": {

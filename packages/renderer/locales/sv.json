@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "På: inkluderar granskningsfas (ungefär 5× fler krediter/tid). Av: hoppar över granskning."
       }
     },
     "dubbing": {

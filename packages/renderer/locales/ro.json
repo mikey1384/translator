@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "Pornit: include fază de verificare (aprox. 5× mai multe credite/timp). Oprit: omite verificarea."
       }
     },
     "dubbing": {

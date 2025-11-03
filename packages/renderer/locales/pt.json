@@ -174,7 +174,7 @@
       },
       "qualityTranslation": {
         "label": "Tradução de alta qualidade",
-        "help": "Ativo: inclui etapa de revisão. Desativado: pula a revisão para ganhar velocidade."
+        "help": "Ativo: inclui etapa de revisão (usa cerca de 5× mais créditos/tempo). Desativado: pula a revisão."
       }
     },
     "dubbing": {

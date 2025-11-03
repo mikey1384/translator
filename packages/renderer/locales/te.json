@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "ఆన్: సమీక్ష దశ ఉంటుంది (సుమారు 5× అధిక క్రెడిట్స్/సమయం). ఆఫ్: సమీక్షను దాటవేయండి."
       }
     },
     "dubbing": {

@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "פועל: כולל שלב ביקורת (כ־5× יותר קרדיטים/זמן). כבוי: מדלג על הביקורת."
       }
     },
     "dubbing": {

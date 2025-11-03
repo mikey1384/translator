@@ -188,7 +188,7 @@
       },
       "qualityTranslation": {
         "label": "Hochwertige Übersetzung",
-        "help": "Ein: enthält Prüfphase. Aus: überspringt Prüfung für mehr Geschwindigkeit."
+        "help": "Ein: umfasst eine Prüffase (ca. 5× mehr Credits/Zeit). Aus: überspringt die Prüfung."
       }
     },
     "dubbing": {

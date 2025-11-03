@@ -141,7 +141,7 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase. Off: skip review for speed."
+        "help": "تشغيل: يتضمن مرحلة المراجعة (يستهلك حوالي 5× مزيدًا من الاعتمادات/الوقت). إيقاف: يتخطى المراجعة."
       }
     },
     "dubbing": {
