@@ -3,30 +3,61 @@ import os from 'node:os';
 import path from 'node:path';
 import log from 'electron-log';
 
+export type CookieBrowser =
+  | 'safari'
+  | 'chrome'
+  | 'firefox'
+  | 'edge'
+  | 'chromium';
+
+function normalizeBrowser(browser: string): CookieBrowser | null {
+  const key = browser?.toLowerCase?.();
+  switch (key) {
+    case 'safari':
+    case 'chrome':
+    case 'firefox':
+    case 'edge':
+    case 'chromium':
+      return key;
+    default:
+      return null;
+  }
+}
+
 const exists = (p: string) => {
   try {
     fs.accessSync(p, fs.constants.R_OK);
     return true;
   } catch {
-    return false;
+    try {
+      const stat = fs.lstatSync(p);
+      return stat.isDirectory();
+    } catch {
+      return false;
+    }
   }
 };
 
-let cachedHint: string | null = null;
+function candidateOrder(): CookieBrowser[] {
+  switch (process.platform) {
+    case 'darwin':
+      return ['safari', 'chrome', 'firefox', 'edge'];
+    case 'win32':
+      return ['edge', 'chrome', 'firefox'];
+    default:
+      return ['chrome', 'chromium', 'firefox'];
+  }
+}
 
-export function defaultBrowserHint(): string {
-  if (cachedHint) return cachedHint;
-
+function pathCandidates(browser: CookieBrowser): string[] {
   const home = os.homedir();
-
-  const candidates: [string, string][] = [];
-
   switch (process.platform) {
     case 'darwin': {
-      candidates.push(
-        ['safari', path.join(home, 'Library', 'Safari', 'History.db')],
-        [
-          'chrome',
+      if (browser === 'safari') {
+        return [path.join(home, 'Library', 'Safari', 'History.db')];
+      }
+      if (browser === 'chrome') {
+        return [
           path.join(
             home,
             'Library',
@@ -36,9 +67,10 @@ export function defaultBrowserHint(): string {
             'Default',
             'Cookies'
           ),
-        ],
-        [
-          'firefox',
+        ];
+      }
+      if (browser === 'firefox') {
+        return [
           path.join(
             home,
             'Library',
@@ -46,9 +78,10 @@ export function defaultBrowserHint(): string {
             'Firefox',
             'Profiles'
           ),
-        ],
-        [
-          'edge',
+        ];
+      }
+      if (browser === 'edge') {
+        return [
           path.join(
             home,
             'Library',
@@ -57,20 +90,29 @@ export function defaultBrowserHint(): string {
             'Default',
             'Cookies'
           ),
-        ]
-      );
+        ];
+      }
+      if (browser === 'chromium') {
+        return [
+          path.join(
+            home,
+            'Library',
+            'Application Support',
+            'Chromium',
+            'Default',
+            'Cookies'
+          ),
+        ];
+      }
       break;
     }
-
     case 'win32': {
       const local =
         process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local');
       const roaming =
         process.env.APPDATA || path.join(home, 'AppData', 'Roaming');
-
-      candidates.push(
-        [
-          'edge',
+      if (browser === 'edge') {
+        return [
           path.join(
             local,
             'Microsoft',
@@ -79,9 +121,10 @@ export function defaultBrowserHint(): string {
             'Default',
             'Cookies'
           ),
-        ],
-        [
-          'chrome',
+        ];
+      }
+      if (browser === 'chrome') {
+        return [
           path.join(
             local,
             'Google',
@@ -90,33 +133,69 @@ export function defaultBrowserHint(): string {
             'Default',
             'Cookies'
           ),
-        ],
-        ['firefox', path.join(roaming, 'Mozilla', 'Firefox', 'Profiles')]
-      );
+        ];
+      }
+      if (browser === 'firefox') {
+        return [path.join(roaming, 'Mozilla', 'Firefox', 'Profiles')];
+      }
+      if (browser === 'chromium') {
+        return [
+          path.join(local, 'Chromium', 'User Data', 'Default', 'Cookies'),
+        ];
+      }
       break;
     }
-
     default: {
-      candidates.push(
-        [
-          'chrome',
+      if (browser === 'chrome') {
+        return [
           path.join(home, '.config', 'google-chrome', 'Default', 'Cookies'),
-        ],
-        [
-          'chromium',
+        ];
+      }
+      if (browser === 'chromium') {
+        return [
           path.join(home, '.config', 'chromium', 'Default', 'Cookies'),
-        ],
-        ['firefox', path.join(home, '.mozilla', 'firefox')]
-      );
+          path.join(home, '.config', 'chromium-browser', 'Default', 'Cookies'),
+        ];
+      }
+      if (browser === 'firefox') {
+        return [path.join(home, '.mozilla', 'firefox')];
+      }
+      if (browser === 'edge') {
+        return [
+          path.join(home, '.config', 'microsoft-edge', 'Default', 'Cookies'),
+        ];
+      }
+      if (browser === 'safari') {
+        return [path.join(home, '.config', 'safari')];
+      }
     }
   }
+  return [];
+}
 
-  const hint =
-    candidates.find(
-      ([_, p]) =>
-        exists(p) || (fs.existsSync(p) && fs.lstatSync(p).isDirectory())
-    )?.[0] || 'chrome';
+export function resolveBrowserCookiesPath(browser: string): string | null {
+  const normalized = normalizeBrowser(browser);
+  if (!normalized) return null;
+  const candidates = pathCandidates(normalized);
+  for (const candidate of candidates) {
+    if (exists(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
 
+export function browserCookiesAvailable(browser: string): boolean {
+  return resolveBrowserCookiesPath(browser) !== null;
+}
+
+let cachedHint: string | null = null;
+
+export function defaultBrowserHint(): string {
+  if (cachedHint) return cachedHint;
+
+  const order = candidateOrder();
+  const hint = order.find(browserCookiesAvailable) || 'chrome';
   cachedHint = hint;
   log.info(`[URLProcessor] Auto-detected browser for cookies: ${hint}`);
   return hint;

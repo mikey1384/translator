@@ -196,31 +196,36 @@ async function downloadMediaInternal(
   });
 
   try {
-    // If a preferred browser was saved, default to using cookies
+    let shouldUseCookies = opts.useCookies === true;
+    // Load persisted browser preference for UI, but do not force cookies unless explicitly requested
     try {
       const preferred = await (
         window as any
       ).electron.getPreferredCookiesBrowser();
-      if (preferred && typeof preferred === 'string') {
+      if (preferred && typeof preferred === 'string' && preferred !== 'auto') {
         if (!cookiesBrowser) {
           cookiesBrowser = preferred;
           set((state: UrlState) => {
             state.cookiesBrowser = preferred;
           });
         }
-        // Only auto-use cookies if not explicitly overridden by caller
-        if (opts.useCookies === undefined) {
-          opts.useCookies = true;
-        }
       }
     } catch {
       // ignore preference errors
+    }
+    if (shouldUseCookies && !cookiesBrowser) {
+      try {
+        cookiesBrowser = await (window as any).electron
+          .getDefaultCookieBrowser?.();
+      } catch {
+        // ignore default failures
+      }
     }
     const res = await UrlIPC.download({
       url: urlInput,
       quality: downloadQuality,
       operationId: opId,
-      useCookies: opts.useCookies ?? false,
+      useCookies: shouldUseCookies,
       cookiesBrowser,
     });
 

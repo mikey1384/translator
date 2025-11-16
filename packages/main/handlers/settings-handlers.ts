@@ -4,6 +4,7 @@ import log from 'electron-log';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import type Store from 'electron-store';
+import { browserCookiesAvailable } from '../services/url-processor/utils.js';
 
 /* ----------------------------------------------------------
  * Types
@@ -193,7 +194,10 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  function setUseByoOpenAi(value: boolean): { success: boolean; error?: string } {
+  function setUseByoOpenAi(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
     try {
       store.set('useByoOpenAi', Boolean(value));
       return { success: true };
@@ -220,11 +224,30 @@ export function buildSettingsHandlers(opts: {
     // yt-dlp auto update is always on
 
     // Persisted cookie browser preference
-    getPreferredCookiesBrowser: () =>
-      (store.get('preferredCookiesBrowser') as string | undefined) || '',
+    getPreferredCookiesBrowser: () => {
+      const stored =
+        (store.get('preferredCookiesBrowser') as string | undefined) || '';
+      if (stored && !browserCookiesAvailable(stored)) {
+        log.warn(
+          `[settings] Stored cookie browser '${stored}' no longer available; clearing preference.`
+        );
+        store.delete('preferredCookiesBrowser');
+        return '';
+      }
+      return stored;
+    },
     setPreferredCookiesBrowser: (_evt: any, v: string) => {
       try {
         if (typeof v !== 'string') throw new Error('Invalid browser value');
+        if (!v || v === 'auto') {
+          store.delete('preferredCookiesBrowser');
+          return { success: true };
+        }
+        if (!browserCookiesAvailable(v)) {
+          throw new Error(
+            'Selected browser cookies not found on this system. Open YouTube in that browser once or pick another.'
+          );
+        }
         store.set('preferredCookiesBrowser', v);
         return { success: true };
       } catch (err: any) {
