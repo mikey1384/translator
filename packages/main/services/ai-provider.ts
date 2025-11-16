@@ -118,17 +118,13 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
     return stage5Client.translate(options);
   }
 
-  const { messages, model, temperature, signal } =
-    options as Stage5TranslateOptions & {
-      temperature?: number;
-    };
+  const { messages, model, signal } = options as Stage5TranslateOptions;
 
   log.debug('[ai-provider] Using OpenAI direct translation.');
   try {
     return await translateWithOpenAi({
       messages,
       model,
-      temperature,
       apiKey,
       signal,
     });

@@ -184,7 +184,6 @@ export async function translate({
   messages,
   model = AI_MODELS.GPT,
   reasoning,
-  temperature = 0.4,
   signal,
 }: {
   messages: any[];
@@ -192,7 +191,6 @@ export async function translate({
   reasoning?: {
     effort?: 'low' | 'medium' | 'high';
   };
-  temperature?: number;
   signal?: AbortSignal;
 }) {
   // Dev: simulate zero credits without hitting the network
@@ -205,12 +203,7 @@ export async function translate({
   }
 
   try {
-    const isGpt5 = String(model).startsWith('gpt-5');
     const payload: any = { messages, model, reasoning };
-    if (!isGpt5 && typeof temperature === 'number') {
-      payload.temperature = temperature;
-    }
-
     const postResponse = await axios.post(`${API}/translate`, payload, {
       headers: headers(),
       signal,

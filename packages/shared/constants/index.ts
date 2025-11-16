@@ -1,6 +1,5 @@
 export const AI_MODELS = {
-  GPT: 'gpt-4.1',
-  O3: 'o3',
+  GPT: 'gpt-5.1',
   WHISPER: 'whisper-1',
 } as const;
 
@@ -51,19 +50,19 @@ export const USD_PER_CREDIT = 10 / 350_000;
 // Match backend pricing margin
 export const PRICE_MARGIN = 2;
 
-// GPT-4.1 tokenizer costs (USD per token)
-export const GPT4_1_USD_PER_TOKEN_IN = 2 / 1_000_000; // $0.002 / 1M
-export const GPT4_1_USD_PER_TOKEN_OUT = 8 / 1_000_000; // $0.008 / 1M
+// GPT-5.1 tokenizer costs (USD per token)
+export const GPT5_1_USD_PER_TOKEN_IN = 2 / 1_000_000; // $0.002 / 1M
+export const GPT5_1_USD_PER_TOKEN_OUT = 8 / 1_000_000; // $0.008 / 1M
 
 // Credits per 1k tokens (estimated)
 // Apply backend token calibration to align with actual deduction
 export const TOKEN_CREDIT_CALIBRATION_UI = 0.7;
 export const CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
-  ((PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT) *
+  ((PRICE_MARGIN * 1000 * GPT5_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
 ); // ≈ 98 when PRICE_MARGIN=2, calibration=0.7
 export const CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
-  ((PRICE_MARGIN * 1000 * GPT4_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT) *
+  ((PRICE_MARGIN * 1000 * GPT5_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
 ); // ≈ 392 when PRICE_MARGIN=2, calibration=0.7
 

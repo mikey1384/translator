@@ -3,6 +3,7 @@ import fs from 'fs';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
+import { AI_MODELS } from '@shared/constants';
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
 
@@ -17,7 +18,6 @@ export interface OpenAiTranscribeOptions {
 export interface OpenAiTranslateOptions {
   messages: any[];
   model?: string;
-  temperature?: number;
   apiKey: string;
   signal?: AbortSignal;
 }
@@ -85,8 +85,7 @@ export async function transcribeWithOpenAi({
 
 export async function translateWithOpenAi({
   messages,
-  model = 'gpt-4.1',
-  temperature,
+  model = AI_MODELS.GPT,
   apiKey,
   signal,
 }: OpenAiTranslateOptions): Promise<any> {
@@ -94,9 +93,6 @@ export async function translateWithOpenAi({
     model,
     messages,
   };
-  if (typeof temperature === 'number') {
-    payload.temperature = temperature;
-  }
 
   const response = await axios.post(
     `${OPENAI_BASE_URL}/chat/completions`,
@@ -232,7 +228,7 @@ export async function testOpenAiApiKey(
   signal?: AbortSignal
 ): Promise<boolean> {
   try {
-    await axios.get(`${OPENAI_BASE_URL}/models/gpt-4o-mini`, {
+    await axios.get(`${OPENAI_BASE_URL}/models/gpt-5-mini`, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },

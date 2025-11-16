@@ -2,6 +2,7 @@ import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
+import { AI_MODELS } from '@shared/constants';
 
 const NETWORK_RETRY_BASE_MS = 5_000;
 const NETWORK_RETRY_MAX_MS = 60_000;
@@ -555,7 +556,7 @@ Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}:
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt },
         ],
-        model: 'gpt-5',
+        model: AI_MODELS.GPT,
         reasoning: { effort: 'high' },
         signal,
         operationId,

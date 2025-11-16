@@ -5,6 +5,7 @@ import type {
   TranscriptHighlight,
   TranscriptSummarySection,
 } from '@shared-types/app';
+import { AI_MODELS } from '@shared/constants';
 
 interface GenerateTranscriptSummaryOptions {
   segments: TranscriptSummarySegment[];
@@ -291,7 +292,7 @@ ${chunkText}`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    model: 'gpt-5',
+    model: AI_MODELS.GPT,
     reasoning: { effort: 'high' },
     signal,
     operationId,
@@ -333,7 +334,7 @@ ${notes}`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    model: 'gpt-5',
+    model: AI_MODELS.GPT,
     reasoning: { effort: 'high' },
     signal,
     operationId,
@@ -575,7 +576,7 @@ Return STRICT JSON ONLY (no markdown) using this shape:
       { role: 'system', content: system },
       { role: 'user', content: user },
     ],
-    model: 'gpt-5',
+    model: AI_MODELS.GPT,
     reasoning: { effort: 'medium' },
     signal,
     operationId,
