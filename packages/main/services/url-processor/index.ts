@@ -123,12 +123,17 @@ export async function processVideoUrl(
       combinedLC
     );
     const needsLoginBotCheck =
-      /login_required|sign\s*in\s*to\s*confirm|not\s*a\s*bot|verify\s*(you|you'?re)\s*not\s*(a\s*)?bot|consent/.test(
+      /login_required|sign\s*in\s*to\s*confirm|not\s*a\s*bot|verify\s*(you|you'?re)\s*not\s*(a\s*)?bot|consent|captcha/.test(
         combinedLC
       );
 
-    const isYouTube = /(^|\.)youtube\.com/.test(new URL(url).hostname);
-    if ((looksSuspicious || needsLoginBotCheck || isYouTube) && !useCookies) {
+    const needsCookiesNow = looksSuspicious || needsLoginBotCheck;
+    if (needsCookiesNow && !useCookies) {
+      log.info(
+        `[URLprocessor] NeedCookies triggered (host=${
+          new URL(url).hostname
+        }, 429-ish=${looksSuspicious}, loginCheck=${needsLoginBotCheck})`
+      );
       progressCallback?.({
         percent: PROGRESS.WARMUP_END,
         stage: 'NeedCookies',

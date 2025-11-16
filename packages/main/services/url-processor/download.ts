@@ -288,6 +288,8 @@ export async function downloadVideoFromPlatform(
   }
 
   let currentFormat = formatString;
+  const mp4FallbackFormat = 'bestvideo[ext=mp4]+bestaudio/best[ext=mp4]/best';
+  let forcedMp4Fallback = false;
 
   const safeTimestamp = Date.now();
   const tempFilenamePattern = join(
@@ -365,6 +367,7 @@ export async function downloadVideoFromPlatform(
   // the truly highest formats (often VP9/AV1 in WebM/MKV). For mid/low, prefer MP4.
   let containerArgs =
     effectiveQuality === 'high' ? [] : ['--merge-output-format', 'mp4'];
+  const defaultContainerArgs = [...containerArgs];
 
   // Prefer highest resolution/codec/fps explicitly for high quality
   let sortArgs =
@@ -833,11 +836,29 @@ export async function downloadVideoFromPlatform(
         if (looksLikeTLSError) {
           addNoCheckCertificates = true;
         }
+        const looksLikeFormatMissing =
+          /Requested format is not available/i.test(errorBlob);
         const looksLikeNsigFailure =
           /nsig/i.test(errorBlob) ||
-          /Initial JS player n function/i.test(errorBlob) ||
-          /Requested format is not available/i.test(errorBlob);
-        if (looksLikeNsigFailure && attempt < maxAttempts) {
+          /Initial JS player n function/i.test(errorBlob);
+        if (
+          looksLikeFormatMissing &&
+          forcedMp4Fallback &&
+          attempt < maxAttempts
+        ) {
+          log.warn(
+            '[URLprocessor] MP4 fallback still missing requested format; allowing non-MP4 variants again.'
+          );
+          currentFormat = formatString;
+          containerArgs = [...defaultContainerArgs];
+          forcedMp4Fallback = false;
+          attempt += 1;
+          continue;
+        }
+        const treatAsExtractorIssue =
+          looksLikeNsigFailure ||
+          (looksLikeFormatMissing && !forcedMp4Fallback);
+        if (treatAsExtractorIssue && attempt < maxAttempts) {
           if (extractorMode === 'web') {
             extractorMode = 'ios';
             extractorArgs = ['--extractor-args', 'youtube:player_client=ios'];
@@ -867,9 +888,13 @@ export async function downloadVideoFromPlatform(
             attempt += 1;
             continue;
           }
-          if (currentFormat === formatString) {
-            currentFormat = 'bestvideo[ext=mp4]+bestaudio/best[ext=mp4]/best';
+          if (
+            currentFormat === formatString &&
+            formatString !== mp4FallbackFormat
+          ) {
+            currentFormat = mp4FallbackFormat;
             containerArgs = ['--merge-output-format', 'mp4'];
+            forcedMp4Fallback = true;
             log.warn(
               '[URLprocessor] Retrying with simplified format selection (best MP4 fallback).'
             );
