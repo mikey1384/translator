@@ -118,23 +118,24 @@ function sanitizeHighlightSubtitleSegments(
   segments?: TranscriptHighlightSubtitleSegment[] | null
 ): TranscriptHighlightSubtitleSegment[] {
   if (!Array.isArray(segments)) return [];
-  return segments
-    .map(seg => {
-      const start = Number(seg?.start);
-      const end = Number(seg?.end);
-      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-        return null;
-      }
-      return {
-        start,
-        end,
-        original: typeof seg?.original === 'string' ? seg.original : '',
-        translation:
-          typeof seg?.translation === 'string' ? seg.translation : undefined,
-      };
-    })
-    .filter((seg): seg is TranscriptHighlightSubtitleSegment => !!seg)
-    .sort((a, b) => a.start - b.start);
+  const sanitized: TranscriptHighlightSubtitleSegment[] = [];
+  for (const seg of segments) {
+    const start = Number(seg?.start);
+    const end = Number(seg?.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+      continue;
+    }
+    const cleaned: TranscriptHighlightSubtitleSegment = {
+      start,
+      end,
+      original: typeof seg?.original === 'string' ? seg.original : '',
+    };
+    if (typeof seg?.translation === 'string') {
+      cleaned.translation = seg.translation;
+    }
+    sanitized.push(cleaned);
+  }
+  return sanitized.sort((a, b) => a.start - b.start);
 }
 
 function sliceSegmentsForRange({
@@ -1193,6 +1194,16 @@ export async function handleGenerateTranscriptSummary(
                 category: h.category,
                 justification: h.justification,
                 videoPath: outPath,
+              });
+
+              event.sender.send('transcript-summary-progress', {
+                percent: Math.min(100, basePercent + step * (i + 1)),
+                stage: `Highlight ${i + 1} of ${toCut.length} ready`,
+                operationId,
+                current: i + 1,
+                total: toCut.length,
+                partialHighlights: [...cutHighlights],
+                partialSections: sections,
               });
             }
 
