@@ -106,6 +106,15 @@ export function generateTranscriptSummary(options: {
   operationId?: string;
   videoPath?: string | null;
   maxHighlights?: number;
+  highlightSubtitleSegments?: {
+    start: number;
+    end: number;
+    original: string;
+    translation?: string;
+  }[];
+  highlightSubtitleMode?: import('@shared-types/app').SubtitleRenderMode;
+  highlightStylePreset?: import('@shared/constants/subtitle-styles').SubtitleStylePresetKey;
+  highlightBaseFontSize?: number;
 }): Promise<{
   summary?: string;
   highlights?: import('@shared-types/app').TranscriptHighlight[];

@@ -42,6 +42,9 @@ export function TranscriptSummaryPanel({
   const { t } = useTranslation();
   const summaryLanguage = useUIStore(s => s.summaryLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
+  const showOriginalText = useUIStore(s => s.showOriginalText);
+  const baseFontSize = useUIStore(s => s.baseFontSize);
+  const subtitleStyle = useUIStore(s => s.subtitleStyle);
 
   const [summary, setSummary] = useState<string>('');
   const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
@@ -81,7 +84,19 @@ export function TranscriptSummaryPanel({
     [segments]
   );
 
+  const highlightSubtitleSegments = useMemo(
+    () =>
+      segments.map(seg => ({
+        start: seg.start,
+        end: seg.end,
+        original: seg.original,
+        translation: seg.translation,
+      })),
+    [segments]
+  );
+
   const hasTranscript = usableSegments.length > 0;
+  const highlightSubtitleMode = showOriginalText ? 'dual' : 'translation';
 
   useEffect(() => {
     return () => {
@@ -207,6 +222,10 @@ export function TranscriptSummaryPanel({
         operationId: opId,
         videoPath: originalVideoPath || fallbackVideoPath || null,
         maxHighlights: 10,
+        highlightSubtitleSegments,
+        highlightSubtitleMode,
+        highlightStylePreset: subtitleStyle,
+        highlightBaseFontSize: baseFontSize,
       });
 
       if (result?.error) {
@@ -271,6 +290,10 @@ export function TranscriptSummaryPanel({
     progressPercent,
     originalVideoPath,
     fallbackVideoPath,
+    highlightSubtitleSegments,
+    highlightSubtitleMode,
+    subtitleStyle,
+    baseFontSize,
   ]);
 
   const handleDownloadHighlight = useCallback(

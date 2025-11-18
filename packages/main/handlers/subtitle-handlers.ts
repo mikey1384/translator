@@ -19,13 +19,16 @@ import {
   DubSegmentPayload,
   DubSubtitlesOptions,
   TranscriptHighlight,
+  TranscriptHighlightSubtitleSegment,
+  SubtitleRenderMode,
+  SrtSegment,
 } from '@shared-types/app';
 import {
   addSubtitle,
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
-import type { FFmpegContext } from '../services/ffmpeg-runner.js';
+import type { FFmpegContext, VideoMeta } from '../services/ffmpeg-runner.js';
 import {
   extractAudioSegment,
   mkTempAudioName,
@@ -40,6 +43,17 @@ import {
   mergeAdjacentIntervals,
   chunkSpeechInterval,
 } from '../services/subtitle-processing/audio-chunker.js';
+import { buildSrt } from '../../shared/helpers/index.js';
+import { getAssetsPath } from '../../shared/helpers/paths.js';
+import {
+  SUBTITLE_STYLE_PRESETS,
+  SubtitleStylePresetKey,
+} from '../../shared/constants/subtitle-styles.js';
+import {
+  BASELINE_FONT_SIZE,
+  BASELINE_HEIGHT,
+  fontScale,
+} from '../../shared/constants/runtime-config.js';
 
 let fileManagerInstance: FileManager | null = null;
 let ffmpegCtx: FFmpegContext | null = null;
@@ -95,6 +109,153 @@ function resolveHighlightLimit(value?: number | null): number {
   }
   const numeric = Math.floor(value as number);
   return Math.max(0, numeric);
+}
+
+const SHORT_CLIP_WIDTH = 1080;
+const SHORT_CLIP_HEIGHT = 1920;
+
+function sanitizeHighlightSubtitleSegments(
+  segments?: TranscriptHighlightSubtitleSegment[] | null
+): TranscriptHighlightSubtitleSegment[] {
+  if (!Array.isArray(segments)) return [];
+  return segments
+    .map(seg => {
+      const start = Number(seg?.start);
+      const end = Number(seg?.end);
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+        return null;
+      }
+      return {
+        start,
+        end,
+        original: typeof seg?.original === 'string' ? seg.original : '',
+        translation:
+          typeof seg?.translation === 'string' ? seg.translation : undefined,
+      };
+    })
+    .filter((seg): seg is TranscriptHighlightSubtitleSegment => !!seg)
+    .sort((a, b) => a.start - b.start);
+}
+
+function sliceSegmentsForRange({
+  segments,
+  clipStart,
+  clipEnd,
+}: {
+  segments: TranscriptHighlightSubtitleSegment[];
+  clipStart: number;
+  clipEnd: number;
+}): SrtSegment[] {
+  if (!Array.isArray(segments) || segments.length === 0) return [];
+  const duration = Math.max(0, clipEnd - clipStart);
+  if (duration <= 0) return [];
+
+  const selected: SrtSegment[] = [];
+  let counter = 0;
+  for (const seg of segments) {
+    if (seg.end <= clipStart || seg.start >= clipEnd) continue;
+    const absoluteStart = Math.max(seg.start, clipStart);
+    const absoluteEnd = Math.min(seg.end, clipEnd);
+    if (absoluteEnd <= absoluteStart) continue;
+    const relativeStart = Math.max(0, absoluteStart - clipStart);
+    const relativeEnd = Math.min(duration, absoluteEnd - clipStart);
+    if (relativeEnd <= relativeStart) continue;
+
+    selected.push({
+      id: `clip-${counter++}-${Math.round(relativeStart * 1000)}`,
+      index: selected.length + 1,
+      start: relativeStart,
+      end: relativeEnd,
+      original: seg.original ?? '',
+      translation: seg.translation,
+    });
+  }
+
+  return selected;
+}
+
+function escapeFilterPath(filePath: string): string {
+  const normalized = filePath.replace(/\\/g, '/');
+  const escapedColons = normalized.replace(/:/g, '\\:');
+  const escaped = escapedColons.replace(/'/g, "\\'");
+  return `'${escaped}'`;
+}
+
+function quoteFilterValue(value: string): string {
+  return `'${value.replace(/'/g, "\\'")}'`;
+}
+
+function buildSubtitleFilter({
+  inputLabel,
+  outputLabel,
+  subtitlePath,
+  fontsDir,
+  stylePreset,
+  fontSizePx,
+}: {
+  inputLabel: string;
+  outputLabel: string;
+  subtitlePath: string;
+  fontsDir: string | null;
+  stylePreset: SubtitleStylePresetKey;
+  fontSizePx: number;
+}): string {
+  const style =
+    SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
+  const assignments = [
+    `FontName=${style.fontName}`,
+    `FontSize=${Math.max(10, Math.round(fontSizePx))}`,
+    `PrimaryColour=${style.primaryColor}`,
+    `SecondaryColour=${style.secondaryColor}`,
+    `OutlineColour=${style.outlineColor}`,
+    `BackColour=${style.backColor}`,
+    `Bold=${style.isBold ? -1 : 0}`,
+    `Italic=${style.isItalic ? -1 : 0}`,
+    `Underline=${style.isUnderline ? -1 : 0}`,
+    `StrikeOut=${style.isStrikeout ? -1 : 0}`,
+    `Spacing=${style.spacing}`,
+    `ScaleX=${style.scaleX}`,
+    `ScaleY=${style.scaleY}`,
+    `BorderStyle=${style.borderStyle}`,
+    `Outline=${style.outlineSize}`,
+    `Shadow=${style.shadowDepth}`,
+    `Alignment=${style.alignment}`,
+    `MarginV=${style.marginVertical}`,
+    `MarginL=${style.marginLeft}`,
+    `MarginR=${style.marginRight}`,
+  ];
+
+  const params = [
+    `subtitles=${escapeFilterPath(subtitlePath)}`,
+    fontsDir ? `fontsdir=${escapeFilterPath(fontsDir)}` : null,
+    `force_style=${quoteFilterValue(assignments.join(','))}`,
+  ].filter(Boolean);
+
+  return `[${inputLabel}]${params.join(':')}[${outputLabel}]`;
+}
+
+function isVideoAlreadyVertical(meta: VideoMeta | null): boolean {
+  if (!meta || !meta.width || !meta.height) return false;
+  const ratio = meta.height / Math.max(meta.width, 1);
+  return ratio >= 1.2;
+}
+
+function normalizeSubtitleMode(
+  mode?: SubtitleRenderMode | null
+): SubtitleRenderMode {
+  if (mode === 'dual' || mode === 'original' || mode === 'translation') {
+    return mode;
+  }
+  return 'translation';
+}
+
+function resolveStylePreset(
+  preset?: SubtitleStylePresetKey | string | null
+): SubtitleStylePresetKey {
+  if (preset && preset in SUBTITLE_STYLE_PRESETS) {
+    return preset as SubtitleStylePresetKey;
+  }
+  return 'Default';
 }
 
 export async function handleGenerateSubtitles(
@@ -721,12 +882,7 @@ async function buildDubSegmentsFromSpeech({
 
 export async function handleGenerateTranscriptSummary(
   event: IpcMainInvokeEvent,
-  options: {
-    segments: { start: number; end: number; text: string }[];
-    targetLanguage: string;
-    videoPath?: string | null;
-    maxHighlights?: number;
-  },
+  options: import('@shared-types/app').TranscriptSummaryRequest,
   operationId: string
 ): Promise<{
   success: boolean;
@@ -758,6 +914,19 @@ export async function handleGenerateTranscriptSummary(
         });
       },
     });
+
+    const subtitleSegments = sanitizeHighlightSubtitleSegments(
+      options.highlightSubtitleSegments
+    );
+    const includeSubtitles = subtitleSegments.length > 0;
+    const subtitleMode = normalizeSubtitleMode(options.highlightSubtitleMode);
+    const stylePreset = resolveStylePreset(options.highlightStylePreset);
+    const baseFontSizePx = Number.isFinite(options.highlightBaseFontSize)
+      ? Math.max(10, Number(options.highlightBaseFontSize))
+      : BASELINE_FONT_SIZE;
+    const fontsDir = includeSubtitles
+      ? path.dirname(getAssetsPath('NotoSans-Regular.ttf'))
+      : null;
 
     let cutHighlights:
       | import('@shared-types/app').TranscriptHighlight[]
@@ -802,6 +971,36 @@ export async function handleGenerateTranscriptSummary(
         }
 
         if (videoAvailable) {
+          let videoMeta: VideoMeta | null = null;
+          try {
+            videoMeta = await ffmpeg.getVideoMetadata(inputVideo);
+            if (
+              !durationKnown &&
+              Number.isFinite(videoMeta?.duration) &&
+              (videoMeta?.duration ?? 0) > 0
+            ) {
+              totalDur = videoMeta!.duration;
+              durationKnown = true;
+            }
+          } catch (err) {
+            log.warn(
+              `[${operationId}] Video metadata probe failed for ${inputVideo}`,
+              err
+            );
+          }
+
+          const enforceVertical = !isVideoAlreadyVertical(videoMeta);
+          const referenceHeight = Math.max(
+            videoMeta?.height ?? BASELINE_HEIGHT,
+            BASELINE_HEIGHT
+          );
+          const targetHeight = enforceVertical
+            ? SHORT_CLIP_HEIGHT
+            : referenceHeight;
+          const computedFontSize = Math.max(
+            12,
+            Math.round(baseFontSizePx * fontScale(targetHeight))
+          );
           const basePercent = 95; // continue from selection stage
           const step = toCut.length > 0 ? 5 / toCut.length : 5; // up to 100%
 
@@ -864,19 +1063,97 @@ export async function handleGenerateTranscriptSummary(
                 inputVideo,
                 '-t',
                 String(duration),
-                '-map',
-                '0:v:0?',
-                '-map',
-                '0:a:0?',
               ];
 
-              if (duration > fadeDuration * 2) {
-                args.push(
-                  '-vf',
-                  `fade=t=in:st=0:d=${fadeDuration.toFixed(2)},fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`,
-                  '-af',
-                  `afade=t=in:st=0:d=${fadeDuration.toFixed(2)},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`
+              const filterParts: string[] = [];
+              let currentLabel = '0:v:0';
+              let filterLabelCounter = 0;
+              const nextLabel = (prefix: string) =>
+                `${prefix}${++filterLabelCounter}`;
+
+              if (enforceVertical) {
+                const mainLabel = nextLabel('main');
+                const bgLabel = nextLabel('bg');
+                filterParts.push(
+                  `[${currentLabel}]split=2[${mainLabel}][${bgLabel}]`
                 );
+                const blurLabel = nextLabel('blur');
+                filterParts.push(
+                  `[${bgLabel}]scale=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:force_original_aspect_ratio=increase,crop=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT},gblur=sigma=28[${blurLabel}]`
+                );
+                const fgLabel = nextLabel('fg');
+                filterParts.push(
+                  `[${mainLabel}]scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease[${fgLabel}]`
+                );
+                const mergedLabel = nextLabel('mix');
+                filterParts.push(
+                  `[${blurLabel}][${fgLabel}]overlay=(W-w)/2:(H-h)/2[${mergedLabel}]`
+                );
+                currentLabel = mergedLabel;
+              }
+
+              const cleanup: string[] = [];
+              if (includeSubtitles && fontsDir) {
+                const clipSegments = sliceSegmentsForRange({
+                  segments: subtitleSegments,
+                  clipStart: safeStart,
+                  clipEnd: safeEnd,
+                });
+                if (clipSegments.length > 0) {
+                  const srtPath = path.join(
+                    ffmpeg.tempDir,
+                    `highlight-${operationId}-${i + 1}.srt`
+                  );
+                  const srtContent = buildSrt({
+                    segments: clipSegments,
+                    mode: subtitleMode,
+                    noWrap: true,
+                  });
+                  if (srtContent.trim()) {
+                    await fs.writeFile(srtPath, srtContent, 'utf8');
+                    cleanup.push(srtPath);
+                    const subtitleLabel = nextLabel('subs');
+                    filterParts.push(
+                      buildSubtitleFilter({
+                        inputLabel: currentLabel,
+                        outputLabel: subtitleLabel,
+                        subtitlePath: srtPath,
+                        fontsDir,
+                        stylePreset,
+                        fontSizePx: computedFontSize,
+                      })
+                    );
+                    currentLabel = subtitleLabel;
+                  }
+                }
+              }
+
+              const needsVideoFade = duration > fadeDuration * 2;
+              let audioFadeFilter: string | null = null;
+              if (needsVideoFade) {
+                const fadeLabel = nextLabel('fade');
+                filterParts.push(
+                  `[${currentLabel}]fade=t=in:st=0:d=${fadeDuration.toFixed(2)},fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}[${fadeLabel}]`
+                );
+                currentLabel = fadeLabel;
+                audioFadeFilter = `afade=t=in:st=0:d=${fadeDuration.toFixed(2)},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`;
+              }
+
+              if (filterParts.length > 0) {
+                args.push(
+                  '-filter_complex',
+                  filterParts.join(';'),
+                  '-map',
+                  `[${currentLabel}]`
+                );
+              } else {
+                args.push('-map', '0:v:0?');
+              }
+
+              args.push('-map', '0:a:0?');
+
+              if (audioFadeFilter) {
+                args.push('-af', audioFadeFilter);
               }
 
               args.push(
@@ -895,10 +1172,16 @@ export async function handleGenerateTranscriptSummary(
                 outPath
               );
 
-              await ffmpeg.run(args, {
-                operationId,
-                signal: controller.signal,
-              });
+              try {
+                await ffmpeg.run(args, {
+                  operationId,
+                  signal: controller.signal,
+                });
+              } finally {
+                await Promise.all(
+                  cleanup.map(temp => fs.unlink(temp).catch(() => void 0))
+                );
+              }
 
               cutHighlights.push({
                 start: safeStart,
