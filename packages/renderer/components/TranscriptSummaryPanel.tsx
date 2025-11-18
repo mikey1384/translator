@@ -445,21 +445,18 @@ export function TranscriptSummaryPanel({
         <button
           className={tabButtonStyles(activeTab === 'summary')}
           onClick={() => setActiveTab('summary')}
-          disabled={isGenerating}
         >
           {t('summary.tab.summary', 'Summary')}
         </button>
         <button
           className={tabButtonStyles(activeTab === 'sections')}
           onClick={() => setActiveTab('sections')}
-          disabled={isGenerating}
         >
           {t('summary.tab.sections', 'Detailed notes')}
         </button>
         <button
           className={tabButtonStyles(activeTab === 'highlights')}
           onClick={() => setActiveTab('highlights')}
-          disabled={isGenerating}
         >
           {t('summary.tab.highlights', 'Highlights')}
         </button>
