@@ -107,12 +107,13 @@ function initializeSubtitleDisplay() {
       if (text.trim()) {
         const html = text
           .split('\n')
-          .map(line =>
-            `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` +
-            `overflow-wrap:anywhere;word-break:break-word;` +
-            `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
-            `${esc(line)}` +
-            `</span>`
+          .map(
+            line =>
+              `<span style="background-color:${bg};padding:1px 6px;display:inline;line-height:1.5;white-space:pre-wrap;` +
+              `overflow-wrap:anywhere;word-break:break-word;` +
+              `box-decoration-break:clone;-webkit-box-decoration-break:clone;">` +
+              `${esc(line)}` +
+              `</span>`
           )
           .join('<br/>');
         el.innerHTML = html;
@@ -124,6 +125,18 @@ function initializeSubtitleDisplay() {
     }
 
     applyPresetStyles(el, { fontSizePx, stylePreset, isMultiLine });
+
+    try {
+      const computedFont = window
+        .getComputedStyle(el)
+        .getPropertyValue('font-family');
+      if (!(window as any).__loggedFontFamily) {
+        console.log('[render-host] subtitle font-family:', computedFont);
+        (window as any).__loggedFontFamily = true;
+      }
+    } catch (err) {
+      console.warn('[render-host] Failed to read font-family:', err);
+    }
 
     if (text.trim()) {
       el.classList.add('visible'); // show subtitle if there's content

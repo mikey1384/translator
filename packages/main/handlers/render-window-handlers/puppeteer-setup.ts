@@ -32,14 +32,12 @@ export async function initPuppeteer({
   videoWidth,
   videoHeight,
   fontRegular,
-  fontSizePx,
   stylePreset,
 }: {
   operationId: string;
   videoWidth: number;
   videoHeight: number;
   fontRegular: string;
-  fontSizePx?: number;
   stylePreset?: unknown;
 }): Promise<{ browser: Browser; page: Page }> {
   const hostHtml = getRenderHostPath();
@@ -88,17 +86,23 @@ export async function initPuppeteer({
   await page.goto(hostUrl, { waitUntil: 'networkidle0' });
 
   /* ─── optional font & style helpers ─── */
-  if (fontSizePx) {
-    await page.addStyleTag({
-      content: `
-        @font-face {
-          font-family: "Noto Sans";
-          src: url("${fontRegular}") format("truetype");
-          font-weight: normal;
-        }`,
-    });
-    await page.evaluate(() => document.fonts.ready);
-  }
+  await page.addStyleTag({
+    content: `
+      @font-face {
+        font-family: "Noto Sans";
+        src: url("${fontRegular}") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Noto Sans";
+        src: url("${fontRegular}") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+      }
+    `,
+  });
+  await page.evaluate(() => document.fonts.ready);
 
   if (stylePreset) {
     await page.evaluate(preset => {
@@ -110,6 +114,23 @@ export async function initPuppeteer({
   await page.waitForFunction('typeof window.updateSubtitle === "function"', {
     timeout: 5_000,
   });
+
+  if (fontRegular) {
+    try {
+      const fontPath = url.fileURLToPath(fontRegular);
+      await fs.promises.access(fontPath, fs.constants.R_OK);
+      log.info(
+        `[Puppeteer:${operationId}] Font asset accessible at ${fontPath}`
+      );
+    } catch (err) {
+      log.error(
+        `[Puppeteer:${operationId}] Unable to access font asset ${fontRegular}:`,
+        err
+      );
+    }
+  } else {
+    log.warn(`[Puppeteer:${operationId}] No font asset provided`);
+  }
 
   await page.addStyleTag({
     content: `

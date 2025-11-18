@@ -292,6 +292,8 @@ export default function VideoPlayer() {
   // Side menu removed; no need for file dialog here
   const isAudioOnly = useVideoStore(s => s.isAudioOnly);
   const videoPath = useVideoStore(s => s.path);
+  const videoHeightMeta = useVideoStore(s => s.meta?.height ?? null);
+  const videoWidthMeta = useVideoStore(s => s.meta?.width ?? null);
   const mergeInProgress = useTaskStore(s => s.merge.inProgress);
   const translationInProgress = useTaskStore(s => s.translation.inProgress);
   const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
@@ -598,6 +600,8 @@ export default function VideoPlayer() {
             stylePreset={subtitleStyle}
             showOriginalText={showOriginal}
             isAudioOnly={isAudioOnly}
+            videoHeight={videoHeightMeta}
+            videoWidth={videoWidthMeta}
           />
 
           <div

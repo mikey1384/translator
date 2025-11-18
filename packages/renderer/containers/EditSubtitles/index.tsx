@@ -647,12 +647,31 @@ export default function EditSubtitles({
         noWrap: true,
       });
 
-      const { baseFontSize, subtitleStyle } = useUIStore.getState();
+      const {
+        baseFontSize,
+        subtitleStyle,
+        previewSubtitleFontPx,
+        previewDisplayHeightPx,
+        previewVideoHeightPx,
+      } = useUIStore.getState();
 
       const targetHeight = meta?.height ?? BASELINE_HEIGHT;
-      const scaledFontSize = isAudioOnly
-        ? baseFontSize
-        : Math.max(1, Math.round(baseFontSize * fontScale(targetHeight)));
+      let fontSizePx = isAudioOnly
+        ? Math.max(10, baseFontSize)
+        : Math.max(10, Math.round(baseFontSize * fontScale(targetHeight)));
+
+      if (
+        !isAudioOnly &&
+        previewSubtitleFontPx > 0 &&
+        previewDisplayHeightPx > 0 &&
+        previewVideoHeightPx > 0
+      ) {
+        const adjusted = Math.round(
+          (previewSubtitleFontPx * previewVideoHeightPx) /
+            previewDisplayHeightPx
+        );
+        fontSizePx = Math.max(10, adjusted);
+      }
 
       const opts: RenderSubtitlesOptions = {
         operationId: opId,
@@ -663,7 +682,7 @@ export default function EditSubtitles({
         videoHeight: meta?.height ?? 720,
         frameRate: Number(meta?.frameRate ?? 30),
         originalVideoPath: videoPath,
-        fontSizePx: scaledFontSize,
+        fontSizePx,
         stylePreset: subtitleStyle,
         overlayMode: isAudioOnly ? 'blackVideo' : 'overlayOnVideo',
       };

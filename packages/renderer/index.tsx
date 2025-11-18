@@ -6,6 +6,42 @@ import { logSystem } from './utils/logger.js';
 import initI18nPromise from './i18n.js';
 import './highlight.css';
 
+function ensureNotoSansLoaded(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('noto-sans-font')) return;
+
+  const baseUrl =
+    typeof window !== 'undefined' && window.location
+      ? window.location.href
+      : import.meta.url;
+  const fontUrl = new URL(
+    './assets/fonts/NotoSans-Regular.ttf',
+    baseUrl
+  ).toString();
+
+  const style = document.createElement('style');
+  style.id = 'noto-sans-font';
+  style.textContent = `
+    @font-face {
+      font-family: 'Noto Sans';
+      src: url('${fontUrl}') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Noto Sans';
+      src: url('${fontUrl}') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensureNotoSansLoaded();
+
 let root: ReturnType<typeof createRoot> | null = null;
 
 const renderApp = () => {
@@ -38,7 +74,8 @@ initI18nPromise
           if (info) logSystem(info);
           else {
             const ua = navigator.userAgent;
-            const platform = (navigator as any).userAgentData?.platform || navigator.platform;
+            const platform =
+              (navigator as any).userAgentData?.platform || navigator.platform;
             logSystem({ platform, ua });
           }
         } catch (e) {

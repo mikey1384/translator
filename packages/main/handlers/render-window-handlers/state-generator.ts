@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs/promises';
 import { Page } from 'puppeteer';
 import log from 'electron-log';
-import { BASELINE_HEIGHT } from '../../../shared/constants/index.js';
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
 
 export async function generateStatePngs({
@@ -33,7 +32,6 @@ export async function generateStatePngs({
   const pngs: Array<{ path: string; duration: number }> = [];
   const total = events.length;
   const STAGE_PERCENT = 10;
-  const STEP = Math.max(1, Math.floor(total / 200));
   let captured = 0;
 
   // Bump the progress bar every 5s even if nothing else happens
@@ -81,10 +79,7 @@ export async function generateStatePngs({
       const durationToUse =
         i === 0 && ev.text ? Math.max(duration, 2 / fps) : duration;
 
-      const scaledSize =
-        fontSizePx && videoHeight
-          ? Math.round(fontSizePx * (videoHeight / BASELINE_HEIGHT))
-          : fontSizePx;
+      const scaledSize = fontSizePx ? Math.round(fontSizePx) : fontSizePx;
 
       await page.evaluate(
         ({ txt, size, preset }) => {

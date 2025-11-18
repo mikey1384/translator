@@ -1627,6 +1627,15 @@ function initializeSubtitleDisplay() {
       el.textContent = text;
     }
     applyPresetStyles(el, { fontSizePx, stylePreset, isMultiLine });
+    try {
+      const computedFont = window.getComputedStyle(el).getPropertyValue("font-family");
+      if (!window.__loggedFontFamily) {
+        console.log("[render-host] subtitle font-family:", computedFont);
+        window.__loggedFontFamily = true;
+      }
+    } catch (err) {
+      console.warn("[render-host] Failed to read font-family:", err);
+    }
     if (text.trim()) {
       el.classList.add("visible");
     } else {

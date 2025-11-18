@@ -32,6 +32,9 @@ interface State {
   seenLC: Set<string>;
   // Transcription controls (session-only)
   transcriptionLanguage: string; // 'auto' | language token
+  previewSubtitleFontPx: number;
+  previewDisplayHeightPx: number;
+  previewVideoHeightPx: number;
 }
 
 // Enable Set/Map support in Immer (used for seenGaps/seenLC)
@@ -65,6 +68,11 @@ interface Actions {
   resetExclamationState(): void;
   // Transcription controls setters
   setTranscriptionLanguage(lang: string): void;
+  setPreviewSubtitleMetrics(
+    fontPx: number,
+    displayHeightPx: number,
+    videoHeightPx: number
+  ): void;
 }
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
@@ -126,6 +134,9 @@ const initial: State = {
   seenGaps: new Set<string>(),
   seenLC: new Set<string>(),
   transcriptionLanguage: 'auto',
+  previewSubtitleFontPx: 0,
+  previewDisplayHeightPx: 0,
+  previewVideoHeightPx: 0,
 };
 
 const resetSearchState = (s: Draft<State>) => {
@@ -303,6 +314,21 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
 
         setTranscriptionLanguage(lang: string) {
           set({ transcriptionLanguage: lang || 'auto' });
+        },
+
+        setPreviewSubtitleMetrics(fontPx, displayHeightPx, videoHeightPx) {
+          if (
+            !Number.isFinite(fontPx) ||
+            !Number.isFinite(displayHeightPx) ||
+            !Number.isFinite(videoHeightPx)
+          ) {
+            return;
+          }
+          set(s => {
+            s.previewSubtitleFontPx = fontPx;
+            s.previewDisplayHeightPx = displayHeightPx;
+            s.previewVideoHeightPx = videoHeightPx;
+          });
         },
       };
     })

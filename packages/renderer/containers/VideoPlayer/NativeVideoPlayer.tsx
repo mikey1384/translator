@@ -19,10 +19,10 @@ import {
 
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
 
-import { useVideoStore, useSubStore } from '../../state';
+import { useVideoStore, useSubStore, useUIStore } from '../../state';
 import { useSubSourceId } from '../../state/subtitle-store';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles';
-import { fontScale } from '../../../shared/constants';
+import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
 
 import { cueText } from '../../../shared/helpers';
 
@@ -72,6 +72,8 @@ export interface NativeVideoPlayerProps {
   stylePreset: SubtitleStylePresetKey;
   showOriginalText: boolean;
   isAudioOnly: boolean;
+  videoHeight?: number | null;
+  videoWidth?: number | null;
 }
 
 export default function NativeVideoPlayer({
@@ -81,6 +83,8 @@ export default function NativeVideoPlayer({
   stylePreset,
   showOriginalText,
   isAudioOnly,
+  videoHeight,
+  videoWidth,
 }: NativeVideoPlayerProps) {
   const { url: videoUrl, togglePlay } = useVideoStore();
 
@@ -88,6 +92,7 @@ export default function NativeVideoPlayer({
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement & HTMLAudioElement>(null!);
   const [scale, setScale] = useState(1);
+  const [displayHeightPx, setDisplayHeightPx] = useState(0);
 
   const [activeSubtitle, setActiveSubtitle] = useState('');
   const [subtitleVisible, setSubtitleVisible] = useState(false);
@@ -98,13 +103,51 @@ export default function NativeVideoPlayer({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const subSourceId = useSubSourceId();
 
+  const targetVideoHeight = !isAudioOnly
+    ? Math.max(videoHeight ?? BASELINE_HEIGHT, 1)
+    : null;
+  const targetVideoWidth =
+    !isAudioOnly && targetVideoHeight
+      ? Math.max(videoWidth ?? Math.round((targetVideoHeight * 16) / 9), 1)
+      : null;
+  const canonicalFontSize = isAudioOnly
+    ? Math.max(10, baseFontSize)
+    : Math.max(
+        10,
+        Math.round(
+          baseFontSize * fontScale(targetVideoHeight ?? BASELINE_HEIGHT)
+        )
+      );
+
   const recomputeScale = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     const rect = v.getBoundingClientRect();
-    const h = rect.height === 0 && isAudioOnly ? 180 : rect.height;
-    setScale(fontScale(Math.round(h)));
-  }, [isAudioOnly]);
+    const cssWidth = Math.max(rect.width, 1);
+    const cssHeight = Math.max(rect.height, 1);
+
+    let contentHeight = cssHeight;
+    if (!isAudioOnly) {
+      const intrinsicWidth = v.videoWidth || targetVideoWidth || cssWidth || 1;
+      const intrinsicHeight =
+        v.videoHeight || targetVideoHeight || cssHeight || 1;
+      const scaleFactor = Math.min(
+        cssWidth / intrinsicWidth,
+        cssHeight / intrinsicHeight
+      );
+      contentHeight = Math.max(1, intrinsicHeight * scaleFactor);
+    } else if (rect.height === 0) {
+      contentHeight = 180;
+    }
+
+    const rounded = Math.round(contentHeight);
+    setDisplayHeightPx(rounded);
+    if (!isAudioOnly && targetVideoHeight) {
+      setScale(contentHeight / targetVideoHeight);
+    } else {
+      setScale(1);
+    }
+  }, [isAudioOnly, targetVideoHeight, targetVideoWidth]);
 
   const flash = useCallback((state: 'play' | 'pause') => {
     setIndicator(state);
@@ -155,6 +198,10 @@ export default function NativeVideoPlayer({
       return () => ro.disconnect();
     }
   }, [recomputeScale, isAudioOnly]);
+
+  useEffect(() => {
+    recomputeScale();
+  }, [recomputeScale]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -241,6 +288,20 @@ export default function NativeVideoPlayer({
     return () => clearTimeout(id);
   }, [activeSubtitle]);
 
+  const effFontSize = Math.max(10, Math.round(canonicalFontSize * scale));
+
+  useEffect(() => {
+    if (!isAudioOnly && displayHeightPx > 0 && targetVideoHeight) {
+      useUIStore
+        .getState()
+        .setPreviewSubtitleMetrics(
+          effFontSize,
+          displayHeightPx,
+          targetVideoHeight
+        );
+    }
+  }, [effFontSize, displayHeightPx, targetVideoHeight, isAudioOnly]);
+
   if (!videoUrl) return null;
 
   const onVideoClick = () => {
@@ -273,8 +334,6 @@ export default function NativeVideoPlayer({
       nativeSeek(Math.min(v.currentTime + 10, v.duration));
     }
   };
-
-  const effFontSize = Math.max(10, Math.round(baseFontSize * scale));
 
   const wrapperCls =
     css`
