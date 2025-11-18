@@ -9,9 +9,7 @@ type TranslateAllOptions = {
   operationPrefix?: string;
 };
 
-export async function runFullSrtTranslation(
-  options: TranslateAllOptions = {}
-) {
+export async function runFullSrtTranslation(options: TranslateAllOptions = {}) {
   const { onNoSubtitles, operationPrefix } = options;
   const subStore = useSubStore.getState();
   const segments = subStore.order.map(id => subStore.segments[id]);

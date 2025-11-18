@@ -98,5 +98,6 @@ module.exports = {
     'preload.cjs',
     '*.cjs',
     '*.mjs',
+    'webrtcvad-fork/**',
   ],
 };

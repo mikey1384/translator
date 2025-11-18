@@ -44,7 +44,8 @@ export default function ConfirmReplaceSrtDialog({
           box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
         `}
       >
-        <h3 id="confirm-replace-srt-title"
+        <h3
+          id="confirm-replace-srt-title"
           className={css`
             margin: 0 0 8px 0;
           `}

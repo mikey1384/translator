@@ -143,3 +143,26 @@ export function onOpenAiApiKeyChanged(
 ): () => void {
   return window.electron.onOpenAiApiKeyChanged(callback);
 }
+
+export function getDeviceId(): Promise<string> {
+  return window.electron.getDeviceId();
+}
+
+export function getAdminDeviceId(): Promise<string | null> {
+  return window.electron.getAdminDeviceId();
+}
+
+export function resetCredits(): Promise<{
+  success: boolean;
+  creditsAdded?: number;
+  error?: string;
+}> {
+  return window.electron.resetCredits();
+}
+
+export function resetCreditsToZero(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return window.electron.resetCreditsToZero();
+}

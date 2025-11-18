@@ -155,7 +155,9 @@ export default function ProgressArea({
             : 'merge';
         logTask('cancel', kind as any, { operationId });
       }
-    } catch {}
+    } catch {
+      // Ignore logging errors
+    }
     if (progress < 100) {
       if (!operationId) {
         console.warn(

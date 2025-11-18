@@ -18,26 +18,28 @@ interface Actions {
   triggerSave: () => Promise<void>;
 }
 
-export const useActionsStore = createWithEqualityFn<State & Actions>((set, get) => ({
-  save: null,
-  saveAs: null,
-  canSaveDirectly: false,
+export const useActionsStore = createWithEqualityFn<State & Actions>(
+  (set, get) => ({
+    save: null,
+    saveAs: null,
+    canSaveDirectly: false,
 
-  registerSaveHandlers: ({ save, saveAs, canSaveDirectly }) =>
-    set({ save, saveAs, canSaveDirectly }),
+    registerSaveHandlers: ({ save, saveAs, canSaveDirectly }) =>
+      set({ save, saveAs, canSaveDirectly }),
 
-  clearSaveHandlers: () => set({ save: null, saveAs: null, canSaveDirectly: false }),
+    clearSaveHandlers: () =>
+      set({ save: null, saveAs: null, canSaveDirectly: false }),
 
-  triggerSave: async () => {
-    const { save, saveAs, canSaveDirectly } = get();
-    const fn = canSaveDirectly ? save : saveAs;
-    if (fn) {
-      await fn();
-    }
-  },
-}));
+    triggerSave: async () => {
+      const { save, saveAs, canSaveDirectly } = get();
+      const fn = canSaveDirectly ? save : saveAs;
+      if (fn) {
+        await fn();
+      }
+    },
+  })
+);
 
 export async function triggerSave() {
   await useActionsStore.getState().triggerSave();
 }
-

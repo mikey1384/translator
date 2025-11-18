@@ -53,7 +53,12 @@ export default function UrlCookieBanner() {
   }, [needCookies]);
 
   // Hide if cancelled or running; banner is only relevant when explicitly requested
-  if (!needCookies || suppressed || downloadInProgress || downloadStage === 'Cancelled')
+  if (
+    !needCookies ||
+    suppressed ||
+    downloadInProgress ||
+    downloadStage === 'Cancelled'
+  )
     return null;
 
   return (

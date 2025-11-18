@@ -102,7 +102,10 @@ function ensureSubscriptions(
         try {
           await SystemIPC.setByoProviderEnabled(false);
         } catch (err) {
-          console.error('[AiStore] Failed to sync BYO toggle after key removal:', err);
+          console.error(
+            '[AiStore] Failed to sync BYO toggle after key removal:',
+            err
+          );
         }
         return;
       }
@@ -226,7 +229,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           keyPresent: Boolean(key),
           keyLoading: false,
         });
-      } catch (_err: any) {
+      } catch {
         set({ keyLoading: false, keyPresent: false });
       }
     },
@@ -255,7 +258,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
             await SystemIPC.setByoProviderEnabled(false);
             set({ useByo: false });
           } catch (err) {
-            console.error('[AiStore] Failed to disable BYO toggle after key clear:', err);
+            console.error(
+              '[AiStore] Failed to disable BYO toggle after key clear:',
+              err
+            );
           }
         }
         return result;
@@ -293,7 +299,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         return result;
       } catch (err: any) {
         console.error('[AiStore] Failed to update BYO toggle:', err);
-        return { success: false, error: err?.message || 'Failed to save toggle' };
+        return {
+          success: false,
+          error: err?.message || 'Failed to save toggle',
+        };
       }
     },
   };

@@ -30,9 +30,13 @@ export default function CreditWarningBanner({
                 cursor: 'pointer',
               }}
               onClick={() => {
-              try { logButton('open_settings'); } catch {}
-              onSettingsClick();
-            }}
+                try {
+                  logButton('open_settings');
+                } catch {
+                  // Ignore logging errors
+                }
+                onSettingsClick();
+              }}
             />
           ),
         }}

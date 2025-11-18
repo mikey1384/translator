@@ -42,10 +42,7 @@ export default function SaveAndMergeBar({
 }: SaveAndMergeBarProps) {
   const { t } = useTranslation();
 
-  const [fontSize, setFontSize] = useUIStore(s => [
-    s.baseFontSize,
-    s.setBaseFontSize,
-  ]);
+  const [fontSize] = useUIStore(s => [s.baseFontSize]);
   const [stylePreset, setStylePreset] = useUIStore(s => [
     s.subtitleStyle,
     s.setSubtitleStyle,
@@ -271,13 +268,18 @@ export default function SaveAndMergeBar({
               setStylePreset(e.target.value as SubtitleStylePresetKey)
             }
           >
-            {(['Default', 'Classic', 'Boxed', 'LineBox'] as SubtitleStylePresetKey[]).map(
-              key => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              )
-            )}
+            {(
+              [
+                'Default',
+                'Classic',
+                'Boxed',
+                'LineBox',
+              ] as SubtitleStylePresetKey[]
+            ).map(key => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
           </select>
         </div>
 

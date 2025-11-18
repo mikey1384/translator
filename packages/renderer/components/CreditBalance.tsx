@@ -51,7 +51,9 @@ export default function CreditBalance({ suffixText }: CreditBalanceProps) {
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const keyPresent = useAiStore(s => s.keyPresent);
   const keyValue = useAiStore(s => s.keyValue);
-  const usingApiKey = Boolean(useByo && byoUnlocked && (keyPresent || (keyValue || '').trim()));
+  const usingApiKey = Boolean(
+    useByo && byoUnlocked && (keyPresent || (keyValue || '').trim())
+  );
 
   if (loading) {
     return (
@@ -72,7 +74,9 @@ export default function CreditBalance({ suffixText }: CreditBalanceProps) {
   if (checkoutPending) {
     return (
       <div className={creditBalanceContainer}>
-        <span className={creditText}>🔄 {t('credits.redirectingToPayment', 'Opening secure checkout…')}</span>
+        <span className={creditText}>
+          🔄 {t('credits.redirectingToPayment', 'Opening secure checkout…')}
+        </span>
       </div>
     );
   }
@@ -80,7 +84,9 @@ export default function CreditBalance({ suffixText }: CreditBalanceProps) {
   if (usingApiKey) {
     return (
       <div className={creditBalanceContainer}>
-        <span className={creditText}>🔑 {t('credits.usingApiKey', 'Using API Key')}</span>
+        <span className={creditText}>
+          🔑 {t('credits.usingApiKey', 'Using API Key')}
+        </span>
       </div>
     );
   }

@@ -196,7 +196,7 @@ async function downloadMediaInternal(
   });
 
   try {
-    let shouldUseCookies = opts.useCookies === true;
+    const shouldUseCookies = opts.useCookies === true;
     // Load persisted browser preference for UI, but do not force cookies unless explicitly requested
     try {
       const preferred = await (
@@ -215,8 +215,9 @@ async function downloadMediaInternal(
     }
     if (shouldUseCookies && !cookiesBrowser) {
       try {
-        cookiesBrowser = await (window as any).electron
-          .getDefaultCookieBrowser?.();
+        cookiesBrowser = await (
+          window as any
+        ).electron.getDefaultCookieBrowser?.();
       } catch {
         // ignore default failures
       }

@@ -263,7 +263,9 @@ export async function handleCreateByoUnlockSession(): Promise<void> {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('byo-unlock-error', {
         message:
-          err?.response?.data?.message || err?.message || 'Unable to start checkout',
+          err?.response?.data?.message ||
+          err?.message ||
+          'Unable to start checkout',
       });
     }
   }
@@ -313,7 +315,10 @@ async function openStripeCheckout(
           win.webContents.removeListener('did-fail-load', handleLoadFailure);
         }
       } catch (e) {
-        log.warn('[credit-handler] Cleanup after checkout encountered an issue:', e);
+        log.warn(
+          '[credit-handler] Cleanup after checkout encountered an issue:',
+          e
+        );
       }
     };
 
@@ -353,7 +358,10 @@ async function openStripeCheckout(
               win.close();
             }
           } catch (e) {
-            log.warn('[credit-handler] Error closing checkout window after success:', e);
+            log.warn(
+              '[credit-handler] Error closing checkout window after success:',
+              e
+            );
           }
         });
       }
@@ -384,7 +392,10 @@ async function openStripeCheckout(
                 win.close();
               }
             } catch (e) {
-              log.warn('[credit-handler] Error closing checkout window after cancel:', e);
+              log.warn(
+                '[credit-handler] Error closing checkout window after cancel:',
+                e
+              );
             }
           });
         }
@@ -411,7 +422,10 @@ async function openStripeCheckout(
             win.close();
           }
         } catch (e) {
-          log.warn('[credit-handler] Error closing checkout window after load failure:', e);
+          log.warn(
+            '[credit-handler] Error closing checkout window after load failure:',
+            e
+          );
         }
       });
     };

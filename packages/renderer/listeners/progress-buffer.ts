@@ -44,7 +44,9 @@ function flush() {
       try {
         const s = useAiStore.getState();
         const usingApiKey = Boolean(
-          s.useByo && s.byoUnlocked && (s.keyPresent || (s.keyValue || '').trim())
+          s.useByo &&
+            s.byoUnlocked &&
+            (s.keyPresent || (s.keyValue || '').trim())
         );
         if (!usingApiKey) openCreditRanOut();
       } catch {

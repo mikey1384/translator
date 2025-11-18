@@ -78,11 +78,13 @@ initI18nPromise
               (navigator as any).userAgentData?.platform || navigator.platform;
             logSystem({ platform, ua });
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       })();
-    } catch {}
+    } catch {
+      // ignore
+    }
     renderApp();
   })
   .catch(error => {

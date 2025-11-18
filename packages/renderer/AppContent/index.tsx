@@ -34,7 +34,9 @@ export default function AppContent() {
   useEffect(() => {
     try {
       useAiStore.getState().initialize();
-    } catch {}
+    } catch {
+      // Ignore initialization errors
+    }
   }, []);
   const { showSettings } = useUIStore();
   const { setDownload } = useUrlStore();

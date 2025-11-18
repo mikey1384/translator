@@ -9,13 +9,25 @@ export default function useGlobalHotkeys() {
       if (e.ctrlKey && e.key === 'f') {
         e.preventDefault();
         setFindBarVisible(true);
-        try { logButton('findbar_open'); } catch {}
+        try {
+          logButton('findbar_open');
+        } catch {
+          // Ignore logging errors
+        }
       }
       if (e.key === 'Escape') {
         setFindBarVisible(false);
-        try { logButton('findbar_close'); } catch {}
+        try {
+          logButton('findbar_close');
+        } catch {
+          // Ignore logging errors
+        }
         toggleSettings(false);
-        try { logButton('close_settings'); } catch {}
+        try {
+          logButton('close_settings');
+        } catch {
+          // Ignore logging errors
+        }
       }
     };
     window.addEventListener('keydown', onKey);

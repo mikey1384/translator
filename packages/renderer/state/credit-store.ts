@@ -69,7 +69,8 @@ export const useCreditStore = create<CreditState>((set, get) => {
         const credits = res.creditBalance ?? get().credits ?? 0;
         // Unify: always use translation-based credits/hour for estimates
         const perHour = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
-        const hours = typeof credits === 'number' ? credits / perHour : get().hours;
+        const hours =
+          typeof credits === 'number' ? credits / perHour : get().hours;
         set({
           credits,
           hours,

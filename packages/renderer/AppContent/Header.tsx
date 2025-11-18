@@ -42,7 +42,9 @@ export default function Header() {
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const keyPresent = useAiStore(s => s.keyPresent);
   const keyValue = useAiStore(s => s.keyValue);
-  const usingApiKey = Boolean(useByo && byoUnlocked && (keyPresent || (keyValue || '').trim()));
+  const usingApiKey = Boolean(
+    useByo && byoUnlocked && (keyPresent || (keyValue || '').trim())
+  );
   const suffix =
     !usingApiKey && typeof hours === 'number'
       ? `(${Math.floor(hours).toLocaleString()}h)`
@@ -54,7 +56,11 @@ export default function Header() {
         <button
           className={settingsButton}
           onClick={() => {
-            try { logButton('close_settings'); } catch {}
+            try {
+              logButton('close_settings');
+            } catch {
+              // Ignore logging errors
+            }
             toggleSettings(false);
           }}
         >
@@ -73,9 +79,13 @@ export default function Header() {
           <button
             className={settingsButton}
             onClick={() => {
-            try { logButton('open_settings'); } catch {}
-            toggleSettings(true);
-          }}
+              try {
+                logButton('open_settings');
+              } catch {
+                // Ignore logging errors
+              }
+              toggleSettings(true);
+            }}
           >
             {t('common.settings')}
           </button>

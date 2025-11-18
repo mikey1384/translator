@@ -187,7 +187,8 @@ export async function generateDubbedMedia({
 
     if (remaining > 0) {
       const prevIdx = getPrevIndex(idx);
-      const prevPlan = prevIdx != null ? payloadByIndex.get(prevIdx) : undefined;
+      const prevPlan =
+        prevIdx != null ? payloadByIndex.get(prevIdx) : undefined;
       const prevEnd = prevPlan
         ? Number(prevPlan.start ?? 0) + durationForPlan(prevPlan)
         : 0;
@@ -333,14 +334,16 @@ export async function generateDubbedMedia({
     const tempSegmentPaths: Set<string> = new Set();
     let fallbackStart = 0;
 
-    const stage5Segments = [...(synthResult.segments ?? [])].sort(
-      (a, b) => {
-        const ai = Number.isFinite(a?.index) ? Number(a.index) : Number.MAX_SAFE_INTEGER;
-        const bi = Number.isFinite(b?.index) ? Number(b.index) : Number.MAX_SAFE_INTEGER;
-        if (ai !== bi) return ai - bi;
-        return 0;
-      }
-    );
+    const stage5Segments = [...(synthResult.segments ?? [])].sort((a, b) => {
+      const ai = Number.isFinite(a?.index)
+        ? Number(a.index)
+        : Number.MAX_SAFE_INTEGER;
+      const bi = Number.isFinite(b?.index)
+        ? Number(b.index)
+        : Number.MAX_SAFE_INTEGER;
+      if (ai !== bi) return ai - bi;
+      return 0;
+    });
 
     const clipCount = stage5Segments.length;
     for (let clipIdx = 0; clipIdx < clipCount; clipIdx++) {
@@ -411,7 +414,10 @@ export async function generateDubbedMedia({
 
       let effectiveDuration = scheduledDuration;
       if (meta && actualDuration > 0.01) {
-        const desiredNoCompression = Math.max(effectiveDuration, actualDuration);
+        const desiredNoCompression = Math.max(
+          effectiveDuration,
+          actualDuration
+        );
         if (desiredNoCompression > effectiveDuration) {
           const gained = extendSegmentAllocation(
             targetIndex!,
@@ -764,7 +770,9 @@ export async function generateDubbedMedia({
     const backgroundVolume = ambientActive ? 0.2 + ambientRatio * 0.35 : 0; // 0.20 → 0.55
     const voiceVolume = voiceActive ? 1.25 + voiceRatio * 0.35 : 0; // 1.25 → 1.60
 
-    const ambientWeight = ambientActive ? (0.5 + ambientRatio) * ambientRatio : 0; // scale down near 0
+    const ambientWeight = ambientActive
+      ? (0.5 + ambientRatio) * ambientRatio
+      : 0; // scale down near 0
     const voiceWeight = voiceActive ? 2.0 * voiceRatio : 0; // fade out as slider approaches 100% ambient
     const normalize = ambientActive && voiceActive ? 1 : 0;
 

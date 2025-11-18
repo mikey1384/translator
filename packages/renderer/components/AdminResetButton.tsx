@@ -2,6 +2,7 @@ import { css } from '@emotion/css';
 import { useState, useEffect } from 'react';
 import { useCreditStore } from '../state';
 import { colors } from '../styles';
+import { SystemIPC } from '../ipc';
 
 const adminButtonContainer = css`
   display: flex;
@@ -54,8 +55,8 @@ export default function AdminResetButton() {
     const checkAdminStatus = async () => {
       try {
         const [deviceId, adminDeviceId] = await Promise.all([
-          window.electron.getDeviceId(),
-          window.electron.getAdminDeviceId(),
+          SystemIPC.getDeviceId(),
+          SystemIPC.getAdminDeviceId(),
         ]);
         setIsAdmin(Boolean(adminDeviceId && deviceId === adminDeviceId));
       } catch (error) {
@@ -71,7 +72,7 @@ export default function AdminResetButton() {
 
     setAddLoading(true);
     try {
-      const result = await window.electron.resetCredits();
+      const result = await SystemIPC.resetCredits();
 
       if (result.success) {
         console.log(
@@ -102,7 +103,7 @@ export default function AdminResetButton() {
 
     setResetLoading(true);
     try {
-      const result = await window.electron.resetCreditsToZero();
+      const result = await SystemIPC.resetCreditsToZero();
 
       if (result.success) {
         console.log('✅ Credits reset to 0 successful');

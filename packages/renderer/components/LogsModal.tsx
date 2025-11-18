@@ -187,7 +187,9 @@ export default function LogsModal({
           const id = await (window as any).electron?.getDeviceId?.();
           if (id) deviceInfo = { ...deviceInfo, deviceId: id };
         }
-      } catch {}
+      } catch {
+        // Ignore device info retrieval errors
+      }
       const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
 ${JSON.stringify(deviceInfo)}
 
@@ -228,7 +230,9 @@ ${JSON.stringify(deviceInfo)}
           const id = await (window as any).electron?.getDeviceId?.();
           if (id) deviceInfo = { ...deviceInfo, deviceId: id };
         }
-      } catch {}
+      } catch {
+        // Ignore device info retrieval errors
+      }
       const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
 ${JSON.stringify(deviceInfo)}
 

@@ -147,7 +147,9 @@ export default function IconButton({
     try {
       const name = dataLog || ariaLabel || title || 'icon_button';
       logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
-    } catch {}
+    } catch {
+      // Ignore logging errors
+    }
     userOnClick?.(e);
   };
   return (
