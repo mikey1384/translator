@@ -196,6 +196,8 @@ declare module '@shared-types/app' {
     category?: string;
     justification?: string;
     videoPath?: string; // populated when server cuts clips
+    lineStart?: number;
+    lineEnd?: number;
   }
 
   export interface TranscriptSummarySection {

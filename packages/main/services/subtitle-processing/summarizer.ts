@@ -36,6 +36,16 @@ interface SelectTranscriptHighlightsOptions {
 const MAX_CHARS_PER_CHUNK = 7_500;
 const MAX_RUNNING_SUMMARY_CHARS = 20_000;
 const MAX_SECTION_PROMPT_CHARS = 5_000;
+const ABSOLUTE_TIME_TOLERANCE = 0.75;
+
+type ChunkPayload = {
+  text: string;
+  segments: NumberedSegment[];
+  start: number;
+  end: number;
+};
+
+type NumberedSegment = TranscriptSummarySegment & { lineNumber: number };
 
 function sanitizeSegments(
   segments: TranscriptSummarySegment[]
@@ -116,28 +126,33 @@ export async function generateTranscriptSummary({
     throw new Error('Transcript is empty after filtering silent segments');
   }
 
+  const numberedSegments: NumberedSegment[] = cleanedSegments.map(
+    (seg, idx) => ({
+      ...seg,
+      lineNumber: idx + 1,
+    })
+  );
+
   const languageName = formatLanguage(targetLanguage);
 
   progressCallback?.({ percent: 5, stage: 'Preparing transcript slices' });
 
-  const chunks = buildChunks(cleanedSegments);
+  const chunks = buildChunks(numberedSegments);
 
   if (signal.aborted) {
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
   const chunkSummaries: string[] = [];
-  const perChunkProgress = 70 / chunks.length;
+  const perChunkProgress = chunks.length > 0 ? 70 / chunks.length : 0;
   let runningSummary = '';
   const highlightTracker =
     includeHighlights && chunks.length > 0
       ? createHighlightTracker({
-          segments: cleanedSegments,
+          segments: numberedSegments,
           operationId,
         })
       : null;
-  const highlightOutlineSource =
-    highlightTracker !== null ? new Array(chunks.length).fill('') : null;
   let latestHighlights: TranscriptHighlight[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
@@ -145,7 +160,8 @@ export async function generateTranscriptSummary({
       throw new DOMException('Operation cancelled', 'AbortError');
     }
 
-    const chunkText = chunks[i];
+    const chunk = chunks[i];
+    const chunkText = chunk.text;
     const startPercent = 20 + perChunkProgress * i;
     progressCallback?.({
       percent: startPercent,
@@ -162,9 +178,6 @@ export async function generateTranscriptSummary({
     });
     const trimmedSummary = summary.trim();
     chunkSummaries.push(trimmedSummary);
-    if (highlightOutlineSource) {
-      highlightOutlineSource[i] = trimmedSummary;
-    }
 
     runningSummary = await mergeIntoRunningSummary({
       existingSummary: runningSummary,
@@ -174,35 +187,6 @@ export async function generateTranscriptSummary({
       operationId,
     });
 
-    if (highlightTracker && highlightOutlineSource) {
-      const globalOutline = buildGlobalOutline(highlightOutlineSource);
-      try {
-        latestHighlights = await processHighlightChunk({
-          tracker: highlightTracker,
-          chunkText,
-          chunkIndex: i,
-          chunkCount: chunks.length,
-          chunkSummary: trimmedSummary,
-          globalOutline,
-          languageName,
-          signal,
-          operationId,
-        });
-      } catch (err) {
-        console.warn(
-          `[${operationId}] highlight selection failed for chunk ${i + 1}:`,
-          err
-        );
-        const message =
-          err instanceof Error ? err.message : 'Highlight selection failed';
-        progressCallback?.({
-          percent: startPercent,
-          stage: 'highlight-selection-error',
-          error: message,
-        });
-      }
-    }
-
     const partialSections = createSectionSummaries(chunkSummaries);
     const completePercent = 20 + perChunkProgress * (i + 1);
     progressCallback?.({
@@ -210,12 +194,92 @@ export async function generateTranscriptSummary({
       stage: `Section ${i + 1} of ${chunks.length} summarized`,
       partialSummary: runningSummary,
       partialSections,
-      ...(highlightTracker ? { partialHighlights: latestHighlights } : {}),
     });
   }
 
-  if (signal.aborted) {
-    throw new DOMException('Operation cancelled', 'AbortError');
+  let highlightPhaseAborted = false;
+  if (highlightTracker) {
+    const globalOutline = buildGlobalOutline(chunkSummaries);
+    const highlightStartPercent = 90;
+    const highlightEndPercent = 92;
+    const highlightSpan = Math.max(
+      0,
+      highlightEndPercent - highlightStartPercent
+    );
+    const totalHighlightSections = Math.max(1, chunks.length);
+
+    for (let i = 0; i < chunks.length; i++) {
+      if (signal.aborted) {
+        highlightPhaseAborted = true;
+        progressCallback?.({
+          percent: highlightStartPercent,
+          stage: 'highlight-selection-cancelled',
+          error: 'Highlight selection cancelled',
+        });
+        break;
+      }
+
+      const sectionStart =
+        highlightStartPercent + (highlightSpan * i) / totalHighlightSections;
+      progressCallback?.({
+        percent: sectionStart,
+        stage: `Selecting highlights section ${i + 1} of ${chunks.length}`,
+        current: i + 1,
+        total: chunks.length,
+      });
+
+      const chunk = chunks[i];
+      try {
+        latestHighlights = await processHighlightChunk({
+          tracker: highlightTracker,
+          chunkText: chunk.text,
+          chunkSegments: chunk.segments,
+          chunkIndex: i,
+          chunkCount: chunks.length,
+          chunkSummary: chunkSummaries[i] ?? '',
+          globalOutline,
+          languageName,
+          signal,
+          operationId,
+        });
+      } catch (err) {
+        const abortedError =
+          (err as any)?.name === 'AbortError' ||
+          (err as any)?.message === 'Operation cancelled';
+        if (abortedError || signal.aborted) {
+          highlightPhaseAborted = true;
+          progressCallback?.({
+            percent: sectionStart,
+            stage: 'highlight-selection-cancelled',
+            error: 'Highlight selection cancelled',
+          });
+          break;
+        }
+        console.warn(
+          `[${operationId}] highlight selection failed for chunk ${i + 1}:`,
+          err
+        );
+        const message =
+          err instanceof Error ? err.message : 'Highlight selection failed';
+        progressCallback?.({
+          percent: sectionStart,
+          stage: 'highlight-selection-error',
+          error: message,
+        });
+        continue;
+      }
+
+      const sectionComplete =
+        highlightStartPercent +
+        (highlightSpan * (i + 1)) / totalHighlightSections;
+      progressCallback?.({
+        percent: sectionComplete,
+        stage: `Section ${i + 1} highlights proposed`,
+        current: i + 1,
+        total: chunks.length,
+        partialHighlights: latestHighlights,
+      });
+    }
   }
 
   const sectionSummaries = createSectionSummaries(chunkSummaries);
@@ -234,7 +298,7 @@ export async function generateTranscriptSummary({
   });
 
   let highlights: TranscriptHighlight[] = [];
-  if (highlightTracker) {
+  if (highlightTracker && !highlightPhaseAborted) {
     try {
       highlights = finalizeHighlightTracker(highlightTracker);
       progressCallback?.({
@@ -287,7 +351,14 @@ export async function selectTranscriptHighlights({
     throw new Error('Transcript is empty after filtering silent segments');
   }
 
-  const chunks = buildChunks(cleanedSegments);
+  const numberedSegments: NumberedSegment[] = cleanedSegments.map(
+    (seg, idx) => ({
+      ...seg,
+      lineNumber: idx + 1,
+    })
+  );
+
+  const chunks = buildChunks(numberedSegments);
   if (chunks.length === 0) {
     throw new Error('Transcript is empty after chunking');
   }
@@ -338,7 +409,7 @@ export async function selectTranscriptHighlights({
   }
 
   const tracker = createHighlightTracker({
-    segments: cleanedSegments,
+    segments: numberedSegments,
     operationId,
   });
   const outlineSource = chunkSummaries.slice();
@@ -354,7 +425,8 @@ export async function selectTranscriptHighlights({
     }
 
     const chunk = chunks[i];
-    if (!chunk.trim()) continue;
+    const chunkText = chunk.text;
+    if (!chunkText.trim()) continue;
 
     const sectionStart = highlightStart + (highlightSpan * i) / total;
     progressCallback?.({
@@ -368,7 +440,8 @@ export async function selectTranscriptHighlights({
       const globalOutline = buildGlobalOutline(outlineSource);
       latestHighlights = await processHighlightChunk({
         tracker,
-        chunkText: chunk,
+        chunkText,
+        chunkSegments: chunk.segments,
         chunkIndex: i,
         chunkCount: total,
         chunkSummary: chunkSummaries[i] ?? '',
@@ -410,25 +483,45 @@ export async function selectTranscriptHighlights({
   return finalHighlights;
 }
 
-function buildChunks(segments: TranscriptSummarySegment[]): string[] {
-  const chunks: string[] = [];
-  let current = '';
+function buildChunks(segments: NumberedSegment[]): ChunkPayload[] {
+  const chunks: ChunkPayload[] = [];
+  let currentText = '';
+  let currentSegments: NumberedSegment[] = [];
+
+  const flush = () => {
+    if (!currentSegments.length || !currentText.trim()) {
+      currentText = '';
+      currentSegments = [];
+      return;
+    }
+    const start = currentSegments[0]?.start ?? 0;
+    const end = currentSegments[currentSegments.length - 1]?.end ?? start;
+    chunks.push({
+      text: currentText.trim(),
+      segments: currentSegments,
+      start,
+      end,
+    });
+    currentText = '';
+    currentSegments = [];
+  };
 
   for (const seg of segments) {
     const line = formatSegment(seg);
     if (!line) continue;
 
-    if (current.length + line.length + 1 > MAX_CHARS_PER_CHUNK && current) {
-      chunks.push(current.trim());
-      current = '';
+    const nextLength = currentText
+      ? currentText.length + line.length + 1
+      : line.length;
+    if (currentText && nextLength > MAX_CHARS_PER_CHUNK) {
+      flush();
     }
 
-    current += (current ? '\n' : '') + line;
+    currentText += (currentText ? '\n' : '') + line;
+    currentSegments.push(seg);
   }
 
-  if (current.trim()) {
-    chunks.push(current.trim());
-  }
+  flush();
 
   return chunks;
 }
@@ -442,7 +535,7 @@ async function summarizeChunksForHighlights({
   startPercent,
   endPercent,
 }: {
-  chunks: string[];
+  chunks: ChunkPayload[];
   languageName: string;
   signal: AbortSignal;
   operationId: string;
@@ -471,8 +564,9 @@ async function summarizeChunksForHighlights({
       total,
     });
 
+    const chunk = chunks[i];
     const summary = await summarizeChunk({
-      chunkText: chunks[i],
+      chunkText: chunk.text,
       chunkIndex: i,
       chunkCount: total,
       languageName,
@@ -610,7 +704,7 @@ function clampSummaryLength(value: string, limit: number): string {
   return value.slice(0, limit);
 }
 
-function formatSegment(seg: TranscriptSummarySegment): string {
+function formatSegment(seg: NumberedSegment): string {
   if (!seg.text.trim()) {
     return '';
   }
@@ -618,7 +712,10 @@ function formatSegment(seg: TranscriptSummarySegment): string {
   const start = formatTimecode(seg.start);
   const end = formatTimecode(seg.end);
   const safeText = seg.text.replace(/\s+/g, ' ').trim();
-  return `(${start} - ${end}) ${safeText}`;
+  const lineLabel = Number.isFinite(seg.lineNumber)
+    ? `[L${seg.lineNumber}] `
+    : '';
+  return `${lineLabel}(${start} - ${end}) ${safeText}`;
 }
 
 function formatTimecode(seconds: number): string {
@@ -643,7 +740,7 @@ type HighlightTrackerState = {
   seen: Map<string, TranscriptHighlight>;
   highlightIds: Map<string, string>;
   nextId: number;
-  segments: TranscriptSummarySegment[];
+  segments: NumberedSegment[];
   latest: TranscriptHighlight[];
   operationId: string;
 };
@@ -652,7 +749,7 @@ function createHighlightTracker({
   segments,
   operationId,
 }: {
-  segments: TranscriptSummarySegment[];
+  segments: NumberedSegment[];
   operationId: string;
 }): HighlightTrackerState {
   return {
@@ -668,6 +765,7 @@ function createHighlightTracker({
 async function processHighlightChunk({
   tracker,
   chunkText,
+  chunkSegments,
   chunkIndex,
   chunkCount,
   chunkSummary,
@@ -678,6 +776,7 @@ async function processHighlightChunk({
 }: {
   tracker: HighlightTrackerState;
   chunkText: string;
+  chunkSegments: NumberedSegment[];
   chunkIndex: number;
   chunkCount: number;
   chunkSummary: string;
@@ -702,15 +801,18 @@ async function processHighlightChunk({
   });
 
   for (const h of chunkHighlights) {
-    const start = Number(h.start);
-    const end = Number(h.end);
-    if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-    if (end - start < 2) continue;
-    const key = `${Math.round(start * 1000)}-${Math.round(end * 1000)}`;
+    const resolvedRange = resolveHighlightRange({
+      highlight: h,
+      chunkSegments,
+    });
+    if (!resolvedRange) continue;
+    const key = `${Math.round(resolvedRange.start * 1000)}-${Math.round(
+      resolvedRange.end * 1000
+    )}`;
     const highlightId = getHighlightTrackerId(tracker, key);
     const baseHighlight: TranscriptHighlight = {
-      start: Math.max(0, start),
-      end: Math.max(0, end),
+      start: resolvedRange.start,
+      end: resolvedRange.end,
       title: h.title,
       description: h.description,
       score: h.score,
@@ -718,6 +820,8 @@ async function processHighlightChunk({
       category: h.category,
       justification: h.justification,
       id: highlightId,
+      lineStart: h.lineStart,
+      lineEnd: h.lineEnd,
     };
 
     if (!tracker.seen.has(key)) {
@@ -785,6 +889,7 @@ async function proposeHighlightsForChunk({
 - Ensure the speaker completes their final clause before the clip ends. If the punchline or call-to-action continues into the next sentence, include it so the moment lands naturally.
 - Add a short title and description in ${languageName} with plain text (no markdown, emojis, or formatting). Use the title for the hook and the description for context or a micro call-to-action.
 - Provide a confidence score between 0 and 1, a concise category label (e.g., "reveal", "advice", "humor"), and a one-sentence justification referencing transcript evidence.
+- Reference transcript lines using the [L123] markers. For every highlight return the lowest and highest line numbers that belong in the clip.
 - If this section lacks a strong candidate, respond with an empty highlights array.
 
 Global outline of the recording:
@@ -802,6 +907,8 @@ Return STRICT JSON ONLY (no markdown) using this shape:
     {
       "start": 123.0,
       "end": 141.5,
+      "lineStart": 412,
+      "lineEnd": 427,
       "title": "...",
       "description": "...",
       "confidence": 0.82,
@@ -833,7 +940,175 @@ Return STRICT JSON ONLY (no markdown) using this shape:
     category: typeof h.category === 'string' ? h.category : undefined,
     justification:
       typeof h.justification === 'string' ? h.justification : undefined,
+    lineStart: normalizeLineNumber(h.lineStart),
+    lineEnd: normalizeLineNumber(h.lineEnd),
   }));
+}
+
+function resolveHighlightRange({
+  highlight,
+  chunkSegments,
+}: {
+  highlight: TranscriptHighlight;
+  chunkSegments: NumberedSegment[];
+}): { start: number; end: number } | null {
+  if (!Array.isArray(chunkSegments) || chunkSegments.length === 0) {
+    return null;
+  }
+
+  const chunkStart = Math.max(0, chunkSegments[0]?.start ?? 0);
+  const chunkEnd = Math.max(
+    chunkStart + 0.5,
+    chunkSegments[chunkSegments.length - 1]?.end ?? chunkStart
+  );
+
+  const findSegmentIndexByLine = (line?: number): number => {
+    if (!Number.isFinite(line)) return -1;
+    const target = Math.floor(line as number);
+    return chunkSegments.findIndex(seg => seg.lineNumber === target);
+  };
+
+  const hasLineRefs =
+    Number.isFinite(highlight.lineStart) && Number.isFinite(highlight.lineEnd);
+
+  if (hasLineRefs) {
+    const startIndex = findSegmentIndexByLine(highlight.lineStart);
+    const endIndex = findSegmentIndexByLine(highlight.lineEnd);
+    if (startIndex !== -1 && endIndex !== -1) {
+      const lo = Math.min(startIndex, endIndex);
+      const hi = Math.max(startIndex, endIndex);
+      const startTime = chunkSegments[lo].start;
+      const endTime = chunkSegments[hi].end;
+      if (endTime > startTime) {
+        return {
+          start: Number(startTime.toFixed(3)),
+          end: Number(endTime.toFixed(3)),
+        };
+      }
+    }
+  }
+
+  const parseTime = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    return normalizeTimestamp(value);
+  };
+
+  const interpretTime = (value: number | null): number | null => {
+    if (!Number.isFinite(value ?? null)) return null;
+    const numeric = value as number;
+    const chunkDuration = Math.max(0, chunkEnd - chunkStart);
+    if (
+      numeric >= chunkStart - ABSOLUTE_TIME_TOLERANCE &&
+      numeric <= chunkEnd + ABSOLUTE_TIME_TOLERANCE
+    ) {
+      return numeric;
+    }
+    if (
+      numeric >= -ABSOLUTE_TIME_TOLERANCE &&
+      numeric <= chunkDuration + ABSOLUTE_TIME_TOLERANCE
+    ) {
+      return chunkStart + Math.max(0, numeric);
+    }
+    return numeric;
+  };
+
+  let candidateStart = interpretTime(parseTime(highlight.start));
+  let candidateEnd = interpretTime(parseTime(highlight.end));
+
+  if (
+    typeof candidateStart !== 'number' ||
+    !Number.isFinite(candidateStart) ||
+    typeof candidateEnd !== 'number' ||
+    !Number.isFinite(candidateEnd)
+  ) {
+    return null;
+  }
+
+  candidateStart = clampToRange(candidateStart, chunkStart, chunkEnd);
+  candidateEnd = clampToRange(candidateEnd, chunkStart, chunkEnd);
+
+  if (candidateEnd - candidateStart < 1.5) {
+    candidateEnd = Math.min(chunkEnd, candidateStart + 8);
+  }
+
+  const startSnap = snapStartToSegments(chunkSegments, candidateStart);
+  const endSnap = snapEndToSegments(chunkSegments, candidateEnd);
+
+  if (startSnap.index === -1 || endSnap.index === -1) {
+    return null;
+  }
+
+  let resolvedStart = startSnap.time;
+  let resolvedEnd = endSnap.time;
+  let endIndex = Math.max(endSnap.index, startSnap.index);
+
+  if (resolvedEnd - resolvedStart < 1 || endIndex < startSnap.index) {
+    for (let i = startSnap.index; i < chunkSegments.length; i++) {
+      resolvedEnd = Math.max(resolvedEnd, chunkSegments[i].end);
+      if (resolvedEnd - resolvedStart >= 1.5) {
+        endIndex = i;
+        break;
+      }
+    }
+  }
+
+  resolvedStart = clampToRange(resolvedStart, chunkStart, chunkEnd);
+  resolvedEnd = clampToRange(resolvedEnd, chunkStart, chunkEnd);
+
+  if (resolvedEnd <= resolvedStart) {
+    return null;
+  }
+
+  return {
+    start: Number(resolvedStart.toFixed(3)),
+    end: Number(resolvedEnd.toFixed(3)),
+  };
+}
+
+function snapStartToSegments(
+  segments: TranscriptSummarySegment[],
+  time: number
+): { time: number; index: number } {
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return { time, index: -1 };
+  }
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    if (time <= seg.start) {
+      return { time: seg.start, index: i };
+    }
+    if (time < seg.end) {
+      return { time: seg.start, index: i };
+    }
+  }
+  const last = segments[segments.length - 1];
+  return { time: last.start, index: segments.length - 1 };
+}
+
+function snapEndToSegments(
+  segments: TranscriptSummarySegment[],
+  time: number
+): { time: number; index: number } {
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return { time, index: -1 };
+  }
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    if (time <= seg.end) {
+      return { time: seg.end, index: i };
+    }
+  }
+  const last = segments[segments.length - 1];
+  return { time: last.end, index: segments.length - 1 };
+}
+
+function clampToRange(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
 }
 
 function buildGlobalOutline(summaries: string[]): string {
@@ -861,6 +1136,8 @@ function safeParseHighlights(text: string): Array<{
   confidence?: number;
   category?: string;
   justification?: string;
+  lineStart?: number;
+  lineEnd?: number;
 }> {
   try {
     // Try direct JSON parse
@@ -929,10 +1206,23 @@ function normalizeTimestamp(value: unknown): number | null {
   return null;
 }
 
+function normalizeLineNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(1, Math.floor(value));
+  }
+  if (typeof value === 'string') {
+    const numeric = Number(value.trim());
+    if (Number.isFinite(numeric)) {
+      return Math.max(1, Math.floor(numeric));
+    }
+  }
+  return undefined;
+}
+
 function buildFallbackHighlightsFromSegments({
   segments,
 }: {
-  segments: TranscriptSummarySegment[];
+  segments: NumberedSegment[];
 }): TranscriptHighlight[] {
   if (!Array.isArray(segments) || segments.length === 0) {
     return [];
@@ -976,6 +1266,7 @@ function buildFallbackHighlightsFromSegments({
       Math.max(pivot.end + 4, clipStart + 3)
     );
 
+    const lastSegInBucket = bucketSegments[bucketSegments.length - 1];
     results.push({
       id: `fallback-${i + 1}`,
       start: Number(clipStart.toFixed(3)),
@@ -986,6 +1277,8 @@ function buildFallbackHighlightsFromSegments({
       category: 'context',
       justification:
         'Auto-selected because highlight detection returned no confident candidates.',
+      lineStart: pivot.lineNumber,
+      lineEnd: lastSegInBucket?.lineNumber ?? pivot.lineNumber,
     });
   }
 
