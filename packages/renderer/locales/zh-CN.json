@@ -52,7 +52,8 @@
     },
     "installUpdate": "重启以更新",
     "confirmInstallUpdate": "安装更新并重启？",
-    "downloadUpdate": "点击下载更新"
+    "downloadUpdate": "点击下载更新",
+    "retry": "Retry"
   },
   "input": {
     "fromDevice": "从您的设备",
@@ -132,8 +133,14 @@
       "ready": "摘要已就绪",
       "error": "摘要生成失败",
       "cancelled": "摘要已取消",
-      "inProgress": "正在生成摘要…"
-    }
+      "inProgress": "正在生成摘要…",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…"
+    },
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight"
   },
   "panel": {
     "gaps": {
@@ -206,6 +213,33 @@
       "mixHelp": "调节在配音声音下方播放的原始音轨的音量比例。",
       "mixAmbient": "更多环境声",
       "mixVoice": "更多人声"
+    },
+    "byoOpenAi": {
+      "title": "Bring Your Own OpenAI Key",
+      "description": "Unlock a one-time upgrade to use your own OpenAI API key. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your account instead of consuming Stage5 credits.",
+      "unlocking": "Opening checkout…",
+      "unlockCta": "Unlock for $10",
+      "unlockHint": "Once unlocked, add your OpenAI key here at any time to toggle direct billing on your account.",
+      "unlockedDescription": "Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.",
+      "apiKeyLabel": "OpenAI API Key",
+      "hide": "Hide",
+      "show": "Show",
+      "saving": "Saving…",
+      "clear": "Clear Key",
+      "loadingKey": "Loading saved key…",
+      "keySaved": "API key saved locally.",
+      "keyCleared": "API key cleared.",
+      "keyValid": "API key validated successfully.",
+      "keyInvalid": "API key validation failed.",
+      "testing": "Testing…",
+      "test": "Test Key",
+      "lastSynced": "Last synced",
+      "toggleLabel": "Use my OpenAI key",
+      "toggleHelp": "When off, AI Credits are used.",
+      "toggleAria": "Toggle using your OpenAI key",
+      "toggleOn": "Using your OpenAI key for AI tasks.",
+      "toggleOff": "Using Stage5 credits for AI tasks.",
+      "toggleError": "Failed to update preference."
     }
   },
   "credits": {
@@ -284,7 +318,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "请选择视频",
-      "processingDuration": "正在处理视频时长，请稍后重试。"
+      "processingDuration": "正在处理视频时长，请稍后重试。",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "正在启动...",

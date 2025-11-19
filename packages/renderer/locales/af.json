@@ -52,7 +52,8 @@
     },
     "installUpdate": "Herlaai om op te dateer",
     "confirmInstallUpdate": "Installeer opdatering en herlaai?",
-    "downloadUpdate": "Klik om opdatering af te laai"
+    "downloadUpdate": "Klik om opdatering af te laai",
+    "retry": "Retry"
   },
   "input": {
     "fromDevice": "Van jou toestel",
@@ -159,6 +160,33 @@
       "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
       "mixAmbient": "More ambient",
       "mixVoice": "More voice"
+    },
+    "byoOpenAi": {
+      "title": "Bring Your Own OpenAI Key",
+      "description": "Unlock a one-time upgrade to use your own OpenAI API key. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your account instead of consuming Stage5 credits.",
+      "unlocking": "Opening checkout…",
+      "unlockCta": "Unlock for $10",
+      "unlockHint": "Once unlocked, add your OpenAI key here at any time to toggle direct billing on your account.",
+      "unlockedDescription": "Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.",
+      "apiKeyLabel": "OpenAI API Key",
+      "hide": "Hide",
+      "show": "Show",
+      "saving": "Saving…",
+      "clear": "Clear Key",
+      "loadingKey": "Loading saved key…",
+      "keySaved": "API key saved locally.",
+      "keyCleared": "API key cleared.",
+      "keyValid": "API key validated successfully.",
+      "keyInvalid": "API key validation failed.",
+      "testing": "Testing…",
+      "test": "Test Key",
+      "lastSynced": "Last synced",
+      "toggleLabel": "Use my OpenAI key",
+      "toggleHelp": "When off, AI Credits are used.",
+      "toggleAria": "Toggle using your OpenAI key",
+      "toggleOn": "Using your OpenAI key for AI tasks.",
+      "toggleOff": "Using Stage5 credits for AI tasks.",
+      "toggleError": "Failed to update preference."
     }
   },
   "videoPlayer": {
@@ -226,7 +254,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "Kies asseblief 'n video",
-      "processingDuration": "Video-duur word verwerk. Probeer asseblief weer binnekort."
+      "processingDuration": "Video-duur word verwerk. Probeer asseblief weer binnekort.",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "Begin...",
@@ -321,7 +350,8 @@
     "buyCredits": "Koop Krediet",
     "redirectingToPayment": "Maak veilige uitklok oop...",
     "description": "Kies uit ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) kredietpakkette",
-    "notEnough": "Onvoldoende krediet. Koop asseblief meer krediet om voort te gaan."
+    "notEnough": "Onvoldoende krediet. Koop asseblief meer krediet om voort te gaan.",
+    "usingApiKey": "Using API Key"
   },
   "errors": {
     "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
@@ -368,8 +398,28 @@
       "ready": "Summary ready",
       "error": "Summary failed",
       "cancelled": "Summary cancelled",
-      "inProgress": "Generating summary…"
-    }
+      "inProgress": "Generating summary…",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…"
+    },
+    "tab": {
+      "summary": "Summary",
+      "sections": "Detailed notes",
+      "highlights": "Highlights"
+    },
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight",
+    "downloadHighlight": "Download clip",
+    "downloadingHighlight": "Saving…",
+    "highlightSaved": "Saved!",
+    "highlightSaveError": "Save failed",
+    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
+    "saveHighlightDialogTitle": "Save highlight clip",
+    "noSections": "No section notes yet.",
+    "sectionHeading": "Section {{index}}",
+    "highlightsInProgress": "Preparing highlight clips…"
   },
   "panel": {
     "gaps": {

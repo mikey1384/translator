@@ -139,9 +139,9 @@ export async function callAIModel({
   operationId: string;
   retryAttempts?: number;
 }): Promise<string> {
-  log.debug(
-    `[${operationId}] Using ${getActiveProvider()} provider for translation`
-  );
+  const provider = getActiveProvider();
+  const providerName = provider === 'openai' ? 'OpenAI' : 'Stage5';
+  log.debug(`[${operationId}] Using ${providerName} provider for translation`);
 
   let currentAttempt = 0;
   while (currentAttempt < retryAttempts) {
@@ -171,7 +171,7 @@ export async function callAIModel({
           : null;
 
       log.error(
-        `[${operationId}] Unable to extract content from Stage5 response`,
+        `[${operationId}] Unable to extract content from ${providerName} response`,
         {
           type: typeof completion,
           hasChoices: Array.isArray(completion?.choices),
@@ -180,7 +180,7 @@ export async function callAIModel({
         }
       );
 
-      throw new Error('Unexpected response format from Stage5 API.');
+      throw new Error(`Unexpected response format from ${providerName} API.`);
     } catch (error: any) {
       if (signal?.aborted || error?.name === 'AbortError') {
         throw new DOMException('Operation cancelled', 'AbortError');
@@ -219,12 +219,14 @@ export async function callAIModel({
       }
 
       throw new Error(
-        `Stage5 API call failed: ${error?.message || String(error)}`
+        `${providerName} API call failed: ${error?.message || String(error)}`
       );
     }
   }
 
-  throw new Error(`Stage5 API call failed after ${retryAttempts} attempts.`);
+  throw new Error(
+    `${providerName} API call failed after ${retryAttempts} attempts.`
+  );
 }
 
 // Utility function for file operations (still needed by some legacy code)

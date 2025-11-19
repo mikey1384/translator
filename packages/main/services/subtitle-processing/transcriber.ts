@@ -9,7 +9,10 @@ import {
 } from './constants.js';
 import fs from 'fs';
 import { throwIfAborted } from './utils.js';
-import { transcribe as transcribeAi } from '../ai-provider.js';
+import {
+  transcribe as transcribeAi,
+  getActiveProvider as getActiveAiProvider,
+} from '../ai-provider.js';
 
 export async function transcribeChunk({
   chunkIndex,
@@ -36,7 +39,12 @@ export async function transcribeChunk({
       ).toFixed(2)} MB) to transcription API.`
     );
 
-    log.debug(`[${operationId}] Using Stage5 API for transcription`);
+    const provider = getActiveAiProvider();
+    log.debug(
+      `[${operationId}] Using ${
+        provider === 'openai' ? 'OpenAI BYO API' : 'Stage5 API'
+      } for transcription`
+    );
     // Retry up to 3 attempts on transient failures
     const maxAttempts = 3;
     let lastErr: any = null;

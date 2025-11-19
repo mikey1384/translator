@@ -52,7 +52,8 @@
     },
     "installUpdate": "Neu starten für Update",
     "confirmInstallUpdate": "Update installieren und neu starten?",
-    "downloadUpdate": "Klicken zum Update herunterladen"
+    "downloadUpdate": "Klicken zum Update herunterladen",
+    "retry": "Retry"
   },
   "input": {
     "fromDevice": "Von Ihrem Gerät",
@@ -132,8 +133,14 @@
       "ready": "Zusammenfassung fertig",
       "error": "Zusammenfassung fehlgeschlagen",
       "cancelled": "Zusammenfassung abgebrochen",
-      "inProgress": "Zusammenfassung wird erstellt…"
-    }
+      "inProgress": "Zusammenfassung wird erstellt…",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…"
+    },
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight"
   },
   "panel": {
     "gaps": {
@@ -206,6 +213,33 @@
       "mixHelp": "Steuern Sie, wie viel der Original-Tonspur unter der synchronisierten Stimme zu hören ist.",
       "mixAmbient": "Mehr Umgebungsgeräusch",
       "mixVoice": "Mehr Stimme"
+    },
+    "byoOpenAi": {
+      "title": "Bring Your Own OpenAI Key",
+      "description": "Unlock a one-time upgrade to use your own OpenAI API key. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your account instead of consuming Stage5 credits.",
+      "unlocking": "Opening checkout…",
+      "unlockCta": "Unlock for $10",
+      "unlockHint": "Once unlocked, add your OpenAI key here at any time to toggle direct billing on your account.",
+      "unlockedDescription": "Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.",
+      "apiKeyLabel": "OpenAI API Key",
+      "hide": "Hide",
+      "show": "Show",
+      "saving": "Saving…",
+      "clear": "Clear Key",
+      "loadingKey": "Loading saved key…",
+      "keySaved": "API key saved locally.",
+      "keyCleared": "API key cleared.",
+      "keyValid": "API key validated successfully.",
+      "keyInvalid": "API key validation failed.",
+      "testing": "Testing…",
+      "test": "Test Key",
+      "lastSynced": "Last synced",
+      "toggleLabel": "Use my OpenAI key",
+      "toggleHelp": "When off, AI Credits are used.",
+      "toggleAria": "Toggle using your OpenAI key",
+      "toggleOn": "Using your OpenAI key for AI tasks.",
+      "toggleOff": "Using Stage5 credits for AI tasks.",
+      "toggleError": "Failed to update preference."
     }
   },
   "credits": {
@@ -284,7 +318,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "Bitte wählen Sie ein Video aus",
-      "processingDuration": "Videolänge wird verarbeitet. Bitte versuchen Sie es in Kürze erneut."
+      "processingDuration": "Videolänge wird verarbeitet. Bitte versuchen Sie es in Kürze erneut.",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "Startet...",

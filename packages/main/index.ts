@@ -383,6 +383,36 @@ try {
     }
   });
 
+  ipcMain.handle('cut-highlight-clip', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `highlight-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(`[main.ts/cut-highlight-clip] Starting operation: ${operationId}`);
+
+    try {
+      const result = await subtitleHandlers.handleCutHighlightClip(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/cut-highlight-clip] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/cut-highlight-clip] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/cut-highlight-clip] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('translate-one-line', async (event, options) => {
     const operationId =
       options.operationId ||

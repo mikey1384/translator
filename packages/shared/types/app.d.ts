@@ -195,6 +195,7 @@ declare module '@shared-types/app' {
   }
 
   export interface TranscriptHighlight {
+    id?: string;
     start: number;
     end: number;
     title?: string;
@@ -217,18 +218,15 @@ declare module '@shared-types/app' {
     targetLanguage: string;
     operationId?: string;
     videoPath?: string | null;
+    includeHighlights?: boolean;
     maxHighlights?: number;
-    highlightSubtitleSegments?: TranscriptHighlightSubtitleSegment[];
-    highlightSubtitleMode?: SubtitleRenderMode;
-    highlightStylePreset?: SubtitleStylePresetKey;
-    highlightBaseFontSize?: number;
   }
 
   export interface TranscriptSummaryResult {
     success: boolean;
     summary?: string;
-    highlights?: TranscriptHighlight[];
     sections?: TranscriptSummarySection[];
+    highlights?: TranscriptHighlight[];
     error?: string;
     cancelled?: boolean;
     operationId: string;
@@ -244,6 +242,33 @@ declare module '@shared-types/app' {
     current?: number;
     total?: number;
     operationId?: string;
+  }
+
+  export interface CutHighlightClipRequest {
+    videoPath: string;
+    highlight: TranscriptHighlight;
+    highlightSubtitleSegments?: TranscriptHighlightSubtitleSegment[];
+    highlightSubtitleMode?: SubtitleRenderMode;
+    highlightStylePreset?: SubtitleStylePresetKey;
+    highlightBaseFontSize?: number;
+    operationId?: string;
+  }
+
+  export interface CutHighlightClipResult {
+    success: boolean;
+    highlight?: TranscriptHighlight;
+    error?: string;
+    cancelled?: boolean;
+    operationId: string;
+  }
+
+  export interface HighlightCutProgress {
+    percent: number;
+    stage: string;
+    operationId?: string;
+    highlightId?: string;
+    error?: string;
+    highlight?: TranscriptHighlight;
   }
 
   interface GenerateSubtitlesFromAudioArgs {

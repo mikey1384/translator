@@ -105,22 +105,15 @@ export function generateTranscriptSummary(options: {
   targetLanguage: string;
   operationId?: string;
   videoPath?: string | null;
+  includeHighlights?: boolean;
   maxHighlights?: number;
-  highlightSubtitleSegments?: {
-    start: number;
-    end: number;
-    original: string;
-    translation?: string;
-  }[];
-  highlightSubtitleMode?: import('@shared-types/app').SubtitleRenderMode;
-  highlightStylePreset?: import('@shared/constants/subtitle-styles').SubtitleStylePresetKey;
-  highlightBaseFontSize?: number;
 }): Promise<{
   summary?: string;
-  highlights?: import('@shared-types/app').TranscriptHighlight[];
   sections?: import('@shared-types/app').TranscriptSummarySection[];
+  highlights?: import('@shared-types/app').TranscriptHighlight[];
   success?: boolean;
   error?: string;
+  cancelled?: boolean;
 }> {
   return (window.electron as any).generateTranscriptSummary(options);
 }
@@ -129,6 +122,18 @@ export function onTranscriptSummaryProgress(
   callback: ProgressEventCallback
 ): () => void {
   return (window.electron as any).onTranscriptSummaryProgress(callback);
+}
+
+export function cutHighlightClip(
+  options: import('@shared-types/app').CutHighlightClipRequest
+): Promise<import('@shared-types/app').CutHighlightClipResult> {
+  return (window.electron as any).cutHighlightClip(options);
+}
+
+export function onHighlightCutProgress(
+  callback: (progress: import('@shared-types/app').HighlightCutProgress) => void
+): () => void {
+  return (window.electron as any).onHighlightCutProgress(callback);
 }
 
 export function translateOneLine(options: {

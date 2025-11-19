@@ -90,27 +90,6 @@ function checkServicesInitialized(): {
   };
 }
 
-function extractHighlightScore(
-  highlight: TranscriptHighlight | undefined
-): number {
-  if (!highlight) return 0;
-  if (Number.isFinite(highlight.score ?? null)) {
-    return highlight.score as number;
-  }
-  if (Number.isFinite(highlight.confidence ?? null)) {
-    return (highlight.confidence as number) * 100;
-  }
-  return 0;
-}
-
-function resolveHighlightLimit(value?: number | null): number {
-  if (!Number.isFinite(value ?? null)) {
-    return 10;
-  }
-  const numeric = Math.floor(value as number);
-  return Math.max(0, numeric);
-}
-
 const SHORT_CLIP_WIDTH = 1080;
 const SHORT_CLIP_HEIGHT = 1920;
 
@@ -900,14 +879,13 @@ export async function handleGenerateTranscriptSummary(
   addSubtitle(operationId, controller);
 
   try {
-    const { ffmpeg } = checkServicesInitialized();
-    const highlightLimit = resolveHighlightLimit(options.maxHighlights);
-    const { summary, highlights, sections } = await generateTranscriptSummary({
+    const { summary, sections, highlights } = await generateTranscriptSummary({
       segments: options.segments,
       targetLanguage: options.targetLanguage,
       signal: controller.signal,
       operationId,
-      maxHighlights: highlightLimit,
+      includeHighlights: options.includeHighlights !== false,
+      maxHighlights: options.maxHighlights,
       progressCallback: progress => {
         event.sender.send('transcript-summary-progress', {
           ...progress,
@@ -916,341 +894,11 @@ export async function handleGenerateTranscriptSummary(
       },
     });
 
-    const subtitleSegments = sanitizeHighlightSubtitleSegments(
-      options.highlightSubtitleSegments
-    );
-    const includeSubtitles = subtitleSegments.length > 0;
-    const subtitleMode = normalizeSubtitleMode(options.highlightSubtitleMode);
-    const stylePreset = resolveStylePreset(options.highlightStylePreset);
-    const baseFontSizePx = Number.isFinite(options.highlightBaseFontSize)
-      ? Math.max(10, Number(options.highlightBaseFontSize))
-      : BASELINE_FONT_SIZE;
-    const fontsDir = includeSubtitles
-      ? path.dirname(getAssetsPath('NotoSans-Regular.ttf'))
-      : null;
-
-    let cutHighlights:
-      | import('@shared-types/app').TranscriptHighlight[]
-      | undefined = undefined;
-
-    if (
-      highlightLimit > 0 &&
-      Array.isArray(highlights) &&
-      highlights.length > 0
-    ) {
-      cutHighlights = [];
-      const inputVideo = options.videoPath || null;
-      const toCut = [...highlights]
-        .sort((a, b) => {
-          const scoreA = extractHighlightScore(a);
-          const scoreB = extractHighlightScore(b);
-          if (scoreA !== scoreB) {
-            return scoreB - scoreA;
-          }
-          return a.start - b.start;
-        })
-        .slice(0, Math.min(highlightLimit, highlights.length));
-
-      if (inputVideo) {
-        let totalDur = 0;
-        let durationKnown = false;
-        let videoAvailable = true;
-
-        try {
-          await fs.access(inputVideo);
-          totalDur = await ffmpeg.getMediaDuration(
-            inputVideo,
-            controller.signal
-          );
-          durationKnown = Number.isFinite(totalDur) && totalDur > 0;
-        } catch (err) {
-          videoAvailable = false;
-          log.warn(
-            `[${operationId}] Highlight clipping skipped; video unavailable or duration probe failed for ${inputVideo}`,
-            err
-          );
-        }
-
-        if (videoAvailable) {
-          let videoMeta: VideoMeta | null = null;
-          try {
-            videoMeta = await ffmpeg.getVideoMetadata(inputVideo);
-            if (
-              !durationKnown &&
-              Number.isFinite(videoMeta?.duration) &&
-              (videoMeta?.duration ?? 0) > 0
-            ) {
-              totalDur = videoMeta!.duration;
-              durationKnown = true;
-            }
-          } catch (err) {
-            log.warn(
-              `[${operationId}] Video metadata probe failed for ${inputVideo}`,
-              err
-            );
-          }
-
-          const enforceVertical = !isVideoAlreadyVertical(videoMeta);
-          const referenceHeight = Math.max(
-            videoMeta?.height ?? BASELINE_HEIGHT,
-            BASELINE_HEIGHT
-          );
-          const targetHeight = enforceVertical
-            ? SHORT_CLIP_HEIGHT
-            : referenceHeight;
-          const computedFontSize = Math.max(
-            12,
-            Math.round(baseFontSizePx * fontScale(targetHeight))
-          );
-          const basePercent = 95; // continue from selection stage
-          const step = toCut.length > 0 ? 5 / toCut.length : 5; // up to 100%
-
-          try {
-            for (let i = 0; i < toCut.length; i++) {
-              const h = toCut[i];
-              const rawStart = Number.isFinite(h.start)
-                ? Math.max(0, Number(h.start))
-                : 0;
-              const fallbackEnd = rawStart + 30;
-              const requestedEnd = Number.isFinite(h.end)
-                ? Math.max(rawStart + 2, Number(h.end))
-                : fallbackEnd;
-
-              let safeStart = durationKnown
-                ? Math.min(rawStart, Math.max(0, totalDur - 1))
-                : rawStart;
-
-              let safeEnd = durationKnown
-                ? Math.min(Math.max(safeStart + 2, requestedEnd), totalDur)
-                : Math.max(safeStart + 2, requestedEnd);
-
-              if (!Number.isFinite(safeEnd) || safeEnd <= safeStart) {
-                safeEnd = durationKnown
-                  ? Math.min(totalDur, safeStart + 15)
-                  : safeStart + 15;
-              }
-
-              // Apply small lead/tail padding to ensure natural breathing room
-              const leadPadding = 0.35;
-              const tailPadding = 0.45;
-              safeStart = Math.max(0, safeStart - leadPadding);
-              safeEnd = durationKnown
-                ? Math.min(totalDur, safeEnd + tailPadding)
-                : safeEnd + tailPadding;
-
-              const duration = Math.max(2, safeEnd - safeStart);
-
-              const fadeDuration = Math.min(0.6, Math.max(0.25, duration / 12));
-              const fadeOutStart = Math.max(0.1, duration - fadeDuration);
-
-              const outPath = path.join(
-                ffmpeg.tempDir,
-                `highlight-${operationId}-${i + 1}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
-              );
-
-              event.sender.send('transcript-summary-progress', {
-                percent: Math.min(100, basePercent + step * i),
-                stage: `Cutting highlight ${i + 1} of ${toCut.length}`,
-                operationId,
-                current: i + 1,
-                total: toCut.length,
-              });
-
-              const args = [
-                '-y',
-                '-ss',
-                String(safeStart),
-                '-i',
-                inputVideo,
-                '-t',
-                String(duration),
-              ];
-
-              const filterParts: string[] = [];
-              let currentLabel = '0:v:0';
-              let filterLabelCounter = 0;
-              const nextLabel = (prefix: string) =>
-                `${prefix}${++filterLabelCounter}`;
-
-              if (enforceVertical) {
-                const mainLabel = nextLabel('main');
-                const bgLabel = nextLabel('bg');
-                filterParts.push(
-                  `[${currentLabel}]split=2[${mainLabel}][${bgLabel}]`
-                );
-                const blurLabel = nextLabel('blur');
-                filterParts.push(
-                  `[${bgLabel}]scale=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:force_original_aspect_ratio=increase,crop=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT},gblur=sigma=28[${blurLabel}]`
-                );
-                const fgLabel = nextLabel('fg');
-                filterParts.push(
-                  `[${mainLabel}]scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease[${fgLabel}]`
-                );
-                const mergedLabel = nextLabel('mix');
-                filterParts.push(
-                  `[${blurLabel}][${fgLabel}]overlay=(W-w)/2:(H-h)/2[${mergedLabel}]`
-                );
-                currentLabel = mergedLabel;
-              }
-
-              const cleanup: string[] = [];
-              if (includeSubtitles && fontsDir) {
-                const clipSegments = sliceSegmentsForRange({
-                  segments: subtitleSegments,
-                  clipStart: safeStart,
-                  clipEnd: safeEnd,
-                });
-                if (clipSegments.length > 0) {
-                  const srtPath = path.join(
-                    ffmpeg.tempDir,
-                    `highlight-${operationId}-${i + 1}.srt`
-                  );
-                  const srtContent = buildSrt({
-                    segments: clipSegments,
-                    mode: subtitleMode,
-                    noWrap: true,
-                  });
-                  if (srtContent.trim()) {
-                    await fs.writeFile(srtPath, srtContent, 'utf8');
-                    cleanup.push(srtPath);
-                    const subtitleLabel = nextLabel('subs');
-                    filterParts.push(
-                      buildSubtitleFilter({
-                        inputLabel: currentLabel,
-                        outputLabel: subtitleLabel,
-                        subtitlePath: srtPath,
-                        fontsDir,
-                        stylePreset,
-                        fontSizePx: computedFontSize,
-                      })
-                    );
-                    currentLabel = subtitleLabel;
-                  }
-                }
-              }
-
-              const needsVideoFade = duration > fadeDuration * 2;
-              let audioFadeFilter: string | null = null;
-              if (needsVideoFade) {
-                const fadeLabel = nextLabel('fade');
-                filterParts.push(
-                  `[${currentLabel}]fade=t=in:st=0:d=${fadeDuration.toFixed(2)},fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}[${fadeLabel}]`
-                );
-                currentLabel = fadeLabel;
-                audioFadeFilter = `afade=t=in:st=0:d=${fadeDuration.toFixed(2)},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`;
-              }
-
-              if (filterParts.length > 0) {
-                args.push(
-                  '-filter_complex',
-                  filterParts.join(';'),
-                  '-map',
-                  `[${currentLabel}]`
-                );
-              } else {
-                args.push('-map', '0:v:0?');
-              }
-
-              args.push('-map', '0:a:0?');
-
-              if (audioFadeFilter) {
-                args.push('-af', audioFadeFilter);
-              }
-
-              args.push(
-                '-c:v',
-                'libx264',
-                '-preset',
-                'veryfast',
-                '-crf',
-                '23',
-                '-c:a',
-                'aac',
-                '-b:a',
-                '128k',
-                '-movflags',
-                '+faststart',
-                outPath
-              );
-
-              try {
-                await ffmpeg.run(args, {
-                  operationId,
-                  signal: controller.signal,
-                });
-              } finally {
-                await Promise.all(
-                  cleanup.map(temp => fs.unlink(temp).catch(() => void 0))
-                );
-              }
-
-              cutHighlights.push({
-                start: safeStart,
-                end: safeEnd,
-                title: h.title,
-                description: h.description,
-                score: h.score,
-                confidence: h.confidence,
-                category: h.category,
-                justification: h.justification,
-                videoPath: outPath,
-              });
-
-              event.sender.send('transcript-summary-progress', {
-                percent: Math.min(100, basePercent + step * (i + 1)),
-                stage: `Highlight ${i + 1} of ${toCut.length} ready`,
-                operationId,
-                current: i + 1,
-                total: toCut.length,
-                partialHighlights: [...cutHighlights],
-                partialSections: sections,
-              });
-            }
-
-            event.sender.send('transcript-summary-progress', {
-              percent: 100,
-              stage: 'Highlights ready',
-              operationId,
-              partialHighlights: cutHighlights,
-              partialSections: sections,
-            });
-          } catch (err) {
-            log.warn(
-              `[${operationId}] Highlight clipping failed; returning metadata only`,
-              err
-            );
-            videoAvailable = false;
-          }
-        }
-
-        if (!videoAvailable) {
-          cutHighlights = toCut.map(h => ({ ...h }));
-          event.sender.send('transcript-summary-progress', {
-            percent: 100,
-            stage: 'Highlights metadata ready',
-            operationId,
-            partialHighlights: cutHighlights,
-            partialSections: sections,
-          });
-        }
-      } else {
-        // No video available; return just the metadata
-        cutHighlights = toCut.map(h => ({ ...h }));
-        event.sender.send('transcript-summary-progress', {
-          percent: 100,
-          stage: 'Highlights metadata ready',
-          operationId,
-          partialHighlights: cutHighlights,
-          partialSections: sections,
-        });
-      }
-    }
-
     return {
       success: true,
       summary,
-      highlights: cutHighlights,
       sections,
+      highlights,
       operationId,
     };
   } catch (error: any) {
@@ -1277,6 +925,307 @@ export async function handleGenerateTranscriptSummary(
       return { success: false, cancelled: true, operationId };
     }
 
+    throw error;
+  } finally {
+    registryFinish(operationId);
+  }
+}
+
+export async function handleCutHighlightClip(
+  event: IpcMainInvokeEvent,
+  options: import('@shared-types/app').CutHighlightClipRequest,
+  operationId: string
+): Promise<import('@shared-types/app').CutHighlightClipResult> {
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+  addSubtitle(operationId, controller);
+
+  try {
+    const { ffmpeg } = checkServicesInitialized();
+    const videoPath = options.videoPath;
+    const highlight = options.highlight;
+
+    if (!videoPath) {
+      throw new Error('video-path-missing');
+    }
+    if (!highlight) {
+      throw new Error('highlight-missing');
+    }
+
+    await fs.access(videoPath);
+
+    const subtitleSegments = sanitizeHighlightSubtitleSegments(
+      options.highlightSubtitleSegments
+    );
+    const includeSubtitles = subtitleSegments.length > 0;
+    const subtitleMode = normalizeSubtitleMode(options.highlightSubtitleMode);
+    const stylePreset = resolveStylePreset(options.highlightStylePreset);
+    const baseFontSizePx = Number.isFinite(options.highlightBaseFontSize)
+      ? Math.max(10, Number(options.highlightBaseFontSize))
+      : BASELINE_FONT_SIZE;
+    const fontsDir = includeSubtitles
+      ? path.dirname(getAssetsPath('NotoSans-Regular.ttf'))
+      : null;
+
+    let totalDur = 0;
+    let durationKnown = false;
+    try {
+      totalDur = await ffmpeg.getMediaDuration(videoPath, controller.signal);
+      durationKnown = Number.isFinite(totalDur) && totalDur > 0;
+    } catch (err) {
+      log.warn(
+        `[${operationId}] Highlight clip duration probe failed for ${videoPath}`,
+        err
+      );
+    }
+
+    let videoMeta: VideoMeta | null = null;
+    try {
+      videoMeta = await ffmpeg.getVideoMetadata(videoPath);
+      if (
+        !durationKnown &&
+        Number.isFinite(videoMeta?.duration) &&
+        (videoMeta?.duration ?? 0) > 0
+      ) {
+        totalDur = videoMeta!.duration;
+        durationKnown = true;
+      }
+    } catch (err) {
+      log.warn(`[${operationId}] Video metadata probe failed`, err);
+    }
+
+    const enforceVertical = !isVideoAlreadyVertical(videoMeta);
+    const referenceHeight = Math.max(
+      videoMeta?.height ?? BASELINE_HEIGHT,
+      BASELINE_HEIGHT
+    );
+    const targetHeight = enforceVertical ? SHORT_CLIP_HEIGHT : referenceHeight;
+    const computedFontSize = Math.max(
+      12,
+      Math.round(baseFontSizePx * fontScale(targetHeight))
+    );
+
+    const sanitizedHighlight: TranscriptHighlight = {
+      id: highlight.id,
+      start: highlight.start,
+      end: highlight.end,
+      title: highlight.title,
+      description: highlight.description,
+      score: highlight.score,
+      confidence: highlight.confidence,
+      category: highlight.category,
+      justification: highlight.justification,
+    };
+
+    event.sender.send('highlight-cut-progress', {
+      percent: 5,
+      stage: 'Preparing highlight clip',
+      operationId,
+      highlightId: sanitizedHighlight.id,
+    });
+
+    const rawStart = Number.isFinite(sanitizedHighlight.start)
+      ? Math.max(0, Number(sanitizedHighlight.start))
+      : 0;
+    const fallbackEnd = rawStart + 30;
+    const requestedEnd = Number.isFinite(sanitizedHighlight.end)
+      ? Math.max(rawStart + 2, Number(sanitizedHighlight.end))
+      : fallbackEnd;
+
+    let safeStart = durationKnown
+      ? Math.min(rawStart, Math.max(0, totalDur - 1))
+      : rawStart;
+
+    let safeEnd = durationKnown
+      ? Math.min(Math.max(safeStart + 2, requestedEnd), totalDur)
+      : Math.max(safeStart + 2, requestedEnd);
+
+    if (!Number.isFinite(safeEnd) || safeEnd <= safeStart) {
+      safeEnd = durationKnown
+        ? Math.min(totalDur, safeStart + 15)
+        : safeStart + 15;
+    }
+
+    const leadPadding = 0.35;
+    const tailPadding = 0.45;
+    safeStart = Math.max(0, safeStart - leadPadding);
+    safeEnd = durationKnown
+      ? Math.min(totalDur, safeEnd + tailPadding)
+      : safeEnd + tailPadding;
+
+    const duration = Math.max(2, safeEnd - safeStart);
+    const fadeDuration = Math.min(0.6, Math.max(0.25, duration / 12));
+    const fadeOutStart = Math.max(0.1, duration - fadeDuration);
+
+    const outPath = path.join(
+      ffmpeg.tempDir,
+      `highlight-${operationId}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
+    );
+
+    event.sender.send('highlight-cut-progress', {
+      percent: 25,
+      stage: 'Cutting highlight clip',
+      operationId,
+      highlightId: sanitizedHighlight.id,
+    });
+
+    const args = [
+      '-y',
+      '-ss',
+      String(safeStart),
+      '-i',
+      videoPath,
+      '-t',
+      String(duration),
+    ];
+
+    const filterParts: string[] = [];
+    let currentLabel = '0:v:0';
+    let filterLabelCounter = 0;
+    const nextLabel = (prefix: string) => `${prefix}${++filterLabelCounter}`;
+
+    if (enforceVertical) {
+      const paddedLabel = nextLabel('pad');
+      filterParts.push(
+        `[${currentLabel}]scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black[${paddedLabel}]`
+      );
+      currentLabel = paddedLabel;
+    }
+
+    const cleanup: string[] = [];
+    if (includeSubtitles && fontsDir) {
+      const clipSegments = sliceSegmentsForRange({
+        segments: subtitleSegments,
+        clipStart: safeStart,
+        clipEnd: safeEnd,
+      });
+      if (clipSegments.length > 0) {
+        const srtPath = path.join(
+          ffmpeg.tempDir,
+          `highlight-${operationId}.srt`
+        );
+        const srtContent = buildSrt({
+          segments: clipSegments,
+          mode: subtitleMode,
+          noWrap: true,
+        });
+        if (srtContent.trim()) {
+          await fs.writeFile(srtPath, srtContent, 'utf8');
+          cleanup.push(srtPath);
+          const subtitleLabel = nextLabel('subs');
+          filterParts.push(
+            buildSubtitleFilter({
+              inputLabel: currentLabel,
+              outputLabel: subtitleLabel,
+              subtitlePath: srtPath,
+              fontsDir,
+              stylePreset,
+              fontSizePx: computedFontSize,
+            })
+          );
+          currentLabel = subtitleLabel;
+        }
+      }
+    }
+
+    const needsVideoFade = duration > fadeDuration * 2;
+    let audioFadeFilter: string | null = null;
+    if (needsVideoFade) {
+      const fadeLabel = nextLabel('fade');
+      filterParts.push(
+        `[${currentLabel}]fade=t=in:st=0:d=${fadeDuration.toFixed(
+          2
+        )},fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}[${fadeLabel}]`
+      );
+      currentLabel = fadeLabel;
+      audioFadeFilter = `afade=t=in:st=0:d=${fadeDuration.toFixed(
+        2
+      )},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`;
+    }
+
+    if (filterParts.length > 0) {
+      args.push(
+        '-filter_complex',
+        filterParts.join(';'),
+        '-map',
+        `[${currentLabel}]`
+      );
+    } else {
+      args.push('-map', '0:v:0?');
+    }
+
+    args.push('-map', '0:a:0?');
+
+    if (audioFadeFilter) {
+      args.push('-af', audioFadeFilter);
+    }
+
+    args.push(
+      '-c:v',
+      'libx264',
+      '-preset',
+      'veryfast',
+      '-crf',
+      '23',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '128k',
+      '-movflags',
+      '+faststart',
+      outPath
+    );
+
+    try {
+      await ffmpeg.run(args, {
+        operationId,
+        signal: controller.signal,
+      });
+    } finally {
+      await Promise.all(
+        cleanup.map(temp => fs.unlink(temp).catch(() => void 0))
+      );
+    }
+
+    const cutHighlight: TranscriptHighlight = {
+      ...sanitizedHighlight,
+      start: safeStart,
+      end: safeEnd,
+      videoPath: outPath,
+    };
+
+    event.sender.send('highlight-cut-progress', {
+      percent: 100,
+      stage: 'ready',
+      operationId,
+      highlightId: sanitizedHighlight.id,
+      highlight: cutHighlight,
+    });
+
+    return {
+      success: true,
+      highlight: cutHighlight,
+      operationId,
+    };
+  } catch (error: any) {
+    const aborted =
+      controller.signal.aborted ||
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled';
+
+    const message = error?.message || 'Failed to cut highlight clip';
+
+    event.sender.send('highlight-cut-progress', {
+      percent: 100,
+      stage: aborted ? 'cancelled' : 'error',
+      error: message,
+      operationId,
+      highlightId: options.highlight?.id,
+    });
+
+    if (aborted) {
+      return { success: false, cancelled: true, operationId };
+    }
     throw error;
   } finally {
     registryFinish(operationId);

@@ -52,7 +52,8 @@
     },
     "installUpdate": "புதுப்பிக்க மறுதொடக்கம் செய்யவும்",
     "confirmInstallUpdate": "புதுப்பிப்பை நிறுவி மறுதொடக்கம் செய்யவா?",
-    "downloadUpdate": "புதுப்பிப்பைப் பதிவிறக்க கிளிக் செய்யவும்"
+    "downloadUpdate": "புதுப்பிப்பைப் பதிவிறக்க கிளிக் செய்யவும்",
+    "retry": "Retry"
   },
   "input": {
     "fromDevice": "உங்கள் சாதனத்திலிருந்து",
@@ -159,6 +160,33 @@
       "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
       "mixAmbient": "More ambient",
       "mixVoice": "More voice"
+    },
+    "byoOpenAi": {
+      "title": "Bring Your Own OpenAI Key",
+      "description": "Unlock a one-time upgrade to use your own OpenAI API key. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your account instead of consuming Stage5 credits.",
+      "unlocking": "Opening checkout…",
+      "unlockCta": "Unlock for $10",
+      "unlockHint": "Once unlocked, add your OpenAI key here at any time to toggle direct billing on your account.",
+      "unlockedDescription": "Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.",
+      "apiKeyLabel": "OpenAI API Key",
+      "hide": "Hide",
+      "show": "Show",
+      "saving": "Saving…",
+      "clear": "Clear Key",
+      "loadingKey": "Loading saved key…",
+      "keySaved": "API key saved locally.",
+      "keyCleared": "API key cleared.",
+      "keyValid": "API key validated successfully.",
+      "keyInvalid": "API key validation failed.",
+      "testing": "Testing…",
+      "test": "Test Key",
+      "lastSynced": "Last synced",
+      "toggleLabel": "Use my OpenAI key",
+      "toggleHelp": "When off, AI Credits are used.",
+      "toggleAria": "Toggle using your OpenAI key",
+      "toggleOn": "Using your OpenAI key for AI tasks.",
+      "toggleOff": "Using Stage5 credits for AI tasks.",
+      "toggleError": "Failed to update preference."
     }
   },
   "videoPlayer": {
@@ -226,7 +254,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "தயவுசெய்து காணொளியைத் தேர்ந்தெடுக்கவும்",
-      "processingDuration": "காணொளியின் கால அளவு செயலாக்கப்படுகிறது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்."
+      "processingDuration": "காணொளியின் கால அளவு செயலாக்கப்படுகிறது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "தொடங்குகிறது...",
@@ -321,7 +350,8 @@
     "buyCredits": "கிரெடிட்களை வாங்கு",
     "redirectingToPayment": "பாதுகாப்பான செக்அவுட்டைத் திறக்கிறது...",
     "description": "${{pack1Price}} ({{pack1Hours}} மணிநேரம்), ${{pack2Price}} ({{pack2Hours}} மணிநேரம்), அல்லது ${{pack3Price}} ({{pack3Hours}} மணிநேரம்) கிரெடிட் பேக்கேஜ்களில் இருந்து தேர்ந்தெடுக்கவும்",
-    "notEnough": "போதுமான கிரெடிட்கள் இல்லை. தொடர்வதற்கு தயவுசெய்து அதிக கிரெடிட்களை வாங்கவும்."
+    "notEnough": "போதுமான கிரெடிட்கள் இல்லை. தொடர்வதற்கு தயவுசெய்து அதிக கிரெடிட்களை வாங்கவும்.",
+    "usingApiKey": "Using API Key"
   },
   "errors": {
     "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
@@ -368,8 +398,28 @@
       "ready": "Summary ready",
       "error": "Summary failed",
       "cancelled": "Summary cancelled",
-      "inProgress": "Generating summary…"
-    }
+      "inProgress": "Generating summary…",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…"
+    },
+    "tab": {
+      "summary": "Summary",
+      "sections": "Detailed notes",
+      "highlights": "Highlights"
+    },
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight",
+    "downloadHighlight": "Download clip",
+    "downloadingHighlight": "Saving…",
+    "highlightSaved": "Saved!",
+    "highlightSaveError": "Save failed",
+    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
+    "saveHighlightDialogTitle": "Save highlight clip",
+    "noSections": "No section notes yet.",
+    "sectionHeading": "Section {{index}}",
+    "highlightsInProgress": "Preparing highlight clips…"
   },
   "panel": {
     "gaps": {

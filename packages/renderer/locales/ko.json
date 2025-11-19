@@ -52,7 +52,8 @@
     },
     "installUpdate": "재시작하여 업데이트",
     "confirmInstallUpdate": "업데이트를 설치하고 재시작하시겠습니까?",
-    "downloadUpdate": "클릭하여 업데이트 다운로드"
+    "downloadUpdate": "클릭하여 업데이트 다운로드",
+    "retry": "Retry"
   },
   "errors": {
     "needCookies": "YouTube에서 사람이 맞는지 확인을 요청했습니다. 브라우저 쿠키로 다시 시도하세요.",
@@ -146,8 +147,14 @@
       "ready": "요약 준비 완료",
       "error": "요약 실패",
       "cancelled": "요약이 취소되었습니다",
-      "inProgress": "요약 생성 중…"
-    }
+      "inProgress": "요약 생성 중…",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…"
+    },
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight"
   },
   "panel": {
     "gaps": {

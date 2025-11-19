@@ -13,16 +13,60 @@ interface GenerateTranscriptSummaryOptions {
   signal: AbortSignal;
   operationId: string;
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
+  includeHighlights?: boolean;
   maxHighlights?: number;
 }
 
 interface GenerateTranscriptSummaryResult {
   summary: string;
-  highlights: TranscriptHighlight[];
   sections: TranscriptSummarySection[];
+  highlights: TranscriptHighlight[];
+}
+
+interface SelectTranscriptHighlightsOptions {
+  segments: TranscriptSummarySegment[];
+  targetLanguage: string;
+  signal: AbortSignal;
+  operationId: string;
+  maxHighlights?: number;
+  sections?: TranscriptSummarySection[];
+  progressCallback?: (progress: TranscriptSummaryProgress) => void;
+  startPercent?: number;
+  endPercent?: number;
 }
 
 const MAX_CHARS_PER_CHUNK = 7_500;
+const MAX_RUNNING_SUMMARY_CHARS = 20_000;
+const MAX_SECTION_PROMPT_CHARS = 5_000;
+
+function sanitizeSegments(
+  segments: TranscriptSummarySegment[]
+): TranscriptSummarySegment[] {
+  if (!Array.isArray(segments)) return [];
+  return segments
+    .filter(seg => !!seg && typeof seg.text === 'string')
+    .map(seg => ({
+      start: typeof seg.start === 'number' ? seg.start : 0,
+      end: typeof seg.end === 'number' ? seg.end : seg.start,
+      text: seg.text.trim(),
+    }))
+    .filter(seg => seg.text.length > 0);
+}
+
+function sanitizeSectionContents(
+  sections?: TranscriptSummarySection[] | null
+): string[] | null {
+  if (!Array.isArray(sections) || sections.length === 0) {
+    return null;
+  }
+  const sanitized = sections.map(section =>
+    typeof section?.content === 'string' ? section.content.trim() : ''
+  );
+  if (sanitized.every(content => !content)) {
+    return null;
+  }
+  return sanitized;
+}
 
 function createSectionSummaries(
   summaries: string[]
@@ -62,20 +106,14 @@ export async function generateTranscriptSummary({
   signal,
   operationId,
   progressCallback,
+  includeHighlights = true,
   maxHighlights,
 }: GenerateTranscriptSummaryOptions): Promise<GenerateTranscriptSummaryResult> {
   if (!Array.isArray(segments) || segments.length === 0) {
     throw new Error('No transcript segments available for summary');
   }
 
-  const cleanedSegments = segments
-    .filter(seg => !!seg && typeof seg.text === 'string')
-    .map(seg => ({
-      start: typeof seg.start === 'number' ? seg.start : 0,
-      end: typeof seg.end === 'number' ? seg.end : seg.start,
-      text: seg.text.trim(),
-    }))
-    .filter(seg => seg.text.length > 0);
+  const cleanedSegments = sanitizeSegments(segments);
 
   if (cleanedSegments.length === 0) {
     throw new Error('Transcript is empty after filtering silent segments');
@@ -92,69 +130,9 @@ export async function generateTranscriptSummary({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
-  // Small transcripts reuse the multi-stage path with a single section
-  if (chunks.length === 1) {
-    progressCallback?.({ percent: 20, stage: 'Summarizing section 1 of 1' });
-    const chunkNote = await summarizeChunk({
-      chunkText: chunks[0],
-      chunkIndex: 0,
-      chunkCount: 1,
-      languageName,
-      signal,
-      operationId,
-    });
-
-    const aggregatedDraft = formatChunkDrafts([chunkNote]);
-    const sectionNotes = createSectionSummaries([chunkNote]);
-    progressCallback?.({
-      percent: 60,
-      stage: 'Section 1 of 1 summarized',
-      partialSummary: aggregatedDraft,
-      partialSections: sectionNotes,
-    });
-
-    const highlights =
-      highlightLimit > 0
-        ? await selectHighlightsFromChunks({
-            chunks,
-            chunkSummaries: [chunkNote],
-            segments: cleanedSegments,
-            languageName,
-            signal,
-            operationId,
-            maxHighlights: highlightLimit,
-            progressCallback,
-            startPercent: 70,
-            endPercent: 90,
-          })
-        : [];
-
-    progressCallback?.({
-      percent: 90,
-      stage: 'Synthesizing comprehensive summary',
-      partialSections: sectionNotes,
-    });
-
-    const finalSummary = await synthesizeFromChunkSummaries({
-      chunkSummaries: [chunkNote],
-      languageName,
-      signal,
-      operationId,
-    });
-
-    progressCallback?.({
-      percent: 100,
-      stage: 'Summary ready',
-      partialSummary: finalSummary,
-      partialHighlights: highlights,
-      partialSections: sectionNotes,
-    });
-
-    return { summary: finalSummary, highlights, sections: sectionNotes };
-  }
-
   const chunkSummaries: string[] = [];
   const perChunkProgress = 70 / chunks.length;
+  let runningSummary = '';
 
   for (let i = 0; i < chunks.length; i++) {
     if (signal.aborted) {
@@ -176,15 +154,23 @@ export async function generateTranscriptSummary({
       signal,
       operationId,
     });
-    chunkSummaries.push(summary.trim());
+    const trimmedSummary = summary.trim();
+    chunkSummaries.push(trimmedSummary);
 
-    const aggregatedDraft = formatChunkDrafts(chunkSummaries);
+    runningSummary = await mergeIntoRunningSummary({
+      existingSummary: runningSummary,
+      newSectionSummary: trimmedSummary,
+      languageName,
+      signal,
+      operationId,
+    });
+
     const partialSections = createSectionSummaries(chunkSummaries);
     const completePercent = 20 + perChunkProgress * (i + 1);
     progressCallback?.({
       percent: completePercent,
       stage: `Section ${i + 1} of ${chunks.length} summarized`,
-      partialSummary: aggregatedDraft,
+      partialSummary: runningSummary,
       partialSections,
     });
   }
@@ -194,45 +180,153 @@ export async function generateTranscriptSummary({
   }
 
   const sectionSummaries = createSectionSummaries(chunkSummaries);
+  const finalSummary = runningSummary.trim();
+
+  if (!finalSummary) {
+    throw new Error('Summary synthesis returned empty content');
+  }
 
   progressCallback?.({
-    percent: 90,
+    percent: 92,
     stage: 'Synthesizing comprehensive summary',
+    partialSummary: finalSummary,
     partialSections: sectionSummaries,
   });
 
-  const synthesis = await synthesizeFromChunkSummaries({
-    chunkSummaries,
-    languageName,
-    signal,
-    operationId,
-  });
+  let highlights: TranscriptHighlight[] = [];
+  if (includeHighlights && highlightLimit > 0) {
+    try {
+      highlights = await selectTranscriptHighlights({
+        segments: cleanedSegments,
+        targetLanguage,
+        signal,
+        operationId,
+        maxHighlights: highlightLimit,
+        sections: sectionSummaries,
+        progressCallback,
+        startPercent: 94,
+        endPercent: 99,
+      });
+    } catch (highlightError) {
+      progressCallback?.({
+        percent: 99,
+        stage: 'highlight-selection-error',
+        error:
+          highlightError instanceof Error
+            ? highlightError.message
+            : 'Highlight selection failed',
+      });
+    }
+  }
 
-  const finalSummary = synthesis.trim();
-  const highlights =
-    highlightLimit > 0
-      ? await selectHighlightsFromChunks({
-          chunks,
-          chunkSummaries,
-          segments: cleanedSegments,
-          languageName,
-          signal,
-          operationId,
-          maxHighlights: highlightLimit,
-          progressCallback,
-          startPercent: 92,
-          endPercent: 98,
-        })
-      : [];
   progressCallback?.({
     percent: 100,
     stage: 'Summary ready',
     partialSummary: finalSummary,
-    partialHighlights: highlights,
     partialSections: sectionSummaries,
+    partialHighlights: highlights,
   });
 
-  return { summary: finalSummary, highlights, sections: sectionSummaries };
+  return { summary: finalSummary, sections: sectionSummaries, highlights };
+}
+
+export async function selectTranscriptHighlights({
+  segments,
+  targetLanguage,
+  signal,
+  operationId,
+  maxHighlights,
+  sections,
+  progressCallback,
+  startPercent,
+  endPercent,
+}: SelectTranscriptHighlightsOptions): Promise<TranscriptHighlight[]> {
+  if (!Array.isArray(segments) || segments.length === 0) {
+    throw new Error('No transcript segments provided for highlight selection');
+  }
+
+  const cleanedSegments = sanitizeSegments(segments);
+  if (cleanedSegments.length === 0) {
+    throw new Error('Transcript is empty after filtering silent segments');
+  }
+
+  const highlightLimit = resolveHighlightLimit(maxHighlights);
+  if (highlightLimit <= 0) {
+    return [];
+  }
+
+  const chunks = buildChunks(cleanedSegments);
+  if (chunks.length === 0) {
+    throw new Error('Transcript is empty after chunking');
+  }
+
+  const selectionStart = Number.isFinite(startPercent ?? null)
+    ? Number(startPercent)
+    : 0;
+  const selectionEnd = Number.isFinite(endPercent ?? null)
+    ? Number(endPercent)
+    : 100;
+  const selectionSpan = Math.max(0, selectionEnd - selectionStart);
+  const mapPercent = (value: number) => {
+    const normalized = Math.min(100, Math.max(0, value));
+    if (selectionSpan === 0) {
+      return selectionEnd;
+    }
+    return selectionStart + (selectionSpan * normalized) / 100;
+  };
+
+  const languageName = formatLanguage(targetLanguage);
+  progressCallback?.({
+    percent: mapPercent(5),
+    stage: 'Preparing highlight selection',
+  });
+
+  let chunkSummaries: string[];
+  const sanitizedSections = sanitizeSectionContents(sections);
+  if (sanitizedSections && sanitizedSections.length === chunks.length) {
+    chunkSummaries = sanitizedSections;
+    progressCallback?.({
+      percent: mapPercent(15),
+      stage: 'Reusing summary sections for highlight selection',
+    });
+  } else {
+    chunkSummaries = await summarizeChunksForHighlights({
+      chunks,
+      languageName,
+      signal,
+      operationId,
+      progressCallback,
+      startPercent: mapPercent(10),
+      endPercent: mapPercent(55),
+    });
+  }
+
+  if (signal.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  const highlights = await selectHighlightsFromChunks({
+    chunks,
+    chunkSummaries,
+    segments: cleanedSegments,
+    languageName,
+    signal,
+    operationId,
+    maxHighlights: highlightLimit,
+    progressCallback,
+    startPercent: mapPercent(60),
+    endPercent: mapPercent(95),
+  });
+
+  progressCallback?.({
+    percent: mapPercent(100),
+    stage: 'Highlights ready',
+    partialHighlights: highlights,
+    total: highlights.length,
+    current: highlights.length,
+  });
+
+  return highlights;
 }
 
 function buildChunks(segments: TranscriptSummarySegment[]): string[] {
@@ -256,6 +350,65 @@ function buildChunks(segments: TranscriptSummarySegment[]): string[] {
   }
 
   return chunks;
+}
+
+async function summarizeChunksForHighlights({
+  chunks,
+  languageName,
+  signal,
+  operationId,
+  progressCallback,
+  startPercent,
+  endPercent,
+}: {
+  chunks: string[];
+  languageName: string;
+  signal: AbortSignal;
+  operationId: string;
+  progressCallback?: (progress: TranscriptSummaryProgress) => void;
+  startPercent: number;
+  endPercent: number;
+}): Promise<string[]> {
+  const summaries: string[] = [];
+  if (!Array.isArray(chunks) || chunks.length === 0) {
+    return summaries;
+  }
+
+  const total = chunks.length;
+  const span = Math.max(0, endPercent - startPercent);
+
+  for (let i = 0; i < total; i++) {
+    if (signal.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    const start = startPercent + (span * i) / total;
+    progressCallback?.({
+      percent: start,
+      stage: `Analyzing section ${i + 1} of ${total} for highlights`,
+      current: i + 1,
+      total,
+    });
+
+    const summary = await summarizeChunk({
+      chunkText: chunks[i],
+      chunkIndex: i,
+      chunkCount: total,
+      languageName,
+      signal,
+      operationId,
+    });
+    summaries.push(summary.trim());
+
+    progressCallback?.({
+      percent: startPercent + (span * (i + 1)) / total,
+      stage: `Section ${i + 1} analyzed`,
+      current: i + 1,
+      total,
+    });
+  }
+
+  return summaries;
 }
 
 async function summarizeChunk({
@@ -301,33 +454,54 @@ ${chunkText}`;
   return content;
 }
 
-async function synthesizeFromChunkSummaries({
-  chunkSummaries,
+async function mergeIntoRunningSummary({
+  existingSummary,
+  newSectionSummary,
   languageName,
   signal,
   operationId,
 }: {
-  chunkSummaries: string[];
+  existingSummary: string;
+  newSectionSummary: string;
   languageName: string;
   signal: AbortSignal;
   operationId: string;
 }): Promise<string> {
-  const systemPrompt = `You are an experienced academic writer who crafts comprehensive introductions for audiovisual sources used in college assignments. Always respond in ${languageName} with a formal, well-structured tone and plain-text presentation.`;
+  const sectionText = truncateForPrompt(
+    newSectionSummary,
+    MAX_SECTION_PROMPT_CHARS
+  );
+  if (!sectionText) {
+    return existingSummary.trim();
+  }
 
-  const notes = chunkSummaries
-    .map((summary, idx) => `Section ${idx + 1} notes:\n${summary}`)
-    .join('\n\n');
+  const priorSummary = truncateForPrompt(
+    existingSummary,
+    MAX_RUNNING_SUMMARY_CHARS
+  );
+  const hasPriorSummary = priorSummary.trim().length > 0;
 
-  const userPrompt = `Blend the section notes into a cohesive introductory overview in ${languageName} as though it were the opening section of a college assignment describing this video source. Adhere to the following requirements:
+  const systemPrompt = `You are an experienced conference scribe maintaining a running outline for an extended recording. Always respond in ${languageName} using "- " bullet points (one bullet per line) while preserving chronological order.`;
 
-- Produce 2–3 paragraphs of continuous prose with plain-text formatting. Paragraph one should situate the video (topic, speakers, context, platform, production details). Paragraph two should outline the major themes, sequence of ideas, and analytical framing. Add a third paragraph only if necessary to discuss methodology, intended audience, or broader significance.
-- Integrate timestamps sparingly for pivotal moments, phrasing them inline as "at 00:12:45" or "between 00:08:30 and 00:09:05". Do not wrap times in parentheses or brackets, and never open a sentence with a timestamp.
-- Maintain a formal, third-person tone. Avoid emojis, exclamations, hashtags, rhetorical questions, or typographic decorations.
-- Close with a single sentence that translates "Keywords" into ${languageName} and lists 4–6 thematically important terms separated by commas (e.g., "Palabras clave: término1, término2").
-- Ensure the narrative removes redundancy from the notes, emphasizes continuity, and transitions smoothly between ideas.
+  const introInstruction = hasPriorSummary
+    ? `Do NOT delete existing bullets. Copy the current bullet list verbatim in the same order, then append new bullets summarizing the latest section. Only merge or rephrase earlier bullets if absolutely necessary for clarity, and even then ensure every original bullet still has a counterpart.`
+    : `Create the first set of bullets for the recording using the section notes below.`;
 
-Section notes:
-${notes}`;
+  const existingBlock = hasPriorSummary
+    ? `Existing bullet list (copy exactly before adding new bullets):\n${priorSummary || '(none yet)'}\n\n`
+    : '';
+
+  const userPrompt = `${introInstruction}
+
+Guidelines:
+- Begin every line with "- " and keep each bullet to at most two sentences.
+- Mention speakers, timestamps, locations, or stakes when available to anchor the bullet.
+- Maintain chronological order; new bullets must be appended after the existing list.
+- Add at least three bullets that capture the most important ideas, decisions, or emotions from the latest section.
+- Do not add prose paragraphs, concluding summaries, or keyword lists—bullets only.
+
+${existingBlock}Latest section notes:
+${sectionText}`;
 
   const content = await callAIModel({
     messages: [
@@ -340,7 +514,19 @@ ${notes}`;
     operationId,
   });
 
-  return content;
+  return clampSummaryLength(content, MAX_RUNNING_SUMMARY_CHARS).trim();
+}
+
+function truncateForPrompt(value: string, limit: number): string {
+  if (!value) return '';
+  if (value.length <= limit) return value;
+  return value.slice(0, limit);
+}
+
+function clampSummaryLength(value: string, limit: number): string {
+  if (!value) return '';
+  if (value.length <= limit) return value;
+  return value.slice(0, limit);
 }
 
 function formatSegment(seg: TranscriptSummarySegment): string {
@@ -370,10 +556,6 @@ function formatLanguage(value: string): string {
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-}
-
-function formatChunkDrafts(drafts: string[]): string {
-  return drafts.map((text, idx) => `Section ${idx + 1}\n${text}`).join('\n\n');
 }
 
 function resolveHighlightLimit(value?: number | null): number {
@@ -418,6 +600,16 @@ async function selectHighlightsFromChunks({
     ? chunkSummaries
     : new Array(total).fill('');
   const globalOutline = buildGlobalOutline(sanitizedSummaries);
+
+  const highlightIds = new Map<string, string>();
+  let highlightCounter = 0;
+  const getHighlightId = (key: string): string => {
+    const existing = highlightIds.get(key);
+    if (existing) return existing;
+    const nextId = `${operationId}-hl-${++highlightCounter}`;
+    highlightIds.set(key, nextId);
+    return nextId;
+  };
 
   const seen = new Map<string, TranscriptHighlight>();
 
@@ -465,22 +657,25 @@ async function selectHighlightsFromChunks({
       if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
       if (end - start < 2) continue;
       const key = `${Math.round(start * 1000)}-${Math.round(end * 1000)}`;
+      const baseHighlight: TranscriptHighlight = {
+        start: Math.max(0, start),
+        end: Math.max(0, end),
+        title: h.title,
+        description: h.description,
+        score: h.score,
+        confidence: h.confidence,
+        category: h.category,
+        justification: h.justification,
+        id: getHighlightId(key),
+      };
+
       if (seen.has(key)) {
         const existing = seen.get(key)!;
-        const better = pickBetterHighlight(existing, h);
-        seen.set(key, better);
+        if (getHighlightScore(baseHighlight) > getHighlightScore(existing)) {
+          seen.set(key, { ...existing, ...baseHighlight, id: existing.id });
+        }
       } else {
-        const sanitized: TranscriptHighlight = {
-          start: Math.max(0, start),
-          end: Math.max(0, end),
-          title: h.title,
-          description: h.description,
-          score: h.score,
-          confidence: h.confidence,
-          category: h.category,
-          justification: h.justification,
-        };
-        seen.set(key, sanitized);
+        seen.set(key, baseHighlight);
       }
     }
 
@@ -498,16 +693,27 @@ async function selectHighlightsFromChunks({
     });
   }
 
-  const final = rankHighlights(
+  let final = rankHighlights(
     refineAndScoreHighlights({
       highlights: Array.from(seen.values()),
       segments,
     }),
     maxHighlights
   );
+
+  if (final.length === 0) {
+    final = buildFallbackHighlightsFromSegments({
+      segments,
+      maxHighlights,
+    });
+  }
+
   progressCallback?.({
     percent: endPercent,
-    stage: `Selected ${final.length} highlights`,
+    stage:
+      final.length > 0
+        ? `Selected ${final.length} highlights`
+        : 'No highlight candidates found',
     partialHighlights: final,
   });
 
@@ -584,8 +790,8 @@ Return STRICT JSON ONLY (no markdown) using this shape:
 
   const parsed = safeParseHighlights(content);
   return parsed.map(h => ({
-    start: Number(h.start),
-    end: Number(h.end),
+    start: normalizeTimestamp(h.start) ?? NaN,
+    end: normalizeTimestamp(h.end) ?? NaN,
     title: typeof h.title === 'string' ? h.title : undefined,
     description: typeof h.description === 'string' ? h.description : undefined,
     score: typeof h.score === 'number' ? h.score : undefined,
@@ -629,12 +835,14 @@ function refineAndScoreHighlights({
 
   const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
   const refined: TranscriptHighlight[] = [];
-  const minDuration = 6;
+  const minDuration = 3;
   const maxDuration = 90;
+  const minScoreThreshold = 0.2;
+  let fallbackCandidate: TranscriptHighlight | null = null;
 
   for (const raw of highlights) {
-    const rawStart = Number(raw.start ?? NaN);
-    const rawEnd = Number(raw.end ?? NaN);
+    const rawStart = normalizeTimestamp(raw.start) ?? NaN;
+    const rawEnd = normalizeTimestamp(raw.end) ?? NaN;
     if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) continue;
     if (rawEnd <= rawStart) continue;
 
@@ -653,12 +861,16 @@ function refineAndScoreHighlights({
     const snappedEnd = Math.max(snappedStart + 0.5, lastSeg.end);
 
     const paddedStart = Math.max(0, snappedStart - leadPadding);
-    const paddedEnd = snappedEnd + tailPadding;
-    const duration = paddedEnd - paddedStart;
+    let paddedEnd = Math.max(paddedStart + 2, snappedEnd + tailPadding);
 
-    if (duration < minDuration || duration > maxDuration) {
-      continue;
+    if (paddedEnd - paddedStart < minDuration) {
+      paddedEnd = paddedStart + minDuration;
     }
+    if (paddedEnd - paddedStart > maxDuration) {
+      paddedEnd = paddedStart + maxDuration;
+    }
+
+    const duration = paddedEnd - paddedStart;
 
     const normalizedConfidence = normalizeConfidenceValue(
       Number.isFinite(raw.confidence ?? null)
@@ -684,11 +896,7 @@ function refineAndScoreHighlights({
       1
     );
 
-    if (combinedScore < 0.35) {
-      continue;
-    }
-
-    refined.push({
+    const scoredHighlight: TranscriptHighlight = {
       ...raw,
       start: Number(paddedStart.toFixed(3)),
       end: Number(paddedEnd.toFixed(3)),
@@ -698,7 +906,25 @@ function refineAndScoreHighlights({
       description: raw.description?.trim() || raw.description,
       justification: raw.justification?.trim() || raw.justification,
       category: raw.category?.trim() || raw.category,
-    });
+      id: raw.id,
+    };
+
+    if (combinedScore < minScoreThreshold) {
+      if (
+        !fallbackCandidate ||
+        getHighlightScore(scoredHighlight) >
+          getHighlightScore(fallbackCandidate)
+      ) {
+        fallbackCandidate = scoredHighlight;
+      }
+      continue;
+    }
+
+    refined.push(scoredHighlight);
+  }
+
+  if (refined.length === 0 && fallbackCandidate) {
+    refined.push(fallbackCandidate);
   }
 
   return dedupeHighlights(refined);
@@ -766,16 +992,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-function pickBetterHighlight(
-  a: TranscriptHighlight,
-  b: TranscriptHighlight
-): TranscriptHighlight {
-  const scoreA = getHighlightScore(a);
-  const scoreB = getHighlightScore(b);
-  if (scoreB > scoreA) return { ...a, ...b };
-  return a;
-}
-
 function rankHighlights(
   highlights: TranscriptHighlight[],
   maxHighlights: number
@@ -811,8 +1027,8 @@ function getHighlightScore(highlight: TranscriptHighlight | undefined): number {
 }
 
 function safeParseHighlights(text: string): Array<{
-  start: number;
-  end: number;
+  start?: number | string | null;
+  end?: number | string | null;
   title?: string;
   description?: string;
   score?: number;
@@ -840,4 +1056,116 @@ function safeParseHighlights(text: string): Array<{
     }
     return [];
   }
+}
+
+function normalizeTimestamp(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  let trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const direct = Number(trimmed);
+  if (Number.isFinite(direct)) {
+    return direct;
+  }
+  if (trimmed.includes('-') || /(?:\sto\s)/i.test(trimmed)) {
+    const match = trimmed.match(/([0-9:.]+)\s*(?:-|–|to)\s*[0-9:.]+/i);
+    if (match && match[1]) {
+      trimmed = match[1].trim();
+    }
+  }
+  if (trimmed.includes(':')) {
+    const colonMatch = trimmed.match(/(\d{1,3}:)?\d{1,2}:\d{1,2}(?:\.\d+)?/);
+    if (colonMatch && colonMatch[0]) {
+      trimmed = colonMatch[0];
+    }
+    const rawParts = trimmed.split(':');
+    if (rawParts.length >= 2 && rawParts.length <= 3) {
+      const parts = rawParts.map(part => {
+        const numericPart = Number(part);
+        return Number.isFinite(numericPart) ? numericPart : NaN;
+      });
+      if (parts.some(num => Number.isNaN(num))) {
+        return null;
+      }
+      while (parts.length < 3) {
+        parts.unshift(0);
+      }
+      const [hours, minutes, seconds] = parts;
+      return hours * 3600 + minutes * 60 + seconds;
+    }
+  }
+  return null;
+}
+
+function buildFallbackHighlightsFromSegments({
+  segments,
+  maxHighlights,
+}: {
+  segments: TranscriptSummarySegment[];
+  maxHighlights: number;
+}): TranscriptHighlight[] {
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return [];
+  }
+
+  const totalDuration = segments.reduce((max, seg) => {
+    const end = Number(seg?.end);
+    if (!Number.isFinite(end)) return max;
+    return Math.max(max, end);
+  }, 0);
+
+  if (!Number.isFinite(totalDuration) || totalDuration <= 0) {
+    return [];
+  }
+
+  const desired = Number.isFinite(maxHighlights)
+    ? Math.max(1, Math.min(Math.floor(maxHighlights), 5))
+    : 3;
+  const count = Math.min(desired, segments.length);
+  const bucketSize = totalDuration / count;
+  const results: TranscriptHighlight[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const bucketStart = i * bucketSize;
+    const bucketEnd =
+      i === count - 1 ? totalDuration : bucketStart + bucketSize;
+    const bucketSegments = segments.filter(
+      seg => seg.end > bucketStart && seg.start < bucketEnd
+    );
+    if (bucketSegments.length === 0) continue;
+
+    const pivot = bucketSegments.reduce((best, seg) => {
+      const bestScore = best?.text?.length ?? 0;
+      const segScore = seg?.text?.length ?? 0;
+      if (!best) return seg;
+      return segScore > bestScore ? seg : best;
+    }, bucketSegments[0]);
+
+    if (!pivot) continue;
+    const clipStart = Math.max(0, pivot.start - 1.5);
+    const clipEnd = Math.min(
+      totalDuration,
+      Math.max(pivot.end + 4, clipStart + 3)
+    );
+
+    results.push({
+      id: `fallback-${i + 1}`,
+      start: Number(clipStart.toFixed(3)),
+      end: Number(clipEnd.toFixed(3)),
+      title: `Key moment ${i + 1}`,
+      description: pivot.text,
+      confidence: 0.2,
+      category: 'context',
+      justification:
+        'Auto-selected because highlight detection returned no confident candidates.',
+    });
+  }
+
+  return results;
 }

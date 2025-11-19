@@ -146,6 +146,9 @@
     "status": {
       "preparing": "Preparing transcript…",
       "chunk": "Summarizing section {{current}}/{{total}}",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…",
       "synthesizing": "Synthesizing comprehensive summary…",
       "ready": "Summary ready",
       "error": "Summary failed",

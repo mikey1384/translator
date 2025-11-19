@@ -25,10 +25,18 @@ import {
   progressBarBackgroundStyles,
   progressBarFillStyles,
 } from '../styles';
-import { useUIStore, useTaskStore, useSubStore, useVideoStore } from '../state';
+import {
+  useUIStore,
+  useTaskStore,
+  useSubStore,
+  useVideoStore,
+  useCreditStore,
+} from '../state';
 import {
   generateTranscriptSummary,
   onTranscriptSummaryProgress,
+  cutHighlightClip,
+  onHighlightCutProgress,
 } from '../ipc/subtitles';
 import { save as saveFile } from '../ipc/file';
 
@@ -52,8 +60,6 @@ export function TranscriptSummaryPanel({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
-  const [highlightProgressLabel, setHighlightProgressLabel] = useState('');
-  const [highlightProgressPercent, setHighlightProgressPercent] = useState(0);
   const [activeOperationId, setActiveOperationId] = useState<string | null>(
     null
   );
@@ -68,6 +74,14 @@ export function TranscriptSummaryPanel({
     {}
   );
   const [sections, setSections] = useState<TranscriptSummarySection[]>([]);
+  const [highlightCutState, setHighlightCutState] = useState<
+    Record<string, HighlightClipCutState>
+  >({});
+  const hasSummaryResult = useMemo(
+    () => summary.trim().length > 0 || sections.length > 0,
+    [summary, sections]
+  );
+  const transcriptFingerprintRef = useRef<string | null>(null);
 
   const originalVideoPath = useVideoStore(s => s.originalPath);
   const fallbackVideoPath = useSubStore(s => s.sourceVideoPath);
@@ -95,8 +109,29 @@ export function TranscriptSummaryPanel({
     [segments]
   );
 
+  const transcriptFingerprint = useMemo(() => {
+    if (!segments.length) return 'empty';
+    let hash = 0;
+    const sampleStep = Math.max(1, Math.floor(segments.length / 25));
+    for (let i = 0; i < segments.length; i += sampleStep) {
+      const seg = segments[i];
+      const start = Number.isFinite(seg.start)
+        ? Math.round(seg.start * 1000)
+        : 0;
+      const end = Number.isFinite(seg.end) ? Math.round(seg.end * 1000) : start;
+      const textLength = (seg.original ?? '').length;
+      hash = (hash * 31 + start) | 0;
+      hash = (hash * 31 + end) | 0;
+      hash = (hash * 31 + textLength) | 0;
+    }
+    return `${segments.length}:${hash}`;
+  }, [segments]);
+
   const hasTranscript = usableSegments.length > 0;
   const highlightSubtitleMode = showOriginalText ? 'dual' : 'translation';
+  const videoAvailableForHighlights = Boolean(
+    originalVideoPath || fallbackVideoPath
+  );
 
   useEffect(() => {
     return () => {
@@ -115,43 +150,30 @@ export function TranscriptSummaryPanel({
       const nextLabel = translateStageLabel(progress.stage ?? '', t);
       const pct = typeof progress.percent === 'number' ? progress.percent : 0;
       const clampedPercent = Math.min(100, Math.max(0, pct));
-      const isHighlightStage = /highlight/i.test(nextLabel);
-      if (isHighlightStage) {
-        setHighlightProgressLabel(nextLabel);
-        setHighlightProgressPercent(clampedPercent);
-      } else {
-        setProgressLabel(nextLabel);
-        setProgressPercent(clampedPercent);
-      }
+      setProgressLabel(nextLabel);
+      setProgressPercent(clampedPercent);
 
       if (typeof progress.partialSummary === 'string') {
         setSummary(progress.partialSummary.trim());
       }
 
+      if (Array.isArray(progress.partialSections)) {
+        setSections(progress.partialSections as TranscriptSummarySection[]);
+      }
+
       if (Array.isArray(progress.partialHighlights)) {
         const partialHighlights =
           progress.partialHighlights as TranscriptHighlight[];
-        setHighlights(partialHighlights);
-        setDownloadStatus(prev => {
-          const next: Record<string, 'idle' | 'saving' | 'saved' | 'error'> =
-            {};
-          partialHighlights.forEach((highlight, highlightIndex) => {
-            const key = getHighlightKey(highlight, highlightIndex);
-            if (prev[key]) {
-              next[key] = prev[key];
-            }
+        setHighlights(prev => {
+          const map = new Map<string, TranscriptHighlight>();
+          prev.forEach(h => map.set(getHighlightKey(h), h));
+          partialHighlights.forEach(highlight => {
+            const key = getHighlightKey(highlight);
+            const existing = map.get(key);
+            map.set(key, existing ? { ...existing, ...highlight } : highlight);
           });
-          return next;
+          return Array.from(map.values()).sort((a, b) => a.start - b.start);
         });
-      }
-
-      if (progress.partialHighlights || progress.stage === 'Highlights ready') {
-        setHighlightProgressLabel(nextLabel);
-        setHighlightProgressPercent(clampedPercent);
-      }
-
-      if (Array.isArray(progress.partialSections)) {
-        setSections(progress.partialSections as TranscriptSummarySection[]);
       }
 
       if (progress.partialSummary) {
@@ -167,14 +189,28 @@ export function TranscriptSummaryPanel({
 
       if (progress.error) {
         const message = String(progress.error);
-        setError(
-          message === 'insufficient-credits'
-            ? t('summary.insufficientCredits')
-            : t('summary.error', { message })
-        );
+        const stageText = String(progress.stage || '').toLowerCase();
+        const highlightStage =
+          stageText.includes('highlight') || stageText.includes('punchline');
+
+        if (message === 'insufficient-credits') {
+          setError(t('summary.insufficientCredits'));
+          useCreditStore
+            .getState()
+            .refresh()
+            .catch(() => void 0);
+        } else if (highlightStage) {
+          setError(
+            t('summary.highlightsSelectionFailed', {
+              message,
+            })
+          );
+        } else {
+          setError(t('summary.error', { message }));
+        }
       }
 
-      if (pct >= 100 && !/highlight/i.test(nextLabel)) {
+      if (pct >= 100) {
         useTaskStore.getState().setSummary({
           stage: t('summary.status.ready'),
           percent: 100,
@@ -189,6 +225,83 @@ export function TranscriptSummaryPanel({
     };
   }, [activeOperationId, t]);
 
+  useEffect(() => {
+    const unsubscribe = onHighlightCutProgress(progress => {
+      const highlight = progress.highlight as TranscriptHighlight | undefined;
+      const highlightId =
+        progress.highlightId || (highlight ? getHighlightKey(highlight) : null);
+      const pct = typeof progress.percent === 'number' ? progress.percent : 0;
+      const clampedPercent = Math.min(100, Math.max(0, pct));
+      if (highlightId) {
+        setHighlightCutState(prev => {
+          const prevState = prev[highlightId] || {
+            status: 'idle',
+            percent: 0,
+          };
+          let status: HighlightClipCutState['status'] = prevState.status;
+          const stageText = String(progress.stage || '').toLowerCase();
+          if (stageText.includes('ready')) {
+            status = 'ready';
+          } else if (stageText.includes('cancel')) {
+            status = 'cancelled';
+          } else if (stageText.includes('error')) {
+            status = 'error';
+          } else if (stageText) {
+            status = 'cutting';
+          }
+          const nextState: HighlightClipCutState = {
+            status,
+            percent: status === 'ready' ? 100 : clampedPercent,
+            error: progress.error || undefined,
+            operationId: progress.operationId,
+          };
+          return {
+            ...prev,
+            [highlightId]: nextState,
+          };
+        });
+      }
+
+      if (highlight) {
+        setHighlights(prev => {
+          const map = new Map<string, TranscriptHighlight>();
+          prev.forEach(h => map.set(getHighlightKey(h), h));
+          const key = getHighlightKey(highlight);
+          const existing = map.get(key);
+          map.set(key, existing ? { ...existing, ...highlight } : highlight);
+          return Array.from(map.values()).sort((a, b) => a.start - b.start);
+        });
+        const key = getHighlightKey(highlight);
+        setDownloadStatus(prev => {
+          if (!prev[key]) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+      }
+
+      if (progress.error) {
+        if (progress.error === 'insufficient-credits') {
+          setError(t('summary.insufficientCredits'));
+          useCreditStore
+            .getState()
+            .refresh()
+            .catch(() => void 0);
+        } else {
+          setError(
+            t('summary.downloadHighlightFailed', {
+              message: progress.error,
+            })
+          );
+        }
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [t]);
+
   const handleGenerate = useCallback(async () => {
     if (!hasTranscript || isGenerating) return;
 
@@ -202,12 +315,11 @@ export function TranscriptSummaryPanel({
     setSummary('');
     setHighlights([]);
     setSections([]);
+    setHighlightCutState({});
     setDownloadStatus({});
     setCopyStatus('idle');
     setProgressLabel(t('summary.status.preparing'));
     setProgressPercent(0);
-    setHighlightProgressLabel('');
-    setHighlightProgressPercent(0);
     useTaskStore.getState().setSummary({
       id: opId,
       stage: t('summary.status.preparing'),
@@ -221,15 +333,24 @@ export function TranscriptSummaryPanel({
         targetLanguage: summaryLanguage,
         operationId: opId,
         videoPath: originalVideoPath || fallbackVideoPath || null,
+        includeHighlights: true,
         maxHighlights: 10,
-        highlightSubtitleSegments,
-        highlightSubtitleMode,
-        highlightStylePreset: subtitleStyle,
-        highlightBaseFontSize: baseFontSize,
       });
 
       if (result?.error) {
         throw new Error(result.error);
+      }
+
+      if (result?.cancelled || result?.success === false) {
+        setProgressLabel(t('summary.status.cancelled'));
+        setProgressPercent(prev => Math.max(0, prev));
+        useTaskStore.getState().setSummary({
+          stage: t('summary.status.cancelled'),
+          percent: 0,
+          inProgress: false,
+          id: null,
+        });
+        return;
       }
 
       if (result?.summary) {
@@ -239,21 +360,8 @@ export function TranscriptSummaryPanel({
         setSections(result.sections as TranscriptSummarySection[]);
       }
       if (Array.isArray(result?.highlights)) {
-        const finalHighlights = result.highlights as TranscriptHighlight[];
-        setHighlights(finalHighlights);
-        setDownloadStatus(prev => {
-          const next: Record<string, 'idle' | 'saving' | 'saved' | 'error'> =
-            {};
-          finalHighlights.forEach((highlight, highlightIndex) => {
-            const key = getHighlightKey(highlight, highlightIndex);
-            if (prev[key]) {
-              next[key] = prev[key];
-            }
-          });
-          return next;
-        });
+        setHighlights(result.highlights as TranscriptHighlight[]);
       }
-
       setProgressLabel(t('summary.status.ready'));
       setProgressPercent(100);
       useTaskStore.getState().setSummary({
@@ -290,16 +398,12 @@ export function TranscriptSummaryPanel({
     progressPercent,
     originalVideoPath,
     fallbackVideoPath,
-    highlightSubtitleSegments,
-    highlightSubtitleMode,
-    subtitleStyle,
-    baseFontSize,
   ]);
 
   const handleDownloadHighlight = useCallback(
     async (highlight: TranscriptHighlight, index: number) => {
       if (!highlight?.videoPath) return;
-      const key = getHighlightKey(highlight, index);
+      const key = getHighlightKey(highlight);
 
       setDownloadStatus(prev => ({ ...prev, [key]: 'saving' }));
 
@@ -353,6 +457,110 @@ export function TranscriptSummaryPanel({
     [t]
   );
 
+  const handleCutHighlightClip = useCallback(
+    async (highlight: TranscriptHighlight) => {
+      if (!hasSummaryResult) {
+        setError(
+          t(
+            'summary.summaryRequiredForHighlights',
+            'Generate a transcript summary before cutting highlight clips.'
+          )
+        );
+        return;
+      }
+
+      const videoPath = originalVideoPath || fallbackVideoPath;
+      if (!videoPath) {
+        setError(
+          t(
+            'summary.noVideoForHighlights',
+            'Open the source video to cut highlight clips.'
+          )
+        );
+        return;
+      }
+
+      const key = getHighlightKey(highlight);
+      const existingState = highlightCutState[key];
+      if (existingState?.status === 'cutting') {
+        return;
+      }
+
+      const operationId = `highlight-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
+
+      setHighlightCutState(prev => ({
+        ...prev,
+        [key]: { status: 'cutting', percent: 0, operationId },
+      }));
+      setError(null);
+
+      try {
+        const result = await cutHighlightClip({
+          videoPath,
+          highlight,
+          highlightSubtitleSegments,
+          highlightSubtitleMode,
+          highlightStylePreset: subtitleStyle,
+          highlightBaseFontSize: baseFontSize,
+          operationId,
+        });
+
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+
+        if (result?.cancelled) {
+          setHighlightCutState(prev => ({
+            ...prev,
+            [key]: { status: 'cancelled', percent: 0 },
+          }));
+          return;
+        }
+
+        if (result?.highlight) {
+          const updated = result.highlight as TranscriptHighlight;
+          setHighlights(prev => {
+            const map = new Map<string, TranscriptHighlight>();
+            prev.forEach(h => map.set(getHighlightKey(h), h));
+            const existing = map.get(key);
+            map.set(key, existing ? { ...existing, ...updated } : updated);
+            return Array.from(map.values()).sort((a, b) => a.start - b.start);
+          });
+        }
+
+        setHighlightCutState(prev => ({
+          ...prev,
+          [key]: { status: 'ready', percent: 100 },
+        }));
+      } catch (err: any) {
+        console.error('[TranscriptSummaryPanel] cut highlight failed', err);
+        const message = err?.message || String(err);
+        setHighlightCutState(prev => ({
+          ...prev,
+          [key]: { status: 'error', percent: 0, error: message },
+        }));
+        setError(
+          t('summary.downloadHighlightFailed', {
+            message,
+          })
+        );
+      }
+    },
+    [
+      hasSummaryResult,
+      originalVideoPath,
+      fallbackVideoPath,
+      highlightCutState,
+      highlightSubtitleSegments,
+      highlightSubtitleMode,
+      subtitleStyle,
+      baseFontSize,
+      t,
+    ]
+  );
+
   const handleCopy = useCallback(async () => {
     if (!summary) return;
     try {
@@ -389,14 +597,50 @@ export function TranscriptSummaryPanel({
     }
   }, [summary]);
 
+  useEffect(() => {
+    if (!hasTranscript) {
+      transcriptFingerprintRef.current = null;
+      setSummary('');
+      setSections([]);
+      setHighlights([]);
+      setDownloadStatus({});
+      setHighlightCutState({});
+      setCopyStatus('idle');
+      setProgressLabel('');
+      setProgressPercent(0);
+      setError(null);
+      return;
+    }
+
+    if (transcriptFingerprintRef.current === transcriptFingerprint) {
+      return;
+    }
+
+    transcriptFingerprintRef.current = transcriptFingerprint;
+    setSummary('');
+    setSections([]);
+    setHighlights([]);
+    setDownloadStatus({});
+    setHighlightCutState({});
+    setCopyStatus('idle');
+    setProgressLabel('');
+    setProgressPercent(0);
+    setError(null);
+  }, [
+    hasTranscript,
+    transcriptFingerprint,
+    setSummary,
+    setSections,
+    setHighlights,
+    setDownloadStatus,
+    setCopyStatus,
+  ]);
+
   if (!hasTranscript) {
     return null;
   }
 
   const showProgressBar = isGenerating || activeOperationId !== null;
-  const showHighlightProgress =
-    highlightProgressPercent > 0 &&
-    (isGenerating || activeOperationId !== null);
 
   return (
     <div className={panelStyles}>
@@ -476,23 +720,6 @@ export function TranscriptSummaryPanel({
         </div>
       )}
 
-      {showHighlightProgress && (
-        <div className={progressWrapperStyles}>
-          <div className={progressHeaderStyles}>
-            <span>
-              {highlightProgressLabel ||
-                t('summary.highlightsInProgress', 'Preparing highlight clips…')}
-            </span>
-            <span className={progressPercentStyles}>
-              {Math.round(highlightProgressPercent)}%
-            </span>
-          </div>
-          <div className={progressBarBackgroundStyles}>
-            <div className={progressBarFillStyles(highlightProgressPercent)} />
-          </div>
-        </div>
-      )}
-
       {error && (
         <div className={errorWrapperStyles}>
           <ErrorBanner message={error} onClose={() => setError(null)} />
@@ -563,82 +790,159 @@ export function TranscriptSummaryPanel({
       )}
 
       {activeTab === 'highlights' && (
-        <div className={highlightsGridStyles}>
-          {highlights.length === 0 && (
+        <div className={highlightsTabStyles}>
+          {!hasSummaryResult ? (
+            <div className={noHighlightsStyles}>
+              {t(
+                'summary.summaryRequiredForHighlights',
+                'Generate a transcript summary before cutting highlight clips.'
+              )}
+            </div>
+          ) : highlights.length === 0 ? (
             <div className={noHighlightsStyles}>
               {t(
                 'summary.noHighlights',
                 'No highlights yet. Generate to detect punchlines.'
               )}
             </div>
-          )}
-          {highlights.map((h, idx) => {
-            const key = getHighlightKey(h, idx);
-            const status = downloadStatus[key] || 'idle';
+          ) : (
+            <div className={highlightsGridStyles}>
+              {highlights.map((h, idx) => {
+                const statusKey = getHighlightKey(h);
+                const downloadState = downloadStatus[statusKey] || 'idle';
+                const cutState = highlightCutState[statusKey];
+                const cutStatus =
+                  cutState?.status || (h.videoPath ? 'ready' : 'idle');
+                const cutPercent =
+                  typeof cutState?.percent === 'number'
+                    ? cutState.percent
+                    : h.videoPath
+                      ? 100
+                      : 0;
+                const cutError = cutState?.error;
+                const cutDisabled =
+                  cutStatus === 'cutting' ||
+                  !videoAvailableForHighlights ||
+                  isGenerating ||
+                  Boolean(activeOperationId);
 
-            return (
-              <div key={`${h.start}-${h.end}-${idx}`} className={highlightCard}>
-                <div className={highlightHeader}>
-                  <div className={highlightTitle}>
-                    {h.title || t('summary.highlight', 'Highlight')}
-                  </div>
-                  <div className={highlightTime}>
-                    {formatRange(h.start, h.end)}
-                  </div>
-                </div>
-                {h.videoPath ? (
-                  <video
-                    className={highlightVideo}
-                    controls
-                    src={toFileUrl(h.videoPath)}
-                  />
-                ) : (
-                  <div className={noVideoStyles}>
-                    {t(
-                      'summary.noVideoForHighlights',
-                      'Open the source video to cut highlight clips.'
+                return (
+                  <div key={statusKey} className={highlightCard}>
+                    <div className={highlightHeader}>
+                      <div className={highlightTitle}>
+                        {h.title || t('summary.highlight', 'Highlight')}
+                      </div>
+                      <div className={highlightTime}>
+                        {formatRange(h.start, h.end)}
+                      </div>
+                    </div>
+                    {h.videoPath ? (
+                      <video
+                        className={highlightVideo}
+                        controls
+                        src={toFileUrl(h.videoPath)}
+                      />
+                    ) : (
+                      <div className={highlightPlaceholder}>
+                        <p className={highlightPlaceholderText}>
+                          {t(
+                            'summary.highlightPlaceholder',
+                            'Clip not yet cut.'
+                          )}
+                        </p>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleCutHighlightClip(h)}
+                          disabled={cutDisabled}
+                        >
+                          {cutStatus === 'cutting'
+                            ? t('summary.cuttingHighlightClip', 'Cutting…')
+                            : t(
+                                'summary.cutHighlightClip',
+                                'Cut this highlight'
+                              )}
+                        </Button>
+                        {cutStatus === 'cutting' && (
+                          <div className={highlightCutProgressTrack}>
+                            <div
+                              className={highlightCutProgressFill}
+                              style={{ width: `${cutPercent}%` }}
+                            />
+                          </div>
+                        )}
+                        {cutError && (
+                          <span className={highlightStatusError}>
+                            {cutError}
+                          </span>
+                        )}
+                        {!videoAvailableForHighlights && (
+                          <span className={highlightStatusError}>
+                            {t(
+                              'summary.noVideoForHighlights',
+                              'Open the source video to cut highlight clips.'
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {h.description && (
+                      <div className={highlightDesc}>{h.description}</div>
+                    )}
+                    {h.videoPath && (
+                      <div className={highlightActions}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleDownloadHighlight(h, idx)}
+                          disabled={downloadState === 'saving'}
+                        >
+                          {downloadState === 'saving'
+                            ? t('summary.downloadingHighlight', 'Saving…')
+                            : t('summary.downloadHighlight', 'Download clip')}
+                        </Button>
+                        {downloadState === 'saved' && (
+                          <span className={highlightStatusSuccess}>
+                            {t('summary.highlightSaved', 'Saved!')}
+                          </span>
+                        )}
+                        {downloadState === 'error' && (
+                          <span className={highlightStatusError}>
+                            {t('summary.highlightSaveError', 'Save failed')}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-                {h.description && (
-                  <div className={highlightDesc}>{h.description}</div>
-                )}
-                {h.videoPath && (
-                  <div className={highlightActions}>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleDownloadHighlight(h, idx)}
-                      disabled={status === 'saving'}
-                    >
-                      {status === 'saving'
-                        ? t('summary.downloadingHighlight', 'Saving…')
-                        : t('summary.downloadHighlight', 'Download clip')}
-                    </Button>
-                    {status === 'saved' && (
-                      <span className={highlightStatusSuccess}>
-                        {t('summary.highlightSaved', 'Saved!')}
-                      </span>
-                    )}
-                    {status === 'error' && (
-                      <span className={highlightStatusError}>
-                        {t('summary.highlightSaveError', 'Save failed')}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function getHighlightKey(h: TranscriptHighlight, index: number): string {
-  return `${h.videoPath || ''}-${index}`;
+function getHighlightKey(h: TranscriptHighlight): string {
+  if (typeof h.id === 'string' && h.id.trim().length > 0) {
+    return h.id;
+  }
+  return buildHighlightRangeKey(h);
 }
+
+function buildHighlightRangeKey(h: TranscriptHighlight): string {
+  const start = Number.isFinite(h.start) ? Math.round(h.start * 1000) : 0;
+  const end = Number.isFinite(h.end) ? Math.round(h.end * 1000) : start;
+  return `${start}-${end}`;
+}
+
+type HighlightClipCutState = {
+  status: 'idle' | 'cutting' | 'ready' | 'error' | 'cancelled';
+  percent: number;
+  error?: string;
+  operationId?: string | null;
+};
 
 function buildHighlightFilename(h: TranscriptHighlight, index: number): string {
   const base = h.title ? slugify(h.title) : `highlight-${index + 1}`;
@@ -672,6 +976,25 @@ function translateStageLabel(
       current: Number(chunkMatch[1]),
       total: Number(chunkMatch[2]),
     });
+  }
+  const selectingState =
+    (text.includes('selecting') || text.includes('selection')) &&
+    text.includes('highlight');
+  if (selectingState) {
+    return t(
+      'summary.status.selectingHighlights',
+      'Selecting highlight moments…'
+    );
+  }
+  if (text.includes('cutting') && text.includes('highlight')) {
+    const cutMatch = text.match(/cutting\s+highlight\s+(\d+)\s+of\s+(\d+)/);
+    if (cutMatch) {
+      return t('summary.status.cuttingHighlight', {
+        current: Number(cutMatch[1]),
+        total: Number(cutMatch[2]),
+      });
+    }
+    return t('summary.status.cuttingHighlights', 'Cutting highlight clips…');
   }
   if (text.includes('synthesizing')) {
     return t('summary.status.synthesizing');
@@ -732,6 +1055,12 @@ const panelStyles = css`
   display: flex;
   flex-direction: column;
   gap: 16px;
+`;
+
+const highlightsTabStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `;
 
 const tabsRowStyles = css`
@@ -872,14 +1201,35 @@ const highlightVideo = css`
   background: #000;
 `;
 
-const noVideoStyles = css`
-  color: ${colors.gray};
-  font-size: 0.9rem;
+const highlightPlaceholder = css`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: ${colors.dark};
   background: ${colors.grayLight};
   border: 1px dashed ${colors.border};
   border-radius: 6px;
-  padding: 10px;
-  text-align: center;
+  padding: 12px;
+`;
+
+const highlightPlaceholderText = css`
+  margin: 0;
+  color: ${colors.gray};
+`;
+
+const highlightCutProgressTrack = css`
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: ${colors.gray};
+  opacity: 0.25;
+  overflow: hidden;
+`;
+
+const highlightCutProgressFill = css`
+  height: 100%;
+  background: ${colors.primary};
+  transition: width 0.2s ease;
 `;
 
 const highlightDesc = css`

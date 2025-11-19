@@ -51,6 +51,10 @@ const electronAPI = {
     return ipcRenderer.invoke('generate-transcript-summary', options);
   },
 
+  cutHighlightClip: async (options: any) => {
+    return ipcRenderer.invoke('cut-highlight-clip', options);
+  },
+
   translateOneLine: async (options: any) => {
     return ipcRenderer.invoke('translate-one-line', options);
   },
@@ -111,6 +115,18 @@ const electronAPI = {
       ipcRenderer.removeListener('transcript-summary-progress', handler);
   },
 
+  onHighlightCutProgress: (callback: (progress: any) => void) => {
+    if (typeof callback !== 'function') return;
+    const handler = (_: any, progress: any) => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error('[preload] highlight-cut-progress error:', error);
+      }
+    };
+    ipcRenderer.on('highlight-cut-progress', handler);
+    return () => ipcRenderer.removeListener('highlight-cut-progress', handler);
+  },
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),

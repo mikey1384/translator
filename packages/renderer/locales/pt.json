@@ -52,7 +52,8 @@
     },
     "installUpdate": "Reiniciar para Atualizar",
     "confirmInstallUpdate": "Instalar atualização e reiniciar?",
-    "downloadUpdate": "Clique para baixar atualização"
+    "downloadUpdate": "Clique para baixar atualização",
+    "retry": "Retry"
   },
   "input": {
     "fromDevice": "Do seu dispositivo",
@@ -118,8 +119,28 @@
       "ready": "Resumo pronto",
       "error": "Falha ao gerar o resumo",
       "cancelled": "Resumo cancelado",
-      "inProgress": "Gerando resumo…"
-    }
+      "inProgress": "Gerando resumo…",
+      "selectingHighlights": "Selecting highlight moments…",
+      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Cutting highlight clips…"
+    },
+    "tab": {
+      "summary": "Summary",
+      "sections": "Detailed notes",
+      "highlights": "Highlights"
+    },
+    "noHighlights": "No highlights yet. Generate to detect punchlines.",
+    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "highlight": "Highlight",
+    "downloadHighlight": "Download clip",
+    "downloadingHighlight": "Saving…",
+    "highlightSaved": "Saved!",
+    "highlightSaveError": "Save failed",
+    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
+    "saveHighlightDialogTitle": "Save highlight clip",
+    "noSections": "No section notes yet.",
+    "sectionHeading": "Section {{index}}",
+    "highlightsInProgress": "Preparing highlight clips…"
   },
   "panel": {
     "gaps": {
@@ -192,6 +213,33 @@
       "mixHelp": "Controle quanto da trilha sonora original toca sob a voz dublada.",
       "mixAmbient": "Mais ambiente",
       "mixVoice": "Mais voz"
+    },
+    "byoOpenAi": {
+      "title": "Bring Your Own OpenAI Key",
+      "description": "Unlock a one-time upgrade to use your own OpenAI API key. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your account instead of consuming Stage5 credits.",
+      "unlocking": "Opening checkout…",
+      "unlockCta": "Unlock for $10",
+      "unlockHint": "Once unlocked, add your OpenAI key here at any time to toggle direct billing on your account.",
+      "unlockedDescription": "Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.",
+      "apiKeyLabel": "OpenAI API Key",
+      "hide": "Hide",
+      "show": "Show",
+      "saving": "Saving…",
+      "clear": "Clear Key",
+      "loadingKey": "Loading saved key…",
+      "keySaved": "API key saved locally.",
+      "keyCleared": "API key cleared.",
+      "keyValid": "API key validated successfully.",
+      "keyInvalid": "API key validation failed.",
+      "testing": "Testing…",
+      "test": "Test Key",
+      "lastSynced": "Last synced",
+      "toggleLabel": "Use my OpenAI key",
+      "toggleHelp": "When off, AI Credits are used.",
+      "toggleAria": "Toggle using your OpenAI key",
+      "toggleOn": "Using your OpenAI key for AI tasks.",
+      "toggleOff": "Using Stage5 credits for AI tasks.",
+      "toggleError": "Failed to update preference."
     }
   },
   "videoPlayer": {
@@ -259,7 +307,8 @@
     },
     "validation": {
       "pleaseSelectVideo": "Por favor, selecione um vídeo",
-      "processingDuration": "A duração do vídeo está sendo processada. Tente novamente em breve."
+      "processingDuration": "A duração do vídeo está sendo processada. Tente novamente em breve.",
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
     },
     "status": {
       "starting": "Iniciando...",
@@ -366,7 +415,8 @@
     "buyCredits": "Comprar Créditos",
     "redirectingToPayment": "Abrindo checkout seguro…",
     "description": "Escolha entre pacotes de ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), ou ${{pack3Price}} ({{pack3Hours}}h) de créditos",
-    "notEnough": "Créditos insuficientes. Por favor, compre mais créditos para continuar."
+    "notEnough": "Créditos insuficientes. Por favor, compre mais créditos para continuar.",
+    "usingApiKey": "Using API Key"
   },
   "cta": {
     "generate": {
