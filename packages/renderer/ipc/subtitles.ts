@@ -106,7 +106,6 @@ export function generateTranscriptSummary(options: {
   operationId?: string;
   videoPath?: string | null;
   includeHighlights?: boolean;
-  maxHighlights?: number;
 }): Promise<{
   summary?: string;
   sections?: import('@shared-types/app').TranscriptSummarySection[];

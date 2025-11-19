@@ -19,9 +19,7 @@ import {
   DubSegmentPayload,
   DubSubtitlesOptions,
   TranscriptHighlight,
-  TranscriptHighlightSubtitleSegment,
-  SubtitleRenderMode,
-  SrtSegment,
+  HighlightCutProgress,
 } from '@shared-types/app';
 import {
   addSubtitle,
@@ -43,17 +41,6 @@ import {
   mergeAdjacentIntervals,
   chunkSpeechInterval,
 } from '../services/subtitle-processing/audio-chunker.js';
-import { buildSrt } from '../../shared/helpers/index.js';
-import { getAssetsPath } from '../../shared/helpers/paths.js';
-import {
-  SUBTITLE_STYLE_PRESETS,
-  SubtitleStylePresetKey,
-} from '../../shared/constants/subtitle-styles.js';
-import {
-  BASELINE_FONT_SIZE,
-  BASELINE_HEIGHT,
-  fontScale,
-} from '../../shared/constants/runtime-config.js';
 
 let fileManagerInstance: FileManager | null = null;
 let ffmpegCtx: FFmpegContext | null = null;
@@ -92,150 +79,13 @@ function checkServicesInitialized(): {
 
 const SHORT_CLIP_WIDTH = 1080;
 const SHORT_CLIP_HEIGHT = 1920;
-
-function sanitizeHighlightSubtitleSegments(
-  segments?: TranscriptHighlightSubtitleSegment[] | null
-): TranscriptHighlightSubtitleSegment[] {
-  if (!Array.isArray(segments)) return [];
-  const sanitized: TranscriptHighlightSubtitleSegment[] = [];
-  for (const seg of segments) {
-    const start = Number(seg?.start);
-    const end = Number(seg?.end);
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-      continue;
-    }
-    const cleaned: TranscriptHighlightSubtitleSegment = {
-      start,
-      end,
-      original: typeof seg?.original === 'string' ? seg.original : '',
-    };
-    if (typeof seg?.translation === 'string') {
-      cleaned.translation = seg.translation;
-    }
-    sanitized.push(cleaned);
-  }
-  return sanitized.sort((a, b) => a.start - b.start);
-}
-
-function sliceSegmentsForRange({
-  segments,
-  clipStart,
-  clipEnd,
-}: {
-  segments: TranscriptHighlightSubtitleSegment[];
-  clipStart: number;
-  clipEnd: number;
-}): SrtSegment[] {
-  if (!Array.isArray(segments) || segments.length === 0) return [];
-  const duration = Math.max(0, clipEnd - clipStart);
-  if (duration <= 0) return [];
-
-  const selected: SrtSegment[] = [];
-  let counter = 0;
-  for (const seg of segments) {
-    if (seg.end <= clipStart || seg.start >= clipEnd) continue;
-    const absoluteStart = Math.max(seg.start, clipStart);
-    const absoluteEnd = Math.min(seg.end, clipEnd);
-    if (absoluteEnd <= absoluteStart) continue;
-    const relativeStart = Math.max(0, absoluteStart - clipStart);
-    const relativeEnd = Math.min(duration, absoluteEnd - clipStart);
-    if (relativeEnd <= relativeStart) continue;
-
-    selected.push({
-      id: `clip-${counter++}-${Math.round(relativeStart * 1000)}`,
-      index: selected.length + 1,
-      start: relativeStart,
-      end: relativeEnd,
-      original: seg.original ?? '',
-      translation: seg.translation,
-    });
-  }
-
-  return selected;
-}
-
-function escapeFilterPath(filePath: string): string {
-  const normalized = filePath.replace(/\\/g, '/');
-  const escapedColons = normalized.replace(/:/g, '\\:');
-  const escaped = escapedColons.replace(/'/g, "\\'");
-  return `'${escaped}'`;
-}
-
-function quoteFilterValue(value: string): string {
-  return `'${value.replace(/'/g, "\\'")}'`;
-}
-
-function buildSubtitleFilter({
-  inputLabel,
-  outputLabel,
-  subtitlePath,
-  fontsDir,
-  stylePreset,
-  fontSizePx,
-}: {
-  inputLabel: string;
-  outputLabel: string;
-  subtitlePath: string;
-  fontsDir: string | null;
-  stylePreset: SubtitleStylePresetKey;
-  fontSizePx: number;
-}): string {
-  const style =
-    SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
-  const assignments = [
-    `FontName=${style.fontName}`,
-    `FontSize=${Math.max(10, Math.round(fontSizePx))}`,
-    `PrimaryColour=${style.primaryColor}`,
-    `SecondaryColour=${style.secondaryColor}`,
-    `OutlineColour=${style.outlineColor}`,
-    `BackColour=${style.backColor}`,
-    `Bold=${style.isBold ? -1 : 0}`,
-    `Italic=${style.isItalic ? -1 : 0}`,
-    `Underline=${style.isUnderline ? -1 : 0}`,
-    `StrikeOut=${style.isStrikeout ? -1 : 0}`,
-    `Spacing=${style.spacing}`,
-    `ScaleX=${style.scaleX}`,
-    `ScaleY=${style.scaleY}`,
-    `BorderStyle=${style.borderStyle}`,
-    `Outline=${style.outlineSize}`,
-    `Shadow=${style.shadowDepth}`,
-    `Alignment=${style.alignment}`,
-    `MarginV=${style.marginVertical}`,
-    `MarginL=${style.marginLeft}`,
-    `MarginR=${style.marginRight}`,
-  ];
-
-  const params = [
-    `subtitles=${escapeFilterPath(subtitlePath)}`,
-    fontsDir ? `fontsdir=${escapeFilterPath(fontsDir)}` : null,
-    `force_style=${quoteFilterValue(assignments.join(','))}`,
-  ].filter(Boolean);
-
-  return `[${inputLabel}]${params.join(':')}[${outputLabel}]`;
-}
+const HIGHLIGHT_VIDEO_PRESET = 'superfast';
+const HIGHLIGHT_VIDEO_CRF = 23;
 
 function isVideoAlreadyVertical(meta: VideoMeta | null): boolean {
   if (!meta || !meta.width || !meta.height) return false;
   const ratio = meta.height / Math.max(meta.width, 1);
   return ratio >= 1.2;
-}
-
-function normalizeSubtitleMode(
-  mode?: SubtitleRenderMode | null
-): SubtitleRenderMode {
-  if (mode === 'dual' || mode === 'original' || mode === 'translation') {
-    return mode;
-  }
-  return 'translation';
-}
-
-function resolveStylePreset(
-  preset?: SubtitleStylePresetKey | string | null
-): SubtitleStylePresetKey {
-  if (preset && preset in SUBTITLE_STYLE_PRESETS) {
-    return preset as SubtitleStylePresetKey;
-  }
-  return 'Default';
 }
 
 export async function handleGenerateSubtitles(
@@ -885,7 +735,6 @@ export async function handleGenerateTranscriptSummary(
       signal: controller.signal,
       operationId,
       includeHighlights: options.includeHighlights !== false,
-      maxHighlights: options.maxHighlights,
       progressCallback: progress => {
         event.sender.send('transcript-summary-progress', {
           ...progress,
@@ -940,6 +789,23 @@ export async function handleCutHighlightClip(
   registerAutoCancel(operationId, event.sender, () => controller.abort());
   addSubtitle(operationId, controller);
 
+  let resolvedHighlightId: string | undefined = options.highlight?.id;
+  const emitHighlightProgress = (
+    percent: number,
+    stage: string,
+    extra?: Partial<HighlightCutProgress>
+  ) => {
+    const safePercent = Math.max(0, Math.min(100, percent));
+    const payload: HighlightCutProgress = {
+      percent: safePercent,
+      stage,
+      operationId,
+      highlightId: extra?.highlightId ?? resolvedHighlightId,
+      ...extra,
+    };
+    event.sender.send('highlight-cut-progress', payload);
+  };
+
   try {
     const { ffmpeg } = checkServicesInitialized();
     const videoPath = options.videoPath;
@@ -953,19 +819,6 @@ export async function handleCutHighlightClip(
     }
 
     await fs.access(videoPath);
-
-    const subtitleSegments = sanitizeHighlightSubtitleSegments(
-      options.highlightSubtitleSegments
-    );
-    const includeSubtitles = subtitleSegments.length > 0;
-    const subtitleMode = normalizeSubtitleMode(options.highlightSubtitleMode);
-    const stylePreset = resolveStylePreset(options.highlightStylePreset);
-    const baseFontSizePx = Number.isFinite(options.highlightBaseFontSize)
-      ? Math.max(10, Number(options.highlightBaseFontSize))
-      : BASELINE_FONT_SIZE;
-    const fontsDir = includeSubtitles
-      ? path.dirname(getAssetsPath('NotoSans-Regular.ttf'))
-      : null;
 
     let totalDur = 0;
     let durationKnown = false;
@@ -995,15 +848,6 @@ export async function handleCutHighlightClip(
     }
 
     const enforceVertical = !isVideoAlreadyVertical(videoMeta);
-    const referenceHeight = Math.max(
-      videoMeta?.height ?? BASELINE_HEIGHT,
-      BASELINE_HEIGHT
-    );
-    const targetHeight = enforceVertical ? SHORT_CLIP_HEIGHT : referenceHeight;
-    const computedFontSize = Math.max(
-      12,
-      Math.round(baseFontSizePx * fontScale(targetHeight))
-    );
 
     const sanitizedHighlight: TranscriptHighlight = {
       id: highlight.id,
@@ -1016,13 +860,13 @@ export async function handleCutHighlightClip(
       category: highlight.category,
       justification: highlight.justification,
     };
+    resolvedHighlightId = sanitizedHighlight.id;
 
-    event.sender.send('highlight-cut-progress', {
-      percent: 5,
-      stage: 'Preparing highlight clip',
-      operationId,
-      highlightId: sanitizedHighlight.id,
-    });
+    const progressThrottleMs = 250;
+    let lastProgressPercent = 5;
+    let lastProgressAt = Date.now();
+
+    emitHighlightProgress(lastProgressPercent, 'Preparing highlight clip');
 
     const rawStart = Number.isFinite(sanitizedHighlight.start)
       ? Math.max(0, Number(sanitizedHighlight.start))
@@ -1062,12 +906,25 @@ export async function handleCutHighlightClip(
       `highlight-${operationId}-${Math.round(safeStart)}-${Math.round(safeEnd)}.mp4`
     );
 
-    event.sender.send('highlight-cut-progress', {
-      percent: 25,
-      stage: 'Cutting highlight clip',
-      operationId,
-      highlightId: sanitizedHighlight.id,
-    });
+    emitHighlightProgress(lastProgressPercent, 'Cutting highlight clip');
+    const handleFfmpegProgress = (pct: number) => {
+      if (!Number.isFinite(pct)) return;
+      const clamped =
+        pct >= 100 ? 99 : Math.max(0, Math.min(100, Math.round(pct)));
+      const now = Date.now();
+      if (clamped < lastProgressPercent) {
+        return;
+      }
+      if (
+        clamped === lastProgressPercent &&
+        now - lastProgressAt < progressThrottleMs
+      ) {
+        return;
+      }
+      lastProgressPercent = clamped;
+      lastProgressAt = now;
+      emitHighlightProgress(clamped, 'Cutting highlight clip');
+    };
 
     const args = [
       '-y',
@@ -1087,45 +944,16 @@ export async function handleCutHighlightClip(
     if (enforceVertical) {
       const paddedLabel = nextLabel('pad');
       filterParts.push(
-        `[${currentLabel}]scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black[${paddedLabel}]`
+        `[${currentLabel}]scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease:flags=fast_bilinear,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black[${paddedLabel}]`
       );
       currentLabel = paddedLabel;
     }
 
     const cleanup: string[] = [];
-    if (includeSubtitles && fontsDir) {
-      const clipSegments = sliceSegmentsForRange({
-        segments: subtitleSegments,
-        clipStart: safeStart,
-        clipEnd: safeEnd,
-      });
-      if (clipSegments.length > 0) {
-        const srtPath = path.join(
-          ffmpeg.tempDir,
-          `highlight-${operationId}.srt`
-        );
-        const srtContent = buildSrt({
-          segments: clipSegments,
-          mode: subtitleMode,
-          noWrap: true,
-        });
-        if (srtContent.trim()) {
-          await fs.writeFile(srtPath, srtContent, 'utf8');
-          cleanup.push(srtPath);
-          const subtitleLabel = nextLabel('subs');
-          filterParts.push(
-            buildSubtitleFilter({
-              inputLabel: currentLabel,
-              outputLabel: subtitleLabel,
-              subtitlePath: srtPath,
-              fontsDir,
-              stylePreset,
-              fontSizePx: computedFontSize,
-            })
-          );
-          currentLabel = subtitleLabel;
-        }
-      }
+    try {
+      await fs.mkdir(ffmpeg.tempDir, { recursive: true });
+    } catch {
+      // ignore mkdir errors; writeFile will throw if still unavailable
     }
 
     const needsVideoFade = duration > fadeDuration * 2;
@@ -1143,7 +971,8 @@ export async function handleCutHighlightClip(
       )},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeDuration.toFixed(2)}`;
     }
 
-    if (filterParts.length > 0) {
+    const requiresVideoFilter = filterParts.length > 0;
+    if (requiresVideoFilter) {
       args.push(
         '-filter_complex',
         filterParts.join(';'),
@@ -1160,26 +989,33 @@ export async function handleCutHighlightClip(
       args.push('-af', audioFadeFilter);
     }
 
-    args.push(
-      '-c:v',
-      'libx264',
-      '-preset',
-      'veryfast',
-      '-crf',
-      '23',
-      '-c:a',
-      'aac',
-      '-b:a',
-      '128k',
-      '-movflags',
-      '+faststart',
-      outPath
-    );
+    if (requiresVideoFilter) {
+      args.push(
+        '-c:v',
+        'libx264',
+        '-preset',
+        HIGHLIGHT_VIDEO_PRESET,
+        '-crf',
+        String(HIGHLIGHT_VIDEO_CRF)
+      );
+    } else {
+      args.push('-c:v', 'copy');
+    }
+
+    if (audioFadeFilter) {
+      args.push('-c:a', 'aac', '-b:a', '128k');
+    } else {
+      args.push('-c:a', 'copy');
+    }
+
+    args.push('-movflags', '+faststart', outPath);
 
     try {
       await ffmpeg.run(args, {
         operationId,
         signal: controller.signal,
+        totalDuration: duration,
+        progress: handleFfmpegProgress,
       });
     } finally {
       await Promise.all(
@@ -1194,13 +1030,7 @@ export async function handleCutHighlightClip(
       videoPath: outPath,
     };
 
-    event.sender.send('highlight-cut-progress', {
-      percent: 100,
-      stage: 'ready',
-      operationId,
-      highlightId: sanitizedHighlight.id,
-      highlight: cutHighlight,
-    });
+    emitHighlightProgress(100, 'ready', { highlight: cutHighlight });
 
     return {
       success: true,
@@ -1215,12 +1045,8 @@ export async function handleCutHighlightClip(
 
     const message = error?.message || 'Failed to cut highlight clip';
 
-    event.sender.send('highlight-cut-progress', {
-      percent: 100,
-      stage: aborted ? 'cancelled' : 'error',
+    emitHighlightProgress(100, aborted ? 'cancelled' : 'error', {
       error: message,
-      operationId,
-      highlightId: options.highlight?.id,
     });
 
     if (aborted) {

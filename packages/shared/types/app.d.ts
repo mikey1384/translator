@@ -185,15 +185,6 @@ declare module '@shared-types/app' {
     text: string;
   }
 
-  export type SubtitleRenderMode = 'original' | 'translation' | 'dual';
-
-  export interface TranscriptHighlightSubtitleSegment {
-    start: number;
-    end: number;
-    original: string;
-    translation?: string;
-  }
-
   export interface TranscriptHighlight {
     id?: string;
     start: number;
@@ -219,7 +210,6 @@ declare module '@shared-types/app' {
     operationId?: string;
     videoPath?: string | null;
     includeHighlights?: boolean;
-    maxHighlights?: number;
   }
 
   export interface TranscriptSummaryResult {
@@ -247,10 +237,6 @@ declare module '@shared-types/app' {
   export interface CutHighlightClipRequest {
     videoPath: string;
     highlight: TranscriptHighlight;
-    highlightSubtitleSegments?: TranscriptHighlightSubtitleSegment[];
-    highlightSubtitleMode?: SubtitleRenderMode;
-    highlightStylePreset?: SubtitleStylePresetKey;
-    highlightBaseFontSize?: number;
     operationId?: string;
   }
 

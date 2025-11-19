@@ -50,9 +50,6 @@ export function TranscriptSummaryPanel({
   const { t } = useTranslation();
   const summaryLanguage = useUIStore(s => s.summaryLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
-  const showOriginalText = useUIStore(s => s.showOriginalText);
-  const baseFontSize = useUIStore(s => s.baseFontSize);
-  const subtitleStyle = useUIStore(s => s.subtitleStyle);
 
   const [summary, setSummary] = useState<string>('');
   const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
@@ -77,6 +74,22 @@ export function TranscriptSummaryPanel({
   const [highlightCutState, setHighlightCutState] = useState<
     Record<string, HighlightClipCutState>
   >({});
+  const mergeHighlightUpdates = useCallback(
+    (incoming?: TranscriptHighlight[] | null) => {
+      if (!Array.isArray(incoming) || incoming.length === 0) return;
+      setHighlights(prev => {
+        const map = new Map<string, TranscriptHighlight>();
+        prev.forEach(h => map.set(getHighlightKey(h), h));
+        incoming.forEach(highlight => {
+          const key = getHighlightKey(highlight);
+          const existing = map.get(key);
+          map.set(key, existing ? { ...existing, ...highlight } : highlight);
+        });
+        return Array.from(map.values()).sort((a, b) => a.start - b.start);
+      });
+    },
+    []
+  );
   const hasSummaryResult = useMemo(
     () => summary.trim().length > 0 || sections.length > 0,
     [summary, sections]
@@ -95,17 +108,6 @@ export function TranscriptSummaryPanel({
           text: (seg.original ?? '').trim(),
         }))
         .filter(seg => seg.text.length > 0),
-    [segments]
-  );
-
-  const highlightSubtitleSegments = useMemo(
-    () =>
-      segments.map(seg => ({
-        start: seg.start,
-        end: seg.end,
-        original: seg.original,
-        translation: seg.translation,
-      })),
     [segments]
   );
 
@@ -128,7 +130,6 @@ export function TranscriptSummaryPanel({
   }, [segments]);
 
   const hasTranscript = usableSegments.length > 0;
-  const highlightSubtitleMode = showOriginalText ? 'dual' : 'translation';
   const videoAvailableForHighlights = Boolean(
     originalVideoPath || fallbackVideoPath
   );
@@ -162,18 +163,9 @@ export function TranscriptSummaryPanel({
       }
 
       if (Array.isArray(progress.partialHighlights)) {
-        const partialHighlights =
-          progress.partialHighlights as TranscriptHighlight[];
-        setHighlights(prev => {
-          const map = new Map<string, TranscriptHighlight>();
-          prev.forEach(h => map.set(getHighlightKey(h), h));
-          partialHighlights.forEach(highlight => {
-            const key = getHighlightKey(highlight);
-            const existing = map.get(key);
-            map.set(key, existing ? { ...existing, ...highlight } : highlight);
-          });
-          return Array.from(map.values()).sort((a, b) => a.start - b.start);
-        });
+        mergeHighlightUpdates(
+          progress.partialHighlights as TranscriptHighlight[]
+        );
       }
 
       if (progress.partialSummary) {
@@ -223,7 +215,7 @@ export function TranscriptSummaryPanel({
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [activeOperationId, t]);
+  }, [activeOperationId, t, mergeHighlightUpdates]);
 
   useEffect(() => {
     const unsubscribe = onHighlightCutProgress(progress => {
@@ -263,14 +255,7 @@ export function TranscriptSummaryPanel({
       }
 
       if (highlight) {
-        setHighlights(prev => {
-          const map = new Map<string, TranscriptHighlight>();
-          prev.forEach(h => map.set(getHighlightKey(h), h));
-          const key = getHighlightKey(highlight);
-          const existing = map.get(key);
-          map.set(key, existing ? { ...existing, ...highlight } : highlight);
-          return Array.from(map.values()).sort((a, b) => a.start - b.start);
-        });
+        mergeHighlightUpdates([highlight]);
         const key = getHighlightKey(highlight);
         setDownloadStatus(prev => {
           if (!prev[key]) return prev;
@@ -300,7 +285,7 @@ export function TranscriptSummaryPanel({
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [t]);
+  }, [t, mergeHighlightUpdates]);
 
   const handleGenerate = useCallback(async () => {
     if (!hasTranscript || isGenerating) return;
@@ -334,7 +319,6 @@ export function TranscriptSummaryPanel({
         operationId: opId,
         videoPath: originalVideoPath || fallbackVideoPath || null,
         includeHighlights: true,
-        maxHighlights: 10,
       });
 
       if (result?.error) {
@@ -360,7 +344,7 @@ export function TranscriptSummaryPanel({
         setSections(result.sections as TranscriptSummarySection[]);
       }
       if (Array.isArray(result?.highlights)) {
-        setHighlights(result.highlights as TranscriptHighlight[]);
+        mergeHighlightUpdates(result.highlights as TranscriptHighlight[]);
       }
       setProgressLabel(t('summary.status.ready'));
       setProgressPercent(100);
@@ -398,6 +382,7 @@ export function TranscriptSummaryPanel({
     progressPercent,
     originalVideoPath,
     fallbackVideoPath,
+    mergeHighlightUpdates,
   ]);
 
   const handleDownloadHighlight = useCallback(
@@ -500,10 +485,6 @@ export function TranscriptSummaryPanel({
         const result = await cutHighlightClip({
           videoPath,
           highlight,
-          highlightSubtitleSegments,
-          highlightSubtitleMode,
-          highlightStylePreset: subtitleStyle,
-          highlightBaseFontSize: baseFontSize,
           operationId,
         });
 
@@ -553,10 +534,6 @@ export function TranscriptSummaryPanel({
       originalVideoPath,
       fallbackVideoPath,
       highlightCutState,
-      highlightSubtitleSegments,
-      highlightSubtitleMode,
-      subtitleStyle,
-      baseFontSize,
       t,
     ]
   );

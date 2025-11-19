@@ -14,7 +14,6 @@ interface GenerateTranscriptSummaryOptions {
   operationId: string;
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
   includeHighlights?: boolean;
-  maxHighlights?: number;
 }
 
 interface GenerateTranscriptSummaryResult {
@@ -28,7 +27,6 @@ interface SelectTranscriptHighlightsOptions {
   targetLanguage: string;
   signal: AbortSignal;
   operationId: string;
-  maxHighlights?: number;
   sections?: TranscriptSummarySection[];
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
   startPercent?: number;
@@ -107,7 +105,6 @@ export async function generateTranscriptSummary({
   operationId,
   progressCallback,
   includeHighlights = true,
-  maxHighlights,
 }: GenerateTranscriptSummaryOptions): Promise<GenerateTranscriptSummaryResult> {
   if (!Array.isArray(segments) || segments.length === 0) {
     throw new Error('No transcript segments available for summary');
@@ -120,7 +117,6 @@ export async function generateTranscriptSummary({
   }
 
   const languageName = formatLanguage(targetLanguage);
-  const highlightLimit = resolveHighlightLimit(maxHighlights);
 
   progressCallback?.({ percent: 5, stage: 'Preparing transcript slices' });
 
@@ -133,6 +129,16 @@ export async function generateTranscriptSummary({
   const chunkSummaries: string[] = [];
   const perChunkProgress = 70 / chunks.length;
   let runningSummary = '';
+  const highlightTracker =
+    includeHighlights && chunks.length > 0
+      ? createHighlightTracker({
+          segments: cleanedSegments,
+          operationId,
+        })
+      : null;
+  const highlightOutlineSource =
+    highlightTracker !== null ? new Array(chunks.length).fill('') : null;
+  let latestHighlights: TranscriptHighlight[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
     if (signal.aborted) {
@@ -156,6 +162,9 @@ export async function generateTranscriptSummary({
     });
     const trimmedSummary = summary.trim();
     chunkSummaries.push(trimmedSummary);
+    if (highlightOutlineSource) {
+      highlightOutlineSource[i] = trimmedSummary;
+    }
 
     runningSummary = await mergeIntoRunningSummary({
       existingSummary: runningSummary,
@@ -165,6 +174,35 @@ export async function generateTranscriptSummary({
       operationId,
     });
 
+    if (highlightTracker && highlightOutlineSource) {
+      const globalOutline = buildGlobalOutline(highlightOutlineSource);
+      try {
+        latestHighlights = await processHighlightChunk({
+          tracker: highlightTracker,
+          chunkText,
+          chunkIndex: i,
+          chunkCount: chunks.length,
+          chunkSummary: trimmedSummary,
+          globalOutline,
+          languageName,
+          signal,
+          operationId,
+        });
+      } catch (err) {
+        console.warn(
+          `[${operationId}] highlight selection failed for chunk ${i + 1}:`,
+          err
+        );
+        const message =
+          err instanceof Error ? err.message : 'Highlight selection failed';
+        progressCallback?.({
+          percent: startPercent,
+          stage: 'highlight-selection-error',
+          error: message,
+        });
+      }
+    }
+
     const partialSections = createSectionSummaries(chunkSummaries);
     const completePercent = 20 + perChunkProgress * (i + 1);
     progressCallback?.({
@@ -172,6 +210,7 @@ export async function generateTranscriptSummary({
       stage: `Section ${i + 1} of ${chunks.length} summarized`,
       partialSummary: runningSummary,
       partialSections,
+      ...(highlightTracker ? { partialHighlights: latestHighlights } : {}),
     });
   }
 
@@ -191,25 +230,24 @@ export async function generateTranscriptSummary({
     stage: 'Synthesizing comprehensive summary',
     partialSummary: finalSummary,
     partialSections: sectionSummaries,
+    ...(highlightTracker ? { partialHighlights: latestHighlights } : {}),
   });
 
   let highlights: TranscriptHighlight[] = [];
-  if (includeHighlights && highlightLimit > 0) {
+  if (highlightTracker) {
     try {
-      highlights = await selectTranscriptHighlights({
-        segments: cleanedSegments,
-        targetLanguage,
-        signal,
-        operationId,
-        maxHighlights: highlightLimit,
-        sections: sectionSummaries,
-        progressCallback,
-        startPercent: 94,
-        endPercent: 99,
+      highlights = finalizeHighlightTracker(highlightTracker);
+      progressCallback?.({
+        percent: 96,
+        stage:
+          highlights.length > 0
+            ? `Selected ${highlights.length} highlights`
+            : 'No highlight candidates found',
+        partialHighlights: highlights,
       });
     } catch (highlightError) {
       progressCallback?.({
-        percent: 99,
+        percent: 96,
         stage: 'highlight-selection-error',
         error:
           highlightError instanceof Error
@@ -235,7 +273,6 @@ export async function selectTranscriptHighlights({
   targetLanguage,
   signal,
   operationId,
-  maxHighlights,
   sections,
   progressCallback,
   startPercent,
@@ -248,11 +285,6 @@ export async function selectTranscriptHighlights({
   const cleanedSegments = sanitizeSegments(segments);
   if (cleanedSegments.length === 0) {
     throw new Error('Transcript is empty after filtering silent segments');
-  }
-
-  const highlightLimit = resolveHighlightLimit(maxHighlights);
-  if (highlightLimit <= 0) {
-    return [];
   }
 
   const chunks = buildChunks(cleanedSegments);
@@ -305,28 +337,77 @@ export async function selectTranscriptHighlights({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
-  const highlights = await selectHighlightsFromChunks({
-    chunks,
-    chunkSummaries,
+  const tracker = createHighlightTracker({
     segments: cleanedSegments,
-    languageName,
-    signal,
     operationId,
-    maxHighlights: highlightLimit,
-    progressCallback,
-    startPercent: mapPercent(60),
-    endPercent: mapPercent(95),
   });
+  const outlineSource = chunkSummaries.slice();
+  const total = chunks.length;
+  const highlightStart = mapPercent(60);
+  const highlightEnd = mapPercent(95);
+  const highlightSpan = Math.max(0, highlightEnd - highlightStart);
+  let latestHighlights: TranscriptHighlight[] = [];
 
+  for (let i = 0; i < total; i++) {
+    if (signal.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    const chunk = chunks[i];
+    if (!chunk.trim()) continue;
+
+    const sectionStart = highlightStart + (highlightSpan * i) / total;
+    progressCallback?.({
+      percent: sectionStart,
+      stage: `Selecting highlights section ${i + 1} of ${total}`,
+      current: i + 1,
+      total,
+    });
+
+    try {
+      const globalOutline = buildGlobalOutline(outlineSource);
+      latestHighlights = await processHighlightChunk({
+        tracker,
+        chunkText: chunk,
+        chunkIndex: i,
+        chunkCount: total,
+        chunkSummary: chunkSummaries[i] ?? '',
+        globalOutline,
+        languageName,
+        signal,
+        operationId,
+      });
+    } catch (err) {
+      console.warn(
+        `[${operationId}] highlight selection failed for chunk ${i + 1}:`,
+        err
+      );
+      continue;
+    }
+
+    const sectionComplete = highlightStart + (highlightSpan * (i + 1)) / total;
+    progressCallback?.({
+      percent: sectionComplete,
+      stage: `Section ${i + 1} highlights proposed`,
+      current: i + 1,
+      total,
+      partialHighlights: latestHighlights,
+    });
+  }
+
+  const finalHighlights = finalizeHighlightTracker(tracker);
   progressCallback?.({
     percent: mapPercent(100),
-    stage: 'Highlights ready',
-    partialHighlights: highlights,
-    total: highlights.length,
-    current: highlights.length,
+    stage:
+      finalHighlights.length > 0
+        ? `Selected ${finalHighlights.length} highlights`
+        : 'No highlight candidates found',
+    partialHighlights: finalHighlights,
+    total: finalHighlights.length,
+    current: finalHighlights.length,
   });
 
-  return highlights;
+  return finalHighlights;
 }
 
 function buildChunks(segments: TranscriptSummarySegment[]): string[] {
@@ -558,166 +639,121 @@ function formatLanguage(value: string): string {
     .join(' ');
 }
 
-function resolveHighlightLimit(value?: number | null): number {
-  if (!Number.isFinite(value ?? null)) {
-    return 10;
-  }
-  const numeric = Math.floor(value as number);
-  return Math.max(0, numeric);
+type HighlightTrackerState = {
+  seen: Map<string, TranscriptHighlight>;
+  highlightIds: Map<string, string>;
+  nextId: number;
+  segments: TranscriptSummarySegment[];
+  latest: TranscriptHighlight[];
+  operationId: string;
+};
+
+function createHighlightTracker({
+  segments,
+  operationId,
+}: {
+  segments: TranscriptSummarySegment[];
+  operationId: string;
+}): HighlightTrackerState {
+  return {
+    seen: new Map(),
+    highlightIds: new Map(),
+    nextId: 0,
+    segments,
+    latest: [],
+    operationId,
+  };
 }
 
-async function selectHighlightsFromChunks({
-  chunks,
-  chunkSummaries,
-  segments,
+async function processHighlightChunk({
+  tracker,
+  chunkText,
+  chunkIndex,
+  chunkCount,
+  chunkSummary,
+  globalOutline,
   languageName,
   signal,
   operationId,
-  maxHighlights = 10,
-  progressCallback,
-  startPercent = 0,
-  endPercent = 5,
 }: {
-  chunks: string[];
-  chunkSummaries: string[];
-  segments: TranscriptSummarySegment[];
+  tracker: HighlightTrackerState;
+  chunkText: string;
+  chunkIndex: number;
+  chunkCount: number;
+  chunkSummary: string;
+  globalOutline: string;
   languageName: string;
   signal: AbortSignal;
   operationId: string;
-  maxHighlights?: number;
-  progressCallback?: (progress: TranscriptSummaryProgress) => void;
-  startPercent?: number;
-  endPercent?: number;
 }): Promise<TranscriptHighlight[]> {
-  if (!Array.isArray(chunks) || chunks.length === 0) {
-    return [];
+  if (!chunkText.trim()) {
+    return tracker.latest;
   }
 
-  const total = chunks.length;
-  const perChunkLimit = Math.max(1, Math.ceil(maxHighlights / total));
-  const span = Math.max(0, endPercent - startPercent);
-  const sanitizedSummaries = Array.isArray(chunkSummaries)
-    ? chunkSummaries
-    : new Array(total).fill('');
-  const globalOutline = buildGlobalOutline(sanitizedSummaries);
+  const chunkHighlights = await proposeHighlightsForChunk({
+    chunkText,
+    chunkIndex,
+    chunkCount,
+    chunkSummary,
+    globalOutline,
+    languageName,
+    signal,
+    operationId,
+  });
 
-  const highlightIds = new Map<string, string>();
-  let highlightCounter = 0;
-  const getHighlightId = (key: string): string => {
-    const existing = highlightIds.get(key);
-    if (existing) return existing;
-    const nextId = `${operationId}-hl-${++highlightCounter}`;
-    highlightIds.set(key, nextId);
-    return nextId;
-  };
+  for (const h of chunkHighlights) {
+    const start = Number(h.start);
+    const end = Number(h.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+    if (end - start < 2) continue;
+    const key = `${Math.round(start * 1000)}-${Math.round(end * 1000)}`;
+    const highlightId = getHighlightTrackerId(tracker, key);
+    const baseHighlight: TranscriptHighlight = {
+      start: Math.max(0, start),
+      end: Math.max(0, end),
+      title: h.title,
+      description: h.description,
+      score: h.score,
+      confidence: h.confidence,
+      category: h.category,
+      justification: h.justification,
+      id: highlightId,
+    };
 
-  const seen = new Map<string, TranscriptHighlight>();
-
-  for (let i = 0; i < total; i++) {
-    if (signal.aborted) {
-      throw new DOMException('Operation cancelled', 'AbortError');
+    if (!tracker.seen.has(key)) {
+      tracker.seen.set(key, baseHighlight);
     }
-
-    const chunk = chunks[i];
-    if (!chunk.trim()) continue;
-
-    const percent = startPercent + (span * i) / total;
-    progressCallback?.({
-      percent,
-      stage: `Selecting highlights section ${i + 1} of ${total}`,
-      current: i + 1,
-      total,
-    });
-
-    let chunkHighlights: TranscriptHighlight[] = [];
-    try {
-      chunkHighlights = await proposeHighlightsForChunk({
-        chunkText: chunk,
-        chunkIndex: i,
-        chunkCount: total,
-        chunkSummary: sanitizedSummaries[i] ?? '',
-        globalOutline,
-        languageName,
-        signal,
-        operationId,
-        perChunkLimit,
-      });
-    } catch (err) {
-      // Log but continue; a single chunk failure shouldn't abort the entire summary
-      console.warn(
-        `[${operationId}] highlight selection failed for chunk ${i + 1}:`,
-        err
-      );
-      continue;
-    }
-
-    for (const h of chunkHighlights) {
-      const start = Number(h.start);
-      const end = Number(h.end);
-      if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-      if (end - start < 2) continue;
-      const key = `${Math.round(start * 1000)}-${Math.round(end * 1000)}`;
-      const baseHighlight: TranscriptHighlight = {
-        start: Math.max(0, start),
-        end: Math.max(0, end),
-        title: h.title,
-        description: h.description,
-        score: h.score,
-        confidence: h.confidence,
-        category: h.category,
-        justification: h.justification,
-        id: getHighlightId(key),
-      };
-
-      if (seen.has(key)) {
-        const existing = seen.get(key)!;
-        if (getHighlightScore(baseHighlight) > getHighlightScore(existing)) {
-          seen.set(key, { ...existing, ...baseHighlight, id: existing.id });
-        }
-      } else {
-        seen.set(key, baseHighlight);
-      }
-    }
-
-    const refinedCandidates = refineAndScoreHighlights({
-      highlights: Array.from(seen.values()),
-      segments,
-    });
-    const ranked = rankHighlights(refinedCandidates, maxHighlights);
-    progressCallback?.({
-      percent: startPercent + (span * (i + 1)) / total,
-      stage: `Section ${i + 1} highlights proposed`,
-      current: i + 1,
-      total,
-      partialHighlights: ranked,
-    });
   }
 
-  let final = rankHighlights(
-    refineAndScoreHighlights({
-      highlights: Array.from(seen.values()),
-      segments,
-    }),
-    maxHighlights
-  );
+  tracker.latest = Array.from(tracker.seen.values());
+
+  return tracker.latest;
+}
+
+function finalizeHighlightTracker(
+  tracker: HighlightTrackerState
+): TranscriptHighlight[] {
+  let final = Array.from(tracker.seen.values());
 
   if (final.length === 0) {
     final = buildFallbackHighlightsFromSegments({
-      segments,
-      maxHighlights,
+      segments: tracker.segments,
     });
   }
 
-  progressCallback?.({
-    percent: endPercent,
-    stage:
-      final.length > 0
-        ? `Selected ${final.length} highlights`
-        : 'No highlight candidates found',
-    partialHighlights: final,
-  });
-
+  tracker.latest = final;
   return final;
+}
+
+function getHighlightTrackerId(
+  tracker: HighlightTrackerState,
+  key: string
+): string {
+  const existing = tracker.highlightIds.get(key);
+  if (existing) return existing;
+  const nextId = `${tracker.operationId}-hl-${++tracker.nextId}`;
+  tracker.highlightIds.set(key, nextId);
+  return nextId;
 }
 
 async function proposeHighlightsForChunk({
@@ -729,7 +765,6 @@ async function proposeHighlightsForChunk({
   languageName,
   signal,
   operationId,
-  perChunkLimit,
 }: {
   chunkText: string;
   chunkIndex: number;
@@ -739,17 +774,16 @@ async function proposeHighlightsForChunk({
   languageName: string;
   signal: AbortSignal;
   operationId: string;
-  perChunkLimit: number;
 }): Promise<TranscriptHighlight[]> {
-  const limit = Math.max(1, Math.min(5, perChunkLimit));
-
   const system = `You are a senior editorial producer who selects short-form video moments that feel natural and gripping. Always respond in ${languageName}. Output strict JSON that matches the requested schema.`;
 
-  const user = `Review section ${chunkIndex + 1} of ${chunkCount} from a larger recording. Recommend up to ${limit} short clips only if they will play smoothly as isolated highlights. Follow these principles:
-- Keep clips entirely within this section's timestamps and anchor them at natural sentence boundaries.
-- Ideal runtime is 12–45 seconds. Never return under 6 seconds or over 75 seconds.
-- Focus on singular, high-impact beats: turning points, memorable quotes, emotional reactions, or concrete advice.
-- Add a short title and description in ${languageName} with plain text (no markdown, emojis, or formatting).
+  const user = `Review section ${chunkIndex + 1} of ${chunkCount} from a larger recording. Recommend every short clip that will play smoothly as an isolated highlight. Follow these principles:
+- Keep clips entirely within this section's timestamps and anchor them at natural sentence boundaries. Never borrow context from other sections.
+- Favor runtimes between 15–40 seconds when possible. Runs outside 8–60 seconds should only be suggested if the storytelling payoff is unquestionably stronger. Never stretch a moment just to reach one minute.
+- Prioritize beats that would perform well as YouTube-style shorts: hook the viewer within the opening seconds, stay tightly aligned with the promise implied by the title/description, and deliver an unmistakable payoff or quotable takeaway.
+- Reject segments that feel tangential to the section's focus or that leave the final thought unresolved. Titles and descriptions must truthfully reflect what the viewer will see.
+- Ensure the speaker completes their final clause before the clip ends. If the punchline or call-to-action continues into the next sentence, include it so the moment lands naturally.
+- Add a short title and description in ${languageName} with plain text (no markdown, emojis, or formatting). Use the title for the hook and the description for context or a micro call-to-action.
 - Provide a confidence score between 0 and 1, a concise category label (e.g., "reveal", "advice", "humor"), and a one-sentence justification referencing transcript evidence.
 - If this section lacks a strong candidate, respond with an empty highlights array.
 
@@ -816,214 +850,6 @@ function buildGlobalOutline(summaries: string[]): string {
       return `Section ${idx + 1}: ${clean}`;
     })
     .join('\n');
-}
-
-function refineAndScoreHighlights({
-  highlights,
-  segments,
-  leadPadding = 0.6,
-  tailPadding = 0.75,
-}: {
-  highlights: TranscriptHighlight[];
-  segments: TranscriptSummarySegment[];
-  leadPadding?: number;
-  tailPadding?: number;
-}): TranscriptHighlight[] {
-  if (!Array.isArray(highlights) || highlights.length === 0) {
-    return [];
-  }
-
-  const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
-  const refined: TranscriptHighlight[] = [];
-  const minDuration = 3;
-  const maxDuration = 90;
-  const minScoreThreshold = 0.2;
-  let fallbackCandidate: TranscriptHighlight | null = null;
-
-  for (const raw of highlights) {
-    const rawStart = normalizeTimestamp(raw.start) ?? NaN;
-    const rawEnd = normalizeTimestamp(raw.end) ?? NaN;
-    if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) continue;
-    if (rawEnd <= rawStart) continue;
-
-    const overlapSegments = findOverlappingSegments(
-      sortedSegments,
-      rawStart,
-      rawEnd
-    );
-    if (overlapSegments.length === 0) {
-      continue;
-    }
-
-    const firstSeg = overlapSegments[0];
-    const lastSeg = overlapSegments[overlapSegments.length - 1];
-    const snappedStart = Math.max(0, firstSeg.start);
-    const snappedEnd = Math.max(snappedStart + 0.5, lastSeg.end);
-
-    const paddedStart = Math.max(0, snappedStart - leadPadding);
-    let paddedEnd = Math.max(paddedStart + 2, snappedEnd + tailPadding);
-
-    if (paddedEnd - paddedStart < minDuration) {
-      paddedEnd = paddedStart + minDuration;
-    }
-    if (paddedEnd - paddedStart > maxDuration) {
-      paddedEnd = paddedStart + maxDuration;
-    }
-
-    const duration = paddedEnd - paddedStart;
-
-    const normalizedConfidence = normalizeConfidenceValue(
-      Number.isFinite(raw.confidence ?? null)
-        ? (raw.confidence as number)
-        : Number.isFinite(raw.score ?? null)
-          ? (raw.score as number)
-          : undefined
-    );
-
-    const durationScore =
-      duration <= 0
-        ? 0
-        : duration >= 12 && duration <= 45
-          ? 1
-          : duration < 12
-            ? clamp(duration / 12, 0, 1)
-            : clamp(1 - (duration - 45) / 35, 0, 1);
-
-    const coverageScore = clamp(overlapSegments.length / 3, 0, 1);
-    const combinedScore = clamp(
-      normalizedConfidence * 0.5 + durationScore * 0.3 + coverageScore * 0.2,
-      0,
-      1
-    );
-
-    const scoredHighlight: TranscriptHighlight = {
-      ...raw,
-      start: Number(paddedStart.toFixed(3)),
-      end: Number(paddedEnd.toFixed(3)),
-      confidence: normalizedConfidence,
-      score: Number((combinedScore * 100).toFixed(2)),
-      title: raw.title?.trim() || raw.title,
-      description: raw.description?.trim() || raw.description,
-      justification: raw.justification?.trim() || raw.justification,
-      category: raw.category?.trim() || raw.category,
-      id: raw.id,
-    };
-
-    if (combinedScore < minScoreThreshold) {
-      if (
-        !fallbackCandidate ||
-        getHighlightScore(scoredHighlight) >
-          getHighlightScore(fallbackCandidate)
-      ) {
-        fallbackCandidate = scoredHighlight;
-      }
-      continue;
-    }
-
-    refined.push(scoredHighlight);
-  }
-
-  if (refined.length === 0 && fallbackCandidate) {
-    refined.push(fallbackCandidate);
-  }
-
-  return dedupeHighlights(refined);
-}
-
-function findOverlappingSegments(
-  segments: TranscriptSummarySegment[],
-  start: number,
-  end: number
-): TranscriptSummarySegment[] {
-  const overlaps: TranscriptSummarySegment[] = [];
-  for (const seg of segments) {
-    if (seg.end <= start) continue;
-    if (seg.start >= end) break;
-    overlaps.push(seg);
-  }
-  return overlaps;
-}
-
-function dedupeHighlights(
-  highlights: TranscriptHighlight[]
-): TranscriptHighlight[] {
-  if (!Array.isArray(highlights) || highlights.length === 0) return [];
-  const sorted = [...highlights].sort((a, b) => a.start - b.start);
-  const result: TranscriptHighlight[] = [];
-
-  for (const current of sorted) {
-    const last = result[result.length - 1];
-    if (!last) {
-      result.push(current);
-      continue;
-    }
-
-    const overlap =
-      Math.min(last.end, current.end) - Math.max(last.start, current.start);
-    const shortest = Math.min(
-      last.end - last.start,
-      current.end - current.start
-    );
-
-    if (overlap > 0 && overlap / Math.max(shortest, 1) >= 0.6) {
-      const lastScore = getHighlightScore(last);
-      const currentScore = getHighlightScore(current);
-      if (currentScore > lastScore) {
-        result[result.length - 1] = current;
-      }
-    } else {
-      result.push(current);
-    }
-  }
-
-  return result;
-}
-
-function normalizeConfidenceValue(value?: number): number {
-  if (!Number.isFinite(value ?? null)) return 0.5;
-  const numeric = value as number;
-  if (numeric > 1) {
-    return clamp(numeric / 100, 0, 1);
-  }
-  return clamp(numeric, 0, 1);
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-
-function rankHighlights(
-  highlights: TranscriptHighlight[],
-  maxHighlights: number
-): TranscriptHighlight[] {
-  const sorted = [...highlights].sort((lhs, rhs) => {
-    const scoreA = getHighlightScore(lhs);
-    const scoreB = getHighlightScore(rhs);
-    if (scoreA !== scoreB) {
-      return scoreB - scoreA;
-    }
-    const lengthA = lhs.end - lhs.start;
-    const lengthB = rhs.end - rhs.start;
-    if (lengthA !== lengthB) {
-      return lengthB - lengthA;
-    }
-    return lhs.start - rhs.start;
-  });
-  if (maxHighlights <= 0) {
-    return [];
-  }
-  return sorted.slice(0, Math.min(maxHighlights, sorted.length));
-}
-
-function getHighlightScore(highlight: TranscriptHighlight | undefined): number {
-  if (!highlight) return 0;
-  if (Number.isFinite(highlight.score ?? null)) {
-    return highlight.score as number;
-  }
-  if (Number.isFinite(highlight.confidence ?? null)) {
-    return (highlight.confidence as number) * 100;
-  }
-  return 0;
 }
 
 function safeParseHighlights(text: string): Array<{
@@ -1105,10 +931,8 @@ function normalizeTimestamp(value: unknown): number | null {
 
 function buildFallbackHighlightsFromSegments({
   segments,
-  maxHighlights,
 }: {
   segments: TranscriptSummarySegment[];
-  maxHighlights: number;
 }): TranscriptHighlight[] {
   if (!Array.isArray(segments) || segments.length === 0) {
     return [];
@@ -1124,10 +948,8 @@ function buildFallbackHighlightsFromSegments({
     return [];
   }
 
-  const desired = Number.isFinite(maxHighlights)
-    ? Math.max(1, Math.min(Math.floor(maxHighlights), 5))
-    : 3;
-  const count = Math.min(desired, segments.length);
+  const estimatedCount = Math.max(1, Math.round(totalDuration / 90));
+  const count = Math.min(segments.length, estimatedCount);
   const bucketSize = totalDuration / count;
   const results: TranscriptHighlight[] = [];
 
