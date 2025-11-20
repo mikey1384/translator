@@ -199,7 +199,6 @@ export async function generateTranscriptSummary({
 
   let highlightPhaseAborted = false;
   if (highlightTracker) {
-    const globalOutline = buildGlobalOutline(chunkSummaries);
     const highlightStartPercent = 90;
     const highlightEndPercent = 92;
     const highlightSpan = Math.max(
@@ -237,7 +236,6 @@ export async function generateTranscriptSummary({
           chunkIndex: i,
           chunkCount: chunks.length,
           chunkSummary: chunkSummaries[i] ?? '',
-          globalOutline,
           languageName,
           signal,
           operationId,
@@ -412,7 +410,6 @@ export async function selectTranscriptHighlights({
     segments: numberedSegments,
     operationId,
   });
-  const outlineSource = chunkSummaries.slice();
   const total = chunks.length;
   const highlightStart = mapPercent(60);
   const highlightEnd = mapPercent(95);
@@ -437,7 +434,6 @@ export async function selectTranscriptHighlights({
     });
 
     try {
-      const globalOutline = buildGlobalOutline(outlineSource);
       latestHighlights = await processHighlightChunk({
         tracker,
         chunkText,
@@ -445,7 +441,6 @@ export async function selectTranscriptHighlights({
         chunkIndex: i,
         chunkCount: total,
         chunkSummary: chunkSummaries[i] ?? '',
-        globalOutline,
         languageName,
         signal,
         operationId,
@@ -769,7 +764,6 @@ async function processHighlightChunk({
   chunkIndex,
   chunkCount,
   chunkSummary,
-  globalOutline,
   languageName,
   signal,
   operationId,
@@ -780,7 +774,6 @@ async function processHighlightChunk({
   chunkIndex: number;
   chunkCount: number;
   chunkSummary: string;
-  globalOutline: string;
   languageName: string;
   signal: AbortSignal;
   operationId: string;
@@ -794,7 +787,6 @@ async function processHighlightChunk({
     chunkIndex,
     chunkCount,
     chunkSummary,
-    globalOutline,
     languageName,
     signal,
     operationId,
@@ -865,7 +857,6 @@ async function proposeHighlightsForChunk({
   chunkIndex,
   chunkCount,
   chunkSummary,
-  globalOutline,
   languageName,
   signal,
   operationId,
@@ -874,7 +865,6 @@ async function proposeHighlightsForChunk({
   chunkIndex: number;
   chunkCount: number;
   chunkSummary: string;
-  globalOutline: string;
   languageName: string;
   signal: AbortSignal;
   operationId: string;
@@ -891,9 +881,6 @@ async function proposeHighlightsForChunk({
 - Provide a confidence score between 0 and 1, a concise category label (e.g., "reveal", "advice", "humor"), and a one-sentence justification referencing transcript evidence.
 - Reference transcript lines using the [L123] markers. For every highlight return the lowest and highest line numbers that belong in the clip.
 - If this section lacks a strong candidate, respond with an empty highlights array.
-
-Global outline of the recording:
-${globalOutline}
 
 Focused notes for this section:
 ${chunkSummary || '(no notes provided)'}
@@ -1109,22 +1096,6 @@ function clampToRange(value: number, min: number, max: number): number {
   if (value < min) return min;
   if (value > max) return max;
   return value;
-}
-
-function buildGlobalOutline(summaries: string[]): string {
-  if (!Array.isArray(summaries) || summaries.length === 0) {
-    return '(outline unavailable)';
-  }
-  return summaries
-    .map((summary, idx) => {
-      const clean =
-        typeof summary === 'string' ? summary.replace(/\s+/g, ' ').trim() : '';
-      if (!clean) {
-        return `Section ${idx + 1}: (no summary available)`;
-      }
-      return `Section ${idx + 1}: ${clean}`;
-    })
-    .join('\n');
 }
 
 function safeParseHighlights(text: string): Array<{
