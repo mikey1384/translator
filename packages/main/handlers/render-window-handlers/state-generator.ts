@@ -10,6 +10,8 @@ export async function generateStatePngs({
   tempDirPath,
   videoWidth,
   videoHeight,
+  displayWidth,
+  displayHeight,
   fps,
   fontSizePx,
   stylePreset,
@@ -22,6 +24,8 @@ export async function generateStatePngs({
   tempDirPath: string;
   videoWidth: number;
   videoHeight: number;
+  displayWidth?: number;
+  displayHeight?: number;
   fps: number;
   fontSizePx?: number;
   stylePreset?: unknown;
@@ -82,11 +86,22 @@ export async function generateStatePngs({
       const scaledSize = fontSizePx ? Math.round(fontSizePx) : fontSizePx;
 
       await page.evaluate(
-        ({ txt, size, preset }) => {
+        ({ txt, size, preset, displayWidth: dw, displayHeight: dh }) => {
           // @ts-expect-error provided by render-host script
-          window.updateSubtitle(txt, { fontSizePx: size, stylePreset: preset });
+          window.updateSubtitle(txt, {
+            fontSizePx: size,
+            stylePreset: preset,
+            videoWidthPx: dw,
+            videoHeightPx: dh,
+          });
         },
-        { txt: ev.text, size: scaledSize, preset: stylePreset }
+        {
+          txt: ev.text,
+          size: scaledSize,
+          preset: stylePreset,
+          displayWidth,
+          displayHeight,
+        }
       );
 
       try {

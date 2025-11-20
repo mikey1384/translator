@@ -294,6 +294,12 @@ export default function VideoPlayer() {
   const videoPath = useVideoStore(s => s.path);
   const videoHeightMeta = useVideoStore(s => s.meta?.height ?? null);
   const videoWidthMeta = useVideoStore(s => s.meta?.width ?? null);
+  const videoDisplayHeightMeta = useVideoStore(
+    s => s.meta?.displayHeight ?? null
+  );
+  const videoDisplayWidthMeta = useVideoStore(
+    s => s.meta?.displayWidth ?? null
+  );
   const mergeInProgress = useTaskStore(s => s.merge.inProgress);
   const translationInProgress = useTaskStore(s => s.translation.inProgress);
   const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
@@ -602,6 +608,8 @@ export default function VideoPlayer() {
             isAudioOnly={isAudioOnly}
             videoHeight={videoHeightMeta}
             videoWidth={videoWidthMeta}
+            displayHeight={videoDisplayHeightMeta}
+            displayWidth={videoDisplayWidthMeta}
           />
 
           <div

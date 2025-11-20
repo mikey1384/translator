@@ -20,12 +20,16 @@ export function getSubtitleStyles(opts: {
   isFullScreen?: boolean;
   stylePreset: SubtitleStylePresetKey;
   isMultiLine: boolean;
+  videoWidthPx?: number;
+  videoHeightPx?: number;
 }): string {
   const {
     displayFontSize = BASELINE_FONT_SIZE,
     isFullScreen = false,
     stylePreset = 'Default',
     isMultiLine,
+    videoWidthPx,
+    videoHeightPx,
   } = opts;
 
   const style =
@@ -41,8 +45,28 @@ export function getSubtitleStyles(opts: {
   // In docked mode, position absolutely within the video wrapper so width matches the video.
   const position: 'fixed' | 'absolute' = isFullScreen ? 'fixed' : 'absolute';
 
+  const SHORTS_RATIO_CUTOFF = 0.68; // ~9:16 portrait or taller
+  const canvasWidth =
+    videoWidthPx ??
+    (typeof window !== 'undefined'
+      ? window.innerWidth || undefined
+      : undefined);
+  const canvasHeight =
+    videoHeightPx ??
+    (typeof window !== 'undefined'
+      ? window.innerHeight || undefined
+      : undefined);
+  const isShortFormPortrait =
+    !!canvasWidth &&
+    !!canvasHeight &&
+    canvasWidth < canvasHeight &&
+    canvasWidth / canvasHeight <= SHORTS_RATIO_CUTOFF;
+
   let bottomValue: string;
-  if (isMultiLine) {
+  if (isShortFormPortrait) {
+    // Lift captions further for Shorts/TikTok-style portrait videos to clear platform UI at the bottom.
+    bottomValue = isMultiLine ? '30%' : '24%';
+  } else if (isMultiLine) {
     bottomValue = isFullScreen ? '5%' : '2.5%';
   } else {
     bottomValue = isFullScreen ? '10%' : '5%';

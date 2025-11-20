@@ -198,6 +198,8 @@ export function initializeRenderWindowHandlers({
           tempDirPath,
           videoWidth: options.videoWidth,
           videoHeight: options.videoHeight,
+          displayWidth: options.displayWidth ?? options.videoWidth,
+          displayHeight: options.displayHeight ?? options.videoHeight,
           fps: realFps,
           fontSizePx: options.fontSizePx,
           stylePreset: options.stylePreset,

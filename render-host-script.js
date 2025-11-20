@@ -1430,7 +1430,9 @@ function getSubtitleStyles(opts) {
     displayFontSize = BASELINE_FONT_SIZE,
     isFullScreen = false,
     stylePreset = "Default",
-    isMultiLine
+    isMultiLine,
+    videoWidthPx,
+    videoHeightPx
   } = opts;
   const style = SUBTITLE_STYLE_PRESETS[stylePreset] || SUBTITLE_STYLE_PRESETS.Default;
   const finalFontSize = Math.max(10, displayFontSize);
@@ -1438,8 +1440,14 @@ function getSubtitleStyles(opts) {
   const outlineRgba = assColorToRgba(style.outlineColor);
   const shadowRgba = assColorToRgba(style.backColor);
   const position2 = isFullScreen ? "fixed" : "absolute";
+  const SHORTS_RATIO_CUTOFF = 0.68;
+  const canvasWidth = videoWidthPx ?? (typeof window !== "undefined" ? window.innerWidth || void 0 : void 0);
+  const canvasHeight = videoHeightPx ?? (typeof window !== "undefined" ? window.innerHeight || void 0 : void 0);
+  const isShortFormPortrait = !!canvasWidth && !!canvasHeight && canvasWidth < canvasHeight && canvasWidth / canvasHeight <= SHORTS_RATIO_CUTOFF;
   let bottomValue;
-  if (isMultiLine) {
+  if (isShortFormPortrait) {
+    bottomValue = isMultiLine ? "30%" : "24%";
+  } else if (isMultiLine) {
     bottomValue = isFullScreen ? "5%" : "2.5%";
   } else {
     bottomValue = isFullScreen ? "10%" : "5%";
@@ -1545,10 +1553,16 @@ function getSubtitleStyles(opts) {
 }
 
 // render-host-script.tsx
+var renderTarget = {
+  width: void 0,
+  height: void 0
+};
 function applyPresetStyles(el, {
   fontSizePx = 24,
   stylePreset = "Default",
-  isMultiLine = false
+  isMultiLine = false,
+  videoWidthPx = renderTarget.width,
+  videoHeightPx = renderTarget.height
 } = {}) {
   if (!el) return;
   const dynamicClass = getSubtitleStyles({
@@ -1556,7 +1570,9 @@ function applyPresetStyles(el, {
     isFullScreen: false,
     // your headless renderer might treat the canvas as always full-screen
     stylePreset,
-    isMultiLine
+    isMultiLine,
+    videoWidthPx,
+    videoHeightPx
   });
   el.className = dynamicClass;
   el.style.fontSize = fontSizePx + "px";
@@ -1573,6 +1589,8 @@ function applySubtitlePreset(preset) {
 function initializeSubtitleDisplay() {
   console.log("[initializeSubtitleDisplay] Initializing...");
   document.body.style.backgroundColor = "transparent";
+  renderTarget.width = window.innerWidth || void 0;
+  renderTarget.height = window.innerHeight || void 0;
   const rootElement = document.getElementById("render-host-root");
   if (rootElement) {
     rootElement.style.backgroundColor = "transparent";
@@ -1584,7 +1602,6 @@ function initializeSubtitleDisplay() {
       subtitleEl = document.createElement("div");
       subtitleEl.id = "subtitle";
       subtitleEl.style.position = "absolute";
-      subtitleEl.style.bottom = "10px";
       subtitleEl.style.textAlign = "center";
       subtitleEl.style.pointerEvents = "none";
       rootElement.appendChild(subtitleEl);
@@ -1598,7 +1615,6 @@ function initializeSubtitleDisplay() {
       subtitleEl = document.createElement("div");
       subtitleEl.id = "subtitle";
       subtitleEl.style.position = "absolute";
-      subtitleEl.style.bottom = "10px";
       subtitleEl.style.textAlign = "center";
       subtitleEl.style.pointerEvents = "none";
       document.body.appendChild(subtitleEl);
@@ -1608,7 +1624,12 @@ function initializeSubtitleDisplay() {
   window.updateSubtitle = (text, opts = {}) => {
     const el = document.getElementById("subtitle");
     if (!el) return;
-    const { stylePreset = "Default", fontSizePx } = opts;
+    const {
+      stylePreset = "Default",
+      fontSizePx,
+      videoWidthPx,
+      videoHeightPx
+    } = opts;
     const isMultiLine = text.includes("\n");
     if (stylePreset === "LineBox") {
       const bg = assColorToRgba(
@@ -1626,7 +1647,13 @@ function initializeSubtitleDisplay() {
     } else {
       el.textContent = text;
     }
-    applyPresetStyles(el, { fontSizePx, stylePreset, isMultiLine });
+    applyPresetStyles(el, {
+      fontSizePx,
+      stylePreset,
+      isMultiLine,
+      videoWidthPx,
+      videoHeightPx
+    });
     try {
       const computedFont = window.getComputedStyle(el).getPropertyValue("font-family");
       if (!window.__loggedFontFamily) {

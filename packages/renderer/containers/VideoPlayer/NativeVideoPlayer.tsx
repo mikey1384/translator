@@ -74,6 +74,8 @@ export interface NativeVideoPlayerProps {
   isAudioOnly: boolean;
   videoHeight?: number | null;
   videoWidth?: number | null;
+  displayHeight?: number | null;
+  displayWidth?: number | null;
 }
 
 export default function NativeVideoPlayer({
@@ -85,6 +87,8 @@ export default function NativeVideoPlayer({
   isAudioOnly,
   videoHeight,
   videoWidth,
+  displayHeight,
+  displayWidth,
 }: NativeVideoPlayerProps) {
   const { url: videoUrl, togglePlay } = useVideoStore();
 
@@ -110,6 +114,14 @@ export default function NativeVideoPlayer({
     !isAudioOnly && targetVideoHeight
       ? Math.max(videoWidth ?? Math.round((targetVideoHeight * 16) / 9), 1)
       : null;
+  const subtitleCanvasWidth =
+    !isAudioOnly && (displayWidth || videoWidth || targetVideoWidth)
+      ? displayWidth ?? videoWidth ?? targetVideoWidth ?? undefined
+      : undefined;
+  const subtitleCanvasHeight =
+    !isAudioOnly && (displayHeight || videoHeight || targetVideoHeight)
+      ? displayHeight ?? videoHeight ?? targetVideoHeight ?? undefined
+      : undefined;
   const canonicalFontSize = isAudioOnly
     ? Math.max(10, baseFontSize)
     : Math.max(
@@ -390,6 +402,8 @@ export default function NativeVideoPlayer({
         displayFontSize={effFontSize}
         isFullScreen={isFullyExpanded}
         stylePreset={stylePreset}
+        videoWidthPx={subtitleCanvasWidth}
+        videoHeightPx={subtitleCanvasHeight}
       />
 
       {showInd && (

@@ -27,6 +27,9 @@ type Meta = {
   width: number;
   height: number;
   frameRate: number | string;
+  rotation?: number;
+  displayWidth?: number;
+  displayHeight?: number;
 } | null;
 
 interface State {

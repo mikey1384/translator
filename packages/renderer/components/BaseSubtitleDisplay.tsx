@@ -14,6 +14,8 @@ interface BaseSubtitleDisplayProps {
   displayFontSize?: number;
   isFullScreen?: boolean;
   stylePreset?: SubtitleStylePresetKey;
+  videoWidthPx?: number;
+  videoHeightPx?: number;
 }
 
 export default function BaseSubtitleDisplay({
@@ -22,6 +24,8 @@ export default function BaseSubtitleDisplay({
   displayFontSize,
   isFullScreen,
   stylePreset,
+  videoWidthPx,
+  videoHeightPx,
 }: BaseSubtitleDisplayProps): React.ReactElement {
   const subtitleRef = useRef<HTMLDivElement>(null);
   const [isMultiLine, setIsMultiLine] = useState(false);
@@ -77,6 +81,8 @@ export default function BaseSubtitleDisplay({
     isFullScreen,
     stylePreset: stylePreset as SubtitleStylePresetKey,
     isMultiLine,
+    videoWidthPx,
+    videoHeightPx,
   });
   const combinedClassName = `${dynamicStyles} ${isVisible ? 'visible' : ''}`;
 

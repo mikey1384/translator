@@ -7,16 +7,25 @@ import {
   SubtitleStylePresetKey,
 } from '../shared/constants/subtitle-styles.js';
 
+const renderTarget = {
+  width: undefined as number | undefined,
+  height: undefined as number | undefined,
+};
+
 function applyPresetStyles(
   el: HTMLElement | null,
   {
     fontSizePx = 24,
     stylePreset = 'Default',
     isMultiLine = false,
+    videoWidthPx = renderTarget.width,
+    videoHeightPx = renderTarget.height,
   }: {
     fontSizePx?: number;
     stylePreset?: SubtitleStylePresetKey;
     isMultiLine?: boolean;
+    videoWidthPx?: number;
+    videoHeightPx?: number;
   } = {}
 ) {
   if (!el) return;
@@ -25,6 +34,8 @@ function applyPresetStyles(
     isFullScreen: false, // your headless renderer might treat the canvas as always full-screen
     stylePreset,
     isMultiLine,
+    videoWidthPx,
+    videoHeightPx,
   });
   el.className = dynamicClass;
   el.style.fontSize = fontSizePx + 'px';
@@ -44,6 +55,8 @@ export function applySubtitlePreset(preset: SubtitleStylePresetKey) {
 function initializeSubtitleDisplay() {
   console.log('[initializeSubtitleDisplay] Initializing...');
   document.body.style.backgroundColor = 'transparent';
+  renderTarget.width = window.innerWidth || undefined;
+  renderTarget.height = window.innerHeight || undefined;
 
   const rootElement = document.getElementById('render-host-root');
   if (rootElement) {
@@ -57,7 +70,6 @@ function initializeSubtitleDisplay() {
       subtitleEl.id = 'subtitle';
       // Minimal inline styles; the dynamic class will control layout
       subtitleEl.style.position = 'absolute';
-      subtitleEl.style.bottom = '10px';
       subtitleEl.style.textAlign = 'center';
       subtitleEl.style.pointerEvents = 'none';
       rootElement.appendChild(subtitleEl);
@@ -72,7 +84,6 @@ function initializeSubtitleDisplay() {
       subtitleEl = document.createElement('div');
       subtitleEl.id = 'subtitle';
       subtitleEl.style.position = 'absolute';
-      subtitleEl.style.bottom = '10px';
       subtitleEl.style.textAlign = 'center';
       subtitleEl.style.pointerEvents = 'none';
       document.body.appendChild(subtitleEl);
@@ -83,12 +94,22 @@ function initializeSubtitleDisplay() {
   // @ts-expect-error...
   window.updateSubtitle = (
     text: string,
-    opts: { stylePreset?: SubtitleStylePresetKey; fontSizePx?: number } = {}
+    opts: {
+      stylePreset?: SubtitleStylePresetKey;
+      fontSizePx?: number;
+      videoWidthPx?: number;
+      videoHeightPx?: number;
+    } = {}
   ) => {
     const el = document.getElementById('subtitle');
     if (!el) return;
 
-    const { stylePreset = 'Default', fontSizePx } = opts;
+    const {
+      stylePreset = 'Default',
+      fontSizePx,
+      videoWidthPx,
+      videoHeightPx,
+    } = opts;
     const isMultiLine = text.includes('\n');
 
     /* ---------- render text ---------- */
@@ -124,7 +145,13 @@ function initializeSubtitleDisplay() {
       el.textContent = text;
     }
 
-    applyPresetStyles(el, { fontSizePx, stylePreset, isMultiLine });
+    applyPresetStyles(el, {
+      fontSizePx,
+      stylePreset,
+      isMultiLine,
+      videoWidthPx,
+      videoHeightPx,
+    });
 
     try {
       const computedFont = window

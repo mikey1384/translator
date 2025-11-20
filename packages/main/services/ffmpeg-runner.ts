@@ -64,6 +64,9 @@ export interface VideoMeta {
   width: number;
   height: number;
   frameRate: number;
+  rotation?: number;
+  displayWidth?: number;
+  displayHeight?: number;
 }
 
 let _ffmpegCached: string | null = null;
@@ -370,12 +373,12 @@ export async function createFFmpegContext(
         ffprobePath,
         [
           '-v',
-          'error',
-          '-show_entries',
-          'stream=index,codec_type,width,height,r_frame_rate:format=duration',
-          '-of',
-          'json',
-          file,
+      'error',
+      '-show_entries',
+      'stream=index,codec_type,width,height,r_frame_rate,tags=rotate,side_data_list:format=duration',
+      '-of',
+      'json',
+      file,
         ],
         { windowsHide: true }
       );
@@ -395,11 +398,27 @@ export async function createFFmpegContext(
           const v =
             data.streams?.find((s: any) => s.codec_type === 'video') || {};
           const [num, den] = (v.r_frame_rate || '0/1').split('/');
+          const rotationTag = Number(
+            (v.tags && v.tags.rotate) ??
+              v.side_data_list?.find((s: any) => s?.rotation != null)
+                ?.rotation ??
+              0
+          );
+          const normalizedRotation =
+            ((Number.isFinite(rotationTag) ? rotationTag : 0) % 360 + 360) %
+            360;
+          const isQuarterTurn =
+            normalizedRotation === 90 || normalizedRotation === 270;
+          const displayWidth = isQuarterTurn ? +v.height || 0 : +v.width || 0;
+          const displayHeight = isQuarterTurn ? +v.width || 0 : +v.height || 0;
           resolve({
             duration: parseFloat(data.format?.duration ?? '0'),
             width: +v.width || 0,
             height: +v.height || 0,
             frameRate: +den ? +num / +den : 0,
+            rotation: normalizedRotation,
+            displayWidth,
+            displayHeight,
           });
         } catch (e: any) {
           reject(

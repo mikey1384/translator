@@ -86,6 +86,9 @@ declare module '@shared-types/app' {
       width: number;
       height: number;
       frameRate: number;
+      rotation?: number;
+      displayWidth?: number;
+      displayHeight?: number;
     };
     error?: string;
     code?: string;
@@ -471,6 +474,9 @@ declare module '@shared-types/app' {
     overlayMode?: 'overlayOnVideo' | 'blackVideo';
     stylePreset?: SubtitleStylePresetKey;
     outputMode?: 'original' | 'translation' | 'dual';
+    displayWidth?: number;
+    displayHeight?: number;
+    videoRotationDeg?: number;
   }
 
   export interface ExposedRenderResult {
