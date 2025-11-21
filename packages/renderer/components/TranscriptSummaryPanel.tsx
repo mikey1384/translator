@@ -947,13 +947,7 @@ function translateStageLabel(
   if (text.includes('preparing')) {
     return t('summary.status.preparing');
   }
-  const chunkMatch = text.match(/section\s+(\d+)\s+of\s+(\d+)/);
-  if (chunkMatch) {
-    return t('summary.status.chunk', {
-      current: Number(chunkMatch[1]),
-      total: Number(chunkMatch[2]),
-    });
-  }
+
   const selectingState =
     (text.includes('selecting') || text.includes('selection')) &&
     text.includes('highlight');
@@ -972,6 +966,14 @@ function translateStageLabel(
       });
     }
     return t('summary.status.cuttingHighlights', 'Cutting highlight clips…');
+  }
+
+  const chunkMatch = text.match(/section\s+(\d+)\s+of\s+(\d+)/);
+  if (chunkMatch) {
+    return t('summary.status.chunk', {
+      current: Number(chunkMatch[1]),
+      total: Number(chunkMatch[2]),
+    });
   }
   if (text.includes('synthesizing')) {
     return t('summary.status.synthesizing');
