@@ -178,7 +178,7 @@ export async function transcribe(
 }
 
 export async function translate(options: Stage5TranslateOptions): Promise<any> {
-  const { messages, model, signal } = options as Stage5TranslateOptions;
+  const { messages, model, signal, reasoning } = options as Stage5TranslateOptions;
   const provider = getActiveProviderForModel(model);
 
   // Handle Anthropic/Claude models with BYO key
@@ -198,6 +198,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
         model,
         apiKey: anthropicKey,
         signal,
+        effort: reasoning?.effort,
       });
     } catch (error) {
       mapAnthropicError(error);

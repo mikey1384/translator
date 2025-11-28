@@ -5,6 +5,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
+import type { SummaryEffortLevel } from '@shared-types/app';
 
 interface State {
   showSettings: boolean;
@@ -15,6 +16,7 @@ interface State {
   inputMode: 'file' | 'url';
   targetLanguage: string;
   summaryLanguage: string;
+  summaryEffortLevel: SummaryEffortLevel;
   showOriginalText: boolean;
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
@@ -53,6 +55,7 @@ interface Actions {
   setInputMode(mode: 'file' | 'url'): void;
   setTargetLanguage(lang: string): void;
   setSummaryLanguage(lang: string): void;
+  setSummaryEffortLevel(level: SummaryEffortLevel): void;
   setShowOriginalText(show: boolean): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
@@ -77,6 +80,7 @@ interface Actions {
 
 const TARGET_LANG_KEY = 'savedTargetLanguage';
 const SUMMARY_LANG_KEY = 'savedSummaryLanguage';
+const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
@@ -104,14 +108,15 @@ const initial: State = {
   inputMode: 'file',
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
+  summaryEffortLevel: (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ?? 'high',
   showOriginalText: JSON.parse(
     localStorage.getItem(SHOW_ORIGINAL_KEY) ?? 'true'
   ),
   qualityTranscription: JSON.parse(
-    localStorage.getItem(QUALITY_TRANSCRIPTION_KEY) ?? 'false'
+    localStorage.getItem(QUALITY_TRANSCRIPTION_KEY) ?? 'true'
   ),
   qualityTranslation: JSON.parse(
-    localStorage.getItem(QUALITY_TRANSLATION_KEY) ?? 'false'
+    localStorage.getItem(QUALITY_TRANSLATION_KEY) ?? 'true'
   ),
   dubVoice: (() => {
     const stored = localStorage.getItem(DUB_VOICE_KEY);
@@ -240,6 +245,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         setSummaryLanguage(lang) {
           localStorage.setItem(SUMMARY_LANG_KEY, lang);
           set({ summaryLanguage: lang });
+        },
+
+        setSummaryEffortLevel(level) {
+          localStorage.setItem(SUMMARY_EFFORT_KEY, level);
+          set({ summaryEffortLevel: level });
         },
 
         setShowOriginalText(show) {

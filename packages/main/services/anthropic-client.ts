@@ -2,13 +2,22 @@ import Anthropic from '@anthropic-ai/sdk';
 import log from 'electron-log';
 import { AI_MODELS } from '@shared/constants';
 
-const ANTHROPIC_MAX_TOKENS = 8192;
+const ANTHROPIC_MAX_TOKENS = 16000;
+const ANTHROPIC_MAX_TOKENS_WITH_THINKING = 32000;
+
+// Extended thinking budget tokens by effort level
+const THINKING_BUDGET: Record<'low' | 'medium' | 'high', number> = {
+  low: 0, // No extended thinking
+  medium: 8000, // Moderate reasoning
+  high: 16000, // Deep reasoning
+};
 
 export interface AnthropicTranslateOptions {
   messages: Array<{ role: string; content: string }>;
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
+  effort?: 'low' | 'medium' | 'high';
 }
 
 function makeAnthropic(apiKey: string) {
@@ -24,6 +33,7 @@ export async function translateWithAnthropic({
   model = AI_MODELS.CLAUDE_OPUS,
   apiKey,
   signal,
+  effort,
 }: AnthropicTranslateOptions): Promise<any> {
   const client = makeAnthropic(apiKey);
 
@@ -48,26 +58,55 @@ export async function translateWithAnthropic({
     userMessages.unshift({ role: 'user', content: 'Please proceed.' });
   }
 
-  const response = await client.messages.create(
-    {
-      model,
-      max_tokens: ANTHROPIC_MAX_TOKENS,
-      system: systemPrompt,
-      messages: userMessages,
-    },
-    { signal }
-  );
+  // Determine if extended thinking should be enabled
+  const budgetTokens = effort ? THINKING_BUDGET[effort] : 0;
+  const useExtendedThinking = budgetTokens > 0;
 
-  // Convert Anthropic response to OpenAI-compatible format
-  const content =
-    response.content[0]?.type === 'text' ? response.content[0].text : '';
+  // Build request parameters
+  const requestParams: Anthropic.MessageCreateParams = {
+    model,
+    max_tokens: useExtendedThinking
+      ? ANTHROPIC_MAX_TOKENS_WITH_THINKING
+      : ANTHROPIC_MAX_TOKENS,
+    messages: userMessages,
+  };
+
+  // Add system prompt if present (not compatible with extended thinking in some cases)
+  if (systemPrompt && !useExtendedThinking) {
+    requestParams.system = systemPrompt;
+  } else if (systemPrompt && useExtendedThinking) {
+    // Prepend system context to first user message when using extended thinking
+    userMessages[0].content = `${systemPrompt}\n\n${userMessages[0].content}`;
+  }
+
+  // Add extended thinking configuration
+  if (useExtendedThinking) {
+    (requestParams as any).thinking = {
+      type: 'enabled',
+      budget_tokens: budgetTokens,
+    };
+    log.debug(
+      `[anthropic-client] Extended thinking enabled with budget: ${budgetTokens} tokens`
+    );
+  }
+
+  const response = await client.messages.create(requestParams, { signal });
+
+  // Extract text content, handling both regular and thinking responses
+  let textContent = '';
+  for (const block of response.content) {
+    if (block.type === 'text') {
+      textContent += block.text;
+    }
+    // Skip 'thinking' blocks - they contain internal reasoning
+  }
 
   return {
     choices: [
       {
         message: {
           role: 'assistant',
-          content,
+          content: textContent,
         },
       },
     ],

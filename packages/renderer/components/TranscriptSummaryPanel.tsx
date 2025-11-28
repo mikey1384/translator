@@ -51,6 +51,8 @@ export function TranscriptSummaryPanel({
   const { t } = useTranslation();
   const summaryLanguage = useUIStore(s => s.summaryLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
+  const summaryEffortLevel = useUIStore(s => s.summaryEffortLevel);
+  const setSummaryEffortLevel = useUIStore(s => s.setSummaryEffortLevel);
 
   const [summary, setSummary] = useState<string>('');
   const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
@@ -322,6 +324,7 @@ export function TranscriptSummaryPanel({
         operationId: opId,
         videoPath: originalVideoPath || fallbackVideoPath || null,
         includeHighlights: true,
+        effortLevel: summaryEffortLevel,
       });
 
       if (result?.error) {
@@ -380,6 +383,7 @@ export function TranscriptSummaryPanel({
     hasTranscript,
     isGenerating,
     summaryLanguage,
+    summaryEffortLevel,
     usableSegments,
     t,
     progressPercent,
@@ -654,6 +658,30 @@ export function TranscriptSummaryPanel({
               </optgroup>
             ))}
           </select>
+          <div className={effortToggleStyles}>
+            <button
+              className={effortButtonStyles(summaryEffortLevel === 'standard')}
+              onClick={() => setSummaryEffortLevel('standard')}
+              disabled={isGenerating}
+              title={t(
+                'summary.effortStandardDesc',
+                'Fast analysis using GPT-5.1'
+              )}
+            >
+              {t('summary.effortStandard', 'Standard')}
+            </button>
+            <button
+              className={effortButtonStyles(summaryEffortLevel === 'high')}
+              onClick={() => setSummaryEffortLevel('high')}
+              disabled={isGenerating}
+              title={t(
+                'summary.effortHighDesc',
+                'Deep analysis using Claude Opus with extended thinking'
+              )}
+            >
+              {t('summary.effortHigh', 'High')}
+            </button>
+          </div>
           <Button
             variant="primary"
             size="sm"
@@ -1371,6 +1399,39 @@ const aspectModeButtonStyles = (active: boolean) => css`
 
   &:hover {
     background: ${active ? colors.primary : colors.grayLight};
+  }
+
+  &:first-of-type {
+    border-right: 1px solid ${colors.border};
+  }
+`;
+
+const effortToggleStyles = css`
+  display: flex;
+  gap: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid ${colors.border};
+`;
+
+const effortButtonStyles = (active: boolean) => css`
+  border: none;
+  background: ${active ? colors.primary : colors.white};
+  color: ${active ? colors.white : colors.dark};
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: ${active ? colors.primary : colors.grayLight};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   &:first-of-type {

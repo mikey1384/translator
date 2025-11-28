@@ -106,6 +106,7 @@ export function generateTranscriptSummary(options: {
   operationId?: string;
   videoPath?: string | null;
   includeHighlights?: boolean;
+  effortLevel?: import('@shared-types/app').SummaryEffortLevel;
 }): Promise<{
   summary?: string;
   sections?: import('@shared-types/app').TranscriptSummarySection[];

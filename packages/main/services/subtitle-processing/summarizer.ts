@@ -4,6 +4,7 @@ import type {
   TranscriptSummaryProgress,
   TranscriptHighlight,
   TranscriptSummarySection,
+  SummaryEffortLevel,
 } from '@shared-types/app';
 import { AI_MODELS } from '@shared/constants';
 
@@ -14,6 +15,7 @@ interface GenerateTranscriptSummaryOptions {
   operationId: string;
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
   includeHighlights?: boolean;
+  effortLevel?: SummaryEffortLevel;
 }
 
 interface GenerateTranscriptSummaryResult {
@@ -115,6 +117,7 @@ export async function generateTranscriptSummary({
   operationId,
   progressCallback,
   includeHighlights = true,
+  effortLevel = 'standard',
 }: GenerateTranscriptSummaryOptions): Promise<GenerateTranscriptSummaryResult> {
   if (!Array.isArray(segments) || segments.length === 0) {
     throw new Error('No transcript segments available for summary');
@@ -134,6 +137,11 @@ export async function generateTranscriptSummary({
   );
 
   const languageName = formatLanguage(targetLanguage);
+
+  // Determine model and reasoning based on effort level
+  const useHighEffort = effortLevel === 'high';
+  const model = useHighEffort ? AI_MODELS.CLAUDE_OPUS : AI_MODELS.GPT;
+  const reasoning = useHighEffort ? { effort: 'high' as const } : undefined;
 
   progressCallback?.({ percent: 5, stage: 'Preparing transcript slices' });
 
@@ -175,6 +183,8 @@ export async function generateTranscriptSummary({
       languageName,
       signal,
       operationId,
+      model,
+      reasoning,
     });
     const trimmedSummary = summary.trim();
     chunkSummaries.push(trimmedSummary);
@@ -185,6 +195,8 @@ export async function generateTranscriptSummary({
       languageName,
       signal,
       operationId,
+      model,
+      reasoning,
     });
 
     const partialSections = createSectionSummaries(chunkSummaries);
@@ -239,6 +251,8 @@ export async function generateTranscriptSummary({
           languageName,
           signal,
           operationId,
+          model,
+          reasoning,
         });
       } catch (err) {
         const abortedError =
@@ -588,6 +602,8 @@ async function summarizeChunk({
   languageName,
   signal,
   operationId,
+  model = AI_MODELS.GPT,
+  reasoning,
 }: {
   chunkText: string;
   chunkIndex: number;
@@ -595,6 +611,8 @@ async function summarizeChunk({
   languageName: string;
   signal: AbortSignal;
   operationId: string;
+  model?: string;
+  reasoning?: { effort: 'low' | 'medium' | 'high' };
 }): Promise<string> {
   const systemPrompt = `You are a meticulous academic researcher creating detailed source notes for university-level assignments. Always respond in ${languageName} using a formal, objective tone and plain-text formatting.`;
 
@@ -615,7 +633,8 @@ ${chunkText}`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    model: AI_MODELS.CLAUDE_OPUS,
+    model,
+    reasoning,
     signal,
     operationId,
   });
@@ -629,12 +648,16 @@ async function mergeIntoRunningSummary({
   languageName,
   signal,
   operationId,
+  model = AI_MODELS.GPT,
+  reasoning,
 }: {
   existingSummary: string;
   newSectionSummary: string;
   languageName: string;
   signal: AbortSignal;
   operationId: string;
+  model?: string;
+  reasoning?: { effort: 'low' | 'medium' | 'high' };
 }): Promise<string> {
   const sectionText = truncateForPrompt(
     newSectionSummary,
@@ -677,7 +700,8 @@ ${sectionText}`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    model: AI_MODELS.CLAUDE_OPUS,
+    model,
+    reasoning,
     signal,
     operationId,
   });
@@ -765,6 +789,8 @@ async function processHighlightChunk({
   languageName,
   signal,
   operationId,
+  model = AI_MODELS.GPT,
+  reasoning,
 }: {
   tracker: HighlightTrackerState;
   chunkText: string;
@@ -775,6 +801,8 @@ async function processHighlightChunk({
   languageName: string;
   signal: AbortSignal;
   operationId: string;
+  model?: string;
+  reasoning?: { effort: 'low' | 'medium' | 'high' };
 }): Promise<TranscriptHighlight[]> {
   if (!chunkText.trim()) {
     return tracker.latest;
@@ -788,6 +816,8 @@ async function processHighlightChunk({
     languageName,
     signal,
     operationId,
+    model,
+    reasoning,
   });
 
   for (const h of chunkHighlights) {
@@ -858,6 +888,8 @@ async function proposeHighlightsForChunk({
   languageName,
   signal,
   operationId,
+  model = AI_MODELS.GPT,
+  reasoning,
 }: {
   chunkText: string;
   chunkIndex: number;
@@ -866,6 +898,8 @@ async function proposeHighlightsForChunk({
   languageName: string;
   signal: AbortSignal;
   operationId: string;
+  model?: string;
+  reasoning?: { effort: 'low' | 'medium' | 'high' };
 }): Promise<TranscriptHighlight[]> {
   const system = `You are a senior editorial producer who selects short-form video moments that feel natural and gripping. Always respond in ${languageName}. Output strict JSON that matches the requested schema.`;
 
@@ -908,7 +942,8 @@ Return STRICT JSON ONLY (no markdown) using this shape:
       { role: 'system', content: system },
       { role: 'user', content: user },
     ],
-    model: AI_MODELS.CLAUDE_OPUS,
+    model,
+    reasoning,
     signal,
     operationId,
   });

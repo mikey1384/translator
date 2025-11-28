@@ -209,12 +209,15 @@ declare module '@shared-types/app' {
     content: string;
   }
 
+  export type SummaryEffortLevel = 'standard' | 'high';
+
   export interface TranscriptSummaryRequest {
     segments: TranscriptSummarySegment[];
     targetLanguage: string;
     operationId?: string;
     videoPath?: string | null;
     includeHighlights?: boolean;
+    effortLevel?: SummaryEffortLevel;
   }
 
   export interface TranscriptSummaryResult {

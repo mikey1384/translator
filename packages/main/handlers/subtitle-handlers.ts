@@ -735,6 +735,7 @@ export async function handleGenerateTranscriptSummary(
       signal: controller.signal,
       operationId,
       includeHighlights: options.includeHighlights !== false,
+      effortLevel: options.effortLevel,
       progressCallback: progress => {
         event.sender.send('transcript-summary-progress', {
           ...progress,
