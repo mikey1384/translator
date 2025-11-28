@@ -6,6 +6,7 @@ import { getDeviceId } from '../handlers/credit-handlers.js';
 
 export interface EntitlementsSnapshot {
   byoOpenAi: boolean;
+  byoAnthropic: boolean;
   fetchedAt?: string;
 }
 
@@ -19,24 +20,36 @@ export function initEntitlementsManager(store: SettingsStoreType) {
 
 export function getCachedEntitlements(): EntitlementsSnapshot {
   const byoOpenAi = storeRef?.get('byoOpenAiUnlocked', false) ?? false;
+  const byoAnthropic = storeRef?.get('byoAnthropicUnlocked', false) ?? false;
   return {
     byoOpenAi: Boolean(byoOpenAi),
+    byoAnthropic: Boolean(byoAnthropic),
     fetchedAt: undefined,
   };
 }
 
 export function setByoUnlocked(
-  unlocked: boolean,
+  entitlements: { byoOpenAi?: boolean; byoAnthropic?: boolean },
   opts: { notify?: boolean; window?: BrowserWindow | null } = {}
 ): EntitlementsSnapshot {
   if (!storeRef) {
     log.warn('[entitlements-manager] setByoUnlocked called before init.');
   } else {
-    storeRef.set('byoOpenAiUnlocked', Boolean(unlocked));
+    if (entitlements.byoOpenAi !== undefined) {
+      storeRef.set('byoOpenAiUnlocked', Boolean(entitlements.byoOpenAi));
+    }
+    if (entitlements.byoAnthropic !== undefined) {
+      storeRef.set('byoAnthropicUnlocked', Boolean(entitlements.byoAnthropic));
+    }
   }
 
   const snapshot: EntitlementsSnapshot = {
-    byoOpenAi: Boolean(unlocked),
+    byoOpenAi: Boolean(
+      entitlements.byoOpenAi ?? storeRef?.get('byoOpenAiUnlocked', false)
+    ),
+    byoAnthropic: Boolean(
+      entitlements.byoAnthropic ?? storeRef?.get('byoAnthropicUnlocked', false)
+    ),
     fetchedAt: new Date().toISOString(),
   };
 
@@ -61,14 +74,17 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
     });
 
     const data = response.data ?? {};
-    const unlocked = Boolean(
+    const byoOpenAi = Boolean(
       data?.entitlements?.byoOpenAi ??
         data?.byoOpenAi ??
         data?.unlocked ??
         false
     );
+    const byoAnthropic = Boolean(
+      data?.entitlements?.byoAnthropic ?? data?.byoAnthropic ?? false
+    );
 
-    return setByoUnlocked(unlocked, { notify: false });
+    return setByoUnlocked({ byoOpenAi, byoAnthropic }, { notify: false });
   } catch (error: any) {
     log.error('[entitlements-manager] Failed to fetch entitlements:', error);
     throw error;
@@ -81,21 +97,27 @@ export async function syncEntitlements(
   try {
     const snapshot = await fetchEntitlementsFromServer();
     if (!opts.silent) {
-      setByoUnlocked(snapshot.byoOpenAi, {
-        notify: true,
-        window: opts.window,
-      });
+      setByoUnlocked(
+        { byoOpenAi: snapshot.byoOpenAi, byoAnthropic: snapshot.byoAnthropic },
+        {
+          notify: true,
+          window: opts.window,
+        }
+      );
     } else {
-      setByoUnlocked(snapshot.byoOpenAi, {
-        notify: false,
-        window: opts.window,
-      });
+      setByoUnlocked(
+        { byoOpenAi: snapshot.byoOpenAi, byoAnthropic: snapshot.byoAnthropic },
+        {
+          notify: false,
+          window: opts.window,
+        }
+      );
     }
     return {
       ...snapshot,
       fetchedAt: new Date().toISOString(),
     };
-  } catch (error) {
+  } catch (error: any) {
     // Preserve existing cached value on fetch failures, but log the error.
     const cached = getCachedEntitlements();
     if (!opts.silent) {

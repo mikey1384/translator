@@ -36,7 +36,7 @@ function sendNetLog(
 }
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
-  defaults: { balanceCredits: 0, creditsPerHour: 100_000 },
+  defaults: { balanceCredits: 0, creditsPerHour: 18_900 },
 });
 
 export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
@@ -46,7 +46,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   const perHourOverrideRaw = process.env.CREDITS_PER_HOUR_OVERRIDE;
   if (forceZero || (overrideRaw && overrideRaw.length > 0)) {
     const credits = forceZero ? 0 : Math.max(0, Number(overrideRaw) || 0);
-    const creditsPerHour = Math.max(1, Number(perHourOverrideRaw) || 2800);
+    const creditsPerHour = Math.max(1, Number(perHourOverrideRaw) || 18_900);
     store.set('balanceCredits', credits);
     store.set('creditsPerHour', creditsPerHour);
     return {
@@ -69,7 +69,9 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     const credits = Number(response.data?.creditBalance ?? 0);
     const perHour = Math.max(
       1,
-      Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800
+      Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
+        Number(response.data?.creditsPerHour) ||
+        18_900
     );
     const hours = credits / perHour;
     store.set('balanceCredits', credits);
@@ -101,7 +103,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     }
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', 2800);
+    const cachedPerHour = store.get('creditsPerHour', 18_900);
     return {
       success: false,
       error: err.message,
@@ -607,7 +609,9 @@ export async function handleStripeSuccess(
       const credits = Number(response.data.creditBalance) || 0;
       const perHour = Math.max(
         1,
-        Number(process.env.CREDITS_PER_HOUR_OVERRIDE) || 2800
+        Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
+          Number(response.data?.creditsPerHour) ||
+          18_900
       );
       const hours = credits / perHour;
       store.set('balanceCredits', credits);

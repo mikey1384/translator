@@ -12,6 +12,7 @@ import type {
   SrtSegment,
   TranscriptHighlight,
   TranscriptSummarySection,
+  HighlightAspectMode,
 } from '@shared-types/app';
 import Button from './Button';
 import ErrorBanner from './ErrorBanner';
@@ -74,6 +75,8 @@ export function TranscriptSummaryPanel({
   const [highlightCutState, setHighlightCutState] = useState<
     Record<string, HighlightClipCutState>
   >({});
+  const [highlightAspectMode, setHighlightAspectMode] =
+    useState<HighlightAspectMode>('vertical');
   const mergeHighlightUpdates = useCallback(
     (incoming?: TranscriptHighlight[] | null) => {
       if (!Array.isArray(incoming) || incoming.length === 0) return;
@@ -486,6 +489,7 @@ export function TranscriptSummaryPanel({
           videoPath,
           highlight,
           operationId,
+          aspectMode: highlightAspectMode,
         });
 
         if (result?.error) {
@@ -534,6 +538,7 @@ export function TranscriptSummaryPanel({
       originalVideoPath,
       fallbackVideoPath,
       highlightCutState,
+      highlightAspectMode,
       t,
     ]
   );
@@ -768,6 +773,41 @@ export function TranscriptSummaryPanel({
 
       {activeTab === 'highlights' && (
         <div className={highlightsTabStyles}>
+          {/* Aspect mode selector */}
+          {hasSummaryResult && highlights.length > 0 && (
+            <div className={aspectModeRowStyles}>
+              <span className={aspectModeLabelStyles}>
+                {t('summary.clipFormat', 'Clip format:')}
+              </span>
+              <div className={aspectModeToggleStyles}>
+                <button
+                  className={aspectModeButtonStyles(
+                    highlightAspectMode === 'vertical'
+                  )}
+                  onClick={() => setHighlightAspectMode('vertical')}
+                  title={t(
+                    'summary.verticalFormatDesc',
+                    'Optimized for YouTube Shorts, TikTok, Reels (9:16)'
+                  )}
+                >
+                  {t('summary.verticalFormat', '9:16 Vertical')}
+                </button>
+                <button
+                  className={aspectModeButtonStyles(
+                    highlightAspectMode === 'original'
+                  )}
+                  onClick={() => setHighlightAspectMode('original')}
+                  title={t(
+                    'summary.originalFormatDesc',
+                    'Keep original video dimensions'
+                  )}
+                >
+                  {t('summary.originalFormat', 'Original')}
+                </button>
+              </div>
+            </div>
+          )}
+
           {!hasSummaryResult ? (
             <div className={noHighlightsStyles}>
               {t(
@@ -1295,6 +1335,47 @@ const summaryHeaderStyles = css`
 const errorWrapperStyles = css`
   display: flex;
   align-items: center;
+`;
+
+const aspectModeRowStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 4px;
+`;
+
+const aspectModeLabelStyles = css`
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: ${colors.gray};
+`;
+
+const aspectModeToggleStyles = css`
+  display: flex;
+  gap: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid ${colors.border};
+`;
+
+const aspectModeButtonStyles = (active: boolean) => css`
+  border: none;
+  background: ${active ? colors.primary : colors.white};
+  color: ${active ? colors.white : colors.dark};
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: ${active ? colors.primary : colors.grayLight};
+  }
+
+  &:first-of-type {
+    border-right: 1px solid ${colors.border};
+  }
 `;
 
 export default TranscriptSummaryPanel;

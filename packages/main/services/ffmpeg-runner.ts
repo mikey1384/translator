@@ -440,8 +440,6 @@ export async function createFFmpegContext(
     }
   }
 
-  // DEBUG: Prove we can spawn inside Electron too
-
   return {
     tempDir,
     ffmpegPath,

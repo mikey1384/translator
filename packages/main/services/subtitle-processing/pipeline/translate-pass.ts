@@ -102,6 +102,17 @@ export async function translatePass({
         log.info(`[${operationId}] translate batch aborted (credits)`);
         throw err;
       }
+      // Handle API key and rate limit errors for both OpenAI and Anthropic
+      if (
+        msg === 'openai-key-invalid' ||
+        msg === 'openai-rate-limit' ||
+        msg === 'anthropic-key-invalid' ||
+        msg === 'anthropic-rate-limit'
+      ) {
+        aborted = true;
+        log.info(`[${operationId}] translate batch aborted (${msg})`);
+        throw err;
+      }
       log.error(`[${operationId}] translate batch failed`, err);
       throw err;
     }

@@ -239,10 +239,13 @@ declare module '@shared-types/app' {
     operationId?: string;
   }
 
+  export type HighlightAspectMode = 'vertical' | 'original';
+
   export interface CutHighlightClipRequest {
     videoPath: string;
     highlight: TranscriptHighlight;
     operationId?: string;
+    aspectMode?: HighlightAspectMode;
   }
 
   export interface CutHighlightClipResult {

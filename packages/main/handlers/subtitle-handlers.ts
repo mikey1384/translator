@@ -847,7 +847,10 @@ export async function handleCutHighlightClip(
       log.warn(`[${operationId}] Video metadata probe failed`, err);
     }
 
-    const enforceVertical = !isVideoAlreadyVertical(videoMeta);
+    // Only apply vertical cropping if aspectMode is 'vertical' (default) and video is not already vertical
+    const aspectMode = options.aspectMode ?? 'vertical';
+    const enforceVertical =
+      aspectMode === 'vertical' && !isVideoAlreadyVertical(videoMeta);
 
     const sanitizedHighlight: TranscriptHighlight = {
       id: highlight.id,

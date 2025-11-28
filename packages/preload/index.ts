@@ -336,6 +336,26 @@ const electronAPI = {
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-byo-provider-enabled', enabled),
 
+  // Anthropic API key functions
+  getAnthropicApiKey: (): Promise<string | null> =>
+    ipcRenderer.invoke('get-anthropic-api-key'),
+  setAnthropicApiKey: (
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-anthropic-api-key', apiKey),
+  clearAnthropicApiKey: (): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('clear-anthropic-api-key'),
+  validateAnthropicApiKey: (
+    apiKey?: string
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('validate-anthropic-api-key', apiKey),
+  getByoAnthropicEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-byo-anthropic-enabled'),
+  setByoAnthropicEnabled: (
+    enabled: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-anthropic-enabled', enabled),
+
   // Get device ID for admin button visibility
   getDeviceId: (): Promise<string> => ipcRenderer.invoke('get-device-id'),
   getAdminDeviceId: (): Promise<string | null> =>
@@ -375,14 +395,22 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('checkout-cancelled', handler);
   },
 
-  getEntitlements: (): Promise<{ byoOpenAi: boolean; fetchedAt?: string }> =>
-    ipcRenderer.invoke('get-entitlements'),
+  getEntitlements: (): Promise<{
+    byoOpenAi: boolean;
+    byoAnthropic: boolean;
+    fetchedAt?: string;
+  }> => ipcRenderer.invoke('get-entitlements'),
   refreshEntitlements: (): Promise<{
     byoOpenAi: boolean;
+    byoAnthropic: boolean;
     fetchedAt?: string;
   }> => ipcRenderer.invoke('refresh-entitlements'),
   onEntitlementsUpdated: (
-    callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+    callback: (snapshot: {
+      byoOpenAi: boolean;
+      byoAnthropic: boolean;
+      fetchedAt?: string;
+    }) => void
   ) => {
     const handler = (_: any, payload: any) => callback(payload);
     ipcRenderer.on('entitlements-updated', handler);
@@ -399,7 +427,11 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('byo-unlock-pending', handler);
   },
   onByoUnlockConfirmed: (
-    callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+    callback: (snapshot: {
+      byoOpenAi: boolean;
+      byoAnthropic: boolean;
+      fetchedAt?: string;
+    }) => void
   ) => {
     const handler = (_: any, payload: any) => callback(payload);
     ipcRenderer.on('byo-unlock-confirmed', handler);
@@ -423,6 +455,14 @@ const electronAPI = {
     const handler = (_: any, payload: any) => callback(payload);
     ipcRenderer.on('openai-api-key-changed', handler);
     return () => ipcRenderer.removeListener('openai-api-key-changed', handler);
+  },
+  onAnthropicApiKeyChanged: (
+    callback: (payload: { hasKey: boolean }) => void
+  ) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('anthropic-api-key-changed', handler);
+    return () =>
+      ipcRenderer.removeListener('anthropic-api-key-changed', handler);
   },
 
   // App log channel (network/status messages from main)

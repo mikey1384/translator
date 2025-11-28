@@ -1,7 +1,7 @@
 {
   "name": "Translator",
   "private": true,
-  "version": "1.7.6",
+  "version": "1.8.0",
   "type": "module",
   "description": "Translator - AI-powered video translation tool",
   "author": "Mikey Lee",
@@ -75,6 +75,7 @@
     "wait-on": "^8.0.3"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
     "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "@puppeteer/browsers": "^2.10.5",

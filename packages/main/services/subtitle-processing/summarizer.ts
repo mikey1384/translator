@@ -615,8 +615,7 @@ ${chunkText}`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    model: AI_MODELS.GPT,
-    reasoning: { effort: 'high' },
+    model: AI_MODELS.CLAUDE_OPUS,
     signal,
     operationId,
   });
@@ -678,8 +677,7 @@ ${sectionText}`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    model: AI_MODELS.GPT,
-    reasoning: { effort: 'high' },
+    model: AI_MODELS.CLAUDE_OPUS,
     signal,
     operationId,
   });
@@ -910,8 +908,7 @@ Return STRICT JSON ONLY (no markdown) using this shape:
       { role: 'system', content: system },
       { role: 'user', content: user },
     ],
-    model: AI_MODELS.GPT,
-    reasoning: { effort: 'medium' },
+    model: AI_MODELS.CLAUDE_OPUS,
     signal,
     operationId,
   });

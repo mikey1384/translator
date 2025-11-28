@@ -92,8 +92,15 @@ const byoCardStyles = css`
 function ByoOpenAiSection() {
   const { t } = useTranslation();
   const [showKey, setShowKey] = useState(false);
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [anthropicStatusMessage, setAnthropicStatusMessage] = useState<
+    string | null
+  >(null);
+  const [anthropicStatusError, setAnthropicStatusError] = useState<
+    string | null
+  >(null);
 
   const initialized = useAiStore(state => state.initialized);
   const initialize = useAiStore(state => state.initialize);
@@ -103,6 +110,7 @@ function ByoOpenAiSection() {
   const unlockPending = useAiStore(state => state.unlockPending);
   const unlockError = useAiStore(state => state.unlockError);
   const lastFetched = useAiStore(state => state.lastFetched);
+  // OpenAI state
   const keyValue = useAiStore(state => state.keyValue);
   const keyPresent = useAiStore(state => state.keyPresent);
   const keyLoading = useAiStore(state => state.keyLoading);
@@ -116,6 +124,20 @@ function ByoOpenAiSection() {
   const validateKey = useAiStore(state => state.validateKey);
   const refreshEntitlements = useAiStore(state => state.refreshEntitlements);
   const setUseByo = useAiStore(state => state.setUseByo);
+  // Anthropic state
+  const anthropicKeyValue = useAiStore(state => state.anthropicKeyValue);
+  const anthropicKeyPresent = useAiStore(state => state.anthropicKeyPresent);
+  const anthropicKeyLoading = useAiStore(state => state.anthropicKeyLoading);
+  const savingAnthropicKey = useAiStore(state => state.savingAnthropicKey);
+  const validatingAnthropicKey = useAiStore(
+    state => state.validatingAnthropicKey
+  );
+  const useByoAnthropic = useAiStore(state => state.useByoAnthropic);
+  const setAnthropicKeyValue = useAiStore(state => state.setAnthropicKeyValue);
+  const saveAnthropicKey = useAiStore(state => state.saveAnthropicKey);
+  const clearAnthropicKey = useAiStore(state => state.clearAnthropicKey);
+  const validateAnthropicKey = useAiStore(state => state.validateAnthropicKey);
+  const setUseByoAnthropic = useAiStore(state => state.setUseByoAnthropic);
 
   useEffect(() => {
     if (!initialized) {
@@ -129,6 +151,11 @@ function ByoOpenAiSection() {
     setStatusMessage(null);
     setStatusError(null);
   }, [keyValue]);
+
+  useEffect(() => {
+    setAnthropicStatusMessage(null);
+    setAnthropicStatusError(null);
+  }, [anthropicKeyValue]);
 
   const handleUnlock = async () => {
     setStatusMessage(null);
@@ -223,6 +250,108 @@ function ByoOpenAiSection() {
         : t(
             'settings.byoOpenAi.toggleOff',
             'Using Stage5 credits for AI tasks.'
+          )
+    );
+  };
+
+  // Anthropic handlers
+  const handleAnthropicSave = async () => {
+    setAnthropicStatusMessage(null);
+    setAnthropicStatusError(null);
+    try {
+      const result = await saveAnthropicKey();
+      if (result.success) {
+        setAnthropicStatusMessage(
+          anthropicKeyValue.trim()
+            ? t('settings.byoAnthropic.keySaved', 'Anthropic API key saved.')
+            : t('settings.byoAnthropic.keyCleared', 'Anthropic API key cleared.')
+        );
+        logButton('settings_anthropic_key_save', {
+          hasKey: Boolean(anthropicKeyValue.trim()),
+        });
+      } else if (result.error) {
+        logButton('settings_anthropic_key_save_error', { error: result.error });
+        setAnthropicStatusError(result.error);
+      }
+    } catch (err: any) {
+      logButton('settings_anthropic_key_save_exception');
+      setAnthropicStatusError(err?.message || String(err));
+    }
+  };
+
+  const handleAnthropicClear = async () => {
+    setAnthropicStatusMessage(null);
+    setAnthropicStatusError(null);
+    try {
+      const result = await clearAnthropicKey();
+      if (result.success) {
+        setAnthropicStatusMessage(
+          t('settings.byoAnthropic.keyCleared', 'Anthropic API key cleared.')
+        );
+        logButton('settings_anthropic_key_clear');
+      } else if (result.error) {
+        logButton('settings_anthropic_key_clear_error', {
+          error: result.error,
+        });
+        setAnthropicStatusError(result.error);
+      }
+    } catch (err: any) {
+      logButton('settings_anthropic_key_clear_exception');
+      setAnthropicStatusError(err?.message || String(err));
+    }
+  };
+
+  const handleAnthropicTest = async () => {
+    setAnthropicStatusMessage(null);
+    setAnthropicStatusError(null);
+    try {
+      const result = await validateAnthropicKey();
+      logButton('settings_anthropic_key_test', { ok: result.ok });
+      if (result.ok) {
+        setAnthropicStatusMessage(
+          t(
+            'settings.byoAnthropic.keyValid',
+            'Anthropic API key validated successfully.'
+          )
+        );
+      } else {
+        setAnthropicStatusError(
+          result.error ||
+            t(
+              'settings.byoAnthropic.keyInvalid',
+              'Anthropic API key validation failed.'
+            )
+        );
+      }
+    } catch (err: any) {
+      logButton('settings_anthropic_key_test_exception');
+      setAnthropicStatusError(err?.message || String(err));
+    }
+  };
+
+  const handleToggleUseByoAnthropic = async (value: boolean) => {
+    setAnthropicStatusMessage(null);
+    setAnthropicStatusError(null);
+    const result = await setUseByoAnthropic(value);
+    if (!result.success) {
+      setAnthropicStatusError(
+        result.error ||
+          t(
+            'settings.byoAnthropic.toggleError',
+            'Failed to update Anthropic preference.'
+          )
+      );
+      return;
+    }
+    setAnthropicStatusMessage(
+      value
+        ? t(
+            'settings.byoAnthropic.toggleOn',
+            'Using your Anthropic key for Claude models.'
+          )
+        : t(
+            'settings.byoAnthropic.toggleOff',
+            'Using Stage5 credits for Claude models.'
           )
     );
   };
@@ -483,6 +612,226 @@ function ByoOpenAiSection() {
         {statusError && (
           <p style={{ color: colors.danger, margin: 0 }}>{statusError}</p>
         )}
+
+        {/* Anthropic API Key Section */}
+        <div
+          style={{
+            borderTop: `1px solid ${colors.border}`,
+            marginTop: 16,
+            paddingTop: 20,
+          }}
+        >
+          <h3
+            style={{
+              fontSize: '1rem',
+              fontWeight: 600,
+              margin: '0 0 12px',
+              color: colors.dark,
+            }}
+          >
+            {t('settings.byoAnthropic.title', 'Anthropic API Key (Optional)')}
+          </h3>
+          <p
+            style={{
+              color: colors.textDim,
+              lineHeight: 1.5,
+              margin: '0 0 14px',
+              fontSize: '.9rem',
+            }}
+          >
+            {t(
+              'settings.byoAnthropic.description',
+              'Add your Anthropic API key to use Claude models directly. Without this key, translations will use GPT with enhanced reasoning for the review phase.'
+            )}
+          </p>
+
+          <label
+            style={{
+              color: colors.dark,
+              fontWeight: 600,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <span>
+              {t('settings.byoAnthropic.apiKeyLabel', 'Anthropic API Key')}
+            </span>
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+              }}
+            >
+              <input
+                type={showAnthropicKey ? 'text' : 'password'}
+                value={anthropicKeyValue}
+                onChange={e => setAnthropicKeyValue(e.target.value)}
+                placeholder="sk-ant-..."
+                disabled={anthropicKeyLoading || savingAnthropicKey}
+                style={{
+                  flex: 1,
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  border: `1px solid ${colors.border}`,
+                  background: colors.light,
+                  color: colors.dark,
+                  fontFamily: 'monospace',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowAnthropicKey(v => !v)}
+                style={{
+                  padding: '10px 12px',
+                  background: colors.grayLight,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                {showAnthropicKey
+                  ? t('settings.byoAnthropic.hide', 'Hide')
+                  : t('settings.byoAnthropic.show', 'Show')}
+              </button>
+            </div>
+          </label>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: 12,
+              flexWrap: 'wrap',
+              marginTop: 12,
+            }}
+          >
+            <button
+              onClick={handleAnthropicSave}
+              disabled={savingAnthropicKey || validatingAnthropicKey}
+              style={{
+                padding: '10px 16px',
+                background: colors.primary,
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                cursor:
+                  savingAnthropicKey || validatingAnthropicKey
+                    ? 'wait'
+                    : 'pointer',
+                opacity:
+                  savingAnthropicKey || validatingAnthropicKey ? 0.7 : 1,
+              }}
+            >
+              {savingAnthropicKey
+                ? t('settings.byoAnthropic.saving', 'Saving…')
+                : t('common.save', 'Save')}
+            </button>
+            <button
+              onClick={handleAnthropicTest}
+              disabled={validatingAnthropicKey || !anthropicKeyValue.trim()}
+              style={{
+                padding: '10px 16px',
+                background: colors.grayLight,
+                color: colors.dark,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                cursor: validatingAnthropicKey ? 'wait' : 'pointer',
+                opacity: validatingAnthropicKey ? 0.7 : 1,
+              }}
+            >
+              {validatingAnthropicKey
+                ? t('settings.byoAnthropic.testing', 'Testing…')
+                : t('settings.byoAnthropic.test', 'Test Key')}
+            </button>
+            <button
+              onClick={handleAnthropicClear}
+              disabled={
+                savingAnthropicKey ||
+                validatingAnthropicKey ||
+                (!anthropicKeyPresent && !anthropicKeyValue)
+              }
+              style={{
+                padding: '10px 16px',
+                background: 'transparent',
+                color: colors.textDim,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                cursor:
+                  savingAnthropicKey || validatingAnthropicKey
+                    ? 'wait'
+                    : 'pointer',
+              }}
+            >
+              {t('settings.byoAnthropic.clear', 'Clear Key')}
+            </button>
+          </div>
+
+          {anthropicKeyLoading && (
+            <p style={{ color: colors.textDim, margin: '12px 0 0' }}>
+              {t(
+                'settings.byoAnthropic.loadingKey',
+                'Loading saved Anthropic key…'
+              )}
+            </p>
+          )}
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '12px 14px',
+              border: `1px solid ${colors.border}`,
+              borderRadius: 8,
+              background: colors.grayLight,
+              marginTop: 16,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                color: colors.dark,
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>
+                {t(
+                  'settings.byoAnthropic.toggleLabel',
+                  'Use my Anthropic key'
+                )}
+              </span>
+              <span style={{ color: colors.textDim, fontSize: '.85rem' }}>
+                {t(
+                  'settings.byoAnthropic.toggleHelp',
+                  'When off, Claude requests use Stage5 credits.'
+                )}
+              </span>
+            </div>
+            <Switch
+              checked={useByoAnthropic}
+              onChange={value => handleToggleUseByoAnthropic(value)}
+              disabled={!anthropicKeyPresent && !anthropicKeyValue.trim()}
+              aria-label={t(
+                'settings.byoAnthropic.toggleAria',
+                'Toggle using your Anthropic key'
+              )}
+            />
+          </div>
+
+          {anthropicStatusMessage && (
+            <p style={{ color: colors.primary, margin: '12px 0 0' }}>
+              {anthropicStatusMessage}
+            </p>
+          )}
+          {anthropicStatusError && (
+            <p style={{ color: colors.danger, margin: '12px 0 0' }}>
+              {anthropicStatusError}
+            </p>
+          )}
+        </div>
       </>
     );
   };
@@ -490,7 +839,7 @@ function ByoOpenAiSection() {
   return (
     <section className={byoCardStyles}>
       <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>
-        {t('settings.byoOpenAi.title', 'Bring Your Own OpenAI Key')}
+        {t('settings.byoOpenAi.title', 'Bring Your Own API Keys')}
       </h2>
 
       {lastFetched && (

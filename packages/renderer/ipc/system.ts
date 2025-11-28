@@ -94,6 +94,7 @@ export function onCheckoutCancelled(callback: () => void): () => void {
 
 export function getEntitlements(): Promise<{
   byoOpenAi: boolean;
+  byoAnthropic: boolean;
   fetchedAt?: string;
 }> {
   return window.electron.getEntitlements();
@@ -101,13 +102,18 @@ export function getEntitlements(): Promise<{
 
 export function refreshEntitlements(): Promise<{
   byoOpenAi: boolean;
+  byoAnthropic: boolean;
   fetchedAt?: string;
 }> {
   return window.electron.refreshEntitlements();
 }
 
 export function onEntitlementsUpdated(
-  callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+  callback: (snapshot: {
+    byoOpenAi: boolean;
+    byoAnthropic: boolean;
+    fetchedAt?: string;
+  }) => void
 ): () => void {
   return window.electron.onEntitlementsUpdated(callback);
 }
@@ -123,7 +129,11 @@ export function onByoUnlockPending(callback: () => void): () => void {
 }
 
 export function onByoUnlockConfirmed(
-  callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+  callback: (snapshot: {
+    byoOpenAi: boolean;
+    byoAnthropic: boolean;
+    fetchedAt?: string;
+  }) => void
 ): () => void {
   return window.electron.onByoUnlockConfirmed(callback);
 }
@@ -142,6 +152,46 @@ export function onOpenAiApiKeyChanged(
   callback: (payload: { hasKey: boolean }) => void
 ): () => void {
   return window.electron.onOpenAiApiKeyChanged(callback);
+}
+
+// Anthropic API key functions
+export function getAnthropicApiKey(): Promise<string | null> {
+  return window.electron.getAnthropicApiKey();
+}
+
+export function setAnthropicApiKey(
+  apiKey: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setAnthropicApiKey(apiKey);
+}
+
+export function clearAnthropicApiKey(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return window.electron.clearAnthropicApiKey();
+}
+
+export function validateAnthropicApiKey(
+  apiKey?: string
+): Promise<{ ok: boolean; error?: string }> {
+  return window.electron.validateAnthropicApiKey(apiKey);
+}
+
+export function getByoAnthropicEnabled(): Promise<boolean> {
+  return window.electron.getByoAnthropicEnabled();
+}
+
+export function setByoAnthropicEnabled(
+  enabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoAnthropicEnabled(enabled);
+}
+
+export function onAnthropicApiKeyChanged(
+  callback: (payload: { hasKey: boolean }) => void
+): () => void {
+  return window.electron.onAnthropicApiKeyChanged(callback);
 }
 
 export function getDeviceId(): Promise<string> {

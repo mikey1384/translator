@@ -13,9 +13,12 @@ export type SettingsStoreType = Store<{
   app_language_preference: string;
   subtitleTargetLanguage: string;
   apiKey: string | null;
+  anthropicApiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
   byoOpenAiUnlocked: boolean;
+  byoAnthropicUnlocked: boolean;
   useByoOpenAi: boolean;
+  useByoAnthropic: boolean;
   preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
 }>;
 
@@ -185,6 +188,70 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── Anthropic API key ─────────── */
+  function getAnthropicApiKey(): string | null {
+    try {
+      const key = store.get('anthropicApiKey', null);
+      return typeof key === 'string' && key.length > 0 ? key : null;
+    } catch (err) {
+      log.error('[settings] Failed to read stored Anthropic API key:', err);
+      return null;
+    }
+  }
+
+  async function setAnthropicApiKey(
+    _evt: any,
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (typeof apiKey !== 'string' || !apiKey.trim()) {
+        store.set('anthropicApiKey', null);
+        return { success: true };
+      }
+      const trimmed = apiKey.trim();
+      store.set('anthropicApiKey', trimmed);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist Anthropic API key:', err);
+      return { success: false, error: err?.message || 'Failed to save key' };
+    }
+  }
+
+  async function clearAnthropicApiKey(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      store.set('anthropicApiKey', null);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to clear Anthropic API key:', err);
+      return { success: false, error: err?.message || 'Failed to clear key' };
+    }
+  }
+
+  function getUseByoAnthropic(): boolean {
+    try {
+      return Boolean(store.get('useByoAnthropic', false));
+    } catch (err) {
+      log.error('[settings] Failed to read BYO Anthropic toggle:', err);
+      return false;
+    }
+  }
+
+  function setUseByoAnthropic(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('useByoAnthropic', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist BYO Anthropic toggle:', err);
+      return { success: false, error: err?.message || 'Failed to save toggle' };
+    }
+  }
+
   function getUseByoOpenAi(): boolean {
     try {
       return Boolean(store.get('useByoOpenAi', false));
@@ -219,8 +286,13 @@ export function buildSettingsHandlers(opts: {
     getApiKey,
     setApiKey,
     clearApiKey,
+    getAnthropicApiKey,
+    setAnthropicApiKey,
+    clearAnthropicApiKey,
     getUseByoOpenAi,
     setUseByoOpenAi,
+    getUseByoAnthropic,
+    setUseByoAnthropic,
     // yt-dlp auto update is always on
 
     // Persisted cookie browser preference

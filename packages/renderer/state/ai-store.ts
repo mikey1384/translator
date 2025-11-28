@@ -5,21 +5,32 @@ interface AiStoreState {
   initialized: boolean;
   initializing: boolean;
   byoUnlocked: boolean;
+  byoAnthropicUnlocked: boolean;
   entitlementsLoading: boolean;
   entitlementsError?: string;
   unlockPending: boolean;
   unlockError?: string;
   lastFetched?: string;
+  // OpenAI key state
   keyValue: string;
   keyPresent: boolean;
   keyLoading: boolean;
   savingKey: boolean;
   validatingKey: boolean;
   useByo: boolean;
+  // Anthropic key state
+  anthropicKeyValue: string;
+  anthropicKeyPresent: boolean;
+  anthropicKeyLoading: boolean;
+  savingAnthropicKey: boolean;
+  validatingAnthropicKey: boolean;
+  useByoAnthropic: boolean;
+  // Actions
   initialize: () => Promise<void>;
   fetchEntitlements: () => Promise<void>;
   refreshEntitlements: () => Promise<void>;
   startUnlock: () => Promise<void>;
+  // OpenAI actions
   setKeyValue: (value: string) => void;
   loadKey: () => Promise<void>;
   saveKey: () => Promise<{ success: boolean; error?: string }>;
@@ -27,6 +38,16 @@ interface AiStoreState {
   validateKey: () => Promise<{ ok: boolean; error?: string }>;
   syncByoToggle: () => Promise<void>;
   setUseByo: (value: boolean) => Promise<{ success: boolean; error?: string }>;
+  // Anthropic actions
+  setAnthropicKeyValue: (value: string) => void;
+  loadAnthropicKey: () => Promise<void>;
+  saveAnthropicKey: () => Promise<{ success: boolean; error?: string }>;
+  clearAnthropicKey: () => Promise<{ success: boolean; error?: string }>;
+  validateAnthropicKey: () => Promise<{ ok: boolean; error?: string }>;
+  syncByoAnthropicToggle: () => Promise<void>;
+  setUseByoAnthropic: (
+    value: boolean
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 const unsubscribers: Array<() => void> = [];
@@ -41,6 +62,7 @@ function ensureSubscriptions(
     SystemIPC.onEntitlementsUpdated(snapshot => {
       set({
         byoUnlocked: Boolean(snapshot?.byoOpenAi),
+        byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
         entitlementsLoading: false,
         entitlementsError: undefined,
         unlockPending: false,
@@ -71,6 +93,7 @@ function ensureSubscriptions(
         unlockPending: false,
         unlockError: undefined,
         byoUnlocked: Boolean(snapshot?.byoOpenAi),
+        byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
         entitlementsLoading: false,
         entitlementsError: undefined,
         lastFetched: snapshot?.fetchedAt,
@@ -117,6 +140,36 @@ function ensureSubscriptions(
       }
     })
   );
+
+  unsubscribers.push(
+    SystemIPC.onAnthropicApiKeyChanged(async ({ hasKey }) => {
+      if (!hasKey) {
+        set({
+          anthropicKeyPresent: false,
+          anthropicKeyValue: '',
+          useByoAnthropic: false,
+        });
+        try {
+          await SystemIPC.setByoAnthropicEnabled(false);
+        } catch (err) {
+          console.error(
+            '[AiStore] Failed to sync BYO Anthropic toggle after key removal:',
+            err
+          );
+        }
+        return;
+      }
+      try {
+        const key = await SystemIPC.getAnthropicApiKey();
+        set({
+          anthropicKeyPresent: Boolean(key),
+          anthropicKeyValue: key ?? '',
+        });
+      } catch {
+        set({ anthropicKeyPresent: true });
+      }
+    })
+  );
 }
 
 export const useAiStore = create<AiStoreState>((set, get) => {
@@ -142,26 +195,42 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     initialized: false,
     initializing: false,
     byoUnlocked: false,
+    byoAnthropicUnlocked: false,
     entitlementsLoading: true,
     entitlementsError: undefined,
     unlockPending: false,
     unlockError: undefined,
     lastFetched: undefined,
+    // OpenAI state
     keyValue: '',
     keyPresent: false,
     keyLoading: false,
     savingKey: false,
     validatingKey: false,
     useByo: false,
+    // Anthropic state
+    anthropicKeyValue: '',
+    anthropicKeyPresent: false,
+    anthropicKeyLoading: false,
+    savingAnthropicKey: false,
+    validatingAnthropicKey: false,
+    useByoAnthropic: false,
 
     initialize: async () => {
       if (get().initialized || get().initializing) return;
-      set({ initializing: true, entitlementsLoading: true, keyLoading: true });
+      set({
+        initializing: true,
+        entitlementsLoading: true,
+        keyLoading: true,
+        anthropicKeyLoading: true,
+      });
       try {
         await Promise.allSettled([
           get().fetchEntitlements(),
           get().loadKey(),
           get().syncByoToggle(),
+          get().loadAnthropicKey(),
+          get().syncByoAnthropicToggle(),
         ]);
       } finally {
         set({ initialized: true, initializing: false });
@@ -174,6 +243,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const snapshot = await SystemIPC.getEntitlements();
         set({
           byoUnlocked: Boolean(snapshot?.byoOpenAi),
+          byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
           entitlementsLoading: false,
           entitlementsError: undefined,
           lastFetched: snapshot?.fetchedAt,
@@ -192,6 +262,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const snapshot = await SystemIPC.refreshEntitlements();
         set({
           byoUnlocked: Boolean(snapshot?.byoOpenAi),
+          byoAnthropicUnlocked: Boolean(snapshot?.byoAnthropic),
           entitlementsLoading: false,
           entitlementsError: undefined,
           lastFetched: snapshot?.fetchedAt,
@@ -299,6 +370,99 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         return result;
       } catch (err: any) {
         console.error('[AiStore] Failed to update BYO toggle:', err);
+        return {
+          success: false,
+          error: err?.message || 'Failed to save toggle',
+        };
+      }
+    },
+
+    // Anthropic actions
+    setAnthropicKeyValue: (value: string) => {
+      set({ anthropicKeyValue: value });
+    },
+
+    loadAnthropicKey: async () => {
+      try {
+        set({ anthropicKeyLoading: true });
+        const key = await SystemIPC.getAnthropicApiKey();
+        set({
+          anthropicKeyValue: key ?? '',
+          anthropicKeyPresent: Boolean(key),
+          anthropicKeyLoading: false,
+        });
+      } catch {
+        set({ anthropicKeyLoading: false, anthropicKeyPresent: false });
+      }
+    },
+
+    saveAnthropicKey: async () => {
+      const value = get().anthropicKeyValue;
+      try {
+        set({ savingAnthropicKey: true });
+        const result = await SystemIPC.setAnthropicApiKey(value);
+        if (result.success) {
+          set({ anthropicKeyPresent: Boolean(value.trim()) });
+        }
+        return result;
+      } finally {
+        set({ savingAnthropicKey: false });
+      }
+    },
+
+    clearAnthropicKey: async () => {
+      try {
+        set({ savingAnthropicKey: true });
+        const result = await SystemIPC.clearAnthropicApiKey();
+        if (result.success) {
+          set({ anthropicKeyValue: '', anthropicKeyPresent: false });
+          try {
+            await SystemIPC.setByoAnthropicEnabled(false);
+            set({ useByoAnthropic: false });
+          } catch (err) {
+            console.error(
+              '[AiStore] Failed to disable BYO Anthropic toggle after key clear:',
+              err
+            );
+          }
+        }
+        return result;
+      } finally {
+        set({ savingAnthropicKey: false });
+      }
+    },
+
+    validateAnthropicKey: async () => {
+      const value = get().anthropicKeyValue.trim();
+      try {
+        set({ validatingAnthropicKey: true });
+        const result = await SystemIPC.validateAnthropicApiKey(
+          value || undefined
+        );
+        return result;
+      } finally {
+        set({ validatingAnthropicKey: false });
+      }
+    },
+
+    syncByoAnthropicToggle: async () => {
+      try {
+        const enabled = await SystemIPC.getByoAnthropicEnabled();
+        set({ useByoAnthropic: Boolean(enabled) });
+      } catch (err) {
+        console.error('[AiStore] Failed to sync BYO Anthropic toggle:', err);
+      }
+    },
+
+    setUseByoAnthropic: async (value: boolean) => {
+      try {
+        const result = await SystemIPC.setByoAnthropicEnabled(value);
+        if (result.success) {
+          set({ useByoAnthropic: Boolean(value) });
+        }
+        return result;
+      } catch (err: any) {
+        console.error('[AiStore] Failed to update BYO Anthropic toggle:', err);
         return {
           success: false,
           error: err?.message || 'Failed to save toggle',

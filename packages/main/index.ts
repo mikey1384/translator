@@ -55,7 +55,11 @@ import {
   getCachedEntitlements,
   syncEntitlements,
 } from './services/entitlements-manager.js';
-import { initAiProvider, validateApiKey } from './services/ai-provider.js';
+import {
+  initAiProvider,
+  validateApiKey,
+  validateAnthropicApiKey,
+} from './services/ai-provider.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -65,18 +69,24 @@ const settingsStore = new Store<{
   app_language_preference: string;
   subtitleTargetLanguage: string;
   apiKey: string | null;
+  anthropicApiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
   byoOpenAiUnlocked: boolean;
+  byoAnthropicUnlocked: boolean;
   useByoOpenAi: boolean;
+  useByoAnthropic: boolean;
 }>({
   name: 'app-settings',
   defaults: {
     app_language_preference: 'en',
     subtitleTargetLanguage: 'original',
     apiKey: null,
+    anthropicApiKey: null,
     videoPlaybackPositions: {},
     byoOpenAiUnlocked: false,
+    byoAnthropicUnlocked: false,
     useByoOpenAi: false,
+    useByoAnthropic: false,
   },
 });
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
@@ -618,6 +628,46 @@ try {
   );
   ipcMain.handle('set-byo-provider-enabled', (_event, value: boolean) =>
     settingsHandlers.setUseByoOpenAi(Boolean(value))
+  );
+
+  // Anthropic API key handlers
+  ipcMain.handle('get-anthropic-api-key', () =>
+    settingsHandlers.getAnthropicApiKey()
+  );
+  ipcMain.handle('set-anthropic-api-key', async (event, apiKey: string) => {
+    const result = await settingsHandlers.setAnthropicApiKey(event, apiKey);
+    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send('anthropic-api-key-changed', {
+        hasKey: result.success && Boolean(apiKey?.trim?.()),
+      });
+    }
+    return result;
+  });
+  ipcMain.handle('clear-anthropic-api-key', async () => {
+    const result = await settingsHandlers.clearAnthropicApiKey();
+    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send('anthropic-api-key-changed', { hasKey: false });
+    }
+    return result;
+  });
+  ipcMain.handle(
+    'validate-anthropic-api-key',
+    async (_event, apiKey?: string) => {
+      const provided = typeof apiKey === 'string' ? apiKey.trim() : '';
+      const keyToCheck = provided || settingsHandlers.getAnthropicApiKey();
+      if (!keyToCheck) {
+        return { ok: false, error: 'Missing API key' };
+      }
+      return validateAnthropicApiKey(keyToCheck);
+    }
+  );
+  ipcMain.handle('get-byo-anthropic-enabled', () =>
+    settingsHandlers.getUseByoAnthropic()
+  );
+  ipcMain.handle('set-byo-anthropic-enabled', (_event, value: boolean) =>
+    settingsHandlers.setUseByoAnthropic(Boolean(value))
   );
 
   // Handle Stripe checkout completion messages from embedded window

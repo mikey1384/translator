@@ -1,5 +1,6 @@
 export const AI_MODELS = {
   GPT: 'gpt-5.1',
+  CLAUDE_OPUS: 'claude-opus-4-5-20251101',
   WHISPER: 'whisper-1',
 } as const;
 
@@ -51,20 +52,24 @@ export const USD_PER_CREDIT = 10 / 350_000;
 export const PRICE_MARGIN = 2;
 
 // GPT-5.1 tokenizer costs (USD per token)
-export const GPT5_1_USD_PER_TOKEN_IN = 2 / 1_000_000; // $0.002 / 1M
-export const GPT5_1_USD_PER_TOKEN_OUT = 8 / 1_000_000; // $0.008 / 1M
+export const GPT5_1_USD_PER_TOKEN_IN = 1.25 / 1_000_000; // $1.25 / 1M
+export const GPT5_1_USD_PER_TOKEN_OUT = 10 / 1_000_000; // $10.00 / 1M
+
+// Claude Opus 4.5 tokenizer costs (USD per token)
+export const CLAUDE_OPUS_USD_PER_TOKEN_IN = 5 / 1_000_000; // $0.005 / 1M
+export const CLAUDE_OPUS_USD_PER_TOKEN_OUT = 25 / 1_000_000; // $0.025 / 1M
 
 // Credits per 1k tokens (estimated)
-// Apply backend token calibration to align with actual deduction
-export const TOKEN_CREDIT_CALIBRATION_UI = 0.7;
+// Calibration factor (1.0 = no adjustment)
+export const TOKEN_CREDIT_CALIBRATION_UI = 1.0;
 export const CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
   ((PRICE_MARGIN * 1000 * GPT5_1_USD_PER_TOKEN_IN) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
-); // ≈ 98 when PRICE_MARGIN=2, calibration=0.7
+); // ≈ 88 with current pricing
 export const CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
   ((PRICE_MARGIN * 1000 * GPT5_1_USD_PER_TOKEN_OUT) / USD_PER_CREDIT) *
     TOKEN_CREDIT_CALIBRATION_UI
-); // ≈ 392 when PRICE_MARGIN=2, calibration=0.7
+); // ≈ 700 with current pricing
 
 // Estimated tokens produced per 1 hour of audio transcript (prompt ~= completion)
 // Tweakable after measurement; 16k strikes a practical balance across languages.
@@ -79,7 +84,7 @@ const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
       CREDITS_PER_1K_TOKENS_COMPLETION
 );
 
-export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 3.06; // was 1.8
+export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
 
 export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
   BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR *
@@ -87,9 +92,8 @@ export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 );
 
 // Transcription: compute credits/hour from model USD rate with margin and calibration
-export const WHISPER_TURBO_USD_PER_HOUR = 0.04; // groq whisper-large-v3-turbo
-// Align transcription credits/hour with backend deduction for whisper-large-v3-turbo
-// Backend math: $0.04/h × margin(2) = $0.08/h; $0.08 / (10/350k) = 2,800 credits/hour
+export const WHISPER_USD_PER_HOUR = 0.36; // OpenAI whisper-1: $0.006/min = $0.36/hr
+// Backend math: $0.36/h × margin(2) = $0.72/h; $0.72 / (10/350k) = 25,200 credits/hour
 // Historical transcription estimate kept for reference only.
 // We now unify hour estimation with translation.
 export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =

@@ -6,6 +6,11 @@ import {
   MIN_FINAL_SEGMENT_DURATION_SEC,
   TARGET_FINAL_SEGMENT_DURATION_SEC,
   SPLIT_AT_PAUSE_GAP_SEC,
+  MAX_CHARS_PER_SEGMENT,
+  TARGET_CHARS_PER_SEGMENT,
+  MAX_WORDS_PER_SEGMENT,
+  TARGET_WORDS_PER_SEGMENT,
+  MAX_CHARS_PER_SECOND,
 } from './constants.js';
 import fs from 'fs';
 import { throwIfAborted } from './utils.js';
@@ -83,7 +88,41 @@ export async function transcribeChunk({
     }
 
     const segments = (res as any)?.segments as Array<any> | undefined;
-    const words = ((res as any)?.words as Array<any> | undefined) || [];
+    let words = ((res as any)?.words as Array<any> | undefined) || [];
+
+    // Debug: log response keys to understand structure
+    log.debug(
+      `[transcribeChunk] Whisper response keys: ${Object.keys(res || {}).join(', ')}`
+    );
+    if (segments?.[0]) {
+      log.debug(
+        `[transcribeChunk] First segment keys: ${Object.keys(segments[0]).join(', ')}`
+      );
+      // Check if words are inside segments (OpenAI's nested format)
+      if (Array.isArray(segments[0].words) && segments[0].words.length > 0) {
+        log.debug(`[transcribeChunk] Found words INSIDE segments - extracting...`);
+      }
+    }
+
+    // If no top-level words, try to extract from inside segments (OpenAI's format)
+    if (words.length === 0 && Array.isArray(segments)) {
+      const nestedWords: any[] = [];
+      for (const seg of segments) {
+        if (Array.isArray(seg.words)) {
+          nestedWords.push(...seg.words);
+        }
+      }
+      if (nestedWords.length > 0) {
+        log.debug(
+          `[transcribeChunk] Extracted ${nestedWords.length} words from inside segments`
+        );
+        words = nestedWords;
+      }
+    }
+
+    log.debug(
+      `[transcribeChunk] Whisper response: ${segments?.length ?? 0} segments, ${words.length} top-level words`
+    );
 
     // Simple, Whisper-faithful mapping: one SRT segment per Whisper segment.
     const srtSegments: SrtSegment[] = [];
@@ -143,7 +182,14 @@ export async function transcribeChunk({
           words: relWords,
         } as SrtSegment;
 
+        log.debug(
+          `[transcribeChunk] Segment ${segIdx}: ${text.length} chars, ${relWords.length} words mapped, duration ${(absEnd - absStart).toFixed(2)}s`
+        );
+
         const splitSegs = smartSplitByWords(baseSeg);
+        log.debug(
+          `[transcribeChunk] Segment ${segIdx} split into ${splitSegs.length} parts`
+        );
         for (const ss of splitSegs) {
           ss.index = segIdx++;
           srtSegments.push(ss);
@@ -248,7 +294,25 @@ function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
   const words = Array.isArray((seg as any).words)
     ? ((seg as any).words as any[])
     : [];
-  if (totalDur <= MAX_FINAL_SEGMENT_DURATION_SEC || words.length === 0) {
+
+  // If no words available, can't do smart splitting
+  if (words.length === 0) {
+    return [seg];
+  }
+
+  // Calculate total text length for density check
+  const totalText = joinWords(words.map(w => String(w.word ?? '')));
+  const totalChars = totalText.length;
+  const totalWordCount = words.length;
+
+  // Check if segment is already within ALL limits
+  const withinDuration = totalDur <= MAX_FINAL_SEGMENT_DURATION_SEC;
+  const withinChars = totalChars <= MAX_CHARS_PER_SEGMENT;
+  const withinWords = totalWordCount <= MAX_WORDS_PER_SEGMENT;
+  const withinReadingSpeed =
+    totalDur > 0 ? totalChars / totalDur <= MAX_CHARS_PER_SECOND : true;
+
+  if (withinDuration && withinChars && withinWords && withinReadingSpeed) {
     return [seg];
   }
 
@@ -274,6 +338,12 @@ function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
     } as SrtSegment;
   };
 
+  // Helper to calculate char count for a range of words
+  const getCharCount = (fromIdx: number, toIdx: number): number => {
+    const slice = words.slice(fromIdx, toIdx + 1);
+    return joinWords(slice.map(w => String(w.word ?? ''))).length;
+  };
+
   const out: SrtSegment[] = [];
   let i = 0;
   while (i < words.length) {
@@ -284,6 +354,9 @@ function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
     const baseStart = words[i].start ?? 0;
     while (j < words.length) {
       const curDur = (words[j].end ?? 0) - baseStart;
+      const curWordCount = j - i + 1;
+      const curCharCount = getCharCount(i, j);
+      const curReadingSpeed = curDur > 0 ? curCharCount / curDur : 0;
 
       const token = String(words[j].word ?? '');
       if (/[.?!…:;]$/.test(token)) lastGoodCut = j;
@@ -294,17 +367,39 @@ function smartSplitByWords(seg: SrtSegment): SrtSegment[] {
         if (gap >= SPLIT_AT_PAUSE_GAP_SEC) lastPauseCut = j;
       }
 
-      const targetReached = curDur >= TARGET_FINAL_SEGMENT_DURATION_SEC;
-      const maxReached = curDur >= MAX_FINAL_SEGMENT_DURATION_SEC;
+      // Check all target thresholds (prefer to split at natural boundaries)
+      const durationTargetReached = curDur >= TARGET_FINAL_SEGMENT_DURATION_SEC;
+      const charTargetReached = curCharCount >= TARGET_CHARS_PER_SEGMENT;
+      const wordTargetReached = curWordCount >= TARGET_WORDS_PER_SEGMENT;
+      const targetReached =
+        durationTargetReached || charTargetReached || wordTargetReached;
+
+      // Check all hard limits (must split)
+      const durationMaxReached = curDur >= MAX_FINAL_SEGMENT_DURATION_SEC;
+      const charMaxReached = curCharCount >= MAX_CHARS_PER_SEGMENT;
+      const wordMaxReached = curWordCount >= MAX_WORDS_PER_SEGMENT;
+      // Only check reading speed for segments >= 1.5s to avoid spurious splits on brief fast speech
+      const readingSpeedExceeded =
+        curDur >= 1.5 && curReadingSpeed > MAX_CHARS_PER_SECOND;
+      const maxReached =
+        durationMaxReached ||
+        charMaxReached ||
+        wordMaxReached ||
+        readingSpeedExceeded;
+
       if (targetReached || maxReached) {
         let cut = -1;
         if (lastGoodCut >= i) cut = lastGoodCut;
         else if (lastPauseCut >= i) cut = lastPauseCut;
         else cut = j;
 
-        // Avoid too-short segments
+        // Avoid too-short segments (but only if we haven't hit a hard limit)
         const cutDur = (words[cut].end ?? 0) - baseStart;
-        if (cutDur < MIN_FINAL_SEGMENT_DURATION_SEC && cut + 1 < words.length) {
+        if (
+          !maxReached &&
+          cutDur < MIN_FINAL_SEGMENT_DURATION_SEC &&
+          cut + 1 < words.length
+        ) {
           cut = Math.min(words.length - 1, cut + 1);
         }
 

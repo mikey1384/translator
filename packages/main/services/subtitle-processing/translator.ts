@@ -3,6 +3,40 @@ import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
 import { AI_MODELS } from '@shared/constants';
+import { getActiveProvider, hasUserAnthropicApiKey } from '../ai-provider.js';
+
+/**
+ * Determines which model to use for the review phase.
+ * - If using Stage5 (credits): Use Claude Opus for best quality
+ * - If BYO with Anthropic key: Use Claude Opus
+ * - If BYO OpenAI only (no Anthropic): Fall back to GPT with high reasoning
+ */
+function getReviewModel(): { model: string; reasoning?: { effort: 'high' } } {
+  const provider = getActiveProvider();
+  const hasAnthropicKey = hasUserAnthropicApiKey();
+
+  log.debug(
+    `[Review] getReviewModel: provider=${provider}, hasAnthropicKey=${hasAnthropicKey}`
+  );
+
+  // Stage5 users always get Claude Opus (paid via credits)
+  if (provider === 'stage5') {
+    log.debug('[Review] Using Claude Opus (Stage5 credits)');
+    return { model: AI_MODELS.CLAUDE_OPUS };
+  }
+
+  // BYO users: check if they have Anthropic key
+  if (hasAnthropicKey) {
+    log.debug('[Review] Using Claude Opus (BYO Anthropic key)');
+    return { model: AI_MODELS.CLAUDE_OPUS };
+  }
+
+  // BYO OpenAI only: fall back to GPT with high reasoning effort
+  log.info(
+    '[Review] No Anthropic key available, falling back to GPT-5.1 with high reasoning effort'
+  );
+  return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+}
 
 const NETWORK_RETRY_BASE_MS = 5_000;
 const NETWORK_RETRY_MAX_MS = 60_000;
@@ -551,13 +585,14 @@ Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}:
     }
     attempt += 1;
     try {
+      const reviewConfig = getReviewModel();
       const reviewedContent = await callAIModel({
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt },
         ],
-        model: AI_MODELS.GPT,
-        reasoning: { effort: 'high' },
+        model: reviewConfig.model,
+        reasoning: reviewConfig.reasoning,
         signal,
         operationId,
         retryAttempts: 3,

@@ -30,9 +30,30 @@ export const PROGRESS_ANALYSIS_DONE = 5;
 // --- Readability / Segmentation constraints (applied using Whisper word timings)
 // Aim: keep cues readable without deviating far from Whisper output.
 export const MAX_FINAL_SEGMENT_DURATION_SEC = 6.0; // hard limit per cue
-export const TARGET_FINAL_SEGMENT_DURATION_SEC = 3.5; // preferred split point
+export const TARGET_FINAL_SEGMENT_DURATION_SEC = 4.0; // preferred split point
 export const MIN_FINAL_SEGMENT_DURATION_SEC = 1.2; // avoid overly tiny cues
 export const SPLIT_AT_PAUSE_GAP_SEC = 0.35; // prefer splits on natural pauses
+
+// --- Text density constraints for NORMAL videos (landscape/widescreen)
+// More relaxed limits for traditional video content
+export const MAX_CHARS_PER_SEGMENT = 120; // ~3 lines readable
+export const TARGET_CHARS_PER_SEGMENT = 84; // 2 lines × 42 chars
+export const MAX_WORDS_PER_SEGMENT = 20; // comfortable reading
+export const TARGET_WORDS_PER_SEGMENT = 14; // preferred split point for words
+export const MAX_CHARS_PER_SECOND = 25; // reading speed limit
+
+// --- Text density constraints for SHORTS (portrait/vertical 9:16)
+// Aggressive limits for TikTok/Reels/Shorts style content
+export const SHORTS_MAX_CHARS_PER_SEGMENT = 60; // 1-2 short lines
+export const SHORTS_TARGET_CHARS_PER_SEGMENT = 42; // ~1 line
+export const SHORTS_MAX_WORDS_PER_SEGMENT = 10; // very punchy
+export const SHORTS_TARGET_WORDS_PER_SEGMENT = 6; // few words per segment
+export const SHORTS_MAX_CHARS_PER_SECOND = 18; // slower reading for mobile
+export const SHORTS_MAX_DURATION_SEC = 3.0; // shorter segments for shorts
+export const SHORTS_TARGET_DURATION_SEC = 2.0; // even shorter preferred
+
+// Short-form video detection threshold (width/height ratio)
+export const SHORTS_RATIO_CUTOFF = 0.68; // ~9:16 portrait or taller
 
 // --- ASR Output Format Configuration ---
 import {
