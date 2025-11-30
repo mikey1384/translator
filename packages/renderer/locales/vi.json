@@ -98,7 +98,12 @@
     "continueTranscribing": "Tiếp tục chép lời",
     "improveTranscription": "Cải thiện chép lời",
     "improveTranslation": "Cải thiện bản dịch",
-    "dub": "Lồng tiếng"
+    "dub": "Lồng tiếng",
+    "dubEstimateCredits": "{{credits}} credits (~{{minutes}} phút)",
+    "dubEstimateByo": "~{{minutes}} phút âm thanh",
+    "translateEstimateCredits": "{{credits}} credits",
+    "translateEstimateByo": "Khóa BYO",
+    "qualityBadge": "(+đánh giá)"
   },
   "editSubtitles": {
     "title": "Chỉnh sửa Phụ đề",
@@ -209,6 +214,15 @@
       "toggleOn": "Đang sử dụng Anthropic key của bạn cho các mô hình Claude.",
       "toggleOff": "Đang sử dụng tín dụng Stage5 cho các mô hình Claude.",
       "toggleError": "Không thể cập nhật tùy chọn Anthropic."
+    },
+    "stage5TtsProvider": {
+      "label": "Chất lượng TTS (Tín dụng Stage5)",
+      "openai": "Tiêu chuẩn (OpenAI TTS)",
+      "openaiHint": "Chất lượng tốt, chi phí thấp",
+      "openaiHintWithBalance": "Chất lượng tốt · Số dư: {{time}} lồng tiếng",
+      "elevenlabs": "Cao cấp (ElevenLabs)",
+      "elevenlabsHint": "Chất lượng cao nhất, chi phí cao (~13×)",
+      "elevenlabsHintWithBalance": "Chất lượng cao nhất · Số dư: {{time}} lồng tiếng"
     }
   },
   "videoPlayer": {

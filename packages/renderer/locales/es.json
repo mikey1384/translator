@@ -98,7 +98,12 @@
     "improveTranslation": "Mejorar traducción",
     "chooseSrtFile": "Elegir archivo SRT",
     "cancel_confirmation": "¿Estás seguro de que quieres cancelar el proceso de traducción de subtítulos? Se perderá todo el progreso y tendrás que empezar de nuevo.",
-    "dub": "Generar voz doblada"
+    "dub": "Generar voz doblada",
+    "dubEstimateCredits": "{{credits}} créditos (~{{minutes}}min)",
+    "dubEstimateByo": "~{{minutes}}min de audio",
+    "translateEstimateCredits": "{{credits}} créditos",
+    "translateEstimateByo": "Clave BYO",
+    "qualityBadge": "(+revisión)"
   },
   "summary": {
     "title": "Resumen de la transcripción",
@@ -111,6 +116,8 @@
     },
     "generate": "Generar resumen",
     "regenerate": "Regenerar resumen",
+    "estimateCredits": "{{credits}} créditos",
+    "highEffortBadge": "(profundo)",
     "placeholder": "Tu resumen con IA aparecerá aquí cuando se genere.",
     "insufficientCredits": "No hay créditos suficientes para ejecutar el resumen.",
     "error": "No pudimos crear el resumen. {{message}}",
@@ -262,6 +269,15 @@
       "toggleOn": "Usando tu clave de Anthropic para modelos Claude.",
       "toggleOff": "Usando créditos de Stage5 para modelos Claude.",
       "toggleError": "Error al actualizar la preferencia de Anthropic."
+    },
+    "stage5TtsProvider": {
+      "label": "Calidad TTS (Créditos Stage5)",
+      "openai": "Estándar (OpenAI TTS)",
+      "openaiHint": "Buena calidad, menor costo",
+      "openaiHintWithBalance": "Buena calidad · Tu saldo: {{time}} de doblaje",
+      "elevenlabs": "Premium (ElevenLabs)",
+      "elevenlabsHint": "Mejor calidad, mayor costo (~13×)",
+      "elevenlabsHintWithBalance": "Mejor calidad · Tu saldo: {{time}} de doblaje"
     }
   },
   "credits": {

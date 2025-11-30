@@ -98,7 +98,12 @@
     "improveTranslation": "Améliorer la traduction",
     "chooseSrtFile": "Choisir un fichier SRT",
     "cancel_confirmation": "Êtes-vous sûr de vouloir annuler le processus de traduction des sous-titres ? Tout progrès sera perdu et vous devrez recommencer.",
-    "dub": "Doubler la voix"
+    "dub": "Doubler la voix",
+    "dubEstimateCredits": "{{credits}} crédits (~{{minutes}}min)",
+    "dubEstimateByo": "~{{minutes}}min audio",
+    "translateEstimateCredits": "{{credits}} crédits",
+    "translateEstimateByo": "Clé BYO",
+    "qualityBadge": "(+révision)"
   },
   "summary": {
     "title": "Résumé de la transcription",
@@ -111,6 +116,8 @@
     },
     "generate": "Générer le résumé",
     "regenerate": "Régénérer le résumé",
+    "estimateCredits": "{{credits}} crédits",
+    "highEffortBadge": "(approfondi)",
     "placeholder": "Votre résumé IA apparaîtra ici une fois généré.",
     "insufficientCredits": "Crédits insuffisants pour générer le résumé.",
     "error": "Impossible de créer le résumé. {{message}}",
@@ -262,6 +269,15 @@
       "toggleOn": "Utilisation de votre clé Anthropic pour les modèles Claude.",
       "toggleOff": "Utilisation des crédits Stage5 pour les modèles Claude.",
       "toggleError": "Échec de la mise à jour de la préférence Anthropic."
+    },
+    "stage5TtsProvider": {
+      "label": "Qualité TTS (Crédits Stage5)",
+      "openai": "Standard (OpenAI TTS)",
+      "openaiHint": "Bonne qualité, coût réduit",
+      "openaiHintWithBalance": "Bonne qualité · Votre solde : {{time}} de doublage",
+      "elevenlabs": "Premium (ElevenLabs)",
+      "elevenlabsHint": "Meilleure qualité, coût plus élevé (~13×)",
+      "elevenlabsHintWithBalance": "Meilleure qualité · Votre solde : {{time}} de doublage"
     }
   },
   "credits": {

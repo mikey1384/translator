@@ -98,7 +98,12 @@
     "improveTranslation": "Übersetzung verbessern",
     "chooseSrtFile": "SRT-Datei auswählen",
     "cancel_confirmation": "Sind Sie sicher, dass Sie den Untertitel-Übersetzungsprozess abbrechen möchten? Jeder Fortschritt geht verloren und Sie müssen neu beginnen.",
-    "dub": "Stimme synchronisieren"
+    "dub": "Stimme synchronisieren",
+    "dubEstimateCredits": "{{credits}} Credits (~{{minutes}}min)",
+    "dubEstimateByo": "~{{minutes}}min Audio",
+    "translateEstimateCredits": "{{credits}} Credits",
+    "translateEstimateByo": "BYO-Schlüssel",
+    "qualityBadge": "(+Prüfung)"
   },
   "summary": {
     "title": "Transkript-Zusammenfassung",
@@ -111,6 +116,8 @@
     },
     "generate": "Zusammenfassung erstellen",
     "regenerate": "Zusammenfassung neu erstellen",
+    "estimateCredits": "{{credits}} Credits",
+    "highEffortBadge": "(tiefgehend)",
     "placeholder": "Die KI-Zusammenfassung erscheint hier, sobald sie erstellt wurde.",
     "insufficientCredits": "Nicht genug Credits, um die Zusammenfassung auszuführen.",
     "error": "Die Zusammenfassung konnte nicht erstellt werden. {{message}}",
@@ -262,6 +269,15 @@
       "toggleOn": "Ihr Anthropic-Schlüssel wird für Claude-Modelle verwendet.",
       "toggleOff": "Stage5-Guthaben wird für Claude-Modelle verwendet.",
       "toggleError": "Anthropic-Einstellung konnte nicht aktualisiert werden."
+    },
+    "stage5TtsProvider": {
+      "label": "TTS-Qualität (Stage5-Guthaben)",
+      "openai": "Standard (OpenAI TTS)",
+      "openaiHint": "Gute Qualität, geringere Kosten",
+      "openaiHintWithBalance": "Gute Qualität · Ihr Guthaben: {{time}} Synchronisation",
+      "elevenlabs": "Premium (ElevenLabs)",
+      "elevenlabsHint": "Beste Qualität, höhere Kosten (~13×)",
+      "elevenlabsHintWithBalance": "Beste Qualität · Ihr Guthaben: {{time}} Synchronisation"
     }
   },
   "credits": {

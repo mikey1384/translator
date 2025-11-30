@@ -98,7 +98,12 @@
     "improveTranslation": "改善翻譯",
     "chooseSrtFile": "選擇SRT檔案",
     "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
-    "dub": "產生配音語音"
+    "dub": "產生配音語音",
+    "dubEstimateCredits": "{{credits}} 點數 (~{{minutes}}分鐘)",
+    "dubEstimateByo": "~{{minutes}}分鐘音訊",
+    "translateEstimateCredits": "{{credits}} 點數",
+    "translateEstimateByo": "BYO金鑰",
+    "qualityBadge": "(+審校)"
   },
   "summary": {
     "title": "逐字稿摘要",
@@ -111,6 +116,8 @@
     },
     "generate": "產生摘要",
     "regenerate": "重新產生摘要",
+    "estimateCredits": "{{credits}} 點數",
+    "highEffortBadge": "(深度)",
     "placeholder": "AI 摘要產生後會顯示在此。",
     "insufficientCredits": "點數不足，無法執行摘要。",
     "error": "無法建立摘要。{{message}}",
@@ -262,6 +269,15 @@
       "toggleOn": "正在使用您的Anthropic金鑰執行Claude模型。",
       "toggleOff": "正在使用Stage5積分執行Claude模型。",
       "toggleError": "更新Anthropic設定失敗。"
+    },
+    "stage5TtsProvider": {
+      "label": "TTS品質（Stage5點數）",
+      "openai": "標準（OpenAI TTS）",
+      "openaiHint": "良好音質，較低成本",
+      "openaiHintWithBalance": "良好音質 · 您的餘額：{{time}}配音時長",
+      "elevenlabs": "高級（ElevenLabs）",
+      "elevenlabsHint": "最佳音質，較高成本（約13倍）",
+      "elevenlabsHintWithBalance": "最佳音質 · 您的餘額：{{time}}配音時長"
     }
   },
   "credits": {

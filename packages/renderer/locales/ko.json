@@ -112,6 +112,11 @@
     "improveTranslation": "번역 개선",
     "chooseSrtFile": "SRT 파일 선택",
     "dub": "더빙 생성",
+    "dubEstimateCredits": "{{credits}} 크레딧 (~{{minutes}}분)",
+    "dubEstimateByo": "~{{minutes}}분 오디오",
+    "translateEstimateCredits": "{{credits}} 크레딧",
+    "translateEstimateByo": "BYO 키",
+    "qualityBadge": "(+검토)",
     "cancel_confirmation": "자막 번역 과정을 취소하시겠습니까? 모든 진행 상황이 손실되며 다시 시작해야 합니다."
   },
   "summary": {
@@ -125,6 +130,8 @@
     },
     "generate": "요약 생성",
     "regenerate": "요약 다시 생성",
+    "estimateCredits": "{{credits}} 크레딧",
+    "highEffortBadge": "(정밀)",
     "placeholder": "생성이 완료되면 AI 요약이 여기에 표시됩니다.",
     "insufficientCredits": "요약을 실행하기에 크레딧이 부족합니다.",
     "error": "요약을 생성하지 못했습니다. {{message}}",
@@ -233,7 +240,52 @@
       "qualityTranslation": {
         "label": "고품질 번역",
         "help": "켜짐: 검토 단계 포함(크레딧/시간 약 5× 더 사용). 꺼짐: 검토 건너뜀."
+      },
+      "qualitySummary": {
+        "label": "고품질 요약",
+        "help": "켜짐: Claude Opus로 정밀 분석. 꺼짐: GPT-5.1로 빠른 분석."
       }
+    },
+    "byoMaster": {
+      "toggleLabel": "내 API 키 사용",
+      "keysActive": "{{count}}개 키 활성화"
+    },
+    "preferClaude": {
+      "forTranslation": {
+        "label": "번역에 Claude 선호",
+        "help": "초안: GPT-5.1 → 검토: Opus 4.5"
+      },
+      "forReview": {
+        "label": "검토에 Claude 선호",
+        "help": "검토: Claude Opus 4.5"
+      }
+    },
+    "transcriptionProvider": {
+      "label": "전사 제공자",
+      "elevenlabs": "ElevenLabs Scribe",
+      "elevenlabsHint": "최고 품질, ElevenLabs 키 사용",
+      "openai": "OpenAI Whisper",
+      "openaiHint": "빠르고 정확함, OpenAI 키 사용",
+      "stage5": "Stage5 (크레딧)",
+      "stage5Hint": "Stage5 AI 크레딧 사용"
+    },
+    "dubbingProvider": {
+      "label": "더빙 제공자",
+      "elevenlabs": "ElevenLabs (음성 복제)",
+      "elevenlabsHint": "원본 화자의 음성 유지",
+      "openai": "OpenAI TTS",
+      "openaiHint": "합성 음성 사용 (alloy, echo 등)",
+      "stage5": "Stage5 (크레딧)",
+      "stage5Hint": "Stage5 AI 크레딧 사용"
+    },
+    "stage5TtsProvider": {
+      "label": "TTS 품질 (Stage5 크레딧)",
+      "openai": "표준 (OpenAI TTS)",
+      "openaiHint": "좋은 품질, 저렴한 비용",
+      "openaiHintWithBalance": "좋은 품질 · 잔액: {{time}} 더빙 가능",
+      "elevenlabs": "프리미엄 (ElevenLabs)",
+      "elevenlabsHint": "최고 품질, 높은 비용 (~13배)",
+      "elevenlabsHintWithBalance": "최고 품질 · 잔액: {{time}} 더빙 가능"
     },
     "dubbing": {
       "voiceLabel": "더빙 음성",
@@ -299,6 +351,31 @@
       "toggleOn": "Claude 모델에 내 Anthropic 키를 사용 중입니다.",
       "toggleOff": "Claude 모델에 Stage5 크레딧을 사용 중입니다.",
       "toggleError": "Anthropic 설정 업데이트에 실패했습니다."
+    },
+    "byoElevenLabs": {
+      "title": "ElevenLabs API 키 (선택 사항)",
+      "description": "ElevenLabs API 키를 추가하면 고품질 전사(Scribe)와 더빙(TTS)을 사용할 수 있습니다. 이 키가 없으면 전사와 더빙은 OpenAI 서비스를 사용합니다.",
+      "apiKeyLabel": "ElevenLabs API 키",
+      "hide": "숨기기",
+      "show": "표시",
+      "saving": "저장 중…",
+      "clear": "키 삭제",
+      "loadingKey": "저장된 ElevenLabs 키 불러오는 중…",
+      "keySaved": "ElevenLabs API 키가 저장되었습니다.",
+      "keyCleared": "ElevenLabs API 키가 삭제되었습니다.",
+      "keyValid": "ElevenLabs API 키가 성공적으로 검증되었습니다.",
+      "keyInvalid": "ElevenLabs API 키 검증에 실패했습니다.",
+      "testing": "테스트 중…",
+      "test": "키 테스트",
+      "toggleLabel": "내 ElevenLabs 키 사용",
+      "toggleHelp": "꺼져 있으면 전사와 더빙에 Stage5 크레딧이 사용됩니다.",
+      "toggleAria": "ElevenLabs 키 사용 전환",
+      "toggleOn": "ElevenLabs 서비스에 내 키를 사용 중입니다.",
+      "toggleOff": "ElevenLabs 서비스에 Stage5 크레딧을 사용 중입니다.",
+      "toggleError": "ElevenLabs 설정 업데이트에 실패했습니다."
+    },
+    "voiceCloning": {
+      "enabled": "ElevenLabs에서 음성 복제가 활성화되었습니다. 더빙된 오디오에서 원본 화자의 음성이 유지됩니다."
     }
   },
   "credits": {
@@ -306,6 +383,9 @@
     "loading": "불러오는 중…",
     "credits": "크레딧",
     "usingApiKey": "API 키 사용 중",
+    "usingOpenAi": "OpenAI 사용 중",
+    "usingAnthropic": "Claude 사용 중",
+    "usingElevenLabs": "ElevenLabs 사용 중",
     "hours": "시간",
     "buyCredits": "크레딧 구매",
     "redirectingToPayment": "결제 창을 여는 중…",

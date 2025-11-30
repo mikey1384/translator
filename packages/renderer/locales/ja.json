@@ -98,7 +98,12 @@
     "improveTranslation": "翻訳を改善",
     "chooseSrtFile": "SRTファイルを選択",
     "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。",
-    "dub": "吹き替え音声を生成"
+    "dub": "吹き替え音声を生成",
+    "dubEstimateCredits": "{{credits}} クレジット (~{{minutes}}分)",
+    "dubEstimateByo": "~{{minutes}}分の音声",
+    "translateEstimateCredits": "{{credits}} クレジット",
+    "translateEstimateByo": "BYOキー",
+    "qualityBadge": "(+レビュー)"
   },
   "summary": {
     "title": "書き起こしの要約",
@@ -111,6 +116,8 @@
     },
     "generate": "要約を生成",
     "regenerate": "要約を再生成",
+    "estimateCredits": "{{credits}} クレジット",
+    "highEffortBadge": "(詳細)",
     "placeholder": "生成が完了すると、AIによる要約がここに表示されます。",
     "insufficientCredits": "要約を実行するためのクレジットが足りません。",
     "error": "要約を作成できませんでした。{{message}}",
@@ -196,7 +203,52 @@
       "qualityTranslation": {
         "label": "高品質の翻訳",
         "help": "オン: レビュー工程を含みます（クレジット/時間が約5×必要）。オフ: レビューを省略します。"
+      },
+      "qualitySummary": {
+        "label": "高品質の要約",
+        "help": "オン: Claude Opusで詳細分析。オフ: GPT-5.1で高速分析。"
       }
+    },
+    "byoMaster": {
+      "toggleLabel": "自分のAPIキーを使用",
+      "keysActive": "{{count}}個のキーが有効"
+    },
+    "preferClaude": {
+      "forTranslation": {
+        "label": "翻訳にClaudeを優先",
+        "help": "下書き: GPT-5.1 → レビュー: Opus 4.5"
+      },
+      "forReview": {
+        "label": "レビューにClaudeを優先",
+        "help": "レビュー: Claude Opus 4.5"
+      }
+    },
+    "transcriptionProvider": {
+      "label": "文字起こしプロバイダー",
+      "elevenlabs": "ElevenLabs Scribe",
+      "elevenlabsHint": "最高品質、ElevenLabsキーを使用",
+      "openai": "OpenAI Whisper",
+      "openaiHint": "高速で正確、OpenAIキーを使用",
+      "stage5": "Stage5（クレジット）",
+      "stage5Hint": "Stage5 AIクレジットを使用"
+    },
+    "dubbingProvider": {
+      "label": "吹き替えプロバイダー",
+      "elevenlabs": "ElevenLabs（音声クローン）",
+      "elevenlabsHint": "オリジナルの話者の声を保持",
+      "openai": "OpenAI TTS",
+      "openaiHint": "合成音声を使用（alloy、echoなど）",
+      "stage5": "Stage5（クレジット）",
+      "stage5Hint": "Stage5 AIクレジットを使用"
+    },
+    "stage5TtsProvider": {
+      "label": "TTS品質（Stage5クレジット）",
+      "openai": "標準（OpenAI TTS）",
+      "openaiHint": "良品質、低コスト",
+      "openaiHintWithBalance": "良品質 · 残高: {{time}}の吹き替え可能",
+      "elevenlabs": "プレミアム（ElevenLabs）",
+      "elevenlabsHint": "最高品質、高コスト（約13倍）",
+      "elevenlabsHintWithBalance": "最高品質 · 残高: {{time}}の吹き替え可能"
     },
     "dubbing": {
       "voiceLabel": "吹き替え音声",
@@ -262,6 +314,31 @@
       "toggleOn": "Claudeモデルに自分のAnthropicキーを使用中。",
       "toggleOff": "ClaudeモデルにStage5クレジットを使用中。",
       "toggleError": "Anthropic設定の更新に失敗しました。"
+    },
+    "byoElevenLabs": {
+      "title": "ElevenLabs APIキー（オプション）",
+      "description": "ElevenLabs APIキーを追加すると、高品質な文字起こし（Scribe）と吹き替え（TTS）を使用できます。このキーがない場合、文字起こしと吹き替えはOpenAIサービスを使用します。",
+      "apiKeyLabel": "ElevenLabs APIキー",
+      "hide": "非表示",
+      "show": "表示",
+      "saving": "保存中…",
+      "clear": "キーを削除",
+      "loadingKey": "保存されたElevenLabsキーを読み込み中…",
+      "keySaved": "ElevenLabs APIキーを保存しました。",
+      "keyCleared": "ElevenLabs APIキーを削除しました。",
+      "keyValid": "ElevenLabs APIキーの検証に成功しました。",
+      "keyInvalid": "ElevenLabs APIキーの検証に失敗しました。",
+      "testing": "テスト中…",
+      "test": "キーをテスト",
+      "toggleLabel": "自分のElevenLabsキーを使用",
+      "toggleHelp": "オフの場合、文字起こしと吹き替えにStage5クレジットを使用します。",
+      "toggleAria": "ElevenLabsキーの使用を切り替え",
+      "toggleOn": "ElevenLabsサービスに自分のキーを使用中。",
+      "toggleOff": "ElevenLabsサービスにStage5クレジットを使用中。",
+      "toggleError": "ElevenLabs設定の更新に失敗しました。"
+    },
+    "voiceCloning": {
+      "enabled": "ElevenLabsで音声クローンが有効です。吹き替え音声ではオリジナルの話者の声が保持されます。"
     }
   },
   "credits": {
@@ -269,6 +346,9 @@
     "loading": "読み込み中...",
     "credits": "クレジット",
     "usingApiKey": "APIキーを使用中",
+    "usingOpenAi": "OpenAIを使用中",
+    "usingAnthropic": "Claudeを使用中",
+    "usingElevenLabs": "ElevenLabsを使用中",
     "hours": "時間",
     "buyCredits": "クレジットを購入",
     "redirectingToPayment": "安全な決済を開いています…",

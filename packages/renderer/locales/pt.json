@@ -98,11 +98,18 @@
     "improveTranslation": "Melhorar tradução",
     "chooseSrtFile": "Escolher Arquivo SRT",
     "cancel_confirmation": "Tem certeza que deseja cancelar o processo de tradução de legendas? Qualquer progresso será perdido e você precisará começar novamente.",
-    "dub": "Dublar voz"
+    "dub": "Dublar voz",
+    "dubEstimateCredits": "{{credits}} créditos (~{{minutes}}min)",
+    "dubEstimateByo": "~{{minutes}}min de áudio",
+    "translateEstimateCredits": "{{credits}} créditos",
+    "translateEstimateByo": "Chave BYO",
+    "qualityBadge": "(+revisão)"
   },
   "summary": {
     "title": "Resumo da transcrição",
     "ctaHelper": "Gere uma visão geral detalhada. Vídeos longos podem levar alguns instantes para processar.",
+    "estimateCredits": "{{credits}} créditos",
+    "highEffortBadge": "(aprofundado)",
     "languageLabel": "Idioma do resumo",
     "generate": "Gerar resumo",
     "regenerate": "Regenerar resumo",
@@ -262,6 +269,15 @@
       "toggleOn": "Usando sua chave Anthropic para modelos Claude.",
       "toggleOff": "Usando créditos Stage5 para modelos Claude.",
       "toggleError": "Falha ao atualizar preferência Anthropic."
+    },
+    "stage5TtsProvider": {
+      "label": "Qualidade TTS (Créditos Stage5)",
+      "openai": "Padrão (OpenAI TTS)",
+      "openaiHint": "Boa qualidade, custo menor",
+      "openaiHintWithBalance": "Boa qualidade · Seu saldo: {{time}} de dublagem",
+      "elevenlabs": "Premium (ElevenLabs)",
+      "elevenlabsHint": "Melhor qualidade, custo maior (~13×)",
+      "elevenlabsHintWithBalance": "Melhor qualidade · Seu saldo: {{time}} de dublagem"
     }
   },
   "videoPlayer": {
