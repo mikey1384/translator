@@ -120,27 +120,27 @@
       "error": "Riepilogo non riuscito",
       "cancelled": "Riepilogo annullato",
       "inProgress": "Generazione del riepilogo…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "Selezione dei momenti salienti…",
+      "cuttingHighlight": "Ritaglio momento saliente {{current}}/{{total}}…",
+      "cuttingHighlights": "Ritaglio clip dei momenti salienti…"
     },
     "tab": {
-      "summary": "Summary",
-      "sections": "Detailed notes",
-      "highlights": "Highlights"
+      "summary": "Riepilogo",
+      "sections": "Note dettagliate",
+      "highlights": "Momenti salienti"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight",
-    "downloadHighlight": "Download clip",
-    "downloadingHighlight": "Saving…",
-    "highlightSaved": "Saved!",
-    "highlightSaveError": "Save failed",
-    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
-    "saveHighlightDialogTitle": "Save highlight clip",
-    "noSections": "No section notes yet.",
-    "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…"
+    "noHighlights": "Nessun momento saliente ancora. Genera per rilevare le battute migliori.",
+    "noVideoForHighlights": "Apri il video sorgente per ritagliare i clip dei momenti salienti.",
+    "highlight": "Momento saliente",
+    "downloadHighlight": "Scarica clip",
+    "downloadingHighlight": "Salvataggio…",
+    "highlightSaved": "Salvato!",
+    "highlightSaveError": "Salvataggio fallito",
+    "downloadHighlightFailed": "Impossibile salvare il clip del momento saliente: {{message}}",
+    "saveHighlightDialogTitle": "Salva clip del momento saliente",
+    "noSections": "Nessuna nota di sezione ancora.",
+    "sectionHeading": "Sezione {{index}}",
+    "highlightsInProgress": "Preparazione dei clip dei momenti salienti…"
   },
   "panel": {
     "gaps": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "Originale:",
       "subtitlePlaceholder": "Testo del sottotitolo",
       "confirmRemove": "Sei sicuro di voler rimuovere questo blocco di sottotitoli? Questa azione non può essere annullata.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Trascrivi questa riga"
     },
     "header": {
       "save": "Salva",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "Seleziona un video",
       "processingDuration": "La durata del video è in elaborazione. Riprova tra poco.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Questo file è archiviato in iCloud. Nel Finder, fai clic su \"Scarica\" e attendi che l'icona del cloud finisca, poi riprova."
     },
     "status": {
       "starting": "Avvio in corso...",
@@ -382,10 +382,10 @@
       "description": "Questo potrebbe essere dovuto a un'elevata richiesta o a problemi con i server di OpenAI. Il processo è ancora in esecuzione in background.",
       "checkStatus": "Controlla lo stato di OpenAI"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Annullare il download? Il progresso andrà perso e dovrai ricominciare.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Il download sta richiedendo più tempo del solito.",
+      "description": "Questo potrebbe essere dovuto a modifiche della piattaforma video o nuove misure di protezione. Potrebbe essere necessario attendere la prossima versione dell'app per gestire i video più recenti."
     },
     "unsavedSrtOnTranscribe": {
       "title": "Salvare i sottotitoli correnti prima di trascrivere?",
@@ -417,11 +417,16 @@
     "transcribedChunks": "Trascritti e puliti {{done}}/{{total}} blocchi",
     "gapRepair": "Riparazione lacune #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Riparazione sottotitoli mancanti (Iterazione {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "scrubbingHallucinations": "Pulizia sottotitoli ({{done}}/{{total}})",
+    "translationCleanup": "Pulizia sottotitoli tradotti ({{done}}/{{total}})",
     "reviewingSlow": "Revisione (potrebbe richiedere del tempo...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "Revisione {{done}}/{{total}}",
+    "reviewingRange": "Revisione {{start}}–{{end}} (di {{total}})",
+    "transcribingElevenLabs": "Trascrizione con ElevenLabs (~{{minutes}} min rimanenti)",
+    "transcribingElevenLabsHours": "Trascrizione con ElevenLabs (~{{hours}}h {{minutes}}m rimanenti)",
+    "transcribingElevenLabsFinishing": "Trascrizione con ElevenLabs...",
+    "transcriptionFallbackWhisper": "Passaggio alla trascrizione a blocchi...",
+    "transcribingR2Upload": "Caricamento audio per trascrizione..."
   },
   "messages": {
     "fileSaved": "File salvato:\n{{path}}",

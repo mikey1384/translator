@@ -1,13 +1,27 @@
 export const AI_MODELS = {
   GPT: 'gpt-5.1',
+  CLAUDE_SONNET: 'claude-sonnet-4-5-20250929',
   CLAUDE_OPUS: 'claude-opus-4-5-20251101',
   WHISPER: 'whisper-1',
 } as const;
 
-export const subtitleVideoPlayer = {
-  instance: null as any,
-  isReady: false,
+/** User-friendly display names for AI models */
+export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
+  [AI_MODELS.GPT]: 'GPT-5.1',
+  [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet',
+  [AI_MODELS.CLAUDE_OPUS]: 'Claude Opus',
+  [AI_MODELS.WHISPER]: 'Whisper',
 };
+
+// Error codes used across the application
+export const ERROR_CODES = {
+  INSUFFICIENT_CREDITS: 'insufficient-credits',
+  OPENAI_KEY_INVALID: 'openai-key-invalid',
+  OPENAI_RATE_LIMIT: 'openai-rate-limit',
+  ANTHROPIC_KEY_INVALID: 'anthropic-key-invalid',
+  ANTHROPIC_RATE_LIMIT: 'anthropic-rate-limit',
+  TRANSLATION_JOB_NOT_FOUND: 'translation-job-not-found',
+} as const;
 
 export const colors = {
   primary: '#4361ee',
@@ -51,13 +65,9 @@ export const USD_PER_CREDIT = 10 / 350_000;
 // Match backend pricing margin
 export const PRICE_MARGIN = 2;
 
-// GPT-5.1 tokenizer costs (USD per token)
-export const GPT5_1_USD_PER_TOKEN_IN = 1.25 / 1_000_000; // $1.25 / 1M
-export const GPT5_1_USD_PER_TOKEN_OUT = 10 / 1_000_000; // $10.00 / 1M
-
-// Claude Opus 4.5 tokenizer costs (USD per token)
-export const CLAUDE_OPUS_USD_PER_TOKEN_IN = 5 / 1_000_000; // $0.005 / 1M
-export const CLAUDE_OPUS_USD_PER_TOKEN_OUT = 25 / 1_000_000; // $0.025 / 1M
+// GPT-5.1 tokenizer costs (USD per token) - used for UI credit estimates
+const GPT5_1_USD_PER_TOKEN_IN = 1.25 / 1_000_000; // $1.25 / 1M
+const GPT5_1_USD_PER_TOKEN_OUT = 10 / 1_000_000; // $10.00 / 1M
 
 // Credits per 1k tokens (estimated)
 // Calibration factor (1.0 = no adjustment)
@@ -91,21 +101,9 @@ export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
     TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
 );
 
-// Transcription: compute credits/hour from model USD rate with margin and calibration
-export const WHISPER_USD_PER_HOUR = 0.36; // OpenAI whisper-1: $0.006/min = $0.36/hr
-// Backend math: $0.36/h × margin(2) = $0.72/h; $0.72 / (10/350k) = 25,200 credits/hour
-// Historical transcription estimate kept for reference only.
-// We now unify hour estimation with translation.
-export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR;
-
-// Set the generic credits/hour constant used across UI to the translation-based estimate
+// Credits per audio hour (unified for transcription + translation)
 export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
-
-// Keep a single source of truth for "new pricing" as well
-export const NEW_CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 
 const MICRO_CREDITS = 15_000; // $1 entry pack
 const STARTER_CREDITS = 150_000;

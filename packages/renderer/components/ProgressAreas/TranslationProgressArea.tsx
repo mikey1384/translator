@@ -105,6 +105,7 @@ type TranslationSlice = {
   percent: number;
   stage: string;
   id?: string;
+  model?: string;
 };
 
 export default function TranslationProgressArea({
@@ -112,7 +113,7 @@ export default function TranslationProgressArea({
 }: { autoCloseDelay?: number } = {}) {
   const { t } = useTranslation();
   const {
-    translation: { inProgress, percent, stage, id },
+    translation: { inProgress, percent, stage, id, model },
     setTranslation: patchTranslation,
   } = useTaskStore(s => ({
     translation: s.translation,
@@ -196,6 +197,16 @@ export default function TranslationProgressArea({
     return TRANSLATION_PROGRESS_COLOR;
   }, [isCancelling, percent]);
 
+  // Combine stage message with model name when available (during review phase)
+  const displayStage = useMemo(() => {
+    const translatedStage = translateBackendMessage(stage, t);
+    // Only append model during review phase (when model is provided)
+    if (model && stage.includes('reviewing')) {
+      return `${translatedStage} (${model})`;
+    }
+    return translatedStage;
+  }, [stage, model, t]);
+
   if (!inProgress) return null;
 
   return (
@@ -219,7 +230,7 @@ export default function TranslationProgressArea({
           isVisible={inProgress}
           title={t('dialogs.translationInProgress')}
           progress={percent}
-          stage={translateBackendMessage(stage, t)}
+          stage={displayStage}
           progressBarColor={progressBarColor}
           isCancelling={isCancelling}
           operationId={id ?? null}

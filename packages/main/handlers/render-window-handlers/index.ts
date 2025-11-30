@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { ChildProcess } from 'child_process';
-import { ipcMain, BrowserWindow, dialog } from 'electron';
+import { ipcMain, dialog } from 'electron';
 import log from 'electron-log';
 import { pathToFileURL } from 'url';
 
@@ -22,6 +22,7 @@ import { normalizeSubtitleSegments } from '../../services/subtitle-processing/pi
 import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
 import { probeFps } from './ffprobe-utils.js';
+import { getMainWindow } from '../../utils/window.js';
 
 const activeRenderJobs = new Map<
   string,
@@ -255,7 +256,7 @@ export function initializeRenderWindowHandlers({
           signal: controller.signal,
         });
 
-        const win = BrowserWindow.getAllWindows()[0];
+        const win = getMainWindow();
         if (!win) {
           throw new Error(
             'Cannot show save dialog: No application window found.'

@@ -82,11 +82,13 @@ export async function executeDubGeneration({
   operationId,
   videoPath,
   voice,
+  targetLanguage,
 }: {
   segments: any[];
   operationId: string;
   videoPath?: string | null;
   voice?: string;
+  targetLanguage?: string;
 }): Promise<{
   success: boolean;
   videoPath?: string;
@@ -137,6 +139,7 @@ export async function executeDubGeneration({
       videoPath: videoPath ?? null,
       quality,
       ambientMix: dubAmbientMix,
+      targetLanguage,
     });
 
     if (res?.success) {

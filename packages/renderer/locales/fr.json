@@ -18,13 +18,13 @@
       "unexpectedRemove": "Une erreur inattendue s'est produite lors de la suppression de la clé.",
       "unexpectedSave": "Une erreur inattendue s'est produite lors de l'enregistrement.",
       "unexpectedLoad": "Une erreur inattendue s'est produite lors du chargement.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Échec du rendu",
+      "creditReservationFailed": "Échec de la réservation de crédits",
+      "invalidRenderOptions": "Options de rendu non valides",
+      "missingVideoMetadata": "Métadonnées vidéo manquantes ({{missing}})",
+      "noSourceVideo": "Pas de vidéo source",
+      "noSubtitlesLoaded": "Aucun sous-titre chargé",
+      "failedToLoadSRT": "Échec du chargement du fichier SRT"
     },
     "success": "Succès",
     "settings": "Paramètres",
@@ -46,9 +46,9 @@
     "backToTopAria": "Retourner en haut de la page",
     "confirmReload": "Êtes-vous sûr de vouloir recharger la page ? Les modifications non enregistrées pourraient être perdues.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "Fichiers SRT",
+      "mediaFiles": "Fichiers multimédia",
+      "videoFiles": "Fichiers vidéo"
     },
     "installUpdate": "Redémarrer pour Mettre à Jour",
     "confirmInstallUpdate": "Installer la mise à jour et redémarrer ?",
@@ -134,13 +134,13 @@
       "error": "Échec du résumé",
       "cancelled": "Résumé annulé",
       "inProgress": "Génération du résumé…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "Sélection des moments forts…",
+      "cuttingHighlight": "Découpe du moment fort {{current}}/{{total}}…",
+      "cuttingHighlights": "Découpe des clips de moments forts…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight"
+    "noHighlights": "Aucun moment fort pour l'instant. Générez pour détecter les temps forts.",
+    "noVideoForHighlights": "Ouvrez la vidéo source pour découper les clips de moments forts.",
+    "highlight": "Moment fort"
   },
   "panel": {
     "gaps": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "Original :",
       "subtitlePlaceholder": "Texte du sous-titre",
       "confirmRemove": "Êtes-vous sûr de vouloir supprimer ce bloc de sous-titres ? Cette action ne peut pas être annulée.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Transcrire cette ligne"
     },
     "header": {
       "save": "Enregistrer",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "Veuillez sélectionner une vidéo",
       "processingDuration": "La durée de la vidéo est en cours de traitement. Veuillez réessayer dans quelques instants.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Ce fichier est stocké dans iCloud. Dans le Finder, cliquez sur « Télécharger » et attendez que l'icône de nuage disparaisse, puis réessayez."
     },
     "status": {
       "starting": "Démarrage...",
@@ -417,11 +417,16 @@
     "transcribedChunks": "Transcrit et nettoyé {{done}}/{{total}} fragments",
     "gapRepair": "Réparation des lacunes #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Réparation des sous-titres manquants (Itération {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "scrubbingHallucinations": "Nettoyage des sous-titres ({{done}}/{{total}})",
+    "translationCleanup": "Nettoyage des sous-titres traduits ({{done}}/{{total}})",
     "reviewingSlow": "Relecture (cela peut prendre un moment...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "Relecture {{done}}/{{total}}",
+    "reviewingRange": "Relecture {{start}}–{{end}} (sur {{total}})",
+    "transcribingElevenLabs": "Transcription avec ElevenLabs (~{{minutes}} min restantes)",
+    "transcribingElevenLabsHours": "Transcription avec ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
+    "transcribingElevenLabsFinishing": "Transcription avec ElevenLabs...",
+    "transcriptionFallbackWhisper": "Passage à la transcription par fragments...",
+    "transcribingR2Upload": "Téléversement de l'audio pour transcription..."
   },
   "messages": {
     "fileSaved": "Fichier enregistré :\n{{path}}",

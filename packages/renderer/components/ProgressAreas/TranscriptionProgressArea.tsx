@@ -69,6 +69,21 @@ function translateBackendMessage(
       const total = parseInt(parts[3], 10) || 1;
       return t('progress.transcribingOf', { done, total });
     }
+    case 'transcribing_elevenlabs': {
+      const minutes = parseInt(parts[2], 10) || 1;
+      return t('progress.transcribingElevenLabs', { minutes });
+    }
+    case 'transcribing_elevenlabs_hours': {
+      const hours = parseInt(parts[2], 10) || 1;
+      const minutes = parseInt(parts[3], 10) || 0;
+      return t('progress.transcribingElevenLabsHours', { hours, minutes });
+    }
+    case 'transcribing_elevenlabs_finishing':
+      return t('progress.transcribingElevenLabsFinishing');
+    case 'transcription_fallback_whisper':
+      return t('progress.transcriptionFallbackWhisper');
+    case 'transcribing_r2_upload':
+      return t('progress.transcribingR2Upload');
     case 'error':
       return t('progress.error');
     default:

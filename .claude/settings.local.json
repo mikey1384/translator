@@ -1,17 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(for file in *.json)",
-      "Bash(do if [ \"$file\" != \"en.json\" ])",
-      "Bash(then echo \"=== $file ===\")",
-      "Bash(jq:*)",
-      "Bash(echo:*)",
-      "Bash(fi)",
       "Bash(done)",
-      "Bash(node:*)",
-      "Bash(for lang in de es fr)",
-      "Bash(do echo \"=== Missing in $lang.json ===\")",
-      "Bash(grep:*)"
+      "Bash(xxd:*)",
+      "Bash(wrangler deploy:*)",
+      "Bash(flyctl deploy:*)",
+      "Bash(npx tsc:*)",
+      "Bash(wrangler secret list:*)",
+      "Bash(flyctl secrets:*)",
+      "Bash(flyctl logs:*)",
+      "WebSearch",
+      "WebFetch(domain:help.elevenlabs.io)",
+      "WebFetch(domain:elevenlabs.io)",
+      "WebFetch(domain:www.saasworthy.com)",
+      "WebFetch(domain:flexprice.io)",
+      "WebFetch(domain:blog.unrealspeech.com)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

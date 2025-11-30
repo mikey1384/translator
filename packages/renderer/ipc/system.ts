@@ -95,6 +95,7 @@ export function onCheckoutCancelled(callback: () => void): () => void {
 export function getEntitlements(): Promise<{
   byoOpenAi: boolean;
   byoAnthropic: boolean;
+  byoElevenLabs: boolean;
   fetchedAt?: string;
 }> {
   return window.electron.getEntitlements();
@@ -103,6 +104,7 @@ export function getEntitlements(): Promise<{
 export function refreshEntitlements(): Promise<{
   byoOpenAi: boolean;
   byoAnthropic: boolean;
+  byoElevenLabs: boolean;
   fetchedAt?: string;
 }> {
   return window.electron.refreshEntitlements();
@@ -112,6 +114,7 @@ export function onEntitlementsUpdated(
   callback: (snapshot: {
     byoOpenAi: boolean;
     byoAnthropic: boolean;
+    byoElevenLabs: boolean;
     fetchedAt?: string;
   }) => void
 ): () => void {
@@ -132,6 +135,7 @@ export function onByoUnlockConfirmed(
   callback: (snapshot: {
     byoOpenAi: boolean;
     byoAnthropic: boolean;
+    byoElevenLabs: boolean;
     fetchedAt?: string;
   }) => void
 ): () => void {
@@ -215,4 +219,117 @@ export function resetCreditsToZero(): Promise<{
   error?: string;
 }> {
   return window.electron.resetCreditsToZero();
+}
+
+// ElevenLabs API key functions
+export function getElevenLabsApiKey(): Promise<string | null> {
+  return window.electron.getElevenLabsApiKey();
+}
+
+export function setElevenLabsApiKey(
+  apiKey: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setElevenLabsApiKey(apiKey);
+}
+
+export function clearElevenLabsApiKey(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return window.electron.clearElevenLabsApiKey();
+}
+
+export function validateElevenLabsApiKey(
+  apiKey?: string
+): Promise<{ ok: boolean; error?: string }> {
+  return window.electron.validateElevenLabsApiKey(apiKey);
+}
+
+export function getByoElevenLabsEnabled(): Promise<boolean> {
+  return window.electron.getByoElevenLabsEnabled();
+}
+
+export function setByoElevenLabsEnabled(
+  enabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoElevenLabsEnabled(enabled);
+}
+
+// Master BYO toggle
+export function getByoMasterEnabled(): Promise<boolean> {
+  return window.electron.getByoMasterEnabled();
+}
+
+export function setByoMasterEnabled(
+  enabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setByoMasterEnabled(enabled);
+}
+
+// Claude translation preference
+export function getPreferClaudeTranslation(): Promise<boolean> {
+  return window.electron.getPreferClaudeTranslation();
+}
+
+export function setPreferClaudeTranslation(
+  prefer: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferClaudeTranslation(prefer);
+}
+
+// Claude review preference
+export function getPreferClaudeReview(): Promise<boolean> {
+  return window.electron.getPreferClaudeReview();
+}
+
+export function setPreferClaudeReview(
+  prefer: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferClaudeReview(prefer);
+}
+
+// Transcription provider preference
+export type TranscriptionProvider = 'elevenlabs' | 'openai' | 'stage5';
+
+export function getPreferredTranscriptionProvider(): Promise<TranscriptionProvider> {
+  return window.electron.getPreferredTranscriptionProvider();
+}
+
+export function setPreferredTranscriptionProvider(
+  provider: TranscriptionProvider
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferredTranscriptionProvider(provider);
+}
+
+// Dubbing provider preference
+export type DubbingProvider = 'elevenlabs' | 'openai' | 'stage5';
+
+export function getPreferredDubbingProvider(): Promise<DubbingProvider> {
+  return window.electron.getPreferredDubbingProvider();
+}
+
+export function setPreferredDubbingProvider(
+  provider: DubbingProvider
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferredDubbingProvider(provider);
+}
+
+// Stage5 dubbing TTS provider (when using Stage5 API)
+// 'openai' = cheaper ($15/1M chars), 'elevenlabs' = premium ($200/1M chars)
+export type Stage5TtsProvider = 'openai' | 'elevenlabs';
+
+export function getStage5DubbingTtsProvider(): Promise<Stage5TtsProvider> {
+  return window.electron.getStage5DubbingTtsProvider();
+}
+
+export function setStage5DubbingTtsProvider(
+  provider: Stage5TtsProvider
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setStage5DubbingTtsProvider(provider);
+}
+
+export function onElevenLabsApiKeyChanged(
+  callback: (payload: { hasKey: boolean }) => void
+): () => void {
+  return window.electron.onElevenLabsApiKeyChanged(callback);
 }

@@ -3,6 +3,7 @@ import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises';
+import crypto from 'crypto';
 import log from 'electron-log';
 import {
   detectSpeechIntervals,
@@ -12,6 +13,7 @@ import {
 } from '../audio-chunker.js';
 import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
+import { ERROR_CODES } from '../../../../shared/constants/index.js';
 import {
   SAVE_WHISPER_CHUNKS,
   PRE_PAD_SEC,
@@ -25,8 +27,13 @@ import {
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
-// Note: batching/parallelism is controlled here; we no longer rely on WHISPER_PARALLEL
+
 import { throwIfAborted } from '../utils.js';
+import {
+  transcribe as transcribeAi,
+  getActiveProviderForAudio,
+  transcribeLargeFileViaR2,
+} from '../../ai-provider.js';
 
 export async function transcribePass({
   audioPath,
@@ -73,6 +80,257 @@ export async function transcribePass({
       );
     }
 
+    // Check provider and file size for transcription strategy
+    const audioProvider = getActiveProviderForAudio();
+    const useByoElevenLabs = audioProvider === 'elevenlabs';
+    const useStage5 = audioProvider === 'stage5';
+
+    // Get file size for routing decision
+    const audioStats = await fsp.stat(audioPath);
+    const fileSizeMB = audioStats.size / (1024 * 1024);
+    const MAX_DIRECT_FILE_SIZE_MB = 95; // Stay under CF 100MB limit with buffer
+    const MAX_R2_FILE_SIZE_MB = 500; // R2 upload limit
+
+    // Determine transcription strategy:
+    // - BYO ElevenLabs: Always try direct (no CF limit)
+    // - Stage5 credits < 95MB: Try direct ElevenLabs via CF Worker
+    // - Stage5 credits 95-500MB: Use R2 upload flow
+    // - Stage5 credits > 500MB or fallback: Whisper chunked
+    const canTryDirectElevenLabs =
+      useByoElevenLabs || (useStage5 && fileSizeMB < MAX_DIRECT_FILE_SIZE_MB);
+    const canTryR2ElevenLabs =
+      useStage5 &&
+      fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB &&
+      fileSizeMB < MAX_R2_FILE_SIZE_MB;
+
+    // Helper function for ElevenLabs transcription with progress
+    const tryElevenLabsTranscription = async (): Promise<{
+      segments: SrtSegment[];
+      speechIntervals: Array<{ start: number; end: number }>;
+    } | null> => {
+      log.info(
+        `[${operationId}] Trying ElevenLabs Scribe (${fileSizeMB.toFixed(1)}MB) - best quality mode`
+      );
+
+      // ElevenLabs processes at ~8x real-time, estimate completion time
+      const durationMinutes = duration / 60;
+      const bufferMultiplier = durationMinutes > 60 ? 1.5 : 1.2;
+      const estimatedProcessingTime = (duration / 8) * bufferMultiplier;
+      const startTime = Date.now();
+      let progressInterval: ReturnType<typeof setInterval> | null = null;
+
+      const formatTimeRemaining = (seconds: number): string => {
+        if (seconds < 60) return '__i18n__:transcribing_elevenlabs_finishing';
+        const minutes = Math.ceil(seconds / 60);
+        if (minutes >= 60) {
+          const hours = Math.floor(minutes / 60);
+          const remainingMins = minutes % 60;
+          return `__i18n__:transcribing_elevenlabs_hours:${hours}:${remainingMins}`;
+        }
+        return `__i18n__:transcribing_elevenlabs:${minutes}`;
+      };
+
+      progressInterval = setInterval(() => {
+        if (signal?.aborted) {
+          if (progressInterval) clearInterval(progressInterval);
+          return;
+        }
+
+        const elapsed = (Date.now() - startTime) / 1000;
+        const estimatedPercent = Math.min(
+          95,
+          Stage.TRANSCRIBE +
+            (elapsed / estimatedProcessingTime) * (95 - Stage.TRANSCRIBE)
+        );
+        const remainingSec = Math.max(0, estimatedProcessingTime - elapsed);
+
+        progressCallback?.({
+          percent: Math.round(estimatedPercent),
+          stage: formatTimeRemaining(remainingSec),
+        });
+      }, 2000);
+
+      progressCallback?.({
+        percent: Stage.TRANSCRIBE,
+        stage: formatTimeRemaining(estimatedProcessingTime),
+      });
+
+      try {
+        const result = await transcribeAi({
+          filePath: audioPath,
+          signal,
+        });
+
+        throwIfAborted(signal);
+
+        const segments = (result?.segments || []) as Array<{
+          id: number;
+          start: number;
+          end: number;
+          text: string;
+          words?: Array<{ word: string; start: number; end: number }>;
+        }>;
+
+        const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
+          id: crypto.randomUUID(),
+          index: idx + 1,
+          start: seg.start,
+          end: seg.end,
+          original: seg.text?.trim() || '',
+          words: seg.words,
+        }));
+
+        const cleaned = srtSegments
+          .filter(s => (s.original ?? '').trim() !== '')
+          .sort((a, b) => a.start - b.start)
+          .map((s, i) => ({
+            ...s,
+            index: i + 1,
+            original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
+          }));
+
+        const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
+        await fsp.writeFile(
+          path.join(tempDir, `${operationId}_final.srt`),
+          finalSrt,
+          'utf8'
+        );
+
+        log.info(
+          `[${operationId}] ✏️ ElevenLabs transcription complete: ${cleaned.length} segments`
+        );
+
+        progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
+        return { segments: cleaned, speechIntervals: [] };
+      } catch (error: any) {
+        // Don't log cancellation as an error
+        if (
+          error?.name === 'AbortError' ||
+          error?.message === 'Cancelled' ||
+          signal?.aborted
+        ) {
+          throw error;
+        }
+        log.warn(
+          `[${operationId}] ElevenLabs transcription failed: ${error?.message || error}`
+        );
+        return null; // Signal to try fallback
+      } finally {
+        if (progressInterval) clearInterval(progressInterval);
+      }
+    };
+
+    // Try direct ElevenLabs first if applicable (BYO key or small Stage5 files)
+    if (canTryDirectElevenLabs) {
+      const elevenLabsResult = await tryElevenLabsTranscription();
+      if (elevenLabsResult) {
+        return elevenLabsResult;
+      }
+
+      // ElevenLabs failed, fall back to Whisper chunked
+      if (!useByoElevenLabs) {
+        log.info(
+          `[${operationId}] Falling back to Whisper chunked transcription`
+        );
+        progressCallback?.({
+          percent: Stage.TRANSCRIBE,
+          stage: '__i18n__:transcription_fallback_whisper',
+        });
+      } else {
+        // BYO ElevenLabs failed with no fallback available
+        throw new SubtitleProcessingError(
+          'ElevenLabs transcription failed. Please check your API key and try again.'
+        );
+      }
+    }
+
+    // Try R2 upload flow for large Stage5 files (95-500MB)
+    if (canTryR2ElevenLabs) {
+      log.info(
+        `[${operationId}] Using R2 upload flow for large file (${fileSizeMB.toFixed(1)}MB)`
+      );
+
+      try {
+        progressCallback?.({
+          percent: Stage.TRANSCRIBE,
+          stage: '__i18n__:transcribing_r2_upload',
+        });
+
+        const result = await transcribeLargeFileViaR2({
+          filePath: audioPath,
+          signal,
+          onProgress: (stage, percent) => {
+            progressCallback?.({
+              percent: percent ?? Stage.TRANSCRIBE,
+              stage: stage || '__i18n__:transcribing_elevenlabs_finishing',
+            });
+          },
+        });
+
+        throwIfAborted(signal);
+
+        // Convert result to SrtSegments (same as tryElevenLabsTranscription)
+        const segments = (result?.segments || []) as Array<{
+          id: number;
+          start: number;
+          end: number;
+          text: string;
+          words?: Array<{ word: string; start: number; end: number }>;
+        }>;
+
+        const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
+          id: crypto.randomUUID(),
+          index: idx + 1,
+          start: seg.start,
+          end: seg.end,
+          original: seg.text?.trim() || '',
+          words: seg.words,
+        }));
+
+        const cleaned = srtSegments
+          .filter(s => (s.original ?? '').trim() !== '')
+          .sort((a, b) => a.start - b.start)
+          .map((s, i) => ({
+            ...s,
+            index: i + 1,
+            original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
+          }));
+
+        const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
+        await fsp.writeFile(
+          path.join(tempDir, `${operationId}_final.srt`),
+          finalSrt,
+          'utf8'
+        );
+
+        log.info(
+          `[${operationId}] ✏️ R2 ElevenLabs transcription complete: ${cleaned.length} segments`
+        );
+
+        progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
+        return { segments: cleaned, speechIntervals: [] };
+      } catch (error: any) {
+        if (
+          error?.name === 'AbortError' ||
+          error?.message === 'Cancelled' ||
+          signal?.aborted
+        ) {
+          throw error;
+        }
+        log.warn(
+          `[${operationId}] R2 ElevenLabs transcription failed: ${error?.message || error}`
+        );
+        log.info(
+          `[${operationId}] Falling back to Whisper chunked transcription`
+        );
+        progressCallback?.({
+          percent: Stage.TRANSCRIBE,
+          stage: '__i18n__:transcription_fallback_whisper',
+        });
+      }
+    }
+
+    // Whisper chunked path: robust fallback with real progress
     progressCallback?.({
       percent: Stage.TRANSCRIBE,
       stage: 'Analyzing audio for chunk boundaries...',
@@ -310,10 +568,7 @@ export async function transcribePass({
             done++;
           } else {
             const err = r.reason;
-            if (
-              err?.message === 'insufficient-credits' ||
-              /Insufficient credits/i.test(String(err?.message || err))
-            ) {
+            if (err?.message === ERROR_CODES.INSUFFICIENT_CREDITS) {
               throw err; // propagate credit exhaustion
             }
             if (

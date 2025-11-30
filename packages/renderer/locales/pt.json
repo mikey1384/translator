@@ -120,27 +120,27 @@
       "error": "Falha ao gerar o resumo",
       "cancelled": "Resumo cancelado",
       "inProgress": "Gerando resumo…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "Selecionando momentos de destaque…",
+      "cuttingHighlight": "Recortando destaque {{current}}/{{total}}…",
+      "cuttingHighlights": "Recortando clips de destaque…"
     },
     "tab": {
-      "summary": "Summary",
-      "sections": "Detailed notes",
-      "highlights": "Highlights"
+      "summary": "Resumo",
+      "sections": "Notas detalhadas",
+      "highlights": "Destaques"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight",
-    "downloadHighlight": "Download clip",
-    "downloadingHighlight": "Saving…",
-    "highlightSaved": "Saved!",
-    "highlightSaveError": "Save failed",
-    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
-    "saveHighlightDialogTitle": "Save highlight clip",
-    "noSections": "No section notes yet.",
-    "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…"
+    "noHighlights": "Ainda não há destaques. Gere para detectar momentos marcantes.",
+    "noVideoForHighlights": "Abra o vídeo original para recortar clips de destaque.",
+    "highlight": "Destaque",
+    "downloadHighlight": "Baixar clip",
+    "downloadingHighlight": "Salvando…",
+    "highlightSaved": "Salvo!",
+    "highlightSaveError": "Falha ao salvar",
+    "downloadHighlightFailed": "Falha ao salvar clip de destaque: {{message}}",
+    "saveHighlightDialogTitle": "Salvar clip de destaque",
+    "noSections": "Ainda não há notas de seção.",
+    "sectionHeading": "Seção {{index}}",
+    "highlightsInProgress": "Preparando clips de destaque…"
   },
   "panel": {
     "gaps": {
@@ -330,7 +330,7 @@
     "validation": {
       "pleaseSelectVideo": "Por favor, selecione um vídeo",
       "processingDuration": "A duração do vídeo está sendo processada. Tente novamente em breve.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Este arquivo está armazenado no iCloud. No Finder, clique em \"Baixar\" e aguarde o ícone da nuvem terminar, depois tente novamente."
     },
     "status": {
       "starting": "Iniciando...",
@@ -371,10 +371,10 @@
       "description": "Isso pode ser devido à alta demanda ou problemas com os servidores da OpenAI. O processo ainda está rodando em segundo plano.",
       "checkStatus": "Verificar status da OpenAI"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Cancelar download? O progresso será perdido e você precisará começar novamente.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "O download está demorando mais que o usual.",
+      "description": "Isso pode ser devido a alterações na plataforma de vídeo ou novas medidas de proteção. Você pode precisar aguardar a próxima versão do app para lidar com vídeos mais recentes."
     },
     "creditRanOut": {
       "title": "Créditos esgotados",
@@ -406,11 +406,16 @@
     "transcribedChunks": "Transcrito e limpo {{done}}/{{total}} fragmentos",
     "gapRepair": "Reparo de lacunas #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando legendas ausentes (Iteração {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "scrubbingHallucinations": "Limpando legendas ({{done}}/{{total}})",
+    "translationCleanup": "Limpando legendas traduzidas ({{done}}/{{total}})",
     "reviewingSlow": "Revisando (isso pode demorar um pouco...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "Revisando {{done}}/{{total}}",
+    "reviewingRange": "Revisando {{start}}–{{end}} (de {{total}})",
+    "transcribingElevenLabs": "Transcrevendo com ElevenLabs (~{{minutes}} min restantes)",
+    "transcribingElevenLabsHours": "Transcrevendo com ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
+    "transcribingElevenLabsFinishing": "Transcrevendo com ElevenLabs...",
+    "transcriptionFallbackWhisper": "Mudando para transcrição fragmentada...",
+    "transcribingR2Upload": "Enviando áudio para transcrição..."
   },
   "messages": {
     "fileSaved": "Arquivo salvo:\n{{path}}",
@@ -438,7 +443,7 @@
     "redirectingToPayment": "Abrindo checkout seguro…",
     "description": "Escolha entre pacotes de ${{packMicroPrice}} ({{packMicroHours}}h), ${{pack1Price}} ({{pack1Hours}}h), ${{pack2Price}} ({{pack2Hours}}h), ou ${{pack3Price}} ({{pack3Hours}}h) de créditos",
     "notEnough": "Créditos insuficientes. Por favor, compre mais créditos para continuar.",
-    "usingApiKey": "Using API Key"
+    "usingApiKey": "Usando chave de API"
   },
   "cta": {
     "generate": {

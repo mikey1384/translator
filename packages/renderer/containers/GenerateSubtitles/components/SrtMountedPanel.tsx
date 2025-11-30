@@ -9,6 +9,58 @@ import {
 } from '../../../constants/translation-languages';
 import { useTaskStore } from '../../../state/task-store';
 import { useUrlStore } from '../../../state/url-store';
+import { useSubStore } from '../../../state/subtitle-store';
+import { useAiStore } from '../../../state/ai-store';
+import { useCreditStore } from '../../../state/credit-store';
+import { useMemo } from 'react';
+import {
+  CREDITS_PER_1K_TOKENS_PROMPT,
+  CREDITS_PER_1K_TOKENS_COMPLETION,
+} from '../../../../shared/constants';
+
+// TTS credits per character (based on pricing.ts calculations with margin)
+// OpenAI tts-1: $15/1M chars * 2 margin / USD_PER_CREDIT ≈ 1.05 credits/char
+// ElevenLabs: $200/1M chars * 2 margin / USD_PER_CREDIT ≈ 14 credits/char
+const TTS_CREDITS_PER_CHAR = {
+  openai: 1.05,
+  elevenlabs: 14,
+} as const;
+
+// Translation credits estimation: input tokens ≈ chars/4, output ≈ input
+// Quality translation adds review phase overhead (TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER)
+function estimateTranslationCredits(
+  charCount: number,
+  qualityEnabled: boolean
+): number {
+  const inputTokens = Math.ceil(charCount / 4);
+  const outputTokens = inputTokens; // Translation output is roughly same size as input
+  const baseCredits = Math.ceil(
+    (inputTokens / 1000) * CREDITS_PER_1K_TOKENS_PROMPT +
+      (outputTokens / 1000) * CREDITS_PER_1K_TOKENS_COMPLETION
+  );
+  // Quality translation includes review phase which adds ~50% overhead
+  // The actual overhead also includes Claude Opus usage which is ~4x more expensive
+  // So total quality cost is roughly base * 1.5 (review) * some factor for Claude
+  // Using ~5x as a conservative estimate for the full quality pipeline
+  const QUALITY_MULTIPLIER = 5;
+  return qualityEnabled ? Math.ceil(baseCredits * QUALITY_MULTIPLIER) : baseCredits;
+}
+
+function formatCredits(credits: number): string {
+  if (credits < 1000) return `~${Math.ceil(credits)}`;
+  if (credits < 10000) return `~${(credits / 1000).toFixed(1)}k`;
+  return `~${Math.round(credits / 1000)}k`;
+}
+
+function formatDubbingTime(credits: number, creditsPerChar: number, charCount: number): string {
+  // Estimate based on ~750 chars per minute of speech
+  const minutes = charCount / 750;
+  if (minutes < 1) return '<1m';
+  if (minutes < 60) return `~${Math.ceil(minutes)}m`;
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.ceil(minutes % 60);
+  return mins > 0 ? `~${hours}h ${mins}m` : `~${hours}h`;
+}
 
 interface SrtMountedPanelProps {
   srtPath?: string | null;
@@ -52,6 +104,91 @@ export default function SrtMountedPanel({
     isMergeInProgress ||
     isSummaryInProgress ||
     isDownloadInProgress;
+
+  // Dubbing cost estimation
+  const segments = useSubStore(s => s.segments);
+  const order = useSubStore(s => s.order);
+  const credits = useCreditStore(s => s.credits);
+  const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
+  const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
+  const useByoMaster = useAiStore(s => s.useByoMaster);
+  const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
+  const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
+
+  // Calculate total character count from subtitles (use translation if available, else original)
+  const dubbingEstimate = useMemo(() => {
+    let charCount = 0;
+    for (const id of order) {
+      const seg = segments[id];
+      if (!seg) continue;
+      const text = (seg.translation || seg.original || '').trim();
+      charCount += text.length;
+    }
+    if (charCount === 0) return null;
+
+    // Determine which TTS provider will be used
+    let ttsProvider: 'openai' | 'elevenlabs' = 'openai';
+    if (useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
+      // BYO ElevenLabs - no Stage5 credits used
+      ttsProvider = 'elevenlabs';
+    } else if (preferredDubbingProvider === 'elevenlabs' && useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
+      // Direct ElevenLabs with BYO key
+      ttsProvider = 'elevenlabs';
+    } else if (preferredDubbingProvider === 'stage5') {
+      // Stage5 credits - use user's selected TTS provider preference
+      ttsProvider = stage5DubbingTtsProvider;
+    } else if (preferredDubbingProvider === 'openai') {
+      ttsProvider = 'openai';
+    }
+
+    // For BYO keys, we don't show credit estimates (user pays directly)
+    const isByo = useByoMaster && (
+      (preferredDubbingProvider === 'elevenlabs' && useByoElevenLabs && elevenLabsKeyPresent) ||
+      (preferredDubbingProvider === 'openai')
+    );
+
+    const creditsPerChar = TTS_CREDITS_PER_CHAR[ttsProvider];
+    const estimatedCredits = Math.ceil(charCount * creditsPerChar);
+    const audioMinutes = Math.ceil(charCount / 750); // ~750 chars per minute of speech
+
+    return {
+      charCount,
+      ttsProvider,
+      estimatedCredits,
+      audioMinutes,
+      isByo,
+      hasEnoughCredits: isByo || (credits == null || credits >= estimatedCredits),
+    };
+  }, [order, segments, credits, preferredDubbingProvider, stage5DubbingTtsProvider, useByoMaster, useByoElevenLabs, elevenLabsKeyPresent]);
+
+  // Translation cost estimation
+  const qualityTranslation = useUIStore(s => s.qualityTranslation);
+  const keyPresent = useAiStore(s => s.keyPresent); // BYO OpenAI key
+  const useByoOpenAi = useAiStore(s => s.useByoOpenAi);
+
+  const translationEstimate = useMemo(() => {
+    let charCount = 0;
+    for (const id of order) {
+      const seg = segments[id];
+      if (!seg) continue;
+      // Translation is based on original text
+      const text = (seg.original || '').trim();
+      charCount += text.length;
+    }
+    if (charCount === 0) return null;
+
+    // For BYO keys, we don't show credit estimates (user pays directly)
+    const isByo = useByoMaster && useByoOpenAi && keyPresent;
+
+    const estimatedCredits = estimateTranslationCredits(charCount, qualityTranslation);
+    return {
+      charCount,
+      estimatedCredits,
+      isByo,
+      hasEnoughCredits: isByo || (credits == null || credits >= estimatedCredits),
+      qualityEnabled: qualityTranslation,
+    };
+  }, [order, segments, credits, qualityTranslation, useByoMaster, useByoOpenAi, keyPresent]);
 
   return (
     <div
@@ -166,24 +303,99 @@ export default function SrtMountedPanel({
           </label>
         </div>
 
-        <Button
-          variant="primary"
-          size="md"
-          onClick={onTranslate}
-          disabled={isDisabled}
-          isLoading={isTranslating}
+        <div
+          className={css`
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+          `}
         >
-          {t('subtitles.translate', 'Translate')}
-        </Button>
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={onDub}
-          disabled={isDubDisabled}
-          isLoading={isDubbing}
+          <Button
+            variant="primary"
+            size="md"
+            onClick={onTranslate}
+            disabled={isDisabled}
+            isLoading={isTranslating}
+          >
+            {t('subtitles.translate', 'Translate')}
+          </Button>
+          {translationEstimate && !isTranslating && (
+            <span
+              className={css`
+                font-size: 0.75rem;
+                color: ${translationEstimate.hasEnoughCredits
+                  ? colors.gray
+                  : colors.danger};
+                text-align: center;
+                max-width: 120px;
+              `}
+            >
+              {translationEstimate.isByo
+                ? t('subtitles.translateEstimateByo', 'BYO key')
+                : t(
+                    'subtitles.translateEstimateCredits',
+                    '{{credits}} credits',
+                    {
+                      credits: formatCredits(translationEstimate.estimatedCredits),
+                    }
+                  )}
+              {!translationEstimate.isByo && translationEstimate.qualityEnabled && (
+                <span
+                  className={css`
+                    color: ${colors.primaryDark};
+                    margin-left: 2px;
+                  `}
+                >
+                  {t('subtitles.qualityBadge', '(+review)')}
+                </span>
+              )}
+            </span>
+          )}
+        </div>
+        <div
+          className={css`
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+          `}
         >
-          {t('subtitles.dub', 'Dub Voice')}
-        </Button>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={onDub}
+            disabled={isDubDisabled}
+            isLoading={isDubbing}
+          >
+            {t('subtitles.dub', 'Dub Voice')}
+          </Button>
+          {dubbingEstimate && !isDubbing && (
+            <span
+              className={css`
+                font-size: 0.75rem;
+                color: ${dubbingEstimate.hasEnoughCredits
+                  ? colors.gray
+                  : colors.danger};
+                text-align: center;
+                max-width: 120px;
+              `}
+            >
+              {dubbingEstimate.isByo
+                ? t('subtitles.dubEstimateByo', '~{{minutes}}m audio', {
+                    minutes: dubbingEstimate.audioMinutes,
+                  })
+                : t(
+                    'subtitles.dubEstimateCredits',
+                    '{{credits}} credits (~{{minutes}}m)',
+                    {
+                      credits: formatCredits(dubbingEstimate.estimatedCredits),
+                      minutes: dubbingEstimate.audioMinutes,
+                    }
+                  )}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

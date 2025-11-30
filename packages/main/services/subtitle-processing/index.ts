@@ -13,8 +13,12 @@ import { translatePass } from './pipeline/translate-pass.js';
 import { finalizePass } from './pipeline/finalize-pass.js';
 import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
+import {
+  ERROR_CODES,
+  AI_MODEL_DISPLAY_NAMES,
+} from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
-import { reviewTranslationBatch } from './translator.js';
+import { reviewTranslationBatch, getReviewModel } from './translator.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -80,16 +84,13 @@ export async function extractSubtitlesFromMedia({
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       error.name === 'AbortError' ||
       (error instanceof Error && error.message === 'Operation cancelled') ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      ) ||
+      creditCancel ||
       signal.aborted;
-    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
-      String(error?.message || '')
-    );
 
     if (isCancel) {
       progressCallback?.({
@@ -102,7 +103,7 @@ export async function extractSubtitlesFromMedia({
         percent: 100,
         stage: '__i18n__:error',
         error: creditCancel
-          ? 'insufficient-credits'
+          ? ERROR_CODES.INSUFFICIENT_CREDITS
           : !isCancel
             ? error?.message || String(error)
             : undefined,
@@ -173,6 +174,11 @@ export async function translateSubtitlesFromSrt({
       const AFTER_CTX = 15;
       let done = 0;
 
+      // Determine which model will be used for review and get display name
+      const reviewConfig = getReviewModel();
+      const reviewModelName =
+        AI_MODEL_DISPLAY_NAMES[reviewConfig.model] ?? reviewConfig.model;
+
       const emitRangeStage = (
         startIndex: number,
         endIndex: number,
@@ -199,6 +205,7 @@ export async function translateSubtitlesFromSrt({
           stage,
           current: completed,
           total,
+          model: reviewModelName,
         };
         if (includePartial) {
           payload.partialResult = buildSrt({
@@ -249,7 +256,7 @@ export async function translateSubtitlesFromSrt({
         } catch (err: any) {
           if (
             err?.name === 'AbortError' ||
-            String(err?.message).includes('insufficient-credits')
+            String(err?.message).includes(ERROR_CODES.INSUFFICIENT_CREDITS)
           ) {
             throw err;
           }

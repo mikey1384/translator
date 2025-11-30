@@ -1,7 +1,8 @@
 import type { FFmpegContext } from '../../ffmpeg-runner.js';
-import { attachExtractAudio } from '../audio-extractor.js';
+import { attachExtractAudio, AudioQualityMode } from '../audio-extractor.js';
 import { GenerateProgressCallback } from '@shared-types/app';
 import { Stage, scaleProgress } from './progress.js';
+import { getActiveProviderForAudio } from '../../ai-provider.js';
 
 export async function prepareAudio({
   videoPath,
@@ -23,10 +24,16 @@ export async function prepareAudio({
 
   attachExtractAudio(services.ffmpeg);
 
+  // Use higher quality audio for ElevenLabs (better speaker diarization)
+  const audioProvider = getActiveProviderForAudio();
+  const qualityMode: AudioQualityMode =
+    audioProvider === 'elevenlabs' ? 'elevenlabs' : 'whisper';
+
   const audioPath = await services.ffmpeg.extractAudio!({
     videoPath,
     operationId,
     signal,
+    qualityMode,
     progress: ({ percent, stage }: { percent: number; stage?: string }) => {
       progressCallback?.({
         percent: scaleProgress(percent, Stage.START, Stage.TRANSCRIBE),

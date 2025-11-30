@@ -292,6 +292,8 @@ declare module '@shared-types/app' {
       error?: string;
       batchStartIndex?: number;
       operationId?: string;
+      /** AI model or provider being used (e.g., "ElevenLabs Dubbing", "OpenAI TTS") */
+      model?: string;
     });
   }
 

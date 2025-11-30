@@ -60,6 +60,8 @@ import {
   validateApiKey,
   validateAnthropicApiKey,
 } from './services/ai-provider.js';
+import { testElevenLabsApiKey } from './services/elevenlabs-client.js';
+import { getMainWindow } from './utils/window.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -70,11 +72,19 @@ const settingsStore = new Store<{
   subtitleTargetLanguage: string;
   apiKey: string | null;
   anthropicApiKey: string | null;
+  elevenLabsApiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
   byoOpenAiUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
+  byoElevenLabsUnlocked: boolean;
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
+  useByoElevenLabs: boolean;
+  useByoMaster: boolean;
+  preferClaudeTranslation: boolean;
+  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
+  preferredCookiesBrowser?: string;
 }>({
   name: 'app-settings',
   defaults: {
@@ -82,11 +92,18 @@ const settingsStore = new Store<{
     subtitleTargetLanguage: 'original',
     apiKey: null,
     anthropicApiKey: null,
+    elevenLabsApiKey: null,
     videoPlaybackPositions: {},
     byoOpenAiUnlocked: false,
     byoAnthropicUnlocked: false,
+    byoElevenLabsUnlocked: false,
     useByoOpenAi: false,
     useByoAnthropic: false,
+    useByoElevenLabs: false,
+    useByoMaster: true, // Default true for backwards compatibility
+    preferClaudeTranslation: false,
+    preferredTranscriptionProvider: 'elevenlabs',
+    preferredDubbingProvider: 'elevenlabs',
   },
 });
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
@@ -582,7 +599,7 @@ try {
 
   ipcMain.handle('get-entitlements', () => getCachedEntitlements());
   ipcMain.handle('refresh-entitlements', async () => {
-    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    const mainWin = getMainWindow();
     return syncEntitlements({ window: mainWin ?? undefined });
   });
 
@@ -599,7 +616,7 @@ try {
   ipcMain.handle('get-openai-api-key', () => settingsHandlers.getApiKey());
   ipcMain.handle('set-openai-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setApiKey(event, apiKey);
-    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    const mainWin = getMainWindow();
     if (mainWin && !mainWin.isDestroyed()) {
       mainWin.webContents.send('openai-api-key-changed', {
         hasKey: result.success && Boolean(apiKey?.trim?.()),
@@ -609,7 +626,7 @@ try {
   });
   ipcMain.handle('clear-openai-api-key', async () => {
     const result = await settingsHandlers.clearApiKey();
-    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    const mainWin = getMainWindow();
     if (mainWin && !mainWin.isDestroyed()) {
       mainWin.webContents.send('openai-api-key-changed', { hasKey: false });
     }
@@ -636,7 +653,7 @@ try {
   );
   ipcMain.handle('set-anthropic-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setAnthropicApiKey(event, apiKey);
-    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    const mainWin = getMainWindow();
     if (mainWin && !mainWin.isDestroyed()) {
       mainWin.webContents.send('anthropic-api-key-changed', {
         hasKey: result.success && Boolean(apiKey?.trim?.()),
@@ -646,7 +663,7 @@ try {
   });
   ipcMain.handle('clear-anthropic-api-key', async () => {
     const result = await settingsHandlers.clearAnthropicApiKey();
-    const mainWin = BrowserWindow.getAllWindows()[0] ?? null;
+    const mainWin = getMainWindow();
     if (mainWin && !mainWin.isDestroyed()) {
       mainWin.webContents.send('anthropic-api-key-changed', { hasKey: false });
     }
@@ -668,6 +685,108 @@ try {
   );
   ipcMain.handle('set-byo-anthropic-enabled', (_event, value: boolean) =>
     settingsHandlers.setUseByoAnthropic(Boolean(value))
+  );
+
+  // ElevenLabs API key handlers
+  ipcMain.handle('get-elevenlabs-api-key', () =>
+    settingsHandlers.getElevenLabsApiKey()
+  );
+  ipcMain.handle('set-elevenlabs-api-key', async (event, apiKey: string) => {
+    const result = await settingsHandlers.setElevenLabsApiKey(event, apiKey);
+    const mainWin = getMainWindow();
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send('elevenlabs-api-key-changed', {
+        hasKey: result.success && Boolean(apiKey?.trim?.()),
+      });
+    }
+    return result;
+  });
+  ipcMain.handle('clear-elevenlabs-api-key', async () => {
+    const result = await settingsHandlers.clearElevenLabsApiKey();
+    const mainWin = getMainWindow();
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send('elevenlabs-api-key-changed', { hasKey: false });
+    }
+    return result;
+  });
+  ipcMain.handle(
+    'validate-elevenlabs-api-key',
+    async (_event, apiKey?: string) => {
+      const provided = typeof apiKey === 'string' ? apiKey.trim() : '';
+      const keyToCheck = provided || settingsHandlers.getElevenLabsApiKey();
+      if (!keyToCheck) {
+        return { ok: false, error: 'Missing API key' };
+      }
+      try {
+        await testElevenLabsApiKey(keyToCheck);
+        return { ok: true };
+      } catch (err: any) {
+        return {
+          ok: false,
+          error: err?.message || 'API key validation failed',
+        };
+      }
+    }
+  );
+  ipcMain.handle('get-byo-elevenlabs-enabled', () =>
+    settingsHandlers.getUseByoElevenLabs()
+  );
+  ipcMain.handle('set-byo-elevenlabs-enabled', (_event, value: boolean) =>
+    settingsHandlers.setUseByoElevenLabs(Boolean(value))
+  );
+
+  // Master BYO toggle handlers
+  ipcMain.handle('get-byo-master-enabled', () =>
+    settingsHandlers.getUseByoMaster()
+  );
+  ipcMain.handle('set-byo-master-enabled', (_event, value: boolean) =>
+    settingsHandlers.setUseByoMaster(Boolean(value))
+  );
+
+  // Claude translation preference handlers
+  ipcMain.handle('get-prefer-claude-translation', () =>
+    settingsHandlers.getPreferClaudeTranslation()
+  );
+  ipcMain.handle('set-prefer-claude-translation', (_event, value: boolean) =>
+    settingsHandlers.setPreferClaudeTranslation(Boolean(value))
+  );
+
+  // Claude review preference handlers
+  ipcMain.handle('get-prefer-claude-review', () =>
+    settingsHandlers.getPreferClaudeReview()
+  );
+  ipcMain.handle('set-prefer-claude-review', (_event, value: boolean) =>
+    settingsHandlers.setPreferClaudeReview(Boolean(value))
+  );
+
+  // Transcription provider preference handlers
+  ipcMain.handle('get-preferred-transcription-provider', () =>
+    settingsHandlers.getPreferredTranscriptionProvider()
+  );
+  ipcMain.handle(
+    'set-preferred-transcription-provider',
+    (_event, value: 'elevenlabs' | 'openai' | 'stage5') =>
+      settingsHandlers.setPreferredTranscriptionProvider(value)
+  );
+
+  // Dubbing provider preference handlers
+  ipcMain.handle('get-preferred-dubbing-provider', () =>
+    settingsHandlers.getPreferredDubbingProvider()
+  );
+  ipcMain.handle(
+    'set-preferred-dubbing-provider',
+    (_event, value: 'elevenlabs' | 'openai' | 'stage5') =>
+      settingsHandlers.setPreferredDubbingProvider(value)
+  );
+
+  // Stage5 dubbing TTS provider handlers
+  ipcMain.handle('get-stage5-dubbing-tts-provider', () =>
+    settingsHandlers.getStage5DubbingTtsProvider()
+  );
+  ipcMain.handle(
+    'set-stage5-dubbing-tts-provider',
+    (_event, value: 'openai' | 'elevenlabs') =>
+      settingsHandlers.setStage5DubbingTtsProvider(value)
   );
 
   // Handle Stripe checkout completion messages from embedded window

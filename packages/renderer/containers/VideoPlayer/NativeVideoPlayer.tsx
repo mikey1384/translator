@@ -116,11 +116,11 @@ export default function NativeVideoPlayer({
       : null;
   const subtitleCanvasWidth =
     !isAudioOnly && (displayWidth || videoWidth || targetVideoWidth)
-      ? displayWidth ?? videoWidth ?? targetVideoWidth ?? undefined
+      ? (displayWidth ?? videoWidth ?? targetVideoWidth ?? undefined)
       : undefined;
   const subtitleCanvasHeight =
     !isAudioOnly && (displayHeight || videoHeight || targetVideoHeight)
-      ? displayHeight ?? videoHeight ?? targetVideoHeight ?? undefined
+      ? (displayHeight ?? videoHeight ?? targetVideoHeight ?? undefined)
       : undefined;
   const canonicalFontSize = isAudioOnly
     ? Math.max(10, baseFontSize)

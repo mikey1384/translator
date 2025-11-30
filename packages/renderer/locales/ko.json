@@ -148,13 +148,13 @@
       "error": "요약 실패",
       "cancelled": "요약이 취소되었습니다",
       "inProgress": "요약 생성 중…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "하이라이트 순간 선택 중…",
+      "cuttingHighlight": "하이라이트 {{current}}/{{total}} 자르는 중…",
+      "cuttingHighlights": "하이라이트 클립 자르는 중…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight"
+    "noHighlights": "아직 하이라이트가 없습니다. 생성하여 명장면을 감지하세요.",
+    "noVideoForHighlights": "하이라이트 클립을 자르려면 소스 동영상을 열어주세요.",
+    "highlight": "하이라이트"
   },
   "panel": {
     "gaps": {
@@ -182,8 +182,13 @@
     "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
     "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})",
     "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "검토 중 {{done}}/{{total}}",
+    "reviewingRange": "{{start}}–{{end}} 검토 중 ({{total}}개 중)",
+    "transcribingElevenLabs": "ElevenLabs로 전사 중 (~{{minutes}}분 남음)",
+    "transcribingElevenLabsHours": "ElevenLabs로 전사 중 (~{{hours}}시간 {{minutes}}분 남음)",
+    "transcribingElevenLabsFinishing": "ElevenLabs로 전사 중...",
+    "transcriptionFallbackWhisper": "청크 방식 전사로 전환 중...",
+    "transcribingR2Upload": "전사를 위해 오디오 업로드 중..."
   },
   "editSubtitles": {
     "title": "자막 편집",
@@ -201,7 +206,7 @@
       "originalTextPrefix": "원본:",
       "subtitlePlaceholder": "자막 텍스트",
       "confirmRemove": "이 자막 블록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "이 줄 전사하기"
     },
     "header": {
       "save": "저장",

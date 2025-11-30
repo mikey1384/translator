@@ -53,7 +53,7 @@
     "installUpdate": "Khởi động lại để cập nhật",
     "confirmInstallUpdate": "Cài đặt bản cập nhật và khởi động lại?",
     "downloadUpdate": "Nhấp để tải xuống bản cập nhật",
-    "retry": "Retry"
+    "retry": "Thử lại"
   },
   "input": {
     "fromDevice": "Từ thiết bị của bạn",
@@ -69,21 +69,21 @@
     "selectVideoFile": "Chọn Tệp Video",
     "selectVideoAudioFile": "Chọn Tệp Video / Âm thanh",
     "saveOriginalVideo": "Lưu Video Gốc",
-    "localFileDescription": "Upload a video or audio file from your computer",
-    "selectLocalFile": "Upload from computer",
-    "downloadFromUrl": "Download from web",
-    "webDescription": "Paste YouTube, TikTok, Instagram video links, or direct video file URLs from web pages",
-    "chooseFile": "Choose File",
-    "fileSelected": "File selected",
-    "transcribeOnly": "Transcribe Audio",
-    "srtLoaded": "Transcription Complete",
+    "localFileDescription": "Tải lên video hoặc tệp âm thanh từ máy tính của bạn",
+    "selectLocalFile": "Tải lên từ máy tính",
+    "downloadFromUrl": "Tải xuống từ web",
+    "webDescription": "Dán liên kết YouTube, TikTok, Instagram hoặc URL video trực tiếp từ các trang web",
+    "chooseFile": "Chọn tệp",
+    "fileSelected": "Đã chọn tệp",
+    "transcribeOnly": "Chép lời âm thanh",
+    "srtLoaded": "Chép lời hoàn tất",
     "srtFileLoaded": "Đã tải SRT",
-    "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
-    "saveDubbedVideo": "Save Dubbed Video"
+    "featuresUnlockAfterTranscription": "Menu dịch và các tùy chọn khác sẽ xuất hiện sau khi chép lời hoàn tất.",
+    "retryWithCookies": "Thử lại với cookie trình duyệt",
+    "selectBrowser": "Trình duyệt",
+    "cookieHelp": "Mẹo: Hãy đăng nhập YouTube trong trình duyệt đã chọn. Nếu thấy màn hình đồng ý, hãy truy cập youtube.com trong trình duyệt đó và chấp nhận, sau đó thử lại ở đây.",
+    "cookieAdvice": "Đảm bảo trình duyệt đã chọn là trình duyệt bạn đã đăng nhập YouTube.",
+    "saveDubbedVideo": "Lưu video lồng tiếng"
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -95,10 +95,10 @@
     "translation": "Dịch",
     "chooseSrtFile": "Chọn Tệp SRT",
     "cancel_confirmation": "Bạn có chắc chắn muốn hủy quá trình dịch phụ đề không? Mọi tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại.",
-    "continueTranscribing": "Continue transcribing",
-    "improveTranscription": "Improve Transcription",
-    "improveTranslation": "Improve Translation",
-    "dub": "Dub Voice"
+    "continueTranscribing": "Tiếp tục chép lời",
+    "improveTranscription": "Cải thiện chép lời",
+    "improveTranslation": "Cải thiện bản dịch",
+    "dub": "Lồng tiếng"
   },
   "editSubtitles": {
     "title": "Chỉnh sửa Phụ đề",
@@ -116,7 +116,7 @@
       "originalTextPrefix": "Gốc:",
       "subtitlePlaceholder": "Văn bản phụ đề",
       "confirmRemove": "Bạn có chắc chắn muốn xóa khối phụ đề này không? Hành động này không thể hoàn tác.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Chép lời dòng này"
     },
     "header": {
       "save": "Lưu",
@@ -135,19 +135,19 @@
     "title": "Cài đặt",
     "creditsDescription": "Mua credits. Số giờ hiển thị là ước tính tổng thời lượng video bạn có thể chép lời hoặc dịch. Ví dụ: chép lời và dịch một video 3 giờ sẽ tốn khoảng 6 giờ (≈140.000 credits).",
     "performanceQuality": {
-      "title": "Performance & Quality",
+      "title": "Hiệu suất & Chất lượng",
       "qualityTranscription": {
-        "label": "Quality Transcription",
-        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+        "label": "Chép lời chất lượng cao",
+        "help": "Bật: tuần tự, sử dụng ngữ cảnh dòng trước. Tắt: chế độ hàng loạt nhanh hơn."
       },
       "qualityTranslation": {
-        "label": "Quality Translation",
+        "label": "Dịch chất lượng cao",
         "help": "Bật: bao gồm giai đoạn rà soát (dùng khoảng 5× nhiều tín dụng/thời gian). Tắt: bỏ qua rà soát."
       }
     },
     "dubbing": {
-      "voiceLabel": "Dubbed Voice",
-      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceLabel": "Giọng lồng tiếng",
+      "voiceHelp": "Chọn giọng mặc định khi tạo âm thanh lồng tiếng.",
       "voiceOptions": {
         "alloy": "Alloy",
         "echo": "Echo",
@@ -156,59 +156,59 @@
         "nova": "Nova",
         "shimmer": "Shimmer"
       },
-      "mixLabel": "Dubbing Volume vs Original Video Volume",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixLabel": "Âm lượng lồng tiếng vs Âm lượng video gốc",
+      "mixHelp": "Điều chỉnh mức âm thanh gốc phát bên dưới giọng lồng tiếng.",
+      "mixAmbient": "Nhiều âm nền hơn",
+      "mixVoice": "Nhiều giọng nói hơn"
     },
     "byoOpenAi": {
-      "title": "Bring Your Own API Keys",
-      "description": "Unlock a one-time upgrade to use your own API keys. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your accounts instead of consuming Stage5 credits.",
-      "unlocking": "Opening checkout…",
-      "unlockCta": "Unlock for $10",
-      "unlockHint": "Once unlocked, add your API keys here at any time to toggle direct billing on your accounts.",
-      "unlockedDescription": "Enter your OpenAI API key below. Transcription, translation, and dubbing will run directly against your OpenAI account when a key is present.",
+      "title": "Sử dụng API Key của bạn",
+      "description": "Mở khóa nâng cấp một lần để sử dụng API key của riêng bạn. Sau khi mở khóa, mọi chép lời, dịch, lồng tiếng hoặc tóm tắt sẽ chạy trực tiếp trên tài khoản của bạn thay vì tiêu tốn tín dụng Stage5.",
+      "unlocking": "Đang mở thanh toán…",
+      "unlockCta": "Mở khóa với $10",
+      "unlockHint": "Sau khi mở khóa, thêm API key của bạn vào đây bất cứ lúc nào để bật thanh toán trực tiếp trên tài khoản của bạn.",
+      "unlockedDescription": "Nhập OpenAI API key của bạn bên dưới. Chép lời, dịch và lồng tiếng sẽ chạy trực tiếp trên tài khoản OpenAI của bạn khi có key.",
       "apiKeyLabel": "OpenAI API Key",
-      "hide": "Hide",
-      "show": "Show",
-      "saving": "Saving…",
-      "clear": "Clear Key",
-      "loadingKey": "Loading saved key…",
-      "keySaved": "OpenAI API key saved.",
-      "keyCleared": "OpenAI API key cleared.",
-      "keyValid": "OpenAI API key validated successfully.",
-      "keyInvalid": "OpenAI API key validation failed.",
-      "testing": "Testing…",
-      "test": "Test Key",
-      "lastSynced": "Last synced",
-      "toggleLabel": "Use my OpenAI key",
-      "toggleHelp": "When off, AI Credits are used.",
-      "toggleAria": "Toggle using your OpenAI key",
-      "toggleOn": "Using your OpenAI key for AI tasks.",
-      "toggleOff": "Using Stage5 credits for AI tasks.",
-      "toggleError": "Failed to update preference."
+      "hide": "Ẩn",
+      "show": "Hiện",
+      "saving": "Đang lưu…",
+      "clear": "Xóa Key",
+      "loadingKey": "Đang tải key đã lưu…",
+      "keySaved": "Đã lưu OpenAI API key.",
+      "keyCleared": "Đã xóa OpenAI API key.",
+      "keyValid": "OpenAI API key hợp lệ.",
+      "keyInvalid": "OpenAI API key không hợp lệ.",
+      "testing": "Đang kiểm tra…",
+      "test": "Kiểm tra Key",
+      "lastSynced": "Đồng bộ lần cuối",
+      "toggleLabel": "Dùng OpenAI key của tôi",
+      "toggleHelp": "Khi tắt, sẽ sử dụng tín dụng AI.",
+      "toggleAria": "Bật/tắt sử dụng OpenAI key của bạn",
+      "toggleOn": "Đang sử dụng OpenAI key của bạn cho các tác vụ AI.",
+      "toggleOff": "Đang sử dụng tín dụng Stage5 cho các tác vụ AI.",
+      "toggleError": "Không thể cập nhật tùy chọn."
     },
     "byoAnthropic": {
-      "title": "Anthropic API Key (Optional)",
-      "description": "Add your Anthropic API key to use Claude models directly for the translation review phase. Without this key, translations will use GPT with enhanced reasoning instead.",
+      "title": "Anthropic API Key (Tùy chọn)",
+      "description": "Thêm Anthropic API key của bạn để sử dụng trực tiếp các mô hình Claude cho giai đoạn rà soát bản dịch. Nếu không có key này, bản dịch sẽ sử dụng GPT với khả năng suy luận nâng cao.",
       "apiKeyLabel": "Anthropic API Key",
-      "hide": "Hide",
-      "show": "Show",
-      "saving": "Saving…",
-      "clear": "Clear Key",
-      "loadingKey": "Loading saved Anthropic key…",
-      "keySaved": "Anthropic API key saved.",
-      "keyCleared": "Anthropic API key cleared.",
-      "keyValid": "Anthropic API key validated successfully.",
-      "keyInvalid": "Anthropic API key validation failed.",
-      "testing": "Testing…",
-      "test": "Test Key",
-      "toggleLabel": "Use my Anthropic key",
-      "toggleHelp": "When off, Claude requests use Stage5 credits.",
-      "toggleAria": "Toggle using your Anthropic key",
-      "toggleOn": "Using your Anthropic key for Claude models.",
-      "toggleOff": "Using Stage5 credits for Claude models.",
-      "toggleError": "Failed to update Anthropic preference."
+      "hide": "Ẩn",
+      "show": "Hiện",
+      "saving": "Đang lưu…",
+      "clear": "Xóa Key",
+      "loadingKey": "Đang tải Anthropic key đã lưu…",
+      "keySaved": "Đã lưu Anthropic API key.",
+      "keyCleared": "Đã xóa Anthropic API key.",
+      "keyValid": "Anthropic API key hợp lệ.",
+      "keyInvalid": "Anthropic API key không hợp lệ.",
+      "testing": "Đang kiểm tra…",
+      "test": "Kiểm tra Key",
+      "toggleLabel": "Dùng Anthropic key của tôi",
+      "toggleHelp": "Khi tắt, các yêu cầu Claude sẽ dùng tín dụng Stage5.",
+      "toggleAria": "Bật/tắt sử dụng Anthropic key của bạn",
+      "toggleOn": "Đang sử dụng Anthropic key của bạn cho các mô hình Claude.",
+      "toggleOff": "Đang sử dụng tín dụng Stage5 cho các mô hình Claude.",
+      "toggleError": "Không thể cập nhật tùy chọn Anthropic."
     }
   },
   "videoPlayer": {
@@ -277,7 +277,7 @@
     "validation": {
       "pleaseSelectVideo": "Vui lòng chọn video",
       "processingDuration": "Thời lượng video đang được xử lý. Vui lòng thử lại sau ít phút.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Tệp này được lưu trữ trên iCloud. Trong Finder, nhấp \"Tải xuống\" và đợi biểu tượng đám mây hoàn tất, sau đó thử lại."
     },
     "status": {
       "starting": "Đang bắt đầu...",
@@ -317,10 +317,10 @@
       "description": "Điều này có thể do nhu cầu cao hoặc sự cố với máy chủ OpenAI. Quá trình vẫn đang chạy ở chế độ nền.",
       "checkStatus": "Kiểm tra trạng thái OpenAI"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Hủy tải xuống? Tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại.",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Quá trình tải xuống mất nhiều thời gian hơn bình thường.",
+      "description": "Điều này có thể do thay đổi từ nền tảng video hoặc các biện pháp bảo vệ mới. Bạn có thể cần đợi phiên bản ứng dụng tiếp theo để xử lý các video mới hơn."
     },
     "unsavedSrtOnTranscribe": {
       "title": "Lưu phụ đề hiện tại trước khi chuyển âm?",
@@ -335,34 +335,39 @@
       "openSettings": "Mở Cài đặt",
       "ok": "OK"
     },
-    "transcriptionInProgress": "Transcription in Progress",
-    "saveDubbedVideoAs": "Save Dubbed Video As",
-    "dubbingInProgress": "Dubbing in Progress",
-    "dubbingWorking": "Generating dubbed audio…",
-    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again."
+    "transcriptionInProgress": "Đang chép lời",
+    "saveDubbedVideoAs": "Lưu video lồng tiếng thành",
+    "dubbingInProgress": "Đang lồng tiếng",
+    "dubbingWorking": "Đang tạo âm thanh lồng tiếng…",
+    "cancelDubbingConfirm": "Hủy lồng tiếng? Tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại."
   },
   "progress": {
     "transcribedChunks": "Đã phiên âm & làm sạch {{done}}/{{total}} đoạn",
     "gapRepair": "Sửa chỗ trống #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Đang sửa phụ đề bị thiếu (Lần {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
-    "beginningReview": "Beginning review...",
-    "starting": "Starting...",
-    "completed": "Completed",
-    "processCancelled": "Process cancelled",
-    "mergingTitle": "Merging Video & Subtitles",
-    "extractingAudio": "Extracting audio...",
-    "transcribingOf": "Transcribing {{done}}/{{total}}",
-    "error": "Error",
-    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "scrubbingHallucinations": "Đang làm sạch phụ đề ({{done}}/{{total}})",
+    "translationCleanup": "Đang dọn dẹp phụ đề đã dịch ({{done}}/{{total}})",
+    "beginningReview": "Bắt đầu rà soát...",
+    "starting": "Đang bắt đầu...",
+    "completed": "Hoàn tất",
+    "processCancelled": "Quá trình đã bị hủy",
+    "mergingTitle": "Đang ghép Video & Phụ đề",
+    "extractingAudio": "Đang trích xuất âm thanh...",
+    "transcribingOf": "Đang chép lời {{done}}/{{total}}",
+    "error": "Lỗi",
+    "reviewingSlow": "Đang rà soát (có thể mất một lúc...) {{done}}/{{total}}",
+    "reviewingBatch": "Đang rà soát {{done}}/{{total}}",
+    "reviewingRange": "Đang rà soát {{start}}–{{end}} (của {{total}})",
+    "transcribingElevenLabs": "Đang phiên âm với ElevenLabs (~{{minutes}} phút còn lại)",
+    "transcribingElevenLabsHours": "Đang phiên âm với ElevenLabs (~{{hours}}h {{minutes}}m còn lại)",
+    "transcribingElevenLabsFinishing": "Đang phiên âm với ElevenLabs...",
+    "transcriptionFallbackWhisper": "Chuyển sang phiên âm theo phần...",
+    "transcribingR2Upload": "Đang tải lên âm thanh để phiên âm..."
   },
   "messages": {
     "fileSaved": "Tệp đã được lưu:\n{{path}}",
     "videoSaved": "Video đã được lưu vào:\n{{path}}",
-    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
+    "dubbedVideoSaved": "Video lồng tiếng đã được lưu vào:\n{{path}}"
   },
   "credits": {
     "title": "Giờ Sử dụng AI",
@@ -373,97 +378,97 @@
     "redirectingToPayment": "Đang mở thanh toán an toàn…",
     "description": "Chọn từ các gói tín dụng ${{pack1Price}} ({{pack1Hours}} giờ), ${{pack2Price}} ({{pack2Hours}} giờ), hoặc ${{pack3Price}} ({{pack3Hours}} giờ)",
     "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục.",
-    "usingApiKey": "Using API Key"
+    "usingApiKey": "Đang sử dụng API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
-    "unexpected": "An unexpected error occurred.",
-    "unexpectedRemove": "An unexpected error occurred while removing the key.",
-    "unexpectedSave": "An unexpected error occurred while saving.",
-    "unexpectedLoad": "An unexpected error occurred while loading.",
-    "renderFailed": "Render failed",
-    "creditReservationFailed": "Credit reservation failed",
-    "invalidRenderOptions": "Invalid render options provided",
-    "missingVideoMetadata": "Missing video metadata ({{missing}})",
-    "noSourceVideo": "No source video",
-    "noSubtitlesLoaded": "No subtitles loaded",
-    "failedToLoadSRT": "Failed to load SRT file"
+    "needCookies": "YouTube yêu cầu xác minh người dùng. Thử lại bằng cookie trình duyệt của bạn.",
+    "unexpected": "Đã xảy ra lỗi không mong muốn.",
+    "unexpectedRemove": "Đã xảy ra lỗi không mong muốn khi xóa key.",
+    "unexpectedSave": "Đã xảy ra lỗi không mong muốn khi lưu.",
+    "unexpectedLoad": "Đã xảy ra lỗi không mong muốn khi tải.",
+    "renderFailed": "Render thất bại",
+    "creditReservationFailed": "Đặt chỗ tín dụng thất bại",
+    "invalidRenderOptions": "Các tùy chọn render không hợp lệ",
+    "missingVideoMetadata": "Thiếu metadata video ({{missing}})",
+    "noSourceVideo": "Không có video nguồn",
+    "noSubtitlesLoaded": "Không có phụ đề nào được tải",
+    "failedToLoadSRT": "Không thể tải tệp SRT"
   },
   "cta": {
     "generate": {
-      "title": "Get subtitles from a video",
-      "subtitle": "Transcribe/translate from device or link"
+      "title": "Lấy phụ đề từ video",
+      "subtitle": "Chép lời/dịch từ thiết bị hoặc liên kết"
     },
     "edit": {
-      "title": "Edit an existing subtitle",
-      "subtitle": "Load, edit, and export SRT",
-      "pillOpen": "Open .srt",
-      "pillMerge": "Merge to video"
+      "title": "Chỉnh sửa phụ đề có sẵn",
+      "subtitle": "Tải, chỉnh sửa và xuất SRT",
+      "pillOpen": "Mở .srt",
+      "pillMerge": "Ghép vào video"
     }
   },
   "summary": {
-    "title": "Transcript Summary",
-    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
-    "languageLabel": "Summary language",
-    "generate": "Generate summary",
-    "regenerate": "Regenerate summary",
-    "placeholder": "Your AI summary will appear here once generated.",
-    "insufficientCredits": "Not enough credits to run the summary.",
-    "error": "We couldn't create a summary. {{message}}",
-    "copy": "Copy summary",
-    "copied": "Copied!",
-    "copyError": "Couldn't copy summary to clipboard.",
+    "title": "Tóm tắt bản chép",
+    "ctaHelper": "Tạo tổng quan chi tiết. Video dài có thể mất một lúc để xử lý.",
+    "languageLabel": "Ngôn ngữ tóm tắt",
+    "generate": "Tạo tóm tắt",
+    "regenerate": "Tạo lại tóm tắt",
+    "placeholder": "Tóm tắt AI của bạn sẽ xuất hiện ở đây sau khi được tạo.",
+    "insufficientCredits": "Không đủ tín dụng để chạy tóm tắt.",
+    "error": "Không thể tạo tóm tắt. {{message}}",
+    "copy": "Sao chép tóm tắt",
+    "copied": "Đã sao chép!",
+    "copyError": "Không thể sao chép tóm tắt vào clipboard.",
     "status": {
-      "preparing": "Preparing transcript…",
-      "chunk": "Summarizing section {{current}}/{{total}}",
-      "synthesizing": "Synthesizing comprehensive summary…",
-      "ready": "Summary ready",
-      "error": "Summary failed",
-      "cancelled": "Summary cancelled",
-      "inProgress": "Generating summary…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "preparing": "Đang chuẩn bị bản chép…",
+      "chunk": "Đang tóm tắt phần {{current}}/{{total}}",
+      "synthesizing": "Đang tổng hợp tóm tắt toàn diện…",
+      "ready": "Tóm tắt sẵn sàng",
+      "error": "Tóm tắt thất bại",
+      "cancelled": "Tóm tắt đã hủy",
+      "inProgress": "Đang tạo tóm tắt…",
+      "selectingHighlights": "Đang chọn những khoảnh khắc nổi bật…",
+      "cuttingHighlight": "Đang cắt highlight {{current}}/{{total}}…",
+      "cuttingHighlights": "Đang cắt các clip highlight…"
     },
     "tab": {
-      "summary": "Summary",
-      "sections": "Detailed notes",
-      "highlights": "Highlights"
+      "summary": "Tóm tắt",
+      "sections": "Ghi chú chi tiết",
+      "highlights": "Điểm nổi bật"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "noHighlights": "Chưa có highlight. Tạo để phát hiện những khoảnh khắc đáng chú ý.",
+    "noVideoForHighlights": "Mở video nguồn để cắt các clip highlight.",
     "highlight": "Highlight",
-    "downloadHighlight": "Download clip",
-    "downloadingHighlight": "Saving…",
-    "highlightSaved": "Saved!",
-    "highlightSaveError": "Save failed",
-    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
-    "saveHighlightDialogTitle": "Save highlight clip",
-    "noSections": "No section notes yet.",
-    "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…"
+    "downloadHighlight": "Tải clip",
+    "downloadingHighlight": "Đang lưu…",
+    "highlightSaved": "Đã lưu!",
+    "highlightSaveError": "Lưu thất bại",
+    "downloadHighlightFailed": "Không thể lưu clip highlight: {{message}}",
+    "saveHighlightDialogTitle": "Lưu clip highlight",
+    "noSections": "Chưa có ghi chú phần.",
+    "sectionHeading": "Phần {{index}}",
+    "highlightsInProgress": "Đang chuẩn bị các clip highlight…"
   },
   "panel": {
     "gaps": {
-      "title": "Gaps",
-      "none": "No large gaps detected"
+      "title": "Khoảng trống",
+      "none": "Không phát hiện khoảng trống lớn"
     },
     "confidence": {
-      "title": "Low Confidence",
-      "none": "No low-confidence lines detected",
-      "count": "{{count}} lines"
+      "title": "Độ tin cậy thấp",
+      "none": "Không phát hiện dòng có độ tin cậy thấp",
+      "count": "{{count}} dòng"
     }
   },
   "logs": {
-    "title": "Recent Logs",
-    "copy": "Copy",
-    "email": "Email to Dev",
-    "close": "Close",
-    "empty": "No logs yet.",
-    "copied": "Logs copied to clipboard",
-    "copyFailed": "Copy failed",
-    "emailSubject": "Stage5 Debug Logs",
-    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
-    "deviceInfoHeader": "Device Info"
+    "title": "Nhật ký gần đây",
+    "copy": "Sao chép",
+    "email": "Gửi email cho Dev",
+    "close": "Đóng",
+    "empty": "Chưa có nhật ký.",
+    "copied": "Đã sao chép nhật ký vào clipboard",
+    "copyFailed": "Sao chép thất bại",
+    "emailSubject": "Nhật ký Debug Stage5",
+    "emailBodyPrefix": "Xin chào,\n\nDưới đây là nhật ký gần đây của tôi để hỗ trợ debug.\n\n",
+    "deviceInfoHeader": "Thông tin thiết bị"
   }
 }

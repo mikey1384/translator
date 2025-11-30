@@ -4,9 +4,9 @@ import Store from 'electron-store';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import FormData from 'form-data';
-import { AI_MODELS } from '../../shared/constants/index.js';
+import { AI_MODELS, ERROR_CODES } from '../../shared/constants/index.js';
 
-const API = 'https://api.stage5.tools';
+export const STAGE5_API_URL = 'https://api.stage5.tools';
 
 function sendNetLog(
   level: 'info' | 'warn' | 'error',
@@ -49,7 +49,7 @@ export async function transcribe({
 }) {
   // Dev: simulate zero credits without hitting the network
   if (process.env.FORCE_ZERO_CREDITS === '1') {
-    throw new Error('insufficient-credits');
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
   }
   // Check if already cancelled before starting
   if (signal?.aborted) {
@@ -69,15 +69,19 @@ export async function transcribe({
 
   try {
     // Step 1: Submit the transcription job
-    const submitResponse = await axios.post(`${API}/transcribe`, fd, {
-      headers: {
-        ...headers(),
-        ...fd.getHeaders(), // Let form-data set the proper boundary
-      },
-      signal, // Pass the AbortSignal to axios
-    });
+    const submitResponse = await axios.post(
+      `${STAGE5_API_URL}/transcribe`,
+      fd,
+      {
+        headers: {
+          ...headers(),
+          ...fd.getHeaders(), // Let form-data set the proper boundary
+        },
+        signal, // Pass the AbortSignal to axios
+      }
+    );
     sendNetLog('info', `POST /transcribe -> ${submitResponse.status}`, {
-      url: `${API}/transcribe`,
+      url: `${STAGE5_API_URL}/transcribe`,
       method: 'POST',
       status: submitResponse.status,
     });
@@ -99,7 +103,7 @@ export async function transcribe({
 
         // Poll for result
         const resultResponse = await axios.get(
-          `${API}/transcribe/result/${jobId}`,
+          `${STAGE5_API_URL}/transcribe/result/${jobId}`,
           {
             headers: headers(),
             signal,
@@ -109,7 +113,7 @@ export async function transcribe({
           'info',
           `GET /transcribe/result/${jobId} -> ${resultResponse.status}`,
           {
-            url: `${API}/transcribe/result/${jobId}`,
+            url: `${STAGE5_API_URL}/transcribe/result/${jobId}`,
             method: 'GET',
             status: resultResponse.status,
           }
@@ -153,7 +157,7 @@ export async function transcribe({
 
     // Handle insufficient credits with a friendly error message
     if (error.response?.status === 402) {
-      throw new Error('insufficient-credits');
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     // Log HTTP errors then re-throw
@@ -195,7 +199,7 @@ export async function translate({
 }) {
   // Dev: simulate zero credits without hitting the network
   if (process.env.FORCE_ZERO_CREDITS === '1') {
-    throw new Error('insufficient-credits');
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
   }
   // Check if already cancelled before starting
   if (signal?.aborted) {
@@ -204,14 +208,18 @@ export async function translate({
 
   try {
     const payload: any = { messages, model, reasoning };
-    const postResponse = await axios.post(`${API}/translate`, payload, {
-      headers: headers(),
-      signal,
-      validateStatus: () => true,
-    });
+    const postResponse = await axios.post(
+      `${STAGE5_API_URL}/translate`,
+      payload,
+      {
+        headers: headers(),
+        signal,
+        validateStatus: () => true,
+      }
+    );
 
     sendNetLog('info', `POST /translate -> ${postResponse.status}`, {
-      url: `${API}/translate`,
+      url: `${STAGE5_API_URL}/translate`,
       method: 'POST',
       status: postResponse.status,
     });
@@ -229,7 +237,7 @@ export async function translate({
     }
 
     if (postResponse.status === 402) {
-      throw new Error('insufficient-credits');
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     throw new Error(
@@ -247,7 +255,7 @@ export async function translate({
 
     // Handle insufficient credits with a friendly error message
     if (error.response?.status === 402) {
-      throw new Error('insufficient-credits');
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     // Log HTTP errors then re-throw
@@ -292,17 +300,20 @@ async function pollTranslationJob({
 
     await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
 
-    const statusResponse = await axios.get(`${API}/translate/result/${jobId}`, {
-      headers: headers(),
-      signal,
-      validateStatus: () => true,
-    });
+    const statusResponse = await axios.get(
+      `${STAGE5_API_URL}/translate/result/${jobId}`,
+      {
+        headers: headers(),
+        signal,
+        validateStatus: () => true,
+      }
+    );
 
     sendNetLog(
       'info',
       `GET /translate/result/${jobId} -> ${statusResponse.status}`,
       {
-        url: `${API}/translate/result/${jobId}`,
+        url: `${STAGE5_API_URL}/translate/result/${jobId}`,
         method: 'GET',
         status: statusResponse.status,
       }
@@ -317,7 +328,7 @@ async function pollTranslationJob({
     }
 
     if (statusResponse.status === 402) {
-      throw new Error('insufficient-credits');
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     if (statusResponse.status === 404) {
@@ -340,6 +351,7 @@ export async function synthesizeDub({
   model,
   format,
   quality,
+  ttsProvider,
   signal,
 }: {
   segments: Array<{
@@ -353,6 +365,8 @@ export async function synthesizeDub({
   model?: string;
   format?: string;
   quality?: 'standard' | 'high';
+  /** TTS provider for Stage5 API: 'openai' (cheaper) or 'elevenlabs' (higher quality) */
+  ttsProvider?: 'openai' | 'elevenlabs';
   signal?: AbortSignal;
 }): Promise<{
   audioBase64?: string;
@@ -368,7 +382,7 @@ export async function synthesizeDub({
   segmentCount?: number;
 }> {
   if (process.env.FORCE_ZERO_CREDITS === '1') {
-    throw new Error('insufficient-credits');
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
   }
   if (signal?.aborted) {
     throw new DOMException('Operation cancelled', 'AbortError');
@@ -376,13 +390,14 @@ export async function synthesizeDub({
 
   try {
     const response = await axios.post(
-      `${API}/dub`,
+      `${STAGE5_API_URL}/dub`,
       {
         segments,
         voice,
         model,
         format,
         quality,
+        ttsProvider,
       },
       {
         headers: {
@@ -394,7 +409,7 @@ export async function synthesizeDub({
     );
 
     sendNetLog('info', `POST /dub -> ${response.status}`, {
-      url: `${API}/dub`,
+      url: `${STAGE5_API_URL}/dub`,
       method: 'POST',
       status: response.status,
     });
@@ -436,7 +451,7 @@ export async function synthesizeDub({
     }
 
     if (error?.response?.status === 402) {
-      throw new Error('insufficient-credits');
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     let errToThrow: any = error;
@@ -472,4 +487,281 @@ export async function synthesizeDub({
 
     throw errToThrow;
   }
+}
+
+// ============================================================================
+// R2-based Large File Transcription
+// ============================================================================
+
+export interface R2TranscriptionJob {
+  jobId: string;
+  uploadUrl: string;
+  fileKey: string;
+  expiresIn: number;
+}
+
+/**
+ * Request a presigned URL for uploading a large audio file to R2
+ */
+export async function requestTranscriptionUploadUrl({
+  language,
+  contentType = 'audio/webm',
+  fileSizeMB,
+  signal,
+}: {
+  language?: string;
+  contentType?: string;
+  fileSizeMB?: number;
+  signal?: AbortSignal;
+}): Promise<R2TranscriptionJob> {
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    const response = await axios.post(
+      `${STAGE5_API_URL}/transcribe/upload-url`,
+      { language, contentType, fileSizeMB },
+      {
+        headers: { ...headers(), 'Content-Type': 'application/json' },
+        signal,
+      }
+    );
+
+    sendNetLog('info', `POST /transcribe/upload-url -> ${response.status}`, {
+      url: `${STAGE5_API_URL}/transcribe/upload-url`,
+      method: 'POST',
+      status: response.status,
+    });
+
+    return response.data as R2TranscriptionJob;
+  } catch (error: any) {
+    if (error?.response?.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+    sendNetLog('error', `HTTP ERROR: ${error?.message || error}`);
+    throw error;
+  }
+}
+
+/**
+ * Upload a file to R2 using a presigned URL
+ */
+export async function uploadToR2({
+  uploadUrl,
+  filePath,
+  contentType = 'audio/webm',
+  onProgress,
+  signal,
+}: {
+  uploadUrl: string;
+  filePath: string;
+  contentType?: string;
+  onProgress?: (percent: number) => void;
+  signal?: AbortSignal;
+}): Promise<void> {
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  const fs = await import('fs');
+  const fileBuffer = await fs.promises.readFile(filePath);
+  const totalSize = fileBuffer.length;
+
+  // Use fetch for streaming upload with progress
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType,
+      'Content-Length': String(totalSize),
+    },
+    body: fileBuffer,
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`R2 upload failed: ${response.status} ${errorText}`);
+  }
+
+  onProgress?.(100);
+  sendNetLog(
+    'info',
+    `PUT R2 upload -> ${response.status} (${(totalSize / 1024 / 1024).toFixed(1)}MB)`
+  );
+}
+
+/**
+ * Start processing a file that was uploaded to R2
+ */
+export async function startTranscriptionProcessing({
+  jobId,
+  signal,
+}: {
+  jobId: string;
+  signal?: AbortSignal;
+}): Promise<{ status: string; message: string }> {
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    const response = await axios.post(
+      `${STAGE5_API_URL}/transcribe/process/${jobId}`,
+      {},
+      {
+        headers: headers(),
+        signal,
+      }
+    );
+
+    sendNetLog(
+      'info',
+      `POST /transcribe/process/${jobId} -> ${response.status}`,
+      {
+        url: `${STAGE5_API_URL}/transcribe/process/${jobId}`,
+        method: 'POST',
+        status: response.status,
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+    sendNetLog('error', `HTTP ERROR: ${error?.message || error}`);
+    throw error;
+  }
+}
+
+/**
+ * Poll for transcription job status
+ */
+export async function getTranscriptionStatus({
+  jobId,
+  signal,
+}: {
+  jobId: string;
+  signal?: AbortSignal;
+}): Promise<{
+  jobId: string;
+  status: 'pending_upload' | 'processing' | 'completed' | 'failed';
+  result?: any;
+  error?: string;
+}> {
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    const response = await axios.get(
+      `${STAGE5_API_URL}/transcribe/status/${jobId}`,
+      {
+        headers: headers(),
+        signal,
+      }
+    );
+
+    sendNetLog(
+      'info',
+      `GET /transcribe/status/${jobId} -> ${response.status}`,
+      {
+        url: `${STAGE5_API_URL}/transcribe/status/${jobId}`,
+        method: 'GET',
+        status: response.status,
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      throw new Error('Job not found');
+    }
+    sendNetLog('error', `HTTP ERROR: ${error?.message || error}`);
+    throw error;
+  }
+}
+
+/**
+ * Full R2-based transcription workflow:
+ * 1. Request upload URL
+ * 2. Upload file to R2
+ * 3. Start processing
+ * 4. Poll for result
+ */
+export async function transcribeViaR2({
+  filePath,
+  language,
+  signal,
+  onProgress,
+}: {
+  filePath: string;
+  language?: string;
+  signal?: AbortSignal;
+  onProgress?: (stage: string, percent?: number) => void;
+}): Promise<any> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+
+  const fs = await import('fs');
+  const stats = await fs.promises.stat(filePath);
+  const fileSizeMB = stats.size / (1024 * 1024);
+
+  // Step 1: Request upload URL
+  onProgress?.('Requesting upload URL...', 5);
+  const { jobId, uploadUrl } = await requestTranscriptionUploadUrl({
+    language,
+    fileSizeMB,
+    signal,
+  });
+
+  // Step 2: Upload file to R2
+  onProgress?.('Uploading audio to cloud storage...', 10);
+  await uploadToR2({
+    uploadUrl,
+    filePath,
+    onProgress: pct => onProgress?.('Uploading...', 10 + pct * 0.3),
+    signal,
+  });
+
+  // Step 3: Start processing
+  onProgress?.('Starting transcription...', 45);
+  await startTranscriptionProcessing({ jobId, signal });
+
+  // Step 4: Poll for result
+  const pollInterval = 2000; // 2 seconds
+  const maxWaitMs = 600000; // 10 minutes
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitMs) {
+    if (signal?.aborted) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    const status = await getTranscriptionStatus({ jobId, signal });
+
+    if (status.status === 'completed') {
+      onProgress?.('Transcription complete!', 100);
+      return status.result;
+    }
+
+    if (status.status === 'failed') {
+      throw new Error(status.error || 'Transcription failed');
+    }
+
+    // Update progress based on elapsed time (estimate ~8x real-time)
+    const elapsedSec = (Date.now() - startTime) / 1000;
+    const estimatedTotalSec = (fileSizeMB / 10) * 60; // Rough estimate: 10MB per minute
+    const progressPercent = Math.min(
+      95,
+      45 + (elapsedSec / estimatedTotalSec) * 50
+    );
+    onProgress?.('Transcribing with ElevenLabs...', progressPercent);
+
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+
+  throw new Error('Transcription timed out');
 }

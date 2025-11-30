@@ -18,13 +18,13 @@
       "unexpectedRemove": "Beim Entfernen des Schlüssels ist ein unerwarteter Fehler aufgetreten.",
       "unexpectedSave": "Beim Speichern ist ein unerwarteter Fehler aufgetreten.",
       "unexpectedLoad": "Beim Laden ist ein unerwarteter Fehler aufgetreten.",
-      "renderFailed": "Render failed",
-      "creditReservationFailed": "Credit reservation failed",
-      "invalidRenderOptions": "Invalid render options provided",
-      "missingVideoMetadata": "Missing video metadata ({{missing}})",
-      "noSourceVideo": "No source video",
-      "noSubtitlesLoaded": "No subtitles loaded",
-      "failedToLoadSRT": "Failed to load SRT file"
+      "renderFailed": "Rendern fehlgeschlagen",
+      "creditReservationFailed": "Guthaben-Reservierung fehlgeschlagen",
+      "invalidRenderOptions": "Ungültige Render-Optionen angegeben",
+      "missingVideoMetadata": "Fehlende Video-Metadaten ({{missing}})",
+      "noSourceVideo": "Kein Quellvideo",
+      "noSubtitlesLoaded": "Keine Untertitel geladen",
+      "failedToLoadSRT": "SRT-Datei konnte nicht geladen werden"
     },
     "success": "Erfolg",
     "settings": "Einstellungen",
@@ -46,9 +46,9 @@
     "backToTopAria": "Zurück zum Seitenanfang scrollen",
     "confirmReload": "Sind Sie sicher, dass Sie die Seite neu laden möchten? Nicht gespeicherte Änderungen könnten verloren gehen.",
     "fileFilters": {
-      "srtFiles": "SRT Files",
-      "mediaFiles": "Media Files",
-      "videoFiles": "Video Files"
+      "srtFiles": "SRT-Dateien",
+      "mediaFiles": "Mediendateien",
+      "videoFiles": "Videodateien"
     },
     "installUpdate": "Neu starten für Update",
     "confirmInstallUpdate": "Update installieren und neu starten?",
@@ -134,12 +134,12 @@
       "error": "Zusammenfassung fehlgeschlagen",
       "cancelled": "Zusammenfassung abgebrochen",
       "inProgress": "Zusammenfassung wird erstellt…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "Highlight-Momente werden ausgewählt…",
+      "cuttingHighlight": "Highlight {{current}}/{{total}} wird geschnitten…",
+      "cuttingHighlights": "Highlight-Clips werden geschnitten…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
+    "noHighlights": "Noch keine Highlights. Generieren Sie, um Höhepunkte zu erkennen.",
+    "noVideoForHighlights": "Öffnen Sie das Quellvideo, um Highlight-Clips zu schneiden.",
     "highlight": "Highlight"
   },
   "panel": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Untertiteltext",
       "confirmRemove": "Sind Sie sicher, dass Sie diesen Untertitelblock entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Diese Zeile transkribieren"
     },
     "header": {
       "save": "Speichern",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "Bitte wählen Sie ein Video aus",
       "processingDuration": "Videolänge wird verarbeitet. Bitte versuchen Sie es in Kürze erneut.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Diese Datei ist in iCloud gespeichert. Klicken Sie im Finder auf ‚Laden' und warten Sie, bis das Wolkensymbol verschwindet, dann versuchen Sie es erneut."
     },
     "status": {
       "starting": "Startet...",
@@ -420,8 +420,13 @@
     "scrubbingHallucinations": "Untertitel bereinigen ({{done}}/{{total}})",
     "translationCleanup": "Übersetzte Untertitel bereinigen ({{done}}/{{total}})",
     "reviewingSlow": "Überprüfung (dies kann etwas dauern...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "Überprüfung {{done}}/{{total}}",
+    "reviewingRange": "Überprüfung {{start}}–{{end}} (von {{total}})",
+    "transcribingElevenLabs": "Transkription mit ElevenLabs (~{{minutes}} Min. verbleibend)",
+    "transcribingElevenLabsHours": "Transkription mit ElevenLabs (~{{hours}}h {{minutes}}m verbleibend)",
+    "transcribingElevenLabsFinishing": "Transkription mit ElevenLabs...",
+    "transcriptionFallbackWhisper": "Wechsel zur Chunk-Transkription...",
+    "transcribingR2Upload": "Audio wird für Transkription hochgeladen..."
   },
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",

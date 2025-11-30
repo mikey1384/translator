@@ -134,13 +134,13 @@
       "error": "摘要生成失败",
       "cancelled": "摘要已取消",
       "inProgress": "正在生成摘要…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "正在选择精彩时刻…",
+      "cuttingHighlight": "正在剪辑精彩片段 {{current}}/{{total}}…",
+      "cuttingHighlights": "正在剪辑精彩片段…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight"
+    "noHighlights": "暂无精彩片段。点击生成以检测精彩时刻。",
+    "noVideoForHighlights": "请打开源视频以剪辑精彩片段。",
+    "highlight": "精彩片段"
   },
   "panel": {
     "gaps": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕文本",
       "confirmRemove": "确定要移除此字幕块吗？此操作无法撤销。",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "转录此行"
     },
     "header": {
       "save": "保存",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "请选择视频",
       "processingDuration": "正在处理视频时长，请稍后重试。",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "此文件存储在 iCloud 中。请在访达中点击「下载」，等待云朵图标消失后再试。"
     },
     "status": {
       "starting": "正在启动...",
@@ -420,8 +420,13 @@
     "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
     "translationCleanup": "清理翻译字幕中 ({{done}}/{{total}})",
     "reviewingSlow": "检查中（可能需要一些时间…）{{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "审阅中 {{done}}/{{total}}",
+    "reviewingRange": "审阅 {{start}}–{{end}}（共 {{total}} 条）",
+    "transcribingElevenLabs": "使用 ElevenLabs 转录中（约剩余 {{minutes}} 分钟）",
+    "transcribingElevenLabsHours": "使用 ElevenLabs 转录中（约剩余 {{hours}} 小时 {{minutes}} 分钟）",
+    "transcribingElevenLabsFinishing": "使用 ElevenLabs 转录中...",
+    "transcriptionFallbackWhisper": "正在切换到分块转录...",
+    "transcribingR2Upload": "正在上传音频以进行转录..."
   },
   "messages": {
     "fileSaved": "文件已保存：\n{{path}}",

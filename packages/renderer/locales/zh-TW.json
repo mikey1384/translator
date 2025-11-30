@@ -134,13 +134,13 @@
       "error": "摘要失敗",
       "cancelled": "摘要已取消",
       "inProgress": "正在產生摘要…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "正在選擇精彩時刻…",
+      "cuttingHighlight": "正在剪輯精彩片段 {{current}}/{{total}}…",
+      "cuttingHighlights": "正在剪輯精彩片段…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight"
+    "noHighlights": "尚無精彩片段。點擊產生以偵測精彩時刻。",
+    "noVideoForHighlights": "請開啟來源影片以剪輯精彩片段。",
+    "highlight": "精彩片段"
   },
   "panel": {
     "gaps": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕文字",
       "confirmRemove": "確定要移除此字幕區塊嗎？此操作無法撤銷。",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "轉錄此行"
     },
     "header": {
       "save": "儲存",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "請選擇影片",
       "processingDuration": "正在處理影片長度。請稍後再試。",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "此檔案儲存在 iCloud 中。請在 Finder 中點選「下載」，等待雲朵圖示消失後再試。"
     },
     "status": {
       "starting": "啟動中...",
@@ -417,11 +417,16 @@
     "transcribedChunks": "已轉錄並清理 {{done}}/{{total}} 個片段",
     "gapRepair": "間隙修復 #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "修復遺失的字幕 (第{{iteration}}/{{maxIterations}}次迭代) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "scrubbingHallucinations": "清理字幕中 ({{done}}/{{total}})",
+    "translationCleanup": "清理翻譯字幕中 ({{done}}/{{total}})",
     "reviewingSlow": "檢查中（可能需要一點時間…）{{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "審閱中 {{done}}/{{total}}",
+    "reviewingRange": "審閱 {{start}}–{{end}}（共 {{total}} 條）",
+    "transcribingElevenLabs": "使用 ElevenLabs 轉錄中（約剩餘 {{minutes}} 分鐘）",
+    "transcribingElevenLabsHours": "使用 ElevenLabs 轉錄中（約剩餘 {{hours}} 小時 {{minutes}} 分鐘）",
+    "transcribingElevenLabsFinishing": "使用 ElevenLabs 轉錄中...",
+    "transcriptionFallbackWhisper": "正在切換到分塊轉錄...",
+    "transcribingR2Upload": "正在上傳音訊以進行轉錄..."
   },
   "messages": {
     "fileSaved": "檔案已儲存：\n{{path}}",

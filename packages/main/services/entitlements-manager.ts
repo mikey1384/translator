@@ -3,14 +3,15 @@ import { BrowserWindow } from 'electron';
 import log from 'electron-log';
 import type { SettingsStoreType } from '../handlers/settings-handlers.js';
 import { getDeviceId } from '../handlers/credit-handlers.js';
+import { STAGE5_API_URL } from './stage5-client.js';
+import { getMainWindow } from '../utils/window.js';
 
 export interface EntitlementsSnapshot {
   byoOpenAi: boolean;
   byoAnthropic: boolean;
+  byoElevenLabs: boolean;
   fetchedAt?: string;
 }
-
-const API_BASE = 'https://api.stage5.tools';
 
 let storeRef: SettingsStoreType | null = null;
 
@@ -21,15 +22,21 @@ export function initEntitlementsManager(store: SettingsStoreType) {
 export function getCachedEntitlements(): EntitlementsSnapshot {
   const byoOpenAi = storeRef?.get('byoOpenAiUnlocked', false) ?? false;
   const byoAnthropic = storeRef?.get('byoAnthropicUnlocked', false) ?? false;
+  const byoElevenLabs = storeRef?.get('byoElevenLabsUnlocked', false) ?? false;
   return {
     byoOpenAi: Boolean(byoOpenAi),
     byoAnthropic: Boolean(byoAnthropic),
+    byoElevenLabs: Boolean(byoElevenLabs),
     fetchedAt: undefined,
   };
 }
 
 export function setByoUnlocked(
-  entitlements: { byoOpenAi?: boolean; byoAnthropic?: boolean },
+  entitlements: {
+    byoOpenAi?: boolean;
+    byoAnthropic?: boolean;
+    byoElevenLabs?: boolean;
+  },
   opts: { notify?: boolean; window?: BrowserWindow | null } = {}
 ): EntitlementsSnapshot {
   if (!storeRef) {
@@ -41,6 +48,12 @@ export function setByoUnlocked(
     if (entitlements.byoAnthropic !== undefined) {
       storeRef.set('byoAnthropicUnlocked', Boolean(entitlements.byoAnthropic));
     }
+    if (entitlements.byoElevenLabs !== undefined) {
+      storeRef.set(
+        'byoElevenLabsUnlocked',
+        Boolean(entitlements.byoElevenLabs)
+      );
+    }
   }
 
   const snapshot: EntitlementsSnapshot = {
@@ -50,11 +63,15 @@ export function setByoUnlocked(
     byoAnthropic: Boolean(
       entitlements.byoAnthropic ?? storeRef?.get('byoAnthropicUnlocked', false)
     ),
+    byoElevenLabs: Boolean(
+      entitlements.byoElevenLabs ??
+        storeRef?.get('byoElevenLabsUnlocked', false)
+    ),
     fetchedAt: new Date().toISOString(),
   };
 
   if (opts.notify !== false) {
-    const target = opts.window ?? BrowserWindow.getAllWindows()[0] ?? null;
+    const target = opts.window ?? getMainWindow();
     if (target && !target.isDestroyed()) {
       target.webContents.send('entitlements-updated', snapshot);
     }
@@ -65,7 +82,7 @@ export function setByoUnlocked(
 
 export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapshot> {
   const deviceId = getDeviceId();
-  const url = `${API_BASE}/entitlements/${deviceId}`;
+  const url = `${STAGE5_API_URL}/entitlements/${deviceId}`;
 
   try {
     const response = await axios.get(url, {
@@ -83,8 +100,14 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
     const byoAnthropic = Boolean(
       data?.entitlements?.byoAnthropic ?? data?.byoAnthropic ?? false
     );
+    const byoElevenLabs = Boolean(
+      data?.entitlements?.byoElevenLabs ?? data?.byoElevenLabs ?? false
+    );
 
-    return setByoUnlocked({ byoOpenAi, byoAnthropic }, { notify: false });
+    return setByoUnlocked(
+      { byoOpenAi, byoAnthropic, byoElevenLabs },
+      { notify: false }
+    );
   } catch (error: any) {
     log.error('[entitlements-manager] Failed to fetch entitlements:', error);
     throw error;
@@ -98,7 +121,11 @@ export async function syncEntitlements(
     const snapshot = await fetchEntitlementsFromServer();
     if (!opts.silent) {
       setByoUnlocked(
-        { byoOpenAi: snapshot.byoOpenAi, byoAnthropic: snapshot.byoAnthropic },
+        {
+          byoOpenAi: snapshot.byoOpenAi,
+          byoAnthropic: snapshot.byoAnthropic,
+          byoElevenLabs: snapshot.byoElevenLabs,
+        },
         {
           notify: true,
           window: opts.window,
@@ -106,7 +133,11 @@ export async function syncEntitlements(
       );
     } else {
       setByoUnlocked(
-        { byoOpenAi: snapshot.byoOpenAi, byoAnthropic: snapshot.byoAnthropic },
+        {
+          byoOpenAi: snapshot.byoOpenAi,
+          byoAnthropic: snapshot.byoAnthropic,
+          byoElevenLabs: snapshot.byoElevenLabs,
+        },
         {
           notify: false,
           window: opts.window,
@@ -121,7 +152,7 @@ export async function syncEntitlements(
     // Preserve existing cached value on fetch failures, but log the error.
     const cached = getCachedEntitlements();
     if (!opts.silent) {
-      const target = opts.window ?? BrowserWindow.getAllWindows()[0] ?? null;
+      const target = opts.window ?? getMainWindow();
       if (target && !target.isDestroyed()) {
         target.webContents.send('entitlements-error', {
           message: error?.message || 'Failed to fetch entitlements',

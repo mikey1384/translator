@@ -14,6 +14,7 @@ import {
 } from './constants.js';
 import fs from 'fs';
 import { throwIfAborted } from './utils.js';
+import { ERROR_CODES } from '../../../shared/constants/index.js';
 import {
   transcribe as transcribeAi,
   getActiveProvider as getActiveAiProvider,
@@ -67,8 +68,7 @@ export async function transcribeChunk({
         // Propagate immediately on cancellation or insufficient credits
         if (
           err?.name === 'AbortError' ||
-          err?.message === 'insufficient-credits' ||
-          /Insufficient credits/i.test(String(err?.message || err)) ||
+          err?.message === ERROR_CODES.INSUFFICIENT_CREDITS ||
           signal?.aborted
         ) {
           throw err;
@@ -100,7 +100,9 @@ export async function transcribeChunk({
       );
       // Check if words are inside segments (OpenAI's nested format)
       if (Array.isArray(segments[0].words) && segments[0].words.length > 0) {
-        log.debug(`[transcribeChunk] Found words INSIDE segments - extracting...`);
+        log.debug(
+          `[transcribeChunk] Found words INSIDE segments - extracting...`
+        );
       }
     }
 
@@ -234,15 +236,12 @@ export async function transcribeChunk({
     return [];
   } catch (error: any) {
     // If credits ran out, propagate a recognizable error upstream
-    if (
-      error?.message === 'insufficient-credits' ||
-      /Insufficient credits/i.test(String(error?.message || error))
-    ) {
+    if (error?.message === ERROR_CODES.INSUFFICIENT_CREDITS) {
       throw error;
     }
     if (
-      error?.message === 'openai-key-invalid' ||
-      error?.message === 'openai-rate-limit'
+      error?.message === ERROR_CODES.OPENAI_KEY_INVALID ||
+      error?.message === ERROR_CODES.OPENAI_RATE_LIMIT
     ) {
       throw error;
     }

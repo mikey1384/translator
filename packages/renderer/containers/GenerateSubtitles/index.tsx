@@ -261,6 +261,7 @@ export default function GenerateSubtitles() {
       operationId,
       videoPath: sourceVideoPath,
       voice: dubVoice,
+      targetLanguage,
     });
   }
 

@@ -14,11 +14,19 @@ export type SettingsStoreType = Store<{
   subtitleTargetLanguage: string;
   apiKey: string | null;
   anthropicApiKey: string | null;
+  elevenLabsApiKey: string | null;
   videoPlaybackPositions: Record<string, number>;
   byoOpenAiUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
+  byoElevenLabsUnlocked: boolean;
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
+  useByoElevenLabs: boolean;
+  useByoMaster: boolean; // Master toggle to enable/disable all BYO keys at once
+  preferClaudeTranslation: boolean; // When true, use Claude (Sonnet) for draft instead of GPT
+  preferClaudeReview: boolean; // When true (default), use Claude Opus for review; false = GPT-5.1 with high reasoning
+  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for transcription
+  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for dubbing/TTS
   preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
 }>;
 
@@ -252,6 +260,70 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── ElevenLabs API key ─────────── */
+  function getElevenLabsApiKey(): string | null {
+    try {
+      const key = store.get('elevenLabsApiKey', null);
+      return typeof key === 'string' && key.length > 0 ? key : null;
+    } catch (err) {
+      log.error('[settings] Failed to read stored ElevenLabs API key:', err);
+      return null;
+    }
+  }
+
+  async function setElevenLabsApiKey(
+    _evt: any,
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (typeof apiKey !== 'string' || !apiKey.trim()) {
+        store.set('elevenLabsApiKey', null);
+        return { success: true };
+      }
+      const trimmed = apiKey.trim();
+      store.set('elevenLabsApiKey', trimmed);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist ElevenLabs API key:', err);
+      return { success: false, error: err?.message || 'Failed to save key' };
+    }
+  }
+
+  async function clearElevenLabsApiKey(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      store.set('elevenLabsApiKey', null);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to clear ElevenLabs API key:', err);
+      return { success: false, error: err?.message || 'Failed to clear key' };
+    }
+  }
+
+  function getUseByoElevenLabs(): boolean {
+    try {
+      return Boolean(store.get('useByoElevenLabs', false));
+    } catch (err) {
+      log.error('[settings] Failed to read BYO ElevenLabs toggle:', err);
+      return false;
+    }
+  }
+
+  function setUseByoElevenLabs(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('useByoElevenLabs', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist BYO ElevenLabs toggle:', err);
+      return { success: false, error: err?.message || 'Failed to save toggle' };
+    }
+  }
+
   function getUseByoOpenAi(): boolean {
     try {
       return Boolean(store.get('useByoOpenAi', false));
@@ -274,6 +346,192 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── Master BYO toggle ─────────── */
+  function getUseByoMaster(): boolean {
+    try {
+      // Default to true so existing users with keys continue to use them
+      return Boolean(store.get('useByoMaster', true));
+    } catch (err) {
+      log.error('[settings] Failed to read BYO master toggle:', err);
+      return true;
+    }
+  }
+
+  function setUseByoMaster(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('useByoMaster', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist BYO master toggle:', err);
+      return { success: false, error: err?.message || 'Failed to save toggle' };
+    }
+  }
+
+  /* ─────────── Claude translation preference ─────────── */
+  function getPreferClaudeTranslation(): boolean {
+    try {
+      // Default to false (use GPT for draft, which is cheaper)
+      return Boolean(store.get('preferClaudeTranslation', false));
+    } catch (err) {
+      log.error(
+        '[settings] Failed to read Claude translation preference:',
+        err
+      );
+      return false;
+    }
+  }
+
+  function setPreferClaudeTranslation(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('preferClaudeTranslation', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist Claude translation preference:',
+        err
+      );
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Claude review preference ─────────── */
+  function getPreferClaudeReview(): boolean {
+    try {
+      // Default to true (use Claude Opus for review, which is higher quality)
+      return Boolean(store.get('preferClaudeReview', true));
+    } catch (err) {
+      log.error('[settings] Failed to read Claude review preference:', err);
+      return true;
+    }
+  }
+
+  function setPreferClaudeReview(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('preferClaudeReview', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist Claude review preference:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Transcription provider preference ─────────── */
+  function getPreferredTranscriptionProvider():
+    | 'elevenlabs'
+    | 'openai'
+    | 'stage5' {
+    try {
+      const value = store.get('preferredTranscriptionProvider', 'elevenlabs');
+      if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
+        return value;
+      }
+      return 'elevenlabs'; // Default to ElevenLabs (highest quality)
+    } catch (err) {
+      log.error(
+        '[settings] Failed to read transcription provider preference:',
+        err
+      );
+      return 'elevenlabs';
+    }
+  }
+
+  function setPreferredTranscriptionProvider(
+    value: 'elevenlabs' | 'openai' | 'stage5'
+  ): { success: boolean; error?: string } {
+    try {
+      store.set('preferredTranscriptionProvider', value);
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist transcription provider preference:',
+        err
+      );
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Dubbing provider preference ─────────── */
+  function getPreferredDubbingProvider(): 'elevenlabs' | 'openai' | 'stage5' {
+    try {
+      const value = store.get('preferredDubbingProvider', 'elevenlabs');
+      if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
+        return value;
+      }
+      return 'elevenlabs'; // Default to ElevenLabs (voice cloning)
+    } catch (err) {
+      log.error('[settings] Failed to read dubbing provider preference:', err);
+      return 'elevenlabs';
+    }
+  }
+
+  function setPreferredDubbingProvider(
+    value: 'elevenlabs' | 'openai' | 'stage5'
+  ): { success: boolean; error?: string } {
+    try {
+      store.set('preferredDubbingProvider', value);
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist dubbing provider preference:',
+        err
+      );
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Stage5 dubbing TTS provider ─────────── */
+  function getStage5DubbingTtsProvider(): 'openai' | 'elevenlabs' {
+    try {
+      const value = store.get('stage5DubbingTtsProvider', 'openai');
+      if (value === 'openai' || value === 'elevenlabs') {
+        return value;
+      }
+      return 'openai'; // Default to OpenAI (cheaper)
+    } catch (err) {
+      log.error('[settings] Failed to read stage5 dubbing TTS provider:', err);
+      return 'openai';
+    }
+  }
+
+  function setStage5DubbingTtsProvider(
+    value: 'openai' | 'elevenlabs'
+  ): { success: boolean; error?: string } {
+    try {
+      store.set('stage5DubbingTtsProvider', value);
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist stage5 dubbing TTS provider:',
+        err
+      );
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
   /* ------------------------------------------------ */
   return {
     getLocaleUrl,
@@ -293,6 +551,23 @@ export function buildSettingsHandlers(opts: {
     setUseByoOpenAi,
     getUseByoAnthropic,
     setUseByoAnthropic,
+    getElevenLabsApiKey,
+    setElevenLabsApiKey,
+    clearElevenLabsApiKey,
+    getUseByoElevenLabs,
+    setUseByoElevenLabs,
+    getUseByoMaster,
+    setUseByoMaster,
+    getPreferClaudeTranslation,
+    setPreferClaudeTranslation,
+    getPreferClaudeReview,
+    setPreferClaudeReview,
+    getPreferredTranscriptionProvider,
+    setPreferredTranscriptionProvider,
+    getPreferredDubbingProvider,
+    setPreferredDubbingProvider,
+    getStage5DubbingTtsProvider,
+    setStage5DubbingTtsProvider,
     // yt-dlp auto update is always on
 
     // Persisted cookie browser preference

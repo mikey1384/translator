@@ -9,6 +9,8 @@ export interface TranslationTask {
   inProgress: boolean;
   batchStartIndex?: number;
   isCompleted?: boolean;
+  /** AI model being used (e.g., "Claude Opus", "GPT-5.1") */
+  model?: string;
 }
 
 interface State {
@@ -109,7 +111,8 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           (p.percent === undefined ||
             Math.round(p.percent) === Math.round(task.percent)) &&
           (p.id === undefined || p.id === task.id) &&
-          (p.inProgress === undefined || p.inProgress === task.inProgress);
+          (p.inProgress === undefined || p.inProgress === task.inProgress) &&
+          (p.model === undefined || p.model === task.model);
         if (same) return;
         Object.assign(s.dubbing, p);
         const stageNow = (p.stage ?? s.dubbing.stage ?? '').toLowerCase();

@@ -86,9 +86,32 @@ const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
 const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
-const DEFAULT_DUB_VOICE = 'alloy';
+const DEFAULT_DUB_VOICE = 'rachel';
 
+/** Safely parse a boolean from localStorage with fallback */
+function parseStoredBool(key: string, fallback: boolean): boolean {
+  const raw = localStorage.getItem(key);
+  if (raw === null) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'boolean' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// ElevenLabs voices (primary provider)
 const ALLOWED_DUB_VOICES = new Set([
+  'rachel',
+  'adam',
+  'josh',
+  'bella',
+  'antoni',
+  'domi',
+  'elli',
+  'arnold',
+  'sam',
+  // Legacy OpenAI voices (for backwards compatibility - mapped to ElevenLabs on backend)
   'alloy',
   'echo',
   'fable',
@@ -108,16 +131,11 @@ const initial: State = {
   inputMode: 'file',
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
-  summaryEffortLevel: (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ?? 'high',
-  showOriginalText: JSON.parse(
-    localStorage.getItem(SHOW_ORIGINAL_KEY) ?? 'true'
-  ),
-  qualityTranscription: JSON.parse(
-    localStorage.getItem(QUALITY_TRANSCRIPTION_KEY) ?? 'true'
-  ),
-  qualityTranslation: JSON.parse(
-    localStorage.getItem(QUALITY_TRANSLATION_KEY) ?? 'true'
-  ),
+  summaryEffortLevel:
+    (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ?? 'high',
+  showOriginalText: parseStoredBool(SHOW_ORIGINAL_KEY, true),
+  qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
+  qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, true),
   dubVoice: (() => {
     const stored = localStorage.getItem(DUB_VOICE_KEY);
     return stored && ALLOWED_DUB_VOICES.has(stored)

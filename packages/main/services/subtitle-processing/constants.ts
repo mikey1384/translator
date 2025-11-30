@@ -64,6 +64,7 @@ import {
 const USE_FLAC = ASR_USE_FLAC;
 const fastMode = ASR_FAST_MODE;
 
+// --- Whisper-optimized settings (low quality, fast) ---
 export const ASR_SAMPLE_RATE = fastMode ? 12_000 : 16_000;
 export const ASR_SAMPLE_FMT = 's16';
 export const ASR_OUT_EXT = USE_FLAC ? '.flac' : '.webm';
@@ -71,3 +72,10 @@ export const ASR_AUDIO_CODEC = USE_FLAC ? 'flac' : 'libopus';
 export const ASR_OPUS_BITRATE = fastMode ? '24k' : '32k';
 export const ASR_VBR = 'on';
 export const ASR_COMPR_LEVEL = fastMode ? 6 : 8;
+
+// --- ElevenLabs-optimized settings (high quality, no chunking) ---
+// ElevenLabs Scribe benefits from higher quality audio and speaker diarization
+// which requires the full audio file (no chunking)
+export const ELEVENLABS_SAMPLE_RATE = 16_000; // 16kHz for better quality
+export const ELEVENLABS_OPUS_BITRATE = '64k'; // Higher bitrate for clarity
+export const ELEVENLABS_COMPR_LEVEL = 10; // Best FLAC compression

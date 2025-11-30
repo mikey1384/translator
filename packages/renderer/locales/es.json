@@ -134,13 +134,13 @@
       "error": "Error en el resumen",
       "cancelled": "Resumen cancelado",
       "inProgress": "Generando resumen…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "Seleccionando momentos destacados…",
+      "cuttingHighlight": "Recortando destacado {{current}}/{{total}}…",
+      "cuttingHighlights": "Recortando clips destacados…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight"
+    "noHighlights": "Aún no hay destacados. Genera para detectar momentos clave.",
+    "noVideoForHighlights": "Abre el video original para recortar clips destacados.",
+    "highlight": "Destacado"
   },
   "panel": {
     "gaps": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "Original:",
       "subtitlePlaceholder": "Texto del subtítulo",
       "confirmRemove": "¿Estás seguro de que quieres eliminar este bloque de subtítulos? Esta acción no se puede deshacer.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Transcribir esta línea"
     },
     "header": {
       "save": "Guardar",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "Por favor selecciona un video",
       "processingDuration": "Se está procesando la duración del video. Inténtalo de nuevo en un momento.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Este archivo está almacenado en iCloud. En Finder, haz clic en \"Descargar\" y espera a que el icono de la nube termine, luego inténtalo de nuevo."
     },
     "status": {
       "starting": "Iniciando...",
@@ -417,11 +417,16 @@
     "transcribedChunks": "Transcrito y limpiado {{done}}/{{total}} fragmentos",
     "gapRepair": "Reparación de huecos #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Reparando subtítulos faltantes (Iteración {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "scrubbingHallucinations": "Limpiando subtítulos ({{done}}/{{total}})",
+    "translationCleanup": "Limpiando subtítulos traducidos ({{done}}/{{total}})",
     "reviewingSlow": "Revisando (esto puede tardar un poco...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "Revisando {{done}}/{{total}}",
+    "reviewingRange": "Revisando {{start}}–{{end}} (de {{total}})",
+    "transcribingElevenLabs": "Transcribiendo con ElevenLabs (~{{minutes}} min restantes)",
+    "transcribingElevenLabsHours": "Transcribiendo con ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
+    "transcribingElevenLabsFinishing": "Transcribiendo con ElevenLabs...",
+    "transcriptionFallbackWhisper": "Cambiando a transcripción por fragmentos...",
+    "transcribingR2Upload": "Subiendo audio para transcripción..."
   },
   "messages": {
     "fileSaved": "Archivo guardado:\n{{path}}",

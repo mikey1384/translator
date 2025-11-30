@@ -26,6 +26,7 @@ import {
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
+import { ERROR_CODES } from '../../shared/constants/index.js';
 import type { FFmpegContext, VideoMeta } from '../services/ffmpeg-runner.js';
 import {
   extractAudioSegment,
@@ -142,16 +143,13 @@ export async function handleGenerateSubtitles(
   } catch (error: any) {
     log.error(`[${operationId}] Error generating subtitles:`, error);
 
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       controller.signal.aborted ||
       error.name === 'AbortError' ||
       error.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
-    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
-      String(error?.message || '')
-    );
+      creditCancel;
     if (tempVideoPath && !isCancel) {
       await cleanupTempFile(tempVideoPath);
     }
@@ -160,7 +158,7 @@ export async function handleGenerateSubtitles(
       percent: 100,
       stage: isCancel ? 'Process cancelled' : `Error: ${error.message}`,
       error: creditCancel
-        ? 'insufficient-credits'
+        ? ERROR_CODES.INSUFFICIENT_CREDITS
         : isCancel
           ? undefined
           : error.message || String(error),
@@ -258,15 +256,12 @@ export async function handleTranslateSubtitles(
       operationId,
     };
   } catch (error: any) {
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
-    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
-      String(error?.message || '')
-    );
+      creditCancel;
     // Emit a final progress event so renderer updates status appropriately
     try {
       event.sender.send('generate-subtitles-progress', {
@@ -275,7 +270,7 @@ export async function handleTranslateSubtitles(
           ? 'Process cancelled'
           : `Error: ${error?.message || String(error)}`,
         error: creditCancel
-          ? 'insufficient-credits'
+          ? ERROR_CODES.INSUFFICIENT_CREDITS
           : isCancel
             ? undefined
             : error?.message || String(error),
@@ -386,6 +381,7 @@ export async function handleDubSubtitles(
       voice: options.voice,
       quality: options.quality,
       ambientMix: options.ambientMix,
+      targetLanguage: options.targetLanguage,
       operationId,
       signal: controller.signal,
       progressCallback,
@@ -758,17 +754,20 @@ export async function handleGenerateTranscriptSummary(
       error?.message === 'Operation cancelled';
 
     const insufficientCredits =
-      !aborted && /insufficient-credits/i.test(String(error?.message ?? ''));
+      !aborted &&
+      String(error?.message ?? '').includes(ERROR_CODES.INSUFFICIENT_CREDITS);
 
     event.sender.send('transcript-summary-progress', {
       percent: 100,
       stage: aborted ? 'cancelled' : 'error',
-      error: insufficientCredits ? 'insufficient-credits' : error?.message,
+      error: insufficientCredits
+        ? ERROR_CODES.INSUFFICIENT_CREDITS
+        : error?.message,
       operationId,
     });
 
     if (insufficientCredits) {
-      throw new Error('insufficient-credits');
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
     if (aborted) {
@@ -1198,21 +1197,18 @@ export async function handleTranslateOneLine(
 
     return { success: true, translation, operationId };
   } catch (error: any) {
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
-    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
-      String(error?.message || '')
-    );
+      creditCancel;
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
         stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
         error: creditCancel
-          ? 'insufficient-credits'
+          ? ERROR_CODES.INSUFFICIENT_CREDITS
           : isCancel
             ? undefined
             : error?.message || String(error),
@@ -1334,21 +1330,18 @@ export async function handleTranscribeOneLine(
       operationId,
     };
   } catch (error: any) {
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
-    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
-      String(error?.message || '')
-    );
+      creditCancel;
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
         stage: isCancel ? '__i18n__:process_cancelled' : '__i18n__:error',
         error: creditCancel
-          ? 'insufficient-credits'
+          ? ERROR_CODES.INSUFFICIENT_CREDITS
           : isCancel
             ? undefined
             : error?.message || String(error),
@@ -1475,15 +1468,12 @@ export async function handleTranscribeRemaining(
     });
     return { success: true, segments: segsOut, operationId };
   } catch (error: any) {
+    const errorMsg = String(error?.message || '');
+    const creditCancel = errorMsg.includes(ERROR_CODES.INSUFFICIENT_CREDITS);
     const isCancel =
       error?.name === 'AbortError' ||
       error?.message === 'Operation cancelled' ||
-      /insufficient-credits|Insufficient credits/i.test(
-        String(error?.message || '')
-      );
-    const creditCancel = /insufficient-credits|Insufficient credits/i.test(
-      String(error?.message || '')
-    );
+      creditCancel;
     try {
       event.sender.send('generate-subtitles-progress', {
         percent: 100,
@@ -1491,7 +1481,7 @@ export async function handleTranscribeRemaining(
           ? 'Process cancelled'
           : `Error: ${error?.message || String(error)}`,
         error: creditCancel
-          ? 'insufficient-credits'
+          ? ERROR_CODES.INSUFFICIENT_CREDITS
           : isCancel
             ? undefined
             : error?.message || String(error),

@@ -40,6 +40,35 @@ import {
   onHighlightCutProgress,
 } from '../ipc/subtitles';
 import { save as saveFile } from '../ipc/file';
+import {
+  CREDITS_PER_1K_TOKENS_PROMPT,
+  CREDITS_PER_1K_TOKENS_COMPLETION,
+} from '../../shared/constants';
+
+// Summary estimation: input tokens ≈ chars/4, output tokens ≈ 20% of input
+// High effort (Claude Opus) costs ~4x more than standard (GPT-5.1)
+const CLAUDE_OPUS_MULTIPLIER = 4;
+
+function estimateSummaryCredits(
+  charCount: number,
+  effortLevel: 'standard' | 'high'
+): number {
+  const inputTokens = Math.ceil(charCount / 4);
+  const outputTokens = Math.ceil(inputTokens * 0.2); // Summary is typically ~20% of input
+  const baseCredits = Math.ceil(
+    (inputTokens / 1000) * CREDITS_PER_1K_TOKENS_PROMPT +
+      (outputTokens / 1000) * CREDITS_PER_1K_TOKENS_COMPLETION
+  );
+  return effortLevel === 'high'
+    ? Math.ceil(baseCredits * CLAUDE_OPUS_MULTIPLIER)
+    : baseCredits;
+}
+
+function formatCredits(credits: number): string {
+  if (credits < 1000) return `~${Math.ceil(credits)}`;
+  if (credits < 10000) return `~${(credits / 1000).toFixed(1)}k`;
+  return `~${Math.round(credits / 1000)}k`;
+}
 
 interface TranscriptSummaryPanelProps {
   segments: SrtSegment[];
@@ -52,7 +81,6 @@ export function TranscriptSummaryPanel({
   const summaryLanguage = useUIStore(s => s.summaryLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
   const summaryEffortLevel = useUIStore(s => s.summaryEffortLevel);
-  const setSummaryEffortLevel = useUIStore(s => s.setSummaryEffortLevel);
 
   const [summary, setSummary] = useState<string>('');
   const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
@@ -138,6 +166,20 @@ export function TranscriptSummaryPanel({
   const videoAvailableForHighlights = Boolean(
     originalVideoPath || fallbackVideoPath
   );
+
+  // Credit balance and summary cost estimation
+  const credits = useCreditStore(s => s.credits);
+  const summaryEstimate = useMemo(() => {
+    if (!hasTranscript) return null;
+    const charCount = usableSegments.reduce((acc, seg) => acc + seg.text.length, 0);
+    if (charCount === 0) return null;
+    const estimatedCredits = estimateSummaryCredits(charCount, summaryEffortLevel);
+    return {
+      charCount,
+      estimatedCredits,
+      hasEnoughCredits: credits == null || credits >= estimatedCredits,
+    };
+  }, [hasTranscript, usableSegments, summaryEffortLevel, credits]);
 
   useEffect(() => {
     return () => {
@@ -658,39 +700,49 @@ export function TranscriptSummaryPanel({
               </optgroup>
             ))}
           </select>
-          <div className={effortToggleStyles}>
-            <button
-              className={effortButtonStyles(summaryEffortLevel === 'standard')}
-              onClick={() => setSummaryEffortLevel('standard')}
-              disabled={isGenerating}
-              title={t(
-                'summary.effortStandardDesc',
-                'Fast analysis using GPT-5.1'
-              )}
-            >
-              {t('summary.effortStandard', 'Standard')}
-            </button>
-            <button
-              className={effortButtonStyles(summaryEffortLevel === 'high')}
-              onClick={() => setSummaryEffortLevel('high')}
-              disabled={isGenerating}
-              title={t(
-                'summary.effortHighDesc',
-                'Deep analysis using Claude Opus with extended thinking'
-              )}
-            >
-              {t('summary.effortHigh', 'High')}
-            </button>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            isLoading={isGenerating}
+          <div
+            className={css`
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 4px;
+            `}
           >
-            {summary ? t('summary.regenerate') : t('summary.generate')}
-          </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              isLoading={isGenerating}
+            >
+              {summary ? t('summary.regenerate') : t('summary.generate')}
+            </Button>
+            {summaryEstimate && !isGenerating && (
+              <span
+                className={css`
+                  font-size: 0.75rem;
+                  color: ${summaryEstimate.hasEnoughCredits
+                    ? colors.gray
+                    : colors.danger};
+                  text-align: center;
+                `}
+              >
+                {t('summary.estimateCredits', '{{credits}} credits', {
+                  credits: formatCredits(summaryEstimate.estimatedCredits),
+                })}
+                {summaryEffortLevel === 'high' && (
+                  <span
+                    className={css`
+                      color: ${colors.primaryDark};
+                      margin-left: 4px;
+                    `}
+                  >
+                    {t('summary.highEffortBadge', '(deep)')}
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1399,39 +1451,6 @@ const aspectModeButtonStyles = (active: boolean) => css`
 
   &:hover {
     background: ${active ? colors.primary : colors.grayLight};
-  }
-
-  &:first-of-type {
-    border-right: 1px solid ${colors.border};
-  }
-`;
-
-const effortToggleStyles = css`
-  display: flex;
-  gap: 0;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid ${colors.border};
-`;
-
-const effortButtonStyles = (active: boolean) => css`
-  border: none;
-  background: ${active ? colors.primary : colors.white};
-  color: ${active ? colors.white : colors.dark};
-  padding: 5px 12px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-
-  &:hover:not(:disabled) {
-    background: ${active ? colors.primary : colors.grayLight};
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
   }
 
   &:first-of-type {

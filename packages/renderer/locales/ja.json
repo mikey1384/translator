@@ -134,13 +134,13 @@
       "error": "要約に失敗しました",
       "cancelled": "要約をキャンセルしました",
       "inProgress": "要約を生成しています…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "selectingHighlights": "ハイライトの瞬間を選択中…",
+      "cuttingHighlight": "ハイライト {{current}}/{{total}} を切り出し中…",
+      "cuttingHighlights": "ハイライトクリップを切り出し中…"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight"
+    "noHighlights": "ハイライトはまだありません。生成して名場面を検出します。",
+    "noVideoForHighlights": "ハイライトクリップを切り出すには、ソース動画を開いてください。",
+    "highlight": "ハイライト"
   },
   "panel": {
     "gaps": {
@@ -169,7 +169,7 @@
       "originalTextPrefix": "原文:",
       "subtitlePlaceholder": "字幕テキスト",
       "confirmRemove": "この字幕ブロックを削除してもよろしいですか？この操作は元に戻せません。",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "この行を文字起こし"
     },
     "header": {
       "save": "保存",
@@ -341,7 +341,7 @@
     "validation": {
       "pleaseSelectVideo": "動画を選択してください",
       "processingDuration": "動画の長さを処理中です。しばらくしてから再度お試しください。",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "このファイルはiCloudに保存されています。Finderで「ダウンロード」をクリックし、クラウドアイコンが消えるまで待ってから、再度お試しください。"
     },
     "status": {
       "starting": "開始中...",
@@ -420,8 +420,13 @@
     "scrubbingHallucinations": "字幕のクリーニング中 ({{done}}/{{total}})",
     "translationCleanup": "翻訳字幕のクリーンアップ中 ({{done}}/{{total}})",
     "reviewingSlow": "レビュー中（しばらく時間がかかる場合があります）{{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingBatch": "レビュー中 {{done}}/{{total}}",
+    "reviewingRange": "{{start}}–{{end}} をレビュー中（{{total}} 件中）",
+    "transcribingElevenLabs": "ElevenLabsで文字起こし中（残り約{{minutes}}分）",
+    "transcribingElevenLabsHours": "ElevenLabsで文字起こし中（残り約{{hours}}時間{{minutes}}分）",
+    "transcribingElevenLabsFinishing": "ElevenLabsで文字起こし中...",
+    "transcriptionFallbackWhisper": "チャンク分割での文字起こしに切り替え中...",
+    "transcribingR2Upload": "音声をアップロード中..."
   },
   "messages": {
     "fileSaved": "ファイルを保存しました:\n{{path}}",

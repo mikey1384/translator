@@ -112,6 +112,11 @@
     "improveTranslation": "Improve Translation",
     "chooseSrtFile": "Choose SRT File",
     "dub": "Dub Voice",
+    "dubEstimateCredits": "{{credits}} credits (~{{minutes}}m)",
+    "dubEstimateByo": "~{{minutes}}m audio",
+    "translateEstimateCredits": "{{credits}} credits",
+    "translateEstimateByo": "BYO key",
+    "qualityBadge": "(+review)",
     "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
   },
   "summary": {
@@ -125,6 +130,8 @@
     },
     "generate": "Generate summary",
     "regenerate": "Regenerate summary",
+    "estimateCredits": "{{credits}} credits",
+    "highEffortBadge": "(deep)",
     "placeholder": "Your AI summary will appear here once generated.",
     "insufficientCredits": "Not enough credits to run the summary.",
     "error": "We couldn't create a summary. {{message}}",
@@ -276,6 +283,15 @@
       "toggleOn": "Using your Anthropic key for Claude models.",
       "toggleOff": "Using Stage5 credits for Claude models.",
       "toggleError": "Failed to update Anthropic preference."
+    },
+    "stage5TtsProvider": {
+      "label": "TTS Quality (Stage5 Credits)",
+      "openai": "Standard (OpenAI TTS)",
+      "openaiHint": "Good quality, lower cost",
+      "openaiHintWithBalance": "Good quality · Your balance: {{time}} of dubbing",
+      "elevenlabs": "Premium (ElevenLabs)",
+      "elevenlabsHint": "Best quality, higher cost (~13x)",
+      "elevenlabsHintWithBalance": "Best quality · Your balance: {{time}} of dubbing"
     }
   },
   "credits": {
@@ -441,6 +457,11 @@
     "transcribingOf": "Transcribing {{done}}/{{total}}",
     "error": "Error",
     "transcribedChunks": "Transcribed {{done}}/{{total}} chunks",
+    "transcribingElevenLabs": "Transcribing with ElevenLabs (~{{minutes}} min remaining)",
+    "transcribingElevenLabsHours": "Transcribing with ElevenLabs (~{{hours}}h {{minutes}}m remaining)",
+    "transcribingElevenLabsFinishing": "Transcribing with ElevenLabs...",
+    "transcriptionFallbackWhisper": "Falling back to chunked transcription...",
+    "transcribingR2Upload": "Uploading audio for transcription...",
     "gapRepair": "Gap repair #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Repairing missing captions (Iteration {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",

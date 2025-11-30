@@ -16,7 +16,12 @@ import {
   ASR_COMPR_LEVEL,
   ASR_SAMPLE_RATE,
   ASR_SAMPLE_FMT,
+  ELEVENLABS_SAMPLE_RATE,
+  ELEVENLABS_OPUS_BITRATE,
+  ELEVENLABS_COMPR_LEVEL,
 } from './constants.js';
+
+export type AudioQualityMode = 'whisper' | 'elevenlabs';
 
 export const mkTempAudioName = (stem: string): string =>
   `${stem}${ASR_OUT_EXT}`;
@@ -28,6 +33,7 @@ declare module '../ffmpeg-runner.js' {
       operationId?: string;
       signal?: AbortSignal;
       progress?: (p: { percent: number; stage?: string }) => void;
+      qualityMode?: AudioQualityMode;
     }) => Promise<string>;
   }
 }
@@ -61,9 +67,24 @@ export async function extractAudio(
     operationId?: string;
     signal?: AbortSignal;
     progress?: (p: { percent: number; stage?: string }) => void;
+    qualityMode?: AudioQualityMode;
   }
 ): Promise<string> {
-  const { videoPath, progress, operationId, signal } = opts;
+  const {
+    videoPath,
+    progress,
+    operationId,
+    signal,
+    qualityMode = 'whisper',
+  } = opts;
+
+  // Select quality settings based on mode
+  const sampleRate =
+    qualityMode === 'elevenlabs' ? ELEVENLABS_SAMPLE_RATE : ASR_SAMPLE_RATE;
+  const opusBitrate =
+    qualityMode === 'elevenlabs' ? ELEVENLABS_OPUS_BITRATE : ASR_OPUS_BITRATE;
+  const comprLevel =
+    qualityMode === 'elevenlabs' ? ELEVENLABS_COMPR_LEVEL : ASR_COMPR_LEVEL;
 
   if (!fs.existsSync(videoPath)) {
     throw new FFmpegError(`Input video file not found: ${videoPath}`);
@@ -118,7 +139,7 @@ export async function extractAudio(
       '-map',
       `0:a:${audioIdx}?`,
       '-ar',
-      String(ASR_SAMPLE_RATE),
+      String(sampleRate),
       '-sample_fmt',
       ASR_SAMPLE_FMT,
       '-ac',
@@ -128,11 +149,11 @@ export async function extractAudio(
     ];
 
     if (ASR_AUDIO_CODEC === 'libopus') {
-      ffmpegArgs.push('-b:a', ASR_OPUS_BITRATE);
+      ffmpegArgs.push('-b:a', opusBitrate);
       ffmpegArgs.push('-vbr', ASR_VBR);
       ffmpegArgs.push('-application', 'voip');
     } else {
-      ffmpegArgs.push('-compression_level', String(ASR_COMPR_LEVEL));
+      ffmpegArgs.push('-compression_level', String(comprLevel));
     }
 
     ffmpegArgs.push('-progress', 'pipe:1', '-y', outputPath);
@@ -242,6 +263,7 @@ export function attachExtractAudio(ctx: FFmpegContext): void {
     operationId?: string;
     signal?: AbortSignal;
     progress?: (p: { percent: number; stage?: string }) => void;
+    qualityMode?: AudioQualityMode;
   }) => extractAudio(ctx, opts);
 }
 

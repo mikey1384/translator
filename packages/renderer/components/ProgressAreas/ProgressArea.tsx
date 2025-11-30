@@ -2,9 +2,22 @@ import { useEffect } from 'react';
 import { css } from '@emotion/css';
 import { colors } from '../../styles.js';
 import { useCreditStore } from '../../state/credit-store';
+import { useUIStore } from '../../state/ui-store';
+import { useAiStore } from '../../state/ai-store';
 import { logButton, logTask } from '../../utils/logger.js';
 import { CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../../shared/constants';
-import CreditBalance from '../CreditBalance';
+import CreditBalance, { type OperationType } from '../CreditBalance';
+
+// Translation quality multiplier (matches SrtMountedPanel estimate)
+const TRANSLATION_QUALITY_MULTIPLIER = 5;
+
+// TTS credits per minute (based on ~750 chars/min * credits/char)
+// OpenAI: 1.05 credits/char * 750 = ~788 credits/min
+// ElevenLabs: 14 credits/char * 750 = ~10,500 credits/min
+const TTS_CREDITS_PER_MINUTE = {
+  openai: 788,
+  elevenlabs: 10500,
+} as const;
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -119,18 +132,53 @@ export default function ProgressArea({
   autoCloseDelay = 4000,
   subLabel,
 }: ProgressAreaProps) {
-  // Compute remaining hours (integer) to show next to credits in header
+  // Compute remaining time to show next to credits in header
   const { credits } = useCreditStore();
-  let remainingHours: number | null = null;
-  if (
-    operationId?.startsWith('translate-') ||
-    operationId?.startsWith('transcribe-')
-  ) {
-    // Unify both translation and transcription hour estimates
-    remainingHours =
-      typeof credits === 'number'
-        ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
-        : null;
+  const qualityTranslation = useUIStore(s => s.qualityTranslation);
+  const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
+  const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
+  const useByoMaster = useAiStore(s => s.useByoMaster);
+  const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
+  const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
+
+  // Calculate operation-specific time estimates
+  let suffixText: string | undefined;
+  if (typeof credits === 'number' && credits > 0) {
+    if (operationId?.startsWith('transcribe-')) {
+      // Transcription: use base translation hour rate (similar cost)
+      const hours = credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+      suffixText = `(${Math.floor(hours).toLocaleString()}h)`;
+    } else if (operationId?.startsWith('translate-')) {
+      // Translation: adjust for quality toggle
+      const effectiveCreditsPerHour = qualityTranslation
+        ? CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_QUALITY_MULTIPLIER
+        : CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+      const hours = credits / effectiveCreditsPerHour;
+      if (hours < 1) {
+        suffixText = `(~${Math.ceil(hours * 60)}m)`;
+      } else {
+        suffixText = `(${Math.floor(hours).toLocaleString()}h)`;
+      }
+    } else if (operationId?.startsWith('dub-')) {
+      // Dubbing: use TTS provider-specific rate
+      let ttsProvider: 'openai' | 'elevenlabs' = 'openai';
+      if (useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
+        ttsProvider = 'elevenlabs';
+      } else if (preferredDubbingProvider === 'stage5') {
+        ttsProvider = stage5DubbingTtsProvider;
+      } else if (preferredDubbingProvider === 'elevenlabs' && useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
+        ttsProvider = 'elevenlabs';
+      }
+      const creditsPerMin = TTS_CREDITS_PER_MINUTE[ttsProvider];
+      const minutes = credits / creditsPerMin;
+      if (minutes < 60) {
+        suffixText = `(~${Math.floor(minutes)}m)`;
+      } else {
+        const hours = Math.floor(minutes / 60);
+        const mins = Math.floor(minutes % 60);
+        suffixText = mins > 0 ? `(~${hours}h ${mins}m)` : `(~${hours}h)`;
+      }
+    }
   }
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -184,13 +232,19 @@ export default function ProgressArea({
     return null;
   }
 
-  // Show credit balance for AI operations identified by operationId prefix
-  const shouldShowCreditBalance = Boolean(
-    operationId &&
-      (operationId.startsWith('translate-') ||
-        operationId.startsWith('transcribe-') ||
-        operationId.startsWith('dub-'))
-  );
+  // Determine operation type from operationId prefix
+  const operationType: OperationType | null = operationId
+    ? operationId.startsWith('translate-')
+      ? 'translation'
+      : operationId.startsWith('transcribe-')
+        ? 'transcription'
+        : operationId.startsWith('dub-')
+          ? 'dubbing'
+          : null
+    : null;
+
+  // Show credit balance for AI operations
+  const shouldShowCreditBalance = operationType !== null;
 
   return (
     <div className={progressContainerStyles}>
@@ -203,13 +257,10 @@ export default function ProgressArea({
           `}
         >
           <h3>{title}</h3>
-          {shouldShowCreditBalance && (
+          {shouldShowCreditBalance && operationType && (
             <CreditBalance
-              suffixText={
-                typeof remainingHours === 'number'
-                  ? `(${Math.floor(remainingHours).toLocaleString()}h)`
-                  : undefined
-              }
+              operationType={operationType}
+              suffixText={suffixText}
             />
           )}
         </div>

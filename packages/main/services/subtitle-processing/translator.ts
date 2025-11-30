@@ -2,40 +2,119 @@ import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
-import { AI_MODELS } from '@shared/constants';
-import { getActiveProvider, hasUserAnthropicApiKey } from '../ai-provider.js';
+import { AI_MODELS, ERROR_CODES } from '@shared/constants';
+import {
+  getActiveProviderForModel,
+  prefersClaudeTranslation,
+  prefersClaudeReview,
+} from '../ai-provider.js';
+
+/**
+ * Determines which model to use for the draft/initial translation phase.
+ * Uses getActiveProviderForModel() to properly check entitlements, keys, and toggles.
+ * - If user prefers Claude and Anthropic BYO is fully active: Use Claude Sonnet 4.5
+ * - If OpenAI BYO is fully active: Use GPT
+ * - If only Anthropic BYO is active (no OpenAI): Use Claude Sonnet 4.5
+ * - Otherwise: Use GPT (Stage5 credits)
+ */
+function getDraftModel(): { model: string } {
+  const prefersClaude = prefersClaudeTranslation();
+
+  // Check if Anthropic BYO is fully active (entitlement + key + toggle + master)
+  const canUseAnthropicByo =
+    getActiveProviderForModel(AI_MODELS.CLAUDE_SONNET) === 'anthropic';
+  // Check if OpenAI BYO is fully active (entitlement + key + toggle + master)
+  const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
+
+  log.debug(
+    `[Draft] getDraftModel: canUseAnthropicByo=${canUseAnthropicByo}, canUseOpenAiByo=${canUseOpenAiByo}, prefersClaude=${prefersClaude}`
+  );
+
+  // If user explicitly prefers Claude and Anthropic BYO is fully active
+  if (prefersClaude && canUseAnthropicByo) {
+    log.debug(
+      '[Draft] User prefers Claude and Anthropic BYO active - using Claude Sonnet'
+    );
+    return { model: AI_MODELS.CLAUDE_SONNET };
+  }
+
+  // If OpenAI BYO is active, use GPT
+  if (canUseOpenAiByo) {
+    log.debug('[Draft] Using GPT (BYO OpenAI)');
+    return { model: AI_MODELS.GPT };
+  }
+
+  // If only Anthropic BYO is active (no OpenAI BYO), use Claude
+  if (canUseAnthropicByo) {
+    log.debug(
+      '[Draft] No OpenAI BYO, Anthropic BYO active - using Claude Sonnet'
+    );
+    return { model: AI_MODELS.CLAUDE_SONNET };
+  }
+
+  // Default: GPT via Stage5
+  log.debug('[Draft] No BYO active, using GPT (Stage5 credits)');
+  return { model: AI_MODELS.GPT };
+}
 
 /**
  * Determines which model to use for the review phase.
- * - If using Stage5 (credits): Use Claude Opus for best quality
- * - If BYO with Anthropic key: Use Claude Opus
- * - If BYO OpenAI only (no Anthropic): Fall back to GPT with high reasoning
+ * Uses getActiveProviderForModel() to properly check entitlements, keys, and toggles.
+ * Respects user's preference for Claude vs GPT review model.
  */
-function getReviewModel(): { model: string; reasoning?: { effort: 'high' } } {
-  const provider = getActiveProvider();
-  const hasAnthropicKey = hasUserAnthropicApiKey();
+export function getReviewModel(): {
+  model: string;
+  reasoning?: { effort: 'high' };
+} {
+  // Check if Anthropic BYO is fully active (entitlement + key + toggle + master)
+  const canUseAnthropicByo =
+    getActiveProviderForModel(AI_MODELS.CLAUDE_OPUS) === 'anthropic';
+  // Check if OpenAI BYO is fully active (entitlement + key + toggle + master)
+  const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
+  // User preference: true = Claude Opus, false = GPT with high reasoning
+  const prefersClaude = prefersClaudeReview();
 
   log.debug(
-    `[Review] getReviewModel: provider=${provider}, hasAnthropicKey=${hasAnthropicKey}`
+    `[Review] getReviewModel: canUseAnthropicByo=${canUseAnthropicByo}, canUseOpenAiByo=${canUseOpenAiByo}, prefersClaude=${prefersClaude}`
   );
 
-  // Stage5 users always get Claude Opus (paid via credits)
-  if (provider === 'stage5') {
-    log.debug('[Review] Using Claude Opus (Stage5 credits)');
+  // If user prefers Claude and Anthropic BYO is available
+  if (prefersClaude && canUseAnthropicByo) {
+    log.debug('[Review] Using Claude Opus (BYO Anthropic, user preference)');
     return { model: AI_MODELS.CLAUDE_OPUS };
   }
 
-  // BYO users: check if they have Anthropic key
-  if (hasAnthropicKey) {
-    log.debug('[Review] Using Claude Opus (BYO Anthropic key)');
+  // If user prefers GPT and OpenAI BYO is available
+  if (!prefersClaude && canUseOpenAiByo) {
+    log.debug(
+      '[Review] Using GPT-5.1 with high reasoning (BYO OpenAI, user preference)'
+    );
+    return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+  }
+
+  // Fallback: If user's preferred provider is not available, use what's available
+  if (canUseAnthropicByo) {
+    log.debug('[Review] Using Claude Opus (BYO Anthropic, fallback)');
     return { model: AI_MODELS.CLAUDE_OPUS };
   }
 
-  // BYO OpenAI only: fall back to GPT with high reasoning effort
-  log.info(
-    '[Review] No Anthropic key available, falling back to GPT-5.1 with high reasoning effort'
-  );
-  return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+  if (canUseOpenAiByo) {
+    log.debug(
+      '[Review] Using GPT-5.1 with high reasoning (BYO OpenAI, fallback)'
+    );
+    return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+  }
+
+  // No BYO available: Use Stage5 credits based on preference
+  if (prefersClaude) {
+    log.debug('[Review] Using Claude Opus (Stage5 credits, user preference)');
+    return { model: AI_MODELS.CLAUDE_OPUS };
+  } else {
+    log.debug(
+      '[Review] Using GPT-5.1 with high reasoning (Stage5 credits, user preference)'
+    );
+    return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+  }
 }
 
 const NETWORK_RETRY_BASE_MS = 5_000;
@@ -76,7 +155,10 @@ function normaliseErrorMessage(error: any): string {
 function isLikelyNetworkError(error: any): boolean {
   const msg = normaliseErrorMessage(error);
   if (!msg) return false;
-  if (msg.includes('insufficient-credits') || msg.includes('invalid api key')) {
+  if (
+    msg.includes(ERROR_CODES.INSUFFICIENT_CREDITS) ||
+    msg.includes('invalid api key')
+  ) {
     return false;
   }
   if (typeof error?.code === 'string') {
@@ -315,12 +397,16 @@ Output format (exactly ${batch.segments.length} lines):
 
   while (retryCount < MAX_RETRIES) {
     try {
-      log.info(`[${operationId}] Sending translation batch via callChatModel`);
+      const draftConfig = getDraftModel();
+      log.info(
+        `[${operationId}] Sending translation batch via callChatModel (model: ${draftConfig.model})`
+      );
       const res = await callAIModel({
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: combinedPrompt },
         ],
+        model: draftConfig.model,
         signal,
         operationId,
         retryAttempts: MAX_RETRIES,
@@ -354,6 +440,7 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
               { role: 'system', content: repairSystem },
               { role: 'user', content: repairPrompt },
             ],
+            model: draftConfig.model,
             signal,
             operationId,
             retryAttempts: 2,
@@ -399,7 +486,7 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
       // If credits ran out, propagate this upward to cancel the whole pipeline
       if (
         typeof err?.message === 'string' &&
-        err.message === 'insufficient-credits'
+        err.message === ERROR_CODES.INSUFFICIENT_CREDITS
       ) {
         throw err;
       }
@@ -661,7 +748,7 @@ Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}:
       }
       if (
         typeof error?.message === 'string' &&
-        error.message === 'insufficient-credits'
+        error.message === ERROR_CODES.INSUFFICIENT_CREDITS
       ) {
         throw error;
       }

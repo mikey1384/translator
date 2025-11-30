@@ -1,11 +1,13 @@
 import type { CreditBalanceResult } from '@shared-types/app';
 import Store from 'electron-store';
 import { BrowserWindow } from 'electron';
-import axios from 'axios'; // Assuming axios is available
-import log from 'electron-log'; // Assuming electron-log is correctly configured
-
+import axios from 'axios';
+import log from 'electron-log';
 import { v4 as uuidv4 } from 'uuid';
 import { syncEntitlements } from '../services/entitlements-manager.js';
+import { STAGE5_API_URL } from '../services/stage5-client.js';
+import { CREDITS_PER_AUDIO_HOUR } from '../../shared/constants/index.js';
+import { getMainWindow } from '../utils/window.js';
 
 // Generate or retrieve device ID using proper UUID v4
 export function getDeviceId(): string {
@@ -36,7 +38,7 @@ function sendNetLog(
 }
 const store = new Store<{ balanceCredits: number; creditsPerHour: number }>({
   name: 'credit-balance',
-  defaults: { balanceCredits: 0, creditsPerHour: 18_900 },
+  defaults: { balanceCredits: 0, creditsPerHour: CREDITS_PER_AUDIO_HOUR },
 });
 
 export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
@@ -46,7 +48,10 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   const perHourOverrideRaw = process.env.CREDITS_PER_HOUR_OVERRIDE;
   if (forceZero || (overrideRaw && overrideRaw.length > 0)) {
     const credits = forceZero ? 0 : Math.max(0, Number(overrideRaw) || 0);
-    const creditsPerHour = Math.max(1, Number(perHourOverrideRaw) || 18_900);
+    const creditsPerHour = Math.max(
+      1,
+      Number(perHourOverrideRaw) || CREDITS_PER_AUDIO_HOUR
+    );
     store.set('balanceCredits', credits);
     store.set('creditsPerHour', creditsPerHour);
     return {
@@ -61,7 +66,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
   try {
     // Get credit balance from the API (server returns creditBalance and updatedAt)
     const response = await axios.get(
-      `https://api.stage5.tools/credits/${getDeviceId()}`,
+      `${STAGE5_API_URL}/credits/${getDeviceId()}`,
       { headers: { Authorization: `Bearer ${getDeviceId()}` } }
     );
     // Intentionally avoid logging successful GET /credits to reduce noise in the UI log modal
@@ -71,7 +76,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
       1,
       Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
         Number(response.data?.creditsPerHour) ||
-        18_900
+        CREDITS_PER_AUDIO_HOUR
     );
     const hours = credits / perHour;
     store.set('balanceCredits', credits);
@@ -87,7 +92,7 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
     if (err.response) {
       sendNetLog(
         'error',
-        `HTTP ${err.response.status} GET https://api.stage5.tools/credits`,
+        `HTTP ${err.response.status} GET ${STAGE5_API_URL}/credits`,
         {
           status: err.response.status,
           url: err.config?.url,
@@ -95,15 +100,14 @@ export async function handleGetCreditBalance(): Promise<CreditBalanceResult> {
         }
       );
     } else if (err.request) {
-      sendNetLog(
-        'error',
-        `HTTP NO_RESPONSE GET https://api.stage5.tools/credits`,
-        { url: err.config?.url, method: err.config?.method }
-      );
+      sendNetLog('error', `HTTP NO_RESPONSE GET ${STAGE5_API_URL}/credits`, {
+        url: err.config?.url,
+        method: err.config?.method,
+      });
     }
     log.error('[credit-handler] handleGetCreditBalance error:', err);
     const cachedBal = store.get('balanceCredits', 0);
-    const cachedPerHour = store.get('creditsPerHour', 18_900);
+    const cachedPerHour = store.get('creditsPerHour', CREDITS_PER_AUDIO_HOUR);
     return {
       success: false,
       error: err.message,
@@ -120,7 +124,7 @@ export async function handleCreateCheckoutSession(
   packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
 ): Promise<string | null> {
   try {
-    const apiUrl = 'https://api.stage5.tools/payments/create-session';
+    const apiUrl = `${STAGE5_API_URL}/payments/create-session`;
     log.info(
       `[credit-handler] Creating checkout session for ${packId} via ${apiUrl}`
     );
@@ -141,7 +145,7 @@ export async function handleCreateCheckoutSession(
       );
 
       // Emit checkout-pending event so UI can show "syncing balance..." until webhook lands
-      const mainWindow = BrowserWindow.getAllWindows()[0];
+      const mainWindow = getMainWindow();
       if (mainWindow) {
         mainWindow.webContents.send('checkout-pending');
       }
@@ -173,7 +177,7 @@ export async function handleCreateCheckoutSession(
     if (err.response) {
       sendNetLog(
         'error',
-        `HTTP ${err.response.status} POST https://api.stage5.tools/payments/create-session`,
+        `HTTP ${err.response.status} POST ${STAGE5_API_URL}/payments/create-session`,
         {
           status: err.response.status,
           url: err.config?.url,
@@ -183,7 +187,7 @@ export async function handleCreateCheckoutSession(
     } else if (err.request) {
       sendNetLog(
         'error',
-        `HTTP NO_RESPONSE POST https://api.stage5.tools/payments/create-session`,
+        `HTTP NO_RESPONSE POST ${STAGE5_API_URL}/payments/create-session`,
         { url: err.config?.url, method: err.config?.method }
       );
     }
@@ -193,9 +197,9 @@ export async function handleCreateCheckoutSession(
 }
 
 export async function handleCreateByoUnlockSession(): Promise<void> {
-  const mainWindow = BrowserWindow.getAllWindows()[0] ?? null;
+  const mainWindow = getMainWindow();
   const deviceId = getDeviceId();
-  const apiUrl = 'https://api.stage5.tools/payments/create-byo-unlock';
+  const apiUrl = `${STAGE5_API_URL}/payments/create-byo-unlock`;
 
   try {
     log.info('[credit-handler] Initiating BYO OpenAI unlock checkout.');
@@ -292,7 +296,7 @@ async function openStripeCheckout(
   options: StripeCheckoutOptions
 ): Promise<void> {
   return new Promise(resolve => {
-    const parent = BrowserWindow.getAllWindows()[0];
+    const parent = getMainWindow();
     const win = new BrowserWindow({
       width: 800,
       height: 1000,
@@ -450,13 +454,10 @@ export async function handleResetCredits(): Promise<{
   try {
     log.info('[credit-handler] Attempting admin add credits...');
 
-    const response = await axios.post(
-      'https://api.stage5.tools/admin/add-credits',
-      {
-        deviceId: getDeviceId(),
-        pack: 'STANDARD',
-      }
-    );
+    const response = await axios.post(`${STAGE5_API_URL}/admin/add-credits`, {
+      deviceId: getDeviceId(),
+      pack: 'STANDARD',
+    });
 
     if (response.data?.success) {
       const { creditsAdded } = response.data;
@@ -472,7 +473,7 @@ export async function handleResetCredits(): Promise<{
         updatedBalance.success &&
         updatedBalance.creditBalance !== undefined
       ) {
-        const mainWindow = BrowserWindow.getAllWindows()[0];
+        const mainWindow = getMainWindow();
         if (mainWindow) {
           mainWindow.webContents.send('credits-updated', {
             creditBalance: updatedBalance.creditBalance,
@@ -506,12 +507,9 @@ export async function handleResetCreditsToZero(): Promise<{
   try {
     log.info('[credit-handler] Attempting admin credit reset to zero...');
 
-    const response = await axios.post(
-      'https://api.stage5.tools/admin/reset-to-zero',
-      {
-        deviceId: getDeviceId(),
-      }
-    );
+    const response = await axios.post(`${STAGE5_API_URL}/admin/reset-to-zero`, {
+      deviceId: getDeviceId(),
+    });
 
     if (response.data?.success) {
       log.info('[credit-handler] ✅ Admin reset to zero successful');
@@ -524,7 +522,7 @@ export async function handleResetCreditsToZero(): Promise<{
         updatedBalance.success &&
         updatedBalance.creditBalance !== undefined
       ) {
-        const mainWindow = BrowserWindow.getAllWindows()[0];
+        const mainWindow = getMainWindow();
         if (mainWindow) {
           mainWindow.webContents.send('credits-updated', {
             creditBalance: updatedBalance.creditBalance,
@@ -553,7 +551,7 @@ export async function handleStripeSuccess(
   opts: { mode?: CheckoutMode; window?: BrowserWindow | null } = {}
 ): Promise<void> {
   const mode = opts.mode ?? 'credits';
-  const targetWindow = opts.window ?? BrowserWindow.getAllWindows()[0] ?? null;
+  const targetWindow = opts.window ?? getMainWindow();
 
   if (mode === 'byo') {
     try {
@@ -594,10 +592,9 @@ export async function handleStripeSuccess(
     // Refresh the credit balance from the server with retry logic for webhook race conditions
     let response: any = null;
     for (let i = 0; i < 3; i++) {
-      response = await axios.get(
-        `https://api.stage5.tools/credits/${getDeviceId()}`,
-        { headers: { Authorization: `Bearer ${getDeviceId()}` } }
-      );
+      response = await axios.get(`${STAGE5_API_URL}/credits/${getDeviceId()}`, {
+        headers: { Authorization: `Bearer ${getDeviceId()}` },
+      });
       if (response.data?.creditBalance !== undefined) break;
       log.info(
         `[credit-handler] Balance not yet updated, retrying in 2s (attempt ${i + 1}/3)...`
@@ -611,7 +608,7 @@ export async function handleStripeSuccess(
         1,
         Number(process.env.CREDITS_PER_HOUR_OVERRIDE) ||
           Number(response.data?.creditsPerHour) ||
-          18_900
+          CREDITS_PER_AUDIO_HOUR
       );
       const hours = credits / perHour;
       store.set('balanceCredits', credits);

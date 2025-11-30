@@ -130,12 +130,7 @@ const electronAPI = {
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),
-  writeFile: (filePath: string, data: any) =>
-    ipcRenderer.invoke('write-file', filePath, data),
-  readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
   deleteFile: (filePath: string) => ipcRenderer.invoke('delete-file', filePath),
-  getLastSaveDirectory: () => ipcRenderer.invoke('get-last-save-directory'),
-  getAppName: () => ipcRenderer.invoke('get-app-name'),
 
   // ---------------------- Video Processing & Screenshots ----------------------
   processVideo: (options: any) => ipcRenderer.invoke('process-video', options),
@@ -398,17 +393,20 @@ const electronAPI = {
   getEntitlements: (): Promise<{
     byoOpenAi: boolean;
     byoAnthropic: boolean;
+    byoElevenLabs: boolean;
     fetchedAt?: string;
   }> => ipcRenderer.invoke('get-entitlements'),
   refreshEntitlements: (): Promise<{
     byoOpenAi: boolean;
     byoAnthropic: boolean;
+    byoElevenLabs: boolean;
     fetchedAt?: string;
   }> => ipcRenderer.invoke('refresh-entitlements'),
   onEntitlementsUpdated: (
     callback: (snapshot: {
       byoOpenAi: boolean;
       byoAnthropic: boolean;
+      byoElevenLabs: boolean;
       fetchedAt?: string;
     }) => void
   ) => {
@@ -430,6 +428,7 @@ const electronAPI = {
     callback: (snapshot: {
       byoOpenAi: boolean;
       byoAnthropic: boolean;
+      byoElevenLabs: boolean;
       fetchedAt?: string;
     }) => void
   ) => {
@@ -463,6 +462,85 @@ const electronAPI = {
     ipcRenderer.on('anthropic-api-key-changed', handler);
     return () =>
       ipcRenderer.removeListener('anthropic-api-key-changed', handler);
+  },
+
+  // ElevenLabs API key functions
+  getElevenLabsApiKey: (): Promise<string | null> =>
+    ipcRenderer.invoke('get-elevenlabs-api-key'),
+  setElevenLabsApiKey: (
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-elevenlabs-api-key', apiKey),
+  clearElevenLabsApiKey: (): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('clear-elevenlabs-api-key'),
+  validateElevenLabsApiKey: (
+    apiKey?: string
+  ): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('validate-elevenlabs-api-key', apiKey),
+  getByoElevenLabsEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-byo-elevenlabs-enabled'),
+  setByoElevenLabsEnabled: (
+    enabled: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-elevenlabs-enabled', enabled),
+
+  // Master BYO toggle
+  getByoMasterEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-byo-master-enabled'),
+  setByoMasterEnabled: (
+    enabled: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-byo-master-enabled', enabled),
+
+  // Claude translation preference
+  getPreferClaudeTranslation: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-prefer-claude-translation'),
+  setPreferClaudeTranslation: (
+    prefer: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-prefer-claude-translation', prefer),
+
+  // Claude review preference
+  getPreferClaudeReview: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-prefer-claude-review'),
+  setPreferClaudeReview: (
+    prefer: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-prefer-claude-review', prefer),
+
+  // Transcription provider preference
+  getPreferredTranscriptionProvider: (): Promise<
+    'elevenlabs' | 'openai' | 'stage5'
+  > => ipcRenderer.invoke('get-preferred-transcription-provider'),
+  setPreferredTranscriptionProvider: (
+    provider: 'elevenlabs' | 'openai' | 'stage5'
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-preferred-transcription-provider', provider),
+
+  // Dubbing provider preference
+  getPreferredDubbingProvider: (): Promise<
+    'elevenlabs' | 'openai' | 'stage5'
+  > => ipcRenderer.invoke('get-preferred-dubbing-provider'),
+  setPreferredDubbingProvider: (
+    provider: 'elevenlabs' | 'openai' | 'stage5'
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-preferred-dubbing-provider', provider),
+
+  // Stage5 dubbing TTS provider (when using Stage5 API)
+  getStage5DubbingTtsProvider: (): Promise<'openai' | 'elevenlabs'> =>
+    ipcRenderer.invoke('get-stage5-dubbing-tts-provider'),
+  setStage5DubbingTtsProvider: (
+    provider: 'openai' | 'elevenlabs'
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-stage5-dubbing-tts-provider', provider),
+
+  onElevenLabsApiKeyChanged: (
+    callback: (payload: { hasKey: boolean }) => void
+  ) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('elevenlabs-api-key-changed', handler);
+    return () =>
+      ipcRenderer.removeListener('elevenlabs-api-key-changed', handler);
   },
 
   // App log channel (network/status messages from main)

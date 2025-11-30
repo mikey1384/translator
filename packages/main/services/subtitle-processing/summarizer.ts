@@ -6,6 +6,7 @@ import type {
   TranscriptSummarySection,
   SummaryEffortLevel,
 } from '@shared-types/app';
+import { getSummaryModelConfig } from '../ai-provider.js';
 import { AI_MODELS } from '@shared/constants';
 
 interface GenerateTranscriptSummaryOptions {
@@ -33,6 +34,7 @@ interface SelectTranscriptHighlightsOptions {
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
   startPercent?: number;
   endPercent?: number;
+  effortLevel?: SummaryEffortLevel;
 }
 
 const MAX_CHARS_PER_CHUNK = 7_500;
@@ -138,10 +140,10 @@ export async function generateTranscriptSummary({
 
   const languageName = formatLanguage(targetLanguage);
 
-  // Determine model and reasoning based on effort level
-  const useHighEffort = effortLevel === 'high';
-  const model = useHighEffort ? AI_MODELS.CLAUDE_OPUS : AI_MODELS.GPT;
-  const reasoning = useHighEffort ? { effort: 'high' as const } : undefined;
+  // Get model configuration based on effort level and BYO settings
+  const modelConfig = getSummaryModelConfig(effortLevel);
+  const model = modelConfig.model;
+  const reasoning = modelConfig.reasoning;
 
   progressCallback?.({ percent: 5, stage: 'Preparing transcript slices' });
 
@@ -353,6 +355,7 @@ export async function selectTranscriptHighlights({
   progressCallback,
   startPercent,
   endPercent,
+  effortLevel = 'standard',
 }: SelectTranscriptHighlightsOptions): Promise<TranscriptHighlight[]> {
   if (!Array.isArray(segments) || segments.length === 0) {
     throw new Error('No transcript segments provided for highlight selection');
@@ -374,6 +377,11 @@ export async function selectTranscriptHighlights({
   if (chunks.length === 0) {
     throw new Error('Transcript is empty after chunking');
   }
+
+  // Get model configuration based on effort level
+  const modelConfig = getSummaryModelConfig(effortLevel);
+  const model = modelConfig.model;
+  const reasoning = modelConfig.reasoning;
 
   const selectionStart = Number.isFinite(startPercent ?? null)
     ? Number(startPercent)
@@ -413,6 +421,8 @@ export async function selectTranscriptHighlights({
       progressCallback,
       startPercent: mapPercent(10),
       endPercent: mapPercent(55),
+      model,
+      reasoning,
     });
   }
 
@@ -458,6 +468,8 @@ export async function selectTranscriptHighlights({
         languageName,
         signal,
         operationId,
+        model,
+        reasoning,
       });
     } catch (err) {
       console.warn(
@@ -543,6 +555,8 @@ async function summarizeChunksForHighlights({
   progressCallback,
   startPercent,
   endPercent,
+  model,
+  reasoning,
 }: {
   chunks: ChunkPayload[];
   languageName: string;
@@ -551,6 +565,8 @@ async function summarizeChunksForHighlights({
   progressCallback?: (progress: TranscriptSummaryProgress) => void;
   startPercent: number;
   endPercent: number;
+  model?: string;
+  reasoning?: { effort: 'low' | 'medium' | 'high' };
 }): Promise<string[]> {
   const summaries: string[] = [];
   if (!Array.isArray(chunks) || chunks.length === 0) {
@@ -581,6 +597,8 @@ async function summarizeChunksForHighlights({
       languageName,
       signal,
       operationId,
+      model,
+      reasoning,
     });
     summaries.push(summary.trim());
 

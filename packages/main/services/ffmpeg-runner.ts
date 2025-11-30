@@ -373,12 +373,12 @@ export async function createFFmpegContext(
         ffprobePath,
         [
           '-v',
-      'error',
-      '-show_entries',
-      'stream=index,codec_type,width,height,r_frame_rate,tags=rotate,side_data_list:format=duration',
-      '-of',
-      'json',
-      file,
+          'error',
+          '-show_entries',
+          'stream=index,codec_type,width,height,r_frame_rate,tags=rotate,side_data_list:format=duration',
+          '-of',
+          'json',
+          file,
         ],
         { windowsHide: true }
       );
@@ -405,7 +405,7 @@ export async function createFFmpegContext(
               0
           );
           const normalizedRotation =
-            ((Number.isFinite(rotationTag) ? rotationTag : 0) % 360 + 360) %
+            (((Number.isFinite(rotationTag) ? rotationTag : 0) % 360) + 360) %
             360;
           const isQuarterTurn =
             normalizedRotation === 90 || normalizedRotation === 270;

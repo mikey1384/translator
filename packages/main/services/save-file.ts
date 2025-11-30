@@ -1,7 +1,8 @@
-import { BrowserWindow, dialog, app } from 'electron';
+import { dialog, app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { esmDirname } from '@shared/esm-paths';
+import { getFocusedOrMainWindow } from '../utils/window.js';
 
 const SETTINGS_FILE_NAME = 'save-settings.json';
 let settingsFilePath: string | null = null;
@@ -140,8 +141,7 @@ export class SaveFileService {
           '[saveFile] Save dialog requested. ForceDialog:',
           forceDialog
         );
-        const window =
-          BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+        const window = getFocusedOrMainWindow();
         if (!window) {
           throw new SaveFileError(
             'No application window available to show save dialog.'

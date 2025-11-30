@@ -2,6 +2,7 @@ import { GenerateProgressCallback, SrtSegment } from '@shared-types/app';
 import log from 'electron-log';
 import { scaleProgress, Stage } from './progress.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
+import { ERROR_CODES } from '../../../../shared/constants/index.js';
 import { translateBatch } from '../translator.js';
 import { throwIfAborted } from '../utils.js';
 
@@ -97,17 +98,17 @@ export async function translatePass({
         throw err;
       }
       const msg = String(err?.message || err || '');
-      if (/insufficient-credits/i.test(msg)) {
+      if (msg.includes(ERROR_CODES.INSUFFICIENT_CREDITS)) {
         aborted = true;
         log.info(`[${operationId}] translate batch aborted (credits)`);
         throw err;
       }
       // Handle API key and rate limit errors for both OpenAI and Anthropic
       if (
-        msg === 'openai-key-invalid' ||
-        msg === 'openai-rate-limit' ||
-        msg === 'anthropic-key-invalid' ||
-        msg === 'anthropic-rate-limit'
+        msg === ERROR_CODES.OPENAI_KEY_INVALID ||
+        msg === ERROR_CODES.OPENAI_RATE_LIMIT ||
+        msg === ERROR_CODES.ANTHROPIC_KEY_INVALID ||
+        msg === ERROR_CODES.ANTHROPIC_RATE_LIMIT
       ) {
         aborted = true;
         log.info(`[${operationId}] translate batch aborted (${msg})`);

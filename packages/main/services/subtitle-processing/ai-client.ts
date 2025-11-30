@@ -2,7 +2,7 @@ import { SubtitleProcessingError } from './errors.js';
 import fs from 'fs';
 import { translate as translateAi, getActiveProvider } from '../ai-provider.js';
 import log from 'electron-log';
-import { AI_MODELS } from '../../../shared/constants/index.js';
+import { AI_MODELS, ERROR_CODES } from '../../../shared/constants/index.js';
 
 function extractContentFromCompletion(completion: any): string | null {
   if (!completion) {
@@ -212,10 +212,10 @@ export async function callAIModel({
       }
 
       // Handle specific error cases
-      if (error?.message === 'insufficient-credits') {
+      if (error?.message === ERROR_CODES.INSUFFICIENT_CREDITS) {
         // Preserve the specific error so the renderer can show a credit-ran-out modal,
         // while the main handler still treats it as a cancellation for UX.
-        throw new Error('insufficient-credits');
+        throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
       }
 
       throw new Error(

@@ -20,6 +20,7 @@ export interface OpenAiTranslateOptions {
   model?: string;
   apiKey: string;
   signal?: AbortSignal;
+  reasoning?: { effort?: 'low' | 'medium' | 'high' };
 }
 
 export interface OpenAiDubOptions {
@@ -91,11 +92,19 @@ export async function translateWithOpenAi({
   model = AI_MODELS.GPT,
   apiKey,
   signal,
+  reasoning,
 }: OpenAiTranslateOptions): Promise<any> {
   const payload: Record<string, any> = {
     model,
     messages,
   };
+
+  // Add reasoning_effort for models that support it (e.g., GPT-5.1)
+  // Chat Completions API uses flat `reasoning_effort` parameter, not nested object
+  if (reasoning?.effort) {
+    payload.reasoning_effort = reasoning.effort;
+    log.debug(`[openai-client] Using reasoning_effort: ${reasoning.effort}`);
+  }
 
   const response = await axios.post(
     `${OPENAI_BASE_URL}/chat/completions`,

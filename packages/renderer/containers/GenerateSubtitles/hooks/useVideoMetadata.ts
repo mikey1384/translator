@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as SystemIPC from '../../../ipc/system';
 
-const MAX_METADATA_ATTEMPTS = 300;
+// Max retry attempts for metadata fetching (with 5s delay cap = ~5 minutes max wait)
+const MAX_METADATA_ATTEMPTS = 60;
 
 type MetadataStatus = 'idle' | 'fetching' | 'waiting' | 'success' | 'failed';
 

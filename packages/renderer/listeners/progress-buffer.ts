@@ -1,4 +1,5 @@
 import { parseSrt } from '../../shared/helpers';
+import { ERROR_CODES } from '../../shared/constants';
 import * as SubtitlesIPC from '@ipc/subtitles';
 import { useTaskStore } from '../state/task-store';
 import { useSubStore } from '../state/subtitle-store';
@@ -36,15 +37,20 @@ function flush() {
       batchStartIndex,
       partialResult,
       error,
+      model,
     } = queued as any;
     const stageLower = (stage ?? '').toLowerCase();
 
     // If we detect credits exhaustion, trigger the global modal once
-    if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
+    if (
+      typeof error === 'string' &&
+      error.includes(ERROR_CODES.INSUFFICIENT_CREDITS)
+    ) {
       try {
         const s = useAiStore.getState();
         const usingApiKey = Boolean(
-          s.useByo &&
+          s.useByoMaster &&
+            s.useByo &&
             s.byoUnlocked &&
             (s.keyPresent || (s.keyValue || '').trim())
         );
@@ -138,6 +144,7 @@ function flush() {
         percent,
         id: operationId ?? null,
         batchStartIndex,
+        model,
       });
       // Log phase changes (stage string transitions)
       if (stage && operationId && lastTranslate.stage !== stage) {
@@ -357,8 +364,12 @@ SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
     const operationId =
       typeof progress?.operationId === 'string' ? progress.operationId : null;
     const error = (progress as any)?.error as string | undefined;
+    const model = (progress as any)?.model as string | undefined;
 
-    if (typeof error === 'string' && /insufficient-credits/i.test(error)) {
+    if (
+      typeof error === 'string' &&
+      error.includes(ERROR_CODES.INSUFFICIENT_CREDITS)
+    ) {
       try {
         openCreditRanOut();
       } catch {
@@ -370,6 +381,7 @@ SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
       stage,
       percent,
       id: operationId,
+      model,
     });
 
     const lower = stage.toLowerCase();

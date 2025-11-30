@@ -1,4 +1,4 @@
-import { BrowserWindow, IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent } from 'electron';
 import { processVideoUrl } from '../services/url-processor/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log';
@@ -14,6 +14,7 @@ import {
   cancelSafely,
 } from '../active-processes.js';
 import { forceKillWindows } from '../utils/process-killer.js';
+import { getMainWindow } from '../utils/window.js';
 
 interface UrlHandlerServices {
   fileManager: FileManager;
@@ -62,7 +63,7 @@ export async function handleProcessUrl(
   _event: IpcMainInvokeEvent,
   options: ProcessUrlOptions
 ): Promise<ProcessUrlResult> {
-  const mainWindow = BrowserWindow.getAllWindows()[0];
+  const mainWindow = getMainWindow();
   const operationId = options.operationId || uuidv4();
   log.info(
     `[url-handler] Starting process for URL: ${options.url}, Effective Operation ID used: ${operationId}`
