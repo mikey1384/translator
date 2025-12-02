@@ -12,6 +12,8 @@
     "backToApp": "Zurück zur App",
     "next": "Weiter",
     "done": "Fertig",
+    "gotIt": "Verstanden",
+    "close": "Schließen",
     "loading": "Wird geladen...",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten.",
@@ -202,8 +204,51 @@
       },
       "qualityTranslation": {
         "label": "Hochwertige Übersetzung",
-        "help": "Ein: umfasst eine Prüffase (ca. 5× mehr Credits/Zeit). Aus: überspringt die Prüfung."
+        "help": "Ein: umfasst eine Prüfphase (~5× mehr Credits/Zeit). Aus: überspringt die Prüfung.",
+        "helpWithEstimate": "Prüfung verwendet ~5× mehr Credits. Ihre Credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+      },
+      "qualitySummary": {
+        "label": "Hochwertige Zusammenfassung",
+        "help": "Ein: Tiefenanalyse + Highlight-Clips mit Claude Opus (~4× Credits). Aus: Schnell mit GPT-5.1.",
+        "helpWithEstimate": "Tiefenanalyse + Highlight-Clips (~4× Credits). Ihre Credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+      },
+      "qualityDubbing": {
+        "label": "Hochwertige Synchronisation",
+        "help": "Ein: ElevenLabs TTS (Premium-Stimmen, ~13× Credits). Aus: OpenAI TTS (gute Qualität).",
+        "helpWithEstimate": "ElevenLabs TTS (~13× Credits). Ihre Credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
       }
+    },
+    "byoMaster": {
+      "toggleLabel": "Meine API-Schlüssel verwenden",
+      "keysActive": "{{count}} Schlüssel aktiv"
+    },
+    "preferClaude": {
+      "forTranslation": {
+        "label": "Claude für Übersetzung bevorzugen",
+        "help": "Entwurf: GPT-5.1 → Prüfung: Opus 4.5"
+      },
+      "forReview": {
+        "label": "Claude für Prüfung bevorzugen",
+        "help": "Prüfung: Claude Opus 4.5"
+      }
+    },
+    "transcriptionProvider": {
+      "label": "Transkriptionsanbieter",
+      "elevenlabs": "ElevenLabs Scribe",
+      "elevenlabsHint": "Beste Qualität, nutzt ElevenLabs-Schlüssel",
+      "openai": "OpenAI Whisper",
+      "openaiHint": "Schnell und präzise, nutzt OpenAI-Schlüssel",
+      "stage5": "Stage5 (Guthaben)",
+      "stage5Hint": "Nutzt Stage5 KI-Guthaben"
+    },
+    "dubbingProvider": {
+      "label": "Synchronisationsanbieter",
+      "elevenlabs": "ElevenLabs (Stimmklonen)",
+      "elevenlabsHint": "Behält die Stimme des Originalsprechers bei",
+      "openai": "OpenAI TTS",
+      "openaiHint": "Nutzt synthetische Stimmen (alloy, echo, usw.)",
+      "stage5": "Stage5 (Guthaben)",
+      "stage5Hint": "Nutzt Stage5 KI-Guthaben"
     },
     "dubbing": {
       "voiceLabel": "Synchronstimme",
@@ -214,12 +259,34 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "Diese Stimme vorhören",
+      "previewing": "Wird abgespielt...",
+      "previewFree": "Vorhören",
+      "previewWithCost": "Vorhören ({{cost}} Credits)",
       "mixLabel": "Synchronstimme-Lautstärke vs Originalvideolautstärke",
       "mixHelp": "Steuern Sie, wie viel der Original-Tonspur unter der synchronisierten Stimme zu hören ist.",
       "mixAmbient": "Mehr Umgebungsgeräusch",
-      "mixVoice": "Mehr Stimme"
+      "mixVoice": "Mehr Stimme",
+      "voiceCloning": "Originalstimme klonen",
+      "voiceCloningDesc": "Die Originalstimme des Sprechers im synchronisierten Audio beibehalten",
+      "voiceCloningEnabled": "Stimmklonen ist mit ElevenLabs aktiviert. Die Originalstimme des Sprechers wird im synchronisierten Audio erhalten.",
+      "voiceCloningInfo": "Das Stimmklonen verwendet die ElevenLabs Dubbing API, um die Originalstimme des Sprechers zu analysieren und nachzubilden.",
+      "costPerMinute": "Kosten pro Minute",
+      "credits": "Credits",
+      "yourBalance": "Ihr Guthaben",
+      "canClone": "Sie können klonen",
+      "upToMinutes": "bis zu {{minutes}} Min",
+      "loading": "Laden..."
     },
     "byoOpenAi": {
       "title": "Eigene API-Schlüssel verwenden",
@@ -246,7 +313,43 @@
       "toggleAria": "Verwendung Ihres OpenAI-Schlüssels umschalten",
       "toggleOn": "Ihr OpenAI-Schlüssel wird für KI-Aufgaben verwendet.",
       "toggleOff": "Stage5-Guthaben wird für KI-Aufgaben verwendet.",
-      "toggleError": "Einstellung konnte nicht aktualisiert werden."
+      "toggleError": "Einstellung konnte nicht aktualisiert werden.",
+      "howToGetKeys": "Wie bekomme ich API-Schlüssel?"
+    },
+    "apiKeyGuide": {
+      "title": "So erhalten Sie API-Schlüssel",
+      "required": "Erforderlich",
+      "optional": "Optional",
+      "openai": {
+        "description": "OpenAI betreibt Transkription (Whisper), Übersetzung (GPT) und Text-zu-Sprache-Vertonung.",
+        "step1": "Gehen Sie zu",
+        "step2": "Registrieren Sie sich oder melden Sie sich an",
+        "step3": "Navigieren Sie zu",
+        "step3b": "in der linken Seitenleiste",
+        "step4": "Klicken Sie auf",
+        "step5": "Fügen Sie eine Zahlungsmethode in den Abrechnungseinstellungen hinzu (erforderlich für API-Nutzung)",
+        "step6": "Kopieren Sie den Schlüssel (beginnt mit sk-) und fügen Sie ihn in Stage5 ein",
+        "note": "Tipp: Neue OpenAI-Konten erhalten oft Startguthaben. Sie zahlen nur für das, was Sie nutzen."
+      },
+      "anthropic": {
+        "description": "Claude bietet hochwertigere Übersetzungsüberprüfungen. Ohne Claude übernimmt GPT alle Übersetzungsaufgaben.",
+        "step1": "Gehen Sie zu",
+        "step2": "Registrieren Sie sich oder melden Sie sich an",
+        "step3": "Gehen Sie zu",
+        "step3b": "in den Einstellungen",
+        "step4": "Klicken Sie auf",
+        "step5": "Fügen Sie eine Zahlungsmethode in Pläne & Abrechnung hinzu (erforderlich für API-Nutzung)",
+        "step6": "Kopieren Sie den Schlüssel (beginnt mit sk-ant-) und fügen Sie ihn in Stage5 ein",
+        "note": "Tipp: Anthropic bietet nutzungsbasierte Preise. Sie zahlen nur für das, was Sie nutzen."
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs bietet Premium-Transkription und Vertonung mit Stimmklonung. Ohne ElevenLabs übernimmt OpenAI diese Aufgaben.",
+        "step1": "Gehen Sie zu",
+        "step2": "Registrieren Sie sich oder melden Sie sich an",
+        "step3": "Klicken Sie auf Ihr Profilsymbol und wählen Sie",
+        "step4": "Kopieren Sie Ihren API-Schlüssel und fügen Sie ihn in Stage5 ein",
+        "note": "Tipp: ElevenLabs hat eine kostenlose Stufe mit begrenzter Nutzung. Für mehr upgraden Sie auf einen kostenpflichtigen Plan."
+      }
     },
     "byoAnthropic": {
       "title": "Anthropic API-Schlüssel (Optional)",
@@ -278,6 +381,31 @@
       "elevenlabs": "Premium (ElevenLabs)",
       "elevenlabsHint": "Beste Qualität, höhere Kosten (~13×)",
       "elevenlabsHintWithBalance": "Beste Qualität · Ihr Guthaben: {{time}} Synchronisation"
+    },
+    "byoElevenLabs": {
+      "title": "ElevenLabs API-Schlüssel (Optional)",
+      "description": "Fügen Sie Ihren ElevenLabs API-Schlüssel hinzu, um hochwertige Transkription (Scribe) und Synchronisation (TTS) zu verwenden. Ohne diesen Schlüssel werden Transkription und Synchronisation OpenAI-Dienste verwenden.",
+      "apiKeyLabel": "ElevenLabs API-Schlüssel",
+      "hide": "Verbergen",
+      "show": "Anzeigen",
+      "saving": "Speichern…",
+      "clear": "Schlüssel löschen",
+      "loadingKey": "Gespeicherten ElevenLabs-Schlüssel laden…",
+      "keySaved": "ElevenLabs API-Schlüssel gespeichert.",
+      "keyCleared": "ElevenLabs API-Schlüssel gelöscht.",
+      "keyValid": "ElevenLabs API-Schlüssel erfolgreich validiert.",
+      "keyInvalid": "Validierung des ElevenLabs API-Schlüssels fehlgeschlagen.",
+      "testing": "Testen…",
+      "test": "Schlüssel testen",
+      "toggleLabel": "Meinen ElevenLabs-Schlüssel verwenden",
+      "toggleHelp": "Wenn deaktiviert, verwenden Transkription und Synchronisation Stage5-Guthaben.",
+      "toggleAria": "Verwendung Ihres ElevenLabs-Schlüssels umschalten",
+      "toggleOn": "Ihr ElevenLabs-Schlüssel wird verwendet.",
+      "toggleOff": "Stage5-Guthaben wird für ElevenLabs-Dienste verwendet.",
+      "toggleError": "ElevenLabs-Einstellung konnte nicht aktualisiert werden."
+    },
+    "voiceCloning": {
+      "enabled": "ElevenLabs Stimmklonen aktiviert. Synchronisiertes Audio behält die Stimme des Originalsprechers bei."
     }
   },
   "credits": {
@@ -285,6 +413,9 @@
     "loading": "Lädt...",
     "credits": "Credits",
     "usingApiKey": "API‑Schlüssel wird verwendet",
+    "usingOpenAi": "Nutzt OpenAI",
+    "usingAnthropic": "Nutzt Claude",
+    "usingElevenLabs": "Nutzt ElevenLabs",
     "hours": "Stunden",
     "buyCredits": "Credits kaufen",
     "redirectingToPayment": "Sichere Zahlung öffnen…",

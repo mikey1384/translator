@@ -21,8 +21,12 @@ export async function runFullSrtTranslation(options: TranslateAllOptions = {}) {
         useUrlStore
           .getState()
           .setError('No SRT file available for translation');
-      } catch {
-        // No URL store in this context; swallow.
+      } catch (err) {
+        // URL store may not be available in all contexts (e.g., direct API calls)
+        console.debug(
+          '[runFullTranslation] Could not set error on URL store:',
+          err
+        );
       }
     }
     return { success: false, reason: 'no_subtitles' as const };

@@ -3,6 +3,7 @@ import fs from 'fs';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
+import { API_TIMEOUTS } from '../../shared/constants/index.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
 
@@ -17,6 +18,7 @@ export const ELEVENLABS_VOICES = {
   dave: 'CYw3kZ02Hs0563khs1Fj', // British, young, conversational
   fin: 'D38z5RcWu1voky8WS1ja', // Irish, old, sailor
   sarah: 'EXAVITQu4vr4xnSDxMaL', // American, young, soft
+  bella: 'EXAVITQu4vr4xnSDxMaL', // Alias for sarah (same voice)
   antoni: 'ErXwobaYiN019PkySvjV', // American, young, well-rounded
   thomas: 'GBv7mTt0atIp3Br8iCZE', // American, young, calm
   charlie: 'IKne3meq5aSn9XLyUdCD', // Australian, middle-aged, casual
@@ -32,6 +34,7 @@ export const ELEVENLABS_VOICES = {
   arnold: 'VR6AewLTigWG4xSOukaG', // American, middle-aged, crisp
   charlotte: 'XB0fDUnXU5powFXDhCwa', // Swedish, middle-aged, seductive
   matilda: 'XrExE9yKIg1WjnnlVkGX', // American, middle-aged, warm
+  brian: 'nPczCjzI2devNBz1zQrb', // American, middle-aged, deep
   matthew: 'Yko7PKs6WkxO6YstNECE', // British, middle-aged, audiobook
   james: 'ZQe5CZNOzWyzPSCn5a3c', // Australian, old, calm
   joseph: 'Zlb1dXrM653N07WRdFW3', // British, middle-aged, ground reporter
@@ -498,8 +501,11 @@ export async function dubWithElevenLabs({
   onProgress?.('Processing audio...', 10);
 
   // Step 2: Poll for completion
-  const pollInterval = 5000; // 5 seconds
-  const maxWait = Math.max(600_000, expectedDurationSec * 3000); // At least 10 min or 3x expected
+  const pollInterval = API_TIMEOUTS.VOICE_CLONING_POLL_INTERVAL;
+  const maxWait = Math.max(
+    API_TIMEOUTS.VOICE_CLONING_BASE_MAX_WAIT,
+    expectedDurationSec * 3000
+  ); // At least 10 min or 3x expected
   const startTime = Date.now();
   let lastStatus: string = 'dubbing';
 

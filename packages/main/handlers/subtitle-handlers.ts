@@ -36,6 +36,7 @@ import { transcribePass } from '../services/subtitle-processing/pipeline/transcr
 import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 import { generateDubbedMedia } from '../services/dubber.js';
 import { synthesizeDub as synthesizeDubAi } from '../services/ai-provider.js';
+import { voiceCloneDub } from '../services/stage5-client.js';
 import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
@@ -63,6 +64,32 @@ export function initializeSubtitleHandlers(
   fileManagerInstance = services.fileManager;
 
   log.info('[handlers/subtitle-handlers.ts] Initialized!');
+}
+
+/**
+ * Delete a temp file with retry logic for locked files (common on Windows).
+ * Silently succeeds if file doesn't exist.
+ */
+async function safeDeleteTempFile(
+  filePath: string,
+  retries = 3,
+  delayMs = 100
+): Promise<void> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      await fs.unlink(filePath);
+      return; // Success
+    } catch (err: any) {
+      if (err.code === 'ENOENT') return; // File already gone
+      if (attempt < retries - 1) {
+        await new Promise(r => setTimeout(r, delayMs * (attempt + 1)));
+      } else {
+        log.warn(
+          `[safeDeleteTempFile] Failed to delete ${filePath} after ${retries} attempts: ${err.message}`
+        );
+      }
+    }
+  }
 }
 
 function checkServicesInitialized(): {
@@ -276,8 +303,10 @@ export async function handleTranslateSubtitles(
             : error?.message || String(error),
         operationId,
       });
-    } catch {
-      // Do nothing
+    } catch (cbErr: any) {
+      log.debug(
+        `[${operationId}] Progress callback failed: ${cbErr?.message || cbErr}`
+      );
     }
     return {
       success: !isCancel,
@@ -351,6 +380,105 @@ export async function handleDubSubtitles(
   };
 
   try {
+    // Voice cloning path: use ElevenLabs Dubbing API for full workflow
+    // Requires a real target language (not 'original') for translation
+    if (
+      options.useVoiceCloning &&
+      options.targetLanguage &&
+      options.targetLanguage !== 'original'
+    ) {
+      progressCallback({
+        percent: 5,
+        stage: 'Preparing voice cloning...',
+        operationId,
+      });
+
+      if (!options.videoDurationSeconds || options.videoDurationSeconds <= 0) {
+        throw new Error('Video duration is required for voice cloning');
+      }
+
+      const videoFileName = path.basename(normalizedVideoPath);
+      const videoExt = path.extname(normalizedVideoPath).toLowerCase();
+      const mimeType =
+        videoExt === '.mp4'
+          ? 'video/mp4'
+          : videoExt === '.webm'
+            ? 'video/webm'
+            : videoExt === '.mov'
+              ? 'video/quicktime'
+              : 'video/mp4';
+
+      progressCallback({
+        percent: 10,
+        stage: 'Uploading for voice cloning...',
+        operationId,
+      });
+
+      const voiceCloningResult = await voiceCloneDub({
+        file: {
+          path: normalizedVideoPath,
+          name: videoFileName,
+          type: mimeType,
+        },
+        targetLanguage: options.targetLanguage,
+        sourceLanguage: options.sourceLanguage,
+        durationSeconds: options.videoDurationSeconds,
+        dropBackgroundAudio: false, // Keep original background audio
+        onProgress: (status, percent) => {
+          progressCallback({
+            percent: 10 + Math.round(percent * 0.8), // Scale 0-100 to 10-90
+            stage: status,
+            operationId,
+          });
+        },
+        signal: controller.signal,
+      });
+
+      progressCallback({
+        percent: 92,
+        stage: 'Saving dubbed audio...',
+        operationId,
+      });
+
+      // Save the returned audio to a temp file
+      const audioBuffer = Buffer.from(voiceCloningResult.audioBase64, 'base64');
+      const audioExt = voiceCloningResult.format || 'mp3';
+      const audioPath = fileManager.getTempPath(
+        `voice-clone-${operationId}.${audioExt}`
+      );
+      await fs.writeFile(audioPath, audioBuffer);
+
+      progressCallback({
+        percent: 95,
+        stage: 'Merging with video...',
+        operationId,
+      });
+
+      // Mux the dubbed audio with the original video
+      const outputVideoPath = fileManager.getTempPath(
+        `dubbed-${operationId}.mp4`
+      );
+      await ffmpeg.muxAudioIntoVideo(
+        audioPath,
+        normalizedVideoPath,
+        outputVideoPath
+      );
+
+      progressCallback({
+        percent: 100,
+        stage: 'Voice cloning complete',
+        operationId,
+      });
+
+      return {
+        success: true,
+        audioPath,
+        videoPath: outputVideoPath,
+        operationId,
+      };
+    }
+
+    // Standard TTS dubbing path
     progressCallback({
       percent: 10,
       stage: 'Detecting speech segments...',
@@ -1214,8 +1342,10 @@ export async function handleTranslateOneLine(
             : error?.message || String(error),
         operationId,
       });
-    } catch {
-      // Do nothing
+    } catch (cbErr: any) {
+      log.debug(
+        `[${operationId}] Progress callback failed: ${cbErr?.message || cbErr}`
+      );
     }
     return {
       success: !isCancel,
@@ -1347,8 +1477,10 @@ export async function handleTranscribeOneLine(
             : error?.message || String(error),
         operationId,
       });
-    } catch {
-      // Do nothing
+    } catch (cbErr: any) {
+      log.debug(
+        `[${operationId}] Progress callback failed: ${cbErr?.message || cbErr}`
+      );
     }
     return {
       success: !isCancel,
@@ -1358,11 +1490,7 @@ export async function handleTranscribeOneLine(
     };
   } finally {
     if (tempAudioPath) {
-      try {
-        await fs.unlink(tempAudioPath);
-      } catch {
-        // Do nothing
-      }
+      await safeDeleteTempFile(tempAudioPath);
     }
     registryFinish(operationId);
   }
@@ -1487,8 +1615,10 @@ export async function handleTranscribeRemaining(
             : error?.message || String(error),
         operationId,
       });
-    } catch {
-      // Do nothing
+    } catch (cbErr: any) {
+      log.debug(
+        `[${operationId}] Progress callback failed: ${cbErr?.message || cbErr}`
+      );
     }
     return {
       success: !isCancel,
@@ -1498,11 +1628,7 @@ export async function handleTranscribeRemaining(
     };
   } finally {
     if (tempAudioPath) {
-      try {
-        await fs.unlink(tempAudioPath);
-      } catch {
-        // Do nothing
-      }
+      await safeDeleteTempFile(tempAudioPath);
     }
     registryFinish(operationId);
   }

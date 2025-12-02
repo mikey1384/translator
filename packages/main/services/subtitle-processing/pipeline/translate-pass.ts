@@ -21,6 +21,12 @@ export async function translatePass({
   qualityTranslation: boolean;
   signal: AbortSignal;
 }) {
+  // Guard against empty or missing segments
+  if (!segments || segments.length === 0) {
+    log.warn(`[${operationId}] translatePass called with empty segments`);
+    return [];
+  }
+
   if (targetLang === 'original') {
     // Explicitly mark translation as skipped to keep UI progress accurate
     try {

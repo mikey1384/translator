@@ -5,8 +5,14 @@ import axios from 'axios';
 import log from 'electron-log';
 import { v4 as uuidv4 } from 'uuid';
 import { syncEntitlements } from '../services/entitlements-manager.js';
-import { STAGE5_API_URL } from '../services/stage5-client.js';
-import { CREDITS_PER_AUDIO_HOUR } from '../../shared/constants/index.js';
+import {
+  STAGE5_API_URL,
+  getVoiceCloningPricing,
+} from '../services/stage5-client.js';
+import {
+  CREDITS_PER_AUDIO_HOUR,
+  API_TIMEOUTS,
+} from '../../shared/constants/index.js';
 import { getMainWindow } from '../utils/window.js';
 
 // Generate or retrieve device ID using proper UUID v4
@@ -296,7 +302,7 @@ async function openStripeCheckout(
   options: StripeCheckoutOptions
 ): Promise<void> {
   return new Promise(resolve => {
-    const parent = getMainWindow();
+    const parent = getMainWindow() ?? undefined;
     const win = new BrowserWindow({
       width: 800,
       height: 1000,
@@ -590,16 +596,38 @@ export async function handleStripeSuccess(
     log.info(`[credit-handler] Processing successful payment: ${sessionId}`);
 
     // Refresh the credit balance from the server with retry logic for webhook race conditions
+    const maxRetries = API_TIMEOUTS.CREDIT_REFRESH_MAX_RETRIES;
+    const retryDelay = API_TIMEOUTS.CREDIT_REFRESH_RETRY_DELAY;
     let response: any = null;
-    for (let i = 0; i < 3; i++) {
-      response = await axios.get(`${STAGE5_API_URL}/credits/${getDeviceId()}`, {
-        headers: { Authorization: `Bearer ${getDeviceId()}` },
-      });
-      if (response.data?.creditBalance !== undefined) break;
-      log.info(
-        `[credit-handler] Balance not yet updated, retrying in 2s (attempt ${i + 1}/3)...`
-      );
-      await new Promise(r => setTimeout(r, 2_000)); // wait 2 seconds
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        response = await axios.get(
+          `${STAGE5_API_URL}/credits/${getDeviceId()}`,
+          {
+            headers: { Authorization: `Bearer ${getDeviceId()}` },
+          }
+        );
+        if (response.data?.creditBalance !== undefined) break;
+        log.info(
+          `[credit-handler] Balance not yet updated, retrying in ${retryDelay / 1000}s (attempt ${i + 1}/${maxRetries})...`
+        );
+        await new Promise(r => setTimeout(r, retryDelay));
+      } catch (retryErr: any) {
+        // Fail fast on non-retryable errors (auth failures, not found)
+        const status = retryErr?.response?.status;
+        if (status === 401 || status === 403 || status === 404) {
+          log.error(
+            `[credit-handler] Non-retryable error (${status}), aborting refresh`
+          );
+          throw retryErr;
+        }
+        // For other errors (network issues, 5xx), continue retrying
+        if (i === maxRetries - 1) throw retryErr; // Last attempt, propagate error
+        log.warn(
+          `[credit-handler] Refresh error, retrying in ${retryDelay / 1000}s (attempt ${i + 1}/${maxRetries}): ${retryErr.message}`
+        );
+        await new Promise(r => setTimeout(r, retryDelay));
+      }
     }
 
     if (response?.data && typeof response.data.creditBalance === 'number') {
@@ -627,5 +655,25 @@ export async function handleStripeSuccess(
     }
   } catch (error) {
     log.error('[credit-handler] Error refreshing credit balance:', error);
+  }
+}
+
+/**
+ * Get voice cloning pricing from the API
+ * Returns credits per minute for voice cloning operations
+ */
+export async function handleGetVoiceCloningPricing(): Promise<{
+  creditsPerMinute: number;
+  description: string;
+}> {
+  try {
+    return await getVoiceCloningPricing();
+  } catch (err) {
+    log.error('[credit-handler] Failed to get voice cloning pricing:', err);
+    // Return fallback pricing
+    return {
+      creditsPerMinute: 35000,
+      description: 'Voice cloning uses ElevenLabs Dubbing API',
+    };
   }
 }

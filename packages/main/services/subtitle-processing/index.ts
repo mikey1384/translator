@@ -266,8 +266,10 @@ export async function translateSubtitlesFromSrt({
         const nextEnd = Math.min(done + BATCH, total);
         emitRangeStage(nextStart, nextEnd, done, true);
       }
-    } catch {
-      // If review fails (network, etc.), continue with translatedSegments
+    } catch (reviewErr: any) {
+      log.warn(
+        `[translateSubtitles] Review pass failed, continuing with base translation: ${reviewErr?.message || reviewErr}`
+      );
     }
   }
 

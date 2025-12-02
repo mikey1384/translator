@@ -21,7 +21,7 @@ function createStyleElement(options) {
   tag.setAttribute("data-s", "");
   return tag;
 }
-var StyleSheet = /* @__PURE__ */ function() {
+var StyleSheet = /* @__PURE__ */ (function() {
   function StyleSheet2(options) {
     var _this = this;
     this._insertTag = function(tag) {
@@ -79,7 +79,7 @@ var StyleSheet = /* @__PURE__ */ function() {
     this.ctr = 0;
   };
   return StyleSheet2;
-}();
+})();
 
 // ../../node_modules/stylis/src/Enum.js
 var MS = "-ms-";

@@ -48,6 +48,7 @@ import {
   handleResetCreditsToZero,
   handleStripeSuccess,
   handleCreateByoUnlockSession,
+  handleGetVoiceCloningPricing,
   getDeviceId,
 } from './handlers/credit-handlers.js';
 import {
@@ -82,8 +83,10 @@ const settingsStore = new Store<{
   useByoElevenLabs: boolean;
   useByoMaster: boolean;
   preferClaudeTranslation: boolean;
+  preferClaudeReview: boolean;
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
+  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
   preferredCookiesBrowser?: string;
 }>({
   name: 'app-settings',
@@ -102,8 +105,10 @@ const settingsStore = new Store<{
     useByoElevenLabs: false,
     useByoMaster: true, // Default true for backwards compatibility
     preferClaudeTranslation: false,
+    preferClaudeReview: true, // Default true for higher quality
     preferredTranscriptionProvider: 'elevenlabs',
     preferredDubbingProvider: 'elevenlabs',
+    stage5DubbingTtsProvider: 'openai', // Default to OpenAI for cost efficiency
   },
 });
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
@@ -284,6 +289,7 @@ try {
   ipcMain.handle('copy-file', fileHandlers.handleCopyFile);
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
   ipcMain.handle('readFileContent', fileHandlers.handleReadFileContent);
+  ipcMain.handle('getFileSize', fileHandlers.handleGetFileSize);
 
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const operationId =
@@ -572,6 +578,7 @@ try {
   );
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
+  ipcMain.handle('get-voice-cloning-pricing', handleGetVoiceCloningPricing);
   ipcMain.handle('get-device-id', () => getDeviceId());
   ipcMain.handle(
     'get-admin-device-id',

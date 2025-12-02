@@ -8,75 +8,23 @@ interface LanguageOption {
   label: string;
 }
 
-interface LanguageGroup {
-  label: string;
-  options: LanguageOption[];
-}
+import {
+  TRANSLATION_LANGUAGE_GROUPS,
+  TRANSLATION_LANGUAGES_BASE,
+} from '../../constants/translation-languages';
 
-const languageGroups: LanguageGroup[] = [
-  {
-    label: 'regions.eastAsia',
-    options: [
-      { value: 'korean', label: 'languages.korean' },
-      { value: 'japanese', label: 'languages.japanese' },
-      { value: 'chinese_simplified', label: 'languages.chinese_simplified' },
-      { value: 'chinese_traditional', label: 'languages.chinese_traditional' },
-      { value: 'vietnamese', label: 'languages.vietnamese' },
-    ],
-  },
-  {
-    label: 'regions.europe',
-    options: [
-      { value: 'spanish', label: 'languages.spanish' },
-      { value: 'french', label: 'languages.french' },
-      { value: 'german', label: 'languages.german' },
-      { value: 'italian', label: 'languages.italian' },
-      { value: 'portuguese', label: 'languages.portuguese' },
-      { value: 'russian', label: 'languages.russian' },
-      { value: 'dutch', label: 'languages.dutch' },
-      { value: 'polish', label: 'languages.polish' },
-      { value: 'swedish', label: 'languages.swedish' },
-      { value: 'turkish', label: 'languages.turkish' },
-      { value: 'norwegian', label: 'languages.norwegian' },
-      { value: 'danish', label: 'languages.danish' },
-      { value: 'finnish', label: 'languages.finnish' },
-      { value: 'greek', label: 'languages.greek' },
-      { value: 'czech', label: 'languages.czech' },
-      { value: 'hungarian', label: 'languages.hungarian' },
-      { value: 'romanian', label: 'languages.romanian' },
-      { value: 'ukrainian', label: 'languages.ukrainian' },
-    ],
-  },
-  {
-    label: 'regions.southSoutheastAsia',
-    options: [
-      { value: 'hindi', label: 'languages.hindi' },
-      { value: 'indonesian', label: 'languages.indonesian' },
-      { value: 'thai', label: 'languages.thai' },
-      { value: 'malay', label: 'languages.malay' },
-      { value: 'tagalog', label: 'languages.tagalog' },
-      { value: 'bengali', label: 'languages.bengali' },
-      { value: 'tamil', label: 'languages.tamil' },
-      { value: 'telugu', label: 'languages.telugu' },
-      { value: 'marathi', label: 'languages.marathi' },
-      { value: 'urdu', label: 'languages.urdu' },
-    ],
-  },
-  {
-    label: 'regions.middleEastAfrica',
-    options: [
-      { value: 'arabic', label: 'languages.arabic' },
-      { value: 'hebrew', label: 'languages.hebrew' },
-      { value: 'farsi', label: 'languages.farsi' },
-      { value: 'swahili', label: 'languages.swahili' },
-      { value: 'afrikaans', label: 'languages.afrikaans' },
-    ],
-  },
-];
+// Map centralized language data to local format
+const languageGroups = TRANSLATION_LANGUAGE_GROUPS.map(g => ({
+  label: g.labelKey,
+  options: g.options.map(o => ({ value: o.value, label: o.labelKey })),
+}));
 
 const baseLanguageOptions: LanguageOption[] = [
   { value: 'original', label: 'languages.original' },
-  { value: 'english', label: 'languages.english' },
+  ...TRANSLATION_LANGUAGES_BASE.map(o => ({
+    value: o.value,
+    label: o.labelKey,
+  })),
 ];
 
 interface GenerateSubtitlesPanelProps {

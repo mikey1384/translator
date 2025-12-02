@@ -12,6 +12,8 @@
     "backToApp": "Back to App",
     "next": "Next",
     "done": "Done",
+    "gotIt": "Got it",
+    "close": "Close",
     "loading": "Loading...",
     "error": {
       "unexpected": "An unexpected error occurred.",
@@ -114,6 +116,7 @@
     "dub": "Dub Voice",
     "dubEstimateCredits": "{{credits}} credits (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m audio",
+    "voiceCloningRequiresTranslation": "Voice cloning requires a target language",
     "translateEstimateCredits": "{{credits}} credits",
     "translateEstimateByo": "BYO key",
     "qualityBadge": "(+review)",
@@ -216,7 +219,18 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase (uses about 5× more credits/time). Off: skip review."
+        "help": "On: includes review phase (~5× more credits/time). Off: skip review.",
+        "helpWithEstimate": "Review phase uses ~5× more credits. Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+      },
+      "qualitySummary": {
+        "label": "Quality Summary",
+        "help": "On: deep analysis + highlight clips with Claude Opus (~4× credits). Off: fast with GPT-5.1.",
+        "helpWithEstimate": "Deep analysis + highlight clips (~4× credits). Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+      },
+      "qualityDubbing": {
+        "label": "Quality Dubbing",
+        "help": "On: ElevenLabs TTS (premium voices, ~13× credits). Off: OpenAI TTS (good quality).",
+        "helpWithEstimate": "ElevenLabs TTS (~13× credits). Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
       }
     },
     "dubbing": {
@@ -228,12 +242,35 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "Preview this voice",
+      "previewing": "Playing...",
+      "previewFree": "Preview",
+      "previewWithCost": "Preview ({{cost}} credits)",
       "mixLabel": "Dubbing Volume vs Original Video Volume",
       "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
       "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "mixVoice": "More voice",
+      "voiceCloning": "Clone Original Voice",
+      "voiceCloningDesc": "Preserve the original speaker's voice in dubbed audio",
+      "voiceCloningInsufficientCredits": "Requires at least 1 minute of credits",
+      "voiceCloningEnabled": "Voice cloning is enabled with ElevenLabs. The original speaker's voice will be preserved in the dubbed audio.",
+      "voiceCloningInfo": "Voice cloning uses ElevenLabs Dubbing API to analyze and recreate the original speaker's voice.",
+      "costPerMinute": "Cost per minute",
+      "credits": "credits",
+      "yourBalance": "Your balance",
+      "canClone": "You can clone",
+      "upToMinutes": "up to {{minutes}} min",
+      "loading": "Loading..."
     },
     "byoOpenAi": {
       "title": "Bring Your Own API Keys",
@@ -260,7 +297,43 @@
       "toggleAria": "Toggle using your OpenAI key",
       "toggleOn": "Using your OpenAI key for AI tasks.",
       "toggleOff": "Using Stage5 credits for AI tasks.",
-      "toggleError": "Failed to update preference."
+      "toggleError": "Failed to update preference.",
+      "howToGetKeys": "How do I get API keys?"
+    },
+    "apiKeyGuide": {
+      "title": "How to Get API Keys",
+      "required": "Required",
+      "optional": "Optional",
+      "openai": {
+        "description": "OpenAI powers transcription (Whisper), translation (GPT), and text-to-speech dubbing.",
+        "step1": "Go to",
+        "step2": "Sign up or log in to your account",
+        "step3": "Navigate to",
+        "step3b": "in the left sidebar",
+        "step4": "Click",
+        "step5": "Add a payment method in Billing settings (required to use the API)",
+        "step6": "Copy the key (starts with sk-) and paste it in Stage5",
+        "note": "Tip: New OpenAI accounts often get free credits to start. You only pay for what you use."
+      },
+      "anthropic": {
+        "description": "Claude provides higher-quality translation reviews. Without it, GPT handles all translation tasks.",
+        "step1": "Go to",
+        "step2": "Sign up or log in to your account",
+        "step3": "Go to",
+        "step3b": "in the settings",
+        "step4": "Click",
+        "step5": "Add a payment method in Plans & Billing (required to use the API)",
+        "step6": "Copy the key (starts with sk-ant-) and paste it in Stage5",
+        "note": "Tip: Anthropic offers pay-as-you-go pricing. You only pay for what you use."
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs offers premium transcription and voice-cloning dubbing. Without it, OpenAI handles these tasks.",
+        "step1": "Go to",
+        "step2": "Sign up or log in to your account",
+        "step3": "Click your profile icon and select",
+        "step4": "Copy your API key and paste it in Stage5",
+        "note": "Tip: ElevenLabs has a free tier with limited usage. For more, upgrade to a paid plan in your account settings."
+      }
     },
     "byoAnthropic": {
       "title": "Anthropic API Key (Optional)",
@@ -383,7 +456,9 @@
     "validation": {
       "pleaseSelectVideo": "Please select a video",
       "processingDuration": "Video duration is being processed. Please try again shortly.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click 'Download' and wait for the cloud icon to finish, then try again.",
+      "insufficientCreditsForVoiceCloning": "Insufficient credits for voice cloning. Video is {{duration}} min but you can only afford {{affordable}} min. Please add credits or disable voice cloning.",
+      "fileTooLargeForVoiceCloning": "Video file is too large for voice cloning ({{size}}MB). Maximum allowed is {{max}}MB. Please use a shorter video or disable voice cloning."
     },
     "status": {
       "starting": "Starting...",

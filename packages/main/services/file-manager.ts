@@ -30,6 +30,10 @@ export class FileManager {
     return this.tempDir;
   }
 
+  getTempPath(filename: string): string {
+    return path.join(this.tempDir, filename);
+  }
+
   async ensureTempDir(): Promise<void> {
     try {
       await fs.mkdir(this.tempDir, { recursive: true });

@@ -15,7 +15,13 @@
       "WebFetch(domain:www.saasworthy.com)",
       "WebFetch(domain:flexprice.io)",
       "WebFetch(domain:blog.unrealspeech.com)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm install:*)",
+      "Bash(cat:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm view:*)"
     ],
     "deny": [],
     "ask": []

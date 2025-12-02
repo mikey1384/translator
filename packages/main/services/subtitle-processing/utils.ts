@@ -52,6 +52,41 @@ export function throwIfAborted(signal?: AbortSignal): void {
   }
 }
 
+/**
+ * Validates and sanitizes a timing value from API response.
+ * Returns a safe, finite, non-negative number or fallback.
+ */
+export function sanitizeTiming(value: unknown, fallback = 0): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.max(0, value);
+}
+
+/**
+ * Validates a timing interval (start/end pair) from API response.
+ * Ensures start < end, both are finite and non-negative.
+ * Returns corrected values or null if interval is invalid.
+ */
+export function validateTimingInterval(
+  start: unknown,
+  end: unknown,
+  minDuration = 0.001
+): { start: number; end: number } | null {
+  const s = sanitizeTiming(start);
+  const e = sanitizeTiming(end);
+
+  // Invalid: end must be greater than start
+  if (e <= s) {
+    // Try to salvage by using minimum duration
+    if (s === 0 && e === 0) return null; // Both zero/invalid - can't fix
+    const fixedEnd = s + minDuration;
+    return { start: s, end: fixedEnd };
+  }
+
+  return { start: s, end: e };
+}
+
 export async function scrubHallucinationsBatch({
   segments,
   operationId,

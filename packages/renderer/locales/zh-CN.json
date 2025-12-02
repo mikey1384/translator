@@ -12,6 +12,8 @@
     "backToApp": "返回应用",
     "next": "下一步",
     "done": "完成",
+    "gotIt": "知道了",
+    "close": "关闭",
     "loading": "加载中...",
     "error": {
       "unexpected": "发生了意外错误。",
@@ -202,8 +204,51 @@
       },
       "qualityTranslation": {
         "label": "高质量翻译",
-        "help": "开启：包含复审阶段（大约多用5×积分/时间）。关闭：跳过复审。"
+        "help": "开启：包含复审阶段（约5×积分/时间）。关闭：跳过复审。",
+        "helpWithEstimate": "复审使用约5×积分。您的积分可翻译：~{{normalTime}}普通，~{{hqTime}}高质量。"
+      },
+      "qualitySummary": {
+        "label": "高质量摘要",
+        "help": "开启：Claude Opus深度分析+精彩片段（约4×积分）。关闭：GPT-5.1快速分析。",
+        "helpWithEstimate": "深度分析+精彩片段（约4×积分）。您的积分可分析：~{{normalTime}}普通，~{{hqTime}}高质量。"
+      },
+      "qualityDubbing": {
+        "label": "高质量配音",
+        "help": "开启：ElevenLabs TTS（优质语音，约13×积分）。关闭：OpenAI TTS（良好质量）。",
+        "helpWithEstimate": "ElevenLabs TTS（约13×积分）。您的积分可配音：~{{normalTime}}普通，~{{hqTime}}高质量。"
       }
+    },
+    "byoMaster": {
+      "toggleLabel": "使用我的API密钥",
+      "keysActive": "{{count}}个密钥已激活"
+    },
+    "preferClaude": {
+      "forTranslation": {
+        "label": "翻译优先使用Claude",
+        "help": "初稿：GPT-5.1 → 复审：Opus 4.5"
+      },
+      "forReview": {
+        "label": "复审优先使用Claude",
+        "help": "复审：Claude Opus 4.5"
+      }
+    },
+    "transcriptionProvider": {
+      "label": "转录提供商",
+      "elevenlabs": "ElevenLabs Scribe",
+      "elevenlabsHint": "最高质量，使用ElevenLabs密钥",
+      "openai": "OpenAI Whisper",
+      "openaiHint": "快速准确，使用OpenAI密钥",
+      "stage5": "Stage5（积分）",
+      "stage5Hint": "使用Stage5 AI积分"
+    },
+    "dubbingProvider": {
+      "label": "配音提供商",
+      "elevenlabs": "ElevenLabs（语音克隆）",
+      "elevenlabsHint": "保持原始说话者的声音",
+      "openai": "OpenAI TTS",
+      "openaiHint": "使用合成语音（alloy、echo等）",
+      "stage5": "Stage5（积分）",
+      "stage5Hint": "使用Stage5 AI积分"
     },
     "dubbing": {
       "voiceLabel": "配音语音",
@@ -214,12 +259,34 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "预览此语音",
+      "previewing": "播放中...",
+      "previewFree": "预览",
+      "previewWithCost": "预览（{{cost}}积分）",
       "mixLabel": "配音音量 vs 原视频音量",
       "mixHelp": "调节在配音声音下方播放的原始音轨的音量比例。",
       "mixAmbient": "更多环境声",
-      "mixVoice": "更多人声"
+      "mixVoice": "更多人声",
+      "voiceCloning": "克隆原声",
+      "voiceCloningDesc": "在配音音频中保留原说话者的声音",
+      "voiceCloningEnabled": "已启用ElevenLabs语音克隆。原说话者的声音将保留在配音音频中。",
+      "voiceCloningInfo": "语音克隆使用ElevenLabs配音API来分析和重现原说话者的声音。",
+      "costPerMinute": "每分钟费用",
+      "credits": "积分",
+      "yourBalance": "您的余额",
+      "canClone": "您可以克隆",
+      "upToMinutes": "最多{{minutes}}分钟",
+      "loading": "加载中..."
     },
     "byoOpenAi": {
       "title": "使用自己的API密钥",
@@ -246,7 +313,43 @@
       "toggleAria": "切换使用您的OpenAI密钥",
       "toggleOn": "正在使用您的OpenAI密钥执行AI任务。",
       "toggleOff": "正在使用Stage5积分执行AI任务。",
-      "toggleError": "更新设置失败。"
+      "toggleError": "更新设置失败。",
+      "howToGetKeys": "如何获取API密钥？"
+    },
+    "apiKeyGuide": {
+      "title": "如何获取API密钥",
+      "required": "必需",
+      "optional": "可选",
+      "openai": {
+        "description": "OpenAI提供转录（Whisper）、翻译（GPT）和文字转语音配音功能。",
+        "step1": "访问",
+        "step2": "注册或登录您的账户",
+        "step3": "在左侧边栏中导航到",
+        "step3b": "",
+        "step4": "点击",
+        "step5": "在账单设置中添加付款方式（使用API必需）",
+        "step6": "复制密钥（以sk-开头）并粘贴到Stage5中",
+        "note": "提示：新的OpenAI账户通常会获得免费额度。您只需为实际使用付费。"
+      },
+      "anthropic": {
+        "description": "Claude提供更高质量的翻译审核。没有它，GPT将处理所有翻译任务。",
+        "step1": "访问",
+        "step2": "注册或登录您的账户",
+        "step3": "在设置中前往",
+        "step3b": "",
+        "step4": "点击",
+        "step5": "在计划和账单中添加付款方式（使用API必需）",
+        "step6": "复制密钥（以sk-ant-开头）并粘贴到Stage5中",
+        "note": "提示：Anthropic提供按需付费的定价。您只需为实际使用付费。"
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs提供优质转录和语音克隆配音。没有它，OpenAI将处理这些任务。",
+        "step1": "访问",
+        "step2": "注册或登录您的账户",
+        "step3": "点击您的头像并选择",
+        "step4": "复制您的API密钥并粘贴到Stage5中",
+        "note": "提示：ElevenLabs有免费套餐但使用量有限。如需更多，请在账户设置中升级到付费计划。"
+      }
     },
     "byoAnthropic": {
       "title": "Anthropic API密钥（可选）",
@@ -278,6 +381,31 @@
       "elevenlabs": "高级（ElevenLabs）",
       "elevenlabsHint": "最佳音质，较高成本（约13倍）",
       "elevenlabsHintWithBalance": "最佳音质 · 您的余额：{{time}}配音时长"
+    },
+    "byoElevenLabs": {
+      "title": "ElevenLabs API密钥（可选）",
+      "description": "添加您的ElevenLabs API密钥可使用高质量转录（Scribe）和配音（TTS）。没有此密钥，转录和配音将使用OpenAI服务。",
+      "apiKeyLabel": "ElevenLabs API密钥",
+      "hide": "隐藏",
+      "show": "显示",
+      "saving": "保存中…",
+      "clear": "清除密钥",
+      "loadingKey": "正在加载保存的ElevenLabs密钥…",
+      "keySaved": "ElevenLabs API密钥已保存。",
+      "keyCleared": "ElevenLabs API密钥已清除。",
+      "keyValid": "ElevenLabs API密钥验证成功。",
+      "keyInvalid": "ElevenLabs API密钥验证失败。",
+      "testing": "测试中…",
+      "test": "测试密钥",
+      "toggleLabel": "使用我的ElevenLabs密钥",
+      "toggleHelp": "关闭时，转录和配音使用Stage5积分。",
+      "toggleAria": "切换使用您的ElevenLabs密钥",
+      "toggleOn": "正在使用您的ElevenLabs密钥。",
+      "toggleOff": "正在使用Stage5积分进行ElevenLabs服务。",
+      "toggleError": "更新ElevenLabs设置失败。"
+    },
+    "voiceCloning": {
+      "enabled": "ElevenLabs语音克隆已启用。配音音频将保留原始说话者的声音。"
     }
   },
   "credits": {
@@ -285,6 +413,9 @@
     "loading": "加载中...",
     "credits": "积分",
     "usingApiKey": "正在使用 API 密钥",
+    "usingOpenAi": "使用OpenAI",
+    "usingAnthropic": "使用Claude",
+    "usingElevenLabs": "使用ElevenLabs",
     "hours": "小时",
     "buyCredits": "购买积分",
     "redirectingToPayment": "正在打开安全支付…",

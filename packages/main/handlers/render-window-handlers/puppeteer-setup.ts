@@ -32,12 +32,14 @@ export async function initPuppeteer({
   videoWidth,
   videoHeight,
   fontRegular,
+  fontSizePx: _fontSizePx, // Reserved for future use
   stylePreset,
 }: {
   operationId: string;
   videoWidth: number;
   videoHeight: number;
   fontRegular: string;
+  fontSizePx?: number;
   stylePreset?: unknown;
 }): Promise<{ browser: Browser; page: Page }> {
   const hostHtml = getRenderHostPath();

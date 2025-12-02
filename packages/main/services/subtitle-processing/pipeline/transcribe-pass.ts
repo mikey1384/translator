@@ -394,6 +394,18 @@ export async function transcribePass({
     log.info(
       `[${operationId}] VAD grouping produced ${chunks.length} chunk(s) (≥${MIN_CHUNK_DURATION_SEC}s).`
     );
+
+    if (chunks.length === 0) {
+      log.warn(
+        `[${operationId}] No speech detected in audio - file may be silent or corrupted`
+      );
+      progressCallback?.({
+        percent: 100,
+        stage: '__i18n__:completed',
+      });
+      return { segments: [], speechIntervals: [] };
+    }
+
     progressCallback?.({
       percent: Stage.TRANSCRIBE,
       stage: `Chunked audio into ${chunks.length} parts`,

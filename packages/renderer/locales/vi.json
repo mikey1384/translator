@@ -12,6 +12,8 @@
     "backToApp": "Quay lại Ứng dụng",
     "next": "Tiếp theo",
     "done": "Hoàn tất",
+    "gotIt": "Đã hiểu",
+    "close": "Đóng",
     "loading": "Đang tải...",
     "error": {
       "unexpected": "Đã xảy ra lỗi không mong muốn.",
@@ -147,8 +149,51 @@
       },
       "qualityTranslation": {
         "label": "Dịch chất lượng cao",
-        "help": "Bật: bao gồm giai đoạn rà soát (dùng khoảng 5× nhiều tín dụng/thời gian). Tắt: bỏ qua rà soát."
+        "help": "Bật: bao gồm giai đoạn rà soát (~5× tín dụng/thời gian). Tắt: bỏ qua rà soát.",
+        "helpWithEstimate": "Rà soát sử dụng ~5× tín dụng. Tín dụng của bạn: ~{{normalTime}} thường, ~{{hqTime}} HQ."
+      },
+      "qualitySummary": {
+        "label": "Tóm tắt chất lượng cao",
+        "help": "Bật: Claude Opus phân tích sâu + clip nổi bật (~4× tín dụng). Tắt: GPT-5.1 phân tích nhanh.",
+        "helpWithEstimate": "Phân tích sâu + clip nổi bật (~4× tín dụng). Tín dụng của bạn: ~{{normalTime}} thường, ~{{hqTime}} HQ."
+      },
+      "qualityDubbing": {
+        "label": "Lồng tiếng chất lượng cao",
+        "help": "Bật: ElevenLabs TTS (giọng cao cấp, ~13× tín dụng). Tắt: OpenAI TTS (chất lượng tốt).",
+        "helpWithEstimate": "ElevenLabs TTS (~13× tín dụng). Tín dụng của bạn: ~{{normalTime}} thường, ~{{hqTime}} HQ."
       }
+    },
+    "byoMaster": {
+      "toggleLabel": "Dùng API key của tôi",
+      "keysActive": "{{count}} key đang hoạt động"
+    },
+    "preferClaude": {
+      "forTranslation": {
+        "label": "Ưu tiên Claude cho dịch",
+        "help": "Bản nháp: GPT-5.1 → Rà soát: Opus 4.5"
+      },
+      "forReview": {
+        "label": "Ưu tiên Claude cho rà soát",
+        "help": "Rà soát: Claude Opus 4.5"
+      }
+    },
+    "transcriptionProvider": {
+      "label": "Nhà cung cấp chép lời",
+      "elevenlabs": "ElevenLabs Scribe",
+      "elevenlabsHint": "Chất lượng cao nhất, dùng key ElevenLabs",
+      "openai": "OpenAI Whisper",
+      "openaiHint": "Nhanh và chính xác, dùng key OpenAI",
+      "stage5": "Stage5 (Tín dụng)",
+      "stage5Hint": "Dùng tín dụng Stage5 AI"
+    },
+    "dubbingProvider": {
+      "label": "Nhà cung cấp lồng tiếng",
+      "elevenlabs": "ElevenLabs (Sao chép giọng)",
+      "elevenlabsHint": "Giữ nguyên giọng nói gốc",
+      "openai": "OpenAI TTS",
+      "openaiHint": "Dùng giọng tổng hợp (alloy, echo, v.v.)",
+      "stage5": "Stage5 (Tín dụng)",
+      "stage5Hint": "Dùng tín dụng Stage5 AI"
     },
     "dubbing": {
       "voiceLabel": "Giọng lồng tiếng",
@@ -159,12 +204,34 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "Nghe thử giọng này",
+      "previewing": "Đang phát...",
+      "previewFree": "Nghe thử",
+      "previewWithCost": "Nghe thử ({{cost}} tín dụng)",
       "mixLabel": "Âm lượng lồng tiếng vs Âm lượng video gốc",
       "mixHelp": "Điều chỉnh mức âm thanh gốc phát bên dưới giọng lồng tiếng.",
       "mixAmbient": "Nhiều âm nền hơn",
-      "mixVoice": "Nhiều giọng nói hơn"
+      "mixVoice": "Nhiều giọng nói hơn",
+      "voiceCloning": "Sao chép giọng gốc",
+      "voiceCloningDesc": "Bảo toàn giọng nói gốc của người nói trong audio lồng tiếng",
+      "voiceCloningEnabled": "Sao chép giọng nói đã được bật với ElevenLabs. Giọng nói gốc của người nói sẽ được bảo toàn trong audio lồng tiếng.",
+      "voiceCloningInfo": "Sao chép giọng nói sử dụng API lồng tiếng ElevenLabs để phân tích và tái tạo giọng nói gốc của người nói.",
+      "costPerMinute": "Chi phí mỗi phút",
+      "credits": "tín dụng",
+      "yourBalance": "Số dư của bạn",
+      "canClone": "Bạn có thể sao chép",
+      "upToMinutes": "tối đa {{minutes}} phút",
+      "loading": "Đang tải..."
     },
     "byoOpenAi": {
       "title": "Sử dụng API Key của bạn",
@@ -191,7 +258,43 @@
       "toggleAria": "Bật/tắt sử dụng OpenAI key của bạn",
       "toggleOn": "Đang sử dụng OpenAI key của bạn cho các tác vụ AI.",
       "toggleOff": "Đang sử dụng tín dụng Stage5 cho các tác vụ AI.",
-      "toggleError": "Không thể cập nhật tùy chọn."
+      "toggleError": "Không thể cập nhật tùy chọn.",
+      "howToGetKeys": "Làm thế nào để lấy API key?"
+    },
+    "apiKeyGuide": {
+      "title": "Cách lấy API Key",
+      "required": "Bắt buộc",
+      "optional": "Tùy chọn",
+      "openai": {
+        "description": "OpenAI cung cấp phiên âm (Whisper), dịch thuật (GPT) và lồng tiếng chuyển văn bản thành giọng nói.",
+        "step1": "Truy cập",
+        "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
+        "step3": "Điều hướng đến",
+        "step3b": "ở thanh bên trái",
+        "step4": "Nhấp vào",
+        "step5": "Thêm phương thức thanh toán trong cài đặt thanh toán (bắt buộc để sử dụng API)",
+        "step6": "Sao chép key (bắt đầu bằng sk-) và dán vào Stage5",
+        "note": "Mẹo: Tài khoản OpenAI mới thường nhận được tín dụng miễn phí. Bạn chỉ trả cho những gì bạn sử dụng."
+      },
+      "anthropic": {
+        "description": "Claude cung cấp đánh giá dịch thuật chất lượng cao hơn. Không có nó, GPT sẽ xử lý tất cả các tác vụ dịch thuật.",
+        "step1": "Truy cập",
+        "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
+        "step3": "Đi đến",
+        "step3b": "trong cài đặt",
+        "step4": "Nhấp vào",
+        "step5": "Thêm phương thức thanh toán trong Gói & Thanh toán (bắt buộc để sử dụng API)",
+        "step6": "Sao chép key (bắt đầu bằng sk-ant-) và dán vào Stage5",
+        "note": "Mẹo: Anthropic cung cấp giá theo mức sử dụng. Bạn chỉ trả cho những gì bạn sử dụng."
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs cung cấp phiên âm cao cấp và lồng tiếng nhân bản giọng nói. Không có nó, OpenAI sẽ xử lý các tác vụ này.",
+        "step1": "Truy cập",
+        "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
+        "step3": "Nhấp vào biểu tượng hồ sơ của bạn và chọn",
+        "step4": "Sao chép API key của bạn và dán vào Stage5",
+        "note": "Mẹo: ElevenLabs có gói miễn phí với mức sử dụng giới hạn. Để sử dụng nhiều hơn, nâng cấp lên gói trả phí trong cài đặt tài khoản."
+      }
     },
     "byoAnthropic": {
       "title": "Anthropic API Key (Tùy chọn)",
@@ -223,6 +326,31 @@
       "elevenlabs": "Cao cấp (ElevenLabs)",
       "elevenlabsHint": "Chất lượng cao nhất, chi phí cao (~13×)",
       "elevenlabsHintWithBalance": "Chất lượng cao nhất · Số dư: {{time}} lồng tiếng"
+    },
+    "byoElevenLabs": {
+      "title": "API Key ElevenLabs (Tùy chọn)",
+      "description": "Thêm API key ElevenLabs để dùng chép lời chất lượng cao (Scribe) và lồng tiếng (TTS). Không có key này, chép lời và lồng tiếng sẽ dùng dịch vụ OpenAI.",
+      "apiKeyLabel": "API Key ElevenLabs",
+      "hide": "Ẩn",
+      "show": "Hiện",
+      "saving": "Đang lưu…",
+      "clear": "Xóa key",
+      "loadingKey": "Đang tải ElevenLabs key đã lưu…",
+      "keySaved": "API key ElevenLabs đã lưu.",
+      "keyCleared": "API key ElevenLabs đã xóa.",
+      "keyValid": "API key ElevenLabs xác thực thành công.",
+      "keyInvalid": "Xác thực API key ElevenLabs thất bại.",
+      "testing": "Đang kiểm tra…",
+      "test": "Kiểm tra key",
+      "toggleLabel": "Dùng ElevenLabs key của tôi",
+      "toggleHelp": "Khi tắt, chép lời và lồng tiếng dùng tín dụng Stage5.",
+      "toggleAria": "Bật/tắt sử dụng ElevenLabs key của bạn",
+      "toggleOn": "Đang sử dụng ElevenLabs key của bạn.",
+      "toggleOff": "Đang sử dụng tín dụng Stage5 cho dịch vụ ElevenLabs.",
+      "toggleError": "Không thể cập nhật tùy chọn ElevenLabs."
+    },
+    "voiceCloning": {
+      "enabled": "Sao chép giọng ElevenLabs đã bật. Âm thanh lồng tiếng sẽ giữ nguyên giọng nói gốc."
     }
   },
   "videoPlayer": {
@@ -392,7 +520,10 @@
     "redirectingToPayment": "Đang mở thanh toán an toàn…",
     "description": "Chọn từ các gói tín dụng ${{pack1Price}} ({{pack1Hours}} giờ), ${{pack2Price}} ({{pack2Hours}} giờ), hoặc ${{pack3Price}} ({{pack3Hours}} giờ)",
     "notEnough": "Tín dụng không đủ. Vui lòng mua thêm tín dụng để tiếp tục.",
-    "usingApiKey": "Đang sử dụng API Key"
+    "usingApiKey": "Đang sử dụng API Key",
+    "usingOpenAi": "Đang dùng OpenAI",
+    "usingAnthropic": "Đang dùng Claude",
+    "usingElevenLabs": "Đang dùng ElevenLabs"
   },
   "errors": {
     "needCookies": "YouTube yêu cầu xác minh người dùng. Thử lại bằng cookie trình duyệt của bạn.",

@@ -41,74 +41,69 @@ export function initAiProvider(settingsStore: SettingsStoreType) {
   settingsStoreRef = settingsStore;
 }
 
-function getStoredApiKey(): string | null {
-  if (!settingsStoreRef) return null;
-  const raw = settingsStoreRef.get('apiKey', null);
-  if (typeof raw === 'string' && raw.trim()) {
-    return raw.trim();
-  }
-  return null;
-}
-
-function getStoredAnthropicApiKey(): string | null {
-  if (!settingsStoreRef) {
-    log.warn(
-      '[ai-provider] settingsStoreRef is null when checking Anthropic key'
+// Generic helper to get a stored API key with validation
+function createApiKeyGetter(
+  keyName: string,
+  providerName: string
+): () => string | null {
+  return () => {
+    if (!settingsStoreRef) {
+      log.warn(
+        `[ai-provider] settingsStoreRef is null when checking ${providerName} key`
+      );
+      return null;
+    }
+    const raw = settingsStoreRef.get(keyName as any, null);
+    log.debug(
+      `[ai-provider] getStored${providerName}ApiKey raw value:`,
+      raw ? `[${(raw as string).length} chars]` : 'null'
     );
+    if (typeof raw === 'string' && raw.trim()) {
+      return raw.trim();
+    }
     return null;
-  }
-  const raw = settingsStoreRef.get('anthropicApiKey', null);
-  log.debug(
-    '[ai-provider] getStoredAnthropicApiKey raw value:',
-    raw ? `[${raw.length} chars]` : 'null'
-  );
-  if (typeof raw === 'string' && raw.trim()) {
-    return raw.trim();
-  }
-  return null;
+  };
 }
 
-function isByoAnthropicToggleEnabled(): boolean {
-  if (!settingsStoreRef) return false;
-  // Master toggle overrides individual toggles
-  if (!isByoMasterEnabled()) return false;
-  try {
-    return Boolean(settingsStoreRef.get('useByoAnthropic', false));
-  } catch (err) {
-    log.error('[ai-provider] Failed to load BYO Anthropic toggle state:', err);
-    return false;
-  }
+// Generic helper to check if a BYO toggle is enabled (respects master toggle)
+function createByoToggleChecker(
+  toggleKey: string,
+  providerName: string,
+  requiresMaster = true
+): () => boolean {
+  return () => {
+    if (!settingsStoreRef) return false;
+    if (requiresMaster && !isByoMasterEnabled()) return false;
+    try {
+      return Boolean(settingsStoreRef.get(toggleKey as any, false));
+    } catch (err) {
+      log.error(
+        `[ai-provider] Failed to load BYO ${providerName} toggle state:`,
+        err
+      );
+      return false;
+    }
+  };
 }
 
-function getStoredElevenLabsApiKey(): string | null {
-  if (!settingsStoreRef) {
-    log.warn(
-      '[ai-provider] settingsStoreRef is null when checking ElevenLabs key'
-    );
-    return null;
-  }
-  const raw = settingsStoreRef.get('elevenLabsApiKey', null);
-  log.debug(
-    '[ai-provider] getStoredElevenLabsApiKey raw value:',
-    raw ? `[${raw.length} chars]` : 'null'
-  );
-  if (typeof raw === 'string' && raw.trim()) {
-    return raw.trim();
-  }
-  return null;
-}
+const getStoredApiKey = createApiKeyGetter('apiKey', 'OpenAI');
+const getStoredAnthropicApiKey = createApiKeyGetter(
+  'anthropicApiKey',
+  'Anthropic'
+);
+const getStoredElevenLabsApiKey = createApiKeyGetter(
+  'elevenLabsApiKey',
+  'ElevenLabs'
+);
 
-function isByoElevenLabsToggleEnabled(): boolean {
-  if (!settingsStoreRef) return false;
-  // Master toggle overrides individual toggles
-  if (!isByoMasterEnabled()) return false;
-  try {
-    return Boolean(settingsStoreRef.get('useByoElevenLabs', false));
-  } catch (err) {
-    log.error('[ai-provider] Failed to load BYO ElevenLabs toggle state:', err);
-    return false;
-  }
-}
+const isByoAnthropicToggleEnabled = createByoToggleChecker(
+  'useByoAnthropic',
+  'Anthropic'
+);
+const isByoElevenLabsToggleEnabled = createByoToggleChecker(
+  'useByoElevenLabs',
+  'ElevenLabs'
+);
 
 function isByoMasterEnabled(): boolean {
   if (!settingsStoreRef) return false;
@@ -217,49 +212,57 @@ function isByoToggleEnabled(): boolean {
   }
 }
 
-function mapOpenAiError(error: any): never {
-  const status = error?.response?.status;
+// Provider-specific error codes mapping
+const PROVIDER_ERROR_CODES = {
+  openai: {
+    authInvalid: ERROR_CODES.OPENAI_KEY_INVALID,
+    rateLimit: ERROR_CODES.OPENAI_RATE_LIMIT,
+  },
+  anthropic: {
+    authInvalid: ERROR_CODES.ANTHROPIC_KEY_INVALID,
+    rateLimit: ERROR_CODES.ANTHROPIC_RATE_LIMIT,
+  },
+  elevenlabs: {
+    authInvalid: ERROR_CODES.ELEVENLABS_KEY_INVALID,
+    rateLimit: ERROR_CODES.ELEVENLABS_RATE_LIMIT,
+  },
+} as const;
+
+type ErrorMappableProvider = keyof typeof PROVIDER_ERROR_CODES;
+
+/**
+ * Maps API errors to standardized error codes for a given provider.
+ * Extracts status from error.status or error.response.status.
+ */
+function mapProviderError(provider: ErrorMappableProvider, error: any): never {
+  const status = error?.status || error?.response?.status;
+  const codes = PROVIDER_ERROR_CODES[provider];
+
   if (status === 401 || status === 403) {
-    log.error('[ai-provider] OpenAI rejected request with auth error:', status);
-    throw new Error(ERROR_CODES.OPENAI_KEY_INVALID);
+    log.error(
+      `[ai-provider] ${provider} rejected request with auth error:`,
+      status
+    );
+    throw new Error(codes.authInvalid);
   }
   if (status === 429) {
-    log.warn('[ai-provider] OpenAI rate limit hit.');
-    throw new Error(ERROR_CODES.OPENAI_RATE_LIMIT);
+    log.warn(`[ai-provider] ${provider} rate limit hit.`);
+    throw new Error(codes.rateLimit);
   }
   throw error;
+}
+
+// Convenience wrappers for backwards compatibility
+function mapOpenAiError(error: any): never {
+  return mapProviderError('openai', error);
 }
 
 function mapAnthropicError(error: any): never {
-  const status = error?.status || error?.response?.status;
-  if (status === 401 || status === 403) {
-    log.error(
-      '[ai-provider] Anthropic rejected request with auth error:',
-      status
-    );
-    throw new Error(ERROR_CODES.ANTHROPIC_KEY_INVALID);
-  }
-  if (status === 429) {
-    log.warn('[ai-provider] Anthropic rate limit hit.');
-    throw new Error(ERROR_CODES.ANTHROPIC_RATE_LIMIT);
-  }
-  throw error;
+  return mapProviderError('anthropic', error);
 }
 
 function mapElevenLabsError(error: any): never {
-  const status = error?.status || error?.response?.status;
-  if (status === 401 || status === 403) {
-    log.error(
-      '[ai-provider] ElevenLabs rejected request with auth error:',
-      status
-    );
-    throw new Error('elevenlabs-key-invalid');
-  }
-  if (status === 429) {
-    log.warn('[ai-provider] ElevenLabs rate limit hit.');
-    throw new Error('elevenlabs-rate-limit');
-  }
-  throw error;
+  return mapProviderError('elevenlabs', error);
 }
 
 export function hasUserApiKey(): boolean {
@@ -310,12 +313,14 @@ export function mustUseStage5(): boolean {
 }
 
 /**
- * Get the active provider for transcription.
- * Respects user's preferred transcription provider setting.
+ * Generic helper to resolve provider based on user preference and available BYO keys.
+ * Handles fallback logic: preferred > alternative BYO > Stage5
  */
-export function getActiveProviderForAudio(): ProviderKind {
+function resolveProviderByPreference(
+  preference: 'elevenlabs' | 'openai' | 'stage5',
+  context: string
+): ProviderKind {
   const entitlements = getCachedEntitlements();
-  const preference = getPreferredTranscriptionProvider();
 
   const hasElevenLabs =
     entitlements.byoElevenLabs &&
@@ -325,7 +330,7 @@ export function getActiveProviderForAudio(): ProviderKind {
     entitlements.byoOpenAi && hasUserApiKey() && isByoToggleEnabled();
 
   log.debug(
-    `[ai-provider] getActiveProviderForAudio: preference=${preference}, hasElevenLabs=${hasElevenLabs}, hasOpenAi=${hasOpenAi}`
+    `[ai-provider] ${context}: preference=${preference}, hasElevenLabs=${hasElevenLabs}, hasOpenAi=${hasOpenAi}`
   );
 
   // User explicitly wants Stage5
@@ -356,49 +361,25 @@ export function getActiveProviderForAudio(): ProviderKind {
 }
 
 /**
+ * Get the active provider for transcription.
+ * Respects user's preferred transcription provider setting.
+ */
+export function getActiveProviderForAudio(): ProviderKind {
+  return resolveProviderByPreference(
+    getPreferredTranscriptionProvider(),
+    'getActiveProviderForAudio'
+  );
+}
+
+/**
  * Get the active provider for dubbing/TTS.
  * Respects user's preferred dubbing provider setting.
  */
 export function getActiveProviderForDubbing(): ProviderKind {
-  const entitlements = getCachedEntitlements();
-  const preference = getPreferredDubbingProvider();
-
-  const hasElevenLabs =
-    entitlements.byoElevenLabs &&
-    hasUserElevenLabsApiKey() &&
-    isByoElevenLabsToggleEnabled();
-  const hasOpenAi =
-    entitlements.byoOpenAi && hasUserApiKey() && isByoToggleEnabled();
-
-  log.debug(
-    `[ai-provider] getActiveProviderForDubbing: preference=${preference}, hasElevenLabs=${hasElevenLabs}, hasOpenAi=${hasOpenAi}`
+  return resolveProviderByPreference(
+    getPreferredDubbingProvider(),
+    'getActiveProviderForDubbing'
   );
-
-  // User explicitly wants Stage5
-  if (preference === 'stage5') {
-    return 'stage5';
-  }
-
-  // User prefers ElevenLabs
-  if (preference === 'elevenlabs') {
-    if (hasElevenLabs) return 'elevenlabs';
-    // Fallback: try OpenAI, then Stage5
-    if (hasOpenAi) return 'openai';
-    return 'stage5';
-  }
-
-  // User prefers OpenAI
-  if (preference === 'openai') {
-    if (hasOpenAi) return 'openai';
-    // Fallback: try ElevenLabs, then Stage5
-    if (hasElevenLabs) return 'elevenlabs';
-    return 'stage5';
-  }
-
-  // Default: prefer ElevenLabs > OpenAI > Stage5
-  if (hasElevenLabs) return 'elevenlabs';
-  if (hasOpenAi) return 'openai';
-  return 'stage5';
 }
 
 export async function transcribe(
@@ -693,7 +674,9 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
   // Default: use Stage5 API with user's preferred TTS provider
   // OpenAI: $15/1M chars (cheaper), ElevenLabs: $200/1M chars (premium quality)
   const stage5TtsProvider = getStage5DubbingTtsProvider();
-  log.debug(`[ai-provider] Using Stage5 API with ${stage5TtsProvider} TTS provider`);
+  log.debug(
+    `[ai-provider] Using Stage5 API with ${stage5TtsProvider} TTS provider`
+  );
   return stage5Client.synthesizeDub({
     ...options,
     ttsProvider: stage5TtsProvider,

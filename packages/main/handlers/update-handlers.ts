@@ -31,7 +31,6 @@ export function buildUpdateHandlers(opts: {
     if (process.platform === 'win32') {
       const url = 'https://downloads.stage5.tools/win/latest/';
       // setFeedURL overrides provider selection from app-update.yml
-      // @ts-expect-error runtime accepts GenericServerOptions
       autoUpdater.setFeedURL({ provider: 'generic', url });
       log.info(`[update] Windows feed set to generic: ${url}`);
     }

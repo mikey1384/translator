@@ -262,6 +262,7 @@ export default function GenerateSubtitles() {
       videoPath: sourceVideoPath,
       voice: dubVoice,
       targetLanguage,
+      videoDurationSeconds: durationSecs ?? undefined,
     });
   }
 

@@ -253,50 +253,6 @@ export async function generateDubbedMedia({
       : undefined;
   };
 
-  const slideTimelineForward = (idx: number, delta: number): number => {
-    if (!Number.isFinite(delta) || delta <= 0) return 0;
-    const pos = orderedIndexes.indexOf(idx);
-    if (pos === -1) return 0;
-    const anchor = payloadByIndex.get(idx);
-    if (!anchor) return 0;
-
-    const currentDuration = durationForPlan(anchor);
-    setPlanDuration(anchor, currentDuration + delta);
-
-    let carriedShift = delta;
-    let prevEnd = Number(anchor.start ?? 0) + durationForPlan(anchor);
-
-    for (let i = pos + 1; i < orderedIndexes.length; i++) {
-      const nextIdx = orderedIndexes[i];
-      const seg = payloadByIndex.get(nextIdx);
-      if (!seg) continue;
-      const existingStart = Number(seg.start ?? 0);
-      const newStart = existingStart + carriedShift;
-      seg.start = newStart;
-
-      const segDuration = durationForPlan(seg);
-      if (segDuration > 0) {
-        seg.end = newStart + segDuration;
-      } else if (typeof seg.end === 'number') {
-        seg.end += carriedShift;
-      }
-
-      const requiredStart = prevEnd + MIN_DUB_SILENCE_GAP_SEC;
-      if (seg.start < requiredStart) {
-        const adjust = requiredStart - seg.start;
-        seg.start += adjust;
-        if (typeof seg.end === 'number') {
-          seg.end += adjust;
-        }
-        carriedShift += adjust;
-      }
-
-      prevEnd = Number(seg.start ?? 0) + durationForPlan(seg);
-    }
-
-    return delta;
-  };
-
   const extendSegmentAllocation = (idx: number, extra: number): number => {
     if (!Number.isFinite(idx) || !payloadByIndex.has(idx) || extra <= 0) {
       return 0;
@@ -350,16 +306,6 @@ export async function generateDubbedMedia({
       }
     }
 
-    // DISABLED: Don't shift timeline forward - causes cumulative sync drift
-    // Instead, rely on compression (atempo) to fit audio into allocated slots
-    // if (remaining > 0) {
-    //   const shifted = slideTimelineForward(idx, remaining);
-    //   if (shifted > 0) {
-    //     gained += shifted;
-    //     remaining = Math.max(0, remaining - shifted);
-    //   }
-    // }
-
     return gained;
   };
 
@@ -391,64 +337,60 @@ export async function generateDubbedMedia({
   let modelUsed: string | undefined;
   let formatUsed = 'mp3';
 
-  try {
-    for (let batchIndex = 0; batchIndex < batchCount; batchIndex++) {
-      const start = batchIndex * batchSize;
-      const batchSegments = payloadSegments.slice(start, start + batchSize);
-      const percentBase = 35;
-      const percentRange = 9;
-      progressCallback?.({
-        percent: Math.min(
-          44,
-          percentBase + (percentRange * batchIndex) / Math.max(1, batchCount)
-        ),
-        stage: `Requesting voice synthesis (${start + 1}-${Math.min(
-          payloadSegments.length,
-          start + batchSegments.length
-        )}/${payloadSegments.length})...`,
-        operationId,
-        model: ttsProvider,
-      });
+  for (let batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+    const start = batchIndex * batchSize;
+    const batchSegments = payloadSegments.slice(start, start + batchSize);
+    const percentBase = 35;
+    const percentRange = 9;
+    progressCallback?.({
+      percent: Math.min(
+        44,
+        percentBase + (percentRange * batchIndex) / Math.max(1, batchCount)
+      ),
+      stage: `Requesting voice synthesis (${start + 1}-${Math.min(
+        payloadSegments.length,
+        start + batchSegments.length
+      )}/${payloadSegments.length})...`,
+      operationId,
+      model: ttsProvider,
+    });
 
-      const result = await synthesizeDubAi({
-        segments: batchSegments,
-        voice,
-        quality: 'standard',
-        signal,
-      });
+    const result = await synthesizeDubAi({
+      segments: batchSegments,
+      voice,
+      quality: 'standard',
+      signal,
+    });
 
-      if (result?.segments?.length) {
-        aggregatedClips.push(...result.segments);
-      }
-      formatUsed = result?.format ?? formatUsed;
-      voiceUsed = result?.voice ?? voiceUsed;
-      modelUsed = result?.model ?? modelUsed;
-
-      // Update ttsProvider with actual model from API for better UI feedback
-      if (modelUsed) {
-        if (modelUsed.includes('eleven')) {
-          ttsProvider = 'ElevenLabs TTS';
-        } else if (modelUsed.includes('tts-1')) {
-          ttsProvider = 'OpenAI TTS';
-        }
-      }
-
-      progressCallback?.({
-        percent: Math.min(
-          44,
-          percentBase +
-            (percentRange * (batchIndex + 1)) / Math.max(1, batchCount)
-        ),
-        stage: `Requesting voice synthesis (${Math.min(
-          payloadSegments.length,
-          start + batchSegments.length
-        )}/${payloadSegments.length})...`,
-        operationId,
-        model: ttsProvider,
-      });
+    if (result?.segments?.length) {
+      aggregatedClips.push(...result.segments);
     }
-  } finally {
-    // no-op
+    formatUsed = result?.format ?? formatUsed;
+    voiceUsed = result?.voice ?? voiceUsed;
+    modelUsed = result?.model ?? modelUsed;
+
+    // Update ttsProvider with actual model from API for better UI feedback
+    if (modelUsed) {
+      if (modelUsed.includes('eleven')) {
+        ttsProvider = 'ElevenLabs TTS';
+      } else if (modelUsed.includes('tts-1')) {
+        ttsProvider = 'OpenAI TTS';
+      }
+    }
+
+    progressCallback?.({
+      percent: Math.min(
+        44,
+        percentBase +
+          (percentRange * (batchIndex + 1)) / Math.max(1, batchCount)
+      ),
+      stage: `Requesting voice synthesis (${Math.min(
+        payloadSegments.length,
+        start + batchSegments.length
+      )}/${payloadSegments.length})...`,
+      operationId,
+      model: ttsProvider,
+    });
   }
 
   const synthResult = {
@@ -677,9 +619,10 @@ export async function generateDubbedMedia({
       }
 
       // Use ORIGINAL start time for proper sync with video, not any modified timing
-      const originalStart = targetIndex != null
-        ? originalStartByIndex.get(targetIndex) ?? planStart
-        : planStart;
+      const originalStart =
+        targetIndex != null
+          ? (originalStartByIndex.get(targetIndex) ?? planStart)
+          : planStart;
       scheduledStart = Math.max(0, originalStart);
       scheduledLength = meta ? durationForPlan(meta) : scheduledLength;
 

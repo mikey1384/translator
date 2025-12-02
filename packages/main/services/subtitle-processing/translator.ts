@@ -467,6 +467,21 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
         }
       }
 
+      // Validate batch has some successful translations
+      const emptyCount = translatedBatch.filter(
+        (s: any) => !s.translation || s.translation.trim() === ''
+      ).length;
+      if (emptyCount === translatedBatch.length && translatedBatch.length > 0) {
+        log.error(
+          `[${operationId}] Translation batch returned all empty translations (${emptyCount}/${translatedBatch.length})`
+        );
+        throw new Error('Translation batch failed: all translations empty');
+      } else if (emptyCount > translatedBatch.length * 0.5) {
+        log.warn(
+          `[${operationId}] Translation batch has many empty translations: ${emptyCount}/${translatedBatch.length}`
+        );
+      }
+
       return translatedBatch;
     } catch (err: any) {
       log.error(

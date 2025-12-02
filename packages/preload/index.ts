@@ -207,6 +207,10 @@ const electronAPI = {
   readFileContent: (filePath: string) =>
     ipcRenderer.invoke('readFileContent', filePath),
 
+  // ---------------------- Get File Size ----------------------
+  getFileSize: (filePath: string) =>
+    ipcRenderer.invoke('getFileSize', filePath),
+
   // ---------------------- Find-in-Page ----------------------
   sendFindInPage: (opts: any) => ipcRenderer.send('find-in-page', opts),
   sendStopFind: () => ipcRenderer.send('stop-find'),
@@ -312,6 +316,13 @@ const electronAPI = {
     success: boolean;
     error?: string;
   }> => ipcRenderer.invoke('reset-credits-to-zero'),
+
+  // Get voice cloning pricing from API
+  getVoiceCloningPricing: (): Promise<{
+    creditsPerMinute: number;
+    description: string;
+  }> => ipcRenderer.invoke('get-voice-cloning-pricing'),
+
   getOpenAiApiKey: (): Promise<string | null> =>
     ipcRenderer.invoke('get-openai-api-key'),
   setOpenAiApiKey: (

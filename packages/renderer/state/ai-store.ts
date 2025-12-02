@@ -7,6 +7,8 @@ interface AiStoreState {
   byoUnlocked: boolean;
   byoAnthropicUnlocked: boolean;
   byoElevenLabsUnlocked: boolean;
+  // Admin preview mode: when true, pretend BYO is not unlocked (for UI testing)
+  adminByoPreviewMode: boolean;
   entitlementsLoading: boolean;
   entitlementsError?: string;
   unlockPending: boolean;
@@ -51,6 +53,8 @@ interface AiStoreState {
   fetchEntitlements: () => Promise<void>;
   refreshEntitlements: () => Promise<void>;
   startUnlock: () => Promise<void>;
+  // Admin preview mode action
+  setAdminByoPreviewMode: (value: boolean) => void;
   // Master toggle actions
   syncByoMasterToggle: () => Promise<void>;
   setUseByoMaster: (
@@ -290,6 +294,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
     byoUnlocked: false,
     byoAnthropicUnlocked: false,
     byoElevenLabsUnlocked: false,
+    adminByoPreviewMode: false,
     entitlementsLoading: true,
     entitlementsError: undefined,
     unlockPending: false,
@@ -409,6 +414,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           unlockError: err?.message || 'Unable to start checkout',
         });
       }
+    },
+
+    setAdminByoPreviewMode: (value: boolean) => {
+      set({ adminByoPreviewMode: value });
     },
 
     setKeyValue: (value: string) => {
@@ -839,13 +848,14 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         const provider = await SystemIPC.getStage5DubbingTtsProvider();
         set({ stage5DubbingTtsProvider: provider });
       } catch (err) {
-        console.error('[AiStore] Failed to sync Stage5 dubbing TTS provider:', err);
+        console.error(
+          '[AiStore] Failed to sync Stage5 dubbing TTS provider:',
+          err
+        );
       }
     },
 
-    setStage5DubbingTtsProvider: async (
-      value: 'openai' | 'elevenlabs'
-    ) => {
+    setStage5DubbingTtsProvider: async (value: 'openai' | 'elevenlabs') => {
       try {
         const result = await SystemIPC.setStage5DubbingTtsProvider(value);
         if (result.success) {
@@ -853,7 +863,10 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         }
         return result;
       } catch (err: any) {
-        console.error('[AiStore] Failed to update Stage5 dubbing TTS provider:', err);
+        console.error(
+          '[AiStore] Failed to update Stage5 dubbing TTS provider:',
+          err
+        );
         return {
           success: false,
           error: err?.message || 'Failed to save preference',

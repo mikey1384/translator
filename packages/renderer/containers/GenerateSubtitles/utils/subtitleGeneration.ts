@@ -1,13 +1,25 @@
 import { useTaskStore } from '../../../state';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
+import * as FileIPC from '../../../ipc/file';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
-import { useSubStore, useUIStore, useVideoStore } from '../../../state';
+import {
+  useSubStore,
+  useUIStore,
+  useVideoStore,
+  useCreditStore,
+} from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
+
+// Voice cloning costs ~35,000 credits per minute (fetched from API, this is fallback)
+const VOICE_CLONING_CREDITS_PER_MINUTE = 35_000;
+
+// Maximum file size for voice cloning upload (matches server limit)
+const MAX_VOICE_CLONING_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -31,19 +43,18 @@ export async function executeSrtTranslation({
   targetLanguage: string;
   operationId: string;
 }): Promise<{ success: boolean; subtitles?: string; cancelled?: boolean }> {
-  // Prevent translation while transcription is in progress
-  if (useTaskStore.getState().transcription.inProgress) {
+  // Atomically check and start translation (prevents race condition)
+  const started = useTaskStore
+    .getState()
+    .tryStartTranslation(
+      operationId,
+      i18n.t('generateSubtitles.status.starting')
+    );
+  if (!started) {
     return { success: false };
   }
-  const srtContent = buildSrt({ segments, mode: 'dual' });
 
-  // Initialize translation task so progress-buffer accepts progress updates
-  useTaskStore.getState().setTranslation({
-    id: operationId,
-    stage: i18n.t('generateSubtitles.status.starting'),
-    percent: 0,
-    inProgress: true,
-  });
+  const srtContent = buildSrt({ segments, mode: 'dual' });
 
   try {
     const { qualityTranslation } = useUIStore.getState();
@@ -83,12 +94,16 @@ export async function executeDubGeneration({
   videoPath,
   voice,
   targetLanguage,
+  videoDurationSeconds,
+  sourceLanguage,
 }: {
   segments: any[];
   operationId: string;
   videoPath?: string | null;
   voice?: string;
   targetLanguage?: string;
+  videoDurationSeconds?: number;
+  sourceLanguage?: string;
 }): Promise<{
   success: boolean;
   videoPath?: string;
@@ -99,17 +114,13 @@ export async function executeDubGeneration({
     return { success: false };
   }
 
-  // Prevent dubbing while transcription is running to avoid overload
-  if (useTaskStore.getState().transcription.inProgress) {
+  // Atomically check and start dubbing (prevents race condition)
+  const started = useTaskStore
+    .getState()
+    .tryStartDubbing(operationId, i18n.t('generateSubtitles.status.starting'));
+  if (!started) {
     return { success: false };
   }
-
-  useTaskStore.getState().setDubbing({
-    id: operationId,
-    stage: i18n.t('generateSubtitles.status.starting'),
-    percent: 0,
-    inProgress: true,
-  });
 
   const payloadSegments = segments.map((seg: any, idx: number) => ({
     start: Number(seg?.start ?? 0),
@@ -127,9 +138,65 @@ export async function executeDubGeneration({
         : undefined,
   }));
 
-  const { dubVoice, dubAmbientMix } = useUIStore.getState();
+  const { dubVoice, dubAmbientMix, dubUseVoiceCloning } = useUIStore.getState();
   const quality = 'standard';
   const selectedVoice = voice ?? dubVoice ?? 'alloy';
+
+  // Determine if we should use voice cloning
+  // Voice cloning requires: toggle enabled + real target language (not 'original') + video duration
+  const useVoiceCloning =
+    dubUseVoiceCloning &&
+    !!targetLanguage &&
+    targetLanguage !== 'original' &&
+    (videoDurationSeconds ?? 0) > 0;
+
+  // Pre-check credits for voice cloning before starting the upload
+  if (useVoiceCloning && videoDurationSeconds) {
+    const credits = useCreditStore.getState().credits;
+    const durationMinutes = Math.ceil(videoDurationSeconds / 60);
+    const requiredCredits = durationMinutes * VOICE_CLONING_CREDITS_PER_MINUTE;
+
+    if (typeof credits === 'number' && credits < requiredCredits) {
+      const affordableMinutes = Math.floor(
+        credits / VOICE_CLONING_CREDITS_PER_MINUTE
+      );
+      useUrlStore
+        .getState()
+        .setError(
+          i18n.t(
+            'generateSubtitles.validation.insufficientCreditsForVoiceCloning',
+            'Insufficient credits for voice cloning. Video is {{duration}} min but you can only afford {{affordable}} min. Please add credits or disable voice cloning.',
+            { duration: durationMinutes, affordable: affordableMinutes }
+          )
+        );
+      return { success: false };
+    }
+  }
+
+  // Pre-check file size for voice cloning (must not exceed 200MB)
+  if (useVoiceCloning && videoPath) {
+    try {
+      const sizeResult = await FileIPC.getFileSize(videoPath);
+      if (sizeResult.success && sizeResult.sizeBytes) {
+        if (sizeResult.sizeBytes > MAX_VOICE_CLONING_FILE_SIZE) {
+          const sizeMB = Math.round(sizeResult.sizeBytes / (1024 * 1024));
+          const maxMB = MAX_VOICE_CLONING_FILE_SIZE / (1024 * 1024);
+          useUrlStore
+            .getState()
+            .setError(
+              i18n.t(
+                'generateSubtitles.validation.fileTooLargeForVoiceCloning',
+                'Video file is too large for voice cloning ({{size}}MB). Maximum allowed is {{max}}MB. Please use a shorter video or disable voice cloning.',
+                { size: sizeMB, max: maxMB }
+              )
+            );
+          return { success: false };
+        }
+      }
+    } catch {
+      // File size check failed, proceed anyway and let server handle it
+    }
+  }
 
   try {
     const res = await SubtitlesIPC.dubSubtitles({
@@ -140,6 +207,9 @@ export async function executeDubGeneration({
       quality,
       ambientMix: dubAmbientMix,
       targetLanguage,
+      useVoiceCloning,
+      videoDurationSeconds,
+      sourceLanguage,
     });
 
     if (res?.success) {

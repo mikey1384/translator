@@ -32,6 +32,7 @@ import {
   useSubStore,
   useVideoStore,
   useCreditStore,
+  useAiStore,
 } from '../state';
 import {
   generateTranscriptSummary,
@@ -169,17 +170,37 @@ export function TranscriptSummaryPanel({
 
   // Credit balance and summary cost estimation
   const credits = useCreditStore(s => s.credits);
+  const useByoMaster = useAiStore(s => s.useByoMaster);
+  const useByo = useAiStore(s => s.useByo);
+  const keyPresent = useAiStore(s => s.keyPresent);
+
   const summaryEstimate = useMemo(() => {
     if (!hasTranscript) return null;
-    const charCount = usableSegments.reduce((acc, seg) => acc + seg.text.length, 0);
+    const charCount = usableSegments.reduce(
+      (acc, seg) => acc + seg.text.length,
+      0
+    );
     if (charCount === 0) return null;
-    const estimatedCredits = estimateSummaryCredits(charCount, summaryEffortLevel);
+    const isByo = useByoMaster && useByo && keyPresent;
+    const estimatedCredits = estimateSummaryCredits(
+      charCount,
+      summaryEffortLevel
+    );
     return {
       charCount,
       estimatedCredits,
-      hasEnoughCredits: credits == null || credits >= estimatedCredits,
+      isByo,
+      hasEnoughCredits: isByo || credits == null || credits >= estimatedCredits,
     };
-  }, [hasTranscript, usableSegments, summaryEffortLevel, credits]);
+  }, [
+    hasTranscript,
+    usableSegments,
+    summaryEffortLevel,
+    credits,
+    useByoMaster,
+    useByo,
+    keyPresent,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -335,9 +356,15 @@ export function TranscriptSummaryPanel({
   }, [t, mergeHighlightUpdates]);
 
   const handleGenerate = useCallback(async () => {
-    if (!hasTranscript || isGenerating) return;
+    if (!hasTranscript) return;
 
     const opId = `summary-${Date.now()}`;
+
+    // Atomically check and start summary (prevents race condition)
+    const started = useTaskStore
+      .getState()
+      .tryStartSummary(opId, t('summary.status.preparing'));
+    if (!started) return;
 
     setIsGenerating(true);
     setActiveOperationId(opId);
@@ -352,12 +379,6 @@ export function TranscriptSummaryPanel({
     setCopyStatus('idle');
     setProgressLabel(t('summary.status.preparing'));
     setProgressPercent(0);
-    useTaskStore.getState().setSummary({
-      id: opId,
-      stage: t('summary.status.preparing'),
-      percent: 0,
-      inProgress: true,
-    });
 
     try {
       const result = await generateTranscriptSummary({
@@ -423,7 +444,6 @@ export function TranscriptSummaryPanel({
     }
   }, [
     hasTranscript,
-    isGenerating,
     summaryLanguage,
     summaryEffortLevel,
     usableSegments,
@@ -727,10 +747,12 @@ export function TranscriptSummaryPanel({
                   text-align: center;
                 `}
               >
-                {t('summary.estimateCredits', '{{credits}} credits', {
-                  credits: formatCredits(summaryEstimate.estimatedCredits),
-                })}
-                {summaryEffortLevel === 'high' && (
+                {summaryEstimate.isByo
+                  ? t('summary.estimateByo', 'BYO key')
+                  : t('summary.estimateCredits', '{{credits}} credits', {
+                      credits: formatCredits(summaryEstimate.estimatedCredits),
+                    })}
+                {!summaryEstimate.isByo && summaryEffortLevel === 'high' && (
                   <span
                     className={css`
                       color: ${colors.primaryDark};

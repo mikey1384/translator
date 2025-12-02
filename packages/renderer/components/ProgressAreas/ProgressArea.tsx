@@ -5,19 +5,12 @@ import { useCreditStore } from '../../state/credit-store';
 import { useUIStore } from '../../state/ui-store';
 import { useAiStore } from '../../state/ai-store';
 import { logButton, logTask } from '../../utils/logger.js';
-import { CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../../shared/constants';
+import {
+  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
+  TRANSLATION_QUALITY_MULTIPLIER,
+  TTS_CREDITS_PER_MINUTE,
+} from '../../../shared/constants';
 import CreditBalance, { type OperationType } from '../CreditBalance';
-
-// Translation quality multiplier (matches SrtMountedPanel estimate)
-const TRANSLATION_QUALITY_MULTIPLIER = 5;
-
-// TTS credits per minute (based on ~750 chars/min * credits/char)
-// OpenAI: 1.05 credits/char * 750 = ~788 credits/min
-// ElevenLabs: 14 credits/char * 750 = ~10,500 credits/min
-const TTS_CREDITS_PER_MINUTE = {
-  openai: 788,
-  elevenlabs: 10500,
-} as const;
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -138,17 +131,22 @@ export default function ProgressArea({
   const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
   const useByoMaster = useAiStore(s => s.useByoMaster);
+  const useByo = useAiStore(s => s.useByo);
+  const keyPresent = useAiStore(s => s.keyPresent);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
 
-  // Calculate operation-specific time estimates
+  // Check if using BYO for OpenAI operations (transcription/translation)
+  const usingByoOpenAi = useByoMaster && useByo && keyPresent;
+
+  // Calculate operation-specific time estimates (only when using credits)
   let suffixText: string | undefined;
   if (typeof credits === 'number' && credits > 0) {
-    if (operationId?.startsWith('transcribe-')) {
+    if (operationId?.startsWith('transcribe-') && !usingByoOpenAi) {
       // Transcription: use base translation hour rate (similar cost)
       const hours = credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR;
       suffixText = `(${Math.floor(hours).toLocaleString()}h)`;
-    } else if (operationId?.startsWith('translate-')) {
+    } else if (operationId?.startsWith('translate-') && !usingByoOpenAi) {
       // Translation: adjust for quality toggle
       const effectiveCreditsPerHour = qualityTranslation
         ? CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_QUALITY_MULTIPLIER
@@ -161,22 +159,23 @@ export default function ProgressArea({
       }
     } else if (operationId?.startsWith('dub-')) {
       // Dubbing: use TTS provider-specific rate
-      let ttsProvider: 'openai' | 'elevenlabs' = 'openai';
-      if (useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
-        ttsProvider = 'elevenlabs';
-      } else if (preferredDubbingProvider === 'stage5') {
-        ttsProvider = stage5DubbingTtsProvider;
-      } else if (preferredDubbingProvider === 'elevenlabs' && useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
-        ttsProvider = 'elevenlabs';
-      }
-      const creditsPerMin = TTS_CREDITS_PER_MINUTE[ttsProvider];
-      const minutes = credits / creditsPerMin;
-      if (minutes < 60) {
-        suffixText = `(~${Math.floor(minutes)}m)`;
-      } else {
-        const hours = Math.floor(minutes / 60);
-        const mins = Math.floor(minutes % 60);
-        suffixText = mins > 0 ? `(~${hours}h ${mins}m)` : `(~${hours}h)`;
+      // Check if using BYO for dubbing (ElevenLabs)
+      const usingByoDubbing =
+        useByoMaster && useByoElevenLabs && elevenLabsKeyPresent;
+      if (!usingByoDubbing) {
+        let ttsProvider: 'openai' | 'elevenlabs' = 'openai';
+        if (preferredDubbingProvider === 'stage5') {
+          ttsProvider = stage5DubbingTtsProvider;
+        }
+        const creditsPerMin = TTS_CREDITS_PER_MINUTE[ttsProvider];
+        const minutes = credits / creditsPerMin;
+        if (minutes < 60) {
+          suffixText = `(~${Math.floor(minutes)}m)`;
+        } else {
+          const hours = Math.floor(minutes / 60);
+          const mins = Math.floor(minutes % 60);
+          suffixText = mins > 0 ? `(~${hours}h ${mins}m)` : `(~${hours}h)`;
+        }
       }
     }
   }

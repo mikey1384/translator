@@ -20,6 +20,8 @@ export const ERROR_CODES = {
   OPENAI_RATE_LIMIT: 'openai-rate-limit',
   ANTHROPIC_KEY_INVALID: 'anthropic-key-invalid',
   ANTHROPIC_RATE_LIMIT: 'anthropic-rate-limit',
+  ELEVENLABS_KEY_INVALID: 'elevenlabs-key-invalid',
+  ELEVENLABS_RATE_LIMIT: 'elevenlabs-rate-limit',
   TRANSLATION_JOB_NOT_FOUND: 'translation-job-not-found',
 } as const;
 
@@ -95,6 +97,39 @@ const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 );
 
 export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
+
+// Quality mode multipliers (includes review phase + Claude Opus usage)
+// These are used in UI to estimate costs when quality toggles are enabled
+export const TRANSLATION_QUALITY_MULTIPLIER = 5;
+export const SUMMARY_QUALITY_MULTIPLIER = 4;
+
+// TTS credits per minute (based on ~750 chars/min * credits/char)
+// OpenAI: 1.05 credits/char * 750 = ~788 credits/min
+// ElevenLabs: 14 credits/char * 750 = ~10,500 credits/min
+export const TTS_CREDITS_PER_MINUTE = {
+  openai: 788,
+  elevenlabs: 10500,
+} as const;
+
+// API polling intervals and timeouts (in milliseconds)
+// Used for long-running operations that require polling for completion
+export const API_TIMEOUTS = {
+  // Transcription (Whisper via Stage5 API)
+  TRANSCRIPTION_POLL_INTERVAL: 1_000, // 1 second
+  TRANSCRIPTION_MAX_WAIT: 300_000, // 5 minutes
+
+  // Translation (GPT/Claude via Stage5 API)
+  TRANSLATION_POLL_INTERVAL: 2_000, // 2 seconds
+  TRANSLATION_MAX_WAIT: 600_000, // 10 minutes
+
+  // Voice cloning (ElevenLabs Dubbing API)
+  VOICE_CLONING_POLL_INTERVAL: 5_000, // 5 seconds
+  VOICE_CLONING_BASE_MAX_WAIT: 600_000, // 10 minutes minimum
+
+  // Credit balance refresh after payment
+  CREDIT_REFRESH_RETRY_DELAY: 2_000, // 2 seconds between retries
+  CREDIT_REFRESH_MAX_RETRIES: 3,
+} as const;
 
 export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
   BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR *

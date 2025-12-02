@@ -12,6 +12,8 @@
     "backToApp": "アプリに戻る",
     "next": "次へ",
     "done": "完了",
+    "gotIt": "了解",
+    "close": "閉じる",
     "loading": "読み込み中...",
     "error": {
       "unexpected": "予期しないエラーが発生しました。",
@@ -202,11 +204,18 @@
       },
       "qualityTranslation": {
         "label": "高品質の翻訳",
-        "help": "オン: レビュー工程を含みます（クレジット/時間が約5×必要）。オフ: レビューを省略します。"
+        "help": "オン: レビュー工程を含みます（約5×のクレジット/時間）。オフ: レビューを省略します。",
+        "helpWithEstimate": "レビューは約5×のクレジットを使用。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。"
       },
       "qualitySummary": {
         "label": "高品質の要約",
-        "help": "オン: Claude Opusで詳細分析。オフ: GPT-5.1で高速分析。"
+        "help": "オン: Claude Opusで詳細分析+ハイライトクリップ（約4×クレジット）。オフ: GPT-5.1で高速分析。",
+        "helpWithEstimate": "詳細分析+ハイライトクリップ（約4×クレジット）。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。"
+      },
+      "qualityDubbing": {
+        "label": "高品質の吹き替え",
+        "help": "オン: ElevenLabs TTS（プレミアム音声、約13×クレジット）。オフ: OpenAI TTS（良好な品質）。",
+        "helpWithEstimate": "ElevenLabs TTS（約13×クレジット）。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。"
       }
     },
     "byoMaster": {
@@ -259,12 +268,34 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "この音声をプレビュー",
+      "previewing": "再生中...",
+      "previewFree": "プレビュー",
+      "previewWithCost": "プレビュー（{{cost}}クレジット）",
       "mixLabel": "吹き替え音量 vs 元の動画の音量",
       "mixHelp": "吹き替え音声の下で再生する元のサウンドトラックの量を調整します。",
       "mixAmbient": "環境音を大きく",
-      "mixVoice": "音声を大きく"
+      "mixVoice": "音声を大きく",
+      "voiceCloning": "オリジナルの声をクローン",
+      "voiceCloningDesc": "吹き替え音声で元の話者の声を保持",
+      "voiceCloningEnabled": "ElevenLabsでボイスクローニングが有効です。元の話者の声が吹き替え音声で保持されます。",
+      "voiceCloningInfo": "ボイスクローニングはElevenLabs吹き替えAPIを使用して、元の話者の声を分析・再現します。",
+      "costPerMinute": "1分あたりのコスト",
+      "credits": "クレジット",
+      "yourBalance": "残高",
+      "canClone": "クローン可能",
+      "upToMinutes": "最大{{minutes}}分",
+      "loading": "読み込み中..."
     },
     "byoOpenAi": {
       "title": "自分のAPIキーを使用",
@@ -291,7 +322,43 @@
       "toggleAria": "OpenAIキーの使用を切り替え",
       "toggleOn": "AIタスクに自分のOpenAIキーを使用中。",
       "toggleOff": "AIタスクにStage5クレジットを使用中。",
-      "toggleError": "設定の更新に失敗しました。"
+      "toggleError": "設定の更新に失敗しました。",
+      "howToGetKeys": "APIキーの取得方法"
+    },
+    "apiKeyGuide": {
+      "title": "APIキーの取得方法",
+      "required": "必須",
+      "optional": "オプション",
+      "openai": {
+        "description": "OpenAIは文字起こし（Whisper）、翻訳（GPT）、テキスト読み上げ吹き替えを提供します。",
+        "step1": "アクセス：",
+        "step2": "アカウントを登録またはログイン",
+        "step3": "左サイドバーの",
+        "step3b": "に移動",
+        "step4": "クリック：",
+        "step5": "請求設定で支払い方法を追加（API使用に必須）",
+        "step6": "キー（sk-で始まる）をコピーしてStage5に貼り付け",
+        "note": "ヒント：新しいOpenAIアカウントには無料クレジットが付与されることが多いです。使用した分だけ支払います。"
+      },
+      "anthropic": {
+        "description": "Claudeはより高品質な翻訳レビューを提供します。これがない場合、GPTがすべての翻訳タスクを処理します。",
+        "step1": "アクセス：",
+        "step2": "アカウントを登録またはログイン",
+        "step3": "設定の",
+        "step3b": "に移動",
+        "step4": "クリック：",
+        "step5": "プランと請求で支払い方法を追加（API使用に必須）",
+        "step6": "キー（sk-ant-で始まる）をコピーしてStage5に貼り付け",
+        "note": "ヒント：Anthropicは従量課金制です。使用した分だけ支払います。"
+      },
+      "elevenlabs": {
+        "description": "ElevenLabsはプレミアム文字起こしと音声クローン吹き替えを提供します。これがない場合、OpenAIがこれらのタスクを処理します。",
+        "step1": "アクセス：",
+        "step2": "アカウントを登録またはログイン",
+        "step3": "プロフィールアイコンをクリックして選択：",
+        "step4": "APIキーをコピーしてStage5に貼り付け",
+        "note": "ヒント：ElevenLabsには使用制限付きの無料プランがあります。より多く使用するには、アカウント設定で有料プランにアップグレードしてください。"
+      }
     },
     "byoAnthropic": {
       "title": "Anthropic APIキー（オプション）",

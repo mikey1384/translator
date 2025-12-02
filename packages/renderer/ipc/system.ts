@@ -221,6 +221,13 @@ export function resetCreditsToZero(): Promise<{
   return window.electron.resetCreditsToZero();
 }
 
+export function getVoiceCloningPricing(): Promise<{
+  creditsPerMinute: number;
+  description: string;
+}> {
+  return window.electron.getVoiceCloningPricing();
+}
+
 // ElevenLabs API key functions
 export function getElevenLabsApiKey(): Promise<string | null> {
   return window.electron.getElevenLabsApiKey();

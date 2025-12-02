@@ -21,6 +21,7 @@ interface State {
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
   qualityTranslation: boolean; // true = include review phase
+  dubUseVoiceCloning: boolean; // true = use ElevenLabs Dubbing API to clone original voice
   dubVoice: string;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
@@ -59,6 +60,7 @@ interface Actions {
   setShowOriginalText(show: boolean): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
+  setDubUseVoiceCloning(v: boolean): void;
   setDubVoice(voice: string): void;
   setDubAmbientMix(value: number): void;
   setBaseFontSize(size: number): void;
@@ -84,6 +86,7 @@ const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
+const DUB_VOICE_CLONING_KEY = 'savedDubVoiceCloning';
 const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
 const DEFAULT_DUB_VOICE = 'rachel';
@@ -111,6 +114,12 @@ const ALLOWED_DUB_VOICES = new Set([
   'elli',
   'arnold',
   'sam',
+  // Additional ElevenLabs voices
+  'sarah',
+  'charlie',
+  'emily',
+  'matilda',
+  'brian',
   // Legacy OpenAI voices (for backwards compatibility - mapped to ElevenLabs on backend)
   'alloy',
   'echo',
@@ -132,10 +141,12 @@ const initial: State = {
   targetLanguage: localStorage.getItem(TARGET_LANG_KEY) ?? 'original',
   summaryLanguage: localStorage.getItem(SUMMARY_LANG_KEY) ?? 'english',
   summaryEffortLevel:
-    (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ?? 'high',
+    (localStorage.getItem(SUMMARY_EFFORT_KEY) as SummaryEffortLevel) ??
+    'standard',
   showOriginalText: parseStoredBool(SHOW_ORIGINAL_KEY, true),
   qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
-  qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, true),
+  qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, false),
+  dubUseVoiceCloning: parseStoredBool(DUB_VOICE_CLONING_KEY, false),
   dubVoice: (() => {
     const stored = localStorage.getItem(DUB_VOICE_KEY);
     return stored && ALLOWED_DUB_VOICES.has(stored)
@@ -283,6 +294,11 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
         setQualityTranslation(v) {
           localStorage.setItem(QUALITY_TRANSLATION_KEY, JSON.stringify(v));
           set({ qualityTranslation: v });
+        },
+
+        setDubUseVoiceCloning(v) {
+          localStorage.setItem(DUB_VOICE_CLONING_KEY, JSON.stringify(v));
+          set({ dubUseVoiceCloning: v });
         },
 
         setDubVoice(voice) {

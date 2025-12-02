@@ -1,10 +1,13 @@
 import axios from 'axios';
 import { BrowserWindow } from 'electron';
-import Store from 'electron-store';
-import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import FormData from 'form-data';
-import { AI_MODELS, ERROR_CODES } from '../../shared/constants/index.js';
+import {
+  AI_MODELS,
+  ERROR_CODES,
+  API_TIMEOUTS,
+} from '../../shared/constants/index.js';
+import { getDeviceId } from '../handlers/credit-handlers.js';
 
 export const STAGE5_API_URL = 'https://api.stage5.tools';
 
@@ -22,17 +25,6 @@ function sendNetLog(
     // Do nothing
   }
 }
-
-const idStore = new Store<{ deviceId?: string }>({ name: 'device-config' });
-
-export const getDeviceId = (): string => {
-  let id = idStore.get('deviceId');
-  if (!id) {
-    id = uuidv4();
-    idStore.set('deviceId', id);
-  }
-  return id;
-};
 
 const headers = () => ({ Authorization: `Bearer ${getDeviceId()}` });
 
@@ -91,8 +83,8 @@ export async function transcribe({
       const { jobId } = submitResponse.data;
 
       // Step 2: Poll for job completion
-      const pollInterval = 1000; // Poll every 1 second
-      const maxWaitTime = 300000; // 5 minutes max
+      const pollInterval = API_TIMEOUTS.TRANSCRIPTION_POLL_INTERVAL;
+      const maxWaitTime = API_TIMEOUTS.TRANSCRIPTION_MAX_WAIT;
       const startTime = Date.now();
 
       while (Date.now() - startTime < maxWaitTime) {
@@ -289,8 +281,8 @@ async function pollTranslationJob({
   jobId: string;
   signal?: AbortSignal;
 }): Promise<any> {
-  const pollIntervalMs = 2000;
-  const maxWaitMs = 600_000; // 10 minutes
+  const pollIntervalMs = API_TIMEOUTS.TRANSLATION_POLL_INTERVAL;
+  const maxWaitMs = API_TIMEOUTS.TRANSLATION_MAX_WAIT;
   const startTime = Date.now();
 
   while (Date.now() - startTime < maxWaitMs) {
@@ -731,8 +723,8 @@ export async function transcribeViaR2({
   await startTranscriptionProcessing({ jobId, signal });
 
   // Step 4: Poll for result
-  const pollInterval = 2000; // 2 seconds
-  const maxWaitMs = 600000; // 10 minutes
+  const pollInterval = API_TIMEOUTS.TRANSLATION_POLL_INTERVAL;
+  const maxWaitMs = API_TIMEOUTS.TRANSLATION_MAX_WAIT;
   const startTime = Date.now();
 
   while (Date.now() - startTime < maxWaitMs) {
@@ -764,4 +756,179 @@ export async function transcribeViaR2({
   }
 
   throw new Error('Transcription timed out');
+}
+
+// ============================================================================
+// Voice Cloning Dubbing (ElevenLabs Dubbing API)
+// ============================================================================
+
+export interface VoiceCloningResult {
+  audioBase64: string;
+  transcript: string;
+  format: string;
+  durationSeconds: number;
+  creditsUsed: number;
+}
+
+/**
+ * Dub video/audio with voice cloning using ElevenLabs Dubbing API via Stage5 API
+ * This clones the original speaker's voice and translates to the target language
+ */
+export async function voiceCloneDub({
+  file,
+  targetLanguage,
+  sourceLanguage,
+  durationSeconds,
+  numSpeakers,
+  dropBackgroundAudio = true,
+  onProgress,
+  signal,
+}: {
+  file: { path: string; name: string; type: string };
+  targetLanguage: string;
+  sourceLanguage?: string;
+  durationSeconds: number;
+  numSpeakers?: number;
+  dropBackgroundAudio?: boolean;
+  onProgress?: (status: string, progress: number) => void;
+  signal?: AbortSignal;
+}): Promise<VoiceCloningResult> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    onProgress?.('Preparing voice cloning...', 5);
+
+    // Read the file
+    const fs = await import('fs');
+    const fileBuffer = await fs.promises.readFile(file.path);
+
+    // Create form data
+    const FormData = (await import('form-data')).default;
+    const formData = new FormData();
+    formData.append('file', fileBuffer, {
+      filename: file.name,
+      contentType: file.type || 'video/mp4',
+    });
+    formData.append('target_language', targetLanguage);
+    formData.append('duration_seconds', String(durationSeconds));
+    if (sourceLanguage) {
+      formData.append('source_language', sourceLanguage);
+    }
+    if (numSpeakers !== undefined) {
+      formData.append('num_speakers', String(numSpeakers));
+    }
+    formData.append('drop_background_audio', String(dropBackgroundAudio));
+
+    onProgress?.('Uploading for voice cloning...', 15);
+
+    const response = await axios.post(
+      `${STAGE5_API_URL}/dub/voice-clone`,
+      formData,
+      {
+        headers: {
+          ...headers(),
+          ...formData.getHeaders(),
+        },
+        signal,
+        // Long timeout for voice cloning (can take several minutes)
+        timeout: 600000, // 10 minutes
+        onUploadProgress: progressEvent => {
+          if (progressEvent.total) {
+            const uploadProgress = Math.round(
+              (progressEvent.loaded / progressEvent.total) * 30
+            );
+            onProgress?.('Uploading...', 15 + uploadProgress);
+          }
+        },
+      }
+    );
+
+    sendNetLog('info', `POST /dub/voice-clone -> ${response.status}`, {
+      url: `${STAGE5_API_URL}/dub/voice-clone`,
+      method: 'POST',
+      status: response.status,
+    });
+
+    onProgress?.('Voice cloning complete!', 100);
+
+    const data = response.data as VoiceCloningResult;
+    return data;
+  } catch (error: any) {
+    if (
+      error?.name === 'AbortError' ||
+      error?.code === 'ERR_CANCELED' ||
+      signal?.aborted
+    ) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    if (error?.response?.status === 402) {
+      const errorData = error.response.data;
+      const message = errorData?.message || ERROR_CODES.INSUFFICIENT_CREDITS;
+      throw new Error(message);
+    }
+
+    let errToThrow: any = error;
+
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        {
+          status: error.response.status,
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.response.data,
+        }
+      );
+      const details =
+        error.response.data?.details ??
+        error.response.data?.message ??
+        error.response.data;
+      if (details) {
+        const message =
+          typeof details === 'string' ? details : JSON.stringify(details);
+        errToThrow = new Error(message);
+      }
+    } else if (error.request) {
+      sendNetLog(
+        'error',
+        `HTTP NO_RESPONSE ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+        { url: error.config?.url, method: error.config?.method }
+      );
+    } else {
+      sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
+    }
+
+    throw errToThrow;
+  }
+}
+
+/**
+ * Get voice cloning pricing info from Stage5 API
+ */
+export async function getVoiceCloningPricing(): Promise<{
+  creditsPerMinute: number;
+  description: string;
+}> {
+  try {
+    const response = await axios.get(
+      `${STAGE5_API_URL}/dub/voice-clone/pricing`,
+      {
+        headers: headers(),
+      }
+    );
+    return response.data;
+  } catch {
+    // Fallback pricing if API call fails
+    return {
+      creditsPerMinute: 35000,
+      description: 'Voice cloning uses ElevenLabs Dubbing API',
+    };
+  }
 }

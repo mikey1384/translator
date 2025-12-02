@@ -25,3 +25,9 @@ export function readFileContent(
 ): Promise<{ success: boolean; data?: ArrayBuffer; error?: string }> {
   return window.electron.readFileContent(filePath);
 }
+
+export function getFileSize(
+  filePath: string
+): Promise<{ success: boolean; sizeBytes?: number; error?: string }> {
+  return window.electron.getFileSize(filePath);
+}

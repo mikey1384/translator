@@ -395,6 +395,12 @@ declare module '@shared-types/app' {
     quality?: 'standard' | 'high';
     operationId: string;
     ambientMix?: number;
+    /** Use ElevenLabs voice cloning instead of preset TTS voices */
+    useVoiceCloning?: boolean;
+    /** Video duration in seconds (required for voice cloning credit estimation) */
+    videoDurationSeconds?: number;
+    /** Source language for voice cloning (optional, auto-detected if not provided) */
+    sourceLanguage?: string;
   }
 
   export interface DubSubtitlesResult {
@@ -527,6 +533,9 @@ declare module '@shared-types/app' {
     readFileContent: (
       filePath: string
     ) => Promise<{ success: boolean; data?: ArrayBuffer; error?: string }>;
+    getFileSize: (
+      filePath: string
+    ) => Promise<{ success: boolean; sizeBytes?: number; error?: string }>;
 
     hasVideoTrack: (filePath: string) => Promise<boolean>;
     getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;
@@ -643,21 +652,35 @@ declare module '@shared-types/app' {
     onCheckoutCancelled: (callback: () => void) => () => void;
     getEntitlements: () => Promise<{
       byoOpenAi: boolean;
+      byoAnthropic: boolean;
+      byoElevenLabs: boolean;
       fetchedAt?: string;
     }>;
     refreshEntitlements: () => Promise<{
       byoOpenAi: boolean;
+      byoAnthropic: boolean;
+      byoElevenLabs: boolean;
       fetchedAt?: string;
     }>;
     onEntitlementsUpdated: (
-      callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+      callback: (snapshot: {
+        byoOpenAi: boolean;
+        byoAnthropic: boolean;
+        byoElevenLabs: boolean;
+        fetchedAt?: string;
+      }) => void
     ) => () => void;
     onEntitlementsError: (
       callback: (payload: { message: string }) => void
     ) => () => void;
     onByoUnlockPending: (callback: () => void) => () => void;
     onByoUnlockConfirmed: (
-      callback: (snapshot: { byoOpenAi: boolean; fetchedAt?: string }) => void
+      callback: (snapshot: {
+        byoOpenAi: boolean;
+        byoAnthropic: boolean;
+        byoElevenLabs: boolean;
+        fetchedAt?: string;
+      }) => void
     ) => () => void;
     onByoUnlockCancelled: (callback: () => void) => () => void;
     onByoUnlockError: (
@@ -665,6 +688,117 @@ declare module '@shared-types/app' {
     ) => () => void;
     onOpenAiApiKeyChanged: (
       callback: (payload: { hasKey: boolean }) => void
+    ) => () => void;
+
+    // Anthropic API key methods
+    getAnthropicApiKey: () => Promise<string | null>;
+    setAnthropicApiKey: (
+      apiKey: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    clearAnthropicApiKey: () => Promise<{ success: boolean; error?: string }>;
+    validateAnthropicApiKey: (
+      apiKey?: string
+    ) => Promise<{ ok: boolean; error?: string }>;
+    getByoAnthropicEnabled: () => Promise<boolean>;
+    setByoAnthropicEnabled: (
+      enabled: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    onAnthropicApiKeyChanged: (
+      callback: (payload: { hasKey: boolean }) => void
+    ) => () => void;
+
+    // ElevenLabs API key methods
+    getElevenLabsApiKey: () => Promise<string | null>;
+    setElevenLabsApiKey: (
+      apiKey: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    clearElevenLabsApiKey: () => Promise<{ success: boolean; error?: string }>;
+    validateElevenLabsApiKey: (
+      apiKey?: string
+    ) => Promise<{ ok: boolean; error?: string }>;
+    getByoElevenLabsEnabled: () => Promise<boolean>;
+    setByoElevenLabsEnabled: (
+      enabled: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    onElevenLabsApiKeyChanged: (
+      callback: (payload: { hasKey: boolean }) => void
+    ) => () => void;
+
+    // Master BYO toggle
+    getByoMasterEnabled: () => Promise<boolean>;
+    setByoMasterEnabled: (
+      enabled: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    // Claude translation/review preferences
+    getPreferClaudeTranslation: () => Promise<boolean>;
+    setPreferClaudeTranslation: (
+      prefer: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    getPreferClaudeReview: () => Promise<boolean>;
+    setPreferClaudeReview: (
+      prefer: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    // Provider preferences
+    getPreferredTranscriptionProvider: () => Promise<
+      'elevenlabs' | 'openai' | 'stage5'
+    >;
+    setPreferredTranscriptionProvider: (
+      provider: 'elevenlabs' | 'openai' | 'stage5'
+    ) => Promise<{ success: boolean; error?: string }>;
+    getPreferredDubbingProvider: () => Promise<
+      'elevenlabs' | 'openai' | 'stage5'
+    >;
+    setPreferredDubbingProvider: (
+      provider: 'elevenlabs' | 'openai' | 'stage5'
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    // Stage5 dubbing TTS provider
+    getStage5DubbingTtsProvider: () => Promise<'openai' | 'elevenlabs'>;
+    setStage5DubbingTtsProvider: (
+      provider: 'openai' | 'elevenlabs'
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    // Voice cloning pricing
+    getVoiceCloningPricing: () => Promise<{
+      creditsPerMinute: number;
+      description: string;
+    }>;
+
+    // System info
+    getSystemInfo: () => Promise<{
+      platform: string;
+      arch: string;
+      release?: string;
+      cpu?: string;
+      isAppleSilicon?: boolean;
+    }>;
+
+    // Cookie preferences
+    getDefaultCookieBrowser: () => Promise<string>;
+    getPreferredCookiesBrowser: () => Promise<string>;
+    setPreferredCookiesBrowser: (
+      v: string
+    ) => Promise<{ success: boolean; error?: string }>;
+
+    // App log
+    onAppLog: (callback: (payload: any) => void) => () => void;
+
+    // Transcript summary
+    generateTranscriptSummary: (
+      options: TranscriptSummaryRequest
+    ) => Promise<TranscriptSummaryResult>;
+    onTranscriptSummaryProgress: (
+      callback: (progress: TranscriptSummaryProgress) => void
+    ) => () => void;
+
+    // Highlight clip
+    cutHighlightClip: (
+      options: CutHighlightClipRequest
+    ) => Promise<CutHighlightClipResult>;
+    onHighlightCutProgress: (
+      callback: (progress: HighlightCutProgress) => void
     ) => () => void;
 
     // Update System

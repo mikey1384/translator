@@ -22,6 +22,7 @@ export const colors = {
   dark: '#F5F5F5',
   gray: '#8A8A8A',
   grayLight: '#2A2A2A',
+  grayMedium: '#6A6A6A',
   grayDark: '#E0E0E0',
   muted: '#B0B0B0',
   white: '#080808',

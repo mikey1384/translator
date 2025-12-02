@@ -29,6 +29,21 @@ interface Actions {
   setDubbing(patch: Partial<TranslationTask>): void;
   startMerge(): void;
   doneMerge(): void;
+  /**
+   * Atomically check if dubbing can start (no transcription running)
+   * and set dubbing to inProgress. Returns true if started, false if blocked.
+   */
+  tryStartDubbing(id: string, stage: string): boolean;
+  /**
+   * Atomically check if translation can start (no transcription running)
+   * and set translation to inProgress. Returns true if started, false if blocked.
+   */
+  tryStartTranslation(id: string, stage: string): boolean;
+  /**
+   * Atomically check if summary can start and set to inProgress.
+   * Returns true if started, false if blocked.
+   */
+  tryStartSummary(id: string, stage: string): boolean;
 }
 
 const empty: TranslationTask = {
@@ -229,5 +244,60 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
           inProgress: false,
         };
       }),
+    tryStartDubbing: (id: string, stage: string) => {
+      let started = false;
+      set(s => {
+        // Block if transcription is running or dubbing already in progress
+        if (s.transcription.inProgress || s.dubbing.inProgress) {
+          return;
+        }
+        s.dubbing = {
+          id,
+          stage,
+          percent: 0,
+          inProgress: true,
+          isCompleted: false,
+        };
+        started = true;
+      });
+      return started;
+    },
+    tryStartTranslation: (id: string, stage: string) => {
+      let started = false;
+      set(s => {
+        // Block if transcription is running or translation already in progress
+        if (s.transcription.inProgress || s.translation.inProgress) {
+          return;
+        }
+        s.translation = {
+          id,
+          stage,
+          percent: 0,
+          inProgress: true,
+          isCompleted: false,
+          reviewedBatchStartIndex: null,
+        };
+        started = true;
+      });
+      return started;
+    },
+    tryStartSummary: (id: string, stage: string) => {
+      let started = false;
+      set(s => {
+        // Block if summary already in progress
+        if (s.summary.inProgress) {
+          return;
+        }
+        s.summary = {
+          id,
+          stage,
+          percent: 0,
+          inProgress: true,
+          isCompleted: false,
+        };
+        started = true;
+      });
+      return started;
+    },
   }))
 );

@@ -12,6 +12,8 @@
     "backToApp": "앱으로 돌아가기",
     "next": "다음",
     "done": "완료",
+    "gotIt": "알겠습니다",
+    "close": "닫기",
     "loading": "로딩 중...",
     "error": {
       "unexpected": "예기치 않은 오류가 발생했습니다.",
@@ -239,11 +241,18 @@
       },
       "qualityTranslation": {
         "label": "고품질 번역",
-        "help": "켜짐: 검토 단계 포함(크레딧/시간 약 5× 더 사용). 꺼짐: 검토 건너뜀."
+        "help": "켜짐: 검토 단계 포함(~5× 크레딧/시간). 꺼짐: 검토 건너뜀.",
+        "helpWithEstimate": "검토는 ~5× 크레딧을 사용합니다. 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질."
       },
       "qualitySummary": {
         "label": "고품질 요약",
-        "help": "켜짐: Claude Opus로 정밀 분석. 꺼짐: GPT-5.1로 빠른 분석."
+        "help": "켜짐: Claude Opus로 정밀 분석 + 하이라이트 클립 (~4× 크레딧). 꺼짐: GPT-5.1로 빠른 분석.",
+        "helpWithEstimate": "정밀 분석 + 하이라이트 클립 (~4× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질."
+      },
+      "qualityDubbing": {
+        "label": "고품질 더빙",
+        "help": "켜짐: ElevenLabs TTS (프리미엄 음성, ~13× 크레딧). 꺼짐: OpenAI TTS (좋은 품질).",
+        "helpWithEstimate": "ElevenLabs TTS (~13× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질."
       }
     },
     "byoMaster": {
@@ -296,12 +305,34 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "이 음성 미리듣기",
+      "previewing": "재생 중...",
+      "previewFree": "미리듣기",
+      "previewWithCost": "미리듣기 ({{cost}} 크레딧)",
       "mixLabel": "더빙 음량 vs 원본 영상 음량",
       "mixHelp": "더빙 음성 아래로 재생되는 원본 사운드트랙의 비율을 조절합니다.",
       "mixAmbient": "배경음 더 크게",
-      "mixVoice": "목소리 더 크게"
+      "mixVoice": "목소리 더 크게",
+      "voiceCloning": "원본 음성 복제",
+      "voiceCloningDesc": "더빙 오디오에서 원래 화자의 음성 보존",
+      "voiceCloningEnabled": "ElevenLabs 음성 복제가 활성화되었습니다. 원래 화자의 음성이 더빙 오디오에서 보존됩니다.",
+      "voiceCloningInfo": "음성 복제는 ElevenLabs 더빙 API를 사용하여 원래 화자의 음성을 분석하고 재현합니다.",
+      "costPerMinute": "분당 비용",
+      "credits": "크레딧",
+      "yourBalance": "잔액",
+      "canClone": "복제 가능",
+      "upToMinutes": "최대 {{minutes}}분",
+      "loading": "로딩 중..."
     },
     "byoOpenAi": {
       "title": "나만의 API 키 사용",
@@ -328,7 +359,43 @@
       "toggleAria": "OpenAI 키 사용 전환",
       "toggleOn": "AI 작업에 내 OpenAI 키를 사용 중입니다.",
       "toggleOff": "AI 작업에 Stage5 크레딧을 사용 중입니다.",
-      "toggleError": "설정 업데이트에 실패했습니다."
+      "toggleError": "설정 업데이트에 실패했습니다.",
+      "howToGetKeys": "API 키는 어떻게 받나요?"
+    },
+    "apiKeyGuide": {
+      "title": "API 키 받는 방법",
+      "required": "필수",
+      "optional": "선택",
+      "openai": {
+        "description": "OpenAI는 전사(Whisper), 번역(GPT), 텍스트 음성 변환 더빙을 제공합니다.",
+        "step1": "방문:",
+        "step2": "계정에 가입하거나 로그인",
+        "step3": "왼쪽 사이드바에서",
+        "step3b": "로 이동",
+        "step4": "클릭:",
+        "step5": "결제 설정에서 결제 수단 추가 (API 사용에 필수)",
+        "step6": "키(sk-로 시작)를 복사하여 Stage5에 붙여넣기",
+        "note": "팁: 새 OpenAI 계정은 종종 무료 크레딧을 받습니다. 사용한 만큼만 지불합니다."
+      },
+      "anthropic": {
+        "description": "Claude는 더 높은 품질의 번역 검토를 제공합니다. 없으면 GPT가 모든 번역 작업을 처리합니다.",
+        "step1": "방문:",
+        "step2": "계정에 가입하거나 로그인",
+        "step3": "설정에서",
+        "step3b": "로 이동",
+        "step4": "클릭:",
+        "step5": "요금제 및 결제에서 결제 수단 추가 (API 사용에 필수)",
+        "step6": "키(sk-ant-로 시작)를 복사하여 Stage5에 붙여넣기",
+        "note": "팁: Anthropic은 사용량 기반 요금제를 제공합니다. 사용한 만큼만 지불합니다."
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs는 프리미엄 전사 및 음성 복제 더빙을 제공합니다. 없으면 OpenAI가 이러한 작업을 처리합니다.",
+        "step1": "방문:",
+        "step2": "계정에 가입하거나 로그인",
+        "step3": "프로필 아이콘을 클릭하고 선택:",
+        "step4": "API 키를 복사하여 Stage5에 붙여넣기",
+        "note": "팁: ElevenLabs는 제한된 사용량의 무료 플랜이 있습니다. 더 많이 사용하려면 계정 설정에서 유료 플랜으로 업그레이드하세요."
+      }
     },
     "byoAnthropic": {
       "title": "Anthropic API 키 (선택 사항)",

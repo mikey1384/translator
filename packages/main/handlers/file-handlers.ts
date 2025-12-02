@@ -160,3 +160,26 @@ export async function handleReadFileContent(
     };
   }
 }
+
+export async function handleGetFileSize(
+  _event: IpcMainInvokeEvent,
+  filePath: string
+): Promise<{ success: boolean; sizeBytes?: number; error?: string }> {
+  if (!filePath || typeof filePath !== 'string') {
+    return { success: false, error: 'Invalid file path provided.' };
+  }
+  try {
+    const normalizedPath = path.normalize(filePath);
+    const stats = await fs.stat(normalizedPath);
+    return { success: true, sizeBytes: stats.size };
+  } catch (error: any) {
+    console.error(
+      `[handleGetFileSize] Error getting size for ${filePath}:`,
+      error
+    );
+    return {
+      success: false,
+      error: error.message || 'Failed to get file size.',
+    };
+  }
+}

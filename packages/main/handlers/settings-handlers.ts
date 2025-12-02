@@ -27,6 +27,7 @@ export type SettingsStoreType = Store<{
   preferClaudeReview: boolean; // When true (default), use Claude Opus for review; false = GPT-5.1 with high reasoning
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for transcription
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for dubbing/TTS
+  stage5DubbingTtsProvider: 'openai' | 'elevenlabs'; // TTS provider when using Stage5 API for dubbing
   preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
 }>;
 
@@ -514,9 +515,10 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  function setStage5DubbingTtsProvider(
-    value: 'openai' | 'elevenlabs'
-  ): { success: boolean; error?: string } {
+  function setStage5DubbingTtsProvider(value: 'openai' | 'elevenlabs'): {
+    success: boolean;
+    error?: string;
+  } {
     try {
       store.set('stage5DubbingTtsProvider', value);
       return { success: true };

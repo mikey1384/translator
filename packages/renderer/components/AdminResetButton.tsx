@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { useState, useEffect } from 'react';
-import { useCreditStore } from '../state';
+import { useCreditStore, useAiStore } from '../state';
 import { colors } from '../styles';
 import { SystemIPC } from '../ipc';
 
@@ -44,8 +44,32 @@ const resetButton = css`
   }
 `;
 
+const previewButton = css`
+  ${adminButton}
+  background: ${colors.warning};
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: #d97706;
+  }
+`;
+
+const previewActiveButton = css`
+  ${adminButton}
+  background: ${colors.primary};
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: #2563eb;
+  }
+`;
+
 export default function AdminResetButton() {
   const { refresh } = useCreditStore();
+  const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
+  const setAdminByoPreviewMode = useAiStore(
+    state => state.setAdminByoPreviewMode
+  );
   const [isAdmin, setIsAdmin] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -121,6 +145,10 @@ export default function AdminResetButton() {
     }
   };
 
+  const handleToggleByoPreview = () => {
+    setAdminByoPreviewMode(!adminByoPreviewMode);
+  };
+
   // Only render for admin
   if (!isAdmin) return null;
 
@@ -141,6 +169,13 @@ export default function AdminResetButton() {
         title="Admin: Reset credits to 0"
       >
         {resetLoading ? '🔄 Resetting...' : '🗑️ Reset to 0'}
+      </button>
+      <button
+        className={adminByoPreviewMode ? previewActiveButton : previewButton}
+        onClick={handleToggleByoPreview}
+        title="Admin: Toggle BYO preview mode (see UI as if BYO not purchased)"
+      >
+        {adminByoPreviewMode ? '👁️ BYO Preview ON' : '👁️ BYO Preview'}
       </button>
     </div>
   );

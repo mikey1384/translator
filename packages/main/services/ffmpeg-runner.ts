@@ -39,6 +39,12 @@ export interface FFmpegContext {
   hasVideoTrack(file: string): Promise<boolean>;
   getVideoMetadata(file: string): Promise<VideoMeta>;
   cancelOperation(id: string): void;
+  muxAudioIntoVideo(
+    audioPath: string,
+    videoPath: string,
+    outputPath: string,
+    opts?: RunOpts
+  ): Promise<void>;
 }
 
 export interface RunOpts {
@@ -440,6 +446,30 @@ export async function createFFmpegContext(
     }
   }
 
+  async function muxAudioIntoVideo(
+    audioPath: string,
+    videoPath: string,
+    outputPath: string,
+    opts: RunOpts = {}
+  ): Promise<void> {
+    const args = [
+      '-y',
+      '-i',
+      videoPath,
+      '-i',
+      audioPath,
+      '-c:v',
+      'copy',
+      '-map',
+      '0:v:0',
+      '-map',
+      '1:a:0',
+      '-shortest',
+      outputPath,
+    ];
+    await run(args, opts);
+  }
+
   return {
     tempDir,
     ffmpegPath,
@@ -449,5 +479,6 @@ export async function createFFmpegContext(
     hasVideoTrack,
     getVideoMetadata,
     cancelOperation,
+    muxAudioIntoVideo,
   };
 }

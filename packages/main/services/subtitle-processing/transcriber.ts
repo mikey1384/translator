@@ -13,7 +13,7 @@ import {
   MAX_CHARS_PER_SECOND,
 } from './constants.js';
 import fs from 'fs';
-import { throwIfAborted } from './utils.js';
+import { throwIfAborted, validateTimingInterval } from './utils.js';
 import { ERROR_CODES } from '../../../shared/constants/index.js';
 import {
   transcribe as transcribeAi,
@@ -131,15 +131,17 @@ export async function transcribeChunk({
     if (Array.isArray(segments) && segments.length > 0) {
       let segIdx = 1;
       for (const seg of segments) {
-        // Basic quality gate (still permissive to match Whisper closely)
-        const ok =
-          typeof seg?.start === 'number' &&
-          typeof seg?.end === 'number' &&
-          seg.end > seg.start;
-        if (!ok) continue;
+        // Validate timing values from API response
+        const timing = validateTimingInterval(seg?.start, seg?.end);
+        if (!timing) {
+          log.debug(
+            `[transcribeChunk] Skipping segment with invalid timing: start=${seg?.start}, end=${seg?.end}`
+          );
+          continue;
+        }
 
-        const absStart = (seg.start ?? 0) + startTime;
-        const absEnd = (seg.end ?? 0) + startTime;
+        const absStart = timing.start + startTime;
+        const absEnd = timing.end + startTime;
 
         // Prefer Whisper-provided text, fall back to joining words inside the segment
         let text: string = (seg.text ?? '').trim();
@@ -149,8 +151,8 @@ export async function transcribeChunk({
             (w: any) =>
               typeof w?.start === 'number' &&
               typeof w?.end === 'number' &&
-              w.start >= (seg.start ?? 0) - BOUNDARY_TOL &&
-              w.end <= (seg.end ?? 0) + BOUNDARY_TOL
+              w.start >= timing.start - BOUNDARY_TOL &&
+              w.end <= timing.end + BOUNDARY_TOL
           );
           text = segWords.map((w: any) => String(w.word ?? '')).join(' ');
           text = text.replace(/\s{2,}/g, ' ').trim();
@@ -163,13 +165,13 @@ export async function transcribeChunk({
             (w: any) =>
               typeof w?.start === 'number' &&
               typeof w?.end === 'number' &&
-              w.start >= (seg.start ?? 0) - BOUNDARY_TOL &&
-              w.end <= (seg.end ?? 0) + BOUNDARY_TOL
+              w.start >= timing.start - BOUNDARY_TOL &&
+              w.end <= timing.end + BOUNDARY_TOL
           )
           .map((w: any) => ({
             ...w,
-            start: (w.start ?? 0) - (seg.start ?? 0),
-            end: (w.end ?? 0) - (seg.start ?? 0),
+            start: (w.start ?? 0) - timing.start,
+            end: (w.end ?? 0) - timing.start,
           }));
 
         // Build base segment and apply smart splitting using Whisper word timings

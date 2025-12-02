@@ -108,6 +108,11 @@ export async function extractAudio(
     const stats = fs.statSync(videoPath);
     const fileSizeMB = Math.round(stats.size / (1024 * 1024));
     const duration = await ctx.getMediaDuration(videoPath, signal);
+    if (!duration || duration <= 0) {
+      throw new FFmpegError(
+        'Video has zero or invalid duration. The file may be corrupted or unsupported.'
+      );
+    }
     const durationMin = Math.round(duration / 60);
     const ANALYSIS_END = 3;
     const PREP_END = 5;
