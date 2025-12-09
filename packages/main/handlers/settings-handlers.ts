@@ -18,12 +18,14 @@ import {
 
 /**
  * All BYO-related settings returned in a single batched call
+ * NOTE: Keys are NOT decrypted here to avoid Keychain prompts on startup.
+ * Only presence is checked. Decryption happens lazily in ai-provider.ts when needed.
  */
 export interface AllByoSettings {
-  // API keys (decrypted values)
-  openAiKey: string | null;
-  anthropicKey: string | null;
-  elevenLabsKey: string | null;
+  // API key presence flags (NOT decrypted values - avoids Keychain prompt)
+  openAiKeyPresent: boolean;
+  anthropicKeyPresent: boolean;
+  elevenLabsKeyPresent: boolean;
   // Individual provider toggles
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
@@ -624,13 +626,65 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── Check if API key is present (without decrypting) ─────────── */
+  /**
+   * Check if an encrypted API key is stored WITHOUT decrypting it.
+   * This avoids triggering Keychain/credential prompts on app startup.
+   */
+  function hasApiKeyStored(): boolean {
+    try {
+      const stored = store.get('apiKey', null);
+      return (
+        typeof stored === 'string' && stored.length > 0 && isEncrypted(stored)
+      );
+    } catch (err) {
+      log.error('[settings] Failed to check if API key is stored:', err);
+      return false;
+    }
+  }
+
+  function hasAnthropicApiKeyStored(): boolean {
+    try {
+      const stored = store.get('anthropicApiKey', null);
+      return (
+        typeof stored === 'string' && stored.length > 0 && isEncrypted(stored)
+      );
+    } catch (err) {
+      log.error(
+        '[settings] Failed to check if Anthropic API key is stored:',
+        err
+      );
+      return false;
+    }
+  }
+
+  function hasElevenLabsApiKeyStored(): boolean {
+    try {
+      const stored = store.get('elevenLabsApiKey', null);
+      return (
+        typeof stored === 'string' && stored.length > 0 && isEncrypted(stored)
+      );
+    } catch (err) {
+      log.error(
+        '[settings] Failed to check if ElevenLabs API key is stored:',
+        err
+      );
+      return false;
+    }
+  }
+
   /* ─────────── Get all BYO settings in single call ─────────── */
+  /**
+   * Get all BYO settings for the renderer.
+   * NOTE: Does NOT decrypt API keys - only checks presence to avoid Keychain prompts.
+   * Actual key decryption happens lazily in ai-provider.ts when making API calls.
+   */
   function getAllByoSettings(): AllByoSettings {
     return {
-      // API keys
-      openAiKey: getApiKey(),
-      anthropicKey: getAnthropicApiKey(),
-      elevenLabsKey: getElevenLabsApiKey(),
+      // API key presence (NOT decrypted - avoids Keychain prompt on startup)
+      openAiKeyPresent: hasApiKeyStored(),
+      anthropicKeyPresent: hasAnthropicApiKeyStored(),
+      elevenLabsKeyPresent: hasElevenLabsApiKeyStored(),
       // Individual toggles
       useByoOpenAi: getUseByoOpenAi(),
       useByoAnthropic: getUseByoAnthropic(),

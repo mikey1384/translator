@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { css } from '@emotion/css';
 import { useAiStore } from '../state';
@@ -71,6 +71,54 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
   const clearElevenLabsKey = useAiStore(s => s.clearElevenLabsKey);
   const savingElevenLabsKey = useAiStore(s => s.savingElevenLabsKey);
   const validatingElevenLabsKey = useAiStore(s => s.validatingElevenLabsKey);
+
+  // Load key functions (for on-demand decryption when dialog opens)
+  const loadKey = useAiStore(s => s.loadKey);
+  const loadAnthropicKey = useAiStore(s => s.loadAnthropicKey);
+  const loadElevenLabsKey = useAiStore(s => s.loadElevenLabsKey);
+
+  // Load actual API key values when dialog opens (on-demand decryption)
+  // This triggers Keychain prompt only when user opens this dialog, not on app startup
+  useEffect(() => {
+    if (open) {
+      // Load keys in parallel - only triggers Keychain if keys are present
+      if (keyPresent && !keyValue) {
+        loadKey().catch(err =>
+          console.error(
+            '[ApiKeysRequiredDialog] Failed to load OpenAI key:',
+            err
+          )
+        );
+      }
+      if (anthropicKeyPresent && !anthropicKeyValue) {
+        loadAnthropicKey().catch(err =>
+          console.error(
+            '[ApiKeysRequiredDialog] Failed to load Anthropic key:',
+            err
+          )
+        );
+      }
+      if (elevenLabsKeyPresent && !elevenLabsKeyValue) {
+        loadElevenLabsKey().catch(err =>
+          console.error(
+            '[ApiKeysRequiredDialog] Failed to load ElevenLabs key:',
+            err
+          )
+        );
+      }
+    }
+  }, [
+    open,
+    keyPresent,
+    keyValue,
+    anthropicKeyPresent,
+    anthropicKeyValue,
+    elevenLabsKeyPresent,
+    elevenLabsKeyValue,
+    loadKey,
+    loadAnthropicKey,
+    loadElevenLabsKey,
+  ]);
 
   // Check if conditions are now met
   const hasOpenAi = keyPresent;

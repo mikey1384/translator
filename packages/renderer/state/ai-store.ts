@@ -433,18 +433,21 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         }
 
         // Apply all BYO settings from the batched call
+        // NOTE: API keys are NOT decrypted on startup to avoid Keychain prompts.
+        // Only presence flags are checked. Keys are decrypted lazily when needed.
         if (settingsResult.status === 'fulfilled') {
           const settings = settingsResult.value;
           set({
-            // API keys
-            keyValue: settings.openAiKey ?? '',
-            keyPresent: Boolean(settings.openAiKey),
+            // API key presence (NOT the actual values - avoids Keychain prompt)
+            // keyValue stays empty until user explicitly views/edits their key
+            keyValue: '',
+            keyPresent: settings.openAiKeyPresent,
             keyLoading: false,
-            anthropicKeyValue: settings.anthropicKey ?? '',
-            anthropicKeyPresent: Boolean(settings.anthropicKey),
+            anthropicKeyValue: '',
+            anthropicKeyPresent: settings.anthropicKeyPresent,
             anthropicKeyLoading: false,
-            elevenLabsKeyValue: settings.elevenLabsKey ?? '',
-            elevenLabsKeyPresent: Boolean(settings.elevenLabsKey),
+            elevenLabsKeyValue: '',
+            elevenLabsKeyPresent: settings.elevenLabsKeyPresent,
             elevenLabsKeyLoading: false,
             // Individual toggles
             useByo: settings.useByoOpenAi,
@@ -467,11 +470,11 @@ export const useAiStore = create<AiStoreState>((set, get) => {
           // during migration), auto-disable master toggle so user sees Stage5 UI
           if (settings.useByoMaster) {
             const hasValidCombo = hasValidByoCombo({
-              keyPresent: Boolean(settings.openAiKey),
+              keyPresent: settings.openAiKeyPresent,
               useByo: settings.useByoOpenAi,
-              anthropicKeyPresent: Boolean(settings.anthropicKey),
+              anthropicKeyPresent: settings.anthropicKeyPresent,
               useByoAnthropic: settings.useByoAnthropic,
-              elevenLabsKeyPresent: Boolean(settings.elevenLabsKey),
+              elevenLabsKeyPresent: settings.elevenLabsKeyPresent,
               useByoElevenLabs: settings.useByoElevenLabs,
             });
             if (!hasValidCombo) {

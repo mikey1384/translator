@@ -328,10 +328,11 @@ const electronAPI = {
     ipcRenderer.invoke('check-encryption-available'),
 
   // Batched BYO settings - single call to load all settings at once
+  // NOTE: Returns presence flags, NOT decrypted keys (avoids Keychain prompt on startup)
   getAllByoSettings: (): Promise<{
-    openAiKey: string | null;
-    anthropicKey: string | null;
-    elevenLabsKey: string | null;
+    openAiKeyPresent: boolean;
+    anthropicKeyPresent: boolean;
+    elevenLabsKeyPresent: boolean;
     useByoOpenAi: boolean;
     useByoAnthropic: boolean;
     useByoElevenLabs: boolean;
