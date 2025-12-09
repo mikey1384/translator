@@ -10,6 +10,7 @@ import {
   decryptString,
   isEncrypted,
   isEncryptionAvailable,
+  isV2Encrypted,
 } from '../services/secure-storage.js';
 
 /* ----------------------------------------------------------
@@ -629,13 +630,14 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Check if API key is present (without decrypting) ─────────── */
   /**
    * Check if an encrypted API key is stored WITHOUT decrypting it.
-   * This avoids triggering Keychain/credential prompts on app startup.
+   * Only returns true for v2 encrypted keys (app-level encryption).
+   * Legacy v1 keys (Keychain-based) are treated as not present.
    */
   function hasApiKeyStored(): boolean {
     try {
       const stored = store.get('apiKey', null);
       return (
-        typeof stored === 'string' && stored.length > 0 && isEncrypted(stored)
+        typeof stored === 'string' && stored.length > 0 && isV2Encrypted(stored)
       );
     } catch (err) {
       log.error('[settings] Failed to check if API key is stored:', err);
@@ -647,7 +649,9 @@ export function buildSettingsHandlers(opts: {
     try {
       const stored = store.get('anthropicApiKey', null);
       return (
-        typeof stored === 'string' && stored.length > 0 && isEncrypted(stored)
+        typeof stored === 'string' &&
+        stored.length > 0 &&
+        isV2Encrypted(stored)
       );
     } catch (err) {
       log.error(
@@ -662,7 +666,9 @@ export function buildSettingsHandlers(opts: {
     try {
       const stored = store.get('elevenLabsApiKey', null);
       return (
-        typeof stored === 'string' && stored.length > 0 && isEncrypted(stored)
+        typeof stored === 'string' &&
+        stored.length > 0 &&
+        isV2Encrypted(stored)
       );
     } catch (err) {
       log.error(
