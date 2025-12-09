@@ -18,12 +18,10 @@ import {
  * -------------------------------------------------------- */
 
 /**
- * All BYO-related settings returned in a single batched call
- * NOTE: Keys are NOT decrypted here to avoid Keychain prompts on startup.
- * Only presence is checked. Decryption happens lazily in ai-provider.ts when needed.
+ * All BYO-related settings returned in a single batched call.
+ * Decryption happens lazily in ai-provider.ts when needed.
  */
 export interface AllByoSettings {
-  // API key presence flags (NOT decrypted values - avoids Keychain prompt)
   openAiKeyPresent: boolean;
   anthropicKeyPresent: boolean;
   elevenLabsKeyPresent: boolean;
@@ -631,7 +629,6 @@ export function buildSettingsHandlers(opts: {
   /**
    * Check if an encrypted API key is stored WITHOUT decrypting it.
    * Only returns true for v2 encrypted keys (app-level encryption).
-   * Legacy v1 keys (Keychain-based) are treated as not present.
    */
   function hasApiKeyStored(): boolean {
     try {
@@ -649,9 +646,7 @@ export function buildSettingsHandlers(opts: {
     try {
       const stored = store.get('anthropicApiKey', null);
       return (
-        typeof stored === 'string' &&
-        stored.length > 0 &&
-        isV2Encrypted(stored)
+        typeof stored === 'string' && stored.length > 0 && isV2Encrypted(stored)
       );
     } catch (err) {
       log.error(
@@ -666,9 +661,7 @@ export function buildSettingsHandlers(opts: {
     try {
       const stored = store.get('elevenLabsApiKey', null);
       return (
-        typeof stored === 'string' &&
-        stored.length > 0 &&
-        isV2Encrypted(stored)
+        typeof stored === 'string' && stored.length > 0 && isV2Encrypted(stored)
       );
     } catch (err) {
       log.error(
@@ -682,12 +675,10 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Get all BYO settings in single call ─────────── */
   /**
    * Get all BYO settings for the renderer.
-   * NOTE: Does NOT decrypt API keys - only checks presence to avoid Keychain prompts.
-   * Actual key decryption happens lazily in ai-provider.ts when making API calls.
+   * Key decryption happens lazily in ai-provider.ts when making API calls.
    */
   function getAllByoSettings(): AllByoSettings {
     return {
-      // API key presence (NOT decrypted - avoids Keychain prompt on startup)
       openAiKeyPresent: hasApiKeyStored(),
       anthropicKeyPresent: hasAnthropicApiKeyStored(),
       elevenLabsKeyPresent: hasElevenLabsApiKeyStored(),

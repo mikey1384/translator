@@ -11,7 +11,10 @@ import {
 } from '../../components/ApiKeyOptionBox';
 import { byoCardStyles } from './styles';
 
-// Provider configuration with i18n keys and pricing
+// Provider configuration with i18n keys and pricing (per 1 hour video, 2025 prices)
+// GPT-5.1: $1.25/1M in, $10/1M out | Claude Sonnet 4.5: $3/1M in, $15/1M out
+// Claude Opus 4.5: $5/1M in, $25/1M out | Whisper: $0.006/min | Scribe: $0.40/hr
+// OpenAI TTS: $15/1M chars | ElevenLabs TTS: ~$0.20/1K chars
 const PROVIDERS = {
   transcription: {
     openai: {
@@ -25,16 +28,28 @@ const PROVIDERS = {
       price: '~$0.40',
     },
   },
+  translationDraft: {
+    openai: {
+      labelKey: 'settings.byoPreferences.gpt',
+      fallback: 'GPT-5.1',
+      price: '~$0.18',
+    },
+    anthropic: {
+      labelKey: 'settings.byoPreferences.claudeSonnet',
+      fallback: 'Claude Sonnet',
+      price: '~$0.29',
+    },
+  },
   review: {
     openai: {
       labelKey: 'settings.byoPreferences.gptHigh',
       fallback: 'GPT-5.1 (high)',
-      price: '~$0.30',
+      price: '~$0.18',
     },
     anthropic: {
       labelKey: 'settings.byoPreferences.claudeOpus',
       fallback: 'Claude Opus',
-      price: '~$0.80',
+      price: '~$0.48',
     },
   },
   summary: {
@@ -46,7 +61,7 @@ const PROVIDERS = {
     anthropic: {
       labelKey: 'settings.byoPreferences.claudeOpus',
       fallback: 'Claude Opus',
-      price: '~$0.05',
+      price: '~$0.10',
     },
   },
   dubbing: {
@@ -58,7 +73,7 @@ const PROVIDERS = {
     elevenlabs: {
       labelKey: 'settings.byoPreferences.elevenLabsTts',
       fallback: 'ElevenLabs',
-      price: '~$14',
+      price: '~$9',
     },
   },
 } as const;
@@ -178,6 +193,7 @@ export default function ByoOpenAiSection() {
   const savingKey = useAiStore(state => state.savingKey);
   const validatingKey = useAiStore(state => state.validatingKey);
   const setKeyValue = useAiStore(state => state.setKeyValue);
+  const loadKey = useAiStore(state => state.loadKey);
   const saveKey = useAiStore(state => state.saveKey);
   const clearKey = useAiStore(state => state.clearKey);
   const validateKey = useAiStore(state => state.validateKey);
@@ -191,6 +207,7 @@ export default function ByoOpenAiSection() {
     state => state.validatingAnthropicKey
   );
   const setAnthropicKeyValue = useAiStore(state => state.setAnthropicKeyValue);
+  const loadAnthropicKey = useAiStore(state => state.loadAnthropicKey);
   const saveAnthropicKey = useAiStore(state => state.saveAnthropicKey);
   const clearAnthropicKey = useAiStore(state => state.clearAnthropicKey);
   const validateAnthropicKey = useAiStore(state => state.validateAnthropicKey);
@@ -206,12 +223,12 @@ export default function ByoOpenAiSection() {
   const setElevenLabsKeyValue = useAiStore(
     state => state.setElevenLabsKeyValue
   );
+  const loadElevenLabsKey = useAiStore(state => state.loadElevenLabsKey);
   const saveElevenLabsKey = useAiStore(state => state.saveElevenLabsKey);
   const clearElevenLabsKey = useAiStore(state => state.clearElevenLabsKey);
   const validateElevenLabsKey = useAiStore(
     state => state.validateElevenLabsKey
   );
-
 
   // Provider preferences
   const preferredTranscriptionProvider = useAiStore(
@@ -225,6 +242,12 @@ export default function ByoOpenAiSection() {
   );
   const setPreferredDubbingProvider = useAiStore(
     state => state.setPreferredDubbingProvider
+  );
+  const preferClaudeTranslation = useAiStore(
+    state => state.preferClaudeTranslation
+  );
+  const setPreferClaudeTranslation = useAiStore(
+    state => state.setPreferClaudeTranslation
   );
   const preferClaudeReview = useAiStore(state => state.preferClaudeReview);
   const setPreferClaudeReview = useAiStore(
@@ -243,9 +266,12 @@ export default function ByoOpenAiSection() {
     }
   }, [initialized, initialize]);
 
-  // NOTE: We do NOT auto-decrypt keys when opening settings.
-  // Keys are only decrypted when user explicitly needs them (e.g., to copy).
-  // The UI shows "Key saved ✓" based on presence flag, not actual value.
+  // Load API keys when component mounts
+  useEffect(() => {
+    loadKey();
+    loadAnthropicKey();
+    loadElevenLabsKey();
+  }, [loadKey, loadAnthropicKey, loadElevenLabsKey]);
 
   // Don't render if not unlocked (or in admin preview mode) or master toggle is off
   if (!effectiveByoUnlocked || !useByoMaster) {
@@ -268,6 +294,13 @@ export default function ByoOpenAiSection() {
     const result = await setPreferredDubbingProvider(provider);
     if (!result.success) {
       console.error('Failed to update dubbing provider:', result.error);
+    }
+  };
+
+  const handleTranslationProviderChange = async (value: boolean) => {
+    const result = await setPreferClaudeTranslation(value);
+    if (!result.success) {
+      console.error('Failed to update translation provider:', result.error);
     }
   };
 
@@ -299,12 +332,14 @@ export default function ByoOpenAiSection() {
 
   // Individual choice flags (for radio buttons)
   const hasTranscriptionChoice = hasOpenAi && hasElevenLabs;
+  const hasTranslationChoice = hasOpenAi && hasAnthropic;
   const hasReviewChoice = hasOpenAi && hasAnthropic;
   const hasSummaryChoice = hasOpenAi && hasAnthropic;
   const hasDubbingChoice = hasOpenAi && hasElevenLabs;
 
   // Determine which provider is used when there's no choice
   const transcriptionProvider = hasOpenAi ? 'openai' : 'elevenlabs';
+  const translationDraftProvider = hasOpenAi ? 'openai' : 'anthropic';
   const reviewProvider = hasOpenAi ? 'openai' : 'anthropic';
   const summaryProvider = hasOpenAi ? 'openai' : 'anthropic';
   const dubbingProvider = hasOpenAi ? 'openai' : 'elevenlabs';
@@ -526,8 +561,56 @@ export default function ByoOpenAiSection() {
 
             <PreferenceRow
               title={t(
+                'settings.byoPreferences.translationDraft',
+                'Translation (Draft)'
+              )}
+              hasChoice={hasTranslationChoice}
+              radioName="translationProvider"
+              options={[
+                {
+                  value: 'openai',
+                  label: t(
+                    PROVIDERS.translationDraft.openai.labelKey,
+                    PROVIDERS.translationDraft.openai.fallback
+                  ),
+                  price: PROVIDERS.translationDraft.openai.price,
+                  selected: !preferClaudeTranslation,
+                  onSelect: () => handleTranslationProviderChange(false),
+                },
+                {
+                  value: 'anthropic',
+                  label: t(
+                    PROVIDERS.translationDraft.anthropic.labelKey,
+                    PROVIDERS.translationDraft.anthropic.fallback
+                  ),
+                  price: PROVIDERS.translationDraft.anthropic.price,
+                  selected: preferClaudeTranslation,
+                  onSelect: () => handleTranslationProviderChange(true),
+                },
+              ]}
+              infoProvider={
+                translationDraftProvider === 'openai'
+                  ? {
+                      label: t(
+                        PROVIDERS.translationDraft.openai.labelKey,
+                        PROVIDERS.translationDraft.openai.fallback
+                      ),
+                      price: PROVIDERS.translationDraft.openai.price,
+                    }
+                  : {
+                      label: t(
+                        PROVIDERS.translationDraft.anthropic.labelKey,
+                        PROVIDERS.translationDraft.anthropic.fallback
+                      ),
+                      price: PROVIDERS.translationDraft.anthropic.price,
+                    }
+              }
+            />
+
+            <PreferenceRow
+              title={t(
                 'settings.byoPreferences.translationReview',
-                'Translation Review'
+                'Translation (Review)'
               )}
               hasChoice={hasReviewChoice}
               radioName="reviewProvider"

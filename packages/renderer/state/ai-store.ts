@@ -416,8 +416,6 @@ export const useAiStore = create<AiStoreState>((set, get) => {
       });
       try {
         // Load entitlements and BYO settings in parallel
-        // NOTE: We do NOT check encryption availability here to avoid Keychain prompt on startup.
-        // Encryption is checked lazily only when user tries to save a key.
         const [, settingsResult] = await Promise.allSettled([
           get().fetchEntitlements(),
           SystemIPC.getAllByoSettings(),
@@ -428,13 +426,9 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         set({ encryptionAvailable: true });
 
         // Apply all BYO settings from the batched call
-        // NOTE: API keys are NOT decrypted on startup to avoid Keychain prompts.
-        // Only presence flags are checked. Keys are decrypted lazily when needed.
         if (settingsResult.status === 'fulfilled') {
           const settings = settingsResult.value;
           set({
-            // API key presence (NOT the actual values - avoids Keychain prompt)
-            // keyValue stays empty until user explicitly views/edits their key
             keyValue: '',
             keyPresent: settings.openAiKeyPresent,
             keyLoading: false,
@@ -605,6 +599,31 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               err
             );
           }
+          // Reset OpenAI-dependent preferences to fallback (ElevenLabs if available, else stage5)
+          const state = get();
+          const fallback = state.elevenLabsKeyPresent ? 'elevenlabs' : 'stage5';
+          if (state.preferredTranscriptionProvider === 'openai') {
+            try {
+              await SystemIPC.setPreferredTranscriptionProvider(fallback);
+              set({ preferredTranscriptionProvider: fallback });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset transcription provider:',
+                err
+              );
+            }
+          }
+          if (state.preferredDubbingProvider === 'openai') {
+            try {
+              await SystemIPC.setPreferredDubbingProvider(fallback);
+              set({ preferredDubbingProvider: fallback });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset dubbing provider:',
+                err
+              );
+            }
+          }
           await checkAndDisableMasterIfNeeded(get, set);
         }
         return result;
@@ -700,6 +719,41 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               '[AiStore] Failed to disable BYO Anthropic toggle after key clear:',
               err
             );
+          }
+          // Reset Anthropic-dependent preferences (Claude translation/review/summary)
+          const state = get();
+          if (state.preferClaudeTranslation) {
+            try {
+              await SystemIPC.setPreferClaudeTranslation(false);
+              set({ preferClaudeTranslation: false });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset Claude translation preference:',
+                err
+              );
+            }
+          }
+          if (state.preferClaudeReview) {
+            try {
+              await SystemIPC.setPreferClaudeReview(false);
+              set({ preferClaudeReview: false });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset Claude review preference:',
+                err
+              );
+            }
+          }
+          if (state.preferClaudeSummary) {
+            try {
+              await SystemIPC.setPreferClaudeSummary(false);
+              set({ preferClaudeSummary: false });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset Claude summary preference:',
+                err
+              );
+            }
           }
           await checkAndDisableMasterIfNeeded(get, set);
         }
@@ -798,6 +852,30 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               '[AiStore] Failed to disable BYO ElevenLabs toggle after key clear:',
               err
             );
+          }
+          // Reset ElevenLabs-dependent preferences to defaults
+          const state = get();
+          if (state.preferredTranscriptionProvider === 'elevenlabs') {
+            try {
+              await SystemIPC.setPreferredTranscriptionProvider('openai');
+              set({ preferredTranscriptionProvider: 'openai' });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset transcription provider:',
+                err
+              );
+            }
+          }
+          if (state.preferredDubbingProvider === 'elevenlabs') {
+            try {
+              await SystemIPC.setPreferredDubbingProvider('openai');
+              set({ preferredDubbingProvider: 'openai' });
+            } catch (err) {
+              console.error(
+                '[AiStore] Failed to reset dubbing provider:',
+                err
+              );
+            }
           }
           await checkAndDisableMasterIfNeeded(get, set);
         }

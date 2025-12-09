@@ -41,7 +41,7 @@ packages/shared/      → Shared types and constants
   - `subtitle-processing/` - Core pipeline: transcriber → translator → summarizer → dubber
   - `stage5-client.ts` - Stage5 backend API client
   - `openai-client.ts`, `anthropic-client.ts`, `elevenlabs-client.ts` - Direct API clients
-  - `secure-storage.ts` - API key encryption/decryption via keytar
+  - `secure-storage.ts` - API key encryption/decryption (AES-256-GCM)
 
 ### Renderer Process (`packages/renderer/`)
 
@@ -90,4 +90,4 @@ Quality preferences controlled via settings:
 
 ## Environment
 
-Uses `.env` file in project root. API keys stored encrypted via electron-store + keytar.
+Uses `.env` file in project root. API keys stored encrypted via electron-store (AES-256-GCM).

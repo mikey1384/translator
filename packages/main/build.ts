@@ -28,7 +28,6 @@ await esbuild.build({
   external: [
     'electron',
     'webrtcvad', // native .node addon
-    'keytar', // native .node addon
     'ffmpeg-ffprobe-static', // needs to reference unpacked binaries
     'puppeteer', // keep external so it's loaded from node_modules
   ],

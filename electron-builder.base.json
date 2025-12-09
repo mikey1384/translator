@@ -20,7 +20,6 @@
   "asar": true,
   "asarUnpack": [
     "node_modules/webrtcvad/**",
-    "node_modules/keytar/**",
     "node_modules/ffmpeg-ffprobe-static/**",
     "node_modules/youtube-dl-exec/**",
     "render-host.html",

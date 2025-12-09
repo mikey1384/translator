@@ -248,11 +248,6 @@ try {
     isDev,
   });
 
-  // NOTE: API key migration removed from startup to avoid Keychain prompts.
-  // Legacy plain-text keys (if any) will be silently rejected and users
-  // can re-enter them. This is acceptable since encrypted storage has been
-  // the default for many versions.
-
   ipcMain.handle('get-locale-url', settingsHandlers.getLocaleUrl);
   ipcMain.handle(
     'get-language-preference',

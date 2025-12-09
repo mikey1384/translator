@@ -47,7 +47,6 @@ export function checkEncryptionAvailable(): Promise<boolean> {
 }
 
 // Batched BYO settings - single call to load all settings at once
-// NOTE: Returns presence flags, NOT decrypted keys (avoids Keychain prompt on startup)
 export interface AllByoSettings {
   openAiKeyPresent: boolean;
   anthropicKeyPresent: boolean;

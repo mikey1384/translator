@@ -72,9 +72,6 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
   const savingElevenLabsKey = useAiStore(s => s.savingElevenLabsKey);
   const validatingElevenLabsKey = useAiStore(s => s.validatingElevenLabsKey);
 
-  // NOTE: We do NOT auto-decrypt keys when dialog opens.
-  // The UI shows "Key saved ✓" based on presence flag, not actual value.
-
   // Check if conditions are now met
   const hasOpenAi = keyPresent;
   const hasAnthropicAndElevenLabs = anthropicKeyPresent && elevenLabsKeyPresent;

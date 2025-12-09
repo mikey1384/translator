@@ -47,7 +47,13 @@ function getDerivedKey(): Buffer {
   } catch (err) {
     log.error('[secure-storage] Failed to derive encryption key:', err);
     // Fallback to just app secret if machine ID fails
-    derivedKey = crypto.pbkdf2Sync(APP_SECRET, 'stage5-salt', 100000, 32, 'sha256');
+    derivedKey = crypto.pbkdf2Sync(
+      APP_SECRET,
+      'stage5-salt',
+      100000,
+      32,
+      'sha256'
+    );
     return derivedKey;
   }
 }
@@ -135,7 +141,10 @@ export function decryptString(value: string): string {
  */
 export function isEncrypted(value: string): boolean {
   if (!value) return false;
-  return value.startsWith(ENCRYPTION_PREFIX_V2) || value.startsWith(ENCRYPTION_PREFIX_V1);
+  return (
+    value.startsWith(ENCRYPTION_PREFIX_V2) ||
+    value.startsWith(ENCRYPTION_PREFIX_V1)
+  );
 }
 
 /**
