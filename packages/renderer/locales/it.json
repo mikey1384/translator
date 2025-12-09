@@ -377,7 +377,8 @@
         "step1": "Vai su",
         "step2": "Registrati o accedi al tuo account",
         "step3": "Clicca sull'icona del tuo profilo e seleziona",
-        "step4": "Copia la tua chiave API e incollala in Stage5",
+        "step4": "Aggiungi un metodo di pagamento nelle impostazioni dell'abbonamento (richiesto per l'uso dell'API oltre il piano gratuito)",
+        "step5": "Copia la tua chiave API e incollala in Stage5",
         "note": "Suggerimento: ElevenLabs ha un piano gratuito con utilizzo limitato. Per di più, passa a un piano a pagamento nelle impostazioni del tuo account."
       }
     },

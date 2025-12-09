@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles';
@@ -10,6 +10,8 @@ import {
   ApiKeyInputWrapper,
 } from '../../components/ApiKeyOptionBox';
 import { byoCardStyles } from './styles';
+import ApiKeyGuideModal from './ApiKeyGuideModal';
+import { logButton } from '../../utils/logger';
 
 // Provider configuration with i18n keys and pricing (per 1 hour video, 2025 prices)
 // GPT-5.1: $1.25/1M in, $10/1M out | Claude Sonnet 4.5: $3/1M in, $15/1M out
@@ -174,6 +176,16 @@ function PreferenceRow({
 
 export default function ByoOpenAiSection() {
   const { t } = useTranslation();
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideProvider, setGuideProvider] = useState<
+    'openai' | 'anthropic' | 'elevenlabs' | undefined
+  >();
+
+  const openGuide = (provider: 'openai' | 'anthropic' | 'elevenlabs') => {
+    logButton(`settings_byo_guide_open_${provider}`);
+    setGuideProvider(provider);
+    setGuideOpen(true);
+  };
 
   const initialized = useAiStore(state => state.initialized);
   const initialize = useAiStore(state => state.initialize);
@@ -418,6 +430,7 @@ export default function ByoOpenAiSection() {
               saving={savingKey}
               validating={validatingKey}
               compact
+              onHelpClick={() => openGuide('openai')}
             />
           </ApiKeyOptionBox>
 
@@ -445,6 +458,7 @@ export default function ByoOpenAiSection() {
                   saving={savingAnthropicKey}
                   validating={validatingAnthropicKey}
                   compact
+                  onHelpClick={() => openGuide('anthropic')}
                 />
               </ApiKeyInputWrapper>
 
@@ -461,6 +475,7 @@ export default function ByoOpenAiSection() {
                   saving={savingElevenLabsKey}
                   validating={validatingElevenLabsKey}
                   compact
+                  onHelpClick={() => openGuide('elevenlabs')}
                 />
               </ApiKeyInputWrapper>
             </div>
@@ -747,6 +762,12 @@ export default function ByoOpenAiSection() {
           </div>
         )}
       </div>
+
+      <ApiKeyGuideModal
+        open={guideOpen}
+        onClose={() => setGuideOpen(false)}
+        provider={guideProvider}
+      />
     </section>
   );
 }

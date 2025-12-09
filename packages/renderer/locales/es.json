@@ -377,7 +377,8 @@
         "step1": "Ve a",
         "step2": "Regístrate o inicia sesión en tu cuenta",
         "step3": "Haz clic en el icono de tu perfil y selecciona",
-        "step4": "Copia tu clave de API y pégala en Stage5",
+        "step4": "Añade un método de pago en la configuración de suscripción (requerido para uso de API más allá del nivel gratuito)",
+        "step5": "Copia tu clave de API y pégala en Stage5",
         "note": "Consejo: ElevenLabs tiene un nivel gratuito con uso limitado. Para más, actualiza a un plan de pago en la configuración de tu cuenta."
       }
     },

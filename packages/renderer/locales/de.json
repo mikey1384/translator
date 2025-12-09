@@ -377,7 +377,8 @@
         "step1": "Gehen Sie zu",
         "step2": "Registrieren Sie sich oder melden Sie sich an",
         "step3": "Klicken Sie auf Ihr Profilsymbol und wählen Sie",
-        "step4": "Kopieren Sie Ihren API-Schlüssel und fügen Sie ihn in Stage5 ein",
+        "step4": "Fügen Sie in den Abonnement-Einstellungen eine Zahlungsmethode hinzu (erforderlich für API-Nutzung über das kostenlose Kontingent hinaus)",
+        "step5": "Kopieren Sie Ihren API-Schlüssel und fügen Sie ihn in Stage5 ein",
         "note": "Tipp: ElevenLabs hat eine kostenlose Stufe mit begrenzter Nutzung. Für mehr upgraden Sie auf einen kostenpflichtigen Plan."
       }
     },

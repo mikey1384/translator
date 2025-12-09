@@ -17,6 +17,7 @@ interface ApiKeyInputProps {
   saving?: boolean;
   validating?: boolean;
   compact?: boolean;
+  onHelpClick?: () => void;
 }
 
 const placeholders: Record<string, string> = {
@@ -43,6 +44,7 @@ export default function ApiKeyInput({
   saving = false,
   validating = false,
   compact = false,
+  onHelpClick,
 }: ApiKeyInputProps) {
   const { t } = useTranslation();
   const [showKey, setShowKey] = useState(false);
@@ -130,7 +132,44 @@ export default function ApiKeyInput({
           gap: 8,
         }}
       >
-        <span>{labels[provider]}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {labels[provider]}
+          {onHelpClick && (
+            <button
+              type="button"
+              onClick={e => {
+                e.preventDefault();
+                onHelpClick();
+              }}
+              title={t('settings.apiKey.howToGet', 'How to get this key')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: colors.primary,
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: '.85rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </button>
+          )}
+        </span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input
             type={showKey ? 'text' : 'password'}

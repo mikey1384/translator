@@ -1,14 +1,34 @@
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from 'react';
 import { colors } from '../../styles';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  provider?: 'openai' | 'anthropic' | 'elevenlabs';
 }
 
-export default function ApiKeyGuideModal({ open, onClose }: Props) {
+export default function ApiKeyGuideModal({ open, onClose, provider }: Props) {
   const { t } = useTranslation();
+  const openaiRef = useRef<HTMLElement>(null);
+  const anthropicRef = useRef<HTMLElement>(null);
+  const elevenlabsRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (open && provider) {
+      // Scroll to the relevant section after modal opens
+      setTimeout(() => {
+        const ref =
+          provider === 'openai'
+            ? openaiRef
+            : provider === 'anthropic'
+              ? anthropicRef
+              : elevenlabsRef;
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [open, provider]);
 
   if (!open) return null;
 
@@ -92,7 +112,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
           `}
         >
           {/* OpenAI Section */}
-          <section>
+          <section ref={openaiRef}>
             <h3
               style={{
                 color: colors.text,
@@ -200,6 +220,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
 
           {/* Anthropic Section */}
           <section
+            ref={anthropicRef}
             style={{
               borderTop: `1px solid ${colors.border}`,
               paddingTop: 20,
@@ -313,6 +334,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
 
           {/* ElevenLabs Section */}
           <section
+            ref={elevenlabsRef}
             style={{
               borderTop: `1px solid ${colors.border}`,
               paddingTop: 20,
@@ -395,6 +417,12 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
               <li>
                 {t(
                   'settings.apiKeyGuide.elevenlabs.step4',
+                  'Add a payment method in Subscription settings (required for API usage beyond free tier)'
+                )}
+              </li>
+              <li>
+                {t(
+                  'settings.apiKeyGuide.elevenlabs.step5',
                   'Copy your API key and paste it in Stage5'
                 )}
               </li>

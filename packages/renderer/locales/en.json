@@ -378,7 +378,8 @@
         "step1": "Go to",
         "step2": "Sign up or log in to your account",
         "step3": "Click your profile icon and select",
-        "step4": "Copy your API key and paste it in Stage5",
+        "step4": "Add a payment method in Subscription settings (required for API usage beyond free tier)",
+        "step5": "Copy your API key and paste it in Stage5",
         "note": "Tip: ElevenLabs has a free tier with limited usage. For more, upgrade to a paid plan in your account settings."
       }
     },

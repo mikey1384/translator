@@ -41,6 +41,14 @@ const contentStyles = css`
 export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
   const { t } = useTranslation();
   const [showGuide, setShowGuide] = useState(false);
+  const [guideProvider, setGuideProvider] = useState<
+    'openai' | 'anthropic' | 'elevenlabs' | undefined
+  >();
+
+  const openGuide = (provider?: 'openai' | 'anthropic' | 'elevenlabs') => {
+    setGuideProvider(provider);
+    setShowGuide(true);
+  };
 
   // OpenAI state
   const keyValue = useAiStore(s => s.keyValue);
@@ -113,7 +121,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
             'To use your own API keys, you need either an OpenAI key OR both Anthropic and ElevenLabs keys.'
           )}{' '}
           <button
-            onClick={() => setShowGuide(true)}
+            onClick={() => openGuide()}
             style={{
               background: 'none',
               border: 'none',
@@ -145,6 +153,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
             saving={savingKey}
             validating={validatingKey}
             compact
+            onHelpClick={() => openGuide('openai')}
           />
         </ApiKeyOptionBox>
 
@@ -172,6 +181,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
                 saving={savingAnthropicKey}
                 validating={validatingAnthropicKey}
                 compact
+                onHelpClick={() => openGuide('anthropic')}
               />
             </ApiKeyInputWrapper>
 
@@ -187,6 +197,7 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
                 saving={savingElevenLabsKey}
                 validating={validatingElevenLabsKey}
                 compact
+                onHelpClick={() => openGuide('elevenlabs')}
               />
             </ApiKeyInputWrapper>
           </div>
@@ -216,7 +227,11 @@ export default function ApiKeysRequiredDialog({ open, onClose }: Props) {
         </div>
       </div>
 
-      <ApiKeyGuideModal open={showGuide} onClose={() => setShowGuide(false)} />
+      <ApiKeyGuideModal
+        open={showGuide}
+        onClose={() => setShowGuide(false)}
+        provider={guideProvider}
+      />
     </div>
   );
 }
