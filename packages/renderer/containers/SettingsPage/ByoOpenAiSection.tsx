@@ -212,10 +212,6 @@ export default function ByoOpenAiSection() {
     state => state.validateElevenLabsKey
   );
 
-  // Load key functions (for on-demand decryption when settings page opens)
-  const loadKey = useAiStore(state => state.loadKey);
-  const loadAnthropicKey = useAiStore(state => state.loadAnthropicKey);
-  const loadElevenLabsKey = useAiStore(state => state.loadElevenLabsKey);
 
   // Provider preferences
   const preferredTranscriptionProvider = useAiStore(
@@ -247,44 +243,9 @@ export default function ByoOpenAiSection() {
     }
   }, [initialized, initialize]);
 
-  // Load actual API key values when settings page opens (on-demand decryption)
-  // This triggers Keychain prompt only when user views settings, not on app startup
-  useEffect(() => {
-    if (initialized && effectiveByoUnlocked && useByoMaster) {
-      // Load keys in parallel - only triggers Keychain if keys are present
-      if (keyPresent && !keyValue) {
-        loadKey().catch(err =>
-          console.error('[ByoOpenAiSection] Failed to load OpenAI key:', err)
-        );
-      }
-      if (anthropicKeyPresent && !anthropicKeyValue) {
-        loadAnthropicKey().catch(err =>
-          console.error('[ByoOpenAiSection] Failed to load Anthropic key:', err)
-        );
-      }
-      if (elevenLabsKeyPresent && !elevenLabsKeyValue) {
-        loadElevenLabsKey().catch(err =>
-          console.error(
-            '[ByoOpenAiSection] Failed to load ElevenLabs key:',
-            err
-          )
-        );
-      }
-    }
-  }, [
-    initialized,
-    effectiveByoUnlocked,
-    useByoMaster,
-    keyPresent,
-    keyValue,
-    anthropicKeyPresent,
-    anthropicKeyValue,
-    elevenLabsKeyPresent,
-    elevenLabsKeyValue,
-    loadKey,
-    loadAnthropicKey,
-    loadElevenLabsKey,
-  ]);
+  // NOTE: We do NOT auto-decrypt keys when opening settings.
+  // Keys are only decrypted when user explicitly needs them (e.g., to copy).
+  // The UI shows "Key saved ✓" based on presence flag, not actual value.
 
   // Don't render if not unlocked (or in admin preview mode) or master toggle is off
   if (!effectiveByoUnlocked || !useByoMaster) {
