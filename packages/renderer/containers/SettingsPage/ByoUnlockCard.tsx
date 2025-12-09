@@ -46,7 +46,14 @@ export default function ByoUnlockCard() {
 
   return (
     <section className={byoCardStyles}>
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>
+      <h2
+        style={{
+          fontSize: '1.1rem',
+          fontWeight: 600,
+          margin: 0,
+          color: colors.text,
+        }}
+      >
         {t('settings.byoOpenAi.title', 'Bring Your Own API Keys')}
       </h2>
 

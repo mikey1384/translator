@@ -42,7 +42,7 @@ export default function CreditCard() {
 
   return (
     <section className={card}>
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: colors.text }}>
         {t('credits.title')}
       </h2>
 
