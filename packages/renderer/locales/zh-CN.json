@@ -2,7 +2,9 @@
   "common": {
     "cancel": "取消",
     "save": "保存",
+    "or": "或",
     "saving": "保存中...",
+    "validating": "验证中...",
     "delete": "删除",
     "confirm": "确认",
     "apply": "应用",
@@ -101,11 +103,11 @@
     "chooseSrtFile": "选择SRT文件",
     "cancel_confirmation": "确定要取消字幕翻译过程吗？所有进度将丢失，您需要重新开始。",
     "dub": "生成配音语音",
-    "dubEstimateCredits": "{{credits}} 积分 (~{{minutes}}分钟)",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}分钟)",
     "dubEstimateByo": "~{{minutes}}分钟音频",
-    "translateEstimateCredits": "{{credits}} 积分",
+    "translateEstimateCredits": "~{{minutes}}分钟视频",
     "translateEstimateByo": "BYO密钥",
-    "qualityBadge": "(+审校)"
+    "qualityBadge": "(hq)"
   },
   "summary": {
     "title": "转录摘要",
@@ -195,6 +197,19 @@
   },
   "settings": {
     "title": "设置",
+    "aiProvider": {
+      "title": "AI 提供商"
+    },
+    "byoMaster": {
+      "toggleLabel": "使用我的 API 密钥",
+      "activeKeys": "{{count}} 个密钥已激活",
+      "noKeys": "未配置密钥",
+      "usingCredits": "所有 AI 使用 Stage5 积分",
+      "toggleOn": "正在使用您的 API 密钥进行 AI 操作。",
+      "toggleOff": "所有 AI 操作使用 Stage5 积分。",
+      "toggleError": "更新偏好设置失败。",
+      "toggleAria": "切换使用您的 API 密钥"
+    },
     "creditsDescription": "购买积分。显示的小时数是您可转录或翻译的视频总时长的估算。示例：转录并翻译一段 3 小时视频，大约需要 6 小时（约 140,000 积分）。",
     "performanceQuality": {
       "title": "性能与质量",
@@ -217,10 +232,6 @@
         "help": "开启：ElevenLabs TTS（优质语音，约13×积分）。关闭：OpenAI TTS（良好质量）。",
         "helpWithEstimate": "ElevenLabs TTS（约13×积分）。您的积分可配音：~{{normalTime}}普通，~{{hqTime}}高质量。"
       }
-    },
-    "byoMaster": {
-      "toggleLabel": "使用我的API密钥",
-      "keysActive": "{{count}}个密钥已激活"
     },
     "preferClaude": {
       "forTranslation": {
@@ -314,7 +325,24 @@
       "toggleOn": "正在使用您的OpenAI密钥执行AI任务。",
       "toggleOff": "正在使用Stage5积分执行AI任务。",
       "toggleError": "更新设置失败。",
-      "howToGetKeys": "如何获取API密钥？"
+      "howToGetKeys": "如何获取API密钥？",
+      "option1Title": "选项1：OpenAI",
+      "option2Title": "选项2：Anthropic + ElevenLabs"
+    },
+    "byoPreferences": {
+      "title": "提供商偏好",
+      "pricingHint": "每小时视频的预估费用",
+      "transcription": "转录",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationReview": "翻译审核",
+      "gptHigh": "GPT-5.1（高级）",
+      "gpt": "GPT-5.1",
+      "claudeOpus": "Claude Opus",
+      "summary": "摘要",
+      "dubbing": "配音",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
     },
     "apiKeyGuide": {
       "title": "如何获取API密钥",
@@ -517,6 +545,15 @@
     "closeAria": "关闭查找栏"
   },
   "dialogs": {
+    "apiKeysRequired": {
+      "title": "需要 API 密钥",
+      "message": "要使用您自己的 API 密钥，您需要 OpenAI 密钥或同时拥有 Anthropic 和 ElevenLabs 密钥。",
+      "howToGet": "如何获取 API 密钥",
+      "option1": "选项 1：OpenAI",
+      "option2": "选项 2：Anthropic + ElevenLabs",
+      "enable": "启用 API 密钥",
+      "done": "完成"
+    },
     "saveSrtFileAs": "另存SRT文件为",
     "saveDownloadedVideoAs": "另存下载的视频为",
     "downloadInProgress": "正在下载",
@@ -604,7 +641,20 @@
     "missingVideoMetadata": "缺少视频元数据（{{missing}}）",
     "noSourceVideo": "没有源视频",
     "noSubtitlesLoaded": "没有加载字幕",
-    "failedToLoadSRT": "加载SRT文件失败"
+    "failedToLoadSRT": "加载SRT文件失败",
+    "byo": {
+      "openaiKeyInvalid": "您的OpenAI API密钥无效或已过期。请在设置中检查您的密钥。",
+      "openaiRateLimit": "已达到OpenAI速率限制。请稍后重试。",
+      "openaiInsufficientQuota": "您的OpenAI账户积分不足。请在platform.openai.com添加积分。",
+      "anthropicKeyInvalid": "您的Anthropic API密钥无效或已过期。请在设置中检查您的密钥。",
+      "anthropicRateLimit": "已达到Anthropic速率限制。请稍后重试。",
+      "anthropicInsufficientQuota": "您的Anthropic账户积分不足。请在console.anthropic.com添加积分。",
+      "elevenlabsKeyInvalid": "您的ElevenLabs API密钥无效或已过期。请在设置中检查您的密钥。",
+      "elevenlabsRateLimit": "已达到ElevenLabs速率限制。请稍后重试。",
+      "elevenlabsInsufficientQuota": "您的ElevenLabs账户积分不足。请在elevenlabs.io添加积分。",
+      "checkSettings": "检查设置",
+      "genericApiError": "API请求失败。请检查您的API密钥和账户状态。"
+    }
   },
   "logs": {
     "title": "最新日志",

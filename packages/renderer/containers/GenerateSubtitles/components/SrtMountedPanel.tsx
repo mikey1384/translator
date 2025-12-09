@@ -18,6 +18,7 @@ import {
   CREDITS_PER_1K_TOKENS_COMPLETION,
   TRANSLATION_QUALITY_MULTIPLIER,
 } from '../../../../shared/constants';
+import { formatCredits } from '../../../utils/creditEstimates';
 
 // TTS credits per character (based on pricing.ts calculations with margin)
 // OpenAI tts-1: $15/1M chars * 2 margin / USD_PER_CREDIT ≈ 1.05 credits/char
@@ -41,12 +42,6 @@ function estimateTranslationCredits(
   return qualityEnabled
     ? Math.ceil(baseCredits * TRANSLATION_QUALITY_MULTIPLIER)
     : baseCredits;
-}
-
-function formatCredits(credits: number): string {
-  if (credits < 1000) return `~${Math.ceil(credits)}`;
-  if (credits < 10000) return `~${(credits / 1000).toFixed(1)}k`;
-  return `~${Math.round(credits / 1000)}k`;
 }
 
 interface SrtMountedPanelProps {
@@ -75,14 +70,18 @@ export default function SrtMountedPanel({
   const { t } = useTranslation();
   const showOriginalText = useUIStore(s => s.showOriginalText);
   const setShowOriginalText = useUIStore(s => s.setShowOriginalText);
-  const dubUseVoiceCloning = useUIStore(s => s.dubUseVoiceCloning);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslationTaskActive = useTaskStore(s => !!s.translation.inProgress);
   const isMergeInProgress = useTaskStore(s => !!s.merge.inProgress);
   const isSummaryInProgress = useTaskStore(s => !!s.summary.inProgress);
   const isDownloadInProgress = useUrlStore(s => s.download.inProgress);
   const isTranslationBusy = isTranslating || isTranslationTaskActive;
-  const isDisabled = disabled || isTranslationBusy || isTranscribing;
+  const isDisabled =
+    disabled ||
+    isTranslationBusy ||
+    isTranscribing ||
+    isMergeInProgress ||
+    isSummaryInProgress;
   const isDubDisabled =
     disabled ||
     disableDub ||
@@ -134,15 +133,14 @@ export default function SrtMountedPanel({
         elevenLabsKeyPresent) ||
         preferredDubbingProvider === 'openai');
 
+    // Regular TTS: credits based on character count
     const creditsPerChar = TTS_CREDITS_PER_CHAR[ttsProvider];
     const estimatedCredits = Math.ceil(charCount * creditsPerChar);
-    const audioMinutes = Math.ceil(charCount / 750); // ~750 chars per minute of speech
 
     return {
       charCount,
       ttsProvider,
       estimatedCredits,
-      audioMinutes,
       isByo,
       hasEnoughCredits: isByo || credits == null || credits >= estimatedCredits,
     };
@@ -230,7 +228,7 @@ export default function SrtMountedPanel({
           <div
             className={css`
               font-weight: 600;
-              color: ${colors.dark};
+              color: ${colors.text};
             `}
           >
             {t('input.srtLoaded', 'Transcription Complete')}
@@ -327,41 +325,31 @@ export default function SrtMountedPanel({
           >
             {t('subtitles.translate', 'Translate')}
           </Button>
-          {translationEstimate && !isTranslating && (
-            <span
-              className={css`
-                font-size: 0.75rem;
-                color: ${translationEstimate.hasEnoughCredits
-                  ? colors.gray
-                  : colors.danger};
-                text-align: center;
-                max-width: 120px;
-              `}
-            >
-              {translationEstimate.isByo
-                ? t('subtitles.translateEstimateByo', 'BYO key')
-                : t(
-                    'subtitles.translateEstimateCredits',
-                    '{{credits}} credits',
-                    {
-                      credits: formatCredits(
-                        translationEstimate.estimatedCredits
-                      ),
-                    }
-                  )}
-              {!translationEstimate.isByo &&
-                translationEstimate.qualityEnabled && (
+          {translationEstimate &&
+            !isTranslating &&
+            !translationEstimate.isByo && (
+              <span
+                className={css`
+                  font-size: 0.75rem;
+                  color: ${translationEstimate.hasEnoughCredits
+                    ? colors.gray
+                    : colors.danger};
+                  text-align: center;
+                `}
+              >
+                {formatCredits(translationEstimate.estimatedCredits)} cr
+                {translationEstimate.qualityEnabled && (
                   <span
                     className={css`
                       color: ${colors.primaryDark};
                       margin-left: 2px;
                     `}
                   >
-                    {t('subtitles.qualityBadge', '(+review)')}
+                    {t('subtitles.qualityBadge', '(hq)')}
                   </span>
                 )}
-            </span>
-          )}
+              </span>
+            )}
         </div>
         <div
           className={css`
@@ -380,7 +368,7 @@ export default function SrtMountedPanel({
           >
             {t('subtitles.dub', 'Dub Voice')}
           </Button>
-          {dubbingEstimate && !isDubbing && (
+          {dubbingEstimate && !isDubbing && !dubbingEstimate.isByo && (
             <span
               className={css`
                 font-size: 0.75rem;
@@ -388,41 +376,11 @@ export default function SrtMountedPanel({
                   ? colors.gray
                   : colors.danger};
                 text-align: center;
-                max-width: 120px;
               `}
             >
-              {dubbingEstimate.isByo
-                ? t('subtitles.dubEstimateByo', '~{{minutes}}m audio', {
-                    minutes: dubbingEstimate.audioMinutes,
-                  })
-                : t(
-                    'subtitles.dubEstimateCredits',
-                    '{{credits}} credits (~{{minutes}}m)',
-                    {
-                      credits: formatCredits(dubbingEstimate.estimatedCredits),
-                      minutes: dubbingEstimate.audioMinutes,
-                    }
-                  )}
+              {formatCredits(dubbingEstimate.estimatedCredits)} cr
             </span>
           )}
-          {dubUseVoiceCloning &&
-            targetLanguage === 'original' &&
-            !isDubbing && (
-              <span
-                className={css`
-                  font-size: 0.7rem;
-                  color: ${colors.warning};
-                  text-align: center;
-                  max-width: 140px;
-                  margin-top: 2px;
-                `}
-              >
-                {t(
-                  'subtitles.voiceCloningRequiresTranslation',
-                  'Voice cloning requires a target language'
-                )}
-              </span>
-            )}
         </div>
       </div>
     </div>

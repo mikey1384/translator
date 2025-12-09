@@ -323,6 +323,27 @@ const electronAPI = {
     description: string;
   }> => ipcRenderer.invoke('get-voice-cloning-pricing'),
 
+  // Check if encryption is available for secure key storage
+  checkEncryptionAvailable: (): Promise<boolean> =>
+    ipcRenderer.invoke('check-encryption-available'),
+
+  // Batched BYO settings - single call to load all settings at once
+  getAllByoSettings: (): Promise<{
+    openAiKey: string | null;
+    anthropicKey: string | null;
+    elevenLabsKey: string | null;
+    useByoOpenAi: boolean;
+    useByoAnthropic: boolean;
+    useByoElevenLabs: boolean;
+    useByoMaster: boolean;
+    preferClaudeTranslation: boolean;
+    preferClaudeReview: boolean;
+    preferClaudeSummary: boolean;
+    preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+    preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
+    stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+  }> => ipcRenderer.invoke('get-all-byo-settings'),
+
   getOpenAiApiKey: (): Promise<string | null> =>
     ipcRenderer.invoke('get-openai-api-key'),
   setOpenAiApiKey: (
@@ -518,6 +539,14 @@ const electronAPI = {
     prefer: boolean
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-prefer-claude-review', prefer),
+
+  // Claude summary preference
+  getPreferClaudeSummary: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-prefer-claude-summary'),
+  setPreferClaudeSummary: (
+    prefer: boolean
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-prefer-claude-summary', prefer),
 
   // Transcription provider preference
   getPreferredTranscriptionProvider: (): Promise<

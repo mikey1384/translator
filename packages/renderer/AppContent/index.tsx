@@ -23,10 +23,46 @@ import CreditWarningBanner from '../containers/GenerateSubtitles/components/Cred
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 import { useAiStore } from '../state';
 
+import { css } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
-import { logProgress } from '../utils/logger';
+import { logProgress, logButton } from '../utils/logger';
 import { useRef } from 'react';
+
+const settingsPageWrapper = css`
+  position: fixed;
+  inset: 0;
+  background-color: ${colors.bg};
+  overflow-y: auto;
+  z-index: 50;
+`;
+
+const settingsHeader = css`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: ${colors.bg};
+  padding: 1.5rem;
+  border-bottom: 1px solid ${colors.border};
+`;
+
+const settingsBackButton = css`
+  padding: 8px 15px;
+  font-size: 0.9em;
+  background-color: ${colors.grayLight};
+  color: ${colors.text};
+  border: 1px solid ${colors.border};
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    background-color: ${colors.surface};
+    border-color: ${colors.primary};
+  }
+`;
 
 export default function AppContent() {
   const { t } = useTranslation();
@@ -194,19 +230,46 @@ export default function AppContent() {
     OperationIPC.cancel(download.id!);
   };
 
+  // Settings page rendered as its own scroll container for proper sticky header
+  if (showSettings) {
+    return (
+      <>
+        <div className={settingsPageWrapper}>
+          <div className={settingsHeader}>
+            <button
+              className={settingsBackButton}
+              onClick={() => {
+                try {
+                  logButton('close_settings');
+                } catch {
+                  // Ignore logging errors
+                }
+                useUIStore.getState().toggleSettings(false);
+              }}
+            >
+              {t('common.backToApp')}
+            </button>
+          </div>
+          <div className={containerStyles}>
+            <SettingsPage />
+          </div>
+        </div>
+        <GlobalModals />
+      </>
+    );
+  }
+
   return (
     <div className={pageWrapperStyles}>
-      {!showSettings && videoUrl && (
-        <div style={{ height: 'calc(35vh + 2rem)' }} />
-      )}
+      {videoUrl && <div style={{ height: 'calc(35vh + 2rem)' }} />}
 
       <FindBar />
 
       <div className={containerStyles}>
         <Header />
 
-        {/* Top-level credit warning banner (hidden on Settings page) */}
-        {showCreditWarning && !showSettings && (
+        {/* Top-level credit warning banner */}
+        {showCreditWarning && (
           <div style={{ marginBottom: '12px' }}>
             <CreditWarningBanner
               onSettingsClick={() => useUIStore.getState().toggleSettings(true)}
@@ -214,50 +277,44 @@ export default function AppContent() {
           </div>
         )}
 
-        {showSettings ? (
-          <SettingsPage />
-        ) : (
-          <>
-            {videoUrl && <VideoPlayer />}
+        {videoUrl && <VideoPlayer />}
 
-            <MainPanels />
+        <MainPanels />
 
-            <ProgressArea
-              isVisible={
-                download.inProgress &&
-                !download.stage.toLowerCase().includes('error')
-              }
-              title={t('dialogs.downloadInProgress')}
-              progress={download.percent}
-              stage={download.stage}
-              progressBarColor={
-                download.stage.toLowerCase().includes('error')
-                  ? colors.danger
-                  : colors.progressDownload
-              }
-              operationId={download.id}
-              onCancel={handleCancelDownload}
-              onClose={() =>
-                setDownload({
-                  inProgress: false,
-                  percent: 100,
-                  stage: 'Completed',
-                  id: null,
-                })
-              }
-            />
+        <ProgressArea
+          isVisible={
+            download.inProgress &&
+            !download.stage.toLowerCase().includes('error')
+          }
+          title={t('dialogs.downloadInProgress')}
+          progress={download.percent}
+          stage={download.stage}
+          progressBarColor={
+            download.stage.toLowerCase().includes('error')
+              ? colors.danger
+              : colors.progressDownload
+          }
+          operationId={download.id}
+          onCancel={handleCancelDownload}
+          onClose={() =>
+            setDownload({
+              inProgress: false,
+              percent: 100,
+              stage: 'Completed',
+              id: null,
+            })
+          }
+        />
 
-            {mergeInProgress && <MergingProgressArea />}
+        {mergeInProgress && <MergingProgressArea />}
 
-            {isTranscribing && <TranscriptionProgressArea />}
+        {isTranscribing && <TranscriptionProgressArea />}
 
-            {isTranslating && <TranslationProgressArea />}
+        {isTranslating && <TranslationProgressArea />}
 
-            {isDubbing && <DubbingProgressArea />}
+        {isDubbing && <DubbingProgressArea />}
 
-            <FloatingActionButtons />
-          </>
-        )}
+        <FloatingActionButtons />
       </div>
       <GlobalModals />
     </div>

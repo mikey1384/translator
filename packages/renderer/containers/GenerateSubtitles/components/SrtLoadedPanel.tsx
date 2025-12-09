@@ -65,7 +65,7 @@ export default function SrtLoadedPanel({
           <div
             className={css`
               font-weight: 600;
-              color: ${colors.dark};
+              color: ${colors.text};
             `}
           >
             {t('input.srtFileLoaded', 'SRT Loaded')}

@@ -514,7 +514,7 @@ export default function FloatingActionButtons({
                   transparent 100%
                 ),
                 /* bottom overlay */
-                  linear-gradient(
+                linear-gradient(
                     to bottom,
                     transparent 0%,
                     transparent 50%,

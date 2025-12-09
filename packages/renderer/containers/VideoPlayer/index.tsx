@@ -93,13 +93,13 @@ const commonSeekbarStyles = css`
 
   &::-webkit-slider-thumb {
     appearance: none;
-    background: ${colors.light};
+    background: ${colors.surface};
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
   }
   &::-moz-range-thumb {
-    background: ${colors.light};
+    background: ${colors.surface};
     border-radius: 50%;
     cursor: pointer;
     border: none;

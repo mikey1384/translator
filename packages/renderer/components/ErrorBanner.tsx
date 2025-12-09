@@ -33,7 +33,7 @@ export default function ErrorBanner({ message, onClose }: Props) {
           cursor: pointer;
 
           &:hover {
-            color: ${colors.dark};
+            color: ${colors.text};
           }
         `}
       >

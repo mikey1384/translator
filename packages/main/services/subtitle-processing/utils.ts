@@ -53,6 +53,21 @@ export function throwIfAborted(signal?: AbortSignal): void {
 }
 
 /**
+ * Format time remaining for ElevenLabs transcription progress.
+ * Returns i18n keys for consistent display across all transcription flows.
+ */
+export function formatElevenLabsTimeRemaining(seconds: number): string {
+  if (seconds < 60) return '__i18n__:transcribing_elevenlabs_finishing';
+  const minutes = Math.ceil(seconds / 60);
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMins = minutes % 60;
+    return `__i18n__:transcribing_elevenlabs_hours:${hours}:${remainingMins}`;
+  }
+  return `__i18n__:transcribing_elevenlabs:${minutes}`;
+}
+
+/**
  * Validates and sanitizes a timing value from API response.
  * Returns a safe, finite, non-negative number or fallback.
  */

@@ -10,7 +10,7 @@ const findBarStyles = css`
   position: fixed;
   top: 10px;
   right: 10px;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid ${colors.border};
@@ -20,7 +20,7 @@ const findBarStyles = css`
   gap: 8px;
   z-index: 1200;
   font-size: 0.9rem;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const inputStyles = css`
@@ -28,14 +28,14 @@ const inputStyles = css`
   border: 1px solid ${colors.border};
   border-radius: 4px;
   background-color: ${colors.grayLight};
-  color: ${colors.dark};
+  color: ${colors.text};
   min-width: 160px;
   font-size: 0.95rem;
   &:focus {
     outline: none;
     border-color: ${colors.primary};
     background-color: ${colors.grayLight};
-    color: ${colors.dark};
+    color: ${colors.text};
   }
   &::-webkit-search-decoration,
   &::-webkit-search-cancel-button,
@@ -59,7 +59,7 @@ const matchCountStyles = css`
 const buttonStyles = css`
   background: none;
   border: 1px solid transparent; // Keep layout consistent
-  color: ${colors.dark};
+  color: ${colors.text};
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;

@@ -4,6 +4,7 @@ import { colors } from '../../styles';
 import { useAiStore } from '../../state';
 import Switch from '../../components/Switch';
 import { byoCardStyles } from './styles';
+import { openApiKeysRequired } from '../../state/modal-store';
 
 export default function ByoMasterToggle() {
   const { t } = useTranslation();
@@ -35,6 +36,20 @@ export default function ByoMasterToggle() {
   const handleToggle = async (value: boolean) => {
     setStatusMessage(null);
     setStatusError(null);
+
+    // When turning ON, validate that required keys are present
+    if (value) {
+      const hasOpenAi = keyPresent;
+      const hasAnthropicAndElevenLabs =
+        anthropicKeyPresent && elevenLabsKeyPresent;
+
+      if (!hasOpenAi && !hasAnthropicAndElevenLabs) {
+        // Show modal explaining what's needed
+        openApiKeysRequired();
+        return;
+      }
+    }
+
     const result = await setUseByoMaster(value);
     if (!result.success) {
       setStatusError(
@@ -58,7 +73,14 @@ export default function ByoMasterToggle() {
 
   return (
     <section className={byoCardStyles}>
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>
+      <h2
+        style={{
+          fontSize: '1.1rem',
+          fontWeight: 600,
+          margin: 0,
+          color: colors.text,
+        }}
+      >
         {t('settings.aiProvider.title', 'AI Provider')}
       </h2>
 
@@ -79,7 +101,7 @@ export default function ByoMasterToggle() {
             display: 'flex',
             flexDirection: 'column',
             gap: 4,
-            color: colors.dark,
+            color: colors.text,
           }}
         >
           <span style={{ fontWeight: 600, fontSize: '1rem' }}>

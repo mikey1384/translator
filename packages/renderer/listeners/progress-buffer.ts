@@ -50,9 +50,9 @@ function flush() {
         const s = useAiStore.getState();
         const usingApiKey = Boolean(
           s.useByoMaster &&
-            s.useByo &&
-            s.byoUnlocked &&
-            (s.keyPresent || (s.keyValue || '').trim())
+          s.useByo &&
+          s.byoUnlocked &&
+          (s.keyPresent || (s.keyValue || '').trim())
         );
         if (!usingApiKey) openCreditRanOut();
       } catch {
@@ -171,6 +171,12 @@ function flush() {
         } catch {
           // Do nothing
         }
+        // Refresh credit balance after translation completes (credits were deducted server-side)
+        try {
+          useCreditStore.getState().refresh();
+        } catch {
+          // Do nothing
+        }
         return;
       }
       // If the task has been marked complete (inProgress=false), ignore any late non-final updates
@@ -285,6 +291,12 @@ function flush() {
         } catch {
           // Do nothing
         }
+        // Refresh credit balance after transcription completes (credits were deducted server-side)
+        try {
+          useCreditStore.getState().refresh();
+        } catch {
+          // Do nothing
+        }
       } else {
         // Translation completed: recompute caches to repopulate Gap/LC lists
         try {
@@ -396,6 +408,12 @@ SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
         stage,
         percent: percent >= 100 ? percent : 100,
       });
+      // Refresh credit balance after dubbing completes (credits were deducted server-side)
+      try {
+        useCreditStore.getState().refresh();
+      } catch {
+        // Do nothing
+      }
     }
   } catch (err) {
     console.error('[progress-buffer] dubbing progress error:', err);

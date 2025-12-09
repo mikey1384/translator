@@ -82,7 +82,11 @@ export default function SideMenu({
     (derivedDurationSecs != null ? derivedDurationSecs / 3600 : null);
 
   const isTranscribeDisabled =
-    isTranscribing || derivedHoursNeeded == null || isMetadataPending;
+    isTranscribing ||
+    derivedHoursNeeded == null ||
+    isMetadataPending ||
+    isMerging ||
+    translationInProgress;
 
   const hasUntranslated = hasSubs
     ? order.some(id => {
@@ -318,7 +322,7 @@ export default function SideMenu({
             {metadataStatusMessage && !isTranscribing && (
               <div
                 className={css`
-                  color: ${colors.dark};
+                  color: ${colors.text};
                   font-size: 12px;
                   line-height: 1.4;
                 `}
@@ -363,7 +367,7 @@ export default function SideMenu({
               size="sm"
               variant="primary"
               onClick={handleTranslateAll}
-              disabled={isTranscribing || translationInProgress}
+              disabled={isTranscribing || translationInProgress || isMerging}
               title={t('subtitles.translate', 'Translate')}
             >
               <svg

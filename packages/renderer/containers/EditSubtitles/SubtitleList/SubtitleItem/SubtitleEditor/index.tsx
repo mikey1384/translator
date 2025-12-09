@@ -19,6 +19,7 @@ import {
   groupUncertainRanges,
   synthesizePlaceholdersWithinWindow,
 } from '../../../../../utils/subtitle-heuristics.js';
+import { getByoErrorMessage, isByoError } from '../../../../../utils/byoErrors';
 // Language dropdown for transcription removed
 
 const timeInputStyles = css`
@@ -27,7 +28,7 @@ const timeInputStyles = css`
   border-radius: 4px;
   border: 1px solid ${colors.border};
   background-color: ${colors.grayLight};
-  color: ${colors.dark};
+  color: ${colors.text};
   font-family: monospace;
   transition: border-color 0.2s ease;
   &:focus {
@@ -302,8 +303,12 @@ export default function SubtitleEditor({
       });
     } catch (err) {
       console.error('[SubtitleEditor] single-line translate error:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const friendlyError = isByoError(errorMsg)
+        ? getByoErrorMessage(errorMsg)
+        : t('generateSubtitles.status.error', 'Error');
       setTranslationState({
-        stage: t('generateSubtitles.status.error', 'Error'),
+        stage: friendlyError,
         percent: 100,
         inProgress: false,
       });
@@ -327,7 +332,7 @@ export default function SubtitleEditor({
   return (
     <div
       className={css`
-        background-color: ${colors.light};
+        background-color: ${colors.surface};
         border: 1px solid ${colors.border};
         border-radius: 8px;
         padding: 15px;

@@ -8,6 +8,7 @@ import {
   API_TIMEOUTS,
 } from '../../shared/constants/index.js';
 import { getDeviceId } from '../handlers/credit-handlers.js';
+import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
 
 export const STAGE5_API_URL = 'https://api.stage5.tools';
 
@@ -482,7 +483,389 @@ export async function synthesizeDub({
 }
 
 // ============================================================================
-// R2-based Large File Transcription
+// Direct Relay Endpoints (Simplified Flow)
+// ============================================================================
+
+export const RELAY_URL = 'https://translator-relay.fly.dev';
+
+/**
+ * Estimate transcription time for ElevenLabs Scribe (~8x realtime).
+ * Returns estimated seconds to complete.
+ */
+function estimateTranscriptionTime(
+  durationSec: number | undefined,
+  fileSizeMB: number
+): number {
+  return durationSec
+    ? (durationSec / 8) * (durationSec > 3600 ? 1.5 : 1.2) // 8x realtime + buffer for long files
+    : (fileSizeMB / 10) * 60; // Fallback: ~10MB per minute of audio
+}
+
+/**
+ * Calculate transcription progress and format time remaining.
+ * @param startTime - When transcription started (ms)
+ * @param estimatedTotalSec - Estimated total transcription time (seconds)
+ * @param basePercent - Starting percentage (e.g., 40 after upload)
+ * @param maxPercent - Maximum percentage before complete (e.g., 95)
+ */
+function getTranscriptionProgress(
+  startTime: number,
+  estimatedTotalSec: number,
+  basePercent = 40,
+  maxPercent = 95
+): { stage: string; percent: number } {
+  const elapsedSec = (Date.now() - startTime) / 1000;
+  const progressRange = maxPercent - basePercent;
+  const percent = Math.min(
+    maxPercent,
+    basePercent + (elapsedSec / estimatedTotalSec) * progressRange
+  );
+  const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec);
+  const stage = formatElevenLabsTimeRemaining(remainingSec);
+  return { stage, percent };
+}
+
+/**
+ * Transcribe via direct relay endpoint (simplified flow).
+ * App sends file directly to relay, relay handles auth/credits via CF Worker.
+ * No R2, no polling, no webhooks - just send file and get result.
+ */
+export async function transcribeViaDirect({
+  filePath,
+  language,
+  durationSec,
+  signal,
+  onProgress,
+}: {
+  filePath: string;
+  language?: string;
+  durationSec?: number;
+  signal?: AbortSignal;
+  onProgress?: (stage: string, percent?: number) => void;
+}): Promise<any> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  onProgress?.('Preparing transcription...', 5);
+
+  // Get file size for progress estimation
+  const stats = fs.statSync(filePath);
+  const fileSizeMB = stats.size / (1024 * 1024);
+
+  const fd = new FormData();
+  fd.append('file', fs.createReadStream(filePath));
+  if (language) {
+    fd.append('language', language);
+  }
+
+  onProgress?.('Uploading audio to relay...', 10);
+
+  // Track upload completion to start transcription progress
+  let uploadComplete = false;
+  let transcriptionStartTime: number | null = null;
+  let progressInterval: NodeJS.Timeout | null = null;
+  const estimatedTranscriptionSec = estimateTranscriptionTime(
+    durationSec,
+    fileSizeMB
+  );
+
+  try {
+    const responsePromise = axios.post(`${RELAY_URL}/transcribe-direct`, fd, {
+      headers: {
+        Authorization: `Bearer ${getDeviceId()}`,
+        ...fd.getHeaders(),
+      },
+      signal,
+      // No timeout - relay has no limits, can take as long as needed
+      timeout: 0,
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      onUploadProgress: progressEvent => {
+        if (progressEvent.total) {
+          const uploadPercent = Math.round(
+            (progressEvent.loaded / progressEvent.total) * 30
+          );
+          onProgress?.('Uploading...', 10 + uploadPercent);
+
+          // Start transcription progress timer when upload completes
+          if (progressEvent.loaded >= progressEvent.total && !uploadComplete) {
+            uploadComplete = true;
+            transcriptionStartTime = Date.now();
+
+            // Update progress every second during transcription
+            progressInterval = setInterval(() => {
+              if (!transcriptionStartTime) return;
+              const { stage, percent } = getTranscriptionProgress(
+                transcriptionStartTime,
+                estimatedTranscriptionSec
+              );
+              onProgress?.(stage, percent);
+            }, 1000);
+          }
+        }
+      },
+    });
+
+    const response = await responsePromise;
+
+    // Clear progress interval
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
+
+    sendNetLog('info', `POST /transcribe-direct -> ${response.status}`, {
+      url: `${RELAY_URL}/transcribe-direct`,
+      method: 'POST',
+      status: response.status,
+    });
+
+    onProgress?.('Transcription complete!', 100);
+    return response.data;
+  } catch (error: any) {
+    // Clear progress interval on error
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
+    if (
+      error.name === 'AbortError' ||
+      error.code === 'ERR_CANCELED' ||
+      signal?.aborted
+    ) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    if (error.response?.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error('Invalid API key');
+    }
+
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} POST ${RELAY_URL}/transcribe-direct`,
+        {
+          status: error.response.status,
+          data: error.response.data,
+        }
+      );
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Translate via direct relay endpoint (simplified flow).
+ * App sends request directly to relay, relay handles auth/credits via CF Worker.
+ * No CF Worker middleware for the AI call itself - just auth/billing.
+ */
+export async function translateViaDirect({
+  messages,
+  model = AI_MODELS.GPT,
+  reasoning,
+  signal,
+}: {
+  messages: any[];
+  model?: string;
+  reasoning?: {
+    effort?: 'low' | 'medium' | 'high';
+  };
+  signal?: AbortSignal;
+}): Promise<any> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    const response = await axios.post(
+      `${RELAY_URL}/translate-direct`,
+      { messages, model, reasoning },
+      {
+        headers: {
+          Authorization: `Bearer ${getDeviceId()}`,
+          'Content-Type': 'application/json',
+        },
+        signal,
+        timeout: 0, // No timeout for long translations
+      }
+    );
+
+    sendNetLog('info', `POST /translate-direct -> ${response.status}`, {
+      url: `${RELAY_URL}/translate-direct`,
+      method: 'POST',
+      status: response.status,
+    });
+
+    return response.data;
+  } catch (error: any) {
+    if (
+      error.name === 'AbortError' ||
+      error.code === 'ERR_CANCELED' ||
+      signal?.aborted
+    ) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    if (error.response?.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error('Invalid API key');
+    }
+
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} POST ${RELAY_URL}/translate-direct`,
+        {
+          status: error.response.status,
+          data: error.response.data,
+        }
+      );
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Dub via direct relay endpoint (simplified flow).
+ * App sends request directly to relay, relay handles auth/credits via CF Worker.
+ * No CF Worker middleware for the TTS call itself - just auth/billing.
+ */
+export async function dubViaDirect({
+  segments,
+  voice,
+  model,
+  format,
+  quality,
+  ttsProvider,
+  signal,
+}: {
+  segments: Array<{
+    start?: number;
+    end?: number;
+    original?: string;
+    translation?: string;
+    index?: number;
+  }>;
+  voice?: string;
+  model?: string;
+  format?: string;
+  quality?: 'standard' | 'high';
+  ttsProvider?: 'openai' | 'elevenlabs';
+  signal?: AbortSignal;
+}): Promise<{
+  audioBase64?: string;
+  format: string;
+  voice: string;
+  model: string;
+  segments?: Array<{
+    index: number;
+    audioBase64: string;
+    targetDuration?: number;
+  }>;
+  chunkCount?: number;
+  segmentCount?: number;
+}> {
+  if (process.env.FORCE_ZERO_CREDITS === '1') {
+    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+  }
+
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
+
+  try {
+    const response = await axios.post(
+      `${RELAY_URL}/dub-direct`,
+      { segments, voice, model, format, quality, ttsProvider },
+      {
+        headers: {
+          Authorization: `Bearer ${getDeviceId()}`,
+          'Content-Type': 'application/json',
+        },
+        signal,
+        timeout: 0, // No timeout for long dubbing operations
+      }
+    );
+
+    sendNetLog('info', `POST /dub-direct -> ${response.status}`, {
+      url: `${RELAY_URL}/dub-direct`,
+      method: 'POST',
+      status: response.status,
+    });
+
+    const data = response.data as {
+      audioBase64?: string;
+      format?: string;
+      voice?: string;
+      model?: string;
+      segments?: Array<{
+        index: number;
+        audioBase64: string;
+        targetDuration?: number;
+      }>;
+      chunkCount?: number;
+      segmentCount?: number;
+    };
+
+    return {
+      audioBase64: data.audioBase64,
+      format: data.format ?? 'mp3',
+      voice: data.voice ?? voice ?? 'alloy',
+      model: data.model ?? model ?? 'tts-1',
+      segments: data.segments,
+      chunkCount: data.chunkCount,
+      segmentCount: data.segmentCount,
+    };
+  } catch (error: any) {
+    if (
+      error.name === 'AbortError' ||
+      error.code === 'ERR_CANCELED' ||
+      signal?.aborted
+    ) {
+      throw new DOMException('Operation cancelled', 'AbortError');
+    }
+
+    if (error.response?.status === 402) {
+      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error('Invalid API key');
+    }
+
+    if (error.response) {
+      sendNetLog(
+        'error',
+        `HTTP ${error.response.status} POST ${RELAY_URL}/dub-direct`,
+        {
+          status: error.response.status,
+          data: error.response.data,
+        }
+      );
+    }
+
+    throw error;
+  }
+}
+
+// ============================================================================
+// R2-based Large File Transcription (Legacy - kept for backwards compatibility)
 // ============================================================================
 
 export interface R2TranscriptionJob {
@@ -686,11 +1069,13 @@ export async function transcribeViaR2({
   filePath,
   language,
   signal,
+  durationSec,
   onProgress,
 }: {
   filePath: string;
   language?: string;
   signal?: AbortSignal;
+  durationSec?: number;
   onProgress?: (stage: string, percent?: number) => void;
 }): Promise<any> {
   if (process.env.FORCE_ZERO_CREDITS === '1') {
@@ -743,14 +1128,18 @@ export async function transcribeViaR2({
       throw new Error(status.error || 'Transcription failed');
     }
 
-    // Update progress based on elapsed time (estimate ~8x real-time)
-    const elapsedSec = (Date.now() - startTime) / 1000;
-    const estimatedTotalSec = (fileSizeMB / 10) * 60; // Rough estimate: 10MB per minute
-    const progressPercent = Math.min(
-      95,
-      45 + (elapsedSec / estimatedTotalSec) * 50
+    // Update progress based on elapsed time
+    const estimatedTotalSec = estimateTranscriptionTime(
+      durationSec,
+      fileSizeMB
     );
-    onProgress?.('Transcribing with ElevenLabs...', progressPercent);
+    const { stage, percent } = getTranscriptionProgress(
+      startTime,
+      estimatedTotalSec,
+      45, // Base percent after upload
+      95 // Max percent before complete
+    );
+    onProgress?.(stage, percent);
 
     await new Promise(resolve => setTimeout(resolve, pollInterval));
   }

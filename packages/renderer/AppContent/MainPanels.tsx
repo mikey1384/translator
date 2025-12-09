@@ -176,7 +176,7 @@ const ctaOverlayCard = css`
   padding: 20px 24px;
   border-radius: 12px;
   border: 2px solid ${colors.border};
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
@@ -186,7 +186,7 @@ const ctaOverlayCard = css`
   gap: 14px;
   cursor: pointer;
   user-select: none;
-  color: ${colors.dark};
+  color: ${colors.text};
   text-align: center;
   transition:
     border-color 0.15s ease,
@@ -231,7 +231,7 @@ const overlayIconStyles = css`
 const overlayTitleStyles = css`
   font-size: 1.1rem;
   font-weight: 700;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const overlaySubtitleStyles = css`
@@ -254,6 +254,6 @@ const overlayPill = css`
   border-radius: 999px;
   background-color: ${colors.backgroundLight};
   border: 1px solid ${colors.border};
-  color: ${colors.dark};
+  color: ${colors.text};
   font-size: 0.8rem;
 `;

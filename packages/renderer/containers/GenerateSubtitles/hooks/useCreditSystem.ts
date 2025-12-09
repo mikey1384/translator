@@ -12,9 +12,9 @@ export function useCreditSystem() {
   const aiInitialized = useAiStore(s => s.initialized);
   const usingApiKey = Boolean(
     useByoMaster &&
-      useByo &&
-      byoUnlocked &&
-      (keyPresent || (keyValue || '').trim())
+    useByo &&
+    byoUnlocked &&
+    (keyPresent || (keyValue || '').trim())
   );
 
   useEffect(() => {

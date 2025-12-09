@@ -7,10 +7,12 @@ import { useAiStore } from '../../state/ai-store';
 import { logButton, logTask } from '../../utils/logger.js';
 import {
   CREDITS_PER_TRANSLATION_AUDIO_HOUR,
+  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
   TRANSLATION_QUALITY_MULTIPLIER,
   TTS_CREDITS_PER_MINUTE,
 } from '../../../shared/constants';
 import CreditBalance, { type OperationType } from '../CreditBalance';
+import SettingsButton from '../SettingsButton';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -73,7 +75,7 @@ const headerStyles = css`
 
 const progressBlockStyles = css`
   padding: 16px;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   border-radius: 8px;
   border: 1px solid ${colors.border};
   box-shadow: none;
@@ -95,7 +97,7 @@ const progressLabelStyles = css`
   margin-bottom: 8px;
   font-weight: 500;
   font-size: 0.95rem;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const closeButtonStyles = css`
@@ -107,7 +109,7 @@ const closeButtonStyles = css`
   padding: 0;
   line-height: 1;
   &:hover {
-    color: ${colors.dark};
+    color: ${colors.text};
   }
 `;
 
@@ -143,8 +145,8 @@ export default function ProgressArea({
   let suffixText: string | undefined;
   if (typeof credits === 'number' && credits > 0) {
     if (operationId?.startsWith('transcribe-') && !usingByoOpenAi) {
-      // Transcription: use base translation hour rate (similar cost)
-      const hours = credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+      // Transcription: use ElevenLabs Scribe rate
+      const hours = credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
       suffixText = `(${Math.floor(hours).toLocaleString()}h)`;
     } else if (operationId?.startsWith('translate-') && !usingByoOpenAi) {
       // Translation: adjust for quality toggle
@@ -152,10 +154,18 @@ export default function ProgressArea({
         ? CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_QUALITY_MULTIPLIER
         : CREDITS_PER_TRANSLATION_AUDIO_HOUR;
       const hours = credits / effectiveCreditsPerHour;
+      let timeStr: string;
       if (hours < 1) {
-        suffixText = `(~${Math.ceil(hours * 60)}m)`;
+        timeStr = `${Math.ceil(hours * 60)}m`;
       } else {
-        suffixText = `(${Math.floor(hours).toLocaleString()}h)`;
+        const h = Math.floor(hours);
+        const m = Math.round((hours - h) * 60);
+        timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+      }
+      if (qualityTranslation) {
+        suffixText = `(hq mode: ~${timeStr})`;
+      } else {
+        suffixText = `(~${timeStr})`;
       }
     } else if (operationId?.startsWith('dub-')) {
       // Dubbing: use TTS provider-specific rate
@@ -232,18 +242,15 @@ export default function ProgressArea({
   }
 
   // Determine operation type from operationId prefix
-  const operationType: OperationType | null = operationId
+  const operationType: OperationType = operationId
     ? operationId.startsWith('translate-')
       ? 'translation'
       : operationId.startsWith('transcribe-')
         ? 'transcription'
         : operationId.startsWith('dub-')
           ? 'dubbing'
-          : null
-    : null;
-
-  // Show credit balance for AI operations
-  const shouldShowCreditBalance = operationType !== null;
+          : 'general'
+    : 'general';
 
   return (
     <div className={progressContainerStyles}>
@@ -256,12 +263,11 @@ export default function ProgressArea({
           `}
         >
           <h3>{title}</h3>
-          {shouldShowCreditBalance && operationType && (
-            <CreditBalance
-              operationType={operationType}
-              suffixText={suffixText}
-            />
-          )}
+          <CreditBalance
+            operationType={operationType}
+            suffixText={suffixText}
+          />
+          <SettingsButton variant="icon" />
         </div>
         <button
           className={closeButtonStyles}

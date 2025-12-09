@@ -51,7 +51,7 @@ export default function SettingsPage() {
         <h1
           className={css`
             font-size: 1.8em;
-            color: ${colors.dark};
+            color: ${colors.text};
             margin: 0;
           `}
         >
@@ -80,7 +80,7 @@ export default function SettingsPage() {
             className={css`
               font-size: 1.2rem;
               margin: 0 0 6px;
-              color: ${colors.dark};
+              color: ${colors.text};
             `}
           >
             {t('settings.performanceQuality.title', 'Performance & Quality')}

@@ -101,11 +101,11 @@
     "improveTranscription": "Cải thiện chép lời",
     "improveTranslation": "Cải thiện bản dịch",
     "dub": "Lồng tiếng",
-    "dubEstimateCredits": "{{credits}} credits (~{{minutes}} phút)",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}} phút)",
     "dubEstimateByo": "~{{minutes}} phút âm thanh",
-    "translateEstimateCredits": "{{credits}} credits",
+    "translateEstimateCredits": "~{{minutes}} phút video",
     "translateEstimateByo": "Khóa BYO",
-    "qualityBadge": "(+đánh giá)"
+    "qualityBadge": "(hq)"
   },
   "editSubtitles": {
     "title": "Chỉnh sửa Phụ đề",

@@ -33,7 +33,7 @@ const optionCardStyles = css`
   padding: 24px;
   border: 2px solid ${colors.border};
   border-radius: 12px;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   transition: all 0.3s ease;
   position: relative;
   text-align: center;
@@ -57,7 +57,7 @@ const optionHeaderStyles = css`
   margin-bottom: 16px;
   font-size: 1.1rem;
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const iconPlaceholderStyles = css`

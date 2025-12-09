@@ -101,11 +101,11 @@
     "chooseSrtFile": "選擇SRT檔案",
     "cancel_confirmation": "確定要取消字幕翻譯過程嗎？所有進度將遺失，您需要重新開始。",
     "dub": "產生配音語音",
-    "dubEstimateCredits": "{{credits}} 點數 (~{{minutes}}分鐘)",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}分鐘)",
     "dubEstimateByo": "~{{minutes}}分鐘音訊",
-    "translateEstimateCredits": "{{credits}} 點數",
+    "translateEstimateCredits": "~{{minutes}}分鐘影片",
     "translateEstimateByo": "BYO金鑰",
-    "qualityBadge": "(+審校)"
+    "qualityBadge": "(hq)"
   },
   "summary": {
     "title": "逐字稿摘要",

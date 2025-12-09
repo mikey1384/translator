@@ -28,7 +28,7 @@ import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
 
-import { throwIfAborted } from '../utils.js';
+import { throwIfAborted, formatElevenLabsTimeRemaining } from '../utils.js';
 import {
   transcribe as transcribeAi,
   getActiveProviderForAudio,
@@ -91,17 +91,36 @@ export async function transcribePass({
     const MAX_DIRECT_FILE_SIZE_MB = 95; // Stay under CF 100MB limit with buffer
     const MAX_R2_FILE_SIZE_MB = 500; // R2 upload limit
 
+    // ElevenLabs processes at ~8x realtime. CF Worker subrequest timeout is ~30s.
+    // Use R2 flow for any audio that would exceed this processing time threshold.
+    // Add 50% buffer for safety: 30s * 8 * 0.67 = ~160s (~2.7 min)
+    const MAX_DIRECT_DURATION_SEC = 160;
+    const exceedsDurationThreshold = duration > MAX_DIRECT_DURATION_SEC;
+
     // Determine transcription strategy:
-    // - BYO ElevenLabs: Always try direct (no CF limit)
-    // - Stage5 credits < 95MB: Try direct ElevenLabs via CF Worker
-    // - Stage5 credits 95-500MB: Use R2 upload flow
-    // - Stage5 credits > 500MB or fallback: Whisper chunked
+    // - BYO ElevenLabs: Always try direct (client handles timeouts differently)
+    // - Stage5 + short audio (< 2.7 min) + small file (< 95MB): Direct ElevenLabs via CF
+    // - Stage5 + long audio OR large file (95-500MB): Use R2 upload flow
+    // - Stage5 + very large (> 500MB) or fallback: Whisper chunked
     const canTryDirectElevenLabs =
-      useByoElevenLabs || (useStage5 && fileSizeMB < MAX_DIRECT_FILE_SIZE_MB);
+      useByoElevenLabs ||
+      (useStage5 &&
+        fileSizeMB < MAX_DIRECT_FILE_SIZE_MB &&
+        !exceedsDurationThreshold);
     const canTryR2ElevenLabs =
       useStage5 &&
-      fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB &&
-      fileSizeMB < MAX_R2_FILE_SIZE_MB;
+      fileSizeMB < MAX_R2_FILE_SIZE_MB &&
+      (fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB || exceedsDurationThreshold);
+
+    if (
+      useStage5 &&
+      exceedsDurationThreshold &&
+      fileSizeMB < MAX_DIRECT_FILE_SIZE_MB
+    ) {
+      log.info(
+        `[${operationId}] Audio duration (${(duration / 60).toFixed(1)} min) exceeds CF Worker threshold, using direct relay flow`
+      );
+    }
 
     // Helper function for ElevenLabs transcription with progress
     const tryElevenLabsTranscription = async (): Promise<{
@@ -119,17 +138,6 @@ export async function transcribePass({
       const startTime = Date.now();
       let progressInterval: ReturnType<typeof setInterval> | null = null;
 
-      const formatTimeRemaining = (seconds: number): string => {
-        if (seconds < 60) return '__i18n__:transcribing_elevenlabs_finishing';
-        const minutes = Math.ceil(seconds / 60);
-        if (minutes >= 60) {
-          const hours = Math.floor(minutes / 60);
-          const remainingMins = minutes % 60;
-          return `__i18n__:transcribing_elevenlabs_hours:${hours}:${remainingMins}`;
-        }
-        return `__i18n__:transcribing_elevenlabs:${minutes}`;
-      };
-
       progressInterval = setInterval(() => {
         if (signal?.aborted) {
           if (progressInterval) clearInterval(progressInterval);
@@ -146,13 +154,13 @@ export async function transcribePass({
 
         progressCallback?.({
           percent: Math.round(estimatedPercent),
-          stage: formatTimeRemaining(remainingSec),
+          stage: formatElevenLabsTimeRemaining(remainingSec),
         });
       }, 2000);
 
       progressCallback?.({
         percent: Stage.TRANSCRIBE,
-        stage: formatTimeRemaining(estimatedProcessingTime),
+        stage: formatElevenLabsTimeRemaining(estimatedProcessingTime),
       });
 
       try {
@@ -244,10 +252,10 @@ export async function transcribePass({
       }
     }
 
-    // Try R2 upload flow for large Stage5 files (95-500MB)
+    // Try direct relay flow for large Stage5 files (95-500MB or long duration)
     if (canTryR2ElevenLabs) {
       log.info(
-        `[${operationId}] Using R2 upload flow for large file (${fileSizeMB.toFixed(1)}MB)`
+        `[${operationId}] Using direct relay flow for large file (${fileSizeMB.toFixed(1)}MB)`
       );
 
       try {
@@ -259,6 +267,7 @@ export async function transcribePass({
         const result = await transcribeLargeFileViaR2({
           filePath: audioPath,
           signal,
+          durationSec: duration,
           onProgress: (stage, percent) => {
             progressCallback?.({
               percent: percent ?? Stage.TRANSCRIBE,
@@ -304,7 +313,7 @@ export async function transcribePass({
         );
 
         log.info(
-          `[${operationId}] ✏️ R2 ElevenLabs transcription complete: ${cleaned.length} segments`
+          `[${operationId}] ✏️ Direct relay transcription complete: ${cleaned.length} segments`
         );
 
         progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
@@ -318,7 +327,7 @@ export async function transcribePass({
           throw error;
         }
         log.warn(
-          `[${operationId}] R2 ElevenLabs transcription failed: ${error?.message || error}`
+          `[${operationId}] Direct relay transcription failed: ${error?.message || error}`
         );
         log.info(
           `[${operationId}] Falling back to Whisper chunked transcription`

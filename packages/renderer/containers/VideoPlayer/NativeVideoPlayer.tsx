@@ -450,7 +450,7 @@ export default function NativeVideoPlayer({
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: ${colors.light};
+            background: ${colors.surface};
             color: ${colors.danger};
             padding: 10px 15px;
             border: 1px solid ${colors.danger};

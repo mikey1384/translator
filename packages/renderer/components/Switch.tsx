@@ -35,7 +35,7 @@ const thumb = css`
   left: 2px;
   width: 18px;
   height: 18px;
-  background: ${colors.dark};
+  background: ${colors.text};
   border-radius: 50%;
   transition: transform 0.2s ease;
 `;

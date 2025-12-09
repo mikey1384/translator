@@ -1,35 +1,164 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles';
-import { useCreditStore } from '../../state/credit-store';
 import { useAiStore } from '../../state';
-import { useUIStore } from '../../state/ui-store';
-import Switch from '../../components/Switch';
-import { logButton } from '../../utils/logger';
+import ApiKeyInput from '../../components/ApiKeyInput';
+import {
+  ApiKeyOptionBox,
+  OrDivider,
+  ApiKeyInputWrapper,
+} from '../../components/ApiKeyOptionBox';
 import { byoCardStyles } from './styles';
-import { formatDubbingTime } from './utils';
+
+// Provider configuration with i18n keys and pricing
+const PROVIDERS = {
+  transcription: {
+    openai: {
+      labelKey: 'settings.byoPreferences.openaiWhisper',
+      fallback: 'OpenAI Whisper',
+      price: '~$0.36',
+    },
+    elevenlabs: {
+      labelKey: 'settings.byoPreferences.elevenLabsScribe',
+      fallback: 'ElevenLabs Scribe',
+      price: '~$0.40',
+    },
+  },
+  review: {
+    openai: {
+      labelKey: 'settings.byoPreferences.gptHigh',
+      fallback: 'GPT-5.1 (high)',
+      price: '~$0.30',
+    },
+    anthropic: {
+      labelKey: 'settings.byoPreferences.claudeOpus',
+      fallback: 'Claude Opus',
+      price: '~$0.80',
+    },
+  },
+  summary: {
+    openai: {
+      labelKey: 'settings.byoPreferences.gpt',
+      fallback: 'GPT-5.1',
+      price: '~$0.02',
+    },
+    anthropic: {
+      labelKey: 'settings.byoPreferences.claudeOpus',
+      fallback: 'Claude Opus',
+      price: '~$0.05',
+    },
+  },
+  dubbing: {
+    openai: {
+      labelKey: 'settings.byoPreferences.openaiTts',
+      fallback: 'OpenAI TTS',
+      price: '~$0.70',
+    },
+    elevenlabs: {
+      labelKey: 'settings.byoPreferences.elevenLabsTts',
+      fallback: 'ElevenLabs',
+      price: '~$14',
+    },
+  },
+} as const;
+
+// Styles
+const sectionTitle = css`
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: ${colors.text};
+`;
+
+const radioLabel = css`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+`;
+
+const radioLabelSelected = css`
+  background: rgba(67, 97, 238, 0.1);
+`;
+
+const infoText = css`
+  font-size: 0.85rem;
+  color: ${colors.textDim};
+  padding-left: 4px;
+`;
+
+const priceText = css`
+  color: ${colors.textDim};
+  margin-left: 6px;
+`;
+
+// Reusable PreferenceRow component
+interface PreferenceRowProps {
+  title: string;
+  hasChoice: boolean;
+  radioName: string;
+  options: Array<{
+    value: string;
+    label: string;
+    price: string;
+    selected: boolean;
+    onSelect: () => void;
+  }>;
+  infoProvider?: {
+    label: string;
+    price: string;
+  };
+}
+
+function PreferenceRow({
+  title,
+  hasChoice,
+  radioName,
+  options,
+  infoProvider,
+}: PreferenceRowProps) {
+  return (
+    <div>
+      <div className={sectionTitle} style={{ marginBottom: hasChoice ? 8 : 4 }}>
+        {title}
+      </div>
+      {hasChoice ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {options.map(opt => (
+            <label
+              key={opt.value}
+              className={`${radioLabel} ${opt.selected ? radioLabelSelected : ''}`}
+            >
+              <input
+                type="radio"
+                name={radioName}
+                checked={opt.selected}
+                onChange={opt.onSelect}
+                style={{ accentColor: colors.primary }}
+              />
+              <span style={{ fontSize: '.85rem', color: colors.text }}>
+                {opt.label}
+                <span className={priceText}>{opt.price}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      ) : (
+        infoProvider && (
+          <div className={infoText}>
+            {infoProvider.label}
+            <span className={priceText}>{infoProvider.price}</span>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
 
 export default function ByoOpenAiSection() {
   const { t } = useTranslation();
-  const [showKey, setShowKey] = useState(false);
-  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
-  const [showElevenLabsKey, setShowElevenLabsKey] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [statusError, setStatusError] = useState<string | null>(null);
-  const credits = useCreditStore(state => state.credits);
-  const { qualityTranscription, setQualityTranscription } = useUIStore();
-  const [anthropicStatusMessage, setAnthropicStatusMessage] = useState<
-    string | null
-  >(null);
-  const [anthropicStatusError, setAnthropicStatusError] = useState<
-    string | null
-  >(null);
-  const [elevenLabsStatusMessage, setElevenLabsStatusMessage] = useState<
-    string | null
-  >(null);
-  const [elevenLabsStatusError, setElevenLabsStatusError] = useState<
-    string | null
-  >(null);
 
   const initialized = useAiStore(state => state.initialized);
   const initialize = useAiStore(state => state.initialize);
@@ -37,6 +166,7 @@ export default function ByoOpenAiSection() {
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
   const useByoMaster = useAiStore(state => state.useByoMaster);
   const lastFetched = useAiStore(state => state.lastFetched);
+  const encryptionAvailable = useAiStore(state => state.encryptionAvailable);
 
   // Effective BYO unlocked state (respects admin preview mode)
   const effectiveByoUnlocked = byoUnlocked && !adminByoPreviewMode;
@@ -47,12 +177,10 @@ export default function ByoOpenAiSection() {
   const keyLoading = useAiStore(state => state.keyLoading);
   const savingKey = useAiStore(state => state.savingKey);
   const validatingKey = useAiStore(state => state.validatingKey);
-  const useByo = useAiStore(state => state.useByo);
   const setKeyValue = useAiStore(state => state.setKeyValue);
   const saveKey = useAiStore(state => state.saveKey);
   const clearKey = useAiStore(state => state.clearKey);
   const validateKey = useAiStore(state => state.validateKey);
-  const setUseByo = useAiStore(state => state.setUseByo);
 
   // Anthropic state
   const anthropicKeyValue = useAiStore(state => state.anthropicKeyValue);
@@ -62,12 +190,10 @@ export default function ByoOpenAiSection() {
   const validatingAnthropicKey = useAiStore(
     state => state.validatingAnthropicKey
   );
-  const useByoAnthropic = useAiStore(state => state.useByoAnthropic);
   const setAnthropicKeyValue = useAiStore(state => state.setAnthropicKeyValue);
   const saveAnthropicKey = useAiStore(state => state.saveAnthropicKey);
   const clearAnthropicKey = useAiStore(state => state.clearAnthropicKey);
   const validateAnthropicKey = useAiStore(state => state.validateAnthropicKey);
-  const setUseByoAnthropic = useAiStore(state => state.setUseByoAnthropic);
 
   // ElevenLabs state
   const elevenLabsKeyValue = useAiStore(state => state.elevenLabsKeyValue);
@@ -77,7 +203,6 @@ export default function ByoOpenAiSection() {
   const validatingElevenLabsKey = useAiStore(
     state => state.validatingElevenLabsKey
   );
-  const useByoElevenLabs = useAiStore(state => state.useByoElevenLabs);
   const setElevenLabsKeyValue = useAiStore(
     state => state.setElevenLabsKeyValue
   );
@@ -85,19 +210,6 @@ export default function ByoOpenAiSection() {
   const clearElevenLabsKey = useAiStore(state => state.clearElevenLabsKey);
   const validateElevenLabsKey = useAiStore(
     state => state.validateElevenLabsKey
-  );
-  const setUseByoElevenLabs = useAiStore(state => state.setUseByoElevenLabs);
-
-  // Claude preferences
-  const preferClaudeTranslation = useAiStore(
-    state => state.preferClaudeTranslation
-  );
-  const setPreferClaudeTranslation = useAiStore(
-    state => state.setPreferClaudeTranslation
-  );
-  const preferClaudeReview = useAiStore(state => state.preferClaudeReview);
-  const setPreferClaudeReview = useAiStore(
-    state => state.setPreferClaudeReview
   );
 
   // Provider preferences
@@ -113,11 +225,13 @@ export default function ByoOpenAiSection() {
   const setPreferredDubbingProvider = useAiStore(
     state => state.setPreferredDubbingProvider
   );
-  const stage5DubbingTtsProvider = useAiStore(
-    state => state.stage5DubbingTtsProvider
+  const preferClaudeReview = useAiStore(state => state.preferClaudeReview);
+  const setPreferClaudeReview = useAiStore(
+    state => state.setPreferClaudeReview
   );
-  const setStage5DubbingTtsProvider = useAiStore(
-    state => state.setStage5DubbingTtsProvider
+  const preferClaudeSummary = useAiStore(state => state.preferClaudeSummary);
+  const setPreferClaudeSummary = useAiStore(
+    state => state.setPreferClaudeSummary
   );
 
   useEffect(() => {
@@ -128,346 +242,14 @@ export default function ByoOpenAiSection() {
     }
   }, [initialized, initialize]);
 
-  useEffect(() => {
-    setStatusMessage(null);
-    setStatusError(null);
-  }, [keyValue]);
-
-  useEffect(() => {
-    setAnthropicStatusMessage(null);
-    setAnthropicStatusError(null);
-  }, [anthropicKeyValue]);
-
-  useEffect(() => {
-    setElevenLabsStatusMessage(null);
-    setElevenLabsStatusError(null);
-  }, [elevenLabsKeyValue]);
-
   // Don't render if not unlocked (or in admin preview mode) or master toggle is off
   if (!effectiveByoUnlocked || !useByoMaster) {
     return null;
   }
 
-  // OpenAI handlers
-  const handleSave = async () => {
-    setStatusMessage(null);
-    setStatusError(null);
-    try {
-      const result = await saveKey();
-      if (result.success) {
-        setStatusMessage(
-          keyValue.trim()
-            ? t('settings.byoOpenAi.keySaved', 'API key saved locally.')
-            : t('settings.byoOpenAi.keyCleared', 'API key cleared.')
-        );
-        logButton('settings_byo_key_save', {
-          hasKey: Boolean(keyValue.trim()),
-        });
-      } else if (result.error) {
-        logButton('settings_byo_key_save_error', { error: result.error });
-        setStatusError(result.error);
-      }
-    } catch (err: any) {
-      logButton('settings_byo_key_save_exception');
-      setStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleClear = async () => {
-    setStatusMessage(null);
-    setStatusError(null);
-    try {
-      const result = await clearKey();
-      if (result.success) {
-        setStatusMessage(
-          t('settings.byoOpenAi.keyCleared', 'API key cleared.')
-        );
-        logButton('settings_byo_key_clear');
-      } else if (result.error) {
-        logButton('settings_byo_key_clear_error', { error: result.error });
-        setStatusError(result.error);
-      }
-    } catch (err: any) {
-      logButton('settings_byo_key_clear_exception');
-      setStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleTest = async () => {
-    setStatusMessage(null);
-    setStatusError(null);
-    try {
-      const result = await validateKey();
-      logButton('settings_byo_key_test', { ok: result.ok });
-      if (result.ok) {
-        setStatusMessage(
-          t('settings.byoOpenAi.keyValid', 'API key validated successfully.')
-        );
-      } else {
-        setStatusError(
-          result.error ||
-            t('settings.byoOpenAi.keyInvalid', 'API key validation failed.')
-        );
-      }
-    } catch (err: any) {
-      logButton('settings_byo_key_test_exception');
-      setStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleToggleUseByo = async (value: boolean) => {
-    setStatusMessage(null);
-    setStatusError(null);
-    const result = await setUseByo(value);
-    if (!result.success) {
-      setStatusError(
-        result.error ||
-          t('settings.byoOpenAi.toggleError', 'Failed to update preference.')
-      );
-      return;
-    }
-    setStatusMessage(
-      value
-        ? t(
-            'settings.byoOpenAi.toggleOn',
-            'Using your OpenAI key for AI tasks.'
-          )
-        : t(
-            'settings.byoOpenAi.toggleOff',
-            'Using Stage5 credits for AI tasks.'
-          )
-    );
-  };
-
-  // Anthropic handlers
-  const handleAnthropicSave = async () => {
-    setAnthropicStatusMessage(null);
-    setAnthropicStatusError(null);
-    try {
-      const result = await saveAnthropicKey();
-      if (result.success) {
-        setAnthropicStatusMessage(
-          anthropicKeyValue.trim()
-            ? t('settings.byoAnthropic.keySaved', 'Anthropic API key saved.')
-            : t(
-                'settings.byoAnthropic.keyCleared',
-                'Anthropic API key cleared.'
-              )
-        );
-        logButton('settings_anthropic_key_save', {
-          hasKey: Boolean(anthropicKeyValue.trim()),
-        });
-      } else if (result.error) {
-        logButton('settings_anthropic_key_save_error', { error: result.error });
-        setAnthropicStatusError(result.error);
-      }
-    } catch (err: any) {
-      logButton('settings_anthropic_key_save_exception');
-      setAnthropicStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleAnthropicClear = async () => {
-    setAnthropicStatusMessage(null);
-    setAnthropicStatusError(null);
-    try {
-      const result = await clearAnthropicKey();
-      if (result.success) {
-        setAnthropicStatusMessage(
-          t('settings.byoAnthropic.keyCleared', 'Anthropic API key cleared.')
-        );
-        logButton('settings_anthropic_key_clear');
-      } else if (result.error) {
-        logButton('settings_anthropic_key_clear_error', {
-          error: result.error,
-        });
-        setAnthropicStatusError(result.error);
-      }
-    } catch (err: any) {
-      logButton('settings_anthropic_key_clear_exception');
-      setAnthropicStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleAnthropicTest = async () => {
-    setAnthropicStatusMessage(null);
-    setAnthropicStatusError(null);
-    try {
-      const result = await validateAnthropicKey();
-      logButton('settings_anthropic_key_test', { ok: result.ok });
-      if (result.ok) {
-        setAnthropicStatusMessage(
-          t(
-            'settings.byoAnthropic.keyValid',
-            'Anthropic API key validated successfully.'
-          )
-        );
-      } else {
-        setAnthropicStatusError(
-          result.error ||
-            t(
-              'settings.byoAnthropic.keyInvalid',
-              'Anthropic API key validation failed.'
-            )
-        );
-      }
-    } catch (err: any) {
-      logButton('settings_anthropic_key_test_exception');
-      setAnthropicStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleToggleUseByoAnthropic = async (value: boolean) => {
-    setAnthropicStatusMessage(null);
-    setAnthropicStatusError(null);
-    const result = await setUseByoAnthropic(value);
-    if (!result.success) {
-      setAnthropicStatusError(
-        result.error ||
-          t(
-            'settings.byoAnthropic.toggleError',
-            'Failed to update Anthropic preference.'
-          )
-      );
-      return;
-    }
-    setAnthropicStatusMessage(
-      value
-        ? t(
-            'settings.byoAnthropic.toggleOn',
-            'Using your Anthropic key for Claude models.'
-          )
-        : t(
-            'settings.byoAnthropic.toggleOff',
-            'Using Stage5 credits for Claude models.'
-          )
-    );
-  };
-
-  // ElevenLabs handlers
-  const handleElevenLabsSave = async () => {
-    setElevenLabsStatusMessage(null);
-    setElevenLabsStatusError(null);
-    try {
-      const result = await saveElevenLabsKey();
-      if (result.success) {
-        setElevenLabsStatusMessage(
-          elevenLabsKeyValue.trim()
-            ? t('settings.byoElevenLabs.keySaved', 'ElevenLabs API key saved.')
-            : t(
-                'settings.byoElevenLabs.keyCleared',
-                'ElevenLabs API key cleared.'
-              )
-        );
-        logButton('settings_elevenlabs_key_save', {
-          hasKey: Boolean(elevenLabsKeyValue.trim()),
-        });
-      } else if (result.error) {
-        logButton('settings_elevenlabs_key_save_error', {
-          error: result.error,
-        });
-        setElevenLabsStatusError(result.error);
-      }
-    } catch (err: any) {
-      logButton('settings_elevenlabs_key_save_exception');
-      setElevenLabsStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleElevenLabsClear = async () => {
-    setElevenLabsStatusMessage(null);
-    setElevenLabsStatusError(null);
-    try {
-      const result = await clearElevenLabsKey();
-      if (result.success) {
-        setElevenLabsStatusMessage(
-          t('settings.byoElevenLabs.keyCleared', 'ElevenLabs API key cleared.')
-        );
-        logButton('settings_elevenlabs_key_clear');
-      } else if (result.error) {
-        logButton('settings_elevenlabs_key_clear_error', {
-          error: result.error,
-        });
-        setElevenLabsStatusError(result.error);
-      }
-    } catch (err: any) {
-      logButton('settings_elevenlabs_key_clear_exception');
-      setElevenLabsStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleElevenLabsTest = async () => {
-    setElevenLabsStatusMessage(null);
-    setElevenLabsStatusError(null);
-    try {
-      const result = await validateElevenLabsKey();
-      logButton('settings_elevenlabs_key_test', { ok: result.ok });
-      if (result.ok) {
-        setElevenLabsStatusMessage(
-          t(
-            'settings.byoElevenLabs.keyValid',
-            'ElevenLabs API key validated successfully.'
-          )
-        );
-      } else {
-        setElevenLabsStatusError(
-          result.error ||
-            t(
-              'settings.byoElevenLabs.keyInvalid',
-              'ElevenLabs API key validation failed.'
-            )
-        );
-      }
-    } catch (err: any) {
-      logButton('settings_elevenlabs_key_test_exception');
-      setElevenLabsStatusError(err?.message || String(err));
-    }
-  };
-
-  const handleToggleUseByoElevenLabs = async (value: boolean) => {
-    setElevenLabsStatusMessage(null);
-    setElevenLabsStatusError(null);
-    const result = await setUseByoElevenLabs(value);
-    if (!result.success) {
-      setElevenLabsStatusError(
-        result.error ||
-          t(
-            'settings.byoElevenLabs.toggleError',
-            'Failed to update ElevenLabs preference.'
-          )
-      );
-      return;
-    }
-    setElevenLabsStatusMessage(
-      value
-        ? t(
-            'settings.byoElevenLabs.toggleOn',
-            'Using your ElevenLabs key for transcription & dubbing.'
-          )
-        : t(
-            'settings.byoElevenLabs.toggleOff',
-            'Using Stage5 credits for transcription & dubbing.'
-          )
-    );
-  };
-
-  // Preference handlers
-  const handleToggleClaudePreference = async (value: boolean) => {
-    const result = await setPreferClaudeTranslation(value);
-    if (!result.success) {
-      console.error('Failed to update Claude preference:', result.error);
-    }
-  };
-
-  const handleToggleClaudeReviewPreference = async (value: boolean) => {
-    const result = await setPreferClaudeReview(value);
-    if (!result.success) {
-      console.error('Failed to update Claude review preference:', result.error);
-    }
-  };
-
+  // Provider preference handlers
   const handleTranscriptionProviderChange = async (
-    provider: 'elevenlabs' | 'openai' | 'stage5'
+    provider: 'elevenlabs' | 'openai'
   ) => {
     const result = await setPreferredTranscriptionProvider(provider);
     if (!result.success) {
@@ -476,7 +258,7 @@ export default function ByoOpenAiSection() {
   };
 
   const handleDubbingProviderChange = async (
-    provider: 'elevenlabs' | 'openai' | 'stage5'
+    provider: 'elevenlabs' | 'openai'
   ) => {
     const result = await setPreferredDubbingProvider(provider);
     if (!result.success) {
@@ -484,31 +266,54 @@ export default function ByoOpenAiSection() {
     }
   };
 
-  const handleStage5TtsProviderChange = async (
-    provider: 'openai' | 'elevenlabs'
-  ) => {
-    const result = await setStage5DubbingTtsProvider(provider);
+  const handleReviewProviderChange = async (value: boolean) => {
+    const result = await setPreferClaudeReview(value);
     if (!result.success) {
-      console.error('Failed to update Stage5 TTS provider:', result.error);
+      console.error('Failed to update review provider:', result.error);
     }
   };
 
-  // Computed values
-  const hasBothTranslationKeys =
-    keyPresent && useByo && anthropicKeyPresent && useByoAnthropic;
-  const hasElevenLabsForTranscription =
-    elevenLabsKeyPresent && useByoElevenLabs;
-  const hasOpenAiForTranscription = keyPresent && useByo;
-  const hasAnyTranscriptionKey =
-    hasElevenLabsForTranscription || hasOpenAiForTranscription;
+  const handleSummaryProviderChange = async (value: boolean) => {
+    const result = await setPreferClaudeSummary(value);
+    if (!result.success) {
+      console.error('Failed to update summary provider:', result.error);
+    }
+  };
 
-  // Show quality transcription toggle only when OpenAI Whisper is the selected provider
-  const showQualityTranscriptionToggle =
-    hasOpenAiForTranscription && preferredTranscriptionProvider === 'openai';
+  // Computed values - check which preferences should be shown
+  const hasOpenAi = keyPresent;
+  const hasAnthropic = anthropicKeyPresent;
+  const hasElevenLabs = elevenLabsKeyPresent;
+  const hasAnthropicCombo = hasAnthropic && hasElevenLabs;
+
+  // Show stack panel when any valid provider configuration exists
+  const showStackPanel = hasOpenAi || hasAnthropicCombo;
+
+  // Selection mode: user has both options and can choose between them
+  const hasProviderChoice = hasOpenAi && (hasAnthropic || hasElevenLabs);
+
+  // Individual choice flags (for radio buttons)
+  const hasTranscriptionChoice = hasOpenAi && hasElevenLabs;
+  const hasReviewChoice = hasOpenAi && hasAnthropic;
+  const hasSummaryChoice = hasOpenAi && hasAnthropic;
+  const hasDubbingChoice = hasOpenAi && hasElevenLabs;
+
+  // Determine which provider is used when there's no choice
+  const transcriptionProvider = hasOpenAi ? 'openai' : 'elevenlabs';
+  const reviewProvider = hasOpenAi ? 'openai' : 'anthropic';
+  const summaryProvider = hasOpenAi ? 'openai' : 'anthropic';
+  const dubbingProvider = hasOpenAi ? 'openai' : 'elevenlabs';
 
   return (
     <section className={byoCardStyles}>
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>
+      <h2
+        style={{
+          fontSize: '1.1rem',
+          fontWeight: 600,
+          margin: 0,
+          color: colors.text,
+        }}
+      >
         {t('settings.byoOpenAi.title', 'Bring Your Own API Keys')}
       </h2>
 
@@ -518,1137 +323,340 @@ export default function ByoOpenAiSection() {
         </span>
       )}
 
-      {/* Active keys summary */}
-      {(keyPresent || anthropicKeyPresent || elevenLabsKeyPresent) && (
+      {/* Encryption warning */}
+      {!encryptionAvailable && (
         <div
           style={{
-            display: 'flex',
-            gap: 8,
-            flexWrap: 'wrap',
+            backgroundColor: 'rgba(220, 53, 69, 0.15)',
+            border: '1px solid rgba(220, 53, 69, 0.3)',
+            borderRadius: 6,
             padding: '10px 14px',
-            background: 'rgba(40, 40, 40, 0.3)',
-            borderRadius: 6,
-            fontSize: '.85rem',
+            marginTop: 8,
           }}
         >
-          <span style={{ color: colors.textDim }}>
-            {t('settings.byoMaster.activeLabel', 'Active:')}
-          </span>
-          {keyPresent && useByo && (
-            <span style={{ color: colors.primary }}>OpenAI</span>
-          )}
-          {anthropicKeyPresent && useByoAnthropic && (
-            <span style={{ color: colors.primary }}>Anthropic</span>
-          )}
-          {elevenLabsKeyPresent && useByoElevenLabs && (
-            <span style={{ color: colors.primary }}>ElevenLabs</span>
-          )}
-          {!(
-            (keyPresent && useByo) ||
-            (anthropicKeyPresent && useByoAnthropic) ||
-            (elevenLabsKeyPresent && useByoElevenLabs)
-          ) && (
-            <span style={{ color: colors.textDim, fontStyle: 'italic' }}>
-              {t('settings.byoMaster.noneActive', 'None enabled')}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Claude preference toggles */}
-      {hasBothTranslationKeys && (
-        <>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              padding: '12px 14px',
-              background: 'rgba(40, 40, 40, 0.2)',
-              borderRadius: 6,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span
-                style={{
-                  color: colors.dark,
-                  fontWeight: 500,
-                  fontSize: '.9rem',
-                }}
-              >
-                {t(
-                  'settings.claudePreference.label',
-                  'Prefer Claude for translation'
-                )}
-              </span>
-              <span style={{ color: colors.textDim, fontSize: '.8rem' }}>
-                {preferClaudeTranslation
-                  ? t(
-                      'settings.claudePreference.onHint',
-                      'Draft: Sonnet 4.5 → Review: Opus 4.5'
-                    )
-                  : t(
-                      'settings.claudePreference.offHint',
-                      'Draft: GPT-5.1 → Review: Opus 4.5'
-                    )}
-              </span>
-            </div>
-            <Switch
-              checked={preferClaudeTranslation}
-              onChange={handleToggleClaudePreference}
-              aria-label={t(
-                'settings.claudePreference.aria',
-                'Toggle Claude preference for translation'
-              )}
-            />
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 12,
-              padding: '12px 14px',
-              background: 'rgba(40, 40, 40, 0.2)',
-              borderRadius: 6,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span
-                style={{
-                  color: colors.dark,
-                  fontWeight: 500,
-                  fontSize: '.9rem',
-                }}
-              >
-                {t(
-                  'settings.claudeReviewPreference.label',
-                  'Prefer Claude for review'
-                )}
-              </span>
-              <span style={{ color: colors.textDim, fontSize: '.8rem' }}>
-                {preferClaudeReview
-                  ? t(
-                      'settings.claudeReviewPreference.onHint',
-                      'Review: Claude Opus 4.5'
-                    )
-                  : t(
-                      'settings.claudeReviewPreference.offHint',
-                      'Review: GPT-5.1 (high reasoning)'
-                    )}
-              </span>
-            </div>
-            <Switch
-              checked={preferClaudeReview}
-              onChange={handleToggleClaudeReviewPreference}
-              aria-label={t(
-                'settings.claudeReviewPreference.aria',
-                'Toggle Claude preference for review'
-              )}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Transcription provider selector */}
-      {hasAnyTranscriptionKey && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-            padding: '12px 14px',
-            background: 'rgba(40, 40, 40, 0.2)',
-            borderRadius: 6,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          <span
-            style={{ color: colors.dark, fontWeight: 500, fontSize: '.9rem' }}
-          >
+          <span style={{ color: '#dc3545', fontSize: '0.85rem' }}>
             {t(
-              'settings.transcriptionProvider.label',
-              'Transcription provider'
+              'settings.byoOpenAi.encryptionUnavailable',
+              'Secure storage is not available on this system. API keys cannot be saved.'
             )}
           </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {hasElevenLabsForTranscription && (
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  cursor: 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: 4,
-                  background:
-                    preferredTranscriptionProvider === 'elevenlabs'
-                      ? 'rgba(67, 97, 238, 0.1)'
-                      : 'transparent',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="transcriptionProvider"
-                  checked={preferredTranscriptionProvider === 'elevenlabs'}
-                  onChange={() =>
-                    handleTranscriptionProviderChange('elevenlabs')
-                  }
-                  style={{ accentColor: colors.primary }}
-                />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                    {t(
-                      'settings.transcriptionProvider.elevenlabs',
-                      'ElevenLabs Scribe'
-                    )}
-                  </span>
-                  <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                    {t(
-                      'settings.transcriptionProvider.elevenlabsHint',
-                      'Highest quality, uses your ElevenLabs key'
-                    )}
-                  </span>
-                </div>
-              </label>
-            )}
-            {hasOpenAiForTranscription && (
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  cursor: 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: 4,
-                  background:
-                    preferredTranscriptionProvider === 'openai'
-                      ? 'rgba(67, 97, 238, 0.1)'
-                      : 'transparent',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="transcriptionProvider"
-                  checked={preferredTranscriptionProvider === 'openai'}
-                  onChange={() => handleTranscriptionProviderChange('openai')}
-                  style={{ accentColor: colors.primary }}
-                />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                    {t(
-                      'settings.transcriptionProvider.openai',
-                      'OpenAI Whisper'
-                    )}
-                  </span>
-                  <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                    {t(
-                      'settings.transcriptionProvider.openaiHint',
-                      'Fast and accurate, uses your OpenAI key'
-                    )}
-                  </span>
-                </div>
-              </label>
-            )}
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                cursor: 'pointer',
-                padding: '6px 8px',
-                borderRadius: 4,
-                background:
-                  preferredTranscriptionProvider === 'stage5'
-                    ? 'rgba(67, 97, 238, 0.1)'
-                    : 'transparent',
-              }}
-            >
-              <input
-                type="radio"
-                name="transcriptionProvider"
-                checked={preferredTranscriptionProvider === 'stage5'}
-                onChange={() => handleTranscriptionProviderChange('stage5')}
-                style={{ accentColor: colors.primary }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                  {t(
-                    'settings.transcriptionProvider.stage5',
-                    'Stage5 (Credits)'
-                  )}
-                </span>
-                <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                  {t(
-                    'settings.transcriptionProvider.stage5Hint',
-                    'Uses your Stage5 AI credits'
-                  )}
-                </span>
-              </div>
-            </label>
-          </div>
-
-          {/* Quality Transcription toggle - only for OpenAI Whisper */}
-          {showQualityTranscriptionToggle && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: '10px 12px',
-                background: 'rgba(40, 40, 40, 0.3)',
-                borderRadius: 6,
-                border: `1px dashed ${colors.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 12,
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span
-                  style={{
-                    color: colors.dark,
-                    fontWeight: 500,
-                    fontSize: '.85rem',
-                  }}
-                >
-                  {t(
-                    'settings.performanceQuality.qualityTranscription.label',
-                    'Quality Transcription'
-                  )}
-                </span>
-                <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                  {qualityTranscription
-                    ? t(
-                        'settings.performanceQuality.qualityTranscription.onHint',
-                        'Sequential mode with prior-line context'
-                      )
-                    : t(
-                        'settings.performanceQuality.qualityTranscription.offHint',
-                        'Faster batched mode (5 chunks in parallel)'
-                      )}
-                </span>
-              </div>
-              <Switch
-                checked={qualityTranscription}
-                onChange={setQualityTranscription}
-                aria-label={t(
-                  'settings.performanceQuality.qualityTranscription.label',
-                  'Quality Transcription'
-                )}
-              />
-            </div>
-          )}
         </div>
       )}
 
-      {/* Dubbing provider selector */}
-      {hasAnyTranscriptionKey && (
-        <div
-          style={{
-            marginTop: 16,
-            padding: 12,
-            background: 'rgba(67, 97, 238, 0.05)',
-            borderRadius: 8,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          <div style={{ fontWeight: 600, marginBottom: 8, color: colors.dark }}>
-            {t('settings.dubbingProvider.label', 'Dubbing Provider')}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {hasElevenLabsForTranscription && (
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 8,
-                  cursor: 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: 4,
-                  background:
-                    preferredDubbingProvider === 'elevenlabs'
-                      ? 'rgba(67, 97, 238, 0.1)'
-                      : 'transparent',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="dubbingProvider"
-                  checked={preferredDubbingProvider === 'elevenlabs'}
-                  onChange={() => handleDubbingProviderChange('elevenlabs')}
-                  style={{ accentColor: colors.primary }}
-                />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                    {t(
-                      'settings.dubbingProvider.elevenlabs',
-                      'ElevenLabs (Voice Cloning)'
-                    )}
-                  </span>
-                  <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                    {t(
-                      'settings.dubbingProvider.elevenlabsHint',
-                      "Preserves original speaker's voice"
-                    )}
-                  </span>
-                </div>
-              </label>
-            )}
-            {hasOpenAiForTranscription && (
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 8,
-                  cursor: 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: 4,
-                  background:
-                    preferredDubbingProvider === 'openai'
-                      ? 'rgba(67, 97, 238, 0.1)'
-                      : 'transparent',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="dubbingProvider"
-                  checked={preferredDubbingProvider === 'openai'}
-                  onChange={() => handleDubbingProviderChange('openai')}
-                  style={{ accentColor: colors.primary }}
-                />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                    {t('settings.dubbingProvider.openai', 'OpenAI TTS')}
-                  </span>
-                  <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                    {t(
-                      'settings.dubbingProvider.openaiHint',
-                      'Uses synthetic voices (alloy, echo, etc.)'
-                    )}
-                  </span>
-                </div>
-              </label>
-            )}
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 8,
-                cursor: 'pointer',
-                padding: '6px 8px',
-                borderRadius: 4,
-                background:
-                  preferredDubbingProvider === 'stage5'
-                    ? 'rgba(67, 97, 238, 0.1)'
-                    : 'transparent',
-              }}
-            >
-              <input
-                type="radio"
-                name="dubbingProvider"
-                checked={preferredDubbingProvider === 'stage5'}
-                onChange={() => handleDubbingProviderChange('stage5')}
-                style={{ accentColor: colors.primary }}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                  {t('settings.dubbingProvider.stage5', 'Stage5 (Credits)')}
-                </span>
-                <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                  {t(
-                    'settings.dubbingProvider.stage5Hint',
-                    'Uses your Stage5 AI credits'
-                  )}
-                </span>
-              </div>
-            </label>
-          </div>
-
-          {/* Stage5 TTS Provider sub-selector */}
-          {preferredDubbingProvider === 'stage5' && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: '10px 12px',
-                background: 'rgba(40, 40, 40, 0.3)',
-                borderRadius: 6,
-                border: `1px dashed ${colors.border}`,
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 500,
-                  marginBottom: 8,
-                  color: colors.dark,
-                  fontSize: '.85rem',
-                }}
-              >
-                {t(
-                  'settings.stage5TtsProvider.label',
-                  'TTS Quality (Stage5 Credits)'
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 8,
-                    cursor: 'pointer',
-                    padding: '6px 8px',
-                    borderRadius: 4,
-                    background:
-                      stage5DubbingTtsProvider === 'openai'
-                        ? 'rgba(67, 97, 238, 0.1)'
-                        : 'transparent',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="stage5TtsProvider"
-                    checked={stage5DubbingTtsProvider === 'openai'}
-                    onChange={() => handleStage5TtsProviderChange('openai')}
-                    style={{ accentColor: colors.primary }}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                      {t(
-                        'settings.stage5TtsProvider.openai',
-                        'Standard (OpenAI TTS)'
-                      )}
-                    </span>
-                    <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                      {credits != null && credits > 0
-                        ? t(
-                            'settings.stage5TtsProvider.openaiHintWithBalance',
-                            'Good quality · Your balance: {{time}} of dubbing',
-                            { time: formatDubbingTime(credits, 'openai') }
-                          )
-                        : t(
-                            'settings.stage5TtsProvider.openaiHint',
-                            'Good quality, lower cost'
-                          )}
-                    </span>
-                  </div>
-                </label>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 8,
-                    cursor: 'pointer',
-                    padding: '6px 8px',
-                    borderRadius: 4,
-                    background:
-                      stage5DubbingTtsProvider === 'elevenlabs'
-                        ? 'rgba(67, 97, 238, 0.1)'
-                        : 'transparent',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="stage5TtsProvider"
-                    checked={stage5DubbingTtsProvider === 'elevenlabs'}
-                    onChange={() => handleStage5TtsProviderChange('elevenlabs')}
-                    style={{ accentColor: colors.primary }}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: colors.dark, fontSize: '.85rem' }}>
-                      {t(
-                        'settings.stage5TtsProvider.elevenlabs',
-                        'Premium (ElevenLabs)'
-                      )}
-                    </span>
-                    <span style={{ color: colors.textDim, fontSize: '.75rem' }}>
-                      {credits != null && credits > 0
-                        ? t(
-                            'settings.stage5TtsProvider.elevenlabsHintWithBalance',
-                            'Best quality · Your balance: {{time}} of dubbing',
-                            { time: formatDubbingTime(credits, 'elevenlabs') }
-                          )
-                        : t(
-                            'settings.stage5TtsProvider.elevenlabsHint',
-                            'Best quality, higher cost (~13x)'
-                          )}
-                    </span>
-                  </div>
-                </label>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* OpenAI API Key Section */}
-      <p style={{ color: colors.textDim, lineHeight: 1.5, margin: 0 }}>
-        {t(
-          'settings.byoOpenAi.unlockedDescription',
-          'Enter your OpenAI API key below. All eligible AI requests will run directly against your OpenAI account when a key is present.'
-        )}
-      </p>
-
-      <label
-        style={{
-          color: colors.dark,
-          fontWeight: 600,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-        }}
-      >
-        <span>{t('settings.byoOpenAi.apiKeyLabel', 'OpenAI API Key')}</span>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <input
-            type={showKey ? 'text' : 'password'}
-            value={keyValue}
-            onChange={e => setKeyValue(e.target.value)}
-            placeholder="sk-..."
-            disabled={keyLoading || savingKey}
-            style={{
-              flex: 1,
-              padding: '10px 12px',
-              borderRadius: 6,
-              border: `1px solid ${colors.border}`,
-              background: colors.light,
-              color: colors.dark,
-              fontFamily: 'monospace',
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowKey(v => !v)}
-            style={{
-              padding: '10px 12px',
-              background: colors.grayLight,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >
-            {showKey
-              ? t('settings.byoOpenAi.hide', 'Hide')
-              : t('settings.byoOpenAi.show', 'Show')}
-          </button>
-        </div>
-      </label>
-
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <button
-          onClick={handleSave}
-          disabled={savingKey || validatingKey}
-          style={{
-            padding: '10px 16px',
-            background: colors.primary,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            cursor: savingKey || validatingKey ? 'wait' : 'pointer',
-            opacity: savingKey || validatingKey ? 0.7 : 1,
-          }}
-        >
-          {savingKey
-            ? t('settings.byoOpenAi.saving', 'Saving…')
-            : t('common.save', 'Save')}
-        </button>
-        <button
-          onClick={handleTest}
-          disabled={validatingKey || !keyValue.trim()}
-          style={{
-            padding: '10px 16px',
-            background: colors.grayLight,
-            color: colors.dark,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 6,
-            cursor: validatingKey ? 'wait' : 'pointer',
-            opacity: validatingKey ? 0.7 : 1,
-          }}
-        >
-          {validatingKey
-            ? t('settings.byoOpenAi.testing', 'Testing…')
-            : t('settings.byoOpenAi.test', 'Test Key')}
-        </button>
-        <button
-          onClick={handleClear}
-          disabled={savingKey || validatingKey || (!keyPresent && !keyValue)}
-          style={{
-            padding: '10px 16px',
-            background: 'transparent',
-            color: colors.textDim,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 6,
-            cursor: savingKey || validatingKey ? 'wait' : 'pointer',
-          }}
-        >
-          {t('settings.byoOpenAi.clear', 'Clear Key')}
-        </button>
-      </div>
-
-      {keyLoading && (
-        <p style={{ color: colors.textDim, margin: 0 }}>
-          {t('settings.byoOpenAi.loadingKey', 'Loading saved key…')}
-        </p>
-      )}
-
+      {/* Two-column layout */}
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '12px 14px',
-          border: `1px solid ${colors.border}`,
-          borderRadius: 8,
-          background: colors.grayLight,
-          marginTop: 4,
+          gap: 20,
+          alignItems: 'flex-start',
         }}
       >
+        {/* Left column: API Keys */}
         <div
           style={{
+            flex: '1 1 auto',
+            minWidth: 280,
             display: 'flex',
             flexDirection: 'column',
-            gap: 4,
-            color: colors.dark,
-          }}
-        >
-          <span style={{ fontWeight: 600 }}>
-            {t('settings.byoOpenAi.toggleLabel', 'Use my OpenAI key')}
-          </span>
-          <span style={{ color: colors.textDim, fontSize: '.85rem' }}>
-            {t(
-              'settings.byoOpenAi.toggleHelp',
-              'When off, AI Credits are used.'
-            )}
-          </span>
-        </div>
-        <Switch
-          checked={useByo}
-          onChange={handleToggleUseByo}
-          disabled={!keyPresent && !keyValue.trim()}
-          aria-label={t(
-            'settings.byoOpenAi.toggleAria',
-            'Toggle using your OpenAI key'
-          )}
-        />
-      </div>
-
-      {statusMessage && (
-        <p style={{ color: colors.primary, margin: 0 }}>{statusMessage}</p>
-      )}
-      {statusError && (
-        <p style={{ color: colors.danger, margin: 0 }}>{statusError}</p>
-      )}
-
-      {/* Anthropic API Key Section */}
-      <div
-        style={{
-          borderTop: `1px solid ${colors.border}`,
-          marginTop: 16,
-          paddingTop: 20,
-        }}
-      >
-        <h3
-          style={{
-            fontSize: '1rem',
-            fontWeight: 600,
-            margin: '0 0 12px',
-            color: colors.dark,
-          }}
-        >
-          {t('settings.byoAnthropic.title', 'Anthropic API Key (Optional)')}
-        </h3>
-        <p
-          style={{
-            color: colors.textDim,
-            lineHeight: 1.5,
-            margin: '0 0 14px',
-            fontSize: '.9rem',
-          }}
-        >
-          {t(
-            'settings.byoAnthropic.description',
-            'Add your Anthropic API key to use Claude models directly. Without this key, translations will use GPT with enhanced reasoning for the review phase.'
-          )}
-        </p>
-
-        <label
-          style={{
-            color: colors.dark,
-            fontWeight: 600,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-          }}
-        >
-          <span>
-            {t('settings.byoAnthropic.apiKeyLabel', 'Anthropic API Key')}
-          </span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              type={showAnthropicKey ? 'text' : 'password'}
-              value={anthropicKeyValue}
-              onChange={e => setAnthropicKeyValue(e.target.value)}
-              placeholder="sk-ant-..."
-              disabled={anthropicKeyLoading || savingAnthropicKey}
-              style={{
-                flex: 1,
-                padding: '10px 12px',
-                borderRadius: 6,
-                border: `1px solid ${colors.border}`,
-                background: colors.light,
-                color: colors.dark,
-                fontFamily: 'monospace',
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowAnthropicKey(v => !v)}
-              style={{
-                padding: '10px 12px',
-                background: colors.grayLight,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 6,
-                cursor: 'pointer',
-              }}
-            >
-              {showAnthropicKey
-                ? t('settings.byoAnthropic.hide', 'Hide')
-                : t('settings.byoAnthropic.show', 'Show')}
-            </button>
-          </div>
-        </label>
-
-        <div
-          style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}
-        >
-          <button
-            onClick={handleAnthropicSave}
-            disabled={savingAnthropicKey || validatingAnthropicKey}
-            style={{
-              padding: '10px 16px',
-              background: colors.primary,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor:
-                savingAnthropicKey || validatingAnthropicKey
-                  ? 'wait'
-                  : 'pointer',
-              opacity: savingAnthropicKey || validatingAnthropicKey ? 0.7 : 1,
-            }}
-          >
-            {savingAnthropicKey
-              ? t('settings.byoAnthropic.saving', 'Saving…')
-              : t('common.save', 'Save')}
-          </button>
-          <button
-            onClick={handleAnthropicTest}
-            disabled={validatingAnthropicKey || !anthropicKeyValue.trim()}
-            style={{
-              padding: '10px 16px',
-              background: colors.grayLight,
-              color: colors.dark,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 6,
-              cursor: validatingAnthropicKey ? 'wait' : 'pointer',
-              opacity: validatingAnthropicKey ? 0.7 : 1,
-            }}
-          >
-            {validatingAnthropicKey
-              ? t('settings.byoAnthropic.testing', 'Testing…')
-              : t('settings.byoAnthropic.test', 'Test Key')}
-          </button>
-          <button
-            onClick={handleAnthropicClear}
-            disabled={
-              savingAnthropicKey ||
-              validatingAnthropicKey ||
-              (!anthropicKeyPresent && !anthropicKeyValue)
-            }
-            style={{
-              padding: '10px 16px',
-              background: 'transparent',
-              color: colors.textDim,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 6,
-              cursor:
-                savingAnthropicKey || validatingAnthropicKey
-                  ? 'wait'
-                  : 'pointer',
-            }}
-          >
-            {t('settings.byoAnthropic.clear', 'Clear Key')}
-          </button>
-        </div>
-
-        {anthropicKeyLoading && (
-          <p style={{ color: colors.textDim, margin: '12px 0 0' }}>
-            {t(
-              'settings.byoAnthropic.loadingKey',
-              'Loading saved Anthropic key…'
-            )}
-          </p>
-        )}
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             gap: 12,
-            padding: '12px 14px',
-            border: `1px solid ${colors.border}`,
-            borderRadius: 8,
-            background: colors.grayLight,
-            marginTop: 16,
           }}
         >
+          <ApiKeyOptionBox
+            optionNumber={1}
+            title={t('settings.byoOpenAi.option1Title', 'Option 1: OpenAI')}
+            satisfied={keyPresent}
+          >
+            <ApiKeyInput
+              provider="openai"
+              value={keyValue}
+              onChange={setKeyValue}
+              onSave={saveKey}
+              onValidate={validateKey}
+              onClear={clearKey}
+              keyPresent={keyPresent}
+              loading={keyLoading}
+              saving={savingKey}
+              validating={validatingKey}
+              compact
+            />
+          </ApiKeyOptionBox>
+
+          <OrDivider />
+
+          <ApiKeyOptionBox
+            optionNumber={2}
+            title={t(
+              'settings.byoOpenAi.option2Title',
+              'Option 2: Anthropic + ElevenLabs'
+            )}
+            satisfied={anthropicKeyPresent && elevenLabsKeyPresent}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <ApiKeyInputWrapper satisfied={anthropicKeyPresent}>
+                <ApiKeyInput
+                  provider="anthropic"
+                  value={anthropicKeyValue}
+                  onChange={setAnthropicKeyValue}
+                  onSave={saveAnthropicKey}
+                  onValidate={validateAnthropicKey}
+                  onClear={clearAnthropicKey}
+                  keyPresent={anthropicKeyPresent}
+                  loading={anthropicKeyLoading}
+                  saving={savingAnthropicKey}
+                  validating={validatingAnthropicKey}
+                  compact
+                />
+              </ApiKeyInputWrapper>
+
+              <ApiKeyInputWrapper satisfied={elevenLabsKeyPresent}>
+                <ApiKeyInput
+                  provider="elevenlabs"
+                  value={elevenLabsKeyValue}
+                  onChange={setElevenLabsKeyValue}
+                  onSave={saveElevenLabsKey}
+                  onValidate={validateElevenLabsKey}
+                  onClear={clearElevenLabsKey}
+                  keyPresent={elevenLabsKeyPresent}
+                  loading={elevenLabsKeyLoading}
+                  saving={savingElevenLabsKey}
+                  validating={validatingElevenLabsKey}
+                  compact
+                />
+              </ApiKeyInputWrapper>
+            </div>
+          </ApiKeyOptionBox>
+        </div>
+
+        {/* Right column: Stack info or Preferences */}
+        {showStackPanel && (
           <div
             style={{
+              flex: '0 0 auto',
+              width: 220,
               display: 'flex',
               flexDirection: 'column',
-              gap: 4,
-              color: colors.dark,
+              gap: hasProviderChoice ? 16 : 12,
+              padding: 16,
+              background: hasProviderChoice
+                ? 'rgba(67, 97, 238, 0.05)'
+                : 'transparent',
+              borderRadius: 8,
+              border: `1px solid ${colors.border}`,
             }}
           >
-            <span style={{ fontWeight: 600 }}>
-              {t('settings.byoAnthropic.toggleLabel', 'Use my Anthropic key')}
-            </span>
-            <span style={{ color: colors.textDim, fontSize: '.85rem' }}>
-              {t(
-                'settings.byoAnthropic.toggleHelp',
-                'When off, Claude requests use Stage5 credits.'
-              )}
-            </span>
-          </div>
-          <Switch
-            checked={useByoAnthropic}
-            onChange={handleToggleUseByoAnthropic}
-            disabled={!anthropicKeyPresent && !anthropicKeyValue.trim()}
-            aria-label={t(
-              'settings.byoAnthropic.toggleAria',
-              'Toggle using your Anthropic key'
-            )}
-          />
-        </div>
-
-        {anthropicStatusMessage && (
-          <p style={{ color: colors.primary, margin: '12px 0 0' }}>
-            {anthropicStatusMessage}
-          </p>
-        )}
-        {anthropicStatusError && (
-          <p style={{ color: colors.danger, margin: '12px 0 0' }}>
-            {anthropicStatusError}
-          </p>
-        )}
-      </div>
-
-      {/* ElevenLabs API Key Section */}
-      <div
-        style={{
-          borderTop: `1px solid ${colors.border}`,
-          marginTop: 16,
-          paddingTop: 20,
-        }}
-      >
-        <h3
-          style={{
-            fontSize: '1rem',
-            fontWeight: 600,
-            margin: '0 0 12px',
-            color: colors.dark,
-          }}
-        >
-          {t('settings.byoElevenLabs.title', 'ElevenLabs API Key (Optional)')}
-        </h3>
-        <p
-          style={{
-            color: colors.textDim,
-            lineHeight: 1.5,
-            margin: '0 0 14px',
-            fontSize: '.9rem',
-          }}
-        >
-          {t(
-            'settings.byoElevenLabs.description',
-            'Add your ElevenLabs API key for high-quality transcription (Scribe) and dubbing (TTS). Without this key, transcription and dubbing use OpenAI services.'
-          )}
-        </p>
-
-        <label
-          style={{
-            color: colors.dark,
-            fontWeight: 600,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-          }}
-        >
-          <span>
-            {t('settings.byoElevenLabs.apiKeyLabel', 'ElevenLabs API Key')}
-          </span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              type={showElevenLabsKey ? 'text' : 'password'}
-              value={elevenLabsKeyValue}
-              onChange={e => setElevenLabsKeyValue(e.target.value)}
-              placeholder="sk_..."
-              disabled={elevenLabsKeyLoading || savingElevenLabsKey}
+            <h3
               style={{
-                flex: 1,
-                padding: '10px 12px',
-                borderRadius: 6,
-                border: `1px solid ${colors.border}`,
-                background: colors.light,
-                color: colors.dark,
-                fontFamily: 'monospace',
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowElevenLabsKey(v => !v)}
-              style={{
-                padding: '10px 12px',
-                background: colors.grayLight,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 6,
-                cursor: 'pointer',
+                margin: 0,
+                fontSize: '.95rem',
+                fontWeight: 600,
+                color: colors.text,
               }}
             >
-              {showElevenLabsKey
-                ? t('settings.byoElevenLabs.hide', 'Hide')
-                : t('settings.byoElevenLabs.show', 'Show')}
-            </button>
-          </div>
-        </label>
-
-        <div
-          style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}
-        >
-          <button
-            onClick={handleElevenLabsSave}
-            disabled={savingElevenLabsKey || validatingElevenLabsKey}
-            style={{
-              padding: '10px 16px',
-              background: colors.primary,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor:
-                savingElevenLabsKey || validatingElevenLabsKey
-                  ? 'wait'
-                  : 'pointer',
-              opacity: savingElevenLabsKey || validatingElevenLabsKey ? 0.7 : 1,
-            }}
-          >
-            {savingElevenLabsKey
-              ? t('settings.byoElevenLabs.saving', 'Saving…')
-              : t('common.save', 'Save')}
-          </button>
-          <button
-            onClick={handleElevenLabsTest}
-            disabled={validatingElevenLabsKey || !elevenLabsKeyValue.trim()}
-            style={{
-              padding: '10px 16px',
-              background: colors.grayLight,
-              color: colors.dark,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 6,
-              cursor: validatingElevenLabsKey ? 'wait' : 'pointer',
-              opacity: validatingElevenLabsKey ? 0.7 : 1,
-            }}
-          >
-            {validatingElevenLabsKey
-              ? t('settings.byoElevenLabs.testing', 'Testing…')
-              : t('settings.byoElevenLabs.test', 'Test Key')}
-          </button>
-          <button
-            onClick={handleElevenLabsClear}
-            disabled={
-              savingElevenLabsKey ||
-              validatingElevenLabsKey ||
-              (!elevenLabsKeyPresent && !elevenLabsKeyValue)
-            }
-            style={{
-              padding: '10px 16px',
-              background: 'transparent',
-              color: colors.textDim,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 6,
-              cursor:
-                savingElevenLabsKey || validatingElevenLabsKey
-                  ? 'wait'
-                  : 'pointer',
-            }}
-          >
-            {t('settings.byoElevenLabs.clear', 'Clear Key')}
-          </button>
-        </div>
-
-        {elevenLabsKeyLoading && (
-          <p style={{ color: colors.textDim, margin: '12px 0 0' }}>
-            {t(
-              'settings.byoElevenLabs.loadingKey',
-              'Loading saved ElevenLabs key…'
-            )}
-          </p>
-        )}
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            padding: '12px 14px',
-            border: `1px solid ${colors.border}`,
-            borderRadius: 8,
-            background: colors.grayLight,
-            marginTop: 16,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-              color: colors.dark,
-            }}
-          >
-            <span style={{ fontWeight: 600 }}>
-              {t('settings.byoElevenLabs.toggleLabel', 'Use my ElevenLabs key')}
-            </span>
-            <span style={{ color: colors.textDim, fontSize: '.85rem' }}>
+              {hasProviderChoice
+                ? t('settings.byoPreferences.title', 'Provider Preferences')
+                : t('settings.byoStack.title', 'Your AI Stack')}
+            </h3>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '.75rem',
+                color: colors.textDim,
+                lineHeight: 1.4,
+              }}
+            >
               {t(
-                'settings.byoElevenLabs.toggleHelp',
-                'When off, transcription & dubbing use Stage5 credits.'
+                'settings.byoPreferences.pricingHint',
+                'Estimated cost per 1 hour video'
               )}
-            </span>
-          </div>
-          <Switch
-            checked={useByoElevenLabs}
-            onChange={handleToggleUseByoElevenLabs}
-            disabled={!elevenLabsKeyPresent && !elevenLabsKeyValue.trim()}
-            aria-label={t(
-              'settings.byoElevenLabs.toggleAria',
-              'Toggle using your ElevenLabs key'
-            )}
-          />
-        </div>
+            </p>
 
-        {elevenLabsStatusMessage && (
-          <p style={{ color: colors.primary, margin: '12px 0 0' }}>
-            {elevenLabsStatusMessage}
-          </p>
-        )}
-        {elevenLabsStatusError && (
-          <p style={{ color: colors.danger, margin: '12px 0 0' }}>
-            {elevenLabsStatusError}
-          </p>
+            <PreferenceRow
+              title={t(
+                'settings.byoPreferences.transcription',
+                'Transcription'
+              )}
+              hasChoice={hasTranscriptionChoice}
+              radioName="transcriptionProvider"
+              options={[
+                {
+                  value: 'openai',
+                  label: t(
+                    PROVIDERS.transcription.openai.labelKey,
+                    PROVIDERS.transcription.openai.fallback
+                  ),
+                  price: PROVIDERS.transcription.openai.price,
+                  selected: preferredTranscriptionProvider === 'openai',
+                  onSelect: () => handleTranscriptionProviderChange('openai'),
+                },
+                {
+                  value: 'elevenlabs',
+                  label: t(
+                    PROVIDERS.transcription.elevenlabs.labelKey,
+                    PROVIDERS.transcription.elevenlabs.fallback
+                  ),
+                  price: PROVIDERS.transcription.elevenlabs.price,
+                  selected: preferredTranscriptionProvider === 'elevenlabs',
+                  onSelect: () =>
+                    handleTranscriptionProviderChange('elevenlabs'),
+                },
+              ]}
+              infoProvider={
+                transcriptionProvider === 'openai'
+                  ? {
+                      label: t(
+                        PROVIDERS.transcription.openai.labelKey,
+                        PROVIDERS.transcription.openai.fallback
+                      ),
+                      price: PROVIDERS.transcription.openai.price,
+                    }
+                  : {
+                      label: t(
+                        PROVIDERS.transcription.elevenlabs.labelKey,
+                        PROVIDERS.transcription.elevenlabs.fallback
+                      ),
+                      price: PROVIDERS.transcription.elevenlabs.price,
+                    }
+              }
+            />
+
+            <PreferenceRow
+              title={t(
+                'settings.byoPreferences.translationReview',
+                'Translation Review'
+              )}
+              hasChoice={hasReviewChoice}
+              radioName="reviewProvider"
+              options={[
+                {
+                  value: 'openai',
+                  label: t(
+                    PROVIDERS.review.openai.labelKey,
+                    PROVIDERS.review.openai.fallback
+                  ),
+                  price: PROVIDERS.review.openai.price,
+                  selected: !preferClaudeReview,
+                  onSelect: () => handleReviewProviderChange(false),
+                },
+                {
+                  value: 'anthropic',
+                  label: t(
+                    PROVIDERS.review.anthropic.labelKey,
+                    PROVIDERS.review.anthropic.fallback
+                  ),
+                  price: PROVIDERS.review.anthropic.price,
+                  selected: preferClaudeReview,
+                  onSelect: () => handleReviewProviderChange(true),
+                },
+              ]}
+              infoProvider={
+                reviewProvider === 'openai'
+                  ? {
+                      label: t(
+                        PROVIDERS.review.openai.labelKey,
+                        PROVIDERS.review.openai.fallback
+                      ),
+                      price: PROVIDERS.review.openai.price,
+                    }
+                  : {
+                      label: t(
+                        PROVIDERS.review.anthropic.labelKey,
+                        PROVIDERS.review.anthropic.fallback
+                      ),
+                      price: PROVIDERS.review.anthropic.price,
+                    }
+              }
+            />
+
+            <PreferenceRow
+              title={t('settings.byoPreferences.summary', 'Summary')}
+              hasChoice={hasSummaryChoice}
+              radioName="summaryProvider"
+              options={[
+                {
+                  value: 'openai',
+                  label: t(
+                    PROVIDERS.summary.openai.labelKey,
+                    PROVIDERS.summary.openai.fallback
+                  ),
+                  price: PROVIDERS.summary.openai.price,
+                  selected: !preferClaudeSummary,
+                  onSelect: () => handleSummaryProviderChange(false),
+                },
+                {
+                  value: 'anthropic',
+                  label: t(
+                    PROVIDERS.summary.anthropic.labelKey,
+                    PROVIDERS.summary.anthropic.fallback
+                  ),
+                  price: PROVIDERS.summary.anthropic.price,
+                  selected: preferClaudeSummary,
+                  onSelect: () => handleSummaryProviderChange(true),
+                },
+              ]}
+              infoProvider={
+                summaryProvider === 'openai'
+                  ? {
+                      label: t(
+                        PROVIDERS.summary.openai.labelKey,
+                        PROVIDERS.summary.openai.fallback
+                      ),
+                      price: PROVIDERS.summary.openai.price,
+                    }
+                  : {
+                      label: t(
+                        PROVIDERS.summary.anthropic.labelKey,
+                        PROVIDERS.summary.anthropic.fallback
+                      ),
+                      price: PROVIDERS.summary.anthropic.price,
+                    }
+              }
+            />
+
+            <PreferenceRow
+              title={t('settings.byoPreferences.dubbing', 'Dubbing')}
+              hasChoice={hasDubbingChoice}
+              radioName="dubbingProvider"
+              options={[
+                {
+                  value: 'openai',
+                  label: t(
+                    PROVIDERS.dubbing.openai.labelKey,
+                    PROVIDERS.dubbing.openai.fallback
+                  ),
+                  price: PROVIDERS.dubbing.openai.price,
+                  selected: preferredDubbingProvider === 'openai',
+                  onSelect: () => handleDubbingProviderChange('openai'),
+                },
+                {
+                  value: 'elevenlabs',
+                  label: t(
+                    PROVIDERS.dubbing.elevenlabs.labelKey,
+                    PROVIDERS.dubbing.elevenlabs.fallback
+                  ),
+                  price: PROVIDERS.dubbing.elevenlabs.price,
+                  selected: preferredDubbingProvider === 'elevenlabs',
+                  onSelect: () => handleDubbingProviderChange('elevenlabs'),
+                },
+              ]}
+              infoProvider={
+                dubbingProvider === 'openai'
+                  ? {
+                      label: t(
+                        PROVIDERS.dubbing.openai.labelKey,
+                        PROVIDERS.dubbing.openai.fallback
+                      ),
+                      price: PROVIDERS.dubbing.openai.price,
+                    }
+                  : {
+                      label: t(
+                        PROVIDERS.dubbing.elevenlabs.labelKey,
+                        PROVIDERS.dubbing.elevenlabs.fallback
+                      ),
+                      price: PROVIDERS.dubbing.elevenlabs.price,
+                    }
+              }
+            />
+          </div>
         )}
       </div>
     </section>

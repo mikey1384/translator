@@ -41,6 +41,32 @@ export function createByoUnlockSession(): Promise<void> {
   return window.electron.createByoUnlockSession();
 }
 
+// Check if encryption is available for secure key storage
+export function checkEncryptionAvailable(): Promise<boolean> {
+  return window.electron.checkEncryptionAvailable();
+}
+
+// Batched BYO settings - single call to load all settings at once
+export interface AllByoSettings {
+  openAiKey: string | null;
+  anthropicKey: string | null;
+  elevenLabsKey: string | null;
+  useByoOpenAi: boolean;
+  useByoAnthropic: boolean;
+  useByoElevenLabs: boolean;
+  useByoMaster: boolean;
+  preferClaudeTranslation: boolean;
+  preferClaudeReview: boolean;
+  preferClaudeSummary: boolean;
+  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
+  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+}
+
+export function getAllByoSettings(): Promise<AllByoSettings> {
+  return window.electron.getAllByoSettings();
+}
+
 export function getOpenAiApiKey(): Promise<string | null> {
   return window.electron.getOpenAiApiKey();
 }
@@ -293,6 +319,17 @@ export function setPreferClaudeReview(
   prefer: boolean
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setPreferClaudeReview(prefer);
+}
+
+// Claude summary preference
+export function getPreferClaudeSummary(): Promise<boolean> {
+  return window.electron.getPreferClaudeSummary();
+}
+
+export function setPreferClaudeSummary(
+  prefer: boolean
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setPreferClaudeSummary(prefer);
 }
 
 // Transcription provider preference

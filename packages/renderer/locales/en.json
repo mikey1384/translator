@@ -2,7 +2,9 @@
   "common": {
     "cancel": "Cancel",
     "save": "Save",
+    "or": "OR",
     "saving": "Saving...",
+    "validating": "Validating...",
     "delete": "Delete",
     "confirm": "Confirm",
     "apply": "Apply",
@@ -69,7 +71,20 @@
     "missingVideoMetadata": "Missing video metadata ({{missing}})",
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
-    "failedToLoadSRT": "Failed to load SRT file"
+    "failedToLoadSRT": "Failed to load SRT file",
+    "byo": {
+      "openaiKeyInvalid": "Your OpenAI API key is invalid or expired. Please check your key in Settings.",
+      "openaiRateLimit": "OpenAI rate limit reached. Please wait a moment and try again.",
+      "openaiInsufficientQuota": "Your OpenAI account has insufficient credits. Please add credits at platform.openai.com.",
+      "anthropicKeyInvalid": "Your Anthropic API key is invalid or expired. Please check your key in Settings.",
+      "anthropicRateLimit": "Anthropic rate limit reached. Please wait a moment and try again.",
+      "anthropicInsufficientQuota": "Your Anthropic account has insufficient credits. Please add credits at console.anthropic.com.",
+      "elevenlabsKeyInvalid": "Your ElevenLabs API key is invalid or expired. Please check your key in Settings.",
+      "elevenlabsRateLimit": "ElevenLabs rate limit reached. Please wait a moment and try again.",
+      "elevenlabsInsufficientQuota": "Your ElevenLabs account has insufficient credits. Please add credits at elevenlabs.io.",
+      "checkSettings": "Check Settings",
+      "genericApiError": "API request failed. Please check your API key and account status."
+    }
   },
   "input": {
     "retryWithCookies": "Retry with browser cookies",
@@ -114,12 +129,12 @@
     "improveTranslation": "Improve Translation",
     "chooseSrtFile": "Choose SRT File",
     "dub": "Dub Voice",
-    "dubEstimateCredits": "{{credits}} credits (~{{minutes}}m)",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
     "dubEstimateByo": "~{{minutes}}m audio",
     "voiceCloningRequiresTranslation": "Voice cloning requires a target language",
-    "translateEstimateCredits": "{{credits}} credits",
+    "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "BYO key",
-    "qualityBadge": "(+review)",
+    "qualityBadge": "(hq)",
     "cancel_confirmation": "Are you sure you want to cancel the subtitle translation process? Any progress will be lost and you'll need to start again."
   },
   "summary": {
@@ -210,6 +225,19 @@
   },
   "settings": {
     "title": "Settings",
+    "aiProvider": {
+      "title": "AI Provider"
+    },
+    "byoMaster": {
+      "toggleLabel": "Use my API keys",
+      "activeKeys": "{{count}} key(s) active",
+      "noKeys": "No keys configured",
+      "usingCredits": "All AI uses Stage5 credits",
+      "toggleOn": "Using your API keys for AI operations.",
+      "toggleOff": "Using Stage5 credits for all AI operations.",
+      "toggleError": "Failed to update preference.",
+      "toggleAria": "Toggle using your API keys"
+    },
     "creditsDescription": "Buy credits. The hours shown are an estimate of the total video duration you can transcribe or translate. Example: transcribing and translating a 3‑hour video uses about 6 hours (≈140,000 credits).",
     "performanceQuality": {
       "title": "Performance & Quality",
@@ -219,18 +247,18 @@
       },
       "qualityTranslation": {
         "label": "Quality Translation",
-        "help": "On: includes review phase (~5× more credits/time). Off: skip review.",
-        "helpWithEstimate": "Review phase uses ~5× more credits. Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+        "help": "<b>5× credits</b> • Adds review phase for higher quality",
+        "helpWithEstimate": "<b>5× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)"
       },
       "qualitySummary": {
         "label": "Quality Summary",
-        "help": "On: deep analysis + highlight clips with Claude Opus (~4× credits). Off: fast with GPT-5.1.",
-        "helpWithEstimate": "Deep analysis + highlight clips (~4× credits). Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+        "help": "<b>4× credits</b> • Deep analysis + highlight clips with Claude Opus",
+        "helpWithEstimate": "<b>4× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)"
       },
       "qualityDubbing": {
         "label": "Quality Dubbing",
-        "help": "On: ElevenLabs TTS (premium voices, ~13× credits). Off: OpenAI TTS (good quality).",
-        "helpWithEstimate": "ElevenLabs TTS (~13× credits). Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ."
+        "help": "<b>13× credits</b> • ElevenLabs TTS with premium voices",
+        "helpWithEstimate": "<b>13× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)"
       }
     },
     "dubbing": {
@@ -298,7 +326,24 @@
       "toggleOn": "Using your OpenAI key for AI tasks.",
       "toggleOff": "Using Stage5 credits for AI tasks.",
       "toggleError": "Failed to update preference.",
-      "howToGetKeys": "How do I get API keys?"
+      "howToGetKeys": "How do I get API keys?",
+      "option1Title": "Option 1: OpenAI",
+      "option2Title": "Option 2: Anthropic + ElevenLabs"
+    },
+    "byoPreferences": {
+      "title": "Provider Preferences",
+      "pricingHint": "Estimated cost per 1 hour video",
+      "transcription": "Transcription",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationReview": "Translation Review",
+      "gptHigh": "GPT-5.1 (high)",
+      "gpt": "GPT-5.1",
+      "claudeOpus": "Claude Opus",
+      "summary": "Summary",
+      "dubbing": "Dubbing",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
     },
     "apiKeyGuide": {
       "title": "How to Get API Keys",
@@ -487,6 +532,15 @@
     "closeAria": "Close find bar"
   },
   "dialogs": {
+    "apiKeysRequired": {
+      "title": "API Keys Required",
+      "message": "To use your own API keys, you need either an OpenAI key OR both Anthropic and ElevenLabs keys.",
+      "howToGet": "How to get API keys",
+      "option1": "Option 1: OpenAI",
+      "option2": "Option 2: Anthropic + ElevenLabs",
+      "enable": "Enable API Keys",
+      "done": "Done"
+    },
     "saveSrtFileAs": "Save SRT File As",
     "saveDownloadedVideoAs": "Save Downloaded Video As",
     "saveDubbedVideoAs": "Save Dubbed Video As",

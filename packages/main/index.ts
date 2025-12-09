@@ -84,6 +84,7 @@ const settingsStore = new Store<{
   useByoMaster: boolean;
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
+  preferClaudeSummary: boolean;
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
   stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
@@ -103,11 +104,12 @@ const settingsStore = new Store<{
     useByoOpenAi: false,
     useByoAnthropic: false,
     useByoElevenLabs: false,
-    useByoMaster: true, // Default true for backwards compatibility
+    useByoMaster: false, // Default false - user must explicitly enable after entering keys
     preferClaudeTranslation: false,
     preferClaudeReview: true, // Default true for higher quality
+    preferClaudeSummary: true, // Default true for higher quality
     preferredTranscriptionProvider: 'elevenlabs',
-    preferredDubbingProvider: 'elevenlabs',
+    preferredDubbingProvider: 'openai', // Default to OpenAI TTS (cheaper than ElevenLabs)
     stage5DubbingTtsProvider: 'openai', // Default to OpenAI for cost efficiency
   },
 });
@@ -244,6 +246,11 @@ try {
   const settingsHandlers = buildSettingsHandlers({
     store: settingsStore,
     isDev,
+  });
+
+  // Migrate any existing plain text API keys to encrypted storage
+  settingsHandlers.migrateApiKeysToEncrypted().catch(err => {
+    log.error('[main] Failed to migrate API keys to encrypted storage:', err);
   });
 
   ipcMain.handle('get-locale-url', settingsHandlers.getLocaleUrl);
@@ -620,6 +627,16 @@ try {
     settingsHandlers.setPreferredCookiesBrowser
   );
 
+  // Check if encryption is available for secure key storage
+  ipcMain.handle('check-encryption-available', () =>
+    settingsHandlers.checkEncryptionAvailable()
+  );
+
+  // Batched BYO settings - single call to load all settings at once
+  ipcMain.handle('get-all-byo-settings', () =>
+    settingsHandlers.getAllByoSettings()
+  );
+
   ipcMain.handle('get-openai-api-key', () => settingsHandlers.getApiKey());
   ipcMain.handle('set-openai-api-key', async (event, apiKey: string) => {
     const result = await settingsHandlers.setApiKey(event, apiKey);
@@ -764,6 +781,14 @@ try {
   );
   ipcMain.handle('set-prefer-claude-review', (_event, value: boolean) =>
     settingsHandlers.setPreferClaudeReview(Boolean(value))
+  );
+
+  // Claude summary preference handlers
+  ipcMain.handle('get-prefer-claude-summary', () =>
+    settingsHandlers.getPreferClaudeSummary()
+  );
+  ipcMain.handle('set-prefer-claude-summary', (_event, value: boolean) =>
+    settingsHandlers.setPreferClaudeSummary(Boolean(value))
   );
 
   // Transcription provider preference handlers

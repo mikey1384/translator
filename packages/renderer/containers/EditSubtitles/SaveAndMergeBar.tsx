@@ -173,8 +173,8 @@ export default function SaveAndMergeBar({
               width: 56px;
               max-width: 64px;
               text-align: center;
-              background-color: ${colors.light};
-              color: ${colors.dark};
+              background-color: ${colors.surface};
+              color: ${colors.text};
             `}
             value={fontSize || ''}
             onChange={e => {
@@ -259,8 +259,8 @@ export default function SaveAndMergeBar({
               border: 1px solid ${colors.border};
               border-radius: 4px;
               font-size: 1rem;
-              background-color: ${colors.light};
-              color: ${colors.dark};
+              background-color: ${colors.surface};
+              color: ${colors.text};
               cursor: pointer;
             `}
             value={stylePreset}

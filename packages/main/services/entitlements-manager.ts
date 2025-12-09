@@ -65,7 +65,7 @@ export function setByoUnlocked(
     ),
     byoElevenLabs: Boolean(
       entitlements.byoElevenLabs ??
-        storeRef?.get('byoElevenLabsUnlocked', false)
+      storeRef?.get('byoElevenLabsUnlocked', false)
     ),
     fetchedAt: new Date().toISOString(),
   };
@@ -93,9 +93,9 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
     const data = response.data ?? {};
     const byoOpenAi = Boolean(
       data?.entitlements?.byoOpenAi ??
-        data?.byoOpenAi ??
-        data?.unlocked ??
-        false
+      data?.byoOpenAi ??
+      data?.unlocked ??
+      false
     );
     const byoAnthropic = Boolean(
       data?.entitlements?.byoAnthropic ?? data?.byoAnthropic ?? false

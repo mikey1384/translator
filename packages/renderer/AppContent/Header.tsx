@@ -1,11 +1,8 @@
 import { css } from '@emotion/css';
-import { useUIStore, useCreditStore, useAiStore } from '../state';
-import { logButton } from '../utils/logger';
 import LogoDisplay from '../components/LogoDisplay';
-import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import CreditBalance from '../components/CreditBalance';
-import { colors } from '../styles';
+import SettingsButton from '../components/SettingsButton';
 
 const headerRow = css`
   display: flex;
@@ -15,86 +12,18 @@ const headerRow = css`
   gap: 15px;
 `;
 
-const settingsButton = css`
-  padding: 8px 15px;
-  font-size: 0.9em;
-  background-color: ${colors.grayLight};
-  color: ${colors.dark};
-  border: 1px solid ${colors.border};
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-  box-shadow: none;
-
-  &:hover {
-    background-color: ${colors.light};
-    border-color: ${colors.primary};
-  }
-`;
-
 export default function Header() {
-  const { t } = useTranslation();
-  const { showSettings, toggleSettings } = useUIStore();
-  const { hours } = useCreditStore();
-  const useByoMaster = useAiStore(s => s.useByoMaster);
-  const useByo = useAiStore(s => s.useByo);
-  const byoUnlocked = useAiStore(s => s.byoUnlocked);
-  const keyPresent = useAiStore(s => s.keyPresent);
-  const keyValue = useAiStore(s => s.keyValue);
-  const usingApiKey = Boolean(
-    useByoMaster &&
-      useByo &&
-      byoUnlocked &&
-      (keyPresent || (keyValue || '').trim())
-  );
-  const suffix =
-    !usingApiKey && typeof hours === 'number'
-      ? `(${Math.floor(hours).toLocaleString()}h)`
-      : undefined;
-
   return (
     <div className={headerRow}>
-      {showSettings ? (
-        <button
-          className={settingsButton}
-          onClick={() => {
-            try {
-              logButton('close_settings');
-            } catch {
-              // Ignore logging errors
-            }
-            toggleSettings(false);
-          }}
-        >
-          {t('common.backToApp')}
-        </button>
-      ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <LogoDisplay />
-          <LanguageSwitcher />
-        </div>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <LogoDisplay />
+        <LanguageSwitcher />
+      </div>
 
-      {!showSettings && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
-          <CreditBalance suffixText={suffix} />
-          <button
-            className={settingsButton}
-            onClick={() => {
-              try {
-                logButton('open_settings');
-              } catch {
-                // Ignore logging errors
-              }
-              toggleSettings(true);
-            }}
-          >
-            {t('common.settings')}
-          </button>
-        </div>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+        <CreditBalance />
+        <SettingsButton />
+      </div>
     </div>
   );
 }

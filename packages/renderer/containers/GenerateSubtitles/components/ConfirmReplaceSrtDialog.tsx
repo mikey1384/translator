@@ -36,7 +36,7 @@ export default function ConfirmReplaceSrtDialog({
     >
       <div
         className={css`
-          background: ${colors.light};
+          background: ${colors.surface};
           border: 1px solid ${colors.border};
           border-radius: 8px;
           width: min(520px, 90vw);
@@ -55,7 +55,7 @@ export default function ConfirmReplaceSrtDialog({
         <p
           className={css`
             margin: 0 0 16px 0;
-            color: ${colors.dark};
+            color: ${colors.text};
           `}
         >
           {t('dialogs.unsavedSrtOnTranscribe.message')}

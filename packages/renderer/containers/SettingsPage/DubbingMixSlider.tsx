@@ -20,7 +20,7 @@ export default function DubbingMixSlider() {
       <div
         className={css`
           font-weight: 600;
-          color: ${colors.dark};
+          color: ${colors.text};
         `}
       >
         {t('settings.dubbing.mixLabel', 'Ambient vs Dub Balance')}

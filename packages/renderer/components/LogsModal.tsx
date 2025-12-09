@@ -263,7 +263,7 @@ ${JSON.stringify(deviceInfo)}
     >
       <div
         className={css`
-          background: ${colors.light};
+          background: ${colors.surface};
           border: 1px solid ${colors.border};
           border-radius: 10px;
           width: min(820px, 95vw);
@@ -283,7 +283,7 @@ ${JSON.stringify(deviceInfo)}
             border-bottom: 1px solid ${colors.border};
           `}
         >
-          <div style={{ color: colors.dark, fontWeight: 600 }}>
+          <div style={{ color: colors.text, fontWeight: 600 }}>
             {t('logs.title', 'Recent Logs')}
           </div>
         </div>
@@ -300,7 +300,7 @@ ${JSON.stringify(deviceInfo)}
             className={css`
               overflow: auto;
               padding: 12px;
-              background: ${colors.light};
+              background: ${colors.surface};
             `}
           >
             <pre
@@ -312,7 +312,7 @@ ${JSON.stringify(deviceInfo)}
                   ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
                   'Liberation Mono', 'Courier New', monospace;
                 font-size: 12px;
-                color: ${colors.dark};
+                color: ${colors.text};
               `}
             >
               {textBlob || t('logs.empty', 'No logs yet.')}
@@ -325,13 +325,13 @@ ${JSON.stringify(deviceInfo)}
               display: flex;
               flex-direction: column;
               gap: 10px;
-              background: ${colors.light};
+              background: ${colors.surface};
             `}
           >
             <button
               className={css`
                 background: ${colors.grayLight};
-                color: ${colors.dark};
+                color: ${colors.text};
                 border: 1px solid ${colors.border};
                 border-radius: 6px;
                 padding: 8px 10px;
@@ -364,13 +364,13 @@ ${JSON.stringify(deviceInfo)}
             border-top: 1px solid ${colors.border};
             display: flex;
             justify-content: flex-end;
-            background: ${colors.light};
+            background: ${colors.surface};
           `}
         >
           <button
             className={css`
               background: transparent;
-              color: ${colors.dark};
+              color: ${colors.text};
               border: 1px solid ${colors.border};
               border-radius: 6px;
               padding: 6px 12px;

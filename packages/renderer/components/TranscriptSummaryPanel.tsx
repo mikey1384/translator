@@ -45,6 +45,7 @@ import {
   CREDITS_PER_1K_TOKENS_PROMPT,
   CREDITS_PER_1K_TOKENS_COMPLETION,
 } from '../../shared/constants';
+import { getByoErrorMessage, isByoError } from '../utils/byoErrors';
 
 // Summary estimation: input tokens ≈ chars/4, output tokens ≈ 20% of input
 // High effort (Claude Opus) costs ~4x more than standard (GPT-5.1)
@@ -82,6 +83,8 @@ export function TranscriptSummaryPanel({
   const summaryLanguage = useUIStore(s => s.summaryLanguage);
   const setSummaryLanguage = useUIStore(s => s.setSummaryLanguage);
   const summaryEffortLevel = useUIStore(s => s.summaryEffortLevel);
+  const isMergeInProgress = useTaskStore(s => !!s.merge.inProgress);
+  const isTranslationInProgress = useTaskStore(s => !!s.translation.inProgress);
 
   const [summary, setSummary] = useState<string>('');
   const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
@@ -259,6 +262,8 @@ export function TranscriptSummaryPanel({
             .getState()
             .refresh()
             .catch(() => void 0);
+        } else if (isByoError(message)) {
+          setError(getByoErrorMessage(message));
         } else if (highlightStage) {
           setError(
             t('summary.highlightsSelectionFailed', {
@@ -425,11 +430,12 @@ export function TranscriptSummaryPanel({
       });
     } catch (err: any) {
       const message = String(err?.message || err);
-      setError(
-        message === 'insufficient-credits'
+      const friendlyMessage = isByoError(message)
+        ? getByoErrorMessage(message)
+        : message === 'insufficient-credits'
           ? t('summary.insufficientCredits')
-          : t('summary.error', { message })
-      );
+          : t('summary.error', { message });
+      setError(friendlyMessage);
       setProgressLabel(t('summary.status.error'));
       useTaskStore.getState().setSummary({
         stage: t('summary.status.error'),
@@ -703,7 +709,9 @@ export function TranscriptSummaryPanel({
             className={selectStyles}
             value={summaryLanguage}
             onChange={e => setSummaryLanguage(e.target.value)}
-            disabled={isGenerating}
+            disabled={
+              isGenerating || isMergeInProgress || isTranslationInProgress
+            }
           >
             {TRANSLATION_LANGUAGES_BASE.map(opt => (
               <option key={opt.value} value={opt.value}>
@@ -732,7 +740,9 @@ export function TranscriptSummaryPanel({
               variant="primary"
               size="sm"
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={
+                isGenerating || isMergeInProgress || isTranslationInProgress
+              }
               isLoading={isGenerating}
             >
               {summary ? t('summary.regenerate') : t('summary.generate')}
@@ -749,9 +759,7 @@ export function TranscriptSummaryPanel({
               >
                 {summaryEstimate.isByo
                   ? t('summary.estimateByo', 'BYO key')
-                  : t('summary.estimateCredits', '{{credits}} credits', {
-                      credits: formatCredits(summaryEstimate.estimatedCredits),
-                    })}
+                  : `${formatCredits(summaryEstimate.estimatedCredits)} cr`}
                 {!summaryEstimate.isByo && summaryEffortLevel === 'high' && (
                   <span
                     className={css`
@@ -1172,7 +1180,7 @@ const panelStyles = css`
   border: 1px solid ${colors.border};
   border-radius: 10px;
   padding: 18px 20px;
-  background: ${colors.light};
+  background: ${colors.surface};
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1191,8 +1199,8 @@ const tabsRowStyles = css`
 
 const tabButtonStyles = (active: boolean) => css`
   border: 1px solid ${active ? colors.primary : colors.border};
-  background: ${active ? colors.primary : colors.white};
-  color: ${active ? colors.white : colors.dark};
+  background: ${active ? colors.primary : colors.bg};
+  color: ${active ? colors.bg : colors.text};
   border-radius: 20px;
   padding: 6px 12px;
   font-size: 0.9rem;
@@ -1226,7 +1234,7 @@ const controlsStyles = css`
 const titleStyles = css`
   margin: 0;
   font-size: 1.1rem;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const subtitleStyles = css`
@@ -1238,7 +1246,7 @@ const subtitleStyles = css`
 const labelStyles = css`
   font-size: 0.9rem;
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const progressWrapperStyles = css`
@@ -1251,7 +1259,7 @@ const progressHeaderStyles = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: ${colors.dark};
+  color: ${colors.text};
   font-size: 0.9rem;
 `;
 
@@ -1261,7 +1269,7 @@ const progressPercentStyles = css`
 `;
 
 const summaryBoxStyles = css`
-  background: ${colors.white};
+  background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 8px;
   padding: 14px;
@@ -1290,7 +1298,7 @@ const noHighlightsStyles = css`
 `;
 
 const highlightCard = css`
-  background: ${colors.white};
+  background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 8px;
   padding: 10px;
@@ -1308,7 +1316,7 @@ const highlightHeader = css`
 
 const highlightTitle = css`
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 const highlightTime = css`
@@ -1326,7 +1334,7 @@ const highlightPlaceholder = css`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: ${colors.dark};
+  color: ${colors.text};
   background: ${colors.grayLight};
   border: 1px dashed ${colors.border};
   border-radius: 6px;
@@ -1354,7 +1362,7 @@ const highlightCutProgressFill = css`
 `;
 
 const highlightDesc = css`
-  color: ${colors.dark};
+  color: ${colors.text};
   font-size: 0.95rem;
 `;
 
@@ -1382,7 +1390,7 @@ const sectionsListStyles = css`
 `;
 
 const sectionCardStyles = css`
-  background: ${colors.white};
+  background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 8px;
   padding: 12px;
@@ -1411,7 +1419,7 @@ const sectionIndexStyles = css`
 `;
 
 const sectionTitleStyles = css`
-  color: ${colors.dark};
+  color: ${colors.text};
   font-weight: 600;
   font-size: 1rem;
 `;
@@ -1424,7 +1432,7 @@ const sectionContentStyles = css`
 
 const sectionParagraphStyles = css`
   margin: 0;
-  color: ${colors.dark};
+  color: ${colors.text};
   line-height: 1.55;
   white-space: pre-wrap;
 `;
@@ -1462,8 +1470,8 @@ const aspectModeToggleStyles = css`
 
 const aspectModeButtonStyles = (active: boolean) => css`
   border: none;
-  background: ${active ? colors.primary : colors.white};
-  color: ${active ? colors.white : colors.dark};
+  background: ${active ? colors.primary : colors.bg};
+  color: ${active ? colors.bg : colors.text};
   padding: 5px 12px;
   font-size: 0.8rem;
   cursor: pointer;

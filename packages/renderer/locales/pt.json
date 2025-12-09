@@ -2,7 +2,9 @@
   "common": {
     "cancel": "Cancelar",
     "save": "Salvar",
+    "or": "OU",
     "saving": "Salvando...",
+    "validating": "Validando...",
     "delete": "Excluir",
     "confirm": "Confirmar",
     "apply": "Aplicar",
@@ -101,11 +103,11 @@
     "chooseSrtFile": "Escolher Arquivo SRT",
     "cancel_confirmation": "Tem certeza que deseja cancelar o processo de tradução de legendas? Qualquer progresso será perdido e você precisará começar novamente.",
     "dub": "Dublar voz",
-    "dubEstimateCredits": "{{credits}} créditos (~{{minutes}}min)",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}min)",
     "dubEstimateByo": "~{{minutes}}min de áudio",
-    "translateEstimateCredits": "{{credits}} créditos",
+    "translateEstimateCredits": "~{{minutes}}m vídeo",
     "translateEstimateByo": "Chave BYO",
-    "qualityBadge": "(+revisão)"
+    "qualityBadge": "(hq)"
   },
   "summary": {
     "title": "Resumo da transcrição",
@@ -195,6 +197,19 @@
   },
   "settings": {
     "title": "Configurações",
+    "aiProvider": {
+      "title": "Provedor de IA"
+    },
+    "byoMaster": {
+      "toggleLabel": "Usar minhas chaves de API",
+      "activeKeys": "{{count}} chave(s) ativa(s)",
+      "noKeys": "Nenhuma chave configurada",
+      "usingCredits": "Toda IA usa créditos Stage5",
+      "toggleOn": "Usando suas chaves de API para operações de IA.",
+      "toggleOff": "Usando créditos Stage5 para todas as operações de IA.",
+      "toggleError": "Falha ao atualizar preferência.",
+      "toggleAria": "Alternar uso de suas chaves de API"
+    },
     "creditsDescription": "Compre créditos. As horas exibidas são uma estimativa da duração total de vídeo que você pode transcrever ou traduzir. Exemplo: transcrever e traduzir um vídeo de 3 horas consome cerca de 6 horas (≈140.000 créditos).",
     "performanceQuality": {
       "title": "Desempenho e qualidade",
@@ -217,10 +232,6 @@
         "help": "Ativado: ElevenLabs TTS (vozes premium, ~13× créditos). Desativado: OpenAI TTS (boa qualidade).",
         "helpWithEstimate": "ElevenLabs TTS (~13× créditos). Seus créditos: ~{{normalTime}} normal, ~{{hqTime}} HQ."
       }
-    },
-    "byoMaster": {
-      "toggleLabel": "Usar minhas chaves de API",
-      "keysActive": "{{count}} chaves ativas"
     },
     "preferClaude": {
       "forTranslation": {
@@ -314,7 +325,24 @@
       "toggleOn": "Usando sua chave OpenAI para tarefas de IA.",
       "toggleOff": "Usando créditos Stage5 para tarefas de IA.",
       "toggleError": "Falha ao atualizar preferência.",
-      "howToGetKeys": "Como obter chaves de API?"
+      "howToGetKeys": "Como obter chaves de API?",
+      "option1Title": "Opção 1: OpenAI",
+      "option2Title": "Opção 2: Anthropic + ElevenLabs"
+    },
+    "byoPreferences": {
+      "title": "Preferências de provedor",
+      "pricingHint": "Custo estimado por 1 hora de vídeo",
+      "transcription": "Transcrição",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationReview": "Revisão de tradução",
+      "gptHigh": "GPT-5.1 (alto)",
+      "gpt": "GPT-5.1",
+      "claudeOpus": "Claude Opus",
+      "summary": "Resumo",
+      "dubbing": "Dublagem",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
     },
     "apiKeyGuide": {
       "title": "Como obter chaves de API",
@@ -503,6 +531,15 @@
     "closeAria": "Fechar barra de busca"
   },
   "dialogs": {
+    "apiKeysRequired": {
+      "title": "Chaves de API necessárias",
+      "message": "Para usar suas próprias chaves de API, você precisa de uma chave OpenAI OU de ambas as chaves Anthropic e ElevenLabs.",
+      "howToGet": "Como obter chaves de API",
+      "option1": "Opção 1: OpenAI",
+      "option2": "Opção 2: Anthropic + ElevenLabs",
+      "enable": "Ativar chaves de API",
+      "done": "Concluído"
+    },
     "saveSrtFileAs": "Salvar Arquivo SRT Como",
     "saveDownloadedVideoAs": "Salvar Vídeo Baixado Como",
     "downloadInProgress": "Download em Progresso",
@@ -616,6 +653,19 @@
     "missingVideoMetadata": "Metadados de vídeo ausentes ({{missing}})",
     "noSourceVideo": "Sem vídeo de origem",
     "noSubtitlesLoaded": "Nenhuma legenda carregada",
-    "failedToLoadSRT": "Falha ao carregar arquivo SRT"
+    "failedToLoadSRT": "Falha ao carregar arquivo SRT",
+    "byo": {
+      "openaiKeyInvalid": "Sua chave API do OpenAI é inválida ou expirou. Por favor, verifique sua chave em Configurações.",
+      "openaiRateLimit": "Limite de requisições do OpenAI atingido. Por favor, aguarde um momento e tente novamente.",
+      "openaiInsufficientQuota": "Sua conta OpenAI não tem créditos suficientes. Por favor, adicione créditos em platform.openai.com.",
+      "anthropicKeyInvalid": "Sua chave API do Anthropic é inválida ou expirou. Por favor, verifique sua chave em Configurações.",
+      "anthropicRateLimit": "Limite de requisições do Anthropic atingido. Por favor, aguarde um momento e tente novamente.",
+      "anthropicInsufficientQuota": "Sua conta Anthropic não tem créditos suficientes. Por favor, adicione créditos em console.anthropic.com.",
+      "elevenlabsKeyInvalid": "Sua chave API do ElevenLabs é inválida ou expirou. Por favor, verifique sua chave em Configurações.",
+      "elevenlabsRateLimit": "Limite de requisições do ElevenLabs atingido. Por favor, aguarde um momento e tente novamente.",
+      "elevenlabsInsufficientQuota": "Sua conta ElevenLabs não tem créditos suficientes. Por favor, adicione créditos em elevenlabs.io.",
+      "checkSettings": "Verificar Configurações",
+      "genericApiError": "A requisição da API falhou. Por favor, verifique sua chave API e o status da sua conta."
+    }
   }
 }

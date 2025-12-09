@@ -21,8 +21,7 @@ type FileChangeEvent =
   | ChangeEvent<HTMLInputElement>
   | { target: { files: FileList | { name: string; path: string }[] | null } };
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
@@ -99,11 +98,11 @@ const buttonVariants: Record<ButtonVariant, string> = {
     }
   `,
   secondary: css`
-    color: ${colors.dark};
+    color: ${colors.text};
     background-color: ${colors.grayLight};
     border-color: ${colors.border};
     &:hover:not(:disabled) {
-      background-color: ${colors.light};
+      background-color: ${colors.surface};
       border-color: ${colors.grayDark};
     }
   `,

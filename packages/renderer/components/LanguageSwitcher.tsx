@@ -110,14 +110,14 @@ const dropdownListStyles = css`
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   border: 1px solid ${colors.border};
   border-radius: 6px;
   max-height: 300px;
   overflow-y: auto;
   z-index: 10;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  color: ${colors.dark};
+  color: ${colors.text};
   width: 160px;
   box-sizing: border-box;
 `;

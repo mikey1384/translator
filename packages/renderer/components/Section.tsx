@@ -40,7 +40,7 @@ const subSectionStyles = css`
   padding: 15px 20px;
   margin-top: 15px;
   margin-bottom: 15px;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   border: 1px dashed ${colors.border};
   border-radius: 6px;
 `;
@@ -58,7 +58,7 @@ const headerRowStyles = css`
 const titleStyles = css`
   font-size: 1.4em;
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${colors.text};
   margin: 0;
 `;
 

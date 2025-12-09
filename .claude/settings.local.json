@@ -21,7 +21,12 @@
       "Bash(npm install:*)",
       "Bash(cat:*)",
       "Bash(npx eslint:*)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(wrangler d1 execute:*)",
+      "Bash(curl:*)",
+      "Bash(source .dev.vars)",
+      "Bash(flyctl status:*)",
+      "Bash(timeout 10 flyctl logs:*)"
     ],
     "deny": [],
     "ask": []

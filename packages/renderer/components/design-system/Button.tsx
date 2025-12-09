@@ -21,8 +21,7 @@ export type ButtonVariant =
 
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
@@ -89,7 +88,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary: css`
     background-color: ${colors.primary};
     border-color: ${colors.primary};
-    color: ${colors.white};
+    color: ${colors.bg};
 
     &:hover:not(:disabled) {
       background-color: ${colors.primaryDark};
@@ -105,15 +104,15 @@ const variantStyles: Record<ButtonVariant, string> = {
   secondary: css`
     background-color: ${colors.grayLight};
     border-color: ${colors.border};
-    color: ${colors.dark};
+    color: ${colors.text};
 
     &:hover:not(:disabled) {
-      background-color: ${colors.light};
+      background-color: ${colors.surface};
       border-color: ${colors.grayDark};
     }
 
     &:active:not(:disabled) {
-      background-color: ${colors.light};
+      background-color: ${colors.surface};
       box-shadow: ${shadows.sm};
     }
   `,
@@ -129,14 +128,14 @@ const variantStyles: Record<ButtonVariant, string> = {
     }
 
     &:active:not(:disabled) {
-      background-color: ${colors.light};
+      background-color: ${colors.surface};
     }
   `,
 
   danger: css`
     background-color: ${colors.danger};
     border-color: ${colors.danger};
-    color: ${colors.white};
+    color: ${colors.bg};
 
     &:hover:not(:disabled) {
       background-color: #c82333;
@@ -152,7 +151,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   success: css`
     background-color: ${colors.success};
     border-color: ${colors.success};
-    color: ${colors.white};
+    color: ${colors.bg};
 
     &:hover:not(:disabled) {
       background-color: #218838;

@@ -228,7 +228,7 @@ export default function DubbingVoiceSelector() {
     background: ${colors.grayLight};
     border: 1px solid ${colors.grayMedium};
     border-radius: 6px;
-    color: ${colors.dark};
+    color: ${colors.text};
     font-size: 0.85rem;
     cursor: pointer;
     white-space: nowrap;
@@ -259,7 +259,7 @@ export default function DubbingVoiceSelector() {
 
   const toggleTitleClass = css`
     font-weight: 500;
-    color: ${colors.dark};
+    color: ${colors.text};
     font-size: 0.9rem;
   `;
 
@@ -328,7 +328,7 @@ export default function DubbingVoiceSelector() {
   `;
 
   const creditValueClass = css`
-    color: ${colors.dark};
+    color: ${colors.text};
     font-weight: 500;
   `;
 
@@ -353,7 +353,7 @@ export default function DubbingVoiceSelector() {
         <div
           className={css`
             font-weight: 600;
-            color: ${colors.dark};
+            color: ${colors.text};
           `}
         >
           {t('settings.dubbing.voiceLabel', 'Dubbed Voice')}
@@ -363,7 +363,7 @@ export default function DubbingVoiceSelector() {
             padding: 12px;
             background: ${colors.grayLight};
             border-radius: 8px;
-            color: ${colors.dark};
+            color: ${colors.text};
             font-size: 0.9rem;
           `}
         >
@@ -376,9 +376,10 @@ export default function DubbingVoiceSelector() {
     );
   }
 
-  // For Stage5 credit users, show voice cloning toggle
-  // Voice cloning option is only available when using ElevenLabs TTS provider
-  const showVoiceCloningOption = !useByoMaster && isUsingElevenLabs;
+  // Voice cloning toggle is disabled for Stage5 credit users
+  // ElevenLabs Dubbing API is too expensive (~35k credits/min) and doesn't allow
+  // control over translation quality. Keep it only for BYO ElevenLabs users.
+  const showVoiceCloningOption = false;
 
   // Disable voice cloning if user can't afford at least 1 minute
   const canAffordVoiceCloning = estimatedMinutes >= 1;
@@ -394,7 +395,7 @@ export default function DubbingVoiceSelector() {
       <div
         className={css`
           font-weight: 600;
-          color: ${colors.dark};
+          color: ${colors.text};
         `}
       >
         {t('settings.dubbing.voiceLabel', 'Dubbed Voice')}

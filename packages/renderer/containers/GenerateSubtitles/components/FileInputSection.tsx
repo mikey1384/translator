@@ -15,7 +15,7 @@ const sectionStyle = css`
   padding: 13px 20px;
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
 `;
 
 const labelStyle = {

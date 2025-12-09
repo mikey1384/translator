@@ -1,7 +1,12 @@
 import log from 'electron-log';
 import type { SettingsStoreType } from '../handlers/settings-handlers.js';
+import { decryptString } from './secure-storage.js';
 import * as stage5Client from './stage5-client.js';
-import { transcribeViaR2 } from './stage5-client.js';
+import {
+  transcribeViaDirect,
+  translateViaDirect,
+  dubViaDirect,
+} from './stage5-client.js';
 import { getCachedEntitlements } from './entitlements-manager.js';
 import {
   transcribeWithOpenAi,
@@ -41,7 +46,7 @@ export function initAiProvider(settingsStore: SettingsStoreType) {
   settingsStoreRef = settingsStore;
 }
 
-// Generic helper to get a stored API key with validation
+// Generic helper to get a stored API key with validation and decryption
 function createApiKeyGetter(
   keyName: string,
   providerName: string
@@ -54,14 +59,16 @@ function createApiKeyGetter(
       return null;
     }
     const raw = settingsStoreRef.get(keyName as any, null);
-    log.debug(
-      `[ai-provider] getStored${providerName}ApiKey raw value:`,
-      raw ? `[${(raw as string).length} chars]` : 'null'
-    );
-    if (typeof raw === 'string' && raw.trim()) {
-      return raw.trim();
+    if (typeof raw !== 'string' || raw.length === 0) {
+      return null;
     }
-    return null;
+    // Decrypt the stored key (handles both encrypted and legacy plain text)
+    const decrypted = decryptString(raw);
+    log.debug(
+      `[ai-provider] getStored${providerName}ApiKey:`,
+      decrypted ? `[${decrypted.length} chars]` : 'null'
+    );
+    return decrypted || null;
   };
 }
 
@@ -108,11 +115,11 @@ const isByoElevenLabsToggleEnabled = createByoToggleChecker(
 function isByoMasterEnabled(): boolean {
   if (!settingsStoreRef) return false;
   try {
-    // Default to true for backwards compatibility
-    return Boolean(settingsStoreRef.get('useByoMaster', true));
+    // Default to false - user must explicitly enable after entering keys
+    return Boolean(settingsStoreRef.get('useByoMaster', false));
   } catch (err) {
     log.error('[ai-provider] Failed to load BYO master toggle state:', err);
-    return true;
+    return false;
   }
 }
 
@@ -135,6 +142,16 @@ export function prefersClaudeReview(): boolean {
     return Boolean(settingsStoreRef.get('preferClaudeReview', true));
   } catch (err) {
     log.error('[ai-provider] Failed to load Claude review preference:', err);
+    return true;
+  }
+}
+
+export function prefersClaudeSummary(): boolean {
+  if (!settingsStoreRef) return true; // Default to Claude for summary
+  try {
+    return Boolean(settingsStoreRef.get('preferClaudeSummary', true));
+  } catch (err) {
+    log.error('[ai-provider] Failed to load Claude summary preference:', err);
     return true;
   }
 }
@@ -164,19 +181,16 @@ export function getPreferredTranscriptionProvider(): TranscriptionProviderPref {
 export type DubbingProviderPref = 'elevenlabs' | 'openai' | 'stage5';
 
 export function getPreferredDubbingProvider(): DubbingProviderPref {
-  if (!settingsStoreRef) return 'elevenlabs';
+  if (!settingsStoreRef) return 'openai';
   try {
-    const value = settingsStoreRef.get(
-      'preferredDubbingProvider',
-      'elevenlabs'
-    );
+    const value = settingsStoreRef.get('preferredDubbingProvider', 'openai');
     if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
       return value;
     }
-    return 'elevenlabs';
+    return 'openai';
   } catch (err) {
     log.error('[ai-provider] Failed to load dubbing provider preference:', err);
-    return 'elevenlabs';
+    return 'openai';
   }
 }
 
@@ -525,16 +539,19 @@ export async function transcribe(
 }
 
 /**
- * Transcribe a large file via R2 upload flow (Stage5 credits only).
- * Used for files > 95MB that can't go through CF Worker directly.
+ * Transcribe a large file via direct relay endpoint.
+ * Simplified flow: app sends file to relay, relay handles auth/credits/transcription.
+ * No R2 uploads, no polling, no webhooks - just send and receive.
  */
 export async function transcribeLargeFileViaR2(options: {
   filePath: string;
   language?: string;
   signal?: AbortSignal;
+  durationSec?: number;
   onProgress?: (stage: string, percent?: number) => void;
 }): Promise<any> {
-  return transcribeViaR2(options);
+  // Use the new simplified direct relay flow
+  return transcribeViaDirect(options);
 }
 
 export async function translate(options: Stage5TranslateOptions): Promise<any> {
@@ -592,8 +609,9 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
     }
   }
 
-  // Default: use Stage5 API (handles both OpenAI and Claude via relay)
-  return stage5Client.translate(options);
+  // Default: use Stage5 via direct relay (simplified flow)
+  log.debug('[ai-provider] Using Stage5 direct relay for translation.');
+  return translateViaDirect(options);
 }
 
 export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
@@ -671,13 +689,13 @@ export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {
     }
   }
 
-  // Default: use Stage5 API with user's preferred TTS provider
+  // Default: use Stage5 via direct relay with user's preferred TTS provider
   // OpenAI: $15/1M chars (cheaper), ElevenLabs: $200/1M chars (premium quality)
   const stage5TtsProvider = getStage5DubbingTtsProvider();
   log.debug(
-    `[ai-provider] Using Stage5 API with ${stage5TtsProvider} TTS provider`
+    `[ai-provider] Using Stage5 direct relay with ${stage5TtsProvider} TTS provider`
   );
-  return stage5Client.synthesizeDub({
+  return dubViaDirect({
     ...options,
     ttsProvider: stage5TtsProvider,
   } as any);
@@ -781,8 +799,8 @@ export function getSummaryModelConfig(
     };
   }
 
-  // BYO is available - check preference
-  const prefersClaude = prefersClaudeTranslation();
+  // BYO is available - check summary preference
+  const prefersClaude = prefersClaudeSummary();
 
   // Determine which provider to use
   let useAnthropic: boolean;

@@ -739,6 +739,10 @@ declare module '@shared-types/app' {
     setPreferClaudeReview: (
       prefer: boolean
     ) => Promise<{ success: boolean; error?: string }>;
+    getPreferClaudeSummary: () => Promise<boolean>;
+    setPreferClaudeSummary: (
+      prefer: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
 
     // Provider preferences
     getPreferredTranscriptionProvider: () => Promise<

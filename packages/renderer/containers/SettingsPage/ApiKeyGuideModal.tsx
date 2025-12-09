@@ -31,7 +31,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
     >
       <div
         className={css`
-          background: ${colors.light};
+          background: ${colors.surface};
           border: 1px solid ${colors.border};
           border-radius: 10px;
           width: min(640px, 92vw);
@@ -54,7 +54,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
         >
           <h2
             style={{
-              color: colors.dark,
+              color: colors.text,
               fontWeight: 600,
               fontSize: '1.1rem',
               margin: 0,
@@ -72,7 +72,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
               cursor: pointer;
               padding: 4px 8px;
               &:hover {
-                color: ${colors.dark};
+                color: ${colors.text};
               }
             `}
             aria-label={t('common.close', 'Close')}
@@ -95,7 +95,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
           <section>
             <h3
               style={{
-                color: colors.dark,
+                color: colors.text,
                 fontWeight: 600,
                 fontSize: '1rem',
                 margin: '0 0 10px',
@@ -132,7 +132,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
             </p>
             <ol
               style={{
-                color: colors.dark,
+                color: colors.text,
                 lineHeight: 1.8,
                 margin: 0,
                 paddingLeft: 20,
@@ -207,7 +207,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
           >
             <h3
               style={{
-                color: colors.dark,
+                color: colors.text,
                 fontWeight: 600,
                 fontSize: '1rem',
                 margin: '0 0 10px',
@@ -245,7 +245,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
             </p>
             <ol
               style={{
-                color: colors.dark,
+                color: colors.text,
                 lineHeight: 1.8,
                 margin: 0,
                 paddingLeft: 20,
@@ -320,7 +320,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
           >
             <h3
               style={{
-                color: colors.dark,
+                color: colors.text,
                 fontWeight: 600,
                 fontSize: '1rem',
                 margin: '0 0 10px',
@@ -358,7 +358,7 @@ export default function ApiKeyGuideModal({ open, onClose }: Props) {
             </p>
             <ol
               style={{
-                color: colors.dark,
+                color: colors.text,
                 lineHeight: 1.8,
                 margin: 0,
                 paddingLeft: 20,

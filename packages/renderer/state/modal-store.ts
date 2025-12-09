@@ -13,6 +13,8 @@ interface State {
   changeVideoOpen: boolean;
   // Logs modal
   logsOpen: boolean;
+  // API keys required modal
+  apiKeysRequiredOpen: boolean;
 }
 
 interface Actions {
@@ -32,6 +34,7 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     _creditResolver: undefined,
     changeVideoOpen: false,
     logsOpen: false,
+    apiKeysRequiredOpen: false,
 
     openUnsavedSrtConfirm: () =>
       new Promise<UnsavedChoice>(resolve => {
@@ -84,6 +87,15 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       set(s => {
         s.logsOpen = false;
       }),
+    // API keys required modal controls
+    openApiKeysRequired: () =>
+      set(s => {
+        s.apiKeysRequiredOpen = true;
+      }),
+    closeApiKeysRequired: () =>
+      set(s => {
+        s.apiKeysRequiredOpen = false;
+      }),
   }))
 );
 
@@ -117,4 +129,12 @@ export function openLogs() {
 
 export function closeLogs() {
   return (useModalStore.getState() as any).closeLogs();
+}
+
+export function openApiKeysRequired() {
+  return (useModalStore.getState() as any).openApiKeysRequired();
+}
+
+export function closeApiKeysRequired() {
+  return (useModalStore.getState() as any).closeApiKeysRequired();
 }

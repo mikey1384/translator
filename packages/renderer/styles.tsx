@@ -18,19 +18,19 @@ export const colors = {
   info: '#5BC0DE',
   warning: '#F7559A',
   danger: '#E65E6A',
-  light: '#1E1E1E',
-  dark: '#F5F5F5',
+  // Semantic colors (dark theme)
+  text: '#F5F5F5', // Primary text color (light on dark)
+  textDim: '#bbb', // Secondary/muted text
+  surface: '#1E1E1E', // Card/elevated surface background
+  bg: '#080808', // Page background
+  // Grays
   gray: '#8A8A8A',
   grayLight: '#2A2A2A',
   grayMedium: '#6A6A6A',
   grayDark: '#E0E0E0',
   muted: '#B0B0B0',
-  white: '#080808',
   border: '#333333',
-  text: '#eee',
-  textDim: '#bbb',
-  background: '#222',
-  backgroundLight: '#333',
+  // Progress bars
   progressDownload: '#FCBF49',
   progressMerge: '#F7559A',
   progressTranslate: '#5876F5',
@@ -62,8 +62,8 @@ export const inputStyles = css`
   transition: border-color 0.2s ease;
   width: 100%;
   max-width: 320px;
-  background-color: ${colors.light};
-  color: ${colors.dark};
+  background-color: ${colors.surface};
+  color: ${colors.text};
   box-shadow: ${shadows.sm};
   box-sizing: border-box;
   line-height: 1.2;
@@ -111,8 +111,8 @@ export const selectStyles = css`
   }
 
   option {
-    background-color: ${colors.light};
-    color: ${colors.dark};
+    background-color: ${colors.surface};
+    color: ${colors.text};
     width: auto;
     max-width: none;
   }
@@ -138,7 +138,7 @@ export const fileInputWrapperStyles = css`
     margin-bottom: 8px;
     font-weight: 500;
     font-size: 0.95rem;
-    color: ${colors.dark};
+    color: ${colors.text};
   }
 `;
 
@@ -191,7 +191,7 @@ export const videoContainerStyles = css`
 // Title Styles - Dark Theme
 export const titleStyles = css`
   font-size: 2.5rem;
-  color: ${colors.dark};
+  color: ${colors.text};
   margin-bottom: 1.5rem;
   font-weight: 700;
 
@@ -228,7 +228,7 @@ export const sectionStyles = css`
 export const sectionTitleStyles = css`
   font-size: 1.5rem;
   font-weight: 600;
-  color: ${colors.dark};
+  color: ${colors.text};
   margin-top: 0;
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
@@ -250,8 +250,8 @@ export const textAreaStyles = css`
   font-size: 14px;
   resize: vertical;
   transition: border-color 0.2s ease;
-  background-color: ${colors.light};
-  color: ${colors.dark};
+  background-color: ${colors.surface};
+  color: ${colors.text};
 
   &:focus {
     outline: none;
@@ -267,7 +267,7 @@ export const textAreaStyles = css`
 // Progress Bar Background - Dark Theme
 export const progressBarBackgroundStyles = css`
   height: 12px;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   border-radius: 6px;
   overflow: hidden;
   margin: 8px 0;
@@ -318,14 +318,14 @@ export const resultsAreaStyles = css`
   border: 1px solid ${colors.border};
   border-radius: 6px;
   padding: 1rem;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   max-height: 300px;
   overflow-y: auto;
   font-family: monospace;
   white-space: pre-wrap;
   font-size: 0.875rem;
   box-shadow: ${shadows.inner};
-  color: ${colors.dark};
+  color: ${colors.text};
   width: 100%;
   box-sizing: border-box;
   overflow-x: auto;
@@ -333,8 +333,8 @@ export const resultsAreaStyles = css`
 
 // General page wrapper - Dark Theme
 export const pageWrapperStyles = css`
-  background-color: ${colors.white};
-  color: ${colors.dark};
+  background-color: ${colors.bg};
+  color: ${colors.text};
   min-height: 100vh;
   overflow-x: hidden;
   display: flex;
@@ -344,7 +344,7 @@ export const pageWrapperStyles = css`
 // Status Item - Dark Theme
 export const statusItemStyles = css`
   padding: 1rem;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   border-radius: 8px;
   box-shadow: ${shadows.sm};
   transition: none;
@@ -386,7 +386,7 @@ export const formLabelStyles = css`
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 // Form Row - No theme change needed
@@ -443,7 +443,7 @@ export const resultsHeaderStyles = css`
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: ${colors.dark};
+  color: ${colors.text};
 `;
 
 // Key Status Indicators - Dark Theme
@@ -485,7 +485,7 @@ export const timestampStyles = css`
   margin-top: 5px;
   font-size: 14px;
   font-family: monospace;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid ${colors.border};
@@ -499,7 +499,7 @@ export const controlsStyles = css`
   justify-content: space-between;
   align-items: center;
   margin-top: 1rem;
-  background-color: ${colors.light};
+  background-color: ${colors.surface};
   padding: 0.75rem;
   border-radius: 6px;
   border: 1px solid ${colors.border};
@@ -644,7 +644,7 @@ export const mergeButtonStyles = css`
 // Tasteful, dark-theme friendly accent button
 export const subtleAccentButton = css`
   position: relative;
-  color: ${colors.dark} !important;
+  color: ${colors.text} !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.12)),
     rgba(28, 28, 28, 0.85);

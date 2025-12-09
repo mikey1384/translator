@@ -2,7 +2,9 @@
   "common": {
     "cancel": "キャンセル",
     "save": "保存",
+    "or": "または",
     "saving": "保存中...",
+    "validating": "検証中...",
     "delete": "削除",
     "confirm": "確認",
     "apply": "適用",
@@ -101,11 +103,11 @@
     "chooseSrtFile": "SRTファイルを選択",
     "cancel_confirmation": "字幕翻訳プロセスをキャンセルしてもよろしいですか？進行状況は失われ、最初からやり直す必要があります。",
     "dub": "吹き替え音声を生成",
-    "dubEstimateCredits": "{{credits}} クレジット (~{{minutes}}分)",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}分)",
     "dubEstimateByo": "~{{minutes}}分の音声",
-    "translateEstimateCredits": "{{credits}} クレジット",
+    "translateEstimateCredits": "~{{minutes}}分の動画",
     "translateEstimateByo": "BYOキー",
-    "qualityBadge": "(+レビュー)"
+    "qualityBadge": "(hq)"
   },
   "summary": {
     "title": "書き起こしの要約",
@@ -195,6 +197,19 @@
   },
   "settings": {
     "title": "設定",
+    "aiProvider": {
+      "title": "AIプロバイダー"
+    },
+    "byoMaster": {
+      "toggleLabel": "自分のAPIキーを使用",
+      "activeKeys": "{{count}}個のキーが有効",
+      "noKeys": "キーが設定されていません",
+      "usingCredits": "すべてのAIがStage5クレジットを使用",
+      "toggleOn": "AI操作に自分のAPIキーを使用しています。",
+      "toggleOff": "すべてのAI操作にStage5クレジットを使用しています。",
+      "toggleError": "設定の更新に失敗しました。",
+      "toggleAria": "自分のAPIキーの使用を切り替え"
+    },
     "creditsDescription": "クレジットを購入してください。表示される時間は、文字起こしまたは翻訳できる動画の合計再生時間の目安です。例：3時間の動画を文字起こしして翻訳すると、約6時間（約140,000クレジット）を消費します。",
     "performanceQuality": {
       "title": "パフォーマンスと品質",
@@ -217,10 +232,6 @@
         "help": "オン: ElevenLabs TTS（プレミアム音声、約13×クレジット）。オフ: OpenAI TTS（良好な品質）。",
         "helpWithEstimate": "ElevenLabs TTS（約13×クレジット）。あなたのクレジット：~{{normalTime}}通常、~{{hqTime}}高品質。"
       }
-    },
-    "byoMaster": {
-      "toggleLabel": "自分のAPIキーを使用",
-      "keysActive": "{{count}}個のキーが有効"
     },
     "preferClaude": {
       "forTranslation": {
@@ -323,7 +334,24 @@
       "toggleOn": "AIタスクに自分のOpenAIキーを使用中。",
       "toggleOff": "AIタスクにStage5クレジットを使用中。",
       "toggleError": "設定の更新に失敗しました。",
-      "howToGetKeys": "APIキーの取得方法"
+      "howToGetKeys": "APIキーの取得方法",
+      "option1Title": "オプション1: OpenAI",
+      "option2Title": "オプション2: Anthropic + ElevenLabs"
+    },
+    "byoPreferences": {
+      "title": "プロバイダー設定",
+      "pricingHint": "1時間の動画あたりの推定費用",
+      "transcription": "文字起こし",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationReview": "翻訳レビュー",
+      "gptHigh": "GPT-5.1（高）",
+      "gpt": "GPT-5.1",
+      "claudeOpus": "Claude Opus",
+      "summary": "要約",
+      "dubbing": "吹き替え",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
     },
     "apiKeyGuide": {
       "title": "APIキーの取得方法",
@@ -517,6 +545,15 @@
     "closeAria": "検索バーを閉じる"
   },
   "dialogs": {
+    "apiKeysRequired": {
+      "title": "APIキーが必要です",
+      "message": "自分のAPIキーを使用するには、OpenAIキーか、AnthropicとElevenLabsの両方のキーが必要です。",
+      "howToGet": "APIキーの取得方法",
+      "option1": "オプション1：OpenAI",
+      "option2": "オプション2：Anthropic + ElevenLabs",
+      "enable": "APIキーを有効にする",
+      "done": "完了"
+    },
     "saveSrtFileAs": "SRTファイルに名前を付けて保存",
     "saveDownloadedVideoAs": "ダウンロードした動画に名前を付けて保存",
     "downloadInProgress": "ダウンロード中",
@@ -604,7 +641,20 @@
     "missingVideoMetadata": "動画メタデータがありません（{{missing}}）",
     "noSourceVideo": "ソース動画がありません",
     "noSubtitlesLoaded": "字幕が読み込まれていません",
-    "failedToLoadSRT": "SRTファイルの読み込みに失敗しました"
+    "failedToLoadSRT": "SRTファイルの読み込みに失敗しました",
+    "byo": {
+      "openaiKeyInvalid": "OpenAI APIキーが無効または期限切れです。設定でキーを確認してください。",
+      "openaiRateLimit": "OpenAIのレート制限に達しました。しばらくしてから再試行してください。",
+      "openaiInsufficientQuota": "OpenAIアカウントのクレジットが不足しています。platform.openai.comでクレジットを追加してください。",
+      "anthropicKeyInvalid": "Anthropic APIキーが無効または期限切れです。設定でキーを確認してください。",
+      "anthropicRateLimit": "Anthropicのレート制限に達しました。しばらくしてから再試行してください。",
+      "anthropicInsufficientQuota": "Anthropicアカウントのクレジットが不足しています。console.anthropic.comでクレジットを追加してください。",
+      "elevenlabsKeyInvalid": "ElevenLabs APIキーが無効または期限切れです。設定でキーを確認してください。",
+      "elevenlabsRateLimit": "ElevenLabsのレート制限に達しました。しばらくしてから再試行してください。",
+      "elevenlabsInsufficientQuota": "ElevenLabsアカウントのクレジットが不足しています。elevenlabs.ioでクレジットを追加してください。",
+      "checkSettings": "設定を確認",
+      "genericApiError": "APIリクエストが失敗しました。APIキーとアカウントの状態を確認してください。"
+    }
   },
   "logs": {
     "title": "最新のログ",

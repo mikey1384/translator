@@ -35,6 +35,7 @@ import { getNativePlayerInstance } from '../../native-player';
 import { sameArray } from '../../utils/array';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 import { logButton, logTask, logError } from '../../utils/logger.js';
+import { getByoErrorMessage, isByoError } from '../../utils/byoErrors';
 
 export interface EditSubtitlesProps {
   setMergeStage: (stage: string) => void;
@@ -78,7 +79,7 @@ function EditHeaderTranslateBar({
       <label
         className={css`
           margin-right: 4px;
-          color: ${colors.dark};
+          color: ${colors.text};
           font-size: 0.95rem;
         `}
       >
@@ -539,10 +540,14 @@ export default function EditSubtitles({
       }
     } catch (err) {
       console.error('[EditSubtitles] continue transcribing error:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const friendlyError = isByoError(errorMsg)
+        ? getByoErrorMessage(errorMsg)
+        : t('generateSubtitles.status.error', 'Error');
       // Surface error state to progress UI
       try {
         useTaskStore.getState().setTranscription({
-          stage: t('generateSubtitles.status.error', 'Error'),
+          stage: friendlyError,
           percent: 100,
           inProgress: false,
         });

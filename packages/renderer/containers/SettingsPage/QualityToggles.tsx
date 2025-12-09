@@ -1,18 +1,21 @@
 import { css } from '@emotion/css';
-import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { colors } from '../../styles';
 import { useUIStore } from '../../state/ui-store';
 import { useCreditStore } from '../../state/credit-store';
 import { useAiStore } from '../../state/ai-store';
 import Switch from '../../components/Switch';
 import {
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
   CREDITS_PER_1K_TOKENS_PROMPT,
   CREDITS_PER_1K_TOKENS_COMPLETION,
-  TRANSLATION_QUALITY_MULTIPLIER,
   SUMMARY_QUALITY_MULTIPLIER,
   TTS_CREDITS_PER_MINUTE,
 } from '../../../shared/constants';
+import {
+  estimateTranslatableHours,
+  formatHours,
+} from '../../utils/creditEstimates';
 
 // Summary credits per audio hour estimate:
 // ~45,000 chars/hour → ~11,250 input tokens, ~2,250 output tokens
@@ -22,19 +25,6 @@ const CREDITS_PER_SUMMARY_AUDIO_HOUR = Math.ceil(
   (SUMMARY_INPUT_TOKENS_PER_HOUR / 1000) * CREDITS_PER_1K_TOKENS_PROMPT +
     (SUMMARY_OUTPUT_TOKENS_PER_HOUR / 1000) * CREDITS_PER_1K_TOKENS_COMPLETION
 );
-
-/**
- * Format hours into a readable string (e.g., "2h 30m" or "45m")
- */
-function formatHours(hours: number): string {
-  if (hours < 1) {
-    const mins = Math.round(hours * 60);
-    return mins > 0 ? `${mins}m` : '<1m';
-  }
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
 
 export default function QualityToggles() {
   const { t } = useTranslation();
@@ -51,15 +41,8 @@ export default function QualityToggles() {
   );
 
   // Calculate estimated video hours for translation (normal and HQ modes)
-  const translationNormalHours =
-    typeof credits === 'number' && credits > 0
-      ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
-      : null;
-  const translationHqHours =
-    typeof credits === 'number' && credits > 0
-      ? credits /
-        (CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_QUALITY_MULTIPLIER)
-      : null;
+  const translationNormalHours = estimateTranslatableHours(credits, false);
+  const translationHqHours = estimateTranslatableHours(credits, true);
 
   // Calculate estimated video hours for summary (normal and HQ modes)
   const summaryNormalHours =
@@ -85,7 +68,7 @@ export default function QualityToggles() {
     label: string,
     checked: boolean,
     onChange: (v: boolean) => void,
-    help?: string
+    help?: ReactNode
   ) => (
     <div
       className={css`
@@ -103,7 +86,7 @@ export default function QualityToggles() {
         <div
           className={css`
             font-weight: 600;
-            color: ${colors.dark};
+            color: ${colors.text};
           `}
         >
           {label}
@@ -144,19 +127,23 @@ export default function QualityToggles() {
         ),
         qualityTranslation,
         setQualityTranslation,
-        translationNormalHours !== null && translationHqHours !== null
-          ? t(
-              'settings.performanceQuality.qualityTranslation.helpWithEstimate',
-              'Review phase uses ~5× more credits. Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ.',
-              {
-                normalTime: formatHours(translationNormalHours),
-                hqTime: formatHours(translationHqHours),
-              }
-            )
-          : t(
-              'settings.performanceQuality.qualityTranslation.help',
-              'On: includes review phase (~5× more credits/time). Off: skip review.'
-            )
+        translationNormalHours !== null && translationHqHours !== null ? (
+          <Trans
+            i18nKey="settings.performanceQuality.qualityTranslation.helpWithEstimate"
+            defaults="<b>5× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)"
+            values={{
+              hqTime: formatHours(translationHqHours),
+              normalTime: formatHours(translationNormalHours),
+            }}
+            components={{ b: <strong /> }}
+          />
+        ) : (
+          <Trans
+            i18nKey="settings.performanceQuality.qualityTranslation.help"
+            defaults="<b>5× credits</b> • Adds review phase for higher quality"
+            components={{ b: <strong /> }}
+          />
+        )
       )}
       {row(
         t(
@@ -165,19 +152,23 @@ export default function QualityToggles() {
         ),
         summaryEffortLevel === 'high',
         v => setSummaryEffortLevel(v ? 'high' : 'standard'),
-        summaryNormalHours !== null && summaryHqHours !== null
-          ? t(
-              'settings.performanceQuality.qualitySummary.helpWithEstimate',
-              'Deep analysis + highlight clips (~4× credits). Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ.',
-              {
-                normalTime: formatHours(summaryNormalHours),
-                hqTime: formatHours(summaryHqHours),
-              }
-            )
-          : t(
-              'settings.performanceQuality.qualitySummary.help',
-              'On: deep analysis + highlight clips with Claude Opus (~4× credits). Off: fast with GPT-5.1.'
-            )
+        summaryNormalHours !== null && summaryHqHours !== null ? (
+          <Trans
+            i18nKey="settings.performanceQuality.qualitySummary.helpWithEstimate"
+            defaults="<b>4× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)"
+            values={{
+              hqTime: formatHours(summaryHqHours),
+              normalTime: formatHours(summaryNormalHours),
+            }}
+            components={{ b: <strong /> }}
+          />
+        ) : (
+          <Trans
+            i18nKey="settings.performanceQuality.qualitySummary.help"
+            defaults="<b>4× credits</b> • Deep analysis + highlight clips with Claude Opus"
+            components={{ b: <strong /> }}
+          />
+        )
       )}
       {row(
         t(
@@ -186,19 +177,23 @@ export default function QualityToggles() {
         ),
         stage5DubbingTtsProvider === 'elevenlabs',
         v => setStage5DubbingTtsProvider(v ? 'elevenlabs' : 'openai'),
-        dubbingNormalHours !== null && dubbingHqHours !== null
-          ? t(
-              'settings.performanceQuality.qualityDubbing.helpWithEstimate',
-              'ElevenLabs TTS (~13× credits). Your credits: ~{{normalTime}} normal, ~{{hqTime}} HQ.',
-              {
-                normalTime: formatHours(dubbingNormalHours),
-                hqTime: formatHours(dubbingHqHours),
-              }
-            )
-          : t(
-              'settings.performanceQuality.qualityDubbing.help',
-              'On: ElevenLabs TTS (premium voices, ~13× credits). Off: OpenAI TTS (good quality).'
-            )
+        dubbingNormalHours !== null && dubbingHqHours !== null ? (
+          <Trans
+            i18nKey="settings.performanceQuality.qualityDubbing.helpWithEstimate"
+            defaults="<b>13× credits</b> • Your balance: ~{{normalTime}} (normal) / ~{{hqTime}} (hq)"
+            values={{
+              hqTime: formatHours(dubbingHqHours),
+              normalTime: formatHours(dubbingNormalHours),
+            }}
+            components={{ b: <strong /> }}
+          />
+        ) : (
+          <Trans
+            i18nKey="settings.performanceQuality.qualityDubbing.help"
+            defaults="<b>13× credits</b> • ElevenLabs TTS with premium voices"
+            components={{ b: <strong /> }}
+          />
+        )
       )}
     </div>
   );

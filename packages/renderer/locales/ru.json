@@ -2,7 +2,9 @@
   "common": {
     "cancel": "Отмена",
     "save": "Сохранить",
+    "or": "ИЛИ",
     "saving": "Сохранение...",
+    "validating": "Проверка...",
     "delete": "Удалить",
     "confirm": "Подтвердить",
     "apply": "Применить",
@@ -188,6 +190,19 @@
   },
   "settings": {
     "title": "Настройки",
+    "aiProvider": {
+      "title": "Поставщик ИИ"
+    },
+    "byoMaster": {
+      "toggleLabel": "Использовать мои API-ключи",
+      "activeKeys": "{{count}} ключ(ей) активно",
+      "noKeys": "Ключи не настроены",
+      "usingCredits": "Весь ИИ использует кредиты Stage5",
+      "toggleOn": "Использование ваших API-ключей для операций ИИ.",
+      "toggleOff": "Использование кредитов Stage5 для всех операций ИИ.",
+      "toggleError": "Не удалось обновить настройку.",
+      "toggleAria": "Переключить использование ваших API-ключей"
+    },
     "creditsDescription": "Купите кредиты. Отображаемые часы — это оценка общей продолжительности видео, которое вы можете транскрибировать или переводить. Пример: транскрибация и перевод 3‑часового видео займут около 6 часов (≈140 000 кредитов).",
     "performanceQuality": {
       "title": "Производительность и качество",
@@ -253,7 +268,24 @@
       "toggleOn": "Используется ваш ключ OpenAI для ИИ-задач.",
       "toggleOff": "Используются кредиты Stage5 для ИИ-задач.",
       "toggleError": "Не удалось обновить настройку.",
-      "howToGetKeys": "Как получить API-ключи?"
+      "howToGetKeys": "Как получить API-ключи?",
+      "option1Title": "Вариант 1: OpenAI",
+      "option2Title": "Вариант 2: Anthropic + ElevenLabs"
+    },
+    "byoPreferences": {
+      "title": "Настройки провайдера",
+      "pricingHint": "Ориентировочная стоимость за 1 час видео",
+      "transcription": "Транскрипция",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationReview": "Проверка перевода",
+      "gptHigh": "GPT-5.1 (высокий)",
+      "gpt": "GPT-5.1",
+      "claudeOpus": "Claude Opus",
+      "summary": "Сводка",
+      "dubbing": "Дубляж",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
     },
     "apiKeyGuide": {
       "title": "Как получить API-ключи",
@@ -419,6 +451,15 @@
     "closeAria": "Закрыть панель поиска"
   },
   "dialogs": {
+    "apiKeysRequired": {
+      "title": "Требуются API-ключи",
+      "message": "Для использования собственных API-ключей вам нужен либо ключ OpenAI, ЛИБО оба ключа Anthropic и ElevenLabs.",
+      "howToGet": "Как получить API-ключи",
+      "option1": "Вариант 1: OpenAI",
+      "option2": "Вариант 2: Anthropic + ElevenLabs",
+      "enable": "Включить API-ключи",
+      "done": "Готово"
+    },
     "saveSrtFileAs": "Сохранить SRT файл как",
     "saveDownloadedVideoAs": "Сохранить скачанное видео как",
     "downloadInProgress": "Загрузка в процессе",
@@ -501,7 +542,20 @@
     "missingVideoMetadata": "Отсутствуют метаданные видео ({{missing}})",
     "noSourceVideo": "Нет исходного видео",
     "noSubtitlesLoaded": "Субтитры не загружены",
-    "failedToLoadSRT": "Не удалось загрузить файл SRT"
+    "failedToLoadSRT": "Не удалось загрузить файл SRT",
+    "byo": {
+      "openaiKeyInvalid": "Ваш API-ключ OpenAI недействителен или истёк. Пожалуйста, проверьте ключ в Настройках.",
+      "openaiRateLimit": "Достигнут лимит запросов OpenAI. Пожалуйста, подождите и попробуйте снова.",
+      "openaiInsufficientQuota": "На вашем счёте OpenAI недостаточно кредитов. Пожалуйста, пополните баланс на platform.openai.com.",
+      "anthropicKeyInvalid": "Ваш API-ключ Anthropic недействителен или истёк. Пожалуйста, проверьте ключ в Настройках.",
+      "anthropicRateLimit": "Достигнут лимит запросов Anthropic. Пожалуйста, подождите и попробуйте снова.",
+      "anthropicInsufficientQuota": "На вашем счёте Anthropic недостаточно кредитов. Пожалуйста, пополните баланс на console.anthropic.com.",
+      "elevenlabsKeyInvalid": "Ваш API-ключ ElevenLabs недействителен или истёк. Пожалуйста, проверьте ключ в Настройках.",
+      "elevenlabsRateLimit": "Достигнут лимит запросов ElevenLabs. Пожалуйста, подождите и попробуйте снова.",
+      "elevenlabsInsufficientQuota": "На вашем счёте ElevenLabs недостаточно кредитов. Пожалуйста, пополните баланс на elevenlabs.io.",
+      "checkSettings": "Проверить настройки",
+      "genericApiError": "Ошибка API-запроса. Пожалуйста, проверьте ваш API-ключ и статус аккаунта."
+    }
   },
   "logs": {
     "title": "Последние логи",

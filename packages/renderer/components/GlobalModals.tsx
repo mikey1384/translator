@@ -1,11 +1,13 @@
 import ConfirmReplaceSrtDialog from '../containers/GenerateSubtitles/components/ConfirmReplaceSrtDialog';
 import CreditRanOutDialog from '../containers/GenerateSubtitles/components/CreditRanOutDialog';
+import ApiKeysRequiredDialog from './ApiKeysRequiredDialog';
 import {
   useModalStore,
   resolveUnsavedSrt,
   resolveCreditRanOut,
   closeChangeVideo,
   closeLogs,
+  closeApiKeysRequired,
 } from '../state/modal-store';
 import { useUIStore } from '../state/ui-store';
 import MediaInputSection from '../containers/GenerateSubtitles/components/MediaInputSection';
@@ -21,6 +23,7 @@ export default function GlobalModals() {
   const creditOpen = useModalStore(s => s.creditRanOutOpen);
   const changeVideoOpen = useModalStore(s => s.changeVideoOpen);
   const logsOpen = useModalStore(s => s.logsOpen);
+  const apiKeysRequiredOpen = useModalStore(s => s.apiKeysRequiredOpen);
   const toggleSettings = useUIStore(s => s.toggleSettings);
 
   // Reuse existing stores for MediaInputSection
@@ -94,7 +97,7 @@ export default function GlobalModals() {
         >
           <div
             className={css`
-              background: ${colors.light};
+              background: ${colors.surface};
               border: 1px solid ${colors.border};
               border-radius: 10px;
               width: min(800px, 92vw);
@@ -112,7 +115,7 @@ export default function GlobalModals() {
                 right: 10px;
                 background: transparent;
                 border: 1px solid ${colors.border};
-                color: ${colors.dark};
+                color: ${colors.text};
                 border-radius: 4px;
                 padding: 4px 8px;
                 cursor: pointer;
@@ -152,6 +155,10 @@ export default function GlobalModals() {
       )}
 
       <LogsModal open={logsOpen} onClose={() => closeLogs()} />
+      <ApiKeysRequiredDialog
+        open={apiKeysRequiredOpen}
+        onClose={() => closeApiKeysRequired()}
+      />
     </>
   );
 }

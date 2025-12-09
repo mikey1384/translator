@@ -7,8 +7,7 @@ import { logButton } from '../utils/logger.js';
 type IconButtonVariant = 'primary' | 'secondary' | 'transparent';
 type IconButtonSize = 'sm' | 'md' | 'lg';
 
-export interface IconButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: IconButtonVariant;
   size?: IconButtonSize;
   icon: React.ReactNode;
@@ -72,21 +71,21 @@ const iconButtonVariants = {
   `,
   secondary: css`
     background-color: ${colors.grayLight};
-    color: ${colors.dark};
+    color: ${colors.text};
     border: 1px solid ${colors.border};
 
     &:hover:not(:disabled) {
-      background-color: ${colors.light};
+      background-color: ${colors.surface};
       border-color: ${colors.grayDark};
     }
 
     &:active:not(:disabled) {
-      background-color: ${colors.light};
+      background-color: ${colors.surface};
     }
   `,
   transparent: css`
     background: rgba(42, 42, 42, 0.8);
-    color: ${colors.dark};
+    color: ${colors.text};
 
     &:hover:not(:disabled) {
       background: rgba(42, 42, 42, 0.95);

@@ -9,11 +9,13 @@ import {
   useUIStore,
   useVideoStore,
   useCreditStore,
+  useAiStore,
 } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
+import { getByoErrorMessage, isByoError } from '../../../utils/byoErrors';
 
 // Voice cloning costs ~35,000 credits per minute (fetched from API, this is fallback)
 const VOICE_CLONING_CREDITS_PER_MINUTE = 35_000;
@@ -54,6 +56,13 @@ export async function executeSrtTranslation({
     return { success: false };
   }
 
+  // Refresh credits at start of translation for accurate progress display
+  try {
+    useCreditStore.getState().refresh();
+  } catch {
+    // Non-blocking; continue even if refresh fails
+  }
+
   const srtContent = buildSrt({ segments, mode: 'dual' });
 
   try {
@@ -78,9 +87,13 @@ export async function executeSrtTranslation({
     }
     useTaskStore.getState().setTranslation({ inProgress: false });
     return { success: false };
-  } catch {
+  } catch (err: any) {
+    const errorMsg = err?.message || String(err);
+    const userFriendlyMsg = isByoError(errorMsg)
+      ? getByoErrorMessage(errorMsg)
+      : i18n.t('generateSubtitles.status.error');
     useTaskStore.getState().setTranslation({
-      stage: i18n.t('generateSubtitles.status.error'),
+      stage: userFriendlyMsg,
       percent: 100,
       inProgress: false,
     });
@@ -143,8 +156,21 @@ export async function executeDubGeneration({
   const selectedVoice = voice ?? dubVoice ?? 'alloy';
 
   // Determine if we should use voice cloning
-  // Voice cloning requires: toggle enabled + real target language (not 'original') + video duration
+  // Voice cloning is ONLY available for BYO ElevenLabs users (not Stage5 credits)
+  // It's too expensive (~35k credits/min) and doesn't allow control over translation quality
+  const {
+    useByoMaster,
+    useByoElevenLabs,
+    elevenLabsKeyPresent,
+    byoElevenLabsUnlocked,
+  } = useAiStore.getState();
+  const isByoElevenLabs =
+    useByoMaster &&
+    useByoElevenLabs &&
+    elevenLabsKeyPresent &&
+    byoElevenLabsUnlocked;
   const useVoiceCloning =
+    isByoElevenLabs &&
     dubUseVoiceCloning &&
     !!targetLanguage &&
     targetLanguage !== 'original' &&
@@ -245,34 +271,41 @@ export async function executeDubGeneration({
 
     if (res?.error) {
       try {
-        useUrlStore.getState().setError(res.error);
+        const friendlyError = isByoError(res.error)
+          ? getByoErrorMessage(res.error)
+          : res.error;
+        useUrlStore.getState().setError(friendlyError);
       } catch {
         // ignore store errors
       }
     }
+    const errorStage = res?.cancelled
+      ? i18n.t('generateSubtitles.status.cancelled')
+      : res?.error && isByoError(res.error)
+        ? getByoErrorMessage(res.error)
+        : i18n.t('generateSubtitles.status.error');
     useTaskStore.getState().setDubbing({
-      stage: res?.cancelled
-        ? i18n.t('generateSubtitles.status.cancelled')
-        : i18n.t('generateSubtitles.status.error'),
+      stage: errorStage,
       percent: 100,
       inProgress: false,
     });
     return { success: false, cancelled: res?.cancelled };
   } catch (error) {
     console.error('[executeDubGeneration] Error:', error);
+    const errorMsg =
+      error instanceof Error
+        ? error.message
+        : 'Failed to generate dubbed audio.';
+    const friendlyError = isByoError(errorMsg)
+      ? getByoErrorMessage(errorMsg)
+      : errorMsg;
     try {
-      useUrlStore
-        .getState()
-        .setError(
-          error instanceof Error
-            ? error.message
-            : 'Failed to generate dubbed audio.'
-        );
+      useUrlStore.getState().setError(friendlyError);
     } catch {
       // ignore
     }
     useTaskStore.getState().setDubbing({
-      stage: i18n.t('generateSubtitles.status.error'),
+      stage: friendlyError,
       percent: 100,
       inProgress: false,
     });
@@ -350,10 +383,14 @@ export async function executeSubtitleGeneration({
     }
   } catch (error) {
     console.error('Error generating subtitles:', error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const friendlyError = isByoError(errorMsg)
+      ? getByoErrorMessage(errorMsg)
+      : i18n.t('generateSubtitles.status.error');
 
     setTranscription({
       id: operationId,
-      stage: i18n.t('generateSubtitles.status.error'),
+      stage: friendlyError,
       percent: 100,
       inProgress: false,
     });

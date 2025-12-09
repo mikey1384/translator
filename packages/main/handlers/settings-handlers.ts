@@ -5,10 +5,41 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import type Store from 'electron-store';
 import { browserCookiesAvailable } from '../services/url-processor/utils.js';
+import {
+  encryptString,
+  decryptString,
+  isEncrypted,
+  isEncryptionAvailable,
+} from '../services/secure-storage.js';
 
 /* ----------------------------------------------------------
  * Types
  * -------------------------------------------------------- */
+
+/**
+ * All BYO-related settings returned in a single batched call
+ */
+export interface AllByoSettings {
+  // API keys (decrypted values)
+  openAiKey: string | null;
+  anthropicKey: string | null;
+  elevenLabsKey: string | null;
+  // Individual provider toggles
+  useByoOpenAi: boolean;
+  useByoAnthropic: boolean;
+  useByoElevenLabs: boolean;
+  // Master toggle
+  useByoMaster: boolean;
+  // Claude preferences
+  preferClaudeTranslation: boolean;
+  preferClaudeReview: boolean;
+  preferClaudeSummary: boolean;
+  // Provider preferences
+  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
+  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+}
+
 export type SettingsStoreType = Store<{
   app_language_preference: string;
   subtitleTargetLanguage: string;
@@ -25,6 +56,7 @@ export type SettingsStoreType = Store<{
   useByoMaster: boolean; // Master toggle to enable/disable all BYO keys at once
   preferClaudeTranslation: boolean; // When true, use Claude (Sonnet) for draft instead of GPT
   preferClaudeReview: boolean; // When true (default), use Claude Opus for review; false = GPT-5.1 with high reasoning
+  preferClaudeSummary: boolean; // When true (default), use Claude Opus for video summary
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for transcription
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for dubbing/TTS
   stage5DubbingTtsProvider: 'openai' | 'elevenlabs'; // TTS provider when using Stage5 API for dubbing
@@ -161,8 +193,14 @@ export function buildSettingsHandlers(opts: {
 
   function getApiKey(): string | null {
     try {
-      const key = store.get('apiKey', null);
-      return typeof key === 'string' && key.length > 0 ? key : null;
+      const stored = store.get('apiKey', null);
+      if (typeof stored !== 'string' || stored.length === 0) return null;
+      // Only encrypted values are supported - silently clear legacy values
+      if (!isEncrypted(stored)) {
+        store.set('apiKey', null);
+        return null;
+      }
+      return decryptString(stored) || null;
     } catch (err) {
       log.error('[settings] Failed to read stored API key:', err);
       return null;
@@ -179,7 +217,9 @@ export function buildSettingsHandlers(opts: {
         return { success: true };
       }
       const trimmed = apiKey.trim();
-      store.set('apiKey', trimmed);
+      // Encrypt before storing
+      const encrypted = encryptString(trimmed);
+      store.set('apiKey', encrypted);
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist API key:', err);
@@ -200,8 +240,14 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Anthropic API key ─────────── */
   function getAnthropicApiKey(): string | null {
     try {
-      const key = store.get('anthropicApiKey', null);
-      return typeof key === 'string' && key.length > 0 ? key : null;
+      const stored = store.get('anthropicApiKey', null);
+      if (typeof stored !== 'string' || stored.length === 0) return null;
+      // Only encrypted values are supported - silently clear legacy values
+      if (!isEncrypted(stored)) {
+        store.set('anthropicApiKey', null);
+        return null;
+      }
+      return decryptString(stored) || null;
     } catch (err) {
       log.error('[settings] Failed to read stored Anthropic API key:', err);
       return null;
@@ -218,7 +264,9 @@ export function buildSettingsHandlers(opts: {
         return { success: true };
       }
       const trimmed = apiKey.trim();
-      store.set('anthropicApiKey', trimmed);
+      // Encrypt before storing
+      const encrypted = encryptString(trimmed);
+      store.set('anthropicApiKey', encrypted);
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist Anthropic API key:', err);
@@ -264,8 +312,14 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── ElevenLabs API key ─────────── */
   function getElevenLabsApiKey(): string | null {
     try {
-      const key = store.get('elevenLabsApiKey', null);
-      return typeof key === 'string' && key.length > 0 ? key : null;
+      const stored = store.get('elevenLabsApiKey', null);
+      if (typeof stored !== 'string' || stored.length === 0) return null;
+      // Only encrypted values are supported - silently clear legacy values
+      if (!isEncrypted(stored)) {
+        store.set('elevenLabsApiKey', null);
+        return null;
+      }
+      return decryptString(stored) || null;
     } catch (err) {
       log.error('[settings] Failed to read stored ElevenLabs API key:', err);
       return null;
@@ -282,7 +336,9 @@ export function buildSettingsHandlers(opts: {
         return { success: true };
       }
       const trimmed = apiKey.trim();
-      store.set('elevenLabsApiKey', trimmed);
+      // Encrypt before storing
+      const encrypted = encryptString(trimmed);
+      store.set('elevenLabsApiKey', encrypted);
       return { success: true };
     } catch (err: any) {
       log.error('[settings] Failed to persist ElevenLabs API key:', err);
@@ -350,11 +406,11 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Master BYO toggle ─────────── */
   function getUseByoMaster(): boolean {
     try {
-      // Default to true so existing users with keys continue to use them
-      return Boolean(store.get('useByoMaster', true));
+      // Default to false - user must explicitly enable BYO after entering keys
+      return Boolean(store.get('useByoMaster', false));
     } catch (err) {
       log.error('[settings] Failed to read BYO master toggle:', err);
-      return true;
+      return false;
     }
   }
 
@@ -431,6 +487,33 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── Claude summary preference ─────────── */
+  function getPreferClaudeSummary(): boolean {
+    try {
+      // Default to true (use Claude Opus for summary, which is higher quality)
+      return Boolean(store.get('preferClaudeSummary', true));
+    } catch (err) {
+      log.error('[settings] Failed to read Claude summary preference:', err);
+      return true;
+    }
+  }
+
+  function setPreferClaudeSummary(value: boolean): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set('preferClaudeSummary', Boolean(value));
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist Claude summary preference:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
   /* ─────────── Transcription provider preference ─────────── */
   function getPreferredTranscriptionProvider():
     | 'elevenlabs'
@@ -438,6 +521,9 @@ export function buildSettingsHandlers(opts: {
     | 'stage5' {
     try {
       const value = store.get('preferredTranscriptionProvider', 'elevenlabs');
+      log.info(
+        `[settings] getPreferredTranscriptionProvider: stored="${value}"`
+      );
       if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
         return value;
       }
@@ -455,7 +541,11 @@ export function buildSettingsHandlers(opts: {
     value: 'elevenlabs' | 'openai' | 'stage5'
   ): { success: boolean; error?: string } {
     try {
+      log.info(
+        `[settings] setPreferredTranscriptionProvider: saving "${value}"`
+      );
       store.set('preferredTranscriptionProvider', value);
+      log.info(`[settings] setPreferredTranscriptionProvider: saved OK`);
       return { success: true };
     } catch (err: any) {
       log.error(
@@ -472,14 +562,14 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Dubbing provider preference ─────────── */
   function getPreferredDubbingProvider(): 'elevenlabs' | 'openai' | 'stage5' {
     try {
-      const value = store.get('preferredDubbingProvider', 'elevenlabs');
+      const value = store.get('preferredDubbingProvider', 'openai');
       if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
         return value;
       }
-      return 'elevenlabs'; // Default to ElevenLabs (voice cloning)
+      return 'openai'; // Default to OpenAI TTS (cheaper)
     } catch (err) {
       log.error('[settings] Failed to read dubbing provider preference:', err);
-      return 'elevenlabs';
+      return 'openai';
     }
   }
 
@@ -534,8 +624,75 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
+  /* ─────────── Get all BYO settings in single call ─────────── */
+  function getAllByoSettings(): AllByoSettings {
+    return {
+      // API keys
+      openAiKey: getApiKey(),
+      anthropicKey: getAnthropicApiKey(),
+      elevenLabsKey: getElevenLabsApiKey(),
+      // Individual toggles
+      useByoOpenAi: getUseByoOpenAi(),
+      useByoAnthropic: getUseByoAnthropic(),
+      useByoElevenLabs: getUseByoElevenLabs(),
+      // Master toggle
+      useByoMaster: getUseByoMaster(),
+      // Claude preferences
+      preferClaudeTranslation: getPreferClaudeTranslation(),
+      preferClaudeReview: getPreferClaudeReview(),
+      preferClaudeSummary: getPreferClaudeSummary(),
+      // Provider preferences
+      preferredTranscriptionProvider: getPreferredTranscriptionProvider(),
+      preferredDubbingProvider: getPreferredDubbingProvider(),
+      stage5DubbingTtsProvider: getStage5DubbingTtsProvider(),
+    };
+  }
+
+  /* ─────────── Migration: Handle legacy API key formats ─────────── */
+  async function migrateApiKeysToEncrypted(): Promise<void> {
+    const keysToMigrate = [
+      { key: 'apiKey', name: 'OpenAI' },
+      { key: 'anthropicApiKey', name: 'Anthropic' },
+      { key: 'elevenLabsApiKey', name: 'ElevenLabs' },
+    ] as const;
+
+    for (const { key, name } of keysToMigrate) {
+      try {
+        const stored = store.get(key, null);
+        if (
+          typeof stored === 'string' &&
+          stored.length > 0 &&
+          !isEncrypted(stored)
+        ) {
+          // Legacy key format found - upgrade or clear
+          if (!isEncryptionAvailable()) {
+            // Encryption not available - clear key (user will need to re-enter)
+            store.set(key, null);
+          } else {
+            // Upgrade key format
+            const encrypted = encryptString(stored);
+            store.set(key, encrypted);
+            log.info(`[settings] Upgraded ${name} API key storage format`);
+          }
+        }
+      } catch (err) {
+        log.error(`[settings] Failed to upgrade ${name} API key format:`, err);
+        // Clear the key if upgrade fails (user will need to re-enter)
+        store.set(key, null);
+      }
+    }
+  }
+
+  /* ─────────── Check encryption availability ─────────── */
+  function checkEncryptionAvailable(): boolean {
+    return isEncryptionAvailable();
+  }
+
   /* ------------------------------------------------ */
   return {
+    checkEncryptionAvailable,
+    getAllByoSettings,
+    migrateApiKeysToEncrypted,
     getLocaleUrl,
     getLanguagePreference,
     setLanguagePreference,
@@ -564,6 +721,8 @@ export function buildSettingsHandlers(opts: {
     setPreferClaudeTranslation,
     getPreferClaudeReview,
     setPreferClaudeReview,
+    getPreferClaudeSummary,
+    setPreferClaudeSummary,
     getPreferredTranscriptionProvider,
     setPreferredTranscriptionProvider,
     getPreferredDubbingProvider,

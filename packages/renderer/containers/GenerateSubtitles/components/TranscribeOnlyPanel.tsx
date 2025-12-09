@@ -25,7 +25,7 @@ export default function TranscribeOnlyPanel({
         padding: 20px;
         border: 1px solid ${colors.border};
         border-radius: 6px;
-        background-color: ${colors.light};
+        background-color: ${colors.surface};
         display: flex;
         align-items: center;
         justify-content: center;

@@ -24,7 +24,7 @@ const urlInputStyles = css`
   border-radius: 4px;
   font-size: 0.95rem;
   background-color: ${colors.grayLight};
-  color: ${colors.dark};
+  color: ${colors.text};
   transition: border-color 0.2s ease;
 
   &:focus {

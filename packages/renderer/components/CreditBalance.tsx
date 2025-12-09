@@ -29,13 +29,6 @@ const creditText = css`
   white-space: nowrap;
 `;
 
-const modelSubtext = css`
-  font-size: 0.75rem;
-  color: ${colors.textDim};
-  white-space: nowrap;
-  margin-left: 4px;
-`;
-
 const loadingText = css`
   color: ${colors.textDim};
   font-style: italic;
