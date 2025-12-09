@@ -415,22 +415,17 @@ export const useAiStore = create<AiStoreState>((set, get) => {
         elevenLabsKeyLoading: true,
       });
       try {
-        // Load entitlements, BYO settings, and check encryption in parallel
-        const [, settingsResult, encryptionResult] = await Promise.allSettled([
+        // Load entitlements and BYO settings in parallel
+        // NOTE: We do NOT check encryption availability here to avoid Keychain prompt on startup.
+        // Encryption is checked lazily only when user tries to save a key.
+        const [, settingsResult] = await Promise.allSettled([
           get().fetchEntitlements(),
           SystemIPC.getAllByoSettings(),
-          SystemIPC.checkEncryptionAvailable(),
         ]);
 
-        // Check encryption availability
-        if (encryptionResult.status === 'fulfilled') {
-          set({ encryptionAvailable: encryptionResult.value });
-          if (!encryptionResult.value) {
-            console.warn(
-              '[AiStore] Encryption not available - API keys cannot be stored securely'
-            );
-          }
-        }
+        // Assume encryption is available by default (it is on all modern systems)
+        // Will be updated to false if saving a key fails due to encryption unavailability
+        set({ encryptionAvailable: true });
 
         // Apply all BYO settings from the batched call
         // NOTE: API keys are NOT decrypted on startup to avoid Keychain prompts.
