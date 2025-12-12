@@ -16,6 +16,7 @@ import { useMemo } from 'react';
 import {
   CREDITS_PER_1K_TOKENS_PROMPT,
   CREDITS_PER_1K_TOKENS_COMPLETION,
+  TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
   TRANSLATION_QUALITY_MULTIPLIER,
 } from '../../../../shared/constants';
 import { formatCredits } from '../../../utils/creditEstimates';
@@ -39,9 +40,12 @@ function estimateTranslationCredits(
     (inputTokens / 1000) * CREDITS_PER_1K_TOKENS_PROMPT +
       (outputTokens / 1000) * CREDITS_PER_1K_TOKENS_COMPLETION
   );
+  const withOverhead = Math.ceil(
+    baseCredits * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
+  );
   return qualityEnabled
-    ? Math.ceil(baseCredits * TRANSLATION_QUALITY_MULTIPLIER)
-    : baseCredits;
+    ? Math.ceil(withOverhead * TRANSLATION_QUALITY_MULTIPLIER)
+    : withOverhead;
 }
 
 interface SrtMountedPanelProps {

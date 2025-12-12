@@ -44,6 +44,7 @@ import { save as saveFile } from '../ipc/file';
 import {
   CREDITS_PER_1K_TOKENS_PROMPT,
   CREDITS_PER_1K_TOKENS_COMPLETION,
+  SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
 } from '../../shared/constants';
 import { getByoErrorMessage, isByoError } from '../utils/byoErrors';
 
@@ -61,9 +62,12 @@ function estimateSummaryCredits(
     (inputTokens / 1000) * CREDITS_PER_1K_TOKENS_PROMPT +
       (outputTokens / 1000) * CREDITS_PER_1K_TOKENS_COMPLETION
   );
+  const withPipelineOverhead = Math.ceil(
+    baseCredits * SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER
+  );
   return effortLevel === 'high'
-    ? Math.ceil(baseCredits * CLAUDE_OPUS_MULTIPLIER)
-    : baseCredits;
+    ? Math.ceil(withPipelineOverhead * CLAUDE_OPUS_MULTIPLIER)
+    : withPipelineOverhead;
 }
 
 function formatCredits(credits: number): string {

@@ -103,6 +103,12 @@ export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
 export const TRANSLATION_QUALITY_MULTIPLIER = 5;
 export const SUMMARY_QUALITY_MULTIPLIER = 4;
 
+// Summary pipeline overhead multiplier.
+// Stage5 summary runs multiple model calls per chunk:
+// 1) summarizeChunk, 2) mergeIntoRunningSummary, 3) proposeHighlightsForChunk.
+// This approximates the extra credit spend vs a single-pass summary estimate.
+export const SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER = 3;
+
 // TTS credits per minute (based on ~750 chars/min * credits/char)
 // OpenAI: 1.05 credits/char * 750 = ~788 credits/min
 // ElevenLabs: 14 credits/char * 750 = ~10,500 credits/min
