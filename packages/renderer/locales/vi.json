@@ -259,7 +259,9 @@
       "toggleOn": "Đang sử dụng OpenAI key của bạn cho các tác vụ AI.",
       "toggleOff": "Đang sử dụng tín dụng Stage5 cho các tác vụ AI.",
       "toggleError": "Không thể cập nhật tùy chọn.",
-      "howToGetKeys": "Làm thế nào để lấy API key?"
+      "howToGetKeys": "Làm thế nào để lấy API key?",
+      "economicsTitle": "Tại sao đáng giá",
+      "economicsBody": "Tín dụng Stage5 tối ưu hóa sự tiện lợi (không cần cài đặt). BYO thanh toán trực tiếp cho nhà cung cấp—thường rẻ hơn ~30–50% tùy thuộc vào gói của bạn."
     },
     "apiKeyGuide": {
       "title": "Cách lấy API Key",

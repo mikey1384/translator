@@ -386,7 +386,9 @@
       "toggleError": "설정 업데이트에 실패했습니다.",
       "howToGetKeys": "API 키는 어떻게 받나요?",
       "option1Title": "옵션 1: OpenAI",
-      "option2Title": "옵션 2: Anthropic + ElevenLabs"
+      "option2Title": "옵션 2: Anthropic + ElevenLabs",
+      "economicsTitle": "왜 가치가 있을까요",
+      "economicsBody": "Stage5 크레딧은 편의성을 최적화합니다(설정 불필요). BYO는 제공업체에 직접 지불하며—패키지에 따라 보통 ~30-50% 저렴합니다."
     },
     "byoPreferences": {
       "title": "제공자 설정",

@@ -314,7 +314,9 @@
       "toggleOn": "正在使用您的OpenAI金鑰執行AI任務。",
       "toggleOff": "正在使用Stage5積分執行AI任務。",
       "toggleError": "更新設定失敗。",
-      "howToGetKeys": "如何取得API金鑰？"
+      "howToGetKeys": "如何取得API金鑰？",
+      "economicsTitle": "為什麼值得",
+      "economicsBody": "Stage5積分優化了便利性（無需設置）。BYO直接支付給提供商——根據您的套餐，通常便宜約30-50%。"
     },
     "apiKeyGuide": {
       "title": "如何取得API金鑰",

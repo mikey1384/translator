@@ -186,7 +186,9 @@
       "toggleAria": "Toggle using your OpenAI key",
       "toggleOn": "Using your OpenAI key for AI tasks.",
       "toggleOff": "Using Stage5 credits for AI tasks.",
-      "toggleError": "Failed to update preference."
+      "toggleError": "Failed to update preference.",
+      "economicsTitle": "Why it's worth it",
+      "economicsBody": "Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack."
     },
     "byoAnthropic": {
       "title": "Anthropic API Key (Optional)",

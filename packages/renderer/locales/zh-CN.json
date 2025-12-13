@@ -327,7 +327,9 @@
       "toggleError": "更新设置失败。",
       "howToGetKeys": "如何获取API密钥？",
       "option1Title": "选项1：OpenAI",
-      "option2Title": "选项2：Anthropic + ElevenLabs"
+      "option2Title": "选项2：Anthropic + ElevenLabs",
+      "economicsTitle": "为什么值得",
+      "economicsBody": "Stage5积分优化了便利性（无需设置）。BYO直接支付给提供商——根据您的套餐，通常便宜约30-50%。"
     },
     "byoPreferences": {
       "title": "提供商偏好",

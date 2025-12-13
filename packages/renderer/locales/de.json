@@ -327,7 +327,9 @@
       "toggleError": "Einstellung konnte nicht aktualisiert werden.",
       "howToGetKeys": "Wie bekomme ich API-Schlüssel?",
       "option1Title": "Option 1: OpenAI",
-      "option2Title": "Option 2: Anthropic + ElevenLabs"
+      "option2Title": "Option 2: Anthropic + ElevenLabs",
+      "economicsTitle": "Warum es sich lohnt",
+      "economicsBody": "Stage5-Credits optimieren den Komfort (keine Einrichtung). BYO zahlt direkt an die Anbieter—normalerweise ~30–50% günstiger je nach Paket."
     },
     "byoPreferences": {
       "title": "Anbietereinstellungen",

@@ -328,7 +328,9 @@
       "toggleError": "Failed to update preference.",
       "howToGetKeys": "How do I get API keys?",
       "option1Title": "Option 1: OpenAI",
-      "option2Title": "Option 2: Anthropic + ElevenLabs"
+      "option2Title": "Option 2: Anthropic + ElevenLabs",
+      "economicsTitle": "Why it's worth it",
+      "economicsBody": "Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack."
     },
     "byoPreferences": {
       "title": "Provider Preferences",

@@ -270,7 +270,9 @@
       "toggleError": "Не удалось обновить настройку.",
       "howToGetKeys": "Как получить API-ключи?",
       "option1Title": "Вариант 1: OpenAI",
-      "option2Title": "Вариант 2: Anthropic + ElevenLabs"
+      "option2Title": "Вариант 2: Anthropic + ElevenLabs",
+      "economicsTitle": "Почему это того стоит",
+      "economicsBody": "Кредиты Stage5 оптимизируют удобство (без настройки). BYO платит провайдерам напрямую—обычно на ~30–50% дешевле в зависимости от вашего пакета."
     },
     "byoPreferences": {
       "title": "Настройки провайдера",

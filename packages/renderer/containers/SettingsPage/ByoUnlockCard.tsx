@@ -87,6 +87,30 @@ export default function ByoUnlockCard() {
         </button>
       </p>
 
+      <div
+        style={{
+          background: 'rgba(67,97,238,0.06)',
+          border: `1px solid ${colors.border}`,
+          borderRadius: 8,
+          padding: '12px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
+        <div style={{ fontWeight: 600, color: colors.text }}>
+          {t('settings.byoOpenAi.economicsTitle', 'Why it’s worth it')}
+        </div>
+        <div
+          style={{ fontSize: '.9rem', color: colors.textDim, lineHeight: 1.4 }}
+        >
+          {t(
+            'settings.byoOpenAi.economicsBody',
+            'Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack.'
+          )}
+        </div>
+      </div>
+
       {entitlementsError && (
         <div
           style={{
@@ -136,14 +160,6 @@ export default function ByoUnlockCard() {
       {unlockError && (
         <p style={{ color: colors.danger, margin: 0 }}>{unlockError}</p>
       )}
-
-      <p style={{ color: colors.textDim, fontSize: '.9rem', margin: 0 }}>
-        {t(
-          'settings.byoOpenAi.unlockHint',
-          'Once unlocked, add your API keys here at any time to toggle direct billing on your accounts.'
-        )}
-      </p>
-
       <ApiKeyGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
     </section>
   );

@@ -336,7 +336,9 @@
       "toggleError": "設定の更新に失敗しました。",
       "howToGetKeys": "APIキーの取得方法",
       "option1Title": "オプション1: OpenAI",
-      "option2Title": "オプション2: Anthropic + ElevenLabs"
+      "option2Title": "オプション2: Anthropic + ElevenLabs",
+      "economicsTitle": "なぜ価値があるのか",
+      "economicsBody": "Stage5クレジットは利便性を重視しています（セットアップ不要）。BYOはプロバイダーに直接支払います—パックによって通常約30〜50%安くなります。"
     },
     "byoPreferences": {
       "title": "プロバイダー設定",

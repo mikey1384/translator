@@ -186,7 +186,9 @@
       "toggleAria": "Schakel gebruik van je OpenAI-sleutel",
       "toggleOn": "Je OpenAI-sleutel wordt gebruikt voor AI-taken.",
       "toggleOff": "Stage5-tegoed wordt gebruikt voor AI-taken.",
-      "toggleError": "Instelling bijwerken mislukt."
+      "toggleError": "Instelling bijwerken mislukt.",
+      "economicsTitle": "Waarom het de moeite waard is",
+      "economicsBody": "Stage5-tegoed optimaliseert gemak (geen setup). BYO betaalt providers direct—meestal ~30–50% goedkoper afhankelijk van je pakket."
     },
     "byoAnthropic": {
       "title": "Anthropic API-sleutel (Optioneel)",

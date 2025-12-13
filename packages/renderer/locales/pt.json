@@ -327,7 +327,9 @@
       "toggleError": "Falha ao atualizar preferência.",
       "howToGetKeys": "Como obter chaves de API?",
       "option1Title": "Opção 1: OpenAI",
-      "option2Title": "Opção 2: Anthropic + ElevenLabs"
+      "option2Title": "Opção 2: Anthropic + ElevenLabs",
+      "economicsTitle": "Por que vale a pena",
+      "economicsBody": "Os créditos Stage5 otimizam a conveniência (sem configuração). BYO paga diretamente aos provedores—geralmente ~30–50% mais barato dependendo do seu pacote."
     },
     "byoPreferences": {
       "title": "Preferências de provedor",
