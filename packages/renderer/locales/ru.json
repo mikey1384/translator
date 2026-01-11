@@ -144,7 +144,16 @@
     "saveHighlightDialogTitle": "Save highlight clip",
     "noSections": "No section notes yet.",
     "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…"
+    "highlightsInProgress": "Preparing highlight clips…",
+    "combineMode": "Объединить",
+    "exitCombineMode": "Выйти из объединения",
+    "reorderHint": "Перетащите для изменения порядка:",
+    "cutCombined": "Вырезать объединённое",
+    "cuttingCombined": "Вырезаем...",
+    "combinedHighlightReady": "Объединённый момент готов",
+    "downloadCombined": "Скачать объединённый клип",
+    "saveCombinedDialogTitle": "Сохранить объединённый клип моментов",
+    "combinedCutFailed": "Не удалось вырезать объединённые моменты: {{message}}"
   },
   "panel": {
     "gaps": {

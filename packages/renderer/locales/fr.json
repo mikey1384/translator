@@ -151,7 +151,16 @@
     },
     "noHighlights": "Aucun moment fort pour l'instant. Générez pour détecter les temps forts.",
     "noVideoForHighlights": "Ouvrez la vidéo source pour découper les clips de moments forts.",
-    "highlight": "Moment fort"
+    "highlight": "Moment fort",
+    "combineMode": "Combiner",
+    "exitCombineMode": "Quitter combinaison",
+    "reorderHint": "Glissez pour réordonner :",
+    "cutCombined": "Découper combiné",
+    "cuttingCombined": "Découpe en cours...",
+    "combinedHighlightReady": "Moment fort combiné prêt",
+    "downloadCombined": "Télécharger clip combiné",
+    "saveCombinedDialogTitle": "Enregistrer le clip de moments forts combiné",
+    "combinedCutFailed": "Échec de découpe des moments forts combinés : {{message}}"
   },
   "panel": {
     "gaps": {

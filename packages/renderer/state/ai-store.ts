@@ -618,10 +618,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               await SystemIPC.setPreferredDubbingProvider(fallback);
               set({ preferredDubbingProvider: fallback });
             } catch (err) {
-              console.error(
-                '[AiStore] Failed to reset dubbing provider:',
-                err
-              );
+              console.error('[AiStore] Failed to reset dubbing provider:', err);
             }
           }
           await checkAndDisableMasterIfNeeded(get, set);
@@ -871,10 +868,7 @@ export const useAiStore = create<AiStoreState>((set, get) => {
               await SystemIPC.setPreferredDubbingProvider('openai');
               set({ preferredDubbingProvider: 'openai' });
             } catch (err) {
-              console.error(
-                '[AiStore] Failed to reset dubbing provider:',
-                err
-              );
+              console.error('[AiStore] Failed to reset dubbing provider:', err);
             }
           }
           await checkAndDisableMasterIfNeeded(get, set);

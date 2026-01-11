@@ -149,7 +149,16 @@
     },
     "noHighlights": "尚無精彩片段。點擊產生以偵測精彩時刻。",
     "noVideoForHighlights": "請開啟來源影片以剪輯精彩片段。",
-    "highlight": "精彩片段"
+    "highlight": "精彩片段",
+    "combineMode": "合併",
+    "exitCombineMode": "退出合併",
+    "reorderHint": "拖曳以重新排序：",
+    "cutCombined": "合併剪輯",
+    "cuttingCombined": "剪輯中...",
+    "combinedHighlightReady": "合併精彩片段準備就緒",
+    "downloadCombined": "下載合併剪輯",
+    "saveCombinedDialogTitle": "儲存合併的精彩片段",
+    "combinedCutFailed": "合併精彩片段剪輯失敗：{{message}}"
   },
   "panel": {
     "gaps": {

@@ -136,6 +136,20 @@ export function onHighlightCutProgress(
   return (window.electron as any).onHighlightCutProgress(callback);
 }
 
+export function cutCombinedHighlights(
+  options: import('@shared-types/app').CutCombinedHighlightsRequest
+): Promise<import('@shared-types/app').CutCombinedHighlightsResult> {
+  return (window.electron as any).cutCombinedHighlights(options);
+}
+
+export function onCombinedHighlightCutProgress(
+  callback: (
+    progress: import('@shared-types/app').CombinedHighlightCutProgress
+  ) => void
+): () => void {
+  return (window.electron as any).onCombinedHighlightCutProgress(callback);
+}
+
 export function translateOneLine(options: {
   segment: import('@shared-types/app').SrtSegment;
   contextBefore?: import('@shared-types/app').SrtSegment[];

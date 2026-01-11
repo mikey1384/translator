@@ -179,7 +179,16 @@
       "error": "Summary failed",
       "cancelled": "Summary cancelled",
       "inProgress": "Generating summary…"
-    }
+    },
+    "combineMode": "Combine",
+    "exitCombineMode": "Exit Combine",
+    "reorderHint": "Drag to reorder:",
+    "cutCombined": "Cut Combined",
+    "cuttingCombined": "Cutting...",
+    "combinedHighlightReady": "Combined Highlight Ready",
+    "downloadCombined": "Download Combined Clip",
+    "saveCombinedDialogTitle": "Save combined highlight clip",
+    "combinedCutFailed": "Failed to cut combined highlights: {{message}}"
   },
   "panel": {
     "gaps": {

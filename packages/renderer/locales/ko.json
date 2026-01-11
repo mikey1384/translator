@@ -178,7 +178,16 @@
     },
     "noHighlights": "아직 하이라이트가 없습니다. 생성하여 명장면을 감지하세요.",
     "noVideoForHighlights": "하이라이트 클립을 자르려면 소스 동영상을 열어주세요.",
-    "highlight": "하이라이트"
+    "highlight": "하이라이트",
+    "combineMode": "합치기",
+    "exitCombineMode": "합치기 종료",
+    "reorderHint": "드래그하여 순서 변경:",
+    "cutCombined": "합쳐서 자르기",
+    "cuttingCombined": "자르는 중...",
+    "combinedHighlightReady": "합쳐진 하이라이트 준비 완료",
+    "downloadCombined": "합친 클립 다운로드",
+    "saveCombinedDialogTitle": "합친 하이라이트 클립 저장",
+    "combinedCutFailed": "합친 하이라이트 자르기 실패: {{message}}"
   },
   "panel": {
     "gaps": {

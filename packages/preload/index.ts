@@ -127,6 +127,28 @@ const electronAPI = {
     ipcRenderer.on('highlight-cut-progress', handler);
     return () => ipcRenderer.removeListener('highlight-cut-progress', handler);
   },
+
+  cutCombinedHighlights: async (options: any) => {
+    return ipcRenderer.invoke('cut-combined-highlights', options);
+  },
+
+  onCombinedHighlightCutProgress: (callback: (progress: any) => void) => {
+    if (typeof callback !== 'function') return;
+    const handler = (_: any, progress: any) => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error(
+          '[preload] combined-highlight-cut-progress error:',
+          error
+        );
+      }
+    };
+    ipcRenderer.on('combined-highlight-cut-progress', handler);
+    return () =>
+      ipcRenderer.removeListener('combined-highlight-cut-progress', handler);
+  },
+
   // ---------------------- File Operations ----------------------
   openFile: (options: any) => ipcRenderer.invoke('open-file', options),
   saveFile: (options: any) => ipcRenderer.invoke('save-file', options),

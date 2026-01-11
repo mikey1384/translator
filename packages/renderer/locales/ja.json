@@ -151,7 +151,16 @@
     },
     "noHighlights": "ハイライトはまだありません。生成して名場面を検出します。",
     "noVideoForHighlights": "ハイライトクリップを切り出すには、ソース動画を開いてください。",
-    "highlight": "ハイライト"
+    "highlight": "ハイライト",
+    "combineMode": "結合",
+    "exitCombineMode": "結合を終了",
+    "reorderHint": "ドラッグして並べ替え：",
+    "cutCombined": "結合して切り出し",
+    "cuttingCombined": "切り出し中...",
+    "combinedHighlightReady": "結合したハイライトの準備完了",
+    "downloadCombined": "結合クリップをダウンロード",
+    "saveCombinedDialogTitle": "結合したハイライトクリップを保存",
+    "combinedCutFailed": "結合ハイライトの切り出しに失敗しました: {{message}}"
   },
   "panel": {
     "gaps": {

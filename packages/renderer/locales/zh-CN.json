@@ -151,7 +151,16 @@
     },
     "noHighlights": "暂无精彩片段。点击生成以检测精彩时刻。",
     "noVideoForHighlights": "请打开源视频以剪辑精彩片段。",
-    "highlight": "精彩片段"
+    "highlight": "精彩片段",
+    "combineMode": "合并",
+    "exitCombineMode": "退出合并",
+    "reorderHint": "拖动以重新排序：",
+    "cutCombined": "合并剪辑",
+    "cuttingCombined": "剪辑中...",
+    "combinedHighlightReady": "合并精彩片段准备就绪",
+    "downloadCombined": "下载合并剪辑",
+    "saveCombinedDialogTitle": "保存合并的精彩片段",
+    "combinedCutFailed": "合并精彩片段剪辑失败：{{message}}"
   },
   "panel": {
     "gaps": {

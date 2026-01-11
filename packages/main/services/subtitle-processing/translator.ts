@@ -641,42 +641,32 @@ export async function reviewTranslationBatch({
     })
     .join('\n');
 
-  const SYSTEM_PROMPT = `You are a subtitle review engine. Output exactly ${
-    batch.segments.length
-  } lines, each formatted as @@SUB_LINE@@ <ABS_INDEX>: <text>. Do not add any commentary, headers, or extra lines. Do not translate or alter any CTX/CTX_TGT lines.`;
+  const SYSTEM_PROMPT = `Subtitle reviewer. Output exactly ${batch.segments.length} lines: @@SUB_LINE@@ <ID>: <text>. No commentary.`;
 
-  const prompt = `
-You are reviewing draft subtitle translations into ${
-    batch.targetLang
-  }. Improve clarity and naturalness while preserving meaning and respecting timing.
+  const prompt =
+    `Review ${batch.targetLang} subtitle drafts. Fix errors, improve fluency, fill gaps.
 
-CONTEXT BEFORE (do not translate):
+CTX BEFORE:
 ${beforeContext || '(none)'}
 
-PARALLEL BATCH (source ⇄ draft):
+SOURCE:
 ${originalTexts}
 
-CONTEXT AFTER (do not translate):
+CTX AFTER:
 ${afterContext || '(none)'}
 
-DRAFT TRANSLATIONS (one-to-one with source):
+DRAFT:
 ${translatedTexts}
 
-REQUIREMENTS
-0) The initial translation draft may be incomplete or missing some lines. Please fill in any gaps accurately based on context.
-1) Prioritize smooth flow: Ensure translated caption segments connect naturally and logically, even if the original source text feels disjointed.
-2) Maintain structure: Output one line per input line, preserving the exact order and IDs without alterations.
-3) Refine for fluency without adding, omitting, or altering information from the source.
-4) Be mindful of the length of the original text. If the original text is long then the translation for that line should be long. If the original text is short, then the translation for that line should be short.
-5) Align with source order: Match the original text's sequence as closely as possible to avoid disorienting viewers during video playback.
-6) Leverage expertise: Draw on your knowledge and experience to enhance translation quality while staying faithful to the source.
-7) Optimize readability: Target CPS (characters per second) limits — Latin ≤ 17, CJK ≤ 13, Thai ≤ 15. If exceeded, compress phrasing succinctly; avoid modifying timestamps or splitting/merging cues.
-8) Handle duplicates softly: For adjacent lines with essentially identical content, use the same optimized text for both IDs instead of variations.
+RULES:
+- Fill missing translations from context
+- Improve flow between segments
+- Match source length (short→short, long→long)
+- CPS limits: Latin≤17, CJK≤13, Thai≤15 — compress if exceeded
+- Same text for adjacent duplicate content
 
-OUTPUT (exactly ${batch.segments.length} lines):
-@@SUB_LINE@@ <ABS_INDEX>: <final translation>
-Example: @@SUB_LINE@@ ${batch.startIndex + 1}: <your translation>
-Blank allowed: @@SUB_LINE@@ ${batch.startIndex + 2}: 
+OUTPUT ${batch.segments.length} lines:
+@@SUB_LINE@@ ${batch.startIndex + 1}: <translation>
 `.trim();
 
   let attempt = 0;

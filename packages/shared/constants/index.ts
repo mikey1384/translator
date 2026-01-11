@@ -97,9 +97,6 @@ const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 );
 
 export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
-
-// Quality mode multipliers (includes review phase + Claude Opus usage)
-// These are used in UI to estimate costs when quality toggles are enabled
 export const TRANSLATION_QUALITY_MULTIPLIER = 5;
 export const SUMMARY_QUALITY_MULTIPLIER = 4;
 

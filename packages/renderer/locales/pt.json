@@ -151,7 +151,16 @@
     "saveHighlightDialogTitle": "Salvar clip de destaque",
     "noSections": "Ainda não há notas de seção.",
     "sectionHeading": "Seção {{index}}",
-    "highlightsInProgress": "Preparando clips de destaque…"
+    "highlightsInProgress": "Preparando clips de destaque…",
+    "combineMode": "Combinar",
+    "exitCombineMode": "Sair de combinar",
+    "reorderHint": "Arraste para reordenar:",
+    "cutCombined": "Cortar combinado",
+    "cuttingCombined": "Cortando...",
+    "combinedHighlightReady": "Destaque combinado pronto",
+    "downloadCombined": "Baixar clip combinado",
+    "saveCombinedDialogTitle": "Salvar clip de destaques combinado",
+    "combinedCutFailed": "Falha ao cortar destaques combinados: {{message}}"
   },
   "panel": {
     "gaps": {

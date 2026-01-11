@@ -17,6 +17,50 @@ import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
 
+/**
+ * Clean up partial/incomplete download files matching a timestamp pattern.
+ * Called when downloads fail or are cancelled to prevent disk cruft.
+ */
+async function cleanupPartialDownloads(
+  outputDir: string,
+  timestamp: number,
+  operationId: string
+): Promise<void> {
+  const prefix = `download_${timestamp}_`;
+  try {
+    const files = await fsp.readdir(outputDir);
+    const matchingFiles = files.filter(f => f.startsWith(prefix));
+    if (matchingFiles.length === 0) {
+      log.debug(
+        `[URLprocessor ${operationId}] No partial download files to clean up for timestamp ${timestamp}`
+      );
+      return;
+    }
+    log.info(
+      `[URLprocessor ${operationId}] Cleaning up ${matchingFiles.length} partial download file(s) for timestamp ${timestamp}`
+    );
+    await Promise.all(
+      matchingFiles.map(async file => {
+        const filePath = join(outputDir, file);
+        try {
+          await fsp.unlink(filePath);
+          log.info(
+            `[URLprocessor ${operationId}] Deleted partial file: ${file}`
+          );
+        } catch (unlinkError: any) {
+          log.warn(
+            `[URLprocessor ${operationId}] Failed to delete partial file ${file}: ${unlinkError.message}`
+          );
+        }
+      })
+    );
+  } catch (readError: any) {
+    log.warn(
+      `[URLprocessor ${operationId}] Failed to read output dir for cleanup: ${readError.message}`
+    );
+  }
+}
+
 // Warmup helpers for Windows first-run delays
 async function unblockIfMarked(filePath: string): Promise<void> {
   if (process.platform !== 'win32') return;
@@ -947,6 +991,8 @@ export async function downloadVideoFromPlatform(
         percent: 0,
         stage: 'Download cancelled',
       });
+      // Clean up partial download files before throwing
+      await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
       throw new CancelledError();
     }
 
@@ -997,6 +1043,8 @@ export async function downloadVideoFromPlatform(
     } catch {
       // ignore
     }
+    // Clean up partial download files before throwing
+    await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
     throw error;
   } finally {
     if (removeDownloadProcess(operationId)) {

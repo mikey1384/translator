@@ -268,6 +268,28 @@ declare module '@shared-types/app' {
     highlight?: TranscriptHighlight;
   }
 
+  export interface CutCombinedHighlightsRequest {
+    videoPath: string;
+    highlights: TranscriptHighlight[];
+    operationId?: string;
+    aspectMode?: HighlightAspectMode;
+  }
+
+  export interface CutCombinedHighlightsResult {
+    success: boolean;
+    videoPath?: string;
+    error?: string;
+    cancelled?: boolean;
+    operationId: string;
+  }
+
+  export interface CombinedHighlightCutProgress {
+    percent: number;
+    stage: string;
+    operationId?: string;
+    error?: string;
+  }
+
   interface GenerateSubtitlesFromAudioArgs {
     inputAudioPath: string;
     progressCallback?: GenerateProgressCallback;
@@ -803,6 +825,14 @@ declare module '@shared-types/app' {
     ) => Promise<CutHighlightClipResult>;
     onHighlightCutProgress: (
       callback: (progress: HighlightCutProgress) => void
+    ) => () => void;
+
+    // Combined highlights
+    cutCombinedHighlights: (
+      options: CutCombinedHighlightsRequest
+    ) => Promise<CutCombinedHighlightsResult>;
+    onCombinedHighlightCutProgress: (
+      callback: (progress: CombinedHighlightCutProgress) => void
     ) => () => void;
 
     // Update System

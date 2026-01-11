@@ -443,7 +443,16 @@
     "saveHighlightDialogTitle": "Save highlight clip",
     "noSections": "No section notes yet.",
     "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…"
+    "highlightsInProgress": "Preparing highlight clips…",
+    "combineMode": "Combineren",
+    "exitCombineMode": "Combineren afsluiten",
+    "reorderHint": "Sleep om te herschikken:",
+    "cutCombined": "Gecombineerd knippen",
+    "cuttingCombined": "Knippen...",
+    "combinedHighlightReady": "Gecombineerd hoogtepunt klaar",
+    "downloadCombined": "Gecombineerde clip downloaden",
+    "saveCombinedDialogTitle": "Gecombineerde hoogtepuntclip opslaan",
+    "combinedCutFailed": "Kon gecombineerde hoogtepunten niet knippen: {{message}}"
   },
   "panel": {
     "gaps": {

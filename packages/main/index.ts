@@ -448,6 +448,38 @@ try {
     }
   });
 
+  ipcMain.handle('cut-combined-highlights', async (event, options) => {
+    const operationId =
+      options.operationId ||
+      `combined-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    log.info(
+      `[main.ts/cut-combined-highlights] Starting operation: ${operationId}`
+    );
+
+    try {
+      const result = await subtitleHandlers.handleCutCombinedHighlights(
+        event,
+        options,
+        operationId
+      );
+      log.info(
+        `[main.ts/cut-combined-highlights] Operation ${operationId} completed.`
+      );
+      return result;
+    } catch (error) {
+      log.error(
+        `[main.ts/cut-combined-highlights] Error in operation ${operationId}:`,
+        error
+      );
+      throw error;
+    } finally {
+      registry.finish(operationId);
+      log.info(
+        `[main.ts/cut-combined-highlights] Removed controller for ${operationId}.`
+      );
+    }
+  });
+
   ipcMain.handle('translate-one-line', async (event, options) => {
     const operationId =
       options.operationId ||

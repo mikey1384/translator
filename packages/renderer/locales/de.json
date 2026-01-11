@@ -151,7 +151,16 @@
     },
     "noHighlights": "Noch keine Highlights. Generieren Sie, um Höhepunkte zu erkennen.",
     "noVideoForHighlights": "Öffnen Sie das Quellvideo, um Highlight-Clips zu schneiden.",
-    "highlight": "Highlight"
+    "highlight": "Highlight",
+    "combineMode": "Kombinieren",
+    "exitCombineMode": "Kombinieren beenden",
+    "reorderHint": "Zum Neuordnen ziehen:",
+    "cutCombined": "Kombiniert schneiden",
+    "cuttingCombined": "Wird geschnitten...",
+    "combinedHighlightReady": "Kombiniertes Highlight bereit",
+    "downloadCombined": "Kombinierten Clip herunterladen",
+    "saveCombinedDialogTitle": "Kombinierten Highlight-Clip speichern",
+    "combinedCutFailed": "Fehler beim Schneiden kombinierter Highlights: {{message}}"
   },
   "panel": {
     "gaps": {

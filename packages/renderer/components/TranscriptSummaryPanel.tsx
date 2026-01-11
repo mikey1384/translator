@@ -39,7 +39,10 @@ import {
   onTranscriptSummaryProgress,
   cutHighlightClip,
   onHighlightCutProgress,
+  cutCombinedHighlights,
+  onCombinedHighlightCutProgress,
 } from '../ipc/subtitles';
+import * as OperationIPC from '../ipc/operation';
 import { save as saveFile } from '../ipc/file';
 import {
   CREDITS_PER_1K_TOKENS_PROMPT,
@@ -94,6 +97,7 @@ export function TranscriptSummaryPanel({
   const [highlights, setHighlights] = useState<TranscriptHighlight[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
   const [activeOperationId, setActiveOperationId] = useState<string | null>(
@@ -115,6 +119,20 @@ export function TranscriptSummaryPanel({
   >({});
   const [highlightAspectMode, setHighlightAspectMode] =
     useState<HighlightAspectMode>('vertical');
+  const [combineMode, setCombineMode] = useState(false);
+  const [selectedHighlights, setSelectedHighlights] = useState<Set<string>>(
+    new Set()
+  );
+  const [orderedSelection, setOrderedSelection] = useState<
+    TranscriptHighlight[]
+  >([]);
+  const [combineCutState, setCombineCutState] = useState<{
+    status: 'idle' | 'cutting' | 'ready' | 'error' | 'cancelled';
+    percent: number;
+    error?: string;
+    operationId?: string | null;
+    outputPath?: string;
+  }>({ status: 'idle', percent: 0 });
   const mergeHighlightUpdates = useCallback(
     (incoming?: TranscriptHighlight[] | null) => {
       if (!Array.isArray(incoming) || incoming.length === 0) return;
@@ -449,6 +467,7 @@ export function TranscriptSummaryPanel({
       });
     } finally {
       setIsGenerating(false);
+      setIsCancelling(false);
       setActiveOperationId(null);
       setCopyStatus('idle');
     }
@@ -463,6 +482,36 @@ export function TranscriptSummaryPanel({
     fallbackVideoPath,
     mergeHighlightUpdates,
   ]);
+
+  const handleCancel = useCallback(async () => {
+    if (!activeOperationId) {
+      console.warn(
+        '[TranscriptSummaryPanel] no operation id – nothing to cancel'
+      );
+      setIsGenerating(false);
+      return;
+    }
+
+    if (
+      !window.confirm(
+        t('dialogs.cancelSummaryConfirm', 'Cancel summary generation?')
+      )
+    ) {
+      return;
+    }
+
+    setIsCancelling(true);
+
+    try {
+      await OperationIPC.cancel(activeOperationId);
+    } catch (err: any) {
+      console.error('[TranscriptSummaryPanel] cancel failed', err);
+      alert(`Failed to cancel the operation: ${err.message || err}`);
+    } finally {
+      setIsCancelling(false);
+      setIsGenerating(false);
+    }
+  }, [activeOperationId, t]);
 
   const handleDownloadHighlight = useCallback(
     async (highlight: TranscriptHighlight, index: number) => {
@@ -618,6 +667,191 @@ export function TranscriptSummaryPanel({
       t,
     ]
   );
+
+  // Drag handlers for reordering combined highlights
+  const handleDragStart = useCallback((e: React.DragEvent, idx: number) => {
+    e.dataTransfer.setData('text/plain', String(idx));
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetIdx: number) => {
+    e.preventDefault();
+    const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (sourceIdx === targetIdx || isNaN(sourceIdx)) return;
+
+    setOrderedSelection(prev => {
+      const newOrder = [...prev];
+      const [removed] = newOrder.splice(sourceIdx, 1);
+      newOrder.splice(targetIdx, 0, removed);
+      return newOrder;
+    });
+  }, []);
+
+  const handleToggleHighlightSelect = useCallback(
+    (highlight: TranscriptHighlight, checked: boolean) => {
+      const key = getHighlightKey(highlight);
+      setSelectedHighlights(prev => {
+        const newSet = new Set(prev);
+        if (checked) {
+          newSet.add(key);
+        } else {
+          newSet.delete(key);
+        }
+        return newSet;
+      });
+
+      if (checked) {
+        setOrderedSelection(prev => [...prev, highlight]);
+      } else {
+        setOrderedSelection(prev =>
+          prev.filter(h => getHighlightKey(h) !== key)
+        );
+      }
+    },
+    []
+  );
+
+  const handleCutCombined = useCallback(async () => {
+    if (orderedSelection.length < 2) return;
+
+    const videoPath = originalVideoPath || fallbackVideoPath;
+    if (!videoPath) {
+      setError(
+        t(
+          'summary.noVideoForHighlights',
+          'Open the source video to cut highlight clips.'
+        )
+      );
+      return;
+    }
+
+    const operationId = `combined-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
+
+    setCombineCutState({
+      status: 'cutting',
+      percent: 0,
+      operationId,
+    });
+    setError(null);
+
+    try {
+      const result = await cutCombinedHighlights({
+        videoPath,
+        highlights: orderedSelection,
+        operationId,
+        aspectMode: highlightAspectMode,
+      });
+
+      if (result?.error) throw new Error(result.error);
+      if (result?.cancelled) {
+        setCombineCutState({ status: 'cancelled', percent: 0 });
+        return;
+      }
+
+      setCombineCutState({
+        status: 'ready',
+        percent: 100,
+        outputPath: result.videoPath,
+      });
+    } catch (err: any) {
+      console.error('[TranscriptSummaryPanel] cut combined failed', err);
+      setCombineCutState({
+        status: 'error',
+        percent: 0,
+        error: err?.message,
+      });
+      setError(
+        t('summary.combinedCutFailed', {
+          defaultValue: 'Failed to cut combined highlights: {{message}}',
+          message: err?.message || String(err),
+        })
+      );
+    }
+  }, [
+    orderedSelection,
+    originalVideoPath,
+    fallbackVideoPath,
+    highlightAspectMode,
+    t,
+  ]);
+
+  const handleDownloadCombined = useCallback(
+    async (outputPath: string) => {
+      try {
+        const defaultName = `combined-highlights-${Date.now()}.mp4`;
+        const result = await saveFile({
+          sourcePath: outputPath,
+          defaultPath: defaultName,
+          filters: [{ name: 'MP4 Video', extensions: ['mp4'] }],
+          title: t(
+            'summary.saveCombinedDialogTitle',
+            'Save combined highlight clip'
+          ),
+        });
+
+        if (!result?.success || !result.filePath) {
+          throw new Error(result?.error || 'Unknown error');
+        }
+      } catch (err: any) {
+        console.error('[TranscriptSummaryPanel] save combined failed', err);
+        setError(
+          t('summary.downloadHighlightFailed', {
+            message: err?.message || String(err),
+          })
+        );
+      }
+    },
+    [t]
+  );
+
+  // Progress listener for combined highlight cut
+  useEffect(() => {
+    if (!combineCutState.operationId) return;
+
+    const unsubscribe = onCombinedHighlightCutProgress(progress => {
+      if (progress.operationId !== combineCutState.operationId) return;
+
+      const pct = typeof progress.percent === 'number' ? progress.percent : 0;
+      const stageText = String(progress.stage || '').toLowerCase();
+
+      let status: typeof combineCutState.status = 'cutting';
+      if (stageText.includes('ready')) status = 'ready';
+      else if (stageText.includes('cancel')) status = 'cancelled';
+      else if (stageText.includes('error')) status = 'error';
+
+      setCombineCutState(prev => ({
+        ...prev,
+        status,
+        percent: pct,
+        error: progress.error,
+      }));
+
+      if (progress.error) {
+        setError(
+          t('summary.combinedCutFailed', {
+            defaultValue: 'Failed to cut combined highlights: {{message}}',
+            message: progress.error,
+          })
+        );
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [combineCutState.operationId, t]);
+
+  // Reset combine state when exiting combine mode or when highlights change
+  useEffect(() => {
+    if (!combineMode) {
+      setSelectedHighlights(new Set());
+      setOrderedSelection([]);
+      setCombineCutState({ status: 'idle', percent: 0 });
+    }
+  }, [combineMode]);
 
   const handleCopy = useCallback(async () => {
     if (!summary) return;
@@ -806,9 +1040,19 @@ export function TranscriptSummaryPanel({
         <div className={progressWrapperStyles}>
           <div className={progressHeaderStyles}>
             <span>{progressLabel || t('summary.status.inProgress')}</span>
-            <span className={progressPercentStyles}>
-              {Math.round(progressPercent)}%
-            </span>
+            <div className={progressRightStyles}>
+              <span className={progressPercentStyles}>
+                {Math.round(progressPercent)}%
+              </span>
+              <button
+                className={cancelButtonStyles}
+                onClick={handleCancel}
+                disabled={isCancelling || progressPercent >= 100}
+                title={t('summary.cancel', 'Cancel')}
+              >
+                {isCancelling ? '...' : '×'}
+              </button>
+            </div>
           </div>
           <div className={progressBarBackgroundStyles}>
             <div className={progressBarFillStyles(progressPercent)} />
@@ -887,7 +1131,7 @@ export function TranscriptSummaryPanel({
 
       {activeTab === 'highlights' && (
         <div className={highlightsTabStyles}>
-          {/* Aspect mode selector */}
+          {/* Aspect mode selector and combine mode toggle */}
           {hasSummaryResult && highlights.length > 0 && (
             <div className={aspectModeRowStyles}>
               <span className={aspectModeLabelStyles}>
@@ -919,6 +1163,103 @@ export function TranscriptSummaryPanel({
                   {t('summary.originalFormat', 'Original')}
                 </button>
               </div>
+              {highlights.length > 1 && (
+                <Button
+                  variant={combineMode ? 'primary' : 'secondary'}
+                  size="sm"
+                  onClick={() => setCombineMode(!combineMode)}
+                  disabled={combineCutState.status === 'cutting'}
+                >
+                  {combineMode
+                    ? t('summary.exitCombineMode', 'Exit Combine')
+                    : t('summary.combineMode', 'Combine')}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Combine mode: reorder list and cut button */}
+          {combineMode && orderedSelection.length > 0 && (
+            <div className={combineControlsStyles}>
+              <div className={reorderListStyles}>
+                <span className={reorderLabelStyles}>
+                  {t('summary.reorderHint', 'Drag to reorder:')}
+                </span>
+                <div className={reorderContainerStyles}>
+                  {orderedSelection.map((h, idx) => (
+                    <div
+                      key={getHighlightKey(h)}
+                      draggable
+                      onDragStart={e => handleDragStart(e, idx)}
+                      onDragOver={e => e.preventDefault()}
+                      onDrop={e => handleDrop(e, idx)}
+                      className={reorderItemStyles}
+                    >
+                      <span className={reorderIndexStyles}>{idx + 1}.</span>
+                      <span className={reorderTitleStyles}>
+                        {h.title || formatRange(h.start, h.end)}
+                      </span>
+                      <span className={reorderTimeStyles}>
+                        {formatRange(h.start, h.end)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {orderedSelection.length >= 2 && (
+                <div className={combineCutRowStyles}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleCutCombined}
+                    disabled={
+                      combineCutState.status === 'cutting' ||
+                      !videoAvailableForHighlights
+                    }
+                  >
+                    {combineCutState.status === 'cutting'
+                      ? t('summary.cuttingCombined', 'Cutting...')
+                      : t(
+                          'summary.cutCombined',
+                          `Cut ${orderedSelection.length} Combined`
+                        )}
+                  </Button>
+                  {combineCutState.status === 'cutting' && (
+                    <div className={combineCutProgressStyles}>
+                      <div
+                        className={combineCutProgressFillStyles}
+                        style={{ width: `${combineCutState.percent}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Combined result preview */}
+          {combineCutState.status === 'ready' && combineCutState.outputPath && (
+            <div className={combinedResultStyles}>
+              <h4>
+                {t(
+                  'summary.combinedHighlightReady',
+                  'Combined Highlight Ready'
+                )}
+              </h4>
+              <video
+                className={highlightVideo}
+                controls
+                src={toFileUrl(combineCutState.outputPath)}
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  handleDownloadCombined(combineCutState.outputPath!)
+                }
+              >
+                {t('summary.downloadCombined', 'Download Combined Clip')}
+              </Button>
             </div>
           )}
 
@@ -960,6 +1301,16 @@ export function TranscriptSummaryPanel({
                 return (
                   <div key={statusKey} className={highlightCard}>
                     <div className={highlightHeader}>
+                      {combineMode && (
+                        <input
+                          type="checkbox"
+                          checked={selectedHighlights.has(statusKey)}
+                          onChange={e =>
+                            handleToggleHighlightSelect(h, e.target.checked)
+                          }
+                          className={highlightCheckboxStyles}
+                        />
+                      )}
                       <div className={highlightTitle}>
                         {h.title || t('summary.highlight', 'Highlight')}
                       </div>
@@ -1272,6 +1623,39 @@ const progressPercentStyles = css`
   color: ${colors.primaryDark};
 `;
 
+const progressRightStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const cancelButtonStyles = css`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid ${colors.border};
+  background: ${colors.bg};
+  color: ${colors.gray};
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: ${colors.danger};
+    border-color: ${colors.danger};
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+`;
+
 const summaryBoxStyles = css`
   background: ${colors.bg};
   border: 1px solid ${colors.border};
@@ -1489,6 +1873,115 @@ const aspectModeButtonStyles = (active: boolean) => css`
 
   &:first-of-type {
     border-right: 1px solid ${colors.border};
+  }
+`;
+
+const highlightCheckboxStyles = css`
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: ${colors.primary};
+  flex-shrink: 0;
+`;
+
+const combineControlsStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: ${colors.grayLight};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+`;
+
+const reorderListStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const reorderLabelStyles = css`
+  font-size: 0.85rem;
+  color: ${colors.gray};
+`;
+
+const reorderContainerStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const reorderItemStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: ${colors.bg};
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+    opacity: 0.8;
+  }
+`;
+
+const reorderIndexStyles = css`
+  font-weight: 600;
+  color: ${colors.primary};
+  min-width: 24px;
+`;
+
+const reorderTitleStyles = css`
+  flex: 1;
+  color: ${colors.text};
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const reorderTimeStyles = css`
+  color: ${colors.gray};
+  font-size: 0.8rem;
+  flex-shrink: 0;
+`;
+
+const combineCutRowStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const combineCutProgressStyles = css`
+  flex: 1;
+  height: 6px;
+  background: ${colors.gray};
+  opacity: 0.25;
+  border-radius: 999px;
+  overflow: hidden;
+`;
+
+const combineCutProgressFillStyles = css`
+  height: 100%;
+  background: ${colors.primary};
+  transition: width 0.2s ease;
+`;
+
+const combinedResultStyles = css`
+  background: ${colors.grayLight};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  h4 {
+    margin: 0;
+    color: ${colors.text};
+    font-size: 1rem;
   }
 `;
 

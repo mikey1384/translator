@@ -593,7 +593,16 @@
     "saveHighlightDialogTitle": "Lưu clip highlight",
     "noSections": "Chưa có ghi chú phần.",
     "sectionHeading": "Phần {{index}}",
-    "highlightsInProgress": "Đang chuẩn bị các clip highlight…"
+    "highlightsInProgress": "Đang chuẩn bị các clip highlight…",
+    "combineMode": "Kết hợp",
+    "exitCombineMode": "Thoát kết hợp",
+    "reorderHint": "Kéo để sắp xếp lại:",
+    "cutCombined": "Cắt kết hợp",
+    "cuttingCombined": "Đang cắt...",
+    "combinedHighlightReady": "Highlight kết hợp đã sẵn sàng",
+    "downloadCombined": "Tải clip kết hợp",
+    "saveCombinedDialogTitle": "Lưu clip highlight kết hợp",
+    "combinedCutFailed": "Không thể cắt các highlight kết hợp: {{message}}"
   },
   "panel": {
     "gaps": {

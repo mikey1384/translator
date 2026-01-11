@@ -151,7 +151,16 @@
     },
     "noHighlights": "Aún no hay destacados. Genera para detectar momentos clave.",
     "noVideoForHighlights": "Abre el video original para recortar clips destacados.",
-    "highlight": "Destacado"
+    "highlight": "Destacado",
+    "combineMode": "Combinar",
+    "exitCombineMode": "Salir de combinar",
+    "reorderHint": "Arrastra para reordenar:",
+    "cutCombined": "Cortar combinado",
+    "cuttingCombined": "Cortando...",
+    "combinedHighlightReady": "Destacado combinado listo",
+    "downloadCombined": "Descargar clip combinado",
+    "saveCombinedDialogTitle": "Guardar clip de destacados combinado",
+    "combinedCutFailed": "Error al cortar destacados combinados: {{message}}"
   },
   "panel": {
     "gaps": {

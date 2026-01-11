@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { spawn } from 'child_process';
 import type { Stats } from 'fs';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
@@ -20,6 +21,9 @@ import {
   DubSubtitlesOptions,
   TranscriptHighlight,
   HighlightCutProgress,
+  CombinedHighlightCutProgress,
+  CutCombinedHighlightsRequest,
+  CutCombinedHighlightsResult,
 } from '@shared-types/app';
 import {
   addSubtitle,
@@ -1177,6 +1181,274 @@ export async function handleCutHighlightClip(
     const message = error?.message || 'Failed to cut highlight clip';
 
     emitHighlightProgress(100, aborted ? 'cancelled' : 'error', {
+      error: message,
+    });
+
+    if (aborted) {
+      return { success: false, cancelled: true, operationId };
+    }
+    throw error;
+  } finally {
+    registryFinish(operationId);
+  }
+}
+
+/**
+ * Check if a video file has at least one audio stream.
+ */
+async function hasAudioStream(
+  videoPath: string,
+  ffprobePath: string
+): Promise<boolean> {
+  return new Promise<boolean>(resolve => {
+    const p = spawn(ffprobePath, [
+      '-v',
+      'error',
+      '-select_streams',
+      'a',
+      '-show_entries',
+      'stream=index',
+      '-of',
+      'csv=p=0',
+      videoPath,
+    ]);
+    let out = '';
+    p.stdout.on('data', d => (out += d));
+    p.on('error', () => resolve(false));
+    p.on('close', () => resolve(out.trim().length > 0));
+  });
+}
+
+/**
+ * Convert highlights to time ranges in user-defined order.
+ * Applies lead padding to first segment and tail padding to last segment.
+ */
+function highlightsToSegments(
+  highlights: TranscriptHighlight[],
+  totalDur: number
+): Array<{ start: number; end: number }> {
+  if (highlights.length === 0) return [];
+
+  const leadPadding = 0.35;
+  const tailPadding = 0.45;
+
+  return highlights.map((h, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === highlights.length - 1;
+
+    let segStart = Math.max(0, h.start);
+    let segEnd = Math.max(segStart + 0.5, h.end);
+
+    if (isFirst) {
+      segStart = Math.max(0, segStart - leadPadding);
+    }
+    if (isLast) {
+      segEnd = totalDur > 0
+        ? Math.min(totalDur, segEnd + tailPadding)
+        : segEnd + tailPadding;
+    }
+
+    return { start: segStart, end: segEnd };
+  });
+}
+
+export async function handleCutCombinedHighlights(
+  event: IpcMainInvokeEvent,
+  options: CutCombinedHighlightsRequest,
+  operationId: string
+): Promise<CutCombinedHighlightsResult> {
+  const controller = new AbortController();
+  registerAutoCancel(operationId, event.sender, () => controller.abort());
+  addSubtitle(operationId, controller);
+
+  const emitProgress = (
+    percent: number,
+    stage: string,
+    extra?: Partial<CombinedHighlightCutProgress>
+  ) => {
+    const safePercent = Math.max(0, Math.min(100, percent));
+    const payload: CombinedHighlightCutProgress = {
+      percent: safePercent,
+      stage,
+      operationId,
+      ...extra,
+    };
+    event.sender.send('combined-highlight-cut-progress', payload);
+  };
+
+  try {
+    const { ffmpeg } = checkServicesInitialized();
+    const videoPath = options.videoPath;
+    const highlights = options.highlights;
+
+    if (!videoPath) {
+      throw new Error('video-path-missing');
+    }
+    if (!highlights || highlights.length < 2) {
+      throw new Error('at-least-two-highlights-required');
+    }
+
+    await fs.access(videoPath);
+
+    emitProgress(5, 'Preparing combined clip');
+
+    // Get video duration
+    let totalDur = 0;
+    let durationKnown = false;
+    try {
+      totalDur = await ffmpeg.getMediaDuration(videoPath, controller.signal);
+      durationKnown = Number.isFinite(totalDur) && totalDur > 0;
+    } catch (err) {
+      log.warn(
+        `[${operationId}] Combined clip duration probe failed for ${videoPath}`,
+        err
+      );
+    }
+
+    // Get video metadata for aspect ratio
+    let videoMeta: VideoMeta | null = null;
+    try {
+      videoMeta = await ffmpeg.getVideoMetadata(videoPath);
+      if (
+        !durationKnown &&
+        Number.isFinite(videoMeta?.duration) &&
+        (videoMeta?.duration ?? 0) > 0
+      ) {
+        totalDur = videoMeta!.duration;
+        durationKnown = true;
+      }
+    } catch (err) {
+      log.warn(`[${operationId}] Video metadata probe failed`, err);
+    }
+
+    const aspectMode = options.aspectMode ?? 'vertical';
+    const enforceVertical =
+      aspectMode === 'vertical' && !isVideoAlreadyVertical(videoMeta);
+
+    // Check if video has audio stream
+    const hasAudio = await hasAudioStream(videoPath, ffmpeg.ffprobePath);
+
+    // Convert highlights to segments in user-defined order
+    const segments = highlightsToSegments(highlights, totalDur);
+    if (segments.length === 0) {
+      throw new Error('no-valid-segments');
+    }
+
+    log.info(
+      `[${operationId}] Combined highlights: ${highlights.length} highlights → ${segments.length} segments`
+    );
+
+    emitProgress(10, 'Building combined clip');
+
+    // Calculate total combined duration for progress
+    let totalCombinedDuration = 0;
+    for (const seg of segments) {
+      totalCombinedDuration += seg.end - seg.start;
+    }
+
+    // Build FFmpeg filter chain with trim+concat
+    const videoFilters: string[] = [];
+    const audioFilters: string[] = [];
+    const concatVideoInputs: string[] = [];
+    const concatAudioInputs: string[] = [];
+
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const safeStart = Math.max(0, seg.start);
+      const safeEnd = durationKnown ? Math.min(totalDur, seg.end) : seg.end;
+
+      // Video trim + scale/pad
+      let vFilter = `[0:v]trim=start=${safeStart.toFixed(3)}:end=${safeEnd.toFixed(3)},setpts=PTS-STARTPTS`;
+      if (enforceVertical) {
+        vFilter += `,scale=${SHORT_CLIP_WIDTH}:-2:force_original_aspect_ratio=decrease:flags=fast_bilinear,pad=${SHORT_CLIP_WIDTH}:${SHORT_CLIP_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black`;
+      }
+      vFilter += `[v${i}]`;
+      videoFilters.push(vFilter);
+      concatVideoInputs.push(`[v${i}]`);
+
+      // Audio trim (only if video has audio)
+      if (hasAudio) {
+        audioFilters.push(
+          `[0:a]atrim=start=${safeStart.toFixed(3)}:end=${safeEnd.toFixed(3)},asetpts=PTS-STARTPTS[a${i}]`
+        );
+        concatAudioInputs.push(`[a${i}]`);
+      }
+    }
+
+    // Concat all segments (with or without audio)
+    const concatFilter = hasAudio
+      ? `${concatVideoInputs.join('')}${concatAudioInputs.join('')}concat=n=${segments.length}:v=1:a=1[outv][outa]`
+      : `${concatVideoInputs.join('')}concat=n=${segments.length}:v=1:a=0[outv]`;
+
+    const filterComplex = hasAudio
+      ? [...videoFilters, ...audioFilters, concatFilter].join(';')
+      : [...videoFilters, concatFilter].join(';');
+
+    const outPath = path.join(ffmpeg.tempDir, `combined-${operationId}.mp4`);
+
+    const args = [
+      '-y',
+      '-i',
+      videoPath,
+      '-filter_complex',
+      filterComplex,
+      '-map',
+      '[outv]',
+      ...(hasAudio ? ['-map', '[outa]'] : []),
+      '-c:v',
+      'libx264',
+      '-preset',
+      HIGHLIGHT_VIDEO_PRESET,
+      '-crf',
+      String(HIGHLIGHT_VIDEO_CRF),
+      ...(hasAudio ? ['-c:a', 'aac', '-b:a', '128k'] : []),
+      '-movflags',
+      '+faststart',
+      outPath,
+    ];
+
+    const progressThrottleMs = 250;
+    let lastProgressPercent = 10;
+    let lastProgressAt = Date.now();
+
+    const handleFfmpegProgress = (pct: number) => {
+      if (!Number.isFinite(pct)) return;
+      // Map FFmpeg progress (0-100) to our range (10-99)
+      const mapped = 10 + pct * 0.89;
+      const clamped = Math.max(10, Math.min(99, Math.round(mapped)));
+      const now = Date.now();
+      if (clamped <= lastProgressPercent) return;
+      if (now - lastProgressAt < progressThrottleMs) return;
+      lastProgressPercent = clamped;
+      lastProgressAt = now;
+      emitProgress(clamped, 'Cutting combined highlights');
+    };
+
+    emitProgress(10, 'Cutting combined highlights');
+
+    await ffmpeg.run(args, {
+      operationId,
+      signal: controller.signal,
+      totalDuration: totalCombinedDuration,
+      progress: handleFfmpegProgress,
+    });
+
+    emitProgress(100, 'ready');
+
+    return {
+      success: true,
+      videoPath: outPath,
+      operationId,
+    };
+  } catch (error: any) {
+    const aborted =
+      controller.signal.aborted ||
+      error?.name === 'AbortError' ||
+      error?.message === 'Operation cancelled';
+
+    const message = error?.message || 'Failed to cut combined highlights';
+
+    emitProgress(100, aborted ? 'cancelled' : 'error', {
       error: message,
     });
 
