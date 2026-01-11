@@ -10,7 +10,11 @@ import {
 } from '../../active-processes.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
-import { ensureYtDlpBinary, YtDlpSetupError } from './binary-installer.js';
+import {
+  ensureYtDlpBinary,
+  YtDlpSetupError,
+  type BinarySetupProgress,
+} from './binary-installer.js';
 import { ProgressCallback, VideoQuality } from './types.js';
 import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
@@ -180,24 +184,37 @@ export async function downloadVideoFromPlatform(
     throw new Error('FFmpegContext is required for downloadVideoFromPlatform');
   }
 
-  // Preflight: generic warmup message (do not expose internals)
-  progressCallback?.({
-    percent: PROGRESS.WARMUP_START + 1,
-    stage: 'Warming up…',
-  });
-
   const firstRunFlag = join(
     app.getPath('userData'),
     'bin',
     '.yt-dlp-initialized'
   );
 
+  // Progress callback for binary setup (maps to warmup range 0-8%)
+  const binarySetupProgress: BinarySetupProgress = info => {
+    // Map binary setup progress to warmup range
+    const basePercent = PROGRESS.WARMUP_START + 1;
+    const maxPercent = PROGRESS.WARMUP_START + 8;
+    let percent = basePercent;
+    if (info.percent !== undefined) {
+      // Scale binary download progress (0-100) to warmup range (1-8)
+      percent = basePercent + (info.percent / 100) * (maxPercent - basePercent);
+    }
+    progressCallback?.({
+      percent: Math.min(maxPercent, percent),
+      stage: info.stage,
+    });
+  };
+
   const skipUpdateEnv =
     process.env.TRANSLATOR_YTDLP_SKIP_UPDATE === '1' ||
     process.env.YTDLP_SKIP_UPDATE === '1';
   let ytDlpPath: string;
   try {
-    ytDlpPath = await ensureYtDlpBinary({ skipUpdate: skipUpdateEnv });
+    ytDlpPath = await ensureYtDlpBinary({
+      skipUpdate: skipUpdateEnv,
+      onProgress: binarySetupProgress,
+    });
   } catch (error: any) {
     const baseMessage = error?.message || 'yt-dlp binary could not be set up.';
     const attemptedUrl =
@@ -232,8 +249,8 @@ export async function downloadVideoFromPlatform(
 
   // Continue warmup flow
   progressCallback?.({
-    percent: PROGRESS.WARMUP_START + 2,
-    stage: 'Warming up…',
+    percent: PROGRESS.WARMUP_START + 8,
+    stage: 'yt-dlp ready…',
   });
 
   // Detect first run on Windows and pre-warm to avoid SmartScreen/Defender delay
@@ -248,7 +265,7 @@ export async function downloadVideoFromPlatform(
 
   if (isWindows && wasFirstRun) {
     progressCallback?.({
-      percent: PROGRESS.WARMUP_START + 2,
+      percent: PROGRESS.WARMUP_START + 8.5,
       stage: 'Preparing video engine…',
     });
     try {
@@ -268,7 +285,7 @@ export async function downloadVideoFromPlatform(
 
   if (!isWindows) {
     progressCallback?.({
-      percent: PROGRESS.WARMUP_START + 3,
+      percent: PROGRESS.WARMUP_START + 8.5,
       stage: 'Making binary executable…',
     });
 
@@ -287,7 +304,7 @@ export async function downloadVideoFromPlatform(
   }
 
   progressCallback?.({
-    percent: PROGRESS.WARMUP_START + 7,
+    percent: PROGRESS.WARMUP_START + 9,
     stage: 'Preparing output directory…',
   });
 

@@ -31,6 +31,12 @@ export class YtDlpSetupError extends Error {
   }
 }
 
+/** Progress callback for yt-dlp binary setup */
+export type BinarySetupProgress = (info: {
+  stage: string;
+  percent?: number;
+}) => void;
+
 // Concurrent installation protection using file-based mutex
 
 // Create a mutex file to prevent concurrent installations
@@ -300,10 +306,14 @@ export async function ensureWritableBinary(): Promise<string> {
  */
 export async function ensureYtDlpBinary({
   skipUpdate = false,
+  onProgress,
 }: {
   skipUpdate?: boolean;
+  onProgress?: BinarySetupProgress;
 } = {}): Promise<string> {
   try {
+    onProgress?.({ stage: 'Checking yt-dlp…' });
+
     // For packaged apps, always use the writable binary approach
     if (app.isPackaged) {
       const writablePath = await ensureWritableBinary();
@@ -315,7 +325,10 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
-          const updateSuccess = await updateExistingBinary(writablePath);
+          const updateSuccess = await updateExistingBinary(
+            writablePath,
+            onProgress
+          );
           if (!updateSuccess) {
             log.warn(
               '[URLprocessor] Update failed, but existing binary works, continuing...'
@@ -329,7 +342,7 @@ export async function ensureYtDlpBinary({
         log.warn(
           '[URLprocessor] Writable binary is not working, will reinstall...'
         );
-        return await installNewBinary();
+        return await installNewBinary(onProgress);
       }
     }
 
@@ -348,7 +361,10 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
-          const updateSuccess = await updateExistingBinary(existingBinary);
+          const updateSuccess = await updateExistingBinary(
+            existingBinary,
+            onProgress
+          );
           if (!updateSuccess) {
             log.warn(
               '[URLprocessor] Update failed, but existing binary works, continuing...'
@@ -367,7 +383,7 @@ export async function ensureYtDlpBinary({
 
     // If we get here, we need to install/reinstall
     log.info('[URLprocessor] Installing yt-dlp binary...');
-    return await installNewBinary();
+    return await installNewBinary(onProgress);
   } catch (error: any) {
     log.error('[URLprocessor] Failed to ensure yt-dlp binary:', error);
     if (error instanceof YtDlpSetupError) {
@@ -379,9 +395,13 @@ export async function ensureYtDlpBinary({
   }
 }
 
-async function updateExistingBinary(binaryPath: string): Promise<boolean> {
+async function updateExistingBinary(
+  binaryPath: string,
+  onProgress?: BinarySetupProgress
+): Promise<boolean> {
   try {
     log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
+    onProgress?.({ stage: 'Checking for yt-dlp updates…' });
 
     // Get version before update for comparison
     let versionBefore = '';
@@ -396,10 +416,20 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
     }
 
     // Since we now guarantee a writable binary, proceed directly to update
-    const result = await execa(binaryPath, ['-U', '--quiet'], {
-      timeout: 120000,
-      windowsHide: true, // Prevent console flash on Windows
-    });
+    // Use a timer to detect if we're likely downloading (takes longer than 20s)
+    const downloadTimer = setTimeout(() => {
+      onProgress?.({ stage: 'Downloading yt-dlp update…' });
+    }, 20000);
+
+    let result;
+    try {
+      result = await execa(binaryPath, ['-U', '--quiet'], {
+        timeout: 120000,
+        windowsHide: true, // Prevent console flash on Windows
+      });
+    } finally {
+      clearTimeout(downloadTimer);
+    }
 
     const success =
       result.stdout.includes('up to date') ||
@@ -449,7 +479,9 @@ async function updateExistingBinary(binaryPath: string): Promise<boolean> {
   }
 }
 
-async function installNewBinary(): Promise<string> {
+async function installNewBinary(
+  onProgress?: BinarySetupProgress
+): Promise<string> {
   // Acquire installation lock
   if (!(await acquireInstallLock())) {
     const message =
@@ -463,6 +495,7 @@ async function installNewBinary(): Promise<string> {
     const targetBinDir = dirname(targetBinaryPath);
 
     log.info(`[URLprocessor] Target binary path: ${targetBinaryPath}`);
+    onProgress?.({ stage: 'Preparing yt-dlp install…' });
 
     // Ensure the directory exists
     try {
@@ -482,9 +515,10 @@ async function installNewBinary(): Promise<string> {
       log.info(
         '[URLprocessor] Packaged app detected, downloading yt-dlp directly from GitHub...'
       );
-      return await downloadBinaryDirectly(targetBinaryPath);
+      return await downloadBinaryDirectly(targetBinaryPath, onProgress);
     } else {
       // For development, try postinstall script first
+      onProgress?.({ stage: 'Installing yt-dlp…' });
       const postinstallResult = await tryPostinstallScript(targetBinaryPath);
       if (postinstallResult) {
         return postinstallResult;
@@ -494,7 +528,7 @@ async function installNewBinary(): Promise<string> {
       log.info(
         '[URLprocessor] Postinstall script failed, trying direct download...'
       );
-      return await downloadBinaryDirectly(targetBinaryPath);
+      return await downloadBinaryDirectly(targetBinaryPath, onProgress);
     }
   } catch (error: any) {
     log.error('[URLprocessor] Failed to install new binary:', error);
@@ -573,7 +607,10 @@ async function tryPostinstallScript(
   }
 }
 
-async function downloadBinaryDirectly(targetPath: string): Promise<string> {
+async function downloadBinaryDirectly(
+  targetPath: string,
+  onProgress?: BinarySetupProgress
+): Promise<string> {
   log.info('[URLprocessor] Attempting direct download from GitHub...');
 
   const assetName =
@@ -585,6 +622,7 @@ async function downloadBinaryDirectly(targetPath: string): Promise<string> {
   const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/${assetName}`;
 
   log.info(`[URLprocessor] Downloading from: ${downloadUrl}`);
+  onProgress?.({ stage: 'Downloading yt-dlp…', percent: 0 });
 
   const targetDir = dirname(targetPath);
   await fsp.mkdir(targetDir, { recursive: true });
@@ -592,8 +630,36 @@ async function downloadBinaryDirectly(targetPath: string): Promise<string> {
   try {
     const response = await fetchWithRedirect(downloadUrl);
 
+    // Track download progress
+    const contentLength = parseInt(
+      response.headers['content-length'] || '0',
+      10
+    );
+    let downloaded = 0;
+    let lastReportedPercent = 0;
+
     const fileStream = createWriteStream(targetPath);
-    await pipeline(response, fileStream);
+
+    // Download with progress tracking
+    await new Promise<void>((resolve, reject) => {
+      response.on('data', (chunk: Buffer) => {
+        downloaded += chunk.length;
+        if (contentLength > 0) {
+          const percent = Math.round((downloaded / contentLength) * 100);
+          // Only report every 5% to avoid spamming
+          if (percent >= lastReportedPercent + 5 || percent === 100) {
+            lastReportedPercent = percent;
+            onProgress?.({ stage: 'Downloading yt-dlp…', percent });
+          }
+        }
+      });
+      response.on('error', reject);
+      fileStream.on('error', reject);
+      fileStream.on('finish', resolve);
+      response.pipe(fileStream);
+    });
+
+    onProgress?.({ stage: 'Verifying yt-dlp…' });
 
     if (!(await verifyBinaryIntegrity(targetPath))) {
       log.error('[URLprocessor] Downloaded binary failed integrity check');
