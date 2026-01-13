@@ -760,15 +760,15 @@ export type SummaryModelConfig = {
  * Get the model configuration for summary based on effort level and BYO settings.
  *
  * For Stage5 (non-BYO):
- *   - Standard: GPT-5.1 (no reasoning)
- *   - High: Claude Opus with extended thinking
+ *   - Standard: GPT-5.1
+ *   - High: Claude Opus 4.5
  *
  * For BYO users:
  *   - If prefers Claude (or only has Anthropic key):
  *     - Standard: Claude Sonnet 4.5
- *     - High: Claude Opus 4.5 with extended thinking
+ *     - High: Claude Opus 4.5
  *   - If prefers OpenAI (or only has OpenAI key):
- *     - Standard: GPT-5.1 (reasoning: none)
+ *     - Standard: GPT-5.1
  *     - High: GPT-5.1 (reasoning: high)
  */
 export function getSummaryModelConfig(
@@ -789,7 +789,6 @@ export function getSummaryModelConfig(
     if (effortLevel === 'high') {
       return {
         model: AI_MODELS.CLAUDE_OPUS,
-        reasoning: { effort: 'high' },
         provider: 'stage5',
       };
     }
@@ -817,7 +816,6 @@ export function getSummaryModelConfig(
     if (effortLevel === 'high') {
       return {
         model: AI_MODELS.CLAUDE_OPUS,
-        reasoning: { effort: 'high' },
         provider: 'anthropic',
       };
     }

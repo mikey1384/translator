@@ -1977,6 +1977,7 @@ const combinedResultStyles = css`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-width: 320px;
 
   h4 {
     margin: 0;

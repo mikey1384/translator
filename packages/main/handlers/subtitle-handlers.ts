@@ -1376,8 +1376,9 @@ export async function handleCutCombinedHighlights(
     }
 
     // Concat all segments (with or without audio)
+    // FFmpeg concat filter requires interleaved inputs: [v0][a0][v1][a1]... not [v0][v1]...[a0][a1]...
     const concatFilter = hasAudio
-      ? `${concatVideoInputs.join('')}${concatAudioInputs.join('')}concat=n=${segments.length}:v=1:a=1[outv][outa]`
+      ? `${concatVideoInputs.map((v, i) => v + concatAudioInputs[i]).join('')}concat=n=${segments.length}:v=1:a=1[outv][outa]`
       : `${concatVideoInputs.join('')}concat=n=${segments.length}:v=1:a=0[outv]`;
 
     const filterComplex = hasAudio
