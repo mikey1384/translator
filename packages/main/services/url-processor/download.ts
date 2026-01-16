@@ -190,18 +190,15 @@ export async function downloadVideoFromPlatform(
     '.yt-dlp-initialized'
   );
 
-  // Progress callback for binary setup (maps to warmup range 0-8%)
+  // Progress callback for binary setup (maps to warmup range 0-5%)
   const binarySetupProgress: BinarySetupProgress = info => {
-    // Map binary setup progress to warmup range
-    const basePercent = PROGRESS.WARMUP_START + 1;
-    const maxPercent = PROGRESS.WARMUP_START + 8;
-    let percent = basePercent;
+    // Map binary setup progress (0-100) to warmup range (0-5%)
+    let percent = PROGRESS.WARMUP_START;
     if (info.percent !== undefined) {
-      // Scale binary download progress (0-100) to warmup range (1-8)
-      percent = basePercent + (info.percent / 100) * (maxPercent - basePercent);
+      percent = PROGRESS.WARMUP_START + (info.percent / 100) * (PROGRESS.WARMUP_END - PROGRESS.WARMUP_START);
     }
     progressCallback?.({
-      percent: Math.min(maxPercent, percent),
+      percent: Math.min(PROGRESS.WARMUP_END - 0.1, percent), // Never quite reach 5%
       stage: info.stage,
     });
   };

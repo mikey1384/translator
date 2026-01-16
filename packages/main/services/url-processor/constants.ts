@@ -2,10 +2,10 @@ import { VideoQuality } from './types.js';
 
 export const PROGRESS = {
   WARMUP_START: 0,
-  WARMUP_END: 10,
+  WARMUP_END: 5,
 
-  // Map yt-dlp reported percent once across 10→95
-  DL1_START: 10,
+  // Map yt-dlp reported percent across 5→95
+  DL1_START: 5,
   DL1_END: 95,
 
   FINAL_START: 95,

@@ -316,7 +316,7 @@ export async function ensureYtDlpBinary({
   onProgress?: BinarySetupProgress;
 } = {}): Promise<string> {
   // Start crawling progress immediately so users see movement during slow operations
-  const INIT_END = 60; // Maps to ~5% of overall progress
+  const INIT_END = 99; // Crawl toward 99%, which maps to ~4.9% overall (never reaches 5%)
   let currentPercent = 0;
   onProgress?.({ stage: 'Initializing…', percent: currentPercent });
 
@@ -347,11 +347,7 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
-          stopCrawl(); // Stop outer crawl, updateExistingBinary has its own
-          const updateSuccess = await updateExistingBinary(
-            writablePath,
-            onProgress
-          );
+          const updateSuccess = await updateExistingBinary(writablePath);
           lastUpdateCheckTime = now;
           if (!updateSuccess) {
             log.warn(
@@ -362,8 +358,8 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
           );
-          stopCrawl();
         }
+        stopCrawl();
         return writablePath;
       } else {
         log.warn(
@@ -389,11 +385,7 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
-          stopCrawl(); // Stop outer crawl, updateExistingBinary has its own
-          const updateSuccess = await updateExistingBinary(
-            existingBinary,
-            onProgress
-          );
+          const updateSuccess = await updateExistingBinary(existingBinary);
           lastUpdateCheckTime = now;
           if (!updateSuccess) {
             log.warn(
@@ -404,8 +396,8 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
           );
-          stopCrawl();
         }
+        stopCrawl();
         return existingBinary;
       } else {
         log.warn(
@@ -432,31 +424,11 @@ export async function ensureYtDlpBinary({
 }
 
 async function updateExistingBinary(
-  binaryPath: string,
-  onProgress?: BinarySetupProgress
+  binaryPath: string
 ): Promise<boolean> {
+  // Note: Progress is handled by the caller's crawl interval
   try {
     log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
-
-    // Allocate 0-60% for update check phase with slow crawling progress
-    // (This gets scaled to ~1-5% of overall progress bar)
-    const UPDATE_START = 0;
-    const UPDATE_END = 60;
-    let currentPercent = UPDATE_START;
-
-    onProgress?.({ stage: 'Initializing…', percent: currentPercent });
-
-    // Crawl progress slowly during async operations so users see movement
-    // Takes ~2 minutes to approach UPDATE_END, giving visual feedback without false completion
-    const crawlInterval = setInterval(() => {
-      if (currentPercent < UPDATE_END - 0.5) {
-        // Slow logarithmic crawl - moves 1% of remaining distance every 500ms
-        // This takes ~2 min to reach 90% of target, never quite completing
-        const remaining = UPDATE_END - currentPercent;
-        currentPercent += remaining * 0.01;
-        onProgress?.({ stage: 'Initializing…', percent: currentPercent });
-      }
-    }, 500);
 
     // Get version before update for comparison
     let versionBefore = '';
@@ -470,25 +442,10 @@ async function updateExistingBinary(
       // If we can't get version, proceed anyway
     }
 
-    // Since we now guarantee a writable binary, proceed directly to update
-    // Use a timer to detect if we're likely downloading (takes longer than 20s)
-    const downloadTimer = setTimeout(() => {
-      onProgress?.({ stage: 'Downloading yt-dlp update…', percent: currentPercent });
-    }, 20000);
-
-    let result;
-    try {
-      result = await execa(binaryPath, ['-U', '--quiet'], {
-        timeout: 120000,
-        windowsHide: true, // Prevent console flash on Windows
-      });
-    } finally {
-      clearTimeout(downloadTimer);
-      clearInterval(crawlInterval);
-    }
-
-    // Complete the update phase
-    onProgress?.({ stage: 'Initializing…', percent: UPDATE_END });
+    const result = await execa(binaryPath, ['-U', '--quiet'], {
+      timeout: 120000,
+      windowsHide: true, // Prevent console flash on Windows
+    });
 
     const success =
       result.stdout.includes('up to date') ||
