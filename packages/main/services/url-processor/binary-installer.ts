@@ -15,6 +15,10 @@ import {
   getPreferredInstallPath,
 } from './binary-locator.js';
 
+// Cache for update check - only check once per hour
+let lastUpdateCheckTime = 0;
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+
 export class YtDlpSetupError extends Error {
   attemptedUrl?: string;
 
@@ -314,14 +318,19 @@ export async function ensureYtDlpBinary({
   try {
     onProgress?.({ stage: 'Checking yt-dlp…' });
 
+    // Check if we should skip update based on time
+    const now = Date.now();
+    const shouldCheckUpdate =
+      !skipUpdate && now - lastUpdateCheckTime > UPDATE_CHECK_INTERVAL_MS;
+
     // For packaged apps, always use the writable binary approach
     if (app.isPackaged) {
       const writablePath = await ensureWritableBinary();
 
       // Test if it's working
       if (await testBinary(writablePath)) {
-        // Binary works - now try to update it (unless explicitly skipped)
-        if (!skipUpdate) {
+        // Binary works - now try to update it (unless recently checked)
+        if (shouldCheckUpdate) {
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
@@ -329,13 +338,16 @@ export async function ensureYtDlpBinary({
             writablePath,
             onProgress
           );
+          lastUpdateCheckTime = now;
           if (!updateSuccess) {
             log.warn(
               '[URLprocessor] Update failed, but existing binary works, continuing...'
             );
           }
         } else {
-          log.info('[URLprocessor] Skipping update as requested');
+          log.info(
+            '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
+          );
         }
         return writablePath;
       } else {
@@ -356,8 +368,8 @@ export async function ensureYtDlpBinary({
 
       // Test if it's working
       if (await testBinary(existingBinary)) {
-        // Binary works - now try to update it (unless explicitly skipped)
-        if (!skipUpdate) {
+        // Binary works - now try to update it (unless recently checked)
+        if (shouldCheckUpdate) {
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
@@ -365,13 +377,16 @@ export async function ensureYtDlpBinary({
             existingBinary,
             onProgress
           );
+          lastUpdateCheckTime = now;
           if (!updateSuccess) {
             log.warn(
               '[URLprocessor] Update failed, but existing binary works, continuing...'
             );
           }
         } else {
-          log.info('[URLprocessor] Skipping update as requested');
+          log.info(
+            '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
+          );
         }
         return existingBinary;
       } else {
@@ -401,7 +416,26 @@ async function updateExistingBinary(
 ): Promise<boolean> {
   try {
     log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
-    onProgress?.({ stage: 'Checking for yt-dlp updates…' });
+
+    // Allocate 0-60% for update check phase with slow crawling progress
+    // (This gets scaled to ~1-5% of overall progress bar)
+    const UPDATE_START = 0;
+    const UPDATE_END = 60;
+    let currentPercent = UPDATE_START;
+
+    onProgress?.({ stage: 'Initializing…', percent: currentPercent });
+
+    // Crawl progress slowly during async operations so users see movement
+    // Takes ~2 minutes to approach UPDATE_END, giving visual feedback without false completion
+    const crawlInterval = setInterval(() => {
+      if (currentPercent < UPDATE_END - 0.5) {
+        // Slow logarithmic crawl - moves 1% of remaining distance every 500ms
+        // This takes ~2 min to reach 90% of target, never quite completing
+        const remaining = UPDATE_END - currentPercent;
+        currentPercent += remaining * 0.01;
+        onProgress?.({ stage: 'Initializing…', percent: currentPercent });
+      }
+    }, 500);
 
     // Get version before update for comparison
     let versionBefore = '';
@@ -418,7 +452,7 @@ async function updateExistingBinary(
     // Since we now guarantee a writable binary, proceed directly to update
     // Use a timer to detect if we're likely downloading (takes longer than 20s)
     const downloadTimer = setTimeout(() => {
-      onProgress?.({ stage: 'Downloading yt-dlp update…' });
+      onProgress?.({ stage: 'Downloading yt-dlp update…', percent: currentPercent });
     }, 20000);
 
     let result;
@@ -429,7 +463,11 @@ async function updateExistingBinary(
       });
     } finally {
       clearTimeout(downloadTimer);
+      clearInterval(crawlInterval);
     }
+
+    // Complete the update phase
+    onProgress?.({ stage: 'Initializing…', percent: UPDATE_END });
 
     const success =
       result.stdout.includes('up to date') ||
