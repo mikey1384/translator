@@ -244,9 +244,9 @@ export async function downloadVideoFromPlatform(
 
   log.info(`[URLprocessor] yt-dlp ready at: ${ytDlpPath}`);
 
-  // Continue warmup flow
+  // Continue warmup flow (stay within 0-5% range)
   progressCallback?.({
-    percent: PROGRESS.WARMUP_START + 8,
+    percent: PROGRESS.WARMUP_END - 0.5,
     stage: 'yt-dlp ready…',
   });
 
@@ -262,7 +262,7 @@ export async function downloadVideoFromPlatform(
 
   if (isWindows && wasFirstRun) {
     progressCallback?.({
-      percent: PROGRESS.WARMUP_START + 8.5,
+      percent: PROGRESS.WARMUP_END - 0.4,
       stage: 'Preparing video engine…',
     });
     try {
@@ -282,7 +282,7 @@ export async function downloadVideoFromPlatform(
 
   if (!isWindows) {
     progressCallback?.({
-      percent: PROGRESS.WARMUP_START + 8.5,
+      percent: PROGRESS.WARMUP_END - 0.4,
       stage: 'Making binary executable…',
     });
 
@@ -301,7 +301,7 @@ export async function downloadVideoFromPlatform(
   }
 
   progressCallback?.({
-    percent: PROGRESS.WARMUP_START + 9,
+    percent: PROGRESS.WARMUP_END - 0.2,
     stage: 'Preparing output directory…',
   });
 
