@@ -686,10 +686,13 @@ export async function downloadVideoFromPlatform(
                   PROGRESS.WARMUP_END,
                   PROGRESS.WARMUP_END + 1
                 );
-                progressCallback?.({
-                  percent: prepPercent,
-                  stage: 'Fetching video info…',
-                });
+                if (prepPercent > lastPct) {
+                  lastPct = prepPercent;
+                  progressCallback?.({
+                    percent: prepPercent,
+                    stage: 'Fetching video info…',
+                  });
+                }
               } else if (
                 /Merging formats/i.test(line) ||
                 /merging/i.test(line)
@@ -699,10 +702,13 @@ export async function downloadVideoFromPlatform(
                   PROGRESS.FINAL_START + 2,
                   PROGRESS.FINAL_END - 2
                 );
-                progressCallback?.({
-                  percent: mergePercent,
-                  stage: 'Merging formats…',
-                });
+                if (mergePercent > lastPct) {
+                  lastPct = mergePercent;
+                  progressCallback?.({
+                    percent: mergePercent,
+                    stage: 'Merging formats…',
+                  });
+                }
               } else if (
                 /Post-?processing/i.test(line) ||
                 /Fixing/i.test(line)
@@ -712,17 +718,23 @@ export async function downloadVideoFromPlatform(
                   PROGRESS.FINAL_START + 4,
                   PROGRESS.FINAL_END - 1
                 );
-                progressCallback?.({
-                  percent: ppPercent,
-                  stage: 'Post-processing…',
-                });
+                if (ppPercent > lastPct) {
+                  lastPct = ppPercent;
+                  progressCallback?.({
+                    percent: ppPercent,
+                    stage: 'Post-processing…',
+                  });
+                }
               } else if (/Destination:/i.test(line)) {
                 // Early indication that output file path is determined
                 const destPercent = PROGRESS.WARMUP_END + 2;
-                progressCallback?.({
-                  percent: destPercent,
-                  stage: 'Preparing download…',
-                });
+                if (destPercent > lastPct) {
+                  lastPct = destPercent;
+                  progressCallback?.({
+                    percent: destPercent,
+                    stage: 'Preparing download…',
+                  });
+                }
               } else if (/\.(mp4|mkv|webm|m4a)$/i.test(line)) {
                 const maybePath = line.trim();
                 if (isAbsolute(maybePath)) {
