@@ -315,9 +315,22 @@ export async function ensureYtDlpBinary({
   skipUpdate?: boolean;
   onProgress?: BinarySetupProgress;
 } = {}): Promise<string> {
-  try {
-    onProgress?.({ stage: 'Checking yt-dlp…' });
+  // Start crawling progress immediately so users see movement during slow operations
+  const INIT_END = 60; // Maps to ~5% of overall progress
+  let currentPercent = 0;
+  onProgress?.({ stage: 'Initializing…', percent: currentPercent });
 
+  const crawlInterval = setInterval(() => {
+    if (currentPercent < INIT_END - 0.5) {
+      const remaining = INIT_END - currentPercent;
+      currentPercent += remaining * 0.01;
+      onProgress?.({ stage: 'Initializing…', percent: currentPercent });
+    }
+  }, 500);
+
+  const stopCrawl = () => clearInterval(crawlInterval);
+
+  try {
     // Check if we should skip update based on time
     const now = Date.now();
     const shouldCheckUpdate =
@@ -334,6 +347,7 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
+          stopCrawl(); // Stop outer crawl, updateExistingBinary has its own
           const updateSuccess = await updateExistingBinary(
             writablePath,
             onProgress
@@ -348,12 +362,14 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
           );
+          stopCrawl();
         }
         return writablePath;
       } else {
         log.warn(
           '[URLprocessor] Writable binary is not working, will reinstall...'
         );
+        stopCrawl();
         return await installNewBinary(onProgress);
       }
     }
@@ -373,6 +389,7 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
+          stopCrawl(); // Stop outer crawl, updateExistingBinary has its own
           const updateSuccess = await updateExistingBinary(
             existingBinary,
             onProgress
@@ -387,19 +404,23 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
           );
+          stopCrawl();
         }
         return existingBinary;
       } else {
         log.warn(
           '[URLprocessor] Existing binary is not working, will reinstall...'
         );
+        stopCrawl();
       }
     }
 
     // If we get here, we need to install/reinstall
     log.info('[URLprocessor] Installing yt-dlp binary...');
+    stopCrawl();
     return await installNewBinary(onProgress);
   } catch (error: any) {
+    stopCrawl();
     log.error('[URLprocessor] Failed to ensure yt-dlp binary:', error);
     if (error instanceof YtDlpSetupError) {
       throw error;
