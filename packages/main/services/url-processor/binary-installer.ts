@@ -905,12 +905,15 @@ async function downloadQuickJs(
     // Make executable
     await ensureExecutable(targetPath);
 
-    // Verify it works
+    // Verify it works by running a trivial JS expression
     try {
-      await execa(targetPath, ['--version'], { timeout: 10000, windowsHide: true });
-      log.info(`[URLprocessor] QuickJS installed successfully at: ${targetPath}`);
+      await execa(targetPath, ['-e', '1'], { timeout: 10000, windowsHide: true });
+      log.info(`[URLprocessor] QuickJS installed and verified at: ${targetPath}`);
     } catch (error: any) {
-      log.warn(`[URLprocessor] QuickJS version check failed (may still work): ${error.message}`);
+      log.warn(`[URLprocessor] QuickJS execution check failed: ${error.message}`);
+      // Delete the broken binary so next attempt will re-download
+      await fsp.unlink(targetPath).catch(() => {});
+      throw new Error(`QuickJS binary failed execution test: ${error.message}`);
     }
 
     const stats = await fsp.stat(targetPath);
@@ -975,15 +978,13 @@ async function doEnsureJsRuntime(
 
   try {
     await fsp.access(installedQuickJs, fs.constants.X_OK);
-    // QuickJS doesn't support --version, just trust the binary exists and is executable
-    const stats = await fsp.stat(installedQuickJs);
-    if (stats.size > 100000) { // Sanity check: binary should be > 100KB
-      log.info(`[URLprocessor] Found installed QuickJS at: ${installedQuickJs}`);
-      cachedJsRuntime = `quickjs:${installedQuickJs}`;
-      return cachedJsRuntime;
-    }
+    // QuickJS doesn't support --version, use -e to run a trivial JS expression
+    await execa(installedQuickJs, ['-e', '1'], { timeout: 5000, windowsHide: true });
+    log.info(`[URLprocessor] Found installed QuickJS at: ${installedQuickJs}`);
+    cachedJsRuntime = `quickjs:${installedQuickJs}`;
+    return cachedJsRuntime;
   } catch {
-    // Not installed
+    // Not installed or corrupt/incompatible - will trigger re-download
   }
 
   // No runtime found, install QuickJS
