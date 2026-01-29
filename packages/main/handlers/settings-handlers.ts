@@ -3,8 +3,9 @@ import * as fsPromises from 'fs/promises';
 import log from 'electron-log';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import type Store from 'electron-store';
 import { browserCookiesAvailable } from '../services/url-processor/utils.js';
+export type { SettingsStoreType } from '../store/settings-store.js';
+import type { SettingsStoreType } from '../store/settings-store.js';
 import {
   encryptString,
   decryptString,
@@ -40,29 +41,6 @@ export interface AllByoSettings {
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
   stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
 }
-
-export type SettingsStoreType = Store<{
-  app_language_preference: string;
-  subtitleTargetLanguage: string;
-  apiKey: string | null;
-  anthropicApiKey: string | null;
-  elevenLabsApiKey: string | null;
-  videoPlaybackPositions: Record<string, number>;
-  byoOpenAiUnlocked: boolean;
-  byoAnthropicUnlocked: boolean;
-  byoElevenLabsUnlocked: boolean;
-  useByoOpenAi: boolean;
-  useByoAnthropic: boolean;
-  useByoElevenLabs: boolean;
-  useByoMaster: boolean; // Master toggle to enable/disable all BYO keys at once
-  preferClaudeTranslation: boolean; // When true, use Claude (Sonnet) for draft instead of GPT
-  preferClaudeReview: boolean; // When true (default), use Claude Opus for review; false = GPT-5.1 with high reasoning
-  preferClaudeSummary: boolean; // When true (default), use Claude Opus for video summary
-  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for transcription
-  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for dubbing/TTS
-  stage5DubbingTtsProvider: 'openai' | 'elevenlabs'; // TTS provider when using Stage5 API for dubbing
-  preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge'
-}>;
 
 export function buildSettingsHandlers(opts: {
   store: SettingsStoreType;

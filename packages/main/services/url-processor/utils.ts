@@ -99,6 +99,16 @@ function pathCandidates(browser: CookieBrowser): string[] {
         process.env.APPDATA || path.join(home, 'AppData', 'Roaming');
       if (browser === 'edge') {
         return [
+          // Newer Chromium-based Edge stores cookies under Network/Cookies
+          path.join(
+            local,
+            'Microsoft',
+            'Edge',
+            'User Data',
+            'Default',
+            'Network',
+            'Cookies'
+          ),
           path.join(
             local,
             'Microsoft',
@@ -111,6 +121,16 @@ function pathCandidates(browser: CookieBrowser): string[] {
       }
       if (browser === 'chrome') {
         return [
+          // Newer Chromium-based Chrome stores cookies under Network/Cookies
+          path.join(
+            local,
+            'Google',
+            'Chrome',
+            'User Data',
+            'Default',
+            'Network',
+            'Cookies'
+          ),
           path.join(
             local,
             'Google',

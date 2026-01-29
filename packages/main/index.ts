@@ -23,13 +23,13 @@ import * as fs from 'fs';
 import electronContextMenu from 'electron-context-menu';
 import nodeProcess from 'process';
 import os from 'os';
-import Store from 'electron-store';
 import * as renderWindowHandlers from './handlers/render-window-handlers/index.js';
 import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
 import { buildUpdateHandlers } from './handlers/update-handlers.js';
 import { defaultBrowserHint } from './services/url-processor/utils.js';
+import { settingsStore } from './store/settings-store.js';
 
 import { SaveFileService } from './services/save-file.js';
 import { FileManager } from './services/file-manager.js';
@@ -67,52 +67,6 @@ import { getMainWindow } from './utils/window.js';
 log.info('--- [main.ts] Execution Started ---');
 
 let filePathToOpenOnLoad: string | null = null;
-
-const settingsStore = new Store<{
-  app_language_preference: string;
-  subtitleTargetLanguage: string;
-  apiKey: string | null;
-  anthropicApiKey: string | null;
-  elevenLabsApiKey: string | null;
-  videoPlaybackPositions: Record<string, number>;
-  byoOpenAiUnlocked: boolean;
-  byoAnthropicUnlocked: boolean;
-  byoElevenLabsUnlocked: boolean;
-  useByoOpenAi: boolean;
-  useByoAnthropic: boolean;
-  useByoElevenLabs: boolean;
-  useByoMaster: boolean;
-  preferClaudeTranslation: boolean;
-  preferClaudeReview: boolean;
-  preferClaudeSummary: boolean;
-  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
-  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
-  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
-  preferredCookiesBrowser?: string;
-}>({
-  name: 'app-settings',
-  defaults: {
-    app_language_preference: 'en',
-    subtitleTargetLanguage: 'original',
-    apiKey: null,
-    anthropicApiKey: null,
-    elevenLabsApiKey: null,
-    videoPlaybackPositions: {},
-    byoOpenAiUnlocked: false,
-    byoAnthropicUnlocked: false,
-    byoElevenLabsUnlocked: false,
-    useByoOpenAi: false,
-    useByoAnthropic: false,
-    useByoElevenLabs: false,
-    useByoMaster: false, // Default false - user must explicitly enable after entering keys
-    preferClaudeTranslation: false,
-    preferClaudeReview: true, // Default true for higher quality
-    preferClaudeSummary: true, // Default true for higher quality
-    preferredTranscriptionProvider: 'elevenlabs',
-    preferredDubbingProvider: 'openai', // Default to OpenAI TTS (cheaper than ElevenLabs)
-    stage5DubbingTtsProvider: 'openai', // Default to OpenAI for cost efficiency
-  },
-});
 log.info(`[Main Process] Settings store path: ${settingsStore.path}`);
 
 initEntitlementsManager(settingsStore);

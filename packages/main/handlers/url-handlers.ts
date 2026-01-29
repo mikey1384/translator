@@ -229,6 +229,12 @@ export async function handleProcessUrl(
       error?.message ||
       (typeof error === 'string' ? error : 'An unknown error occurred');
 
+    const userFriendlyMessage =
+      typeof (error as any)?.userFriendly === 'string' &&
+      (error as any).userFriendly.trim().length > 0
+        ? ((error as any).userFriendly as string)
+        : rawErrorMessage;
+
     // If upstream flagged NeedCookies, surface that stage instead of generic error
     if (rawErrorMessage === 'NeedCookies') {
       sendProgress({ percent: 0, stage: 'NeedCookies' });
@@ -237,12 +243,12 @@ export async function handleProcessUrl(
     }
 
     // Generic error fallback
-    sendProgress({ percent: 0, stage: 'Error', error: 'Download failed...' });
+    sendProgress({ percent: 0, stage: 'Error', error: userFriendlyMessage });
 
     registryFinish(operationId);
     return {
       success: false,
-      error: `Download failed: ${rawErrorMessage}.`,
+      error: userFriendlyMessage,
       operationId,
     };
   }

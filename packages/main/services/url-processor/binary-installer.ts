@@ -243,8 +243,10 @@ export async function ensureWritableBinary(): Promise<string> {
       const nextOk = await testBinary(userBinNext);
       if (nextOk) {
         const userStats = await fsp.stat(userBin).catch(() => null);
-        const nextIsNewer =
-          !userStats || nextStats.mtimeMs > userStats.mtimeMs + 1000;
+        // Do not use a 1s mtime guard here. On some filesystems/environments the
+        // staged binary can be created within the same second as the primary,
+        // and we still want to prefer it when it's valid.
+        const nextIsNewer = !userStats || nextStats.mtimeMs > userStats.mtimeMs;
         if (nextIsNewer) {
           log.info(`[URLprocessor] Using staged yt-dlp binary: ${userBinNext}`);
           return userBinNext;

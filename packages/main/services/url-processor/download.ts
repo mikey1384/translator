@@ -22,6 +22,7 @@ import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
+import { maybeEnsureWindowsCookiesAccessible } from './cookie-browser-windows.js';
 
 /**
  * Clean up partial/incomplete download files matching a timestamp pattern.
@@ -330,6 +331,27 @@ export async function downloadVideoFromPlatform(
       error: `Failed to write to output directory: ${outputDir}`,
     });
     throw new Error(`Output directory check failed: ${dirError}`);
+  }
+
+  // On Windows, Chromium browsers often lock their cookie DB. If the user requested
+  // --cookies-from-browser chrome/edge, proactively close the browser (with consent)
+  // so yt-dlp can copy/decrypt cookies reliably.
+  try {
+    const idx = extraArgs.findIndex(a => a === '--cookies-from-browser');
+    const browserArg = idx >= 0 ? (extraArgs[idx + 1] || '').toLowerCase() : '';
+    if (browserArg === 'chrome' || browserArg === 'edge') {
+      progressCallback?.({
+        percent: PROGRESS.WARMUP_END - 0.15,
+        stage: 'Preparing browser cookies…',
+      });
+      await maybeEnsureWindowsCookiesAccessible({
+        browser: browserArg as 'chrome' | 'edge',
+        operationId,
+      });
+    }
+  } catch (e) {
+    // Surface the prompt/cookie accessibility failure as a normal download error.
+    throw e;
   }
 
   const isYouTube = /youtube\.com|youtu\.be/.test(url);
