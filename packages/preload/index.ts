@@ -641,6 +641,17 @@ const electronAPI = {
   getDefaultCookieBrowser: (): Promise<string> =>
     ipcRenderer.invoke('get-default-cookie-browser'),
 
+  // --- YouTube cookie session (cross-platform) ---
+  connectYouTubeCookies: (): Promise<{
+    success: boolean;
+    cookiesWritten: number;
+    hasAuthCookies: boolean;
+    cancelled: boolean;
+    error?: string;
+  }> => ipcRenderer.invoke('youtube:connect'),
+  clearYouTubeCookies: (): Promise<void> =>
+    ipcRenderer.invoke('youtube:clear-cookies'),
+
   // --- Cookie preference ---
   getPreferredCookiesBrowser: (): Promise<string> =>
     ipcRenderer.invoke('settings:getPreferredCookiesBrowser'),

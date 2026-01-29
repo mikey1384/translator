@@ -230,6 +230,18 @@ async function downloadMediaInternal(
       cookiesBrowser,
     });
 
+    const cookiesBrowserUsed =
+      (res as any)?.cookiesBrowserUsed &&
+      typeof (res as any).cookiesBrowserUsed === 'string'
+        ? ((res as any).cookiesBrowserUsed as string)
+        : '';
+    if (cookiesBrowserUsed) {
+      cookiesBrowser = cookiesBrowserUsed;
+      set((state: UrlState) => {
+        state.cookiesBrowser = cookiesBrowserUsed;
+      });
+    }
+
     const finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 

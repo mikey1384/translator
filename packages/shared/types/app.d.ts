@@ -148,6 +148,7 @@ declare module '@shared-types/app' {
     error?: string;
     operationId?: string;
     cancelled?: boolean;
+    cookiesBrowserUsed?: string;
   }
 
   export type UrlProgressCallback = (progress: {
@@ -803,6 +804,14 @@ declare module '@shared-types/app' {
 
     // Cookie preferences
     getDefaultCookieBrowser: () => Promise<string>;
+    connectYouTubeCookies: () => Promise<{
+      success: boolean;
+      cookiesWritten: number;
+      hasAuthCookies: boolean;
+      cancelled: boolean;
+      error?: string;
+    }>;
+    clearYouTubeCookies: () => Promise<void>;
     getPreferredCookiesBrowser: () => Promise<string>;
     setPreferredCookiesBrowser: (
       v: string

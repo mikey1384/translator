@@ -23,6 +23,8 @@ import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
 import { maybeEnsureWindowsCookiesAccessible } from './cookie-browser-windows.js';
+import { browserCookiesAvailable } from './utils.js';
+import { exportYouTubeCookiesToFile } from './youtube-cookies.js';
 
 /**
  * Clean up partial/incomplete download files matching a timestamp pattern.
@@ -180,7 +182,12 @@ export async function downloadVideoFromPlatform(
     ffmpeg: FFmpegContext;
   },
   extraArgs: string[] = []
-): Promise<{ filepath: string; info: any; proc: DownloadProcessType }> {
+): Promise<{
+  filepath: string;
+  info: any;
+  proc: DownloadProcessType;
+  cookiesBrowserUsed?: string;
+}> {
   log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
 
   if (!services?.ffmpeg) {
@@ -333,30 +340,50 @@ export async function downloadVideoFromPlatform(
     throw new Error(`Output directory check failed: ${dirError}`);
   }
 
-  // On Windows, Chromium browsers often lock their cookie DB. If the user requested
-  // --cookies-from-browser chrome/edge, proactively close the browser (with consent)
-  // so yt-dlp can copy/decrypt cookies reliably.
-  try {
-    const idx = extraArgs.findIndex(a => a === '--cookies-from-browser');
-    const browserArg = idx >= 0 ? (extraArgs[idx + 1] || '').toLowerCase() : '';
-    if (browserArg === 'chrome' || browserArg === 'edge') {
-      progressCallback?.({
-        percent: PROGRESS.WARMUP_END - 0.15,
-        stage: 'Preparing browser cookies…',
-      });
-      await maybeEnsureWindowsCookiesAccessible({
-        browser: browserArg as 'chrome' | 'edge',
-        operationId,
-      });
-    }
-  } catch (e) {
-    // Surface the prompt/cookie accessibility failure as a normal download error.
-    throw e;
+  let effectiveExtraArgs = [...extraArgs];
+  const dpapiTriedBrowsers = new Set<string>();
+  let cookieCloseAttemptedFor: 'chrome' | 'edge' | null = null;
+
+  function getCookiesBrowserArg(args: string[]): string | null {
+    const idx = args.findIndex(a => a === '--cookies-from-browser');
+    if (idx < 0) return null;
+    const v = (args[idx + 1] || '').toLowerCase().trim();
+    return v || null;
+  }
+
+  function replaceCookiesBrowserArg(args: string[], browser: string): string[] {
+    const idx = args.findIndex(a => a === '--cookies-from-browser');
+    if (idx < 0) return [...args, '--cookies-from-browser', browser];
+    const next = [...args];
+    next[idx + 1] = browser;
+    return next;
   }
 
   const isYouTube = /youtube\.com|youtu\.be/.test(url);
   const isYouTubeShorts = /youtube\.com\/shorts\//.test(url);
   let effectiveQuality = quality;
+
+  // If we have an app-managed YouTube session, export cookies and use them by default for YouTube.
+  // This avoids Windows DPAPI failures and "locked Cookies DB" issues from external browsers.
+  try {
+    const hasCookiesFlag =
+      effectiveExtraArgs.includes('--cookies') ||
+      effectiveExtraArgs.includes('--cookies-from-browser');
+    if (isYouTube && !hasCookiesFlag) {
+      const exported = await exportYouTubeCookiesToFile();
+      if (exported.count > 0) {
+        effectiveExtraArgs = [...effectiveExtraArgs, '--cookies', exported.path];
+        log.info(
+          `[URLprocessor] Using app YouTube cookies (${exported.count}, auth=${exported.hasAuthCookies})`
+        );
+      }
+    }
+  } catch (err: any) {
+    log.warn(
+      '[URLprocessor] Failed to export app YouTube cookies (continuing without):',
+      err?.message || err
+    );
+  }
 
   if (isYouTube && !jsRuntime) {
     const message =
@@ -524,7 +551,7 @@ export async function downloadVideoFromPlatform(
       '--ffmpeg-location',
       ffmpegPath,
       '--no-cache-dir',
-      ...extraArgs,
+      ...effectiveExtraArgs,
     ];
   }
 
@@ -940,6 +967,7 @@ export async function downloadVideoFromPlatform(
           filepath: finalFilepath,
           info: downloadInfo,
           proc: subprocess!,
+          cookiesBrowserUsed: getCookiesBrowserArg(effectiveExtraArgs) ?? undefined,
         };
       } catch (error: any) {
         lastError = error;
@@ -954,7 +982,68 @@ export async function downloadVideoFromPlatform(
             'Download appears stalled (no progress for'
           ) || startupTimeoutFired;
         // If we suspect TLS/certificate issues, enable no-check-certificates for the final retry
-        const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}`;
+        const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}\n${diagnosticLog || ''}`;
+        const currentCookiesBrowser = getCookiesBrowserArg(effectiveExtraArgs);
+        const currentWindowsCookieBrowser =
+          process.platform === 'win32' &&
+          (currentCookiesBrowser === 'chrome' || currentCookiesBrowser === 'edge')
+            ? (currentCookiesBrowser as 'chrome' | 'edge')
+            : null;
+        const looksLikeDpapiFailure =
+          /dpapi decryption failed|failed to decript with dpapi|failed to decrypt with dpapi/i.test(
+            errorBlob
+          );
+
+        // Some Chromium builds store cookies with encryption that yt-dlp can't decrypt via DPAPI.
+        // Try a different browser automatically (Edge/Chrome/Firefox) before giving up.
+        if (
+          looksLikeDpapiFailure &&
+          process.platform === 'win32' &&
+          (currentCookiesBrowser === 'chrome' || currentCookiesBrowser === 'edge')
+        ) {
+          dpapiTriedBrowsers.add(currentCookiesBrowser);
+          const candidates =
+            currentCookiesBrowser === 'chrome'
+              ? ['edge', 'firefox']
+              : ['chrome', 'firefox'];
+          const next = candidates.find(
+            b => !dpapiTriedBrowsers.has(b) && browserCookiesAvailable(b)
+          );
+          if (next) {
+            log.warn(
+              `[URLprocessor] Cookie decryption failed for ${currentCookiesBrowser} (DPAPI). Retrying with ${next} cookies.`
+            );
+            effectiveExtraArgs = replaceCookiesBrowserArg(
+              effectiveExtraArgs,
+              next
+            );
+            cookieCloseAttemptedFor = null;
+            continue;
+          }
+        }
+
+        // On Windows, Chrome/Edge can lock the Cookies DB, causing yt-dlp to fail copying it.
+        // Only close the browser when we see this specific error pattern.
+        if (
+          currentWindowsCookieBrowser &&
+          cookieCloseAttemptedFor !== currentWindowsCookieBrowser &&
+          /could not copy chrome cookie database|cookies database|network[\\\\/]cookies|winerror 32|winerror 5|permission denied|access is denied|database is locked/i.test(
+            errorBlob
+          )
+        ) {
+          cookieCloseAttemptedFor = currentWindowsCookieBrowser;
+          progressCallback?.({
+            percent: PROGRESS.WARMUP_END - 0.15,
+            stage: 'Preparing browser cookies…',
+          });
+          await maybeEnsureWindowsCookiesAccessible({
+            browser: currentWindowsCookieBrowser,
+            operationId,
+          });
+          // Retry the same attempt once cookies are accessible.
+          continue;
+        }
+
         const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(
           errorBlob
         );

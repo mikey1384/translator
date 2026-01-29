@@ -37,6 +37,10 @@ import {
   handleProcessUrl,
   initializeUrlHandler,
 } from './handlers/url-handlers.js';
+import {
+  clearYouTubeCookies,
+  connectYouTubeCookiesInteractive,
+} from './services/url-processor/youtube-cookies.js';
 import * as fileHandlers from './handlers/file-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
@@ -556,6 +560,10 @@ try {
 
   // Provide default cookie browser hint to renderer
   ipcMain.handle('get-default-cookie-browser', () => defaultBrowserHint());
+
+  // YouTube cookie session (cross-platform, avoids Windows DPAPI / locked DB issues)
+  ipcMain.handle('youtube:connect', () => connectYouTubeCookiesInteractive());
+  ipcMain.handle('youtube:clear-cookies', () => clearYouTubeCookies());
 
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 

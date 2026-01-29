@@ -53,6 +53,15 @@ export function mapErrorToUserFriendly({
       'Could not read browser cookies (permission denied). Close the selected browser completely and retry. ' +
       'On Windows, also close background Chrome/Edge processes in Task Manager.'
     );
+  } else if (
+    combinedErrorText.includes('dpapi decryption failed') ||
+    combinedErrorText.includes('failed to decript with dpapi') ||
+    combinedErrorText.includes('failed to decrypt with dpapi')
+  ) {
+    return (
+      'Could not decrypt Chrome/Edge cookies on Windows (DPAPI). ' +
+      'Try selecting a different browser (Edge or Firefox), or sign into YouTube in that browser once and retry.'
+    );
   }
 
   log.info(

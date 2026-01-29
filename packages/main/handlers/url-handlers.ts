@@ -57,6 +57,7 @@ interface ProcessUrlResult {
   error?: string;
   operationId: string;
   cancelled?: boolean;
+  cookiesBrowserUsed?: string;
 }
 
 export async function handleProcessUrl(
@@ -196,6 +197,7 @@ export async function handleProcessUrl(
       size: result.size,
       fileUrl: result.fileUrl,
       originalVideoPath: result.originalVideoPath,
+      cookiesBrowserUsed: result.cookiesBrowserUsed,
       operationId,
     };
     sendProgress({ percent: 100, stage: 'Completed' });

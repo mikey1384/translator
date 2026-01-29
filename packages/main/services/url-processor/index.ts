@@ -38,6 +38,7 @@ export async function processVideoUrl(
   fileUrl: string;
   originalVideoPath: string;
   proc: DownloadProcessType;
+  cookiesBrowserUsed?: string;
 }> {
   log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
 
@@ -87,7 +88,7 @@ export async function processVideoUrl(
   }
 
   // --- 1st attempt: use cookies if specified ---
-  try {
+  const run = async (extraArgs: string[]) => {
     const downloadResult = await downloadVideoFromPlatform(
       url,
       tempDir,
@@ -95,7 +96,7 @@ export async function processVideoUrl(
       progressCallback,
       operationId,
       { ffmpeg },
-      extra
+      extraArgs
     );
     const stats = await fsp.stat(downloadResult.filepath);
     const filename = path.basename(downloadResult.filepath);
@@ -111,7 +112,12 @@ export async function processVideoUrl(
       fileUrl: `file://${downloadResult.filepath}`,
       originalVideoPath: downloadResult.filepath,
       proc: downloadResult.proc,
+      cookiesBrowserUsed: downloadResult.cookiesBrowserUsed,
     };
+  };
+
+  try {
+    return await run(extra);
   } catch (err: any) {
     const combined = `${err?.message ?? ''}\n${err?.stderr ?? ''}\n${
       err?.stdout ?? ''
@@ -138,7 +144,6 @@ export async function processVideoUrl(
         percent: PROGRESS.WARMUP_END,
         stage: 'NeedCookies',
       });
-      // Surface to UI; do not auto-retry with cookies here to avoid friction
       throw new Error('NeedCookies');
     }
 
