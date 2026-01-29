@@ -335,6 +335,18 @@ export async function downloadVideoFromPlatform(
   const isYouTubeShorts = /youtube\.com\/shorts\//.test(url);
   let effectiveQuality = quality;
 
+  if (isYouTube && !jsRuntime) {
+    const message =
+      'YouTube downloads require a JavaScript runtime. Translator could not find/provide one on this system. Please restart the app; if it still fails, install Node.js and restart.';
+    log.error(`[URLprocessor] ${message}`);
+    progressCallback?.({
+      percent: 0,
+      stage: 'Failed',
+      error: message,
+    });
+    throw new Error(message);
+  }
+
   if (isYouTubeShorts && quality === 'low') {
     effectiveQuality = 'mid';
     log.info(
@@ -452,6 +464,8 @@ export async function downloadVideoFromPlatform(
       : 'auto';
 
   const jsRuntimeArgs = jsRuntime ? ['--js-runtimes', jsRuntime] : [];
+  const runElectronAsNode =
+    !!process.versions.electron && jsRuntime === `node:${process.execPath}`;
 
   function buildBaseArgs(): string[] {
     return [
@@ -559,6 +573,7 @@ export async function downloadVideoFromPlatform(
           cwd: outputDir,
           env: {
             ...childEnv(),
+            ...(runElectronAsNode ? { ELECTRON_RUN_AS_NODE: '1' } : {}),
             PYTHONUNBUFFERED: '1',
             PYTHONIOENCODING: 'utf-8',
           },

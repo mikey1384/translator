@@ -7,8 +7,7 @@ export type CookieBrowser =
   | 'safari'
   | 'chrome'
   | 'firefox'
-  | 'edge'
-  | 'chromium';
+  | 'edge';
 
 function normalizeBrowser(browser: string): CookieBrowser | null {
   const key = browser?.toLowerCase?.();
@@ -17,7 +16,6 @@ function normalizeBrowser(browser: string): CookieBrowser | null {
     case 'chrome':
     case 'firefox':
     case 'edge':
-    case 'chromium':
       return key;
     default:
       return null;
@@ -45,7 +43,7 @@ function candidateOrder(): CookieBrowser[] {
     case 'win32':
       return ['edge', 'chrome', 'firefox'];
     default:
-      return ['chrome', 'chromium', 'firefox'];
+      return ['chrome', 'edge', 'firefox'];
   }
 }
 
@@ -92,18 +90,6 @@ function pathCandidates(browser: CookieBrowser): string[] {
           ),
         ];
       }
-      if (browser === 'chromium') {
-        return [
-          path.join(
-            home,
-            'Library',
-            'Application Support',
-            'Chromium',
-            'Default',
-            'Cookies'
-          ),
-        ];
-      }
       break;
     }
     case 'win32': {
@@ -138,23 +124,12 @@ function pathCandidates(browser: CookieBrowser): string[] {
       if (browser === 'firefox') {
         return [path.join(roaming, 'Mozilla', 'Firefox', 'Profiles')];
       }
-      if (browser === 'chromium') {
-        return [
-          path.join(local, 'Chromium', 'User Data', 'Default', 'Cookies'),
-        ];
-      }
       break;
     }
     default: {
       if (browser === 'chrome') {
         return [
           path.join(home, '.config', 'google-chrome', 'Default', 'Cookies'),
-        ];
-      }
-      if (browser === 'chromium') {
-        return [
-          path.join(home, '.config', 'chromium', 'Default', 'Cookies'),
-          path.join(home, '.config', 'chromium-browser', 'Default', 'Cookies'),
         ];
       }
       if (browser === 'firefox') {

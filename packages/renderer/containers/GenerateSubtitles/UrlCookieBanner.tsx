@@ -98,7 +98,6 @@ export default function UrlCookieBanner() {
           <option value="safari">Safari</option>
           <option value="firefox">Firefox</option>
           <option value="edge">Edge</option>
-          <option value="chromium">Chromium</option>
         </select>
         <Button variant="success" onClick={retryWithCookies}>
           {t('input.retryWithCookies', 'Retry with browser cookies')}

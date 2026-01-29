@@ -61,7 +61,7 @@ export type SettingsStoreType = Store<{
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for transcription
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5'; // Which provider to use for dubbing/TTS
   stage5DubbingTtsProvider: 'openai' | 'elevenlabs'; // TTS provider when using Stage5 API for dubbing
-  preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
+  preferredCookiesBrowser?: string; // 'chrome' | 'safari' | 'firefox' | 'edge'
 }>;
 
 export function buildSettingsHandlers(opts: {
@@ -786,6 +786,13 @@ export function buildSettingsHandlers(opts: {
     getPreferredCookiesBrowser: () => {
       const stored =
         (store.get('preferredCookiesBrowser') as string | undefined) || '';
+      if (stored === 'chromium') {
+        log.warn(
+          `[settings] Stored cookie browser '${stored}' is no longer supported; clearing preference.`
+        );
+        store.delete('preferredCookiesBrowser');
+        return '';
+      }
       if (stored && !browserCookiesAvailable(stored)) {
         log.warn(
           `[settings] Stored cookie browser '${stored}' no longer available; clearing preference.`
@@ -801,6 +808,11 @@ export function buildSettingsHandlers(opts: {
         if (!v || v === 'auto') {
           store.delete('preferredCookiesBrowser');
           return { success: true };
+        }
+        if (v === 'chromium') {
+          throw new Error(
+            'Chromium is no longer supported. Please choose Chrome, Safari, Firefox, or Edge.'
+          );
         }
         if (!browserCookiesAvailable(v)) {
           throw new Error(

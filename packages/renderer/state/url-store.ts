@@ -22,7 +22,7 @@ interface UrlState {
   error: string | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
-  cookiesBrowser: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
+  cookiesBrowser: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge'
   cookieBannerSuppressed: boolean;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;

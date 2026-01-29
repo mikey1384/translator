@@ -133,7 +133,7 @@ declare module '@shared-types/app' {
     quality?: VideoQuality;
     operationId?: string;
     useCookies?: boolean;
-    cookiesBrowser?: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge' | 'chromium'
+    cookiesBrowser?: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge'
   }
 
   export interface ProcessUrlResult {
