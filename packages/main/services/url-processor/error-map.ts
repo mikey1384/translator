@@ -33,35 +33,7 @@ export function mapErrorToUserFriendly({
       combinedErrorText
     )
   ) {
-    return 'YouTube is rate-limiting this IP (HTTP 429). Retrying with browser cookies…';
-  } else if (
-    combinedErrorText.includes('could not copy chrome cookie database') ||
-    // Browser cookie extraction frequently fails on Windows when the browser is running
-    // and holds an exclusive lock on the Cookies sqlite DB.
-    (combinedErrorText.includes('--cookies-from-browser') ||
-      combinedErrorText.includes('extracting cookies') ||
-      combinedErrorText.includes('cookies database') ||
-      combinedErrorText.includes('network\\cookies') ||
-      combinedErrorText.includes('network/cookies')) &&
-    (combinedErrorText.includes('permission denied') ||
-      combinedErrorText.includes('access is denied') ||
-      combinedErrorText.includes('winerror 5') ||
-      combinedErrorText.includes('winerror 32') ||
-      combinedErrorText.includes('database is locked'))
-  ) {
-    return (
-      'Could not read browser cookies (permission denied). Close the selected browser completely and retry. ' +
-      'On Windows, also close background Chrome/Edge processes in Task Manager.'
-    );
-  } else if (
-    combinedErrorText.includes('dpapi decryption failed') ||
-    combinedErrorText.includes('failed to decript with dpapi') ||
-    combinedErrorText.includes('failed to decrypt with dpapi')
-  ) {
-    return (
-      'Could not decrypt Chrome/Edge cookies on Windows (DPAPI). ' +
-      'Try selecting a different browser (Edge or Firefox), or sign into YouTube in that browser once and retry.'
-    );
+    return 'YouTube is rate-limiting this network (HTTP 429) or blocking automated requests. Please wait and try again.';
   }
 
   log.info(

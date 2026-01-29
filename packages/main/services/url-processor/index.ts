@@ -8,6 +8,7 @@ import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
+import { exportCookiesToFileForUrl } from './site-cookies.js';
 
 export async function updateYtDlp(): Promise<boolean> {
   try {
@@ -73,7 +74,7 @@ export async function processVideoUrl(
     throw new Error('Invalid URL provided.');
   }
 
-  // --- 1st attempt: use cookies if specified ---
+  // --- Download attempt ---
   const run = async (extraArgs: string[]) => {
     const downloadResult = await downloadVideoFromPlatform(
       url,
@@ -118,18 +119,57 @@ export async function processVideoUrl(
         combinedLC
       );
 
-    const needsCookiesNow = looksSuspicious || needsLoginBotCheck;
-    if (needsCookiesNow) {
+    // For login/captcha/consent errors, always allow reconnect even if cookies exist
+    // (cookies can be expired/invalid).
+    if (needsLoginBotCheck) {
       log.info(
         `[URLprocessor] NeedCookies triggered (host=${
           new URL(url).hostname
-        }, 429-ish=${looksSuspicious}, loginCheck=${needsLoginBotCheck})`
+        }, loginCheck=true)`
       );
       progressCallback?.({
         percent: PROGRESS.WARMUP_END,
         stage: 'NeedCookies',
       });
       throw new Error('NeedCookies');
+    }
+
+    // For pure rate-limit (429-ish) errors, avoid trapping users in a connect loop:
+    // only request cookies when we don't already have any app-managed cookies.
+    if (looksSuspicious) {
+      let cookieCount: number | null = null;
+      try {
+        const exported = await exportCookiesToFileForUrl(url);
+        cookieCount = exported.count;
+      } catch (cookieErr) {
+        // If we can't determine cookie availability, do not mask the real error.
+        log.warn(
+          '[URLprocessor] Failed to check/export app cookies for NeedCookies gating:',
+          cookieErr
+        );
+        cookieCount = null;
+      }
+
+      if (cookieCount === 0) {
+        log.info(
+          `[URLprocessor] NeedCookies triggered (host=${
+            new URL(url).hostname
+          }, 429-ish=true)`
+        );
+        progressCallback?.({
+          percent: PROGRESS.WARMUP_END,
+          stage: 'NeedCookies',
+        });
+        throw new Error('NeedCookies');
+      }
+
+      if (cookieCount && cookieCount > 0) {
+        log.info(
+          `[URLprocessor] Rate-limit detected but app cookies already exist for host=${
+            new URL(url).hostname
+          }; surfacing original error instead of NeedCookies.`
+        );
+      }
     }
 
     throw err; // not a 429 / cookie-related flow ⇒ let normal error flow handle it

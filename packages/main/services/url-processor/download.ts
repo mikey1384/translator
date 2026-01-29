@@ -964,71 +964,9 @@ export async function downloadVideoFromPlatform(
         const wasStartupStall =
           (error?.message || '').includes(
             'Download appears stalled (no progress for'
-          ) || startupTimeoutFired;
+        ) || startupTimeoutFired;
         // If we suspect TLS/certificate issues, enable no-check-certificates for the final retry
         const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}\n${diagnosticLog || ''}`;
-        const currentCookiesBrowser = getCookiesBrowserArg(effectiveExtraArgs);
-        const currentWindowsCookieBrowser =
-          process.platform === 'win32' &&
-          (currentCookiesBrowser === 'chrome' ||
-            currentCookiesBrowser === 'edge')
-            ? (currentCookiesBrowser as 'chrome' | 'edge')
-            : null;
-        const looksLikeDpapiFailure =
-          /dpapi decryption failed|failed to decript with dpapi|failed to decrypt with dpapi/i.test(
-            errorBlob
-          );
-
-        // Some Chromium builds store cookies with encryption that yt-dlp can't decrypt via DPAPI.
-        // Try a different browser automatically (Edge/Chrome/Firefox) before giving up.
-        if (
-          looksLikeDpapiFailure &&
-          process.platform === 'win32' &&
-          (currentCookiesBrowser === 'chrome' ||
-            currentCookiesBrowser === 'edge')
-        ) {
-          dpapiTriedBrowsers.add(currentCookiesBrowser);
-          const candidates =
-            currentCookiesBrowser === 'chrome'
-              ? ['edge', 'firefox']
-              : ['chrome', 'firefox'];
-          const next = candidates.find(
-            b => !dpapiTriedBrowsers.has(b) && browserCookiesAvailable(b)
-          );
-          if (next) {
-            log.warn(
-              `[URLprocessor] Cookie decryption failed for ${currentCookiesBrowser} (DPAPI). Retrying with ${next} cookies.`
-            );
-            effectiveExtraArgs = replaceCookiesBrowserArg(
-              effectiveExtraArgs,
-              next
-            );
-            cookieCloseAttemptedFor = null;
-            continue;
-          }
-        }
-
-        // On Windows, Chrome/Edge can lock the Cookies DB, causing yt-dlp to fail copying it.
-        // Only close the browser when we see this specific error pattern.
-        if (
-          currentWindowsCookieBrowser &&
-          cookieCloseAttemptedFor !== currentWindowsCookieBrowser &&
-          /could not copy chrome cookie database|cookies database|network[\\\\/]cookies|winerror 32|winerror 5|permission denied|access is denied|database is locked/i.test(
-            errorBlob
-          )
-        ) {
-          cookieCloseAttemptedFor = currentWindowsCookieBrowser;
-          progressCallback?.({
-            percent: PROGRESS.WARMUP_END - 0.15,
-            stage: 'Preparing browser cookies…',
-          });
-          await maybeEnsureWindowsCookiesAccessible({
-            browser: currentWindowsCookieBrowser,
-            operationId,
-          });
-          // Retry the same attempt once cookies are accessible.
-          continue;
-        }
 
         const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(
           errorBlob
