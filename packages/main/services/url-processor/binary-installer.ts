@@ -225,8 +225,42 @@ export async function ensureWritableBinary(): Promise<string> {
   const exeExt = process.platform === 'win32' ? '.exe' : '';
   const binaryName = `yt-dlp${exeExt}`;
   const userBin = join(app.getPath('userData'), 'bin', binaryName);
+  const userBinNext = join(
+    app.getPath('userData'),
+    'bin',
+    `yt-dlp.next${exeExt}`
+  );
 
-  // 1. If we already have a user copy, return it.
+  // 1. Prefer a staged "next" binary if present and working. This is important
+  // on Windows where the primary exe may be locked (AV scanning, etc.) and thus
+  // cannot be replaced in-place.
+  try {
+    const minBytes =
+      process.platform === 'win32' ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
+
+    const nextStats = await fsp.stat(userBinNext).catch(() => null);
+    if (nextStats && nextStats.size >= minBytes) {
+      const nextOk = await testBinary(userBinNext);
+      if (nextOk) {
+        const userStats = await fsp.stat(userBin).catch(() => null);
+        const nextIsNewer =
+          !userStats || nextStats.mtimeMs > userStats.mtimeMs + 1000;
+        if (nextIsNewer) {
+          log.info(`[URLprocessor] Using staged yt-dlp binary: ${userBinNext}`);
+          return userBinNext;
+        }
+      } else {
+        log.warn(
+          `[URLprocessor] Staged yt-dlp binary is not working, removing: ${userBinNext}`
+        );
+        await fsp.unlink(userBinNext).catch(() => {});
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. If we already have a user copy, return it.
   try {
     await fsp.access(userBin, fs.constants.X_OK);
     log.info(`[URLprocessor] Using existing writable binary: ${userBin}`);
@@ -235,7 +269,7 @@ export async function ensureWritableBinary(): Promise<string> {
     /* fall through and create it */
   }
 
-  // 2. Acquire lock to prevent race conditions
+  // 3. Acquire lock to prevent race conditions
   if (!(await acquireInstallLock())) {
     log.warn(
       '[URLprocessor] Binary copy already in progress by another process'
@@ -255,10 +289,10 @@ export async function ensureWritableBinary(): Promise<string> {
   try {
     log.info(`[URLprocessor] Creating writable binary copy at: ${userBin}`);
 
-    // 3. Create the folder if needed.
+    // 4. Create the folder if needed.
     await fsp.mkdir(dirname(userBin), { recursive: true });
 
-    // 4. Copy the bundled binary once (read-only → writable).
+    // 5. Copy the bundled binary once (read-only → writable).
     const bundled = join(
       process.resourcesPath,
       'app.asar.unpacked',
@@ -291,7 +325,7 @@ export async function ensureWritableBinary(): Promise<string> {
       );
     }
 
-    // 5. Mark it executable (macOS / Linux).
+    // 6. Mark it executable (macOS / Linux).
     if (process.platform !== 'win32') {
       await fsp.chmod(userBin, 0o755);
     }
@@ -354,6 +388,9 @@ export async function ensureYtDlpBinary({
               '[URLprocessor] Update failed, but existing binary works, continuing...'
             );
           }
+          // Re-evaluate in case the updater staged a newer side-by-side binary.
+          stopCrawl();
+          return await ensureWritableBinary();
         } else {
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
@@ -428,6 +465,12 @@ async function updateExistingBinary(
 ): Promise<boolean> {
   // Note: Progress is handled by the caller's crawl interval
   try {
+    // On Windows, yt-dlp self-update is prone to failing when the executable is
+    // locked. We instead stage a freshly downloaded binary side-by-side.
+    if (process.platform === 'win32' && app.isPackaged) {
+      return await updateExistingBinaryWindowsPackaged(binaryPath);
+    }
+
     log.info(`[URLprocessor] Attempting to update binary: ${binaryPath}`);
 
     // Get version before update for comparison
@@ -495,6 +538,57 @@ async function updateExistingBinary(
   }
 }
 
+async function updateExistingBinaryWindowsPackaged(
+  existingPath: string
+): Promise<boolean> {
+  // Serialize update attempts across app instances.
+  if (!(await acquireInstallLock())) {
+    log.warn('[URLprocessor] yt-dlp update already in progress by another process');
+    return false;
+  }
+
+  const exeExt = '.exe';
+  const binDir = dirname(existingPath);
+  const primaryPath = join(binDir, `yt-dlp${exeExt}`);
+  const nextPath = join(binDir, `yt-dlp.next${exeExt}`);
+
+  const downloadUrl = `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp${exeExt}`;
+
+  try {
+    // If we can fetch the expected hash, avoid a full download when already up to date.
+    const expectedHash = await fetchSha256ForRelease(downloadUrl);
+    if (expectedHash) {
+      const primaryHash = await calculateSHA256(primaryPath).catch(() => null);
+      const nextHash = await calculateSHA256(nextPath).catch(() => null);
+      if (primaryHash === expectedHash || nextHash === expectedHash) {
+        log.info('[URLprocessor] yt-dlp already up to date (hash match)');
+        return true;
+      }
+    }
+
+    // Download to a temp file first; if something goes wrong we don't clobber an existing working binary.
+    const tmpPath = join(
+      binDir,
+      `yt-dlp.download.${process.pid}.${Date.now()}${exeExt}`
+    );
+    try {
+      await downloadBinaryDirectly(tmpPath);
+
+      // Promote to the staged "next" path (do not overwrite the primary path since it may be locked).
+      await fsp.unlink(nextPath).catch(() => {});
+      await fsp.rename(tmpPath, nextPath);
+      log.info(`[URLprocessor] Staged updated yt-dlp at: ${nextPath}`);
+      return true;
+    } catch (error: any) {
+      await fsp.unlink(tmpPath).catch(() => {});
+      log.error('[URLprocessor] Failed to stage updated yt-dlp:', error);
+      return false;
+    }
+  } finally {
+    await releaseInstallLock();
+  }
+}
+
 async function installNewBinary(
   onProgress?: BinarySetupProgress
 ): Promise<string> {
@@ -531,7 +625,19 @@ async function installNewBinary(
       log.info(
         '[URLprocessor] Packaged app detected, downloading yt-dlp directly from GitHub...'
       );
-      return await downloadBinaryDirectly(targetBinaryPath, onProgress);
+      try {
+        return await downloadBinaryDirectly(targetBinaryPath, onProgress);
+      } catch (error: any) {
+        // Windows can lock the primary exe; fall back to a side-by-side staged binary.
+        if (process.platform === 'win32') {
+          const altPath = join(targetBinDir, 'yt-dlp.next.exe');
+          log.warn(
+            `[URLprocessor] Primary yt-dlp path may be locked; trying staged path: ${altPath}`
+          );
+          return await downloadBinaryDirectly(altPath, onProgress);
+        }
+        throw error;
+      }
     } else {
       // For development, try postinstall script first
       onProgress?.({ stage: 'Installing yt-dlp…' });
@@ -758,6 +864,21 @@ export async function installYtDlpBinary(): Promise<string> {
 let cachedJsRuntime: string | null | undefined = undefined; // undefined = not checked yet
 let jsRuntimePromise: Promise<string | null> | null = null; // in-flight promise to prevent concurrent installs
 
+function scrubEnvForNodeProbe(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  // Keep this in sync with the env-scrubbing used when spawning yt-dlp so we
+  // don't mis-detect the embedded runtime due to user-set NODE_OPTIONS.
+  const cleaned: NodeJS.ProcessEnv = { ...env };
+  for (const key of [
+    'NODE_OPTIONS',
+    'NPM_CONFIG_PROXY',
+    'NPM_CONFIG_HTTPS_PROXY',
+  ]) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete cleaned[key];
+  }
+  return cleaned;
+}
+
 async function findExistingJsRuntime(): Promise<string | null> {
   const runtimes = [
     { name: 'node', cmd: 'node' },
@@ -767,6 +888,7 @@ async function findExistingJsRuntime(): Promise<string | null> {
 
   for (const { name, cmd } of runtimes) {
     try {
+      const env = scrubEnvForNodeProbe(process.env);
       if (process.platform === 'win32') {
         // On Windows, use 'where' command
         const { stdout } = await execa('where', [cmd], {
@@ -776,7 +898,11 @@ async function findExistingJsRuntime(): Promise<string | null> {
         const path = stdout.trim().split('\n')[0]?.trim();
         if (path) {
           // Verify it works
-          await execa(path, ['--version'], { timeout: 5000, windowsHide: true });
+          await execa(path, ['--version'], {
+            timeout: 5000,
+            windowsHide: true,
+            env,
+          });
           log.info(`[URLprocessor] Found JS runtime: ${name} at ${path}`);
           return `${name}:${path}`;
         }
@@ -789,7 +915,11 @@ async function findExistingJsRuntime(): Promise<string | null> {
         const path = stdout.trim();
         if (path) {
           // Verify it works
-          await execa(path, ['--version'], { timeout: 5000, windowsHide: true });
+          await execa(path, ['--version'], {
+            timeout: 5000,
+            windowsHide: true,
+            env,
+          });
           log.info(`[URLprocessor] Found JS runtime: ${name} at ${path}`);
           return `${name}:${path}`;
         }
@@ -819,7 +949,11 @@ async function findExistingJsRuntime(): Promise<string | null> {
   for (const nodePath of commonPaths) {
     try {
       await fsp.access(nodePath, fs.constants.X_OK);
-      await execa(nodePath, ['--version'], { timeout: 5000, windowsHide: true });
+      await execa(nodePath, ['--version'], {
+        timeout: 5000,
+        windowsHide: true,
+        env: scrubEnvForNodeProbe(process.env),
+      });
       log.info(`[URLprocessor] Found Node.js at: ${nodePath}`);
       return `node:${nodePath}`;
     } catch {
@@ -837,7 +971,7 @@ async function findEmbeddedNodeRuntime(): Promise<string | null> {
   }
 
   // In Electron, the app/electron executable can behave like Node when this is set.
-  const env: NodeJS.ProcessEnv = { ...process.env };
+  const env: NodeJS.ProcessEnv = scrubEnvForNodeProbe(process.env);
   if (process.versions.electron) {
     env.ELECTRON_RUN_AS_NODE = '1';
   }

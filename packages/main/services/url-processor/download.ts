@@ -7,6 +7,7 @@ import type { FFmpegContext } from '../ffmpeg-runner.js';
 import {
   registerDownloadProcess,
   finish as removeDownloadProcess,
+  consumeCancelMarker,
 } from '../../active-processes.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
@@ -885,7 +886,10 @@ export async function downloadVideoFromPlatform(
         } catch {
           // fall through
         }
-        if (!skipUpdateEnv) {
+        // On Windows, avoid yt-dlp self-update (-U) because the exe is often locked and can
+        // cause confusing "update succeeded but version unchanged" states. Startup already
+        // performs a safe update check.
+        if (!skipUpdateEnv && process.platform !== 'win32') {
           try {
             // Fire-and-forget update; do not block user flow
             // Delay the update by a few seconds to ensure file handles are released
@@ -1019,28 +1023,9 @@ export async function downloadVideoFromPlatform(
     let userFriendlyErrorMessage = rawErrorMessage;
 
     // Check if this was a cancellation
-    if (
-      error.signal === 'SIGTERM' ||
-      error.signal === 'SIGINT' ||
-      error.killed ||
-      // Windows taskkill generates exit code 1 with specific error messages
-      (process.platform === 'win32' &&
-        error.exitCode === 1 &&
-        (error.message?.includes('was terminated') ||
-          error.message?.includes('Command failed') ||
-          rawErrorMessage.includes('taskkill'))) ||
-      // Also check for common Windows termination patterns
-      (process.platform === 'win32' &&
-        (rawErrorMessage.includes('The process was terminated') ||
-          rawErrorMessage.includes('The operation was terminated') ||
-          rawErrorMessage.includes('process terminated') ||
-          rawErrorMessage.includes('Terminated by user') ||
-          // yt-dlp specific termination messages
-          rawErrorMessage.includes('KeyboardInterrupt') ||
-          rawErrorMessage.includes('Interrupted by user')))
-    ) {
+    if (consumeCancelMarker(operationId)) {
       log.info(
-        `[URLprocessor] Download cancelled by user (Op ID: ${operationId}) - Signal: ${error.signal}, ExitCode: ${error.exitCode}`
+        `[URLprocessor] Download cancelled by user (Op ID: ${operationId})`
       );
       progressCallback?.({
         percent: 0,
