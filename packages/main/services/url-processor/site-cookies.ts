@@ -3,7 +3,6 @@ import log from 'electron-log';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
-import { getFocusedOrMainWindow } from '../../utils/window.js';
 
 type ConnectResult = {
   success: boolean;
@@ -11,6 +10,23 @@ type ConnectResult = {
   cancelled: boolean;
   error?: string;
 };
+
+// IMPORTANT: Do not use "cookies" here. Electron stores its own cookie DB at
+// userData/Cookies (case-insensitive on macOS/Windows), so "cookies" would
+// collide with that file.
+const YTDLP_COOKIES_DIR = 'ytdlp-cookies';
+
+const YOUTUBE_AUTH_COOKIE_NAMES = new Set([
+  'SID',
+  'HSID',
+  'SSID',
+  'APISID',
+  'SAPISID',
+  '__Secure-3PSID',
+  '__Secure-3PAPISID',
+  '__Secure-1PSID',
+  '__Secure-1PAPISID',
+]);
 
 // Preserve the existing YouTube cookie jar (used by older versions) so users
 // don't have to "re-connect" after upgrading.
@@ -54,10 +70,14 @@ function partitionForKey(key: string): string {
 export function cookiesFilePathForUrl(rawUrl: string): string {
   const { key } = cookieKeyForUrl(rawUrl);
   if (key === 'youtube') {
-    return path.join(app.getPath('userData'), 'cookies', 'youtube-cookies.txt');
+    return path.join(
+      app.getPath('userData'),
+      YTDLP_COOKIES_DIR,
+      'youtube-cookies.txt'
+    );
   }
   const fileName = `${sanitizeForFilename(key)}-${safeId(key)}.txt`;
-  return path.join(app.getPath('userData'), 'cookies', fileName);
+  return path.join(app.getPath('userData'), YTDLP_COOKIES_DIR, fileName);
 }
 
 const exportInFlightByKey = new Map<
@@ -181,13 +201,13 @@ export async function connectCookiesInteractive(
   const partition = partitionForKey(key);
 
   const promise: Promise<ConnectResult> = new Promise(resolve => {
-    const parent = getFocusedOrMainWindow() ?? undefined;
     const win = new BrowserWindow({
       width: 1100,
       height: 850,
-      parent,
-      modal: Boolean(parent),
-      title: 'Connect',
+      // Avoid modal/parent windows for auth flows. On some platforms, modal
+      // sheets can feel "uncloseable" to users.
+      title: 'Connect (close this window when done)',
+      autoHideMenuBar: true,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -213,7 +233,35 @@ export async function connectCookiesInteractive(
       log.error('[site-cookies] Failed to load connect URL:', err);
     });
 
+    const s = session.fromPartition(partition);
+    let finished = false;
+    let hadYouTubeAuthAtStart = false;
+    let cookiePoll: NodeJS.Timeout | null = null;
+
+    // Some pages register beforeunload handlers that can prevent closing.
+    // We want users to be able to close the connect window reliably.
+    win.webContents.on('will-prevent-unload', event => {
+      event.preventDefault();
+    });
+
+    // Provide a keyboard close path even if the window chrome is confusing.
+    win.webContents.on('before-input-event', (event, input) => {
+      const key = (input.key || '').toLowerCase();
+      const wantsClose = key === 'w' && (input.control || input.meta);
+      if (wantsClose) {
+        event.preventDefault();
+        try {
+          win.close();
+        } catch {
+          // ignore
+        }
+      }
+    });
+
     const cleanup = () => {
+      finished = true;
+      if (cookiePoll) clearInterval(cookiePoll);
+      cookiePoll = null;
       connectWinByKey.delete(key);
       connectInFlightByKey.delete(key);
     };
@@ -240,6 +288,44 @@ export async function connectCookiesInteractive(
         cleanup();
       }
     };
+
+    const hasValidYouTubeAuthCookies = async (): Promise<boolean> => {
+      if (key !== 'youtube') return false;
+      try {
+        const cookies = await s.cookies.get({});
+        const nowSec = Date.now() / 1000;
+        return cookies.some(c => {
+          if (!YOUTUBE_AUTH_COOKIE_NAMES.has(c.name)) return false;
+          // If Electron reports an expirationDate, ensure it isn't already expired.
+          return !c.expirationDate || c.expirationDate > nowSec;
+        });
+      } catch {
+        return false;
+      }
+    };
+
+    // Auto-close for YouTube once we see a successful login transition.
+    // We only auto-close if the window started without auth cookies (so we don't
+    // immediately close when a user is trying to refresh stale cookies).
+    (async () => {
+      hadYouTubeAuthAtStart = await hasValidYouTubeAuthCookies();
+      cookiePoll = setInterval(async () => {
+        if (finished) return;
+        if (key !== 'youtube') return;
+        if (hadYouTubeAuthAtStart) return;
+        const hasAuthNow = await hasValidYouTubeAuthCookies();
+        if (hasAuthNow) {
+          log.info(
+            '[site-cookies] Detected YouTube auth cookies; closing connect window.'
+          );
+          try {
+            win.close();
+          } catch {
+            // ignore
+          }
+        }
+      }, 1500);
+    })().catch(() => {});
 
     win.on('closed', () => {
       // Treat close as completion; user can just close the window once they're done.
