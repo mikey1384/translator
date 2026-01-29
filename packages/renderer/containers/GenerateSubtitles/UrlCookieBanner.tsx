@@ -5,6 +5,17 @@ import { useTranslation } from 'react-i18next';
 import Button from '../../components/Button';
 import { css } from '@emotion/css';
 
+function isYouTubeUrl(rawUrl: string): boolean {
+  try {
+    const u = new URL(rawUrl.trim());
+    return (
+      /(^|\\.)youtube\\.com$/.test(u.hostname) || u.hostname === 'youtu.be'
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function UrlCookieBanner() {
   const { t } = useTranslation();
   const needCookies = useUrlStore(s => s.needCookies);
@@ -12,23 +23,12 @@ export default function UrlCookieBanner() {
   const urlInput = useUrlStore(s => s.urlInput);
   const setNeedCookies = useUrlStore(s => s.setNeedCookies);
   const downloadMedia = useUrlStore(s => s.downloadMedia);
-  const retryWithCookies = useUrlStore(s => s.retryWithCookies);
-  const cookiesBrowser = useUrlStore(s => s.cookiesBrowser);
-  const setCookiesBrowser = useUrlStore(s => s.setCookiesBrowser);
   const setError = useUrlStore(s => s.setError);
   const downloadInProgress = useUrlStore(s => s.download.inProgress);
   const downloadStage = useUrlStore(s => s.download.stage);
   const [connecting, setConnecting] = useState(false);
-  const [platform, setPlatform] = useState<string>('');
 
-  const isYouTube = (() => {
-    try {
-      const u = new URL(urlInput.trim());
-      return /(^|\\.)youtube\\.com$/.test(u.hostname) || u.hostname === 'youtu.be';
-    } catch {
-      return false;
-    }
-  })();
+  const isYouTube = isYouTubeUrl(urlInput);
 
   useEffect(() => {
     if (downloadInProgress) {
@@ -36,87 +36,32 @@ export default function UrlCookieBanner() {
     }
   }, [downloadInProgress, setNeedCookies]);
 
-  useEffect(() => {
-    let alive = true;
-    (window as any).electron
-      .getSystemInfo?.()
-      .then((info: any) => {
-        if (!alive) return;
-        if (info?.platform && typeof info.platform === 'string')
-          setPlatform(info.platform);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // For non-YouTube sites, allow retry using external browser cookies.
-  // Auto-select saved or most likely browser when banner appears.
-  useEffect(() => {
-    let alive = true;
-    async function pickDefault() {
-      try {
-        if (!needCookies) return;
-        if (isYouTube) return;
-        const current = cookiesBrowser;
-        if (current && current !== 'auto') return;
-
-        const saved = await (
-          window as any
-        ).electron.getPreferredCookiesBrowser?.();
-        if (alive && saved) {
-          setCookiesBrowser(saved);
-          return;
-        }
-        const hint = await (window as any).electron.getDefaultCookieBrowser?.();
-        if (alive && hint) setCookiesBrowser(hint);
-      } catch {
-        // ignore
-      }
-    }
-    pickDefault();
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needCookies, isYouTube]);
-
-  async function connectYouTubeAndRetry() {
+  async function connectAndRetry() {
     if (connecting) return;
+
+    const url = urlInput.trim();
+    if (!url) return;
+
     setConnecting(true);
     try {
-      const res = await (window as any).electron.connectYouTubeCookies?.();
+      const res = await (window as any).electron.connectCookiesForUrl?.(url);
       if (!res) {
         setError(
-          t(
-            'errors.youtubeConnectFailed',
-            'Could not connect YouTube. Please try again.'
-          )
+          t('errors.connectFailed', 'Could not connect. Please try again.')
         );
         return;
       }
       if (res.success !== true) {
-        setError(
-          res?.error ||
-            t(
-              'errors.youtubeConnectFailed',
-              'Could not connect YouTube. Please try again.'
-            )
-        );
+        // If the user closed the window without completing the flow, don't treat it as an error.
+        if (res.cancelled) return;
+        setError(res?.error || t('errors.connectFailed'));
         return;
       }
-      // Retry the download; yt-dlp will use the exported cookies file automatically.
+      // Retry the download; yt-dlp will use the app-managed cookies automatically.
       setNeedCookies(false);
       await downloadMedia();
     } catch (e: any) {
-      setError(
-        e?.message ||
-          t(
-            'errors.youtubeConnectFailed',
-            'Could not connect YouTube. Please try again.'
-          )
-      );
+      setError(e?.message || t('errors.connectFailed'));
     } finally {
       setConnecting(false);
     }
@@ -131,7 +76,7 @@ export default function UrlCookieBanner() {
   )
     return null;
 
-    return (
+  return (
     <div
       style={{
         width: '100%',
@@ -144,10 +89,10 @@ export default function UrlCookieBanner() {
     >
       <ErrorBanner
         message={t(
-          'errors.needCookies',
+          isYouTube ? 'errors.needCookiesYouTube' : 'errors.needCookiesGeneric',
           isYouTube
-            ? 'YouTube asked for a human check. To continue, connect YouTube in Translator and retry.'
-            : 'This site asked for a human check. To continue, retry using your browser cookies.'
+            ? 'YouTube asked for a human check. Click Connect to continue.'
+            : 'This site asked for a human check. Click Connect to continue.'
         )}
         onClose={() => setNeedCookies(false)}
       />
@@ -158,34 +103,11 @@ export default function UrlCookieBanner() {
           align-items: center;
         `}
       >
-        {isYouTube ? (
-          <Button variant="success" onClick={connectYouTubeAndRetry}>
-            {connecting
-              ? t('input.connectingYouTube', 'Connecting…')
-              : t('input.connectYouTube', 'Connect YouTube')}
-          </Button>
-        ) : (
-          <>
-            <label>{t('input.selectBrowser', 'Browser')}:</label>
-            <select
-              value={cookiesBrowser}
-              onChange={e => setCookiesBrowser(e.target.value)}
-              className={css`
-                padding: 6px 8px;
-              `}
-            >
-              <option value="chrome">Chrome</option>
-              {platform === 'darwin' ? (
-                <option value="safari">Safari</option>
-              ) : null}
-              <option value="firefox">Firefox</option>
-              <option value="edge">Edge</option>
-            </select>
-            <Button variant="success" onClick={retryWithCookies}>
-              {t('input.retryWithCookies', 'Retry with browser cookies')}
-            </Button>
-          </>
-        )}
+        <Button variant="success" onClick={connectAndRetry}>
+          {connecting
+            ? t('input.connecting', 'Connecting…')
+            : t('input.connect', 'Connect')}
+        </Button>
       </div>
       <div
         className={css`
@@ -195,15 +117,10 @@ export default function UrlCookieBanner() {
           text-align: center;
         `}
       >
-        {isYouTube
-          ? t(
-              'input.cookieAdvice',
-              "Tip: In the Connect window, sign in or complete the check, then close the window to continue."
-            )
-          : t(
-              'input.cookieAdvice',
-              "Make sure the selected browser is the one you're logged into on."
-            )}
+        {t(
+          'input.connectTip',
+          'Tip: In the Connect window, sign in or complete the check, then close the window to continue.'
+        )}
       </div>
     </div>
   );

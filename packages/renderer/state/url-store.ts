@@ -22,7 +22,6 @@ interface UrlState {
   error: string | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
-  cookiesBrowser: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge'
   cookieBannerSuppressed: boolean;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
@@ -32,8 +31,6 @@ interface UrlState {
   setDownload: (patch: Partial<DownloadTask>) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
-  setCookiesBrowser: (v: string) => void;
-  retryWithCookies: () => Promise<ProcessUrlResult | void>;
   onDownloadProgress: ({
     percent,
     stage,
@@ -61,7 +58,6 @@ export const useUrlStore = create<UrlState>()(
     error: null as string | null,
     inputMode: 'url',
     needCookies: false,
-    cookiesBrowser: '',
     cookieBannerSuppressed: false,
 
     setUrlInput: urlInput => {
@@ -82,15 +78,6 @@ export const useUrlStore = create<UrlState>()(
       return downloadMediaInternal(set, get);
     },
 
-    retryWithCookies: async () => {
-      set((state: UrlState) => {
-        state.needCookies = false;
-        state.download = { ...initialDownload, percent: 1 };
-        state.error = null;
-      });
-      return downloadMediaInternal(set, get, { useCookies: true });
-    },
-
     setDownload: patch =>
       set(s => {
         Object.assign(s.download, patch);
@@ -99,8 +86,6 @@ export const useUrlStore = create<UrlState>()(
     setInputMode: mode => set({ inputMode: mode }),
 
     setNeedCookies: v => set({ needCookies: v }),
-
-    setCookiesBrowser: v => set({ cookiesBrowser: v }),
 
     onDownloadProgress: ({
       percent,
@@ -142,11 +127,9 @@ export const useUrlStore = create<UrlState>()(
 
 async function downloadMediaInternal(
   set: any,
-  get: any,
-  opts: { useCookies?: boolean } = {}
+  get: any
 ): Promise<ProcessUrlResult | void> {
   const { urlInput, downloadQuality } = get();
-  let cookiesBrowser = get().cookiesBrowser;
   if (!urlInput.trim()) {
     set((state: UrlState) => {
       state.error = 'Please enter a valid URL';
@@ -196,51 +179,11 @@ async function downloadMediaInternal(
   });
 
   try {
-    const shouldUseCookies = opts.useCookies === true;
-    // Load persisted browser preference for UI, but do not force cookies unless explicitly requested
-    try {
-      const preferred = await (
-        window as any
-      ).electron.getPreferredCookiesBrowser();
-      if (preferred && typeof preferred === 'string' && preferred !== 'auto') {
-        if (!cookiesBrowser) {
-          cookiesBrowser = preferred;
-          set((state: UrlState) => {
-            state.cookiesBrowser = preferred;
-          });
-        }
-      }
-    } catch {
-      // ignore preference errors
-    }
-    if (shouldUseCookies && !cookiesBrowser) {
-      try {
-        cookiesBrowser = await (
-          window as any
-        ).electron.getDefaultCookieBrowser?.();
-      } catch {
-        // ignore default failures
-      }
-    }
     const res = await UrlIPC.download({
       url: urlInput,
       quality: downloadQuality,
       operationId: opId,
-      useCookies: shouldUseCookies,
-      cookiesBrowser,
     });
-
-    const cookiesBrowserUsed =
-      (res as any)?.cookiesBrowserUsed &&
-      typeof (res as any).cookiesBrowserUsed === 'string'
-        ? ((res as any).cookiesBrowserUsed as string)
-        : '';
-    if (cookiesBrowserUsed) {
-      cookiesBrowser = cookiesBrowserUsed;
-      set((state: UrlState) => {
-        state.cookiesBrowser = cookiesBrowserUsed;
-      });
-    }
 
     const finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
@@ -283,19 +226,6 @@ async function downloadMediaInternal(
       state.download.percent = 100;
       state.download.inProgress = false;
     });
-    // Persist cookie browser preference if we used cookies for this run
-    try {
-      if (opts.useCookies) {
-        const currentBrowser = get().cookiesBrowser || cookiesBrowser;
-        if (currentBrowser) {
-          await (window as any).electron.setPreferredCookiesBrowser(
-            currentBrowser
-          );
-        }
-      }
-    } catch {
-      // ignore persistence errors
-    }
     set((state: UrlState) => {
       state.urlInput = '';
     });

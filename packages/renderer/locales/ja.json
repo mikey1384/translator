@@ -87,7 +87,11 @@
     "selectBrowser": "ブラウザ",
     "cookieHelp": "ヒント：選択したブラウザでYouTubeにログインしてください。同意画面が表示された場合は、そのブラウザでyoutube.comにアクセスして同意し、ここで再試行してください。",
     "cookieAdvice": "選択したブラウザがYouTubeにログインしているブラウザであることを確認してください。",
-    "saveDubbedVideo": "吹き替え動画を保存"
+    "saveDubbedVideo": "吹き替え動画を保存",
+    "connect": "接続",
+    "connecting": "接続中...",
+    "connectTip": "ヒント：接続ウィンドウでサインインまたは認証を完了し、ウィンドウを閉じて続行してください。",
+    "youtubeConnectTip": "ヒント：接続ウィンドウでサインインまたは認証を完了し、ウィンドウを閉じて続行してください。"
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -668,7 +672,9 @@
       "elevenlabsInsufficientQuota": "ElevenLabsアカウントのクレジットが不足しています。elevenlabs.ioでクレジットを追加してください。",
       "checkSettings": "設定を確認",
       "genericApiError": "APIリクエストが失敗しました。APIキーとアカウントの状態を確認してください。"
-    }
+    },
+    "needCookiesYouTube": "YouTubeが認証を求めています。「接続」をクリックして続行してください。",
+    "needCookiesGeneric": "このサイトが認証を求めています。「接続」をクリックして続行してください。"
   },
   "logs": {
     "title": "最新のログ",

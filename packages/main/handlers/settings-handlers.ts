@@ -3,7 +3,6 @@ import * as fsPromises from 'fs/promises';
 import log from 'electron-log';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { browserCookiesAvailable } from '../services/url-processor/utils.js';
 export type { SettingsStoreType } from '../store/settings-store.js';
 import type { SettingsStoreType } from '../store/settings-store.js';
 import {
@@ -759,49 +758,5 @@ export function buildSettingsHandlers(opts: {
     getStage5DubbingTtsProvider,
     setStage5DubbingTtsProvider,
     // yt-dlp auto update is always on
-
-    // Persisted cookie browser preference
-    getPreferredCookiesBrowser: () => {
-      const stored =
-        (store.get('preferredCookiesBrowser') as string | undefined) || '';
-      if (stored === 'chromium') {
-        log.warn(
-          `[settings] Stored cookie browser '${stored}' is no longer supported; clearing preference.`
-        );
-        store.delete('preferredCookiesBrowser');
-        return '';
-      }
-      if (stored && !browserCookiesAvailable(stored)) {
-        log.warn(
-          `[settings] Stored cookie browser '${stored}' no longer available; clearing preference.`
-        );
-        store.delete('preferredCookiesBrowser');
-        return '';
-      }
-      return stored;
-    },
-    setPreferredCookiesBrowser: (_evt: any, v: string) => {
-      try {
-        if (typeof v !== 'string') throw new Error('Invalid browser value');
-        if (!v || v === 'auto') {
-          store.delete('preferredCookiesBrowser');
-          return { success: true };
-        }
-        if (v === 'chromium') {
-          throw new Error(
-            'Chromium is no longer supported. Please choose Chrome, Safari, Firefox, or Edge.'
-          );
-        }
-        if (!browserCookiesAvailable(v)) {
-          throw new Error(
-            'Selected browser cookies not found on this system. Open YouTube in that browser once or pick another.'
-          );
-        }
-        store.set('preferredCookiesBrowser', v);
-        return { success: true };
-      } catch (err: any) {
-        return { success: false, error: err.message };
-      }
-    },
   };
 }

@@ -87,7 +87,11 @@
     "selectBrowser": "Browser",
     "cookieHelp": "Tipp: Melden Sie sich im ausgewählten Browser bei YouTube an. Wenn Sie einen Zustimmungsbildschirm sehen, besuchen Sie youtube.com in diesem Browser und akzeptieren Sie, dann versuchen Sie es hier erneut.",
     "cookieAdvice": "Stellen Sie sicher, dass der ausgewählte Browser derjenige ist, in dem Sie bei YouTube angemeldet sind.",
-    "saveDubbedVideo": "Synchronisiertes Video speichern"
+    "saveDubbedVideo": "Synchronisiertes Video speichern",
+    "connect": "Verbinden",
+    "connecting": "Verbindung wird hergestellt...",
+    "connectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren.",
+    "youtubeConnectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren."
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -668,7 +672,9 @@
       "elevenlabsInsufficientQuota": "Ihr ElevenLabs-Konto hat nicht genügend Guthaben. Bitte fügen Sie Guthaben auf elevenlabs.io hinzu.",
       "checkSettings": "Einstellungen überprüfen",
       "genericApiError": "API-Anfrage fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel und Kontostatus."
-    }
+    },
+    "needCookiesYouTube": "YouTube hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
+    "needCookiesGeneric": "Diese Website hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren."
   },
   "logs": {
     "title": "Aktuelle Protokolle",

@@ -28,7 +28,6 @@ import * as subtitleHandlers from './handlers/subtitle-handlers.js';
 import * as registry from './active-processes.js';
 import { buildSettingsHandlers } from './handlers/settings-handlers.js';
 import { buildUpdateHandlers } from './handlers/update-handlers.js';
-import { defaultBrowserHint } from './services/url-processor/utils.js';
 import { settingsStore } from './store/settings-store.js';
 
 import { SaveFileService } from './services/save-file.js';
@@ -38,9 +37,9 @@ import {
   initializeUrlHandler,
 } from './handlers/url-handlers.js';
 import {
-  clearYouTubeCookies,
-  connectYouTubeCookiesInteractive,
-} from './services/url-processor/youtube-cookies.js';
+  clearCookiesForUrl,
+  connectCookiesInteractive,
+} from './services/url-processor/site-cookies.js';
 import * as fileHandlers from './handlers/file-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
 import { createFFmpegContext } from './services/ffmpeg-runner.js';
@@ -558,12 +557,13 @@ try {
     return app.getAppPath();
   });
 
-  // Provide default cookie browser hint to renderer
-  ipcMain.handle('get-default-cookie-browser', () => defaultBrowserHint());
-
-  // YouTube cookie session (cross-platform, avoids Windows DPAPI / locked DB issues)
-  ipcMain.handle('youtube:connect', () => connectYouTubeCookiesInteractive());
-  ipcMain.handle('youtube:clear-cookies', () => clearYouTubeCookies());
+  // App-managed cookies session (cross-platform, avoids Windows DPAPI / locked DB issues)
+  ipcMain.handle('cookies:connect', (_evt, url: string) =>
+    connectCookiesInteractive(url)
+  );
+  ipcMain.handle('cookies:clear', (_evt, url: string) =>
+    clearCookiesForUrl(url)
+  );
 
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);
 
@@ -605,16 +605,6 @@ try {
     const mainWin = getMainWindow();
     return syncEntitlements({ window: mainWin ?? undefined });
   });
-
-  // Persisted cookies browser preference
-  ipcMain.handle(
-    'settings:getPreferredCookiesBrowser',
-    settingsHandlers.getPreferredCookiesBrowser
-  );
-  ipcMain.handle(
-    'settings:setPreferredCookiesBrowser',
-    settingsHandlers.setPreferredCookiesBrowser
-  );
 
   // Check if encryption is available for secure key storage
   ipcMain.handle('check-encryption-available', () =>

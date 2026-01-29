@@ -60,7 +60,10 @@
     }
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube asked for a human check. Click Connect to continue.",
+    "needCookiesYouTube": "YouTube asked for a human check. Click Connect to continue.",
+    "needCookiesGeneric": "This site asked for a human check. Click Connect to continue.",
+    "connectFailed": "Could not connect. Please try again.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",
@@ -87,10 +90,15 @@
     }
   },
   "input": {
+    "connect": "Connect",
+    "connecting": "Connecting...",
+    "connectTip": "Tip: In the Connect window, sign in or complete the check, then close the window to continue.",
     "retryWithCookies": "Retry with browser cookies",
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
     "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
+    "cookieAdviceGeneric": "Make sure the selected browser is the one you're logged into on.",
+    "youtubeConnectTip": "Tip: In the Connect window, sign in or complete the check, then close the window to continue.",
     "fromDevice": "From your device",
     "fromWeb": "From the web",
     "downloadVideo": "Download Video",

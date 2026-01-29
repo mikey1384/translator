@@ -20,10 +20,6 @@ export type AppSettingsSchema = {
   preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
   preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
   stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
-  preferredCookiesBrowser?: string;
-  // Windows-only: allow Translator to close the browser so yt-dlp can read cookies reliably.
-  cookiesAutoCloseChrome?: boolean;
-  cookiesAutoCloseEdge?: boolean;
 };
 
 export type SettingsStoreType = Store<AppSettingsSchema>;
@@ -50,8 +46,5 @@ export const settingsStore: SettingsStoreType = new Store<AppSettingsSchema>({
     preferredTranscriptionProvider: 'elevenlabs',
     preferredDubbingProvider: 'openai', // Default to OpenAI TTS (cheaper than ElevenLabs)
     stage5DubbingTtsProvider: 'openai', // Default to OpenAI for cost efficiency
-    cookiesAutoCloseChrome: false,
-    cookiesAutoCloseEdge: false,
   },
 });
-

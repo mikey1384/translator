@@ -85,7 +85,11 @@
     "selectBrowser": "瀏覽器",
     "cookieHelp": "提示：在所選瀏覽器中登入YouTube。如果看到同意畫面，請在該瀏覽器中訪問youtube.com並接受，然後在此重試。",
     "cookieAdvice": "確保所選瀏覽器是您登入YouTube的瀏覽器。",
-    "saveDubbedVideo": "儲存配音影片"
+    "saveDubbedVideo": "儲存配音影片",
+    "connect": "連接",
+    "connecting": "連接中...",
+    "connectTip": "提示：在連接視窗中登入或完成驗證，然後關閉視窗繼續。",
+    "youtubeConnectTip": "提示：在連接視窗中登入或完成驗證，然後關閉視窗繼續。"
   },
   "subtitles": {
     "outputLanguage": "輸出語言",
@@ -615,7 +619,9 @@
     "missingVideoMetadata": "缺少影片元數據（{{missing}}）",
     "noSourceVideo": "沒有來源影片",
     "noSubtitlesLoaded": "沒有載入字幕",
-    "failedToLoadSRT": "載入SRT檔案失敗"
+    "failedToLoadSRT": "載入SRT檔案失敗",
+    "needCookiesYouTube": "YouTube 要求進行人機驗證。點擊「連接」繼續。",
+    "needCookiesGeneric": "此網站要求進行人機驗證。點擊「連接」繼續。"
   },
   "logs": {
     "title": "最新記錄",

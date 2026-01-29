@@ -87,7 +87,11 @@
     "selectBrowser": "浏览器",
     "cookieHelp": "提示：在所选浏览器中登录YouTube。如果看到同意屏幕，请在该浏览器中访问youtube.com并接受，然后在此重试。",
     "cookieAdvice": "确保所选浏览器是您登录YouTube的浏览器。",
-    "saveDubbedVideo": "保存配音视频"
+    "saveDubbedVideo": "保存配音视频",
+    "connect": "连接",
+    "connecting": "连接中...",
+    "connectTip": "提示：在连接窗口中登录或完成验证，然后关闭窗口继续。",
+    "youtubeConnectTip": "提示：在连接窗口中登录或完成验证，然后关闭窗口继续。"
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -668,7 +672,9 @@
       "elevenlabsInsufficientQuota": "您的ElevenLabs账户积分不足。请在elevenlabs.io添加积分。",
       "checkSettings": "检查设置",
       "genericApiError": "API请求失败。请检查您的API密钥和账户状态。"
-    }
+    },
+    "needCookiesYouTube": "YouTube 要求进行人机验证。点击「连接」继续。",
+    "needCookiesGeneric": "此网站要求进行人机验证。点击「连接」继续。"
   },
   "logs": {
     "title": "最新日志",

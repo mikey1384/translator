@@ -83,7 +83,11 @@
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Log in bij YouTube in de geselecteerde browser. Als je een toestemmingsscherm ziet, bezoek youtube.com in die browser en accepteer, probeer het dan hier opnieuw.",
     "cookieAdvice": "Zorg ervoor dat de geselecteerde browser degene is waarop je bent ingelogd bij YouTube.",
-    "saveDubbedVideo": "Save Dubbed Video"
+    "saveDubbedVideo": "Save Dubbed Video",
+    "connect": "Verbinden",
+    "connecting": "Verbinden...",
+    "connectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan.",
+    "youtubeConnectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan."
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
@@ -389,7 +393,9 @@
     "missingVideoMetadata": "Ontbrekende videometadata ({{missing}})",
     "noSourceVideo": "Geen bronvideo",
     "noSubtitlesLoaded": "Geen ondertitels geladen",
-    "failedToLoadSRT": "Laden van SRT-bestand mislukt"
+    "failedToLoadSRT": "Laden van SRT-bestand mislukt",
+    "needCookiesYouTube": "YouTube heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
+    "needCookiesGeneric": "Deze site heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan."
   },
   "cta": {
     "generate": {

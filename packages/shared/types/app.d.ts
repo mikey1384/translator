@@ -132,8 +132,6 @@ declare module '@shared-types/app' {
     url: string;
     quality?: VideoQuality;
     operationId?: string;
-    useCookies?: boolean;
-    cookiesBrowser?: string; // 'auto' | 'chrome' | 'safari' | 'firefox' | 'edge'
   }
 
   export interface ProcessUrlResult {
@@ -148,7 +146,6 @@ declare module '@shared-types/app' {
     error?: string;
     operationId?: string;
     cancelled?: boolean;
-    cookiesBrowserUsed?: string;
   }
 
   export type UrlProgressCallback = (progress: {
@@ -802,20 +799,13 @@ declare module '@shared-types/app' {
       isAppleSilicon?: boolean;
     }>;
 
-    // Cookie preferences
-    getDefaultCookieBrowser: () => Promise<string>;
-    connectYouTubeCookies: () => Promise<{
+    connectCookiesForUrl: (url: string) => Promise<{
       success: boolean;
       cookiesWritten: number;
-      hasAuthCookies: boolean;
       cancelled: boolean;
       error?: string;
     }>;
-    clearYouTubeCookies: () => Promise<void>;
-    getPreferredCookiesBrowser: () => Promise<string>;
-    setPreferredCookiesBrowser: (
-      v: string
-    ) => Promise<{ success: boolean; error?: string }>;
+    clearCookiesForUrl: (url: string) => Promise<void>;
 
     // App log
     onAppLog: (callback: (payload: any) => void) => () => void;

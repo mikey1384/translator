@@ -8,7 +8,6 @@ import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
-import { defaultBrowserHint } from './utils.js';
 
 export async function updateYtDlp(): Promise<boolean> {
   try {
@@ -28,9 +27,7 @@ export async function processVideoUrl(
   services?: {
     fileManager: FileManager;
     ffmpeg: FFmpegContext;
-  },
-  useCookies: boolean = false,
-  cookiesBrowser?: string
+  }
 ): Promise<{
   videoPath: string;
   filename: string;
@@ -38,7 +35,6 @@ export async function processVideoUrl(
   fileUrl: string;
   originalVideoPath: string;
   proc: DownloadProcessType;
-  cookiesBrowserUsed?: string;
 }> {
   log.info(`[URLprocessor] processVideoUrl CALLED (Op ID: ${operationId})`);
 
@@ -77,16 +73,6 @@ export async function processVideoUrl(
     throw new Error('Invalid URL provided.');
   }
 
-  let extra: string[] = [];
-  if (useCookies) {
-    extra = [
-      '--cookies-from-browser',
-      cookiesBrowser && cookiesBrowser !== 'auto'
-        ? cookiesBrowser
-        : defaultBrowserHint(),
-    ];
-  }
-
   // --- 1st attempt: use cookies if specified ---
   const run = async (extraArgs: string[]) => {
     const downloadResult = await downloadVideoFromPlatform(
@@ -112,12 +98,11 @@ export async function processVideoUrl(
       fileUrl: `file://${downloadResult.filepath}`,
       originalVideoPath: downloadResult.filepath,
       proc: downloadResult.proc,
-      cookiesBrowserUsed: downloadResult.cookiesBrowserUsed,
     };
   };
 
   try {
-    return await run(extra);
+    return await run([]);
   } catch (err: any) {
     const combined = `${err?.message ?? ''}\n${err?.stderr ?? ''}\n${
       err?.stdout ?? ''
@@ -134,7 +119,7 @@ export async function processVideoUrl(
       );
 
     const needsCookiesNow = looksSuspicious || needsLoginBotCheck;
-    if (needsCookiesNow && !useCookies) {
+    if (needsCookiesNow) {
       log.info(
         `[URLprocessor] NeedCookies triggered (host=${
           new URL(url).hostname
@@ -147,7 +132,7 @@ export async function processVideoUrl(
       throw new Error('NeedCookies');
     }
 
-    throw err; // not a 429 or already using cookies ⇒ let normal error flow handle it
+    throw err; // not a 429 / cookie-related flow ⇒ let normal error flow handle it
   }
 }
 

@@ -5,7 +5,7 @@ import type {
 } from '@shared-types/app';
 
 export function download<
-  T extends ProcessUrlOptions & { useCookies?: boolean },
+  T extends ProcessUrlOptions,
 >(options: T): Promise<ProcessUrlResult> {
   return window.electron.processUrl(options);
 }

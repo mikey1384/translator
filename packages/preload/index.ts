@@ -637,28 +637,17 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('update:error', handler);
   },
 
-  // --- Utilities ---
-  getDefaultCookieBrowser: (): Promise<string> =>
-    ipcRenderer.invoke('get-default-cookie-browser'),
-
-  // --- YouTube cookie session (cross-platform) ---
-  connectYouTubeCookies: (): Promise<{
+  // --- App-managed cookies session (cross-platform) ---
+  connectCookiesForUrl: (
+    url: string
+  ): Promise<{
     success: boolean;
     cookiesWritten: number;
-    hasAuthCookies: boolean;
     cancelled: boolean;
     error?: string;
-  }> => ipcRenderer.invoke('youtube:connect'),
-  clearYouTubeCookies: (): Promise<void> =>
-    ipcRenderer.invoke('youtube:clear-cookies'),
-
-  // --- Cookie preference ---
-  getPreferredCookiesBrowser: (): Promise<string> =>
-    ipcRenderer.invoke('settings:getPreferredCookiesBrowser'),
-  setPreferredCookiesBrowser: (
-    v: string
-  ): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke('settings:setPreferredCookiesBrowser', v),
+  }> => ipcRenderer.invoke('cookies:connect', url),
+  clearCookiesForUrl: (url: string): Promise<void> =>
+    ipcRenderer.invoke('cookies:clear', url),
 
   // yt-dlp auto-update is always on; no setting exposed
 };

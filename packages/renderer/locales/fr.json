@@ -87,7 +87,11 @@
     "selectBrowser": "Navigateur",
     "cookieHelp": "Conseil : Connectez-vous à YouTube dans le navigateur sélectionné. Si vous voyez un écran de consentement, visitez youtube.com dans ce navigateur et acceptez, puis réessayez ici.",
     "cookieAdvice": "Assurez-vous que le navigateur sélectionné est celui où vous êtes connecté à YouTube.",
-    "saveDubbedVideo": "Enregistrer la vidéo doublée"
+    "saveDubbedVideo": "Enregistrer la vidéo doublée",
+    "connect": "Connecter",
+    "connecting": "Connexion...",
+    "connectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer.",
+    "youtubeConnectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer."
   },
   "subtitles": {
     "outputLanguage": "Langue de sortie",
@@ -668,7 +672,9 @@
       "elevenlabsInsufficientQuota": "Votre compte ElevenLabs n'a pas assez de crédits. Veuillez ajouter des crédits sur elevenlabs.io.",
       "checkSettings": "Vérifier les Paramètres",
       "genericApiError": "La requête API a échoué. Veuillez vérifier votre clé API et l'état de votre compte."
-    }
+    },
+    "needCookiesYouTube": "YouTube a demandé une vérification humaine. Cliquez sur Connecter pour continuer.",
+    "needCookiesGeneric": "Ce site a demandé une vérification humaine. Cliquez sur Connecter pour continuer."
   },
   "logs": {
     "title": "Journaux récents",

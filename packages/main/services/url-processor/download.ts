@@ -22,9 +22,7 @@ import { PROGRESS, qualityFormatMap } from './constants.js';
 import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
-import { maybeEnsureWindowsCookiesAccessible } from './cookie-browser-windows.js';
-import { browserCookiesAvailable } from './utils.js';
-import { exportYouTubeCookiesToFile } from './youtube-cookies.js';
+import { exportCookiesToFileForUrl } from './site-cookies.js';
 
 /**
  * Clean up partial/incomplete download files matching a timestamp pattern.
@@ -186,7 +184,6 @@ export async function downloadVideoFromPlatform(
   filepath: string;
   info: any;
   proc: DownloadProcessType;
-  cookiesBrowserUsed?: string;
 }> {
   log.info(`[URLprocessor] Starting download: ${url} (Op ID: ${operationId})`);
 
@@ -205,7 +202,9 @@ export async function downloadVideoFromPlatform(
     // Map binary setup progress (0-100) to warmup range (0-5%)
     let percent = PROGRESS.WARMUP_START;
     if (info.percent !== undefined) {
-      percent = PROGRESS.WARMUP_START + (info.percent / 100) * (PROGRESS.WARMUP_END - PROGRESS.WARMUP_START);
+      percent =
+        PROGRESS.WARMUP_START +
+        (info.percent / 100) * (PROGRESS.WARMUP_END - PROGRESS.WARMUP_START);
     }
     progressCallback?.({
       percent: Math.min(PROGRESS.WARMUP_END - 0.1, percent), // Never quite reach 5%
@@ -260,7 +259,9 @@ export async function downloadVideoFromPlatform(
   if (jsRuntime) {
     log.info(`[URLprocessor] Using JS runtime for yt-dlp: ${jsRuntime}`);
   } else {
-    log.warn('[URLprocessor] No JS runtime available - YouTube downloads may fail');
+    log.warn(
+      '[URLprocessor] No JS runtime available - YouTube downloads may fail'
+    );
   }
 
   // Continue warmup flow (stay within 0-5% range)
@@ -341,46 +342,30 @@ export async function downloadVideoFromPlatform(
   }
 
   let effectiveExtraArgs = [...extraArgs];
-  const dpapiTriedBrowsers = new Set<string>();
-  let cookieCloseAttemptedFor: 'chrome' | 'edge' | null = null;
-
-  function getCookiesBrowserArg(args: string[]): string | null {
-    const idx = args.findIndex(a => a === '--cookies-from-browser');
-    if (idx < 0) return null;
-    const v = (args[idx + 1] || '').toLowerCase().trim();
-    return v || null;
-  }
-
-  function replaceCookiesBrowserArg(args: string[], browser: string): string[] {
-    const idx = args.findIndex(a => a === '--cookies-from-browser');
-    if (idx < 0) return [...args, '--cookies-from-browser', browser];
-    const next = [...args];
-    next[idx + 1] = browser;
-    return next;
-  }
 
   const isYouTube = /youtube\.com|youtu\.be/.test(url);
   const isYouTubeShorts = /youtube\.com\/shorts\//.test(url);
   let effectiveQuality = quality;
 
-  // If we have an app-managed YouTube session, export cookies and use them by default for YouTube.
-  // This avoids Windows DPAPI failures and "locked Cookies DB" issues from external browsers.
+  // If we have an app-managed session for this site, export cookies and use them by default.
   try {
-    const hasCookiesFlag =
-      effectiveExtraArgs.includes('--cookies') ||
-      effectiveExtraArgs.includes('--cookies-from-browser');
-    if (isYouTube && !hasCookiesFlag) {
-      const exported = await exportYouTubeCookiesToFile();
+    const hasCookiesFlag = effectiveExtraArgs.includes('--cookies');
+    if (!hasCookiesFlag) {
+      const exported = await exportCookiesToFileForUrl(url);
       if (exported.count > 0) {
-        effectiveExtraArgs = [...effectiveExtraArgs, '--cookies', exported.path];
+        effectiveExtraArgs = [
+          ...effectiveExtraArgs,
+          '--cookies',
+          exported.path,
+        ];
         log.info(
-          `[URLprocessor] Using app YouTube cookies (${exported.count}, auth=${exported.hasAuthCookies})`
+          `[URLprocessor] Using app cookies for ${new URL(url).hostname} (${exported.count})`
         );
       }
     }
   } catch (err: any) {
     log.warn(
-      '[URLprocessor] Failed to export app YouTube cookies (continuing without):',
+      '[URLprocessor] Failed to export app cookies (continuing without):',
       err?.message || err
     );
   }
@@ -967,7 +952,6 @@ export async function downloadVideoFromPlatform(
           filepath: finalFilepath,
           info: downloadInfo,
           proc: subprocess!,
-          cookiesBrowserUsed: getCookiesBrowserArg(effectiveExtraArgs) ?? undefined,
         };
       } catch (error: any) {
         lastError = error;
@@ -986,7 +970,8 @@ export async function downloadVideoFromPlatform(
         const currentCookiesBrowser = getCookiesBrowserArg(effectiveExtraArgs);
         const currentWindowsCookieBrowser =
           process.platform === 'win32' &&
-          (currentCookiesBrowser === 'chrome' || currentCookiesBrowser === 'edge')
+          (currentCookiesBrowser === 'chrome' ||
+            currentCookiesBrowser === 'edge')
             ? (currentCookiesBrowser as 'chrome' | 'edge')
             : null;
         const looksLikeDpapiFailure =
@@ -999,7 +984,8 @@ export async function downloadVideoFromPlatform(
         if (
           looksLikeDpapiFailure &&
           process.platform === 'win32' &&
-          (currentCookiesBrowser === 'chrome' || currentCookiesBrowser === 'edge')
+          (currentCookiesBrowser === 'chrome' ||
+            currentCookiesBrowser === 'edge')
         ) {
           dpapiTriedBrowsers.add(currentCookiesBrowser);
           const candidates =

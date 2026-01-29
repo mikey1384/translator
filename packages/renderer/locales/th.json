@@ -83,7 +83,11 @@
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
     "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
-    "saveDubbedVideo": "Save Dubbed Video"
+    "saveDubbedVideo": "Save Dubbed Video",
+    "connect": "เชื่อมต่อ",
+    "connecting": "กำลังเชื่อมต่อ...",
+    "connectTip": "เคล็ดลับ: ในหน้าต่างเชื่อมต่อ ให้ลงชื่อเข้าใช้หรือทำการยืนยันให้เสร็จ จากนั้นปิดหน้าต่างเพื่อดำเนินการต่อ",
+    "youtubeConnectTip": "เคล็ดลับ: ในหน้าต่างเชื่อมต่อ ให้ลงชื่อเข้าใช้หรือทำการยืนยันให้เสร็จ จากนั้นปิดหน้าต่างเพื่อดำเนินการต่อ"
   },
   "subtitles": {
     "outputLanguage": "ภาษาเอาต์พุต",
@@ -389,7 +393,9 @@
     "missingVideoMetadata": "Missing video metadata ({{missing}})",
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
-    "failedToLoadSRT": "Failed to load SRT file"
+    "failedToLoadSRT": "Failed to load SRT file",
+    "needCookiesYouTube": "YouTube ขอการยืนยันตัวตน คลิกเชื่อมต่อเพื่อดำเนินการต่อ",
+    "needCookiesGeneric": "เว็บไซต์นี้ขอการยืนยันตัวตน คลิกเชื่อมต่อเพื่อดำเนินการต่อ"
   },
   "cta": {
     "generate": {

@@ -83,7 +83,11 @@
     "selectBrowser": "Browser",
     "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
     "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
-    "saveDubbedVideo": "Save Dubbed Video"
+    "saveDubbedVideo": "Save Dubbed Video",
+    "connect": "कनेक्ट करें",
+    "connecting": "कनेक्ट हो रहा है...",
+    "connectTip": "सुझाव: कनेक्ट विंडो में साइन इन करें या जाँच पूरी करें, फिर जारी रखने के लिए विंडो बंद करें।",
+    "youtubeConnectTip": "सुझाव: कनेक्ट विंडो में साइन इन करें या जाँच पूरी करें, फिर जारी रखने के लिए विंडो बंद करें।"
   },
   "subtitles": {
     "outputLanguage": "आउटपुट भाषा",
@@ -389,7 +393,9 @@
     "missingVideoMetadata": "Missing video metadata ({{missing}})",
     "noSourceVideo": "No source video",
     "noSubtitlesLoaded": "No subtitles loaded",
-    "failedToLoadSRT": "Failed to load SRT file"
+    "failedToLoadSRT": "Failed to load SRT file",
+    "needCookiesYouTube": "YouTube ने मानव जाँच का अनुरोध किया है। जारी रखने के लिए कनेक्ट पर क्लिक करें।",
+    "needCookiesGeneric": "इस साइट ने मानव जाँच का अनुरोध किया है। जारी रखने के लिए कनेक्ट पर क्लिक करें।"
   },
   "cta": {
     "generate": {
