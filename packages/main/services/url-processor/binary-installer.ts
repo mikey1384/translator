@@ -975,13 +975,15 @@ async function doEnsureJsRuntime(
 
   try {
     await fsp.access(installedQuickJs, fs.constants.X_OK);
-    // Verify it works
-    await execa(installedQuickJs, ['--version'], { timeout: 5000, windowsHide: true });
-    log.info(`[URLprocessor] Found installed QuickJS at: ${installedQuickJs}`);
-    cachedJsRuntime = `quickjs:${installedQuickJs}`;
-    return cachedJsRuntime;
+    // QuickJS doesn't support --version, just trust the binary exists and is executable
+    const stats = await fsp.stat(installedQuickJs);
+    if (stats.size > 100000) { // Sanity check: binary should be > 100KB
+      log.info(`[URLprocessor] Found installed QuickJS at: ${installedQuickJs}`);
+      cachedJsRuntime = `quickjs:${installedQuickJs}`;
+      return cachedJsRuntime;
+    }
   } catch {
-    // Not installed or doesn't work
+    // Not installed
   }
 
   // No runtime found, install QuickJS
