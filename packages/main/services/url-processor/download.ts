@@ -12,6 +12,7 @@ import type { DownloadProcess as DownloadProcessType } from '../../active-proces
 import { CancelledError } from '../../../shared/cancelled-error.js';
 import {
   ensureYtDlpBinary,
+  ensureJsRuntime,
   YtDlpSetupError,
   type BinarySetupProgress,
 } from './binary-installer.js';
@@ -244,6 +245,15 @@ export async function downloadVideoFromPlatform(
 
   log.info(`[URLprocessor] yt-dlp ready at: ${ytDlpPath}`);
 
+  // Ensure JS runtime is available for YouTube signature decryption
+  // This runs during the "Initializing..." crawl phase so no separate progress stage needed
+  const jsRuntime = await ensureJsRuntime();
+  if (jsRuntime) {
+    log.info(`[URLprocessor] Using JS runtime for yt-dlp: ${jsRuntime}`);
+  } else {
+    log.warn('[URLprocessor] No JS runtime available - YouTube downloads may fail');
+  }
+
   // Continue warmup flow (stay within 0-5% range)
   progressCallback?.({
     percent: PROGRESS.WARMUP_END - 0.5,
@@ -441,6 +451,8 @@ export async function downloadVideoFromPlatform(
       ? 'v6'
       : 'auto';
 
+  const jsRuntimeArgs = jsRuntime ? ['--js-runtimes', jsRuntime] : [];
+
   function buildBaseArgs(): string[] {
     return [
       url,
@@ -456,6 +468,8 @@ export async function downloadVideoFromPlatform(
       ...sortArgs,
       // Fallback extractor tweaks (e.g., forcing iOS client)
       ...extractorArgs,
+      // JS runtime for YouTube signature decryption
+      ...jsRuntimeArgs,
       // Network reliability guards to reduce initial stalls
       '--socket-timeout',
       '10',

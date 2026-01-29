@@ -747,6 +747,259 @@ export async function installYtDlpBinary(): Promise<string> {
   return ensureYtDlpBinary();
 }
 
+/**
+ * JS Runtime installer for yt-dlp.
+ * yt-dlp requires a JavaScript runtime (node, deno, bun, or quickjs) for YouTube signature decryption.
+ * This function checks for existing runtimes and installs QuickJS if none are found.
+ * See: https://github.com/yt-dlp/yt-dlp/wiki/EJS
+ */
+
+let cachedJsRuntime: string | null | undefined = undefined; // undefined = not checked yet
+let jsRuntimePromise: Promise<string | null> | null = null; // in-flight promise to prevent concurrent installs
+
+async function findExistingJsRuntime(): Promise<string | null> {
+  const runtimes = [
+    { name: 'node', cmd: 'node' },
+    { name: 'deno', cmd: 'deno' },
+    { name: 'bun', cmd: 'bun' },
+  ];
+
+  for (const { name, cmd } of runtimes) {
+    try {
+      if (process.platform === 'win32') {
+        // On Windows, use 'where' command
+        const { stdout } = await execa('where', [cmd], {
+          timeout: 5000,
+          windowsHide: true,
+        });
+        const path = stdout.trim().split('\n')[0]?.trim();
+        if (path) {
+          // Verify it works
+          await execa(path, ['--version'], { timeout: 5000, windowsHide: true });
+          log.info(`[URLprocessor] Found JS runtime: ${name} at ${path}`);
+          return `${name}:${path}`;
+        }
+      } else {
+        // On Unix, use 'which' command
+        const { stdout } = await execa('which', [cmd], {
+          timeout: 5000,
+          windowsHide: true,
+        });
+        const path = stdout.trim();
+        if (path) {
+          // Verify it works
+          await execa(path, ['--version'], { timeout: 5000, windowsHide: true });
+          log.info(`[URLprocessor] Found JS runtime: ${name} at ${path}`);
+          return `${name}:${path}`;
+        }
+      }
+    } catch {
+      // Runtime not found or doesn't work, continue
+    }
+  }
+
+  // Check common Windows paths for Node.js
+  if (process.platform === 'win32') {
+    const winPaths = [
+      join(process.env.ProgramFiles || 'C:\\Program Files', 'nodejs', 'node.exe'),
+      join(process.env.LOCALAPPDATA || '', 'Programs', 'node', 'node.exe'),
+    ];
+    for (const nodePath of winPaths) {
+      try {
+        await fsp.access(nodePath, fs.constants.X_OK);
+        await execa(nodePath, ['--version'], { timeout: 5000, windowsHide: true });
+        log.info(`[URLprocessor] Found Node.js at: ${nodePath}`);
+        return `node:${nodePath}`;
+      } catch {
+        // Not found
+      }
+    }
+  }
+
+  return null;
+}
+
+function getQuickJsDownloadUrl(): { url: string; filename: string } {
+  const platform = process.platform;
+  const arch = process.arch;
+
+  // QuickJS-ng releases from https://github.com/aspect-build/aspect-js
+  // These are standalone binaries that work well with yt-dlp
+  if (platform === 'darwin') {
+    if (arch === 'arm64') {
+      return {
+        url: 'https://github.com/aspect-build/aspect-js/releases/latest/download/aspect-js-darwin-aarch64',
+        filename: 'aspect-js',
+      };
+    }
+    return {
+      url: 'https://github.com/aspect-build/aspect-js/releases/latest/download/aspect-js-darwin-x86_64',
+      filename: 'aspect-js',
+    };
+  }
+
+  if (platform === 'linux') {
+    if (arch === 'arm64') {
+      return {
+        url: 'https://github.com/aspect-build/aspect-js/releases/latest/download/aspect-js-linux-aarch64',
+        filename: 'aspect-js',
+      };
+    }
+    return {
+      url: 'https://github.com/aspect-build/aspect-js/releases/latest/download/aspect-js-linux-x86_64',
+      filename: 'aspect-js',
+    };
+  }
+
+  if (platform === 'win32') {
+    return {
+      url: 'https://github.com/aspect-build/aspect-js/releases/latest/download/aspect-js-windows-x86_64.exe',
+      filename: 'aspect-js.exe',
+    };
+  }
+
+  throw new Error(`Unsupported platform: ${platform}/${arch}`);
+}
+
+async function downloadQuickJs(
+  onProgress?: BinarySetupProgress
+): Promise<string> {
+  const { url, filename } = getQuickJsDownloadUrl();
+  const targetDir = join(app.getPath('userData'), 'bin');
+  const targetPath = join(targetDir, filename);
+
+  log.info(`[URLprocessor] Downloading QuickJS from: ${url}`);
+  onProgress?.({ stage: 'Downloading JS runtime…', percent: 0 });
+
+  await fsp.mkdir(targetDir, { recursive: true });
+
+  try {
+    const response = await fetchWithRedirect(url);
+
+    const contentLength = parseInt(
+      response.headers['content-length'] || '0',
+      10
+    );
+    let downloaded = 0;
+    let lastReportedPercent = 0;
+
+    const fileStream = createWriteStream(targetPath);
+
+    await new Promise<void>((resolve, reject) => {
+      response.on('data', (chunk: Buffer) => {
+        downloaded += chunk.length;
+        if (contentLength > 0) {
+          const percent = Math.round((downloaded / contentLength) * 100);
+          if (percent >= lastReportedPercent + 10 || percent === 100) {
+            lastReportedPercent = percent;
+            onProgress?.({ stage: 'Downloading JS runtime…', percent });
+          }
+        }
+      });
+      response.on('error', reject);
+      fileStream.on('error', reject);
+      fileStream.on('finish', resolve);
+      response.pipe(fileStream);
+    });
+
+    // Make executable
+    await ensureExecutable(targetPath);
+
+    // Verify it works
+    try {
+      await execa(targetPath, ['--version'], { timeout: 10000, windowsHide: true });
+      log.info(`[URLprocessor] QuickJS installed successfully at: ${targetPath}`);
+    } catch (error: any) {
+      log.warn(`[URLprocessor] QuickJS version check failed (may still work): ${error.message}`);
+    }
+
+    const stats = await fsp.stat(targetPath);
+    log.info(`[URLprocessor] QuickJS binary size: ${stats.size} bytes`);
+
+    return targetPath;
+  } catch (error: any) {
+    await fsp.unlink(targetPath).catch(() => {});
+    log.error('[URLprocessor] Failed to download QuickJS:', error);
+    throw new Error(`Failed to download QuickJS: ${error.message}`);
+  }
+}
+
+/**
+ * Ensures a JavaScript runtime is available for yt-dlp.
+ * First checks for existing runtimes (node, deno, bun), then installs QuickJS if needed.
+ * Returns the runtime string in yt-dlp format: "runtime:path" or null if unavailable.
+ * Uses in-flight promise pattern to prevent concurrent downloads racing.
+ */
+export async function ensureJsRuntime({
+  onProgress,
+}: {
+  onProgress?: BinarySetupProgress;
+} = {}): Promise<string | null> {
+  // Return cached result if available
+  if (cachedJsRuntime !== undefined) {
+    return cachedJsRuntime;
+  }
+
+  // If another call is already in flight, wait for it instead of racing
+  if (jsRuntimePromise) {
+    log.info('[URLprocessor] JS runtime check already in progress, waiting...');
+    return jsRuntimePromise;
+  }
+
+  // Start the actual work and store the promise so concurrent calls can wait
+  jsRuntimePromise = doEnsureJsRuntime(onProgress);
+
+  try {
+    return await jsRuntimePromise;
+  } finally {
+    jsRuntimePromise = null;
+  }
+}
+
+async function doEnsureJsRuntime(
+  onProgress?: BinarySetupProgress
+): Promise<string | null> {
+  log.info('[URLprocessor] Checking for JavaScript runtime...');
+  onProgress?.({ stage: 'Checking JS runtime…' });
+
+  // First, check for existing runtimes
+  const existingRuntime = await findExistingJsRuntime();
+  if (existingRuntime) {
+    cachedJsRuntime = existingRuntime;
+    return existingRuntime;
+  }
+
+  // Check if we already have QuickJS installed
+  const quickJsFilename = process.platform === 'win32' ? 'aspect-js.exe' : 'aspect-js';
+  const installedQuickJs = join(app.getPath('userData'), 'bin', quickJsFilename);
+
+  try {
+    await fsp.access(installedQuickJs, fs.constants.X_OK);
+    // Verify it works
+    await execa(installedQuickJs, ['--version'], { timeout: 5000, windowsHide: true });
+    log.info(`[URLprocessor] Found installed QuickJS at: ${installedQuickJs}`);
+    cachedJsRuntime = `quickjs:${installedQuickJs}`;
+    return cachedJsRuntime;
+  } catch {
+    // Not installed or doesn't work
+  }
+
+  // No runtime found, install QuickJS
+  log.info('[URLprocessor] No JS runtime found, installing QuickJS...');
+
+  try {
+    const quickJsPath = await downloadQuickJs(onProgress);
+    cachedJsRuntime = `quickjs:${quickJsPath}`;
+    log.info(`[URLprocessor] JS runtime ready: ${cachedJsRuntime}`);
+    return cachedJsRuntime;
+  } catch (error: any) {
+    log.error('[URLprocessor] Failed to install QuickJS:', error);
+    // Cache null so we don't keep retrying
+    cachedJsRuntime = null;
+    return null;
+  }
+}
+
 async function verifyBinaryIntegrity(binaryPath: string): Promise<boolean> {
   try {
     // Ensure executable bit is set before attempting to run the binary on POSIX systems

@@ -1,7 +1,7 @@
 {
   "name": "Translator",
   "private": true,
-  "version": "1.9.15",
+  "version": "1.9.16",
   "type": "module",
   "description": "Translator - AI-powered video translation tool",
   "author": "Mikey Lee",
