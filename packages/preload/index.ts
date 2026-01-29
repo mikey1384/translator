@@ -646,6 +646,10 @@ const electronAPI = {
     cancelled: boolean;
     error?: string;
   }> => ipcRenderer.invoke('cookies:connect', url),
+  getCookiesStatusForUrl: (
+    url: string
+  ): Promise<{ count: number; hasYouTubeAuth: boolean }> =>
+    ipcRenderer.invoke('cookies:status', url),
   clearCookiesForUrl: (url: string): Promise<void> =>
     ipcRenderer.invoke('cookies:clear', url),
 

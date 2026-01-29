@@ -83,15 +83,10 @@
     "srtLoaded": "Transcripción completada",
     "srtFileLoaded": "SRT cargado",
     "featuresUnlockAfterTranscription": "Los menús de traducción y otras opciones aparecerán después de que se complete la transcripción.",
-    "retryWithCookies": "Reintentar con cookies del navegador",
-    "selectBrowser": "Navegador",
-    "cookieHelp": "Consejo: Inicia sesión en YouTube en el navegador seleccionado. Si ves una pantalla de consentimiento, visita youtube.com en ese navegador y acepta, luego reintenta aquí.",
-    "cookieAdvice": "Asegúrate de que el navegador seleccionado sea en el que has iniciado sesión en YouTube.",
     "saveDubbedVideo": "Guardar video doblado",
     "connect": "Conectar",
     "connecting": "Conectando...",
-    "connectTip": "Consejo: En la ventana de conexión, inicia sesión o completa la verificación, luego cierra la ventana para continuar.",
-    "youtubeConnectTip": "Consejo: En la ventana de conexión, inicia sesión o completa la verificación, luego cierra la ventana para continuar."
+    "connectTip": "Consejo: En la ventana de conexión, inicia sesión o completa la verificación, luego cierra la ventana para continuar."
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
@@ -648,7 +643,7 @@
     }
   },
   "errors": {
-    "needCookies": "YouTube solicitó una verificación humana. Reintenta usando las cookies de tu navegador.",
+    "needCookies": "YouTube solicitó una verificación humana. Haz clic en Conectar para continuar.",
     "unexpected": "Ocurrió un error inesperado.",
     "unexpectedRemove": "Ocurrió un error inesperado al eliminar la clave.",
     "unexpectedSave": "Ocurrió un error inesperado al guardar.",

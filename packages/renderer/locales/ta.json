@@ -78,16 +78,11 @@
     "transcribeOnly": "Transcribe Audio",
     "srtLoaded": "Transcription Complete",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "srtFileLoaded": "SRT Loaded",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "இணைக்கவும்",
     "connecting": "இணைக்கிறது...",
-    "connectTip": "குறிப்பு: இணைப்பு சாளரத்தில் உள்நுழையவும் அல்லது சரிபார்ப்பை முடிக்கவும், பின்னர் தொடர சாளரத்தை மூடவும்.",
-    "youtubeConnectTip": "குறிப்பு: இணைப்பு சாளரத்தில் உள்நுழையவும் அல்லது சரிபார்ப்பை முடிக்கவும், பின்னர் தொடர சாளரத்தை மூடவும்."
+    "connectTip": "குறிப்பு: இணைப்பு சாளரத்தில் உள்நுழையவும் அல்லது சரிபார்ப்பை முடிக்கவும், பின்னர் தொடர சாளரத்தை மூடவும்."
   },
   "subtitles": {
     "outputLanguage": "வெளியீட்டு மொழி",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube மனித சரிபார்ப்பைக் கேட்டது. தொடர இணைக்கவும் என்பதைக் கிளிக் செய்யவும்.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

@@ -81,15 +81,10 @@
     "srtLoaded": "轉錄完成",
     "srtFileLoaded": "已載入 SRT",
     "featuresUnlockAfterTranscription": "轉錄完成後將顯示翻譯和其他選單。",
-    "retryWithCookies": "使用瀏覽器Cookie重試",
-    "selectBrowser": "瀏覽器",
-    "cookieHelp": "提示：在所選瀏覽器中登入YouTube。如果看到同意畫面，請在該瀏覽器中訪問youtube.com並接受，然後在此重試。",
-    "cookieAdvice": "確保所選瀏覽器是您登入YouTube的瀏覽器。",
     "saveDubbedVideo": "儲存配音影片",
     "connect": "連接",
     "connecting": "連接中...",
-    "connectTip": "提示：在連接視窗中登入或完成驗證，然後關閉視窗繼續。",
-    "youtubeConnectTip": "提示：在連接視窗中登入或完成驗證，然後關閉視窗繼續。"
+    "connectTip": "提示：在連接視窗中登入或完成驗證，然後關閉視窗繼續。"
   },
   "subtitles": {
     "outputLanguage": "輸出語言",
@@ -608,7 +603,7 @@
     }
   },
   "errors": {
-    "needCookies": "YouTube要求進行人機驗證。請使用瀏覽器Cookie重試。",
+    "needCookies": "YouTube 要求進行人機驗證。點擊「連接」繼續。",
     "unexpected": "發生意外錯誤。",
     "unexpectedRemove": "刪除金鑰時發生意外錯誤。",
     "unexpectedSave": "儲存時發生意外錯誤。",

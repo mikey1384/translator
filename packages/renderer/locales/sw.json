@@ -79,15 +79,10 @@
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT Imepakiwa",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Unganisha",
     "connecting": "Inaunganisha...",
-    "connectTip": "Kidokezo: Katika dirisha la kuunganisha, ingia au kamilisha uthibitisho, kisha funga dirisha kuendelea.",
-    "youtubeConnectTip": "Kidokezo: Katika dirisha la kuunganisha, ingia au kamilisha uthibitisho, kisha funga dirisha kuendelea."
+    "connectTip": "Kidokezo: Katika dirisha la kuunganisha, ingia au kamilisha uthibitisho, kisha funga dirisha kuendelea."
   },
   "subtitles": {
     "outputLanguage": "Lugha ya Matokeo",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube iliomba uthibitisho wa binadamu. Bofya Unganisha kuendelea.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

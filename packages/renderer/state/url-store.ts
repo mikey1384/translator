@@ -22,7 +22,6 @@ interface UrlState {
   error: string | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
-  cookieBannerSuppressed: boolean;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
@@ -31,15 +30,6 @@ interface UrlState {
   setDownload: (patch: Partial<DownloadTask>) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
-  onDownloadProgress: ({
-    percent,
-    stage,
-    operationId,
-  }: {
-    percent: number;
-    stage: string;
-    operationId: string;
-  }) => void;
 }
 
 const initialDownload: DownloadTask = {
@@ -58,7 +48,6 @@ export const useUrlStore = create<UrlState>()(
     error: null as string | null,
     inputMode: 'url',
     needCookies: false,
-    cookieBannerSuppressed: false,
 
     setUrlInput: urlInput => {
       set(state => {
@@ -74,7 +63,7 @@ export const useUrlStore = create<UrlState>()(
     setError: msg => set({ error: msg }),
 
     async downloadMedia() {
-      set({ needCookies: false, cookieBannerSuppressed: false });
+      set({ needCookies: false });
       return downloadMediaInternal(set, get);
     },
 
@@ -84,44 +73,7 @@ export const useUrlStore = create<UrlState>()(
       }),
 
     setInputMode: mode => set({ inputMode: mode }),
-
     setNeedCookies: v => set({ needCookies: v }),
-
-    onDownloadProgress: ({
-      percent,
-      stage,
-      operationId,
-    }: {
-      percent: number;
-      stage: string;
-      operationId: string;
-    }) => {
-      console.log('[url-store] download progress', { percent, stage });
-      if (stage === 'NeedCookies') {
-        set(state => {
-          if (!state.cookieBannerSuppressed) {
-            state.needCookies = true;
-            state.download.inProgress = false;
-            state.download.stage = 'NeedCookies';
-            state.download.percent = 100;
-          }
-        });
-        return;
-      }
-      if (stage === 'Completed' || stage === 'Error' || stage === 'Cancelled') {
-        set(state => {
-          state.needCookies = false;
-          if (stage === 'Cancelled') state.cookieBannerSuppressed = true;
-          if (stage === 'Cancelled') state.error = null;
-        });
-      }
-      set(state => {
-        state.download.percent = percent;
-        state.download.stage = stage;
-        state.download.inProgress = percent < 100;
-        state.download.id = operationId;
-      });
-    },
   }))
 );
 
@@ -150,11 +102,19 @@ async function downloadMediaInternal(
 
   const offProgress = UrlIPC.onProgress(p => {
     if (p.operationId !== opId) return;
+    // Only allow this listener to update state for the currently active download.
+    // Without this, a late Cancelled event from a previous download can overwrite
+    // a new download's state if the user cancels + retries quickly.
+    if (get().download.id !== opId) return;
+    // Ignore late events after user-initiated cancel.
+    if (get().download.stage === 'Cancelled') return;
     if (p.stage === 'NeedCookies') {
       set((state: UrlState) => {
         state.needCookies = true;
         state.download.inProgress = false;
         state.download.stage = 'NeedCookies';
+        state.download.percent = 100;
+        state.error = null;
       });
       return;
     }
@@ -164,6 +124,7 @@ async function downloadMediaInternal(
         state.download.inProgress = false;
         state.download.stage = 'Cancelled';
         state.download.percent = 100;
+        state.error = null;
       });
       return;
     }
@@ -185,26 +146,32 @@ async function downloadMediaInternal(
       operationId: opId,
     });
 
+    // User cancellation should always win, even if the backend eventually
+    // resolves as NeedCookies (race between cancel and captcha detection).
+    const current = get().download;
+    if (current.id !== opId || current.stage === 'Cancelled') {
+      return res;
+    }
+
     const finalPath = res.videoPath ?? res.filePath;
     const filename = res.filename;
 
     if (res.cancelled || !finalPath || !filename) {
       set((state: UrlState) => {
-        state.needCookies = false;
+        state.needCookies = res.error === 'NeedCookies';
         state.download.inProgress = false;
-        // Preserve NeedCookies stage if backend returned that special case
-        if (res.error === 'NeedCookies') {
-          state.needCookies = true;
-          state.download.stage = 'NeedCookies';
-        } else {
-          state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
-        }
+        if (res.error === 'NeedCookies') state.download.stage = 'NeedCookies';
+        else state.download.stage = res.cancelled ? 'Cancelled' : 'Error';
         state.download.percent = 100;
-        if (res.cancelled) state.error = null;
-        else if (res.error === 'NeedCookies')
-          state.error = null; // banner handles it
-        else state.error = res.error || 'Failed to process URL';
-        if (res.cancelled) state.cookieBannerSuppressed = true;
+        if (res.cancelled) {
+          state.needCookies = false;
+          state.error = null;
+        } else if (res.error === 'NeedCookies') {
+          state.error = null;
+        } else {
+          state.needCookies = false;
+          state.error = res.error || 'Failed to process URL';
+        }
       });
       return res;
     }
@@ -222,6 +189,7 @@ async function downloadMediaInternal(
     }
 
     set((state: UrlState) => {
+      state.needCookies = false;
       state.download.stage = 'Completed';
       state.download.percent = 100;
       state.download.inProgress = false;
@@ -231,21 +199,20 @@ async function downloadMediaInternal(
     });
     return res;
   } catch (err: any) {
-    const { needCookies } = get();
-    if (needCookies) {
-      // Do not mark as error; show cookies banner and stop the spinner
-      set((state: UrlState) => {
-        state.download.inProgress = false;
-        if (!state.cookieBannerSuppressed) state.download.stage = 'NeedCookies';
-      });
-    } else {
-      set((state: UrlState) => {
-        state.error = err.message || String(err);
-        state.download.stage = 'Error';
-        state.download.percent = 100;
-        state.download.inProgress = false;
-      });
+    const current = get().download;
+    if (current.id !== opId || current.stage === 'Cancelled') {
+      return;
     }
+
+    set((state: UrlState) => {
+      state.needCookies = err?.message === 'NeedCookies';
+      state.error =
+        err?.message === 'NeedCookies' ? null : err?.message || String(err);
+      state.download.stage =
+        err?.message === 'NeedCookies' ? 'NeedCookies' : 'Error';
+      state.download.percent = 100;
+      state.download.inProgress = false;
+    });
   } finally {
     offProgress();
   }

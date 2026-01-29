@@ -79,15 +79,10 @@
     "srtLoaded": "Transcriptie voltooid",
     "srtFileLoaded": "SRT geladen",
     "featuresUnlockAfterTranscription": "Vertaal- en andere menu's verschijnen na voltooiing van de transcriptie.",
-    "retryWithCookies": "Opnieuw proberen met browsercookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Log in bij YouTube in de geselecteerde browser. Als je een toestemmingsscherm ziet, bezoek youtube.com in die browser en accepteer, probeer het dan hier opnieuw.",
-    "cookieAdvice": "Zorg ervoor dat de geselecteerde browser degene is waarop je bent ingelogd bij YouTube.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Verbinden",
     "connecting": "Verbinden...",
-    "connectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan.",
-    "youtubeConnectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan."
+    "connectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan."
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube vroeg om menselijke verificatie. Probeer opnieuw met je browsercookies.",
+    "needCookies": "YouTube heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
     "unexpected": "Er is een onverwachte fout opgetreden.",
     "unexpectedRemove": "Er is een onverwachte fout opgetreden bij het verwijderen van de sleutel.",
     "unexpectedSave": "Er is een onverwachte fout opgetreden bij het opslaan.",

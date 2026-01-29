@@ -81,15 +81,10 @@
     "srtLoaded": "Chép lời hoàn tất",
     "srtFileLoaded": "Đã tải SRT",
     "featuresUnlockAfterTranscription": "Menu dịch và các tùy chọn khác sẽ xuất hiện sau khi chép lời hoàn tất.",
-    "retryWithCookies": "Thử lại với cookie trình duyệt",
-    "selectBrowser": "Trình duyệt",
-    "cookieHelp": "Mẹo: Hãy đăng nhập YouTube trong trình duyệt đã chọn. Nếu thấy màn hình đồng ý, hãy truy cập youtube.com trong trình duyệt đó và chấp nhận, sau đó thử lại ở đây.",
-    "cookieAdvice": "Đảm bảo trình duyệt đã chọn là trình duyệt bạn đã đăng nhập YouTube.",
     "saveDubbedVideo": "Lưu video lồng tiếng",
     "connect": "Kết nối",
     "connecting": "Đang kết nối...",
-    "connectTip": "Mẹo: Trong cửa sổ kết nối, đăng nhập hoặc hoàn thành xác minh, sau đó đóng cửa sổ để tiếp tục.",
-    "youtubeConnectTip": "Mẹo: Trong cửa sổ kết nối, đăng nhập hoặc hoàn thành xác minh, sau đó đóng cửa sổ để tiếp tục."
+    "connectTip": "Mẹo: Trong cửa sổ kết nối, đăng nhập hoặc hoàn thành xác minh, sau đó đóng cửa sổ để tiếp tục."
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -532,7 +527,7 @@
     "usingElevenLabs": "Đang dùng ElevenLabs"
   },
   "errors": {
-    "needCookies": "YouTube yêu cầu xác minh người dùng. Thử lại bằng cookie trình duyệt của bạn.",
+    "needCookies": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
     "unexpected": "Đã xảy ra lỗi không mong muốn.",
     "unexpectedRemove": "Đã xảy ra lỗi không mong muốn khi xóa key.",
     "unexpectedSave": "Đã xảy ra lỗi không mong muốn khi lưu.",

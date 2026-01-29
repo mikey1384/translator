@@ -79,15 +79,10 @@
     "srtLoaded": "Μετατροπή Ολοκληρώθηκε",
     "srtFileLoaded": "Φορτώθηκε SRT",
     "featuresUnlockAfterTranscription": "Η μετάφραση και άλλα μενού θα εμφανιστούν αφού ολοκληρωθεί η μετατροπή.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Σύνδεση",
     "connecting": "Σύνδεση...",
-    "connectTip": "Συμβουλή: Στο παράθυρο σύνδεσης, συνδεθείτε ή ολοκληρώστε την επαλήθευση και μετά κλείστε το παράθυρο για να συνεχίσετε.",
-    "youtubeConnectTip": "Συμβουλή: Στο παράθυρο σύνδεσης, συνδεθείτε ή ολοκληρώστε την επαλήθευση και μετά κλείστε το παράθυρο για να συνεχίσετε."
+    "connectTip": "Συμβουλή: Στο παράθυρο σύνδεσης, συνδεθείτε ή ολοκληρώστε την επαλήθευση και μετά κλείστε το παράθυρο για να συνεχίσετε."
   },
   "subtitles": {
     "outputLanguage": "Γλώσσα Εξόδου",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "Το YouTube ζήτησε επαλήθευση ανθρώπου. Κάντε κλικ στο Σύνδεση για να συνεχίσετε.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

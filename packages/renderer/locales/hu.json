@@ -79,15 +79,10 @@
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT betöltve",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Csatlakozás",
     "connecting": "Csatlakozás...",
-    "connectTip": "Tipp: A csatlakozási ablakban jelentkezzen be vagy végezze el az ellenőrzést, majd zárja be az ablakot a folytatáshoz.",
-    "youtubeConnectTip": "Tipp: A csatlakozási ablakban jelentkezzen be vagy végezze el az ellenőrzést, majd zárja be az ablakot a folytatáshoz."
+    "connectTip": "Tipp: A csatlakozási ablakban jelentkezzen be vagy végezze el az ellenőrzést, majd zárja be az ablakot a folytatáshoz."
   },
   "subtitles": {
     "outputLanguage": "Kimeneti nyelv",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "A YouTube emberi ellenőrzést kért. Kattintson a Csatlakozás gombra a folytatáshoz.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

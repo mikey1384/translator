@@ -79,15 +79,10 @@
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "Na-load ang SRT",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Kumonekta",
     "connecting": "Kumokonekta...",
-    "connectTip": "Tip: Sa Connect window, mag-sign in o kumpletuhin ang check, pagkatapos isara ang window para magpatuloy.",
-    "youtubeConnectTip": "Tip: Sa Connect window, mag-sign in o kumpletuhin ang check, pagkatapos isara ang window para magpatuloy."
+    "connectTip": "Tip: Sa Connect window, mag-sign in o kumpletuhin ang check, pagkatapos isara ang window para magpatuloy."
   },
   "subtitles": {
     "outputLanguage": "Wika ng Output",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "Humiling ang YouTube ng human check. I-click ang Connect para magpatuloy.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

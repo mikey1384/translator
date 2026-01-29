@@ -79,15 +79,10 @@
     "srtLoaded": "Přepis dokončen",
     "srtFileLoaded": "SRT načteno",
     "featuresUnlockAfterTranscription": "Překlad a další nabídky se zobrazí po dokončení přepisu.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Připojit",
     "connecting": "Připojování...",
-    "connectTip": "Tip: V okně připojení se přihlaste nebo dokončete ověření a poté zavřete okno pro pokračování.",
-    "youtubeConnectTip": "Tip: V okně připojení se přihlaste nebo dokončete ověření a poté zavřete okno pro pokračování."
+    "connectTip": "Tip: V okně připojení se přihlaste nebo dokončete ověření a poté zavřete okno pro pokračování."
   },
   "subtitles": {
     "outputLanguage": "Výstupní jazyk",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube požádal o ověření člověka. Klikněte na Připojit pro pokračování.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

@@ -1243,9 +1243,10 @@ function highlightsToSegments(
       segStart = Math.max(0, segStart - leadPadding);
     }
     if (isLast) {
-      segEnd = totalDur > 0
-        ? Math.min(totalDur, segEnd + tailPadding)
-        : segEnd + tailPadding;
+      segEnd =
+        totalDur > 0
+          ? Math.min(totalDur, segEnd + tailPadding)
+          : segEnd + tailPadding;
     }
 
     return { start: segStart, end: segEnd };

@@ -83,15 +83,10 @@
     "srtLoaded": "Transcription terminée",
     "srtFileLoaded": "SRT chargé",
     "featuresUnlockAfterTranscription": "Les menus de traduction et autres options apparaîtront une fois la transcription terminée.",
-    "retryWithCookies": "Réessayer avec les cookies du navigateur",
-    "selectBrowser": "Navigateur",
-    "cookieHelp": "Conseil : Connectez-vous à YouTube dans le navigateur sélectionné. Si vous voyez un écran de consentement, visitez youtube.com dans ce navigateur et acceptez, puis réessayez ici.",
-    "cookieAdvice": "Assurez-vous que le navigateur sélectionné est celui où vous êtes connecté à YouTube.",
     "saveDubbedVideo": "Enregistrer la vidéo doublée",
     "connect": "Connecter",
     "connecting": "Connexion...",
-    "connectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer.",
-    "youtubeConnectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer."
+    "connectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer."
   },
   "subtitles": {
     "outputLanguage": "Langue de sortie",
@@ -648,7 +643,7 @@
     }
   },
   "errors": {
-    "needCookies": "YouTube a demandé une vérification humaine. Réessayez en utilisant les cookies de votre navigateur.",
+    "needCookies": "YouTube a demandé une vérification humaine. Cliquez sur Connecter pour continuer.",
     "unexpected": "Une erreur inattendue s'est produite.",
     "unexpectedRemove": "Une erreur inattendue s'est produite lors de la suppression de la clé.",
     "unexpectedSave": "Une erreur inattendue s'est produite lors de l'enregistrement.",

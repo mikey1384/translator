@@ -79,15 +79,10 @@
     "srtLoaded": "اكتمل النسخ",
     "srtFileLoaded": "تم تحميل SRT",
     "featuresUnlockAfterTranscription": "ستظهر الترجمة والقوائم الأخرى بعد اكتمال النسخ.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "اتصال",
     "connecting": "جارٍ الاتصال...",
-    "connectTip": "نصيحة: في نافذة الاتصال، قم بتسجيل الدخول أو أكمل التحقق، ثم أغلق النافذة للمتابعة.",
-    "youtubeConnectTip": "نصيحة: في نافذة الاتصال، قم بتسجيل الدخول أو أكمل التحقق، ثم أغلق النافذة للمتابعة."
+    "connectTip": "نصيحة: في نافذة الاتصال، قم بتسجيل الدخول أو أكمل التحقق، ثم أغلق النافذة للمتابعة."
   },
   "subtitles": {
     "outputLanguage": "لغة الإخراج",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "طلب YouTube التحقق البشري. انقر على اتصال للمتابعة.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

@@ -79,15 +79,10 @@
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT Dimuat",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Sambung",
     "connecting": "Menyambung...",
-    "connectTip": "Petua: Dalam tetingkap sambungan, log masuk atau selesaikan pengesahan, kemudian tutup tetingkap untuk meneruskan.",
-    "youtubeConnectTip": "Petua: Dalam tetingkap sambungan, log masuk atau selesaikan pengesahan, kemudian tutup tetingkap untuk meneruskan."
+    "connectTip": "Petua: Dalam tetingkap sambungan, log masuk atau selesaikan pengesahan, kemudian tutup tetingkap untuk meneruskan."
   },
   "subtitles": {
     "outputLanguage": "Bahasa Output",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube meminta pengesahan manusia. Klik Sambung untuk meneruskan.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

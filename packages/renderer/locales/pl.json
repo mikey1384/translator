@@ -79,15 +79,10 @@
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT załadowano",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "Połącz",
     "connecting": "Łączenie...",
-    "connectTip": "Wskazówka: W oknie połączenia zaloguj się lub zakończ weryfikację, a następnie zamknij okno, aby kontynuować.",
-    "youtubeConnectTip": "Wskazówka: W oknie połączenia zaloguj się lub zakończ weryfikację, a następnie zamknij okno, aby kontynuować."
+    "connectTip": "Wskazówka: W oknie połączenia zaloguj się lub zakończ weryfikację, a następnie zamknij okno, aby kontynuować."
   },
   "subtitles": {
     "outputLanguage": "Język wyjściowy",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube poprosił o weryfikację człowieka. Kliknij Połącz, aby kontynuować.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

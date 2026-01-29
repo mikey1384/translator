@@ -83,15 +83,10 @@
     "srtLoaded": "Transkription abgeschlossen",
     "srtFileLoaded": "SRT geladen",
     "featuresUnlockAfterTranscription": "Übersetzungs- und andere Menüs erscheinen nach Abschluss der Transkription.",
-    "retryWithCookies": "Mit Browser-Cookies wiederholen",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tipp: Melden Sie sich im ausgewählten Browser bei YouTube an. Wenn Sie einen Zustimmungsbildschirm sehen, besuchen Sie youtube.com in diesem Browser und akzeptieren Sie, dann versuchen Sie es hier erneut.",
-    "cookieAdvice": "Stellen Sie sicher, dass der ausgewählte Browser derjenige ist, in dem Sie bei YouTube angemeldet sind.",
     "saveDubbedVideo": "Synchronisiertes Video speichern",
     "connect": "Verbinden",
     "connecting": "Verbindung wird hergestellt...",
-    "connectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren.",
-    "youtubeConnectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren."
+    "connectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren."
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -648,7 +643,7 @@
     }
   },
   "errors": {
-    "needCookies": "YouTube hat eine menschliche Überprüfung angefordert. Versuchen Sie es erneut mit Ihren Browser-Cookies.",
+    "needCookies": "YouTube hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
     "unexpected": "Ein unerwarteter Fehler ist aufgetreten.",
     "unexpectedRemove": "Ein unerwarteter Fehler beim Entfernen des Schlüssels ist aufgetreten.",
     "unexpectedSave": "Ein unerwarteter Fehler beim Speichern ist aufgetreten.",

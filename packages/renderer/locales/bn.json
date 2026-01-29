@@ -79,15 +79,10 @@
     "srtLoaded": "ট্রান্সক্রিপশন সম্পূর্ণ",
     "srtFileLoaded": "SRT লোড হয়েছে",
     "featuresUnlockAfterTranscription": "ট্রান্সক্রিপশন সম্পূর্ণ হলে অনুবাদ এবং অন্যান্য মেনু প্রদর্শিত হবে।",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "সংযোগ করুন",
     "connecting": "সংযোগ হচ্ছে...",
-    "connectTip": "পরামর্শ: সংযোগ উইন্ডোতে সাইন ইন করুন বা যাচাই সম্পূর্ণ করুন, তারপর চালিয়ে যেতে উইন্ডো বন্ধ করুন।",
-    "youtubeConnectTip": "পরামর্শ: সংযোগ উইন্ডোতে সাইন ইন করুন বা যাচাই সম্পূর্ণ করুন, তারপর চালিয়ে যেতে উইন্ডো বন্ধ করুন।"
+    "connectTip": "পরামর্শ: সংযোগ উইন্ডোতে সাইন ইন করুন বা যাচাই সম্পূর্ণ করুন, তারপর চালিয়ে যেতে উইন্ডো বন্ধ করুন।"
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

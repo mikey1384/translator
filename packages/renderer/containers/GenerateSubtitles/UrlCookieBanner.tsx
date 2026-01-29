@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import ErrorBanner from '../../components/ErrorBanner';
-import { useUrlStore } from '../../state/url-store';
-import { useTranslation } from 'react-i18next';
-import Button from '../../components/Button';
 import { css } from '@emotion/css';
+import { useTranslation } from 'react-i18next';
+import ErrorBanner from '../../components/ErrorBanner';
+import Button from '../../components/Button';
+import { useUrlStore } from '../../state/url-store';
 
 function isYouTubeUrl(rawUrl: string): boolean {
   try {
@@ -19,7 +19,6 @@ function isYouTubeUrl(rawUrl: string): boolean {
 export default function UrlCookieBanner() {
   const { t } = useTranslation();
   const needCookies = useUrlStore(s => s.needCookies);
-  const suppressed = useUrlStore(s => s.cookieBannerSuppressed);
   const urlInput = useUrlStore(s => s.urlInput);
   const setNeedCookies = useUrlStore(s => s.setNeedCookies);
   const downloadMedia = useUrlStore(s => s.downloadMedia);
@@ -67,13 +66,7 @@ export default function UrlCookieBanner() {
     }
   }
 
-  // Hide if cancelled or running; banner is only relevant when explicitly requested
-  if (
-    !needCookies ||
-    suppressed ||
-    downloadInProgress ||
-    downloadStage === 'Cancelled'
-  )
+  if (!needCookies || downloadInProgress || downloadStage === 'Cancelled')
     return null;
 
   return (
@@ -103,7 +96,11 @@ export default function UrlCookieBanner() {
           align-items: center;
         `}
       >
-        <Button variant="success" onClick={connectAndRetry}>
+        <Button
+          variant="success"
+          onClick={connectAndRetry}
+          disabled={connecting}
+        >
           {connecting
             ? t('input.connecting', 'Connecting…')
             : t('input.connect', 'Connect')}

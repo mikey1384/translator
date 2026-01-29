@@ -28,6 +28,18 @@ const YOUTUBE_AUTH_COOKIE_NAMES = new Set([
   '__Secure-1PAPISID',
 ]);
 
+function hasValidYouTubeAuthCookiesInJar(
+  cookies: Array<{ name?: string; expirationDate?: number }>
+): boolean {
+  const nowSec = Date.now() / 1000;
+  return cookies.some(c => {
+    const name = c.name || '';
+    if (!YOUTUBE_AUTH_COOKIE_NAMES.has(name)) return false;
+    // If Electron reports an expirationDate, ensure it isn't already expired.
+    return !c.expirationDate || c.expirationDate > nowSec;
+  });
+}
+
 // Preserve the existing YouTube cookie jar (used by older versions) so users
 // don't have to "re-connect" after upgrading.
 const LEGACY_YOUTUBE_PARTITION = 'persist:stage5-youtube';
@@ -178,6 +190,26 @@ export async function clearCookiesForUrl(rawUrl: string): Promise<void> {
   await fsp.unlink(cookiePath).catch(() => {});
 }
 
+export async function getCookieStatusForUrl(rawUrl: string): Promise<{
+  count: number;
+  hasYouTubeAuth: boolean;
+}> {
+  const { key } = cookieKeyForUrl(rawUrl);
+  const partition = partitionForKey(key);
+
+  try {
+    const s = session.fromPartition(partition);
+    const cookies = await s.cookies.get({});
+    return {
+      count: cookies.length,
+      hasYouTubeAuth:
+        key === 'youtube' && hasValidYouTubeAuthCookiesInJar(cookies),
+    };
+  } catch {
+    return { count: 0, hasYouTubeAuth: false };
+  }
+}
+
 const connectInFlightByKey = new Map<string, Promise<ConnectResult>>();
 const connectWinByKey = new Map<string, BrowserWindow>();
 
@@ -233,11 +265,6 @@ export async function connectCookiesInteractive(
       log.error('[site-cookies] Failed to load connect URL:', err);
     });
 
-    const s = session.fromPartition(partition);
-    let finished = false;
-    let hadYouTubeAuthAtStart = false;
-    let cookiePoll: NodeJS.Timeout | null = null;
-
     // Some pages register beforeunload handlers that can prevent closing.
     // We want users to be able to close the connect window reliably.
     win.webContents.on('will-prevent-unload', event => {
@@ -259,9 +286,6 @@ export async function connectCookiesInteractive(
     });
 
     const cleanup = () => {
-      finished = true;
-      if (cookiePoll) clearInterval(cookiePoll);
-      cookiePoll = null;
       connectWinByKey.delete(key);
       connectInFlightByKey.delete(key);
     };
@@ -288,44 +312,6 @@ export async function connectCookiesInteractive(
         cleanup();
       }
     };
-
-    const hasValidYouTubeAuthCookies = async (): Promise<boolean> => {
-      if (key !== 'youtube') return false;
-      try {
-        const cookies = await s.cookies.get({});
-        const nowSec = Date.now() / 1000;
-        return cookies.some(c => {
-          if (!YOUTUBE_AUTH_COOKIE_NAMES.has(c.name)) return false;
-          // If Electron reports an expirationDate, ensure it isn't already expired.
-          return !c.expirationDate || c.expirationDate > nowSec;
-        });
-      } catch {
-        return false;
-      }
-    };
-
-    // Auto-close for YouTube once we see a successful login transition.
-    // We only auto-close if the window started without auth cookies (so we don't
-    // immediately close when a user is trying to refresh stale cookies).
-    (async () => {
-      hadYouTubeAuthAtStart = await hasValidYouTubeAuthCookies();
-      cookiePoll = setInterval(async () => {
-        if (finished) return;
-        if (key !== 'youtube') return;
-        if (hadYouTubeAuthAtStart) return;
-        const hasAuthNow = await hasValidYouTubeAuthCookies();
-        if (hasAuthNow) {
-          log.info(
-            '[site-cookies] Detected YouTube auth cookies; closing connect window.'
-          );
-          try {
-            win.close();
-          } catch {
-            // ignore
-          }
-        }
-      }, 1500);
-    })().catch(() => {});
 
     win.on('closed', () => {
       // Treat close as completion; user can just close the window once they're done.

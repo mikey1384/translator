@@ -39,6 +39,7 @@ import {
 import {
   clearCookiesForUrl,
   connectCookiesInteractive,
+  getCookieStatusForUrl,
 } from './services/url-processor/site-cookies.js';
 import * as fileHandlers from './handlers/file-handlers.js';
 import * as utilityHandlers from './handlers/utility-handlers.js';
@@ -563,6 +564,9 @@ try {
   );
   ipcMain.handle('cookies:clear', (_evt, url: string) =>
     clearCookiesForUrl(url)
+  );
+  ipcMain.handle('cookies:status', (_evt, url: string) =>
+    getCookieStatusForUrl(url)
   );
 
   ipcMain.handle('get-video-metadata', subtitleHandlers.handleGetVideoMetadata);

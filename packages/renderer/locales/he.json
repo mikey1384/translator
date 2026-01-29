@@ -79,15 +79,10 @@
     "srtLoaded": "Transcription Complete",
     "srtFileLoaded": "SRT נטען",
     "featuresUnlockAfterTranscription": "Translation and other menus will appear after transcription completes.",
-    "retryWithCookies": "Retry with browser cookies",
-    "selectBrowser": "Browser",
-    "cookieHelp": "Tip: Be signed into YouTube in the selected browser. If you see a consent screen, visit youtube.com once in that browser and accept, then retry here.",
-    "cookieAdvice": "Make sure the selected browser is the one you're logged into YouTube on.",
     "saveDubbedVideo": "Save Dubbed Video",
     "connect": "התחבר",
     "connecting": "מתחבר...",
-    "connectTip": "טיפ: בחלון ההתחברות, התחבר או השלם את האימות, ואז סגור את החלון כדי להמשיך.",
-    "youtubeConnectTip": "טיפ: בחלון ההתחברות, התחבר או השלם את האימות, ואז סגור את החלון כדי להמשיך."
+    "connectTip": "טיפ: בחלון ההתחברות, התחבר או השלם את האימות, ואז סגור את החלון כדי להמשיך."
   },
   "subtitles": {
     "outputLanguage": "שפת פלט",
@@ -382,7 +377,7 @@
     "usingApiKey": "Using API Key"
   },
   "errors": {
-    "needCookies": "YouTube asked for a human check. Retry using your browser cookies.",
+    "needCookies": "YouTube ביקש אימות אנושי. לחץ על התחבר כדי להמשיך.",
     "unexpected": "An unexpected error occurred.",
     "unexpectedRemove": "An unexpected error occurred while removing the key.",
     "unexpectedSave": "An unexpected error occurred while saving.",

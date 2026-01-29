@@ -11,6 +11,7 @@ import DubbingMixSlider from './DubbingMixSlider';
 import ByoUnlockCard from './ByoUnlockCard';
 import ByoMasterToggle from './ByoMasterToggle';
 import ByoOpenAiSection from './ByoOpenAiSection';
+import SiteConnectionSection from './SiteConnectionSection';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -91,6 +92,8 @@ export default function SettingsPage() {
           <CreditCard />
         </section>
       )}
+
+      {!window.env.isPackaged && <SiteConnectionSection />}
 
       {/* —————————————————  BYO API KEYS SECTION (if unlocked + master ON)  ————————————————— */}
       <ByoOpenAiSection />

@@ -964,7 +964,7 @@ export async function downloadVideoFromPlatform(
         const wasStartupStall =
           (error?.message || '').includes(
             'Download appears stalled (no progress for'
-        ) || startupTimeoutFired;
+          ) || startupTimeoutFired;
         // If we suspect TLS/certificate issues, enable no-check-certificates for the final retry
         const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}\n${diagnosticLog || ''}`;
 

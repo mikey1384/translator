@@ -805,6 +805,10 @@ declare module '@shared-types/app' {
       cancelled: boolean;
       error?: string;
     }>;
+    getCookiesStatusForUrl: (url: string) => Promise<{
+      count: number;
+      hasYouTubeAuth: boolean;
+    }>;
     clearCookiesForUrl: (url: string) => Promise<void>;
 
     // App log

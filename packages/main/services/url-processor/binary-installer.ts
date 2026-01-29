@@ -4,7 +4,6 @@ import log from 'electron-log';
 import { app } from 'electron';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import { pipeline } from 'node:stream/promises';
 import { createWriteStream, createReadStream } from 'node:fs';
 import https from 'node:https';
 import { createHash } from 'node:crypto';
@@ -462,9 +461,7 @@ export async function ensureYtDlpBinary({
   }
 }
 
-async function updateExistingBinary(
-  binaryPath: string
-): Promise<boolean> {
+async function updateExistingBinary(binaryPath: string): Promise<boolean> {
   // Note: Progress is handled by the caller's crawl interval
   try {
     // On Windows, yt-dlp self-update is prone to failing when the executable is
@@ -545,7 +542,9 @@ async function updateExistingBinaryWindowsPackaged(
 ): Promise<boolean> {
   // Serialize update attempts across app instances.
   if (!(await acquireInstallLock())) {
-    log.warn('[URLprocessor] yt-dlp update already in progress by another process');
+    log.warn(
+      '[URLprocessor] yt-dlp update already in progress by another process'
+    );
     return false;
   }
 
@@ -936,7 +935,11 @@ async function findExistingJsRuntime(): Promise<string | null> {
   const commonPaths =
     process.platform === 'win32'
       ? [
-          join(process.env.ProgramFiles || 'C:\\Program Files', 'nodejs', 'node.exe'),
+          join(
+            process.env.ProgramFiles || 'C:\\Program Files',
+            'nodejs',
+            'node.exe'
+          ),
           join(process.env.LOCALAPPDATA || '', 'Programs', 'node', 'node.exe'),
         ]
       : [
@@ -981,7 +984,11 @@ async function findEmbeddedNodeRuntime(): Promise<string | null> {
   try {
     await fsp.access(execPath, fs.constants.X_OK);
     const verifyTimeout = process.platform === 'win32' ? 60_000 : 30_000;
-    await execa(execPath, ['--version'], { timeout: verifyTimeout, windowsHide: true, env });
+    await execa(execPath, ['--version'], {
+      timeout: verifyTimeout,
+      windowsHide: true,
+      env,
+    });
     log.info(`[URLprocessor] Using embedded Node.js runtime at: ${execPath}`);
     return `node:${execPath}`;
   } catch (error: any) {

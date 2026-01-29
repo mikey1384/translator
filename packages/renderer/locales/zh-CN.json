@@ -83,15 +83,10 @@
     "srtLoaded": "转录完成",
     "srtFileLoaded": "已加载 SRT",
     "featuresUnlockAfterTranscription": "转录完成后将显示翻译和其他菜单。",
-    "retryWithCookies": "使用浏览器Cookie重试",
-    "selectBrowser": "浏览器",
-    "cookieHelp": "提示：在所选浏览器中登录YouTube。如果看到同意屏幕，请在该浏览器中访问youtube.com并接受，然后在此重试。",
-    "cookieAdvice": "确保所选浏览器是您登录YouTube的浏览器。",
     "saveDubbedVideo": "保存配音视频",
     "connect": "连接",
     "connecting": "连接中...",
-    "connectTip": "提示：在连接窗口中登录或完成验证，然后关闭窗口继续。",
-    "youtubeConnectTip": "提示：在连接窗口中登录或完成验证，然后关闭窗口继续。"
+    "connectTip": "提示：在连接窗口中登录或完成验证，然后关闭窗口继续。"
   },
   "subtitles": {
     "outputLanguage": "输出语言",
@@ -648,7 +643,7 @@
     }
   },
   "errors": {
-    "needCookies": "YouTube要求进行人机验证。请使用浏览器Cookie重试。",
+    "needCookies": "YouTube 要求进行人机验证。点击「连接」继续。",
     "unexpected": "发生意外错误。",
     "unexpectedRemove": "删除密钥时发生意外错误。",
     "unexpectedSave": "保存时发生意外错误。",
