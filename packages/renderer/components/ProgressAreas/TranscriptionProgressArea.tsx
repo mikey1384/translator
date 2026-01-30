@@ -82,6 +82,11 @@ function translateBackendMessage(
       return t('progress.transcribingElevenLabsFinishing');
     case 'transcription_fallback_whisper':
       return t('progress.transcriptionFallbackWhisper');
+    case 'transcription_retry': {
+      const attempt = parseInt(parts[2], 10) || 1;
+      const maxAttempts = parseInt(parts[3], 10) || 3;
+      return t('progress.transcriptionRetry', { attempt, maxAttempts });
+    }
     case 'transcribing_r2_upload':
       return t('progress.transcribingR2Upload');
     case 'error':

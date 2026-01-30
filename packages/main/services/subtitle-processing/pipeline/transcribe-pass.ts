@@ -35,6 +35,66 @@ import {
   transcribeLargeFileViaR2,
 } from '../../ai-provider.js';
 
+// Retry configuration for transient network errors
+const ELEVENLABS_MAX_RETRIES = 3;
+const ELEVENLABS_RETRY_BASE_DELAY_MS = 2000;
+const ELEVENLABS_RETRY_MAX_DELAY_MS = 10000;
+
+/**
+ * Check if an error is a transient network error that should be retried.
+ * Includes DNS failures, connection resets, timeouts, and temporary server errors.
+ */
+function isTransientNetworkError(error: any): boolean {
+  if (!error) return false;
+
+  const message = String(error?.message || '').toLowerCase();
+  const code = String(error?.code || '').toUpperCase();
+
+  // DNS resolution failures
+  if (message.includes('enotfound') || message.includes('getaddrinfo')) {
+    return true;
+  }
+
+  // Connection errors
+  if (
+    code === 'ECONNRESET' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ETIMEDOUT' ||
+    code === 'ECONNABORTED' ||
+    code === 'EHOSTUNREACH' ||
+    code === 'ENETUNREACH' ||
+    code === 'EPIPE' ||
+    code === 'ERR_NETWORK'
+  ) {
+    return true;
+  }
+
+  // Network-related error messages
+  if (
+    message.includes('network') ||
+    message.includes('timeout') ||
+    message.includes('connection reset') ||
+    message.includes('socket hang up') ||
+    message.includes('econnreset') ||
+    message.includes('etimedout')
+  ) {
+    return true;
+  }
+
+  // HTTP 5xx errors (server-side transient issues)
+  const status = error?.status || error?.response?.status;
+  if (typeof status === 'number' && status >= 500 && status < 600) {
+    return true;
+  }
+
+  // Rate limiting (can retry after delay)
+  if (status === 429) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function transcribePass({
   audioPath,
   services,
@@ -166,6 +226,8 @@ export async function transcribePass({
       try {
         const result = await transcribeAi({
           filePath: audioPath,
+          // Use operationId as an idempotency key so retries can't double-bill.
+          idempotencyKey: operationId,
           signal,
         });
 
@@ -219,10 +281,18 @@ export async function transcribePass({
         ) {
           throw error;
         }
+
+        const errorMsg = error?.message || String(error);
         log.warn(
-          `[${operationId}] ElevenLabs transcription failed: ${error?.message || error}`
+          `[${operationId}] ElevenLabs transcription failed: ${errorMsg}`
         );
-        return null; // Signal to try fallback
+
+        // Re-throw transient network errors so outer retry loop can handle them
+        if (isTransientNetworkError(error)) {
+          throw error;
+        }
+
+        return null; // Non-transient failure - signal to try fallback
       } finally {
         if (progressInterval) clearInterval(progressInterval);
       }
@@ -230,15 +300,63 @@ export async function transcribePass({
 
     // Try direct ElevenLabs first if applicable (BYO key or small Stage5 files)
     if (canTryDirectElevenLabs) {
-      const elevenLabsResult = await tryElevenLabsTranscription();
+      let elevenLabsResult: Awaited<
+        ReturnType<typeof tryElevenLabsTranscription>
+      > = null;
+
+      // Retry loop for transient network errors
+      for (let attempt = 1; attempt <= ELEVENLABS_MAX_RETRIES; attempt++) {
+        throwIfAborted(signal);
+
+        try {
+          elevenLabsResult = await tryElevenLabsTranscription();
+          if (elevenLabsResult) {
+            break; // Success
+          }
+          // Function returned null - non-transient failure, don't retry
+          break;
+        } catch (error: any) {
+          // Re-throw cancellation errors
+          if (
+            error?.name === 'AbortError' ||
+            error?.message === 'Cancelled' ||
+            signal?.aborted
+          ) {
+            throw error;
+          }
+
+          const errorMsg = error?.message || String(error);
+
+          // Transient error - retry if attempts remaining
+          if (attempt < ELEVENLABS_MAX_RETRIES) {
+            const delay = Math.min(
+              ELEVENLABS_RETRY_MAX_DELAY_MS,
+              ELEVENLABS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1)
+            );
+            log.info(
+              `[${operationId}] ElevenLabs attempt ${attempt}/${ELEVENLABS_MAX_RETRIES} failed (${errorMsg}), retrying in ${delay}ms...`
+            );
+            progressCallback?.({
+              percent: Stage.TRANSCRIBE,
+              stage: `__i18n__:transcription_retry:${attempt}:${ELEVENLABS_MAX_RETRIES}`,
+            });
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            log.warn(
+              `[${operationId}] ElevenLabs failed after ${ELEVENLABS_MAX_RETRIES} attempts: ${errorMsg}`
+            );
+          }
+        }
+      }
+
       if (elevenLabsResult) {
         return elevenLabsResult;
       }
 
-      // ElevenLabs failed, fall back to Whisper chunked
+      // All retries exhausted, fall back to Whisper chunked
       if (!useByoElevenLabs) {
         log.info(
-          `[${operationId}] Falling back to Whisper chunked transcription`
+          `[${operationId}] Falling back to Whisper chunked transcription after ${ELEVENLABS_MAX_RETRIES} attempts`
         );
         progressCallback?.({
           percent: Stage.TRANSCRIBE,
@@ -258,85 +376,119 @@ export async function transcribePass({
         `[${operationId}] Using direct relay flow for large file (${fileSizeMB.toFixed(1)}MB)`
       );
 
-      try {
-        progressCallback?.({
-          percent: Stage.TRANSCRIBE,
-          stage: '__i18n__:transcribing_r2_upload',
-        });
-
-        const result = await transcribeLargeFileViaR2({
-          filePath: audioPath,
-          signal,
-          durationSec: duration,
-          onProgress: (stage, percent) => {
-            progressCallback?.({
-              percent: percent ?? Stage.TRANSCRIBE,
-              stage: stage || '__i18n__:transcribing_elevenlabs_finishing',
-            });
-          },
-        });
-
+      // Retry loop for transient network errors
+      for (let attempt = 1; attempt <= ELEVENLABS_MAX_RETRIES; attempt++) {
         throwIfAborted(signal);
 
-        // Convert result to SrtSegments (same as tryElevenLabsTranscription)
-        const segments = (result?.segments || []) as Array<{
-          id: number;
-          start: number;
-          end: number;
-          text: string;
-          words?: Array<{ word: string; start: number; end: number }>;
-        }>;
+        try {
+          progressCallback?.({
+            percent: Stage.TRANSCRIBE,
+            stage: '__i18n__:transcribing_r2_upload',
+          });
 
-        const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
-          id: crypto.randomUUID(),
-          index: idx + 1,
-          start: seg.start,
-          end: seg.end,
-          original: seg.text?.trim() || '',
-          words: seg.words,
-        }));
+          const result = await transcribeLargeFileViaR2({
+            filePath: audioPath,
+            // Use operationId as an idempotency key so retries can't double-bill.
+            idempotencyKey: operationId,
+            signal,
+            durationSec: duration,
+            onProgress: (stage, percent) => {
+              progressCallback?.({
+                percent: percent ?? Stage.TRANSCRIBE,
+                stage: stage || '__i18n__:transcribing_elevenlabs_finishing',
+              });
+            },
+          });
 
-        const cleaned = srtSegments
-          .filter(s => (s.original ?? '').trim() !== '')
-          .sort((a, b) => a.start - b.start)
-          .map((s, i) => ({
-            ...s,
-            index: i + 1,
-            original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
+          throwIfAborted(signal);
+
+          // Convert result to SrtSegments (same as tryElevenLabsTranscription)
+          const segments = (result?.segments || []) as Array<{
+            id: number;
+            start: number;
+            end: number;
+            text: string;
+            words?: Array<{ word: string; start: number; end: number }>;
+          }>;
+
+          const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
+            id: crypto.randomUUID(),
+            index: idx + 1,
+            start: seg.start,
+            end: seg.end,
+            original: seg.text?.trim() || '',
+            words: seg.words,
           }));
 
-        const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
-        await fsp.writeFile(
-          path.join(tempDir, `${operationId}_final.srt`),
-          finalSrt,
-          'utf8'
-        );
+          const cleaned = srtSegments
+            .filter(s => (s.original ?? '').trim() !== '')
+            .sort((a, b) => a.start - b.start)
+            .map((s, i) => ({
+              ...s,
+              index: i + 1,
+              original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
+            }));
 
-        log.info(
-          `[${operationId}] ✏️ Direct relay transcription complete: ${cleaned.length} segments`
-        );
+          const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
+          await fsp.writeFile(
+            path.join(tempDir, `${operationId}_final.srt`),
+            finalSrt,
+            'utf8'
+          );
 
-        progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
-        return { segments: cleaned, speechIntervals: [] };
-      } catch (error: any) {
-        if (
-          error?.name === 'AbortError' ||
-          error?.message === 'Cancelled' ||
-          signal?.aborted
-        ) {
-          throw error;
+          log.info(
+            `[${operationId}] ✏️ Direct relay transcription complete: ${cleaned.length} segments`
+          );
+
+          progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
+          return { segments: cleaned, speechIntervals: [] };
+        } catch (error: any) {
+          if (
+            error?.name === 'AbortError' ||
+            error?.message === 'Cancelled' ||
+            signal?.aborted
+          ) {
+            throw error;
+          }
+
+          const errorMsg = error?.message || String(error);
+
+          // Check if this is a transient error worth retrying
+          if (
+            isTransientNetworkError(error) &&
+            attempt < ELEVENLABS_MAX_RETRIES
+          ) {
+            const delay = Math.min(
+              ELEVENLABS_RETRY_MAX_DELAY_MS,
+              ELEVENLABS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1)
+            );
+            log.warn(
+              `[${operationId}] Direct relay attempt ${attempt}/${ELEVENLABS_MAX_RETRIES} failed (${errorMsg}), retrying in ${delay}ms...`
+            );
+            progressCallback?.({
+              percent: Stage.TRANSCRIBE,
+              stage: `__i18n__:transcription_retry:${attempt}:${ELEVENLABS_MAX_RETRIES}`,
+            });
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+
+          // Non-transient error or final attempt - log and break to fallback
+          log.warn(
+            `[${operationId}] Direct relay transcription failed: ${errorMsg}`
+          );
+          break;
         }
-        log.warn(
-          `[${operationId}] Direct relay transcription failed: ${error?.message || error}`
-        );
-        log.info(
-          `[${operationId}] Falling back to Whisper chunked transcription`
-        );
-        progressCallback?.({
-          percent: Stage.TRANSCRIBE,
-          stage: '__i18n__:transcription_fallback_whisper',
-        });
       }
+
+      // All retries exhausted, fall back to Whisper
+      log.info(
+        `[${operationId}] Falling back to Whisper chunked transcription after ${ELEVENLABS_MAX_RETRIES} attempts`
+      );
+      progressCallback?.({
+        percent: Stage.TRANSCRIBE,
+        stage: '__i18n__:transcription_fallback_whisper',
+      });
     }
 
     // Whisper chunked path: robust fallback with real progress

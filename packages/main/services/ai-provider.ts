@@ -410,12 +410,14 @@ export async function transcribe(
       );
       // Fall through to OpenAI or Stage5
     } else {
-      const { filePath, signal } = options as Stage5TranscribeOptions;
+      const { filePath, signal, idempotencyKey } =
+        options as Stage5TranscribeOptions;
       log.debug('[ai-provider] Using ElevenLabs Scribe for transcription.');
       try {
         const result = await transcribeWithElevenLabs({
           filePath,
           apiKey: elevenLabsKey,
+          idempotencyKey,
           signal,
         });
         // Convert ElevenLabs result to Whisper-compatible format
@@ -549,6 +551,8 @@ export async function transcribeLargeFileViaR2(options: {
   signal?: AbortSignal;
   durationSec?: number;
   onProgress?: (stage: string, percent?: number) => void;
+  /** Prevent double-charges on client retries / disconnects. */
+  idempotencyKey?: string;
 }): Promise<any> {
   // Use the new simplified direct relay flow
   return transcribeViaDirect(options);

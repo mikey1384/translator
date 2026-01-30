@@ -33,11 +33,14 @@ export async function transcribe({
   filePath,
   promptContext,
   model = AI_MODELS.WHISPER,
+  idempotencyKey,
   signal,
 }: {
   filePath: string;
   promptContext?: string;
   model?: string;
+  /** Prevent double-charges on client retries / disconnects. */
+  idempotencyKey?: string;
   signal?: AbortSignal;
 }) {
   // Dev: simulate zero credits without hitting the network
@@ -69,6 +72,7 @@ export async function transcribe({
         headers: {
           ...headers(),
           ...fd.getHeaders(), // Let form-data set the proper boundary
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
         signal, // Pass the AbortSignal to axios
       }
@@ -534,12 +538,15 @@ export async function transcribeViaDirect({
   filePath,
   language,
   durationSec,
+  idempotencyKey,
   signal,
   onProgress,
 }: {
   filePath: string;
   language?: string;
   durationSec?: number;
+  /** Prevent double-charges on client retries / disconnects. */
+  idempotencyKey?: string;
   signal?: AbortSignal;
   onProgress?: (stage: string, percent?: number) => void;
 }): Promise<any> {
@@ -579,6 +586,7 @@ export async function transcribeViaDirect({
       headers: {
         Authorization: `Bearer ${getDeviceId()}`,
         ...fd.getHeaders(),
+        ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
       },
       signal,
       // No timeout - relay has no limits, can take as long as needed

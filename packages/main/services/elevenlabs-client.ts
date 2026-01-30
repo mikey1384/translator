@@ -63,6 +63,8 @@ export interface ElevenLabsTranscribeOptions {
   apiKey: string;
   languageCode?: string; // ISO 639-1 code or 'auto'
   signal?: AbortSignal;
+  /** Best-effort idempotency key to avoid duplicate upstream jobs on retry. */
+  idempotencyKey?: string;
 }
 
 export interface ElevenLabsTranscribeResult {
@@ -124,6 +126,7 @@ export async function transcribeWithElevenLabs({
   apiKey,
   languageCode = 'auto',
   signal,
+  idempotencyKey,
 }: ElevenLabsTranscribeOptions): Promise<ElevenLabsTranscribeResult> {
   const form = new FormData();
   form.append('file', fs.createReadStream(filePath));
@@ -139,6 +142,7 @@ export async function transcribeWithElevenLabs({
   const headers = {
     ...form.getHeaders(),
     'xi-api-key': apiKey,
+    ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
   };
 
   const response = await axios.post(
