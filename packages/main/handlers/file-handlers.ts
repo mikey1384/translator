@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { IpcMainInvokeEvent } from 'electron';
+import { app } from 'electron';
 import { FileManager } from '../services/file-manager.js';
 import { SaveFileService, SaveFileOptions } from '../services/save-file.js';
 import { OpenFileResult, OpenFileOptions } from '@shared-types/app';
@@ -180,6 +181,68 @@ export async function handleGetFileSize(
     return {
       success: false,
       error: error.message || 'Failed to get file size.',
+    };
+  }
+}
+
+export async function handleGetDiskSpace(
+  _event: IpcMainInvokeEvent,
+  filePath: string
+): Promise<{
+  success: boolean;
+  freeBytes?: number;
+  totalBytes?: number;
+  error?: string;
+}> {
+  if (!filePath || typeof filePath !== 'string') {
+    return { success: false, error: 'Invalid file path provided.' };
+  }
+
+  try {
+    const normalizedPath = path.normalize(filePath);
+
+    // Prefer statfs on a directory path. If the input is a file, probe its parent directory.
+    let probePath = normalizedPath;
+    try {
+      const stats = await fs.stat(normalizedPath);
+      if (stats.isFile()) probePath = path.dirname(normalizedPath);
+    } catch {
+      // If stat fails (e.g. non-existent path), still try parent directory.
+      probePath = path.dirname(normalizedPath);
+    }
+
+    const stats = await fs.statfs(probePath);
+    const freeBytes = Number(stats.bavail) * Number(stats.bsize);
+    const totalBytes = Number(stats.blocks) * Number(stats.bsize);
+    return { success: true, freeBytes, totalBytes };
+  } catch (error: any) {
+    console.error(`[handleGetDiskSpace] Error for ${filePath}:`, error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get disk space.',
+    };
+  }
+}
+
+export async function handleGetTempDiskSpace(
+  _event: IpcMainInvokeEvent
+): Promise<{
+  success: boolean;
+  freeBytes?: number;
+  totalBytes?: number;
+  error?: string;
+}> {
+  try {
+    const tempDir = app.getPath('temp');
+    const stats = await fs.statfs(tempDir);
+    const freeBytes = Number(stats.bavail) * Number(stats.bsize);
+    const totalBytes = Number(stats.blocks) * Number(stats.bsize);
+    return { success: true, freeBytes, totalBytes };
+  } catch (error: any) {
+    console.error(`[handleGetTempDiskSpace] Error:`, error);
+    return {
+      success: false,
+      error: error.message || 'Failed to get disk space.',
     };
   }
 }

@@ -250,6 +250,8 @@ try {
   ipcMain.handle('delete-file', fileHandlers.handleDeleteFile);
   ipcMain.handle('readFileContent', fileHandlers.handleReadFileContent);
   ipcMain.handle('getFileSize', fileHandlers.handleGetFileSize);
+  ipcMain.handle('getDiskSpace', fileHandlers.handleGetDiskSpace);
+  ipcMain.handle('getTempDiskSpace', fileHandlers.handleGetTempDiskSpace);
 
   ipcMain.handle('generate-subtitles', async (event, options) => {
     const operationId =

@@ -233,6 +233,11 @@ const electronAPI = {
   getFileSize: (filePath: string) =>
     ipcRenderer.invoke('getFileSize', filePath),
 
+  // ---------------------- Disk Space ----------------------
+  getDiskSpace: (filePath: string) =>
+    ipcRenderer.invoke('getDiskSpace', filePath),
+  getTempDiskSpace: () => ipcRenderer.invoke('getTempDiskSpace'),
+
   // ---------------------- Find-in-Page ----------------------
   sendFindInPage: (opts: any) => ipcRenderer.send('find-in-page', opts),
   sendStopFind: () => ipcRenderer.send('stop-find'),

@@ -36,15 +36,18 @@ export async function generateStatePngs({
   const pngs: Array<{ path: string; duration: number }> = [];
   const total = events.length;
   const STAGE_PERCENT = 10;
-  let captured = 0;
+  let processed = 0;
+  let uniqueCaptured = 0;
+  const stateCache = new Map<string, string>();
+  const createdFiles = new Set<string>();
 
   // Bump the progress bar every 5s even if nothing else happens
   // This prevents client timeout during long PNG capture operations
   const heartbeat = setInterval(() => {
-    const frac = captured / total;
+    const frac = processed / total;
     progress({
       percent: 2 + frac * 8, // Stay in the 0-10% bucket
-      stage: `Capturing PNGs… (${captured}/${total})`,
+      stage: `Capturing PNGs… (${processed}/${total})`,
     });
   }, HEARTBEAT_INTERVAL_MS);
 
@@ -64,6 +67,7 @@ export async function generateStatePngs({
 
   try {
     for (let i = 0; i < total; i++) {
+      processed = i + 1;
       if (signal?.aborted) {
         throw new Error('Cancelled');
       }
@@ -76,78 +80,85 @@ export async function generateStatePngs({
 
       const frames = Math.max(1, Math.round((durMs / 1000) * fps));
       const duration = frames / fps;
-      const file = path.join(
-        tempDirPath,
-        `state_${String(i).padStart(5, '0')}.png`
-      );
+      const key = (ev.text || '').trim() ? ev.text : '';
       const durationToUse =
-        i === 0 && ev.text ? Math.max(duration, 2 / fps) : duration;
+        i === 0 && key ? Math.max(duration, 2 / fps) : duration;
+      let file = stateCache.get(key);
+      if (!file) {
+        file = path.join(
+          tempDirPath,
+          `state_${String(uniqueCaptured).padStart(5, '0')}.png`
+        );
+        uniqueCaptured++;
+        createdFiles.add(file);
+        stateCache.set(key, file);
 
-      const scaledSize = fontSizePx ? Math.round(fontSizePx) : fontSizePx;
+        const scaledSize = fontSizePx ? Math.round(fontSizePx) : fontSizePx;
 
-      await page.evaluate(
-        ({ txt, size, preset, displayWidth: dw, displayHeight: dh }) => {
-          // @ts-expect-error provided by render-host script
-          window.updateSubtitle(txt, {
-            fontSizePx: size,
-            stylePreset: preset,
-            videoWidthPx: dw,
-            videoHeightPx: dh,
-          });
-        },
-        {
-          txt: ev.text,
-          size: scaledSize,
-          preset: stylePreset,
-          displayWidth,
-          displayHeight,
-        }
-      );
-
-      try {
-        await page.screenshot({
-          path: file as `${string}.png`,
-          omitBackground: true,
-          clip: {
-            x: 0,
-            y: 0,
-            width: videoWidth > 0 ? videoWidth : 1280,
-            height: videoHeight > 0 ? videoHeight : 720,
+        await page.evaluate(
+          ({ txt, size, preset, displayWidth: dw, displayHeight: dh }) => {
+            // @ts-expect-error provided by render-host script
+            window.updateSubtitle(txt, {
+              fontSizePx: size,
+              stylePreset: preset,
+              videoWidthPx: dw,
+              videoHeightPx: dh,
+            });
           },
-          type: 'png',
-        });
-      } catch (err) {
-        if (
-          signal?.aborted ||
-          (err instanceof Error && err.message?.includes('Target closed'))
-        ) {
-          throw new Error('Cancelled');
+          {
+            txt: key,
+            size: scaledSize,
+            preset: stylePreset,
+            displayWidth,
+            displayHeight,
+          }
+        );
+
+        try {
+          await page.screenshot({
+            path: file as `${string}.png`,
+            omitBackground: true,
+            clip: {
+              x: 0,
+              y: 0,
+              width: videoWidth > 0 ? videoWidth : 1280,
+              height: videoHeight > 0 ? videoHeight : 720,
+            },
+            type: 'png',
+          });
+        } catch (err) {
+          if (
+            signal?.aborted ||
+            (err instanceof Error && err.message?.includes('Target closed'))
+          ) {
+            throw new Error('Cancelled');
+          }
+          throw err;
         }
-        throw err;
       }
 
       pngs.push({ path: file, duration: durationToUse });
 
-      captured++;
-
       // Coarser incremental updates (keeps the bar moving)
-      if (captured % 100 === 0 || captured === total) {
-        const frac = captured / total;
+      if (processed % 100 === 0 || processed === total) {
+        const frac = processed / total;
         progress({
           percent: 2 + frac * 8, // Stay in the 0-10% bucket
-          stage: `Capturing PNGs… (${captured}/${total})`,
+          stage: `Capturing PNGs… (${processed}/${total})`,
         });
       }
     }
 
     clearInterval(heartbeat);
     progress({ percent: 10, stage: 'Overlay concat ready' });
-    log.info(`[state-generator ${operationId}] captured ${pngs.length} PNGs`);
+    log.info(
+      `[state-generator ${operationId}] captured ${uniqueCaptured} unique PNGs for ${pngs.length} frames`
+    );
     return pngs;
   } catch (err) {
     if (err instanceof Error && err.message === 'Cancelled') {
       await Promise.all(
-        pngs.map(async ({ path: file }) => {
+        [...createdFiles].map(async file => {
           try {
             await fs.rm(file, { force: true });
           } catch (cleanupErr) {
@@ -158,7 +169,7 @@ export async function generateStatePngs({
           }
         })
       );
-      const lastPct = Math.round((captured / total) * STAGE_PERCENT);
+      const lastPct = Math.round((processed / total) * STAGE_PERCENT);
       progress({ percent: lastPct, stage: 'Cancelled' });
     }
     throw err;

@@ -31,3 +31,21 @@ export function getFileSize(
 ): Promise<{ success: boolean; sizeBytes?: number; error?: string }> {
   return window.electron.getFileSize(filePath);
 }
+
+export function getDiskSpace(filePath: string): Promise<{
+  success: boolean;
+  freeBytes?: number;
+  totalBytes?: number;
+  error?: string;
+}> {
+  return window.electron.getDiskSpace(filePath);
+}
+
+export function getTempDiskSpace(): Promise<{
+  success: boolean;
+  freeBytes?: number;
+  totalBytes?: number;
+  error?: string;
+}> {
+  return window.electron.getTempDiskSpace();
+}

@@ -239,8 +239,6 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
       set(s => {
         s.merge = {
           ...s.merge,
-          percent: 100,
-          stage: 'done',
           inProgress: false,
         };
       }),

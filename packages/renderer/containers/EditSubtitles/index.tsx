@@ -13,7 +13,11 @@ import SaveAndMergeBar from './SaveAndMergeBar';
 import { buildSrt, openSubtitleWithElectron } from '../../../shared/helpers';
 import { flashReviewedSegment, useSubtitleNavigation } from './hooks/index.js';
 import { flashSubtitle, scrollPrecisely } from '../../utils/scroll.js';
-import { BASELINE_HEIGHT, fontScale } from '../../../shared/constants';
+import {
+  BASELINE_HEIGHT,
+  fontScale,
+  ERROR_CODES,
+} from '../../../shared/constants';
 
 import { colors, selectStyles } from '../../styles';
 import {
@@ -148,6 +152,9 @@ export default function EditSubtitles({
 
   const [saveError, setSaveError] = useState('');
   const [affectedRows, setAffectedRows] = useState<number[]>([]);
+  const [mergePreflightInProgress, setMergePreflightInProgress] =
+    useState(false);
+  const mergeStartLockRef = useRef(false);
   const subtitleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const prevSubsRef = useRef<SrtSegment[]>([]);
   const prevReviewedBatchRef = useRef<number | null>(null);
@@ -476,7 +483,7 @@ export default function EditSubtitles({
             canSaveDirectly={canSaveDirectly}
             subtitlesExist={subtitles.length > 0}
             videoFileExists={!!videoPath}
-            isMergingInProgress={mergeInProgress}
+            isMergingInProgress={mergeInProgress || mergePreflightInProgress}
             isTranslationInProgress={translationInProgress}
           />
         </div>
@@ -604,8 +611,17 @@ export default function EditSubtitles({
   }
 
   async function handleMerge() {
+    // Guard against double-clicks / re-entrancy. The merge button is disabled
+    // using merge state, but we also do an async disk-space preflight before
+    // `startMerge()` runs, so we need a synchronous lock too.
+    if (mergeStartLockRef.current || mergeInProgress) return;
+    mergeStartLockRef.current = true;
+
+    let opId: string | null = null;
+    let ok = false;
     try {
       logButton('merge_start');
+      setSaveError('');
       if (!videoPath) {
         setSaveError(t('common.error.noSourceVideo'));
         try {
@@ -640,8 +656,59 @@ export default function EditSubtitles({
         }
       }
 
+      // Preflight warning: burn-in merge can create very large files.
+      // Only warn when the current free space is close to (or below) a rough estimate.
+      setMergePreflightInProgress(true);
+      try {
+        const [sizeRes, tempSpaceRes] = await Promise.all([
+          FileIPC.getFileSize(videoPath),
+          FileIPC.getTempDiskSpace(),
+        ]);
+        const inputBytes = sizeRes.success ? (sizeRes.sizeBytes ?? 0) : 0;
+        const freeBytes = tempSpaceRes.success
+          ? (tempSpaceRes.freeBytes ?? 0)
+          : 0;
+
+        if (inputBytes > 0 && freeBytes > 0) {
+          const EST_MULTIPLIER = 5;
+          const EST_OVERHEAD_BYTES = 2 * 1024 ** 3; // temp PNGs + misc overhead
+          const SAFETY_MULTIPLIER = 1.1; // "around" the estimate
+          const estimatedBytes =
+            inputBytes * EST_MULTIPLIER + EST_OVERHEAD_BYTES;
+          const warnBelowBytes = estimatedBytes * SAFETY_MULTIPLIER;
+
+          const fmt = (bytes: number) => {
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            let value = Math.max(0, bytes);
+            let unitIndex = 0;
+            while (value >= 1024 && unitIndex < units.length - 1) {
+              value /= 1024;
+              unitIndex++;
+            }
+            const decimals = unitIndex <= 1 ? 0 : value >= 10 ? 0 : 1;
+            return `${value.toFixed(decimals)} ${units[unitIndex]}`;
+          };
+
+          if (freeBytes <= warnBelowBytes) {
+            const proceed = window.confirm(
+              t('dialogs.mergeLowDiskSpaceConfirm', {
+                defaultValue:
+                  'Low disk space detected. This merge may need ~{{need}} free space, but only ~{{free}} is available. Continue anyway?',
+                need: fmt(estimatedBytes),
+                free: fmt(freeBytes),
+              })
+            );
+            if (!proceed) return;
+          }
+        }
+      } catch {
+        // Best-effort only: never block merge if preflight check fails.
+      } finally {
+        setMergePreflightInProgress(false);
+      }
+
       setMergeStage(t('progress.starting', 'Starting...'));
-      const opId = `render-${Date.now()}`;
+      opId = `render-${Date.now()}`;
       onSetMergeOperationId(opId);
       useTaskStore.getState().startMerge();
 
@@ -696,20 +763,45 @@ export default function EditSubtitles({
       };
 
       const res = await onStartPngRenderRequest(opts);
-      if (!res.success) {
-        setSaveError(res.error || t('common.error.renderFailed'));
-        try {
-          logError('merge', (res.error as any) || 'render_failed');
-        } catch {
-          // Do nothing
-        }
-        setMergeStage(t('generateSubtitles.status.error', 'Error'));
-        onSetMergeOperationId(null);
+      ok = !!res?.success;
+
+      // Defensive: some callers may return {success:false} instead of throwing.
+      if (!ok) {
+        const errMsg =
+          res?.error || t('common.error.renderFailed', 'Render failed');
+        throw new Error(errMsg);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const cancelled = /cancel/i.test(errorMsg);
+      const isDiskFull =
+        errorMsg === ERROR_CODES.INSUFFICIENT_DISK_SPACE ||
+        /\bENOSPC\b/i.test(errorMsg) ||
+        /no space left on device/i.test(errorMsg) ||
+        /disk quota exceeded/i.test(errorMsg);
+      const friendlyError = cancelled
+        ? t('generateSubtitles.status.cancelled', 'Cancelled')
+        : isDiskFull
+          ? t('common.error.insufficientDiskSpace')
+          : errorMsg || t('generateSubtitles.status.error', 'Error');
+
+      setSaveError(friendlyError);
+      setMergeStage(friendlyError);
+      try {
+        logError('merge', err as any, { operationId: opId || undefined });
+      } catch {
+        // Do nothing
       }
     } finally {
+      mergeStartLockRef.current = false;
+      setMergePreflightInProgress(false);
       useTaskStore.getState().doneMerge();
+      onSetMergeOperationId(null);
       try {
-        logTask('complete', 'merge', {} as any);
+        logTask('complete', 'merge', {
+          success: ok,
+          operationId: opId || undefined,
+        } as any);
       } catch {
         // Do nothing
       }

@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'child_process';
 import os from 'os';
 import log from 'electron-log';
 import { forceKillWindows } from '../../utils/process-killer.js';
+import { ERROR_CODES } from '../../../shared/constants/index.js';
 
 interface DirectMergeOptions {
   concatListPath: string;
@@ -44,7 +45,9 @@ export async function directMerge(
 
   const VIDEO_START = 40;
   const FINAL_START = 90;
-  const FINAL_END = 100;
+  // Keep below 100 so the renderer stays "in progress" until the user picks
+  // a save location and the main process replies with the final result.
+  const FINAL_END = 95;
   const VIDEO_RANGE = FINAL_START - VIDEO_START;
 
   const platform = os.platform();
@@ -98,9 +101,30 @@ export async function directMerge(
     const ff = spawn(ffmpegPath, ffArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
     registerProcess?.(ff);
 
+    const stderrTail: string[] = [];
+    const MAX_STDERR_LINES = 30;
+    let sawDiskFull = false;
+
     ff.stderr.setEncoding('utf8');
     ff.stderr.on('data', (data: string) => {
-      log.debug(`[ffmpeg-direct-merge ${operationId} stderr] ${data.trim()}`);
+      const text = data.toString();
+      const trimmed = text.trim();
+      if (trimmed) {
+        for (const line of trimmed.split(/\r?\n/)) {
+          const l = line.trim();
+          if (!l) continue;
+          stderrTail.push(l);
+          if (stderrTail.length > MAX_STDERR_LINES) stderrTail.shift();
+          if (
+            /no space left on device/i.test(l) ||
+            /disk quota exceeded/i.test(l) ||
+            /\bENOSPC\b/i.test(l)
+          ) {
+            sawDiskFull = true;
+          }
+        }
+      }
+      log.debug(`[ffmpeg-direct-merge ${operationId} stderr] ${trimmed}`);
     });
 
     ff.stdout.setEncoding('utf8');
@@ -187,17 +211,33 @@ export async function directMerge(
         log.info(
           `[ffmpeg-direct-merge ${operationId}] Direct merge successful.`
         );
-        progressCallback?.({ percent: FINAL_END, stage: 'Merge complete!' });
+        progressCallback?.({ percent: FINAL_END, stage: 'Encoding complete!' });
         resolve({ success: true, finalOutputPath: outputSavePath });
       } else {
-        const err = `ffmpeg direct merge exited with ${code}`;
-        log.error(`[ffmpeg-direct-merge ${operationId}] ${err}`);
+        const aborted = !!signal?.aborted;
+        if (aborted) {
+          const e = new Error('Cancelled');
+          reject(e);
+          return;
+        }
+
+        const msg = sawDiskFull
+          ? ERROR_CODES.INSUFFICIENT_DISK_SPACE
+          : `ffmpeg direct merge exited with ${code}`;
+        const details = stderrTail.join('\n');
+
+        if (details) {
+          log.error(
+            `[ffmpeg-direct-merge ${operationId}] stderr tail:\n${details}`
+          );
+        }
+        log.error(`[ffmpeg-direct-merge ${operationId}] ${msg}`);
         progressCallback?.({
           percent: VIDEO_START,
           stage: 'Merge failed',
-          error: err,
+          error: msg,
         });
-        reject({ success: false, finalOutputPath: '', error: err });
+        reject(new Error(msg));
       }
     });
 
@@ -211,11 +251,7 @@ export async function directMerge(
         stage: 'Merge failed',
         error: `Failed to start ffmpeg: ${err.message}`,
       });
-      reject({
-        success: false,
-        finalOutputPath: '',
-        error: `Failed to start ffmpeg: ${err.message}`,
-      });
+      reject(new Error(`Failed to start ffmpeg: ${err.message}`));
     });
   });
 }

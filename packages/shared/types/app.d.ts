@@ -556,6 +556,18 @@ declare module '@shared-types/app' {
     getFileSize: (
       filePath: string
     ) => Promise<{ success: boolean; sizeBytes?: number; error?: string }>;
+    getDiskSpace: (filePath: string) => Promise<{
+      success: boolean;
+      freeBytes?: number;
+      totalBytes?: number;
+      error?: string;
+    }>;
+    getTempDiskSpace: () => Promise<{
+      success: boolean;
+      freeBytes?: number;
+      totalBytes?: number;
+      error?: string;
+    }>;
 
     hasVideoTrack: (filePath: string) => Promise<boolean>;
     getVideoMetadata: (filePath: string) => Promise<VideoMetadataResult>;

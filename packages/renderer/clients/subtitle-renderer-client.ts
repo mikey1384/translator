@@ -107,6 +107,11 @@ class SubtitleRendererClient {
         clearTimeout(timer);
         timer = setTimeout(() => {
           if (offProgress) offProgress();
+          try {
+            SubtitleIPC.cancelPngRender(operationId);
+          } catch {
+            // ignore; best-effort cancellation
+          }
           this.renderPromises.delete(operationId);
           reject(
             new Error(

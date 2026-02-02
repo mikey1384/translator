@@ -16,6 +16,7 @@ export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
 // Error codes used across the application
 export const ERROR_CODES = {
   INSUFFICIENT_CREDITS: 'insufficient-credits',
+  INSUFFICIENT_DISK_SPACE: 'insufficient-disk-space',
   OPENAI_KEY_INVALID: 'openai-key-invalid',
   OPENAI_RATE_LIMIT: 'openai-rate-limit',
   ANTHROPIC_KEY_INVALID: 'anthropic-key-invalid',

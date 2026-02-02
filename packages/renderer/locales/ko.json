@@ -26,6 +26,7 @@
       "creditReservationFailed": "크레딧 예약 실패",
       "invalidRenderOptions": "잘못된 렌더링 옵션이 제공되었습니다",
       "missingVideoMetadata": "비디오 메타데이터 누락 ({{missing}})",
+      "insufficientDiskSpace": "병합을 완료하기에 저장 공간이 부족합니다. 저장 공간을 확보한 후 다시 시도해 주세요.",
       "noSourceVideo": "소스 비디오 없음",
       "noSubtitlesLoaded": "로드된 자막 없음",
       "failedToLoadSRT": "SRT 파일 로드 실패"
@@ -648,6 +649,7 @@
       "checkStatus": "OpenAI 상태 확인"
     },
     "cancelDownloadConfirm": "다운로드를 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
+    "mergeLowDiskSpaceConfirm": "저장공간이 부족할 수 있습니다. 자막 병합에는 대략 {{need}} 정도의 여유 공간이 필요하지만 현재 남은 공간은 약 {{free}}입니다. 계속 진행할까요?",
     "slowDownloadBanner": {
       "title": "다운로드가 평소보다 오래 걸리고 있습니다.",
       "description": "동영상 플랫폼의 변경사항이나 새로운 보호 조치로 인한 것일 수 있습니다. 새로운 동영상을 처리하려면 다음 앱 버전을 기다려야 할 수 있습니다."
