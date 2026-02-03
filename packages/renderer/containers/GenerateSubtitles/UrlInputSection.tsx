@@ -109,9 +109,21 @@ function UrlInputSection({
           className={selectStyles} // Apply existing select styles
           style={{ minWidth: '120px' }}
         >
-          <option value="high">{t('input.qualityHigh')}</option>
-          <option value="mid">{t('input.qualityMedium')}</option>
-          <option value="low">{t('input.qualityLow')}</option>
+          <optgroup label={t('input.qualityPresets', 'Presets')}>
+            <option value="high">{t('input.qualityBest', 'Best')}</option>
+            <option value="mid">{t('input.qualityMedium')}</option>
+            <option value="low">{t('input.qualityLow')}</option>
+          </optgroup>
+          <optgroup label={t('input.qualityResolution', 'Resolution')}>
+            <option value="4320p">{t('input.quality8k', 'UHD 8K')}</option>
+            <option value="2160p">{t('input.quality4k', 'HD 4K')}</option>
+            <option value="1440p">{t('input.quality2k', 'HQ 2K')}</option>
+            <option value="1080p">1080p</option>
+            <option value="720p">720p</option>
+            <option value="480p">480p</option>
+            <option value="360p">360p</option>
+            <option value="240p">240p</option>
+          </optgroup>
         </select>
       </div>
       <Button

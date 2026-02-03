@@ -26,6 +26,7 @@
       "creditReservationFailed": "Guthaben-Reservierung fehlgeschlagen",
       "invalidRenderOptions": "Ungültige Render-Optionen angegeben",
       "missingVideoMetadata": "Fehlende Video-Metadaten ({{missing}})",
+      "insufficientDiskSpace": "Nicht genügend Speicherplatz, um die Zusammenführung abzuschließen. Bitte geben Sie Speicherplatz frei und versuchen Sie es erneut.",
       "noSourceVideo": "Kein Quellvideo",
       "noSubtitlesLoaded": "Keine Untertitel geladen",
       "failedToLoadSRT": "SRT-Datei konnte nicht geladen werden"
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "Synchronisiertes Video speichern",
     "connect": "Verbinden",
     "connecting": "Verbindung wird hergestellt...",
-    "connectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren."
+    "connectTip": "Tipp: Melden Sie sich im Verbindungsfenster an oder schließen Sie die Überprüfung ab, dann schließen Sie das Fenster, um fortzufahren.",
+    "qualityPresets": "Voreinstellungen",
+    "qualityBest": "Beste",
+    "qualityResolution": "Auflösung",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Ausgabesprache",
@@ -106,7 +113,8 @@
     "dubEstimateByo": "~{{minutes}}min Audio",
     "translateEstimateCredits": "~{{minutes}}m Video",
     "translateEstimateByo": "BYO-Schlüssel",
-    "qualityBadge": "(hq)"
+    "qualityBadge": "(hq)",
+    "voiceCloningRequiresTranslation": "Stimmklonen erfordert eine Zielsprache"
   },
   "summary": {
     "title": "Transkript-Zusammenfassung",
@@ -115,7 +123,7 @@
     "tab": {
       "summary": "Zusammenfassung",
       "sections": "Detaillierte Notizen",
-      "highlights": "Highlights"
+      "highlights": "Höhepunkte"
     },
     "generate": "Zusammenfassung erstellen",
     "regenerate": "Zusammenfassung neu erstellen",
@@ -150,7 +158,7 @@
     },
     "noHighlights": "Noch keine Highlights. Generieren Sie, um Höhepunkte zu erkennen.",
     "noVideoForHighlights": "Öffnen Sie das Quellvideo, um Highlight-Clips zu schneiden.",
-    "highlight": "Highlight",
+    "highlight": "Höhepunkt",
     "combineMode": "Kombinieren",
     "exitCombineMode": "Kombinieren beenden",
     "reorderHint": "Zum Neuordnen ziehen:",
@@ -305,7 +313,8 @@
       "yourBalance": "Ihr Guthaben",
       "canClone": "Sie können klonen",
       "upToMinutes": "bis zu {{minutes}} Min",
-      "loading": "Laden..."
+      "loading": "Laden...",
+      "voiceCloningInsufficientCredits": "Erfordert mindestens 1 Minute Guthaben"
     },
     "byoOpenAi": {
       "title": "Eigene API-Schlüssel verwenden",
@@ -334,8 +343,8 @@
       "toggleOff": "Stage5-Guthaben wird für KI-Aufgaben verwendet.",
       "toggleError": "Einstellung konnte nicht aktualisiert werden.",
       "howToGetKeys": "Wie bekomme ich API-Schlüssel?",
-      "option1Title": "Option 1: OpenAI",
-      "option2Title": "Option 2: Anthropic + ElevenLabs",
+      "option1Title": "Variante 1: OpenAI",
+      "option2Title": "Variante 2: Anthropic + ElevenLabs",
       "economicsTitle": "Warum es sich lohnt",
       "economicsBody": "Stage5-Credits optimieren den Komfort (keine Einrichtung). BYO zahlt direkt an die Anbieter—normalerweise ~30–50% günstiger je nach Paket."
     },
@@ -416,11 +425,11 @@
     },
     "stage5TtsProvider": {
       "label": "TTS-Qualität (Stage5-Guthaben)",
-      "openai": "Standard (OpenAI TTS)",
+      "openai": "Standard (OpenAI-TTS)",
       "openaiHint": "Gute Qualität, geringere Kosten",
       "openaiHintWithBalance": "Gute Qualität · Ihr Guthaben: {{time}} Synchronisation",
       "elevenlabs": "Premium (ElevenLabs)",
-      "elevenlabsHint": "Beste Qualität, höhere Kosten (~13×)",
+      "elevenlabsHint": "Beste Qualität, höhere Kosten (~13-fach)",
       "elevenlabsHintWithBalance": "Beste Qualität · Ihr Guthaben: {{time}} Synchronisation"
     },
     "byoElevenLabs": {
@@ -507,7 +516,7 @@
     "indonesian": "Indonesisch",
     "thai": "Thailändisch",
     "malay": "Malaiisch",
-    "tagalog": "Tagalog (Filipino)",
+    "tagalog": "Tagalog (Philippinisch)",
     "bengali": "Bengalisch",
     "tamil": "Tamil",
     "telugu": "Telugu",
@@ -529,7 +538,9 @@
     "validation": {
       "pleaseSelectVideo": "Bitte wählen Sie ein Video aus",
       "processingDuration": "Videolänge wird verarbeitet. Bitte versuchen Sie es in Kürze erneut.",
-      "icloudPlaceholder": "Diese Datei ist in iCloud gespeichert. Klicken Sie im Finder auf ‚Laden' und warten Sie, bis das Wolkensymbol verschwindet, dann versuchen Sie es erneut."
+      "icloudPlaceholder": "Diese Datei ist in iCloud gespeichert. Klicken Sie im Finder auf ‚Laden' und warten Sie, bis das Wolkensymbol verschwindet, dann versuchen Sie es erneut.",
+      "insufficientCreditsForVoiceCloning": "Nicht genügend Guthaben für Stimmklonen. Video ist {{duration}} Min, aber Sie können sich nur {{affordable}} Min leisten. Bitte laden Sie Guthaben auf oder deaktivieren Sie das Stimmklonen.",
+      "fileTooLargeForVoiceCloning": "Videodatei ist zu groß für Stimmklonen ({{size}}MB). Maximum erlaubt ist {{max}}MB. Bitte verwenden Sie ein kürzeres Video oder deaktivieren Sie das Stimmklonen."
     },
     "status": {
       "starting": "Startet...",
@@ -562,8 +573,8 @@
       "title": "API-Schlüssel erforderlich",
       "message": "Um Ihre eigenen API-Schlüssel zu verwenden, benötigen Sie entweder einen OpenAI-Schlüssel ODER sowohl Anthropic- als auch ElevenLabs-Schlüssel.",
       "howToGet": "So erhalten Sie API-Schlüssel",
-      "option1": "Option 1: OpenAI",
-      "option2": "Option 2: Anthropic + ElevenLabs",
+      "option1": "Variante 1: OpenAI",
+      "option2": "Variante 2: Anthropic + ElevenLabs",
       "enable": "API-Schlüssel aktivieren",
       "done": "Fertig"
     },
@@ -600,7 +611,8 @@
     "saveDubbedVideoAs": "Synchronisiertes Video speichern unter",
     "dubbingInProgress": "Dub-Erstellung läuft",
     "dubbingWorking": "Synchronisierte Audiospur wird erstellt…",
-    "cancelDubbingConfirm": "Dub abbrechen? Der Fortschritt geht verloren und Sie müssen neu beginnen."
+    "cancelDubbingConfirm": "Dub abbrechen? Der Fortschritt geht verloren und Sie müssen neu beginnen.",
+    "mergeLowDiskSpaceConfirm": "Wenig Speicherplatz erkannt. Diese Zusammenführung benötigt ~{{need}} freien Speicher, aber nur ~{{free}} ist verfügbar. Trotzdem fortfahren?"
   },
   "progress": {
     "mergingTitle": "Video und Untertitel werden zusammengeführt",
@@ -623,7 +635,8 @@
     "transcribingElevenLabsHours": "Transkription mit ElevenLabs (~{{hours}}h {{minutes}}m verbleibend)",
     "transcribingElevenLabsFinishing": "Transkription mit ElevenLabs...",
     "transcriptionFallbackWhisper": "Wechsel zur Chunk-Transkription...",
-    "transcribingR2Upload": "Audio wird für Transkription hochgeladen..."
+    "transcribingR2Upload": "Audio wird für Transkription hochgeladen...",
+    "transcriptionRetry": "Verbindung fehlgeschlagen, erneuter Versuch ({{attempt}}/{{maxAttempts}})..."
   },
   "messages": {
     "fileSaved": "Datei gespeichert:\n{{path}}",
@@ -669,7 +682,8 @@
       "genericApiError": "API-Anfrage fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel und Kontostatus."
     },
     "needCookiesYouTube": "YouTube hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
-    "needCookiesGeneric": "Diese Website hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren."
+    "needCookiesGeneric": "Diese Website hat eine menschliche Überprüfung angefordert. Klicken Sie auf Verbinden, um fortzufahren.",
+    "connectFailed": "Verbindung konnte nicht hergestellt werden. Bitte versuchen Sie es erneut."
   },
   "logs": {
     "title": "Aktuelle Protokolle",

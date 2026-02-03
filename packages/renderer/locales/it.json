@@ -26,6 +26,7 @@
       "creditReservationFailed": "Prenotazione crediti fallita",
       "invalidRenderOptions": "Opzioni di rendering non valide fornite",
       "missingVideoMetadata": "Metadati video mancanti ({{missing}})",
+      "insufficientDiskSpace": "Spazio su disco insufficiente per completare l'unione. Libera spazio e riprova.",
       "noSourceVideo": "Nessun video sorgente",
       "noSubtitlesLoaded": "Nessun sottotitolo caricato",
       "failedToLoadSRT": "Impossibile caricare il file SRT"
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "Salva video doppiato",
     "connect": "Connetti",
     "connecting": "Connessione...",
-    "connectTip": "Suggerimento: Nella finestra di connessione, accedi o completa la verifica, quindi chiudi la finestra per continuare."
+    "connectTip": "Suggerimento: Nella finestra di connessione, accedi o completa la verifica, quindi chiudi la finestra per continuare.",
+    "qualityPresets": "Preimpostazioni",
+    "qualityBest": "Migliore",
+    "qualityResolution": "Risoluzione",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Lingua di output",
@@ -102,8 +109,9 @@
     "chooseSrtFile": "Scegli file SRT",
     "cancel_confirmation": "Sei sicuro di voler annullare il processo di traduzione dei sottotitoli? Qualsiasi progresso sarà perso e dovrai ricominciare.",
     "dub": "Doppiare voce",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}min)",
-    "dubEstimateByo": "~{{minutes}}min di audio",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "dubEstimateByo": "~{{minutes}}m audio",
+    "voiceCloningRequiresTranslation": "La clonazione vocale richiede una lingua di destinazione",
     "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "Chiave BYO",
     "qualityBadge": "(hq)"
@@ -227,47 +235,19 @@
       },
       "qualityTranslation": {
         "label": "Traduzione di qualità",
-        "help": "Attivo: include una fase di revisione (~5× più crediti/tempo). Disattivo: salta la revisione.",
-        "helpWithEstimate": "La revisione usa ~5× più crediti. I tuoi crediti: ~{{normalTime}} normale, ~{{hqTime}} HQ."
+        "help": "<b>5× crediti</b> • Aggiunge fase di revisione per qualità superiore",
+        "helpWithEstimate": "<b>5× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)"
       },
       "qualitySummary": {
-        "label": "Riepilogo di alta qualità",
-        "help": "Attivo: analisi approfondita + clip in evidenza con Claude Opus (~4× crediti). Disattivo: veloce con GPT-5.1.",
-        "helpWithEstimate": "Analisi approfondita + clip in evidenza (~4× crediti). I tuoi crediti: ~{{normalTime}} normale, ~{{hqTime}} HQ."
+        "label": "Riepilogo di qualità",
+        "help": "<b>4× crediti</b> • Analisi approfondita + clip in evidenza con Claude Opus",
+        "helpWithEstimate": "<b>4× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)"
       },
       "qualityDubbing": {
         "label": "Doppiaggio di qualità",
-        "help": "Attivo: ElevenLabs TTS (voci premium, ~13× crediti). Disattivo: OpenAI TTS (buona qualità).",
-        "helpWithEstimate": "ElevenLabs TTS (~13× crediti). I tuoi crediti: ~{{normalTime}} normale, ~{{hqTime}} HQ."
+        "help": "<b>13× crediti</b> • ElevenLabs TTS con voci premium",
+        "helpWithEstimate": "<b>13× crediti</b> • Il tuo saldo: ~{{normalTime}} (normale) / ~{{hqTime}} (hq)"
       }
-    },
-    "preferClaude": {
-      "forTranslation": {
-        "label": "Preferisci Claude per la traduzione",
-        "help": "Bozza: GPT-5.1 → Revisione: Opus 4.5"
-      },
-      "forReview": {
-        "label": "Preferisci Claude per la revisione",
-        "help": "Revisione: Claude Opus 4.5"
-      }
-    },
-    "transcriptionProvider": {
-      "label": "Fornitore trascrizione",
-      "elevenlabs": "ElevenLabs Scribe",
-      "elevenlabsHint": "Migliore qualità, usa chiave ElevenLabs",
-      "openai": "OpenAI Whisper",
-      "openaiHint": "Veloce e preciso, usa chiave OpenAI",
-      "stage5": "Stage5 (Crediti)",
-      "stage5Hint": "Usa crediti Stage5 AI"
-    },
-    "dubbingProvider": {
-      "label": "Fornitore doppiaggio",
-      "elevenlabs": "ElevenLabs (Clonazione vocale)",
-      "elevenlabsHint": "Mantiene la voce dell'oratore originale",
-      "openai": "OpenAI TTS",
-      "openaiHint": "Usa voci sintetiche (alloy, echo, ecc.)",
-      "stage5": "Stage5 (Crediti)",
-      "stage5Hint": "Usa crediti Stage5 AI"
     },
     "dubbing": {
       "voiceLabel": "Voce doppiata",
@@ -298,6 +278,7 @@
       "mixVoice": "Più voce",
       "voiceCloning": "Clona voce originale",
       "voiceCloningDesc": "Preserva la voce dell'oratore originale nell'audio doppiato",
+      "voiceCloningInsufficientCredits": "Richiede almeno 1 minuto di crediti",
       "voiceCloningEnabled": "La clonazione vocale è abilitata con ElevenLabs. La voce dell'oratore originale sarà preservata nell'audio doppiato.",
       "voiceCloningInfo": "La clonazione vocale utilizza l'API di doppiaggio ElevenLabs per analizzare e ricreare la voce dell'oratore originale.",
       "costPerMinute": "Costo per minuto",
@@ -444,19 +425,13 @@
       "toggleOn": "Usando la tua chiave ElevenLabs.",
       "toggleOff": "Usando crediti Stage5 per i servizi ElevenLabs.",
       "toggleError": "Aggiornamento preferenza ElevenLabs fallito."
-    },
-    "voiceCloning": {
-      "enabled": "Clonazione vocale ElevenLabs attivata. L'audio doppiato manterrà la voce dell'oratore originale."
     }
   },
   "credits": {
-    "title": "Ore di utilizzo IA",
+    "title": "Crediti IA",
     "loading": "Caricamento...",
     "credits": "crediti",
     "usingApiKey": "Uso chiave API",
-    "usingOpenAi": "Usando OpenAI",
-    "usingAnthropic": "Usando Claude",
-    "usingElevenLabs": "Usando ElevenLabs",
     "hours": "ore",
     "buyCredits": "Acquista crediti",
     "redirectingToPayment": "Apertura pagamento sicuro…",
@@ -529,7 +504,9 @@
     "validation": {
       "pleaseSelectVideo": "Seleziona un video",
       "processingDuration": "La durata del video è in elaborazione. Riprova tra poco.",
-      "icloudPlaceholder": "Questo file è archiviato in iCloud. Nel Finder, fai clic su \"Scarica\" e attendi che l'icona del cloud finisca, poi riprova."
+      "icloudPlaceholder": "Questo file è archiviato in iCloud. Nel Finder, fai clic su \"Scarica\" e attendi che l'icona del cloud finisca, poi riprova.",
+      "insufficientCreditsForVoiceCloning": "Crediti insufficienti per la clonazione vocale. Il video dura {{duration}} min ma puoi permetterti solo {{affordable}} min. Aggiungi crediti o disabilita la clonazione vocale.",
+      "fileTooLargeForVoiceCloning": "Il file video è troppo grande per la clonazione vocale ({{size}}MB). Il massimo consentito è {{max}}MB. Usa un video più corto o disabilita la clonazione vocale."
     },
     "status": {
       "starting": "Avvio in corso...",
@@ -600,7 +577,8 @@
     "saveDubbedVideoAs": "Salva video doppiato come",
     "dubbingInProgress": "Doppiaggio in corso",
     "dubbingWorking": "Generazione dell’audio doppiato…",
-    "cancelDubbingConfirm": "Annullare il doppiaggio? I progressi andranno persi e dovrai ricominciare."
+    "cancelDubbingConfirm": "Annullare il doppiaggio? I progressi andranno persi e dovrai ricominciare.",
+    "mergeLowDiskSpaceConfirm": "Spazio su disco insufficiente rilevato. Questa unione potrebbe richiedere ~{{need}} di spazio libero, ma solo ~{{free}} è disponibile. Continuare comunque?"
   },
   "progress": {
     "mergingTitle": "Unendo video e sottotitoli",
@@ -617,13 +595,13 @@
     "scrubbingHallucinations": "Pulizia sottotitoli ({{done}}/{{total}})",
     "translationCleanup": "Pulizia sottotitoli tradotti ({{done}}/{{total}})",
     "reviewingSlow": "Revisione (potrebbe richiedere del tempo...) {{done}}/{{total}}",
-    "reviewingBatch": "Revisione {{done}}/{{total}}",
     "reviewingRange": "Revisione {{start}}–{{end}} (di {{total}})",
     "transcribingElevenLabs": "Trascrizione con ElevenLabs (~{{minutes}} min rimanenti)",
     "transcribingElevenLabsHours": "Trascrizione con ElevenLabs (~{{hours}}h {{minutes}}m rimanenti)",
     "transcribingElevenLabsFinishing": "Trascrizione con ElevenLabs...",
     "transcriptionFallbackWhisper": "Passaggio alla trascrizione a blocchi...",
-    "transcribingR2Upload": "Caricamento audio per trascrizione..."
+    "transcribingR2Upload": "Caricamento audio per trascrizione...",
+    "transcriptionRetry": "Connessione fallita, nuovo tentativo ({{attempt}}/{{maxAttempts}})..."
   },
   "messages": {
     "fileSaved": "File salvato:\n{{path}}",
@@ -669,7 +647,8 @@
       "genericApiError": "Richiesta API fallita. Verifica la tua chiave API e lo stato del tuo account."
     },
     "needCookiesYouTube": "YouTube ha richiesto una verifica umana. Clicca su Connetti per continuare.",
-    "needCookiesGeneric": "Questo sito ha richiesto una verifica umana. Clicca su Connetti per continuare."
+    "needCookiesGeneric": "Questo sito ha richiesto una verifica umana. Clicca su Connetti per continuare.",
+    "connectFailed": "Impossibile connettersi. Riprova."
   },
   "logs": {
     "title": "Log recenti",
@@ -684,3 +663,4 @@
     "deviceInfoHeader": "Informazioni dispositivo"
   }
 }
+

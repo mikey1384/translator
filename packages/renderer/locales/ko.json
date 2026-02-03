@@ -87,7 +87,8 @@
       "genericApiError": "API 요청이 실패했습니다. API 키와 계정 상태를 확인해주세요."
     },
     "needCookiesYouTube": "YouTube에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
-    "needCookiesGeneric": "이 사이트에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요."
+    "needCookiesGeneric": "이 사이트에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
+    "connectFailed": "연결할 수 없습니다. 다시 시도해 주세요."
   },
   "input": {
     "fromDevice": "내 기기에서",
@@ -95,6 +96,12 @@
     "downloadVideo": "비디오 다운로드",
     "enterVideoUrl": "비디오 URL 입력",
     "quality": "품질",
+    "qualityPresets": "프리셋",
+    "qualityBest": "최고",
+    "qualityResolution": "해상도",
+    "quality8k": "UHD 8K",
+    "quality4k": "HD 4K",
+    "quality2k": "HQ 2K",
     "qualityHigh": "고화질",
     "qualityMedium": "중화질",
     "qualityLow": "저화질",
@@ -135,6 +142,7 @@
     "dubEstimateByo": "~{{minutes}}분 오디오",
     "translateEstimateCredits": "~{{minutes}}분 영상",
     "translateEstimateByo": "BYO 키",
+    "voiceCloningRequiresTranslation": "음성 복제에는 대상 언어가 필요합니다",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "자막 번역 과정을 취소하시겠습니까? 모든 진행 상황이 손실되며 다시 시작해야 합니다."
   },
@@ -223,6 +231,7 @@
     "transcribingElevenLabsHours": "ElevenLabs로 전사 중 (~{{hours}}시간 {{minutes}}분 남음)",
     "transcribingElevenLabsFinishing": "ElevenLabs로 전사 중...",
     "transcriptionFallbackWhisper": "청크 방식 전사로 전환 중...",
+    "transcriptionRetry": "연결 실패, 재시도 중 ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "전사를 위해 오디오 업로드 중..."
   },
   "editSubtitles": {
@@ -367,7 +376,8 @@
       "yourBalance": "잔액",
       "canClone": "복제 가능",
       "upToMinutes": "최대 {{minutes}}분",
-      "loading": "로딩 중..."
+      "loading": "로딩 중...",
+      "voiceCloningInsufficientCredits": "최소 1분 이상의 크레딧이 필요합니다"
     },
     "byoOpenAi": {
       "title": "내 API 키 사용",
@@ -594,7 +604,9 @@
     "validation": {
       "pleaseSelectVideo": "비디오를 선택해주세요",
       "processingDuration": "비디오 길이를 처리 중입니다. 잠시 후 다시 시도해주세요.",
-      "icloudPlaceholder": "이 파일은 iCloud에 저장되어 있습니다. Finder에서 ‘다운로드’를 눌러 아이콘이 사라질 때까지 기다린 뒤 다시 시도해주세요."
+      "icloudPlaceholder": "이 파일은 iCloud에 저장되어 있습니다. Finder에서 '다운로드'를 눌러 아이콘이 사라질 때까지 기다린 뒤 다시 시도해주세요.",
+      "insufficientCreditsForVoiceCloning": "음성 복제를 위한 크레딧이 부족합니다. 영상 길이는 {{duration}}분이지만 {{affordable}}분까지만 사용 가능합니다. 크레딧을 추가하거나 음성 복제를 비활성화해 주세요.",
+      "fileTooLargeForVoiceCloning": "음성 복제에는 영상 파일이 너무 큽니다 ({{size}}MB). 최대 허용 크기는 {{max}}MB입니다. 더 짧은 영상을 사용하거나 음성 복제를 비활성화해 주세요."
     },
     "status": {
       "starting": "시작 중...",

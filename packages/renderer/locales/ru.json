@@ -26,6 +26,7 @@
       "creditReservationFailed": "Ошибка резервирования кредитов",
       "invalidRenderOptions": "Предоставлены неверные параметры рендеринга",
       "missingVideoMetadata": "Отсутствуют метаданные видео ({{missing}})",
+      "insufficientDiskSpace": "Недостаточно места на диске для завершения объединения. Освободите место и повторите попытку.",
       "noSourceVideo": "Нет исходного видео",
       "noSubtitlesLoaded": "Субтитры не загружены",
       "failedToLoadSRT": "Не удалось загрузить SRT файл"
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "Сохранить дубляж видео",
     "connect": "Подключить",
     "connecting": "Подключение...",
-    "connectTip": "Совет: В окне подключения войдите в систему или пройдите проверку, затем закройте окно, чтобы продолжить."
+    "connectTip": "Совет: В окне подключения войдите в систему или пройдите проверку, затем закройте окно, чтобы продолжить.",
+    "qualityPresets": "Предустановки",
+    "qualityBest": "Лучшее",
+    "qualityResolution": "Разрешение",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Язык вывода",
@@ -100,8 +107,14 @@
     "improveTranscription": "Улучшить транскрипцию",
     "improveTranslation": "Улучшить перевод",
     "chooseSrtFile": "Выбрать SRT файл",
-    "cancel_confirmation": "Вы уверены, что хотите отменить процесс перевода субтитров? Весь прогресс будет потерян, и вам придется начать заново.",
-    "dub": "Создать дубляж голоса"
+    "dub": "Создать дубляж голоса",
+    "dubEstimateCredits": "{{credits}} кр (~{{minutes}} мин)",
+    "dubEstimateByo": "~{{minutes}} мин аудио",
+    "voiceCloningRequiresTranslation": "Клонирование голоса требует выбора целевого языка",
+    "translateEstimateCredits": "~{{minutes}} мин видео",
+    "translateEstimateByo": "Свой ключ",
+    "qualityBadge": "(выс.)",
+    "cancel_confirmation": "Вы уверены, что хотите отменить процесс перевода субтитров? Весь прогресс будет потерян, и вам придется начать заново."
   },
   "summary": {
     "title": "Сводка транскрипта",
@@ -118,32 +131,34 @@
     "status": {
       "preparing": "Подготовка транскрипта…",
       "chunk": "Сводка раздела {{current}}/{{total}}",
+      "selectingHighlights": "Выбор ярких моментов…",
+      "cuttingHighlight": "Вырезание момента {{current}}/{{total}}…",
+      "cuttingHighlights": "Вырезание клипов моментов…",
       "synthesizing": "Формирование полной сводки…",
       "ready": "Сводка готова",
       "error": "Сводка не выполнена",
       "cancelled": "Сводка отменена",
-      "inProgress": "Создание сводки…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
+      "inProgress": "Создание сводки…"
     },
     "tab": {
-      "summary": "Summary",
-      "sections": "Detailed notes",
-      "highlights": "Highlights"
+      "summary": "Сводка",
+      "sections": "Подробные заметки",
+      "highlights": "Яркие моменты"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight",
-    "downloadHighlight": "Download clip",
-    "downloadingHighlight": "Saving…",
-    "highlightSaved": "Saved!",
-    "highlightSaveError": "Save failed",
-    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
-    "saveHighlightDialogTitle": "Save highlight clip",
-    "noSections": "No section notes yet.",
-    "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…",
+    "noHighlights": "Ярких моментов пока нет. Создайте, чтобы найти интересные фрагменты.",
+    "noVideoForHighlights": "Откройте исходное видео для вырезания клипов с яркими моментами.",
+    "highlight": "Момент",
+    "downloadHighlight": "Скачать клип",
+    "downloadingHighlight": "Сохранение…",
+    "highlightSaved": "Сохранено!",
+    "highlightSaveError": "Не удалось сохранить",
+    "downloadHighlightFailed": "Не удалось сохранить клип с моментом: {{message}}",
+    "saveHighlightDialogTitle": "Сохранить клип с моментом",
+    "noSections": "Заметок по разделам пока нет.",
+    "sectionHeading": "Раздел {{index}}",
+    "highlightsInProgress": "Подготовка клипов с моментами…",
+    "estimateCredits": "{{credits}} кредитов",
+    "highEffortBadge": "(глубокий)",
     "combineMode": "Объединить",
     "exitCombineMode": "Выйти из объединения",
     "reorderHint": "Перетащите для изменения порядка:",
@@ -181,7 +196,7 @@
       "originalTextPrefix": "Оригинал:",
       "subtitlePlaceholder": "Текст субтитров",
       "confirmRemove": "Вы уверены, что хотите удалить этот блок субтитров? Это действие нельзя отменить.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Транскрибировать строку"
     },
     "header": {
       "save": "Сохранить",
@@ -220,18 +235,18 @@
       },
       "qualityTranslation": {
         "label": "Качественный перевод",
-        "help": "Вкл.: включает этап проверки (~5× больше кредитов/времени). Выкл.: пропускать проверку.",
-        "helpWithEstimate": "Проверка использует ~5× больше кредитов. Ваши кредиты: ~{{normalTime}} обычный, ~{{hqTime}} HQ."
+        "help": "<b>5× кредитов</b> • Добавляет этап проверки для повышения качества",
+        "helpWithEstimate": "<b>5× кредитов</b> • Ваш баланс: ~{{normalTime}} (обычный) / ~{{hqTime}} (выс.)"
       },
       "qualitySummary": {
         "label": "Качественное резюме",
-        "help": "Вкл.: глубокий анализ + выделенные клипы с Claude Opus (~4× кредитов). Выкл.: быстро с GPT-5.1.",
-        "helpWithEstimate": "Глубокий анализ + выделенные клипы (~4× кредитов). Ваши кредиты: ~{{normalTime}} обычный, ~{{hqTime}} HQ."
+        "help": "<b>4× кредитов</b> • Глубокий анализ + выделенные клипы с Claude Opus",
+        "helpWithEstimate": "<b>4× кредитов</b> • Ваш баланс: ~{{normalTime}} (обычный) / ~{{hqTime}} (выс.)"
       },
       "qualityDubbing": {
         "label": "Качественный дубляж",
-        "help": "Вкл.: ElevenLabs TTS (премиум-голоса, ~13× кредитов). Выкл.: OpenAI TTS (хорошее качество).",
-        "helpWithEstimate": "ElevenLabs TTS (~13× кредитов). Ваши кредиты: ~{{normalTime}} обычный, ~{{hqTime}} HQ."
+        "help": "<b>13× кредитов</b> • ElevenLabs TTS с премиум-голосами",
+        "helpWithEstimate": "<b>13× кредитов</b> • Ваш баланс: ~{{normalTime}} (обычный) / ~{{hqTime}} (выс.)"
       }
     },
     "dubbing": {
@@ -243,12 +258,35 @@
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "Прослушать этот голос",
+      "previewing": "Воспроизведение...",
+      "previewFree": "Прослушать",
+      "previewWithCost": "Прослушать ({{cost}} кредитов)",
       "mixLabel": "Громкость дубляжа vs громкость оригинального видео",
       "mixHelp": "Настройте, сколько оригинальной звуковой дорожки будет звучать под дубляжной речью.",
       "mixAmbient": "Больше фонового звука",
-      "mixVoice": "Больше голоса"
+      "mixVoice": "Больше голоса",
+      "voiceCloning": "Клонировать оригинальный голос",
+      "voiceCloningDesc": "Сохранить голос оригинального диктора в дубляже",
+      "voiceCloningInsufficientCredits": "Требуется минимум 1 минута кредитов",
+      "voiceCloningEnabled": "Клонирование голоса включено через ElevenLabs. Голос оригинального диктора будет сохранён в дубляже.",
+      "voiceCloningInfo": "Клонирование голоса использует ElevenLabs Dubbing API для анализа и воссоздания голоса оригинального диктора.",
+      "costPerMinute": "Стоимость за минуту",
+      "credits": "кредитов",
+      "yourBalance": "Ваш баланс",
+      "canClone": "Можно клонировать",
+      "upToMinutes": "до {{minutes}} мин",
+      "loading": "Загрузка..."
     },
     "byoOpenAi": {
       "title": "Используйте свои API-ключи",
@@ -356,6 +394,37 @@
       "toggleOn": "Используется ваш ключ Anthropic для моделей Claude.",
       "toggleOff": "Используются кредиты Stage5 для моделей Claude.",
       "toggleError": "Не удалось обновить настройку Anthropic."
+    },
+    "byoElevenLabs": {
+      "title": "API-ключ ElevenLabs (Необязательно)",
+      "description": "Добавьте свой API-ключ ElevenLabs для премиум-транскрипции и озвучивания с клонированием голоса напрямую. Без этого ключа будет использоваться OpenAI.",
+      "apiKeyLabel": "API-ключ ElevenLabs",
+      "hide": "Скрыть",
+      "show": "Показать",
+      "saving": "Сохранение…",
+      "clear": "Очистить ключ",
+      "loadingKey": "Загрузка сохранённого ключа ElevenLabs…",
+      "keySaved": "API-ключ ElevenLabs сохранён.",
+      "keyCleared": "API-ключ ElevenLabs очищен.",
+      "keyValid": "API-ключ ElevenLabs успешно проверен.",
+      "keyInvalid": "Проверка API-ключа ElevenLabs не удалась.",
+      "testing": "Проверка…",
+      "test": "Проверить ключ",
+      "toggleLabel": "Использовать мой ключ ElevenLabs",
+      "toggleHelp": "При выключении запросы ElevenLabs используют кредиты Stage5.",
+      "toggleAria": "Переключить использование вашего ключа ElevenLabs",
+      "toggleOn": "Используется ваш ключ ElevenLabs для TTS и транскрипции.",
+      "toggleOff": "Используются кредиты Stage5 для ElevenLabs.",
+      "toggleError": "Не удалось обновить настройку ElevenLabs."
+    },
+    "stage5TtsProvider": {
+      "label": "Качество TTS (Кредиты Stage5)",
+      "openai": "Стандартное (OpenAI TTS)",
+      "openaiHint": "Хорошее качество, низкая стоимость",
+      "openaiHintWithBalance": "Хорошее качество · Ваш баланс: {{time}} дубляжа",
+      "elevenlabs": "Премиум (ElevenLabs)",
+      "elevenlabsHint": "Лучшее качество, выше стоимость (~13×)",
+      "elevenlabsHintWithBalance": "Лучшее качество · Ваш баланс: {{time}} дубляжа"
     }
   },
   "credits": {
@@ -435,7 +504,9 @@
     "validation": {
       "pleaseSelectVideo": "Пожалуйста, выберите видео",
       "processingDuration": "Обрабатывается длительность видео. Попробуйте еще раз через некоторое время.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Этот файл хранится в iCloud. В Finder нажмите «Загрузить» и дождитесь завершения загрузки, затем повторите попытку.",
+      "insufficientCreditsForVoiceCloning": "Недостаточно кредитов для клонирования голоса. Видео длится {{duration}} мин, но вы можете позволить только {{affordable}} мин. Пополните кредиты или отключите клонирование голоса.",
+      "fileTooLargeForVoiceCloning": "Видеофайл слишком большой для клонирования голоса ({{size}}МБ). Максимум {{max}}МБ. Используйте более короткое видео или отключите клонирование голоса."
     },
     "status": {
       "starting": "Запуск...",
@@ -506,7 +577,8 @@
     "saveDubbedVideoAs": "Сохранить дубляж видео как",
     "dubbingInProgress": "Дублирование выполняется",
     "dubbingWorking": "Создаем дубляж звука…",
-    "cancelDubbingConfirm": "Отменить дубляж? Прогресс будет потерян, и вам придется начать заново."
+    "cancelDubbingConfirm": "Отменить дубляж? Прогресс будет потерян, и вам придется начать заново.",
+    "mergeLowDiskSpaceConfirm": "Обнаружено мало места на диске. Для объединения может потребоваться ~{{need}} свободного места, но доступно только ~{{free}}. Продолжить?"
   },
   "progress": {
     "mergingTitle": "Объединение видео и субтитров",
@@ -520,11 +592,16 @@
     "transcribedChunks": "Транскрибировано и очищено {{done}}/{{total}} фрагментов",
     "gapRepair": "Восстановление пропусков #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Восстановление отсутствующих субтитров (Итерация {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
+    "transcriptionRetry": "Соединение не удалось, повтор ({{attempt}}/{{maxAttempts}})...",
+    "transcribingElevenLabs": "Транскрибирование через ElevenLabs (~{{minutes}} мин осталось)",
+    "transcribingElevenLabsHours": "Транскрибирование через ElevenLabs (~{{hours}}ч {{minutes}}мин осталось)",
+    "transcribingElevenLabsFinishing": "Транскрибирование через ElevenLabs...",
+    "transcriptionFallbackWhisper": "Переход на транскрибирование по частям...",
+    "transcribingR2Upload": "Загрузка аудио для транскрибирования...",
+    "scrubbingHallucinations": "Очистка субтитров ({{done}}/{{total}})",
+    "translationCleanup": "Очистка переведённых субтитров ({{done}}/{{total}})",
     "reviewingSlow": "Проверка (это может занять время...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingRange": "Проверка {{start}}–{{end}} (из {{total}})"
   },
   "messages": {
     "fileSaved": "Файл сохранен:\n{{path}}",
@@ -545,6 +622,9 @@
   },
   "errors": {
     "needCookies": "YouTube запросил проверку. Нажмите «Подключить», чтобы продолжить.",
+    "needCookiesYouTube": "YouTube запросил проверку. Нажмите «Подключить», чтобы продолжить.",
+    "needCookiesGeneric": "Этот сайт запросил проверку. Нажмите «Подключить», чтобы продолжить.",
+    "connectFailed": "Не удалось подключиться. Пожалуйста, попробуйте снова.",
     "unexpected": "Произошла непредвиденная ошибка.",
     "unexpectedRemove": "Произошла непредвиденная ошибка при удалении ключа.",
     "unexpectedSave": "Произошла непредвиденная ошибка при сохранении.",
@@ -568,9 +648,7 @@
       "elevenlabsInsufficientQuota": "На вашем счёте ElevenLabs недостаточно кредитов. Пожалуйста, пополните баланс на elevenlabs.io.",
       "checkSettings": "Проверить настройки",
       "genericApiError": "Ошибка API-запроса. Пожалуйста, проверьте ваш API-ключ и статус аккаунта."
-    },
-    "needCookiesYouTube": "YouTube запросил проверку. Нажмите «Подключить», чтобы продолжить.",
-    "needCookiesGeneric": "Этот сайт запросил проверку. Нажмите «Подключить», чтобы продолжить."
+    }
   },
   "logs": {
     "title": "Последние логи",

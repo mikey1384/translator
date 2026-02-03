@@ -389,11 +389,18 @@ export async function downloadVideoFromPlatform(
     );
   }
 
+  const isResolutionCap = /^(4320|2160|1440|1080|720|480|360|240)p$/.test(
+    effectiveQuality
+  );
+
   let formatString: string;
-  if (isYouTube) {
+  // YouTube: always use our tuned mapping.
+  // Non-YouTube: keep the existing "best MP4" default for backwards compatibility,
+  // but if the user explicitly picked a resolution cap, respect it cross-site.
+  if (isYouTube || isResolutionCap) {
     formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.mid;
     log.info(
-      `[URLprocessor] Using YouTube format for effective quality '${effectiveQuality}': ${formatString}`
+      `[URLprocessor] Using format for effective quality '${effectiveQuality}' (isYouTube=${isYouTube}): ${formatString}`
     );
   } else {
     formatString = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
@@ -403,8 +410,13 @@ export async function downloadVideoFromPlatform(
   }
 
   let currentFormat = formatString;
+  // Conservative, cross-site fallback: separate best video+audio when possible,
+  // otherwise fall back to best single file. This is especially useful when a
+  // direct file URL doesn't expose height metadata for resolution caps.
+  const bestNoCapFormat = 'bv*+ba/b';
   const mp4FallbackFormat = 'bestvideo[ext=mp4]+bestaudio/best[ext=mp4]/best';
   let forcedMp4Fallback = false;
+  let forcedNoCapFallback = false;
 
   const safeTimestamp = Date.now();
   const tempFilenamePattern = join(
@@ -480,13 +492,13 @@ export async function downloadVideoFromPlatform(
 
   // Decide container behavior: for high quality, avoid forcing MP4 so we can fetch
   // the truly highest formats (often VP9/AV1 in WebM/MKV). For mid/low, prefer MP4.
-  let containerArgs =
-    effectiveQuality === 'high' ? [] : ['--merge-output-format', 'mp4'];
+  const allowNonMp4 = effectiveQuality === 'high' || isResolutionCap;
+
+  let containerArgs = allowNonMp4 ? [] : ['--merge-output-format', 'mp4'];
   const defaultContainerArgs = [...containerArgs];
 
-  // Prefer highest resolution/codec/fps explicitly for high quality
-  let sortArgs =
-    effectiveQuality === 'high' ? ['-S', 'res,codec:av1:vp9:avc,fps'] : [];
+  // Prefer highest resolution/codec/fps explicitly for best/high and resolution-capped profiles
+  let sortArgs = allowNonMp4 ? ['-S', 'res,codec:av1:vp9:avc,fps'] : [];
   let extractorArgs: string[] = [];
   let extractorMode: 'web' | 'ios' | 'android' = 'web';
 
@@ -977,13 +989,32 @@ export async function downloadVideoFromPlatform(
         const looksLikeFormatMissing =
           /Requested format is not available/i.test(errorBlob);
         const looksLikeNsigFailure =
-          /nsig/i.test(errorBlob) ||
-          /Initial JS player n function/i.test(errorBlob);
+          isYouTube &&
+          (/nsig/i.test(errorBlob) ||
+            /Initial JS player n function/i.test(errorBlob));
         if (
           looksLikeFormatMissing &&
           forcedMp4Fallback &&
           attempt < maxAttempts
         ) {
+          // For non-YouTube URLs, resolution-capped selectors can fail when the site
+          // (or a direct file URL) doesn't expose height metadata. In that case,
+          // drop the cap rather than looping between cap+mp4 fallbacks.
+          if (isResolutionCap && !isYouTube && !forcedNoCapFallback) {
+            log.warn(
+              '[URLprocessor] MP4 fallback missing requested format; retrying with best available format (dropping resolution cap).'
+            );
+            currentFormat = bestNoCapFormat;
+            extractorArgs = [];
+            extractorMode = 'web';
+            sortArgs = [];
+            containerArgs = [...defaultContainerArgs];
+            forcedMp4Fallback = false;
+            forcedNoCapFallback = true;
+            attempt += 1;
+            continue;
+          }
+
           log.warn(
             '[URLprocessor] MP4 fallback still missing requested format; allowing non-MP4 variants again.'
           );
@@ -997,7 +1028,23 @@ export async function downloadVideoFromPlatform(
           looksLikeNsigFailure ||
           (looksLikeFormatMissing && !forcedMp4Fallback);
         if (treatAsExtractorIssue && attempt < maxAttempts) {
-          if (extractorMode === 'web') {
+          if (looksLikeFormatMissing && isResolutionCap && !isYouTube) {
+            if (!forcedNoCapFallback) {
+              log.warn(
+                '[URLprocessor] Requested resolution cap not available for this URL; retrying with best available format (dropping cap).'
+              );
+              currentFormat = bestNoCapFormat;
+              extractorArgs = [];
+              extractorMode = 'web';
+              sortArgs = [];
+              containerArgs = [...defaultContainerArgs];
+              forcedNoCapFallback = true;
+              attempt += 1;
+              continue;
+            }
+          }
+
+          if (isYouTube && extractorMode === 'web') {
             extractorMode = 'ios';
             extractorArgs = ['--extractor-args', 'youtube:player_client=ios'];
             log.warn(
@@ -1006,7 +1053,7 @@ export async function downloadVideoFromPlatform(
             attempt += 1;
             continue;
           }
-          if (extractorMode === 'ios') {
+          if (isYouTube && extractorMode === 'ios') {
             extractorMode = 'android';
             extractorArgs = [
               '--extractor-args',

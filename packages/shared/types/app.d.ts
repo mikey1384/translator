@@ -7,7 +7,18 @@ declare module '@shared-types/app' {
   // === General & Utility Types
   // =========================================
 
-  export type VideoQuality = 'high' | 'mid' | 'low';
+  export type VideoQuality =
+    | 'high'
+    | 'mid'
+    | 'low'
+    | '4320p'
+    | '2160p'
+    | '1440p'
+    | '1080p'
+    | '720p'
+    | '480p'
+    | '360p'
+    | '240p';
 
   export interface CancelOperationResult {
     success: boolean;

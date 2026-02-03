@@ -26,6 +26,7 @@
       "creditReservationFailed": "Falha na reserva de créditos",
       "invalidRenderOptions": "Opções de renderização inválidas fornecidas",
       "missingVideoMetadata": "Metadados do vídeo ausentes ({{missing}})",
+      "insufficientDiskSpace": "Espaço em disco insuficiente para concluir a mesclagem. Por favor, libere espaço e tente novamente.",
       "noSourceVideo": "Nenhum vídeo fonte",
       "noSubtitlesLoaded": "Nenhuma legenda carregada",
       "failedToLoadSRT": "Falha ao carregar arquivo SRT"
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "Salvar vídeo dublado",
     "connect": "Conectar",
     "connecting": "Conectando...",
-    "connectTip": "Dica: Na janela de conexão, faça login ou complete a verificação e feche a janela para continuar."
+    "connectTip": "Dica: Na janela de conexão, faça login ou complete a verificação e feche a janela para continuar.",
+    "qualityPresets": "Predefinições",
+    "qualityBest": "Melhor",
+    "qualityResolution": "Resolução",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Idioma de Saída",
@@ -102,9 +109,10 @@
     "chooseSrtFile": "Escolher Arquivo SRT",
     "cancel_confirmation": "Tem certeza que deseja cancelar o processo de tradução de legendas? Qualquer progresso será perdido e você precisará começar novamente.",
     "dub": "Dublar voz",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}min)",
-    "dubEstimateByo": "~{{minutes}}min de áudio",
-    "translateEstimateCredits": "~{{minutes}}m vídeo",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "dubEstimateByo": "~{{minutes}}m de áudio",
+    "voiceCloningRequiresTranslation": "Clonagem de voz requer um idioma de destino",
+    "translateEstimateCredits": "~{{minutes}}m de vídeo",
     "translateEstimateByo": "Chave BYO",
     "qualityBadge": "(hq)"
   },
@@ -298,6 +306,7 @@
       "mixVoice": "Mais voz",
       "voiceCloning": "Clonar voz original",
       "voiceCloningDesc": "Preservar a voz do falante original no áudio dublado",
+      "voiceCloningInsufficientCredits": "Requer pelo menos 1 minuto de créditos",
       "voiceCloningEnabled": "A clonagem de voz está habilitada com ElevenLabs. A voz do falante original será preservada no áudio dublado.",
       "voiceCloningInfo": "A clonagem de voz usa a API de dublagem da ElevenLabs para analisar e recriar a voz do falante original.",
       "costPerMinute": "Custo por minuto",
@@ -444,9 +453,6 @@
       "toggleOn": "Usando sua chave ElevenLabs.",
       "toggleOff": "Usando créditos Stage5 para serviços ElevenLabs.",
       "toggleError": "Falha ao atualizar preferência ElevenLabs."
-    },
-    "voiceCloning": {
-      "enabled": "Clonagem de voz ElevenLabs ativada. O áudio dublado manterá a voz do locutor original."
     }
   },
   "videoPlayer": {
@@ -515,7 +521,9 @@
     "validation": {
       "pleaseSelectVideo": "Por favor, selecione um vídeo",
       "processingDuration": "A duração do vídeo está sendo processada. Tente novamente em breve.",
-      "icloudPlaceholder": "Este arquivo está armazenado no iCloud. No Finder, clique em \"Baixar\" e aguarde o ícone da nuvem terminar, depois tente novamente."
+      "icloudPlaceholder": "Este arquivo está armazenado no iCloud. No Finder, clique em \"Baixar\" e aguarde o ícone da nuvem terminar, depois tente novamente.",
+      "insufficientCreditsForVoiceCloning": "Créditos insuficientes para clonagem de voz. O vídeo tem {{duration}} min, mas você só pode pagar {{affordable}} min. Por favor, adicione créditos ou desative a clonagem de voz.",
+      "fileTooLargeForVoiceCloning": "O arquivo de vídeo é muito grande para clonagem de voz ({{size}}MB). O máximo permitido é {{max}}MB. Por favor, use um vídeo mais curto ou desative a clonagem de voz."
     },
     "status": {
       "starting": "Iniciando...",
@@ -586,7 +594,8 @@
     "saveDubbedVideoAs": "Salvar vídeo dublado como",
     "dubbingInProgress": "Dublagem em andamento",
     "dubbingWorking": "Gerando áudio dublado…",
-    "cancelDubbingConfirm": "Cancelar a dublagem? O progresso será perdido e você terá que recomeçar."
+    "cancelDubbingConfirm": "Cancelar a dublagem? O progresso será perdido e você terá que recomeçar.",
+    "mergeLowDiskSpaceConfirm": "Pouco espaço em disco detectado. Esta mesclagem pode precisar de ~{{need}} de espaço livre, mas apenas ~{{free}} está disponível. Continuar mesmo assim?"
   },
   "progress": {
     "mergingTitle": "Combinando vídeo e legendas",
@@ -609,7 +618,8 @@
     "transcribingElevenLabsHours": "Transcrevendo com ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
     "transcribingElevenLabsFinishing": "Transcrevendo com ElevenLabs...",
     "transcriptionFallbackWhisper": "Mudando para transcrição fragmentada...",
-    "transcribingR2Upload": "Enviando áudio para transcrição..."
+    "transcribingR2Upload": "Enviando áudio para transcrição...",
+    "transcriptionRetry": "Conexão falhou, tentando novamente ({{attempt}}/{{maxAttempts}})..."
   },
   "messages": {
     "fileSaved": "Arquivo salvo:\n{{path}}",
@@ -681,6 +691,7 @@
       "genericApiError": "A requisição da API falhou. Por favor, verifique sua chave API e o status da sua conta."
     },
     "needCookiesYouTube": "O YouTube solicitou uma verificação humana. Clique em Conectar para continuar.",
-    "needCookiesGeneric": "Este site solicitou uma verificação humana. Clique em Conectar para continuar."
+    "needCookiesGeneric": "Este site solicitou uma verificação humana. Clique em Conectar para continuar.",
+    "connectFailed": "Não foi possível conectar. Por favor, tente novamente."
   }
 }

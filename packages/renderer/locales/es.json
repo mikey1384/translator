@@ -26,6 +26,7 @@
       "creditReservationFailed": "Error en la reserva de créditos",
       "invalidRenderOptions": "Opciones de renderización inválidas",
       "missingVideoMetadata": "Faltan metadatos del video ({{missing}})",
+      "insufficientDiskSpace": "No hay suficiente espacio en disco para completar la fusión. Por favor libera espacio e inténtalo de nuevo.",
       "noSourceVideo": "No hay video fuente",
       "noSubtitlesLoaded": "No hay subtítulos cargados",
       "failedToLoadSRT": "Error al cargar el archivo SRT"
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "Guardar video doblado",
     "connect": "Conectar",
     "connecting": "Conectando...",
-    "connectTip": "Consejo: En la ventana de conexión, inicia sesión o completa la verificación, luego cierra la ventana para continuar."
+    "connectTip": "Consejo: En la ventana de conexión, inicia sesión o completa la verificación, luego cierra la ventana para continuar.",
+    "qualityPresets": "Preajustes",
+    "qualityBest": "Mejor",
+    "qualityResolution": "Resolución",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Idioma de salida",
@@ -106,7 +113,8 @@
     "dubEstimateByo": "~{{minutes}}min de audio",
     "translateEstimateCredits": "~{{minutes}}m vídeo",
     "translateEstimateByo": "Clave BYO",
-    "qualityBadge": "(hq)"
+    "qualityBadge": "(hq)",
+    "voiceCloningRequiresTranslation": "La clonación de voz requiere un idioma de destino"
   },
   "summary": {
     "title": "Resumen de la transcripción",
@@ -298,6 +306,7 @@
       "mixVoice": "Más voz",
       "voiceCloning": "Clonar voz original",
       "voiceCloningDesc": "Preservar la voz del hablante original en el audio doblado",
+      "voiceCloningInsufficientCredits": "Requiere al menos 1 minuto de créditos",
       "voiceCloningEnabled": "La clonación de voz está habilitada con ElevenLabs. La voz del hablante original se preservará en el audio doblado.",
       "voiceCloningInfo": "La clonación de voz utiliza la API de doblaje de ElevenLabs para analizar y recrear la voz del hablante original.",
       "costPerMinute": "Costo por minuto",
@@ -516,8 +525,8 @@
     "arabic": "Árabe",
     "hebrew": "Hebreo",
     "farsi": "Farsi (Persa)",
-    "swahili": "Swahili",
-    "afrikaans": "Afrikaans"
+    "swahili": "Suajili",
+    "afrikaans": "Afrikáans"
   },
   "generateSubtitles": {
     "noCredits": "Sin créditos.",
@@ -529,7 +538,9 @@
     "validation": {
       "pleaseSelectVideo": "Por favor selecciona un video",
       "processingDuration": "Se está procesando la duración del video. Inténtalo de nuevo en un momento.",
-      "icloudPlaceholder": "Este archivo está almacenado en iCloud. En Finder, haz clic en \"Descargar\" y espera a que el icono de la nube termine, luego inténtalo de nuevo."
+      "icloudPlaceholder": "Este archivo está almacenado en iCloud. En Finder, haz clic en \"Descargar\" y espera a que el icono de la nube termine, luego inténtalo de nuevo.",
+      "insufficientCreditsForVoiceCloning": "Créditos insuficientes para la clonación de voz. El video dura {{duration}} min pero solo puedes pagar {{affordable}} min. Por favor añade créditos o desactiva la clonación de voz.",
+      "fileTooLargeForVoiceCloning": "El archivo de video es demasiado grande para la clonación de voz ({{size}}MB). El máximo permitido es {{max}}MB. Por favor usa un video más corto o desactiva la clonación de voz."
     },
     "status": {
       "starting": "Iniciando...",
@@ -600,7 +611,8 @@
     "saveDubbedVideoAs": "Guardar video doblado como",
     "dubbingInProgress": "Doblaje en progreso",
     "dubbingWorking": "Generando audio doblado…",
-    "cancelDubbingConfirm": "¿Cancelar el doblaje? Se perderá el progreso y tendrás que empezar de nuevo."
+    "cancelDubbingConfirm": "¿Cancelar el doblaje? Se perderá el progreso y tendrás que empezar de nuevo.",
+    "mergeLowDiskSpaceConfirm": "Se detectó poco espacio en disco. Esta fusión puede necesitar ~{{need}} de espacio libre, pero solo hay ~{{free}} disponible. ¿Continuar de todos modos?"
   },
   "progress": {
     "mergingTitle": "Combinando video y subtítulos",
@@ -623,6 +635,7 @@
     "transcribingElevenLabsHours": "Transcribiendo con ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
     "transcribingElevenLabsFinishing": "Transcribiendo con ElevenLabs...",
     "transcriptionFallbackWhisper": "Cambiando a transcripción por fragmentos...",
+    "transcriptionRetry": "Conexión fallida, reintentando ({{attempt}}/{{maxAttempts}})...",
     "transcribingR2Upload": "Subiendo audio para transcripción..."
   },
   "messages": {
@@ -644,6 +657,7 @@
   },
   "errors": {
     "needCookies": "YouTube solicitó una verificación humana. Haz clic en Conectar para continuar.",
+    "connectFailed": "No se pudo conectar. Por favor inténtalo de nuevo.",
     "unexpected": "Ocurrió un error inesperado.",
     "unexpectedRemove": "Ocurrió un error inesperado al eliminar la clave.",
     "unexpectedSave": "Ocurrió un error inesperado al guardar.",

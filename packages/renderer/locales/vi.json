@@ -2,7 +2,9 @@
   "common": {
     "cancel": "Hủy",
     "save": "Lưu",
+    "or": "HOẶC",
     "saving": "Đang lưu...",
+    "validating": "Đang xác thực...",
     "delete": "Xóa",
     "confirm": "Xác nhận",
     "apply": "Áp dụng",
@@ -26,7 +28,8 @@
       "missingVideoMetadata": "Thiếu metadata video ({{missing}})",
       "noSourceVideo": "Không có video nguồn",
       "noSubtitlesLoaded": "Không có phụ đề nào được tải",
-      "failedToLoadSRT": "Không thể tải tệp SRT"
+      "failedToLoadSRT": "Không thể tải tệp SRT",
+      "insufficientDiskSpace": "Không đủ dung lượng ổ đĩa để hoàn tất việc ghép. Vui lòng giải phóng dung lượng và thử lại."
     },
     "success": "Thành công",
     "settings": "Cài đặt",
@@ -84,7 +87,13 @@
     "saveDubbedVideo": "Lưu video lồng tiếng",
     "connect": "Kết nối",
     "connecting": "Đang kết nối...",
-    "connectTip": "Mẹo: Trong cửa sổ kết nối, đăng nhập hoặc hoàn thành xác minh, sau đó đóng cửa sổ để tiếp tục."
+    "connectTip": "Mẹo: Trong cửa sổ kết nối, đăng nhập hoặc hoàn thành xác minh, sau đó đóng cửa sổ để tiếp tục.",
+    "qualityPresets": "Cài sẵn",
+    "qualityBest": "Tốt nhất",
+    "qualityResolution": "Độ phân giải",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Ngôn ngữ đầu ra",
@@ -100,9 +109,10 @@
     "improveTranscription": "Cải thiện chép lời",
     "improveTranslation": "Cải thiện bản dịch",
     "dub": "Lồng tiếng",
-    "dubEstimateCredits": "{{credits}} cr (~{{minutes}} phút)",
-    "dubEstimateByo": "~{{minutes}} phút âm thanh",
-    "translateEstimateCredits": "~{{minutes}} phút video",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "dubEstimateByo": "~{{minutes}}m âm thanh",
+    "voiceCloningRequiresTranslation": "Sao chép giọng yêu cầu ngôn ngữ đích",
+    "translateEstimateCredits": "~{{minutes}}m video",
     "translateEstimateByo": "Khóa BYO",
     "qualityBadge": "(hq)"
   },
@@ -148,23 +158,32 @@
       },
       "qualityTranslation": {
         "label": "Dịch chất lượng cao",
-        "help": "Bật: bao gồm giai đoạn rà soát (~5× tín dụng/thời gian). Tắt: bỏ qua rà soát.",
-        "helpWithEstimate": "Rà soát sử dụng ~5× tín dụng. Tín dụng của bạn: ~{{normalTime}} thường, ~{{hqTime}} HQ."
+        "help": "<b>5× tín dụng</b> • Thêm giai đoạn rà soát để chất lượng cao hơn",
+        "helpWithEstimate": "<b>5× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)"
       },
       "qualitySummary": {
         "label": "Tóm tắt chất lượng cao",
-        "help": "Bật: Claude Opus phân tích sâu + clip nổi bật (~4× tín dụng). Tắt: GPT-5.1 phân tích nhanh.",
-        "helpWithEstimate": "Phân tích sâu + clip nổi bật (~4× tín dụng). Tín dụng của bạn: ~{{normalTime}} thường, ~{{hqTime}} HQ."
+        "help": "<b>4× tín dụng</b> • Phân tích sâu + clip nổi bật với Claude Opus",
+        "helpWithEstimate": "<b>4× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)"
       },
       "qualityDubbing": {
         "label": "Lồng tiếng chất lượng cao",
-        "help": "Bật: ElevenLabs TTS (giọng cao cấp, ~13× tín dụng). Tắt: OpenAI TTS (chất lượng tốt).",
-        "helpWithEstimate": "ElevenLabs TTS (~13× tín dụng). Tín dụng của bạn: ~{{normalTime}} thường, ~{{hqTime}} HQ."
+        "help": "<b>13× tín dụng</b> • ElevenLabs TTS với giọng cao cấp",
+        "helpWithEstimate": "<b>13× tín dụng</b> • Số dư của bạn: ~{{normalTime}} (thường) / ~{{hqTime}} (hq)"
       }
+    },
+    "aiProvider": {
+      "title": "Nhà cung cấp AI"
     },
     "byoMaster": {
       "toggleLabel": "Dùng API key của tôi",
-      "keysActive": "{{count}} key đang hoạt động"
+      "activeKeys": "{{count}} key đang hoạt động",
+      "noKeys": "Chưa cấu hình key",
+      "usingCredits": "Tất cả AI sử dụng tín dụng Stage5",
+      "toggleOn": "Đang sử dụng API key của bạn cho các tác vụ AI.",
+      "toggleOff": "Đang sử dụng tín dụng Stage5 cho tất cả tác vụ AI.",
+      "toggleError": "Không thể cập nhật tùy chọn.",
+      "toggleAria": "Bật/tắt sử dụng API key của bạn"
     },
     "preferClaude": {
       "forTranslation": {
@@ -224,6 +243,7 @@
       "voiceCloning": "Sao chép giọng gốc",
       "voiceCloningDesc": "Bảo toàn giọng nói gốc của người nói trong audio lồng tiếng",
       "voiceCloningEnabled": "Sao chép giọng nói đã được bật với ElevenLabs. Giọng nói gốc của người nói sẽ được bảo toàn trong audio lồng tiếng.",
+      "voiceCloningInsufficientCredits": "Yêu cầu ít nhất 1 phút tín dụng",
       "voiceCloningInfo": "Sao chép giọng nói sử dụng API lồng tiếng ElevenLabs để phân tích và tái tạo giọng nói gốc của người nói.",
       "costPerMinute": "Chi phí mỗi phút",
       "credits": "tín dụng",
@@ -259,8 +279,27 @@
       "toggleOff": "Đang sử dụng tín dụng Stage5 cho các tác vụ AI.",
       "toggleError": "Không thể cập nhật tùy chọn.",
       "howToGetKeys": "Làm thế nào để lấy API key?",
+    "option1Title": "Tùy chọn 1: OpenAI",
+      "option2Title": "Tùy chọn 2: Anthropic + ElevenLabs",
       "economicsTitle": "Tại sao đáng giá",
       "economicsBody": "Tín dụng Stage5 tối ưu hóa sự tiện lợi (không cần cài đặt). BYO thanh toán trực tiếp cho nhà cung cấp—thường rẻ hơn ~30–50% tùy thuộc vào gói của bạn."
+    },
+    "byoPreferences": {
+      "title": "Tùy chọn Nhà cung cấp",
+      "pricingHint": "Chi phí ước tính cho 1 giờ video",
+      "transcription": "Chép lời",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationDraft": "Dịch (Bản nháp)",
+      "translationReview": "Dịch (Rà soát)",
+      "gptHigh": "GPT-5.1 (cao)",
+      "gpt": "GPT-5.1",
+      "claudeSonnet": "Claude Sonnet",
+      "claudeOpus": "Claude Opus",
+      "summary": "Tóm tắt",
+      "dubbing": "Lồng tiếng",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
     },
     "apiKeyGuide": {
       "title": "Cách lấy API Key",
@@ -293,7 +332,8 @@
         "step1": "Truy cập",
         "step2": "Đăng ký hoặc đăng nhập vào tài khoản của bạn",
         "step3": "Nhấp vào biểu tượng hồ sơ của bạn và chọn",
-        "step4": "Sao chép API key của bạn và dán vào Stage5",
+        "step4": "Thêm phương thức thanh toán trong cài đặt Đăng ký (bắt buộc để sử dụng API vượt mức miễn phí)",
+        "step5": "Sao chép API key của bạn và dán vào Stage5",
         "note": "Mẹo: ElevenLabs có gói miễn phí với mức sử dụng giới hạn. Để sử dụng nhiều hơn, nâng cấp lên gói trả phí trong cài đặt tài khoản."
       }
     },
@@ -420,7 +460,9 @@
     "validation": {
       "pleaseSelectVideo": "Vui lòng chọn video",
       "processingDuration": "Thời lượng video đang được xử lý. Vui lòng thử lại sau ít phút.",
-      "icloudPlaceholder": "Tệp này được lưu trữ trên iCloud. Trong Finder, nhấp \"Tải xuống\" và đợi biểu tượng đám mây hoàn tất, sau đó thử lại."
+      "icloudPlaceholder": "Tệp này được lưu trữ trên iCloud. Trong Finder, nhấp \"Tải xuống\" và đợi biểu tượng đám mây hoàn tất, sau đó thử lại.",
+      "insufficientCreditsForVoiceCloning": "Không đủ tín dụng cho sao chép giọng. Video dài {{duration}} phút nhưng bạn chỉ đủ tín dụng cho {{affordable}} phút. Vui lòng nạp thêm tín dụng hoặc tắt sao chép giọng.",
+      "fileTooLargeForVoiceCloning": "Tệp video quá lớn cho sao chép giọng ({{size}}MB). Tối đa cho phép là {{max}}MB. Vui lòng sử dụng video ngắn hơn hoặc tắt sao chép giọng."
     },
     "status": {
       "starting": "Đang bắt đầu...",
@@ -482,7 +524,17 @@
     "saveDubbedVideoAs": "Lưu video lồng tiếng thành",
     "dubbingInProgress": "Đang lồng tiếng",
     "dubbingWorking": "Đang tạo âm thanh lồng tiếng…",
-    "cancelDubbingConfirm": "Hủy lồng tiếng? Tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại."
+    "cancelDubbingConfirm": "Hủy lồng tiếng? Tiến trình sẽ bị mất và bạn sẽ cần bắt đầu lại.",
+    "mergeLowDiskSpaceConfirm": "Phát hiện dung lượng ổ đĩa thấp. Việc ghép này có thể cần ~{{need}} dung lượng trống, nhưng chỉ còn ~{{free}}. Vẫn tiếp tục?",
+    "apiKeysRequired": {
+      "title": "Cần API Key",
+      "message": "Để sử dụng API key của riêng bạn, bạn cần có key OpenAI HOẶC cả key Anthropic và ElevenLabs.",
+      "howToGet": "Cách lấy API key",
+      "option1": "Tùy chọn 1: OpenAI",
+      "option2": "Tùy chọn 2: Anthropic + ElevenLabs",
+      "enable": "Bật API Key",
+      "done": "Xong"
+    }
   },
   "progress": {
     "transcribedChunks": "Đã phiên âm & làm sạch {{done}}/{{total}} đoạn",
@@ -505,7 +557,8 @@
     "transcribingElevenLabsHours": "Đang phiên âm với ElevenLabs (~{{hours}}h {{minutes}}m còn lại)",
     "transcribingElevenLabsFinishing": "Đang phiên âm với ElevenLabs...",
     "transcriptionFallbackWhisper": "Chuyển sang phiên âm theo phần...",
-    "transcribingR2Upload": "Đang tải lên âm thanh để phiên âm..."
+    "transcribingR2Upload": "Đang tải lên âm thanh để phiên âm...",
+    "transcriptionRetry": "Kết nối thất bại, đang thử lại ({{attempt}}/{{maxAttempts}})..."
   },
   "messages": {
     "fileSaved": "Tệp đã được lưu:\n{{path}}",
@@ -540,7 +593,21 @@
     "noSubtitlesLoaded": "Không có phụ đề nào được tải",
     "failedToLoadSRT": "Không thể tải tệp SRT",
     "needCookiesYouTube": "YouTube yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
-    "needCookiesGeneric": "Trang web này yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục."
+    "needCookiesGeneric": "Trang web này yêu cầu xác minh con người. Nhấp Kết nối để tiếp tục.",
+    "connectFailed": "Không thể kết nối. Vui lòng thử lại.",
+    "byo": {
+      "openaiKeyInvalid": "OpenAI API key của bạn không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra key trong Cài đặt.",
+      "openaiRateLimit": "Đã đạt giới hạn tốc độ OpenAI. Vui lòng đợi một chút và thử lại.",
+      "openaiInsufficientQuota": "Tài khoản OpenAI của bạn không đủ tín dụng. Vui lòng nạp thêm tại platform.openai.com.",
+      "anthropicKeyInvalid": "Anthropic API key của bạn không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra key trong Cài đặt.",
+      "anthropicRateLimit": "Đã đạt giới hạn tốc độ Anthropic. Vui lòng đợi một chút và thử lại.",
+      "anthropicInsufficientQuota": "Tài khoản Anthropic của bạn không đủ tín dụng. Vui lòng nạp thêm tại console.anthropic.com.",
+      "elevenlabsKeyInvalid": "ElevenLabs API key của bạn không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra key trong Cài đặt.",
+      "elevenlabsRateLimit": "Đã đạt giới hạn tốc độ ElevenLabs. Vui lòng đợi một chút và thử lại.",
+      "elevenlabsInsufficientQuota": "Tài khoản ElevenLabs của bạn không đủ tín dụng. Vui lòng nạp thêm tại elevenlabs.io.",
+      "checkSettings": "Kiểm tra Cài đặt",
+      "genericApiError": "Yêu cầu API thất bại. Vui lòng kiểm tra API key và trạng thái tài khoản của bạn."
+    }
   },
   "cta": {
     "generate": {
@@ -560,6 +627,8 @@
     "languageLabel": "Ngôn ngữ tóm tắt",
     "generate": "Tạo tóm tắt",
     "regenerate": "Tạo lại tóm tắt",
+    "estimateCredits": "{{credits}} tín dụng",
+    "highEffortBadge": "(chi tiết)",
     "placeholder": "Tóm tắt AI của bạn sẽ xuất hiện ở đây sau khi được tạo.",
     "insufficientCredits": "Không đủ tín dụng để chạy tóm tắt.",
     "error": "Không thể tạo tóm tắt. {{message}}",

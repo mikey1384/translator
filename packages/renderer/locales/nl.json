@@ -2,7 +2,9 @@
   "common": {
     "cancel": "Annuleren",
     "save": "Opslaan",
+    "or": "OF",
     "saving": "Opslaan...",
+    "validating": "Valideren...",
     "delete": "Verwijderen",
     "confirm": "Bevestigen",
     "apply": "Toepassen",
@@ -12,6 +14,8 @@
     "backToApp": "Terug naar de App",
     "next": "Volgende",
     "done": "Klaar",
+    "gotIt": "Begrepen",
+    "close": "Sluiten",
     "loading": "Laden...",
     "error": {
       "unexpected": "Er is een onverwachte fout opgetreden.",
@@ -22,6 +26,7 @@
       "creditReservationFailed": "Kredietreservering mislukt",
       "invalidRenderOptions": "Ongeldige renderopties opgegeven",
       "missingVideoMetadata": "Videometadata ontbreekt ({{missing}})",
+      "insufficientDiskSpace": "Onvoldoende schijfruimte om het samenvoegen te voltooien. Maak ruimte vrij en probeer het opnieuw.",
       "noSourceVideo": "Geen bronvideo",
       "noSubtitlesLoaded": "Geen ondertitels geladen",
       "failedToLoadSRT": "Laden van SRT-bestand mislukt"
@@ -79,10 +84,16 @@
     "srtLoaded": "Transcriptie voltooid",
     "srtFileLoaded": "SRT geladen",
     "featuresUnlockAfterTranscription": "Vertaal- en andere menu's verschijnen na voltooiing van de transcriptie.",
-    "saveDubbedVideo": "Save Dubbed Video",
+    "saveDubbedVideo": "Gedubde video opslaan",
     "connect": "Verbinden",
     "connecting": "Verbinden...",
-    "connectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan."
+    "connectTip": "Tip: Log in of voltooi de verificatie in het verbindingsvenster en sluit het venster om door te gaan.",
+    "qualityPresets": "Voorinstellingen",
+    "qualityBest": "Beste",
+    "qualityResolution": "Resolutie",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Uitvoertaal",
@@ -93,11 +104,17 @@
     "generateNow": "Genereer ondertitels nu",
     "translation": "Vertaling",
     "chooseSrtFile": "Kies SRT bestand",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "dubEstimateByo": "~{{minutes}}m audio",
+    "voiceCloningRequiresTranslation": "Stemklonen vereist een doeltaal",
+    "translateEstimateCredits": "~{{minutes}}m video",
+    "translateEstimateByo": "BYO-sleutel",
+    "qualityBadge": "(hk)",
     "cancel_confirmation": "Weet je zeker dat je het ondertitelvertaalproces wilt annuleren? Alle voortgang gaat verloren en je moet opnieuw beginnen.",
-    "continueTranscribing": "Continue transcribing",
-    "improveTranscription": "Improve Transcription",
-    "improveTranslation": "Improve Translation",
-    "dub": "Dub Voice"
+    "continueTranscribing": "Doorgaan met transcriberen",
+    "improveTranscription": "Transcriptie verbeteren",
+    "improveTranslation": "Vertaling verbeteren",
+    "dub": "Stem dubben"
   },
   "editSubtitles": {
     "title": "Ondertitels bewerken",
@@ -115,7 +132,7 @@
       "originalTextPrefix": "Origineel:",
       "subtitlePlaceholder": "Ondertiteltekst",
       "confirmRemove": "Weet je zeker dat je dit ondertitelblok wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "Regel transcriberen"
     },
     "header": {
       "save": "Opslaan",
@@ -132,33 +149,80 @@
   },
   "settings": {
     "title": "Instellingen",
+    "aiProvider": {
+      "title": "AI-provider"
+    },
+    "byoMaster": {
+      "toggleLabel": "Mijn API-sleutels gebruiken",
+      "activeKeys": "{{count}} sleutel(s) actief",
+      "noKeys": "Geen sleutels geconfigureerd",
+      "usingCredits": "Alle AI gebruikt Stage5-tegoed",
+      "toggleOn": "Je API-sleutels worden gebruikt voor AI-bewerkingen.",
+      "toggleOff": "Stage5-tegoed wordt gebruikt voor alle AI-bewerkingen.",
+      "toggleError": "Instelling bijwerken mislukt.",
+      "toggleAria": "Schakel gebruik van je API-sleutels"
+    },
     "creditsDescription": "Koop credits. Het aantal getoonde uren is een schatting van de totale videoduur die je kunt transcriberen of vertalen. Voorbeeld: een video van 3 uur transcriberen en vertalen kost ongeveer 6 uur (≈140.000 credits).",
     "performanceQuality": {
-      "title": "Performance & Quality",
+      "title": "Prestaties & Kwaliteit",
       "qualityTranscription": {
-        "label": "Quality Transcription",
-        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+        "label": "Kwaliteitstranscriptie",
+        "help": "Aan: sequentieel, gebruikt context van vorige regel. Uit: snellere batch-modus."
       },
       "qualityTranslation": {
-        "label": "Quality Translation",
-        "help": "Aan: bevat een beoordelingsfase (ongeveer 5× meer credits/tijd). Uit: slaat de beoordeling over."
+        "label": "Kwaliteitsvertaling",
+        "help": "<b>5× credits</b> • Voegt beoordelingsfase toe voor hogere kwaliteit",
+        "helpWithEstimate": "<b>5× credits</b> • Je saldo: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)"
+      },
+      "qualitySummary": {
+        "label": "Kwaliteitssamenvatting",
+        "help": "<b>4× credits</b> • Diepgaande analyse + hoogtepuntclips met Claude Opus",
+        "helpWithEstimate": "<b>4× credits</b> • Je saldo: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)"
+      },
+      "qualityDubbing": {
+        "label": "Kwaliteitsdubbing",
+        "help": "<b>13× credits</b> • ElevenLabs TTS met premium stemmen",
+        "helpWithEstimate": "<b>13× credits</b> • Je saldo: ~{{normalTime}} (normaal) / ~{{hqTime}} (hk)"
       }
     },
     "dubbing": {
-      "voiceLabel": "Dubbed Voice",
-      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceLabel": "Gedubde stem",
+      "voiceHelp": "Kies de standaardstem voor het genereren van gedubde audio.",
       "voiceOptions": {
         "alloy": "Alloy",
         "echo": "Echo",
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
+      "previewTooltip": "Voorbeeld van deze stem",
+      "previewing": "Afspelen...",
+      "previewFree": "Voorbeeld",
+      "previewWithCost": "Voorbeeld ({{cost}} credits)",
       "mixLabel": "Dubbingvolume vs originele videovolume",
       "mixHelp": "Bepaal hoeveel van de originele soundtrack onder de gedubde stem speelt.",
       "mixAmbient": "Meer achtergrond",
-      "mixVoice": "Meer stem"
+      "mixVoice": "Meer stem",
+      "voiceCloning": "Originele stem klonen",
+      "voiceCloningDesc": "Behoud de stem van de originele spreker in gedubde audio",
+      "voiceCloningInsufficientCredits": "Vereist minimaal 1 minuut aan credits",
+      "voiceCloningEnabled": "Stemklonen is ingeschakeld met ElevenLabs. De stem van de originele spreker wordt behouden in de gedubde audio.",
+      "voiceCloningInfo": "Stemklonen gebruikt de ElevenLabs Dubbing API om de stem van de originele spreker te analyseren en na te maken.",
+      "costPerMinute": "Kosten per minuut",
+      "credits": "credits",
+      "yourBalance": "Je saldo",
+      "canClone": "Je kunt klonen",
+      "upToMinutes": "tot {{minutes}} min",
+      "loading": "Laden..."
     },
     "byoOpenAi": {
       "title": "Gebruik je eigen API-sleutels",
@@ -186,6 +250,9 @@
       "toggleOn": "Je OpenAI-sleutel wordt gebruikt voor AI-taken.",
       "toggleOff": "Stage5-tegoed wordt gebruikt voor AI-taken.",
       "toggleError": "Instelling bijwerken mislukt.",
+      "howToGetKeys": "Hoe krijg ik API-sleutels?",
+      "option1Title": "Optie 1: OpenAI",
+      "option2Title": "Optie 2: Anthropic + ElevenLabs",
       "economicsTitle": "Waarom het de moeite waard is",
       "economicsBody": "Stage5-tegoed optimaliseert gemak (geen setup). BYO betaalt providers direct—meestal ~30–50% goedkoper afhankelijk van je pakket."
     },
@@ -210,6 +277,90 @@
       "toggleOn": "Je Anthropic-sleutel wordt gebruikt voor Claude-modellen.",
       "toggleOff": "Stage5-tegoed wordt gebruikt voor Claude-modellen.",
       "toggleError": "Anthropic-instelling bijwerken mislukt."
+    },
+    "byoElevenLabs": {
+      "title": "ElevenLabs API-sleutel (Optioneel)",
+      "description": "Voeg je ElevenLabs API-sleutel toe voor premium transcriptie en stemklonen-dubbing. Zonder deze sleutel wordt OpenAI gebruikt voor deze taken.",
+      "apiKeyLabel": "ElevenLabs API-sleutel",
+      "hide": "Verbergen",
+      "show": "Tonen",
+      "saving": "Opslaan…",
+      "clear": "Sleutel wissen",
+      "loadingKey": "Opgeslagen ElevenLabs-sleutel laden…",
+      "keySaved": "ElevenLabs API-sleutel opgeslagen.",
+      "keyCleared": "ElevenLabs API-sleutel gewist.",
+      "keyValid": "ElevenLabs API-sleutel succesvol gevalideerd.",
+      "keyInvalid": "Validatie van ElevenLabs API-sleutel mislukt.",
+      "testing": "Testen…",
+      "test": "Sleutel testen",
+      "toggleLabel": "Mijn ElevenLabs-sleutel gebruiken",
+      "toggleHelp": "Wanneer uitgeschakeld, wordt OpenAI TTS gebruikt.",
+      "toggleAria": "Schakel gebruik van je ElevenLabs-sleutel",
+      "toggleOn": "Je ElevenLabs-sleutel wordt gebruikt voor TTS.",
+      "toggleOff": "OpenAI TTS wordt gebruikt.",
+      "toggleError": "ElevenLabs-instelling bijwerken mislukt."
+    },
+    "apiKeyGuide": {
+      "title": "Hoe API-sleutels te verkrijgen",
+      "required": "Vereist",
+      "optional": "Optioneel",
+      "openai": {
+        "description": "OpenAI verzorgt transcriptie (Whisper), vertaling (GPT) en tekst-naar-spraak dubbing.",
+        "step1": "Ga naar",
+        "step2": "Registreer of log in op je account",
+        "step3": "Navigeer naar",
+        "step3b": "in de linkerzijbalk",
+        "step4": "Klik op",
+        "step5": "Voeg een betaalmethode toe in Facturatie-instellingen (vereist om de API te gebruiken)",
+        "step6": "Kopieer de sleutel (begint met sk-) en plak deze in Stage5",
+        "note": "Tip: Nieuwe OpenAI-accounts krijgen vaak gratis credits om te starten. Je betaalt alleen voor wat je gebruikt."
+      },
+      "anthropic": {
+        "description": "Claude biedt vertaalbeoordelingen van hogere kwaliteit. Zonder dit handelt GPT alle vertaaltaken af.",
+        "step1": "Ga naar",
+        "step2": "Registreer of log in op je account",
+        "step3": "Ga naar",
+        "step3b": "in de instellingen",
+        "step4": "Klik op",
+        "step5": "Voeg een betaalmethode toe in Abonnementen & Facturatie (vereist om de API te gebruiken)",
+        "step6": "Kopieer de sleutel (begint met sk-ant-) en plak deze in Stage5",
+        "note": "Tip: Anthropic biedt betaling naar gebruik. Je betaalt alleen voor wat je gebruikt."
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs biedt premium transcriptie en stemklonen-dubbing. Zonder dit handelt OpenAI deze taken af.",
+        "step1": "Ga naar",
+        "step2": "Registreer of log in op je account",
+        "step3": "Klik op je profielicoon en selecteer",
+        "step4": "Voeg een betaalmethode toe in Abonnementsinstellingen (vereist voor API-gebruik buiten de gratis laag)",
+        "step5": "Kopieer je API-sleutel en plak deze in Stage5",
+        "note": "Tip: ElevenLabs heeft een gratis laag met beperkt gebruik. Voor meer, upgrade naar een betaald abonnement in je accountinstellingen."
+      }
+    },
+    "byoPreferences": {
+      "title": "Providervoorkeuren",
+      "pricingHint": "Geschatte kosten per 1 uur video",
+      "transcription": "Transcriptie",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationDraft": "Vertaling (Concept)",
+      "translationReview": "Vertaling (Beoordeling)",
+      "gptHigh": "GPT-5.1 (hoog)",
+      "gpt": "GPT-5.1",
+      "claudeSonnet": "Claude Sonnet",
+      "claudeOpus": "Claude Opus",
+      "summary": "Samenvatting",
+      "dubbing": "Dubbing",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
+    },
+    "stage5TtsProvider": {
+      "label": "TTS-kwaliteit (Stage5-tegoed)",
+      "openai": "Standaard (OpenAI TTS)",
+      "openaiHint": "Goede kwaliteit, lagere kosten",
+      "openaiHintWithBalance": "Goede kwaliteit · Je saldo: {{time}} aan dubbing",
+      "elevenlabs": "Premium (ElevenLabs)",
+      "elevenlabsHint": "Beste kwaliteit, hogere kosten (~13x)",
+      "elevenlabsHintWithBalance": "Beste kwaliteit · Je saldo: {{time}} aan dubbing"
     }
   },
   "videoPlayer": {
@@ -278,7 +429,9 @@
     "validation": {
       "pleaseSelectVideo": "Selecteer een video",
       "processingDuration": "Videoduur wordt verwerkt. Probeer het binnenkort opnieuw.",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "Dit bestand staat in iCloud. Klik in Finder op 'Download' en wacht tot het cloudpictogram klaar is, probeer het dan opnieuw.",
+      "insufficientCreditsForVoiceCloning": "Onvoldoende credits voor stemklonen. Video is {{duration}} min maar je kunt slechts {{affordable}} min betalen. Voeg credits toe of schakel stemklonen uit.",
+      "fileTooLargeForVoiceCloning": "Videobestand is te groot voor stemklonen ({{size}}MB). Maximum toegestaan is {{max}}MB. Gebruik een kortere video of schakel stemklonen uit."
     },
     "status": {
       "starting": "Starten...",
@@ -319,10 +472,11 @@
       "description": "Dit kan komen door hoge vraag of problemen met OpenAI's servers. Het proces loopt nog steeds op de achtergrond.",
       "checkStatus": "OpenAI status controleren"
     },
-    "cancelDownloadConfirm": "Cancel download? Progress will be lost and you'll need to start again.",
+    "cancelDownloadConfirm": "Download annuleren? Voortgang gaat verloren en je moet opnieuw beginnen.",
+    "mergeLowDiskSpaceConfirm": "Weinig schijfruimte gedetecteerd. Dit samenvoegen heeft mogelijk ~{{need}} vrije ruimte nodig, maar er is slechts ~{{free}} beschikbaar. Toch doorgaan?",
     "slowDownloadBanner": {
-      "title": "Download is taking longer than usual.",
-      "description": "This may be due to video platform changes or new protection measures. You may need to wait for the next app version to handle newer videos."
+      "title": "Download duurt langer dan gebruikelijk.",
+      "description": "Dit kan komen door wijzigingen aan het videoplatform of nieuwe beveiligingsmaatregelen. Mogelijk moet je wachten op de volgende app-versie om nieuwere video's te verwerken."
     },
     "unsavedSrtOnTranscribe": {
       "title": "Huidige ondertitels opslaan voordat u transcribeert?",
@@ -331,39 +485,54 @@
       "discardAndTranscribe": "Verwerpen en transcriberen",
       "cancel": "Annuleren"
     },
-    "saveDubbedVideoAs": "Save Dubbed Video As",
-    "dubbingInProgress": "Dubbing in Progress",
-    "dubbingWorking": "Generating dubbed audio…",
-    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "saveDubbedVideoAs": "Gedubde video opslaan als",
+    "dubbingInProgress": "Dubbing bezig",
+    "dubbingWorking": "Gedubde audio genereren…",
+    "cancelDubbingConfirm": "Dubbing annuleren? Voortgang gaat verloren en je moet opnieuw beginnen.",
     "creditRanOut": {
-      "title": "Credits ran out",
-      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
-      "openSettings": "Open Settings",
+      "title": "Credits op",
+      "message": "Je AI-credits zijn op. Vul aan in Instellingen en ga dan verder waar je was gebleven.",
+      "openSettings": "Instellingen openen",
       "ok": "OK"
+    },
+    "apiKeysRequired": {
+      "title": "API-sleutels vereist",
+      "message": "Om je eigen API-sleutels te gebruiken, heb je een OpenAI-sleutel OF zowel Anthropic- als ElevenLabs-sleutels nodig.",
+      "howToGet": "Hoe API-sleutels te verkrijgen",
+      "option1": "Optie 1: OpenAI",
+      "option2": "Optie 2: Anthropic + ElevenLabs",
+      "enable": "API-sleutels inschakelen",
+      "done": "Klaar"
     }
   },
   "progress": {
     "transcribedChunks": "Getranscribeerd en opgeschoond {{done}}/{{total}} delen",
     "gapRepair": "Hiaat reparatie #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "Ontbrekende ondertitels repareren (Iteratie {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
-    "scrubbingHallucinations": "Scrubbing captions ({{done}}/{{total}})",
-    "translationCleanup": "Cleaning up translated captions ({{done}}/{{total}})",
-    "beginningReview": "Beginning review...",
-    "starting": "Starting...",
-    "completed": "Completed",
-    "processCancelled": "Process cancelled",
-    "mergingTitle": "Merging Video & Subtitles",
-    "extractingAudio": "Extracting audio...",
-    "transcribingOf": "Transcribing {{done}}/{{total}}",
-    "error": "Error",
-    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "scrubbingHallucinations": "Ondertitels opschonen ({{done}}/{{total}})",
+    "translationCleanup": "Vertaalde ondertitels opruimen ({{done}}/{{total}})",
+    "beginningReview": "Beoordeling starten...",
+    "starting": "Starten...",
+    "completed": "Voltooid",
+    "processCancelled": "Proces geannuleerd",
+    "mergingTitle": "Video & ondertitels samenvoegen",
+    "extractingAudio": "Audio extraheren...",
+    "transcribingOf": "Transcriberen {{done}}/{{total}}",
+    "error": "Fout",
+    "transcribingElevenLabs": "Transcriberen met ElevenLabs (~{{minutes}} min resterend)",
+    "transcribingElevenLabsHours": "Transcriberen met ElevenLabs (~{{hours}}u {{minutes}}m resterend)",
+    "transcribingElevenLabsFinishing": "Transcriberen met ElevenLabs...",
+    "transcriptionFallbackWhisper": "Terugvallen op chunked transcriptie...",
+    "transcriptionRetry": "Verbinding mislukt, opnieuw proberen ({{attempt}}/{{maxAttempts}})...",
+    "transcribingR2Upload": "Audio uploaden voor transcriptie...",
+    "reviewingSlow": "Beoordelen (dit kan even duren...) {{done}}/{{total}}",
+    "reviewingBatch": "Beoordelen {{done}}/{{total}}",
+    "reviewingRange": "Beoordelen {{start}}–{{end}} (van {{total}})"
   },
   "messages": {
     "fileSaved": "Bestand opgeslagen:\n{{path}}",
     "videoSaved": "Video opgeslagen naar:\n{{path}}",
-    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
+    "dubbedVideoSaved": "Gedubde video opgeslagen naar:\n{{path}}"
   },
   "credits": {
     "title": "AI-gebruiksuren",
@@ -372,9 +541,9 @@
     "hours": "uren",
     "buyCredits": "Credits kopen",
     "redirectingToPayment": "Veilige checkout openen…",
-    "description": "Kies uit ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) creditpakketten",
+    "description": "Kies uit ${{packMicroPrice}} ({{packMicroHours}}u), ${{pack1Price}} ({{pack1Hours}}u), ${{pack2Price}} ({{pack2Hours}}u), of ${{pack3Price}} ({{pack3Hours}}u) creditpakketten",
     "notEnough": "Onvoldoende credits. Koop meer credits om door te gaan.",
-    "usingApiKey": "Using API Key"
+    "usingApiKey": "API-sleutel in gebruik"
   },
   "errors": {
     "needCookies": "YouTube heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
@@ -390,61 +559,77 @@
     "noSubtitlesLoaded": "Geen ondertitels geladen",
     "failedToLoadSRT": "Laden van SRT-bestand mislukt",
     "needCookiesYouTube": "YouTube heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
-    "needCookiesGeneric": "Deze site heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan."
+    "needCookiesGeneric": "Deze site heeft om menselijke verificatie gevraagd. Klik op Verbinden om door te gaan.",
+    "connectFailed": "Kon niet verbinden. Probeer het opnieuw.",
+    "byo": {
+      "openaiKeyInvalid": "Je OpenAI API-sleutel is ongeldig of verlopen. Controleer je sleutel in Instellingen.",
+      "openaiRateLimit": "OpenAI rate limit bereikt. Wacht even en probeer het opnieuw.",
+      "openaiInsufficientQuota": "Je OpenAI-account heeft onvoldoende credits. Voeg credits toe op platform.openai.com.",
+      "anthropicKeyInvalid": "Je Anthropic API-sleutel is ongeldig of verlopen. Controleer je sleutel in Instellingen.",
+      "anthropicRateLimit": "Anthropic rate limit bereikt. Wacht even en probeer het opnieuw.",
+      "anthropicInsufficientQuota": "Je Anthropic-account heeft onvoldoende credits. Voeg credits toe op console.anthropic.com.",
+      "elevenlabsKeyInvalid": "Je ElevenLabs API-sleutel is ongeldig of verlopen. Controleer je sleutel in Instellingen.",
+      "elevenlabsRateLimit": "ElevenLabs rate limit bereikt. Wacht even en probeer het opnieuw.",
+      "elevenlabsInsufficientQuota": "Je ElevenLabs-account heeft onvoldoende credits. Voeg credits toe op elevenlabs.io.",
+      "checkSettings": "Instellingen controleren",
+      "genericApiError": "API-verzoek mislukt. Controleer je API-sleutel en accountstatus."
+    }
   },
   "cta": {
     "generate": {
-      "title": "Get subtitles from a video",
-      "subtitle": "Transcribe/translate from device or link"
+      "title": "Ondertitels uit een video halen",
+      "subtitle": "Transcriberen/vertalen vanaf apparaat of link"
     },
     "edit": {
-      "title": "Edit an existing subtitle",
-      "subtitle": "Load, edit, and export SRT",
-      "pillOpen": "Open .srt",
-      "pillMerge": "Merge to video"
+      "title": "Een bestaande ondertitel bewerken",
+      "subtitle": "SRT laden, bewerken en exporteren",
+      "pillOpen": ".srt openen",
+      "pillMerge": "Samenvoegen met video"
     }
   },
   "summary": {
-    "title": "Transcript Summary",
-    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
-    "languageLabel": "Summary language",
-    "generate": "Generate summary",
-    "regenerate": "Regenerate summary",
-    "placeholder": "Your AI summary will appear here once generated.",
-    "insufficientCredits": "Not enough credits to run the summary.",
-    "error": "We couldn't create a summary. {{message}}",
-    "copy": "Copy summary",
-    "copied": "Copied!",
-    "copyError": "Couldn't copy summary to clipboard.",
-    "status": {
-      "preparing": "Preparing transcript…",
-      "chunk": "Summarizing section {{current}}/{{total}}",
-      "synthesizing": "Synthesizing comprehensive summary…",
-      "ready": "Summary ready",
-      "error": "Summary failed",
-      "cancelled": "Summary cancelled",
-      "inProgress": "Generating summary…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
-    },
+    "title": "Transcriptsamenvatting",
+    "ctaHelper": "Genereer een diepgaand overzicht. Lange video's kunnen even duren om te verwerken.",
+    "languageLabel": "Samenvattingstaal",
     "tab": {
-      "summary": "Summary",
-      "sections": "Detailed notes",
-      "highlights": "Highlights"
+      "summary": "Samenvatting",
+      "sections": "Gedetailleerde notities",
+      "highlights": "Hoogtepunten"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight",
-    "downloadHighlight": "Download clip",
-    "downloadingHighlight": "Saving…",
-    "highlightSaved": "Saved!",
-    "highlightSaveError": "Save failed",
-    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
-    "saveHighlightDialogTitle": "Save highlight clip",
-    "noSections": "No section notes yet.",
-    "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…",
+    "generate": "Samenvatting genereren",
+    "regenerate": "Samenvatting opnieuw genereren",
+    "estimateCredits": "{{credits}} credits",
+    "highEffortBadge": "(diep)",
+    "placeholder": "Je AI-samenvatting verschijnt hier na genereren.",
+    "insufficientCredits": "Niet genoeg credits om de samenvatting uit te voeren.",
+    "error": "We konden geen samenvatting maken. {{message}}",
+    "copy": "Samenvatting kopiëren",
+    "copied": "Gekopieerd!",
+    "copyError": "Kon samenvatting niet naar klembord kopiëren.",
+    "noHighlights": "Nog geen hoogtepunten. Genereer om punchlines te detecteren.",
+    "noVideoForHighlights": "Open de bronvideo om hoogtepuntclips te knippen.",
+    "highlight": "Hoogtepunt",
+    "downloadHighlight": "Clip downloaden",
+    "downloadingHighlight": "Opslaan…",
+    "highlightSaved": "Opgeslagen!",
+    "highlightSaveError": "Opslaan mislukt",
+    "downloadHighlightFailed": "Kon hoogtepuntclip niet opslaan: {{message}}",
+    "saveHighlightDialogTitle": "Hoogtepuntclip opslaan",
+    "noSections": "Nog geen sectienotities.",
+    "sectionHeading": "Sectie {{index}}",
+    "highlightsInProgress": "Hoogtepuntclips voorbereiden…",
+    "status": {
+      "preparing": "Transcript voorbereiden…",
+      "chunk": "Sectie {{current}}/{{total}} samenvatten",
+      "selectingHighlights": "Hoogtepuntmomenten selecteren…",
+      "cuttingHighlight": "Hoogtepunt {{current}}/{{total}} knippen…",
+      "cuttingHighlights": "Hoogtepuntclips knippen…",
+      "synthesizing": "Uitgebreide samenvatting samenstellen…",
+      "ready": "Samenvatting klaar",
+      "error": "Samenvatting mislukt",
+      "cancelled": "Samenvatting geannuleerd",
+      "inProgress": "Samenvatting genereren…"
+    },
     "combineMode": "Combineren",
     "exitCombineMode": "Combineren afsluiten",
     "reorderHint": "Sleep om te herschikken:",
@@ -457,25 +642,25 @@
   },
   "panel": {
     "gaps": {
-      "title": "Gaps",
-      "none": "No large gaps detected"
+      "title": "Hiaten",
+      "none": "Geen grote hiaten gedetecteerd"
     },
     "confidence": {
-      "title": "Low Confidence",
-      "none": "No low-confidence lines detected",
-      "count": "{{count}} lines"
+      "title": "Lage betrouwbaarheid",
+      "none": "Geen regels met lage betrouwbaarheid gedetecteerd",
+      "count": "{{count}} regels"
     }
   },
   "logs": {
-    "title": "Recent Logs",
-    "copy": "Copy",
-    "email": "Email to Dev",
-    "close": "Close",
-    "empty": "No logs yet.",
-    "copied": "Logs copied to clipboard",
-    "copyFailed": "Copy failed",
+    "title": "Recente logs",
+    "copy": "Kopiëren",
+    "email": "E-mail naar ontwikkelaar",
+    "close": "Sluiten",
+    "empty": "Nog geen logs.",
+    "copied": "Logs gekopieerd naar klembord",
+    "copyFailed": "Kopiëren mislukt",
     "emailSubject": "Stage5 Debug Logs",
-    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
-    "deviceInfoHeader": "Device Info"
+    "emailBodyPrefix": "Hallo,\n\nHieronder vind je mijn recente logs om het probleem te debuggen.\n\n",
+    "deviceInfoHeader": "Apparaatinfo"
   }
 }

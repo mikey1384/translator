@@ -26,6 +26,7 @@
       "creditReservationFailed": "Échec de la réservation de crédits",
       "invalidRenderOptions": "Options de rendu non valides",
       "missingVideoMetadata": "Métadonnées vidéo manquantes ({{missing}})",
+      "insufficientDiskSpace": "Espace disque insuffisant pour terminer la fusion. Veuillez libérer de l'espace et réessayer.",
       "noSourceVideo": "Pas de vidéo source",
       "noSubtitlesLoaded": "Aucun sous-titre chargé",
       "failedToLoadSRT": "Échec du chargement du fichier SRT"
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "Enregistrer la vidéo doublée",
     "connect": "Connecter",
     "connecting": "Connexion...",
-    "connectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer."
+    "connectTip": "Conseil : Dans la fenêtre de connexion, connectez-vous ou complétez la vérification, puis fermez la fenêtre pour continuer.",
+    "qualityPresets": "Préréglages",
+    "qualityBest": "Meilleur",
+    "qualityResolution": "Résolution",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "Langue de sortie",
@@ -104,6 +111,7 @@
     "dub": "Doubler la voix",
     "dubEstimateCredits": "{{credits}} cr (~{{minutes}}min)",
     "dubEstimateByo": "~{{minutes}}min audio",
+    "voiceCloningRequiresTranslation": "Le clonage vocal nécessite une langue cible",
     "translateEstimateCredits": "~{{minutes}}m vidéo",
     "translateEstimateByo": "Clé BYO",
     "qualityBadge": "(hq)"
@@ -305,7 +313,8 @@
       "yourBalance": "Votre solde",
       "canClone": "Vous pouvez cloner",
       "upToMinutes": "jusqu'à {{minutes}} min",
-      "loading": "Chargement..."
+      "loading": "Chargement...",
+      "voiceCloningInsufficientCredits": "Nécessite au moins 1 minute de crédits"
     },
     "byoOpenAi": {
       "title": "Utilisez vos propres clés API",
@@ -507,10 +516,10 @@
     "indonesian": "Indonésien",
     "thai": "Thaïlandais",
     "malay": "Malais",
-    "tagalog": "Tagalog (Filipino)",
+    "tagalog": "Tagalog (Philippin)",
     "bengali": "Bengali",
     "tamil": "Tamoul",
-    "telugu": "Telugu",
+    "telugu": "Télougou",
     "marathi": "Marathi",
     "urdu": "Ourdou",
     "arabic": "Arabe",
@@ -529,7 +538,9 @@
     "validation": {
       "pleaseSelectVideo": "Veuillez sélectionner une vidéo",
       "processingDuration": "La durée de la vidéo est en cours de traitement. Veuillez réessayer dans quelques instants.",
-      "icloudPlaceholder": "Ce fichier est stocké dans iCloud. Dans le Finder, cliquez sur « Télécharger » et attendez que l'icône de nuage disparaisse, puis réessayez."
+      "icloudPlaceholder": "Ce fichier est stocké dans iCloud. Dans le Finder, cliquez sur « Télécharger » et attendez que l'icône de nuage disparaisse, puis réessayez.",
+      "insufficientCreditsForVoiceCloning": "Crédits insuffisants pour le clonage vocal. La vidéo dure {{duration}} min mais vous ne pouvez payer que {{affordable}} min. Veuillez ajouter des crédits ou désactiver le clonage vocal.",
+      "fileTooLargeForVoiceCloning": "Le fichier vidéo est trop volumineux pour le clonage vocal ({{size}}Mo). La taille maximale autorisée est de {{max}}Mo. Veuillez utiliser une vidéo plus courte ou désactiver le clonage vocal."
     },
     "status": {
       "starting": "Démarrage...",
@@ -599,8 +610,9 @@
     },
     "saveDubbedVideoAs": "Enregistrer la vidéo doublée sous",
     "dubbingInProgress": "Doublage en cours",
-    "dubbingWorking": "Génération de l’audio doublé…",
-    "cancelDubbingConfirm": "Annuler le doublage ? Le progrès sera perdu et vous devrez recommencer."
+    "dubbingWorking": "Génération de l'audio doublé…",
+    "cancelDubbingConfirm": "Annuler le doublage ? Le progrès sera perdu et vous devrez recommencer.",
+    "mergeLowDiskSpaceConfirm": "Espace disque faible détecté. Cette fusion peut nécessiter ~{{need}} d'espace libre, mais seulement ~{{free}} est disponible. Continuer quand même ?"
   },
   "progress": {
     "mergingTitle": "Fusion de la vidéo et des sous-titres",
@@ -622,6 +634,7 @@
     "transcribingElevenLabs": "Transcription avec ElevenLabs (~{{minutes}} min restantes)",
     "transcribingElevenLabsHours": "Transcription avec ElevenLabs (~{{hours}}h {{minutes}}m restantes)",
     "transcribingElevenLabsFinishing": "Transcription avec ElevenLabs...",
+    "transcriptionRetry": "Connexion échouée, nouvelle tentative ({{attempt}}/{{maxAttempts}})...",
     "transcriptionFallbackWhisper": "Passage à la transcription par fragments...",
     "transcribingR2Upload": "Téléversement de l'audio pour transcription..."
   },
@@ -669,7 +682,8 @@
       "genericApiError": "La requête API a échoué. Veuillez vérifier votre clé API et l'état de votre compte."
     },
     "needCookiesYouTube": "YouTube a demandé une vérification humaine. Cliquez sur Connecter pour continuer.",
-    "needCookiesGeneric": "Ce site a demandé une vérification humaine. Cliquez sur Connecter pour continuer."
+    "needCookiesGeneric": "Ce site a demandé une vérification humaine. Cliquez sur Connecter pour continuer.",
+    "connectFailed": "Connexion impossible. Veuillez réessayer."
   },
   "logs": {
     "title": "Journaux récents",

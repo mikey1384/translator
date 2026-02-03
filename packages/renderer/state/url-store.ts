@@ -7,6 +7,26 @@ import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
+const QUALITY_VALUES: VideoQuality[] = [
+  'high',
+  'mid',
+  'low',
+  '4320p',
+  '2160p',
+  '1440p',
+  '1080p',
+  '720p',
+  '480p',
+  '360p',
+  '240p',
+];
+const getInitialQuality = (): VideoQuality => {
+  const stored = localStorage.getItem(SAVED_QUALITY_KEY);
+  if (stored && QUALITY_VALUES.includes(stored as VideoQuality)) {
+    return stored as VideoQuality;
+  }
+  return '1080p';
+};
 
 type DownloadTask = {
   id: string | null;
@@ -42,8 +62,7 @@ const initialDownload: DownloadTask = {
 export const useUrlStore = create<UrlState>()(
   immer<UrlState>((set, get) => ({
     urlInput: '',
-    downloadQuality:
-      (localStorage.getItem(SAVED_QUALITY_KEY) as VideoQuality) ?? 'mid',
+    downloadQuality: getInitialQuality(),
     download: initialDownload,
     error: null as string | null,
     inputMode: 'url',

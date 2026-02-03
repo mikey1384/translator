@@ -2,7 +2,9 @@
   "common": {
     "cancel": "বাতিল",
     "save": "সংরক্ষণ",
+    "or": "অথবা",
     "saving": "সংরক্ষণ করা হচ্ছে...",
+    "validating": "যাচাই করা হচ্ছে...",
     "delete": "মুছুন",
     "confirm": "নিশ্চিত করুন",
     "apply": "প্রয়োগ করুন",
@@ -12,6 +14,8 @@
     "backToApp": "অ্যাপে ফিরে যান",
     "next": "পরবর্তী",
     "done": "সম্পন্ন",
+    "gotIt": "বুঝেছি",
+    "close": "বন্ধ করুন",
     "loading": "লোড হচ্ছে...",
     "error": {
       "unexpected": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
@@ -22,6 +26,7 @@
       "creditReservationFailed": "ক্রেডিট সংরক্ষণ ব্যর্থ হয়েছে",
       "invalidRenderOptions": "অবৈধ রেন্ডার অপশন প্রদান করা হয়েছে",
       "missingVideoMetadata": "ভিডিও মেটাডেটা অনুপস্থিত ({{missing}})",
+      "insufficientDiskSpace": "মার্জ সম্পূর্ণ করতে পর্যাপ্ত ডিস্ক স্পেস নেই। অনুগ্রহ করে স্পেস খালি করে আবার চেষ্টা করুন।",
       "noSourceVideo": "কোন সোর্স ভিডিও নেই",
       "noSubtitlesLoaded": "কোন সাবটাইটেল লোড হয়নি",
       "failedToLoadSRT": "SRT ফাইল লোড করতে ব্যর্থ"
@@ -53,7 +58,7 @@
     "installUpdate": "আপডেটের জন্য পুনরায় চালু করুন",
     "confirmInstallUpdate": "আপডেট ইনস্টল করে পুনরায় চালু করবেন?",
     "downloadUpdate": "আপডেট ডাউনলোড করতে ক্লিক করুন",
-    "retry": "Retry"
+    "retry": "আবার চেষ্টা করুন"
   },
   "input": {
     "fromDevice": "আপনার ডিভাইস থেকে",
@@ -79,10 +84,16 @@
     "srtLoaded": "ট্রান্সক্রিপশন সম্পূর্ণ",
     "srtFileLoaded": "SRT লোড হয়েছে",
     "featuresUnlockAfterTranscription": "ট্রান্সক্রিপশন সম্পূর্ণ হলে অনুবাদ এবং অন্যান্য মেনু প্রদর্শিত হবে।",
-    "saveDubbedVideo": "Save Dubbed Video",
+    "saveDubbedVideo": "ডাব করা ভিডিও সংরক্ষণ করুন",
     "connect": "সংযোগ করুন",
     "connecting": "সংযোগ হচ্ছে...",
-    "connectTip": "পরামর্শ: সংযোগ উইন্ডোতে সাইন ইন করুন বা যাচাই সম্পূর্ণ করুন, তারপর চালিয়ে যেতে উইন্ডো বন্ধ করুন।"
+    "connectTip": "পরামর্শ: সংযোগ উইন্ডোতে সাইন ইন করুন বা যাচাই সম্পূর্ণ করুন, তারপর চালিয়ে যেতে উইন্ডো বন্ধ করুন।",
+    "qualityPresets": "প্রিসেট",
+    "qualityBest": "সেরা",
+    "qualityResolution": "রেজোলিউশন",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "আউটপুট ভাষা",
@@ -94,10 +105,16 @@
     "translation": "অনুবাদ",
     "chooseSrtFile": "SRT ফাইল বেছে নিন",
     "cancel_confirmation": "আপনি কি নিশ্চিত যে আপনি সাবটাইটেল অনুবাদ প্রক্রিয়াটি বাতিল করতে চান? যেকোনো অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
-    "continueTranscribing": "Continue transcribing",
-    "improveTranscription": "Improve Transcription",
-    "improveTranslation": "Improve Translation",
-    "dub": "Dub Voice"
+    "continueTranscribing": "ট্রান্সক্রিপশন চালিয়ে যান",
+    "improveTranscription": "ট্রান্সক্রিপশন উন্নত করুন",
+    "improveTranslation": "অনুবাদ উন্নত করুন",
+    "dub": "ভয়েস ডাব করুন",
+    "dubEstimateCredits": "{{credits}} cr (~{{minutes}}m)",
+    "dubEstimateByo": "~{{minutes}}m অডিও",
+    "voiceCloningRequiresTranslation": "ভয়েস ক্লোনিংয়ের জন্য একটি টার্গেট ভাষা প্রয়োজন",
+    "translateEstimateCredits": "~{{minutes}}m ভিডিও",
+    "translateEstimateByo": "BYO কী",
+    "qualityBadge": "(hq)"
   },
   "editSubtitles": {
     "title": "সাবটাইটেল সম্পাদনা করুন",
@@ -115,7 +132,7 @@
       "originalTextPrefix": "মূল:",
       "subtitlePlaceholder": "সাবটাইটেল টেক্সট",
       "confirmRemove": "আপনি কি নিশ্চিত যে আপনি এই সাবটাইটেল ব্লকটি সরাতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
-      "transcribeThisLine": "Transcribe line"
+      "transcribeThisLine": "লাইন ট্রান্সক্রাইব করুন"
     },
     "header": {
       "save": "সংরক্ষণ",
@@ -132,84 +149,196 @@
   },
   "settings": {
     "title": "সেটিংস",
+    "aiProvider": {
+      "title": "AI প্রোভাইডার"
+    },
+    "byoMaster": {
+      "toggleLabel": "আমার API কী ব্যবহার করুন",
+      "activeKeys": "{{count}}টি কী সক্রিয়",
+      "noKeys": "কোন কী কনফিগার করা হয়নি",
+      "usingCredits": "সব AI তে Stage5 ক্রেডিট ব্যবহার হচ্ছে",
+      "toggleOn": "AI কাজের জন্য আপনার API কী ব্যবহার করা হচ্ছে।",
+      "toggleOff": "সব AI কাজের জন্য Stage5 ক্রেডিট ব্যবহার করা হচ্ছে।",
+      "toggleError": "পছন্দ আপডেট করতে ব্যর্থ।",
+      "toggleAria": "আপনার API কী ব্যবহার টগল করুন"
+    },
     "creditsDescription": "ক্রেডিট কিনুন। প্রদর্শিত ঘন্টাগুলি হলো আপনি যে মোট ভিডিও সময়সীমা ট্রান্সক্রাইব বা অনুবাদ করতে পারবেন তার একটি আনুমানিক হিসাব। উদাহরণ: ৩ ঘণ্টার ভিডিও ট্রান্সক্রাইব ও অনুবাদ করতে প্রায় ৬ ঘণ্টা (≈১,৪০,০০০ ক্রেডিট) লাগে।",
     "performanceQuality": {
-      "title": "Performance & Quality",
+      "title": "পারফরম্যান্স এবং কোয়ালিটি",
       "qualityTranscription": {
-        "label": "Quality Transcription",
-        "help": "On: sequential, uses prior-line context. Off: faster batched mode."
+        "label": "কোয়ালিটি ট্রান্সক্রিপশন",
+        "help": "চালু: ক্রমানুসারে, আগের লাইনের কনটেক্সট ব্যবহার করে। বন্ধ: দ্রুত ব্যাচ মোড।"
       },
       "qualityTranslation": {
-        "label": "Quality Translation",
-        "help": "চালু: রিভিউ পর্যায় অন্তর্ভুক্ত (প্রায় 5× বেশি ক্রেডিট/সময় লাগে)। বন্ধ: রিভিউ এড়িয়ে যান।"
+        "label": "কোয়ালিটি অনুবাদ",
+        "help": "<b>5× ক্রেডিট</b> • উচ্চ মানের জন্য রিভিউ পর্যায় যোগ করে",
+        "helpWithEstimate": "<b>5× ক্রেডিট</b> • আপনার ব্যালেন্স: ~{{normalTime}} (সাধারণ) / ~{{hqTime}} (hq)"
+      },
+      "qualitySummary": {
+        "label": "কোয়ালিটি সারসংক্ষেপ",
+        "help": "<b>4× ক্রেডিট</b> • Claude Opus দিয়ে গভীর বিশ্লেষণ + হাইলাইট ক্লিপ",
+        "helpWithEstimate": "<b>4× ক্রেডিট</b> • আপনার ব্যালেন্স: ~{{normalTime}} (সাধারণ) / ~{{hqTime}} (hq)"
+      },
+      "qualityDubbing": {
+        "label": "কোয়ালিটি ডাবিং",
+        "help": "<b>13× ক্রেডিট</b> • প্রিমিয়াম ভয়েসসহ ElevenLabs TTS",
+        "helpWithEstimate": "<b>13× ক্রেডিট</b> • আপনার ব্যালেন্স: ~{{normalTime}} (সাধারণ) / ~{{hqTime}} (hq)"
       }
     },
     "dubbing": {
-      "voiceLabel": "Dubbed Voice",
-      "voiceHelp": "Choose the default voice used when generating dubbed audio.",
+      "voiceLabel": "ডাব করা ভয়েস",
+      "voiceHelp": "ডাব করা অডিও তৈরি করার সময় ব্যবহৃত ডিফল্ট ভয়েস নির্বাচন করুন।",
       "voiceOptions": {
         "alloy": "Alloy",
         "echo": "Echo",
         "fable": "Fable",
         "onyx": "Onyx",
         "nova": "Nova",
-        "shimmer": "Shimmer"
+        "shimmer": "Shimmer",
+        "rachel": "Rachel",
+        "adam": "Adam",
+        "josh": "Josh",
+        "sarah": "Sarah",
+        "charlie": "Charlie",
+        "emily": "Emily",
+        "matilda": "Matilda",
+        "brian": "Brian"
       },
-      "mixLabel": "Dubbing Volume vs Original Video Volume",
-      "mixHelp": "Control how much of the original soundtrack plays underneath the dubbed voice.",
-      "mixAmbient": "More ambient",
-      "mixVoice": "More voice"
+      "previewTooltip": "এই ভয়েস প্রিভিউ করুন",
+      "previewing": "চালানো হচ্ছে...",
+      "previewFree": "প্রিভিউ",
+      "previewWithCost": "প্রিভিউ ({{cost}} ক্রেডিট)",
+      "mixLabel": "ডাবিং ভলিউম বনাম মূল ভিডিও ভলিউম",
+      "mixHelp": "ডাব করা ভয়েসের নিচে মূল সাউন্ডট্র্যাক কতটা বাজবে তা নিয়ন্ত্রণ করুন।",
+      "mixAmbient": "বেশি অ্যাম্বিয়েন্ট",
+      "mixVoice": "বেশি ভয়েস",
+      "voiceCloning": "মূল ভয়েস ক্লোন করুন",
+      "voiceCloningDesc": "ডাব করা অডিওতে মূল বক্তার ভয়েস সংরক্ষণ করুন",
+      "voiceCloningInsufficientCredits": "কমপক্ষে ১ মিনিটের ক্রেডিট প্রয়োজন",
+      "voiceCloningEnabled": "ElevenLabs এর সাথে ভয়েস ক্লোনিং সক্রিয়। মূল বক্তার ভয়েস ডাব করা অডিওতে সংরক্ষিত থাকবে।",
+      "voiceCloningInfo": "ভয়েস ক্লোনিং ElevenLabs Dubbing API ব্যবহার করে মূল বক্তার ভয়েস বিশ্লেষণ ও পুনরায় তৈরি করে।",
+      "costPerMinute": "প্রতি মিনিটে খরচ",
+      "credits": "ক্রেডিট",
+      "yourBalance": "আপনার ব্যালেন্স",
+      "canClone": "আপনি ক্লোন করতে পারবেন",
+      "upToMinutes": "{{minutes}} মিনিট পর্যন্ত",
+      "loading": "লোড হচ্ছে..."
     },
     "byoOpenAi": {
-      "title": "Bring Your Own API Keys",
-      "description": "Unlock a one-time upgrade to use your own API keys. Once unlocked, any transcription, translation, dubbing, or summary runs directly on your accounts instead of consuming Stage5 credits.",
-      "unlocking": "Opening checkout…",
-      "unlockCta": "Unlock for $10",
-      "unlockHint": "Once unlocked, add your API keys here at any time to toggle direct billing on your accounts.",
-      "unlockedDescription": "Enter your OpenAI API key below. Transcription, translation, and dubbing will run directly against your OpenAI account when a key is present.",
-      "apiKeyLabel": "OpenAI API Key",
-      "hide": "Hide",
-      "show": "Show",
-      "saving": "Saving…",
-      "clear": "Clear Key",
-      "loadingKey": "Loading saved key…",
-      "keySaved": "OpenAI API key saved.",
-      "keyCleared": "OpenAI API key cleared.",
-      "keyValid": "OpenAI API key validated successfully.",
-      "keyInvalid": "OpenAI API key validation failed.",
-      "testing": "Testing…",
-      "test": "Test Key",
-      "lastSynced": "Last synced",
-      "toggleLabel": "Use my OpenAI key",
-      "toggleHelp": "When off, AI Credits are used.",
-      "toggleAria": "Toggle using your OpenAI key",
-      "toggleOn": "Using your OpenAI key for AI tasks.",
-      "toggleOff": "Using Stage5 credits for AI tasks.",
-      "toggleError": "Failed to update preference.",
-      "economicsTitle": "Why it's worth it",
-      "economicsBody": "Stage5 credits optimize for convenience (no setup). BYO pays providers directly—usually ~30–50% cheaper depending on your pack."
+      "title": "নিজের API কী ব্যবহার করুন",
+      "description": "আপনার নিজের API কী ব্যবহার করতে একবারের আপগ্রেড আনলক করুন। আনলক হলে, যেকোনো ট্রান্সক্রিপশন, অনুবাদ, ডাবিং, বা সারসংক্ষেপ সরাসরি আপনার অ্যাকাউন্টে চলবে Stage5 ক্রেডিট খরচ না করে।",
+      "unlocking": "চেকআউট খোলা হচ্ছে…",
+      "unlockCta": "$10 এ আনলক করুন",
+      "unlockHint": "আনলক হলে, যেকোনো সময় এখানে আপনার API কী যোগ করুন এবং আপনার অ্যাকাউন্টে সরাসরি বিলিং টগল করুন।",
+      "unlockedDescription": "নিচে আপনার OpenAI API কী লিখুন। একটি কী থাকলে ট্রান্সক্রিপশন, অনুবাদ, এবং ডাবিং সরাসরি আপনার OpenAI অ্যাকাউন্টে চলবে।",
+      "apiKeyLabel": "OpenAI API কী",
+      "hide": "লুকান",
+      "show": "দেখান",
+      "saving": "সংরক্ষণ করা হচ্ছে…",
+      "clear": "কী মুছুন",
+      "loadingKey": "সংরক্ষিত কী লোড হচ্ছে…",
+      "keySaved": "OpenAI API কী সংরক্ষিত হয়েছে।",
+      "keyCleared": "OpenAI API কী মুছে ফেলা হয়েছে।",
+      "keyValid": "OpenAI API কী সফলভাবে যাচাই করা হয়েছে।",
+      "keyInvalid": "OpenAI API কী যাচাই ব্যর্থ।",
+      "testing": "পরীক্ষা করা হচ্ছে…",
+      "test": "কী পরীক্ষা করুন",
+      "lastSynced": "শেষ সিঙ্ক",
+      "toggleLabel": "আমার OpenAI কী ব্যবহার করুন",
+      "toggleHelp": "বন্ধ থাকলে, AI ক্রেডিট ব্যবহৃত হয়।",
+      "toggleAria": "আপনার OpenAI কী ব্যবহার টগল করুন",
+      "toggleOn": "AI কাজের জন্য আপনার OpenAI কী ব্যবহার করা হচ্ছে।",
+      "toggleOff": "AI কাজের জন্য Stage5 ক্রেডিট ব্যবহার করা হচ্ছে।",
+      "toggleError": "পছন্দ আপডেট করতে ব্যর্থ।",
+      "howToGetKeys": "API কী কীভাবে পাবেন?",
+      "option1Title": "অপশন ১: OpenAI",
+      "option2Title": "অপশন ২: Anthropic + ElevenLabs",
+      "economicsTitle": "কেন এটি মূল্যবান",
+      "economicsBody": "Stage5 ক্রেডিট সুবিধার জন্য অপ্টিমাইজ করা (কোন সেটআপ নেই)। BYO সরাসরি প্রোভাইডারদের পেমেন্ট করে—সাধারণত আপনার প্যাকের উপর নির্ভর করে ~30–50% সস্তা।"
+    },
+    "byoPreferences": {
+      "title": "প্রোভাইডার পছন্দসমূহ",
+      "pricingHint": "১ ঘন্টার ভিডিওর জন্য আনুমানিক খরচ",
+      "transcription": "ট্রান্সক্রিপশন",
+      "openaiWhisper": "OpenAI Whisper",
+      "elevenLabsScribe": "ElevenLabs Scribe",
+      "translationDraft": "অনুবাদ (ড্রাফট)",
+      "translationReview": "অনুবাদ (রিভিউ)",
+      "gptHigh": "GPT-5.1 (উচ্চ)",
+      "gpt": "GPT-5.1",
+      "claudeSonnet": "Claude Sonnet",
+      "claudeOpus": "Claude Opus",
+      "summary": "সারসংক্ষেপ",
+      "dubbing": "ডাবিং",
+      "openaiTts": "OpenAI TTS",
+      "elevenLabsTts": "ElevenLabs"
+    },
+    "apiKeyGuide": {
+      "title": "API কী কীভাবে পাবেন",
+      "required": "প্রয়োজনীয়",
+      "optional": "ঐচ্ছিক",
+      "openai": {
+        "description": "OpenAI ট্রান্সক্রিপশন (Whisper), অনুবাদ (GPT), এবং টেক্সট-টু-স্পিচ ডাবিং চালায়।",
+        "step1": "যান",
+        "step2": "আপনার অ্যাকাউন্টে সাইন আপ বা লগ ইন করুন",
+        "step3": "নেভিগেট করুন",
+        "step3b": "বাম সাইডবারে",
+        "step4": "ক্লিক করুন",
+        "step5": "বিলিং সেটিংসে একটি পেমেন্ট মেথড যোগ করুন (API ব্যবহার করতে প্রয়োজন)",
+        "step6": "কী কপি করুন (sk- দিয়ে শুরু) এবং Stage5 এ পেস্ট করুন",
+        "note": "টিপ: নতুন OpenAI অ্যাকাউন্টে প্রায়ই শুরু করার জন্য বিনামূল্যে ক্রেডিট পাওয়া যায়। আপনি শুধু যা ব্যবহার করেন তার জন্য পেমেন্ট করেন।"
+      },
+      "anthropic": {
+        "description": "Claude উচ্চ-মানের অনুবাদ রিভিউ প্রদান করে। এটি ছাড়া, GPT সব অনুবাদের কাজ সামলায়।",
+        "step1": "যান",
+        "step2": "আপনার অ্যাকাউন্টে সাইন আপ বা লগ ইন করুন",
+        "step3": "যান",
+        "step3b": "সেটিংসে",
+        "step4": "ক্লিক করুন",
+        "step5": "Plans & Billing এ একটি পেমেন্ট মেথড যোগ করুন (API ব্যবহার করতে প্রয়োজন)",
+        "step6": "কী কপি করুন (sk-ant- দিয়ে শুরু) এবং Stage5 এ পেস্ট করুন",
+        "note": "টিপ: Anthropic পে-অ্যাজ-ইউ-গো প্রাইসিং অফার করে। আপনি শুধু যা ব্যবহার করেন তার জন্য পেমেন্ট করেন।"
+      },
+      "elevenlabs": {
+        "description": "ElevenLabs প্রিমিয়াম ট্রান্সক্রিপশন এবং ভয়েস-ক্লোনিং ডাবিং অফার করে। এটি ছাড়া, OpenAI এই কাজগুলো সামলায়।",
+        "step1": "যান",
+        "step2": "আপনার অ্যাকাউন্টে সাইন আপ বা লগ ইন করুন",
+        "step3": "আপনার প্রোফাইল আইকনে ক্লিক করে নির্বাচন করুন",
+        "step4": "সাবস্ক্রিপশন সেটিংসে একটি পেমেন্ট মেথড যোগ করুন (ফ্রি টিয়ারের বাইরে API ব্যবহারের জন্য প্রয়োজন)",
+        "step5": "আপনার API কী কপি করে Stage5 এ পেস্ট করুন",
+        "note": "টিপ: ElevenLabs এ সীমিত ব্যবহারের জন্য একটি ফ্রি টিয়ার আছে। আরো জন্য, আপনার অ্যাকাউন্ট সেটিংসে পেইড প্ল্যানে আপগ্রেড করুন।"
+      }
     },
     "byoAnthropic": {
-      "title": "Anthropic API Key (Optional)",
-      "description": "Add your Anthropic API key to use Claude models directly for the translation review phase. Without this key, translations will use GPT with enhanced reasoning instead.",
-      "apiKeyLabel": "Anthropic API Key",
-      "hide": "Hide",
-      "show": "Show",
-      "saving": "Saving…",
-      "clear": "Clear Key",
-      "loadingKey": "Loading saved Anthropic key…",
-      "keySaved": "Anthropic API key saved.",
-      "keyCleared": "Anthropic API key cleared.",
-      "keyValid": "Anthropic API key validated successfully.",
-      "keyInvalid": "Anthropic API key validation failed.",
-      "testing": "Testing…",
-      "test": "Test Key",
-      "toggleLabel": "Use my Anthropic key",
-      "toggleHelp": "When off, Claude requests use Stage5 credits.",
-      "toggleAria": "Toggle using your Anthropic key",
-      "toggleOn": "Using your Anthropic key for Claude models.",
-      "toggleOff": "Using Stage5 credits for Claude models.",
-      "toggleError": "Failed to update Anthropic preference."
+      "title": "Anthropic API কী (ঐচ্ছিক)",
+      "description": "অনুবাদ রিভিউ পর্যায়ে সরাসরি Claude মডেল ব্যবহার করতে আপনার Anthropic API কী যোগ করুন। এই কী ছাড়া, অনুবাদ পরিবর্তে উন্নত যুক্তিসহ GPT ব্যবহার করবে।",
+      "apiKeyLabel": "Anthropic API কী",
+      "hide": "লুকান",
+      "show": "দেখান",
+      "saving": "সংরক্ষণ করা হচ্ছে…",
+      "clear": "কী মুছুন",
+      "loadingKey": "সংরক্ষিত Anthropic কী লোড হচ্ছে…",
+      "keySaved": "Anthropic API কী সংরক্ষিত হয়েছে।",
+      "keyCleared": "Anthropic API কী মুছে ফেলা হয়েছে।",
+      "keyValid": "Anthropic API কী সফলভাবে যাচাই করা হয়েছে।",
+      "keyInvalid": "Anthropic API কী যাচাই ব্যর্থ।",
+      "testing": "পরীক্ষা করা হচ্ছে…",
+      "test": "কী পরীক্ষা করুন",
+      "toggleLabel": "আমার Anthropic কী ব্যবহার করুন",
+      "toggleHelp": "বন্ধ থাকলে, Claude অনুরোধে Stage5 ক্রেডিট ব্যবহৃত হয়।",
+      "toggleAria": "আপনার Anthropic কী ব্যবহার টগল করুন",
+      "toggleOn": "Claude মডেলের জন্য আপনার Anthropic কী ব্যবহার করা হচ্ছে।",
+      "toggleOff": "Claude মডেলের জন্য Stage5 ক্রেডিট ব্যবহার করা হচ্ছে।",
+      "toggleError": "Anthropic পছন্দ আপডেট করতে ব্যর্থ।"
+    },
+    "stage5TtsProvider": {
+      "label": "TTS কোয়ালিটি (Stage5 ক্রেডিট)",
+      "openai": "স্ট্যান্ডার্ড (OpenAI TTS)",
+      "openaiHint": "ভালো কোয়ালিটি, কম খরচ",
+      "openaiHintWithBalance": "ভালো কোয়ালিটি · আপনার ব্যালেন্স: {{time}} ডাবিং",
+      "elevenlabs": "প্রিমিয়াম (ElevenLabs)",
+      "elevenlabsHint": "সেরা কোয়ালিটি, বেশি খরচ (~13x)",
+      "elevenlabsHintWithBalance": "সেরা কোয়ালিটি · আপনার ব্যালেন্স: {{time}} ডাবিং"
     }
   },
   "videoPlayer": {
@@ -278,7 +407,9 @@
     "validation": {
       "pleaseSelectVideo": "অনুগ্রহ করে একটি ভিডিও নির্বাচন করুন",
       "processingDuration": "ভিডিওর দৈর্ঘ্য প্রক্রিয়াজাত করা হচ্ছে। অনুগ্রহ করে শীঘ্রই আবার চেষ্টা করুন।",
-      "icloudPlaceholder": "This file is stored in iCloud. In Finder, click “Download” and wait for the cloud icon to finish, then try again."
+      "icloudPlaceholder": "এই ফাইলটি iCloud এ সংরক্ষিত। Finder এ, 'Download' ক্লিক করুন এবং ক্লাউড আইকন শেষ হওয়ার জন্য অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।",
+      "insufficientCreditsForVoiceCloning": "ভয়েস ক্লোনিংয়ের জন্য অপর্যাপ্ত ক্রেডিট। ভিডিও {{duration}} মিনিট কিন্তু আপনি শুধু {{affordable}} মিনিট বহন করতে পারবেন। অনুগ্রহ করে ক্রেডিট যোগ করুন বা ভয়েস ক্লোনিং বন্ধ করুন।",
+      "fileTooLargeForVoiceCloning": "ভয়েস ক্লোনিংয়ের জন্য ভিডিও ফাইল অনেক বড় ({{size}}MB)। সর্বোচ্চ অনুমোদিত {{max}}MB। অনুগ্রহ করে ছোট ভিডিও ব্যবহার করুন বা ভয়েস ক্লোনিং বন্ধ করুন।"
     },
     "status": {
       "starting": "শুরু হচ্ছে...",
@@ -307,23 +438,18 @@
     "closeAria": "অনুসন্ধান বার বন্ধ করুন"
   },
   "dialogs": {
+    "apiKeysRequired": {
+      "title": "API কী প্রয়োজন",
+      "message": "আপনার নিজের API কী ব্যবহার করতে, আপনার একটি OpenAI কী অথবা Anthropic এবং ElevenLabs উভয় কী প্রয়োজন।",
+      "howToGet": "API কী কীভাবে পাবেন",
+      "option1": "অপশন ১: OpenAI",
+      "option2": "অপশন ২: Anthropic + ElevenLabs",
+      "enable": "API কী সক্রিয় করুন",
+      "done": "সম্পন্ন"
+    },
     "saveSrtFileAs": "SRT ফাইল এভাবে সংরক্ষণ করুন",
     "saveDownloadedVideoAs": "ডাউনলোড করা ভিডিও এভাবে সংরক্ষণ করুন",
-    "downloadInProgress": "ডাউনলোড চলমান",
-    "saveDownloadedFile": "ডাউনলোড করা ফাইল সংরক্ষণ করুন: {{path}}",
-    "transcriptionInProgress": "ট্রান্সক্রিপশন চলমান",
-    "translationInProgress": "অনুবাদ চলমান",
-    "cancelTranslationConfirm": "অনুবাদ বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
-    "slowProcessingBanner": {
-      "title": "প্রক্রিয়াকরণ স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
-      "description": "এটি উচ্চ চাহিদা বা OpenAI সার্ভারের সমস্যার কারণে হতে পারে। প্রক্রিয়াটি এখনও পেছনে চলছে।",
-      "checkStatus": "OpenAI স্ট্যাটাস চেক করুন"
-    },
-    "cancelDownloadConfirm": "ডাউনলোড বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
-    "slowDownloadBanner": {
-      "title": "ডাউনলোড স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
-      "description": "এটি ভিডিও প্ল্যাটফর্ম পরিবর্তন বা নতুন সুরক্ষা ব্যবস্থার কারণে হতে পারে। নতুন ভিডিওগুলি হ্যান্ডেল করতে আপনাকে পরবর্তী অ্যাপ সংস্করণের জন্য অপেক্ষা করতে হতে পারে।"
-    },
+    "saveDubbedVideoAs": "ডাব করা ভিডিও এভাবে সংরক্ষণ করুন",
     "unsavedSrtOnTranscribe": {
       "title": "ট্রান্সক্রাইব করার আগে বর্তমান সাবটাইটেল সংরক্ষণ করবেন?",
       "message": "আপনার কাছে ইতিমধ্যে সাবটাইটেল লোড করা আছে। ট্রান্সক্রাইব করলে সেগুলো প্রতিস্থাপিত হবে। আপনি কী করতে চান?",
@@ -331,39 +457,59 @@
       "discardAndTranscribe": "সংরক্ষণ না করে ট্রান্সক্রাইব করুন",
       "cancel": "বাতিল"
     },
-    "saveDubbedVideoAs": "Save Dubbed Video As",
-    "dubbingInProgress": "Dubbing in Progress",
-    "dubbingWorking": "Generating dubbed audio…",
-    "cancelDubbingConfirm": "Cancel dubbing? Progress will be lost and you'll need to start again.",
+    "downloadInProgress": "ডাউনলোড চলমান",
+    "saveDownloadedFile": "ডাউনলোড করা ফাইল সংরক্ষণ করুন: {{path}}",
+    "transcriptionInProgress": "ট্রান্সক্রিপশন চলমান",
+    "translationInProgress": "অনুবাদ চলমান",
+    "dubbingInProgress": "ডাবিং চলমান",
+    "dubbingWorking": "ডাব করা অডিও তৈরি হচ্ছে…",
+    "cancelTranslationConfirm": "অনুবাদ বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
+    "cancelDubbingConfirm": "ডাবিং বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
+    "cancelDownloadConfirm": "ডাউনলোড বাতিল করবেন? অগ্রগতি হারিয়ে যাবে এবং আপনাকে আবার শুরু করতে হবে।",
+    "mergeLowDiskSpaceConfirm": "কম ডিস্ক স্পেস শনাক্ত হয়েছে। এই মার্জে ~{{need}} ফাঁকা স্পেস লাগতে পারে, কিন্তু শুধু ~{{free}} উপলব্ধ। তবুও চালিয়ে যাবেন?",
+    "slowProcessingBanner": {
+      "title": "প্রক্রিয়াকরণ স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
+      "description": "এটি উচ্চ চাহিদা বা OpenAI সার্ভারের সমস্যার কারণে হতে পারে। প্রক্রিয়াটি এখনও পেছনে চলছে।",
+      "checkStatus": "OpenAI স্ট্যাটাস চেক করুন"
+    },
+    "slowDownloadBanner": {
+      "title": "ডাউনলোড স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে।",
+      "description": "এটি ভিডিও প্ল্যাটফর্ম পরিবর্তন বা নতুন সুরক্ষা ব্যবস্থার কারণে হতে পারে। নতুন ভিডিওগুলি হ্যান্ডেল করতে আপনাকে পরবর্তী অ্যাপ সংস্করণের জন্য অপেক্ষা করতে হতে পারে।"
+    },
     "creditRanOut": {
-      "title": "Credits ran out",
-      "message": "Your AI credits have run out. Recharge in Settings, then resume where you left off.",
-      "openSettings": "Open Settings",
-      "ok": "OK"
+      "title": "ক্রেডিট শেষ হয়ে গেছে",
+      "message": "আপনার AI ক্রেডিট শেষ হয়ে গেছে। সেটিংসে রিচার্জ করুন, তারপর যেখানে ছিলেন সেখান থেকে চালিয়ে যান।",
+      "openSettings": "সেটিংস খুলুন",
+      "ok": "ঠিক আছে"
     }
   },
   "progress": {
-    "transcribedChunks": "ট্রান্সক্রাইব ও পরিষ্কার করা হয়েছে {{done}}/{{total}} অংশ",
+    "beginningReview": "রিভিউ শুরু হচ্ছে...",
+    "starting": "শুরু হচ্ছে...",
+    "completed": "সম্পন্ন",
+    "processCancelled": "প্রক্রিয়া বাতিল হয়েছে",
+    "mergingTitle": "ভিডিও এবং সাবটাইটেল মার্জ করা হচ্ছে",
+    "extractingAudio": "অডিও এক্সট্র্যাক্ট করা হচ্ছে...",
+    "transcribingOf": "ট্রান্সক্রাইব করা হচ্ছে {{done}}/{{total}}",
+    "error": "ত্রুটি",
+    "transcribedChunks": "ট্রান্সক্রাইব করা হয়েছে {{done}}/{{total}} অংশ",
+    "transcribingElevenLabs": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{minutes}} মিনিট বাকি)",
+    "transcribingElevenLabsHours": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে (~{{hours}}ঘ {{minutes}}মি বাকি)",
+    "transcribingElevenLabsFinishing": "ElevenLabs দিয়ে ট্রান্সক্রাইব করা হচ্ছে...",
+    "transcriptionFallbackWhisper": "চাঙ্কড ট্রান্সক্রিপশনে ফলব্যাক করা হচ্ছে...",
+    "transcriptionRetry": "সংযোগ ব্যর্থ, পুনরায় চেষ্টা করা হচ্ছে ({{attempt}}/{{maxAttempts}})...",
+    "transcribingR2Upload": "ট্রান্সক্রিপশনের জন্য অডিও আপলোড করা হচ্ছে...",
     "gapRepair": "গ্যাপ মেরামত #{{iteration}} ({{done}}/{{total}})",
     "repairingCaptions": "অনুপস্থিত ক্যাপশন মেরামত করা হচ্ছে (পুনরাবৃত্তি {{iteration}}/{{maxIterations}}) {{done}} / {{total}}",
     "scrubbingHallucinations": "ক্যাপশন পরিষ্কার করা হচ্ছে ({{done}}/{{total}})",
     "translationCleanup": "অনুবাদিত ক্যাপশন পরিষ্কার করা হচ্ছে ({{done}}/{{total}})",
-    "beginningReview": "Beginning review...",
-    "starting": "Starting...",
-    "completed": "Completed",
-    "processCancelled": "Process cancelled",
-    "mergingTitle": "Merging Video & Subtitles",
-    "extractingAudio": "Extracting audio...",
-    "transcribingOf": "Transcribing {{done}}/{{total}}",
-    "error": "Error",
-    "reviewingSlow": "Reviewing (this may take a while...) {{done}}/{{total}}",
-    "reviewingBatch": "Reviewing {{done}}/{{total}}",
-    "reviewingRange": "Reviewing {{start}}–{{end}} (of {{total}})"
+    "reviewingSlow": "রিভিউ করা হচ্ছে (এতে কিছু সময় লাগতে পারে...) {{done}}/{{total}}",
+    "reviewingRange": "রিভিউ করা হচ্ছে {{start}}–{{end}} ({{total}} এর মধ্যে)"
   },
   "messages": {
     "fileSaved": "ফাইল সংরক্ষিত হয়েছে:\n{{path}}",
     "videoSaved": "ভিডিও সংরক্ষিত হয়েছে:\n{{path}}",
-    "dubbedVideoSaved": "Dubbed video saved to:\n{{path}}"
+    "dubbedVideoSaved": "ডাব করা ভিডিও সংরক্ষিত হয়েছে:\n{{path}}"
   },
   "credits": {
     "title": "AI ব্যবহারের ঘন্টা",
@@ -374,108 +520,124 @@
     "redirectingToPayment": "নিরাপদ চেকআউট খোলা হচ্ছে...",
     "description": "${{pack1Price}} ({{pack1Hours}} ঘন্টা), ${{pack2Price}} ({{pack2Hours}} ঘন্টা), বা ${{pack3Price}} ({{pack3Hours}} ঘন্টা) ক্রেডিট প্যাক থেকে বেছে নিন",
     "notEnough": "অপর্যাপ্ত ক্রেডিট। অব্যাহত রাখতে অনুগ্রহ করে আরো ক্রেডিট কিনুন।",
-    "usingApiKey": "Using API Key"
+    "usingApiKey": "API কী ব্যবহার করা হচ্ছে"
   },
   "errors": {
     "needCookies": "YouTube মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।",
-    "unexpected": "An unexpected error occurred.",
-    "unexpectedRemove": "An unexpected error occurred while removing the key.",
-    "unexpectedSave": "An unexpected error occurred while saving.",
-    "unexpectedLoad": "An unexpected error occurred while loading.",
-    "renderFailed": "Render failed",
-    "creditReservationFailed": "Credit reservation failed",
-    "invalidRenderOptions": "Invalid render options provided",
-    "missingVideoMetadata": "Missing video metadata ({{missing}})",
-    "noSourceVideo": "No source video",
-    "noSubtitlesLoaded": "No subtitles loaded",
-    "failedToLoadSRT": "Failed to load SRT file",
     "needCookiesYouTube": "YouTube মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।",
-    "needCookiesGeneric": "এই সাইটটি মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।"
+    "needCookiesGeneric": "এই সাইটটি মানব যাচাইয়ের জন্য অনুরোধ করেছে। চালিয়ে যেতে সংযোগ করুন ক্লিক করুন।",
+    "unexpected": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
+    "unexpectedRemove": "কী অপসারণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
+    "unexpectedSave": "সংরক্ষণ করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
+    "unexpectedLoad": "লোড করার সময় একটি অপ্রত্যাশিত ত্রুটি ঘটেছে।",
+    "renderFailed": "রেন্ডার ব্যর্থ হয়েছে",
+    "creditReservationFailed": "ক্রেডিট সংরক্ষণ ব্যর্থ হয়েছে",
+    "invalidRenderOptions": "অবৈধ রেন্ডার অপশন প্রদান করা হয়েছে",
+    "missingVideoMetadata": "ভিডিও মেটাডেটা অনুপস্থিত ({{missing}})",
+    "noSourceVideo": "কোন সোর্স ভিডিও নেই",
+    "noSubtitlesLoaded": "কোন সাবটাইটেল লোড হয়নি",
+    "failedToLoadSRT": "SRT ফাইল লোড করতে ব্যর্থ",
+    "connectFailed": "সংযোগ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+    "byo": {
+      "openaiKeyInvalid": "আপনার OpenAI API কী অবৈধ বা মেয়াদ শেষ। অনুগ্রহ করে সেটিংসে আপনার কী পরীক্ষা করুন।",
+      "openaiRateLimit": "OpenAI রেট সীমায় পৌঁছেছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।",
+      "openaiInsufficientQuota": "আপনার OpenAI অ্যাকাউন্টে পর্যাপ্ত ক্রেডিট নেই। অনুগ্রহ করে platform.openai.com এ ক্রেডিট যোগ করুন।",
+      "anthropicKeyInvalid": "আপনার Anthropic API কী অবৈধ বা মেয়াদ শেষ। অনুগ্রহ করে সেটিংসে আপনার কী পরীক্ষা করুন।",
+      "anthropicRateLimit": "Anthropic রেট সীমায় পৌঁছেছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।",
+      "anthropicInsufficientQuota": "আপনার Anthropic অ্যাকাউন্টে পর্যাপ্ত ক্রেডিট নেই। অনুগ্রহ করে console.anthropic.com এ ক্রেডিট যোগ করুন।",
+      "elevenlabsKeyInvalid": "আপনার ElevenLabs API কী অবৈধ বা মেয়াদ শেষ। অনুগ্রহ করে সেটিংসে আপনার কী পরীক্ষা করুন।",
+      "elevenlabsRateLimit": "ElevenLabs রেট সীমায় পৌঁছেছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।",
+      "elevenlabsInsufficientQuota": "আপনার ElevenLabs অ্যাকাউন্টে পর্যাপ্ত ক্রেডিট নেই। অনুগ্রহ করে elevenlabs.io তে ক্রেডিট যোগ করুন।",
+      "checkSettings": "সেটিংস দেখুন",
+      "genericApiError": "API অনুরোধ ব্যর্থ হয়েছে। অনুগ্রহ করে আপনার API কী এবং অ্যাকাউন্ট স্ট্যাটাস পরীক্ষা করুন।"
+    }
   },
   "cta": {
     "generate": {
-      "title": "Get subtitles from a video",
-      "subtitle": "Transcribe/translate from device or link"
+      "title": "ভিডিও থেকে সাবটাইটেল পান",
+      "subtitle": "ডিভাইস বা লিঙ্ক থেকে ট্রান্সক্রাইব/অনুবাদ করুন"
     },
     "edit": {
-      "title": "Edit an existing subtitle",
-      "subtitle": "Load, edit, and export SRT",
-      "pillOpen": "Open .srt",
-      "pillMerge": "Merge to video"
+      "title": "বিদ্যমান সাবটাইটেল সম্পাদনা করুন",
+      "subtitle": "SRT লোড, সম্পাদনা, এবং এক্সপোর্ট করুন",
+      "pillOpen": ".srt খুলুন",
+      "pillMerge": "ভিডিওতে মার্জ করুন"
     }
   },
   "summary": {
-    "title": "Transcript Summary",
-    "ctaHelper": "Generate an in-depth overview. Long videos may take a moment to process.",
-    "languageLabel": "Summary language",
-    "generate": "Generate summary",
-    "regenerate": "Regenerate summary",
-    "placeholder": "Your AI summary will appear here once generated.",
-    "insufficientCredits": "Not enough credits to run the summary.",
-    "error": "We couldn't create a summary. {{message}}",
-    "copy": "Copy summary",
-    "copied": "Copied!",
-    "copyError": "Couldn't copy summary to clipboard.",
-    "status": {
-      "preparing": "Preparing transcript…",
-      "chunk": "Summarizing section {{current}}/{{total}}",
-      "synthesizing": "Synthesizing comprehensive summary…",
-      "ready": "Summary ready",
-      "error": "Summary failed",
-      "cancelled": "Summary cancelled",
-      "inProgress": "Generating summary…",
-      "selectingHighlights": "Selecting highlight moments…",
-      "cuttingHighlight": "Cutting highlight {{current}}/{{total}}…",
-      "cuttingHighlights": "Cutting highlight clips…"
-    },
+    "title": "ট্রান্সক্রিপ্ট সারসংক্ষেপ",
+    "ctaHelper": "একটি বিস্তারিত ওভারভিউ তৈরি করুন। দীর্ঘ ভিডিও প্রক্রিয়া করতে কিছু সময় লাগতে পারে।",
+    "languageLabel": "সারসংক্ষেপের ভাষা",
     "tab": {
-      "summary": "Summary",
-      "sections": "Detailed notes",
-      "highlights": "Highlights"
+      "summary": "সারসংক্ষেপ",
+      "sections": "বিস্তারিত নোট",
+      "highlights": "হাইলাইটস"
     },
-    "noHighlights": "No highlights yet. Generate to detect punchlines.",
-    "noVideoForHighlights": "Open the source video to cut highlight clips.",
-    "highlight": "Highlight",
-    "downloadHighlight": "Download clip",
-    "downloadingHighlight": "Saving…",
-    "highlightSaved": "Saved!",
-    "highlightSaveError": "Save failed",
-    "downloadHighlightFailed": "Failed to save highlight clip: {{message}}",
-    "saveHighlightDialogTitle": "Save highlight clip",
-    "noSections": "No section notes yet.",
-    "sectionHeading": "Section {{index}}",
-    "highlightsInProgress": "Preparing highlight clips…",
-    "combineMode": "Combine",
-    "exitCombineMode": "Exit Combine",
-    "reorderHint": "Drag to reorder:",
-    "cutCombined": "Cut Combined",
-    "cuttingCombined": "Cutting...",
-    "combinedHighlightReady": "Combined Highlight Ready",
-    "downloadCombined": "Download Combined Clip",
-    "saveCombinedDialogTitle": "Save combined highlight clip",
-    "combinedCutFailed": "Failed to cut combined highlights: {{message}}"
+    "generate": "সারসংক্ষেপ তৈরি করুন",
+    "regenerate": "সারসংক্ষেপ পুনরায় তৈরি করুন",
+    "estimateCredits": "{{credits}} ক্রেডিট",
+    "highEffortBadge": "(গভীর)",
+    "placeholder": "তৈরি হলে আপনার AI সারসংক্ষেপ এখানে দেখা যাবে।",
+    "insufficientCredits": "সারসংক্ষেপ চালাতে পর্যাপ্ত ক্রেডিট নেই।",
+    "error": "আমরা সারসংক্ষেপ তৈরি করতে পারিনি। {{message}}",
+    "copy": "সারসংক্ষেপ কপি করুন",
+    "copied": "কপি হয়েছে!",
+    "copyError": "ক্লিপবোর্ডে সারসংক্ষেপ কপি করা যায়নি।",
+    "noHighlights": "এখনো কোন হাইলাইট নেই। পাঞ্চলাইন শনাক্ত করতে তৈরি করুন।",
+    "noVideoForHighlights": "হাইলাইট ক্লিপ কাটতে সোর্স ভিডিও খুলুন।",
+    "highlight": "হাইলাইট",
+    "downloadHighlight": "ক্লিপ ডাউনলোড করুন",
+    "downloadingHighlight": "সংরক্ষণ হচ্ছে…",
+    "highlightSaved": "সংরক্ষিত!",
+    "highlightSaveError": "সংরক্ষণ ব্যর্থ",
+    "downloadHighlightFailed": "হাইলাইট ক্লিপ সংরক্ষণ ব্যর্থ: {{message}}",
+    "saveHighlightDialogTitle": "হাইলাইট ক্লিপ সংরক্ষণ করুন",
+    "noSections": "এখনো কোন সেকশন নোট নেই।",
+    "sectionHeading": "সেকশন {{index}}",
+    "highlightsInProgress": "হাইলাইট ক্লিপ প্রস্তুত করা হচ্ছে…",
+    "status": {
+      "preparing": "ট্রান্সক্রিপ্ট প্রস্তুত করা হচ্ছে…",
+      "chunk": "সেকশন সারসংক্ষেপ করা হচ্ছে {{current}}/{{total}}",
+      "selectingHighlights": "হাইলাইট মুহূর্ত নির্বাচন করা হচ্ছে…",
+      "cuttingHighlight": "হাইলাইট কাটা হচ্ছে {{current}}/{{total}}…",
+      "cuttingHighlights": "হাইলাইট ক্লিপ কাটা হচ্ছে…",
+      "synthesizing": "ব্যাপক সারসংক্ষেপ সংশ্লেষণ করা হচ্ছে…",
+      "ready": "সারসংক্ষেপ প্রস্তুত",
+      "error": "সারসংক্ষেপ ব্যর্থ",
+      "cancelled": "সারসংক্ষেপ বাতিল",
+      "inProgress": "সারসংক্ষেপ তৈরি করা হচ্ছে…"
+    },
+    "combineMode": "একত্রিত করুন",
+    "exitCombineMode": "একত্রীকরণ থেকে বের হন",
+    "reorderHint": "পুনর্বিন্যাস করতে টানুন:",
+    "cutCombined": "একত্রিত কাটুন",
+    "cuttingCombined": "কাটা হচ্ছে...",
+    "combinedHighlightReady": "একত্রিত হাইলাইট প্রস্তুত",
+    "downloadCombined": "একত্রিত ক্লিপ ডাউনলোড করুন",
+    "saveCombinedDialogTitle": "একত্রিত হাইলাইট ক্লিপ সংরক্ষণ করুন",
+    "combinedCutFailed": "একত্রিত হাইলাইট কাটতে ব্যর্থ: {{message}}"
   },
   "panel": {
     "gaps": {
-      "title": "Gaps",
-      "none": "No large gaps detected"
+      "title": "ফাঁক",
+      "none": "কোন বড় ফাঁক শনাক্ত হয়নি"
     },
     "confidence": {
-      "title": "Low Confidence",
-      "none": "No low-confidence lines detected",
-      "count": "{{count}} lines"
+      "title": "কম কনফিডেন্স",
+      "none": "কম কনফিডেন্সের কোন লাইন শনাক্ত হয়নি",
+      "count": "{{count}} লাইন"
     }
   },
   "logs": {
-    "title": "Recent Logs",
-    "copy": "Copy",
-    "email": "Email to Dev",
-    "close": "Close",
-    "empty": "No logs yet.",
-    "copied": "Logs copied to clipboard",
-    "copyFailed": "Copy failed",
-    "emailSubject": "Stage5 Debug Logs",
-    "emailBodyPrefix": "Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n",
-    "deviceInfoHeader": "Device Info"
+    "title": "সাম্প্রতিক লগ",
+    "copy": "কপি",
+    "email": "ডেভকে ইমেল করুন",
+    "close": "বন্ধ করুন",
+    "empty": "এখনো কোন লগ নেই।",
+    "copied": "লগ ক্লিপবোর্ডে কপি হয়েছে",
+    "copyFailed": "কপি ব্যর্থ",
+    "emailSubject": "Stage5 ডিবাগ লগ",
+    "emailBodyPrefix": "হ্যালো,\n\nসমস্যাটি ডিবাগ করতে সাহায্য করার জন্য নিচে আমার সাম্প্রতিক লগ দেখুন।\n\n",
+    "deviceInfoHeader": "ডিভাইস তথ্য"
   }
 }

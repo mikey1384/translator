@@ -28,7 +28,8 @@
       "missingVideoMetadata": "動画メタデータが不足しています ({{missing}})",
       "noSourceVideo": "ソース動画がありません",
       "noSubtitlesLoaded": "字幕が読み込まれていません",
-      "failedToLoadSRT": "SRTファイルの読み込みに失敗しました"
+      "failedToLoadSRT": "SRTファイルの読み込みに失敗しました",
+      "insufficientDiskSpace": "結合を完了するためのディスク容量が不足しています。空き容量を確保してから再試行してください。"
     },
     "success": "成功",
     "settings": "設定",
@@ -86,7 +87,13 @@
     "saveDubbedVideo": "吹き替え動画を保存",
     "connect": "接続",
     "connecting": "接続中...",
-    "connectTip": "ヒント：接続ウィンドウでサインインまたは認証を完了し、ウィンドウを閉じて続行してください。"
+    "connectTip": "ヒント：接続ウィンドウでサインインまたは認証を完了し、ウィンドウを閉じて続行してください。",
+    "qualityPresets": "プリセット",
+    "qualityBest": "最高",
+    "qualityResolution": "解像度",
+    "quality8k": "8K",
+    "quality4k": "4K",
+    "quality2k": "2K"
   },
   "subtitles": {
     "outputLanguage": "出力言語",
@@ -104,6 +111,7 @@
     "dub": "吹き替え音声を生成",
     "dubEstimateCredits": "{{credits}} cr (~{{minutes}}分)",
     "dubEstimateByo": "~{{minutes}}分の音声",
+    "voiceCloningRequiresTranslation": "ボイスクローニングには翻訳先言語が必要です",
     "translateEstimateCredits": "~{{minutes}}分の動画",
     "translateEstimateByo": "BYOキー",
     "qualityBadge": "(hq)"
@@ -309,6 +317,7 @@
       "voiceCloningDesc": "吹き替え音声で元の話者の声を保持",
       "voiceCloningEnabled": "ElevenLabsでボイスクローニングが有効です。元の話者の声が吹き替え音声で保持されます。",
       "voiceCloningInfo": "ボイスクローニングはElevenLabs吹き替えAPIを使用して、元の話者の声を分析・再現します。",
+      "voiceCloningInsufficientCredits": "1分以上のクレジットが必要です",
       "costPerMinute": "1分あたりのコスト",
       "credits": "クレジット",
       "yourBalance": "残高",
@@ -529,7 +538,9 @@
     "validation": {
       "pleaseSelectVideo": "動画を選択してください",
       "processingDuration": "動画の長さを処理中です。しばらくしてから再度お試しください。",
-      "icloudPlaceholder": "このファイルはiCloudに保存されています。Finderで「ダウンロード」をクリックし、クラウドアイコンが消えるまで待ってから、再度お試しください。"
+      "icloudPlaceholder": "このファイルはiCloudに保存されています。Finderで「ダウンロード」をクリックし、クラウドアイコンが消えるまで待ってから、再度お試しください。",
+      "insufficientCreditsForVoiceCloning": "ボイスクローニングに必要なクレジットが不足しています。動画は{{duration}}分ですが、{{affordable}}分しか処理できません。クレジットを追加するか、ボイスクローニングを無効にしてください。",
+      "fileTooLargeForVoiceCloning": "ボイスクローニングには動画ファイルが大きすぎます（{{size}}MB）。最大{{max}}MBまで対応しています。より短い動画を使用するか、ボイスクローニングを無効にしてください。"
     },
     "status": {
       "starting": "開始中...",
@@ -600,7 +611,8 @@
     "saveDubbedVideoAs": "吹き替え動画として保存",
     "dubbingInProgress": "吹き替え処理中",
     "dubbingWorking": "吹き替え音声を生成しています…",
-    "cancelDubbingConfirm": "吹き替えを中止しますか？進捗は失われ、最初からやり直す必要があります。"
+    "cancelDubbingConfirm": "吹き替えを中止しますか？進捗は失われ、最初からやり直す必要があります。",
+    "mergeLowDiskSpaceConfirm": "ディスク容量が不足しています。この結合には約{{need}}の空き容量が必要ですが、{{free}}しかありません。続行しますか？"
   },
   "progress": {
     "mergingTitle": "動画と字幕を結合中",
@@ -623,6 +635,7 @@
     "transcribingElevenLabsHours": "ElevenLabsで文字起こし中（残り約{{hours}}時間{{minutes}}分）",
     "transcribingElevenLabsFinishing": "ElevenLabsで文字起こし中...",
     "transcriptionFallbackWhisper": "チャンク分割での文字起こしに切り替え中...",
+    "transcriptionRetry": "接続に失敗しました。再試行中（{{attempt}}/{{maxAttempts}}）...",
     "transcribingR2Upload": "音声をアップロード中..."
   },
   "messages": {
@@ -669,7 +682,8 @@
       "genericApiError": "APIリクエストが失敗しました。APIキーとアカウントの状態を確認してください。"
     },
     "needCookiesYouTube": "YouTubeが認証を求めています。「接続」をクリックして続行してください。",
-    "needCookiesGeneric": "このサイトが認証を求めています。「接続」をクリックして続行してください。"
+    "needCookiesGeneric": "このサイトが認証を求めています。「接続」をクリックして続行してください。",
+    "connectFailed": "接続できませんでした。もう一度お試しください。"
   },
   "logs": {
     "title": "最新のログ",
