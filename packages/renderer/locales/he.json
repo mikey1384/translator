@@ -560,7 +560,6 @@
     "noSourceVideo": "אין וידאו מקור",
     "noSubtitlesLoaded": "לא נטענו כתוביות",
     "failedToLoadSRT": "נכשל בטעינת קובץ SRT",
-    "connectFailed": "לא ניתן להתחבר. אנא נסה שוב.",
     "byo": {
       "openaiKeyInvalid": "מפתח ה-API של OpenAI שלך אינו תקף או פג תוקף. אנא בדוק את המפתח בהגדרות.",
       "openaiRateLimit": "הגעת למגבלת הבקשות של OpenAI. אנא המתן רגע ונסה שוב.",
