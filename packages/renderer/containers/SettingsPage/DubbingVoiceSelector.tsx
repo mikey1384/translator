@@ -7,6 +7,7 @@ import { useAiStore } from '../../state';
 import { useCreditStore } from '../../state/credit-store';
 import * as SubtitlesIPC from '../../ipc/subtitles';
 import * as SystemIPC from '../../ipc/system';
+import { ENABLE_VOICE_CLONING } from '../../../shared/constants';
 
 // Preview credit costs (for "Hello" = 5 characters)
 // Calculated using: chars × ($/1M chars) × MARGIN(2) / USD_PER_CREDIT($10/350k)
@@ -50,6 +51,9 @@ export default function DubbingVoiceSelector() {
   const { dubVoice, setDubVoice, dubUseVoiceCloning, setDubUseVoiceCloning } =
     useUIStore();
   const useByoMaster = useAiStore(state => state.useByoMaster);
+  const byoOpenAiUnlocked = useAiStore(state => state.byoUnlocked);
+  const openAiKeyPresent = useAiStore(state => state.keyPresent);
+  const useByoOpenAi = useAiStore(state => state.useByo);
   const credits = useCreditStore(state => state.credits);
   const useByoElevenLabs = useAiStore(state => state.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
@@ -71,6 +75,7 @@ export default function DubbingVoiceSelector() {
 
   // Fetch voice cloning pricing from API on mount
   useEffect(() => {
+    if (!ENABLE_VOICE_CLONING) return;
     let cancelled = false;
     SystemIPC.getVoiceCloningPricing()
       .then(pricing => {
@@ -88,6 +93,10 @@ export default function DubbingVoiceSelector() {
 
   // Auto-disable voice cloning if user can no longer afford it
   useEffect(() => {
+    if (!ENABLE_VOICE_CLONING) {
+      if (dubUseVoiceCloning) setDubUseVoiceCloning(false);
+      return;
+    }
     const canAfford =
       typeof credits === 'number' && credits >= voiceCloningCreditsPerMinute;
     if (dubUseVoiceCloning && !canAfford) {
@@ -101,14 +110,44 @@ export default function DubbingVoiceSelector() {
   ]);
 
   // Determine which TTS provider is active for voice selection
-  // For Stage5 credits mode: use stage5DubbingTtsProvider
-  // For BYO mode: use preferredDubbingProvider
-  const isUsingElevenLabs =
-    useByoMaster && preferredDubbingProvider === 'elevenlabs'
-      ? true
-      : useByoMaster && preferredDubbingProvider === 'openai'
-        ? false
-        : stage5DubbingTtsProvider === 'elevenlabs';
+  // - Stage5 credits mode: use stage5DubbingTtsProvider
+  // - BYO mode: use preferredDubbingProvider, with fallback if the preferred provider isn't available
+  const hasOpenAiByo =
+    useByoMaster && byoOpenAiUnlocked && openAiKeyPresent && useByoOpenAi;
+  const hasElevenLabsByo =
+    useByoMaster &&
+    byoElevenLabsUnlocked &&
+    elevenLabsKeyPresent &&
+    useByoElevenLabs;
+
+  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' = useByoMaster
+    ? (() => {
+        if (preferredDubbingProvider === 'stage5') {
+          return 'stage5';
+        }
+        if (preferredDubbingProvider === 'elevenlabs') {
+          if (hasElevenLabsByo) return 'elevenlabs';
+          if (hasOpenAiByo) return 'openai';
+          return 'stage5';
+        }
+        if (preferredDubbingProvider === 'openai') {
+          if (hasOpenAiByo) return 'openai';
+          if (hasElevenLabsByo) return 'elevenlabs';
+          return 'stage5';
+        }
+        // Unexpected: fall back safely.
+        if (hasOpenAiByo) return 'openai';
+        if (hasElevenLabsByo) return 'elevenlabs';
+        return 'stage5';
+      })()
+    : 'stage5';
+
+  const activeVoiceProvider: 'openai' | 'elevenlabs' =
+    activeDubbingProvider === 'stage5'
+      ? stage5DubbingTtsProvider
+      : activeDubbingProvider;
+
+  const isUsingElevenLabs = activeVoiceProvider === 'elevenlabs';
 
   // Get voices based on active provider
   const activeVoices = isUsingElevenLabs ? ELEVENLABS_VOICES : OPENAI_VOICES;
@@ -166,7 +205,7 @@ export default function DubbingVoiceSelector() {
       if (previewTokenRef.current !== token) return;
       if (result?.success && result.audioBase64) {
         // Refresh credit balance after successful preview (Stage5 mode deducts credits)
-        if (!useByoMaster) {
+        if (!useByoMaster || activeDubbingProvider === 'stage5') {
           refreshCredits();
         }
         try {
@@ -332,9 +371,16 @@ export default function DubbingVoiceSelector() {
     font-weight: 500;
   `;
 
+  // Voice cloning UI is intentionally disabled.
+  // If we re-enable it later, gate all voice-cloning-only UI (including the "enabled" banner)
+  // behind this flag so BYO users still see the normal voice picker by default.
+  const showVoiceCloningOption = ENABLE_VOICE_CLONING;
+
   // When ElevenLabs voice cloning is fully enabled, show message instead of voice selector
   // All conditions must be true: master on, toggle on, key present, entitlement unlocked, and provider is elevenlabs
   const voiceCloningActive =
+    showVoiceCloningOption &&
+    dubUseVoiceCloning &&
     useByoMaster &&
     useByoElevenLabs &&
     elevenLabsKeyPresent &&
@@ -376,10 +422,7 @@ export default function DubbingVoiceSelector() {
     );
   }
 
-  // Voice cloning toggle is disabled for Stage5 credit users
-  // ElevenLabs Dubbing API is too expensive (~35k credits/min) and doesn't allow
-  // control over translation quality. Keep it only for BYO ElevenLabs users.
-  const showVoiceCloningOption = false;
+  // Voice cloning UI is disabled (see showVoiceCloningOption above).
 
   // Disable voice cloning if user can't afford at least 1 minute
   const canAffordVoiceCloning = estimatedMinutes >= 1;
@@ -522,7 +565,7 @@ export default function DubbingVoiceSelector() {
             >
               {isPreviewing
                 ? t('settings.dubbing.previewing', 'Playing...')
-                : useByoMaster
+                : useByoMaster && activeDubbingProvider !== 'stage5'
                   ? t('settings.dubbing.previewFree', 'Preview')
                   : t(
                       'settings.dubbing.previewWithCost',

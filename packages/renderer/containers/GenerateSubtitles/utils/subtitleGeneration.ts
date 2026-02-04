@@ -4,6 +4,7 @@ import * as FileIPC from '../../../ipc/file';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
+import { ENABLE_VOICE_CLONING } from '../../../../shared/constants';
 import {
   useSubStore,
   useUIStore,
@@ -170,6 +171,7 @@ export async function executeDubGeneration({
     elevenLabsKeyPresent &&
     byoElevenLabsUnlocked;
   const useVoiceCloning =
+    ENABLE_VOICE_CLONING &&
     isByoElevenLabs &&
     dubUseVoiceCloning &&
     !!targetLanguage &&

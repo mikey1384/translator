@@ -7,6 +7,7 @@ import type {
   DubSegmentPayload,
   GenerateProgressCallback,
 } from '@shared-types/app';
+import { ENABLE_VOICE_CLONING } from '../../shared/constants/index.js';
 import {
   synthesizeDub as synthesizeDubAi,
   getActiveProviderForDubbing,
@@ -26,6 +27,8 @@ interface GenerateDubArgs {
   quality?: 'standard' | 'high';
   ambientMix?: number;
   targetLanguage?: string; // ISO 639-1 code for ElevenLabs Dubbing API
+  /** Use ElevenLabs Dubbing API (voice cloning) instead of segment-based TTS. */
+  useVoiceCloning?: boolean;
   operationId: string;
   signal: AbortSignal;
   progressCallback?: GenerateProgressCallback;
@@ -40,6 +43,7 @@ export async function generateDubbedMedia({
   quality,
   ambientMix,
   targetLanguage,
+  useVoiceCloning = false,
   operationId,
   signal,
   progressCallback,
@@ -58,6 +62,8 @@ export async function generateDubbedMedia({
   const dubbingProvider = getActiveProviderForDubbing();
   const elevenLabsKey = getCurrentElevenLabsApiKey();
   const useElevenLabsDubbing =
+    ENABLE_VOICE_CLONING &&
+    !!useVoiceCloning &&
     dubbingProvider === 'elevenlabs' &&
     elevenLabsKey &&
     videoPath &&

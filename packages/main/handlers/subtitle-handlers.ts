@@ -30,7 +30,7 @@ import {
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
-import { ERROR_CODES } from '../../shared/constants/index.js';
+import { ENABLE_VOICE_CLONING, ERROR_CODES } from '../../shared/constants/index.js';
 import type { FFmpegContext, VideoMeta } from '../services/ffmpeg-runner.js';
 import {
   extractAudioSegment,
@@ -387,6 +387,7 @@ export async function handleDubSubtitles(
     // Voice cloning path: use ElevenLabs Dubbing API for full workflow
     // Requires a real target language (not 'original') for translation
     if (
+      ENABLE_VOICE_CLONING &&
       options.useVoiceCloning &&
       options.targetLanguage &&
       options.targetLanguage !== 'original'
@@ -514,6 +515,7 @@ export async function handleDubSubtitles(
       quality: options.quality,
       ambientMix: options.ambientMix,
       targetLanguage: options.targetLanguage,
+      useVoiceCloning: ENABLE_VOICE_CLONING && !!options.useVoiceCloning,
       operationId,
       signal: controller.signal,
       progressCallback,

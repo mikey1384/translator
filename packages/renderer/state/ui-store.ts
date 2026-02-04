@@ -6,6 +6,7 @@ import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
 import type { SummaryEffortLevel } from '@shared-types/app';
+import { ENABLE_VOICE_CLONING } from '../../shared/constants';
 
 interface State {
   showSettings: boolean;
@@ -91,6 +92,16 @@ const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
 const DEFAULT_DUB_VOICE = 'rachel';
 
+// Voice cloning is intentionally disabled. Clear any legacy persisted flag so we
+// don't silently trigger expensive cloning runs without UI.
+if (!ENABLE_VOICE_CLONING) {
+  try {
+    localStorage.setItem(DUB_VOICE_CLONING_KEY, JSON.stringify(false));
+  } catch {
+    // Ignore storage failures
+  }
+}
+
 /** Safely parse a boolean from localStorage with fallback */
 function parseStoredBool(key: string, fallback: boolean): boolean {
   const raw = localStorage.getItem(key);
@@ -146,7 +157,9 @@ const initial: State = {
   showOriginalText: parseStoredBool(SHOW_ORIGINAL_KEY, true),
   qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
   qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, false),
-  dubUseVoiceCloning: parseStoredBool(DUB_VOICE_CLONING_KEY, false),
+  dubUseVoiceCloning: ENABLE_VOICE_CLONING
+    ? parseStoredBool(DUB_VOICE_CLONING_KEY, false)
+    : false,
   dubVoice: (() => {
     const stored = localStorage.getItem(DUB_VOICE_KEY);
     return stored && ALLOWED_DUB_VOICES.has(stored)

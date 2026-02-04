@@ -226,6 +226,7 @@ export async function transcribePass({
       try {
         const result = await transcribeAi({
           filePath: audioPath,
+          model: 'scribe_v2',
           // Use operationId as an idempotency key so retries can't double-bill.
           idempotencyKey: operationId,
           signal,

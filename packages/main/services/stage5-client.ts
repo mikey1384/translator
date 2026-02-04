@@ -386,12 +386,15 @@ export async function synthesizeDub({
   }
 
   try {
+    // Stage5 backends accept `model` for TTS selection. Default to Eleven v3 when using ElevenLabs.
+    const effectiveModel =
+      model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
     const response = await axios.post(
       `${STAGE5_API_URL}/dub`,
       {
         segments,
         voice,
-        model,
+        model: effectiveModel,
         format,
         quality,
         ttsProvider,
@@ -433,7 +436,7 @@ export async function synthesizeDub({
       audioBase64: data.audioBase64,
       format: data.format ?? 'mp3',
       voice: data.voice ?? voice ?? 'alloy',
-      model: data.model ?? model ?? 'tts-1',
+      model: data.model ?? effectiveModel ?? model ?? 'tts-1',
       segments: data.segments,
       chunkCount: data.chunkCount,
       segmentCount: data.segmentCount,
@@ -538,6 +541,7 @@ export async function transcribeViaDirect({
   filePath,
   language,
   durationSec,
+  modelId = 'scribe_v2',
   idempotencyKey,
   signal,
   onProgress,
@@ -545,6 +549,8 @@ export async function transcribeViaDirect({
   filePath: string;
   language?: string;
   durationSec?: number;
+  /** ElevenLabs Scribe model for relay transcription. */
+  modelId?: string;
   /** Prevent double-charges on client retries / disconnects. */
   idempotencyKey?: string;
   signal?: AbortSignal;
@@ -568,6 +574,9 @@ export async function transcribeViaDirect({
   fd.append('file', fs.createReadStream(filePath));
   if (language) {
     fd.append('language', language);
+  }
+  if (modelId) {
+    fd.append('model_id', modelId);
   }
 
   onProgress?.('Uploading audio to relay...', 10);
@@ -798,9 +807,12 @@ export async function dubViaDirect({
   }
 
   try {
+    // Relay accepts `model` for TTS selection. Default to Eleven v3 when using ElevenLabs.
+    const effectiveModel =
+      model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
     const response = await axios.post(
       `${RELAY_URL}/dub-direct`,
-      { segments, voice, model, format, quality, ttsProvider },
+      { segments, voice, model: effectiveModel, format, quality, ttsProvider },
       {
         headers: {
           Authorization: `Bearer ${getDeviceId()}`,
@@ -835,7 +847,7 @@ export async function dubViaDirect({
       audioBase64: data.audioBase64,
       format: data.format ?? 'mp3',
       voice: data.voice ?? voice ?? 'alloy',
-      model: data.model ?? model ?? 'tts-1',
+      model: data.model ?? effectiveModel ?? model ?? 'tts-1',
       segments: data.segments,
       chunkCount: data.chunkCount,
       segmentCount: data.segmentCount,

@@ -5,6 +5,8 @@ export const AI_MODELS = {
   WHISPER: 'whisper-1',
 } as const;
 
+export { ENABLE_VOICE_CLONING } from './features';
+
 /** User-friendly display names for AI models */
 export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.GPT]: 'GPT-5.1',

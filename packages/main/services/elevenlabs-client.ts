@@ -130,7 +130,7 @@ export async function transcribeWithElevenLabs({
 }: ElevenLabsTranscribeOptions): Promise<ElevenLabsTranscribeResult> {
   const form = new FormData();
   form.append('file', fs.createReadStream(filePath));
-  form.append('model_id', 'scribe_v1');
+  form.append('model_id', 'scribe_v2');
   if (languageCode && languageCode !== 'auto') {
     form.append('language_code', languageCode);
   }
@@ -163,7 +163,7 @@ export async function transcribeWithElevenLabs({
 export async function synthesizeDubWithElevenLabs({
   segments,
   voice = 'adam',
-  modelId = 'eleven_multilingual_v2',
+  modelId = 'eleven_v3',
   apiKey,
   signal,
   concurrency = 3,

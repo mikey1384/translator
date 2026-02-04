@@ -11,6 +11,7 @@ import {
 } from '../../components/ApiKeyOptionBox';
 import { byoCardStyles } from './styles';
 import ApiKeyGuideModal from './ApiKeyGuideModal';
+import DubbingVoiceSelector from './DubbingVoiceSelector';
 import { logButton } from '../../utils/logger';
 
 // Provider configuration with i18n keys and pricing (per 1 hour video, 2025 prices)
@@ -761,6 +762,11 @@ export default function ByoOpenAiSection() {
             />
           </div>
         )}
+      </div>
+
+      {/* Default dub voice picker (BYO mode) */}
+      <div style={{ marginTop: 16 }}>
+        <DubbingVoiceSelector />
       </div>
 
       <ApiKeyGuideModal
