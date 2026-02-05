@@ -58,7 +58,9 @@
       "srtFiles": "SRT-tiedostot",
       "mediaFiles": "Mediatiedostot",
       "videoFiles": "Videotiedostot"
-    }
+    },
+    "chooseAnotherLocation": "Valitse toinen sijainti",
+    "continue": "Jatka"
   },
   "input": {
     "connect": "Yhdistä",

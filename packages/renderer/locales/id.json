@@ -58,7 +58,9 @@
       "srtFiles": "Berkas SRT",
       "mediaFiles": "Berkas Media",
       "videoFiles": "Berkas Video"
-    }
+    },
+    "chooseAnotherLocation": "Pilih lokasi lain",
+    "continue": "Lanjutkan"
   },
   "input": {
     "connect": "Hubungkan",

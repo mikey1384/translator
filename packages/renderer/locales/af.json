@@ -58,7 +58,9 @@
       "srtFiles": "SRT-lêers",
       "mediaFiles": "Medialêers",
       "videoFiles": "Videolêers"
-    }
+    },
+    "chooseAnotherLocation": "Kies 'n ander ligging",
+    "continue": "Gaan voort"
   },
   "errors": {
     "needCookies": "YouTube het 'n menslike verifikasie gevra. Klik op Verbind om voort te gaan.",

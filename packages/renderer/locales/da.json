@@ -58,7 +58,9 @@
       "srtFiles": "SRT-filer",
       "mediaFiles": "Mediefiler",
       "videoFiles": "Videofiler"
-    }
+    },
+    "chooseAnotherLocation": "Vælg en anden placering",
+    "continue": "Fortsæt"
   },
   "input": {
     "fromDevice": "Fra din enhed",

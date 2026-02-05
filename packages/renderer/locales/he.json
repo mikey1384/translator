@@ -58,7 +58,9 @@
     "installUpdate": "הפעל מחדש כדי לעדכן",
     "confirmInstallUpdate": "התקן עדכון והפעל מחדש?",
     "downloadUpdate": "לחץ כדי להוריד עדכון",
-    "retry": "נסה שוב"
+    "retry": "נסה שוב",
+    "chooseAnotherLocation": "בחר מיקום אחר",
+    "continue": "המשך"
   },
   "input": {
     "fromDevice": "מהמכשיר שלך",

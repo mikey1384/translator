@@ -41,6 +41,7 @@
     "packages/main/dist/**/*",
     "packages/main/boot.mjs",
     "packages/renderer/dist/**/*",
+    "packages/renderer/locales/**/*",
     "index.js",
     "package.json",
     "packages/main/package.json",

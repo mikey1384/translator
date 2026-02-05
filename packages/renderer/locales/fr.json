@@ -58,7 +58,9 @@
     "installUpdate": "Redémarrer pour Mettre à Jour",
     "confirmInstallUpdate": "Installer la mise à jour et redémarrer ?",
     "downloadUpdate": "Cliquer pour télécharger la mise à jour",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "chooseAnotherLocation": "Choisir un autre emplacement",
+    "continue": "Continuer"
   },
   "input": {
     "fromDevice": "Depuis votre appareil",

@@ -58,7 +58,9 @@
     "installUpdate": "Repornește pentru actualizare",
     "confirmInstallUpdate": "Instalează actualizarea și repornește?",
     "downloadUpdate": "Faceți clic pentru a descărca actualizarea",
-    "retry": "Reîncearcă"
+    "retry": "Reîncearcă",
+    "chooseAnotherLocation": "Alege o altă locație",
+    "continue": "Continuă"
   },
   "input": {
     "fromDevice": "De pe dispozitivul tău",

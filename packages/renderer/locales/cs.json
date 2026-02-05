@@ -58,7 +58,9 @@
     "installUpdate": "Restartovat pro aktualizaci",
     "confirmInstallUpdate": "Nainstalovat aktualizaci a restartovat?",
     "downloadUpdate": "Klikněte pro stažení aktualizace",
-    "retry": "Opakovat"
+    "retry": "Opakovat",
+    "chooseAnotherLocation": "Vybrat jiné umístění",
+    "continue": "Pokračovat"
   },
   "input": {
     "fromDevice": "Z vašeho zařízení",

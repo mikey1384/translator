@@ -58,7 +58,9 @@
     "installUpdate": "Neu starten für Update",
     "confirmInstallUpdate": "Update installieren und neu starten?",
     "downloadUpdate": "Klicken zum Update herunterladen",
-    "retry": "Wiederholen"
+    "retry": "Wiederholen",
+    "chooseAnotherLocation": "Anderen Speicherort wählen",
+    "continue": "Weiter"
   },
   "input": {
     "fromDevice": "Von Ihrem Gerät",

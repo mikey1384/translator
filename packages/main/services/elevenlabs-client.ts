@@ -1,9 +1,9 @@
 import axios from 'axios';
-import fs from 'fs';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
 import { API_TIMEOUTS } from '../../shared/constants/index.js';
+import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
 
@@ -129,7 +129,8 @@ export async function transcribeWithElevenLabs({
   idempotencyKey,
 }: ElevenLabsTranscribeOptions): Promise<ElevenLabsTranscribeResult> {
   const form = new FormData();
-  form.append('file', fs.createReadStream(filePath));
+  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+  form.append('file', stream);
   form.append('model_id', 'scribe_v2');
   if (languageCode && languageCode !== 'auto') {
     form.append('language_code', languageCode);
@@ -145,19 +146,23 @@ export async function transcribeWithElevenLabs({
     ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
   };
 
-  const response = await axios.post(
-    `${ELEVENLABS_BASE_URL}/speech-to-text`,
-    form,
-    {
-      headers,
-      signal,
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      timeout: 600_000, // 10 minutes for long audio
-    }
-  );
+  try {
+    const response = await axios.post(
+      `${ELEVENLABS_BASE_URL}/speech-to-text`,
+      form,
+      {
+        headers,
+        signal,
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        timeout: 600_000, // 10 minutes for long audio
+      }
+    );
 
-  return response.data;
+    return response.data;
+  } finally {
+    cleanup();
+  }
 }
 
 export async function synthesizeDubWithElevenLabs({
@@ -366,7 +371,8 @@ export async function submitDubbingJob({
   expectedDurationSec: number;
 }> {
   const form = new FormData();
-  form.append('file', fs.createReadStream(filePath));
+  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+  form.append('file', stream);
   form.append('target_lang', targetLanguage);
 
   if (sourceLanguage) {
@@ -379,21 +385,25 @@ export async function submitDubbingJob({
     form.append('drop_background_audio', 'true');
   }
 
-  const response = await axios.post(`${ELEVENLABS_BASE_URL}/dubbing`, form, {
-    headers: {
-      ...form.getHeaders(),
-      'xi-api-key': apiKey,
-    },
-    signal,
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-    timeout: 120_000, // 2 minutes for upload
-  });
+  try {
+    const response = await axios.post(`${ELEVENLABS_BASE_URL}/dubbing`, form, {
+      headers: {
+        ...form.getHeaders(),
+        'xi-api-key': apiKey,
+      },
+      signal,
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      timeout: 120_000, // 2 minutes for upload
+    });
 
-  return {
-    dubbingId: response.data.dubbing_id,
-    expectedDurationSec: response.data.expected_duration_sec ?? 60,
-  };
+    return {
+      dubbingId: response.data.dubbing_id,
+      expectedDurationSec: response.data.expected_duration_sec ?? 60,
+    };
+  } finally {
+    cleanup();
+  }
 }
 
 /**

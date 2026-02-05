@@ -58,7 +58,9 @@
     "installUpdate": "Mula semula untuk kemas kini",
     "confirmInstallUpdate": "Pasang kemas kini dan mula semula?",
     "downloadUpdate": "Klik untuk muat turun kemas kini",
-    "retry": "Cuba Semula"
+    "retry": "Cuba Semula",
+    "chooseAnotherLocation": "Pilih lokasi lain",
+    "continue": "Teruskan"
   },
   "errors": {
     "needCookies": "YouTube meminta pengesahan manusia. Klik Sambung untuk meneruskan.",

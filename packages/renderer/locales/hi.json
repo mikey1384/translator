@@ -58,7 +58,9 @@
       "srtFiles": "SRT फ़ाइलें",
       "mediaFiles": "मीडिया फ़ाइलें",
       "videoFiles": "वीडियो फ़ाइलें"
-    }
+    },
+    "chooseAnotherLocation": "कोई अन्य स्थान चुनें",
+    "continue": "जारी रखें"
   },
   "input": {
     "connect": "कनेक्ट करें",

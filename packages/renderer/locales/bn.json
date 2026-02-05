@@ -58,7 +58,9 @@
     "installUpdate": "আপডেটের জন্য পুনরায় চালু করুন",
     "confirmInstallUpdate": "আপডেট ইনস্টল করে পুনরায় চালু করবেন?",
     "downloadUpdate": "আপডেট ডাউনলোড করতে ক্লিক করুন",
-    "retry": "আবার চেষ্টা করুন"
+    "retry": "আবার চেষ্টা করুন",
+    "chooseAnotherLocation": "অন্য একটি অবস্থান বেছে নিন",
+    "continue": "চালিয়ে যান"
   },
   "input": {
     "fromDevice": "আপনার ডিভাইস থেকে",

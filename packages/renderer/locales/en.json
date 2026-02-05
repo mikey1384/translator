@@ -58,7 +58,9 @@
       "srtFiles": "SRT Files",
       "mediaFiles": "Media Files",
       "videoFiles": "Video Files"
-    }
+    },
+    "chooseAnotherLocation": "Choose another location",
+    "continue": "Continue"
   },
   "errors": {
     "needCookies": "YouTube asked for a human check. Click Connect to continue.",

@@ -58,7 +58,9 @@
     "installUpdate": "Start på nytt for å oppdatere",
     "confirmInstallUpdate": "Installer oppdatering og start på nytt?",
     "downloadUpdate": "Klikk for å laste ned oppdatering",
-    "retry": "Prøv igjen"
+    "retry": "Prøv igjen",
+    "chooseAnotherLocation": "Velg en annen plassering",
+    "continue": "Fortsett"
   },
   "input": {
     "fromDevice": "Fra enheten din",

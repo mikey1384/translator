@@ -58,7 +58,9 @@
     "installUpdate": "Herstart voor Update",
     "confirmInstallUpdate": "Update installeren en herstarten?",
     "downloadUpdate": "Klik om update te downloaden",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "chooseAnotherLocation": "Kies een andere locatie",
+    "continue": "Doorgaan"
   },
   "input": {
     "fromDevice": "Van je apparaat",

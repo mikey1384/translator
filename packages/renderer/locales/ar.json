@@ -58,7 +58,9 @@
       "srtFiles": "ملفات SRT",
       "mediaFiles": "ملفات الوسائط",
       "videoFiles": "ملفات الفيديو"
-    }
+    },
+    "chooseAnotherLocation": "اختر موقعًا آخر",
+    "continue": "متابعة"
   },
   "input": {
     "fromDevice": "من جهازك",

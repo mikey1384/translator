@@ -58,7 +58,9 @@
       "srtFiles": "فایل‌های SRT",
       "mediaFiles": "فایل‌های رسانه",
       "videoFiles": "فایل‌های ویدیو"
-    }
+    },
+    "chooseAnotherLocation": "مکان دیگری را انتخاب کنید",
+    "continue": "ادامه"
   },
   "input": {
     "connect": "اتصال",

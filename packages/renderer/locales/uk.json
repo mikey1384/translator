@@ -58,7 +58,9 @@
       "srtFiles": "Файли SRT",
       "mediaFiles": "Медіа файли",
       "videoFiles": "Відео файли"
-    }
+    },
+    "chooseAnotherLocation": "Вибрати інше розташування",
+    "continue": "Продовжити"
   },
   "errors": {
     "needCookies": "YouTube запросив перевірку. Натисніть «Підключити», щоб продовжити.",

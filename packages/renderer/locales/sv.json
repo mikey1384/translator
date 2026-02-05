@@ -58,7 +58,9 @@
       "srtFiles": "SRT-filer",
       "mediaFiles": "Mediefiler",
       "videoFiles": "Videofiler"
-    }
+    },
+    "chooseAnotherLocation": "Välj en annan plats",
+    "continue": "Fortsätt"
   },
   "errors": {
     "needCookies": "YouTube begärde en mänsklig verifiering. Klicka på Anslut för att fortsätta.",

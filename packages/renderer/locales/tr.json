@@ -58,7 +58,9 @@
       "srtFiles": "SRT Dosyaları",
       "mediaFiles": "Medya Dosyaları",
       "videoFiles": "Video Dosyaları"
-    }
+    },
+    "chooseAnotherLocation": "Başka bir konum seç",
+    "continue": "Devam et"
   },
   "input": {
     "connect": "Bağlan",

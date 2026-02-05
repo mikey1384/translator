@@ -58,7 +58,9 @@
     "installUpdate": "Перезапустить для обновления",
     "confirmInstallUpdate": "Установить обновление и перезапустить?",
     "downloadUpdate": "Нажмите для загрузки обновления",
-    "retry": "Повторить"
+    "retry": "Повторить",
+    "chooseAnotherLocation": "Выбрать другое расположение",
+    "continue": "Продолжить"
   },
   "input": {
     "fromDevice": "С вашего устройства",

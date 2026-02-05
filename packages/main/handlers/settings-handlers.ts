@@ -45,27 +45,29 @@ export function buildSettingsHandlers(opts: {
   store: SettingsStoreType;
   isDev: boolean;
 }) {
-  const { store, isDev } = opts;
+  const { store } = opts;
 
   /* ─────────── get-locale-url ─────────── */
   async function getLocaleUrl(_evt: any, lang: string): Promise<string | null> {
     try {
-      const localeDirPath = isDev
-        ? path.join(app.getAppPath(), '..', 'src', 'renderer', 'locales')
-        : path.join(
-            app.getAppPath(),
-            'packages',
-            'renderer',
-            'dist',
-            'locales'
-          );
+      const candidates = [
+        path.join(app.getAppPath(), 'packages', 'renderer', 'dist', 'locales'),
+        path.join(app.getAppPath(), 'packages', 'renderer', 'locales'),
+        path.join(process.cwd(), 'packages', 'renderer', 'dist', 'locales'),
+        path.join(process.cwd(), 'packages', 'renderer', 'locales'),
+      ];
 
-      const localePath = path.join(localeDirPath, `${lang}.json`);
-      const localeUrl = pathToFileURL(localePath).toString();
-
-      await fsPromises.access(localePath, fsPromises.constants.R_OK);
-      log.info(`[settings] Using locale file: ${localePath}`);
-      return localeUrl;
+      for (const dir of candidates) {
+        const localePath = path.join(dir, `${lang}.json`);
+        try {
+          await fsPromises.access(localePath, fsPromises.constants.R_OK);
+          log.info(`[settings] Using locale file: ${localePath}`);
+          return pathToFileURL(localePath).toString();
+        } catch {
+          // Try next candidate
+        }
+      }
+      return null;
     } catch (err: any) {
       log.error('[settings] Cannot access locale file:', err);
       return null;

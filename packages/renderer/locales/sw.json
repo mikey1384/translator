@@ -58,7 +58,9 @@
     "installUpdate": "Anzisha upya ili kusasisha",
     "confirmInstallUpdate": "Sakinisha sasishwa na uanzishe upya?",
     "downloadUpdate": "Bonyeza ili kupakua sasishwa",
-    "retry": "Jaribu tena"
+    "retry": "Jaribu tena",
+    "chooseAnotherLocation": "Chagua eneo jingine",
+    "continue": "Endelea"
   },
   "input": {
     "fromDevice": "Kutoka kwenye kifaa chako",

@@ -202,7 +202,15 @@ export async function cancelSafely(id: string): Promise<boolean> {
               entry.handle.kill('SIGTERM');
             }
           } else {
-            // Non-Windows: use regular SIGTERM
+            // Non-Windows: try to kill the whole process group first (covers yt-dlp → ffmpeg),
+            // then fall back to the direct handle kill.
+            if (entry.handle.pid) {
+              try {
+                process.kill(-entry.handle.pid, sig);
+              } catch {
+                // ignore; fall back to direct kill
+              }
+            }
             entry.handle.kill(sig);
           }
         }

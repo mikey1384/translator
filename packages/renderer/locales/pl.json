@@ -58,7 +58,9 @@
       "srtFiles": "Pliki SRT",
       "mediaFiles": "Pliki multimedialne",
       "videoFiles": "Pliki wideo"
-    }
+    },
+    "chooseAnotherLocation": "Wybierz inną lokalizację",
+    "continue": "Kontynuuj"
   },
   "errors": {
     "needCookies": "YouTube poprosił o weryfikację człowieka. Kliknij Połącz, aby kontynuować.",

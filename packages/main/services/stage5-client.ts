@@ -9,6 +9,7 @@ import {
 } from '../../shared/constants/index.js';
 import { getDeviceId } from '../handlers/credit-handlers.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
+import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 export const STAGE5_API_URL = 'https://api.stage5.tools';
 
@@ -53,7 +54,8 @@ export async function transcribe({
   }
 
   const fd = new FormData();
-  fd.append('file', fs.createReadStream(filePath));
+  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+  fd.append('file', stream);
 
   // Language hint removed; rely on auto-detection server-side
 
@@ -178,6 +180,8 @@ export async function transcribe({
       sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
     }
     throw error;
+  } finally {
+    cleanup();
   }
 }
 
@@ -571,7 +575,8 @@ export async function transcribeViaDirect({
   const fileSizeMB = stats.size / (1024 * 1024);
 
   const fd = new FormData();
-  fd.append('file', fs.createReadStream(filePath));
+  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+  fd.append('file', stream);
   if (language) {
     fd.append('language', language);
   }
@@ -676,6 +681,8 @@ export async function transcribeViaDirect({
     }
 
     throw error;
+  } finally {
+    cleanup();
   }
 }
 

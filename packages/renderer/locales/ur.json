@@ -58,7 +58,9 @@
       "srtFiles": "SRT فائلز",
       "mediaFiles": "میڈیا فائلز",
       "videoFiles": "ویڈیو فائلز"
-    }
+    },
+    "chooseAnotherLocation": "کوئی اور مقام منتخب کریں",
+    "continue": "جاری رکھیں"
   },
   "input": {
     "fromDevice": "آپ کے آلے سے",

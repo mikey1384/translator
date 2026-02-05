@@ -58,7 +58,9 @@
     "installUpdate": "重启以更新",
     "confirmInstallUpdate": "安装更新并重启？",
     "downloadUpdate": "点击下载更新",
-    "retry": "重试"
+    "retry": "重试",
+    "chooseAnotherLocation": "选择其他位置",
+    "continue": "继续"
   },
   "input": {
     "fromDevice": "从您的设备",

@@ -58,7 +58,9 @@
     "installUpdate": "Επανεκκίνηση για ενημέρωση",
     "confirmInstallUpdate": "Εγκατάσταση ενημέρωσης και επανεκκίνηση;",
     "downloadUpdate": "Κάντε κλικ για λήψη ενημέρωσης",
-    "retry": "Επανάληψη"
+    "retry": "Επανάληψη",
+    "chooseAnotherLocation": "Επιλέξτε άλλη τοποθεσία",
+    "continue": "Συνέχεια"
   },
   "input": {
     "fromDevice": "Από τη συσκευή σας",

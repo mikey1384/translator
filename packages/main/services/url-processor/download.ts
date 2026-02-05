@@ -122,6 +122,15 @@ async function warmupFfmpeg(ffmpegPath: string): Promise<void> {
 }
 
 function hardKill(proc: any): void {
+  if (process.platform !== 'win32' && proc?.pid) {
+    // If yt-dlp was spawned detached, this kills the whole process group,
+    // including any child ffmpeg processes.
+    try {
+      process.kill(-proc.pid, 'SIGTERM');
+    } catch {
+      // fall through to best-effort single-process kill
+    }
+  }
   try {
     proc?.kill('SIGTERM');
   } catch {
@@ -618,6 +627,9 @@ export async function downloadVideoFromPlatform(
           buffer: false,
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: outputDir,
+          // On Unix, run yt-dlp in its own process group so we can reliably kill
+          // yt-dlp + any child ffmpeg processes on cancellation.
+          detached: process.platform !== 'win32',
           env: {
             ...childEnv(),
             ...(runElectronAsNode ? { ELECTRON_RUN_AS_NODE: '1' } : {}),

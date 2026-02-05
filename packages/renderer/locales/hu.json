@@ -58,7 +58,9 @@
     "installUpdate": "Újraindítás frissítéshez",
     "confirmInstallUpdate": "Telepíti a frissítést és újraindítja?",
     "downloadUpdate": "Kattintson a frissítés letöltéséhez",
-    "retry": "Újra"
+    "retry": "Újra",
+    "chooseAnotherLocation": "Válassz másik helyet",
+    "continue": "Folytatás"
   },
   "input": {
     "fromDevice": "Az eszközödről",

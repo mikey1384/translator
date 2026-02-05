@@ -58,7 +58,9 @@
     "installUpdate": "Khởi động lại để cập nhật",
     "confirmInstallUpdate": "Cài đặt bản cập nhật và khởi động lại?",
     "downloadUpdate": "Nhấp để tải xuống bản cập nhật",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "chooseAnotherLocation": "Chọn vị trí khác",
+    "continue": "Tiếp tục"
   },
   "input": {
     "fromDevice": "Từ thiết bị của bạn",
@@ -279,7 +281,7 @@
       "toggleOff": "Đang sử dụng tín dụng Stage5 cho các tác vụ AI.",
       "toggleError": "Không thể cập nhật tùy chọn.",
       "howToGetKeys": "Làm thế nào để lấy API key?",
-    "option1Title": "Tùy chọn 1: OpenAI",
+      "option1Title": "Tùy chọn 1: OpenAI",
       "option2Title": "Tùy chọn 2: Anthropic + ElevenLabs",
       "economicsTitle": "Tại sao đáng giá",
       "economicsBody": "Tín dụng Stage5 tối ưu hóa sự tiện lợi (không cần cài đặt). BYO thanh toán trực tiếp cho nhà cung cấp—thường rẻ hơn ~30–50% tùy thuộc vào gói của bạn."

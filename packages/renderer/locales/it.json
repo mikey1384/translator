@@ -58,7 +58,9 @@
     "installUpdate": "Riavvia per Aggiornare",
     "confirmInstallUpdate": "Installare aggiornamento e riavviare?",
     "downloadUpdate": "Clicca per scaricare aggiornamento",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "chooseAnotherLocation": "Scegli un'altra posizione",
+    "continue": "Continua"
   },
   "input": {
     "fromDevice": "Dal tuo dispositivo",
@@ -663,4 +665,3 @@
     "deviceInfoHeader": "Informazioni dispositivo"
   }
 }
-

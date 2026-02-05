@@ -58,7 +58,9 @@
     "installUpdate": "รีสตาร์ทเพื่ออัปเดต",
     "confirmInstallUpdate": "ติดตั้งการอัปเดตและรีสตาร์ท?",
     "downloadUpdate": "คลิกเพื่อดาวน์โหลดการอัปเดต",
-    "retry": "ลองใหม่"
+    "retry": "ลองใหม่",
+    "chooseAnotherLocation": "เลือกตำแหน่งอื่น",
+    "continue": "ดำเนินการต่อ"
   },
   "input": {
     "fromDevice": "จากอุปกรณ์ของคุณ",

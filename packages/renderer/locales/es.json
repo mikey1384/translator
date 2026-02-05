@@ -58,7 +58,9 @@
     "installUpdate": "Reiniciar para Actualizar",
     "confirmInstallUpdate": "¿Instalar actualización y reiniciar?",
     "downloadUpdate": "Haz clic para descargar actualización",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "chooseAnotherLocation": "Elegir otra ubicación",
+    "continue": "Continuar"
   },
   "input": {
     "fromDevice": "Desde tu dispositivo",

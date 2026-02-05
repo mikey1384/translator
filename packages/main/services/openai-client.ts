@@ -1,9 +1,9 @@
 import axios from 'axios';
-import fs from 'fs';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
 import { AI_MODELS } from '@shared/constants';
+import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
 
@@ -58,7 +58,13 @@ export async function transcribeWithOpenAi({
   signal,
 }: OpenAiTranscribeOptions): Promise<any> {
   const form = new FormData();
-  form.append('file', fs.createReadStream(filePath));
+  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+  try {
+    form.append('file', stream);
+  } catch {
+    cleanup();
+    throw new Error('Failed to open audio file for transcription');
+  }
   form.append('model', model);
   form.append('response_format', 'verbose_json');
   // Request word-level timestamps for better subtitle segmentation
@@ -73,18 +79,22 @@ export async function transcribeWithOpenAi({
     Authorization: `Bearer ${apiKey}`,
   };
 
-  const response = await axios.post(
-    `${OPENAI_BASE_URL}/audio/transcriptions`,
-    form,
-    {
-      headers,
-      signal,
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-    }
-  );
+  try {
+    const response = await axios.post(
+      `${OPENAI_BASE_URL}/audio/transcriptions`,
+      form,
+      {
+        headers,
+        signal,
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      }
+    );
 
-  return response.data;
+    return response.data;
+  } finally {
+    cleanup();
+  }
 }
 
 export async function translateWithOpenAi({

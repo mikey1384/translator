@@ -23,6 +23,7 @@ import { generateStatePngs } from './state-generator.js';
 import { directMerge } from './ffmpeg-direct-merge.js';
 import { probeFps } from './ffprobe-utils.js';
 import { getFocusedOrMainWindow } from '../../utils/window.js';
+import { getMainT } from '../../utils/i18n.js';
 import { HEARTBEAT_INTERVAL_MS } from '../../../shared/constants/runtime-config.js';
 import { ERROR_CODES } from '../../../shared/constants/index.js';
 import { settingsStore } from '../../store/settings-store.js';
@@ -82,6 +83,57 @@ function formatBytes(bytes: number): string {
   }
   const decimals = unitIndex <= 1 ? 0 : value >= 10 ? 0 : 1;
   return `${value.toFixed(decimals)} ${units[unitIndex]}`;
+}
+
+function formatTimestampForFilename(d = new Date()): string {
+  // Avoid ":" and other chars that are illegal on Windows.
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}` +
+    `${pad2(d.getMonth() + 1)}` +
+    `${pad2(d.getDate())}` +
+    `-${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`
+  );
+}
+
+async function fileExists(p: string): Promise<boolean> {
+  try {
+    await fs.access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function renameExistingFileToBackup(
+  existingPath: string,
+  operationId: string
+): Promise<string | null> {
+  try {
+    const st = await fs.stat(existingPath);
+    if (!st.isFile()) return null;
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') return null;
+    throw err;
+  }
+
+  const dir = path.dirname(existingPath);
+  const ext = path.extname(existingPath);
+  const base = path.basename(existingPath, ext);
+  const stamp = formatTimestampForFilename();
+
+  let backupPath = path.join(dir, `${base}.backup-${stamp}${ext}`);
+  let attempt = 1;
+  while (await fileExists(backupPath)) {
+    backupPath = path.join(dir, `${base}.backup-${stamp}-${attempt}${ext}`);
+    attempt += 1;
+  }
+
+  await fs.rename(existingPath, backupPath);
+  log.warn(
+    `[${operationId}] Destination already existed; moved previous file to: ${backupPath}`
+  );
+  return backupPath;
 }
 
 function normalizeRenderFailure(
@@ -358,10 +410,11 @@ export function initializeRenderWindowHandlers({
         } catch {
           /* noop */
         }
-        const suggestedName = `${path.basename(
+        const baseName = path.basename(
           options.originalVideoPath,
           path.extname(options.originalVideoPath)
-        )}-merged.mp4`;
+        );
+        const suggestedName = `${baseName}-merged-${formatTimestampForFilename()}.mp4`;
 
         let heartbeatPercent = 96;
         let heartbeatStage = 'Waiting for save location…';
@@ -372,7 +425,9 @@ export function initializeRenderWindowHandlers({
         let canceled = false;
         let userPath: string | undefined;
         try {
-          const mergedSizeBytes = (await fs.stat(tempMerged)).size;
+          const srcStat = await fs.stat(tempMerged);
+          const mergedSizeBytes = srcStat.size;
+          const srcDev = srcStat.dev;
 
           sendProgress({
             percent: 96,
@@ -405,86 +460,179 @@ export function initializeRenderWindowHandlers({
             sendProgress({ percent: 98, stage: 'Saving…' });
             heartbeatPercent = 98;
             heartbeatStage = 'Saving…';
+            const destDir = path.dirname(userPath);
+            let sameDevice = false;
             try {
-              await fs.rename(tempMerged, userPath);
-              break;
-            } catch (moveErr: any) {
-              // Cross-device move (e.g. temp dir → external drive / iCloud) requires copy+unlink.
-              if (moveErr?.code !== 'EXDEV') throw moveErr;
+              sameDevice = (await fs.stat(destDir)).dev === srcDev;
+            } catch {
+              // If we can't stat, assume cross-device and fall back to copy.
+              sameDevice = false;
+            }
 
-              // Destination disk space preflight: only relevant when we must copy bytes.
+            if (sameDevice) {
+              let backupPath: string | null = null;
               try {
-                const destDir = path.dirname(userPath);
-                const stat = await fs.statfs(destDir);
-                const destFreeBytes = Number(stat.bavail) * Number(stat.bsize);
-
-                const SAFETY_MULTIPLIER = 1.1; // "around" the need
-                const warnBelowBytes = mergedSizeBytes * SAFETY_MULTIPLIER;
-
-                if (
-                  mergedSizeBytes > 0 &&
-                  destFreeBytes > 0 &&
-                  destFreeBytes <= warnBelowBytes
-                ) {
-                  const lang = getLanguagePreference().toLowerCase();
-                  const isKo = lang.startsWith('ko');
-
-                  const title = isKo ? '저장공간 부족' : 'Low Disk Space';
-                  const message = isKo
-                    ? '선택한 저장 위치의 여유 공간이 부족할 수 있습니다.'
-                    : 'The selected save location may not have enough free space.';
-                  const detail = isKo
-                    ? `필요: 약 ${formatBytes(mergedSizeBytes)}\n남은 공간: 약 ${formatBytes(destFreeBytes)}\n\n계속 진행할까요?`
-                    : `Need ~${formatBytes(mergedSizeBytes)} free\nAvailable ~${formatBytes(destFreeBytes)}\n\nContinue anyway?`;
-
-                  const { response } = await dialog.showMessageBox(win, {
-                    type: 'warning',
-                    title,
-                    message,
-                    detail,
-                    buttons: isKo
-                      ? ['다른 위치 선택', '계속', '취소']
-                      : ['Choose another location', 'Continue', 'Cancel'],
-                    defaultId: 1,
-                    cancelId: 2,
-                    noLink: true,
-                  });
-
-                  if (response === 0) {
-                    // Choose another location
-                    heartbeatPercent = 96;
-                    heartbeatStage = 'Waiting for save location…';
-                    sendProgress({
-                      percent: heartbeatPercent,
-                      stage: heartbeatStage,
-                    });
-                    continue;
-                  }
-                  if (response === 2) {
-                    // Cancel
+                // Avoid overwriting existing files (which can create `.fuse_hidden*` on FUSE mounts).
+                backupPath = await renameExistingFileToBackup(
+                  userPath,
+                  operationId
+                );
+                await fs.rename(tempMerged, userPath);
+                break;
+              } catch (saveErr: any) {
+                if (backupPath) {
+                  try {
+                    const [destExists, backupExists] = await Promise.all([
+                      fileExists(userPath),
+                      fileExists(backupPath),
+                    ]);
+                    if (!destExists && backupExists) {
+                      await fs.rename(backupPath, userPath);
+                    }
+                  } catch (restoreErr) {
                     log.warn(
-                      `[${operationId}] User cancelled due to low disk space warning`
+                      `[${operationId}] Failed to restore existing destination after save error`,
+                      restoreErr
                     );
-                    await fs.unlink(tempMerged).catch(() => void 0);
-                    event.reply('render-subtitles-result', {
-                      operationId,
-                      success: false,
-                      error: 'Cancelled',
-                      cancelled: true,
-                    });
-                    return;
                   }
-                  // Continue
                 }
-              } catch {
-                // Best-effort only: never block saving if the check fails.
+                log.warn(
+                  `[${operationId}] Failed to save merged video to ${userPath}`,
+                  saveErr
+                );
+                heartbeatPercent = 96;
+                heartbeatStage = 'Waiting for save location…';
+                sendProgress({
+                  percent: heartbeatPercent,
+                  stage: heartbeatStage,
+                });
+                continue;
               }
+            }
+
+            // Cross-device save (e.g. temp dir → external drive / iCloud): copy+rename.
+            // Destination disk space preflight: only relevant when we must copy bytes.
+            try {
+              const stat = await fs.statfs(destDir);
+              const destFreeBytes = Number(stat.bavail) * Number(stat.bsize);
+
+              const SAFETY_MULTIPLIER = 1.1; // "around" the need
+              const warnBelowBytes = mergedSizeBytes * SAFETY_MULTIPLIER;
+
+              if (
+                mergedSizeBytes > 0 &&
+                destFreeBytes > 0 &&
+                destFreeBytes <= warnBelowBytes
+              ) {
+                const lang = getLanguagePreference();
+                const t = await getMainT(lang);
+
+                const message = t(
+                  'dialogs.mergeLowDiskSpaceConfirm',
+                  {
+                    need: formatBytes(mergedSizeBytes),
+                    free: formatBytes(destFreeBytes),
+                  },
+                  'Low disk space detected. This merge may need ~{{need}} free space, but only ~{{free}} is available. Continue anyway?'
+                );
+
+                const { response } = await dialog.showMessageBox(win, {
+                  type: 'warning',
+                  title: app.getName(),
+                  message,
+                  buttons: [
+                    t(
+                      'common.chooseAnotherLocation',
+                      undefined,
+                      'Choose another location'
+                    ),
+                    t('common.continue', undefined, 'Continue'),
+                    t('common.cancel', undefined, 'Cancel'),
+                  ],
+                  defaultId: 1,
+                  cancelId: 2,
+                  noLink: true,
+                });
+
+                if (response === 0) {
+                  // Choose another location
+                  heartbeatPercent = 96;
+                  heartbeatStage = 'Waiting for save location…';
+                  sendProgress({
+                    percent: heartbeatPercent,
+                    stage: heartbeatStage,
+                  });
+                  continue;
+                }
+                if (response === 2) {
+                  // Cancel (abort save)
+                  log.warn(
+                    `[${operationId}] User cancelled due to low disk space warning`
+                  );
+                  await fs.unlink(tempMerged).catch(() => void 0);
+                  event.reply('render-subtitles-result', {
+                    operationId,
+                    success: false,
+                    error: 'Cancelled',
+                    cancelled: true,
+                  });
+                  return;
+                }
+                // Continue (copy)
+              }
+            } catch {
+              // Best-effort only: never block saving if the check fails.
+            }
+
+            const tempDest = path.join(
+              destDir,
+              `translator_tmp_${operationId}_${Date.now()}.mp4`
+            );
+            let backupPath: string | null = null;
+            try {
+              // Same rationale as above: avoid truncating/replacing an existing file in-place.
+              backupPath = await renameExistingFileToBackup(
+                userPath,
+                operationId
+              );
 
               heartbeatStage = 'Copying to destination…';
               sendProgress({ percent: 98, stage: heartbeatStage });
-              await fs.copyFile(tempMerged, userPath);
+              await fs.copyFile(tempMerged, tempDest);
+              await fs.rename(tempDest, userPath);
               await fs.unlink(tempMerged).catch(() => void 0);
               break;
+            } catch (copyErr: any) {
+              await fs.unlink(tempDest).catch(() => void 0);
+
+              if (backupPath) {
+                try {
+                  const [destExists, backupExists] = await Promise.all([
+                    fileExists(userPath),
+                    fileExists(backupPath),
+                  ]);
+                  if (!destExists && backupExists) {
+                    await fs.rename(backupPath, userPath);
+                  }
+                } catch (restoreErr) {
+                  log.warn(
+                    `[${operationId}] Failed to restore existing destination after copy error`,
+                    restoreErr
+                  );
+                }
+              }
+
+              log.warn(
+                `[${operationId}] Failed to copy merged video to ${userPath}`,
+                copyErr
+              );
+              heartbeatPercent = 96;
+              heartbeatStage = 'Waiting for save location…';
+              sendProgress({
+                percent: heartbeatPercent,
+                stage: heartbeatStage,
+              });
+              continue;
             }
           }
         } finally {

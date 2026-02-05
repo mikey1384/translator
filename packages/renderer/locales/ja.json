@@ -58,7 +58,9 @@
     "installUpdate": "再起動してアップデート",
     "confirmInstallUpdate": "アップデートをインストールして再起動しますか？",
     "downloadUpdate": "クリックしてアップデートをダウンロード",
-    "retry": "再試行"
+    "retry": "再試行",
+    "chooseAnotherLocation": "別の場所を選択",
+    "continue": "続行"
   },
   "input": {
     "fromDevice": "デバイスから",
