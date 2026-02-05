@@ -402,92 +402,89 @@ export function initializeRenderWindowHandlers({
               return;
             }
 
-            // Destination disk space preflight: warn before a potentially long copy/rename.
+            sendProgress({ percent: 98, stage: 'Saving…' });
+            heartbeatPercent = 98;
+            heartbeatStage = 'Saving…';
             try {
-              const destDir = path.dirname(userPath);
-              const stat = await fs.statfs(destDir);
-              const destFreeBytes = Number(stat.bavail) * Number(stat.bsize);
+              await fs.rename(tempMerged, userPath);
+              break;
+            } catch (moveErr: any) {
+              // Cross-device move (e.g. temp dir → external drive / iCloud) requires copy+unlink.
+              if (moveErr?.code !== 'EXDEV') throw moveErr;
 
-              const SAFETY_MULTIPLIER = 1.1; // "around" the need
-              const warnBelowBytes = mergedSizeBytes * SAFETY_MULTIPLIER;
+              // Destination disk space preflight: only relevant when we must copy bytes.
+              try {
+                const destDir = path.dirname(userPath);
+                const stat = await fs.statfs(destDir);
+                const destFreeBytes = Number(stat.bavail) * Number(stat.bsize);
 
-              if (
-                mergedSizeBytes > 0 &&
-                destFreeBytes > 0 &&
-                destFreeBytes <= warnBelowBytes
-              ) {
-                const lang = getLanguagePreference().toLowerCase();
-                const isKo = lang.startsWith('ko');
+                const SAFETY_MULTIPLIER = 1.1; // "around" the need
+                const warnBelowBytes = mergedSizeBytes * SAFETY_MULTIPLIER;
 
-                const title = isKo ? '저장공간 부족' : 'Low Disk Space';
-                const message = isKo
-                  ? '선택한 저장 위치의 여유 공간이 부족할 수 있습니다.'
-                  : 'The selected save location may not have enough free space.';
-                const detail = isKo
-                  ? `필요: 약 ${formatBytes(mergedSizeBytes)}\n남은 공간: 약 ${formatBytes(destFreeBytes)}\n\n계속 진행할까요?`
-                  : `Need ~${formatBytes(mergedSizeBytes)} free\nAvailable ~${formatBytes(destFreeBytes)}\n\nContinue anyway?`;
+                if (
+                  mergedSizeBytes > 0 &&
+                  destFreeBytes > 0 &&
+                  destFreeBytes <= warnBelowBytes
+                ) {
+                  const lang = getLanguagePreference().toLowerCase();
+                  const isKo = lang.startsWith('ko');
 
-                const { response } = await dialog.showMessageBox(win, {
-                  type: 'warning',
-                  title,
-                  message,
-                  detail,
-                  buttons: isKo
-                    ? ['다른 위치 선택', '계속', '취소']
-                    : ['Choose another location', 'Continue', 'Cancel'],
-                  defaultId: 1,
-                  cancelId: 2,
-                  noLink: true,
-                });
+                  const title = isKo ? '저장공간 부족' : 'Low Disk Space';
+                  const message = isKo
+                    ? '선택한 저장 위치의 여유 공간이 부족할 수 있습니다.'
+                    : 'The selected save location may not have enough free space.';
+                  const detail = isKo
+                    ? `필요: 약 ${formatBytes(mergedSizeBytes)}\n남은 공간: 약 ${formatBytes(destFreeBytes)}\n\n계속 진행할까요?`
+                    : `Need ~${formatBytes(mergedSizeBytes)} free\nAvailable ~${formatBytes(destFreeBytes)}\n\nContinue anyway?`;
 
-                if (response === 1) {
-                  // Continue
-                  break;
-                }
-                if (response === 0) {
-                  // Choose another location
-                  heartbeatPercent = 96;
-                  heartbeatStage = 'Waiting for save location…';
-                  sendProgress({
-                    percent: heartbeatPercent,
-                    stage: heartbeatStage,
+                  const { response } = await dialog.showMessageBox(win, {
+                    type: 'warning',
+                    title,
+                    message,
+                    detail,
+                    buttons: isKo
+                      ? ['다른 위치 선택', '계속', '취소']
+                      : ['Choose another location', 'Continue', 'Cancel'],
+                    defaultId: 1,
+                    cancelId: 2,
+                    noLink: true,
                   });
-                  continue;
+
+                  if (response === 0) {
+                    // Choose another location
+                    heartbeatPercent = 96;
+                    heartbeatStage = 'Waiting for save location…';
+                    sendProgress({
+                      percent: heartbeatPercent,
+                      stage: heartbeatStage,
+                    });
+                    continue;
+                  }
+                  if (response === 2) {
+                    // Cancel
+                    log.warn(
+                      `[${operationId}] User cancelled due to low disk space warning`
+                    );
+                    await fs.unlink(tempMerged).catch(() => void 0);
+                    event.reply('render-subtitles-result', {
+                      operationId,
+                      success: false,
+                      error: 'Cancelled',
+                      cancelled: true,
+                    });
+                    return;
+                  }
+                  // Continue
                 }
-                // Cancel
-                log.warn(
-                  `[${operationId}] User cancelled due to low disk space warning`
-                );
-                await fs.unlink(tempMerged).catch(() => void 0);
-                event.reply('render-subtitles-result', {
-                  operationId,
-                  success: false,
-                  error: 'Cancelled',
-                  cancelled: true,
-                });
-                return;
+              } catch {
+                // Best-effort only: never block saving if the check fails.
               }
-            } catch {
-              // Best-effort only: never block saving if the check fails.
-            }
 
-            break;
-          }
-
-          sendProgress({ percent: 98, stage: 'Saving…' });
-          heartbeatPercent = 98;
-          heartbeatStage = 'Saving…';
-          try {
-            await fs.rename(tempMerged, userPath);
-          } catch (moveErr: any) {
-            // Cross-device move (e.g. temp dir → external drive / iCloud) requires copy+unlink.
-            if (moveErr?.code === 'EXDEV') {
               heartbeatStage = 'Copying to destination…';
               sendProgress({ percent: 98, stage: heartbeatStage });
               await fs.copyFile(tempMerged, userPath);
               await fs.unlink(tempMerged).catch(() => void 0);
-            } else {
-              throw moveErr;
+              break;
             }
           }
         } finally {
