@@ -32,10 +32,16 @@ export function normalizeSubtitleSegments(
     const cur = items[i];
     const next = i + 1 < items.length ? items[i + 1] : null;
 
-    // Ensure chronological order: clamp start to prev.end if out of order
-    if (prev && cur.start < prev.end) {
-      cur.start = prev.end;
-      if (cur.end < cur.start) cur.end = cur.start;
+    // Avoid cumulative drift:
+    // If cues overlap, trim the previous cue instead of pushing the current cue forward.
+    // Pushing starts forward can accumulate small overlaps into minutes of drift on long videos.
+    if (prev && prev.end > cur.start) {
+      prev.end = Math.max(prev.start, cur.start);
+    }
+
+    // Always keep cue durations non-negative.
+    if (cur.end < cur.start) {
+      cur.end = cur.start;
     }
 
     // Join small visible gaps between prev and cur
