@@ -64,7 +64,18 @@
       "Bash(gh release create v1.12.0 --title \"v1.12.0\" --notes \"$\\(cat <<''EOF''\nUpgraded review model to Claude Opus 4.6\n\nTranslations now use Anthropic''s latest Claude Opus 4.6 for the review pass — improved accuracy and fluency at the same credit cost.\nEOF\n\\)\")",
       "Bash(gh api:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run rerun:*)"
+      "Bash(gh run rerun:*)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator status --short)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator log --oneline v1.11.1..HEAD)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator diff -- packages/main/services/url-processor/constants.ts)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator add package.json packages/main/services/url-processor/constants.ts)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator commit -m \"$\\(cat <<''EOF''\nv1.12.1: Fix medium quality download resolution\n\n- Cap medium quality downloads to 720p as expected by the UI\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator tag -a v1.12.1 -m \"v1.12.1\")",
+      "Bash(gh release create v1.12.1 --draft --title \"v1.12.1\" --notes \"$\\(cat <<''EOF''\n- Upgraded translation review model from Claude Opus 4.5 to Claude Opus 4.6 — improved accuracy and fluency at the same credit cost\n- Added update notification popup — you''ll now see what''s new after each update\n- Fixed medium quality downloads to correctly cap at 720p\nEOF\n\\)\" -R mikey1384/translator)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator add scripts/upload-to-r2-win.ps1)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator commit --amend --no-edit)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator tag -d v1.12.1)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator reset --soft HEAD~1)"
     ],
     "deny": [],
     "ask": []

@@ -57,6 +57,86 @@ function Resolve-OptionalPath {
   return $null
 }
 
+function Resolve-ReleaseNotesScriptPath {
+  $scriptPath = Join-Path -Path $PSScriptRoot -ChildPath 'set-latest-yml-release-notes.ps1'
+  if (-not (Test-Path -LiteralPath $scriptPath)) {
+    throw "Release notes injector script not found: $scriptPath"
+  }
+  return $scriptPath
+}
+
+function Resolve-DefaultReleaseNotesPath {
+  param([string]$latestYamlFullPath)
+
+  $latestYamlDir = Split-Path -Parent $latestYamlFullPath
+  $candidatePaths = @(
+    (Join-Path -Path $latestYamlDir -ChildPath 'release-notes.txt'),
+    (Join-Path -Path (Get-Location) -ChildPath 'dist/release-notes.txt')
+  )
+
+  foreach ($candidate in $candidatePaths) {
+    if ($candidate -and (Test-Path -LiteralPath $candidate)) {
+      return (Get-Item -LiteralPath $candidate).FullName
+    }
+  }
+
+  return $null
+}
+
+function Get-GitHubReleaseNotes {
+  param([string]$version)
+
+  if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    Write-Host "WARNING: 'gh' CLI not found. Cannot fetch GitHub release notes for v$version." -ForegroundColor Yellow
+    return $null
+  }
+
+  Write-Host "No release notes file provided. Fetching from GitHub release v$version..."
+  $ghLines = @(& gh release view "v$version" --json body --jq '.body // empty' 2>$null)
+  $ghExit = $LASTEXITCODE
+  if ($ghExit -ne 0) {
+    Write-Host "WARNING: Failed to fetch GitHub release notes for v$version (gh exit code $ghExit)." -ForegroundColor Yellow
+    return $null
+  }
+
+  $ghNotes = ($ghLines -join "`n").Trim()
+  if ($ghNotes.Length -eq 0) {
+    Write-Host "WARNING: GitHub release v$version has no body text." -ForegroundColor Yellow
+    return $null
+  }
+
+  Write-Host "Fetched release notes from GitHub."
+  return $ghNotes
+}
+
+function Inject-ReleaseNotesIntoLatestYaml {
+  param(
+    [string]$injectorScript,
+    [string]$latestYaml,
+    [string]$version,
+    [string]$releaseNotesFile,
+    [string]$releaseNotesText
+  )
+
+  if ($releaseNotesFile) {
+    & $injectorScript `
+      -LatestYamlPath $latestYaml `
+      -Version $version `
+      -ReleaseNotesFile $releaseNotesFile
+    return $true
+  }
+
+  if ($releaseNotesText -and $releaseNotesText.Trim().Length -gt 0) {
+    & $injectorScript `
+      -LatestYamlPath $latestYaml `
+      -Version $version `
+      -ReleaseNotes $releaseNotesText
+    return $true
+  }
+
+  return $false
+}
+
 Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
 Write-Host "Force re-upload: $Force"
@@ -67,35 +147,35 @@ Write-Host "Source: $src"
 $latestYaml = Resolve-LatestYamlPath -p $LatestYamlPath
 Write-Host "latest.yml: $latestYaml"
 
-if (-not $ReleaseNotesFile) {
-  $defaultNotes = Join-Path -Path (Get-Location) -ChildPath 'dist/release-notes.txt'
-  if (Test-Path -LiteralPath $defaultNotes) {
+$injectorScript = Resolve-ReleaseNotesScriptPath
+
+if ($ReleaseNotesFile) {
+  if (-not (Test-Path -LiteralPath $ReleaseNotesFile)) {
+    throw "Release notes file not found: $ReleaseNotesFile"
+  }
+  $ReleaseNotesFile = (Get-Item -LiteralPath $ReleaseNotesFile).FullName
+} else {
+  $defaultNotes = Resolve-DefaultReleaseNotesPath -latestYamlFullPath $latestYaml
+  if ($defaultNotes) {
     $ReleaseNotesFile = $defaultNotes
     Write-Host "Using default release notes file: $ReleaseNotesFile"
   }
 }
 
-if ($ReleaseNotesFile) {
-  & "$PSScriptRoot\set-latest-yml-release-notes.ps1" `
-    -LatestYamlPath $latestYaml `
-    -Version $Version `
-    -ReleaseNotesFile $ReleaseNotesFile
-} else {
-  # Auto-fetch release notes from the GitHub release for this version
-  Write-Host "No release notes file provided. Fetching from GitHub release v$Version..."
-  $ghNotes = $null
-  try {
-    $ghNotes = & gh release view "v$Version" --json body --jq '.body' 2>$null
-  } catch {}
-  if ($ghNotes -and $ghNotes.Trim().Length -gt 0) {
-    Write-Host "Fetched release notes from GitHub."
-    & "$PSScriptRoot\set-latest-yml-release-notes.ps1" `
-      -LatestYamlPath $latestYaml `
-      -Version $Version `
-      -ReleaseNotes $ghNotes
-  } else {
-    Write-Host "WARNING: No release notes found on GitHub release v$Version. latest.yml will not include releaseNotes." -ForegroundColor Yellow
-  }
+$ghNotes = $null
+if (-not $ReleaseNotesFile) {
+  $ghNotes = Get-GitHubReleaseNotes -version $Version
+}
+
+$didInjectReleaseNotes = Inject-ReleaseNotesIntoLatestYaml `
+  -injectorScript $injectorScript `
+  -latestYaml $latestYaml `
+  -version $Version `
+  -releaseNotesFile $ReleaseNotesFile `
+  -releaseNotesText $ghNotes
+
+if (-not $didInjectReleaseNotes) {
+  Write-Host "WARNING: latest.yml will not include releaseNotes. Windows post-update popup will be skipped for this release." -ForegroundColor Yellow
 }
 
 # Optional blockmap (present if differential metadata is generated)
