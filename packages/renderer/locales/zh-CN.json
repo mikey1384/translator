@@ -254,11 +254,11 @@
     "preferClaude": {
       "forTranslation": {
         "label": "翻译优先使用Claude",
-        "help": "初稿：GPT-5.1 → 复审：Opus 4.5"
+        "help": "初稿：GPT-5.1 → 复审：Opus 4.6"
       },
       "forReview": {
         "label": "复审优先使用Claude",
-        "help": "复审：Claude Opus 4.5"
+        "help": "复审：Claude Opus 4.6"
       }
     },
     "transcriptionProvider": {

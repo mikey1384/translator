@@ -16,7 +16,7 @@ import { logButton } from '../../utils/logger';
 
 // Provider configuration with i18n keys and pricing (per 1 hour video, 2025 prices)
 // GPT-5.1: $1.25/1M in, $10/1M out | Claude Sonnet 4.5: $3/1M in, $15/1M out
-// Claude Opus 4.5: $5/1M in, $25/1M out | Whisper: $0.006/min | Scribe: $0.40/hr
+// Claude Opus 4.6: $5/1M in, $25/1M out | Whisper: $0.006/min | Scribe: $0.40/hr
 // OpenAI TTS: $15/1M chars | ElevenLabs TTS: ~$0.20/1K chars
 const PROVIDERS = {
   transcription: {

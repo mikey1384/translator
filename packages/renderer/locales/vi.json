@@ -190,11 +190,11 @@
     "preferClaude": {
       "forTranslation": {
         "label": "Ưu tiên Claude cho dịch",
-        "help": "Bản nháp: GPT-5.1 → Rà soát: Opus 4.5"
+        "help": "Bản nháp: GPT-5.1 → Rà soát: Opus 4.6"
       },
       "forReview": {
         "label": "Ưu tiên Claude cho rà soát",
-        "help": "Rà soát: Claude Opus 4.5"
+        "help": "Rà soát: Claude Opus 4.6"
       }
     },
     "transcriptionProvider": {

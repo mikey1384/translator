@@ -765,12 +765,12 @@ export type SummaryModelConfig = {
  *
  * For Stage5 (non-BYO):
  *   - Standard: GPT-5.1
- *   - High: Claude Opus 4.5
+ *   - High: Claude Opus 4.6
  *
  * For BYO users:
  *   - If prefers Claude (or only has Anthropic key):
  *     - Standard: Claude Sonnet 4.5
- *     - High: Claude Opus 4.5
+ *     - High: Claude Opus 4.6
  *   - If prefers OpenAI (or only has OpenAI key):
  *     - Standard: GPT-5.1
  *     - High: GPT-5.1 (reasoning: high)

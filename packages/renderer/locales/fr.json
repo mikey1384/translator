@@ -254,11 +254,11 @@
     "preferClaude": {
       "forTranslation": {
         "label": "Préférer Claude pour la traduction",
-        "help": "Brouillon : GPT-5.1 → Révision : Opus 4.5"
+        "help": "Brouillon : GPT-5.1 → Révision : Opus 4.6"
       },
       "forReview": {
         "label": "Préférer Claude pour la révision",
-        "help": "Révision : Claude Opus 4.5"
+        "help": "Révision : Claude Opus 4.6"
       }
     },
     "transcriptionProvider": {

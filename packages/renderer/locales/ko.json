@@ -308,11 +308,11 @@
     "preferClaude": {
       "forTranslation": {
         "label": "번역에 Claude 선호",
-        "help": "초안: GPT-5.1 → 검토: Opus 4.5"
+        "help": "초안: GPT-5.1 → 검토: Opus 4.6"
       },
       "forReview": {
         "label": "검토에 Claude 선호",
-        "help": "검토: Claude Opus 4.5"
+        "help": "검토: Claude Opus 4.6"
       }
     },
     "transcriptionProvider": {

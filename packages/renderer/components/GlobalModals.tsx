@@ -8,6 +8,7 @@ import {
   closeChangeVideo,
   closeLogs,
   closeApiKeysRequired,
+  closeUpdateNotes,
 } from '../state/modal-store';
 import { useUIStore } from '../state/ui-store';
 import MediaInputSection from '../containers/GenerateSubtitles/components/MediaInputSection';
@@ -17,14 +18,44 @@ import { css } from '@emotion/css';
 import { colors } from '../styles';
 import { useEffect, useRef } from 'react';
 import LogsModal from './LogsModal';
+import Modal from './Modal';
+import Button from './Button';
+import { useTranslation } from 'react-i18next';
+
+const updateNotesDetailsStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const updateNotesDateStyles = css`
+  color: ${colors.textSecondary};
+  font-size: 0.9rem;
+`;
+
+const updateNotesBodyStyles = css`
+  max-height: min(55vh, 420px);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+`;
 
 export default function GlobalModals() {
+  const { t } = useTranslation();
   const unsavedOpen = useModalStore(s => s.unsavedSrtOpen);
   const creditOpen = useModalStore(s => s.creditRanOutOpen);
   const changeVideoOpen = useModalStore(s => s.changeVideoOpen);
   const logsOpen = useModalStore(s => s.logsOpen);
   const apiKeysRequiredOpen = useModalStore(s => s.apiKeysRequiredOpen);
+  const updateNotesOpen = useModalStore(s => s.updateNotesOpen);
+  const updateNotes = useModalStore(s => s.updateNotes);
   const toggleSettings = useUIStore(s => s.toggleSettings);
+  const formattedReleaseDate = (() => {
+    const raw = updateNotes?.releaseDate;
+    if (!raw) return null;
+    const parsed = Date.parse(raw);
+    return Number.isNaN(parsed) ? raw : new Date(parsed).toLocaleDateString();
+  })();
 
   // Reuse existing stores for MediaInputSection
   const urlInput = useUrlStore(s => s.urlInput);
@@ -155,6 +186,32 @@ export default function GlobalModals() {
       )}
 
       <LogsModal open={logsOpen} onClose={() => closeLogs()} />
+      <Modal
+        open={updateNotesOpen}
+        title={
+          updateNotes?.releaseName?.trim() ||
+          (updateNotes?.version
+            ? t('common.whatsNewVersionTitle', "What's New in v{{version}}", {
+                version: updateNotes.version,
+              })
+            : t('common.whatsNewTitle', "What's New"))
+        }
+        onClose={() => closeUpdateNotes()}
+        actions={
+          <Button variant="primary" onClick={() => closeUpdateNotes()}>
+            {t('common.gotIt', 'Got it')}
+          </Button>
+        }
+      >
+        <div className={updateNotesDetailsStyles}>
+          {formattedReleaseDate && (
+            <div className={updateNotesDateStyles}>{formattedReleaseDate}</div>
+          )}
+          <div className={updateNotesBodyStyles}>
+            {updateNotes?.notes ?? ''}
+          </div>
+        </div>
+      </Modal>
       <ApiKeysRequiredDialog
         open={apiKeysRequiredOpen}
         onClose={() => closeApiKeysRequired()}

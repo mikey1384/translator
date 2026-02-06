@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useUIStore, useVideoStore, useTaskStore } from '../state';
 import * as SystemIPC from '../ipc/system';
 import * as SubtitlesIPC from '../ipc/subtitles';
+import * as UpdateIPC from '../ipc/update';
 import { useCreditStore } from '../state';
 import { useUrlStore } from '../state/url-store';
 
@@ -28,6 +29,7 @@ import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
 import { logProgress, logButton } from '../utils/logger';
 import { useRef } from 'react';
+import { openUpdateNotes } from '../state/modal-store';
 
 const settingsPageWrapper = css`
   position: fixed;
@@ -66,6 +68,25 @@ const settingsBackButton = css`
 
 export default function AppContent() {
   const { t } = useTranslation();
+  useEffect(() => {
+    if (!window.env.isPackaged) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const notice = await UpdateIPC.getPostInstallNotice();
+        if (cancelled || !notice?.notes?.trim()) return;
+        openUpdateNotes(notice);
+      } catch (err) {
+        console.warn('[AppContent] Failed to fetch post-install notes:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Initialize BYO/OpenAI state at app load so pills reflect "Using API Key"
   useEffect(() => {
     try {

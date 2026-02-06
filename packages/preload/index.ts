@@ -621,6 +621,8 @@ const electronAPI = {
   updateCheck: () => ipcRenderer.invoke('update:check'),
   updateDownload: () => ipcRenderer.invoke('update:download'),
   updateInstall: () => ipcRenderer.invoke('update:install'),
+  updateGetPostInstallNotice: () =>
+    ipcRenderer.invoke('update:get-post-install-notice'),
   onUpdateAvailable: (callback: (info: any) => void) => {
     const handler = (_: any, info: any) => callback(info);
     ipcRenderer.on('update:available', handler);

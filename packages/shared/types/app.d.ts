@@ -544,6 +544,13 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  export interface PostInstallUpdateNotice {
+    version: string;
+    releaseName?: string;
+    releaseDate?: string;
+    notes: string;
+  }
+
   // =========================================
   // === Electron API (Main -> Renderer Communication Contract)
   // =========================================
@@ -865,6 +872,7 @@ declare module '@shared-types/app' {
     updateCheck: () => Promise<any>;
     updateDownload: () => Promise<void>;
     updateInstall: () => Promise<void>;
+    updateGetPostInstallNotice: () => Promise<PostInstallUpdateNotice | null>;
     onUpdateAvailable: (callback: (info: any) => void) => () => void;
     onUpdateProgress: (callback: (percent: number) => void) => () => void;
     onUpdateDownloaded: (callback: () => void) => () => void;

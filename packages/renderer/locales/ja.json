@@ -254,11 +254,11 @@
     "preferClaude": {
       "forTranslation": {
         "label": "翻訳にClaudeを優先",
-        "help": "下書き: GPT-5.1 → レビュー: Opus 4.5"
+        "help": "下書き: GPT-5.1 → レビュー: Opus 4.6"
       },
       "forReview": {
         "label": "レビューにClaudeを優先",
-        "help": "レビュー: Claude Opus 4.5"
+        "help": "レビュー: Claude Opus 4.6"
       }
     },
     "transcriptionProvider": {

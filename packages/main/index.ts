@@ -927,6 +927,20 @@ async function createWindow() {
     showInspectElement: isDev,
   });
 
+  // Initialize update handlers before renderer boot so IPC channels exist
+  // when the preload/renderer startup effects invoke update APIs.
+  try {
+    const updateHandlers = buildUpdateHandlers({
+      mainWindow,
+      isDev,
+    });
+    if (updateHandlers) {
+      log.info('[main.ts] Update handlers initialized.');
+    }
+  } catch (err: any) {
+    log.error('[main.ts] Error initializing update handlers:', err);
+  }
+
   const rendererPath = getRendererHtmlPath();
   log.info(`[main.ts] Loading renderer from: ${rendererPath}`);
   try {
@@ -1008,19 +1022,6 @@ async function createWindow() {
   });
 
   createApplicationMenu();
-
-  // Initialize update handlers after window is created
-  try {
-    const updateHandlers = buildUpdateHandlers({
-      mainWindow,
-      isDev,
-    });
-    if (updateHandlers) {
-      log.info('[main.ts] Update handlers initialized.');
-    }
-  } catch (err: any) {
-    log.error('[main.ts] Error initializing update handlers:', err);
-  }
 
   syncEntitlements({ window: mainWindow, silent: true }).catch(err => {
     log.warn('[main.ts] Initial entitlements sync failed:', err);

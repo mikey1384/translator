@@ -39,7 +39,7 @@
 
 ### 💎 AI-Powered (Credits)
 - **Transcription** — Convert speech to text with OpenAI Whisper
-- **Translation** — GPT-5.1 draft + Claude Opus 4.5 review for premium quality
+- **Translation** — GPT-5.1 draft + Claude Opus 4.6 review for premium quality
 - **Dubbing** — Generate natural voice-overs in any target language
 - **Smart Summaries** — AI-generated video summaries and highlights
 
@@ -108,7 +108,7 @@ npm run package:win    # Windows
 
 1. **Input** — Load a video file or paste a URL
 2. **Transcribe** — AI converts speech to subtitles with timestamps
-3. **Translate** — Two-pass translation: GPT-5.1 drafts, Claude Opus 4.5 reviews
+3. **Translate** — Two-pass translation: GPT-5.1 drafts, Claude Opus 4.6 reviews
 4. **Dub** — Generate natural voice-over in the target language
 5. **Export** — Download subtitles (SRT) or video with burned-in captions
 
@@ -143,7 +143,7 @@ Power users can connect their own OpenAI, Anthropic, or ElevenLabs API keys to u
 | Language | TypeScript |
 | Styling | Emotion CSS |
 | Video Processing | FFmpeg |
-| AI Models | OpenAI GPT-5.1, Claude Opus 4.5, Whisper |
+| AI Models | OpenAI GPT-5.1, Claude Opus 4.6, Whisper |
 
 ---
 

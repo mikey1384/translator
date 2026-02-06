@@ -2,6 +2,12 @@ import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 
 type UnsavedChoice = 'save' | 'discard' | 'cancel';
+type PostInstallUpdateNotice = {
+  version: string;
+  releaseName?: string;
+  releaseDate?: string;
+  notes: string;
+};
 
 interface State {
   unsavedSrtOpen: boolean;
@@ -15,6 +21,9 @@ interface State {
   logsOpen: boolean;
   // API keys required modal
   apiKeysRequiredOpen: boolean;
+  // Post-update notes modal
+  updateNotesOpen: boolean;
+  updateNotes: PostInstallUpdateNotice | null;
 }
 
 interface Actions {
@@ -24,6 +33,8 @@ interface Actions {
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
   openChangeVideo: () => void;
   closeChangeVideo: () => void;
+  openUpdateNotes: (payload: PostInstallUpdateNotice) => void;
+  closeUpdateNotes: () => void;
 }
 
 export const useModalStore = createWithEqualityFn<State & Actions>()(
@@ -35,6 +46,8 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     changeVideoOpen: false,
     logsOpen: false,
     apiKeysRequiredOpen: false,
+    updateNotesOpen: false,
+    updateNotes: null,
 
     openUnsavedSrtConfirm: () =>
       new Promise<UnsavedChoice>(resolve => {
@@ -77,6 +90,16 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     closeChangeVideo: () =>
       set(s => {
         s.changeVideoOpen = false;
+      }),
+    openUpdateNotes: payload =>
+      set(s => {
+        s.updateNotesOpen = true;
+        s.updateNotes = payload;
+      }),
+    closeUpdateNotes: () =>
+      set(s => {
+        s.updateNotesOpen = false;
+        s.updateNotes = null;
       }),
     // Logs modal controls
     openLogs: () =>
@@ -121,6 +144,14 @@ export function openChangeVideo() {
 
 export function closeChangeVideo() {
   return useModalStore.getState().closeChangeVideo();
+}
+
+export function openUpdateNotes(payload: PostInstallUpdateNotice) {
+  return useModalStore.getState().openUpdateNotes(payload);
+}
+
+export function closeUpdateNotes() {
+  return useModalStore.getState().closeUpdateNotes();
 }
 
 export function openLogs() {

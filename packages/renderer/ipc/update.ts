@@ -1,3 +1,10 @@
+export interface PostInstallUpdateNotice {
+  version: string;
+  releaseName?: string;
+  releaseDate?: string;
+  notes: string;
+}
+
 export function checkForUpdates(): Promise<any> {
   return window.electron.updateCheck();
 }
@@ -8,6 +15,10 @@ export function downloadUpdate(): Promise<void> {
 
 export function installUpdate(): Promise<void> {
   return window.electron.updateInstall();
+}
+
+export function getPostInstallNotice(): Promise<PostInstallUpdateNotice | null> {
+  return window.electron.updateGetPostInstallNotice();
 }
 
 export function onUpdateAvailable(callback: (info: any) => void): () => void {

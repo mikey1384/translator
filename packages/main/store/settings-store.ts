@@ -1,6 +1,13 @@
 import Store from 'electron-store';
 
 export type AppSettingsSchema = {
+  pendingPostInstallNotice: {
+    targetVersion: string;
+    releaseName?: string;
+    releaseDate?: string;
+    notes: string;
+    preparedAt: string;
+  } | null;
   app_language_preference: string;
   subtitleTargetLanguage: string;
   apiKey: string | null;
@@ -27,6 +34,7 @@ export type SettingsStoreType = Store<AppSettingsSchema>;
 export const settingsStore: SettingsStoreType = new Store<AppSettingsSchema>({
   name: 'app-settings',
   defaults: {
+    pendingPostInstallNotice: null,
     app_language_preference: 'en',
     subtitleTargetLanguage: 'original',
     apiKey: null,

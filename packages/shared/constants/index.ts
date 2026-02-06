@@ -1,7 +1,7 @@
 export const AI_MODELS = {
   GPT: 'gpt-5.1',
   CLAUDE_SONNET: 'claude-sonnet-4-5-20250929',
-  CLAUDE_OPUS: 'claude-opus-4-5-20251101',
+  CLAUDE_OPUS: 'claude-opus-4-6',
   WHISPER: 'whisper-1',
 } as const;
 
