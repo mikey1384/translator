@@ -81,7 +81,21 @@ if ($ReleaseNotesFile) {
     -Version $Version `
     -ReleaseNotesFile $ReleaseNotesFile
 } else {
-  Write-Host "WARNING: No release notes file provided. latest.yml may not contain releaseNotes, so post-update notice popup won't show on Windows." -ForegroundColor Yellow
+  # Auto-fetch release notes from the GitHub release for this version
+  Write-Host "No release notes file provided. Fetching from GitHub release v$Version..."
+  $ghNotes = $null
+  try {
+    $ghNotes = & gh release view "v$Version" --json body --jq '.body' 2>$null
+  } catch {}
+  if ($ghNotes -and $ghNotes.Trim().Length -gt 0) {
+    Write-Host "Fetched release notes from GitHub."
+    & "$PSScriptRoot\set-latest-yml-release-notes.ps1" `
+      -LatestYamlPath $latestYaml `
+      -Version $Version `
+      -ReleaseNotes $ghNotes
+  } else {
+    Write-Host "WARNING: No release notes found on GitHub release v$Version. latest.yml will not include releaseNotes." -ForegroundColor Yellow
+  }
 }
 
 # Optional blockmap (present if differential metadata is generated)
