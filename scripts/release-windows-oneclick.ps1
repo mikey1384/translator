@@ -15,7 +15,10 @@ Param(
   [switch]$SkipPurge,
 
   [Parameter(Mandatory = $false)]
-  [switch]$IncludeVersionedPurge
+  [switch]$IncludeVersionedPurge,
+
+  [Parameter(Mandatory = $false)]
+  [string]$ReleaseNotesFile
 )
 
 Set-StrictMode -Version Latest
@@ -84,8 +87,31 @@ try {
   
   Confirm-ArtifactPaths -version $version
 
+  if (-not $ReleaseNotesFile) {
+    $defaultNotes = Join-Path -Path $repo -ChildPath 'dist/release-notes.txt'
+    if (Test-Path -LiteralPath $defaultNotes) {
+      $ReleaseNotesFile = $defaultNotes
+      Write-Host "Using default release notes file: $ReleaseNotesFile"
+    }
+  }
+
+  if ($ReleaseNotesFile) {
+    Write-Stage 'Injecting release notes into latest.yml'
+    & "$repo\scripts\set-latest-yml-release-notes.ps1" `
+      -LatestYamlPath (Join-Path -Path $repo -ChildPath 'dist/latest.yml') `
+      -Version $version `
+      -ReleaseNotesFile $ReleaseNotesFile
+  } else {
+    Write-Host 'No release notes file provided. Windows latest.yml will not include releaseNotes, so post-update notice popup will not show.' -ForegroundColor Yellow
+    Write-Host 'Tip: create dist/release-notes.txt or pass -ReleaseNotesFile <path>.' -ForegroundColor Yellow
+  }
+
   Write-Stage 'Uploading to Cloudflare R2'
-  & "$repo\scripts\upload-to-r2-win.ps1" -Version $version
+  if ($ReleaseNotesFile) {
+    & "$repo\scripts\upload-to-r2-win.ps1" -Version $version -ReleaseNotesFile $ReleaseNotesFile
+  } else {
+    & "$repo\scripts\upload-to-r2-win.ps1" -Version $version
+  }
 
   if (-not $SkipPurge) {
     Write-Stage 'Purging Cloudflare cache'

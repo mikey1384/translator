@@ -9,6 +9,9 @@ Param(
   [string]$LatestYamlPath = 'dist/latest.yml',
 
   [Parameter(Mandatory = $false)]
+  [string]$ReleaseNotesFile,
+
+  [Parameter(Mandatory = $false)]
   [string]$BucketBase = 'r2-upload:ai-translator-downloads/win',
 
   [Parameter(Mandatory = $false)]
@@ -63,6 +66,23 @@ Write-Host "Source: $src"
 
 $latestYaml = Resolve-LatestYamlPath -p $LatestYamlPath
 Write-Host "latest.yml: $latestYaml"
+
+if (-not $ReleaseNotesFile) {
+  $defaultNotes = Join-Path -Path (Get-Location) -ChildPath 'dist/release-notes.txt'
+  if (Test-Path -LiteralPath $defaultNotes) {
+    $ReleaseNotesFile = $defaultNotes
+    Write-Host "Using default release notes file: $ReleaseNotesFile"
+  }
+}
+
+if ($ReleaseNotesFile) {
+  & "$PSScriptRoot\set-latest-yml-release-notes.ps1" `
+    -LatestYamlPath $latestYaml `
+    -Version $Version `
+    -ReleaseNotesFile $ReleaseNotesFile
+} else {
+  Write-Host "WARNING: No release notes file provided. latest.yml may not contain releaseNotes, so post-update notice popup won't show on Windows." -ForegroundColor Yellow
+}
 
 # Optional blockmap (present if differential metadata is generated)
 $blockmap = Resolve-OptionalPath -pattern "Translator Setup *.exe.blockmap"
@@ -185,4 +205,3 @@ try {
   Write-Host "--- Verify listing: $Version/ ---"
   & rclone lsf "$BucketBase/$Version" | Out-Host
 } catch {}
-
