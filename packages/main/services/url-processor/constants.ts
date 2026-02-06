@@ -18,8 +18,8 @@ const capHeight = (height: number) =>
 export const qualityFormatMap: Record<VideoQuality, string> = {
   // Absolute best: do not restrict container/codec; let yt-dlp pick highest
   high: 'bestvideo+bestaudio/best',
-  // Mid now uses previous "high" profile
-  mid: 'bv*+ba/b',
+  // Medium should align with the explicit 720p option expectation.
+  mid: capHeight(720),
   // Low keeps a conservative, broadly compatible profile
   low:
     'bv*[height<=480]+ba[abr<=128]/b[height<=480]/' +
