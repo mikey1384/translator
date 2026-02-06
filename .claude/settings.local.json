@@ -61,7 +61,10 @@
       "Bash(git -C /Users/mikey/Developer/stage5/translator push origin master --tags)",
       "Bash(git -C /Users/mikey/Developer/stage5/stage5-api push)",
       "Bash(git -C /Users/mikey/Developer/stage5/openai-relay push)",
-      "Bash(gh release create v1.12.0 --title \"v1.12.0\" --notes \"$\\(cat <<''EOF''\nUpgraded review model to Claude Opus 4.6\n\nTranslations now use Anthropic''s latest Claude Opus 4.6 for the review pass — improved accuracy and fluency at the same credit cost.\nEOF\n\\)\")"
+      "Bash(gh release create v1.12.0 --title \"v1.12.0\" --notes \"$\\(cat <<''EOF''\nUpgraded review model to Claude Opus 4.6\n\nTranslations now use Anthropic''s latest Claude Opus 4.6 for the review pass — improved accuracy and fluency at the same credit cost.\nEOF\n\\)\")",
+      "Bash(gh api:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run rerun:*)"
     ],
     "deny": [],
     "ask": []
