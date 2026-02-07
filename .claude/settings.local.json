@@ -75,7 +75,10 @@
       "Bash(git -C /Users/mikey/Developer/stage5/translator add scripts/upload-to-r2-win.ps1)",
       "Bash(git -C /Users/mikey/Developer/stage5/translator commit --amend --no-edit)",
       "Bash(git -C /Users/mikey/Developer/stage5/translator tag -d v1.12.1)",
-      "Bash(git -C /Users/mikey/Developer/stage5/translator reset --soft HEAD~1)"
+      "Bash(git -C /Users/mikey/Developer/stage5/translator reset --soft HEAD~1)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator log --oneline -5)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator fetch origin)",
+      "Bash(git -C /Users/mikey/Developer/stage5/translator log --oneline origin/master -5)"
     ],
     "deny": [],
     "ask": []
