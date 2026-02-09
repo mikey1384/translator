@@ -587,6 +587,8 @@ export async function downloadVideoFromPlatform(
 
   let subprocess: DownloadProcessType | null = null;
   let lastPct = 0; // Track last reported percentage outside subprocess
+  let lastRawPct = 0; // Track yt-dlp's raw percentage to detect stream resets
+  let inSecondStream = false; // True when yt-dlp resets progress for a second stream (e.g. audio)
   let addNoCheckCertificates = false; // enable on final retry only if TLS errors suspected
 
   // Wrap download attempt flow
@@ -596,6 +598,12 @@ export async function downloadVideoFromPlatform(
     let lastError: any = null;
 
     while (attempt <= maxAttempts) {
+      // Reset stream-detection state for each attempt so a retry isn't
+      // misclassified as a second stream after a failed attempt with progress.
+      // Note: lastPct is intentionally preserved to keep user-facing progress monotonic.
+      lastRawPct = 0;
+      inSecondStream = false;
+
       let startupTimeoutFired = false;
       const firstAttemptExtra = attempt === 1 ? ['--verbose'] : [];
       const lastResortExtra =
@@ -742,22 +750,39 @@ export async function downloadVideoFromPlatform(
               } else if (line.startsWith('[download]')) {
                 const progressMatch = line.match(/([\d.]+)%/);
                 if (progressMatch && progressMatch[1]) {
-                  const pct = parseFloat(progressMatch[1]);
-                  // Single-phase mapping: 10 → 95 (monotonic)
-                  const mapped =
-                    PROGRESS.DL1_START +
-                    (pct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100;
-                  const displayPercent = Math.min(
-                    PROGRESS.DL1_END,
-                    Math.max(PROGRESS.WARMUP_END, mapped)
-                  );
+                  const rawPct = parseFloat(progressMatch[1]);
+
+                  // Detect second stream: yt-dlp resets percentage when starting
+                  // a new stream (e.g. audio after video)
+                  if (!inSecondStream && lastRawPct > 50 && rawPct < lastRawPct - 50) {
+                    inSecondStream = true;
+                    log.info('[URLprocessor] Detected second download stream (audio)');
+                  }
+                  lastRawPct = rawPct;
+
+                  // Map raw percentage to the appropriate progress phase
+                  let mapped: number;
+                  let stage: string;
+                  if (inSecondStream) {
+                    mapped =
+                      PROGRESS.DL2_START +
+                      (rawPct * (PROGRESS.DL2_END - PROGRESS.DL2_START)) / 100;
+                    mapped = Math.min(PROGRESS.DL2_END, Math.max(PROGRESS.DL2_START, mapped));
+                    stage = 'Downloading audio...';
+                  } else {
+                    mapped =
+                      PROGRESS.DL1_START +
+                      (rawPct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100;
+                    mapped = Math.min(PROGRESS.DL1_END, Math.max(PROGRESS.WARMUP_END, mapped));
+                    stage = 'Downloading...';
+                  }
 
                   // Monotonic guard
-                  if (displayPercent > lastPct) {
-                    lastPct = displayPercent;
+                  if (mapped > lastPct) {
+                    lastPct = mapped;
                     progressCallback?.({
-                      percent: displayPercent,
-                      stage: 'Downloading...',
+                      percent: mapped,
+                      stage,
                     });
                   }
                 }

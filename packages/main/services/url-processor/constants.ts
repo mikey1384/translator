@@ -4,11 +4,15 @@ export const PROGRESS = {
   WARMUP_START: 0,
   WARMUP_END: 5,
 
-  // Map yt-dlp reported percent across 5→95
+  // First stream (typically video): 5→70
   DL1_START: 5,
-  DL1_END: 95,
+  DL1_END: 70,
 
-  FINAL_START: 95,
+  // Second stream (typically audio): 70→90
+  DL2_START: 70,
+  DL2_END: 90,
+
+  FINAL_START: 90,
   FINAL_END: 100,
 } as const;
 
