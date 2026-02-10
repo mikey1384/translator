@@ -108,8 +108,13 @@ When asked to version bump, tag, and push:
    )"
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
+5. **Update the GitHub Release body** — the annotated tag message does NOT auto-populate the GitHub Release body. You must explicitly set it using `gh release edit`:
+   ```bash
+   gh release edit v{VERSION} --notes "Release notes here"
+   ```
+   Wait for the release to be created by GitHub Actions first (check with `gh release view v{VERSION}`), then edit it. If the release body is empty, the update popup in the app will have no content.
 
-The annotated tag triggers GitHub Actions to build and release. The tag body **must not be empty** or the update popup will be skipped.
+The annotated tag triggers GitHub Actions to build and release. Both the tag body AND the GitHub Release body **must not be empty** or the update popup will be skipped/empty.
 
 ## Environment
 
