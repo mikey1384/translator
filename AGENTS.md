@@ -98,20 +98,18 @@ When asked to version bump, tag, and push:
 
 1. **Bump version** in `package.json` (patch for fixes, minor for features)
 2. **Commit** with message format: `v{VERSION}: Short description of changes`
-3. **Create annotated tag** with the same message and a longer body explaining the change:
+3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this text shows in the app's update popup):
    ```bash
    git tag -a v{VERSION} -m "$(cat <<'EOF'
    v{VERSION}: Short description
 
-   Detailed explanation of what changed and why.
-
-   Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+   User-friendly explanation of what changed and why.
    EOF
    )"
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
 
-The annotated tag triggers GitHub Actions to build and release. The tag message appears in the app's update popup, so write it for end users.
+The annotated tag triggers GitHub Actions to build and release. The tag body **must not be empty** or the update popup will be skipped.
 
 ## Environment
 
