@@ -98,7 +98,7 @@ When asked to version bump, tag, and push:
 
 1. **Bump version** in `package.json` (patch for fixes, minor for features)
 2. **Commit** with message format: `v{VERSION}: Short description of changes`
-3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this text shows in the app's update popup):
+3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this shows in the update popup):
    ```bash
    git tag -a v{VERSION} -m "$(cat <<'EOF'
    v{VERSION}: Short description
@@ -108,13 +108,20 @@ When asked to version bump, tag, and push:
    )"
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
-5. **Update the GitHub Release body** — the annotated tag message does NOT auto-populate the GitHub Release body. You must explicitly set it using `gh release edit`:
+5. **Set the GitHub Release body** — this is **critical** for the update popup on both Mac and Windows. The tag annotation does NOT auto-populate the release body. After pushing, set it with `gh release create` (or `gh release edit` if the release already exists):
+   ```bash
+   # Create release with notes (preferred — do this right after pushing)
+   gh release create v{VERSION} --title "v{VERSION}" --notes "$(cat <<'EOF'
+   User-friendly release notes here.
+   EOF
+   )"
+   ```
+   If GitHub Actions already created the release:
    ```bash
    gh release edit v{VERSION} --notes "Release notes here"
    ```
-   Wait for the release to be created by GitHub Actions first (check with `gh release view v{VERSION}`), then edit it. If the release body is empty, the update popup in the app will have no content.
 
-The annotated tag triggers GitHub Actions to build and release. Both the tag body AND the GitHub Release body **must not be empty** or the update popup will be skipped/empty.
+**Why this matters:** Mac's electron-updater reads notes from the GitHub Release body. The Windows one-click release script (`scripts/release-windows-oneclick.ps1`) also fetches the GitHub Release body to inject into `latest.yml`. If the body is empty, **neither platform shows the update popup**.
 
 ## Environment
 
