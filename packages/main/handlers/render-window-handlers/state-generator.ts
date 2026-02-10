@@ -78,8 +78,13 @@ export async function generateStatePngs({
       const durMs = nextTime - ev.timeMs;
       if (durMs < 1) continue;
 
-      const frames = Math.max(1, Math.round((durMs / 1000) * fps));
-      const duration = frames / fps;
+      // Use exact millisecond duration — do NOT quantize to whole frames.
+      // Frame quantization introduces ±0.5/fps rounding error per event that
+      // accumulates across hundreds of subtitle events, causing progressive
+      // subtitle drift in the merged output (especially with VFR or non-integer
+      // frame rates like 29.97fps where rounding has a systematic bias).
+      // The concat demuxer with -vsync vfr handles fractional durations natively.
+      const duration = durMs / 1000;
       const key = (ev.text || '').trim() ? ev.text : '';
       const durationToUse =
         i === 0 && key ? Math.max(duration, 2 / fps) : duration;
