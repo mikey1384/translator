@@ -116,11 +116,26 @@ jobs:
             }
           done
 
+      - name: Extract tag annotation
+        if: startsWith(github.ref, 'refs/tags/')
+        id: tag_notes
+        run: |
+          # Ensure the full annotated tag object is available
+          git fetch origin tag "$GITHUB_REF_NAME" --no-tags -f 2>/dev/null || true
+          # Get the body (everything after the subject line)
+          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
+          if [ -z "$BODY" ]; then
+            # Single-line annotation — use the subject instead
+            BODY=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
+          fi
+          printf '%s\n' "$BODY" > /tmp/release-notes.md
+
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          body_path: /tmp/release-notes.md
           draft: false
           make_latest: true
           prerelease: ${{ contains(github.ref, '-') }}

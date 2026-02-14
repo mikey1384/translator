@@ -98,26 +98,21 @@ When asked to version bump, tag, and push:
 
 1. **Bump version** in `package.json` (patch for fixes, minor for features)
 2. **Commit** with message format: `v{VERSION}: Short description of changes`
-3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this shows in the update popup):
+3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this shows in the update popup). The first line is the subject; the body after the blank line becomes the "What's New" popup text:
    ```bash
    git tag -a v{VERSION} -m "$(cat <<'EOF'
    v{VERSION}: Short description
 
-   User-friendly explanation of what changed and why.
+   - Change one explanation.
+   - Change two explanation.
    EOF
    )"
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
-5. **Wait for the GitHub Action to finish** — the macOS release workflow builds, signs, and publishes assets to the GitHub Release. electron-builder uses `--publish onTag` and manages the release lifecycle (create draft → upload assets → publish). **Do NOT create the release manually before the action completes** — a pre-existing non-draft release prevents electron-builder from uploading assets.
-6. **Set the GitHub Release body** — this is **critical** for the update popup on both Mac and Windows. The tag annotation does NOT auto-populate the release body. After the action completes, add the body with:
-   ```bash
-   gh release edit v{VERSION} --notes "$(cat <<'EOF'
-   User-friendly release notes here.
-   EOF
-   )"
-   ```
 
-**Why this matters:** Mac's electron-updater reads notes from the GitHub Release body. The Windows one-click release script (`scripts/release-windows-oneclick.ps1`) also fetches the GitHub Release body to inject into `latest.yml`. If the body is empty, **neither platform shows the update popup**. But if the release is pre-created before the action runs, electron-builder cannot upload assets and the update will not appear at all.
+The GitHub Action handles the rest automatically: it builds, signs, uploads assets, creates the GitHub Release, and populates the release body from the tag annotation. **Do NOT manually create the release with `gh release create`** — a pre-existing non-draft release prevents electron-builder from uploading assets.
+
+**Why the tag annotation matters:** The workflow extracts the tag annotation body and sets it as the GitHub Release body. Mac's electron-updater and the Windows release script both read the release body to show the "What's New" popup. If the tag annotation is empty, no popup appears.
 
 ## Environment
 
