@@ -1,6 +1,11 @@
 import { buildSrt, parseSrt, secondsToSrtTime } from '../../shared/helpers';
 import * as SubtitlesIPC from '../ipc/subtitles';
 import { useSubStore, useTaskStore, useUIStore } from '../state';
+import { useUrlStore } from '../state/url-store';
+import {
+  getTranslationFailureMessage,
+  shouldSurfaceTranslationFailure,
+} from './translationFailure';
 
 /**
  * Translates only untranslated subtitle items using the existing streaming pipeline.
@@ -12,6 +17,7 @@ export async function translateMissingUntranslated(): Promise<void> {
   if (useTaskStore.getState().transcription.inProgress) {
     return;
   }
+  useUrlStore.getState().clearError();
   const targetLanguage = useUIStore.getState().targetLanguage || 'english';
   const store = useSubStore.getState();
 
@@ -41,38 +47,74 @@ export async function translateMissingUntranslated(): Promise<void> {
     inProgress: true,
   });
 
-  const res = await SubtitlesIPC.translateSubtitles({
-    subtitles: srtContent,
-    targetLanguage,
-    operationId,
-    qualityTranslation: useUIStore.getState().qualityTranslation,
-  });
+  try {
+    const res = await SubtitlesIPC.translateSubtitles({
+      subtitles: srtContent,
+      targetLanguage,
+      operationId,
+      qualityTranslation: useUIStore.getState().qualityTranslation,
+    });
 
-  if (res?.translatedSubtitles) {
-    const translatedSegs = parseSrt(res.translatedSubtitles);
-    // Build map by time key -> translated text
-    const byTimeKey = new Map<string, string | undefined>();
-    for (const seg of translatedSegs) {
-      const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-      byTimeKey.set(key, seg.translation);
-    }
-
-    // Apply translations back to store for only missing ones
-    const applyStore = useSubStore.getState();
-    for (const seg of missing) {
-      const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
-      const translated = byTimeKey.get(key);
-      if (translated && translated.trim()) {
-        applyStore.update(seg.id, { translation: translated });
+    if (res?.success && res?.translatedSubtitles) {
+      const translatedSegs = parseSrt(res.translatedSubtitles);
+      // Build map by time key -> translated text
+      const byTimeKey = new Map<string, string | undefined>();
+      for (const seg of translatedSegs) {
+        const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
+        byTimeKey.set(key, seg.translation);
       }
+
+      // Apply translations back to store for only missing ones
+      const applyStore = useSubStore.getState();
+      for (const seg of missing) {
+        const key = `${secondsToSrtTime(seg.start)}-->${secondsToSrtTime(seg.end)}`;
+        const translated = byTimeKey.get(key);
+        if (translated && translated.trim()) {
+          applyStore.update(seg.id, { translation: translated });
+        }
+      }
+
+      useTaskStore.getState().setTranslation({
+        stage: 'Completed',
+        percent: 100,
+        inProgress: false,
+      });
+      return;
     }
+
+    const cancelled = Boolean(res?.cancelled);
+    const friendlyError = getTranslationFailureMessage({
+      error: res?.error,
+      cancelled,
+    });
 
     useTaskStore.getState().setTranslation({
-      stage: 'Completed',
+      stage: friendlyError,
       percent: 100,
       inProgress: false,
     });
-  } else {
-    useTaskStore.getState().setTranslation({ inProgress: false });
+
+    if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
+      useUrlStore.getState().setError(friendlyError);
+    }
+  } catch (err: any) {
+    const errorMsg = err?.message || String(err);
+    const cancelled =
+      /operation cancelled/i.test(errorMsg) ||
+      /process cancelled/i.test(errorMsg);
+    const friendlyError = getTranslationFailureMessage({
+      error: errorMsg,
+      cancelled,
+    });
+
+    useTaskStore.getState().setTranslation({
+      stage: friendlyError,
+      percent: 100,
+      inProgress: false,
+    });
+
+    if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
+      useUrlStore.getState().setError(friendlyError);
+    }
   }
 }

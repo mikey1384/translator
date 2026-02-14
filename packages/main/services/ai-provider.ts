@@ -231,18 +231,38 @@ const PROVIDER_ERROR_CODES = {
   openai: {
     authInvalid: ERROR_CODES.OPENAI_KEY_INVALID,
     rateLimit: ERROR_CODES.OPENAI_RATE_LIMIT,
+    insufficientQuota: ERROR_CODES.OPENAI_INSUFFICIENT_QUOTA,
   },
   anthropic: {
     authInvalid: ERROR_CODES.ANTHROPIC_KEY_INVALID,
     rateLimit: ERROR_CODES.ANTHROPIC_RATE_LIMIT,
+    insufficientQuota: ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA,
   },
   elevenlabs: {
     authInvalid: ERROR_CODES.ELEVENLABS_KEY_INVALID,
     rateLimit: ERROR_CODES.ELEVENLABS_RATE_LIMIT,
+    insufficientQuota: ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA,
   },
 } as const;
 
 type ErrorMappableProvider = keyof typeof PROVIDER_ERROR_CODES;
+
+function isInsufficientQuotaError(error: any): boolean {
+  const details = [
+    error?.message,
+    error?.response?.data?.error?.message,
+    error?.response?.data?.error?.code,
+    error?.response?.data?.error?.type,
+    error?.response?.data?.message,
+  ]
+    .map(v => String(v ?? '').toLowerCase())
+    .join(' ');
+  return (
+    details.includes('insufficient_quota') ||
+    details.includes('insufficient quota') ||
+    details.includes('insufficient credits')
+  );
+}
 
 /**
  * Maps API errors to standardized error codes for a given provider.
@@ -260,6 +280,10 @@ function mapProviderError(provider: ErrorMappableProvider, error: any): never {
     throw new Error(codes.authInvalid);
   }
   if (status === 429) {
+    if (isInsufficientQuotaError(error)) {
+      log.warn(`[ai-provider] ${provider} insufficient quota.`);
+      throw new Error(codes.insufficientQuota);
+    }
     log.warn(`[ai-provider] ${provider} rate limit hit.`);
     throw new Error(codes.rateLimit);
   }

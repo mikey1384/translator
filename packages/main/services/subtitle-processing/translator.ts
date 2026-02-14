@@ -498,19 +498,56 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
         throw err; // Re-throw cancellation errors immediately
       }
 
-      // If credits ran out, propagate this upward to cancel the whole pipeline
+      const msg = String(err?.message || '');
+      const lowerMsg = msg.toLowerCase();
+
+      const isProviderAuthError =
+        msg.includes(ERROR_CODES.OPENAI_KEY_INVALID) ||
+        msg.includes(ERROR_CODES.ANTHROPIC_KEY_INVALID) ||
+        msg.includes(ERROR_CODES.ELEVENLABS_KEY_INVALID);
+      const isProviderRateLimit =
+        msg.includes(ERROR_CODES.OPENAI_RATE_LIMIT) ||
+        msg.includes(ERROR_CODES.ANTHROPIC_RATE_LIMIT) ||
+        msg.includes(ERROR_CODES.ELEVENLABS_RATE_LIMIT);
+      const isProviderQuotaError =
+        msg.includes(ERROR_CODES.OPENAI_INSUFFICIENT_QUOTA) ||
+        msg.includes(ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA) ||
+        msg.includes(ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA) ||
+        lowerMsg.includes('insufficient_quota');
+
+      // BYO account/key failures should be surfaced to users, not silently
+      // replaced with source text.
       if (
-        typeof err?.message === 'string' &&
-        err.message === ERROR_CODES.INSUFFICIENT_CREDITS
+        msg === ERROR_CODES.INSUFFICIENT_CREDITS ||
+        isProviderAuthError ||
+        isProviderQuotaError
       ) {
         throw err;
       }
 
+      if (isProviderRateLimit) {
+        if (retryCount < MAX_RETRIES - 1) {
+          retryCount++;
+          const delay = 1000 * Math.pow(2, retryCount);
+          log.info(
+            `[${operationId}] Retrying translation batch after provider rate limit in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+          );
+
+          if (signal?.aborted) {
+            throw new DOMException('Operation cancelled', 'AbortError');
+          }
+
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw err;
+      }
+
       if (
-        err.message &&
-        (err.message.includes('timeout') ||
-          err.message.includes('rate') ||
-          err.message.includes('ECONNRESET')) &&
+        msg &&
+        (msg.includes('timeout') ||
+          msg.includes('rate') ||
+          msg.includes('ECONNRESET')) &&
         retryCount < MAX_RETRIES - 1
       ) {
         retryCount++;

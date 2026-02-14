@@ -17,6 +17,10 @@ import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
 import { useUrlStore } from '../../../state/url-store';
 import * as SystemIPC from '../../../ipc/system';
 import { getByoErrorMessage, isByoError } from '../../../utils/byoErrors';
+import {
+  getTranslationFailureMessage,
+  shouldSurfaceTranslationFailure,
+} from '../../../utils/translationFailure';
 
 // Voice cloning costs ~35,000 credits per minute (fetched from API, this is fallback)
 const VOICE_CLONING_CREDITS_PER_MINUTE = 35_000;
@@ -45,7 +49,12 @@ export async function executeSrtTranslation({
   segments: any[];
   targetLanguage: string;
   operationId: string;
-}): Promise<{ success: boolean; subtitles?: string; cancelled?: boolean }> {
+}): Promise<{
+  success: boolean;
+  subtitles?: string;
+  cancelled?: boolean;
+  error?: string;
+}> {
   // Atomically check and start translation (prevents race condition)
   const started = useTaskStore
     .getState()
@@ -56,6 +65,9 @@ export async function executeSrtTranslation({
   if (!started) {
     return { success: false };
   }
+
+  // Clear stale errors so users only see current run failures.
+  useUrlStore.getState().clearError();
 
   // Refresh credits at start of translation for accurate progress display
   try {
@@ -74,11 +86,12 @@ export async function executeSrtTranslation({
       operationId,
       qualityTranslation,
     });
-    if (res?.translatedSubtitles) {
+    if (res?.success && res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
       // Preserve linkage to the source video if present; do not invent a new one
       const srcVideo = useSubStore.getState().sourceVideoPath ?? null;
       useSubStore.getState().load(finalSegments, null, 'fresh', srcVideo);
+      useUrlStore.getState().clearError();
       useTaskStore.getState().setTranslation({
         stage: i18n.t('generateSubtitles.status.completed'),
         percent: 100,
@@ -86,19 +99,45 @@ export async function executeSrtTranslation({
       });
       return { success: true, subtitles: res.translatedSubtitles };
     }
-    useTaskStore.getState().setTranslation({ inProgress: false });
-    return { success: false };
+
+    const cancelled = Boolean(res?.cancelled);
+    const friendlyError = getTranslationFailureMessage({
+      error: res?.error,
+      cancelled,
+    });
+
+    useTaskStore.getState().setTranslation({
+      stage: friendlyError,
+      percent: 100,
+      inProgress: false,
+    });
+
+    if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
+      useUrlStore.getState().setError(friendlyError);
+    }
+
+    return { success: false, cancelled, error: res?.error };
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
-    const userFriendlyMsg = isByoError(errorMsg)
-      ? getByoErrorMessage(errorMsg)
-      : i18n.t('generateSubtitles.status.error');
+    const cancelled =
+      /operation cancelled/i.test(errorMsg) ||
+      /process cancelled/i.test(errorMsg);
+    const userFriendlyMsg = getTranslationFailureMessage({
+      error: errorMsg,
+      cancelled,
+    });
+
     useTaskStore.getState().setTranslation({
       stage: userFriendlyMsg,
       percent: 100,
       inProgress: false,
     });
-    return { success: false };
+
+    if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
+      useUrlStore.getState().setError(userFriendlyMsg);
+    }
+
+    return { success: false, cancelled, error: errorMsg };
   }
 }
 

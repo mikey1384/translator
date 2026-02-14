@@ -67,7 +67,13 @@ export function translateSubtitles(options: {
   targetLanguage: string;
   operationId?: string;
   qualityTranslation?: boolean;
-}): Promise<{ translatedSubtitles: string; error?: string }> {
+}): Promise<{
+  success: boolean;
+  translatedSubtitles?: string;
+  cancelled?: boolean;
+  error?: string;
+  operationId?: string;
+}> {
   // Ensure sourceLanguage is a string for type contract if not provided
   const payload = {
     sourceLanguage: '',

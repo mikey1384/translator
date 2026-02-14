@@ -2,7 +2,6 @@ import Section from '../../components/Section.js';
 import { useTranslation } from 'react-i18next';
 import SaveOriginalVideoButton from './SaveOriginalVideoButton.js';
 import SaveDubbedVideoButton from './SaveDubbedVideoButton.js';
-import ErrorBanner from '../../components/ErrorBanner.js';
 import {
   useUIStore,
   useVideoStore,
@@ -40,7 +39,6 @@ export default function GenerateSubtitles() {
   const {
     urlInput,
     downloadQuality,
-    error,
     download,
     setUrlInput,
     setDownloadQuality,
@@ -108,8 +106,6 @@ export default function GenerateSubtitles() {
       {/* Global confirmations are rendered via <GlobalModals /> */}
 
       <UrlCookieBanner />
-
-      {error && <ErrorBanner message={error} onClose={() => clearError()} />}
 
       <SaveOriginalVideoButton
         downloadComplete={!download.inProgress && download.percent === 100}

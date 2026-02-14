@@ -21,6 +21,7 @@ import DubbingProgressArea from '../components/ProgressAreas/DubbingProgressArea
 import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
 import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
+import ErrorBanner from '../components/ErrorBanner';
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
 import { useAiStore } from '../state';
 
@@ -96,7 +97,9 @@ export default function AppContent() {
     }
   }, []);
   const { showSettings } = useUIStore();
-  const { setDownload } = useUrlStore();
+  const setDownload = useUrlStore(s => s.setDownload);
+  const globalError = useUrlStore(s => s.error);
+  const clearGlobalError = useUrlStore(s => s.clearError);
   const { url: videoUrl } = useVideoStore();
   const isTranslating = useTaskStore(
     s =>
@@ -281,6 +284,15 @@ export default function AppContent() {
 
       <div className={containerStyles}>
         <Header />
+
+        {globalError && (
+          <div style={{ marginBottom: '12px' }}>
+            <ErrorBanner
+              message={globalError}
+              onClose={() => clearGlobalError()}
+            />
+          </div>
+        )}
 
         {/* Top-level credit warning banner */}
         {showCreditWarning && (

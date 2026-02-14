@@ -167,7 +167,9 @@ function flush() {
           flushTimer = null;
         }
         try {
-          if (operationId) logTask('complete', 'translation', { operationId });
+          if (operationId && !/cancel/.test(stageLower)) {
+            logTask('complete', 'translation', { operationId });
+          }
         } catch {
           // Do nothing
         }

@@ -21,10 +21,13 @@ export const ERROR_CODES = {
   INSUFFICIENT_DISK_SPACE: 'insufficient-disk-space',
   OPENAI_KEY_INVALID: 'openai-key-invalid',
   OPENAI_RATE_LIMIT: 'openai-rate-limit',
+  OPENAI_INSUFFICIENT_QUOTA: 'openai-insufficient-quota',
   ANTHROPIC_KEY_INVALID: 'anthropic-key-invalid',
   ANTHROPIC_RATE_LIMIT: 'anthropic-rate-limit',
+  ANTHROPIC_INSUFFICIENT_QUOTA: 'anthropic-insufficient-quota',
   ELEVENLABS_KEY_INVALID: 'elevenlabs-key-invalid',
   ELEVENLABS_RATE_LIMIT: 'elevenlabs-rate-limit',
+  ELEVENLABS_INSUFFICIENT_QUOTA: 'elevenlabs-insufficient-quota',
   TRANSLATION_JOB_NOT_FOUND: 'translation-job-not-found',
 } as const;
 

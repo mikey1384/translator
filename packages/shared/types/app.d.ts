@@ -352,14 +352,18 @@ declare module '@shared-types/app' {
 
   export interface TranslateSubtitlesOptions {
     subtitles: string;
-    sourceLanguage: string;
+    sourceLanguage?: string;
     targetLanguage: string;
+    operationId?: string;
     qualityTranslation?: boolean; // true = include review, false = skip review
   }
 
   export interface TranslateSubtitlesResult {
-    translatedSubtitles: string;
+    success: boolean;
+    translatedSubtitles?: string;
+    cancelled?: boolean;
     error?: string;
+    operationId?: string;
   }
 
   // Single-line translate with explicit context

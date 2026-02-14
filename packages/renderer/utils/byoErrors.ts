@@ -1,5 +1,5 @@
 import { ERROR_CODES } from '../../shared/constants';
-import i18n from '../i18n';
+import { i18n } from '../i18n';
 
 /**
  * Maps error codes to user-friendly localized messages.
@@ -11,10 +11,16 @@ type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   [ERROR_CODES.OPENAI_KEY_INVALID]: 'errors.byo.openaiKeyInvalid',
   [ERROR_CODES.OPENAI_RATE_LIMIT]: 'errors.byo.openaiRateLimit',
+  [ERROR_CODES.OPENAI_INSUFFICIENT_QUOTA]:
+    'errors.byo.openaiInsufficientQuota',
   [ERROR_CODES.ANTHROPIC_KEY_INVALID]: 'errors.byo.anthropicKeyInvalid',
   [ERROR_CODES.ANTHROPIC_RATE_LIMIT]: 'errors.byo.anthropicRateLimit',
+  [ERROR_CODES.ANTHROPIC_INSUFFICIENT_QUOTA]:
+    'errors.byo.anthropicInsufficientQuota',
   [ERROR_CODES.ELEVENLABS_KEY_INVALID]: 'errors.byo.elevenlabsKeyInvalid',
   [ERROR_CODES.ELEVENLABS_RATE_LIMIT]: 'errors.byo.elevenlabsRateLimit',
+  [ERROR_CODES.ELEVENLABS_INSUFFICIENT_QUOTA]:
+    'errors.byo.elevenlabsInsufficientQuota',
 };
 
 /**
