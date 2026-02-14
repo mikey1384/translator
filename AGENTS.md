@@ -108,20 +108,16 @@ When asked to version bump, tag, and push:
    )"
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
-5. **Set the GitHub Release body** — this is **critical** for the update popup on both Mac and Windows. The tag annotation does NOT auto-populate the release body. After pushing, set it with `gh release create` (or `gh release edit` if the release already exists):
+5. **Wait for the GitHub Action to finish** — the macOS release workflow builds, signs, and publishes assets to the GitHub Release. electron-builder uses `--publish onTag` and manages the release lifecycle (create draft → upload assets → publish). **Do NOT create the release manually before the action completes** — a pre-existing non-draft release prevents electron-builder from uploading assets.
+6. **Set the GitHub Release body** — this is **critical** for the update popup on both Mac and Windows. The tag annotation does NOT auto-populate the release body. After the action completes, add the body with:
    ```bash
-   # Create release with notes (preferred — do this right after pushing)
-   gh release create v{VERSION} --title "v{VERSION}" --notes "$(cat <<'EOF'
+   gh release edit v{VERSION} --notes "$(cat <<'EOF'
    User-friendly release notes here.
    EOF
    )"
    ```
-   If GitHub Actions already created the release:
-   ```bash
-   gh release edit v{VERSION} --notes "Release notes here"
-   ```
 
-**Why this matters:** Mac's electron-updater reads notes from the GitHub Release body. The Windows one-click release script (`scripts/release-windows-oneclick.ps1`) also fetches the GitHub Release body to inject into `latest.yml`. If the body is empty, **neither platform shows the update popup**.
+**Why this matters:** Mac's electron-updater reads notes from the GitHub Release body. The Windows one-click release script (`scripts/release-windows-oneclick.ps1`) also fetches the GitHub Release body to inject into `latest.yml`. If the body is empty, **neither platform shows the update popup**. But if the release is pre-created before the action runs, electron-builder cannot upload assets and the update will not appear at all.
 
 ## Environment
 
