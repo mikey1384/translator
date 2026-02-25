@@ -178,12 +178,21 @@ export async function translateSubtitlesFromSrt({
 
       // Determine which model will be used for review and get display name.
       // This may be updated at runtime if we need to fall back (e.g., Anthropic unavailable).
+      const formatReviewModelName = (
+        model: string,
+        provider = getActiveProviderForModel(model)
+      ) => {
+        const baseName = AI_MODEL_DISPLAY_NAMES[model] ?? model;
+        return provider === 'stage5' ? `${baseName} (Stage5 Auto)` : baseName;
+      };
       const reviewConfig = getReviewModel();
-      const initialReviewProvider = getActiveProviderForModel(reviewConfig.model);
-      let reviewModelName =
-        initialReviewProvider === 'stage5'
-          ? 'Stage5 Auto'
-          : (AI_MODEL_DISPLAY_NAMES[reviewConfig.model] ?? reviewConfig.model);
+      const initialReviewProvider = getActiveProviderForModel(
+        reviewConfig.model
+      );
+      let reviewModelName = formatReviewModelName(
+        reviewConfig.model,
+        initialReviewProvider
+      );
       let reviewConfigOverride: ReturnType<typeof getReviewModel> | null = null;
 
       const emitRangeStage = (
@@ -262,10 +271,10 @@ export async function translateSubtitlesFromSrt({
                   ? { model: AI_MODELS.GPT, reasoning: { effort: 'high' } }
                   : { model: fallbackModel };
               const fallbackProvider = getActiveProviderForModel(fallbackModel);
-              const fallbackName =
-                fallbackProvider === 'stage5'
-                  ? 'Stage5 Auto'
-                  : (AI_MODEL_DISPLAY_NAMES[fallbackModel] ?? fallbackModel);
+              const fallbackName = formatReviewModelName(
+                fallbackModel,
+                fallbackProvider
+              );
               const displayName = `${fallbackName} (fallback)`;
               if (displayName !== reviewModelName) {
                 reviewModelName = displayName;

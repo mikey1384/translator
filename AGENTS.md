@@ -98,7 +98,7 @@ When asked to version bump, tag, and push:
 
 1. **Bump version** in `package.json` (patch for fixes, minor for features)
 2. **Commit** with message format: `v{VERSION}: Short description of changes`
-3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this shows in the update popup). The first line is the subject; the body after the blank line becomes the "What's New" popup text:
+3. **Create annotated tag** with user-facing release notes (NO "Co-Authored-By" — this shows in the update popup). The first line is the subject; after a blank line, add a non-empty body for the "What's New" popup text. Lightweight tags are not allowed:
    ```bash
    git tag -a v{VERSION} -m "$(cat <<'EOF'
    v{VERSION}: Short description
@@ -110,9 +110,9 @@ When asked to version bump, tag, and push:
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
 
-The GitHub Action handles the rest automatically: it builds, signs, uploads assets, creates the GitHub Release, and populates the release body from the tag annotation. **Do NOT manually create the release with `gh release create`** — a pre-existing non-draft release prevents electron-builder from uploading assets.
+The GitHub Action handles the macOS release from SemVer tags: it builds, signs, uploads assets, creates the GitHub Release, and populates the release body from the tag annotation. Windows release is manual via `Release-Windows-OneClick.bat`. **Do NOT manually create the SemVer GitHub release with `gh release create`** — a pre-existing non-draft release prevents electron-builder from uploading assets.
 
-**Why the tag annotation matters:** The workflow extracts the tag annotation body and sets it as the GitHub Release body. Mac's electron-updater and the Windows release script both read the release body to show the "What's New" popup. If the tag annotation is empty, no popup appears.
+**Why the tag annotation matters:** The macOS release workflow fails if the tag body is empty. The Windows release script resolves notes from `dist/release-notes.txt` or the local tag annotation body and fails by default if both are missing. This keeps "What's New" text deterministic across platforms.
 
 ## Environment
 

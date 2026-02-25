@@ -15,7 +15,10 @@ Param(
   [string]$BucketBase = 'r2-upload:ai-translator-downloads/win',
 
   [Parameter(Mandatory = $false)]
-  [switch]$Force
+  [switch]$Force,
+
+  [Parameter(Mandatory = $false)]
+  [switch]$AllowMissingReleaseNotes
 )
 
 Set-StrictMode -Version Latest
@@ -83,30 +86,39 @@ function Resolve-DefaultReleaseNotesPath {
   return $null
 }
 
-function Get-GitHubReleaseNotes {
+function Get-TagReleaseNotes {
   param([string]$version)
 
-  if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-    Write-Host "WARNING: 'gh' CLI not found. Cannot fetch GitHub release notes for v$version." -ForegroundColor Yellow
+  $tag = "v$version"
+
+  if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "WARNING: 'git' not found. Cannot read release notes from $tag." -ForegroundColor Yellow
     return $null
   }
 
-  Write-Host "No release notes file provided. Fetching from GitHub release v$version..."
-  $ghLines = @(& gh release view "v$version" --json body --jq '.body // empty' 2>$null)
-  $ghExit = $LASTEXITCODE
-  if ($ghExit -ne 0) {
-    Write-Host "WARNING: Failed to fetch GitHub release notes for v$version (gh exit code $ghExit)." -ForegroundColor Yellow
+  $tagTypeLines = @(& git cat-file -t $tag 2>$null)
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "WARNING: Tag $tag not found locally." -ForegroundColor Yellow
     return $null
   }
 
-  $ghNotes = ($ghLines -join "`n").Trim()
-  if ($ghNotes.Length -eq 0) {
-    Write-Host "WARNING: GitHub release v$version has no body text." -ForegroundColor Yellow
+  $tagType = ($tagTypeLines -join "`n").Trim()
+  if ($tagType -ne 'tag') {
+    Write-Host "WARNING: Tag $tag is lightweight. Annotated tags are required for release notes." -ForegroundColor Yellow
     return $null
   }
 
-  Write-Host "Fetched release notes from GitHub."
-  return $ghNotes
+  $bodyLines = @(& git tag -l --format='%(contents:body)' $tag 2>$null)
+  if ($LASTEXITCODE -eq 0) {
+    $body = ($bodyLines -join "`n").Trim()
+    if ($body.Length -gt 0) {
+      Write-Host "Using release notes from local tag annotation body: $tag"
+      return $body
+    }
+  }
+
+  Write-Host "WARNING: Tag $tag annotation body is empty." -ForegroundColor Yellow
+  return $null
 }
 
 function Inject-ReleaseNotesIntoLatestYaml {
@@ -162,9 +174,9 @@ if ($ReleaseNotesFile) {
   }
 }
 
-$ghNotes = $null
+$tagNotes = $null
 if (-not $ReleaseNotesFile) {
-  $ghNotes = Get-GitHubReleaseNotes -version $Version
+  $tagNotes = Get-TagReleaseNotes -version $Version
 }
 
 $didInjectReleaseNotes = Inject-ReleaseNotesIntoLatestYaml `
@@ -172,10 +184,19 @@ $didInjectReleaseNotes = Inject-ReleaseNotesIntoLatestYaml `
   -latestYaml $latestYaml `
   -version $Version `
   -releaseNotesFile $ReleaseNotesFile `
-  -releaseNotesText $ghNotes
+  -releaseNotesText $tagNotes
 
 if (-not $didInjectReleaseNotes) {
-  Write-Host "WARNING: latest.yml will not include releaseNotes. Windows post-update popup will be skipped for this release." -ForegroundColor Yellow
+  $msg = @(
+    "Release notes are required for Windows releases."
+    "Provide -ReleaseNotesFile, add dist/release-notes.txt, or create annotated tag v$Version with body text."
+    "Pass -AllowMissingReleaseNotes only for emergency overrides."
+  ) -join ' '
+  if ($AllowMissingReleaseNotes) {
+    Write-Host "WARNING: $msg latest.yml will not include releaseNotes for this release." -ForegroundColor Yellow
+  } else {
+    throw $msg
+  }
 }
 
 # Optional blockmap (present if differential metadata is generated)

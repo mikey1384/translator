@@ -2,6 +2,7 @@
   One‑click Windows Release
   - Builds & signs the app (npm run package:win)
   - Uploads artifacts to Cloudflare R2 (scripts/upload-to-r2-win.ps1)
+  - Injects release notes from dist/release-notes.txt or local annotated tag body
   - Purges Cloudflare cache (scripts/purge-cloudflare-cache.ps1)
 
   Usage: Double‑click Release-Windows-OneClick.bat in repo root
@@ -18,7 +19,10 @@ Param(
   [switch]$IncludeVersionedPurge,
 
   [Parameter(Mandatory = $false)]
-  [string]$ReleaseNotesFile
+  [string]$ReleaseNotesFile,
+
+  [Parameter(Mandatory = $false)]
+  [switch]$AllowMissingReleaseNotes
 )
 
 Set-StrictMode -Version Latest
@@ -88,13 +92,18 @@ try {
   Confirm-ArtifactPaths -version $version
 
   Write-Stage 'Uploading to Cloudflare R2'
+  $uploadArgs = @('-Version', $version)
   if ($ReleaseNotesFile) {
     Write-Host "Using explicit release notes file override: $ReleaseNotesFile"
-    & "$repo\scripts\upload-to-r2-win.ps1" -Version $version -ReleaseNotesFile $ReleaseNotesFile
+    $uploadArgs += @('-ReleaseNotesFile', $ReleaseNotesFile)
   } else {
-    Write-Host 'No -ReleaseNotesFile provided. Upload script will resolve release notes (dist/release-notes.txt, then GitHub release body).' -ForegroundColor Yellow
-    & "$repo\scripts\upload-to-r2-win.ps1" -Version $version
+    Write-Host 'No -ReleaseNotesFile provided. Upload script will resolve release notes (dist/release-notes.txt, then local tag annotation).' -ForegroundColor Yellow
   }
+  if ($AllowMissingReleaseNotes) {
+    Write-Host 'WARNING: AllowMissingReleaseNotes enabled. This should only be used for emergency releases.' -ForegroundColor Yellow
+    $uploadArgs += '-AllowMissingReleaseNotes'
+  }
+  & "$repo\scripts\upload-to-r2-win.ps1" @uploadArgs
 
   if (-not $SkipPurge) {
     Write-Stage 'Purging Cloudflare cache'

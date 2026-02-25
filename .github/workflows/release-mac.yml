@@ -121,13 +121,22 @@ jobs:
         id: tag_notes
         run: |
           # Ensure the full annotated tag object is available
-          git fetch origin tag "$GITHUB_REF_NAME" --no-tags -f 2>/dev/null || true
-          # Get the body (everything after the subject line)
-          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
-          if [ -z "$BODY" ]; then
-            # Single-line annotation — use the subject instead
-            BODY=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+
+          TAG_TYPE=$(git cat-file -t "$GITHUB_REF_NAME" 2>/dev/null || true)
+          if [ "$TAG_TYPE" != "tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME must be an annotated tag."
+            exit 1
           fi
+
+          # Extract the body (text after the subject line + blank line).
+          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
+          if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME annotation body is empty."
+            echo "::error::Add release notes after a blank line in the tag annotation."
+            exit 1
+          fi
+
           printf '%s\n' "$BODY" > /tmp/release-notes.md
 
       - name: Publish GitHub Release
