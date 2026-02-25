@@ -3,7 +3,7 @@ Param(
   [string]$Version,
 
   [Parameter(Mandatory = $false)]
-  [string]$SrcPath = "dist/Translator Setup $Version.exe",
+  [string]$SrcPath,
 
   [Parameter(Mandatory = $false)]
   [string]$LatestYamlPath = 'dist/latest.yml',
@@ -24,17 +24,104 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Read-PackageVersion {
+  $pkgPath = Join-Path -Path (Get-Location) -ChildPath 'package.json'
+  if (-not (Test-Path -LiteralPath $pkgPath)) {
+    return $null
+  }
+  try {
+    $pkg = Get-Content -LiteralPath $pkgPath | ConvertFrom-Json
+    if ($pkg -and $pkg.version) {
+      return [string]$pkg.version
+    }
+  } catch {
+    return $null
+  }
+  return $null
+}
+
+function Get-DefaultSourcePath {
+  param([string]$version)
+  return (Join-Path -Path 'dist' -ChildPath "Translator Setup $version.exe")
+}
+
+function Normalize-Version {
+  param([string]$raw)
+
+  if (-not $raw) { return $null }
+  $v = $raw.Trim()
+  if ($v.Length -eq 0) { return $null }
+
+  # Common accidental placeholders/flags observed in manual invocations.
+  if ($v -in @('version', '-version', '--version')) { return $null }
+
+  # Accept optional "v" prefix from callers.
+  if ($v.StartsWith('v') -or $v.StartsWith('V')) {
+    $v = $v.Substring(1)
+  }
+
+  if ($v -match '^-') { return $null }
+
+  # Strict SemVer-ish validation (supports prerelease + build metadata together).
+  if ($v -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$') {
+    return $null
+  }
+
+  return $v
+}
+
 function Resolve-SourcePath {
-  param([string]$p)
-  if (Test-Path -LiteralPath $p) {
+  param(
+    [string]$p,
+    [string]$version,
+    [switch]$AllowVersionFallback
+  )
+
+  if ($p -and (Test-Path -LiteralPath $p)) {
     return (Get-Item -LiteralPath $p).FullName
   }
-  # Fallback: try to find the first matching installer in dist
-  $candidates = Get-ChildItem -LiteralPath 'dist' -Filter 'Translator Setup *.exe' -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+
+  if (-not $AllowVersionFallback) {
+    throw "Source installer not found at '$p'."
+  }
+
+  $normalizedVersion = Normalize-Version -raw $version
+  if (-not $normalizedVersion) {
+    throw "Cannot resolve fallback source installer because version '$version' is invalid."
+  }
+
+  $escapedVersion = [Regex]::Escape($normalizedVersion)
+  # Fallback: only select an installer that exactly matches the normalized version.
+  $candidates = Get-ChildItem -LiteralPath 'dist' -Filter 'Translator Setup *.exe' -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -match "^Translator Setup $escapedVersion\.exe$" } |
+    Sort-Object LastWriteTime -Descending
   if ($candidates -and $candidates.Count -gt 0) {
     return $candidates[0].FullName
   }
-  throw "Source installer not found at '$p' and no matching 'Translator Setup *.exe' in dist/"
+
+  throw "Source installer not found at '$p' and no installer matching version '$normalizedVersion' in dist/"
+}
+
+function Assert-SourceMatchesVersion {
+  param(
+    [string]$fullPath,
+    [string]$version
+  )
+
+  $fileNameNoExt = [System.IO.Path]::GetFileNameWithoutExtension($fullPath)
+  if ($fileNameNoExt -notmatch '^Translator Setup (.+)$') {
+    Write-Host "WARNING: Could not infer version from installer filename '$fileNameNoExt'. Skipping version consistency check." -ForegroundColor Yellow
+    return
+  }
+
+  $fromName = Normalize-Version -raw $Matches[1]
+  if (-not $fromName) {
+    throw "Resolved installer '$fullPath' has an invalid version segment in its filename."
+  }
+
+  if ($fromName -ne $version) {
+    throw "Resolved installer '$fullPath' does not match requested version '$version' (found '$fromName')."
+  }
 }
 
 function Resolve-LatestYamlPath {
@@ -45,18 +132,17 @@ function Resolve-LatestYamlPath {
   throw "latest.yml not found at '$p'. Build with electron-builder first."
 }
 
-function Resolve-OptionalPath {
-  param(
-    [string]$pattern
-  )
-  $exact = Join-Path -Path 'dist' -ChildPath $pattern
-  if (Test-Path -LiteralPath $exact) {
-    return (Get-Item -LiteralPath $exact).FullName
+function Resolve-BlockmapPath {
+  param([string]$installerPath)
+  if (-not $installerPath) {
+    return $null
   }
-  $candidates = Get-ChildItem -LiteralPath 'dist' -Filter $pattern -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
-  if ($candidates -and $candidates.Count -gt 0) {
-    return $candidates[0].FullName
+
+  $candidate = "$installerPath.blockmap"
+  if (Test-Path -LiteralPath $candidate) {
+    return (Get-Item -LiteralPath $candidate).FullName
   }
+
   return $null
 }
 
@@ -89,7 +175,13 @@ function Resolve-DefaultReleaseNotesPath {
 function Get-TagReleaseNotes {
   param([string]$version)
 
-  $tag = "v$version"
+  $normalizedVersion = Normalize-Version -raw $version
+  if (-not $normalizedVersion) {
+    Write-Host "WARNING: Invalid version '$version'. Skipping tag-based release notes lookup." -ForegroundColor Yellow
+    return $null
+  }
+
+  $tag = "v$normalizedVersion"
 
   if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "WARNING: 'git' not found. Cannot read release notes from $tag." -ForegroundColor Yellow
@@ -153,8 +245,25 @@ Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
 Write-Host "Force re-upload: $Force"
 
-$src = Resolve-SourcePath -p $SrcPath
+$resolvedVersion = Normalize-Version -raw $Version
+if (-not $resolvedVersion) {
+  $pkgVersion = Read-PackageVersion
+  $resolvedVersion = Normalize-Version -raw $pkgVersion
+  if (-not $resolvedVersion) {
+    throw "Invalid -Version '$Version' and unable to recover a valid version from package.json."
+  }
+  Write-Host "WARNING: Invalid -Version '$Version'. Falling back to package.json version '$resolvedVersion'." -ForegroundColor Yellow
+}
+$Version = $resolvedVersion
+
+$srcPathProvided = $PSBoundParameters.ContainsKey('SrcPath') -and -not [string]::IsNullOrWhiteSpace($PSBoundParameters['SrcPath'])
+if (-not $srcPathProvided) {
+  $SrcPath = Get-DefaultSourcePath -version $Version
+}
+
+$src = Resolve-SourcePath -p $SrcPath -version $Version -AllowVersionFallback:(-not $srcPathProvided)
 Write-Host "Source: $src"
+Assert-SourceMatchesVersion -fullPath $src -version $Version
 
 $latestYaml = Resolve-LatestYamlPath -p $LatestYamlPath
 Write-Host "latest.yml: $latestYaml"
@@ -200,7 +309,7 @@ if (-not $didInjectReleaseNotes) {
 }
 
 # Optional blockmap (present if differential metadata is generated)
-$blockmap = Resolve-OptionalPath -pattern "Translator Setup *.exe.blockmap"
+$blockmap = Resolve-BlockmapPath -installerPath $src
 if ($null -ne $blockmap) {
   Write-Host "blockmap:   $blockmap"
 } else {
