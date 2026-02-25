@@ -92,18 +92,20 @@ try {
   Confirm-ArtifactPaths -version $version
 
   Write-Stage 'Uploading to Cloudflare R2'
-  $uploadArgs = @('-Version', $version)
+  $uploadParams = @{
+    Version = $version
+  }
   if ($ReleaseNotesFile) {
     Write-Host "Using explicit release notes file override: $ReleaseNotesFile"
-    $uploadArgs += @('-ReleaseNotesFile', $ReleaseNotesFile)
+    $uploadParams.ReleaseNotesFile = $ReleaseNotesFile
   } else {
     Write-Host 'No -ReleaseNotesFile provided. Upload script will resolve release notes (dist/release-notes.txt, then local tag annotation).' -ForegroundColor Yellow
   }
   if ($AllowMissingReleaseNotes) {
     Write-Host 'WARNING: AllowMissingReleaseNotes enabled. This should only be used for emergency releases.' -ForegroundColor Yellow
-    $uploadArgs += '-AllowMissingReleaseNotes'
+    $uploadParams.AllowMissingReleaseNotes = $true
   }
-  & "$repo\scripts\upload-to-r2-win.ps1" @uploadArgs
+  & "$repo\scripts\upload-to-r2-win.ps1" @uploadParams
 
   if (-not $SkipPurge) {
     Write-Stage 'Purging Cloudflare cache'

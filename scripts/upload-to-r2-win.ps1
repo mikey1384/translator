@@ -245,6 +245,15 @@ Write-Host "== Upload to R2 (Windows) =="
 Write-Host "Version: $Version"
 Write-Host "Force re-upload: $Force"
 
+$recoveredFromLegacyShift = $false
+$legacyShiftedVersion = Normalize-Version -raw $SrcPath
+if ($Version -and ($Version.Trim().ToLowerInvariant() -in @('-version', '--version')) -and $legacyShiftedVersion) {
+  Write-Host "WARNING: Detected positional argument binding for '-Version'. Recovering by treating SrcPath '$SrcPath' as version." -ForegroundColor Yellow
+  $Version = $legacyShiftedVersion
+  $SrcPath = $null
+  $recoveredFromLegacyShift = $true
+}
+
 $resolvedVersion = Normalize-Version -raw $Version
 if (-not $resolvedVersion) {
   $pkgVersion = Read-PackageVersion
@@ -256,7 +265,7 @@ if (-not $resolvedVersion) {
 }
 $Version = $resolvedVersion
 
-$srcPathProvided = $PSBoundParameters.ContainsKey('SrcPath') -and -not [string]::IsNullOrWhiteSpace($PSBoundParameters['SrcPath'])
+$srcPathProvided = (-not $recoveredFromLegacyShift) -and $PSBoundParameters.ContainsKey('SrcPath') -and -not [string]::IsNullOrWhiteSpace($SrcPath)
 if (-not $srcPathProvided) {
   $SrcPath = Get-DefaultSourcePath -version $Version
 }
