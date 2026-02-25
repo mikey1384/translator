@@ -6,6 +6,7 @@ import {
   AI_MODELS,
   ERROR_CODES,
   API_TIMEOUTS,
+  normalizeAiModelId,
 } from '../../shared/constants/index.js';
 import { getDeviceId } from '../handlers/credit-handlers.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
@@ -34,12 +35,14 @@ export async function transcribe({
   filePath,
   promptContext,
   model = AI_MODELS.WHISPER,
+  qualityMode,
   idempotencyKey,
   signal,
 }: {
   filePath: string;
   promptContext?: string;
   model?: string;
+  qualityMode?: boolean;
   /** Prevent double-charges on client retries / disconnects. */
   idempotencyKey?: string;
   signal?: AbortSignal;
@@ -64,6 +67,9 @@ export async function transcribe({
   }
 
   fd.append('model', model);
+  if (typeof qualityMode === 'boolean') {
+    fd.append('qualityMode', String(qualityMode));
+  }
 
   try {
     // Step 1: Submit the transcription job
@@ -187,15 +193,21 @@ export async function transcribe({
 
 export async function translate({
   messages,
-  model = AI_MODELS.GPT,
+  model,
+  modelFamily,
   reasoning,
+  translationPhase,
+  qualityMode,
   signal,
 }: {
   messages: any[];
   model?: string;
+  modelFamily?: 'gpt' | 'claude' | 'auto';
   reasoning?: {
     effort?: 'low' | 'medium' | 'high';
   };
+  translationPhase?: 'draft' | 'review';
+  qualityMode?: boolean;
   signal?: AbortSignal;
 }) {
   // Dev: simulate zero credits without hitting the network
@@ -208,7 +220,20 @@ export async function translate({
   }
 
   try {
-    const payload: any = { messages, model, reasoning };
+    const normalizedModel = model ? normalizeAiModelId(model) : undefined;
+    const payload: any = { messages, reasoning };
+    if (normalizedModel) {
+      payload.model = normalizedModel;
+    }
+    if (modelFamily) {
+      payload.modelFamily = modelFamily;
+    }
+    if (translationPhase) {
+      payload.translationPhase = translationPhase;
+    }
+    if (typeof qualityMode === 'boolean') {
+      payload.qualityMode = qualityMode;
+    }
     const postResponse = await axios.post(
       `${STAGE5_API_URL}/translate`,
       payload,
@@ -546,6 +571,7 @@ export async function transcribeViaDirect({
   language,
   durationSec,
   modelId = 'scribe_v2',
+  qualityMode,
   idempotencyKey,
   signal,
   onProgress,
@@ -555,6 +581,7 @@ export async function transcribeViaDirect({
   durationSec?: number;
   /** ElevenLabs Scribe model for relay transcription. */
   modelId?: string;
+  qualityMode?: boolean;
   /** Prevent double-charges on client retries / disconnects. */
   idempotencyKey?: string;
   signal?: AbortSignal;
@@ -582,6 +609,9 @@ export async function transcribeViaDirect({
   }
   if (modelId) {
     fd.append('model_id', modelId);
+  }
+  if (typeof qualityMode === 'boolean') {
+    fd.append('qualityMode', String(qualityMode));
   }
 
   onProgress?.('Uploading audio to relay...', 10);
@@ -693,15 +723,21 @@ export async function transcribeViaDirect({
  */
 export async function translateViaDirect({
   messages,
-  model = AI_MODELS.GPT,
+  model,
+  modelFamily,
   reasoning,
+  translationPhase,
+  qualityMode,
   signal,
 }: {
   messages: any[];
   model?: string;
+  modelFamily?: 'gpt' | 'claude' | 'auto';
   reasoning?: {
     effort?: 'low' | 'medium' | 'high';
   };
+  translationPhase?: 'draft' | 'review';
+  qualityMode?: boolean;
   signal?: AbortSignal;
 }): Promise<any> {
   if (process.env.FORCE_ZERO_CREDITS === '1') {
@@ -713,9 +749,23 @@ export async function translateViaDirect({
   }
 
   try {
+    const normalizedModel = model ? normalizeAiModelId(model) : undefined;
+    const payload: Record<string, unknown> = { messages, reasoning };
+    if (normalizedModel) {
+      payload.model = normalizedModel;
+    }
+    if (modelFamily) {
+      payload.modelFamily = modelFamily;
+    }
+    if (translationPhase) {
+      payload.translationPhase = translationPhase;
+    }
+    if (typeof qualityMode === 'boolean') {
+      payload.qualityMode = qualityMode;
+    }
     const response = await axios.post(
       `${RELAY_URL}/translate-direct`,
-      { messages, model, reasoning },
+      payload,
       {
         headers: {
           Authorization: `Bearer ${getDeviceId()}`,
@@ -889,289 +939,6 @@ export async function dubViaDirect({
 
     throw error;
   }
-}
-
-// ============================================================================
-// R2-based Large File Transcription (Legacy - kept for backwards compatibility)
-// ============================================================================
-
-export interface R2TranscriptionJob {
-  jobId: string;
-  uploadUrl: string;
-  fileKey: string;
-  expiresIn: number;
-}
-
-/**
- * Request a presigned URL for uploading a large audio file to R2
- */
-export async function requestTranscriptionUploadUrl({
-  language,
-  contentType = 'audio/webm',
-  fileSizeMB,
-  signal,
-}: {
-  language?: string;
-  contentType?: string;
-  fileSizeMB?: number;
-  signal?: AbortSignal;
-}): Promise<R2TranscriptionJob> {
-  if (signal?.aborted) {
-    throw new DOMException('Operation cancelled', 'AbortError');
-  }
-
-  try {
-    const response = await axios.post(
-      `${STAGE5_API_URL}/transcribe/upload-url`,
-      { language, contentType, fileSizeMB },
-      {
-        headers: { ...headers(), 'Content-Type': 'application/json' },
-        signal,
-      }
-    );
-
-    sendNetLog('info', `POST /transcribe/upload-url -> ${response.status}`, {
-      url: `${STAGE5_API_URL}/transcribe/upload-url`,
-      method: 'POST',
-      status: response.status,
-    });
-
-    return response.data as R2TranscriptionJob;
-  } catch (error: any) {
-    if (error?.response?.status === 402) {
-      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-    }
-    sendNetLog('error', `HTTP ERROR: ${error?.message || error}`);
-    throw error;
-  }
-}
-
-/**
- * Upload a file to R2 using a presigned URL
- */
-export async function uploadToR2({
-  uploadUrl,
-  filePath,
-  contentType = 'audio/webm',
-  onProgress,
-  signal,
-}: {
-  uploadUrl: string;
-  filePath: string;
-  contentType?: string;
-  onProgress?: (percent: number) => void;
-  signal?: AbortSignal;
-}): Promise<void> {
-  if (signal?.aborted) {
-    throw new DOMException('Operation cancelled', 'AbortError');
-  }
-
-  const fs = await import('fs');
-  const fileBuffer = await fs.promises.readFile(filePath);
-  const totalSize = fileBuffer.length;
-
-  // Use fetch for streaming upload with progress
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': contentType,
-      'Content-Length': String(totalSize),
-    },
-    body: fileBuffer,
-    signal,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`R2 upload failed: ${response.status} ${errorText}`);
-  }
-
-  onProgress?.(100);
-  sendNetLog(
-    'info',
-    `PUT R2 upload -> ${response.status} (${(totalSize / 1024 / 1024).toFixed(1)}MB)`
-  );
-}
-
-/**
- * Start processing a file that was uploaded to R2
- */
-export async function startTranscriptionProcessing({
-  jobId,
-  signal,
-}: {
-  jobId: string;
-  signal?: AbortSignal;
-}): Promise<{ status: string; message: string }> {
-  if (signal?.aborted) {
-    throw new DOMException('Operation cancelled', 'AbortError');
-  }
-
-  try {
-    const response = await axios.post(
-      `${STAGE5_API_URL}/transcribe/process/${jobId}`,
-      {},
-      {
-        headers: headers(),
-        signal,
-      }
-    );
-
-    sendNetLog(
-      'info',
-      `POST /transcribe/process/${jobId} -> ${response.status}`,
-      {
-        url: `${STAGE5_API_URL}/transcribe/process/${jobId}`,
-        method: 'POST',
-        status: response.status,
-      }
-    );
-
-    return response.data;
-  } catch (error: any) {
-    if (error?.response?.status === 402) {
-      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-    }
-    sendNetLog('error', `HTTP ERROR: ${error?.message || error}`);
-    throw error;
-  }
-}
-
-/**
- * Poll for transcription job status
- */
-export async function getTranscriptionStatus({
-  jobId,
-  signal,
-}: {
-  jobId: string;
-  signal?: AbortSignal;
-}): Promise<{
-  jobId: string;
-  status: 'pending_upload' | 'processing' | 'completed' | 'failed';
-  result?: any;
-  error?: string;
-}> {
-  if (signal?.aborted) {
-    throw new DOMException('Operation cancelled', 'AbortError');
-  }
-
-  try {
-    const response = await axios.get(
-      `${STAGE5_API_URL}/transcribe/status/${jobId}`,
-      {
-        headers: headers(),
-        signal,
-      }
-    );
-
-    sendNetLog(
-      'info',
-      `GET /transcribe/status/${jobId} -> ${response.status}`,
-      {
-        url: `${STAGE5_API_URL}/transcribe/status/${jobId}`,
-        method: 'GET',
-        status: response.status,
-      }
-    );
-
-    return response.data;
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
-      throw new Error('Job not found');
-    }
-    sendNetLog('error', `HTTP ERROR: ${error?.message || error}`);
-    throw error;
-  }
-}
-
-/**
- * Full R2-based transcription workflow:
- * 1. Request upload URL
- * 2. Upload file to R2
- * 3. Start processing
- * 4. Poll for result
- */
-export async function transcribeViaR2({
-  filePath,
-  language,
-  signal,
-  durationSec,
-  onProgress,
-}: {
-  filePath: string;
-  language?: string;
-  signal?: AbortSignal;
-  durationSec?: number;
-  onProgress?: (stage: string, percent?: number) => void;
-}): Promise<any> {
-  if (process.env.FORCE_ZERO_CREDITS === '1') {
-    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-  }
-
-  const fs = await import('fs');
-  const stats = await fs.promises.stat(filePath);
-  const fileSizeMB = stats.size / (1024 * 1024);
-
-  // Step 1: Request upload URL
-  onProgress?.('Requesting upload URL...', 5);
-  const { jobId, uploadUrl } = await requestTranscriptionUploadUrl({
-    language,
-    fileSizeMB,
-    signal,
-  });
-
-  // Step 2: Upload file to R2
-  onProgress?.('Uploading audio to cloud storage...', 10);
-  await uploadToR2({
-    uploadUrl,
-    filePath,
-    onProgress: pct => onProgress?.('Uploading...', 10 + pct * 0.3),
-    signal,
-  });
-
-  // Step 3: Start processing
-  onProgress?.('Starting transcription...', 45);
-  await startTranscriptionProcessing({ jobId, signal });
-
-  // Step 4: Poll for result
-  const pollInterval = API_TIMEOUTS.TRANSLATION_POLL_INTERVAL;
-  const maxWaitMs = API_TIMEOUTS.TRANSLATION_MAX_WAIT;
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < maxWaitMs) {
-    if (signal?.aborted) {
-      throw new DOMException('Operation cancelled', 'AbortError');
-    }
-
-    const status = await getTranscriptionStatus({ jobId, signal });
-
-    if (status.status === 'completed') {
-      onProgress?.('Transcription complete!', 100);
-      return status.result;
-    }
-
-    if (status.status === 'failed') {
-      throw new Error(status.error || 'Transcription failed');
-    }
-
-    // Update progress based on elapsed time
-    const estimatedTotalSec = estimateTranscriptionTime(
-      durationSec,
-      fileSizeMB
-    );
-    const { stage, percent } = getTranscriptionProgress(
-      startTime,
-      estimatedTotalSec,
-      45, // Base percent after upload
-      95 // Max percent before complete
-    );
-    onProgress?.(stage, percent);
-
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-  }
-
-  throw new Error('Transcription timed out');
 }
 
 // ============================================================================

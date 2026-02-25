@@ -15,10 +15,12 @@ import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
 import {
   ERROR_CODES,
+  AI_MODELS,
   AI_MODEL_DISPLAY_NAMES,
 } from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
 import { reviewTranslationBatch, getReviewModel } from './translator.js';
+import { getActiveProviderForModel } from '../ai-provider.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -174,10 +176,15 @@ export async function translateSubtitlesFromSrt({
       const AFTER_CTX = 15;
       let done = 0;
 
-      // Determine which model will be used for review and get display name
+      // Determine which model will be used for review and get display name.
+      // This may be updated at runtime if we need to fall back (e.g., Anthropic unavailable).
       const reviewConfig = getReviewModel();
-      const reviewModelName =
-        AI_MODEL_DISPLAY_NAMES[reviewConfig.model] ?? reviewConfig.model;
+      const initialReviewProvider = getActiveProviderForModel(reviewConfig.model);
+      let reviewModelName =
+        initialReviewProvider === 'stage5'
+          ? 'Stage5 Auto'
+          : (AI_MODEL_DISPLAY_NAMES[reviewConfig.model] ?? reviewConfig.model);
+      let reviewConfigOverride: ReturnType<typeof getReviewModel> | null = null;
 
       const emitRangeStage = (
         startIndex: number,
@@ -248,6 +255,23 @@ export async function translateSubtitlesFromSrt({
             batch,
             operationId,
             signal,
+            initialReviewConfig: reviewConfigOverride ?? undefined,
+            onModelFallback: fallbackModel => {
+              reviewConfigOverride =
+                fallbackModel === AI_MODELS.GPT
+                  ? { model: AI_MODELS.GPT, reasoning: { effort: 'high' } }
+                  : { model: fallbackModel };
+              const fallbackProvider = getActiveProviderForModel(fallbackModel);
+              const fallbackName =
+                fallbackProvider === 'stage5'
+                  ? 'Stage5 Auto'
+                  : (AI_MODEL_DISPLAY_NAMES[fallbackModel] ?? fallbackModel);
+              const displayName = `${fallbackName} (fallback)`;
+              if (displayName !== reviewModelName) {
+                reviewModelName = displayName;
+                emitRangeStage(start, end, done, false);
+              }
+            },
           });
           // splice results back in place
           for (let i = 0; i < reviewed.length; i++) {

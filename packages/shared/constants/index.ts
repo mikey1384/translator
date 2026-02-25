@@ -5,6 +5,16 @@ export const AI_MODELS = {
   WHISPER: 'whisper-1',
 } as const;
 
+const AI_MODEL_ALIASES: Record<string, string> = {
+  'claude-opus-4.6': AI_MODELS.CLAUDE_OPUS,
+};
+
+export function normalizeAiModelId(model?: string): string {
+  const trimmed = (model || '').trim();
+  if (!trimmed) return AI_MODELS.GPT;
+  return AI_MODEL_ALIASES[trimmed.toLowerCase()] || trimmed;
+}
+
 export { ENABLE_VOICE_CLONING } from './features';
 
 /** User-friendly display names for AI models */

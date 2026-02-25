@@ -2,7 +2,11 @@ import { SubtitleProcessingError } from './errors.js';
 import fs from 'fs';
 import { translate as translateAi, getActiveProvider } from '../ai-provider.js';
 import log from 'electron-log';
-import { AI_MODELS, ERROR_CODES } from '../../../shared/constants/index.js';
+import {
+  AI_MODELS,
+  ERROR_CODES,
+  normalizeAiModelId,
+} from '../../../shared/constants/index.js';
 
 function extractContentFromCompletion(completion: any): string | null {
   if (!completion) {
@@ -126,18 +130,24 @@ export async function callAIModel({
   messages,
   model = AI_MODELS.GPT,
   reasoning,
+  translationPhase,
+  qualityMode,
   signal,
   operationId,
   retryAttempts = 3,
+  onResolvedModel,
 }: {
   messages: any[];
   model?: string;
   reasoning?: {
     effort?: 'low' | 'medium' | 'high';
   };
+  translationPhase?: 'draft' | 'review';
+  qualityMode?: boolean;
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
+  onResolvedModel?: (model: string) => void;
 }): Promise<string> {
   const provider = getActiveProvider();
   const providerName = provider === 'openai' ? 'OpenAI' : 'Stage5';
@@ -157,8 +167,21 @@ export async function callAIModel({
         messages,
         model,
         reasoning,
+        translationPhase,
+        qualityMode,
         signal,
       });
+      const resolvedModel =
+        typeof completion?.model === 'string' && completion.model.trim()
+          ? normalizeAiModelId(completion.model)
+          : undefined;
+      if (resolvedModel) {
+        try {
+          onResolvedModel?.(resolvedModel);
+        } catch {
+          // Ignore observer callback errors.
+        }
+      }
       const content = extractContentFromCompletion(completion);
 
       if (content && content.trim()) {

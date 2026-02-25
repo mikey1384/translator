@@ -2,7 +2,7 @@ import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
-import { AI_MODELS, ERROR_CODES } from '@shared/constants';
+import { AI_MODELS, ERROR_CODES, normalizeAiModelId } from '@shared/constants';
 import {
   getActiveProviderForModel,
   prefersClaudeTranslation,
@@ -105,16 +105,16 @@ export function getReviewModel(): {
     return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
   }
 
-  // No BYO available: Use Stage5 credits based on preference
+  // No BYO available: use Stage5 credits based on user preference.
   if (prefersClaude) {
     log.debug('[Review] Using Claude Opus (Stage5 credits, user preference)');
     return { model: AI_MODELS.CLAUDE_OPUS };
-  } else {
-    log.debug(
-      '[Review] Using GPT-5.1 with high reasoning (Stage5 credits, user preference)'
-    );
-    return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
   }
+
+  log.debug(
+    '[Review] Using GPT-5.1 with high reasoning (Stage5 credits, user preference)'
+  );
+  return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
 }
 
 const NETWORK_RETRY_BASE_MS = 5_000;
@@ -176,6 +176,21 @@ function isLikelyNetworkError(error: any): boolean {
     }
   }
   return NETWORK_ERROR_HINTS.some(hint => msg.includes(hint));
+}
+
+function isClaudeModelId(model: string | undefined): boolean {
+  return Boolean(model && model.startsWith('claude-'));
+}
+
+function isAnthropicUnavailableError(error: any): boolean {
+  const msg = normaliseErrorMessage(error);
+  if (!msg) return false;
+  return (
+    msg.includes('anthropic not configured') ||
+    msg.includes('missing anthropic key') ||
+    msg.includes('no anthropic api key available') ||
+    msg.includes('unauthorized - missing anthropic key')
+  );
 }
 
 function delayWithAbort(ms: number, signal?: AbortSignal): Promise<void> {
@@ -332,9 +347,10 @@ function parseIdAndOrdered(translation: string): {
 export async function translateBatch({
   batch,
   targetLang,
+  qualityMode,
   operationId,
   signal,
-}: TranslateBatchArgs): Promise<any[]> {
+}: TranslateBatchArgs & { qualityMode?: boolean }): Promise<any[]> {
   log.info(
     `[${operationId}] Starting translation batch: ${batch.startIndex}-${batch.endIndex}`
   );
@@ -407,6 +423,8 @@ Output format (exactly ${batch.segments.length} lines):
           { role: 'user', content: combinedPrompt },
         ],
         model: draftConfig.model,
+        translationPhase: 'draft',
+        qualityMode,
         signal,
         operationId,
         retryAttempts: MAX_RETRIES,
@@ -441,6 +459,8 @@ Example: @@SUB_LINE@@ ${missing[0].abs}: <your translation>
               { role: 'user', content: repairPrompt },
             ],
             model: draftConfig.model,
+            translationPhase: 'draft',
+            qualityMode,
             signal,
             operationId,
             retryAttempts: 2,
@@ -589,10 +609,14 @@ export async function reviewTranslationBatch({
   batch,
   operationId,
   signal,
+  onModelFallback,
+  initialReviewConfig,
 }: {
   batch: ReviewBatch;
   operationId: string;
   signal?: AbortSignal;
+  onModelFallback?: (model: string) => void;
+  initialReviewConfig?: ReturnType<typeof getReviewModel>;
 }): Promise<any[]> {
   log.info(
     `[${operationId}] Starting review batch: ${batch.startIndex}-${batch.endIndex}`
@@ -708,13 +732,14 @@ OUTPUT ${batch.segments.length} lines:
 
   let attempt = 0;
   let networkRetries = 0;
+  let reviewConfig = initialReviewConfig ?? getReviewModel();
   for (;;) {
     if (signal?.aborted) {
       throw new DOMException('Operation cancelled', 'AbortError');
     }
     attempt += 1;
     try {
-      const reviewConfig = getReviewModel();
+      let observedModel: string | undefined;
       const reviewedContent = await callAIModel({
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
@@ -722,10 +747,27 @@ OUTPUT ${batch.segments.length} lines:
         ],
         model: reviewConfig.model,
         reasoning: reviewConfig.reasoning,
+        translationPhase: 'review',
+        qualityMode: true,
         signal,
         operationId,
         retryAttempts: 3,
+        onResolvedModel: resolvedModel => {
+          observedModel = normalizeAiModelId(resolvedModel);
+        },
       });
+
+      const normalizedRequestedModel = normalizeAiModelId(reviewConfig.model);
+      if (observedModel && observedModel !== normalizedRequestedModel) {
+        log.warn(
+          `[Review] Effective review model switched from ${normalizedRequestedModel} to ${observedModel} (${operationId}).`
+        );
+        reviewConfig =
+          observedModel === AI_MODELS.GPT
+            ? { model: AI_MODELS.GPT, reasoning: { effort: 'high' } }
+            : { model: observedModel };
+        onModelFallback?.(reviewConfig.model);
+      }
 
       if (!reviewedContent) {
         log.warn(
@@ -793,6 +835,17 @@ OUTPUT ${batch.segments.length} lines:
         error.message === ERROR_CODES.INSUFFICIENT_CREDITS
       ) {
         throw error;
+      }
+      if (
+        isClaudeModelId(reviewConfig.model) &&
+        isAnthropicUnavailableError(error)
+      ) {
+        log.warn(
+          `[Review] Anthropic unavailable for review (${operationId}). Falling back to GPT-5.1 with high reasoning.`
+        );
+        reviewConfig = { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+        onModelFallback?.(reviewConfig.model);
+        continue;
       }
       if (isLikelyNetworkError(error)) {
         networkRetries += 1;

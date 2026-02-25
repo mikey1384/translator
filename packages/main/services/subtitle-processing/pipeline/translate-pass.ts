@@ -86,6 +86,7 @@ export async function translatePass({
           contextAfter,
         },
         targetLang,
+        qualityMode: qualityTranslation,
         operationId,
         signal,
       });

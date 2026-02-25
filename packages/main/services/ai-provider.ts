@@ -23,12 +23,13 @@ import {
   synthesizeDubWithElevenLabs,
   testElevenLabsApiKey,
 } from './elevenlabs-client.js';
-import { AI_MODELS, ERROR_CODES } from '@shared/constants';
+import { AI_MODELS, ERROR_CODES, normalizeAiModelId } from '@shared/constants';
 
 export type ProviderKind = 'stage5' | 'openai' | 'anthropic' | 'elevenlabs';
 
 function isClaudeModel(model: string | undefined): boolean {
-  return Boolean(model && model.startsWith('claude-'));
+  const normalizedModel = normalizeAiModelId(model);
+  return Boolean(normalizedModel && normalizedModel.startsWith('claude-'));
 }
 
 type Stage5TranscribeOptions = Parameters<typeof stage5Client.transcribe>[0];
@@ -568,10 +569,13 @@ export async function transcribe(
  * Transcribe a large file via direct relay endpoint.
  * Simplified flow: app sends file to relay, relay handles auth/credits/transcription.
  * No R2 uploads, no polling, no webhooks - just send and receive.
+ * TODO(stage5-cleanup): rename/remove this legacy-named shim once older call sites
+ * no longer reference the "ViaR2" API shape.
  */
 export async function transcribeLargeFileViaR2(options: {
   filePath: string;
   language?: string;
+  qualityMode?: boolean;
   signal?: AbortSignal;
   durationSec?: number;
   onProgress?: (stage: string, percent?: number) => void;
@@ -583,9 +587,25 @@ export async function transcribeLargeFileViaR2(options: {
 }
 
 export async function translate(options: Stage5TranslateOptions): Promise<any> {
-  const { messages, model, signal, reasoning } =
+  const { messages, model, signal, reasoning, translationPhase } =
     options as Stage5TranslateOptions;
-  const provider = getActiveProviderForModel(model);
+  const normalizedModel = normalizeAiModelId(model);
+  const provider = getActiveProviderForModel(normalizedModel);
+  const useServerModelAuthority =
+    translationPhase === 'draft' || translationPhase === 'review';
+  const modelFamilyHint =
+    typeof model === 'string' && model.trim().length > 0
+      ? isClaudeModel(model)
+        ? 'claude'
+        : 'gpt'
+      : undefined;
+  const stage5Options: Stage5TranslateOptions = {
+    ...options,
+    // Subtitle translation phases use backend-authoritative model routing in Stage5 mode.
+    model: useServerModelAuthority ? undefined : normalizedModel,
+    // Preserve user/provider family intent without pinning concrete model versions.
+    modelFamily: useServerModelAuthority ? modelFamilyHint : undefined,
+  };
 
   // Handle Anthropic/Claude models with BYO key
   if (provider === 'anthropic') {
@@ -594,7 +614,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
       log.warn(
         '[ai-provider] Anthropic provider selected but API key missing. Falling back to Stage5.'
       );
-      return stage5Client.translate(options);
+      return stage5Client.translate(stage5Options);
     }
 
     log.debug(
@@ -603,7 +623,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
     try {
       return await translateWithAnthropic({
         messages,
-        model,
+        model: normalizedModel,
         apiKey: anthropicKey,
         signal,
         effort: reasoning?.effort,
@@ -620,14 +640,14 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
       log.warn(
         '[ai-provider] OpenAI provider selected but API key missing. Falling back to Stage5.'
       );
-      return stage5Client.translate(options);
+      return stage5Client.translate(stage5Options);
     }
 
     log.debug('[ai-provider] Using OpenAI direct translation.');
     try {
       return await translateWithOpenAi({
         messages,
-        model,
+        model: normalizedModel,
         apiKey,
         signal,
         reasoning,
@@ -639,7 +659,7 @@ export async function translate(options: Stage5TranslateOptions): Promise<any> {
 
   // Default: use Stage5 via direct relay (simplified flow)
   log.debug('[ai-provider] Using Stage5 direct relay for translation.');
-  return translateViaDirect(options);
+  return translateViaDirect(stage5Options);
 }
 
 export async function synthesizeDub(options: Stage5DubOptions): Promise<any> {

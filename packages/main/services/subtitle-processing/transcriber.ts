@@ -24,6 +24,7 @@ export async function transcribeChunk({
   chunkIndex,
   chunkPath,
   startTime,
+  qualityMode,
   signal,
   operationId,
   promptContext,
@@ -31,6 +32,7 @@ export async function transcribeChunk({
   chunkIndex: number | string;
   chunkPath: string;
   startTime: number;
+  qualityMode?: boolean;
   signal?: AbortSignal;
   operationId: string;
   promptContext?: string;
@@ -61,6 +63,7 @@ export async function transcribeChunk({
         res = await transcribeAi({
           filePath: chunkPath,
           promptContext,
+          qualityMode,
           signal,
         });
         break; // success

@@ -1368,6 +1368,9 @@ var AI_MODELS = {
   CLAUDE_OPUS: "claude-opus-4-6",
   WHISPER: "whisper-1"
 };
+var AI_MODEL_ALIASES = {
+  "claude-opus-4.6": AI_MODELS.CLAUDE_OPUS
+};
 var AI_MODEL_DISPLAY_NAMES = {
   [AI_MODELS.GPT]: "GPT-5.1",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",

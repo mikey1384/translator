@@ -2,7 +2,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
-import { AI_MODELS } from '@shared/constants';
+import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
@@ -104,8 +104,9 @@ export async function translateWithOpenAi({
   signal,
   reasoning,
 }: OpenAiTranslateOptions): Promise<any> {
+  const normalizedModel = normalizeAiModelId(model);
   const payload: Record<string, any> = {
-    model,
+    model: normalizedModel,
     messages,
   };
 

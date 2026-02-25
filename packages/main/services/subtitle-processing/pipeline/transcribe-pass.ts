@@ -144,6 +144,7 @@ export async function transcribePass({
     const audioProvider = getActiveProviderForAudio();
     const useByoElevenLabs = audioProvider === 'elevenlabs';
     const useStage5 = audioProvider === 'stage5';
+    const wantsHighQuality = !!qualityTranscription;
 
     // Get file size for routing decision
     const audioStats = await fsp.stat(audioPath);
@@ -158,22 +159,32 @@ export async function transcribePass({
     const exceedsDurationThreshold = duration > MAX_DIRECT_DURATION_SEC;
 
     // Determine transcription strategy:
-    // - BYO ElevenLabs: Always try direct (client handles timeouts differently)
-    // - Stage5 + short audio (< 2.7 min) + small file (< 95MB): Direct ElevenLabs via CF
-    // - Stage5 + long audio OR large file (95-500MB): Use R2 upload flow
-    // - Stage5 + very large (> 500MB) or fallback: Whisper chunked
+    // - BYO ElevenLabs: Always try direct ElevenLabs
+    // - Stage5 + quality mode + short audio (< 2.7 min) + small file (< 95MB): direct relay
+    // - Stage5 + quality mode + long audio OR large file (95-500MB): direct relay large-file path
+    // - Stage5 + non-quality mode (or quality fallback): Whisper chunked
     const canTryDirectElevenLabs =
       useByoElevenLabs ||
       (useStage5 &&
+        wantsHighQuality &&
         fileSizeMB < MAX_DIRECT_FILE_SIZE_MB &&
         !exceedsDurationThreshold);
     const canTryR2ElevenLabs =
       useStage5 &&
+      wantsHighQuality &&
       fileSizeMB < MAX_R2_FILE_SIZE_MB &&
       (fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB || exceedsDurationThreshold);
+    let chunkedQualityMode = qualityTranscription;
+
+    if (useStage5 && wantsHighQuality && !canTryDirectElevenLabs && !canTryR2ElevenLabs) {
+      // High-quality route is unavailable (e.g., very large files), so force
+      // Whisper for chunked fallback to avoid repeatedly selecting ElevenLabs.
+      chunkedQualityMode = false;
+    }
 
     if (
       useStage5 &&
+      wantsHighQuality &&
       exceedsDurationThreshold &&
       fileSizeMB < MAX_DIRECT_FILE_SIZE_MB
     ) {
@@ -227,12 +238,31 @@ export async function transcribePass({
         const result = await transcribeAi({
           filePath: audioPath,
           model: 'scribe_v2',
+          qualityMode: true,
           // Use operationId as an idempotency key so retries can't double-bill.
           idempotencyKey: operationId,
           signal,
         });
 
         throwIfAborted(signal);
+
+        const resolvedModel =
+          typeof result?.model === 'string'
+            ? result.model.toLowerCase()
+            : '';
+        if (
+          useStage5 &&
+          wantsHighQuality &&
+          resolvedModel.includes('whisper')
+        ) {
+          log.warn(
+            `[${operationId}] Stage5 high-quality transcription fell back to Whisper.`
+          );
+          progressCallback?.({
+            percent: Stage.TRANSCRIBE,
+            stage: '__i18n__:transcription_fallback_whisper',
+          });
+        }
 
         const segments = (result?.segments || []) as Array<{
           id: number;
@@ -359,6 +389,7 @@ export async function transcribePass({
         log.info(
           `[${operationId}] Falling back to Whisper chunked transcription after ${ELEVENLABS_MAX_RETRIES} attempts`
         );
+        chunkedQualityMode = false;
         progressCallback?.({
           percent: Stage.TRANSCRIBE,
           stage: '__i18n__:transcription_fallback_whisper',
@@ -389,6 +420,7 @@ export async function transcribePass({
 
           const result = await transcribeLargeFileViaR2({
             filePath: audioPath,
+            qualityMode: true,
             // Use operationId as an idempotency key so retries can't double-bill.
             idempotencyKey: operationId,
             signal,
@@ -486,6 +518,7 @@ export async function transcribePass({
       log.info(
         `[${operationId}] Falling back to Whisper chunked transcription after ${ELEVENLABS_MAX_RETRIES} attempts`
       );
+      chunkedQualityMode = false;
       progressCallback?.({
         percent: Stage.TRANSCRIBE,
         stage: '__i18n__:transcription_fallback_whisper',
@@ -583,10 +616,10 @@ export async function transcribePass({
     // have been transcribed. After that, provide the previous 2 lines
     // as context for subsequent transcriptions.
 
-    // Two modes:
-    // - qualityTranscription: strictly sequential, passing previous chunk's text as context
-    // - default: batched parallel (5 at a time) with light prior context
-    const useQuality = !!qualityTranscription;
+    // Two chunked modes:
+    // - chunkedQualityMode=true: strictly sequential, passing previous chunk text as context
+    // - chunkedQualityMode=false: batched parallel (5 at a time) with light prior context
+    const useQuality = !!chunkedQualityMode;
     const CONCURRENCY = useQuality ? 1 : 5;
     let done = 0;
 
@@ -623,6 +656,7 @@ export async function transcribePass({
           chunkIndex: meta.index,
           chunkPath: chunkAudioPath,
           startTime: meta.start,
+          qualityMode: chunkedQualityMode,
           signal,
           operationId: operationId ?? '',
           promptContext: promptForChunk,
@@ -719,6 +753,7 @@ export async function transcribePass({
               chunkIndex: meta.index,
               chunkPath: chunkAudioPath,
               startTime: meta.start,
+              qualityMode: chunkedQualityMode,
               signal,
               operationId: operationId ?? '',
               promptContext: basePrompt,

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import log from 'electron-log';
-import { AI_MODELS } from '@shared/constants';
+import { AI_MODELS, normalizeAiModelId } from '@shared/constants';
 
 const ANTHROPIC_MAX_TOKENS = 16000;
 const ANTHROPIC_MAX_TOKENS_WITH_THINKING = 32000;
@@ -35,6 +35,7 @@ export async function translateWithAnthropic({
   signal,
   effort,
 }: AnthropicTranslateOptions): Promise<any> {
+  const normalizedModel = normalizeAiModelId(model);
   const client = makeAnthropic(apiKey);
 
   // Extract system message if present
@@ -64,7 +65,7 @@ export async function translateWithAnthropic({
 
   // Build request parameters
   const requestParams: Anthropic.MessageCreateParams = {
-    model,
+    model: normalizedModel,
     max_tokens: useExtendedThinking
       ? ANTHROPIC_MAX_TOKENS_WITH_THINKING
       : ANTHROPIC_MAX_TOKENS,

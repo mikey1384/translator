@@ -76,6 +76,7 @@ export const useTaskStore = createWithEqualityFn<State & Actions>()(
             Math.round(p.percent) === Math.round(t.percent)) &&
           (p.id === undefined || p.id === t.id) &&
           (p.inProgress === undefined || p.inProgress === t.inProgress) &&
+          (p.model === undefined || p.model === t.model) &&
           (p.batchStartIndex === undefined ||
             p.batchStartIndex === t.reviewedBatchStartIndex);
         if (same) return;
