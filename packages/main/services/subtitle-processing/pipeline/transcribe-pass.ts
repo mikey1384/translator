@@ -250,13 +250,22 @@ export async function transcribePass({
           typeof result?.model === 'string'
             ? result.model.toLowerCase()
             : '';
+        const fallbackTarget =
+          typeof (result as any)?.fallback?.to === 'string'
+            ? String((result as any).fallback.to).toLowerCase()
+            : '';
+        const fallbackAttempts = Number((result as any)?.fallback?.attempts || 0);
+        const fellBackToWhisper =
+          resolvedModel.includes('whisper') || fallbackTarget.includes('whisper');
         if (
           useStage5 &&
           wantsHighQuality &&
-          resolvedModel.includes('whisper')
+          fellBackToWhisper
         ) {
           log.warn(
-            `[${operationId}] Stage5 high-quality transcription fell back to Whisper.`
+            `[${operationId}] Stage5 high-quality transcription fell back to Whisper${
+              fallbackAttempts > 0 ? ` after ${fallbackAttempts} ElevenLabs attempts` : ''
+            }.`
           );
           progressCallback?.({
             percent: Stage.TRANSCRIBE,

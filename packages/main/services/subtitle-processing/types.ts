@@ -13,5 +13,8 @@ export type GenerateSubtitlesFullResult = {
   subtitles: string;
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
+  tempFileSaved: boolean;
+  tempFilePath?: string;
+  tempFileError?: string;
   error?: string;
 };

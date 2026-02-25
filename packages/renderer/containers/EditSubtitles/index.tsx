@@ -31,6 +31,7 @@ import {
   useTaskStore,
   useSubStore,
 } from '../../state';
+import { useUrlStore } from '../../state/url-store';
 
 import * as FileIPC from '@ipc/file';
 
@@ -550,7 +551,7 @@ export default function EditSubtitles({
       const errorMsg = err instanceof Error ? err.message : String(err);
       const friendlyError = isByoError(errorMsg)
         ? getByoErrorMessage(errorMsg)
-        : t('generateSubtitles.status.error', 'Error');
+        : errorMsg || t('generateSubtitles.status.error', 'Error');
       // Surface error state to progress UI
       try {
         useTaskStore.getState().setTranscription({
@@ -558,6 +559,7 @@ export default function EditSubtitles({
           percent: 100,
           inProgress: false,
         });
+        useUrlStore.getState().setError(friendlyError);
       } catch {
         // Do nothing
       }

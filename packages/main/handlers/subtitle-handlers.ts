@@ -197,8 +197,9 @@ export async function handleGenerateSubtitles(
       operationId,
     });
     return {
-      success: !isCancel,
+      success: false,
       cancelled: isCancel,
+      error: !isCancel ? error.message || String(error) : undefined,
       operationId,
     };
   } finally {

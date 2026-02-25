@@ -363,6 +363,7 @@ export async function executeSubtitleGeneration({
   const { setTranscription } = useTaskStore.getState();
   // Ensure translation slice is not considered active during transcription-only
   useTaskStore.getState().setTranslation({ inProgress: false });
+  useUrlStore.getState().clearError();
 
   // Initialize progress tracking (transcription-only)
   setTranscription({
@@ -408,10 +409,21 @@ export async function executeSubtitleGeneration({
       return { success: true, subtitles: result.subtitles };
     } else {
       // Handle failure or cancellation
-      const stage = result.cancelled
+      const cancelled = Boolean(result.cancelled);
+      const errorMsg =
+        typeof result.error === 'string' ? result.error.trim() : '';
+      const stage = cancelled
         ? i18n.t('generateSubtitles.status.cancelled')
-        : i18n.t('generateSubtitles.status.error');
-      const percent = result.cancelled ? 0 : 100;
+        : errorMsg
+          ? isByoError(errorMsg)
+            ? getByoErrorMessage(errorMsg)
+            : errorMsg
+          : i18n.t('generateSubtitles.status.error');
+      const percent = cancelled ? 0 : 100;
+
+      if (!cancelled && stage) {
+        useUrlStore.getState().setError(stage);
+      }
 
       setTranscription({
         id: operationId,
@@ -420,23 +432,30 @@ export async function executeSubtitleGeneration({
         inProgress: false,
       });
 
-      return { success: false, cancelled: result.cancelled };
+      return { success: false, cancelled };
     }
   } catch (error) {
     console.error('Error generating subtitles:', error);
     const errorMsg = error instanceof Error ? error.message : String(error);
+    const cancelled =
+      /operation cancelled/i.test(errorMsg) ||
+      /process cancelled/i.test(errorMsg);
     const friendlyError = isByoError(errorMsg)
       ? getByoErrorMessage(errorMsg)
-      : i18n.t('generateSubtitles.status.error');
+      : errorMsg || i18n.t('generateSubtitles.status.error');
+
+    if (!cancelled) {
+      useUrlStore.getState().setError(friendlyError);
+    }
 
     setTranscription({
       id: operationId,
       stage: friendlyError,
-      percent: 100,
+      percent: cancelled ? 0 : 100,
       inProgress: false,
     });
 
-    return { success: false };
+    return { success: false, cancelled };
   }
 }
 

@@ -20,7 +20,6 @@ import {
 } from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
 import { reviewTranslationBatch, getReviewModel } from './translator.js';
-import { getActiveProviderForModel } from '../ai-provider.js';
 
 export async function extractSubtitlesFromMedia({
   options,
@@ -82,6 +81,7 @@ export async function extractSubtitlesFromMedia({
       speechIntervals,
       fileManager,
       progressCallback,
+      operationId,
     });
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
@@ -178,21 +178,10 @@ export async function translateSubtitlesFromSrt({
 
       // Determine which model will be used for review and get display name.
       // This may be updated at runtime if we need to fall back (e.g., Anthropic unavailable).
-      const formatReviewModelName = (
-        model: string,
-        provider = getActiveProviderForModel(model)
-      ) => {
-        const baseName = AI_MODEL_DISPLAY_NAMES[model] ?? model;
-        return provider === 'stage5' ? `${baseName} (Stage5 Auto)` : baseName;
-      };
+      const formatReviewModelName = (model: string) =>
+        AI_MODEL_DISPLAY_NAMES[model] ?? model;
       const reviewConfig = getReviewModel();
-      const initialReviewProvider = getActiveProviderForModel(
-        reviewConfig.model
-      );
-      let reviewModelName = formatReviewModelName(
-        reviewConfig.model,
-        initialReviewProvider
-      );
+      let reviewModelName = formatReviewModelName(reviewConfig.model);
       let reviewConfigOverride: ReturnType<typeof getReviewModel> | null = null;
 
       const emitRangeStage = (
@@ -270,11 +259,7 @@ export async function translateSubtitlesFromSrt({
                 fallbackModel === AI_MODELS.GPT
                   ? { model: AI_MODELS.GPT, reasoning: { effort: 'high' } }
                   : { model: fallbackModel };
-              const fallbackProvider = getActiveProviderForModel(fallbackModel);
-              const fallbackName = formatReviewModelName(
-                fallbackModel,
-                fallbackProvider
-              );
+              const fallbackName = formatReviewModelName(fallbackModel);
               const displayName = `${fallbackName} (fallback)`;
               if (displayName !== reviewModelName) {
                 reviewModelName = displayName;
@@ -311,6 +296,7 @@ export async function translateSubtitlesFromSrt({
     speechIntervals: [],
     fileManager,
     progressCallback: adaptedProgress ?? progressCallback,
+    operationId,
   });
 
   return { subtitles: finalized.subtitles };

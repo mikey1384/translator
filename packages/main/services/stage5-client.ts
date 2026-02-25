@@ -29,6 +29,19 @@ function sendNetLog(
   }
 }
 
+function getRelayErrorMessage(error: any): string | null {
+  const payload = error?.response?.data;
+  if (!payload || typeof payload !== 'object') return null;
+
+  const base =
+    typeof payload.error === 'string' ? payload.error.trim() : '';
+  const details =
+    typeof payload.details === 'string' ? payload.details.trim() : '';
+
+  if (base && details) return `${base}: ${details}`;
+  return base || details || null;
+}
+
 const headers = () => ({ Authorization: `Bearer ${getDeviceId()}` });
 
 export async function transcribe({
@@ -710,7 +723,16 @@ export async function transcribeViaDirect({
       );
     }
 
-    throw error;
+    const relayMessage =
+      getRelayErrorMessage(error) ||
+      error?.message ||
+      'Direct transcription request failed';
+    if (error && typeof error === 'object') {
+      error.message = relayMessage;
+      throw error;
+    }
+
+    throw new Error(relayMessage);
   } finally {
     cleanup();
   }

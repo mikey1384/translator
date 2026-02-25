@@ -219,14 +219,17 @@ export class FileManager {
 
   async writeTempFile(content: string, extension: string): Promise<string> {
     try {
-      const filename = `temp_${Date.now()}${extension}`;
+      await fs.mkdir(this.tempDir, { recursive: true });
+      const filename = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}${extension}`;
       const filePath = path.join(this.tempDir, filename);
       await fs.writeFile(filePath, content, 'utf8');
       log.info(`Temp file written to: ${filePath}`);
       return filePath;
-    } catch {
-      log.error('Error writing temp file.');
-      throw new FileManagerError('Error writing temp file.');
+    } catch (error: any) {
+      log.error('Error writing temp file.', error);
+      throw new FileManagerError(
+        `Error writing temp file: ${error?.message || String(error)}`
+      );
     }
   }
 

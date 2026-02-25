@@ -1188,6 +1188,18 @@ app
       log.warn('[main.ts] FileManager service not available for cleanup.');
     }
 
+    if (services?.fileManager?.ensureTempDir) {
+      try {
+        await services.fileManager.ensureTempDir();
+        log.info('[main.ts] Temp directory is ready after startup cleanup.');
+      } catch (tempDirError) {
+        log.error(
+          '[main.ts] Failed to re-create temp directory after cleanup:',
+          tempDirError
+        );
+      }
+    }
+
     if (app.isPackaged) {
       log.info('[main.ts] Checking yt-dlp installation...');
       await testYtDlpInstallation();
