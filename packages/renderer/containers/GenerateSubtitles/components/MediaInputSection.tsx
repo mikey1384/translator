@@ -1,4 +1,3 @@
-import React from 'react';
 import { css } from '@emotion/css';
 import { colors, selectStyles } from '../../../styles.js';
 import { FileButton } from '../../../components/design-system/index.js';

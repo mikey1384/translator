@@ -117,13 +117,8 @@ export default function SiteConnectionSection() {
     return () => clearTimeout(timer);
   }, [normalizedUrl, refreshStatus]);
 
-  const connect = async () => {
+  const connectValidUrl = async (valid: string) => {
     if (!api?.connectCookiesForUrl || busy) return;
-    const valid = normalizeUrl(targetUrl);
-    if (!valid) {
-      setError(t('errors.invalidUrl', 'The URL format appears invalid.'));
-      return;
-    }
     setBusy(true);
     try {
       const res = await api.connectCookiesForUrl(valid);
@@ -142,6 +137,16 @@ export default function SiteConnectionSection() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const connect = async () => {
+    if (!api?.connectCookiesForUrl || busy) return;
+    const valid = normalizeUrl(targetUrl);
+    if (!valid) {
+      setError(t('errors.invalidUrl', 'The URL format appears invalid.'));
+      return;
+    }
+    await connectValidUrl(valid);
   };
 
   const clear = async () => {

@@ -354,6 +354,13 @@ export async function downloadVideoFromPlatform(
 
   const isYouTube = /youtube\.com|youtu\.be/.test(url);
   const isYouTubeShorts = /youtube\.com\/shorts\//.test(url);
+  const sourceHost = (() => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return 'unknown';
+    }
+  })();
   let effectiveQuality = quality;
 
   // If we have an app-managed session for this site, export cookies and use them by default.
@@ -405,7 +412,8 @@ export async function downloadVideoFromPlatform(
   let formatString: string;
   // YouTube: always use our tuned mapping.
   // Non-YouTube: keep the existing "best MP4" default for backwards compatibility,
-  // but if the user explicitly picked a resolution cap, respect it cross-site.
+  // but if the user explicitly picked a resolution cap,
+  // respect it cross-site.
   if (isYouTube || isResolutionCap) {
     formatString = qualityFormatMap[effectiveQuality] || qualityFormatMap.mid;
     log.info(
@@ -500,9 +508,8 @@ export async function downloadVideoFromPlatform(
   }
 
   // Decide container behavior: for high quality, avoid forcing MP4 so we can fetch
-  // the truly highest formats (often VP9/AV1 in WebM/MKV). For mid/low, prefer MP4.
+  // the truly highest formats (often VP9/AV1 in WebM/MKV).
   const allowNonMp4 = effectiveQuality === 'high' || isResolutionCap;
-
   let containerArgs = allowNonMp4 ? [] : ['--merge-output-format', 'mp4'];
   const defaultContainerArgs = [...containerArgs];
 
@@ -522,6 +529,13 @@ export async function downloadVideoFromPlatform(
   const jsRuntimeArgs = jsRuntime ? ['--js-runtimes', jsRuntime] : [];
   const runElectronAsNode =
     !!process.versions.electron && jsRuntime === `node:${process.execPath}`;
+  // Keep yt-dlp cache enabled for YouTube to reduce repeated player/metadata fetch pressure.
+  const cacheArgs = isYouTube ? [] : ['--no-cache-dir'];
+  // Use gentler retry pacing for YouTube to reduce anti-bot/rate-limit triggers.
+  const socketTimeoutSeconds = isYouTube ? '20' : '10';
+  const retryCount = isYouTube ? '2' : '3';
+  const retrySleepArg = isYouTube ? 'linear=2::2' : '1';
+  const requestPacingArgs = isYouTube ? ['--sleep-requests', '0.75'] : [];
 
   function buildBaseArgs(): string[] {
     return [
@@ -542,11 +556,12 @@ export async function downloadVideoFromPlatform(
       ...jsRuntimeArgs,
       // Network reliability guards to reduce initial stalls
       '--socket-timeout',
-      '10',
+      socketTimeoutSeconds,
       '--retries',
-      '3',
+      retryCount,
       '--retry-sleep',
-      '1',
+      retrySleepArg,
+      ...requestPacingArgs,
       '--color',
       'never',
       '--progress',
@@ -556,7 +571,7 @@ export async function downloadVideoFromPlatform(
       'after_move:%(filepath)s',
       '--ffmpeg-location',
       ffmpegPath,
-      '--no-cache-dir',
+      ...cacheArgs,
       ...effectiveExtraArgs,
     ];
   }
@@ -590,14 +605,97 @@ export async function downloadVideoFromPlatform(
   let lastRawPct = 0; // Track yt-dlp's raw percentage to detect stream resets
   let inSecondStream = false; // True when yt-dlp resets progress for a second stream (e.g. audio)
   let addNoCheckCertificates = false; // enable on final retry only if TLS errors suspected
+  const needCookiesHintCounters: Record<
+    '429' | 'login_required' | 'captcha_not_a_bot' | 'other',
+    number
+  > = {
+    '429': 0,
+    login_required: 0,
+    captcha_not_a_bot: 0,
+    other: 0,
+  };
+  const classifyNeedCookiesHintCause = (
+    errorBlob: string
+  ): '429' | 'login_required' | 'captcha_not_a_bot' | 'other' => {
+    const blobLC = errorBlob.toLowerCase();
+    if (
+      /login_required|authentication\s*required|sign\s*in\s*to\s*confirm|consent\.youtube\.com|before\s*you\s*continue\s*to\s*youtube|consent\s*required|youtube\s*consent\s*page/.test(
+        blobLC
+      )
+    ) {
+      return 'login_required';
+    }
+    if (
+      /confirm\s*(you|you'?re)\s*not\s*(a\s*)?bot|verify\s*(you|you'?re)\s*(are\s*)?(human|not\s*(a\s*)?bot)|not\s*a\s*bot|captcha|recaptcha|human\s*verification|challenge\s*required/.test(
+        blobLC
+      )
+    ) {
+      return 'captcha_not_a_bot';
+    }
+    if (/429|too\s*many\s*requests|rate[- ]?limit/.test(blobLC)) {
+      return '429';
+    }
+    return 'other';
+  };
+  const throwIfCancelled = (context: string): void => {
+    if (!consumeCancelMarker(operationId)) return;
+    log.info(
+      `[URLprocessor] Cancellation marker consumed (${context}) (Op ID: ${operationId})`
+    );
+    throw new CancelledError();
+  };
+  const waitWithCancelChecks = async (
+    totalMs: number,
+    context: string
+  ): Promise<void> => {
+    const pollMs = 200;
+    let remainingMs = totalMs;
+    while (remainingMs > 0) {
+      throwIfCancelled(context);
+      const sliceMs = Math.min(pollMs, remainingMs);
+      await new Promise(resolve => setTimeout(resolve, sliceMs));
+      remainingMs -= sliceMs;
+    }
+    throwIfCancelled(context);
+  };
 
   // Wrap download attempt flow
   try {
     let attempt = 1;
-    const maxAttempts = 5; // Baseline + ios + android + sort removal + format downgrade
+    const youtubeFallbackTransitions = isYouTube
+      ? // web -> ios -> android
+        2 +
+        // allow one retry after removing sort preferences (high/res capped)
+        (sortArgs.length > 0 ? 1 : 0) +
+        // allow one retry after MP4 format fallback
+        (formatString !== mp4FallbackFormat ? 1 : 0)
+      : 0;
+    const youtubeStartupStallReserveAttempts = isYouTube ? 1 : 0;
+    const minYoutubeAttemptsForFallbackChain =
+      1 + youtubeFallbackTransitions + youtubeStartupStallReserveAttempts;
+    const maxAttempts = isYouTube
+      ? Math.max(4, minYoutubeAttemptsForFallbackChain)
+      : 5;
+    if (isYouTube) {
+      log.info(
+        `[URLprocessor] YouTube retry budget: maxAttempts=${maxAttempts} (fallbackTransitions=${youtubeFallbackTransitions}, startupStallReserve=${youtubeStartupStallReserveAttempts})`
+      );
+    }
     let lastError: any = null;
 
     while (attempt <= maxAttempts) {
+      if (isYouTube && attempt > 1) {
+        // Add a small backoff between full attempts to avoid hammering YouTube.
+        const retryDelayMs = Math.min(7000, 1000 * attempt);
+        log.info(
+          `[URLprocessor] Applying YouTube retry delay of ${retryDelayMs}ms before attempt ${attempt}/${maxAttempts}`
+        );
+        await waitWithCancelChecks(
+          retryDelayMs,
+          `youtube retry delay before attempt ${attempt}/${maxAttempts}`
+        );
+      }
+
       // Reset stream-detection state for each attempt so a retry isn't
       // misclassified as a second stream after a failed attempt with progress.
       // Note: lastPct is intentionally preserved to keep user-facing progress monotonic.
@@ -754,9 +852,15 @@ export async function downloadVideoFromPlatform(
 
                   // Detect second stream: yt-dlp resets percentage when starting
                   // a new stream (e.g. audio after video)
-                  if (!inSecondStream && lastRawPct > 50 && rawPct < lastRawPct - 50) {
+                  if (
+                    !inSecondStream &&
+                    lastRawPct > 50 &&
+                    rawPct < lastRawPct - 50
+                  ) {
                     inSecondStream = true;
-                    log.info('[URLprocessor] Detected second download stream (audio)');
+                    log.info(
+                      '[URLprocessor] Detected second download stream (audio)'
+                    );
                   }
                   lastRawPct = rawPct;
 
@@ -767,13 +871,19 @@ export async function downloadVideoFromPlatform(
                     mapped =
                       PROGRESS.DL2_START +
                       (rawPct * (PROGRESS.DL2_END - PROGRESS.DL2_START)) / 100;
-                    mapped = Math.min(PROGRESS.DL2_END, Math.max(PROGRESS.DL2_START, mapped));
+                    mapped = Math.min(
+                      PROGRESS.DL2_END,
+                      Math.max(PROGRESS.DL2_START, mapped)
+                    );
                     stage = 'Downloading audio...';
                   } else {
                     mapped =
                       PROGRESS.DL1_START +
                       (rawPct * (PROGRESS.DL1_END - PROGRESS.DL1_START)) / 100;
-                    mapped = Math.min(PROGRESS.DL1_END, Math.max(PROGRESS.WARMUP_END, mapped));
+                    mapped = Math.min(
+                      PROGRESS.DL1_END,
+                      Math.max(PROGRESS.WARMUP_END, mapped)
+                    );
                     stage = 'Downloading...';
                   }
 
@@ -1016,6 +1126,13 @@ export async function downloadVideoFromPlatform(
           ) || startupTimeoutFired;
         // If we suspect TLS/certificate issues, enable no-check-certificates for the final retry
         const errorBlob = `${error?.message || ''}\n${error?.stderr || ''}\n${error?.stdout || ''}\n${diagnosticLog || ''}`;
+        const needCookiesHintCause = classifyNeedCookiesHintCause(errorBlob);
+        needCookiesHintCounters[needCookiesHintCause] += 1;
+        if (needCookiesHintCause !== 'other') {
+          log.warn(
+            `[URLprocessor] NeedCookies hint detected (host=${sourceHost}, cause=${needCookiesHintCause}, op=${operationId}, attempt=${attempt}/${maxAttempts}, counts=${JSON.stringify(needCookiesHintCounters)})`
+          );
+        }
 
         const looksLikeTLSError = /SSL|CERTIFICATE|TLS|handshake/i.test(
           errorBlob
@@ -1142,7 +1259,7 @@ export async function downloadVideoFromPlatform(
     let userFriendlyErrorMessage = rawErrorMessage;
 
     // Check if this was a cancellation
-    if (consumeCancelMarker(operationId)) {
+    if (error instanceof CancelledError || consumeCancelMarker(operationId)) {
       log.info(
         `[URLprocessor] Download cancelled by user (Op ID: ${operationId})`
       );
@@ -1206,6 +1323,15 @@ export async function downloadVideoFromPlatform(
     await cleanupPartialDownloads(outputDir, safeTimestamp, operationId);
     throw error;
   } finally {
+    const hasNeedCookiesHints = Object.values(needCookiesHintCounters).some(
+      v => v > 0
+    );
+    if (hasNeedCookiesHints) {
+      log.info(
+        `[URLprocessor] NeedCookies hint summary (host=${sourceHost}, op=${operationId}, counts=${JSON.stringify(needCookiesHintCounters)})`
+      );
+    }
+
     if (removeDownloadProcess(operationId)) {
       log.info(
         `[URLprocessor] Removed download process ${operationId} from map in finally block.`

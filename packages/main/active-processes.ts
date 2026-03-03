@@ -164,10 +164,12 @@ export async function cancel(id: string): Promise<boolean> {
 }
 
 export async function cancelSafely(id: string): Promise<boolean> {
+  // Record user intent to cancel even when the process handle is between retries
+  // and temporarily absent from the registry.
+  markCancelled(id);
+
   const entry = registry.get(id);
   if (!entry) return false;
-
-  markCancelled(id);
 
   const sig = process.platform === 'win32' ? 'SIGINT' : 'SIGTERM';
 

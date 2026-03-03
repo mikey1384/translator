@@ -2,6 +2,7 @@ import log from 'electron-log';
 import fsp from 'node:fs/promises';
 import { ProgressCallback, VideoQuality } from './types.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
+import { consumeCancelMarker } from '../../active-processes.js';
 import { ensureYtDlpBinary } from './binary-installer.js';
 import { downloadVideoFromPlatform } from './download.js';
 import { PROGRESS } from './constants.js';
@@ -9,6 +10,56 @@ import type { FFmpegContext } from '../ffmpeg-runner.js';
 import { FileManager } from '../file-manager.js';
 import path from 'node:path';
 import { exportCookiesToFileForUrl } from './site-cookies.js';
+import { CancelledError } from '../../../shared/cancelled-error.js';
+
+type NeedCookiesCause =
+  | '429'
+  | 'login_required'
+  | 'captcha_not_a_bot'
+  | 'other';
+type NeedCookiesCounters = Record<NeedCookiesCause, number>;
+
+const NEED_COOKIES_RATE_LIMIT_RE = /429|too\s*many\s*requests|rate[- ]?limit/;
+const NEED_COOKIES_LOGIN_REQUIRED_RE =
+  /login_required|authentication\s*required|sign\s*in\s*to\s*confirm/;
+const NEED_COOKIES_CONSENT_INTERSTITIAL_RE =
+  /consent\.youtube\.com|before\s*you\s*continue\s*to\s*youtube|consent\s*required|youtube\s*consent\s*page/;
+const NEED_COOKIES_CAPTCHA_RE =
+  /confirm\s*(you|you'?re)\s*not\s*(a\s*)?bot|verify\s*(you|you'?re)\s*(are\s*)?(human|not\s*(a\s*)?bot)|not\s*a\s*bot|captcha|recaptcha|human\s*verification|challenge\s*required/;
+
+function makeNeedCookiesCounters(): NeedCookiesCounters {
+  return {
+    '429': 0,
+    login_required: 0,
+    captcha_not_a_bot: 0,
+    other: 0,
+  };
+}
+
+const needCookiesCountersTotal: NeedCookiesCounters = makeNeedCookiesCounters();
+const needCookiesCountersByHost = new Map<string, NeedCookiesCounters>();
+
+function incrementNeedCookiesCounters(
+  cause: NeedCookiesCause,
+  host: string
+): {
+  total: NeedCookiesCounters;
+  hostTotal: NeedCookiesCounters;
+} {
+  needCookiesCountersTotal[cause] += 1;
+
+  let hostCounters = needCookiesCountersByHost.get(host);
+  if (!hostCounters) {
+    hostCounters = makeNeedCookiesCounters();
+    needCookiesCountersByHost.set(host, hostCounters);
+  }
+  hostCounters[cause] += 1;
+
+  return {
+    total: { ...needCookiesCountersTotal },
+    hostTotal: { ...hostCounters },
+  };
+}
 
 export async function updateYtDlp(): Promise<boolean> {
   try {
@@ -105,74 +156,139 @@ export async function processVideoUrl(
   try {
     return await run([]);
   } catch (err: any) {
-    const combined = `${err?.message ?? ''}\n${err?.stderr ?? ''}\n${
-      err?.stdout ?? ''
-    }\n${err?.all ?? ''}`;
-    const combinedLC = combined.toLowerCase();
-
-    // Detect 429 / captcha / login-required bot checks
-    const looksSuspicious = /429|too\s*many\s*requests|rate[- ]?limit/.test(
-      combinedLC
-    );
-    const needsLoginBotCheck =
-      /login_required|sign\s*in\s*to\s*confirm|not\s*a\s*bot|verify\s*(you|you'?re)\s*not\s*(a\s*)?bot|consent|captcha/.test(
-        combinedLC
-      );
-
-    // For login/captcha/consent errors, always allow reconnect even if cookies exist
-    // (cookies can be expired/invalid).
-    if (needsLoginBotCheck) {
+    const host = new URL(url).hostname;
+    const throwIfCancelled = (context: string): void => {
+      if (!consumeCancelMarker(operationId)) return;
       log.info(
-        `[URLprocessor] NeedCookies triggered (host=${
-          new URL(url).hostname
-        }, loginCheck=true)`
+        `[URLprocessor] Cancellation marker consumed (${context}) (Op ID: ${operationId})`
+      );
+      throw new CancelledError();
+    };
+    const waitWithCancelChecks = async (
+      totalMs: number,
+      context: string
+    ): Promise<void> => {
+      const pollMs = 200;
+      let remainingMs = totalMs;
+      while (remainingMs > 0) {
+        throwIfCancelled(context);
+        const sliceMs = Math.min(pollMs, remainingMs);
+        await new Promise(resolve => setTimeout(resolve, sliceMs));
+        remainingMs -= sliceMs;
+      }
+      throwIfCancelled(context);
+    };
+    const classify = (error: any) => {
+      const combined = `${error?.message ?? ''}\n${error?.stderr ?? ''}\n${
+        error?.stdout ?? ''
+      }\n${error?.all ?? ''}`;
+      const combinedLC = combined.toLowerCase();
+      return {
+        looksSuspicious: NEED_COOKIES_RATE_LIMIT_RE.test(combinedLC),
+        hasLoginRequired: NEED_COOKIES_LOGIN_REQUIRED_RE.test(combinedLC),
+        hasConsentInterstitial:
+          NEED_COOKIES_CONSENT_INTERSTITIAL_RE.test(combinedLC),
+        hasCaptchaOrHumanCheck: NEED_COOKIES_CAPTCHA_RE.test(combinedLC),
+      };
+    };
+    const requestNeedCookies = (
+      cause: NeedCookiesCause,
+      reason: string
+    ): never => {
+      const counts = incrementNeedCookiesCounters(cause, host);
+      log.info(
+        `[URLprocessor] NeedCookies triggered (host=${host}, cause=${cause}, reason=${reason}, op=${operationId}, total=${JSON.stringify(counts.total)}, hostTotal=${JSON.stringify(counts.hostTotal)})`
       );
       progressCallback?.({
         percent: PROGRESS.WARMUP_END,
         stage: 'NeedCookies',
       });
       throw new Error('NeedCookies');
-    }
-
-    // For pure rate-limit (429-ish) errors, avoid trapping users in a connect loop:
-    // only request cookies when we don't already have any app-managed cookies.
-    if (looksSuspicious) {
-      let cookieCount: number | null = null;
+    };
+    const getCookieCountForGating = async (): Promise<number | null> => {
       try {
         const exported = await exportCookiesToFileForUrl(url);
-        cookieCount = exported.count;
+        return exported.count;
       } catch (cookieErr) {
         // If we can't determine cookie availability, do not mask the real error.
         log.warn(
           '[URLprocessor] Failed to check/export app cookies for NeedCookies gating:',
           cookieErr
         );
-        cookieCount = null;
+        return null;
       }
+    };
 
-      if (cookieCount === 0) {
-        log.info(
-          `[URLprocessor] NeedCookies triggered (host=${
-            new URL(url).hostname
-          }, 429-ish=true)`
-        );
-        progressCallback?.({
-          percent: PROGRESS.WARMUP_END,
-          stage: 'NeedCookies',
-        });
-        throw new Error('NeedCookies');
-      }
+    const firstCheck = classify(err);
 
-      if (cookieCount && cookieCount > 0) {
-        log.info(
-          `[URLprocessor] Rate-limit detected but app cookies already exist for host=${
-            new URL(url).hostname
-          }; surfacing original error instead of NeedCookies.`
-        );
+    // For login/captcha/human-check errors, always allow reconnect even if cookies exist
+    // (cookies can be expired/invalid).
+    if (firstCheck.hasLoginRequired || firstCheck.hasConsentInterstitial) {
+      requestNeedCookies(
+        'login_required',
+        firstCheck.hasConsentInterstitial
+          ? 'consentInterstitial=true'
+          : 'loginCheck=true'
+      );
+    }
+    if (firstCheck.hasCaptchaOrHumanCheck) {
+      requestNeedCookies('captcha_not_a_bot', 'humanCheck=true');
+    }
+
+    // For pure rate-limit (429-ish) errors, prefer a delayed retry once before forcing
+    // users into a connect/login flow.
+    if (firstCheck.looksSuspicious) {
+      const retryDelayMs = 4000;
+      log.warn(
+        `[URLprocessor] Rate-limit detected for host=${host}; waiting ${retryDelayMs}ms before retrying once.`
+      );
+      progressCallback?.({
+        percent: PROGRESS.WARMUP_END,
+        stage: 'Rate limited, retrying...',
+      });
+      await waitWithCancelChecks(
+        retryDelayMs,
+        'rate-limit backoff before one-shot retry'
+      );
+
+      try {
+        return await run([]);
+      } catch (retryErr: any) {
+        const retryCheck = classify(retryErr);
+
+        if (retryCheck.hasLoginRequired || retryCheck.hasConsentInterstitial) {
+          requestNeedCookies(
+            'login_required',
+            retryCheck.hasConsentInterstitial
+              ? 'consentInterstitial=true, after429Retry=true'
+              : 'loginCheck=true, after429Retry=true'
+          );
+        }
+        if (retryCheck.hasCaptchaOrHumanCheck) {
+          requestNeedCookies(
+            'captcha_not_a_bot',
+            'humanCheck=true, after429Retry=true'
+          );
+        }
+
+        if (retryCheck.looksSuspicious) {
+          // Only request cookies when we don't already have app-managed cookies.
+          const cookieCount = await getCookieCountForGating();
+          if (cookieCount === 0) {
+            requestNeedCookies('429', '429-ish=true, afterRetry=true');
+          }
+          if (cookieCount && cookieCount > 0) {
+            log.info(
+              `[URLprocessor] Rate-limit persisted after retry, but app cookies already exist for host=${host}; surfacing original error instead of NeedCookies.`
+            );
+          }
+        }
+
+        throw retryErr;
       }
     }
 
-    throw err; // not a 429 / cookie-related flow ⇒ let normal error flow handle it
+    throw err; // not a 429 / cookie-related flow => let normal error flow handle it
   }
 }
 
