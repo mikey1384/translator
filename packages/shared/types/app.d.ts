@@ -1039,6 +1039,7 @@ declare module '@shared-types/app' {
     updateDownload: () => Promise<void>;
     updateInstall: () => Promise<void>;
     updateGetPostInstallNotice: () => Promise<PostInstallUpdateNotice | null>;
+    updateClearPostInstallNotice: (version?: string) => Promise<void>;
     updateGetRequiredNotice: () => Promise<UpdateRequiredNotice | null>;
     onUpdateAvailable: (callback: (info: any) => void) => () => void;
     onUpdateProgress: (callback: (percent: number) => void) => () => void;

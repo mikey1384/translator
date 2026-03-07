@@ -656,6 +656,8 @@ const electronAPI = {
   updateInstall: () => ipcRenderer.invoke('update:install'),
   updateGetPostInstallNotice: () =>
     ipcRenderer.invoke('update:get-post-install-notice'),
+  updateClearPostInstallNotice: (version?: string) =>
+    ipcRenderer.invoke('update:clear-post-install-notice', version),
   updateGetRequiredNotice: () =>
     ipcRenderer.invoke('update:get-required-notice'),
   onUpdateAvailable: (callback: (info: any) => void) => {

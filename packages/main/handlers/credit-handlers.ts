@@ -11,6 +11,7 @@ import {
   withStage5AuthRetryOnResponse,
 } from '../services/stage5-auth.js';
 import {
+  type CheckoutEntitlement,
   hasUnlockedCheckoutEntitlement,
   normalizeCheckoutEntitlement,
 } from '../utils/payment-entitlements.js';
@@ -87,7 +88,6 @@ const CHECKOUT_BACKGROUND_SYNC_RETRY_COUNT = Math.max(
   CHECKOUT_SYNC_RETRY_COUNT * 2,
   90
 );
-const CHECKOUT_SUCCESS_SIGNAL_TTL_MS = 5 * 60_000;
 
 type StripeSettlementStatus =
   | 'confirmed'
@@ -101,41 +101,11 @@ interface StripeSettlementResult {
 
 const checkoutVisibilityFollowUps = new Set<string>();
 const checkoutSettlementFollowUps = new Set<string>();
-const checkoutSuccessSignals = new Map<string, number>();
-
 function buildCheckoutFollowUpKey(
   mode: CheckoutMode,
   sessionId: string
 ): string {
   return `${mode}:${sessionId}`;
-}
-
-export function shouldIgnoreDuplicateCheckoutSuccessSignal({
-  mode,
-  sessionId,
-}: {
-  mode: CheckoutMode;
-  sessionId?: string | null;
-}): boolean {
-  const normalizedSessionId = String(sessionId || '').trim();
-  if (!normalizedSessionId) {
-    return false;
-  }
-
-  const now = Date.now();
-  for (const [key, ts] of checkoutSuccessSignals.entries()) {
-    if (now - ts > CHECKOUT_SUCCESS_SIGNAL_TTL_MS) {
-      checkoutSuccessSignals.delete(key);
-    }
-  }
-
-  const dedupeKey = `${mode}:${normalizedSessionId}`;
-  if (checkoutSuccessSignals.has(dedupeKey)) {
-    return true;
-  }
-
-  checkoutSuccessSignals.set(dedupeKey, now);
-  return false;
 }
 
 function emitCheckoutCancelled(
@@ -640,6 +610,12 @@ async function openStripeCheckout(
     win.loadURL(options.sessionUrl);
 
     let completed = false;
+    let skipOnClosedCallback = false;
+    let successRedirectPayload: {
+      sessionId?: string | null;
+      mode: CheckoutMode;
+      url: string;
+    } | null = null;
 
     const cleanup = () => {
       try {
@@ -656,30 +632,18 @@ async function openStripeCheckout(
       }
     };
 
-    const finish = ({
+    const finish = async ({
       cb,
-      closeWindow = false,
     }: {
-      cb?: () => void;
-      closeWindow?: boolean;
+      cb?: () => void | Promise<void>;
     } = {}) => {
       if (completed) return;
       completed = true;
       cleanup();
       try {
-        cb?.();
+        await cb?.();
       } catch (err) {
         log.error('[credit-handler] Error during checkout callback:', err);
-      }
-      if (closeWindow && !win.isDestroyed()) {
-        try {
-          win.close();
-        } catch (err) {
-          log.warn(
-            '[credit-handler] Failed to close checkout window after terminal state:',
-            err
-          );
-        }
       }
       resolve();
     };
@@ -716,8 +680,7 @@ async function openStripeCheckout(
         return;
       }
 
-      finish({ closeWindow: true });
-      log.info('[credit-handler] Checkout completed. Closing checkout window.');
+      log.info('[credit-handler] Success handled after manual close.');
     };
 
     const handleRedirect = (_event: Electron.Event, url: string) => {
@@ -737,18 +700,10 @@ async function openStripeCheckout(
             targetUrl.searchParams.get('mode') ?? options.defaultMode
           );
           const sessionId = targetUrl.searchParams.get('session_id');
-          if (
-            shouldIgnoreDuplicateCheckoutSuccessSignal({
-              mode,
-              sessionId,
-            })
-          ) {
-            log.info(
-              '[credit-handler] Ignoring already-processed checkout success signal.'
-            );
-            return;
-          }
-          handleSuccess({ sessionId, mode, url });
+          successRedirectPayload = { sessionId, mode, url };
+          log.info(
+            '[credit-handler] Checkout success redirect observed. Waiting for manual close before reconciling payment.'
+          );
           return;
         }
 
@@ -774,7 +729,16 @@ async function openStripeCheckout(
               err
             );
           }
-          finish({ closeWindow: true });
+          if (!win.isDestroyed()) {
+            try {
+              win.close();
+            } catch (err) {
+              log.warn(
+                '[credit-handler] Failed to close checkout window after cancel redirect:',
+                err
+              );
+            }
+          }
           log.info(
             '[credit-handler] Checkout cancelled redirect observed. Closing checkout window.'
           );
@@ -791,8 +755,16 @@ async function openStripeCheckout(
     const handleLoadFailure = (
       _event: Electron.Event,
       errorCode: number,
-      errorDescription: string
+      errorDescription: string,
+      validatedURL?: string
     ) => {
+      if (errorCode === -3) {
+        log.info(
+          `[credit-handler] Ignoring non-fatal checkout navigation abort for ${validatedURL || 'unknown URL'}.`
+        );
+        return;
+      }
+
       log.error(
         `[credit-handler] Checkout window failed to load: ${errorCode} - ${errorDescription}`
       );
@@ -801,7 +773,25 @@ async function openStripeCheckout(
       }
 
       loadFailureHandled = true;
-      finish({ cb: options.onCancel, closeWindow: true });
+      try {
+        options.onCancel?.();
+      } catch (err) {
+        log.error(
+          '[credit-handler] Error during checkout load-failure callback:',
+          err
+        );
+      }
+      skipOnClosedCallback = true;
+      if (!win.isDestroyed()) {
+        try {
+          win.close();
+        } catch (err) {
+          log.warn(
+            '[credit-handler] Failed to close checkout window after load failure:',
+            err
+          );
+        }
+      }
       log.info(
         '[credit-handler] Checkout load failure surfaced to the app. Closing the window so the user can retry.'
       );
@@ -812,7 +802,17 @@ async function openStripeCheckout(
     win.webContents.on('did-fail-load', handleLoadFailure);
 
     win.on('closed', () => {
-      finish(options.onClosed);
+      if (successRedirectPayload) {
+        void finish({
+          cb: () => handleSuccess(successRedirectPayload!),
+        });
+        return;
+      }
+      if (skipOnClosedCallback || cancelRedirectHandled) {
+        void finish();
+        return;
+      }
+      void finish({ cb: options.onClosed });
     });
   });
 }
@@ -1365,7 +1365,7 @@ async function waitForCheckoutEntitlementSync({
   maxRetries = CHECKOUT_SYNC_RETRY_COUNT,
 }: {
   sessionId: string;
-  expectedEntitlement: string;
+  expectedEntitlement: CheckoutEntitlement;
   targetWindow?: BrowserWindow | null;
   maxRetries?: number;
 }): Promise<boolean> {
@@ -1398,7 +1398,7 @@ function scheduleCheckoutVisibilityFollowUp(
   sessionId: string,
   opts: CheckoutFollowUpOptions & {
     stripeSessionCreatedUnix?: number | null;
-    expectedEntitlement?: string;
+    expectedEntitlement?: CheckoutEntitlement;
   }
 ): void {
   const key = buildCheckoutFollowUpKey(opts.mode, sessionId);

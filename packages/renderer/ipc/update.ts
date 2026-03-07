@@ -29,6 +29,10 @@ export function getPostInstallNotice(): Promise<PostInstallUpdateNotice | null> 
   return window.electron.updateGetPostInstallNotice();
 }
 
+export function clearPostInstallNotice(version?: string): Promise<void> {
+  return window.electron.updateClearPostInstallNotice(version);
+}
+
 export function getRequiredNotice(): Promise<UpdateRequiredNotice | null> {
   return window.electron.updateGetRequiredNotice();
 }

@@ -103,7 +103,7 @@ function stagePostInstallNotice(info: UpdateInfo | null | undefined): void {
   log.info(`[update] Staged post-install notes for v${targetVersion}`);
 }
 
-function consumePostInstallNotice(): PostInstallNotice | null {
+function getPostInstallNotice(): PostInstallNotice | null {
   const pending = settingsStore.get(PENDING_POST_INSTALL_NOTICE_KEY);
   if (!pending) return null;
 
@@ -114,9 +114,13 @@ function consumePostInstallNotice(): PostInstallNotice | null {
   }
 
   const notes = String(pending.notes || '').trim();
-  settingsStore.set(PENDING_POST_INSTALL_NOTICE_KEY, null);
 
-  if (!notes) return null;
+  if (!notes) {
+    settingsStore.set(PENDING_POST_INSTALL_NOTICE_KEY, null);
+    return null;
+  }
+
+  log.info(`[update] Post-install notes ready for v${pending.targetVersion}`);
 
   return {
     version: pending.targetVersion,
@@ -130,6 +134,25 @@ function consumePostInstallNotice(): PostInstallNotice | null {
         : undefined,
     notes,
   };
+}
+
+function clearPostInstallNotice(expectedVersion?: string): void {
+  const pending = settingsStore.get(PENDING_POST_INSTALL_NOTICE_KEY);
+  if (!pending) return;
+
+  if (
+    typeof expectedVersion === 'string' &&
+    expectedVersion.trim() &&
+    pending.targetVersion !== expectedVersion.trim()
+  ) {
+    log.warn(
+      `[update] Skipping post-install note clear for v${expectedVersion}; staged notice targets v${pending.targetVersion}`
+    );
+    return;
+  }
+
+  settingsStore.set(PENDING_POST_INSTALL_NOTICE_KEY, null);
+  log.info(`[update] Cleared post-install notes for v${pending.targetVersion}`);
 }
 
 /* ----------------------------------------------------------
@@ -247,7 +270,13 @@ export function buildUpdateHandlers(opts: {
   ipcMain.handle('update:download', downloadUpdate);
   ipcMain.handle('update:install', installUpdate);
   ipcMain.handle('update:get-post-install-notice', () =>
-    consumePostInstallNotice()
+    getPostInstallNotice()
+  );
+  ipcMain.handle(
+    'update:clear-post-install-notice',
+    (_event: any, version?: string) => {
+      clearPostInstallNotice(version);
+    }
   );
 
   /* ------------------------------------------------ */

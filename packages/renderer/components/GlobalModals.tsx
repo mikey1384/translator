@@ -22,6 +22,7 @@ import LogsModal from './LogsModal';
 import Modal from './Modal';
 import Button from './Button';
 import { useTranslation } from 'react-i18next';
+import * as UpdateIPC from '../ipc/update';
 
 const updateNotesDetailsStyles = css`
   display: flex;
@@ -164,6 +165,16 @@ export default function GlobalModals() {
     }
   };
 
+  const handleCloseUpdateNotes = async () => {
+    const version = updateNotes?.version;
+    closeUpdateNotes();
+    try {
+      await UpdateIPC.clearPostInstallNotice(version);
+    } catch (err) {
+      console.warn('[GlobalModals] Failed to clear post-install notes:', err);
+    }
+  };
+
   return (
     <>
       <ConfirmReplaceSrtDialog
@@ -299,9 +310,12 @@ export default function GlobalModals() {
               })
             : t('common.whatsNewTitle', "What's New"))
         }
-        onClose={() => closeUpdateNotes()}
+        onClose={() => void handleCloseUpdateNotes()}
         actions={
-          <Button variant="primary" onClick={() => closeUpdateNotes()}>
+          <Button
+            variant="primary"
+            onClick={() => void handleCloseUpdateNotes()}
+          >
             {t('common.gotIt', 'Got it')}
           </Button>
         }

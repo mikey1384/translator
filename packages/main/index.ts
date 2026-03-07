@@ -50,9 +50,7 @@ import {
   handleCreateCheckoutSession,
   handleResetCredits,
   handleResetCreditsToZero,
-  handleStripeSuccess,
   handleCreateByoUnlockSession,
-  shouldIgnoreDuplicateCheckoutSuccessSignal,
 } from './handlers/credit-handlers.js';
 import {
   initEntitlementsManager,
@@ -71,10 +69,7 @@ import type {
 import { testElevenLabsApiKey } from './services/elevenlabs-client.js';
 import { getMainWindow } from './utils/window.js';
 import { suggestVideosViaChat } from './services/video-suggestions.js';
-import {
-  getPendingStage5UpdateRequiredNotice,
-  isStage5UpdateRequiredError,
-} from './services/stage5-version-gate.js';
+import { getPendingStage5UpdateRequiredNotice } from './services/stage5-version-gate.js';
 import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 
 log.info('--- [main.ts] Execution Started ---');
@@ -886,45 +881,6 @@ try {
     (_event, value: 'openai' | 'elevenlabs') =>
       settingsHandlers.setStage5DubbingTtsProvider(value)
   );
-
-  // Handle Stripe checkout completion messages from embedded window
-  ipcMain.on('stripe-success', async (_event, data) => {
-    log.info('[main.ts] Received stripe-success message:', data);
-    const mode = data?.mode === 'byo' ? 'byo' : 'credits';
-    if (
-      shouldIgnoreDuplicateCheckoutSuccessSignal({
-        mode,
-        sessionId: data?.sessionId,
-      })
-    ) {
-      log.info('[main.ts] Ignoring duplicate stripe-success message.');
-      return;
-    }
-    try {
-      const result = await handleStripeSuccess(data.sessionId, {
-        mode,
-        window: mainWindow,
-      });
-      if (
-        result.status !== 'cancelled' ||
-        !mainWindow ||
-        mainWindow.isDestroyed()
-      ) {
-        return;
-      }
-
-      if (mode === 'byo') {
-        mainWindow.webContents.send('byo-unlock-cancelled');
-        return;
-      }
-
-      mainWindow.webContents.send('checkout-cancelled');
-    } catch (error) {
-      if (!isStage5UpdateRequiredError(error)) {
-        log.error('[main.ts] Failed to process stripe-success message:', error);
-      }
-    }
-  });
 
   ipcMain.on('stripe-cancelled', (_event, data) => {
     log.info('[main.ts] Received stripe-cancelled message:', data);
