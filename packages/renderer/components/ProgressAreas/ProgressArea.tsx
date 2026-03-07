@@ -1,19 +1,15 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  getEffectiveCalibrationMultiplier,
-  useEtaCalibrationStore,
-} from '../../state/eta-calibration-store';
+import { useCreditStore } from '../../state/credit-store';
 import { useUIStore } from '../../state/ui-store';
 import { useAiStore } from '../../state/ai-store';
-import { useSubStore } from '../../state/subtitle-store';
-import { useTaskStore } from '../../state/task-store';
-import { useVideoStore } from '../../state/video-store';
 import { logButton, logTask } from '../../utils/logger.js';
 import {
-  estimateRemainingSeconds,
-  formatEtaDuration,
-} from '../../utils/progressEta';
+  estimateTranscriptionHours,
+  estimateTranslatableHours,
+  formatDubbingTime,
+  formatHours,
+} from '../../utils/creditEstimates';
 import {
   resolveDubbingCreditProvider,
   resolveDubbingProvider,
@@ -76,15 +72,8 @@ export default function ProgressArea({
   notice,
 }: ProgressAreaProps) {
   const { t } = useTranslation();
-  const translationTask = useTaskStore(s => s.translation);
-  const transcriptionTask = useTaskStore(s => s.transcription);
-  const dubbingTask = useTaskStore(s => s.dubbing);
-  const videoDurationSec = useVideoStore(s => s.meta?.duration ?? null);
-  const segmentCount = useSubStore(s => s.order.length);
-  const etaCalibrationRecords = useEtaCalibrationStore(s => s.records);
-  const qualityTranscription = useUIStore(s => s.qualityTranscription);
+  const credits = useCreditStore(s => s.credits);
   const qualityTranslation = useUIStore(s => s.qualityTranslation);
-  const [nowMs, setNowMs] = useState(() => Date.now());
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
   const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
   const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
@@ -153,8 +142,12 @@ export default function ProgressArea({
           : 'general'
     : 'general';
 
-  const etaText = useMemo(() => {
-    if (progress >= 100 || operationType === 'general') {
+  const coverageText = useMemo(() => {
+    if (
+      operationType === 'general' ||
+      typeof credits !== 'number' ||
+      credits <= 0
+    ) {
       return undefined;
     }
 
@@ -164,84 +157,40 @@ export default function ProgressArea({
       resolveTranslationReviewProvider(runtimeState);
     const resolvedTranscriptionProvider =
       resolveTranscriptionProvider(runtimeState);
-    const transcriptionProviderHint =
-      resolvedTranscriptionProvider === 'stage5'
-        ? preferredTranscriptionProvider === 'openai'
-          ? 'openai'
-          : 'elevenlabs'
-        : resolvedTranscriptionProvider;
     const resolvedDubbingProvider = resolveDubbingProvider(runtimeState);
-    const dubbingProviderHint =
-      resolvedDubbingProvider === 'stage5'
-        ? resolveDubbingCreditProvider(runtimeState)
-        : resolvedDubbingProvider === 'elevenlabs'
-          ? 'elevenlabs'
-          : 'openai';
-
-    const task =
-      operationType === 'translation'
-        ? translationTask
-        : operationType === 'transcription'
-          ? transcriptionTask
-          : operationType === 'dubbing'
-            ? dubbingTask
-            : null;
-
-    if (!task) return undefined;
-
-    const etaSeconds = estimateRemainingSeconds(
-      {
-        operationType,
-        percent: task.percent,
-        phaseKey: task.phaseKey,
-        current: task.current,
-        total: task.total,
-        etaSeconds: task.etaSeconds,
-        startedAt: task.startedAt,
-        phaseStartedAt: task.phaseStartedAt,
-        model: task.model,
-        segmentCount,
-        videoDurationSec,
-        qualityTranslation,
-        qualityTranscription,
-        translationDraftProvider,
-        translationReviewProvider,
-        transcriptionProvider: transcriptionProviderHint,
-        dubbingProvider: dubbingProviderHint,
-        nowMs,
-      },
-      bucketKey =>
-        getEffectiveCalibrationMultiplier(etaCalibrationRecords, bucketKey)
-    );
-
-    return etaSeconds != null
-      ? `ETA ${formatEtaDuration(etaSeconds)}`
-      : undefined;
-  }, [
-    progress,
-    operationType,
-    nowMs,
-    runtimeState,
-    preferredTranscriptionProvider,
-    translationTask,
-    transcriptionTask,
-    dubbingTask,
-    etaCalibrationRecords,
-    segmentCount,
-    videoDurationSec,
-    qualityTranscription,
-    qualityTranslation,
-  ]);
-
-  useEffect(() => {
-    if (!isVisible || progress >= 100) {
-      return;
+    if (operationType === 'transcription') {
+      if (resolvedTranscriptionProvider !== 'stage5') {
+        return undefined;
+      }
+      const hours = estimateTranscriptionHours(credits);
+      return hours != null ? `(~${formatHours(hours)})` : undefined;
     }
-    const timer = setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isVisible, progress]);
+
+    if (operationType === 'translation') {
+      if (
+        translationDraftProvider !== 'stage5' ||
+        translationReviewProvider !== 'stage5'
+      ) {
+        return undefined;
+      }
+      const hours = estimateTranslatableHours(credits, qualityTranslation);
+      if (hours == null) return undefined;
+      const time = formatHours(hours);
+      return qualityTranslation ? `(hq mode: ~${time})` : `(~${time})`;
+    }
+
+    if (operationType === 'dubbing') {
+      if (resolvedDubbingProvider !== 'stage5') {
+        return undefined;
+      }
+      return `(${formatDubbingTime(
+        credits,
+        resolveDubbingCreditProvider(runtimeState)
+      )})`;
+    }
+
+    return undefined;
+  }, [operationType, credits, runtimeState, qualityTranslation]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -307,7 +256,7 @@ export default function ProgressArea({
               <div className={workflowStatusUtilityRowStyles}>
                 <CreditBalance
                   operationType={operationType}
-                  suffixText={etaText}
+                  suffixText={coverageText}
                 />
                 <SettingsButton variant="icon" />
               </div>

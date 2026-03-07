@@ -238,8 +238,8 @@ export const workspaceStyles = css`
   display: grid;
   grid-template-columns: minmax(340px, 0.92fr) minmax(0, 1.35fr);
   align-items: stretch;
-  min-height: 600px;
-  max-height: 74vh;
+  height: min(74vh, 860px);
+  min-height: min(600px, 74vh);
   overflow: hidden;
 
   @media (max-width: 1040px) {
@@ -251,8 +251,8 @@ export const workspaceStyles = css`
 `;
 
 export const workspaceCompactStyles = css`
+  height: auto;
   min-height: 0;
-  max-height: none;
   align-items: start;
   overflow: visible;
 `;
@@ -763,14 +763,16 @@ export const liveActivityDetailsStyles = css`
   background: ${colors.surface};
   padding: 4px 6px;
   min-height: 0;
+  display: grid;
 `;
 
 export const liveActivityDetailsBodyStyles = css`
   margin-top: 6px;
   display: grid;
   gap: 6px;
-  max-height: none;
-  overflow: visible;
+  max-height: min(320px, 38vh);
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 2px;
 `;
 
