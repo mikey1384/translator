@@ -416,6 +416,7 @@ export default function AppContent() {
           }
           operationId={download.id}
           onCancel={handleCancelDownload}
+          verticalOffsetPx={-13}
           onClose={() =>
             setDownload({
               inProgress: false,

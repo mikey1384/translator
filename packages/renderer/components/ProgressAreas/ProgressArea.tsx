@@ -52,6 +52,7 @@ interface ProgressAreaProps {
   onClose: () => void;
   subLabel?: string;
   notice?: ReactNode;
+  verticalOffsetPx?: number;
 }
 
 export const PROGRESS_BAR_HEIGHT = 156;
@@ -70,6 +71,7 @@ export default function ProgressArea({
   autoCloseDelay = 4000,
   subLabel,
   notice,
+  verticalOffsetPx,
 }: ProgressAreaProps) {
   const { t } = useTranslation();
   const credits = useCreditStore(s => s.credits);
@@ -245,7 +247,14 @@ export default function ProgressArea({
   }
 
   return (
-    <div className={workflowStatusOverlayStyles}>
+    <div
+      className={workflowStatusOverlayStyles}
+      style={
+        verticalOffsetPx
+          ? { transform: `translateY(${verticalOffsetPx}px)` }
+          : undefined
+      }
+    >
       <div className={workflowStatusStackStyles}>
         <div className={workflowStatusCardStyles}>
           <div className={workflowStatusHeaderStyles}>
