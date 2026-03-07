@@ -3,8 +3,13 @@ import { BrowserWindow } from 'electron';
 import log from 'electron-log';
 import type { SettingsStoreType } from '../handlers/settings-handlers.js';
 import { getDeviceId } from '../handlers/credit-handlers.js';
-import { STAGE5_API_URL } from './stage5-client.js';
+import { STAGE5_API_URL } from './endpoints.js';
+import { withStage5AuthRetry } from './stage5-auth.js';
 import { getMainWindow } from '../utils/window.js';
+import {
+  isStage5UpdateRequiredError,
+  throwIfStage5UpdateRequiredError,
+} from './stage5-version-gate.js';
 
 export interface EntitlementsSnapshot {
   byoOpenAi: boolean;
@@ -85,10 +90,12 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
   const url = `${STAGE5_API_URL}/entitlements/${deviceId}`;
 
   try {
-    const response = await axios.get(url, {
-      headers: { Authorization: `Bearer ${deviceId}` },
-      timeout: 15_000,
-    });
+    const response = await withStage5AuthRetry(authHeaders =>
+      axios.get(url, {
+        headers: authHeaders,
+        timeout: 15_000,
+      })
+    );
 
     const data = response.data ?? {};
     const byoOpenAi = Boolean(
@@ -109,6 +116,7 @@ export async function fetchEntitlementsFromServer(): Promise<EntitlementsSnapsho
       { notify: false }
     );
   } catch (error: any) {
+    throwIfStage5UpdateRequiredError({ error, source: 'stage5-api' });
     log.error('[entitlements-manager] Failed to fetch entitlements:', error);
     throw error;
   }
@@ -149,6 +157,9 @@ export async function syncEntitlements(
       fetchedAt: new Date().toISOString(),
     };
   } catch (error: any) {
+    if (isStage5UpdateRequiredError(error)) {
+      throw error;
+    }
     // Preserve existing cached value on fetch failures, but log the error.
     const cached = getCachedEntitlements();
     if (!opts.silent) {

@@ -23,7 +23,11 @@ const baseIconButtonStyles = css`
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
 
   &:focus {
     outline: none;
@@ -113,22 +117,6 @@ const loadingSpinnerStyle = css`
   animation: spin 0.75s linear infinite;
 `;
 
-// Entry animation
-const entryAnimation = css`
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px) scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  animation: fadeIn 0.5s ease-out;
-`;
-
 export default function IconButton({
   variant = 'primary',
   size = 'md',
@@ -157,7 +145,6 @@ export default function IconButton({
         baseIconButtonStyles,
         iconButtonVariants[variant],
         iconButtonSizes[size],
-        entryAnimation,
         className
       )}
       disabled={isLoading || disabled}

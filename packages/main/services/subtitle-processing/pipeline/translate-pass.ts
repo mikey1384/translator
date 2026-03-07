@@ -33,7 +33,11 @@ export async function translatePass({
       progressCallback?.({
         percent: scaleProgress(100, Stage.START, Stage.TRANSLATE),
         stage: 'Skipping translation (same language)',
+        phaseKey: 'translate',
         partialResult: buildSrt({ segments, mode: 'dual' }),
+        current: segments.length,
+        total: segments.length,
+        unit: 'segments',
       });
     } catch {
       // ignore progress errors
@@ -139,12 +143,14 @@ export async function translatePass({
           qualityTranslation ? Stage.TRANSLATE : Stage.END
         ),
         stage: `Translating ${doneSoFar}/${totalSegments}`,
+        phaseKey: 'translate',
         partialResult: buildSrt({
           segments: segmentsInProcess,
           mode: 'dual',
         }),
         current: doneSoFar,
         total: totalSegments,
+        unit: 'segments',
       });
     }
   }

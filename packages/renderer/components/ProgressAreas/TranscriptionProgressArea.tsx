@@ -3,7 +3,7 @@ import ProgressArea from './ProgressArea';
 import { colors } from '../../styles';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '../../ipc/operation';
-// Remaining hours are computed and shown in ProgressArea header next to credits
+// ProgressArea renders a smart remaining-time estimate in the header.
 
 function translateBackendMessage(
   stage: string,
@@ -98,10 +98,8 @@ function translateBackendMessage(
 
 export default function TranscriptionProgressArea() {
   const { t } = useTranslation();
-  const { transcription, setTranscription } = useTaskStore(s => ({
-    transcription: s.transcription,
-    setTranscription: s.setTranscription,
-  }));
+  const transcription = useTaskStore(s => s.transcription);
+  const setTranscription = useTaskStore(s => s.setTranscription);
 
   const { inProgress, percent, stage, id } = transcription;
   if (!inProgress || !(id && id.startsWith('transcribe-'))) return null;

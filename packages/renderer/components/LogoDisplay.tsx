@@ -1,4 +1,5 @@
 import { css } from '@emotion/css';
+import { useTranslation } from 'react-i18next';
 
 const logoTextColor = '#FAF0E6';
 
@@ -30,10 +31,15 @@ const bylineTextStyles = css`
 `;
 
 export default function LogoDisplay() {
+  const { t } = useTranslation();
   return (
     <div className={logoContainerStyles}>
-      <div className={translatorTextStyles}>translator</div>
-      <div className={bylineTextStyles}>by stage_5</div>
+      <div className={translatorTextStyles}>
+        {t('branding.translator', 'translator')}
+      </div>
+      <div className={bylineTextStyles}>
+        {t('branding.byStage5', 'by stage_5')}
+      </div>
     </div>
   );
 }

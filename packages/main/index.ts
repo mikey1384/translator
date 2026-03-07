@@ -52,8 +52,7 @@ import {
   handleResetCreditsToZero,
   handleStripeSuccess,
   handleCreateByoUnlockSession,
-  handleGetVoiceCloningPricing,
-  getDeviceId,
+  shouldIgnoreDuplicateCheckoutSuccessSignal,
 } from './handlers/credit-handlers.js';
 import {
   initEntitlementsManager,
@@ -65,8 +64,18 @@ import {
   validateApiKey,
   validateAnthropicApiKey,
 } from './services/ai-provider.js';
+import type {
+  VideoSuggestionModelPreference,
+  VideoSuggestionRecency,
+} from '@shared-types/app';
 import { testElevenLabsApiKey } from './services/elevenlabs-client.js';
 import { getMainWindow } from './utils/window.js';
+import { suggestVideosViaChat } from './services/video-suggestions.js';
+import {
+  getPendingStage5UpdateRequiredNotice,
+  isStage5UpdateRequiredError,
+} from './services/stage5-version-gate.js';
+import { hasConfiguredAdminSecret } from './services/admin-auth.js';
 
 log.info('--- [main.ts] Execution Started ---');
 
@@ -532,6 +541,37 @@ try {
   });
 
   ipcMain.handle('process-url', handleProcessUrl);
+  ipcMain.handle('suggest-videos', async (event, request) => {
+    const operationId =
+      request?.operationId ||
+      `video-suggest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const controller = new AbortController();
+
+    registry.registerAutoCancel(operationId, event.sender, () => {
+      controller.abort();
+    });
+
+    try {
+      return await suggestVideosViaChat(
+        {
+          ...(request || {}),
+          operationId,
+        },
+        {
+          signal: controller.signal,
+          onProgress: progress => {
+            try {
+              event.sender.send('video-suggestion-progress', progress);
+            } catch {
+              // Renderer may be unavailable; ignore progress emit failures.
+            }
+          },
+        }
+      );
+    } finally {
+      registry.finish(operationId);
+    }
+  });
 
   ipcMain.handle('cancel-operation', async (_event, operationId: string) => {
     log.info(`[main.ts/cancel-operation] Received request for: ${operationId}`);
@@ -540,8 +580,8 @@ try {
       return {
         success,
         message: success
-          ? `Cancellation initiated for ${operationId}`
-          : `No active operation found for ${operationId}`,
+          ? `Cancellation requested for ${operationId}`
+          : `Cancellation failed for ${operationId}`,
       };
     } catch (error) {
       log.error(
@@ -580,12 +620,7 @@ try {
   );
   ipcMain.handle('reset-credits', handleResetCredits);
   ipcMain.handle('reset-credits-to-zero', handleResetCreditsToZero);
-  ipcMain.handle('get-voice-cloning-pricing', handleGetVoiceCloningPricing);
-  ipcMain.handle('get-device-id', () => getDeviceId());
-  ipcMain.handle(
-    'get-admin-device-id',
-    () => process.env.ADMIN_DEVICE_ID || null
-  );
+  ipcMain.handle('is-admin-mode', () => hasConfiguredAdminSecret());
   ipcMain.handle('get-system-info', () => {
     try {
       const platform = process.platform;
@@ -593,13 +628,11 @@ try {
       const release = os.release();
       const cpu = os.cpus()?.[0]?.model ?? '';
       const isAppleSilicon = platform === 'darwin' && arch === 'arm64';
-      const deviceId = getDeviceId();
-      return { platform, arch, release, cpu, isAppleSilicon, deviceId };
+      return { platform, arch, release, cpu, isAppleSilicon };
     } catch {
       return {
         platform: process.platform,
         arch: process.arch,
-        deviceId: getDeviceId(),
       } as any;
     }
   });
@@ -744,12 +777,12 @@ try {
     settingsHandlers.setUseByoElevenLabs(Boolean(value))
   );
 
-  // Master BYO toggle handlers
-  ipcMain.handle('get-byo-master-enabled', () =>
-    settingsHandlers.getUseByoMaster()
+  // Strict BYO mode handlers
+  ipcMain.handle('get-strict-byo-mode-enabled', () =>
+    settingsHandlers.getStrictByoModeEnabled()
   );
-  ipcMain.handle('set-byo-master-enabled', (_event, value: boolean) =>
-    settingsHandlers.setUseByoMaster(Boolean(value))
+  ipcMain.handle('set-strict-byo-mode-enabled', (_event, value: boolean) =>
+    settingsHandlers.setStrictByoModeEnabled(Boolean(value))
   );
 
   // Claude translation preference handlers
@@ -774,6 +807,54 @@ try {
   );
   ipcMain.handle('set-prefer-claude-summary', (_event, value: boolean) =>
     settingsHandlers.setPreferClaudeSummary(Boolean(value))
+  );
+  ipcMain.handle('get-video-suggestion-model-preference', () =>
+    settingsHandlers.getVideoSuggestionModelPreference()
+  );
+  ipcMain.handle(
+    'set-video-suggestion-model-preference',
+    (_event, value: VideoSuggestionModelPreference) =>
+      settingsHandlers.setVideoSuggestionModelPreference(value)
+  );
+  ipcMain.handle('get-video-suggestion-target-country', () =>
+    settingsHandlers.getVideoSuggestionTargetCountry()
+  );
+  ipcMain.handle(
+    'set-video-suggestion-target-country',
+    (_event, value: string) =>
+      settingsHandlers.setVideoSuggestionTargetCountry(value)
+  );
+  ipcMain.handle('get-video-suggestion-recency', () =>
+    settingsHandlers.getVideoSuggestionRecency()
+  );
+  ipcMain.handle(
+    'set-video-suggestion-recency',
+    (_event, value: VideoSuggestionRecency) =>
+      settingsHandlers.setVideoSuggestionRecency(value)
+  );
+  ipcMain.handle('get-video-suggestion-preference-topic', () =>
+    settingsHandlers.getVideoSuggestionPreferenceTopic()
+  );
+  ipcMain.handle(
+    'set-video-suggestion-preference-topic',
+    (_event, value: string) =>
+      settingsHandlers.setVideoSuggestionPreferenceTopic(value)
+  );
+  ipcMain.handle('get-video-suggestion-preference-creator', () =>
+    settingsHandlers.getVideoSuggestionPreferenceCreator()
+  );
+  ipcMain.handle(
+    'set-video-suggestion-preference-creator',
+    (_event, value: string) =>
+      settingsHandlers.setVideoSuggestionPreferenceCreator(value)
+  );
+  ipcMain.handle('get-video-suggestion-preference-subtopic', () =>
+    settingsHandlers.getVideoSuggestionPreferenceSubtopic()
+  );
+  ipcMain.handle(
+    'set-video-suggestion-preference-subtopic',
+    (_event, value: string) =>
+      settingsHandlers.setVideoSuggestionPreferenceSubtopic(value)
   );
 
   // Transcription provider preference handlers
@@ -810,21 +891,62 @@ try {
   ipcMain.on('stripe-success', async (_event, data) => {
     log.info('[main.ts] Received stripe-success message:', data);
     const mode = data?.mode === 'byo' ? 'byo' : 'credits';
-    await handleStripeSuccess(data.sessionId, {
-      mode,
-      window: mainWindow,
-    });
+    if (
+      shouldIgnoreDuplicateCheckoutSuccessSignal({
+        mode,
+        sessionId: data?.sessionId,
+      })
+    ) {
+      log.info('[main.ts] Ignoring duplicate stripe-success message.');
+      return;
+    }
+    try {
+      const result = await handleStripeSuccess(data.sessionId, {
+        mode,
+        window: mainWindow,
+      });
+      if (
+        result.status !== 'cancelled' ||
+        !mainWindow ||
+        mainWindow.isDestroyed()
+      ) {
+        return;
+      }
+
+      if (mode === 'byo') {
+        mainWindow.webContents.send('byo-unlock-cancelled');
+        return;
+      }
+
+      mainWindow.webContents.send('checkout-cancelled');
+    } catch (error) {
+      if (!isStage5UpdateRequiredError(error)) {
+        log.error('[main.ts] Failed to process stripe-success message:', error);
+      }
+    }
   });
 
   ipcMain.on('stripe-cancelled', (_event, data) => {
     log.info('[main.ts] Received stripe-cancelled message:', data);
-    // No action needed for cancellation
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return;
+    }
+
+    if (data?.mode === 'byo') {
+      mainWindow.webContents.send('byo-unlock-cancelled');
+      return;
+    }
+
+    mainWindow.webContents.send('checkout-cancelled');
   });
 
   // Expose app.isPackaged to renderer via preload (sync)
   ipcMain.on('is-packaged', event => {
     event.returnValue = app.isPackaged;
   });
+  ipcMain.handle('update:get-required-notice', () =>
+    getPendingStage5UpdateRequiredNotice()
+  );
 } catch (error) {
   log.error('[main.ts] FATAL: Error during initial setup:', error);
   app

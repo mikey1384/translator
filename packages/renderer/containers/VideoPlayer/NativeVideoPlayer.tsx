@@ -9,7 +9,7 @@ import {
   ElementType,
 } from 'react';
 import { css } from '@emotion/css';
-import { colors } from '../../styles';
+import { useTranslation } from 'react-i18next';
 
 import {
   setNativePlayerInstance,
@@ -18,6 +18,18 @@ import {
 } from '../../native-player';
 
 import BaseSubtitleDisplay from '../../components/BaseSubtitleDisplay';
+import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
+import {
+  videoPlayerCenterStateBodyStyles,
+  videoPlayerCenterStateCopyStyles,
+  videoPlayerCenterStateHeaderStyles,
+  videoPlayerCenterStateHintStyles,
+  videoPlayerCenterStateIconStyles,
+  videoPlayerCenterStateProgressFillStyles,
+  videoPlayerCenterStateProgressTrackStyles,
+  videoPlayerCenterStateStyles,
+  videoPlayerCenterStateTitleStyles,
+} from './video-player-side-styles';
 
 import { useVideoStore, useSubStore, useUIStore } from '../../state';
 import { useSubSourceId } from '../../state/subtitle-store';
@@ -90,7 +102,10 @@ export default function NativeVideoPlayer({
   displayHeight,
   displayWidth,
 }: NativeVideoPlayerProps) {
-  const { url: videoUrl, togglePlay } = useVideoStore();
+  const { t } = useTranslation();
+  const videoUrl = useVideoStore(s => s.url);
+  const videoPath = useVideoStore(s => s.path);
+  const togglePlay = useVideoStore(s => s.togglePlay);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorTimer = useRef<NodeJS.Timeout | null>(null);
@@ -106,6 +121,14 @@ export default function NativeVideoPlayer({
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const subSourceId = useSubSourceId();
+  const { metadataStatus, metadataErrorCode } = useVideoMetadata(videoPath);
+  const showICloudWaitingState = metadataErrorCode === 'icloud-placeholder';
+  const suppressGenericPlaybackError =
+    showICloudWaitingState ||
+    metadataStatus === 'fetching' ||
+    metadataStatus === 'waiting';
+  const showPlaybackErrorState =
+    Boolean(errorMessage) && !suppressGenericPlaybackError;
 
   const targetVideoHeight = !isAudioOnly
     ? Math.max(videoHeight ?? BASELINE_HEIGHT, 1)
@@ -180,14 +203,20 @@ export default function NativeVideoPlayer({
 
     const onPlay = () => flash('play');
     const onPause = () => flash('pause');
-    const onErr = () => setErrorMessage('Media playback error');
+    const onErr = () =>
+      setErrorMessage(t('videoPlayer.mediaPlaybackError', 'Media playback error'));
 
-    const onLoadedMetadata = recomputeScale;
+    const onLoadedMetadata = () => {
+      setErrorMessage(null);
+      recomputeScale();
+    };
+    const onCanPlay = () => setErrorMessage(null);
 
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
     v.addEventListener('error', onErr);
     v.addEventListener('loadedmetadata', onLoadedMetadata);
+    v.addEventListener('canplay', onCanPlay);
 
     setNativePlayerInstance(v);
     const readyEvent = new Event('native-player-ready');
@@ -198,8 +227,9 @@ export default function NativeVideoPlayer({
       v.removeEventListener('pause', onPause);
       v.removeEventListener('error', onErr);
       v.removeEventListener('loadedmetadata', onLoadedMetadata);
+      v.removeEventListener('canplay', onCanPlay);
     };
-  }, [recomputeScale, videoUrl, flash]);
+  }, [recomputeScale, videoUrl, flash, t]);
 
   useLayoutEffect(() => {
     const v = videoRef.current;
@@ -443,21 +473,90 @@ export default function NativeVideoPlayer({
         </div>
       )}
 
-      {errorMessage && (
+      {showICloudWaitingState && (
         <div
-          className={css`
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: ${colors.surface};
-            color: ${colors.danger};
-            padding: 10px 15px;
-            border: 1px solid ${colors.danger};
-            border-radius: 4px;
-          `}
+          className={videoPlayerCenterStateStyles('warning')}
+          role="status"
+          aria-live="polite"
         >
-          {errorMessage}
+          <div className={videoPlayerCenterStateHeaderStyles}>
+            <div
+              className={videoPlayerCenterStateIconStyles('warning')}
+              aria-hidden="true"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+            </div>
+              <div className={videoPlayerCenterStateCopyStyles}>
+                <div className={videoPlayerCenterStateTitleStyles}>
+                  {t(
+                    'videoPlayer.icloudWaitingTitle',
+                    'Downloading from iCloud'
+                  )}
+                </div>
+                <div className={videoPlayerCenterStateBodyStyles}>
+                  {t(
+                    'videoPlayer.icloudWaitingBody',
+                    "This file is not stored locally yet. In Finder, click 'Download' and wait for the cloud icon to disappear."
+                  )}
+                </div>
+              </div>
+          </div>
+          <div className={videoPlayerCenterStateProgressTrackStyles}>
+            <div className={videoPlayerCenterStateProgressFillStyles} />
+          </div>
+          <div className={videoPlayerCenterStateHintStyles}>
+            {t(
+              'videoPlayer.icloudWaitingHint',
+              'The video will load automatically when the download finishes.'
+            )}
+          </div>
+        </div>
+      )}
+
+      {showPlaybackErrorState && (
+        <div
+          className={videoPlayerCenterStateStyles('error')}
+          role="alert"
+        >
+          <div className={videoPlayerCenterStateHeaderStyles}>
+            <div
+              className={videoPlayerCenterStateIconStyles('error')}
+              aria-hidden="true"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M15 9l-6 6" />
+                <path d="M9 9l6 6" />
+              </svg>
+            </div>
+            <div className={videoPlayerCenterStateCopyStyles}>
+              <div className={videoPlayerCenterStateTitleStyles}>
+                {errorMessage}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

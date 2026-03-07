@@ -6,7 +6,6 @@ import { useSubStore } from './subtitle-store';
 import { SubtitleStylePresetKey } from '../../shared/constants/subtitle-styles';
 import { sameArray } from '../utils/array';
 import type { SummaryEffortLevel } from '@shared-types/app';
-import { ENABLE_VOICE_CLONING } from '../../shared/constants';
 
 interface State {
   showSettings: boolean;
@@ -22,7 +21,6 @@ interface State {
   // Quality toggles
   qualityTranscription: boolean; // true = sequential/contextual
   qualityTranslation: boolean; // true = include review phase
-  dubUseVoiceCloning: boolean; // true = use ElevenLabs Dubbing API to clone original voice
   dubVoice: string;
   baseFontSize: number;
   subtitleStyle: SubtitleStylePresetKey;
@@ -61,7 +59,6 @@ interface Actions {
   setShowOriginalText(show: boolean): void;
   setQualityTranscription(v: boolean): void;
   setQualityTranslation(v: boolean): void;
-  setDubUseVoiceCloning(v: boolean): void;
   setDubVoice(voice: string): void;
   setDubAmbientMix(value: number): void;
   setBaseFontSize(size: number): void;
@@ -87,20 +84,9 @@ const SUMMARY_EFFORT_KEY = 'savedSummaryEffortLevel';
 const SHOW_ORIGINAL_KEY = 'savedShowOriginalText';
 const QUALITY_TRANSCRIPTION_KEY = 'savedQualityTranscription';
 const QUALITY_TRANSLATION_KEY = 'savedQualityTranslation';
-const DUB_VOICE_CLONING_KEY = 'savedDubVoiceCloning';
 const DUB_VOICE_KEY = 'savedDubVoice';
 const DUB_AMBIENT_MIX_KEY = 'savedDubAmbientMix';
 const DEFAULT_DUB_VOICE = 'rachel';
-
-// Voice cloning is intentionally disabled. Clear any legacy persisted flag so we
-// don't silently trigger expensive cloning runs without UI.
-if (!ENABLE_VOICE_CLONING) {
-  try {
-    localStorage.setItem(DUB_VOICE_CLONING_KEY, JSON.stringify(false));
-  } catch {
-    // Ignore storage failures
-  }
-}
 
 /** Safely parse a boolean from localStorage with fallback */
 function parseStoredBool(key: string, fallback: boolean): boolean {
@@ -157,9 +143,6 @@ const initial: State = {
   showOriginalText: parseStoredBool(SHOW_ORIGINAL_KEY, true),
   qualityTranscription: parseStoredBool(QUALITY_TRANSCRIPTION_KEY, true),
   qualityTranslation: parseStoredBool(QUALITY_TRANSLATION_KEY, false),
-  dubUseVoiceCloning: ENABLE_VOICE_CLONING
-    ? parseStoredBool(DUB_VOICE_CLONING_KEY, false)
-    : false,
   dubVoice: (() => {
     const stored = localStorage.getItem(DUB_VOICE_KEY);
     return stored && ALLOWED_DUB_VOICES.has(stored)
@@ -309,11 +292,6 @@ export const useUIStore = createWithEqualityFn<State & Actions>()(
           set({ qualityTranslation: v });
         },
 
-        setDubUseVoiceCloning(v) {
-          localStorage.setItem(DUB_VOICE_CLONING_KEY, JSON.stringify(v));
-          set({ dubUseVoiceCloning: v });
-        },
-
         setDubVoice(voice) {
           const next = ALLOWED_DUB_VOICES.has(voice)
             ? voice
@@ -397,9 +375,14 @@ useUIStore.subscribe(s => {
   localStorage.setItem('savedMergeStylePreset', s.subtitleStyle);
 });
 
-export const useSubtitlePrefs = () =>
-  useUIStore(s => ({
-    baseFontSize: s.baseFontSize,
-    subtitleStyle: s.subtitleStyle,
-    showOriginal: s.showOriginalText,
-  }));
+export const useSubtitlePrefs = () => {
+  const baseFontSize = useUIStore(s => s.baseFontSize);
+  const subtitleStyle = useUIStore(s => s.subtitleStyle);
+  const showOriginal = useUIStore(s => s.showOriginalText);
+
+  return {
+    baseFontSize,
+    subtitleStyle,
+    showOriginal,
+  };
+};

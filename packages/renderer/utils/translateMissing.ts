@@ -95,7 +95,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     });
 
     if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
-      useUrlStore.getState().setError(friendlyError);
+      useUrlStore.getState().setOperationError(friendlyError);
     }
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
@@ -114,7 +114,7 @@ export async function translateMissingUntranslated(): Promise<void> {
     });
 
     if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
-      useUrlStore.getState().setError(friendlyError);
+      useUrlStore.getState().setOperationError(friendlyError);
     }
   }
 }

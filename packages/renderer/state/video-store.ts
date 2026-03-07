@@ -6,6 +6,14 @@ import * as FileIPC from '../ipc/file';
 import { useTaskStore } from './task-store';
 import { useUIStore } from './ui-store';
 import { useSubStore } from './subtitle-store';
+import {
+  basename as recentMediaBasename,
+  filterExistingRecentLocalMedia,
+  readRecentLocalMedia,
+  rememberRecentLocalMedia,
+  removeRecentLocalMedia,
+  type RecentLocalMediaItem,
+} from './recent-local-media';
 import throttle from 'lodash/throttle';
 import { logButton, logVideo } from '../utils/logger';
 
@@ -45,6 +53,7 @@ interface State {
   meta: Meta;
   isAudioOnly: boolean;
   isReady: boolean;
+  recentLocalMedia: RecentLocalMediaItem[];
   resumeAt: number | null;
   _positionListeners: {
     onTimeUpdate: () => void;
@@ -53,17 +62,19 @@ interface State {
 }
 
 interface Actions {
+  openLocalMedia(options?: {
+    preserveSubtitles?: boolean;
+  }): Promise<{ canceled: boolean; selectedPath?: string }>;
+  openRecentLocalMedia(
+    path: string,
+    options?: { preserveSubtitles?: boolean }
+  ): Promise<{ opened: boolean; missing?: boolean }>;
+  refreshRecentLocalMedia(): Promise<void>;
   setFile(
     file: File | { name: string | undefined; path: string } | null
   ): Promise<void>;
   togglePlay(): Promise<void>;
   handleTogglePlay(): void;
-  openFileDialog(): Promise<void>;
-  // New: mount a video without resetting current subtitles
-  openFileDialogPreserveSubs(): Promise<{
-    canceled: boolean;
-    selectedPath?: string;
-  } | void>;
   mountFilePreserveSubs(
     file: File | { name: string | undefined; path: string }
   ): Promise<void>;
@@ -93,6 +104,7 @@ const initial: State = {
   meta: null,
   isAudioOnly: false,
   isReady: false,
+  recentLocalMedia: readRecentLocalMedia(),
   resumeAt: null,
   _positionListeners: null,
 };
@@ -120,6 +132,106 @@ if (typeof window !== 'undefined') {
 export const useVideoStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
     ...initial,
+
+    async openLocalMedia(options) {
+      const preserveSubtitles = Boolean(options?.preserveSubtitles);
+      try {
+        logButton(
+          preserveSubtitles ? 'open_file_dialog_preserve_subs' : 'open_file_dialog'
+        );
+      } catch {
+        // Do nothing
+      }
+      const res = await FileIPC.open({
+        properties: ['openFile'],
+        filters: [
+          {
+            name: 'Media',
+            extensions: [
+              'mp4',
+              'mkv',
+              'avi',
+              'mov',
+              'webm',
+              'mp3',
+              'wav',
+              'aac',
+              'ogg',
+              'flac',
+            ],
+          },
+        ],
+      });
+      if (res.canceled || !res.filePaths.length) {
+        return { canceled: true } as const;
+      }
+      const path = res.filePaths[0];
+      try {
+        logVideo('video_selected', { path });
+      } catch {
+        // Do nothing
+      }
+      try {
+        const payload = {
+          name: recentMediaBasename(path),
+          path,
+        } as const;
+        if (preserveSubtitles) {
+          await get().mountFilePreserveSubs(payload);
+        } else {
+          await get().setFile(payload);
+        }
+        useUIStore.getState().setInputMode('file');
+        set({ recentLocalMedia: rememberRecentLocalMedia(path) });
+        return { canceled: false, selectedPath: path } as const;
+      } catch (err) {
+        console.error('[video-store] Error opening local media:', err);
+        return { canceled: true } as const;
+      }
+    },
+
+    async openRecentLocalMedia(path, options) {
+      const trimmed = String(path || '').trim();
+      if (!trimmed) return { opened: false } as const;
+      let exists = false;
+      try {
+        exists = await window.fileApi.fileExists(trimmed);
+      } catch (err) {
+        console.error(
+          '[video-store] Failed to validate recent local media:',
+          err
+        );
+        return { opened: false } as const;
+      }
+
+      if (!exists) {
+        set({ recentLocalMedia: removeRecentLocalMedia(trimmed) });
+        return { opened: false, missing: true } as const;
+      }
+
+      try {
+        const payload = {
+          name: recentMediaBasename(trimmed),
+          path: trimmed,
+        } as const;
+        if (options?.preserveSubtitles) {
+          await get().mountFilePreserveSubs(payload);
+        } else {
+          await get().setFile(payload);
+        }
+        useUIStore.getState().setInputMode('file');
+        set({ recentLocalMedia: rememberRecentLocalMedia(trimmed) });
+        return { opened: true } as const;
+      } catch (err) {
+        console.error('[video-store] Failed to open recent local media:', err);
+        return { opened: false } as const;
+      }
+    },
+
+    async refreshRecentLocalMedia() {
+      const recentLocalMedia = await filterExistingRecentLocalMedia();
+      set({ recentLocalMedia });
+    },
 
     async setFile(fd: File | { name: string; path: string } | null) {
       const prev = get();
@@ -267,90 +379,6 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
       if (!np) return;
       if (np.paused) np.play().catch(console.error);
       else np.pause();
-    },
-
-    async openFileDialog() {
-      try {
-        logButton('open_file_dialog');
-      } catch {
-        // Do nothing
-      }
-      const res = await FileIPC.open({
-        properties: ['openFile'],
-        filters: [
-          {
-            name: 'Media',
-            extensions: [
-              'mp4',
-              'mkv',
-              'avi',
-              'mov',
-              'webm',
-              'mp3',
-              'wav',
-              'aac',
-              'ogg',
-              'flac',
-            ],
-          },
-        ],
-      });
-      if (res.canceled || !res.filePaths.length) return;
-      const p = res.filePaths[0];
-      try {
-        logVideo('video_selected', { path: p });
-      } catch {
-        // Do nothing
-      }
-      try {
-        await get().setFile({ name: p.split(/[\\/]/).pop()!, path: p });
-      } catch (err) {
-        console.error('[video-store] Error setting file:', err);
-      }
-      import('../state/ui-store').then(m =>
-        m.useUIStore.getState().setInputMode('file')
-      );
-    },
-
-    async openFileDialogPreserveSubs() {
-      const res = await FileIPC.open({
-        properties: ['openFile'],
-        filters: [
-          {
-            name: 'Media',
-            extensions: [
-              'mp4',
-              'mkv',
-              'avi',
-              'mov',
-              'webm',
-              'mp3',
-              'wav',
-              'aac',
-              'ogg',
-              'flac',
-            ],
-          },
-        ],
-      });
-      if (res.canceled || !res.filePaths.length)
-        return { canceled: true } as const;
-      const p = res.filePaths[0];
-      try {
-        await get().mountFilePreserveSubs({
-          name: p.split(/[\\/]/).pop()!,
-          path: p,
-        });
-      } catch (err) {
-        console.error(
-          '[video-store] Error mounting file (preserve subs):',
-          err
-        );
-      }
-      import('../state/ui-store').then(m =>
-        m.useUIStore.getState().setInputMode('file')
-      );
-      return { canceled: false, selectedPath: p } as const;
     },
 
     async mountFilePreserveSubs(fd: File | { name: string; path: string }) {

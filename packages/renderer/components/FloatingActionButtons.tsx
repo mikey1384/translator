@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { css, cx } from '@emotion/css';
 import { colors } from '../styles';
 import IconButton from './IconButton.js';
@@ -6,14 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { useTaskStore, useUpdateStore } from '../state';
 import * as SubtitleIPC from '@ipc/subtitles';
 import { openLogs } from '../state/modal-store';
-import { logButton, logSystem } from '../utils/logger';
+import { logButton } from '../utils/logger';
 
 interface FloatingActionButtonsProps {
   scrollThreshold?: number;
   onClick?: () => void;
 }
 
-// Modern button styles with refined animation
 const buttonContainerStyles = css`
   position: fixed;
   bottom: 30px;
@@ -21,27 +20,6 @@ const buttonContainerStyles = css`
   z-index: 1000;
   display: flex;
   gap: 10px;
-`;
-
-// Shared keyframes to avoid duplication
-const greenPulseKeyframes = css`
-  @keyframes greenPulse {
-    0%,
-    100% {
-      transform: scale(1);
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-    }
-    50% {
-      transform: scale(1.05);
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.9);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    transform: none;
-    box-shadow: none;
-  }
 `;
 
 const spinKeyframes = css`
@@ -55,16 +33,160 @@ const spinKeyframes = css`
   }
 `;
 
-// Icon styles using Emotion for consistency
 const iconContainerStyles = css`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
 `;
 
-const smallIconTextStyles = css`
-  font-size: 10px;
-  font-weight: bold;
+const updateAttentionKeyframes = css`
+  @keyframes updateFabPulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 10px 24px rgba(5, 10, 19, 0.26);
+    }
+    50% {
+      transform: scale(1.03);
+      box-shadow: 0 16px 34px rgba(5, 10, 19, 0.34);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 10px 24px rgba(5, 10, 19, 0.26);
+    }
+  }
+
+  @keyframes updateFabGlowAmber {
+    0%,
+    100% {
+      box-shadow:
+        0 10px 24px rgba(5, 10, 19, 0.26),
+        0 0 0 0 rgba(240, 180, 75, 0.2);
+    }
+    50% {
+      box-shadow:
+        0 18px 36px rgba(217, 138, 22, 0.28),
+        0 0 0 8px rgba(240, 180, 75, 0.12);
+    }
+  }
+
+  @keyframes updateFabGlowGreen {
+    0%,
+    100% {
+      box-shadow:
+        0 10px 24px rgba(5, 10, 19, 0.26),
+        0 0 0 0 rgba(57, 200, 135, 0.18);
+    }
+    50% {
+      box-shadow:
+        0 18px 36px rgba(28, 165, 106, 0.28),
+        0 0 0 8px rgba(57, 200, 135, 0.12);
+    }
+  }
+`;
+
+const updatePillBaseStyles = css`
+  ${updateAttentionKeyframes}
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  min-width: 164px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  box-sizing: border-box;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(5, 10, 19, 0.26);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    opacity: 0.74;
+    cursor: wait;
+  }
+`;
+
+const updatePillAvailableStyles = css`
+  color: #fff7ea;
+  background: linear-gradient(135deg, #f0b44b, #d98a16);
+  border-color: rgba(255, 219, 154, 0.32);
+  animation:
+    updateFabPulse 1.8s ease-in-out infinite,
+    updateFabGlowAmber 1.8s ease-in-out infinite;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 14px 28px rgba(217, 138, 22, 0.28);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+const updatePillDownloadingStyles = css`
+  color: #edf6ff;
+  background: linear-gradient(135deg, #5a90ff, #376ce6);
+  border-color: rgba(171, 200, 255, 0.28);
+`;
+
+const updatePillReadyStyles = css`
+  color: #f3fff8;
+  background: linear-gradient(135deg, #39c887, #1ca56a);
+  border-color: rgba(136, 236, 188, 0.3);
+  animation:
+    updateFabPulse 1.8s ease-in-out infinite,
+    updateFabGlowGreen 1.8s ease-in-out infinite;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 14px 28px rgba(28, 165, 106, 0.28);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+const updatePillTextStyles = css`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 2px;
+`;
+
+const updatePillLabelStyles = css`
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+`;
+
+const updatePillMetaStyles = css`
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  opacity: 0.9;
+  white-space: nowrap;
+`;
+
+const updatePillProgressBadgeStyles = css`
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(9, 13, 20, 0.18);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
 `;
 
 const downloadSpinnerStyles = css`
@@ -76,52 +198,50 @@ const downloadSpinnerStyles = css`
   }
 `;
 
-// SVG triangle styles for hover scaling
-const svgTriangleBase = css`
-  fill: #fff;
-  stroke: none;
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 120ms ease;
-  transform: scale(1.25);
-`;
-
-const svgTriangleScaled = css`
-  transform: scale(1.3);
-`;
-
 export default function FloatingActionButtons({
   scrollThreshold = 300,
   onClick,
 }: FloatingActionButtonsProps) {
   const { t } = useTranslation();
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
-  const [showScrollToBottomButton, setShowScrollToBottomButton] =
-    useState(false);
-  const [hoverHalf, setHoverHalf] = useState<null | 'top' | 'bottom'>(null);
-  const { available, downloading, percent, downloaded, install, check } =
-    useUpdateStore();
+  const showScrollToTopRef = useRef(false);
+  const scrollFrameRef = useRef<number | null>(null);
+  const available = useUpdateStore(s => s.available);
+  const downloading = useUpdateStore(s => s.downloading);
+  const percent = useUpdateStore(s => s.percent);
+  const downloaded = useUpdateStore(s => s.downloaded);
+  const install = useUpdateStore(s => s.install);
+  const check = useUpdateStore(s => s.check);
   const doDownload = () => useUpdateStore.getState().download();
 
   useEffect(() => {
-    const handleScroll = () => {
+    const syncScrollButtons = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const docHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.offsetHeight,
-        document.documentElement.clientHeight
-      );
-      const viewportBottom = scrollTop + window.innerHeight;
+      const shouldShowTop = scrollTop > scrollThreshold;
 
-      setShowScrollToTopButton(scrollTop > scrollThreshold);
-      setShowScrollToBottomButton(docHeight - viewportBottom > scrollThreshold);
+      if (showScrollToTopRef.current !== shouldShowTop) {
+        showScrollToTopRef.current = shouldShowTop;
+        setShowScrollToTopButton(shouldShowTop);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => {
+      if (scrollFrameRef.current != null) return;
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        syncScrollButtons();
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    syncScrollButtons();
+    return () => {
+      if (scrollFrameRef.current != null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+        scrollFrameRef.current = null;
+      }
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [scrollThreshold]);
 
   // Check for updates on mount and periodically (only in production)
@@ -144,17 +264,6 @@ export default function FloatingActionButtons({
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  };
-
-  const handleScrollToBottomClick = () => {
-    const docHeight = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.offsetHeight,
-      document.documentElement.clientHeight
-    );
-    window.scrollTo({ top: docHeight, behavior: 'smooth' });
   };
 
   const handleReloadClick = async () => {
@@ -205,30 +314,42 @@ export default function FloatingActionButtons({
           'common.installUpdate',
           'INSTALL UPDATE - Click to install and restart'
         ),
-        variant: 'primary' as const,
         'aria-label': t(
           'common.installUpdateAria',
           'Install update and restart application'
         ),
-        className: css`
-          ${greenPulseKeyframes}
-          background: #10b981 !important;
-          color: white !important;
-          animation: greenPulse 2s ease-in-out infinite;
-          box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-
-          &:hover {
-            animation-play-state: paused;
-            transform: scale(1.05);
-          }
-        `,
+        kind: 'update' as const,
+        className: updatePillReadyStyles,
+        label: t('common.installUpdateNow', 'Install Update'),
+        meta: t('common.installUpdate', 'Restart to Update'),
         icon: (
-          <div className={iconContainerStyles}>
-            <span>📥</span>
-            <span className={smallIconTextStyles}>
-              {t('common.installUpdateShort', 'INSTALL UPDATE')}
-            </span>
-          </div>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v10"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <path
+              d="m7 10 5 5 5-5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M5 19h14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         ),
       };
     }
@@ -239,65 +360,88 @@ export default function FloatingActionButtons({
         const progressPercent = percent != null ? Math.round(percent) : 0;
         return {
           title: t('common.downloadingUpdate', 'Downloading update...'),
-          variant: 'primary' as const,
-          'aria-label': t(
-            'common.downloadingUpdateProgress',
-            `Downloading update ${progressPercent} percent`
-          ),
+          'aria-label': t('common.downloadingUpdateProgress', {
+            percent: progressPercent,
+            defaultValue: 'Downloading update {{percent}} percent',
+          }),
           'aria-live': 'polite' as const,
           'aria-busy': true,
-          className: css`
-            background: #3b82f6 !important;
-            color: white !important;
-            opacity: 0.9;
-          `,
+          kind: 'update' as const,
+          className: updatePillDownloadingStyles,
+          label: t('common.downloadingUpdateShort', 'DOWNLOADING'),
+          meta: t('common.downloadingUpdate', 'Downloading update...'),
+          progressLabel: `${progressPercent}%`,
           icon: (
-            <div className={iconContainerStyles}>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className={downloadSpinnerStyles}
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                stroke="currentColor"
+                strokeWidth="2"
                 fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={downloadSpinnerStyles}
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                />
-                <path
-                  d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className={smallIconTextStyles}>
-                {t('common.downloadingUpdateShort', 'DOWNLOADING')}
-              </span>
-              {percent != null && (
-                <span
-                  className={css`
-                    font-size: 9px;
-                    margin-left: 4px;
-                  `}
-                >
-                  {Math.round(percent)}%
-                </span>
-              )}
-            </div>
+              />
+              <path
+                d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
           ),
         };
       }
+
+      return {
+      title: t('common.downloadUpdate', 'Click to download update'),
+        'aria-label': t('common.downloadUpdateNow', 'Download Update'),
+        kind: 'update' as const,
+        className: updatePillAvailableStyles,
+        label: t('common.downloadUpdateNow', 'Download Update'),
+        meta: t('common.checkForUpdateNow', 'Check for Update'),
+        icon: (
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v10"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <path
+              d="m7 10 5 5 5-5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M5 19h14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        ),
+      };
     }
 
     // Default reload button
     return {
       title: t('common.reloadPage'),
+      kind: 'reload' as const,
       variant: 'secondary' as const,
       'aria-label': t('common.reloadPageAria', 'Reload page'),
       icon: (
@@ -328,25 +472,18 @@ export default function FloatingActionButtons({
   };
 
   const buttonProps = getButtonProps();
-
   return (
     <div className={buttonContainerStyles}>
-      {/* Logs Button */}
       <IconButton
         onClick={() => {
-          logButton('open_logs');
-          // Log deviceId so it’s immediately visible in the logs panel
-          try {
-            (async () => {
-              const id = await (window as any).electron?.getDeviceId?.();
-              if (id) logSystem({ deviceId: id });
-            })();
-          } catch {
-            logSystem({ deviceId: 'unknown' });
-          }
+          logButton('report_issue');
           openLogs();
         }}
-        aria-label={t('common.logs', 'Open logs')}
+        title={t('common.reportIssue', 'Report issue or feedback')}
+        aria-label={t(
+          'common.reportIssueAria',
+          'Open the issue report and logs dialog'
+        )}
         size="lg"
         variant="secondary"
         icon={
@@ -357,47 +494,50 @@ export default function FloatingActionButtons({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            {/* Document with folded corner */}
             <path
-              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              d="M8 9h8"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
-              d="M14 2v6h6"
+              d="M9.5 14.5h5"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Bulleted log lines */}
-            <circle cx="9" cy="11" r="1" fill="currentColor" />
-            <line
-              x1="12"
-              y1="11"
-              x2="18"
-              y2="11"
+            <path
+              d="M10 4.5 8.5 3M14 4.5 15.5 3"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
-            <circle cx="9" cy="15" r="1" fill="currentColor" />
-            <line
-              x1="12"
-              y1="15"
-              x2="18"
-              y2="15"
+            <rect
+              x="6"
+              y="6"
+              width="12"
+              height="12"
+              rx="5"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M6 11H4M20 11h-2M6.5 15.5 5 17M17.5 15.5 19 17"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
+            <circle cx="10" cy="11" r="1" fill="currentColor" />
+            <circle cx="14" cy="11" r="1" fill="currentColor" />
           </svg>
         }
       />
       {buttonProps &&
-        (available || downloaded ? (
+        (buttonProps.kind === 'update' ? (
           <button
             onClick={handleReloadClick}
             title={buttonProps.title}
@@ -406,34 +546,24 @@ export default function FloatingActionButtons({
             aria-busy={buttonProps['aria-busy'] ?? undefined}
             disabled={downloading}
             className={cx(
-              css`
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                padding: 12px 16px;
-                font-size: 11px;
-                font-weight: bold;
-                color: white;
-                transition: all 0.3s ease;
-                min-width: 80px;
-                height: 44px;
-
-                &:focus {
-                  outline: none;
-                }
-
-                &:disabled {
-                  opacity: 0.6;
-                  cursor: not-allowed;
-                }
-              `,
+              updatePillBaseStyles,
               buttonProps.className
             )}
           >
-            {buttonProps.icon}
+            <div className={iconContainerStyles}>
+              {buttonProps.icon}
+              <div className={updatePillTextStyles}>
+                <span className={updatePillLabelStyles}>
+                  {buttonProps.label}
+                </span>
+                <span className={updatePillMetaStyles}>{buttonProps.meta}</span>
+              </div>
+              {buttonProps.progressLabel ? (
+                <span className={updatePillProgressBadgeStyles}>
+                  {buttonProps.progressLabel}
+                </span>
+              ) : null}
+            </div>
           </button>
         ) : (
           <IconButton
@@ -447,136 +577,43 @@ export default function FloatingActionButtons({
             className={buttonProps.className}
           />
         ))}
-      {(showScrollToTopButton || showScrollToBottomButton) && (
-        // Split scroll button with two-tone background (top/bottom)
+      {showScrollToTopButton && (
         <IconButton
-          variant="transparent"
-          onClick={e => {
-            const el = e.currentTarget as HTMLElement;
-            const rect = el.getBoundingClientRect();
-            const midY = rect.top + rect.height / 2;
-            if (e.clientY <= midY) {
-              logButton('scroll_top');
-              if (showScrollToTopButton) handleBackToTopClick();
-            } else {
-              logButton('scroll_bottom');
-              if (showScrollToBottomButton) handleScrollToBottomClick();
-            }
+          variant="secondary"
+          onClick={() => {
+            logButton('scroll_top');
+            handleBackToTopClick();
           }}
-          onMouseMove={e => {
-            const el = e.currentTarget as HTMLElement;
-            const rect = el.getBoundingClientRect();
-            const midY = rect.top + rect.height / 2;
-            setHoverHalf(e.clientY <= midY ? 'top' : 'bottom');
-          }}
-          onMouseLeave={() => setHoverHalf(null)}
           onKeyDown={e => {
             if (e.key === 'ArrowUp' || e.key === 'Home') {
               e.preventDefault();
-              if (showScrollToTopButton) handleBackToTopClick();
-            } else if (e.key === 'ArrowDown' || e.key === 'End') {
-              e.preventDefault();
-              if (showScrollToBottomButton) handleScrollToBottomClick();
+              handleBackToTopClick();
             }
           }}
-          aria-label={t(
-            'common.splitScrollButtonAria',
-            'Scroll to top (upper half) or bottom (lower half)'
-          )}
+          title={t('common.backToTop', 'Back to Top')}
+          aria-label={t('common.backToTopAria', 'Scroll back to top')}
           size="lg"
-          className={css`
-            position: relative;
-            border: 1px solid ${colors.border};
-            /* Two-tone background split equally: Up=orange-red, Down=ocean-blue (no inversion) */
-            ${(() => {
-              const upColor = '#FF6B3D'; /* orange-red */
-              const downColor = '#1E90FF'; /* ocean-blue */
-              return `background: linear-gradient(to bottom, ${upColor} 0%, ${upColor} 50%, ${downColor} 50%, ${downColor} 100%) !important;`;
-            })()}
-            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15) inset;
-            transition: box-shadow 0.15s ease;
-
-            /* Dim unavailable half without affecting legibility */
-            &::after {
-              content: '';
-              position: absolute;
-              inset: 0;
-              border-radius: 50%;
-              background:
-                /* top overlay */
-                linear-gradient(
-                  to bottom,
-                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'}
-                    0%,
-                  ${showScrollToTopButton ? 'transparent' : 'rgba(0,0,0,0.45)'}
-                    50%,
-                  transparent 50%,
-                  transparent 100%
-                ),
-                /* bottom overlay */
-                linear-gradient(
-                    to bottom,
-                    transparent 0%,
-                    transparent 50%,
-                    ${showScrollToBottomButton
-                        ? 'transparent'
-                        : 'rgba(0,0,0,0.45)'}
-                      50%,
-                    ${showScrollToBottomButton
-                        ? 'transparent'
-                        : 'rgba(0,0,0,0.45)'}
-                      100%
-                  );
-              pointer-events: none;
-            }
-
-            /* Light up hovered half (top/bottom) without moving the button */
-            &::before {
-              content: '';
-              position: absolute;
-              inset: 0;
-              border-radius: 50%;
-              background: ${hoverHalf === 'top' && showScrollToTopButton
-                ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.22) 50%, transparent 50%, transparent 100%)`
-                : hoverHalf === 'bottom' && showScrollToBottomButton
-                  ? `linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.22) 100%)`
-                  : 'none'};
-              pointer-events: none;
-            }
-          `}
           icon={
             <svg
-              width="22"
-              height="22"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className={css`
-                stroke: currentColor;
-                stroke-width: 2;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-              `}
             >
-              {/* Divider line */}
-              <line x1="4" y1="12" x2="20" y2="12" opacity="0.4" />
-              {/* Up triangle (top half) */}
-              <polygon
-                className={cx(
-                  svgTriangleBase,
-                  hoverHalf === 'top' ? svgTriangleScaled : undefined
-                )}
-                opacity={showScrollToTopButton ? 1 : 0.35}
-                points="12,2 5,8 19,8"
+              <path
+                d="M12 19V5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-              {/* Down triangle (bottom half) */}
-              <polygon
-                className={cx(
-                  svgTriangleBase,
-                  hoverHalf === 'bottom' ? svgTriangleScaled : undefined
-                )}
-                opacity={showScrollToBottomButton ? 1 : 0.35}
-                points="12,22 5,16 19,16"
+              <path
+                d="m5 12 7-7 7 7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
           }

@@ -29,16 +29,9 @@ export default function MergingProgressArea({
   autoCloseDelay = 4_000,
 }: { autoCloseDelay?: number } = {}) {
   const { t } = useTranslation();
-  const {
-    merge: { inProgress, percent, stage, id },
-    setMerge: patchMerge,
-  } = useTaskStore(s => ({
-    merge: s.merge,
-    setMerge: s.setMerge,
-  })) as {
-    merge: MergeSlice;
-    setMerge: (patch: Partial<MergeSlice>) => void;
-  };
+  const merge = useTaskStore(s => s.merge) as MergeSlice;
+  const patchMerge = useTaskStore(s => s.setMerge);
+  const { inProgress, percent, stage, id } = merge;
 
   const [isCancelling, setIsCancelling] = useState(false);
 

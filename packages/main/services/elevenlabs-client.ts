@@ -2,7 +2,6 @@ import axios from 'axios';
 import FormData from 'form-data';
 import log from 'electron-log';
 import type { DubSegmentPayload } from '@shared-types/app';
-import { API_TIMEOUTS } from '../../shared/constants/index.js';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
 
 const ELEVENLABS_BASE_URL = 'https://api.elevenlabs.io/v1';
@@ -95,6 +94,7 @@ export interface ElevenLabsDubOptions {
   >;
   voice?: string; // Voice ID or name
   modelId?: string;
+  format?: string;
   apiKey: string;
   signal?: AbortSignal;
   concurrency?: number;
@@ -119,6 +119,68 @@ function resolveVoiceId(voice?: string): string {
   // Try to match by name
   const key = voice.toLowerCase() as ElevenLabsVoiceId;
   return ELEVENLABS_VOICES[key] ?? ELEVENLABS_VOICES.adam;
+}
+
+type ElevenLabsDubFormat = 'mp3' | 'opus' | 'pcm' | 'wav';
+
+function resolveElevenLabsDubFormat(format?: string): {
+  normalizedFormat: ElevenLabsDubFormat;
+  apiOutputFormat: string;
+  wrapPcmAsWav?: boolean;
+} {
+  const normalized = String(format || 'mp3').trim().toLowerCase();
+  switch (normalized) {
+    case 'mp3':
+      return {
+        normalizedFormat: 'mp3',
+        apiOutputFormat: 'mp3_44100_128',
+      };
+    case 'opus':
+      return {
+        normalizedFormat: 'opus',
+        apiOutputFormat: 'opus_48000_32',
+      };
+    case 'pcm':
+      return {
+        normalizedFormat: 'pcm',
+        apiOutputFormat: 'pcm_44100',
+      };
+    case 'wav':
+      return {
+        normalizedFormat: 'wav',
+        apiOutputFormat: 'pcm_44100',
+        wrapPcmAsWav: true,
+      };
+    default:
+      throw new Error(
+        `ElevenLabs does not support requested output format "${normalized}"`
+      );
+  }
+}
+
+function wrapPcm16LeAsWav(
+  pcmBuffer: Buffer,
+  sampleRate = 44_100,
+  channels = 1,
+  bitsPerSample = 16
+): Buffer {
+  const blockAlign = (channels * bitsPerSample) / 8;
+  const byteRate = sampleRate * blockAlign;
+  const wavHeader = Buffer.alloc(44);
+  wavHeader.write('RIFF', 0);
+  wavHeader.writeUInt32LE(36 + pcmBuffer.length, 4);
+  wavHeader.write('WAVE', 8);
+  wavHeader.write('fmt ', 12);
+  wavHeader.writeUInt32LE(16, 16);
+  wavHeader.writeUInt16LE(1, 20);
+  wavHeader.writeUInt16LE(channels, 22);
+  wavHeader.writeUInt32LE(sampleRate, 24);
+  wavHeader.writeUInt32LE(byteRate, 28);
+  wavHeader.writeUInt16LE(blockAlign, 32);
+  wavHeader.writeUInt16LE(bitsPerSample, 34);
+  wavHeader.write('data', 36);
+  wavHeader.writeUInt32LE(pcmBuffer.length, 40);
+  return Buffer.concat([wavHeader, pcmBuffer]);
 }
 
 export async function transcribeWithElevenLabs({
@@ -169,6 +231,7 @@ export async function synthesizeDubWithElevenLabs({
   segments,
   voice = 'adam',
   modelId = 'eleven_v3',
+  format = 'mp3',
   apiKey,
   signal,
   concurrency = 3,
@@ -178,6 +241,7 @@ export async function synthesizeDubWithElevenLabs({
   }
 
   const voiceId = resolveVoiceId(voice);
+  const outputSpec = resolveElevenLabsDubFormat(format);
   const limiter = Math.max(1, Math.min(5, concurrency));
   const queue = [...segments];
   const out: Array<{
@@ -224,7 +288,9 @@ export async function synthesizeDubWithElevenLabs({
 
       axios
         .post(
-          `${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}`,
+          `${ELEVENLABS_BASE_URL}/text-to-speech/${voiceId}?output_format=${encodeURIComponent(
+            outputSpec.apiOutputFormat
+          )}`,
           {
             text,
             model_id: modelId,
@@ -247,9 +313,12 @@ export async function synthesizeDubWithElevenLabs({
         )
         .then(res => {
           const buffer = Buffer.from(res.data as ArrayBuffer);
+          const audioBuffer = outputSpec.wrapPcmAsWav
+            ? wrapPcm16LeAsWav(buffer)
+            : buffer;
           out.push({
             index: seg.index ?? out.length,
-            audioBase64: buffer.toString('base64'),
+            audioBase64: audioBuffer.toString('base64'),
             targetDuration: seg.targetDuration,
           });
         })
@@ -280,7 +349,7 @@ export async function synthesizeDubWithElevenLabs({
   out.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 
   return {
-    format: 'mp3',
+    format: outputSpec.normalizedFormat,
     voice: voiceId,
     model: modelId,
     segments: out,
@@ -330,272 +399,4 @@ export async function getElevenLabsVoices(
     );
     return [];
   }
-}
-
-// ============================================================================
-// ElevenLabs Dubbing API - Full video/audio dubbing with voice cloning
-// ============================================================================
-
-export interface ElevenLabsDubbingJobOptions {
-  filePath: string; // Path to video/audio file
-  sourceLanguage?: string; // ISO 639-1 code (auto-detect if not provided)
-  targetLanguage: string; // ISO 639-1 code
-  apiKey: string;
-  numSpeakers?: number; // 0 = auto-detect (max 9 recommended)
-  dropBackgroundAudio?: boolean; // Remove background audio for cleaner dub
-  signal?: AbortSignal;
-  onProgress?: (status: string, percent?: number) => void;
-}
-
-export interface ElevenLabsDubbingResult {
-  dubbingId: string;
-  audioBase64: string;
-  format: string;
-  transcript?: string; // SRT format
-  targetLanguage: string;
-}
-
-/**
- * Submit a dubbing job to ElevenLabs
- */
-export async function submitDubbingJob({
-  filePath,
-  sourceLanguage,
-  targetLanguage,
-  apiKey,
-  numSpeakers = 0,
-  dropBackgroundAudio = false,
-  signal,
-}: Omit<ElevenLabsDubbingJobOptions, 'onProgress'>): Promise<{
-  dubbingId: string;
-  expectedDurationSec: number;
-}> {
-  const form = new FormData();
-  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
-  form.append('file', stream);
-  form.append('target_lang', targetLanguage);
-
-  if (sourceLanguage) {
-    form.append('source_lang', sourceLanguage);
-  }
-  if (numSpeakers > 0) {
-    form.append('num_speakers', String(numSpeakers));
-  }
-  if (dropBackgroundAudio) {
-    form.append('drop_background_audio', 'true');
-  }
-
-  try {
-    const response = await axios.post(`${ELEVENLABS_BASE_URL}/dubbing`, form, {
-      headers: {
-        ...form.getHeaders(),
-        'xi-api-key': apiKey,
-      },
-      signal,
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      timeout: 120_000, // 2 minutes for upload
-    });
-
-    return {
-      dubbingId: response.data.dubbing_id,
-      expectedDurationSec: response.data.expected_duration_sec ?? 60,
-    };
-  } finally {
-    cleanup();
-  }
-}
-
-/**
- * Poll dubbing job status
- */
-export async function getDubbingStatus(
-  dubbingId: string,
-  apiKey: string,
-  signal?: AbortSignal
-): Promise<{
-  status: 'dubbing' | 'dubbed' | 'failed' | 'cloning';
-  error?: string;
-}> {
-  const response = await axios.get(
-    `${ELEVENLABS_BASE_URL}/dubbing/${dubbingId}`,
-    {
-      headers: { 'xi-api-key': apiKey },
-      signal,
-      timeout: 30_000,
-    }
-  );
-
-  return {
-    status: response.data.status,
-    error: response.data.error,
-  };
-}
-
-/**
- * Get dubbed audio as base64
- */
-export async function getDubbedAudio(
-  dubbingId: string,
-  languageCode: string,
-  apiKey: string,
-  signal?: AbortSignal
-): Promise<{ audioBase64: string; format: string }> {
-  const response = await axios.get(
-    `${ELEVENLABS_BASE_URL}/dubbing/${dubbingId}/audio/${languageCode}`,
-    {
-      headers: { 'xi-api-key': apiKey },
-      responseType: 'arraybuffer',
-      signal,
-      timeout: 300_000, // 5 minutes for large files
-    }
-  );
-
-  const buffer = Buffer.from(response.data as ArrayBuffer);
-  return {
-    audioBase64: buffer.toString('base64'),
-    format: 'mp3',
-  };
-}
-
-/**
- * Get dubbed transcript as SRT
- */
-export async function getDubbedTranscript(
-  dubbingId: string,
-  languageCode: string,
-  apiKey: string,
-  signal?: AbortSignal
-): Promise<string> {
-  const response = await axios.get(
-    `${ELEVENLABS_BASE_URL}/dubbing/${dubbingId}/transcript/${languageCode}`,
-    {
-      headers: { 'xi-api-key': apiKey },
-      params: { format_type: 'srt' },
-      signal,
-      timeout: 30_000,
-    }
-  );
-
-  return response.data;
-}
-
-/**
- * Full dubbing workflow: submit, poll, and retrieve results
- */
-export async function dubWithElevenLabs({
-  filePath,
-  sourceLanguage,
-  targetLanguage,
-  apiKey,
-  numSpeakers = 0,
-  dropBackgroundAudio = false,
-  signal,
-  onProgress,
-}: ElevenLabsDubbingJobOptions): Promise<ElevenLabsDubbingResult> {
-  // Step 1: Submit dubbing job
-  onProgress?.('Uploading to ElevenLabs...', 5);
-  log.info(
-    `[elevenlabs-client] Submitting dubbing job for ${filePath} -> ${targetLanguage}`
-  );
-
-  const { dubbingId, expectedDurationSec } = await submitDubbingJob({
-    filePath,
-    sourceLanguage,
-    targetLanguage,
-    apiKey,
-    numSpeakers,
-    dropBackgroundAudio,
-    signal,
-  });
-
-  log.info(
-    `[elevenlabs-client] Dubbing job submitted: ${dubbingId}, expected ${expectedDurationSec}s`
-  );
-  onProgress?.('Processing audio...', 10);
-
-  // Step 2: Poll for completion
-  const pollInterval = API_TIMEOUTS.VOICE_CLONING_POLL_INTERVAL;
-  const maxWait = Math.max(
-    API_TIMEOUTS.VOICE_CLONING_BASE_MAX_WAIT,
-    expectedDurationSec * 3000
-  ); // At least 10 min or 3x expected
-  const startTime = Date.now();
-  let lastStatus: string = 'dubbing';
-
-  while (Date.now() - startTime < maxWait) {
-    if (signal?.aborted) {
-      throw new Error('Dubbing cancelled');
-    }
-
-    const { status, error } = await getDubbingStatus(dubbingId, apiKey, signal);
-
-    if (status === 'failed') {
-      throw new Error(`Dubbing failed: ${error || 'Unknown error'}`);
-    }
-
-    if (status === 'dubbed') {
-      log.info(`[elevenlabs-client] Dubbing complete for ${dubbingId}`);
-      break;
-    }
-
-    // Update progress with status-aware messages
-    const elapsed = Date.now() - startTime;
-    const baseProgress = 10 + (elapsed / (expectedDurationSec * 1000)) * 70;
-    const progress = Math.min(80, baseProgress);
-
-    // Show different messages based on actual API status
-    let statusMessage: string;
-    if (status === 'cloning') {
-      statusMessage = 'Cloning voice...';
-    } else if (elapsed < 10000) {
-      statusMessage = 'Analyzing audio...';
-    } else if (elapsed < 30000) {
-      statusMessage = 'Detecting speakers...';
-    } else {
-      statusMessage = 'Generating dubbed audio...';
-    }
-
-    if (status !== lastStatus) {
-      log.info(`[elevenlabs-client] Dubbing status: ${status}`);
-      lastStatus = status;
-    }
-
-    onProgress?.(statusMessage, Math.round(progress));
-
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-  }
-
-  // If we exited due to timeout (not break), throw error
-  const finalElapsed = Date.now() - startTime;
-  if (finalElapsed >= maxWait) {
-    throw new Error(
-      `Dubbing timed out after ${Math.round(finalElapsed / 1000)}s`
-    );
-  }
-
-  // Step 3: Retrieve dubbed audio and transcript
-  onProgress?.('Downloading dubbed audio...', 90);
-
-  const [audioResult, transcript] = await Promise.all([
-    getDubbedAudio(dubbingId, targetLanguage, apiKey, signal),
-    getDubbedTranscript(dubbingId, targetLanguage, apiKey, signal).catch(
-      err => {
-        log.warn(
-          `[elevenlabs-client] Failed to get transcript: ${err?.message}`
-        );
-        return undefined;
-      }
-    ),
-  ]);
-
-  onProgress?.('Complete', 100);
-
-  return {
-    dubbingId,
-    audioBase64: audioResult.audioBase64,
-    format: audioResult.format,
-    transcript,
-    targetLanguage,
-  };
 }

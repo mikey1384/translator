@@ -1,5 +1,8 @@
 import type {
+  AllByoSettings,
   CreditBalanceResult,
+  VideoSuggestionModelPreference,
+  VideoSuggestionRecency,
   VideoMetadataResult,
 } from '@shared-types/app';
 
@@ -44,23 +47,6 @@ export function createByoUnlockSession(): Promise<void> {
 // Check if encryption is available for secure key storage
 export function checkEncryptionAvailable(): Promise<boolean> {
   return window.electron.checkEncryptionAvailable();
-}
-
-// Batched BYO settings - single call to load all settings at once
-export interface AllByoSettings {
-  openAiKeyPresent: boolean;
-  anthropicKeyPresent: boolean;
-  elevenLabsKeyPresent: boolean;
-  useByoOpenAi: boolean;
-  useByoAnthropic: boolean;
-  useByoElevenLabs: boolean;
-  useByoMaster: boolean;
-  preferClaudeTranslation: boolean;
-  preferClaudeReview: boolean;
-  preferClaudeSummary: boolean;
-  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
-  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
-  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
 }
 
 export function getAllByoSettings(): Promise<AllByoSettings> {
@@ -224,12 +210,8 @@ export function onAnthropicApiKeyChanged(
   return window.electron.onAnthropicApiKeyChanged(callback);
 }
 
-export function getDeviceId(): Promise<string> {
-  return window.electron.getDeviceId();
-}
-
-export function getAdminDeviceId(): Promise<string | null> {
-  return window.electron.getAdminDeviceId();
+export function isAdminMode(): Promise<boolean> {
+  return window.electron.isAdminMode();
 }
 
 export function resetCredits(): Promise<{
@@ -245,13 +227,6 @@ export function resetCreditsToZero(): Promise<{
   error?: string;
 }> {
   return window.electron.resetCreditsToZero();
-}
-
-export function getVoiceCloningPricing(): Promise<{
-  creditsPerMinute: number;
-  description: string;
-}> {
-  return window.electron.getVoiceCloningPricing();
 }
 
 // ElevenLabs API key functions
@@ -288,15 +263,15 @@ export function setByoElevenLabsEnabled(
   return window.electron.setByoElevenLabsEnabled(enabled);
 }
 
-// Master BYO toggle
-export function getByoMasterEnabled(): Promise<boolean> {
-  return window.electron.getByoMasterEnabled();
+// Strict BYO mode
+export function getStrictByoModeEnabled(): Promise<boolean> {
+  return window.electron.getStrictByoModeEnabled();
 }
 
-export function setByoMasterEnabled(
+export function setStrictByoModeEnabled(
   enabled: boolean
 ): Promise<{ success: boolean; error?: string }> {
-  return window.electron.setByoMasterEnabled(enabled);
+  return window.electron.setStrictByoModeEnabled(enabled);
 }
 
 // Claude translation preference
@@ -330,6 +305,66 @@ export function setPreferClaudeSummary(
   prefer: boolean
 ): Promise<{ success: boolean; error?: string }> {
   return window.electron.setPreferClaudeSummary(prefer);
+}
+
+export function getVideoSuggestionModelPreference(): Promise<VideoSuggestionModelPreference> {
+  return window.electron.getVideoSuggestionModelPreference();
+}
+
+export function setVideoSuggestionModelPreference(
+  model: VideoSuggestionModelPreference
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setVideoSuggestionModelPreference(model);
+}
+
+export function getVideoSuggestionTargetCountry(): Promise<string> {
+  return window.electron.getVideoSuggestionTargetCountry();
+}
+
+export function setVideoSuggestionTargetCountry(
+  country: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setVideoSuggestionTargetCountry(country);
+}
+
+export function getVideoSuggestionRecency(): Promise<VideoSuggestionRecency> {
+  return window.electron.getVideoSuggestionRecency();
+}
+
+export function setVideoSuggestionRecency(
+  recency: VideoSuggestionRecency
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setVideoSuggestionRecency(recency);
+}
+
+export function getVideoSuggestionPreferenceTopic(): Promise<string> {
+  return window.electron.getVideoSuggestionPreferenceTopic();
+}
+
+export function setVideoSuggestionPreferenceTopic(
+  value: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setVideoSuggestionPreferenceTopic(value);
+}
+
+export function getVideoSuggestionPreferenceCreator(): Promise<string> {
+  return window.electron.getVideoSuggestionPreferenceCreator();
+}
+
+export function setVideoSuggestionPreferenceCreator(
+  value: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setVideoSuggestionPreferenceCreator(value);
+}
+
+export function getVideoSuggestionPreferenceSubtopic(): Promise<string> {
+  return window.electron.getVideoSuggestionPreferenceSubtopic();
+}
+
+export function setVideoSuggestionPreferenceSubtopic(
+  value: string
+): Promise<{ success: boolean; error?: string }> {
+  return window.electron.setVideoSuggestionPreferenceSubtopic(value);
 }
 
 // Transcription provider preference

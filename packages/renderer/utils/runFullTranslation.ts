@@ -20,7 +20,7 @@ export async function runFullSrtTranslation(options: TranslateAllOptions = {}) {
       try {
         useUrlStore
           .getState()
-          .setError('No SRT file available for translation');
+          .setValidationError('No SRT file available for translation');
       } catch (err) {
         // URL store may not be available in all contexts (e.g., direct API calls)
         console.debug(

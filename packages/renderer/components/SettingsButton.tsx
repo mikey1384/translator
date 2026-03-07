@@ -3,36 +3,25 @@ import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../state';
 import { logButton } from '../utils/logger';
 import { colors } from '../styles';
-
-const textButtonStyles = css`
-  padding: 8px 15px;
-  font-size: 0.9em;
-  background-color: ${colors.grayLight};
-  color: ${colors.text};
-  border: 1px solid ${colors.border};
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-  box-shadow: none;
-
-  &:hover {
-    background-color: ${colors.surface};
-    border-color: ${colors.primary};
-  }
-`;
+import Button from './Button';
+import { borderRadius } from './design-system/tokens.js';
 
 const iconButtonStyles = css`
-  background: none;
-  border: none;
-  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid ${colors.border};
+  border-radius: ${borderRadius.full};
+  width: 38px;
+  height: 38px;
+  padding: 0;
   cursor: pointer;
-  color: ${colors.gray};
+  color: ${colors.textDim};
   display: flex;
   align-items: center;
+  justify-content: center;
   &:hover {
     color: ${colors.text};
+    border-color: ${colors.borderStrong};
+    background: rgba(255, 255, 255, 0.06);
   }
 `;
 
@@ -58,12 +47,13 @@ export default function SettingsButton({
   };
 
   if (variant === 'icon') {
+    const settingsLabel = t('common.settings', 'Settings');
     return (
       <button
         className={iconButtonStyles}
         onClick={handleClick}
-        aria-label="Settings"
-        title="Settings"
+        aria-label={settingsLabel}
+        title={settingsLabel}
       >
         <svg
           width={size}
@@ -83,8 +73,8 @@ export default function SettingsButton({
   }
 
   return (
-    <button className={textButtonStyles} onClick={handleClick}>
+    <Button variant="secondary" size="sm" onClick={handleClick}>
       {t('common.settings')}
-    </button>
+    </Button>
   );
 }

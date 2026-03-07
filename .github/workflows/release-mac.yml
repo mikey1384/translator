@@ -71,6 +71,38 @@ jobs:
       - name: Build both architectures
         run: npm run package:mac
 
+      - name: Extract tag annotation
+        if: startsWith(github.ref, 'refs/tags/')
+        id: tag_notes
+        run: |
+          # Ensure the full annotated tag object is available
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+
+          TAG_TYPE=$(git cat-file -t "$GITHUB_REF_NAME" 2>/dev/null || true)
+          if [ "$TAG_TYPE" != "tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME must be an annotated tag."
+            exit 1
+          fi
+
+          # Extract the body (text after the subject line + blank line).
+          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
+          if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME annotation body is empty."
+            echo "::error::Add release notes after a blank line in the tag annotation."
+            exit 1
+          fi
+
+          printf '%s\n' "$BODY" > /tmp/release-notes.md
+
+      - name: Inject release notes into latest-mac.yml
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          APP_VERSION=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          node scripts/inject-update-release-notes.mjs \
+            --yaml dist/latest-mac.yml \
+            --version "$APP_VERSION" \
+            --release-notes-file /tmp/release-notes.md
+
       # —————————————————————————————————— upload & release ——————————————————————————
       - name: Install AWS CLI v2
         run: |
@@ -116,29 +148,6 @@ jobs:
             }
           done
 
-      - name: Extract tag annotation
-        if: startsWith(github.ref, 'refs/tags/')
-        id: tag_notes
-        run: |
-          # Ensure the full annotated tag object is available
-          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
-
-          TAG_TYPE=$(git cat-file -t "$GITHUB_REF_NAME" 2>/dev/null || true)
-          if [ "$TAG_TYPE" != "tag" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME must be an annotated tag."
-            exit 1
-          fi
-
-          # Extract the body (text after the subject line + blank line).
-          BODY=$(git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME")
-          if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME annotation body is empty."
-            echo "::error::Add release notes after a blank line in the tag annotation."
-            exit 1
-          fi
-
-          printf '%s\n' "$BODY" > /tmp/release-notes.md
-
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -148,3 +157,7 @@ jobs:
           draft: false
           make_latest: true
           prerelease: ${{ contains(github.ref, '-') }}
+
+      - name: Replace GitHub latest-mac.yml asset with release-notes-enriched copy
+        if: startsWith(github.ref, 'refs/tags/')
+        run: gh release upload "$GITHUB_REF_NAME" dist/latest-mac.yml --clobber

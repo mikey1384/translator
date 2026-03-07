@@ -7,13 +7,9 @@ import * as OperationIPC from '@ipc/operation';
 
 export default function DubbingProgressArea() {
   const { t } = useTranslation();
-  const {
-    dubbing: { inProgress, percent, stage, id },
-    setDubbing,
-  } = useTaskStore(s => ({
-    dubbing: s.dubbing,
-    setDubbing: s.setDubbing,
-  }));
+  const dubbing = useTaskStore(s => s.dubbing);
+  const setDubbing = useTaskStore(s => s.setDubbing);
+  const { inProgress, percent, stage, id } = dubbing;
 
   const handleCancel = useCallback(async () => {
     if (!id) {
@@ -30,7 +26,12 @@ export default function DubbingProgressArea() {
       await OperationIPC.cancel(id);
     } catch (err: any) {
       console.error('[DubbingProgressArea] cancel failed', err);
-      alert(`Failed to cancel dubbing: ${err?.message || err}`);
+      alert(
+        t('errors.cancelDubbingFailed', {
+          defaultValue: 'Failed to cancel dubbing: {{message}}',
+          message: err?.message || String(err),
+        })
+      );
     } finally {
       setDubbing({ inProgress: false });
     }

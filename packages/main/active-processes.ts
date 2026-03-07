@@ -4,6 +4,10 @@ import log from 'electron-log';
 import type { WebContents } from 'electron';
 import { app } from 'electron';
 import { forceKillWindows } from './utils/process-killer.js';
+import { attachAutoCancelListeners } from './utils/auto-cancel-listeners.js';
+import { consumeCancelMarker, markCancelled } from './utils/cancel-markers.js';
+
+export { consumeCancelMarker } from './utils/cancel-markers.js';
 
 export type DownloadProcess = ReturnType<typeof execa>;
 export type RenderJob = {
@@ -12,39 +16,42 @@ export type RenderJob = {
 };
 export type SubtitleJob = AbortController;
 
+type RegistryEntryBase = {
+  autoCancelCleanup?: () => void;
+};
+
 type RegistryEntry =
-  | { kind: 'download'; handle: DownloadProcess; cancel?: () => void }
-  | { kind: 'subtitle'; handle: SubtitleJob }
-  | { kind: 'render'; handle: RenderJob }
-  | { kind: 'generic'; wc: WebContents; cancel: () => void };
+  | (RegistryEntryBase & {
+      kind: 'download';
+      handle: DownloadProcess;
+      cancel?: () => void;
+    })
+  | (RegistryEntryBase & { kind: 'subtitle'; handle: SubtitleJob })
+  | (RegistryEntryBase & { kind: 'render'; handle: RenderJob })
+  | (RegistryEntryBase & {
+      kind: 'generic';
+      wc: WebContents;
+      cancel: () => void;
+    });
 
 const registry = new Map<string, RegistryEntry>();
 
-// When we intentionally cancel an operation, mark it so downstream error handlers
-// can distinguish a real user/app cancellation from unrelated subprocess failures.
-const cancelMarkers = new Map<string, number>();
-const CANCEL_MARKER_TTL_MS = 5 * 60 * 1000;
-
-function pruneCancelMarkers(now: number): void {
-  for (const [id, ts] of cancelMarkers) {
-    if (now - ts > CANCEL_MARKER_TTL_MS) {
-      cancelMarkers.delete(id);
-    }
+function cleanupAutoCancel(entry: RegistryEntry | undefined): void {
+  if (!entry?.autoCancelCleanup) return;
+  try {
+    entry.autoCancelCleanup();
+  } catch (error) {
+    log.warn('[registry] Failed to remove auto-cancel listeners:', error);
+  } finally {
+    entry.autoCancelCleanup = undefined;
   }
 }
 
-function markCancelled(id: string): void {
-  const now = Date.now();
-  pruneCancelMarkers(now);
-  cancelMarkers.set(id, now);
-}
-
-export function consumeCancelMarker(id: string): boolean {
-  const now = Date.now();
-  pruneCancelMarkers(now);
-  const had = cancelMarkers.has(id);
-  if (had) cancelMarkers.delete(id);
-  return had;
+function deleteRegistryEntry(id: string): boolean {
+  const entry = registry.get(id);
+  if (!entry) return false;
+  cleanupAutoCancel(entry);
+  return registry.delete(id);
 }
 
 export async function registerDownloadProcess(
@@ -59,6 +66,7 @@ export async function registerDownloadProcess(
         kind: 'download',
         handle: proc,
         cancel: existing.cancel,
+        autoCancelCleanup: existing.autoCancelCleanup,
       });
       log.info(`[registry] Promoted generic entry to download process ${id}`);
       return;
@@ -81,8 +89,13 @@ export async function registerDownloadProcess(
 }
 
 export function addSubtitle(id: string, job: SubtitleJob) {
+  const existing = registry.get(id);
   log.info(`[registry] add subtitle ${id}`);
-  registry.set(id, { kind: 'subtitle', handle: job });
+  registry.set(id, {
+    kind: 'subtitle',
+    handle: job,
+    autoCancelCleanup: existing?.autoCancelCleanup,
+  });
 }
 
 export function registerRenderJob(id: string, job: RenderJob) {
@@ -90,7 +103,11 @@ export function registerRenderJob(id: string, job: RenderJob) {
 
   if (existing && existing.kind !== 'render') {
     if (existing.kind === 'generic') {
-      registry.set(id, { kind: 'render', handle: job });
+      registry.set(id, {
+        kind: 'render',
+        handle: job,
+        autoCancelCleanup: existing.autoCancelCleanup,
+      });
       log.info(`[registry] Promoted generic entry to render job ${id}`);
     } else {
       log.warn(`[registry] ID ${id} already used for a ${existing.kind} job`);
@@ -108,7 +125,7 @@ export function registerRenderJob(id: string, job: RenderJob) {
 }
 
 export function finish(id: string): boolean {
-  return registry.delete(id);
+  return deleteRegistryEntry(id);
 }
 
 export function hasProcess(id: string): boolean {
@@ -122,8 +139,11 @@ export function registerAutoCancel(
 ) {
   const existing = registry.get(operationId);
 
+  cleanupAutoCancel(existing);
+
   if (existing?.kind === 'generic') {
     existing.cancel = cancel;
+    existing.wc = wc;
     log.info(
       `[registry] Updated cancel function for existing operation ${operationId}`
     );
@@ -132,31 +152,24 @@ export function registerAutoCancel(
     log.info(`[registry] Registered new generic operation ${operationId}`);
   }
 
-  const cancelOnce = () => {
-    cancelSafely(operationId);
-  };
-  wc.once('destroyed', cancelOnce);
-  wc.once('render-process-gone', cancelOnce);
-  wc.once('will-navigate', cancelOnce);
-  wc.once(
-    'did-start-navigation' as any,
-    (
-      _e: unknown,
-      _url: unknown,
-      _isInPlace: unknown,
-      _isMainFrame: unknown,
-      _frameId: unknown,
-      _parentFrameId: unknown,
-      details: unknown
-    ) => {
-      if ((details as any)?.isReload) {
-        log.info(
-          `[registry] Cancelling due to reload for operation ${operationId}`
+  const autoCancelCleanup = attachAutoCancelListeners(
+    wc as any,
+    operationId,
+    () => {
+      void cancelSafely(operationId).catch(error => {
+        log.error(
+          `[registry] Auto-cancel failed for operation ${operationId}:`,
+          error
         );
-        cancelOnce();
-      }
-    }
+      });
+    },
+    log
   );
+
+  const updatedEntry = registry.get(operationId);
+  if (updatedEntry) {
+    updatedEntry.autoCancelCleanup = autoCancelCleanup;
+  }
 }
 
 export async function cancel(id: string): Promise<boolean> {
@@ -169,7 +182,12 @@ export async function cancelSafely(id: string): Promise<boolean> {
   markCancelled(id);
 
   const entry = registry.get(id);
-  if (!entry) return false;
+  if (!entry) {
+    log.info(
+      `[registry] Recorded cancellation marker for ${id} without active handle`
+    );
+    return true;
+  }
 
   const sig = process.platform === 'win32' ? 'SIGINT' : 'SIGTERM';
 
@@ -255,13 +273,15 @@ export async function cancelSafely(id: string): Promise<boolean> {
         break;
     }
   } finally {
-    registry.delete(id);
+    deleteRegistryEntry(id);
   }
   return true;
 }
 
-app.on('before-quit', () => {
-  for (const id of registry.keys()) {
-    cancelSafely(id);
-  }
-});
+if (app?.on) {
+  app.on('before-quit', () => {
+    for (const id of registry.keys()) {
+      cancelSafely(id);
+    }
+  });
+}

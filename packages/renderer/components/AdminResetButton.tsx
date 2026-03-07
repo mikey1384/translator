@@ -1,5 +1,6 @@
 import { css } from '@emotion/css';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCreditStore, useAiStore } from '../state';
 import { colors } from '../styles';
 import { SystemIPC } from '../ipc';
@@ -65,7 +66,8 @@ const previewActiveButton = css`
 `;
 
 export default function AdminResetButton() {
-  const { refresh } = useCreditStore();
+  const { t } = useTranslation();
+  const refresh = useCreditStore(s => s.refresh);
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
   const setAdminByoPreviewMode = useAiStore(
     state => state.setAdminByoPreviewMode
@@ -75,14 +77,9 @@ export default function AdminResetButton() {
   const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
-    // Check if current device is admin device
     const checkAdminStatus = async () => {
       try {
-        const [deviceId, adminDeviceId] = await Promise.all([
-          SystemIPC.getDeviceId(),
-          SystemIPC.getAdminDeviceId(),
-        ]);
-        setIsAdmin(Boolean(adminDeviceId && deviceId === adminDeviceId));
+        setIsAdmin(await SystemIPC.isAdminMode());
       } catch (error) {
         console.error('Failed to check admin status:', error);
       }
@@ -106,11 +103,21 @@ export default function AdminResetButton() {
         await refresh();
       } else {
         console.error('❌ Credit add failed:', result.error);
-        alert(`Credit add failed: ${result.error}`);
+        alert(
+          t('errors.adminCreditAddFailed', {
+            defaultValue: 'Credit add failed: {{message}}',
+            message: result.error || 'unknown',
+          })
+        );
       }
     } catch (error) {
       console.error('❌ Credit add error:', error);
-      alert(`Credit add error: ${error}`);
+      alert(
+        t('errors.adminCreditAddError', {
+          defaultValue: 'Credit add error: {{message}}',
+          message: String(error),
+        })
+      );
     } finally {
       setAddLoading(false);
     }
@@ -120,8 +127,11 @@ export default function AdminResetButton() {
     if (!isAdmin || resetLoading) return;
 
     // Confirm with user since this is destructive
-    const confirmed = confirm(
-      'Are you sure you want to reset credits to 0? This cannot be undone.'
+    const confirmed = window.confirm(
+      t(
+        'admin.confirmResetCreditsToZero',
+        'Are you sure you want to reset credits to 0? This cannot be undone.'
+      )
     );
     if (!confirmed) return;
 
@@ -135,11 +145,21 @@ export default function AdminResetButton() {
         await refresh();
       } else {
         console.error('❌ Credit reset to 0 failed:', result.error);
-        alert(`Credit reset to 0 failed: ${result.error}`);
+        alert(
+          t('errors.adminCreditResetFailed', {
+            defaultValue: 'Credit reset to 0 failed: {{message}}',
+            message: result.error || 'unknown',
+          })
+        );
       }
     } catch (error) {
       console.error('❌ Credit reset to 0 error:', error);
-      alert(`Credit reset to 0 error: ${error}`);
+      alert(
+        t('errors.adminCreditResetError', {
+          defaultValue: 'Credit reset to 0 error: {{message}}',
+          message: String(error),
+        })
+      );
     } finally {
       setResetLoading(false);
     }
@@ -158,24 +178,36 @@ export default function AdminResetButton() {
         className={addButton}
         onClick={handleAddCredits}
         disabled={addLoading || resetLoading}
-        title="Admin: Add standard pack (350,000 credits)"
+        title={t(
+          'admin.addStandardPackTitle',
+          'Admin: Add standard pack (350,000 credits)'
+        )}
       >
-        {addLoading ? '🔄 Adding...' : '➕ Add 350k Credits'}
+        {addLoading
+          ? `🔄 ${t('admin.adding', 'Adding...')}`
+          : `➕ ${t('admin.addCredits', 'Add 350k Credits')}`}
       </button>
       <button
         className={resetButton}
         onClick={handleResetToZero}
         disabled={addLoading || resetLoading}
-        title="Admin: Reset credits to 0"
+        title={t('admin.resetCreditsToZeroTitle', 'Admin: Reset credits to 0')}
       >
-        {resetLoading ? '🔄 Resetting...' : '🗑️ Reset to 0'}
+        {resetLoading
+          ? `🔄 ${t('admin.resetting', 'Resetting...')}`
+          : `🗑️ ${t('admin.resetToZero', 'Reset to 0')}`}
       </button>
       <button
         className={adminByoPreviewMode ? previewActiveButton : previewButton}
         onClick={handleToggleByoPreview}
-        title="Admin: Toggle BYO preview mode (see UI as if BYO not purchased)"
+        title={t(
+          'admin.toggleByoPreviewTitle',
+          'Admin: Toggle BYO preview mode (see UI as if BYO not purchased)'
+        )}
       >
-        {adminByoPreviewMode ? '👁️ BYO Preview ON' : '👁️ BYO Preview'}
+        {adminByoPreviewMode
+          ? `👁️ ${t('admin.byoPreviewOn', 'BYO Preview ON')}`
+          : `👁️ ${t('admin.byoPreview', 'BYO Preview')}`}
       </button>
     </div>
   );

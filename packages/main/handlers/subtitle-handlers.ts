@@ -30,7 +30,7 @@ import {
   registerAutoCancel,
   finish as registryFinish,
 } from '../active-processes.js';
-import { ENABLE_VOICE_CLONING, ERROR_CODES } from '../../shared/constants/index.js';
+import { ERROR_CODES } from '../../shared/constants/index.js';
 import type { FFmpegContext, VideoMeta } from '../services/ffmpeg-runner.js';
 import {
   extractAudioSegment,
@@ -40,7 +40,6 @@ import { transcribePass } from '../services/subtitle-processing/pipeline/transcr
 import { generateTranscriptSummary } from '../services/subtitle-processing/summarizer.js';
 import { generateDubbedMedia } from '../services/dubber.js';
 import { synthesizeDub as synthesizeDubAi } from '../services/ai-provider.js';
-import { voiceCloneDub } from '../services/stage5-client.js';
 import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
@@ -385,106 +384,6 @@ export async function handleDubSubtitles(
   };
 
   try {
-    // Voice cloning path: use ElevenLabs Dubbing API for full workflow
-    // Requires a real target language (not 'original') for translation
-    if (
-      ENABLE_VOICE_CLONING &&
-      options.useVoiceCloning &&
-      options.targetLanguage &&
-      options.targetLanguage !== 'original'
-    ) {
-      progressCallback({
-        percent: 5,
-        stage: 'Preparing voice cloning...',
-        operationId,
-      });
-
-      if (!options.videoDurationSeconds || options.videoDurationSeconds <= 0) {
-        throw new Error('Video duration is required for voice cloning');
-      }
-
-      const videoFileName = path.basename(normalizedVideoPath);
-      const videoExt = path.extname(normalizedVideoPath).toLowerCase();
-      const mimeType =
-        videoExt === '.mp4'
-          ? 'video/mp4'
-          : videoExt === '.webm'
-            ? 'video/webm'
-            : videoExt === '.mov'
-              ? 'video/quicktime'
-              : 'video/mp4';
-
-      progressCallback({
-        percent: 10,
-        stage: 'Uploading for voice cloning...',
-        operationId,
-      });
-
-      const voiceCloningResult = await voiceCloneDub({
-        file: {
-          path: normalizedVideoPath,
-          name: videoFileName,
-          type: mimeType,
-        },
-        targetLanguage: options.targetLanguage,
-        sourceLanguage: options.sourceLanguage,
-        durationSeconds: options.videoDurationSeconds,
-        dropBackgroundAudio: false, // Keep original background audio
-        onProgress: (status, percent) => {
-          progressCallback({
-            percent: 10 + Math.round(percent * 0.8), // Scale 0-100 to 10-90
-            stage: status,
-            operationId,
-          });
-        },
-        signal: controller.signal,
-      });
-
-      progressCallback({
-        percent: 92,
-        stage: 'Saving dubbed audio...',
-        operationId,
-      });
-
-      // Save the returned audio to a temp file
-      const audioBuffer = Buffer.from(voiceCloningResult.audioBase64, 'base64');
-      const audioExt = voiceCloningResult.format || 'mp3';
-      const audioPath = fileManager.getTempPath(
-        `voice-clone-${operationId}.${audioExt}`
-      );
-      await fs.writeFile(audioPath, audioBuffer);
-
-      progressCallback({
-        percent: 95,
-        stage: 'Merging with video...',
-        operationId,
-      });
-
-      // Mux the dubbed audio with the original video
-      const outputVideoPath = fileManager.getTempPath(
-        `dubbed-${operationId}.mp4`
-      );
-      await ffmpeg.muxAudioIntoVideo(
-        audioPath,
-        normalizedVideoPath,
-        outputVideoPath
-      );
-
-      progressCallback({
-        percent: 100,
-        stage: 'Voice cloning complete',
-        operationId,
-      });
-
-      return {
-        success: true,
-        audioPath,
-        videoPath: outputVideoPath,
-        operationId,
-      };
-    }
-
-    // Standard TTS dubbing path
     progressCallback({
       percent: 10,
       stage: 'Detecting speech segments...',
@@ -515,8 +414,6 @@ export async function handleDubSubtitles(
       voice: options.voice,
       quality: options.quality,
       ambientMix: options.ambientMix,
-      targetLanguage: options.targetLanguage,
-      useVoiceCloning: ENABLE_VOICE_CLONING && !!options.useVoiceCloning,
       operationId,
       signal: controller.signal,
       progressCallback,

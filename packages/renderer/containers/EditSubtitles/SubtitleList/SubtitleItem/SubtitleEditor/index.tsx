@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { css } from '@emotion/css';
 import Button from '../../../../../components/Button.js';
-import { colors } from '../../../../../styles.js';
 import SubtitleEditTextarea from './SubtitleEditTextarea.js';
 import { useTranslation } from 'react-i18next';
 import { useSubtitleRow } from '../../../../../state/subtitle-store.js';
@@ -20,28 +18,23 @@ import {
   synthesizePlaceholdersWithinWindow,
 } from '../../../../../utils/subtitle-heuristics.js';
 import { getByoErrorMessage, isByoError } from '../../../../../utils/byoErrors';
+import {
+  subtitleRowCardStyles,
+  subtitleRowContentStyles,
+  subtitleRowDividerStyles,
+  subtitleRowFieldLabelStyles,
+  subtitleRowFieldShellStyles,
+  subtitleRowFieldStackStyles,
+  subtitleRowFooterStyles,
+  subtitleRowHeaderActionsStyles,
+  subtitleRowHeaderStyles,
+  subtitleRowIndexStyles,
+  subtitleRowOldTextStyles,
+  subtitleRowSideActionStyles,
+  subtitleRowTimeGroupStyles,
+  subtitleRowTimeInputStyles,
+} from '../../../edit-workspace-styles';
 // Language dropdown for transcription removed
-
-const timeInputStyles = css`
-  width: 150px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid ${colors.border};
-  background-color: ${colors.grayLight};
-  color: ${colors.text};
-  font-family: monospace;
-  transition: border-color 0.2s ease;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-  }
-`;
-
-const actionButtonsStyles = css`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-`;
 
 const TIMECODE_RX = /^\d{2}:\d{2}:\d{2},\d{3}$/;
 const PARTIAL_RX = /^\d{0,2}(:\d{0,2}){0,2}[,.]?\d{0,3}$/;
@@ -73,10 +66,7 @@ export default function SubtitleEditor({
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isTranslatingGlobal = useTaskStore(s => !!s.translation.inProgress);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
-  const { path: videoPath } = useVideoStore(s => ({
-    path: s.path,
-    url: s.url,
-  }));
+  const videoPath = useVideoStore(s => s.path);
   const [isTranscribingOne, setIsTranscribingOne] = useState(false);
   const editingLocked = isTranscribing || isTranslatingGlobal;
   // No manual language selection for transcription
@@ -330,35 +320,12 @@ export default function SubtitleEditor({
   }
 
   return (
-    <div
-      className={css`
-        background-color: ${colors.surface};
-        border: 1px solid ${colors.border};
-        border-radius: 8px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      `}
-    >
-      <div
-        className={css`
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 10px;
-        `}
-      >
-        <span
-          className={css`
-            font-weight: bold;
-            color: ${colors.grayDark};
-            font-size: 1.1em;
-          `}
-        >
+    <div className={subtitleRowCardStyles}>
+      <div className={subtitleRowHeaderStyles}>
+        <span className={subtitleRowIndexStyles}>
           #{subtitle.index}
         </span>
-        <div className={actionButtonsStyles}>
+        <div className={subtitleRowHeaderActionsStyles}>
           <Button
             variant="secondary"
             size="sm"
@@ -383,7 +350,6 @@ export default function SubtitleEditor({
                 height="12"
                 viewBox="0 0 16 16"
                 fill="currentColor"
-                style={{ verticalAlign: 'middle' }}
               >
                 <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z" />
               </svg>
@@ -393,7 +359,6 @@ export default function SubtitleEditor({
                 height="12"
                 viewBox="0 0 16 16"
                 fill="currentColor"
-                style={{ verticalAlign: 'middle' }}
               >
                 <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z" />
               </svg>
@@ -415,7 +380,6 @@ export default function SubtitleEditor({
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ verticalAlign: 'middle' }}
             >
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -437,7 +401,6 @@ export default function SubtitleEditor({
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ verticalAlign: 'middle' }}
             >
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <line x1="4" y1="7" x2="20" y2="7" />
@@ -450,19 +413,12 @@ export default function SubtitleEditor({
         </div>
       </div>
 
-      <div
-        className={css`
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-        `}
-      >
-        <div
-          className={css`
-            flex: 1 1 auto;
-            min-width: 0;
-          `}
-        >
+      <div className={subtitleRowContentStyles}>
+      <div className={subtitleRowFieldShellStyles}>
+        <div className={subtitleRowFieldStackStyles}>
+          <div className={subtitleRowFieldLabelStyles}>
+            {t('editSubtitles.workspace.originalLabel', 'Original')}
+          </div>
           <SubtitleEditTextarea
             value={subtitle.original}
             searchTerm={searchText || ''}
@@ -473,14 +429,7 @@ export default function SubtitleEditor({
           />
         </div>
         {(!subtitle.original || !subtitle.original.trim()) && videoPath && (
-          <div
-            className={css`
-              display: flex;
-              flex-direction: column;
-              gap: 8px;
-              align-items: flex-start;
-            `}
-          >
+          <div className={subtitleRowSideActionStyles}>
             <Button
               variant="success"
               size="lg"
@@ -503,14 +452,7 @@ export default function SubtitleEditor({
         )}
 
         {subtitle.original && subtitle.original.trim() && videoPath && (
-          <div
-            className={css`
-              display: flex;
-              flex-direction: column;
-              gap: 8px;
-              align-items: flex-start;
-            `}
-          >
+          <div className={subtitleRowSideActionStyles}>
             <Button
               variant="primary"
               size="md"
@@ -537,14 +479,7 @@ export default function SubtitleEditor({
       </div>
 
       {temporaryAffectedText && (
-        <div
-          className={css`
-            font-size: 0.95em;
-            line-height: 1.5;
-            margin-bottom: 5px;
-            white-space: pre-wrap;
-          `}
-        >
+        <div className={subtitleRowOldTextStyles}>
           <span
             className="strike-fade"
             onAnimationEnd={() => {
@@ -559,19 +494,11 @@ export default function SubtitleEditor({
       )}
 
       {subtitle.original && subtitle.original.trim() ? (
-        <div
-          className={css`
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-          `}
-        >
-          <div
-            className={css`
-              flex: 1 1 auto;
-              min-width: 0;
-            `}
-          >
+        <div className={subtitleRowFieldShellStyles}>
+          <div className={subtitleRowFieldStackStyles}>
+            <div className={subtitleRowFieldLabelStyles}>
+              {t('editSubtitles.workspace.translationLabel', 'Translation')}
+            </div>
             <SubtitleEditTextarea
               value={subtitle.translation ?? ''}
               searchTerm={searchText || ''}
@@ -581,12 +508,7 @@ export default function SubtitleEditor({
               readOnly={editingLocked}
             />
           </div>
-          <div
-            className={css`
-              display: flex;
-              align-items: center;
-            `}
-          >
+          <div className={subtitleRowSideActionStyles}>
             <Button
               variant="primary"
               size="md"
@@ -612,16 +534,8 @@ export default function SubtitleEditor({
         </div>
       ) : null}
 
-      <div
-        className={css`
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-        `}
-      >
-        <div className={actionButtonsStyles}>
+      <div className={subtitleRowFooterStyles}>
+        <div className={subtitleRowTimeGroupStyles}>
           <input
             type="text"
             value={localStart}
@@ -633,11 +547,11 @@ export default function SubtitleEditor({
             onKeyDown={e => {
               if (e.key === 'Enter') commitTimeChange('start', localStart);
             }}
-            className={timeInputStyles}
+            className={subtitleRowTimeInputStyles}
             aria-label={`Start time for subtitle ${id}`}
             data-testid={`subtitle-start-${id}`}
           />
-          <span>→</span>
+          <span className={subtitleRowDividerStyles}>→</span>
           <input
             type="text"
             value={localEnd}
@@ -649,17 +563,17 @@ export default function SubtitleEditor({
             onKeyDown={e => {
               if (e.key === 'Enter') commitTimeChange('end', localEnd);
             }}
-            className={timeInputStyles}
+            className={subtitleRowTimeInputStyles}
             aria-label={`End time for subtitle ${id}`}
             data-testid={`subtitle-end-${id}`}
           />
-          <span style={{ marginLeft: '8px', color: colors.gray }}>|</span>
+          <span className={subtitleRowDividerStyles}>|</span>
           <input
             type="number"
             step="0.1"
             value={shiftAmount}
             onChange={e => setShiftAmount(e.target.value)}
-            className={timeInputStyles}
+            className={subtitleRowTimeInputStyles}
             placeholder="0.5"
             title={t('editSubtitles.item.shiftTitle')}
             data-testid={`subtitle-shift-input-${id}`}
@@ -674,6 +588,7 @@ export default function SubtitleEditor({
             {t('editSubtitles.item.applyShift')}
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );

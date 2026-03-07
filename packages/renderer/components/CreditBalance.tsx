@@ -1,27 +1,35 @@
-import { css } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCreditStore, useTaskStore } from '../state';
 import { useAiStore } from '../state';
-import { colors } from '../styles';
+import { colors, metaPillStyles } from '../styles';
+import {
+  hasAnthropicByoAvailable,
+  hasElevenLabsByoAvailable,
+  hasOpenAiByoAvailable,
+  resolveDubbingProvider,
+  resolveTranscriptionProvider,
+  resolveTranslationDraftProvider,
+  resolveTranslationReviewProvider,
+  type ByoRuntimeState,
+} from '../state/byo-runtime';
 
 const creditBalanceContainer = css`
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid ${colors.primary}33;
-  border-radius: 20px;
   font-size: 0.85rem;
-  color: ${colors.primary};
+  color: ${colors.primaryLight};
   cursor: default;
 `;
 
 const creditIcon = css`
   width: 16px;
   height: 16px;
-  opacity: 0.8;
+  opacity: 0.88;
 `;
 
 const creditText = css`
@@ -37,6 +45,14 @@ const loadingText = css`
 const errorText = css`
   color: ${colors.danger};
   font-size: 0.8rem;
+`;
+
+const providerPillStyles = css`
+  color: ${colors.primaryLight};
+`;
+
+const checkoutTextStyles = css`
+  color: ${colors.primaryLight};
 `;
 
 export type OperationType =
@@ -59,130 +75,102 @@ interface CreditBalanceProps {
 function useActiveProvider(
   operationType: OperationType
 ): 'credits' | 'openai' | 'anthropic' | 'elevenlabs' | 'mixed' {
-  const useByoMaster = useAiStore(s => s.useByoMaster);
-
-  // OpenAI
+  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
   const byoUnlocked = useAiStore(s => s.byoUnlocked);
+  const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
+  const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
   const useByo = useAiStore(s => s.useByo);
   const keyPresent = useAiStore(s => s.keyPresent);
-  const hasOpenAi = byoUnlocked && useByoMaster && useByo && keyPresent;
-
-  // Anthropic
-  const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
   const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
   const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
-  const hasAnthropic =
-    byoAnthropicUnlocked &&
-    useByoMaster &&
-    useByoAnthropic &&
-    anthropicKeyPresent;
-
-  // ElevenLabs
-  const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
-  const hasElevenLabs =
-    byoElevenLabsUnlocked &&
-    useByoMaster &&
-    useByoElevenLabs &&
-    elevenLabsKeyPresent;
-
-  // User preferences
   const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
+  const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
+  const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
   const preferredTranscriptionProvider = useAiStore(
     s => s.preferredTranscriptionProvider
   );
   const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
+  const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
 
-  // If master toggle is off, always show credits
-  if (!useByoMaster) {
-    return 'credits';
-  }
+  const runtimeState = useMemo<ByoRuntimeState>(
+    () => ({
+      useStrictByoMode,
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+      useByo,
+      useByoAnthropic,
+      useByoElevenLabs,
+      keyPresent,
+      anthropicKeyPresent,
+      elevenLabsKeyPresent,
+      preferClaudeTranslation,
+      preferClaudeReview,
+      preferClaudeSummary,
+      preferredTranscriptionProvider,
+      preferredDubbingProvider,
+      stage5DubbingTtsProvider,
+    }),
+    [
+      useStrictByoMode,
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+      useByo,
+      useByoAnthropic,
+      useByoElevenLabs,
+      keyPresent,
+      anthropicKeyPresent,
+      elevenLabsKeyPresent,
+      preferClaudeTranslation,
+      preferClaudeReview,
+      preferClaudeSummary,
+      preferredTranscriptionProvider,
+      preferredDubbingProvider,
+      stage5DubbingTtsProvider,
+    ]
+  );
 
   switch (operationType) {
     case 'transcription': {
-      // Check user's transcription provider preference
-      if (preferredTranscriptionProvider === 'stage5') {
-        return 'credits';
-      }
-      if (preferredTranscriptionProvider === 'elevenlabs' && hasElevenLabs) {
-        return 'elevenlabs';
-      }
-      if (preferredTranscriptionProvider === 'openai' && hasOpenAi) {
-        return 'openai';
-      }
-      // Fallback logic: ElevenLabs > OpenAI > Stage5
-      if (hasElevenLabs) return 'elevenlabs';
-      if (hasOpenAi) return 'openai';
-      return 'credits';
+      const provider = resolveTranscriptionProvider(runtimeState);
+      return provider === 'stage5' ? 'credits' : provider;
     }
 
     case 'translation': {
-      // Translation uses draft model (GPT or Sonnet) + review model (Opus or GPT)
-      // Draft logic (matches translator.ts getDraftModel):
-      //   1. If preferClaudeTranslation && hasAnthropic → Sonnet
-      //   2. Else if hasOpenAi → GPT
-      //   3. Else if hasAnthropic (no OpenAI) → Sonnet (fallback to available provider)
-      //   4. Else → GPT via Stage5
-      // Review: If hasAnthropic → Opus, else GPT enhanced
-      let draftUsesAnthropic = false;
-      let draftUsesOpenAi = false;
-      if (preferClaudeTranslation && hasAnthropic) {
-        draftUsesAnthropic = true;
-      } else if (hasOpenAi) {
-        draftUsesOpenAi = true;
-      } else if (hasAnthropic) {
-        // Fallback: if only Anthropic available, use it regardless of preference
-        draftUsesAnthropic = true;
-      }
-      const draftUsesByo = draftUsesAnthropic || draftUsesOpenAi;
-
-      const reviewUsesAnthropic = hasAnthropic;
-      const reviewUsesOpenAi = !reviewUsesAnthropic && hasOpenAi;
-      const reviewUsesByo = reviewUsesAnthropic || reviewUsesOpenAi;
-
-      // If both phases use BYO (same or different providers)
-      if (draftUsesByo && reviewUsesByo) {
-        // If both use Anthropic, show Anthropic
-        if (draftUsesAnthropic && reviewUsesAnthropic) return 'anthropic';
-        // If both use OpenAI, show OpenAI
-        if (draftUsesOpenAi && reviewUsesOpenAi) return 'openai';
-        // Mixed providers
-        return 'mixed';
-      }
-      // If either phase uses Stage5
-      if (!draftUsesByo || !reviewUsesByo) {
-        // Partial BYO - show mixed to indicate not purely credits
-        if (draftUsesByo || reviewUsesByo) return 'mixed';
+      const draftProvider = resolveTranslationDraftProvider(runtimeState);
+      const reviewProvider = resolveTranslationReviewProvider(runtimeState);
+      if (draftProvider === 'stage5' && reviewProvider === 'stage5') {
         return 'credits';
       }
-      return 'credits';
+      if (draftProvider === reviewProvider && draftProvider !== 'stage5') {
+        return draftProvider;
+      }
+      return 'mixed';
     }
 
     case 'dubbing': {
-      // Check user's dubbing provider preference
-      if (preferredDubbingProvider === 'stage5') {
-        return 'credits';
-      }
-      if (preferredDubbingProvider === 'elevenlabs' && hasElevenLabs) {
-        return 'elevenlabs';
-      }
-      if (preferredDubbingProvider === 'openai' && hasOpenAi) {
-        return 'openai';
-      }
-      // Fallback logic: ElevenLabs > OpenAI > Stage5
-      if (hasElevenLabs) return 'elevenlabs';
-      if (hasOpenAi) return 'openai';
-      return 'credits';
+      const provider = resolveDubbingProvider(runtimeState);
+      return provider === 'stage5' ? 'credits' : provider;
     }
 
     case 'general':
     default: {
-      // For header/general display, show API key if any BYO is active
-      if (hasOpenAi || hasAnthropic || hasElevenLabs) {
-        return 'mixed'; // Generic "using API keys"
+      const activeProviders = [
+        hasOpenAiByoAvailable(runtimeState) ? 'openai' : null,
+        hasAnthropicByoAvailable(runtimeState) ? 'anthropic' : null,
+        hasElevenLabsByoAvailable(runtimeState) ? 'elevenlabs' : null,
+      ].filter(Boolean) as Array<'openai' | 'anthropic' | 'elevenlabs'>;
+
+      if (activeProviders.length === 0) {
+        return 'credits';
       }
-      return 'credits';
+      if (activeProviders.length === 1) {
+        return activeProviders[0];
+      }
+      return 'mixed';
     }
   }
 }
@@ -192,7 +180,11 @@ export default function CreditBalance({
   operationType = 'general',
 }: CreditBalanceProps) {
   const { t } = useTranslation();
-  const { credits, hours, loading, error, checkoutPending } = useCreditStore();
+  const credits = useCreditStore(s => s.credits);
+  const hours = useCreditStore(s => s.hours);
+  const loading = useCreditStore(s => s.loading);
+  const error = useCreditStore(s => s.error);
+  const checkoutPending = useCreditStore(s => s.checkoutPending);
 
   // Check if dubbing is in progress and get the model being used
   const dubbingInProgress = useTaskStore(s => s.dubbing.inProgress);
@@ -231,33 +223,44 @@ export default function CreditBalance({
     }
 
     return (
-      <div className={creditBalanceContainer}>
-        <span className={creditText}>🔑 {badgeText}</span>
+      <div className={cx(metaPillStyles, creditBalanceContainer, providerPillStyles)}>
+        <span className={creditText}>{badgeText}</span>
+        {suffixText && (
+          <span
+            className={css`
+              color: ${colors.textDim};
+              font-weight: 400;
+              font-size: 0.8rem;
+            `}
+          >
+            {suffixText}
+          </span>
+        )}
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className={creditBalanceContainer}>
-        <span className={loadingText}>⏳ {t('credits.loading')}</span>
+      <div className={cx(metaPillStyles, creditBalanceContainer)}>
+        <span className={loadingText}>{t('credits.loading')}</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={creditBalanceContainer}>
-        <span className={errorText}>⚠️ {t('common.error.unexpected')}</span>
+      <div className={cx(metaPillStyles, creditBalanceContainer)}>
+        <span className={errorText}>{t('common.error.unexpected')}</span>
       </div>
     );
   }
 
   if (checkoutPending) {
     return (
-      <div className={creditBalanceContainer}>
-        <span className={creditText}>
-          🔄 {t('credits.redirectingToPayment', 'Opening secure checkout…')}
+      <div className={cx(metaPillStyles, creditBalanceContainer)}>
+        <span className={cx(creditText, checkoutTextStyles)}>
+          {t('credits.redirectingToPayment', 'Opening secure checkout…')}
         </span>
       </div>
     );
@@ -271,7 +274,7 @@ export default function CreditBalance({
 
     // Normal display for credits > 0
     return (
-      <div className={creditBalanceContainer}>
+      <div className={cx(metaPillStyles, creditBalanceContainer)}>
         <svg
           className={creditIcon}
           viewBox="0 0 24 24"
@@ -287,7 +290,7 @@ export default function CreditBalance({
             className={css`
               color: ${colors.textDim};
               font-weight: 400;
-              font-size: 0.85rem;
+              font-size: 0.8rem;
             `}
           >
             {suffixText}

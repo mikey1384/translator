@@ -7,15 +7,24 @@ import {
   ChangeEvent,
   useLayoutEffect,
 } from 'react';
-import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import GapList from './GapList';
 
 import NativeVideoPlayer from './NativeVideoPlayer';
 import SpeedMenu from './SpeedMenu';
 import SideMenu from './SideMenu';
+import {
+  fixedVideoContainerStyles,
+  videoPlayerAnchorStyles,
+  videoPlayerGrowStyles,
+  videoPlayerIconButtonStyles,
+  videoPlayerOverlayControlsStyles,
+  videoPlayerRootStyles,
+  videoPlayerSeekbarStyles,
+  videoPlayerTimeStyles,
+  videoPlayerWrapperStyles,
+} from './video-player-side-styles';
 
-import { colors } from '../../styles';
 import Button from '../../components/Button';
 import { PROGRESS_BAR_HEIGHT } from '../../components/ProgressAreas/ProgressArea';
 import { BASELINE_HEIGHT } from '../../../shared/constants';
@@ -25,248 +34,6 @@ import { useVideoStore, useTaskStore, useSubtitlePrefs } from '../../state';
 import { getNativePlayerInstance, nativeSeek } from '../../native-player';
 import { useUrlStore } from '../../state/url-store';
 import { getPlaybackPosition, savePlaybackPosition } from '../../ipc/video';
-
-const commonOverlayControlsStyles = css`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  /* Ensure controls sit above the side menu in windowed mode */
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  pointer-events: none;
-
-  &:hover {
-    opacity: 1;
-  }
-
-  & > * {
-    pointer-events: auto;
-  }
-`;
-
-const videoOverlayControlsStyles = css`
-  ${commonOverlayControlsStyles}
-  height: 80px;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.5) 60%,
-    transparent 100%
-  );
-  padding: 0 20px;
-`;
-
-const fullscreenOverlayControlsStyles = css`
-  ${commonOverlayControlsStyles}
-  height: 100px;
-  padding: 0 40px;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.7) 30%,
-    transparent 100%
-  );
-  bottom: 0;
-`;
-
-const commonSeekbarStyles = css`
-  width: 100%;
-  cursor: pointer;
-  appearance: none;
-  background: linear-gradient(
-    to right,
-    ${colors.primary} 0%,
-    ${colors.primary} var(--seek-before-width, 0%),
-    rgba(255, 255, 255, 0.3) var(--seek-before-width, 0%),
-    rgba(255, 255, 255, 0.3) 100%
-  );
-  border-radius: 4px;
-  outline: none;
-  position: relative;
-  z-index: 2;
-  margin: 0;
-
-  &::-webkit-slider-thumb {
-    appearance: none;
-    background: ${colors.surface};
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
-  }
-  &::-moz-range-thumb {
-    background: ${colors.surface};
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
-  }
-`;
-
-const seekbarStyles = css`
-  ${commonSeekbarStyles}
-  height: 8px;
-
-  &::-webkit-slider-thumb {
-    width: 16px;
-    height: 16px;
-  }
-  &::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-  }
-`;
-
-const fullscreenSeekbarStyles = css`
-  ${commonSeekbarStyles}
-  height: 12px;
-
-  &::-webkit-slider-thumb {
-    width: 24px;
-    height: 24px;
-  }
-  &::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
-  }
-`;
-
-const commonTimeDisplayStyles = css`
-  font-family: monospace;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  text-align: center;
-`;
-
-const timeDisplayStyles = css`
-  ${commonTimeDisplayStyles}
-  font-size: 0.9rem;
-  min-width: 50px;
-`;
-
-const fullscreenTimeDisplayStyles = css`
-  ${commonTimeDisplayStyles}
-  font-size: 1.2rem;
-  min-width: 70px;
-`;
-
-const commonButtonStyles = css`
-  background: transparent !important;
-  border: none !important;
-  padding: 5px;
-  color: white;
-  cursor: pointer;
-  &:hover {
-    color: ${colors.primary};
-  }
-`;
-
-const transparentButtonStyles = css`
-  ${commonButtonStyles}
-  svg {
-    width: 24px;
-    height: 24px;
-  }
-`;
-
-const fullscreenButtonStyles = css`
-  ${commonButtonStyles}
-  svg {
-    width: 32px;
-    height: 32px;
-  }
-`;
-
-const fixedVideoContainerBaseStyles = css`
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  background-color: rgba(30, 30, 30, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid ${colors.border};
-  overflow: hidden;
-  transition: all 0.3s ease-out;
-  &:focus,
-  &:focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
-
-  &.cursor-off {
-    cursor: none !important;
-  }
-
-  video {
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    display: block;
-  }
-`;
-
-const fixedVideoContainerStyles = (isFullScreen: boolean) => css`
-  ${fixedVideoContainerBaseStyles}
-
-  ${isFullScreen
-    ? `
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
-    transform: none;
-    padding: 0;
-    border-radius: 0;
-    z-index: 9999;
-    background-color: black;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-
-    /* In fullscreen, allow the video to fill the screen area
-       without being constrained by object-fit: contain */
-    video {
-      width: 100% !important;
-      height: 100% !important;
-      /* Preserve full frame with letterboxing as needed (no cropping) */
-      object-fit: contain !important;
-    }
-  `
-    : `
-    width: calc(95% - 30px);
-    height: 35vh;
-    padding: 10px;
-    border-radius: 0 0 8px 8px;
-    margin-bottom: 0;
-    display: grid;
-    /* Wider symmetric side columns so video narrows proportionally */
-    grid-template-columns: 28% 1fr 28%;
-    grid-auto-rows: 1fr;
-    column-gap: 12px;
-    align-items: stretch;
-
-    @media (max-height: 700px) {
-      height: 30vh;
-    }
-  `}
-`;
-
-const playerWrapperStyles = () => css`
-  min-width: 0;
-  position: relative;
-  height: 100%;
-`;
 
 // Side menu removed; no separate controls column needed
 
@@ -575,7 +342,7 @@ export default function VideoPlayer() {
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className={videoPlayerRootStyles}>
       <div
         ref={playerDivRef}
         tabIndex={0}
@@ -591,7 +358,7 @@ export default function VideoPlayer() {
           <GapList key={(videoPath || videoUrl || 'none').toString()} />
         )}
         <div
-          className={playerWrapperStyles()}
+          className={videoPlayerWrapperStyles}
           onMouseEnter={() => {
             setShowOverlay(true);
             restartHideTimer();
@@ -613,13 +380,9 @@ export default function VideoPlayer() {
           />
 
           <div
-            className={
-              isFullScreen
-                ? fullscreenOverlayControlsStyles
-                : videoOverlayControlsStyles
-            }
+            className={videoPlayerOverlayControlsStyles(isFullScreen)}
             style={{
-              opacity: isFullScreen
+              '--player-overlay-opacity': isFullScreen
                 ? showFsControls
                   ? 1
                   : 0
@@ -632,9 +395,7 @@ export default function VideoPlayer() {
               onClick={togglePlay}
               variant="primary"
               size="sm"
-              className={
-                isFullScreen ? fullscreenButtonStyles : transparentButtonStyles
-              }
+              className={videoPlayerIconButtonStyles(isFullScreen)}
             >
               {isPlaying ? (
                 <svg
@@ -655,15 +416,11 @@ export default function VideoPlayer() {
               )}
             </Button>
 
-            <span
-              className={
-                isFullScreen ? fullscreenTimeDisplayStyles : timeDisplayStyles
-              }
-            >
+            <span className={videoPlayerTimeStyles(isFullScreen)}>
               {fmt(currentTime)}
             </span>
 
-            <div style={{ flexGrow: 1 }}>
+            <div className={videoPlayerGrowStyles}>
               <input
                 type="range"
                 min={0}
@@ -673,33 +430,25 @@ export default function VideoPlayer() {
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   seek(+e.target.value)
                 }
-                className={
-                  isFullScreen ? fullscreenSeekbarStyles : seekbarStyles
-                }
+                className={videoPlayerSeekbarStyles(isFullScreen)}
                 style={{ '--seek-before-width': `${pct}%` } as any}
               />
             </div>
 
-            <span
-              className={
-                isFullScreen ? fullscreenTimeDisplayStyles : timeDisplayStyles
-              }
-            >
+            <span className={videoPlayerTimeStyles(isFullScreen)}>
               {fmt(duration)}
             </span>
 
-            <div style={{ position: 'relative' }}>
+            <div className={videoPlayerAnchorStyles}>
               <Button
                 ref={speedBtnRef}
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowSpeedMenu(m => !m)}
                 className={`speed-btn ${
-                  isFullScreen
-                    ? fullscreenButtonStyles
-                    : transparentButtonStyles
+                  videoPlayerIconButtonStyles(isFullScreen)
                 }`}
-                title="Playback speed"
+                title={t('videoPlayer.playbackSpeed', 'Playback speed')}
               >
                 {playbackRate}×
               </Button>
@@ -729,9 +478,7 @@ export default function VideoPlayer() {
               onClick={toggleFullscreen}
               variant="secondary"
               size="sm"
-              className={
-                isFullScreen ? fullscreenButtonStyles : transparentButtonStyles
-              }
+              className={videoPlayerIconButtonStyles(isFullScreen)}
               title={
                 isFullScreen
                   ? t('videoPlayer.exitFullscreen')

@@ -1,9 +1,12 @@
 import { css } from '@emotion/css';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { colors } from '../styles';
 import { useLogsStore, formatLog } from '../state/logs-store';
 import { useTranslation } from 'react-i18next';
 import type { LogEntry } from '../state/logs-store';
+import Button from './Button';
+import Modal from './Modal';
+import { Alert } from './design-system/index.js';
 
 // Stable stringify for meta objects (sort keys recursively)
 function stableStringify(val: any): string {
@@ -152,12 +155,15 @@ function compactAndFormatLogs(entries: LogEntry[]): string {
 
 export default function LogsModal({
   open,
+  reportPrompt,
   onClose,
 }: {
   open: boolean;
+  reportPrompt?: string | null;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const [userMessage, setUserMessage] = useState('');
   const logs = useLogsStore(s => s.logs);
   const last30 = useMemo(() => {
     const copy = logs.slice();
@@ -165,7 +171,22 @@ export default function LogsModal({
   }, [logs]);
 
   const textBlob = useMemo(() => compactAndFormatLogs(last30), [last30]);
-  if (!open) return null;
+  const resolveReportPrompt = (rawPrompt?: string | null) => {
+    const baseFallback = t(
+      'logs.reportPrompt',
+      'Something went wrong. Report this to the creator for a quick fix.'
+    );
+    const value = (rawPrompt || '').trim();
+    if (!value) return baseFallback;
+    if (value.startsWith('__i18n__:')) {
+      return t(value.slice(9), baseFallback);
+    }
+    return value;
+  };
+
+  useEffect(() => {
+    if (!open) setUserMessage('');
+  }, [open]);
 
   const copyToClipboard = async () => {
     try {
@@ -180,15 +201,6 @@ export default function LogsModal({
         const platform =
           (navigator as any).userAgentData?.platform || navigator.platform;
         deviceInfo = { platform, ua } as any;
-      }
-      // Ensure deviceId is present if available
-      try {
-        if (!deviceInfo?.deviceId) {
-          const id = await (window as any).electron?.getDeviceId?.();
-          if (id) deviceInfo = { ...deviceInfo, deviceId: id };
-        }
-      } catch {
-        // Ignore device info retrieval errors
       }
       const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
 ${JSON.stringify(deviceInfo)}
@@ -207,10 +219,11 @@ ${JSON.stringify(deviceInfo)}
     const subject = encodeURIComponent(
       t('logs.emailSubject', 'Stage5 Debug Logs')
     );
-    const prefix = t(
+    const intro = resolveReportPrompt(reportPrompt);
+    const prefix = `${intro}\n\n${t(
       'logs.emailBodyPrefix',
       'Hi,\n\nPlease find my recent logs below to help debug the issue.\n\n'
-    );
+    )}`;
     (async () => {
       let deviceInfo: any = null;
       try {
@@ -224,165 +237,151 @@ ${JSON.stringify(deviceInfo)}
           (navigator as any).userAgentData?.platform || navigator.platform;
         deviceInfo = { platform, ua } as any;
       }
-      // Ensure deviceId is present if available
-      try {
-        if (!deviceInfo?.deviceId) {
-          const id = await (window as any).electron?.getDeviceId?.();
-          if (id) deviceInfo = { ...deviceInfo, deviceId: id };
-        }
-      } catch {
-        // Ignore device info retrieval errors
-      }
       const header = `${t('logs.deviceInfoHeader', 'Device Info')}:
 ${JSON.stringify(deviceInfo)}
 
 `;
       const compact = compactAndFormatLogs(last30);
-      const body = encodeURIComponent(prefix + header + compact);
+      const note = userMessage.trim()
+        ? `${t('logs.optionalMessage', 'Optional message')}:\n${userMessage.trim()}\n\n`
+        : '';
+      const body = encodeURIComponent(
+        prefix + '\n\n' + note + header + compact
+      );
       const mailto = `mailto:mikey@stage5.tools?subject=${subject}&body=${body}`;
       window.location.href = mailto;
     })();
   };
 
   return (
-    <div
-      className={css`
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.55);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
+    <Modal
+      open={open}
+      title={t('logs.title', 'Recent Logs')}
+      onClose={onClose}
+      contentClassName={css`
+        width: min(820px, 95vw);
+        max-height: 85vh;
       `}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Logs"
-      onClick={onClose}
+      bodyClassName={css`
+        overflow: hidden;
+      `}
+      actions={
+        <Button variant="secondary" onClick={onClose}>
+          {t('logs.close', 'Close')}
+        </Button>
+      }
+      closeLabel={t('logs.close', 'Close')}
     >
+      {reportPrompt ? (
+        <Alert
+          variant="error"
+          className={css`
+            margin-bottom: 12px;
+          `}
+        >
+          {resolveReportPrompt(reportPrompt)}
+        </Alert>
+      ) : null}
       <div
         className={css`
-          background: ${colors.surface};
-          border: 1px solid ${colors.border};
-          border-radius: 10px;
-          width: min(820px, 95vw);
-          max-height: 85vh;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-columns: 1fr 160px;
+          gap: 0;
+          min-height: min(60vh, 520px);
+
+          @media (max-width: 760px) {
+            grid-template-columns: 1fr;
+          }
         `}
-        onClick={e => e.stopPropagation()}
       >
         <div
           className={css`
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            border-bottom: 1px solid ${colors.border};
+            overflow: auto;
+            padding: 12px;
+            background: ${colors.surface};
+            border: 1px solid ${colors.border};
+            border-radius: 10px 0 0 10px;
+
+            @media (max-width: 760px) {
+              border-radius: 10px 10px 0 0;
+            }
           `}
         >
-          <div style={{ color: colors.text, fontWeight: 600 }}>
-            {t('logs.title', 'Recent Logs')}
-          </div>
+          <pre
+            className={css`
+              margin: 0;
+              white-space: pre-wrap;
+              word-break: break-word;
+              font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                'Liberation Mono', 'Courier New', monospace;
+              font-size: 12px;
+              color: ${colors.text};
+            `}
+          >
+            {textBlob || t('logs.empty', 'No logs yet.')}
+          </pre>
         </div>
         <div
           className={css`
-            display: grid;
-            grid-template-columns: 1fr 160px; /* content | side buttons */
-            gap: 0;
-            flex: 1 1 auto;
-            min-height: 0; /* allow inner scrolls */
+            border: 1px solid ${colors.border};
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: ${colors.surface};
+
+            @media (max-width: 760px) {
+              border-left: 1px solid ${colors.border};
+              border-top: none;
+              border-radius: 0 0 10px 10px;
+            }
           `}
         >
-          <div
+          <label
             className={css`
-              overflow: auto;
-              padding: 12px;
-              background: ${colors.surface};
+              display: grid;
+              gap: 6px;
+              font-size: 0.8rem;
+              color: ${colors.gray};
             `}
           >
-            <pre
+            {t('logs.optionalMessage', 'Optional message')}
+            <textarea
+              value={userMessage}
+              onChange={e => setUserMessage(e.target.value)}
+              placeholder={t(
+                'logs.optionalMessagePlaceholder',
+                'What were you trying to do?'
+              )}
               className={css`
-                margin: 0;
-                white-space: pre-wrap;
-                word-break: break-word;
-                font-family:
-                  ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-                  'Liberation Mono', 'Courier New', monospace;
-                font-size: 12px;
-                color: ${colors.text};
-              `}
-            >
-              {textBlob || t('logs.empty', 'No logs yet.')}
-            </pre>
-          </div>
-          <div
-            className={css`
-              border-left: 1px solid ${colors.border};
-              padding: 12px;
-              display: flex;
-              flex-direction: column;
-              gap: 10px;
-              background: ${colors.surface};
-            `}
-          >
-            <button
-              className={css`
-                background: ${colors.grayLight};
-                color: ${colors.text};
+                min-height: 90px;
+                resize: vertical;
                 border: 1px solid ${colors.border};
                 border-radius: 6px;
-                padding: 8px 10px;
-                cursor: pointer;
+                padding: 8px;
+                font-size: 0.82rem;
+                background: ${colors.bg};
+                color: ${colors.text};
+                caret-color: ${colors.text};
+
+                &::placeholder {
+                  color: ${colors.textDim};
+                  opacity: 1;
+                }
               `}
-              onClick={copyToClipboard}
-              aria-label={t('logs.copy', 'Copy')}
-            >
-              {t('logs.copy', 'Copy')}
-            </button>
-            <button
-              className={css`
-                background: ${colors.primary};
-                color: white;
-                border: 1px solid ${colors.primary};
-                border-radius: 6px;
-                padding: 8px 10px;
-                cursor: pointer;
-              `}
-              onClick={emailToDev}
-              aria-label={t('logs.email', 'Email to Dev')}
-            >
-              {t('logs.email', 'Email to Dev')}
-            </button>
-          </div>
-        </div>
-        <div
-          className={css`
-            padding: 10px 12px;
-            border-top: 1px solid ${colors.border};
-            display: flex;
-            justify-content: flex-end;
-            background: ${colors.surface};
-          `}
-        >
-          <button
-            className={css`
-              background: transparent;
-              color: ${colors.text};
-              border: 1px solid ${colors.border};
-              border-radius: 6px;
-              padding: 6px 12px;
-              cursor: pointer;
-            `}
-            onClick={onClose}
-            aria-label={t('logs.close', 'Close')}
-          >
-            {t('logs.close', 'Close')}
-          </button>
+            />
+          </label>
+          <Button variant="secondary" size="sm" onClick={copyToClipboard}>
+            {t('logs.copy', 'Copy')}
+          </Button>
+          <Button variant="primary" size="sm" onClick={emailToDev}>
+            {t('logs.sendReport', 'Send report')}
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

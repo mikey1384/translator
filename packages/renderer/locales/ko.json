@@ -44,26 +44,60 @@
     "select": "선택",
     "video": "동영상",
     "selected": "선택됨",
+    "retry": "다시 시도",
     "uiLanguage": "UI 언어",
     "reloadPage": "페이지 새로고침",
     "reloadPageAria": "페이지를 새로고침합니다",
     "backToTop": "맨 위로",
     "backToTopAria": "맨 위로 스크롤",
     "confirmReload": "페이지를 새로고침하시겠습니까? 저장되지 않은 변경사항이 손실될 수 있습니다.",
+    "installUpdate": "재시작하여 업데이트",
+    "confirmInstallUpdate": "업데이트를 설치하고 재시작하시겠습니까?",
+    "downloadUpdate": "클릭하여 업데이트 다운로드",
+    "dismissError": "오류 닫기",
+    "closeAlert": "알림 닫기",
+    "closeBanner": "배너 닫기",
+    "closeOrCancelProcess": "프로세스 닫기 또는 취소",
+    "checkForUpdateNow": "업데이트 확인",
+    "clear": "지우기",
+    "currentVersionLabel": "현재 버전",
+    "downloadingUpdate": "업데이트 다운로드 중...",
+    "downloadingUpdateProgress": "업데이트 다운로드 중 {{percent}}%",
+    "downloadingUpdateShort": "다운로드 중",
+    "downloadUpdateNow": "업데이트 다운로드",
+    "hide": "숨기기",
+    "installUpdateAria": "업데이트를 설치하고 앱을 다시 시작합니다",
+    "installUpdateNow": "업데이트 설치",
+    "installUpdateShort": "업데이트 설치",
+    "locked": "잠김",
+    "lockedWhileProcessing": "처리 중 잠김",
+    "logs": "로그 열기",
+    "reportIssue": "문제 신고 / 피드백",
+    "reportIssueAria": "문제 신고 및 로그 대화상자 열기",
+    "minimumVersionLabel": "최소 지원 버전",
+    "openDownloadPage": "다운로드 페이지 열기",
+    "show": "표시",
+    "splitScrollButtonAria": "위로(상단 절반) 또는 아래로(하단 절반) 스크롤",
+    "updateRequiredBody": "이 버전의 Translator는 더 이상 백엔드에서 지원되지 않습니다. 계속하려면 앱을 업데이트하세요.",
+    "updateRequiredTitle": "업데이트 필요",
+    "wait": "잠시만…",
+    "whatsNewTitle": "새로운 기능",
+    "whatsNewVersionTitle": "v{{version}}의 새로운 기능",
     "fileFilters": {
       "srtFiles": "SRT 파일",
       "mediaFiles": "미디어 파일",
       "videoFiles": "비디오 파일"
     },
-    "installUpdate": "재시작하여 업데이트",
-    "confirmInstallUpdate": "업데이트를 설치하고 재시작하시겠습니까?",
-    "downloadUpdate": "클릭하여 업데이트 다운로드",
-    "retry": "다시 시도",
     "chooseAnotherLocation": "다른 위치 선택",
-    "continue": "계속"
+    "continue": "계속",
+    "send": "보내기"
   },
   "errors": {
     "needCookies": "YouTube에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
+    "needCookiesYouTube": "YouTube에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
+    "needCookiesGeneric": "이 사이트에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
+    "connectFailed": "연결할 수 없습니다. 다시 시도해 주세요.",
+    "invalidUrl": "URL 형식이 올바르지 않은 것 같습니다.",
     "unexpected": "예기치 않은 오류가 발생했습니다.",
     "unexpectedRemove": "키를 제거하는 중 예기치 않은 오류가 발생했습니다.",
     "unexpectedSave": "저장하는 중 예기치 않은 오류가 발생했습니다.",
@@ -75,6 +109,13 @@
     "noSourceVideo": "소스 비디오 없음",
     "noSubtitlesLoaded": "자막이 로드되지 않았습니다",
     "failedToLoadSRT": "SRT 파일을 로드하지 못했습니다",
+    "cancelTranslationFailed": "번역 취소 실패: {{message}}",
+    "cancelDubbingFailed": "더빙 취소 실패: {{message}}",
+    "cancelSummaryFailed": "요약 생성 취소 실패: {{message}}",
+    "adminCreditAddFailed": "크레딧 추가 실패: {{message}}",
+    "adminCreditAddError": "크레딧 추가 오류: {{message}}",
+    "adminCreditResetFailed": "크레딧 0으로 초기화 실패: {{message}}",
+    "adminCreditResetError": "크레딧 0으로 초기화 오류: {{message}}",
     "byo": {
       "openaiKeyInvalid": "OpenAI API 키가 유효하지 않거나 만료되었습니다. 설정에서 키를 확인해주세요.",
       "openaiRateLimit": "OpenAI 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.",
@@ -87,12 +128,12 @@
       "elevenlabsInsufficientQuota": "ElevenLabs 계정에 크레딧이 부족합니다. elevenlabs.io에서 크레딧을 추가해주세요.",
       "checkSettings": "설정 확인",
       "genericApiError": "API 요청이 실패했습니다. API 키와 계정 상태를 확인해주세요."
-    },
-    "needCookiesYouTube": "YouTube에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
-    "needCookiesGeneric": "이 사이트에서 사람 확인을 요청했습니다. 연결을 클릭하여 계속하세요.",
-    "connectFailed": "연결할 수 없습니다. 다시 시도해 주세요."
+    }
   },
   "input": {
+    "connect": "연결",
+    "connecting": "연결 중...",
+    "connectTip": "팁: 연결 창에서 로그인하거나 확인을 완료한 다음 창을 닫아 계속하세요.",
     "fromDevice": "내 기기에서",
     "fromWeb": "웹에서",
     "downloadVideo": "비디오 다운로드",
@@ -115,6 +156,7 @@
     "localFileDescription": "컴퓨터에서 비디오 또는 오디오 파일 업로드",
     "selectLocalFile": "컴퓨터에서 업로드",
     "downloadFromUrl": "웹에서 다운로드",
+    "recentMedia": "최근 파일",
     "webDescription": "YouTube, TikTok, Instagram 링크 또는 비디오 파일 직접 URL 붙여넣기",
     "chooseFile": "파일 선택",
     "fileSelected": "파일이 선택됨",
@@ -123,9 +165,159 @@
     "srtFileLoaded": "SRT 불러옴",
     "featuresUnlockAfterTranscription": "전사가 완료되면 번역 및 기타 메뉴가 나타납니다.",
     "saveDubbedVideo": "더빙 비디오 저장",
-    "connect": "연결",
-    "connecting": "연결 중...",
-    "connectTip": "팁: 연결 창에서 로그인하거나 확인을 완료한 다음 창을 닫아 계속하세요."
+    "videoSuggestion": {
+      "show": "AI로 영상 찾기",
+      "hide": "AI 영상 검색 숨기기",
+      "modelHint": "현재 모델",
+      "sourceHint": "검색 소스",
+      "searchDetails": "검색 세부정보",
+      "introTitle": "원하는 동영상 유형을 설명해 주세요.",
+      "introCopy": "주제, 분위기, 크리에이터, 또는 시청자부터 시작하세요. 국가나 기간은 필요할 때만 추가하세요.",
+      "starterQuestion": "어떤 영상을 찾고 계신가요?",
+      "defaultFollowUp": "조금 더 알려주시면 검색을 정교하게 해드릴게요.",
+      "errorMessage": "문제가 발생했습니다. 다시 시도해 주세요.",
+      "composerTitle": "AI에게 찾을 영상을 말해보세요",
+      "composerHint": "어떤 언어든 가능",
+      "composerMeta": "Enter 키를 눌러 검색",
+      "placeholder": "예: AI 정책에 대한 일본어 길거리 인터뷰",
+      "thinking": "생각 중...",
+      "resultsFor": "검색 결과:",
+      "downloadThis": "다운로드",
+      "failedToStart": "추천을 시작하지 못했습니다",
+      "requestFailed": "추천 요청에 실패했습니다",
+      "untitledVideo": "제목 없는 영상",
+      "openOnYoutube": "링크 열기",
+      "openFailed": "원본 영상 링크를 열 수 없습니다",
+      "uploadedOn": "업로드 날짜: {{date}}",
+      "durationLabel": "재생 시간: {{duration}}",
+      "downloadHistoryTitle": "다운로드 기록",
+      "recentChannelsTitle": "최근 다운로드한 채널",
+      "tabResults": "결과",
+      "tabHistory": "다운로드 기록",
+      "tabChannels": "채널",
+      "downloadAgain": "다시 다운로드",
+      "openChannel": "채널 열기",
+      "downloadedOn": "다운로드한 날짜: {{date}}",
+      "downloadedRecently": "최근에 다운로드됨",
+      "findVideos": "영상 찾기",
+      "resultsEmpty": "아직 결과가 없습니다. 원하는 영상을 말해주시면 검색할게요.",
+      "historyEmpty": "아직 다운로드한 영상이 없습니다.",
+      "channelsEmpty": "아직 채널 바로가기가 없습니다. 먼저 추천 영상을 다운로드해 보세요.",
+      "playLocal": "재생",
+      "downloadFailed": "다운로드에 실패했습니다",
+      "unknownChannel": "알 수 없는 채널",
+      "channelUnavailable": "이 항목에는 채널 링크가 없습니다.",
+      "openChannelFailed": "원본 채널 링크를 열 수 없습니다",
+      "missingLocalFile": "이 기록 항목에는 로컬 파일 경로가 없습니다.",
+      "downloadedFileMissing": "저장된 경로에서 로컬 파일을 찾을 수 없습니다.",
+      "cannotOpenDownloadedFile": "다운로드한 파일을 열 수 없습니다.",
+      "preference": {
+        "detailsToggle": "선호 상세 설정 (선택)",
+        "noPreset": "사전 설정 없음 (채팅에서 직접 입력)",
+        "savedValue": "저장됨: {{value}}",
+        "useSavedValue": "저장된 값 사용: {{value}}",
+        "removeSaved": "저장값 삭제",
+        "noneForSearch": "이 검색에는 선호 없음",
+        "topicLabel": "선호 주제",
+        "creatorLabel": "선호 크리에이터 스타일",
+        "subtopicLabel": "선호 세부 주제 / 장르",
+        "topic": {
+          "gaming": "게임 방송",
+          "education": "공부 / 교육",
+          "interviews": "인터뷰 / 팟캐스트",
+          "travel": "여행 / 산책"
+        },
+        "creator": {
+          "femaleStreamer": "여성 스트리머",
+          "maleStreamer": "남성 스트리머",
+          "vtuber": "브이튜버",
+          "any": "아무 크리에이터나"
+        },
+        "subtopic": {
+          "rpg": "RPG",
+          "fps": "FPS",
+          "moba": "MOBA",
+          "casual": "캐주얼"
+        }
+      },
+      "searchFailed": "지금은 검색할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "noMatches": "아직 적절한 결과가 없습니다. 주제, 분위기 또는 크리에이터를 추가하면 다시 검색할게요.",
+      "lowConfidenceNoScoredResults": "순위 매기기 후 신뢰할 만한 일치 항목이 남지 않았습니다. 더 넓은 주제를 시도하거나, 크리에이터 힌트를 추가하거나, 기간 설정을 바꿔 보세요.",
+      "lowConfidenceGeneric": "검색 신뢰도가 낮았습니다. 세부 정보를 하나 더 추가한 뒤 다시 시도하세요.",
+      "genericError": "문제가 발생했습니다. 다시 시도해 주세요.",
+      "askMore": "더 나은 결과를 찾을 수 있도록 조금 더 알려주세요.",
+      "platformLabel": "검색 플랫폼",
+      "platformHint": "어떤 플랫폼에서 찾을지 이 설정으로 고정됩니다.",
+      "platform": {
+        "youtube": "YouTube",
+        "twitch": "Twitch",
+        "tiktok": "TikTok",
+        "instagram": "Instagram",
+        "vimeo": "Vimeo",
+        "bilibili": "Bilibili",
+        "dailymotion": "Dailymotion"
+      },
+      "workflowHint": "1. 원하는 내용을 설명 -> 2. 결과 선택 -> 3. 다운로드하거나 원본 링크 열기",
+      "currentStep": "현재 단계",
+      "liveActivityTitle": "실시간 검색 진행 상황",
+      "liveActivityProgress": "{{cleared}}/4 단계 완료 • {{seconds}}초",
+      "lastActivityTitle": "마지막 검색",
+      "lastActivityProgress": "{{cleared}}/4단계 완료 • {{seconds}}초 만에 완료",
+      "minimizeActivity": "접기",
+      "expandActivity": "펼치기",
+      "activityComplete": "검색 활동이 완료되었습니다.",
+      "nextActionHint": "영상을 선택한 뒤 다운로드하거나 원본 링크를 여세요.",
+      "stagePending": "대기 중",
+      "stageRunning": "진행 중...",
+      "stageCleared": "완료",
+      "searchQueryLabel": "검색어",
+      "searchMore": "더 찾아보기",
+      "searchMoreLoading": "추가 검색 중...",
+      "resetChat": "채팅 초기화",
+      "useLastSearch": "지난번처럼 검색",
+      "starterQuestionWithMemory": "지난번에 {{summary}}(으)로 찾으셨어요. 이번에도 그대로 검색할까요?",
+      "quickStartUserMessage": "저장된 지난 선호로 바로 찾아줘: {{summary}}",
+      "stillRunning": "계속 진행 중",
+      "liveDetailsToggle": "실시간 상세 정보",
+      "moreActions": "추가 작업",
+      "cancelFailed": "현재 검색을 취소하지 못했습니다.",
+      "countryGlobal": "전체 결과",
+      "countryHint": "전체 결과를 보려면 비워 두세요.",
+      "countryLabel": "대상 국가 / 지역",
+      "countryPlaceholder": "예: 미국, 일본, 스페인, 브라질",
+      "countryScope": "국가: {{country}}",
+      "emptyCopy": "주제, 대상, 크리에이터 스타일 또는 분위기를 적어보세요. 국가나 최신성은 필요할 때만 추가하세요.",
+      "emptyEyebrow": "어시스턴트 가이드 탐색",
+      "emptyTitle": "찾고 싶은 영상을 설명하세요",
+      "languageHint": "출력 언어",
+      "noMoreResults": "더 이상 구분되는 결과가 없습니다. 국가나 최신성을 조정해 보세요.",
+      "aiVideoRecommendation": "AI 영상 추천",
+      "optionalDiscovery": "선택 검색",
+      "recencyAny": "전체 기간(오래된 동영상 포함)",
+      "recencyDay": "최근 24시간",
+      "recencyHint": "최신 동영상을 더 높게 보려면 사용하세요.",
+      "recencyLabel": "최신성",
+      "recencyMonth": "최근 30일",
+      "recencyWeek": "최근 7일",
+      "recencyYear": "최근 1년",
+      "removeChannelItem": "채널 제거",
+      "removeHistoryItem": "제거",
+      "resultsReadyCount": "{{count}}개 준비됨",
+      "retrievalReady": "결과가 준비되었습니다.",
+      "savedDownloads": "저장된 다운로드",
+      "savedDownloadsCount": "저장된 다운로드 {{count}}개",
+      "savedPreferencesCount": "저장된 선호 {{count}}개",
+      "searchingLong": "계속 검색하고 동영상을 순위 매기는 중...",
+      "searchingVeryLong": "평소보다 오래 걸리지만 계속 진행 중입니다.",
+      "stillWorking": "계속 작업 중...",
+      "toggleCopy": "내 언어로 말하면 AI가 맞는 YouTube 영상을 찾아드려요.",
+      "stage": {
+        "strategist": "검색 계획",
+        "discovery": "후보 검색",
+        "curator": "일치 항목 순위 매기기",
+        "retrieval": "결과 불러오기"
+      }
+    }
   },
   "subtitles": {
     "outputLanguage": "출력 언어",
@@ -142,9 +334,9 @@
     "dub": "더빙 생성",
     "dubEstimateCredits": "{{credits}} cr (~{{minutes}}분)",
     "dubEstimateByo": "~{{minutes}}분 오디오",
+    "voiceCloningRequiresTranslation": "음성 복제에는 대상 언어가 필요합니다",
     "translateEstimateCredits": "~{{minutes}}분 영상",
     "translateEstimateByo": "BYO 키",
-    "voiceCloningRequiresTranslation": "음성 복제에는 대상 언어가 필요합니다",
     "qualityBadge": "(hq)",
     "cancel_confirmation": "자막 번역 과정을 취소하시겠습니까? 모든 진행 상황이 손실되며 다시 시작해야 합니다."
   },
@@ -160,18 +352,33 @@
     "generate": "요약 생성",
     "regenerate": "요약 다시 생성",
     "estimateCredits": "{{credits}} 크레딧",
+    "estimateByo": "BYO 키",
     "highEffortBadge": "(정밀)",
     "placeholder": "생성이 완료되면 AI 요약이 여기에 표시됩니다.",
     "insufficientCredits": "요약을 실행하기에 크레딧이 부족합니다.",
     "error": "요약을 생성하지 못했습니다. {{message}}",
+    "cancel": "취소",
     "copy": "요약 복사",
     "copied": "복사되었습니다!",
     "copyError": "요약을 클립보드로 복사하지 못했습니다.",
+    "noHighlights": "아직 하이라이트가 없습니다. 생성하여 명장면을 감지하세요.",
+    "noVideoForHighlights": "하이라이트 클립을 자르려면 소스 동영상을 열어주세요.",
+    "summaryRequiredForHighlights": "하이라이트 클립을 자르기 전에 전사 요약을 생성하세요.",
+    "highlight": "하이라이트",
+    "cutHighlightClip": "이 하이라이트 자르기",
+    "cuttingHighlightClip": "자르는 중…",
+    "highlightPlaceholder": "아직 클립이 잘리지 않았습니다.",
+    "clipFormat": "클립 형식:",
+    "originalFormat": "원본",
+    "originalFormatDesc": "원본 동영상 크기 유지",
+    "verticalFormat": "9:16 세로형",
+    "verticalFormatDesc": "YouTube Shorts, TikTok, Reels(9:16)에 최적화",
     "downloadHighlight": "클립 다운로드",
     "downloadingHighlight": "저장 중…",
     "highlightSaved": "저장됨!",
     "highlightSaveError": "저장 실패",
     "downloadHighlightFailed": "하이라이트 클립 저장 실패: {{message}}",
+    "highlightsSelectionFailed": "하이라이트 구간 선택 실패: {{message}}",
     "saveHighlightDialogTitle": "하이라이트 클립 저장",
     "noSections": "섹션 노트가 아직 없습니다.",
     "sectionHeading": "섹션 {{index}}",
@@ -179,18 +386,15 @@
     "status": {
       "preparing": "전사를 준비하는 중…",
       "chunk": "{{current}}/{{total}} 구간 요약 중",
+      "selectingHighlights": "하이라이트 순간 선택 중…",
+      "cuttingHighlight": "하이라이트 {{current}}/{{total}} 자르는 중…",
+      "cuttingHighlights": "하이라이트 클립 자르는 중…",
       "synthesizing": "종합 요약을 생성하는 중…",
       "ready": "요약 준비 완료",
       "error": "요약 실패",
       "cancelled": "요약이 취소되었습니다",
-      "inProgress": "요약 생성 중…",
-      "selectingHighlights": "하이라이트 순간 선택 중…",
-      "cuttingHighlight": "하이라이트 {{current}}/{{total}} 자르는 중…",
-      "cuttingHighlights": "하이라이트 클립 자르는 중…"
+      "inProgress": "요약 생성 중…"
     },
-    "noHighlights": "아직 하이라이트가 없습니다. 생성하여 명장면을 감지하세요.",
-    "noVideoForHighlights": "하이라이트 클립을 자르려면 소스 동영상을 열어주세요.",
-    "highlight": "하이라이트",
     "combineMode": "합치기",
     "exitCombineMode": "합치기 종료",
     "reorderHint": "드래그하여 순서 변경:",
@@ -202,6 +406,7 @@
     "combinedCutFailed": "합친 하이라이트 자르기 실패: {{message}}"
   },
   "panel": {
+    "new": "신규",
     "gaps": {
       "title": "공백 구간",
       "none": "큰 공백 구간이 없습니다"
@@ -212,33 +417,28 @@
       "count": "{{count}}줄"
     }
   },
-  "progress": {
-    "mergingTitle": "비디오와 자막 병합 중",
-    "beginningReview": "리뷰 시작 중...",
-    "starting": "시작 중...",
-    "completed": "완료",
-    "processCancelled": "작업이 취소되었습니다",
-    "extractingAudio": "오디오 추출 중...",
-    "transcribingOf": "전사 중 {{done}}/{{total}}",
-    "error": "오류",
-    "transcribedChunks": "{{done}}/{{total}} 전사 완료",
-    "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
-    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
-    "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
-    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})",
-    "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}",
-    "reviewingBatch": "검토 중 {{done}}/{{total}}",
-    "reviewingRange": "{{start}}–{{end}} 검토 중 ({{total}}개 중)",
-    "transcribingElevenLabs": "ElevenLabs로 전사 중 (~{{minutes}}분 남음)",
-    "transcribingElevenLabsHours": "ElevenLabs로 전사 중 (~{{hours}}시간 {{minutes}}분 남음)",
-    "transcribingElevenLabsFinishing": "ElevenLabs로 전사 중...",
-    "transcriptionFallbackWhisper": "청크 방식 전사로 전환 중...",
-    "transcriptionRetry": "연결 실패, 재시도 중 ({{attempt}}/{{maxAttempts}})...",
-    "transcribingR2Upload": "전사를 위해 오디오 업로드 중..."
-  },
   "editSubtitles": {
     "title": "자막 편집",
     "listTitle": "자막 ({{count}}개)",
+    "workspace": {
+      "editorStage": "편집 작업공간",
+      "dualMode": "이중 텍스트 모드",
+      "translationMode": "번역 전용 모드",
+      "videoMounted": "미리보기 영상 연결됨",
+      "videoNeeded": "미리보기와 병합을 위해 원본 영상을 연결하세요",
+      "readyTitle": "자막 편집기 준비됨",
+      "emptyTitle": "편집을 시작하려면 자막을 불러오세요",
+      "readyCopy": "SRT를 저장하거나 원본 미디어에 자막을 입히기 전에 여기서 타이밍, 줄바꿈, 번역을 다듬으세요.",
+      "emptyCopy": "기존 SRT를 열어 바로 편집하세요. 메인 워크플로에서 생성된 전사도 준비되면 여기에 표시됩니다.",
+      "rowsLoaded": "{{count}}개 행 불러옴",
+      "loadAnotherSrt": "다른 SRT 불러오기",
+      "mountVideoTitle": "미리보기와 자막 입히기 내보내기를 위해 원본 영상을 연결하세요",
+      "mountVideoCopy": "영상 없이도 계속 편집할 수 있지만, 원본 미디어를 연결하면 미리보기, 탐색, 병합이 가장 잘 작동합니다.",
+      "listCopy": "원문, 번역, 타이밍, 줄 단위 작업을 바로 편집하세요.",
+      "originalLabel": "원문",
+      "translationLabel": "번역",
+      "mergeNeedsVideoCopy": "자막 입히기 내보내기를 시작하기 전에 원본 영상을 연결하세요."
+    },
     "item": {
       "seek": "탐색",
       "seekTitle": "비디오를 시작 시간으로 이동",
@@ -272,15 +472,17 @@
     "aiProvider": {
       "title": "AI 제공업체"
     },
-    "byoMaster": {
+    "strictByoMode": {
       "toggleLabel": "내 API 키 사용",
-      "activeKeys": "{{count}}개 키 활성화",
-      "noKeys": "구성된 키 없음",
-      "usingCredits": "모든 AI가 Stage5 크레딧 사용",
-      "toggleOn": "AI 작업에 내 API 키를 사용합니다.",
-      "toggleOff": "모든 AI 작업에 Stage5 크레딧을 사용합니다.",
-      "toggleError": "설정 업데이트에 실패했습니다.",
-      "toggleAria": "내 API 키 사용 전환"
+      "activeKeys": "준비된 키 {{count}}개",
+      "noKeys": "설정된 키 없음",
+      "requirement": "번역 + 오디오 커버리지 필요",
+      "strictActive": "Stage5 크레딧 꺼짐",
+      "usingCredits": "Stage5 크레딧 사용 중",
+      "toggleOn": "이제 API 키를 사용합니다.",
+      "toggleOff": "이제 Stage5 크레딧을 사용합니다.",
+      "toggleError": "설정을 업데이트하지 못했습니다.",
+      "toggleAria": "내 API 키 사용"
     },
     "creditsDescription": "크레딧을 구매하세요. 표시된 시간은 전사 또는 번역할 수 있는 총 영상 길이에 대한 추정치입니다. 예: 3시간짜리 영상을 전사하고 번역하면 약 6시간(≈140,000 크레딧)이 소모됩니다.",
     "performanceQuality": {
@@ -291,56 +493,49 @@
       },
       "qualityTranslation": {
         "label": "고품질 번역",
+        "modelOn": "GPT-5.1 초안 + GPT-5.4 검토",
+        "modelOff": "GPT-5.1 초안 전용",
         "help": "켜짐: 검토 단계 포함(~5× 크레딧/시간). 꺼짐: 검토 건너뜀.",
-        "helpWithEstimate": "검토는 ~5× 크레딧을 사용합니다. 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질."
+        "helpWithEstimate": "검토는 ~5× 크레딧을 사용합니다. 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질.",
+        "helpOn": "<b>5× 크레딧</b> • GPT-5.1 초안 + GPT-5.4 검토",
+        "helpOff": "<b>1× 크레딧</b> • GPT-5.1 초안만 사용",
+        "helpWithEstimateOn": "<b>5× 크레딧</b> • GPT-5.1 초안 + GPT-5.4 검토 • 보유 크레딧: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× 크레딧</b> • GPT-5.1 초안만 사용 • 보유 크레딧: ~{{time}}"
       },
       "qualitySummary": {
         "label": "고품질 요약",
+        "modelOn": "GPT-5.4 정밀 분석 + 하이라이트 클립",
+        "modelOff": "GPT-5.1 기본 분석",
         "help": "켜짐: Claude Opus로 정밀 분석 + 하이라이트 클립 (~4× 크레딧). 꺼짐: GPT-5.1로 빠른 분석.",
-        "helpWithEstimate": "정밀 분석 + 하이라이트 클립 (~4× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질."
+        "helpWithEstimate": "정밀 분석 + 하이라이트 클립 (~4× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질.",
+        "helpOn": "<b>4× 크레딧</b> • GPT-5.4 정밀 분석 + 하이라이트 클립",
+        "helpOff": "<b>1× 크레딧</b> • GPT-5.1 기본 분석",
+        "helpWithEstimateOn": "<b>4× 크레딧</b> • GPT-5.4 정밀 분석 + 하이라이트 클립 • 보유 크레딧: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× 크레딧</b> • GPT-5.1 기본 분석 • 보유 크레딧: ~{{time}}"
       },
       "qualityDubbing": {
         "label": "고품질 더빙",
-        "help": "켜짐: ElevenLabs TTS (프리미엄 음성, ~13× 크레딧). 꺼짐: OpenAI TTS (좋은 품질).",
-        "helpWithEstimate": "ElevenLabs TTS (~13× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질."
-      }
-    },
-    "preferClaude": {
-      "forTranslation": {
-        "label": "번역에 Claude 선호",
-        "help": "초안: GPT-5.1 → 검토: Opus 4.6"
+        "modelOn": "ElevenLabs TTS 프리미엄 음성",
+        "modelOff": "OpenAI TTS",
+        "help": "켜짐: ElevenLabs TTS (프리미엄 음성, ~12× 크레딧). 꺼짐: OpenAI TTS (좋은 품질).",
+        "helpWithEstimate": "ElevenLabs TTS (~12× 크레딧). 보유 크레딧: ~{{normalTime}} 일반, ~{{hqTime}} 고품질.",
+        "helpOn": "<b>{{ratio}}× 크레딧</b> • ElevenLabs TTS 프리미엄 음성",
+        "helpOff": "<b>1× 크레딧</b> • OpenAI TTS",
+        "helpWithEstimateOn": "<b>{{ratio}}× 크레딧</b> • ElevenLabs TTS 프리미엄 음성 • 보유 크레딧: ~{{time}}",
+        "helpWithEstimateOff": "<b>1× 크레딧</b> • OpenAI TTS • 보유 크레딧: ~{{time}}"
       },
-      "forReview": {
-        "label": "검토에 Claude 선호",
-        "help": "검토: Claude Opus 4.6"
+      "videoSuggestionModel": {
+        "label": "영상 추천 품질",
+        "help": "번역과 동일한 백엔드 모델 등급을 사용합니다.",
+        "default": "기본값 (번역 기본값과 동일)",
+        "quality": "고품질 (번역 고품질과 동일)"
+      },
+      "rate": {
+        "perHour": "시간당 약 {{credits}} 크레딧",
+        "perMinute": "분당 약 {{credits}} 크레딧",
+        "perSearch": "검색당 약 {{credits}} 크레딧",
+        "balance": "보유 크레딧: ~{{time}}"
       }
-    },
-    "transcriptionProvider": {
-      "label": "전사 제공자",
-      "elevenlabs": "ElevenLabs Scribe",
-      "elevenlabsHint": "최고 품질, ElevenLabs 키 사용",
-      "openai": "OpenAI Whisper",
-      "openaiHint": "빠르고 정확함, OpenAI 키 사용",
-      "stage5": "Stage5 (크레딧)",
-      "stage5Hint": "Stage5 AI 크레딧 사용"
-    },
-    "dubbingProvider": {
-      "label": "더빙 제공자",
-      "elevenlabs": "ElevenLabs (음성 복제)",
-      "elevenlabsHint": "원본 화자의 음성 유지",
-      "openai": "OpenAI TTS",
-      "openaiHint": "합성 음성 사용 (alloy, echo 등)",
-      "stage5": "Stage5 (크레딧)",
-      "stage5Hint": "Stage5 AI 크레딧 사용"
-    },
-    "stage5TtsProvider": {
-      "label": "TTS 품질 (Stage5 크레딧)",
-      "openai": "표준 (OpenAI TTS)",
-      "openaiHint": "좋은 품질, 저렴한 비용",
-      "openaiHintWithBalance": "좋은 품질 · 잔액: {{time}} 더빙 가능",
-      "elevenlabs": "프리미엄 (ElevenLabs)",
-      "elevenlabsHint": "최고 품질, 높은 비용 (~13배)",
-      "elevenlabsHintWithBalance": "최고 품질 · 잔액: {{time}} 더빙 가능"
     },
     "dubbing": {
       "voiceLabel": "더빙 음성",
@@ -371,6 +566,7 @@
       "mixVoice": "목소리 더 크게",
       "voiceCloning": "원본 음성 복제",
       "voiceCloningDesc": "더빙 오디오에서 원래 화자의 음성 보존",
+      "voiceCloningInsufficientCredits": "최소 1분 이상의 크레딧이 필요합니다",
       "voiceCloningEnabled": "ElevenLabs 음성 복제가 활성화되었습니다. 원래 화자의 음성이 더빙 오디오에서 보존됩니다.",
       "voiceCloningInfo": "음성 복제는 ElevenLabs 더빙 API를 사용하여 원래 화자의 음성을 분석하고 재현합니다.",
       "costPerMinute": "분당 비용",
@@ -378,8 +574,7 @@
       "yourBalance": "잔액",
       "canClone": "복제 가능",
       "upToMinutes": "최대 {{minutes}}분",
-      "loading": "로딩 중...",
-      "voiceCloningInsufficientCredits": "최소 1분 이상의 크레딧이 필요합니다"
+      "loading": "로딩 중..."
     },
     "byoOpenAi": {
       "title": "내 API 키 사용",
@@ -411,29 +606,53 @@
       "option1Title": "옵션 1: OpenAI",
       "option2Title": "옵션 2: Anthropic + ElevenLabs",
       "economicsTitle": "왜 가치가 있을까요",
-      "economicsBody": "Stage5 크레딧은 편의성을 최적화합니다(설정 불필요). BYO는 제공업체에 직접 지불하며—패키지에 따라 보통 ~30-50% 저렴합니다."
+      "economicsBody": "Stage5 크레딧은 편의성을 최적화합니다(설정 불필요). BYO는 제공업체에 직접 지불하며—패키지에 따라 보통 ~30-50% 저렴합니다.",
+      "encryptionUnavailable": "이 시스템에서는 보안 저장소를 사용할 수 없습니다. API 키를 저장할 수 없습니다."
     },
     "byoPreferences": {
       "title": "제공자 설정",
+      "stage5Credits": "Stage5 credits",
       "pricingHint": "1시간 영상 기준 예상 비용",
+      "pricingHintHeuristic": "현재 앱 추정 기준으로 계산한 예상 비용",
       "transcription": "전사",
       "openaiWhisper": "OpenAI Whisper",
       "elevenLabsScribe": "ElevenLabs Scribe",
       "translationDraft": "번역 (초안)",
-      "translationReview": "번역 (검토)",
-      "gptHigh": "GPT-5.1 (고급)",
+      "gptHigh": "GPT-5.4",
       "gpt": "GPT-5.1",
+      "gptSummaryStack": "GPT-5.1 / GPT-5.4",
       "claudeSonnet": "Claude Sonnet",
       "claudeOpus": "Claude Opus",
+      "claudeSummaryStack": "Claude Sonnet / Claude Opus",
+      "reviewPass": "검토 패스",
+      "off": "끔",
+      "on": "켬",
+      "defaultMode": "기본",
+      "qualityMode": "고품질",
       "summary": "요약",
       "dubbing": "더빙",
       "openaiTts": "OpenAI TTS",
-      "elevenLabsTts": "ElevenLabs"
+      "elevenLabsTts": "ElevenLabs",
+      "videoSuggestionModelUnavailable": "현재 사용 가능한 BYO 동영상 추천 모델이 없습니다. 이 기능을 사용하려면 OpenAI 또는 Anthropic BYO를 활성화하세요.",
+      "videoSuggestionModelRequiresOpenAi": "OpenAI BYO 잠금 해제, 키, 토글이 필요합니다.",
+      "videoSuggestionModelRequiresAnthropic": "Anthropic BYO 잠금 해제, 키, 토글이 필요합니다.",
+      "translationReview": "번역 (검토)"
     },
     "apiKeyGuide": {
       "title": "API 키 받는 방법",
       "required": "필수",
       "optional": "선택",
+      "providers": {
+        "openai": "OpenAI",
+        "anthropicClaude": "Anthropic (Claude)",
+        "elevenlabs": "ElevenLabs"
+      },
+      "labels": {
+        "apiKeys": "API 키",
+        "createNewSecretKey": "새 시크릿 키 만들기",
+        "createKey": "키 생성",
+        "profileApiKey": "프로필 + API 키"
+      },
       "openai": {
         "description": "OpenAI는 전사(Whisper), 번역(GPT), 텍스트 음성 변환 더빙을 제공합니다.",
         "step1": "방문:",
@@ -458,6 +677,7 @@
       },
       "elevenlabs": {
         "description": "ElevenLabs는 프리미엄 전사 및 음성 복제 더빙을 제공합니다. 없으면 OpenAI가 이러한 작업을 처리합니다.",
+        "ttsDescription": "ElevenLabs는 프리미엄 전사 및 더빙 음성을 제공합니다. 없으면 OpenAI가 이 작업을 처리합니다.",
         "step1": "방문:",
         "step2": "계정에 가입하거나 로그인",
         "step3": "프로필 아이콘을 클릭하고 선택:",
@@ -468,7 +688,7 @@
     },
     "byoAnthropic": {
       "title": "Anthropic API 키 (선택 사항)",
-      "description": "Anthropic API 키를 추가하면 번역 검토 단계에서 Claude 모델을 직접 사용할 수 있습니다. 이 키가 없으면 번역은 향상된 추론 기능이 있는 GPT를 사용합니다.",
+      "description": "Anthropic API 키를 추가하면 번역 검토 단계에서 Claude 모델을 직접 사용할 수 있습니다. 이 키가 없으면 GPT-5.4가 검토 패스를 처리합니다.",
       "apiKeyLabel": "Anthropic API 키",
       "hide": "숨기기",
       "show": "표시",
@@ -488,30 +708,35 @@
       "toggleOff": "Claude 모델에 Stage5 크레딧을 사용 중입니다.",
       "toggleError": "Anthropic 설정 업데이트에 실패했습니다."
     },
-    "byoElevenLabs": {
-      "title": "ElevenLabs API 키 (선택 사항)",
-      "description": "ElevenLabs API 키를 추가하면 고품질 전사(Scribe)와 더빙(TTS)을 사용할 수 있습니다. 이 키가 없으면 전사와 더빙은 OpenAI 서비스를 사용합니다.",
-      "apiKeyLabel": "ElevenLabs API 키",
-      "hide": "숨기기",
-      "show": "표시",
-      "saving": "저장 중…",
-      "clear": "키 삭제",
-      "loadingKey": "저장된 ElevenLabs 키 불러오는 중…",
-      "keySaved": "ElevenLabs API 키가 저장되었습니다.",
-      "keyCleared": "ElevenLabs API 키가 삭제되었습니다.",
-      "keyValid": "ElevenLabs API 키가 성공적으로 검증되었습니다.",
-      "keyInvalid": "ElevenLabs API 키 검증에 실패했습니다.",
-      "testing": "테스트 중…",
-      "test": "키 테스트",
-      "toggleLabel": "내 ElevenLabs 키 사용",
-      "toggleHelp": "꺼져 있으면 전사와 더빙에 Stage5 크레딧이 사용됩니다.",
-      "toggleAria": "ElevenLabs 키 사용 전환",
-      "toggleOn": "ElevenLabs 서비스에 내 키를 사용 중입니다.",
-      "toggleOff": "ElevenLabs 서비스에 Stage5 크레딧을 사용 중입니다.",
-      "toggleError": "ElevenLabs 설정 업데이트에 실패했습니다."
+    "stage5TtsProvider": {
+      "label": "TTS 품질 (Stage5 크레딧)",
+      "openai": "표준 (OpenAI TTS)",
+      "openaiHint": "좋은 품질, 저렴한 비용",
+      "openaiHintWithBalance": "좋은 품질 · 잔액: {{time}} 더빙 가능",
+      "elevenlabs": "프리미엄 (ElevenLabs)",
+      "elevenlabsHint": "최고 품질, 높은 비용 (~12배)",
+      "elevenlabsHintWithBalance": "최고 품질 · 잔액: {{time}} 더빙 가능"
     },
-    "voiceCloning": {
-      "enabled": "ElevenLabs에서 음성 복제가 활성화되었습니다. 더빙된 오디오에서 원본 화자의 음성이 유지됩니다."
+    "apiKey": {
+      "saved": "API 키가 저장되었습니다.",
+      "cleared": "API 키가 삭제되었습니다.",
+      "invalid": "API 키 검증에 실패했습니다.",
+      "howToGet": "이 키 받는 방법"
+    },
+    "byoStack": {
+      "title": "내 AI 스택"
+    },
+    "siteConnection": {
+      "title": "웹사이트 연결",
+      "siteUrlLabel": "사이트 URL",
+      "checking": "확인 중…",
+      "connected": "연결됨",
+      "connectedSignedIn": "연결됨(로그인됨)",
+      "notConnected": "연결되지 않음",
+      "invalidUrl": "올바른 URL을 입력하세요",
+      "unavailable": "사용 불가",
+      "thisSite": "이 사이트",
+      "clearConfirm": "Translator 내에서 {{site}}에서 로그아웃됩니다. 계속할까요?"
     }
   },
   "credits": {
@@ -523,6 +748,7 @@
     "usingAnthropic": "Claude 사용 중",
     "usingElevenLabs": "ElevenLabs 사용 중",
     "hours": "시간",
+    "translationHoursShort": "번역 시간",
     "buyCredits": "크레딧 구매",
     "redirectingToPayment": "결제 창을 여는 중…",
     "description": "${{packMicroPrice}} ({{packMicroHours}}시간), ${{pack1Price}} ({{pack1Hours}}시간), ${{pack2Price}} ({{pack2Hours}}시간), ${{pack3Price}} ({{pack3Hours}}시간) 크레딧 팩 중 선택하세요",
@@ -540,13 +766,41 @@
       "pillMerge": "비디오에 병합"
     }
   },
+  "branding": {
+    "translator": "translator",
+    "byStage5": "by stage_5"
+  },
   "videoPlayer": {
     "enterFullscreen": "전체화면 진입",
     "exitFullscreen": "전체화면 종료",
+    "playbackSpeed": "재생 속도",
+    "icloudWaitingTitle": "iCloud에서 다운로드 중",
+    "icloudWaitingBody": "이 파일은 아직 로컬에 없습니다. Finder에서 '다운로드'를 누르고 구름 아이콘이 사라질 때까지 기다려주세요.",
+    "icloudWaitingHint": "다운로드가 끝나면 영상이 자동으로 열립니다.",
+    "mediaPlaybackError": "미디어 재생 오류",
+    "sideActions": "비디오 사이드 작업",
     "scrollToCurrentSubtitle": "현재 자막으로 이동",
     "changeVideo": "비디오 변경",
+    "findVideoWithAi": "AI로 동영상 찾기",
     "mountSrt": "SRT 불러오기",
-    "changeSrt": "SRT 변경"
+    "changeSrt": "SRT 변경",
+    "useThisVideo": "이 동영상 사용",
+    "useDownloadedVideo": "이 동영상 사용",
+    "useOriginalAudio": "원본 오디오 사용",
+    "useDubbedAudio": "더빙 오디오 사용"
+  },
+  "admin": {
+    "title": "관리자",
+    "addStandardPackTitle": "관리자: 표준 팩 추가 (350,000 크레딧)",
+    "resetCreditsToZeroTitle": "관리자: 크레딧을 0으로 초기화",
+    "toggleByoPreviewTitle": "관리자: BYO 미리보기 모드 전환 (BYO 미구매 상태 UI 확인)",
+    "addCredits": "35만 크레딧 추가",
+    "adding": "추가 중...",
+    "resetToZero": "0으로 초기화",
+    "resetting": "초기화 중...",
+    "byoPreview": "BYO 미리보기",
+    "byoPreviewOn": "BYO 미리보기 켜짐",
+    "confirmResetCreditsToZero": "크레딧을 0으로 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다."
   },
   "regions": {
     "eastAsia": "동아시아",
@@ -620,6 +874,25 @@
       "buyCredits": "크레딧 구매",
       "redirectingToPayment": "결제 페이지로 이동 중..."
     },
+    "workflow": {
+      "stepOne": "1단계",
+      "stepTwo": "2단계",
+      "stepThree": "3단계",
+      "chooseSourceTitle": "소스 선택",
+      "sourceLoading": "소스 가져오는 중",
+      "sourceLoadingDescription": "다운로드한 소스를 전사용으로 준비하는 중입니다.",
+      "localSourceReady": "로컬 파일 준비 완료",
+      "webSourceReady": "웹 소스 준비 완료",
+      "sourceReadyDescription": "선택한 미디어가 다음 단계로 준비되었습니다.",
+      "transcribeTitle": "전사 만들기",
+      "transcribeDescription": "소스 미디어를 번역이나 더빙 전에 편집 가능한 자막 트랙으로 전환하세요.",
+      "translateDubTitle": "번역 또는 더빙",
+      "translateDubDescription": "전사본이 준비되었습니다. 다음으로 출력 언어, 번역 모드 또는 더빙을 선택하세요.",
+      "availableOutputs": "사용 가능한 파일",
+      "availableOutputsDescription": "다운로드한 미디어와 더빙된 미디어는 보관할 버전을 저장할 때까지 여기에서 계속 사용할 수 있습니다.",
+      "saveOutputsTitle": "파일 저장",
+      "saveOutputsDescription": "보관할 소스 또는 더빙 미디어는 앱 작업 공간 밖에 저장하세요."
+    },
     "calculatingCost": "비용 계산 중...",
     "notEnoughCredits": "사용 가능한 크레딧이 부족합니다"
   },
@@ -639,35 +912,20 @@
   "dialogs": {
     "apiKeysRequired": {
       "title": "API 키 필요",
-      "message": "자신의 API 키를 사용하려면 OpenAI 키 또는 Anthropic과 ElevenLabs 키가 모두 필요합니다.",
+      "message": "모든 AI 작업에 API 키를 사용하려면 번역 커버리지와 오디오 커버리지가 필요합니다. OpenAI는 둘 다 충족합니다. Anthropic은 오디오에 OpenAI 또는 ElevenLabs가 필요합니다.",
       "howToGet": "API 키 받는 방법",
       "option1": "옵션 1: OpenAI",
       "option2": "옵션 2: Anthropic + ElevenLabs",
-      "enable": "API 키 활성화",
-      "done": "완료"
+      "enable": "내 API 키 사용",
+      "done": "완료",
+      "ready": "커버리지가 모두 준비되었습니다. 이제 내 API 키 사용을 켤 수 있습니다.",
+      "missingTranslation": "번역에는 아직 {{providers}}가 필요합니다.",
+      "missingAudio": "오디오에는 아직 {{providers}}가 필요합니다.",
+      "missingBoth": "아직 필요한 항목: 번역 ({{translationProviders}}), 오디오 ({{audioProviders}})."
     },
     "saveSrtFileAs": "SRT 파일 다른 이름으로 저장",
     "saveDownloadedVideoAs": "다운로드한 비디오 다른 이름으로 저장",
     "saveDubbedVideoAs": "더빙 비디오 다른 이름으로 저장",
-    "downloadInProgress": "다운로드 진행 중",
-    "saveDownloadedFile": "다운로드한 파일 저장: {{path}}",
-    "transcriptionInProgress": "전사 진행 중",
-    "translationInProgress": "번역 진행 중",
-    "dubbingInProgress": "더빙 생성 중",
-    "dubbingWorking": "더빙 오디오를 생성하는 중입니다…",
-    "cancelTranslationConfirm": "번역을 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
-    "cancelDubbingConfirm": "더빙을 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
-    "slowProcessingBanner": {
-      "title": "처리 시간이 평소보다 오래 걸리고 있습니다.",
-      "description": "OpenAI 서버 문제로 인한 것일 수 있습니다. 프로세스는 백그라운드에서 계속 실행 중입니다.",
-      "checkStatus": "OpenAI 상태 확인"
-    },
-    "cancelDownloadConfirm": "다운로드를 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
-    "mergeLowDiskSpaceConfirm": "저장공간이 부족할 수 있습니다. 자막 병합에는 대략 {{need}} 정도의 여유 공간이 필요하지만 현재 남은 공간은 약 {{free}}입니다. 계속 진행할까요?",
-    "slowDownloadBanner": {
-      "title": "다운로드가 평소보다 오래 걸리고 있습니다.",
-      "description": "동영상 플랫폼의 변경사항이나 새로운 보호 조치로 인한 것일 수 있습니다. 새로운 동영상을 처리하려면 다음 앱 버전을 기다려야 할 수 있습니다."
-    },
     "unsavedSrtOnTranscribe": {
       "title": "전사 시작 전에 현재 자막을 저장하시겠습니까?",
       "message": "이미 자막이 로드되어 있습니다. 전사를 시작하면 현재 자막이 교체됩니다.",
@@ -675,12 +933,55 @@
       "discardAndTranscribe": "저장하지 않고 전사하기",
       "cancel": "취소"
     },
+    "downloadInProgress": "다운로드 진행 중",
+    "saveDownloadedFile": "다운로드한 파일 저장: {{path}}",
+    "transcriptionInProgress": "전사 진행 중",
+    "translationInProgress": "번역 진행 중",
+    "dubbingInProgress": "더빙 생성 중",
+    "dubbingWorking": "더빙 오디오를 생성하는 중입니다…",
+    "cancelTranslationConfirm": "번역을 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
+    "cancelSummaryConfirm": "요약 생성을 취소할까요?",
+    "cancelDubbingConfirm": "더빙을 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
+    "cancelDownloadConfirm": "다운로드를 취소하시겠습니까? 진행 상황이 손실되며 다시 시작해야 합니다.",
+    "mergeLowDiskSpaceConfirm": "저장공간이 부족할 수 있습니다. 자막 병합에는 대략 {{need}} 정도의 여유 공간이 필요하지만 현재 남은 공간은 약 {{free}}입니다. 계속 진행할까요?",
+    "slowProcessingBanner": {
+      "title": "처리 시간이 평소보다 오래 걸리고 있습니다.",
+      "description": "OpenAI 서버 문제로 인한 것일 수 있습니다. 프로세스는 백그라운드에서 계속 실행 중입니다.",
+      "checkStatus": "OpenAI 상태 확인"
+    },
+    "slowDownloadBanner": {
+      "title": "다운로드가 평소보다 오래 걸리고 있습니다.",
+      "description": "동영상 플랫폼의 변경사항이나 새로운 보호 조치로 인한 것일 수 있습니다. 새로운 동영상을 처리하려면 다음 앱 버전을 기다려야 할 수 있습니다."
+    },
     "creditRanOut": {
       "title": "크레딧이 소진되었습니다",
       "message": "AI 크레딧이 소진되었습니다. 설정에서 충전한 후 중단한 위치에서 다시 이어서 진행하세요.",
       "openSettings": "설정 열기",
       "ok": "확인"
     }
+  },
+  "progress": {
+    "beginningReview": "리뷰 시작 중...",
+    "starting": "시작 중...",
+    "completed": "완료",
+    "processCancelled": "작업이 취소되었습니다",
+    "mergingTitle": "비디오와 자막 병합 중",
+    "extractingAudio": "오디오 추출 중...",
+    "transcribingOf": "전사 중 {{done}}/{{total}}",
+    "error": "오류",
+    "transcribedChunks": "{{done}}/{{total}} 전사 완료",
+    "transcribingElevenLabs": "ElevenLabs로 전사 중 (~{{minutes}}분 남음)",
+    "transcribingElevenLabsHours": "ElevenLabs로 전사 중 (~{{hours}}시간 {{minutes}}분 남음)",
+    "transcribingElevenLabsFinishing": "ElevenLabs로 전사 중...",
+    "transcriptionFallbackWhisper": "청크 방식 전사로 전환 중...",
+    "transcriptionRetry": "연결 실패, 재시도 중 ({{attempt}}/{{maxAttempts}})...",
+    "transcribingR2Upload": "전사를 위해 오디오 업로드 중...",
+    "gapRepair": "갭 복구 #{{iteration}} ({{done}}/{{total}})",
+    "repairingCaptions": "누락된 자막 복구 중 ({{iteration}}/{{maxIterations}}회) {{done}} / {{total}}",
+    "scrubbingHallucinations": "자막 클리닝 중 ({{done}}/{{total}})",
+    "translationCleanup": "번역된 자막 클린업 중 ({{done}}/{{total}})",
+    "reviewingSlow": "검토 중(시간이 조금 걸릴 수 있습니다...) {{done}}/{{total}}",
+    "reviewingRange": "{{start}}–{{end}} 검토 중 ({{total}}개 중)"
   },
   "messages": {
     "fileSaved": "파일 저장됨:\n{{path}}",
@@ -697,6 +998,10 @@
     "copyFailed": "복사 실패",
     "emailSubject": "Stage5 디버그 로그",
     "emailBodyPrefix": "안녕하세요,\n\n아래는 문제 해결을 위한 최근 로그입니다.\n\n",
-    "deviceInfoHeader": "장치 정보"
+    "deviceInfoHeader": "장치 정보",
+    "optionalMessage": "추가 메시지",
+    "optionalMessagePlaceholder": "무엇을 하려고 하셨나요?",
+    "sendReport": "보고서 보내기",
+    "reportPrompt": "문제가 발생했습니다. 빠른 수정을 위해 개발자에게 보고해 주세요."
   }
 }

@@ -1,11 +1,11 @@
 import React, { forwardRef, useState, useEffect } from 'react';
-import { css } from '@emotion/css';
 import { useInView } from 'react-intersection-observer';
 import SubtitleEditor from './SubtitleEditor/index.js';
 import {
   useSubtitleRow,
   useSubActions,
 } from '../../../../state/subtitle-store.js';
+import { subtitleRowPlaceholderStyles } from '../../edit-workspace-styles';
 
 interface Props {
   id: string;
@@ -57,13 +57,7 @@ const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
     };
 
     return (
-      <div
-        ref={combinedRef}
-        data-cue-id={id}
-        className={css`
-          box-sizing: border-box;
-        `}
-      >
+      <div ref={combinedRef} data-cue-id={id}>
         {shouldRender && (
           <SubtitleEditor
             id={id}
@@ -74,11 +68,7 @@ const SubtitleItemComponent = forwardRef<HTMLDivElement, Props>(
           />
         )}
         {!shouldRender && (
-          <div
-            className={css`
-              height: 150px;
-            `}
-          ></div>
+          <div className={subtitleRowPlaceholderStyles}></div>
         )}
       </div>
     );

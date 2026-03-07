@@ -11,8 +11,10 @@
  * - But no annoying system prompts!
  */
 import crypto from 'crypto';
-import { machineIdSync } from 'node-machine-id';
+import nodeMachineId from 'node-machine-id';
 import log from 'electron-log';
+
+const { machineIdSync } = nodeMachineId;
 
 // Prefix to identify our encrypted values (v2 = app-level encryption)
 const ENCRYPTION_PREFIX_V2 = 'enc2:';

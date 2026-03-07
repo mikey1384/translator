@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../../styles.js';
 import { spacing, borderRadius, transitions } from './tokens.js';
 
@@ -133,6 +134,8 @@ export default function Alert({
   onClose,
   className,
 }: AlertProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className={cx(baseAlertStyles, variantStyles[variant], className)}
@@ -149,7 +152,7 @@ export default function Alert({
         <button
           className={closeButtonStyles}
           onClick={onClose}
-          aria-label="Close alert"
+          aria-label={t('common.closeAlert', 'Close alert')}
         >
           ✕
         </button>

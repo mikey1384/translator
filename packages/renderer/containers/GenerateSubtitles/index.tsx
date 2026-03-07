@@ -1,7 +1,8 @@
 import Section from '../../components/Section.js';
+import Button from '../../components/Button.js';
 import { useTranslation } from 'react-i18next';
-import SaveOriginalVideoButton from './SaveOriginalVideoButton.js';
-import SaveDubbedVideoButton from './SaveDubbedVideoButton.js';
+import { cx } from '@emotion/css';
+import { useEffect } from 'react';
 import {
   useUIStore,
   useVideoStore,
@@ -15,6 +16,11 @@ import UrlCookieBanner from './UrlCookieBanner';
 import MediaInputSection from './components/MediaInputSection.js';
 import TranscribeOnlyPanel from './components/TranscribeOnlyPanel.js';
 import SrtMountedPanel from './components/SrtMountedPanel.js';
+import VideoSuggestionPanel from './components/VideoSuggestionPanel/index.js';
+import type {
+  ProcessUrlResult,
+  VideoSuggestionResultItem,
+} from '@shared-types/app';
 
 // Custom hooks
 import { useVideoMetadata } from './hooks/useVideoMetadata';
@@ -28,49 +34,85 @@ import {
   executeDubGeneration,
 } from './utils/subtitleGeneration';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
+import {
+  workflowPanelControlsStyles,
+  workflowPanelFlushStyles,
+  workflowPanelLeadIconStyles,
+  workflowPanelLeadStyles,
+  workflowPanelMetaStyles,
+  workflowPanelMutedStyles,
+  workflowPanelStyles,
+  workflowPanelTextBlockStyles,
+  workflowPanelTitleStyles,
+  workflowStageBodyStyles,
+  workflowStageDescriptionStyles,
+  workflowStageEyebrowStyles,
+  workflowStageHeaderRowStyles,
+  workflowStageHeaderStyles,
+  workflowStagePillStyles,
+  workflowStageShellStyles,
+  workflowStageStackStyles,
+  workflowStageTitleStyles,
+} from '../../components/workflow-surface-styles';
 
 export default function GenerateSubtitles() {
   const { t } = useTranslation();
 
   // UI State
-  const { targetLanguage, setTargetLanguage, dubVoice } = useUIStore();
+  const targetLanguage = useUIStore(s => s.targetLanguage);
+  const setTargetLanguage = useUIStore(s => s.setTargetLanguage);
+  const dubVoice = useUIStore(s => s.dubVoice);
 
   // URL processing state
-  const {
-    urlInput,
-    downloadQuality,
-    download,
-    setUrlInput,
-    setDownloadQuality,
-    clearError,
-    downloadMedia,
-  } = useUrlStore();
+  const urlInput = useUrlStore(s => s.urlInput);
+  const downloadQuality = useUrlStore(s => s.downloadQuality);
+  const download = useUrlStore(s => s.download);
+  const setUrlInput = useUrlStore(s => s.setUrlInput);
+  const setDownloadQuality = useUrlStore(s => s.setDownloadQuality);
+  const clearError = useUrlStore(s => s.clearError);
+  const downloadMedia = useUrlStore(s => s.downloadMedia);
 
   // Video file state
-  const {
-    file: videoFile,
-    path: videoFilePath,
-    openFileDialog,
-    dubbedVideoPath,
-  } = useVideoStore();
+  const videoFile = useVideoStore(s => s.file);
+  const videoFilePath = useVideoStore(s => s.path);
+  const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
+  const openLocalMedia = useVideoStore(s => s.openLocalMedia);
+  const openRecentLocalMedia = useVideoStore(s => s.openRecentLocalMedia);
+  const refreshRecentLocalMedia = useVideoStore(s => s.refreshRecentLocalMedia);
+  const dubbedVideoPath = useVideoStore(s => s.dubbedVideoPath);
 
   // Task state
-  const { translation, transcription, dubbing } = useTaskStore();
+  const translationInProgress = useTaskStore(s => s.translation.inProgress);
+  const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
+  const transcriptionId = useTaskStore(s => s.transcription.id);
+  const transcriptionCompleted = useTaskStore(s =>
+    Boolean(s.transcription.isCompleted)
+  );
+  const dubbingInProgress = useTaskStore(s => s.dubbing.inProgress);
+  const dubbingId = useTaskStore(s => s.dubbing.id);
 
   // Subtitle state
-  const subStore = useSubStore();
-  const hasMountedSubtitles = subStore.order.length > 0;
+  const mountedSubtitleCount = useSubStore(s => s.order.length);
+  const originalSrtPath = useSubStore(s => s.originalPath);
+  const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
+  const hasMountedSubtitles = mountedSubtitleCount > 0;
   // Decouple transcription completion from subtitle presence
-  const isTranscriptionDone =
-    Boolean(transcription.isCompleted) || hasMountedSubtitles;
+  const isTranscriptionDone = transcriptionCompleted || hasMountedSubtitles;
   const isTranscribing =
-    !!transcription.inProgress &&
-    (transcription.id?.startsWith('transcribe-') ?? false);
-  const isTranslating =
-    !!translation.inProgress &&
-    (translation.id?.startsWith('translate-') ?? false);
+    !!transcriptionInProgress &&
+    (transcriptionId?.startsWith('transcribe-') ?? false);
+  const isTranslating = !!translationInProgress;
   const isDubbing =
-    !!dubbing.inProgress && (dubbing.id?.startsWith('dub-') ?? false);
+    !!dubbingInProgress && (dubbingId?.startsWith('dub-') ?? false);
+  const hasSourceSelection = Boolean(
+    videoFile || videoFilePath || download.inProgress
+  );
+  const downloadComplete = !download.inProgress && download.percent === 100;
+  const didDownloadFromUrl = Boolean(download.id);
+  const canSaveOriginalVideo =
+    didDownloadFromUrl && downloadComplete && Boolean(videoFilePath);
+  const canSaveDubbedVideo = Boolean(dubbedVideoPath);
+  const showSaveStage = canSaveOriginalVideo || canSaveDubbedVideo;
 
   // Custom hooks for business logic (after videoFilePath is declared)
   const {
@@ -97,70 +139,274 @@ export default function GenerateSubtitles() {
         : metadataStatus === 'failed' && metadataErrorMessage
           ? metadataErrorMessage
           : null;
+  const sourceDisplayName =
+    (videoFilePath ? getBasename(videoFilePath) : videoFile?.name) ?? null;
+  const sourceStatusLabel = download.inProgress
+    ? t('generateSubtitles.workflow.sourceLoading', 'Fetching source')
+    : didDownloadFromUrl
+      ? t('generateSubtitles.workflow.webSourceReady', 'Web source ready')
+      : t('generateSubtitles.workflow.localSourceReady', 'Local file ready');
+  const sourceStatusMeta = download.inProgress
+    ? t(
+        'generateSubtitles.workflow.sourceLoadingDescription',
+        'The downloaded source is being prepared for transcription.'
+      )
+    : sourceDisplayName ||
+      t(
+        'generateSubtitles.workflow.sourceReadyDescription',
+        'Your selected media is ready for the next step.'
+      );
+  const processingStageTitle = isTranscriptionDone
+    ? t('generateSubtitles.workflow.translateDubTitle', 'Translate Or Dub')
+    : t('generateSubtitles.workflow.transcribeTitle', 'Create Transcript');
 
   // Local UI state for confirm dialog when an SRT is already mounted
   // Replaced local dialog with global modal; see GlobalModals
 
+  useEffect(() => {
+    void refreshRecentLocalMedia();
+  }, [refreshRecentLocalMedia]);
+
+  async function handleOpenRecentMedia(path: string) {
+    await openRecentLocalMedia(path, { preserveSubtitles: false });
+  }
+
   return (
-    <Section title={t('subtitles.generate')}>
+    <Section
+      title={t('subtitles.generate')}
+      contentClassName={workflowStageStackStyles}
+    >
       {/* Global confirmations are rendered via <GlobalModals /> */}
 
-      <UrlCookieBanner />
+      <div className={workflowStageShellStyles}>
+        <div className={workflowStageHeaderStyles}>
+          <div className={workflowStageHeaderRowStyles}>
+            <span className={workflowStageEyebrowStyles}>
+              {t('generateSubtitles.workflow.stepOne', 'Step 1')}
+            </span>
+            <h3 className={workflowStageTitleStyles}>
+              {t(
+                'generateSubtitles.workflow.chooseSourceTitle',
+                'Choose Source'
+              )}
+            </h3>
+            {hasSourceSelection ? (
+              <span className={workflowStagePillStyles}>
+                {sourceStatusLabel}
+              </span>
+            ) : null}
+          </div>
+        </div>
 
-      <SaveOriginalVideoButton
-        downloadComplete={!download.inProgress && download.percent === 100}
-        downloadedVideoPath={videoFilePath}
-        onSaveOriginalVideo={handleSaveOriginalVideo}
-        didDownloadFromUrl={!!download.id}
-        inputMode={'file'}
-      />
-      <SaveDubbedVideoButton
-        dubbedVideoPath={dubbedVideoPath}
-        onSaveDubbedVideo={handleSaveDubbedVideo}
-        disabled={isDubbing}
-      />
+        <div className={workflowStageBodyStyles}>
+          <UrlCookieBanner />
 
-      {/* Show appropriate panel: only show transcribe panel until transcription completes */}
-      {(videoFile || videoFilePath || download.inProgress) && (
-        <>
-          {!isTranscriptionDone && !isTranslating ? (
-            <TranscribeOnlyPanel
-              onTranscribe={handleTranscribeOnly}
-              isTranscribing={isTranscribing}
-              disabled={
-                isButtonDisabled || hoursNeeded == null || isMetadataPending
-              }
-              statusMessage={metadataStatusMessage}
-            />
+          {hasSourceSelection ? (
+            <div
+              className={cx(
+                workflowPanelStyles,
+                workflowPanelMutedStyles,
+                workflowPanelFlushStyles
+              )}
+            >
+              <div className={workflowPanelLeadStyles}>
+                <div className={workflowPanelLeadIconStyles} aria-hidden="true">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {download.inProgress ? (
+                      <>
+                        <path d="M12 2v5" />
+                        <path d="M17.5 6.5 14 10" />
+                        <path d="M22 12h-5" />
+                        <path d="M17.5 17.5 14 14" />
+                        <path d="M12 22v-5" />
+                        <path d="M6.5 17.5 10 14" />
+                        <path d="M2 12h5" />
+                        <path d="M6.5 6.5 10 10" />
+                      </>
+                    ) : didDownloadFromUrl ? (
+                      <>
+                        <path d="M12 5v10" />
+                        <path d="m7 10 5 5 5-5" />
+                        <path d="M5 19h14" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 2v6h6" />
+                      </>
+                    )}
+                  </svg>
+                </div>
+                <div className={workflowPanelTextBlockStyles}>
+                  <h3 className={workflowPanelTitleStyles}>
+                    {sourceStatusLabel}
+                  </h3>
+                  <p className={workflowPanelMetaStyles}>{sourceStatusMeta}</p>
+                </div>
+              </div>
+            </div>
           ) : (
-            <SrtMountedPanel
-              srtPath={subStore.originalPath}
-              onTranslate={handleTranslate}
-              isTranslating={isTranslating}
-              disabled={isButtonDisabled || hoursNeeded == null}
-              targetLanguage={targetLanguage}
-              onTargetLanguageChange={setTargetLanguage}
-              onDub={handleDub}
-              isDubbing={isDubbing}
-              disableDub={isButtonDisabled || hoursNeeded == null}
+            <MediaInputSection
+              videoFile={videoFile}
+              recentMedia={recentLocalMedia}
+              onOpenFileDialog={() =>
+                openLocalMedia({ preserveSubtitles: false })
+              }
+              onOpenRecentFile={handleOpenRecentMedia}
+              isDownloadInProgress={download.inProgress}
+              isTranslationInProgress={translationInProgress}
+              urlInput={urlInput}
+              setUrlInput={setUrlInput}
+              downloadQuality={downloadQuality}
+              setDownloadQuality={setDownloadQuality}
+              handleProcessUrl={downloadMedia}
             />
           )}
-        </>
-      )}
 
-      {!videoFilePath && !videoFile && (
-        <MediaInputSection
-          videoFile={videoFile}
-          onOpenFileDialog={openFileDialog}
-          isDownloadInProgress={download.inProgress}
-          isTranslationInProgress={translation.inProgress}
-          urlInput={urlInput}
-          setUrlInput={setUrlInput}
-          downloadQuality={downloadQuality}
-          setDownloadQuality={setDownloadQuality}
-          handleProcessUrl={downloadMedia}
-        />
-      )}
+          <VideoSuggestionPanel
+            disabled={translationInProgress || download.inProgress}
+            isDownloadInProgress={download.inProgress}
+            onDownload={handleSuggestedVideoDownload}
+          />
+        </div>
+      </div>
+
+      {hasSourceSelection ? (
+        <div className={workflowStageShellStyles}>
+          <div className={workflowStageHeaderStyles}>
+            <div className={workflowStageHeaderRowStyles}>
+              <span className={workflowStageEyebrowStyles}>
+                {t('generateSubtitles.workflow.stepTwo', 'Step 2')}
+              </span>
+              <h3 className={workflowStageTitleStyles}>
+                {processingStageTitle}
+              </h3>
+            </div>
+          </div>
+
+          <div className={workflowStageBodyStyles}>
+            {!isTranscriptionDone && !isTranslating ? (
+              <TranscribeOnlyPanel
+                className={workflowPanelFlushStyles}
+                onTranscribe={handleTranscribeOnly}
+                isTranscribing={isTranscribing}
+                disabled={
+                  isButtonDisabled || hoursNeeded == null || isMetadataPending
+                }
+                statusMessage={metadataStatusMessage}
+              />
+            ) : (
+              <SrtMountedPanel
+                className={workflowPanelFlushStyles}
+                srtPath={originalSrtPath}
+                onTranslate={handleTranslate}
+                isTranslating={isTranslating}
+                disabled={isButtonDisabled || hoursNeeded == null}
+                targetLanguage={targetLanguage}
+                onTargetLanguageChange={setTargetLanguage}
+                onDub={handleDub}
+                isDubbing={isDubbing}
+                disableDub={isButtonDisabled || hoursNeeded == null}
+              />
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {showSaveStage ? (
+        <div className={workflowStageShellStyles}>
+          <div className={workflowStageHeaderStyles}>
+            <div className={workflowStageHeaderRowStyles}>
+              <span className={workflowStageEyebrowStyles}>
+                {t('generateSubtitles.workflow.stepThree', 'Step 3')}
+              </span>
+              <h3 className={workflowStageTitleStyles}>
+                {t('generateSubtitles.workflow.saveOutputsTitle', 'Save files')}
+              </h3>
+            </div>
+            <p className={workflowStageDescriptionStyles}>
+              {t(
+                'generateSubtitles.workflow.saveOutputsDescription',
+                'Keep any source or dubbed media you want to preserve outside the app workspace.'
+              )}
+            </p>
+          </div>
+
+          <div className={workflowStageBodyStyles}>
+            <div
+              className={cx(
+                workflowPanelStyles,
+                workflowPanelMutedStyles,
+                workflowPanelFlushStyles
+              )}
+            >
+              <div className={workflowPanelLeadStyles}>
+                <div className={workflowPanelLeadIconStyles} aria-hidden="true">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2Z" />
+                  </svg>
+                </div>
+                <div className={workflowPanelTextBlockStyles}>
+                  <h3 className={workflowPanelTitleStyles}>
+                    {t(
+                      'generateSubtitles.workflow.availableOutputs',
+                      'Available files'
+                    )}
+                  </h3>
+                  <p className={workflowPanelMetaStyles}>
+                    {t(
+                      'generateSubtitles.workflow.availableOutputsDescription',
+                      'Downloaded and dubbed media remain available here until you save the versions you want to keep.'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className={workflowPanelControlsStyles}>
+                {canSaveOriginalVideo ? (
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    onClick={handleSaveOriginalVideo}
+                    title={`Save the downloaded file: ${videoFilePath}`}
+                  >
+                    {t('input.saveOriginalVideo')}
+                  </Button>
+                ) : null}
+                {canSaveDubbedVideo ? (
+                  <Button
+                    variant="success"
+                    size="sm"
+                    onClick={handleSaveDubbedVideo}
+                    disabled={isDubbing}
+                    title={dubbedVideoPath ?? undefined}
+                  >
+                    {t('input.saveDubbedVideo')}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </Section>
   );
 
@@ -190,7 +436,7 @@ export default function GenerateSubtitles() {
       onNoSubtitles: () =>
         useUrlStore
           .getState()
-          .setError('No SRT file available for translation'),
+          .setValidationError('No SRT file available for translation'),
     });
   }
 
@@ -236,9 +482,14 @@ export default function GenerateSubtitles() {
   }
 
   async function handleDub() {
-    const currentSegments = subStore.order.map(id => subStore.segments[id]);
+    const subtitleState = useSubStore.getState();
+    const currentSegments = subtitleState.order.map(
+      id => subtitleState.segments[id]
+    );
     if (currentSegments.length === 0) {
-      useUrlStore.getState().setError('No subtitles available for dubbing');
+      useUrlStore
+        .getState()
+        .setValidationError('No subtitles available for dubbing');
       return;
     }
 
@@ -246,7 +497,7 @@ export default function GenerateSubtitles() {
     const videoStoreState = useVideoStore.getState();
     const sourceVideoPath =
       videoStoreState.originalPath ??
-      subStore.sourceVideoPath ??
+      subtitleState.sourceVideoPath ??
       videoFilePath ??
       videoStoreState.path;
 
@@ -267,8 +518,7 @@ export default function GenerateSubtitles() {
       return;
     }
 
-    const sourceName =
-      subStore.sourceVideoPath ?? videoFilePath ?? dubbedVideoPath;
+    const sourceName = sourceVideoPath ?? videoFilePath ?? dubbedVideoPath;
     const filename = sourceName.split(/[\\/]/).pop() ?? 'dubbed_video';
     const baseName = filename.replace(/\.[^/.]+$/, '');
     const voiceSuffix =
@@ -308,4 +558,17 @@ export default function GenerateSubtitles() {
       clearError();
     }
   }
+
+  async function handleSuggestedVideoDownload(
+    item: VideoSuggestionResultItem
+  ): Promise<ProcessUrlResult | void> {
+    const url = String(item?.url || '').trim();
+    if (!url) return;
+    useUrlStore.getState().setUrlInput(url);
+    return useUrlStore.getState().downloadMedia();
+  }
+}
+
+function getBasename(path: string): string {
+  return path.split(/[\\/]/).pop() || path;
 }

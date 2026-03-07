@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
 import log from 'electron-log';
 import { FileManager } from './file-manager.js';
 import type { FFmpegContext } from './ffmpeg-runner.js';
@@ -7,13 +5,12 @@ import type {
   DubSegmentPayload,
   GenerateProgressCallback,
 } from '@shared-types/app';
-import { ENABLE_VOICE_CLONING } from '../../shared/constants/index.js';
 import {
   synthesizeDub as synthesizeDubAi,
   getActiveProviderForDubbing,
-  getCurrentElevenLabsApiKey,
 } from './ai-provider.js';
-import { dubWithElevenLabs } from './elevenlabs-client.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 const MIN_DUB_SILENCE_GAP_SEC = 0.15;
 // Allow more aggressive compression for ElevenLabs which produces longer audio
@@ -26,9 +23,6 @@ interface GenerateDubArgs {
   voice?: string;
   quality?: 'standard' | 'high';
   ambientMix?: number;
-  targetLanguage?: string; // ISO 639-1 code for ElevenLabs Dubbing API
-  /** Use ElevenLabs Dubbing API (voice cloning) instead of segment-based TTS. */
-  useVoiceCloning?: boolean;
   operationId: string;
   signal: AbortSignal;
   progressCallback?: GenerateProgressCallback;
@@ -42,8 +36,6 @@ export async function generateDubbedMedia({
   voice,
   quality,
   ambientMix,
-  targetLanguage,
-  useVoiceCloning = false,
   operationId,
   signal,
   progressCallback,
@@ -57,131 +49,7 @@ export async function generateDubbedMedia({
   if (!segments?.length) {
     throw new Error('No subtitle segments provided for dubbing.');
   }
-
-  // Check if we should use ElevenLabs Dubbing API (voice cloning)
   const dubbingProvider = getActiveProviderForDubbing();
-  const elevenLabsKey = getCurrentElevenLabsApiKey();
-  const useElevenLabsDubbing =
-    ENABLE_VOICE_CLONING &&
-    !!useVoiceCloning &&
-    dubbingProvider === 'elevenlabs' &&
-    elevenLabsKey &&
-    videoPath &&
-    targetLanguage;
-
-  if (useElevenLabsDubbing) {
-    log.info(
-      `[${operationId}] Using ElevenLabs Dubbing API with voice cloning -> ${targetLanguage}`
-    );
-
-    try {
-      const result = await dubWithElevenLabs({
-        filePath: videoPath,
-        targetLanguage,
-        apiKey: elevenLabsKey,
-        signal,
-        onProgress: (status, percent) => {
-          progressCallback?.({
-            percent: percent ?? 50,
-            stage: status,
-            operationId,
-            model: 'ElevenLabs Dubbing',
-          });
-        },
-      });
-
-      // Save the dubbed audio to temp file
-      const tmpDir = fileManager.getTempDir();
-      await fileManager.ensureTempDir();
-      const audioPath = path.join(
-        tmpDir,
-        `dub-elevenlabs-${operationId}-${Date.now()}.mp3`
-      );
-      await fs.writeFile(audioPath, Buffer.from(result.audioBase64, 'base64'));
-
-      log.info(`[${operationId}] ElevenLabs dubbing complete: ${audioPath}`);
-
-      // Mix with original video if needed
-      if (videoPath) {
-        const outputPath = path.join(
-          tmpDir,
-          `dubbed-${operationId}-${Date.now()}.mp4`
-        );
-
-        const mixValueRaw = typeof ambientMix === 'number' ? ambientMix : 0.35;
-        const mix = Math.min(1, Math.max(0, mixValueRaw));
-        const ambientRatio = mix;
-        const voiceRatio = 1 - mix;
-
-        const backgroundVolume =
-          ambientRatio > 0.001 ? 0.2 + ambientRatio * 0.35 : 0;
-        const voiceVolume = voiceRatio > 0.001 ? 1.25 + voiceRatio * 0.35 : 0;
-        const ambientWeight =
-          ambientRatio > 0.001 ? (0.5 + ambientRatio) * ambientRatio : 0;
-        const voiceWeight = voiceRatio > 0.001 ? 2.0 * voiceRatio : 0;
-        const normalize = ambientRatio > 0.001 && voiceRatio > 0.001 ? 1 : 0;
-
-        const filterComplex =
-          `[0:a]volume=${backgroundVolume.toFixed(2)}[bg];` +
-          `[1:a]volume=${voiceVolume.toFixed(2)}[voice];` +
-          `[bg][voice]amix=inputs=2:weights=${ambientWeight.toFixed(3)} ${voiceWeight.toFixed(3)}:dropout_transition=0:normalize=${normalize}[aout]`;
-
-        await ffmpeg.run(
-          [
-            '-y',
-            '-i',
-            videoPath,
-            '-i',
-            audioPath,
-            '-filter_complex',
-            filterComplex,
-            '-map',
-            '0:v:0',
-            '-map',
-            '[aout]',
-            '-c:v',
-            'copy',
-            '-c:a',
-            'aac',
-            '-shortest',
-            outputPath,
-          ],
-          { operationId, signal }
-        );
-
-        progressCallback?.({
-          percent: 100,
-          stage: 'Dubbed video ready (voice cloning)',
-          operationId,
-          model: 'ElevenLabs Dubbing',
-        });
-
-        return {
-          audioPath,
-          videoPath: outputPath,
-          transcript: result.transcript,
-        };
-      }
-
-      progressCallback?.({
-        percent: 100,
-        stage: 'Dub audio ready (voice cloning)',
-        operationId,
-        model: 'ElevenLabs Dubbing',
-      });
-
-      return {
-        audioPath,
-        transcript: result.transcript,
-      };
-    } catch (err: any) {
-      log.error(
-        `[${operationId}] ElevenLabs Dubbing API failed, falling back to TTS:`,
-        err?.message || err
-      );
-      // Fall through to TTS-based dubbing
-    }
-  }
 
   // TTS-based dubbing (OpenAI or ElevenLabs TTS)
   // For BYO, we know the provider. For Stage5, show generic label until API returns actual model.
@@ -318,6 +186,10 @@ export async function generateDubbedMedia({
   progressCallback?.({
     percent: Math.min(30, Math.max(20, payloadSegments.length / 2 + 20)),
     stage: `Preparing ${payloadSegments.length} segments for dubbing...`,
+    phaseKey: 'prepare_dub',
+    current: payloadSegments.length,
+    total: payloadSegments.length,
+    unit: 'segments',
     operationId,
     model: ttsProvider,
   });
@@ -325,6 +197,10 @@ export async function generateDubbedMedia({
   progressCallback?.({
     percent: 35,
     stage: `Requesting voice synthesis (0/${payloadSegments.length})...`,
+    phaseKey: 'synthesize',
+    current: 0,
+    total: payloadSegments.length,
+    unit: 'segments',
     operationId,
     model: ttsProvider,
   });
@@ -357,6 +233,10 @@ export async function generateDubbedMedia({
         payloadSegments.length,
         start + batchSegments.length
       )}/${payloadSegments.length})...`,
+      phaseKey: 'synthesize',
+      current: start,
+      total: payloadSegments.length,
+      unit: 'segments',
       operationId,
       model: ttsProvider,
     });
@@ -365,6 +245,7 @@ export async function generateDubbedMedia({
       segments: batchSegments,
       voice,
       quality: 'standard',
+      idempotencyKey: `dub:${operationId}:batch:${batchIndex}`,
       signal,
     });
 
@@ -394,6 +275,10 @@ export async function generateDubbedMedia({
         payloadSegments.length,
         start + batchSegments.length
       )}/${payloadSegments.length})...`,
+      phaseKey: 'synthesize',
+      current: Math.min(payloadSegments.length, start + batchSegments.length),
+      total: payloadSegments.length,
+      unit: 'segments',
       operationId,
       model: ttsProvider,
     });
@@ -427,6 +312,10 @@ export async function generateDubbedMedia({
       stage: totalClips
         ? `Aligning voice segments 0/${totalClips}...`
         : 'Aligning dub segments with original timing...',
+      phaseKey: 'align',
+      current: 0,
+      total: totalClips || undefined,
+      unit: totalClips ? 'segments' : undefined,
       operationId,
       model: ttsProvider,
     });
@@ -646,6 +535,10 @@ export async function generateDubbedMedia({
         progressCallback?.({
           percent: Math.min(58, alignPercent),
           stage: `Aligning voice segments ${clipIdx + 1}/${totalClips}...`,
+          phaseKey: 'align',
+          current: clipIdx + 1,
+          total: totalClips,
+          unit: 'segments',
           operationId,
           model: ttsProvider,
         });
@@ -740,6 +633,7 @@ export async function generateDubbedMedia({
       progressCallback?.({
         percent: 58,
         stage: 'Merged dub segments into continuous track',
+        phaseKey: 'combine_voice_track',
         operationId,
         model: ttsProvider,
       });
@@ -831,6 +725,7 @@ export async function generateDubbedMedia({
   progressCallback?.({
     percent: videoPath ? 75 : 95,
     stage: 'Prepared dubbed audio track',
+    phaseKey: 'prepare_output',
     operationId,
     model: ttsProvider,
   });
@@ -839,6 +734,7 @@ export async function generateDubbedMedia({
     progressCallback?.({
       percent: 100,
       stage: 'Dub audio ready',
+      phaseKey: 'completed',
       operationId,
       model: ttsProvider,
     });
@@ -871,6 +767,7 @@ export async function generateDubbedMedia({
     progressCallback?.({
       percent: 85,
       stage: 'Balancing audio tracks...',
+      phaseKey: 'mux',
       operationId,
       model: ttsProvider,
     });
@@ -932,6 +829,7 @@ export async function generateDubbedMedia({
   progressCallback?.({
     percent: 100,
     stage: 'Dubbed video ready',
+    phaseKey: 'completed',
     operationId,
     model: ttsProvider,
   });

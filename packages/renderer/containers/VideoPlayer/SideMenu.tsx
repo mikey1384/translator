@@ -1,6 +1,4 @@
-import { css } from '@emotion/css';
 import Button from '../../components/Button';
-import { colors, selectStyles } from '../../styles';
 import {
   useSubStore,
   useTaskStore,
@@ -18,6 +16,18 @@ import {
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
+import {
+  sidePanelButtonContentStyles,
+  sidePanelDividerStyles,
+  sidePanelFieldStackStyles,
+  sidePanelLabelStyles,
+  sidePanelSectionStyles,
+  sidePanelSelectStyles,
+  sidePanelShellStyles,
+  sidePanelWarningIconStyles,
+  sidePanelWarningStyles,
+  sidePanelWarningTextStyles,
+} from './video-player-side-styles';
 
 export default function SideMenu({
   isFullScreen = false,
@@ -25,13 +35,11 @@ export default function SideMenu({
   isFullScreen?: boolean;
 }) {
   const { t } = useTranslation();
-  const hasSubs = useSubStore(s => s.order.length > 0);
-  const { order, segments, originalPath, scrollToCurrent } = useSubStore(s => ({
-    order: s.order,
-    segments: s.segments,
-    originalPath: s.originalPath,
-    scrollToCurrent: s.scrollToCurrent,
-  }));
+  const order = useSubStore(s => s.order);
+  const segments = useSubStore(s => s.segments);
+  const originalPath = useSubStore(s => s.originalPath);
+  const scrollToCurrent = useSubStore(s => s.scrollToCurrent);
+  const hasSubs = order.length > 0;
   const setTranslation = useTaskStore(s => s.setTranslation);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
@@ -169,27 +177,10 @@ export default function SideMenu({
   return (
     <>
       <div
-        className={css`
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end; /* anchor items to bottom when there's space */
-          gap: 8px;
-          background: rgba(0, 0, 0, 0.35);
-          border: 1px solid ${colors.border};
-          border-radius: 6px;
-          padding: 8px 8px;
-          backdrop-filter: blur(4px);
-          height: 100%;
-          overflow: auto;
-        `}
-        aria-label="Video side actions"
+        className={sidePanelShellStyles}
+        aria-label={t('videoPlayer.sideActions', 'Video side actions')}
       >
-        {/* Spacer pushes actions toward the bottom when there is vertical room */}
-        <div
-          className={css`
-            flex: 1 1 auto;
-          `}
-        />
+        <div className={sidePanelSectionStyles}>
         <Button
           size="sm"
           variant="secondary"
@@ -200,21 +191,22 @@ export default function SideMenu({
           title={t('videoPlayer.changeVideo', 'Change Video')}
           disabled={isTranscribing || translationInProgress || isMerging}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ marginRight: 8 }}
-          >
-            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
-            <path d="M7 9l5 3-5 3z" />
-          </svg>
-          {t('videoPlayer.changeVideo', 'Change Video')}
+          <span className={sidePanelButtonContentStyles}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
+              <path d="M7 9l5 3-5 3z" />
+            </svg>
+            {t('videoPlayer.changeVideo', 'Change Video')}
+          </span>
         </Button>
         {hasDubbedTrack && (
           <Button
@@ -252,23 +244,24 @@ export default function SideMenu({
               : t('videoPlayer.mountSrt', 'Mount SRT')
           }
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ marginRight: 8 }}
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <path d="M14 2v6h6" />
-          </svg>
-          {originalPath
-            ? t('videoPlayer.changeSrt', 'Change SRT')
-            : t('videoPlayer.mountSrt', 'Mount SRT')}
+          <span className={sidePanelButtonContentStyles}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <path d="M14 2v6h6" />
+            </svg>
+            {originalPath
+              ? t('videoPlayer.changeSrt', 'Change SRT')
+              : t('videoPlayer.mountSrt', 'Mount SRT')}
+          </span>
         </Button>
 
         {hasSubs && (
@@ -304,9 +297,12 @@ export default function SideMenu({
             )}
           </Button>
         )}
+        </div>
+
+        <div className={sidePanelDividerStyles} />
 
         {!transcriptionIsCompleted && !translationInProgress && (
-          <>
+          <div className={sidePanelSectionStyles}>
             <Button
               size="sm"
               variant="primary"
@@ -319,31 +315,42 @@ export default function SideMenu({
                 ? t('subtitles.generating')
                 : t('input.transcribeOnly')}
             </Button>
-            {metadataStatusMessage && !isTranscribing && (
-              <div
-                className={css`
-                  color: ${colors.text};
-                  font-size: 12px;
-                  line-height: 1.4;
-                `}
-              >
-                {metadataStatusMessage}
+            {metadataStatusMessage &&
+              metadataErrorCode !== 'icloud-placeholder' &&
+              !isTranscribing && (
+              <div className={sidePanelWarningStyles} role="alert">
+                <div className={sidePanelWarningIconStyles} aria-hidden="true">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                  </svg>
+                </div>
+                <div className={sidePanelWarningTextStyles}>
+                  {metadataStatusMessage}
+                </div>
               </div>
             )}
-          </>
+          </div>
         )}
 
         {hasUntranslated && (
-          <div
-            className={css`
-              display: flex;
-              flex-direction: column;
-              gap: 6px;
-              margin-top: 10px;
-            `}
-          >
+          <div className={sidePanelSectionStyles}>
+            <div className={sidePanelFieldStackStyles}>
+              <div className={sidePanelLabelStyles}>
+                {t('subtitles.outputLanguage', 'Output language')}
+              </div>
             <select
-              className={selectStyles}
+              className={sidePanelSelectStyles}
               value={targetLanguage}
               onChange={e => setTargetLanguage(e.target.value)}
             >
@@ -358,10 +365,11 @@ export default function SideMenu({
                     <option key={opt.value} value={opt.value}>
                       {t(opt.labelKey)}
                     </option>
-                  ))}
-                </optgroup>
-              ))}
+                ))}
+              </optgroup>
+            ))}
             </select>
+            </div>
 
             <Button
               size="sm"
@@ -370,31 +378,27 @@ export default function SideMenu({
               disabled={isTranscribing || translationInProgress || isMerging}
               title={t('subtitles.translate', 'Translate')}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ marginRight: 8 }}
-              >
-                <path d="M4 7h16" />
-                <path d="M9 7c0 7 6 7 6 14" />
-                <path d="M12 20l4-4" />
-                <path d="M20 20l-4-4" />
-              </svg>
-              {t('subtitles.translate', 'Translate')}
+              <span className={sidePanelButtonContentStyles}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 7h16" />
+                  <path d="M9 7c0 7 6 7 6 14" />
+                  <path d="M12 20l4-4" />
+                  <path d="M20 20l-4-4" />
+                </svg>
+                {t('subtitles.translate', 'Translate')}
+              </span>
             </Button>
           </div>
         )}
-        <div
-          className={css`
-            height: 2px;
-          `}
-        />
       </div>
     </>
   );

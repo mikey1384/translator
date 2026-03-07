@@ -110,9 +110,9 @@ When asked to version bump, tag, and push:
    ```
 4. **Push commit and tag together**: `git push && git push --tags`
 
-The GitHub Action handles the macOS release from SemVer tags: it builds, signs, uploads assets, creates the GitHub Release, and populates the release body from the tag annotation. Windows release is manual via `Release-Windows-OneClick.bat`. **Do NOT manually create the SemVer GitHub release with `gh release create`** — a pre-existing non-draft release prevents electron-builder from uploading assets.
+The GitHub Action handles the macOS release from SemVer tags: it builds, signs, uploads assets, injects the tag body into `latest-mac.yml`, overwrites the GitHub release asset with that enriched updater metadata, and publishes the release body from the same tag annotation. Windows release is manual via `Release-Windows-OneClick.bat`. **Do NOT manually create the SemVer GitHub release with `gh release create`** — a pre-existing non-draft release prevents electron-builder from uploading assets.
 
-**Why the tag annotation matters:** The macOS release workflow fails if the tag body is empty. The Windows release script resolves notes from `dist/release-notes.txt` or the local tag annotation body and fails by default if both are missing. This keeps "What's New" text deterministic across platforms.
+**Why the tag annotation matters:** The updater popup is driven by `latest-mac.yml` / `latest.yml`, not by commit messages. The macOS workflow fails if the tag body is empty. The Windows release script resolves notes from `dist/release-notes.txt` or the annotated tag body (fetching the tag from origin if needed) and fails by default if both are missing. This keeps "What's New" text deterministic across platforms.
 
 ## Environment
 

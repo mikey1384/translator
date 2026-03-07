@@ -1,51 +1,17 @@
-import { css } from '@emotion/css';
-import { colors } from '../../styles';
 import { useEffect, useState } from 'react';
 import { useSubStore } from '../../state/subtitle-store';
 import { useVideoStore, useUIStore } from '../../state';
 import { useTranslation } from 'react-i18next';
-
-const container = css`
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid ${colors.border};
-  border-radius: 6px;
-  padding: 8px 8px;
-  backdrop-filter: blur(4px);
-  height: 100%;
-  overflow: auto;
-`;
-
-const item = css`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  width: 100%;
-  text-align: left;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #fff;
-  outline: none;
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: ${colors.border};
-  }
-  &:focus-visible {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
-  }
-`;
-
-const meta = css`
-  color: #d1d5db;
-  font-size: 0.8rem;
-`;
+import {
+  sidePanelEmptyCopyStyles,
+  sidePanelItemButtonStyles,
+  sidePanelListStyles,
+  sidePanelMetaRowStyles,
+  sidePanelNewBadgeStyles,
+  sidePanelShellStyles,
+  sidePanelTabButtonStyles,
+  sidePanelTabsStyles,
+} from './video-player-side-styles';
 
 const fmt = (s: number) => {
   if (!Number.isFinite(s)) return '00:00';
@@ -59,14 +25,13 @@ const fmt = (s: number) => {
 
 export default function GapList() {
   const { t } = useTranslation();
-  const { order, gaps, lcRanges, origin, sourceVideoPath } = useSubStore(s => ({
-    order: s.order,
-    gaps: s.gapsCache,
-    lcRanges: s.lcRangesCache,
-    origin: s.origin,
-    sourceVideoPath: s.sourceVideoPath,
-  }));
-  const { url, path } = useVideoStore(s => ({ url: s.url, path: s.path }));
+  const order = useSubStore(s => s.order);
+  const gaps = useSubStore(s => s.gapsCache);
+  const lcRanges = useSubStore(s => s.lcRangesCache);
+  const origin = useSubStore(s => s.origin);
+  const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
+  const url = useVideoStore(s => s.url);
+  const path = useVideoStore(s => s.path);
   const hasVideo = Boolean(url || path);
   const hasSubs = (order?.length ?? 0) > 0;
   const isFreshForThisVideo =
@@ -95,34 +60,13 @@ export default function GapList() {
 
   const lowConfidence = lcRanges;
 
-  // Tab UI styles
-  const tabBar = css`
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  `;
-  const tabBtn = (active: boolean) => css`
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid ${colors.border};
-    background: ${active ? 'rgba(255,255,255,0.15)' : 'transparent'};
-    color: #fff;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    &:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
-  `;
-
   const gapItems = gaps.map((g, idx) => {
     const key = `${g.start}-${g.end}`;
     const unseen = !seenGaps.has(key);
     return (
       <button
         key={`${key}-${idx}`}
-        className={item}
+        className={sidePanelItemButtonStyles}
         onClick={() => {
           try {
             const st = useSubStore.getState();
@@ -140,9 +84,9 @@ export default function GapList() {
         <span>
           {fmt(g.start)} → {fmt(g.end)}
         </span>
-        <span className={meta}>
+        <span className={sidePanelMetaRowStyles}>
           {unseen ? (
-            <span style={{ color: '#ff7a18', marginRight: 6 }} title="new">
+            <span className={sidePanelNewBadgeStyles} title={t('panel.new', 'new')}>
               !
             </span>
           ) : null}
@@ -158,7 +102,7 @@ export default function GapList() {
     return (
       <button
         key={`lc-${key}-${idx}`}
-        className={item}
+        className={sidePanelItemButtonStyles}
         onClick={() => {
           try {
             const st = useSubStore.getState();
@@ -175,9 +119,9 @@ export default function GapList() {
         <span>
           {fmt(r.start)} → {fmt(r.end)}
         </span>
-        <span className={meta}>
+        <span className={sidePanelMetaRowStyles}>
           {unseen ? (
-            <span style={{ color: '#ff7a18', marginRight: 6 }} title="new">
+            <span className={sidePanelNewBadgeStyles} title={t('panel.new', 'new')}>
               !
             </span>
           ) : null}
@@ -193,50 +137,48 @@ export default function GapList() {
   );
 
   return (
-    <div className={container}>
+    <div className={sidePanelShellStyles}>
       {showContent ? (
         <>
-          <div className={tabBar} role="tablist">
+          <div className={sidePanelTabsStyles} role="tablist">
             <button
-              className={tabBtn(tab === 'gaps')}
+              className={sidePanelTabButtonStyles(tab === 'gaps')}
               role="tab"
               aria-selected={tab === 'gaps'}
               onClick={() => setTab('gaps')}
             >
               {t('panel.gaps.title', 'Gaps')}
               {hasUnseenGaps ? (
-                <span style={{ color: '#ff7a18' }}>!</span>
+                <span className={sidePanelNewBadgeStyles}>!</span>
               ) : null}
             </button>
             <button
-              className={tabBtn(tab === 'confidence')}
+              className={sidePanelTabButtonStyles(tab === 'confidence')}
               role="tab"
               aria-selected={tab === 'confidence'}
               onClick={() => setTab('confidence')}
             >
               {t('panel.confidence.title', 'Low Confidence')}
-              {hasUnseenLC ? <span style={{ color: '#ff7a18' }}>!</span> : null}
+              {hasUnseenLC ? (
+                <span className={sidePanelNewBadgeStyles}>!</span>
+              ) : null}
             </button>
           </div>
 
           {tab === 'gaps' ? (
             gaps.length === 0 ? (
-              <div className={meta}>
+              <div className={sidePanelEmptyCopyStyles}>
                 {t('panel.gaps.none', 'No large gaps detected')}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {gapItems}
-              </div>
+              <div className={sidePanelListStyles}>{gapItems}</div>
             )
           ) : lowConfidence.length === 0 ? (
-            <div className={meta}>
+            <div className={sidePanelEmptyCopyStyles}>
               {t('panel.confidence.none', 'No low-confidence lines detected')}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {lcItems}
-            </div>
+            <div className={sidePanelListStyles}>{lcItems}</div>
           )}
         </>
       ) : null}

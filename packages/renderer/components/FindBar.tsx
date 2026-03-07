@@ -1,110 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { css } from '@emotion/css';
+import { cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../styles.js';
 import { useUIStore } from '../state/ui-store.js';
 import { useSubStore } from '../state/subtitle-store.js';
 import { logButton } from '../utils/logger.js';
-
-const findBarStyles = css`
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background-color: ${colors.surface};
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid ${colors.border};
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 1200;
-  font-size: 0.9rem;
-  color: ${colors.text};
-`;
-
-const inputStyles = css`
-  padding: 5px 9px;
-  border: 1px solid ${colors.border};
-  border-radius: 4px;
-  background-color: ${colors.grayLight};
-  color: ${colors.text};
-  min-width: 160px;
-  font-size: 0.95rem;
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary};
-    background-color: ${colors.grayLight};
-    color: ${colors.text};
-  }
-  &::-webkit-search-decoration,
-  &::-webkit-search-cancel-button,
-  &::-webkit-search-results-button,
-  &::-webkit-search-results-decoration {
-    -webkit-appearance: none;
-  }
-`;
-
-const inputReplaceStyles = css`
-  ${inputStyles}
-  min-width: 120px;
-`;
-
-const matchCountStyles = css`
-  color: ${colors.gray};
-  min-width: 50px; // Prevent layout shift
-  text-align: center;
-`;
-
-const buttonStyles = css`
-  background: none;
-  border: 1px solid transparent; // Keep layout consistent
-  color: ${colors.text};
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  transition: background-color 0.1s ease;
-
-  &:hover {
-    background-color: ${colors.grayLight};
-  }
-  &:disabled {
-    color: ${colors.gray};
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-`;
-
-const closeButtonStyles = css`
-  ${buttonStyles}
-  margin-left: 5px;
-`;
+import Button from './Button.js';
+import {
+  editorButtonContentStyles,
+  editorFindBarStyles,
+  editorFindIconButtonStyles,
+  editorFindInputStyles,
+  editorFindMatchCountErrorStyles,
+  editorFindMatchCountStyles,
+  editorFindReplaceInputStyles,
+} from '../containers/EditSubtitles/edit-workspace-styles';
 
 export default function FindBar() {
   const { t } = useTranslation();
-  const {
-    isVisible,
-    searchText,
-    setSearchText,
-    matchCount,
-    activeMatchIndex,
-    findNext,
-    findPrev,
-    hideFindBar,
-  } = useUIStore(state => ({
-    isVisible: state.isFindBarVisible,
-    searchText: state.searchText,
-    setSearchText: state.setSearchText,
-    matchCount: state.matchedIndices.length,
-    activeMatchIndex: state.activeMatchIndex,
-    findNext: state.handleFindNext,
-    findPrev: state.handleFindPrev,
-    hideFindBar: state.handleCloseFindBar,
-  }));
+  const isVisible = useUIStore(state => state.isFindBarVisible);
+  const searchText = useUIStore(state => state.searchText);
+  const setSearchText = useUIStore(state => state.setSearchText);
+  const matchCount = useUIStore(state => state.matchedIndices.length);
+  const activeMatchIndex = useUIStore(state => state.activeMatchIndex);
+  const findNext = useUIStore(state => state.handleFindNext);
+  const findPrev = useUIStore(state => state.handleFindPrev);
+  const hideFindBar = useUIStore(state => state.handleCloseFindBar);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [replaceText, setReplaceText] = useState('');
@@ -163,13 +83,9 @@ export default function FindBar() {
     searchText.length > 0
       ? `${hasMatches ? activeMatchIndex + 1 : 0} of ${matchCount}`
       : '0 of 0';
-  const matchInfoColor =
-    matchCount === 0 && searchText.length > 0
-      ? colors.danger || '#d9534f'
-      : colors.gray;
 
   return (
-    <div className={findBarStyles}>
+    <div className={editorFindBarStyles}>
       <input
         ref={inputRef}
         type="text"
@@ -177,20 +93,27 @@ export default function FindBar() {
         value={draft}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        className={inputStyles}
+        className={editorFindInputStyles}
       />
       <input
         type="text"
         placeholder={t('findBar.replacePlaceholder')}
         value={replaceText}
         onChange={e => setReplaceText(e.target.value)}
-        className={inputReplaceStyles}
+        className={editorFindReplaceInputStyles}
       />
-      <span className={matchCountStyles} style={{ color: matchInfoColor }}>
+      <span
+        className={cx(
+          editorFindMatchCountStyles,
+          matchCount === 0 && searchText.length > 0
+            ? editorFindMatchCountErrorStyles
+            : ''
+        )}
+      >
         {showMatchInfo}
       </span>
       <button
-        className={buttonStyles}
+        className={editorFindIconButtonStyles}
         onClick={() => {
           try {
             logButton('findbar_next');
@@ -203,10 +126,10 @@ export default function FindBar() {
         title={t('findBar.nextMatch')}
         aria-label={t('findBar.nextMatchAria')}
       >
-        <span style={{ verticalAlign: 'middle' }}>↓</span>
+        <span>↓</span>
       </button>
       <button
-        className={buttonStyles}
+        className={editorFindIconButtonStyles}
         onClick={() => {
           try {
             logButton('findbar_prev');
@@ -219,10 +142,11 @@ export default function FindBar() {
         title={t('findBar.previousMatch')}
         aria-label={t('findBar.previousMatchAria')}
       >
-        <span style={{ verticalAlign: 'middle' }}>↑</span>
+        <span>↑</span>
       </button>
-      <button
-        className={buttonStyles}
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={() => {
           try {
             logButton('findbar_replace_all');
@@ -233,12 +157,13 @@ export default function FindBar() {
         }}
         disabled={!searchText || !replaceText}
         title={t('findBar.replaceAllTitle')}
-        aria-label={t('findBar.replaceAllAria')}
       >
-        {t('findBar.replaceAll')}
-      </button>
+        <span className={editorButtonContentStyles}>
+          {t('findBar.replaceAll')}
+        </span>
+      </Button>
       <button
-        className={closeButtonStyles}
+        className={editorFindIconButtonStyles}
         onClick={() => {
           try {
             logButton('findbar_close');
@@ -250,7 +175,7 @@ export default function FindBar() {
         title={t('findBar.closeTitle')}
         aria-label={t('findBar.closeAria')}
       >
-        <span style={{ verticalAlign: 'middle' }}>✕</span>
+        <span>✕</span>
       </button>
     </div>
   );

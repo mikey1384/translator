@@ -166,13 +166,15 @@ export default function SiteConnectionSection() {
     } catch {
       isYouTube = false;
     }
+    const siteLabel = isYouTube
+      ? 'YouTube'
+      : t('settings.siteConnection.thisSite', 'this site');
     const ok = window.confirm(
-      t(
-        'settings.siteConnection.clearConfirm',
-        isYouTube
-          ? 'This will sign you out of YouTube inside Translator. Continue?'
-          : 'This will sign you out of this site inside Translator. Continue?'
-      )
+      t('settings.siteConnection.clearConfirm', {
+        site: siteLabel,
+        defaultValue:
+          'This will sign you out of {{site}} inside Translator. Continue?',
+      })
     );
     if (!ok) return;
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import ErrorBanner from '../../components/ErrorBanner';
 import Button from '../../components/Button';
+import { Alert } from '../../components/design-system/index.js';
+import { colors } from '../../styles';
 import { useUrlStore } from '../../state/url-store';
 
 function isYouTubeUrl(rawUrl: string): boolean {
@@ -71,54 +72,63 @@ export default function UrlCookieBanner() {
 
   return (
     <div
-      style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '10px',
-      }}
+      className={css`
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      `}
     >
-      <ErrorBanner
-        message={t(
-          isYouTube ? 'errors.needCookiesYouTube' : 'errors.needCookiesGeneric',
-          isYouTube
-            ? 'YouTube asked for a human check. Click Connect to continue.'
-            : 'This site asked for a human check. Click Connect to continue.'
-        )}
-        onClose={() => setNeedCookies(false)}
-      />
-      <div
-        className={css`
-          display: flex;
-          gap: 10px;
-          align-items: center;
-        `}
-      >
-        <Button
-          variant="success"
-          onClick={connectAndRetry}
-          disabled={connecting}
+      <Alert variant="warning" onClose={() => setNeedCookies(false)}>
+        <div
+          className={css`
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          `}
         >
-          {connecting
-            ? t('input.connecting', 'Connecting…')
-            : t('input.connect', 'Connect')}
-        </Button>
-      </div>
-      <div
-        className={css`
-          font-size: 0.85rem;
-          color: #666;
-          max-width: 720px;
-          text-align: center;
-        `}
-      >
-        {t(
-          'input.connectTip',
-          'Tip: In the Connect window, sign in or complete the check, then close the window to continue.'
-        )}
-      </div>
+          <div>
+            {t(
+              isYouTube
+                ? 'errors.needCookiesYouTube'
+                : 'errors.needCookiesGeneric',
+              isYouTube
+                ? 'YouTube asked for a human check. Click Connect to continue.'
+                : 'This site asked for a human check. Click Connect to continue.'
+            )}
+          </div>
+          <div
+            className={css`
+              display: flex;
+              flex-wrap: wrap;
+              align-items: center;
+              gap: 10px;
+            `}
+          >
+            <Button
+              variant="warning"
+              onClick={connectAndRetry}
+              disabled={connecting}
+            >
+              {connecting
+                ? t('input.connecting', 'Connecting…')
+                : t('input.connect', 'Connect')}
+            </Button>
+            <span
+              className={css`
+                font-size: 0.85rem;
+                color: ${colors.textDim};
+                line-height: 1.45;
+              `}
+            >
+              {t(
+                'input.connectTip',
+                'Tip: In the Connect window, sign in or complete the check, then close the window to continue.'
+              )}
+            </span>
+          </div>
+        </div>
+      </Alert>
     </div>
   );
 }

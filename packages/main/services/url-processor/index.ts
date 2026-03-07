@@ -1,15 +1,12 @@
 import log from 'electron-log';
 import fsp from 'node:fs/promises';
-import { ProgressCallback, VideoQuality } from './types.js';
+import type { ProgressCallback, VideoQuality } from './types.js';
 import type { DownloadProcess as DownloadProcessType } from '../../active-processes.js';
-import { consumeCancelMarker } from '../../active-processes.js';
-import { ensureYtDlpBinary } from './binary-installer.js';
-import { downloadVideoFromPlatform } from './download.js';
+import { consumeCancelMarker } from '../../utils/cancel-markers.js';
 import { PROGRESS } from './constants.js';
 import type { FFmpegContext } from '../ffmpeg-runner.js';
-import { FileManager } from '../file-manager.js';
+import type { FileManager } from '../file-manager.js';
 import path from 'node:path';
-import { exportCookiesToFileForUrl } from './site-cookies.js';
 import { CancelledError } from '../../../shared/cancelled-error.js';
 
 type NeedCookiesCause =
@@ -18,6 +15,31 @@ type NeedCookiesCause =
   | 'captcha_not_a_bot'
   | 'other';
 type NeedCookiesCounters = Record<NeedCookiesCause, number>;
+
+type DownloadVideoFromPlatformFn =
+  typeof import('./download.js').downloadVideoFromPlatform;
+type ExportCookiesToFileForUrlFn =
+  typeof import('./site-cookies.js').exportCookiesToFileForUrl;
+
+type ProcessVideoUrlDependencies = {
+  downloadVideoFromPlatformImpl?: DownloadVideoFromPlatformFn;
+  exportCookiesToFileForUrlImpl?: ExportCookiesToFileForUrlFn;
+  waitImpl?: (ms: number) => Promise<void>;
+};
+
+async function defaultDownloadVideoFromPlatform(
+  ...args: Parameters<DownloadVideoFromPlatformFn>
+): ReturnType<DownloadVideoFromPlatformFn> {
+  const { downloadVideoFromPlatform } = await import('./download.js');
+  return downloadVideoFromPlatform(...args);
+}
+
+async function defaultExportCookiesToFileForUrl(
+  ...args: Parameters<ExportCookiesToFileForUrlFn>
+): ReturnType<ExportCookiesToFileForUrlFn> {
+  const { exportCookiesToFileForUrl } = await import('./site-cookies.js');
+  return exportCookiesToFileForUrl(...args);
+}
 
 const NEED_COOKIES_RATE_LIMIT_RE = /429|too\s*many\s*requests|rate[- ]?limit/;
 const NEED_COOKIES_LOGIN_REQUIRED_RE =
@@ -63,6 +85,7 @@ function incrementNeedCookiesCounters(
 
 export async function updateYtDlp(): Promise<boolean> {
   try {
+    const { ensureYtDlpBinary } = await import('./binary-installer.js');
     await ensureYtDlpBinary();
     return true;
   } catch (error) {
@@ -79,7 +102,8 @@ export async function processVideoUrl(
   services?: {
     fileManager: FileManager;
     ffmpeg: FFmpegContext;
-  }
+  },
+  dependencies: ProcessVideoUrlDependencies = {}
 ): Promise<{
   videoPath: string;
   filename: string;
@@ -102,6 +126,14 @@ export async function processVideoUrl(
     throw new Error('FFmpegContext is required for processVideoUrl');
   }
   const { ffmpeg } = services;
+  const downloadVideo =
+    dependencies.downloadVideoFromPlatformImpl || defaultDownloadVideoFromPlatform;
+  const exportCookies =
+    dependencies.exportCookiesToFileForUrlImpl ||
+    defaultExportCookiesToFileForUrl;
+  const waitImpl =
+    dependencies.waitImpl || (async (ms: number) =>
+      new Promise(resolve => setTimeout(resolve, ms)));
 
   try {
     // Normalize YouTube Shorts to watch URL to improve extractor stability
@@ -127,7 +159,7 @@ export async function processVideoUrl(
 
   // --- Download attempt ---
   const run = async (extraArgs: string[]) => {
-    const downloadResult = await downloadVideoFromPlatform(
+    const downloadResult = await downloadVideo(
       url,
       tempDir,
       quality,
@@ -173,7 +205,7 @@ export async function processVideoUrl(
       while (remainingMs > 0) {
         throwIfCancelled(context);
         const sliceMs = Math.min(pollMs, remainingMs);
-        await new Promise(resolve => setTimeout(resolve, sliceMs));
+        await waitImpl(sliceMs);
         remainingMs -= sliceMs;
       }
       throwIfCancelled(context);
@@ -207,7 +239,7 @@ export async function processVideoUrl(
     };
     const getCookieCountForGating = async (): Promise<number | null> => {
       try {
-        const exported = await exportCookiesToFileForUrl(url);
+        const exported = await exportCookies(url);
         return exported.count;
       } catch (cookieErr) {
         // If we can't determine cookie availability, do not mask the real error.

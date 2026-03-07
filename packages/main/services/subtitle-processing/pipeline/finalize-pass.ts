@@ -104,6 +104,7 @@ export async function finalizePass({
   progressCallback?.({
     percent: scaleProgress(0, Stage.REVIEW, Stage.FINAL),
     stage: 'Applying final adjustments',
+    phaseKey: 'finalize',
   });
 
   const items = normalizeSubtitleSegments((segments ?? []) as SrtSegment[]);
@@ -131,6 +132,7 @@ export async function finalizePass({
     stage: tempFileSaved
       ? 'Saved temporary subtitle file'
       : 'Subtitles ready (temporary save unavailable)',
+    phaseKey: 'finalize',
   });
 
   progressCallback?.({
@@ -138,9 +140,11 @@ export async function finalizePass({
     stage: tempFileSaved
       ? 'Processing complete!'
       : 'Processing complete (temporary save unavailable)',
+    phaseKey: 'completed',
     partialResult: finalSrtContent,
     current: items.length,
     total: items.length,
+    unit: 'segments',
   });
 
   return {

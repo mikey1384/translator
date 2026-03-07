@@ -1,25 +1,125 @@
-export const AI_MODELS = {
-  GPT: 'gpt-5.1',
-  CLAUDE_SONNET: 'claude-sonnet-4-5-20250929',
-  CLAUDE_OPUS: 'claude-opus-4-6',
-  WHISPER: 'whisper-1',
-} as const;
+import {
+  CHARS_PER_TOKEN,
+  SPOKEN_CHARS_PER_MINUTE,
+  SUMMARY_INPUT_TOKENS_PER_AUDIO_HOUR,
+  SUMMARY_OUTPUT_TOKEN_RATIO,
+  SUMMARY_OUTPUT_TOKENS_PER_AUDIO_HOUR,
+  SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
+  SUMMARY_QUALITY_MULTIPLIER,
+  TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
+  TRANSLATION_QUALITY_MULTIPLIER,
+  TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION,
+  TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT,
+  VIDEO_SUGGESTION_COMPLETION_TOKENS_PER_SEARCH,
+  VIDEO_SUGGESTION_PROMPT_TOKENS_PER_SEARCH,
+  VIDEO_SUGGESTION_WEB_SEARCH_CALLS_PER_SEARCH,
+} from './estimate-heuristics';
+import {
+  AI_MODELS,
+  normalizeAiModelId,
+  STAGE5_ELEVENLABS_SCRIBE_MODEL,
+  STAGE5_REVIEW_TRANSLATION_MODEL,
+  STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL,
+  STAGE5_TTS_MODEL_ELEVEN_TURBO,
+  STAGE5_TTS_MODEL_HD,
+  STAGE5_TTS_MODEL_PRICING,
+  STAGE5_TTS_MODEL_STANDARD,
+  STAGE5_TRANSCRIPTION_MODEL_PRICING,
+  STAGE5_TRANSLATION_MODEL_PRICING,
+  STAGE5_WHISPER_MODEL,
+} from './model-catalog';
+import {
+  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR as STAGE5_SCRIBE_CREDITS_PER_AUDIO_HOUR,
+  PREVIEW_TTS_CREDITS,
+  PRICE_MARGIN,
+  TTS_CREDITS_PER_MINUTE,
+  USD_PER_CREDIT,
+  estimateTranscriptionCredits,
+  estimateTtsCredits,
+  getTranscriptionCreditsPerSecond,
+  getTtsCreditsPerCharacter,
+} from './pricing';
+import {
+  estimateDubbingUsdPerHour,
+  estimatePreviewUsd,
+  estimateSummaryUsdPerHour,
+  estimateTokenModelUsd,
+  estimateTranscriptCharsToTokens,
+  estimateTranslationUsdPerHour,
+  estimateTranscriptionUsdPerHour,
+  estimateVideoSuggestionUsdPerSearch,
+} from './byo-estimates';
+export type { UsdRange } from './byo-estimates';
+import {
+  ANTHROPIC_WEB_SEARCH_USD_PER_CALL,
+  ELEVENLABS_PLAN_TIERS,
+  OPENAI_WEB_SEARCH_USD_PER_CALL,
+  VENDOR_TOKEN_MODEL_PRICING,
+  VENDOR_TRANSCRIPTION_MODEL_PRICING,
+  VENDOR_TTS_MODEL_PRICING,
+} from './vendor-pricing';
 
-const AI_MODEL_ALIASES: Record<string, string> = {
-  'claude-opus-4.6': AI_MODELS.CLAUDE_OPUS,
+export {
+  AI_MODELS,
+  normalizeAiModelId,
+  STAGE5_ELEVENLABS_SCRIBE_MODEL,
+  STAGE5_REVIEW_TRANSLATION_MODEL,
+  STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL,
+  STAGE5_TTS_MODEL_ELEVEN_TURBO,
+  STAGE5_TTS_MODEL_HD,
+  STAGE5_TTS_MODEL_PRICING,
+  STAGE5_TTS_MODEL_STANDARD,
+  STAGE5_TRANSCRIPTION_MODEL_PRICING,
+  STAGE5_TRANSLATION_MODEL_PRICING,
+  STAGE5_WHISPER_MODEL,
 };
-
-export function normalizeAiModelId(model?: string): string {
-  const trimmed = (model || '').trim();
-  if (!trimmed) return AI_MODELS.GPT;
-  return AI_MODEL_ALIASES[trimmed.toLowerCase()] || trimmed;
-}
-
-export { ENABLE_VOICE_CLONING } from './features';
+export {
+  CHARS_PER_TOKEN,
+  PREVIEW_TTS_CREDITS,
+  PRICE_MARGIN,
+  SPOKEN_CHARS_PER_MINUTE,
+  TTS_CREDITS_PER_MINUTE,
+  USD_PER_CREDIT,
+  estimateTranscriptionCredits,
+  estimateTtsCredits,
+  getTranscriptionCreditsPerSecond,
+  getTtsCreditsPerCharacter,
+};
+export {
+  SUMMARY_INPUT_TOKENS_PER_AUDIO_HOUR,
+  SUMMARY_OUTPUT_TOKEN_RATIO,
+  SUMMARY_OUTPUT_TOKENS_PER_AUDIO_HOUR,
+  SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER,
+  SUMMARY_QUALITY_MULTIPLIER,
+  TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
+  TRANSLATION_QUALITY_MULTIPLIER,
+  TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION,
+  TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT,
+  VIDEO_SUGGESTION_COMPLETION_TOKENS_PER_SEARCH,
+  VIDEO_SUGGESTION_PROMPT_TOKENS_PER_SEARCH,
+  VIDEO_SUGGESTION_WEB_SEARCH_CALLS_PER_SEARCH,
+};
+export {
+  ANTHROPIC_WEB_SEARCH_USD_PER_CALL,
+  ELEVENLABS_PLAN_TIERS,
+  OPENAI_WEB_SEARCH_USD_PER_CALL,
+  VENDOR_TOKEN_MODEL_PRICING,
+  VENDOR_TRANSCRIPTION_MODEL_PRICING,
+  VENDOR_TTS_MODEL_PRICING,
+  estimateDubbingUsdPerHour,
+  estimatePreviewUsd,
+  estimateSummaryUsdPerHour,
+  estimateTokenModelUsd,
+  estimateTranscriptCharsToTokens,
+  estimateTranslationUsdPerHour,
+  estimateTranscriptionUsdPerHour,
+  estimateVideoSuggestionUsdPerSearch,
+};
 
 /** User-friendly display names for AI models */
 export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
   [AI_MODELS.GPT]: 'GPT-5.1',
+  [STAGE5_REVIEW_TRANSLATION_MODEL]: 'GPT-5.4',
   [AI_MODELS.CLAUDE_SONNET]: 'Claude Sonnet',
   [AI_MODELS.CLAUDE_OPUS]: 'Claude Opus',
   [AI_MODELS.WHISPER]: 'Whisper',
@@ -27,6 +127,7 @@ export const AI_MODEL_DISPLAY_NAMES: Record<string, string> = {
 
 // Error codes used across the application
 export const ERROR_CODES = {
+  UPDATE_REQUIRED: 'update-required',
   INSUFFICIENT_CREDITS: 'insufficient-credits',
   INSUFFICIENT_DISK_SPACE: 'insufficient-disk-space',
   OPENAI_KEY_INVALID: 'openai-key-invalid',
@@ -77,15 +178,10 @@ export const languages = [
 
 // Credit system constants (computed below using model pricing)
 
-// Translation pricing estimate (client-side mirror of backend pricing)
-// USD per credit based on $10 -> 350,000 credits
-export const USD_PER_CREDIT = 10 / 350_000;
-// Match backend pricing margin
-export const PRICE_MARGIN = 2;
-
 // GPT-5.1 tokenizer costs (USD per token) - used for UI credit estimates
-const GPT5_1_USD_PER_TOKEN_IN = 1.25 / 1_000_000; // $1.25 / 1M
-const GPT5_1_USD_PER_TOKEN_OUT = 10 / 1_000_000; // $10.00 / 1M
+const GPT5_1_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING['gpt-5.1'].in;
+const GPT5_1_USD_PER_TOKEN_OUT =
+  STAGE5_TRANSLATION_MODEL_PRICING['gpt-5.1'].out;
 
 // Credits per 1k tokens (estimated)
 // Calibration factor (1.0 = no adjustment)
@@ -99,11 +195,6 @@ export const CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
     TOKEN_CREDIT_CALIBRATION_UI
 ); // ≈ 700 with current pricing
 
-// Estimated tokens produced per 1 hour of audio transcript (prompt ~= completion)
-// Tweakable after measurement; 16k strikes a practical balance across languages.
-export const TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT = 16_000;
-export const TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION = 16_000;
-
 // Credits required to translate 1 hour of audio-equivalent text (prompt + completion)
 const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
   (TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1000) *
@@ -111,24 +202,6 @@ const BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
     (TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1000) *
       CREDITS_PER_1K_TOKENS_COMPLETION
 );
-
-export const TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
-export const TRANSLATION_QUALITY_MULTIPLIER = 5;
-export const SUMMARY_QUALITY_MULTIPLIER = 4;
-
-// Summary pipeline overhead multiplier.
-// Stage5 summary runs multiple model calls per chunk:
-// 1) summarizeChunk, 2) mergeIntoRunningSummary, 3) proposeHighlightsForChunk.
-// This approximates the extra credit spend vs a single-pass summary estimate.
-export const SUMMARY_PIPELINE_OVERHEAD_MULTIPLIER = 3;
-
-// TTS credits per minute (based on ~750 chars/min * credits/char)
-// OpenAI: 1.05 credits/char * 750 = ~788 credits/min
-// ElevenLabs: 14 credits/char * 750 = ~10,500 credits/min
-export const TTS_CREDITS_PER_MINUTE = {
-  openai: 788,
-  elevenlabs: 10500,
-} as const;
 
 // API polling intervals and timeouts (in milliseconds)
 // Used for long-running operations that require polling for completion
@@ -140,10 +213,6 @@ export const API_TIMEOUTS = {
   // Translation (GPT/Claude via Stage5 API)
   TRANSLATION_POLL_INTERVAL: 2_000, // 2 seconds
   TRANSLATION_MAX_WAIT: 600_000, // 10 minutes
-
-  // Voice cloning (ElevenLabs Dubbing API)
-  VOICE_CLONING_POLL_INTERVAL: 5_000, // 5 seconds
-  VOICE_CLONING_BASE_MAX_WAIT: 600_000, // 10 minutes minimum
 
   // Credit balance refresh after payment
   CREDIT_REFRESH_RETRY_DELAY: 2_000, // 2 seconds between retries
@@ -159,9 +228,9 @@ export const CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
 export const CREDITS_PER_AUDIO_HOUR = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
 export const CREDITS_PER_AUDIO_SECOND = CREDITS_PER_AUDIO_HOUR / 3_600;
 
-// Transcription pricing aligned with non-HQ translation rate
+// Stage5 transcription uses ElevenLabs Scribe pricing in credits mode.
 export const CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR =
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR;
+  STAGE5_SCRIBE_CREDITS_PER_AUDIO_HOUR;
 
 const MICRO_CREDITS = 15_000; // $1 entry pack
 const STARTER_CREDITS = 150_000;

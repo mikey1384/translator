@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../styles';
+import Button from './Button';
+import { breakpoints, colors, gradients, shadows } from '../styles';
+import {
+  borderRadius,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  spacing,
+  transitions,
+} from './design-system/tokens.js';
 
 // Cooldown between validation attempts (milliseconds)
 const VALIDATION_COOLDOWN_MS = 2000;
@@ -31,6 +41,116 @@ const labels: Record<string, string> = {
   anthropic: 'Anthropic API Key',
   elevenlabs: 'ElevenLabs API Key',
 };
+
+const rootStyles = css`
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing.md};
+  min-width: 0;
+`;
+
+const compactRootStyles = css`
+  gap: ${spacing.sm};
+`;
+
+const labelStyles = css`
+  color: ${colors.text};
+  font-weight: ${fontWeight.semibold};
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing.sm};
+  min-width: 0;
+`;
+
+const labelTextRowStyles = css`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+`;
+
+const helpButtonStyles = css`
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: ${colors.primary};
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  &:hover {
+    color: ${colors.primaryLight};
+  }
+`;
+
+const inputRowStyles = css`
+  display: flex;
+  align-items: center;
+  gap: ${spacing.sm};
+  min-width: 0;
+
+  @media (max-width: ${breakpoints.mobileMaxWidth}) {
+    flex-wrap: wrap;
+  }
+`;
+
+const inputStyles = css`
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  min-height: 42px;
+  border-radius: ${borderRadius.lg};
+  border: 1px solid ${colors.border};
+  background: ${gradients.surfaceRaised};
+  color: ${colors.text};
+  box-shadow: ${shadows.sm};
+  font-family: monospace;
+  font-size: ${fontSize.sm};
+  line-height: ${lineHeight.normal};
+  transition:
+    border-color ${transitions.fast},
+    box-shadow ${transitions.fast},
+    background-color ${transitions.fast};
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primaryLight};
+    box-shadow:
+      ${shadows.sm},
+      0 0 0 3px rgba(125, 167, 255, 0.16);
+  }
+
+  &::placeholder {
+    color: ${colors.gray};
+  }
+`;
+
+const roomyInputStyles = css`
+  min-height: 44px;
+  font-size: ${fontSize.md};
+`;
+
+const actionRowStyles = css`
+  display: flex;
+  gap: ${spacing.sm};
+  flex-wrap: wrap;
+`;
+
+const statusMessageStyles = css`
+  margin: 0;
+  color: ${colors.primaryLight};
+  font-size: ${fontSize.sm};
+`;
+
+const statusErrorStyles = css`
+  margin: 0;
+  color: ${colors.danger};
+  font-size: ${fontSize.sm};
+`;
 
 export default function ApiKeyInput({
   provider,
@@ -116,23 +236,9 @@ export default function ApiKeyInput({
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: compact ? 8 : 12,
-      }}
-    >
-      <label
-        style={{
-          color: colors.text,
-          fontWeight: 600,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-        }}
-      >
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className={`${rootStyles} ${compact ? compactRootStyles : ''}`}>
+      <label className={labelStyles}>
+        <span className={labelTextRowStyles}>
           {labels[provider]}
           {onHelpClick && (
             <button
@@ -142,16 +248,7 @@ export default function ApiKeyInput({
                 onHelpClick();
               }}
               title={t('settings.apiKey.howToGet', 'How to get this key')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: colors.primary,
-                cursor: 'pointer',
-                padding: 0,
-                fontSize: '.85rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
+              className={helpButtonStyles}
             >
               <svg
                 width="16"
@@ -170,101 +267,55 @@ export default function ApiKeyInput({
             </button>
           )}
         </span>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className={inputRowStyles}>
           <input
             type={showKey ? 'text' : 'password'}
             value={value}
             onChange={e => onChange(e.target.value)}
             placeholder={placeholders[provider]}
             disabled={loading || saving}
-            style={{
-              flex: 1,
-              padding: compact ? '8px 10px' : '10px 12px',
-              borderRadius: 6,
-              border: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.text,
-              fontFamily: 'monospace',
-              fontSize: compact ? '.85rem' : '1rem',
-            }}
+            className={`${inputStyles} ${compact ? '' : roomyInputStyles}`}
           />
-          <button
+          <Button
             type="button"
             onClick={() => setShowKey(v => !v)}
-            style={{
-              padding: compact ? '8px 10px' : '10px 12px',
-              background: colors.grayLight,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontSize: compact ? '.85rem' : '1rem',
-            }}
+            variant="secondary"
+            size={compact ? 'sm' : 'md'}
+            disabled={loading || saving}
           >
             {showKey ? t('common.hide', 'Hide') : t('common.show', 'Show')}
-          </button>
+          </Button>
         </div>
       </label>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button
+      <div className={actionRowStyles}>
+        <Button
           onClick={handleSave}
           disabled={saving || validating || cooldownActive || !value.trim()}
-          style={{
-            padding: compact ? '8px 12px' : '10px 16px',
-            background: colors.primary,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            cursor: saving || validating || cooldownActive ? 'wait' : 'pointer',
-            opacity:
-              saving || validating || cooldownActive || !value.trim() ? 0.7 : 1,
-            fontSize: compact ? '.85rem' : '1rem',
-          }}
+          variant="primary"
+          size={compact ? 'sm' : 'md'}
         >
           {saving || validating
             ? t('common.validating', 'Validating…')
             : cooldownActive
               ? t('common.wait', 'Wait…')
               : t('common.save', 'Save')}
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleClear}
           disabled={saving || validating || (!keyPresent && !value)}
-          style={{
-            padding: compact ? '8px 12px' : '10px 16px',
-            background: 'transparent',
-            color: colors.textDim,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 6,
-            cursor: saving || validating ? 'wait' : 'pointer',
-            fontSize: compact ? '.85rem' : '1rem',
-          }}
+          variant="secondary"
+          size={compact ? 'sm' : 'md'}
         >
           {t('common.clear', 'Clear')}
-        </button>
+        </Button>
       </div>
 
       {statusMessage && (
-        <p
-          style={{
-            color: colors.primary,
-            margin: 0,
-            fontSize: compact ? '.85rem' : '1rem',
-          }}
-        >
-          {statusMessage}
-        </p>
+        <p className={statusMessageStyles}>{statusMessage}</p>
       )}
       {statusError && (
-        <p
-          style={{
-            color: colors.danger,
-            margin: 0,
-            fontSize: compact ? '.85rem' : '1rem',
-          }}
-        >
-          {statusError}
-        </p>
+        <p className={statusErrorStyles}>{statusError}</p>
       )}
     </div>
   );

@@ -20,6 +20,7 @@ export async function prepareAudio({
   progressCallback?.({
     percent: Stage.START,
     stage: 'Starting subtitle generation',
+    phaseKey: 'prepare_audio',
   });
 
   attachExtractAudio(services.ffmpeg);
@@ -38,6 +39,7 @@ export async function prepareAudio({
       progressCallback?.({
         percent: scaleProgress(percent, Stage.START, Stage.TRANSCRIBE),
         stage: stage ?? '',
+        phaseKey: 'prepare_audio',
       });
     },
   });

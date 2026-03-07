@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUIStore, useVideoStore, useTaskStore } from '../state';
+import {
+  useUIStore,
+  useVideoStore,
+  useTaskStore,
+  useUpdateStore,
+} from '../state';
 import * as SystemIPC from '../ipc/system';
 import * as SubtitlesIPC from '../ipc/subtitles';
 import * as UpdateIPC from '../ipc/update';
@@ -20,6 +25,7 @@ import TranscriptionProgressArea from '../components/ProgressAreas/Transcription
 import DubbingProgressArea from '../components/ProgressAreas/DubbingProgressArea';
 import FloatingActionButtons from '../components/FloatingActionButtons';
 import GlobalModals from '../components/GlobalModals';
+import Button from '../components/Button';
 import CreditWarningBanner from '../containers/GenerateSubtitles/components/CreditWarningBanner';
 import ErrorBanner from '../components/ErrorBanner';
 import { useCreditSystem } from '../containers/GenerateSubtitles/hooks/useCreditSystem';
@@ -29,8 +35,19 @@ import { css } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
 import { logProgress, logButton } from '../utils/logger';
+import {
+  isAbortLikeReason,
+  isDisruptiveDownloadFailure,
+  isDisruptiveGlobalError,
+  isDisruptiveStage,
+  shouldIgnoreGlobalBrowserError,
+} from '../utils/disruptiveErrors';
 import { useRef } from 'react';
-import { openUpdateNotes } from '../state/modal-store';
+import {
+  openErrorReportPrompt,
+  openRequiredUpdate,
+  openUpdateNotes,
+} from '../state/modal-store';
 
 const settingsPageWrapper = css`
   position: fixed;
@@ -47,24 +64,6 @@ const settingsHeader = css`
   background-color: ${colors.bg};
   padding: 1.5rem;
   border-bottom: 1px solid ${colors.border};
-`;
-
-const settingsBackButton = css`
-  padding: 8px 15px;
-  font-size: 0.9em;
-  background-color: ${colors.grayLight};
-  color: ${colors.text};
-  border: 1px solid ${colors.border};
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-
-  &:hover {
-    background-color: ${colors.surface};
-    border-color: ${colors.primary};
-  }
 `;
 
 export default function AppContent() {
@@ -88,6 +87,40 @@ export default function AppContent() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const surfaceRequiredUpdate = (payload: UpdateIPC.UpdateRequiredNotice) => {
+      openRequiredUpdate(payload);
+      if (window.env.isPackaged) {
+        void useUpdateStore.getState().check();
+      }
+    };
+
+    void (async () => {
+      try {
+        const notice = await UpdateIPC.getRequiredNotice();
+        if (cancelled || !notice) return;
+        surfaceRequiredUpdate(notice);
+      } catch (err) {
+        console.warn(
+          '[AppContent] Failed to fetch required-update notice:',
+          err
+        );
+      }
+    })();
+
+    const unsubscribe = UpdateIPC.onUpdateRequired(payload => {
+      if (cancelled) return;
+      surfaceRequiredUpdate(payload);
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
   // Initialize BYO/OpenAI state at app load so pills reflect "Using API Key"
   useEffect(() => {
     try {
@@ -96,11 +129,12 @@ export default function AppContent() {
       // Ignore initialization errors
     }
   }, []);
-  const { showSettings } = useUIStore();
+  const showSettings = useUIStore(s => s.showSettings);
   const setDownload = useUrlStore(s => s.setDownload);
   const globalError = useUrlStore(s => s.error);
+  const globalErrorKind = useUrlStore(s => s.errorKind);
   const clearGlobalError = useUrlStore(s => s.clearError);
-  const { url: videoUrl } = useVideoStore();
+  const videoUrl = useVideoStore(s => s.url);
   const isTranslating = useTaskStore(
     s =>
       !!s.translation.inProgress &&
@@ -115,6 +149,11 @@ export default function AppContent() {
   const isDubbing = useTaskStore(
     s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
   );
+  const transcriptionStage = useTaskStore(s => s.transcription.stage);
+  const translationStage = useTaskStore(s => s.translation.stage);
+  const dubbingStage = useTaskStore(s => s.dubbing.stage);
+  const mergeStage = useTaskStore(s => s.merge.stage);
+  const summaryStage = useTaskStore(s => s.summary.stage);
   const download = useUrlStore(s => s.download);
   const { showCreditWarning } = useCreditSystem();
 
@@ -230,6 +269,61 @@ export default function AppContent() {
     }
   }, [mergeInProgress]);
 
+  // Auto-surface a report flow for disruptive failures.
+  useEffect(() => {
+    if (isDisruptiveGlobalError(globalError, globalErrorKind)) {
+      openErrorReportPrompt();
+    }
+  }, [globalError, globalErrorKind]);
+
+  useEffect(() => {
+    if (isDisruptiveGlobalError(globalError, globalErrorKind)) return;
+    if (
+      isDisruptiveDownloadFailure({
+        stage: download.stage,
+        error: globalError,
+        kind: globalErrorKind,
+      })
+    ) {
+      openErrorReportPrompt();
+    }
+  }, [download.stage, globalError, globalErrorKind]);
+
+  useEffect(() => {
+    if (
+      isDisruptiveStage(transcriptionStage) ||
+      isDisruptiveStage(translationStage) ||
+      isDisruptiveStage(dubbingStage) ||
+      isDisruptiveStage(mergeStage) ||
+      isDisruptiveStage(summaryStage)
+    ) {
+      openErrorReportPrompt();
+    }
+  }, [
+    transcriptionStage,
+    translationStage,
+    dubbingStage,
+    mergeStage,
+    summaryStage,
+  ]);
+
+  useEffect(() => {
+    const onError = (event: Event) => {
+      if (shouldIgnoreGlobalBrowserError(event)) return;
+      openErrorReportPrompt();
+    };
+    const onUnhandled = (event: PromiseRejectionEvent) => {
+      if (isAbortLikeReason((event as any)?.reason)) return;
+      openErrorReportPrompt();
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onUnhandled);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onUnhandled);
+    };
+  }, []);
+
   const handleCancelDownload = () => {
     if (!download.id) return;
     try {
@@ -253,8 +347,9 @@ export default function AppContent() {
       <>
         <div className={settingsPageWrapper}>
           <div className={settingsHeader}>
-            <button
-              className={settingsBackButton}
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => {
                 try {
                   logButton('close_settings');
@@ -265,7 +360,7 @@ export default function AppContent() {
               }}
             >
               {t('common.backToApp')}
-            </button>
+            </Button>
           </div>
           <div className={containerStyles}>
             <SettingsPage />
@@ -294,7 +389,6 @@ export default function AppContent() {
           </div>
         )}
 
-        {/* Top-level credit warning banner */}
         {showCreditWarning && (
           <div style={{ marginBottom: '12px' }}>
             <CreditWarningBanner

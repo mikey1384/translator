@@ -6,12 +6,29 @@ import { pathToFileURL } from 'url';
 export type { SettingsStoreType } from '../store/settings-store.js';
 import type { SettingsStoreType } from '../store/settings-store.js';
 import {
+  APP_SETTINGS_DEFAULTS,
+  normalizeDubbingProviderSetting,
+  normalizeStage5DubbingTtsProviderSetting,
+  normalizeTranscriptionProviderSetting,
+  normalizeVideoSuggestionModelPreferenceSetting,
+  normalizeVideoSuggestionRecencySetting,
+  type DubbingProviderPreference,
+  type Stage5DubbingTtsProviderPreference,
+  type TranscriptionProviderPreference,
+  type VideoSuggestionModelPreferenceValue,
+  type VideoSuggestionRecency,
+} from '../store/settings-schema.js';
+import {
   encryptString,
   decryptString,
   isEncrypted,
   isEncryptionAvailable,
   isV2Encrypted,
 } from '../services/secure-storage.js';
+import {
+  sanitizeVideoSuggestionCountry,
+  sanitizeVideoSuggestionPreference,
+} from '../../shared/helpers/video-suggestion-sanitize.js';
 
 /* ----------------------------------------------------------
  * Types
@@ -29,16 +46,17 @@ export interface AllByoSettings {
   useByoOpenAi: boolean;
   useByoAnthropic: boolean;
   useByoElevenLabs: boolean;
-  // Master toggle
-  useByoMaster: boolean;
+  // Strict global BYO toggle
+  useStrictByoMode: boolean;
   // Claude preferences
   preferClaudeTranslation: boolean;
   preferClaudeReview: boolean;
   preferClaudeSummary: boolean;
+  videoSuggestionModelPreference: VideoSuggestionModelPreferenceValue;
   // Provider preferences
-  preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
-  preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
-  stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+  preferredTranscriptionProvider: TranscriptionProviderPreference;
+  preferredDubbingProvider: DubbingProviderPreference;
+  stage5DubbingTtsProvider: Stage5DubbingTtsProviderPreference;
 }
 
 export function buildSettingsHandlers(opts: {
@@ -269,10 +287,12 @@ export function buildSettingsHandlers(opts: {
 
   function getUseByoAnthropic(): boolean {
     try {
-      return Boolean(store.get('useByoAnthropic', false));
+      return Boolean(
+        store.get('useByoAnthropic', APP_SETTINGS_DEFAULTS.useByoAnthropic)
+      );
     } catch (err) {
       log.error('[settings] Failed to read BYO Anthropic toggle:', err);
-      return false;
+      return APP_SETTINGS_DEFAULTS.useByoAnthropic;
     }
   }
 
@@ -341,10 +361,12 @@ export function buildSettingsHandlers(opts: {
 
   function getUseByoElevenLabs(): boolean {
     try {
-      return Boolean(store.get('useByoElevenLabs', false));
+      return Boolean(
+        store.get('useByoElevenLabs', APP_SETTINGS_DEFAULTS.useByoElevenLabs)
+      );
     } catch (err) {
       log.error('[settings] Failed to read BYO ElevenLabs toggle:', err);
-      return false;
+      return APP_SETTINGS_DEFAULTS.useByoElevenLabs;
     }
   }
 
@@ -363,10 +385,12 @@ export function buildSettingsHandlers(opts: {
 
   function getUseByoOpenAi(): boolean {
     try {
-      return Boolean(store.get('useByoOpenAi', false));
+      return Boolean(
+        store.get('useByoOpenAi', APP_SETTINGS_DEFAULTS.useByoOpenAi)
+      );
     } catch (err) {
       log.error('[settings] Failed to read BYO toggle:', err);
-      return false;
+      return APP_SETTINGS_DEFAULTS.useByoOpenAi;
     }
   }
 
@@ -383,18 +407,19 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  /* ─────────── Master BYO toggle ─────────── */
-  function getUseByoMaster(): boolean {
+  /* ─────────── Strict BYO mode ─────────── */
+  function getStrictByoModeEnabled(): boolean {
     try {
-      // Default to false - user must explicitly enable BYO after entering keys
-      return Boolean(store.get('useByoMaster', false));
+      return Boolean(
+        store.get('useByoMaster', APP_SETTINGS_DEFAULTS.useByoMaster)
+      );
     } catch (err) {
-      log.error('[settings] Failed to read BYO master toggle:', err);
-      return false;
+      log.error('[settings] Failed to read strict BYO mode:', err);
+      return APP_SETTINGS_DEFAULTS.useByoMaster;
     }
   }
 
-  function setUseByoMaster(value: boolean): {
+  function setStrictByoModeEnabled(value: boolean): {
     success: boolean;
     error?: string;
   } {
@@ -402,7 +427,7 @@ export function buildSettingsHandlers(opts: {
       store.set('useByoMaster', Boolean(value));
       return { success: true };
     } catch (err: any) {
-      log.error('[settings] Failed to persist BYO master toggle:', err);
+      log.error('[settings] Failed to persist strict BYO mode:', err);
       return { success: false, error: err?.message || 'Failed to save toggle' };
     }
   }
@@ -410,14 +435,18 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Claude translation preference ─────────── */
   function getPreferClaudeTranslation(): boolean {
     try {
-      // Default to false (use GPT for draft, which is cheaper)
-      return Boolean(store.get('preferClaudeTranslation', false));
+      return Boolean(
+        store.get(
+          'preferClaudeTranslation',
+          APP_SETTINGS_DEFAULTS.preferClaudeTranslation
+        )
+      );
     } catch (err) {
       log.error(
         '[settings] Failed to read Claude translation preference:',
         err
       );
-      return false;
+      return APP_SETTINGS_DEFAULTS.preferClaudeTranslation;
     }
   }
 
@@ -443,11 +472,15 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Claude review preference ─────────── */
   function getPreferClaudeReview(): boolean {
     try {
-      // Default to true (use Claude Opus for review, which is higher quality)
-      return Boolean(store.get('preferClaudeReview', true));
+      return Boolean(
+        store.get(
+          'preferClaudeReview',
+          APP_SETTINGS_DEFAULTS.preferClaudeReview
+        )
+      );
     } catch (err) {
       log.error('[settings] Failed to read Claude review preference:', err);
-      return true;
+      return APP_SETTINGS_DEFAULTS.preferClaudeReview;
     }
   }
 
@@ -470,11 +503,15 @@ export function buildSettingsHandlers(opts: {
   /* ─────────── Claude summary preference ─────────── */
   function getPreferClaudeSummary(): boolean {
     try {
-      // Default to true (use Claude Opus for summary, which is higher quality)
-      return Boolean(store.get('preferClaudeSummary', true));
+      return Boolean(
+        store.get(
+          'preferClaudeSummary',
+          APP_SETTINGS_DEFAULTS.preferClaudeSummary
+        )
+      );
     } catch (err) {
       log.error('[settings] Failed to read Claude summary preference:', err);
-      return true;
+      return APP_SETTINGS_DEFAULTS.preferClaudeSummary;
     }
   }
 
@@ -494,37 +531,239 @@ export function buildSettingsHandlers(opts: {
     }
   }
 
-  /* ─────────── Transcription provider preference ─────────── */
-  function getPreferredTranscriptionProvider():
-    | 'elevenlabs'
-    | 'openai'
-    | 'stage5' {
+  /* ─────────── Video suggestion model preference ─────────── */
+  function getVideoSuggestionModelPreference(): VideoSuggestionModelPreferenceValue {
     try {
-      const value = store.get('preferredTranscriptionProvider', 'elevenlabs');
+      const rawValue = store.get(
+        'videoSuggestionModelPreference',
+        APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference
+      );
+      return normalizeVideoSuggestionModelPreferenceSetting(rawValue);
+    } catch (err) {
+      log.error(
+        '[settings] Failed to read video suggestion model preference:',
+        err
+      );
+      return APP_SETTINGS_DEFAULTS.videoSuggestionModelPreference;
+    }
+  }
+
+  function setVideoSuggestionModelPreference(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'videoSuggestionModelPreference',
+        normalizeVideoSuggestionModelPreferenceSetting(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist video suggestion model preference:',
+        err
+      );
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Video suggestion target country ─────────── */
+  function getVideoSuggestionTargetCountry(): string {
+    try {
+      const value = store.get(
+        'videoSuggestionTargetCountry',
+        APP_SETTINGS_DEFAULTS.videoSuggestionTargetCountry
+      );
+      return sanitizeVideoSuggestionCountry(value);
+    } catch (err) {
+      log.error(
+        '[settings] Failed to read video suggestion target country:',
+        err
+      );
+      return APP_SETTINGS_DEFAULTS.videoSuggestionTargetCountry;
+    }
+  }
+
+  function setVideoSuggestionTargetCountry(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const safeValue = sanitizeVideoSuggestionCountry(value);
+      store.set('videoSuggestionTargetCountry', safeValue);
+      return { success: true };
+    } catch (err: any) {
+      log.error(
+        '[settings] Failed to persist video suggestion target country:',
+        err
+      );
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Video suggestion recency ─────────── */
+  function getVideoSuggestionRecency(): VideoSuggestionRecency {
+    try {
+      const value = store.get(
+        'videoSuggestionRecency',
+        APP_SETTINGS_DEFAULTS.videoSuggestionRecency
+      );
+      return normalizeVideoSuggestionRecencySetting(value);
+    } catch (err) {
+      log.error('[settings] Failed to read video suggestion recency:', err);
+      return APP_SETTINGS_DEFAULTS.videoSuggestionRecency;
+    }
+  }
+
+  function setVideoSuggestionRecency(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const safeValue = normalizeVideoSuggestionRecencySetting(value);
+      store.set('videoSuggestionRecency', safeValue);
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist video suggestion recency:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Video suggestion preference slots ─────────── */
+  function getVideoSuggestionPreferenceTopic(): string {
+    try {
+      const value = store.get(
+        'videoSuggestionPreferenceTopic',
+        APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceTopic
+      );
+      return sanitizeVideoSuggestionPreference(value);
+    } catch (err) {
+      log.error('[settings] Failed to read video suggestion topic:', err);
+      return APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceTopic;
+    }
+  }
+
+  function setVideoSuggestionPreferenceTopic(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'videoSuggestionPreferenceTopic',
+        sanitizeVideoSuggestionPreference(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist video suggestion topic:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  function getVideoSuggestionPreferenceCreator(): string {
+    try {
+      const value = store.get(
+        'videoSuggestionPreferenceCreator',
+        APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceCreator
+      );
+      return sanitizeVideoSuggestionPreference(value);
+    } catch (err) {
+      log.error('[settings] Failed to read video suggestion creator:', err);
+      return APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceCreator;
+    }
+  }
+
+  function setVideoSuggestionPreferenceCreator(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'videoSuggestionPreferenceCreator',
+        sanitizeVideoSuggestionPreference(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist video suggestion creator:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  function getVideoSuggestionPreferenceSubtopic(): string {
+    try {
+      const value = store.get(
+        'videoSuggestionPreferenceSubtopic',
+        APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceSubtopic
+      );
+      return sanitizeVideoSuggestionPreference(value);
+    } catch (err) {
+      log.error('[settings] Failed to read video suggestion subtopic:', err);
+      return APP_SETTINGS_DEFAULTS.videoSuggestionPreferenceSubtopic;
+    }
+  }
+
+  function setVideoSuggestionPreferenceSubtopic(value: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      store.set(
+        'videoSuggestionPreferenceSubtopic',
+        sanitizeVideoSuggestionPreference(value)
+      );
+      return { success: true };
+    } catch (err: any) {
+      log.error('[settings] Failed to persist video suggestion subtopic:', err);
+      return {
+        success: false,
+        error: err?.message || 'Failed to save preference',
+      };
+    }
+  }
+
+  /* ─────────── Transcription provider preference ─────────── */
+  function getPreferredTranscriptionProvider(): TranscriptionProviderPreference {
+    try {
+      const value = store.get(
+        'preferredTranscriptionProvider',
+        APP_SETTINGS_DEFAULTS.preferredTranscriptionProvider
+      );
       log.info(
         `[settings] getPreferredTranscriptionProvider: stored="${value}"`
       );
-      if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
-        return value;
-      }
-      return 'elevenlabs'; // Default to ElevenLabs (highest quality)
+      return normalizeTranscriptionProviderSetting(value);
     } catch (err) {
       log.error(
         '[settings] Failed to read transcription provider preference:',
         err
       );
-      return 'elevenlabs';
+      return APP_SETTINGS_DEFAULTS.preferredTranscriptionProvider;
     }
   }
 
   function setPreferredTranscriptionProvider(
-    value: 'elevenlabs' | 'openai' | 'stage5'
+    value: TranscriptionProviderPreference
   ): { success: boolean; error?: string } {
     try {
+      const safeValue = normalizeTranscriptionProviderSetting(value);
       log.info(
-        `[settings] setPreferredTranscriptionProvider: saving "${value}"`
+        `[settings] setPreferredTranscriptionProvider: saving "${safeValue}"`
       );
-      store.set('preferredTranscriptionProvider', value);
+      store.set('preferredTranscriptionProvider', safeValue);
       log.info(`[settings] setPreferredTranscriptionProvider: saved OK`);
       return { success: true };
     } catch (err: any) {
@@ -540,24 +779,26 @@ export function buildSettingsHandlers(opts: {
   }
 
   /* ─────────── Dubbing provider preference ─────────── */
-  function getPreferredDubbingProvider(): 'elevenlabs' | 'openai' | 'stage5' {
+  function getPreferredDubbingProvider(): DubbingProviderPreference {
     try {
-      const value = store.get('preferredDubbingProvider', 'openai');
-      if (value === 'elevenlabs' || value === 'openai' || value === 'stage5') {
-        return value;
-      }
-      return 'openai'; // Default to OpenAI TTS (cheaper)
+      const value = store.get(
+        'preferredDubbingProvider',
+        APP_SETTINGS_DEFAULTS.preferredDubbingProvider
+      );
+      return normalizeDubbingProviderSetting(value);
     } catch (err) {
       log.error('[settings] Failed to read dubbing provider preference:', err);
-      return 'openai';
+      return APP_SETTINGS_DEFAULTS.preferredDubbingProvider;
     }
   }
 
-  function setPreferredDubbingProvider(
-    value: 'elevenlabs' | 'openai' | 'stage5'
-  ): { success: boolean; error?: string } {
+  function setPreferredDubbingProvider(value: DubbingProviderPreference): {
+    success: boolean;
+    error?: string;
+  } {
     try {
-      store.set('preferredDubbingProvider', value);
+      const safeValue = normalizeDubbingProviderSetting(value);
+      store.set('preferredDubbingProvider', safeValue);
       return { success: true };
     } catch (err: any) {
       log.error(
@@ -572,25 +813,28 @@ export function buildSettingsHandlers(opts: {
   }
 
   /* ─────────── Stage5 dubbing TTS provider ─────────── */
-  function getStage5DubbingTtsProvider(): 'openai' | 'elevenlabs' {
+  function getStage5DubbingTtsProvider(): Stage5DubbingTtsProviderPreference {
     try {
-      const value = store.get('stage5DubbingTtsProvider', 'openai');
-      if (value === 'openai' || value === 'elevenlabs') {
-        return value;
-      }
-      return 'openai'; // Default to OpenAI (cheaper)
+      const value = store.get(
+        'stage5DubbingTtsProvider',
+        APP_SETTINGS_DEFAULTS.stage5DubbingTtsProvider
+      );
+      return normalizeStage5DubbingTtsProviderSetting(value);
     } catch (err) {
       log.error('[settings] Failed to read stage5 dubbing TTS provider:', err);
-      return 'openai';
+      return APP_SETTINGS_DEFAULTS.stage5DubbingTtsProvider;
     }
   }
 
-  function setStage5DubbingTtsProvider(value: 'openai' | 'elevenlabs'): {
+  function setStage5DubbingTtsProvider(
+    value: Stage5DubbingTtsProviderPreference
+  ): {
     success: boolean;
     error?: string;
   } {
     try {
-      store.set('stage5DubbingTtsProvider', value);
+      const safeValue = normalizeStage5DubbingTtsProviderSetting(value);
+      store.set('stage5DubbingTtsProvider', safeValue);
       return { success: true };
     } catch (err: any) {
       log.error(
@@ -665,12 +909,13 @@ export function buildSettingsHandlers(opts: {
       useByoOpenAi: getUseByoOpenAi(),
       useByoAnthropic: getUseByoAnthropic(),
       useByoElevenLabs: getUseByoElevenLabs(),
-      // Master toggle
-      useByoMaster: getUseByoMaster(),
+      // Strict global BYO toggle
+      useStrictByoMode: getStrictByoModeEnabled(),
       // Claude preferences
       preferClaudeTranslation: getPreferClaudeTranslation(),
       preferClaudeReview: getPreferClaudeReview(),
       preferClaudeSummary: getPreferClaudeSummary(),
+      videoSuggestionModelPreference: getVideoSuggestionModelPreference(),
       // Provider preferences
       preferredTranscriptionProvider: getPreferredTranscriptionProvider(),
       preferredDubbingProvider: getPreferredDubbingProvider(),
@@ -745,14 +990,26 @@ export function buildSettingsHandlers(opts: {
     clearElevenLabsApiKey,
     getUseByoElevenLabs,
     setUseByoElevenLabs,
-    getUseByoMaster,
-    setUseByoMaster,
+    getStrictByoModeEnabled,
+    setStrictByoModeEnabled,
     getPreferClaudeTranslation,
     setPreferClaudeTranslation,
     getPreferClaudeReview,
     setPreferClaudeReview,
     getPreferClaudeSummary,
     setPreferClaudeSummary,
+    getVideoSuggestionModelPreference,
+    setVideoSuggestionModelPreference,
+    getVideoSuggestionTargetCountry,
+    setVideoSuggestionTargetCountry,
+    getVideoSuggestionRecency,
+    setVideoSuggestionRecency,
+    getVideoSuggestionPreferenceTopic,
+    setVideoSuggestionPreferenceTopic,
+    getVideoSuggestionPreferenceCreator,
+    setVideoSuggestionPreferenceCreator,
+    getVideoSuggestionPreferenceSubtopic,
+    setVideoSuggestionPreferenceSubtopic,
     getPreferredTranscriptionProvider,
     setPreferredTranscriptionProvider,
     getPreferredDubbingProvider,

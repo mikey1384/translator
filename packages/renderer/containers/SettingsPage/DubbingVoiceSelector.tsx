@@ -6,21 +6,8 @@ import { useUIStore } from '../../state/ui-store';
 import { useAiStore } from '../../state';
 import { useCreditStore } from '../../state/credit-store';
 import * as SubtitlesIPC from '../../ipc/subtitles';
-import * as SystemIPC from '../../ipc/system';
-import { ENABLE_VOICE_CLONING } from '../../../shared/constants';
+import { PREVIEW_TTS_CREDITS } from '../../utils/creditEstimates';
 
-// Preview credit costs (for "Hello" = 5 characters)
-// Calculated using: chars × ($/1M chars) × MARGIN(2) / USD_PER_CREDIT($10/350k)
-const PREVIEW_CREDITS = {
-  openai: 6, // ~$0.000075 → 6 credits
-  elevenlabs: 70, // ~$0.001 → 70 credits
-} as const;
-
-// Voice cloning cost fallback (fetched from API at runtime)
-// ElevenLabs Dubbing API ~$0.50/min × MARGIN(2) / USD_PER_CREDIT ≈ 35,000 credits per minute
-const DEFAULT_VOICE_CLONING_CREDITS_PER_MINUTE = 35_000;
-
-// ElevenLabs voices
 const ELEVENLABS_VOICES = [
   { value: 'rachel', fallback: 'Rachel' },
   { value: 'adam', fallback: 'Adam' },
@@ -32,7 +19,6 @@ const ELEVENLABS_VOICES = [
   { value: 'brian', fallback: 'Brian' },
 ] as const;
 
-// OpenAI TTS voices
 const OPENAI_VOICES = [
   { value: 'alloy', fallback: 'Alloy' },
   { value: 'echo', fallback: 'Echo' },
@@ -42,19 +28,17 @@ const OPENAI_VOICES = [
   { value: 'shimmer', fallback: 'Shimmer' },
 ] as const;
 
-// Default voices for each provider
 const DEFAULT_OPENAI_VOICE = 'alloy';
 const DEFAULT_ELEVENLABS_VOICE = 'rachel';
 
 export default function DubbingVoiceSelector() {
   const { t } = useTranslation();
-  const { dubVoice, setDubVoice, dubUseVoiceCloning, setDubUseVoiceCloning } =
-    useUIStore();
-  const useByoMaster = useAiStore(state => state.useByoMaster);
+  const dubVoice = useUIStore(s => s.dubVoice);
+  const setDubVoice = useUIStore(s => s.setDubVoice);
+  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
   const byoOpenAiUnlocked = useAiStore(state => state.byoUnlocked);
   const openAiKeyPresent = useAiStore(state => state.keyPresent);
   const useByoOpenAi = useAiStore(state => state.useByo);
-  const credits = useCreditStore(state => state.credits);
   const useByoElevenLabs = useAiStore(state => state.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(state => state.elevenLabsKeyPresent);
   const byoElevenLabsUnlocked = useAiStore(
@@ -66,63 +50,28 @@ export default function DubbingVoiceSelector() {
   const stage5DubbingTtsProvider = useAiStore(
     state => state.stage5DubbingTtsProvider
   );
+  const refreshCredits = useCreditStore(state => state.refresh);
   const [isPreviewing, setIsPreviewing] = useState(false);
-  const [voiceCloningCreditsPerMinute, setVoiceCloningCreditsPerMinute] =
-    useState(DEFAULT_VOICE_CLONING_CREDITS_PER_MINUTE);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const previewTokenRef = useRef(0);
 
-  // Fetch voice cloning pricing from API on mount
-  useEffect(() => {
-    if (!ENABLE_VOICE_CLONING) return;
-    let cancelled = false;
-    SystemIPC.getVoiceCloningPricing()
-      .then(pricing => {
-        if (!cancelled && pricing?.creditsPerMinute) {
-          setVoiceCloningCreditsPerMinute(pricing.creditsPerMinute);
-        }
-      })
-      .catch(() => {
-        // Keep default on error
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Auto-disable voice cloning if user can no longer afford it
-  useEffect(() => {
-    if (!ENABLE_VOICE_CLONING) {
-      if (dubUseVoiceCloning) setDubUseVoiceCloning(false);
-      return;
-    }
-    const canAfford =
-      typeof credits === 'number' && credits >= voiceCloningCreditsPerMinute;
-    if (dubUseVoiceCloning && !canAfford) {
-      setDubUseVoiceCloning(false);
-    }
-  }, [
-    credits,
-    voiceCloningCreditsPerMinute,
-    dubUseVoiceCloning,
-    setDubUseVoiceCloning,
-  ]);
-
-  // Determine which TTS provider is active for voice selection
-  // - Stage5 credits mode: use stage5DubbingTtsProvider
-  // - BYO mode: use preferredDubbingProvider, with fallback if the preferred provider isn't available
   const hasOpenAiByo =
-    useByoMaster && byoOpenAiUnlocked && openAiKeyPresent && useByoOpenAi;
+    useStrictByoMode &&
+    byoOpenAiUnlocked &&
+    openAiKeyPresent &&
+    useByoOpenAi;
   const hasElevenLabsByo =
-    useByoMaster &&
+    useStrictByoMode &&
     byoElevenLabsUnlocked &&
     elevenLabsKeyPresent &&
     useByoElevenLabs;
 
-  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' = useByoMaster
+  const activeDubbingProvider: 'stage5' | 'openai' | 'elevenlabs' = useStrictByoMode
     ? (() => {
         if (preferredDubbingProvider === 'stage5') {
+          if (hasOpenAiByo) return 'openai';
+          if (hasElevenLabsByo) return 'elevenlabs';
           return 'stage5';
         }
         if (preferredDubbingProvider === 'elevenlabs') {
@@ -135,7 +84,6 @@ export default function DubbingVoiceSelector() {
           if (hasElevenLabsByo) return 'elevenlabs';
           return 'stage5';
         }
-        // Unexpected: fall back safely.
         if (hasOpenAiByo) return 'openai';
         if (hasElevenLabsByo) return 'elevenlabs';
         return 'stage5';
@@ -148,18 +96,13 @@ export default function DubbingVoiceSelector() {
       : activeDubbingProvider;
 
   const isUsingElevenLabs = activeVoiceProvider === 'elevenlabs';
-
-  // Get voices based on active provider
   const activeVoices = isUsingElevenLabs ? ELEVENLABS_VOICES : OPENAI_VOICES;
   const defaultVoice = isUsingElevenLabs
     ? DEFAULT_ELEVENLABS_VOICE
     : DEFAULT_OPENAI_VOICE;
-
-  // Check if current voice is valid for the active provider
   const isCurrentVoiceValid = activeVoices.some(v => v.value === dubVoice);
   const effectiveVoice = isCurrentVoiceValid ? dubVoice : defaultVoice;
 
-  // Auto-switch voice when provider changes and current voice is invalid
   useEffect(() => {
     if (!isCurrentVoiceValid && dubVoice !== effectiveVoice) {
       setDubVoice(effectiveVoice);
@@ -186,15 +129,6 @@ export default function DubbingVoiceSelector() {
     };
   }, []);
 
-  // Just update the voice selection (no auto-preview)
-  const handleVoiceChange = (value: string) => {
-    setDubVoice(value);
-  };
-
-  // Get credit refresh function (only used in Stage5 mode)
-  const refreshCredits = useCreditStore(state => state.refresh);
-
-  // Preview the currently selected voice (costs credits for Stage5 mode)
   const handlePreview = async () => {
     const token = ++previewTokenRef.current;
     setIsPreviewing(true);
@@ -204,8 +138,7 @@ export default function DubbingVoiceSelector() {
       });
       if (previewTokenRef.current !== token) return;
       if (result?.success && result.audioBase64) {
-        // Refresh credit balance after successful preview (Stage5 mode deducts credits)
-        if (!useByoMaster || activeDubbingProvider === 'stage5') {
+        if (!useStrictByoMode || activeDubbingProvider === 'stage5') {
           refreshCredits();
         }
         try {
@@ -245,16 +178,9 @@ export default function DubbingVoiceSelector() {
     }
   };
 
-  // Get preview cost (only relevant for Stage5 credits mode)
   const previewCost = isUsingElevenLabs
-    ? PREVIEW_CREDITS.elevenlabs
-    : PREVIEW_CREDITS.openai;
-
-  // Calculate voice cloning credit estimates
-  const estimatedMinutes =
-    typeof credits === 'number' && credits > 0
-      ? Math.floor(credits / voiceCloningCreditsPerMinute)
-      : 0;
+    ? PREVIEW_TTS_CREDITS.elevenlabs
+    : PREVIEW_TTS_CREDITS.openai;
 
   const selectClass = css`
     flex: 1;
@@ -283,150 +209,6 @@ export default function DubbingVoiceSelector() {
     }
   `;
 
-  const toggleRowClass = css`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  `;
-
-  const toggleLabelClass = css`
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  `;
-
-  const toggleTitleClass = css`
-    font-weight: 500;
-    color: ${colors.text};
-    font-size: 0.9rem;
-  `;
-
-  const toggleDescClass = css`
-    color: ${colors.gray};
-    font-size: 0.8rem;
-  `;
-
-  const toggleSwitchClass = css`
-    position: relative;
-    width: 44px;
-    height: 24px;
-    background: ${colors.grayMedium};
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    flex-shrink: 0;
-
-    &[data-checked='true'] {
-      background: ${colors.primary};
-    }
-
-    &[data-disabled='true'] {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.2s ease;
-    }
-
-    &[data-checked='true']::after {
-      transform: translateX(20px);
-    }
-  `;
-
-  const creditInfoClass = css`
-    padding: 12px;
-    background: ${colors.grayLight};
-    border-radius: 8px;
-    font-size: 0.85rem;
-  `;
-
-  const creditRowClass = css`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 0;
-
-    &:not(:last-child) {
-      border-bottom: 1px solid ${colors.grayMedium};
-      margin-bottom: 4px;
-    }
-  `;
-
-  const creditLabelClass = css`
-    color: ${colors.gray};
-  `;
-
-  const creditValueClass = css`
-    color: ${colors.text};
-    font-weight: 500;
-  `;
-
-  // Voice cloning UI is intentionally disabled.
-  // If we re-enable it later, gate all voice-cloning-only UI (including the "enabled" banner)
-  // behind this flag so BYO users still see the normal voice picker by default.
-  const showVoiceCloningOption = ENABLE_VOICE_CLONING;
-
-  // When ElevenLabs voice cloning is fully enabled, show message instead of voice selector
-  // All conditions must be true: master on, toggle on, key present, entitlement unlocked, and provider is elevenlabs
-  const voiceCloningActive =
-    showVoiceCloningOption &&
-    dubUseVoiceCloning &&
-    useByoMaster &&
-    useByoElevenLabs &&
-    elevenLabsKeyPresent &&
-    byoElevenLabsUnlocked &&
-    preferredDubbingProvider === 'elevenlabs';
-
-  if (voiceCloningActive) {
-    return (
-      <div
-        className={css`
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        `}
-      >
-        <div
-          className={css`
-            font-weight: 600;
-            color: ${colors.text};
-          `}
-        >
-          {t('settings.dubbing.voiceLabel', 'Dubbed Voice')}
-        </div>
-        <div
-          className={css`
-            padding: 12px;
-            background: ${colors.grayLight};
-            border-radius: 8px;
-            color: ${colors.text};
-            font-size: 0.9rem;
-          `}
-        >
-          {t(
-            'settings.dubbing.voiceCloningEnabled',
-            "Voice cloning is enabled with ElevenLabs. The original speaker's voice will be preserved in the dubbed audio."
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Voice cloning UI is disabled (see showVoiceCloningOption above).
-
-  // Disable voice cloning if user can't afford at least 1 minute
-  const canAffordVoiceCloning = estimatedMinutes >= 1;
-
   return (
     <div
       className={css`
@@ -444,151 +226,53 @@ export default function DubbingVoiceSelector() {
         {t('settings.dubbing.voiceLabel', 'Dubbed Voice')}
       </div>
 
-      {/* Voice Cloning Toggle (Stage5 credits + ElevenLabs only) */}
-      {showVoiceCloningOption && (
-        <div className={toggleRowClass}>
-          <div className={toggleLabelClass}>
-            <span className={toggleTitleClass}>
-              {t('settings.dubbing.voiceCloning', 'Clone Original Voice')}
-            </span>
-            <span className={toggleDescClass}>
-              {canAffordVoiceCloning
-                ? t(
-                    'settings.dubbing.voiceCloningDesc',
-                    "Preserve the original speaker's voice in dubbed audio"
-                  )
-                : t(
-                    'settings.dubbing.voiceCloningInsufficientCredits',
-                    'Requires at least 1 minute of credits'
-                  )}
-            </span>
-          </div>
-          <div
-            className={toggleSwitchClass}
-            data-checked={dubUseVoiceCloning && canAffordVoiceCloning}
-            data-disabled={!canAffordVoiceCloning}
-            onClick={() => {
-              if (canAffordVoiceCloning) {
-                setDubUseVoiceCloning(!dubUseVoiceCloning);
-              }
-            }}
-            role="switch"
-            aria-checked={dubUseVoiceCloning && canAffordVoiceCloning}
-            aria-disabled={!canAffordVoiceCloning}
-            tabIndex={canAffordVoiceCloning ? 0 : -1}
-            onKeyDown={e => {
-              if (
-                canAffordVoiceCloning &&
-                (e.key === 'Enter' || e.key === ' ')
-              ) {
-                e.preventDefault();
-                setDubUseVoiceCloning(!dubUseVoiceCloning);
-              }
-            }}
-          />
-        </div>
-      )}
+      <div
+        className={css`
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        `}
+      >
+        <select
+          className={`${selectStyles} ${selectClass}`}
+          value={effectiveVoice}
+          onChange={e => setDubVoice(e.target.value)}
+          disabled={isPreviewing}
+        >
+          {options.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className={previewButtonClass}
+          onClick={handlePreview}
+          disabled={isPreviewing}
+          title={t('settings.dubbing.previewTooltip', 'Preview this voice')}
+        >
+          {isPreviewing
+            ? t('settings.dubbing.previewing', 'Playing...')
+            : useStrictByoMode && activeDubbingProvider !== 'stage5'
+              ? t('settings.dubbing.previewFree', 'Preview')
+              : t('settings.dubbing.previewWithCost', 'Preview ({{cost}} credits)', {
+                  cost: previewCost,
+                })}
+        </button>
+      </div>
 
-      {/* Voice Cloning Credit Info (when cloning is enabled) */}
-      {showVoiceCloningOption && dubUseVoiceCloning ? (
-        <div className={creditInfoClass}>
-          <div className={creditRowClass}>
-            <span className={creditLabelClass}>
-              {t('settings.dubbing.costPerMinute', 'Cost per minute')}
-            </span>
-            <span className={creditValueClass}>
-              {voiceCloningCreditsPerMinute.toLocaleString()}{' '}
-              {t('settings.dubbing.credits', 'credits')}
-            </span>
-          </div>
-          <div className={creditRowClass}>
-            <span className={creditLabelClass}>
-              {t('settings.dubbing.yourBalance', 'Your balance')}
-            </span>
-            <span className={creditValueClass}>
-              {typeof credits === 'number'
-                ? `${credits.toLocaleString()} ${t('settings.dubbing.credits', 'credits')}`
-                : t('settings.dubbing.loading', 'Loading...')}
-            </span>
-          </div>
-          <div className={creditRowClass}>
-            <span className={creditLabelClass}>
-              {t('settings.dubbing.canClone', 'You can clone')}
-            </span>
-            <span className={creditValueClass}>
-              {t('settings.dubbing.upToMinutes', 'up to {{minutes}} min', {
-                minutes: estimatedMinutes,
-              })}
-            </span>
-          </div>
-          <div
-            className={css`
-              margin-top: 8px;
-              color: ${colors.gray};
-              font-size: 0.8rem;
-            `}
-          >
-            {t(
-              'settings.dubbing.voiceCloningInfo',
-              "Voice cloning uses ElevenLabs Dubbing API to analyze and recreate the original speaker's voice."
-            )}
-          </div>
-        </div>
-      ) : (
-        /* Voice Actor Dropdown (when cloning is disabled or using TTS) */
-        <>
-          <div
-            className={css`
-              display: flex;
-              gap: 8px;
-              align-items: center;
-            `}
-          >
-            <select
-              className={`${selectStyles} ${selectClass}`}
-              value={effectiveVoice}
-              onChange={e => handleVoiceChange(e.target.value)}
-              disabled={isPreviewing}
-            >
-              {options.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className={previewButtonClass}
-              onClick={handlePreview}
-              disabled={isPreviewing}
-              title={t('settings.dubbing.previewTooltip', 'Preview this voice')}
-            >
-              {isPreviewing
-                ? t('settings.dubbing.previewing', 'Playing...')
-                : useByoMaster && activeDubbingProvider !== 'stage5'
-                  ? t('settings.dubbing.previewFree', 'Preview')
-                  : t(
-                      'settings.dubbing.previewWithCost',
-                      'Preview ({{cost}} credits)',
-                      {
-                        cost: previewCost,
-                      }
-                    )}
-            </button>
-          </div>
-          <div
-            className={css`
-              color: ${colors.gray};
-              font-size: 0.85rem;
-            `}
-          >
-            {t(
-              'settings.dubbing.voiceHelp',
-              'Choose the default voice for generated dubs.'
-            )}
-          </div>
-        </>
-      )}
+      <div
+        className={css`
+          color: ${colors.gray};
+          font-size: 0.85rem;
+        `}
+      >
+        {t(
+          'settings.dubbing.voiceHelp',
+          'Choose the default voice for generated dubs.'
+        )}
+      </div>
     </div>
   );
 }

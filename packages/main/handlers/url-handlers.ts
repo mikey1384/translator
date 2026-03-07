@@ -5,13 +5,10 @@ import log from 'electron-log';
 import { FileManager } from '../services/file-manager.js';
 import type { FFmpegContext } from '../services/ffmpeg-runner.js';
 import { CancelledError } from '../../shared/cancelled-error.js';
-import { ProcessUrlOptions } from '@shared-types/app';
+import type { ProcessUrlOptions, ProcessUrlResult } from '@shared-types/app';
 import {
   registerAutoCancel,
-  registerDownloadProcess,
   finish as registryFinish,
-  hasProcess,
-  cancelSafely,
 } from '../active-processes.js';
 import { forceKillWindows } from '../utils/process-killer.js';
 import { getMainWindow } from '../utils/window.js';
@@ -41,22 +38,6 @@ function checkServicesInitialized(): {
     throw new Error('[url-handler] Services not initialized.');
   }
   return { fileManager: fileManagerInstance, ffmpeg: ffmpegCtx };
-}
-
-interface ProcessUrlResult {
-  success: boolean;
-  message?: string;
-  filePath?: string;
-  videoId?: string;
-  title?: string;
-  duration?: number;
-  filename?: string;
-  size?: number;
-  fileUrl?: string;
-  originalVideoPath?: string;
-  error?: string;
-  operationId: string;
-  cancelled?: boolean;
 }
 
 export async function handleProcessUrl(
@@ -105,10 +86,10 @@ export async function handleProcessUrl(
     // Track early cancellation
     let cancelledEarly = false;
 
-    // Register auto-cancel early with a placeholder cancel function that attempts cancellation
+    // Register auto-cancel early so generic cancellation can mark this operation
+    // before yt-dlp has been spawned and promoted into the registry.
     registerAutoCancel(operationId, _event.sender, () => {
       cancelledEarly = true;
-      cancelSafely(operationId);
       log.info(`[url-handler] Early cancel triggered for ${operationId}`);
     });
 
@@ -182,11 +163,6 @@ export async function handleProcessUrl(
       };
     }
 
-    // Manual cancel (Stop button)
-    if (!hasProcess(operationId)) {
-      registerDownloadProcess(operationId, result.proc);
-    }
-
     const successResult: ProcessUrlResult = {
       success: true,
       filePath: result.videoPath,
@@ -196,7 +172,6 @@ export async function handleProcessUrl(
       originalVideoPath: result.originalVideoPath,
       operationId,
     };
-    sendProgress({ percent: 100, stage: 'Completed' });
     registryFinish(operationId);
     return successResult;
   } catch (error: any) {

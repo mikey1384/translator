@@ -5,6 +5,7 @@ import fs from 'fs';
 import fsp from 'fs/promises';
 import crypto from 'crypto';
 import log from 'electron-log';
+import { dialog } from 'electron';
 import {
   detectSpeechIntervals,
   normalizeSpeechIntervals,
@@ -13,7 +14,7 @@ import {
 } from '../audio-chunker.js';
 import { transcribeChunk } from '../transcriber.js';
 import { buildSrt } from '../../../../shared/helpers/index.js';
-import { ERROR_CODES } from '../../../../shared/constants/index.js';
+import { AI_MODELS, ERROR_CODES } from '../../../../shared/constants/index.js';
 import {
   SAVE_WHISPER_CHUNKS,
   PRE_PAD_SEC,
@@ -27,6 +28,7 @@ import {
 import { SubtitleProcessingError } from '../errors.js';
 import { Stage } from './progress.js';
 import { extractAudioSegment, mkTempAudioName } from '../audio-extractor.js';
+import { getFocusedOrMainWindow } from '../../../utils/window.js';
 
 import { throwIfAborted, formatElevenLabsTimeRemaining } from '../utils.js';
 import {
@@ -93,6 +95,92 @@ function isTransientNetworkError(error: any): boolean {
   }
 
   return false;
+}
+
+type TranscriptionFallbackConfirmationPayload = {
+  error: 'transcription-fallback-confirmation-required';
+  message: string;
+  reason: 'insufficient-credits' | 'provider-unavailable';
+  requestedModel: string;
+  fallbackModel: string;
+  requestedReserveSpend: number;
+  fallbackReserveSpend: number;
+  whisperGuardMessage?: string;
+};
+
+function getTranscriptionFallbackConfirmationPayload(
+  error: any
+): TranscriptionFallbackConfirmationPayload | null {
+  const payload = error?.response?.data;
+  if (!payload || typeof payload !== 'object') return null;
+  if (payload.error !== 'transcription-fallback-confirmation-required') {
+    return null;
+  }
+
+  if (
+    typeof payload.message !== 'string' ||
+    (payload.reason !== 'insufficient-credits' &&
+      payload.reason !== 'provider-unavailable') ||
+    typeof payload.requestedModel !== 'string' ||
+    typeof payload.fallbackModel !== 'string' ||
+    typeof payload.requestedReserveSpend !== 'number' ||
+    typeof payload.fallbackReserveSpend !== 'number'
+  ) {
+    return null;
+  }
+
+  return payload as TranscriptionFallbackConfirmationPayload;
+}
+
+function formatEstimatedCredits(value: number): string {
+  const normalized = Number.isFinite(value) ? Math.max(0, Math.ceil(value)) : 0;
+  return new Intl.NumberFormat('en-US').format(normalized);
+}
+
+async function promptForTranscriptionFallback({
+  payload,
+  signal,
+}: {
+  payload: TranscriptionFallbackConfirmationPayload;
+  signal: AbortSignal;
+}): Promise<'fallback' | 'recharge' | 'cancel'> {
+  throwIfAborted(signal);
+
+  const secondaryActionLabel =
+    payload.reason === 'insufficient-credits' ? 'Recharge First' : 'Retry Later';
+  const detailLines = [
+    payload.message,
+    '',
+    `ElevenLabs quality estimate: ${formatEstimatedCredits(payload.requestedReserveSpend)} credits`,
+    `Whisper estimate: ${formatEstimatedCredits(payload.fallbackReserveSpend)} credits`,
+    '',
+    'Continue with Whisper applies only to this transcription.',
+  ];
+
+  if (payload.whisperGuardMessage) {
+    detailLines.push('', payload.whisperGuardMessage);
+  }
+
+  const options = {
+    type: 'warning' as const,
+    title: 'Transcription quality change required',
+    message: 'High-quality transcription needs your confirmation',
+    detail: detailLines.join('\n'),
+    buttons: ['Continue with Whisper', secondaryActionLabel, 'Cancel'],
+    defaultId: 1,
+    cancelId: 2,
+    noLink: true,
+  };
+  const parentWindow = getFocusedOrMainWindow();
+  const { response } = parentWindow
+    ? await dialog.showMessageBox(parentWindow, options)
+    : await dialog.showMessageBox(options);
+
+  throwIfAborted(signal);
+
+  if (response === 0) return 'fallback';
+  if (response === 1) return 'recharge';
+  return 'cancel';
 }
 
 export async function transcribePass({
@@ -175,6 +263,7 @@ export async function transcribePass({
       fileSizeMB < MAX_R2_FILE_SIZE_MB &&
       (fileSizeMB >= MAX_DIRECT_FILE_SIZE_MB || exceedsDurationThreshold);
     let chunkedQualityMode = qualityTranscription;
+    let userConfirmedWhisperFallback = false;
 
     if (useStage5 && wantsHighQuality && !canTryDirectElevenLabs && !canTryR2ElevenLabs) {
       // High-quality route is unavailable (e.g., very large files), so force
@@ -192,6 +281,84 @@ export async function transcribePass({
         `[${operationId}] Audio duration (${(duration / 60).toFixed(1)} min) exceeds CF Worker threshold, using direct relay flow`
       );
     }
+
+    const finalizeTranscriptionResult = async ({
+      result,
+      completionLogLabel,
+    }: {
+      result: any;
+      completionLogLabel: string;
+    }): Promise<{
+      segments: SrtSegment[];
+      speechIntervals: Array<{ start: number; end: number }>;
+    }> => {
+      const segments = (result?.segments || []) as Array<{
+        id: number;
+        start: number;
+        end: number;
+        text: string;
+        words?: Array<{ word: string; start: number; end: number }>;
+      }>;
+
+      const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
+        id: crypto.randomUUID(),
+        index: idx + 1,
+        start: seg.start,
+        end: seg.end,
+        original: seg.text?.trim() || '',
+        words: seg.words,
+      }));
+
+      const cleaned = srtSegments
+        .filter(s => (s.original ?? '').trim() !== '')
+        .sort((a, b) => a.start - b.start)
+        .map((s, i) => ({
+          ...s,
+          index: i + 1,
+          original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
+        }));
+
+      const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
+      await fsp.writeFile(
+        path.join(tempDir, `${operationId}_final.srt`),
+        finalSrt,
+        'utf8'
+      );
+
+      log.info(`[${operationId}] ✏️ ${completionLogLabel}: ${cleaned.length} segments`);
+
+      progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
+      return { segments: cleaned, speechIntervals: [] };
+    };
+
+    const runConfirmedWhisperFallback = async (): Promise<{
+      segments: SrtSegment[];
+      speechIntervals: Array<{ start: number; end: number }>;
+    }> => {
+      log.info(
+        `[${operationId}] Retrying transcription with explicit Whisper after user confirmation`
+      );
+      progressCallback?.({
+        percent: Stage.TRANSCRIBE,
+        stage: '__i18n__:transcription_fallback_whisper',
+        phaseKey: 'transcription_fallback',
+      });
+
+      const result = await transcribeAi({
+        filePath: audioPath,
+        model: AI_MODELS.WHISPER,
+        qualityMode: false,
+        durationSec: duration,
+        idempotencyKey: `${operationId}:whisper-fallback`,
+        signal,
+      });
+
+      throwIfAborted(signal);
+      return finalizeTranscriptionResult({
+        result,
+        completionLogLabel: 'Confirmed Whisper transcription complete',
+      });
+    };
 
     // Helper function for ElevenLabs transcription with progress
     const tryElevenLabsTranscription = async (): Promise<{
@@ -226,12 +393,16 @@ export async function transcribePass({
         progressCallback?.({
           percent: Math.round(estimatedPercent),
           stage: formatElevenLabsTimeRemaining(remainingSec),
+          phaseKey: 'transcribe_vendor',
+          etaSeconds: Math.round(remainingSec),
         });
       }, 2000);
 
       progressCallback?.({
         percent: Stage.TRANSCRIBE,
         stage: formatElevenLabsTimeRemaining(estimatedProcessingTime),
+        phaseKey: 'transcribe_vendor',
+        etaSeconds: Math.round(estimatedProcessingTime),
       });
 
       try {
@@ -239,6 +410,7 @@ export async function transcribePass({
           filePath: audioPath,
           model: 'scribe_v2',
           qualityMode: true,
+          durationSec: duration,
           // Use operationId as an idempotency key so retries can't double-bill.
           idempotencyKey: operationId,
           signal,
@@ -270,48 +442,13 @@ export async function transcribePass({
           progressCallback?.({
             percent: Stage.TRANSCRIBE,
             stage: '__i18n__:transcription_fallback_whisper',
+            phaseKey: 'transcription_fallback',
           });
         }
-
-        const segments = (result?.segments || []) as Array<{
-          id: number;
-          start: number;
-          end: number;
-          text: string;
-          words?: Array<{ word: string; start: number; end: number }>;
-        }>;
-
-        const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
-          id: crypto.randomUUID(),
-          index: idx + 1,
-          start: seg.start,
-          end: seg.end,
-          original: seg.text?.trim() || '',
-          words: seg.words,
-        }));
-
-        const cleaned = srtSegments
-          .filter(s => (s.original ?? '').trim() !== '')
-          .sort((a, b) => a.start - b.start)
-          .map((s, i) => ({
-            ...s,
-            index: i + 1,
-            original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
-          }));
-
-        const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
-        await fsp.writeFile(
-          path.join(tempDir, `${operationId}_final.srt`),
-          finalSrt,
-          'utf8'
-        );
-
-        log.info(
-          `[${operationId}] ✏️ ElevenLabs transcription complete: ${cleaned.length} segments`
-        );
-
-        progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
-        return { segments: cleaned, speechIntervals: [] };
+        return finalizeTranscriptionResult({
+          result,
+          completionLogLabel: 'ElevenLabs transcription complete',
+        });
       } catch (error: any) {
         // Don't log cancellation as an error
         if (
@@ -326,6 +463,10 @@ export async function transcribePass({
         log.warn(
           `[${operationId}] ElevenLabs transcription failed: ${errorMsg}`
         );
+
+        if (getTranscriptionFallbackConfirmationPayload(error)) {
+          throw error;
+        }
 
         // Re-throw transient network errors so outer retry loop can handle them
         if (isTransientNetworkError(error)) {
@@ -365,6 +506,25 @@ export async function transcribePass({
             throw error;
           }
 
+          const fallbackConfirmation =
+            getTranscriptionFallbackConfirmationPayload(error);
+          if (fallbackConfirmation) {
+            const choice = await promptForTranscriptionFallback({
+              payload: fallbackConfirmation,
+              signal,
+            });
+
+            if (choice === 'fallback') {
+              userConfirmedWhisperFallback = true;
+              chunkedQualityMode = false;
+              break;
+            }
+            if (choice === 'recharge') {
+              throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+            }
+            throw new DOMException('Operation cancelled', 'AbortError');
+          }
+
           const errorMsg = error?.message || String(error);
 
           // Transient error - retry if attempts remaining
@@ -395,8 +555,15 @@ export async function transcribePass({
 
       // All retries exhausted, fall back to Whisper chunked
       if (!useByoElevenLabs) {
+        if (userConfirmedWhisperFallback) {
+          return await runConfirmedWhisperFallback();
+        }
         log.info(
-          `[${operationId}] Falling back to Whisper chunked transcription after ${ELEVENLABS_MAX_RETRIES} attempts`
+          `[${operationId}] Falling back to Whisper chunked transcription ${
+            userConfirmedWhisperFallback
+              ? 'after explicit user confirmation'
+              : `after ${ELEVENLABS_MAX_RETRIES} attempts`
+          }`
         );
         chunkedQualityMode = false;
         progressCallback?.({
@@ -425,6 +592,7 @@ export async function transcribePass({
           progressCallback?.({
             percent: Stage.TRANSCRIBE,
             stage: '__i18n__:transcribing_r2_upload',
+            phaseKey: 'upload_audio',
           });
 
           const result = await transcribeLargeFileViaR2({
@@ -438,52 +606,17 @@ export async function transcribePass({
               progressCallback?.({
                 percent: percent ?? Stage.TRANSCRIBE,
                 stage: stage || '__i18n__:transcribing_elevenlabs_finishing',
+                phaseKey: 'transcribe_vendor',
               });
             },
           });
 
           throwIfAborted(signal);
 
-          // Convert result to SrtSegments (same as tryElevenLabsTranscription)
-          const segments = (result?.segments || []) as Array<{
-            id: number;
-            start: number;
-            end: number;
-            text: string;
-            words?: Array<{ word: string; start: number; end: number }>;
-          }>;
-
-          const srtSegments: SrtSegment[] = segments.map((seg, idx) => ({
-            id: crypto.randomUUID(),
-            index: idx + 1,
-            start: seg.start,
-            end: seg.end,
-            original: seg.text?.trim() || '',
-            words: seg.words,
-          }));
-
-          const cleaned = srtSegments
-            .filter(s => (s.original ?? '').trim() !== '')
-            .sort((a, b) => a.start - b.start)
-            .map((s, i) => ({
-              ...s,
-              index: i + 1,
-              original: (s.original ?? '').replace(/\s{2,}/g, ' ').trim(),
-            }));
-
-          const finalSrt = buildSrt({ segments: cleaned, mode: 'original' });
-          await fsp.writeFile(
-            path.join(tempDir, `${operationId}_final.srt`),
-            finalSrt,
-            'utf8'
-          );
-
-          log.info(
-            `[${operationId}] ✏️ Direct relay transcription complete: ${cleaned.length} segments`
-          );
-
-          progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
-          return { segments: cleaned, speechIntervals: [] };
+          return finalizeTranscriptionResult({
+            result,
+            completionLogLabel: 'Direct relay transcription complete',
+          });
         } catch (error: any) {
           if (
             error?.name === 'AbortError' ||
@@ -494,6 +627,25 @@ export async function transcribePass({
           }
 
           const errorMsg = error?.message || String(error);
+          const fallbackConfirmation =
+            getTranscriptionFallbackConfirmationPayload(error);
+
+          if (fallbackConfirmation) {
+            const choice = await promptForTranscriptionFallback({
+              payload: fallbackConfirmation,
+              signal,
+            });
+
+            if (choice === 'fallback') {
+              userConfirmedWhisperFallback = true;
+              chunkedQualityMode = false;
+              break;
+            }
+            if (choice === 'recharge') {
+              throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+            }
+            throw new DOMException('Operation cancelled', 'AbortError');
+          }
 
           // Check if this is a transient error worth retrying
           if (
@@ -525,7 +677,11 @@ export async function transcribePass({
 
       // All retries exhausted, fall back to Whisper
       log.info(
-        `[${operationId}] Falling back to Whisper chunked transcription after ${ELEVENLABS_MAX_RETRIES} attempts`
+        `[${operationId}] Falling back to Whisper chunked transcription ${
+          userConfirmedWhisperFallback
+            ? 'after explicit user confirmation'
+            : `after ${ELEVENLABS_MAX_RETRIES} attempts`
+        }`
       );
       chunkedQualityMode = false;
       progressCallback?.({
@@ -538,6 +694,7 @@ export async function transcribePass({
     progressCallback?.({
       percent: Stage.TRANSCRIBE,
       stage: 'Analyzing audio for chunk boundaries...',
+      phaseKey: 'analyze_audio',
     });
 
     const raw = await detectSpeechIntervals({
@@ -606,6 +763,7 @@ export async function transcribePass({
       progressCallback?.({
         percent: 100,
         stage: '__i18n__:completed',
+        phaseKey: 'completed',
       });
       return { segments: [], speechIntervals: [] };
     }
@@ -613,12 +771,20 @@ export async function transcribePass({
     progressCallback?.({
       percent: Stage.TRANSCRIBE,
       stage: `Chunked audio into ${chunks.length} parts`,
+      phaseKey: 'chunk_audio',
+      current: chunks.length,
+      total: chunks.length,
+      unit: 'chunks',
     });
 
     // Keep progress continuous: transcription spans 10%..70%
     progressCallback?.({
       percent: Stage.TRANSCRIBE,
       stage: `Starting transcription of ${chunks.length} chunks...`,
+      phaseKey: 'transcribe_chunks',
+      current: 0,
+      total: chunks.length,
+      unit: 'chunks',
     });
 
     // We delay providing prompt context until at least 5 segments
@@ -704,8 +870,10 @@ export async function transcribePass({
         progressCallback?.({
           percent: Math.min(p, 95),
           stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
+          phaseKey: 'transcribe_chunks',
           current: done,
           total: chunks.length,
+          unit: 'chunks',
           partialResult: intermediateSrt,
         });
 
@@ -829,8 +997,10 @@ export async function transcribePass({
         progressCallback?.({
           percent: Math.min(p, 95),
           stage: `__i18n__:transcribed_chunks:${done}:${chunks.length}`,
+          phaseKey: 'transcribe_chunks',
           current: done,
           total: chunks.length,
+          unit: 'chunks',
           partialResult: intermediateSrt,
         });
 

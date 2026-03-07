@@ -2,6 +2,12 @@ import { ReactNode } from 'react';
 import { css, cx } from '@emotion/css';
 import { sectionStyles } from '../styles.js';
 import { colors } from '../styles.js';
+import {
+  borderRadius,
+  fontSize,
+  fontWeight,
+  spacing,
+} from './design-system/tokens.js';
 
 interface SectionProps {
   children: ReactNode;
@@ -37,37 +43,38 @@ const overflowVisibleStyle = css`
 `;
 
 const subSectionStyles = css`
-  padding: 15px 20px;
-  margin-top: 15px;
-  margin-bottom: 15px;
-  background-color: ${colors.surface};
-  border: 1px dashed ${colors.border};
-  border-radius: 6px;
+  padding: ${spacing.lg} ${spacing.xl};
+  margin-top: ${spacing.lg};
+  margin-bottom: ${spacing.lg};
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid ${colors.border};
+  border-radius: ${borderRadius.xl};
 `;
 
 const headerRowStyles = css`
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid ${colors.border};
+  gap: ${spacing.md};
+  margin-bottom: ${spacing.xl};
+  padding-bottom: ${spacing.md};
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 `;
 
 const titleStyles = css`
-  font-size: 1.4em;
-  font-weight: 600;
+  font-size: clamp(1.2rem, 1.4vw, 1.5rem);
+  font-weight: ${fontWeight.semibold};
   color: ${colors.text};
   margin: 0;
+  letter-spacing: -0.02em;
 `;
 
 const subTitleStyles = css`
-  font-size: 1.1em;
-  font-weight: 500;
-  margin-bottom: 15px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid ${colors.grayLight};
+  font-size: ${fontSize.lg};
+  font-weight: ${fontWeight.medium};
+  margin-bottom: ${spacing.md};
+  padding-bottom: ${spacing.sm};
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 `;
 
 export default function Section({

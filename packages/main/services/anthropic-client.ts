@@ -20,6 +20,15 @@ export interface AnthropicTranslateOptions {
   effort?: 'low' | 'medium' | 'high';
 }
 
+export interface AnthropicWebSearchOptions {
+  messages: Array<{ role: string; content: string }>;
+  model?: string;
+  apiKey: string;
+  signal?: AbortSignal;
+  effort?: 'low' | 'medium' | 'high';
+  onTextDelta?: (delta: string) => void;
+}
+
 function makeAnthropic(apiKey: string) {
   return new Anthropic({
     apiKey,
@@ -114,6 +123,128 @@ export async function translateWithAnthropic({
     usage: {
       prompt_tokens: response.usage.input_tokens,
       completion_tokens: response.usage.output_tokens,
+    },
+  };
+}
+
+export async function respondWithAnthropicWebSearch({
+  messages,
+  model = AI_MODELS.CLAUDE_OPUS,
+  apiKey,
+  signal,
+  effort,
+  onTextDelta,
+}: AnthropicWebSearchOptions): Promise<any> {
+  const normalizedModel = normalizeAiModelId(model);
+  const client = makeAnthropic(apiKey);
+
+  let systemPrompt: string | undefined;
+  const userMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
+    [];
+
+  for (const msg of messages) {
+    if (msg.role === 'system') {
+      systemPrompt = msg.content;
+    } else if (msg.role === 'user' || msg.role === 'assistant') {
+      userMessages.push({
+        role: msg.role,
+        content: msg.content,
+      });
+    }
+  }
+
+  if (userMessages.length === 0 || userMessages[0].role !== 'user') {
+    userMessages.unshift({ role: 'user', content: 'Please proceed.' });
+  }
+
+  const budgetTokens = effort ? THINKING_BUDGET[effort] : 0;
+  const useExtendedThinking = budgetTokens > 0;
+
+  const requestParams: any = {
+    model: normalizedModel,
+    max_tokens: useExtendedThinking
+      ? ANTHROPIC_MAX_TOKENS_WITH_THINKING
+      : ANTHROPIC_MAX_TOKENS,
+    messages: userMessages,
+    tools: [
+      {
+        type: 'web_search_20250305',
+        name: 'web_search',
+      },
+    ],
+  };
+
+  if (systemPrompt && !useExtendedThinking) {
+    requestParams.system = systemPrompt;
+  } else if (systemPrompt && useExtendedThinking) {
+    userMessages[0].content = `${systemPrompt}\n\n${userMessages[0].content}`;
+  }
+
+  if (useExtendedThinking) {
+    requestParams.thinking = {
+      type: 'enabled',
+      budget_tokens: budgetTokens,
+    };
+  }
+
+  let textContent = '';
+  const stream = await client.messages.create(
+    {
+      ...requestParams,
+      stream: true,
+    },
+    { signal }
+  );
+
+  for await (const event of stream as any) {
+    if (
+      event?.type === 'content_block_delta' &&
+      event?.delta?.type === 'text_delta' &&
+      typeof event?.delta?.text === 'string'
+    ) {
+      const delta = event.delta.text;
+      textContent += delta;
+      try {
+        onTextDelta?.(delta);
+      } catch {
+        // Ignore observer callback errors.
+      }
+      continue;
+    }
+    if (
+      event?.type === 'content_block_start' &&
+      event?.content_block?.type === 'text' &&
+      typeof event?.content_block?.text === 'string'
+    ) {
+      const initial = event.content_block.text;
+      if (initial) {
+        textContent += initial;
+        try {
+          onTextDelta?.(initial);
+        } catch {
+          // Ignore observer callback errors.
+        }
+      }
+    }
+  }
+
+  if (!textContent.trim()) {
+    throw new Error('Anthropic web-search stream returned no text content.');
+  }
+
+  return {
+    model: normalizedModel,
+    choices: [
+      {
+        message: {
+          role: 'assistant',
+          content: textContent,
+        },
+      },
+    ],
+    usage: {
+      prompt_tokens: 0,
+      completion_tokens: 0,
     },
   };
 }

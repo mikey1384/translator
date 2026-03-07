@@ -9,6 +9,7 @@ import { useAiStore } from '../state/ai-store';
 import { i18n } from '../i18n';
 import { logTask, logPhase } from '../utils/logger';
 import { openCreditRanOut } from '../state/modal-store';
+import { hasStrictByoActiveCoverage } from '../state/byo-runtime';
 
 type ProgressPayload = Parameters<
   Parameters<typeof SubtitlesIPC.onGenerateProgress>[0]
@@ -35,6 +36,11 @@ function flush() {
       percent = 0,
       operationId,
       batchStartIndex,
+      current,
+      total,
+      unit,
+      phaseKey,
+      etaSeconds,
       partialResult,
       error,
       model,
@@ -48,12 +54,7 @@ function flush() {
     ) {
       try {
         const s = useAiStore.getState();
-        const usingApiKey = Boolean(
-          s.useByoMaster &&
-          s.useByo &&
-          s.byoUnlocked &&
-          (s.keyPresent || (s.keyValue || '').trim())
-        );
+        const usingApiKey = hasStrictByoActiveCoverage(s);
         if (!usingApiKey) openCreditRanOut();
       } catch {
         // Do nothing
@@ -144,6 +145,11 @@ function flush() {
         percent,
         id: operationId ?? null,
         batchStartIndex,
+        current,
+        total,
+        unit,
+        phaseKey,
+        etaSeconds,
         model,
       });
       // Log phase changes (stage string transitions)
@@ -206,6 +212,12 @@ function flush() {
         percent,
         id: operationId ?? null,
         batchStartIndex,
+        current,
+        total,
+        unit,
+        phaseKey,
+        etaSeconds,
+        model,
       });
       // Log phase changes (stage string transitions)
       if (stage && operationId && lastTranscribe.stage !== stage) {
@@ -379,6 +391,22 @@ SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
       typeof progress?.operationId === 'string' ? progress.operationId : null;
     const error = (progress as any)?.error as string | undefined;
     const model = (progress as any)?.model as string | undefined;
+    const current =
+      typeof progress?.current === 'number' ? progress.current : undefined;
+    const total =
+      typeof progress?.total === 'number' ? progress.total : undefined;
+    const unit =
+      typeof (progress as any)?.unit === 'string'
+        ? ((progress as any).unit as string)
+        : undefined;
+    const phaseKey =
+      typeof (progress as any)?.phaseKey === 'string'
+        ? ((progress as any).phaseKey as string)
+        : undefined;
+    const etaSeconds =
+      typeof (progress as any)?.etaSeconds === 'number'
+        ? (progress as any).etaSeconds
+        : undefined;
 
     if (
       typeof error === 'string' &&
@@ -395,6 +423,11 @@ SubtitlesIPC.onDubProgress((eventOrProgress, progressMaybe) => {
       stage,
       percent,
       id: operationId,
+      current,
+      total,
+      unit,
+      phaseKey,
+      etaSeconds,
       model,
     });
 

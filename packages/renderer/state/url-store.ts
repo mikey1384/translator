@@ -5,6 +5,7 @@ import * as UrlIPC from '@ipc/url';
 import { i18n } from '../i18n';
 import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
+import { useUIStore } from './ui-store';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -35,18 +36,47 @@ type DownloadTask = {
   inProgress: boolean;
 };
 
+export type UrlErrorKind = 'validation' | 'operation' | 'unknown';
+
+const VALIDATION_ERROR_HINTS: RegExp[] = [
+  /\bplease enter a valid url\b/i,
+  /\binvalid url\b/i,
+  /\burl format appears invalid\b/i,
+  /\bno srt file available\b/i,
+  /\bno subtitles available\b/i,
+];
+
+const OPERATION_ERROR_HINT =
+  /\b(error|failed|failure|fatal|exception|crash|panic|timeout|timed out)\b/i;
+
+function inferErrorKind(message: string): UrlErrorKind {
+  if (VALIDATION_ERROR_HINTS.some(re => re.test(message))) {
+    return 'validation';
+  }
+  if (OPERATION_ERROR_HINT.test(message)) {
+    return 'operation';
+  }
+  return 'unknown';
+}
+
 interface UrlState {
   urlInput: string;
   downloadQuality: VideoQuality;
   download: DownloadTask;
   error: string | null;
+  errorKind: UrlErrorKind | null;
   inputMode: 'url' | 'file';
   needCookies: boolean;
   setUrlInput: (urlInput: string) => void;
   setDownloadQuality: (downloadQuality: VideoQuality) => void;
   clearError: () => void;
-  setError: (msg: string) => void;
-  downloadMedia: () => Promise<ProcessUrlResult | void>;
+  setError: (msg: string, kind?: UrlErrorKind) => void;
+  setValidationError: (msg: string) => void;
+  setOperationError: (msg: string) => void;
+  downloadMedia: (options?: {
+    preserveSubtitles?: boolean;
+    url?: string;
+  }) => Promise<ProcessUrlResult | void>;
   setDownload: (patch: Partial<DownloadTask>) => void;
   setInputMode: (mode: 'url' | 'file') => void;
   setNeedCookies: (v: boolean) => void;
@@ -65,12 +95,14 @@ export const useUrlStore = create<UrlState>()(
     downloadQuality: getInitialQuality(),
     download: initialDownload,
     error: null as string | null,
+    errorKind: null as UrlErrorKind | null,
     inputMode: 'url',
     needCookies: false,
 
     setUrlInput: urlInput => {
       set(state => {
         state.error = null;
+        state.errorKind = null;
         state.urlInput = urlInput;
       });
     },
@@ -78,12 +110,30 @@ export const useUrlStore = create<UrlState>()(
       localStorage.setItem(SAVED_QUALITY_KEY, downloadQuality);
       set({ downloadQuality });
     },
-    clearError: () => set({ error: null }),
-    setError: msg => set({ error: msg }),
+    clearError: () => set({ error: null, errorKind: null }),
+    setError: (msg, kind) =>
+      set(state => {
+        const text = String(msg || '').trim();
+        const resolvedKind = text ? (kind ?? inferErrorKind(text)) : null;
+        state.error = text || null;
+        state.errorKind = resolvedKind;
+      }),
+    setValidationError: msg =>
+      set(state => {
+        const text = String(msg || '').trim();
+        state.error = text || null;
+        state.errorKind = text ? 'validation' : null;
+      }),
+    setOperationError: msg =>
+      set(state => {
+        const text = String(msg || '').trim();
+        state.error = text || null;
+        state.errorKind = text ? 'operation' : null;
+      }),
 
-    async downloadMedia() {
+    async downloadMedia(options) {
       set({ needCookies: false });
-      return downloadMediaInternal(set, get);
+      return downloadMediaInternal(set, get, options);
     },
 
     setDownload: patch =>
@@ -98,12 +148,16 @@ export const useUrlStore = create<UrlState>()(
 
 async function downloadMediaInternal(
   set: any,
-  get: any
+  get: any,
+  options?: { preserveSubtitles?: boolean; url?: string }
 ): Promise<ProcessUrlResult | void> {
   const { urlInput, downloadQuality } = get();
-  if (!urlInput.trim()) {
+  const requestedUrl = String(options?.url ?? urlInput ?? '').trim();
+  const preserveSubtitles = Boolean(options?.preserveSubtitles);
+  if (!requestedUrl) {
     set((state: UrlState) => {
       state.error = 'Please enter a valid URL';
+      state.errorKind = 'validation';
     });
     return;
   }
@@ -116,7 +170,9 @@ async function downloadMediaInternal(
       percent: 0,
       inProgress: true,
     };
+    state.urlInput = requestedUrl;
     state.error = null;
+    state.errorKind = null;
   });
 
   const offProgress = UrlIPC.onProgress(p => {
@@ -134,6 +190,7 @@ async function downloadMediaInternal(
         state.download.stage = 'NeedCookies';
         state.download.percent = 100;
         state.error = null;
+        state.errorKind = null;
       });
       return;
     }
@@ -144,6 +201,7 @@ async function downloadMediaInternal(
         state.download.stage = 'Cancelled';
         state.download.percent = 100;
         state.error = null;
+        state.errorKind = null;
       });
       return;
     }
@@ -154,13 +212,15 @@ async function downloadMediaInternal(
     });
     if (p.error)
       set((state: UrlState) => {
-        state.error = `Download error: ${p.error}`;
+        const message = `Download error: ${p.error}`;
+        state.error = message;
+        state.errorKind = inferErrorKind(message);
       });
   });
 
   try {
     const res = await UrlIPC.download({
-      url: urlInput,
+      url: requestedUrl,
       quality: downloadQuality,
       operationId: opId,
     });
@@ -185,11 +245,15 @@ async function downloadMediaInternal(
         if (res.cancelled) {
           state.needCookies = false;
           state.error = null;
+          state.errorKind = null;
         } else if (res.error === 'NeedCookies') {
           state.error = null;
+          state.errorKind = null;
         } else {
           state.needCookies = false;
-          state.error = res.error || 'Failed to process URL';
+          const message = res.error || 'Failed to process URL';
+          state.error = message;
+          state.errorKind = inferErrorKind(message);
         }
       });
       return res;
@@ -199,19 +263,29 @@ async function downloadMediaInternal(
     const preserveMountedDiskSubs =
       existingSubs.length > 0 && subsOrigin === 'disk';
 
-    await useVideoStore
-      .getState()
-      .setFile({ path: finalPath!, name: filename! });
+    if (preserveSubtitles) {
+      await useVideoStore
+        .getState()
+        .mountFilePreserveSubs({ path: finalPath!, name: filename! });
+    } else {
+      await useVideoStore.getState().setFile({
+        path: finalPath!,
+        name: filename!,
+      });
+    }
 
-    if (!preserveMountedDiskSubs) {
+    if (!preserveSubtitles && !preserveMountedDiskSubs) {
       useSubStore.getState().load([]);
     }
+
+    useUIStore.getState().setInputMode('file');
 
     set((state: UrlState) => {
       state.needCookies = false;
       state.download.stage = 'Completed';
       state.download.percent = 100;
       state.download.inProgress = false;
+      state.errorKind = null;
     });
     set((state: UrlState) => {
       state.urlInput = '';
@@ -225,8 +299,10 @@ async function downloadMediaInternal(
 
     set((state: UrlState) => {
       state.needCookies = err?.message === 'NeedCookies';
-      state.error =
+      const message =
         err?.message === 'NeedCookies' ? null : err?.message || String(err);
+      state.error = message;
+      state.errorKind = message ? inferErrorKind(message) : null;
       state.download.stage =
         err?.message === 'NeedCookies' ? 'NeedCookies' : 'Error';
       state.download.percent = 100;

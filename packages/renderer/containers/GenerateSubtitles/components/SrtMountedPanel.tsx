@@ -1,5 +1,5 @@
-import { css } from '@emotion/css';
-import { colors, selectStyles } from '../../../styles.js';
+import { cx } from '@emotion/css';
+import { selectStyles } from '../../../styles.js';
 import { useTranslation } from 'react-i18next';
 import Button from '../../../components/Button.js';
 import { useUIStore } from '../../../state/ui-store';
@@ -14,39 +14,34 @@ import { useAiStore } from '../../../state/ai-store';
 import { useCreditStore } from '../../../state/credit-store';
 import { useMemo } from 'react';
 import {
-  CREDITS_PER_1K_TOKENS_PROMPT,
-  CREDITS_PER_1K_TOKENS_COMPLETION,
-  TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER,
-  TRANSLATION_QUALITY_MULTIPLIER,
-} from '../../../../shared/constants';
-import { formatCredits } from '../../../utils/creditEstimates';
-
-// TTS credits per character (based on pricing.ts calculations with margin)
-// OpenAI tts-1: $15/1M chars * 2 margin / USD_PER_CREDIT ≈ 1.05 credits/char
-// ElevenLabs: $200/1M chars * 2 margin / USD_PER_CREDIT ≈ 14 credits/char
-const TTS_CREDITS_PER_CHAR = {
-  openai: 1.05,
-  elevenlabs: 14,
-} as const;
-
-// Translation credits estimation: input tokens ≈ chars/4, output ≈ input
-function estimateTranslationCredits(
-  charCount: number,
-  qualityEnabled: boolean
-): number {
-  const inputTokens = Math.ceil(charCount / 4);
-  const outputTokens = inputTokens; // Translation output is roughly same size as input
-  const baseCredits = Math.ceil(
-    (inputTokens / 1000) * CREDITS_PER_1K_TOKENS_PROMPT +
-      (outputTokens / 1000) * CREDITS_PER_1K_TOKENS_COMPLETION
-  );
-  const withOverhead = Math.ceil(
-    baseCredits * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
-  );
-  return qualityEnabled
-    ? Math.ceil(withOverhead * TRANSLATION_QUALITY_MULTIPLIER)
-    : withOverhead;
-}
+  estimateDubbingCreditsFromChars,
+  estimateTranslationCreditsFromChars,
+  formatCredits,
+} from '../../../utils/creditEstimates';
+import {
+  isDubbingByo,
+  isTranslationByo,
+  resolveDubbingCreditProvider,
+  type ByoRuntimeState,
+} from '../../../state/byo-runtime';
+import {
+  workflowPanelActionGroupStyles,
+  workflowPanelBadgeStyles,
+  workflowPanelCheckboxInputStyles,
+  workflowPanelCheckboxLabelStyles,
+  workflowPanelControlsStyles,
+  workflowPanelCostStyles,
+  workflowPanelCostWarningStyles,
+  workflowPanelInlineFieldStyles,
+  workflowPanelLeadIconStyles,
+  workflowPanelLeadIconSuccessStyles,
+  workflowPanelLeadStyles,
+  workflowPanelMetaStyles,
+  workflowPanelStyles,
+  workflowPanelSuccessStyles,
+  workflowPanelTextBlockStyles,
+  workflowPanelTitleStyles,
+} from '../../../components/workflow-surface-styles';
 
 interface SrtMountedPanelProps {
   srtPath?: string | null;
@@ -58,6 +53,7 @@ interface SrtMountedPanelProps {
   targetLanguage?: string;
   onTargetLanguageChange?: (lang: string) => void;
   disableDub?: boolean;
+  className?: string;
 }
 
 export default function SrtMountedPanel({
@@ -70,6 +66,7 @@ export default function SrtMountedPanel({
   targetLanguage,
   onTargetLanguageChange,
   disableDub = false,
+  className,
 }: SrtMountedPanelProps) {
   const { t } = useTranslation();
   const showOriginalText = useUIStore(s => s.showOriginalText);
@@ -100,11 +97,63 @@ export default function SrtMountedPanel({
   const segments = useSubStore(s => s.segments);
   const order = useSubStore(s => s.order);
   const credits = useCreditStore(s => s.credits);
+  const byoUnlocked = useAiStore(s => s.byoUnlocked);
+  const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
+  const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
+  const preferredTranscriptionProvider = useAiStore(
+    s => s.preferredTranscriptionProvider
+  );
   const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
-  const useByoMaster = useAiStore(s => s.useByoMaster);
+  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
+  const useByo = useAiStore(s => s.useByo);
+  const keyPresent = useAiStore(s => s.keyPresent);
+  const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
+  const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
+  const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
+  const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
+  const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
+
+  const runtimeState = useMemo<ByoRuntimeState>(
+    () => ({
+      useStrictByoMode,
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+      useByo,
+      useByoAnthropic,
+      useByoElevenLabs,
+      keyPresent,
+      anthropicKeyPresent,
+      elevenLabsKeyPresent,
+      preferClaudeTranslation,
+      preferClaudeReview,
+      preferClaudeSummary,
+      preferredTranscriptionProvider,
+      preferredDubbingProvider,
+      stage5DubbingTtsProvider,
+    }),
+    [
+      useStrictByoMode,
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+      useByo,
+      useByoAnthropic,
+      useByoElevenLabs,
+      keyPresent,
+      anthropicKeyPresent,
+      elevenLabsKeyPresent,
+      preferClaudeTranslation,
+      preferClaudeReview,
+      preferClaudeSummary,
+      preferredTranscriptionProvider,
+      preferredDubbingProvider,
+      stage5DubbingTtsProvider,
+    ]
+  );
 
   // Calculate total character count from subtitles (use translation if available, else original)
   const dubbingEstimate = useMemo(() => {
@@ -117,29 +166,14 @@ export default function SrtMountedPanel({
     }
     if (charCount === 0) return null;
 
-    // Determine which TTS provider will be used
-    let ttsProvider: 'openai' | 'elevenlabs' = 'openai';
-    if (useByoMaster && useByoElevenLabs && elevenLabsKeyPresent) {
-      // BYO ElevenLabs - no Stage5 credits used
-      ttsProvider = 'elevenlabs';
-    } else if (preferredDubbingProvider === 'stage5') {
-      // Stage5 credits - use user's selected TTS provider preference
-      ttsProvider = stage5DubbingTtsProvider;
-    } else if (preferredDubbingProvider === 'openai') {
-      ttsProvider = 'openai';
-    }
-
-    // For BYO keys, we don't show credit estimates (user pays directly)
-    const isByo =
-      useByoMaster &&
-      ((preferredDubbingProvider === 'elevenlabs' &&
-        useByoElevenLabs &&
-        elevenLabsKeyPresent) ||
-        preferredDubbingProvider === 'openai');
+    const ttsProvider = resolveDubbingCreditProvider(runtimeState);
+    const isByo = isDubbingByo(runtimeState);
 
     // Regular TTS: credits based on character count
-    const creditsPerChar = TTS_CREDITS_PER_CHAR[ttsProvider];
-    const estimatedCredits = Math.ceil(charCount * creditsPerChar);
+    const estimatedCredits = estimateDubbingCreditsFromChars(
+      charCount,
+      ttsProvider
+    );
 
     return {
       charCount,
@@ -148,21 +182,10 @@ export default function SrtMountedPanel({
       isByo,
       hasEnoughCredits: isByo || credits == null || credits >= estimatedCredits,
     };
-  }, [
-    order,
-    segments,
-    credits,
-    preferredDubbingProvider,
-    stage5DubbingTtsProvider,
-    useByoMaster,
-    useByoElevenLabs,
-    elevenLabsKeyPresent,
-  ]);
+  }, [order, segments, credits, runtimeState]);
 
   // Translation cost estimation
   const qualityTranslation = useUIStore(s => s.qualityTranslation);
-  const keyPresent = useAiStore(s => s.keyPresent); // BYO OpenAI key
-  const useByo = useAiStore(s => s.useByo);
 
   const translationEstimate = useMemo(() => {
     let charCount = 0;
@@ -175,10 +198,9 @@ export default function SrtMountedPanel({
     }
     if (charCount === 0) return null;
 
-    // For BYO keys, we don't show credit estimates (user pays directly)
-    const isByo = useByoMaster && useByo && keyPresent;
+    const isByo = isTranslationByo(runtimeState);
 
-    const estimatedCredits = estimateTranslationCredits(
+    const estimatedCredits = estimateTranslationCreditsFromChars(
       charCount,
       qualityTranslation
     );
@@ -189,137 +211,99 @@ export default function SrtMountedPanel({
       hasEnoughCredits: isByo || credits == null || credits >= estimatedCredits,
       qualityEnabled: qualityTranslation,
     };
-  }, [
-    order,
-    segments,
-    credits,
-    qualityTranslation,
-    useByoMaster,
-    useByo,
-    keyPresent,
-  ]);
+  }, [order, segments, credits, qualityTranslation, runtimeState]);
+
+  const translationCostClassName = cx(
+    workflowPanelCostStyles,
+    translationEstimate && !translationEstimate.hasEnoughCredits
+      ? workflowPanelCostWarningStyles
+      : undefined
+  );
+
+  const dubbingCostClassName = cx(
+    workflowPanelCostStyles,
+    dubbingEstimate && !dubbingEstimate.hasEnoughCredits
+      ? workflowPanelCostWarningStyles
+      : undefined
+  );
 
   return (
     <div
-      className={css`
-        margin-top: 10px;
-        padding: 20px;
-        border: 1px solid ${colors.success};
-        border-radius: 6px;
-        background-color: ${colors.success}0F;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-      `}
+      className={cx(workflowPanelStyles, workflowPanelSuccessStyles, className)}
     >
-      <div
-        className={css`
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        `}
-      >
-        <span
-          className={css`
-            color: ${colors.success};
-            font-size: 1.2rem;
-          `}
+      <div className={workflowPanelLeadStyles}>
+        <div
+          className={cx(
+            workflowPanelLeadIconStyles,
+            workflowPanelLeadIconSuccessStyles
+          )}
+          aria-hidden="true"
         >
-          ✓
-        </span>
-        <div>
-          <div
-            className={css`
-              font-weight: 600;
-              color: ${colors.text};
-            `}
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </div>
+        <div className={workflowPanelTextBlockStyles}>
+          <h3 className={workflowPanelTitleStyles}>
             {t('input.srtLoaded', 'Transcription Complete')}
-          </div>
+          </h3>
           {srtPath && (
-            <div
-              className={css`
-                font-size: 0.9rem;
-                color: ${colors.gray};
-                margin-top: 2px;
-              `}
-            >
+            <p className={workflowPanelMetaStyles}>
               {srtPath.split(/[/\\]/).pop()}
-            </div>
+            </p>
           )}
         </div>
       </div>
 
-      <div
-        className={css`
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        `}
-      >
-        <label
-          className={css`
-            margin-right: 6px;
-          `}
-        >
-          {t('subtitles.outputLanguage')}:
-        </label>
-        <select
-          className={selectStyles}
-          value={targetLanguage}
-          onChange={e => onTargetLanguageChange?.(e.target.value)}
-          disabled={isDisabled}
-        >
-          {TRANSLATION_LANGUAGES_BASE.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {t(opt.labelKey)}
-            </option>
-          ))}
-          {TRANSLATION_LANGUAGE_GROUPS.map(group => (
-            <optgroup key={group.labelKey} label={t(group.labelKey)}>
-              {group.options.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {t(opt.labelKey)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-
-        <div
-          className={css`
-            margin-top: 8px;
-          `}
-        >
-          <label
-            className={css`
-              display: inline-flex;
-              align-items: center;
-              cursor: pointer;
-            `}
-          >
-            <input
-              type="checkbox"
-              checked={showOriginalText}
-              onChange={e => setShowOriginalText(e.target.checked)}
-              className={css`
-                margin-right: 6px;
-                accent-color: #4361ee;
-              `}
-            />
-            {t('subtitles.showOriginalText')}
+      <div className={workflowPanelControlsStyles}>
+        <div className={workflowPanelInlineFieldStyles}>
+          <label htmlFor="output-language-select">
+            {t('subtitles.outputLanguage')}:
           </label>
+          <select
+            id="output-language-select"
+            className={selectStyles}
+            value={targetLanguage}
+            onChange={e => onTargetLanguageChange?.(e.target.value)}
+            disabled={isDisabled}
+          >
+            {TRANSLATION_LANGUAGES_BASE.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {t(opt.labelKey)}
+              </option>
+            ))}
+            {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+              <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                {group.options.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </div>
 
-        <div
-          className={css`
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-          `}
-        >
+        <label className={workflowPanelCheckboxLabelStyles}>
+          <input
+            type="checkbox"
+            checked={showOriginalText}
+            onChange={e => setShowOriginalText(e.target.checked)}
+            className={workflowPanelCheckboxInputStyles}
+          />
+          {t('subtitles.showOriginalText')}
+        </label>
+
+        <div className={workflowPanelActionGroupStyles}>
           <Button
             variant="primary"
             size="md"
@@ -329,40 +313,19 @@ export default function SrtMountedPanel({
           >
             {t('subtitles.translate', 'Translate')}
           </Button>
-          {translationEstimate &&
-            !isTranslating &&
-            !translationEstimate.isByo && (
-              <span
-                className={css`
-                  font-size: 0.75rem;
-                  color: ${translationEstimate.hasEnoughCredits
-                    ? colors.gray
-                    : colors.danger};
-                  text-align: center;
-                `}
-              >
-                {formatCredits(translationEstimate.estimatedCredits)} cr
-                {translationEstimate.qualityEnabled && (
-                  <span
-                    className={css`
-                      color: ${colors.primaryDark};
-                      margin-left: 2px;
-                    `}
-                  >
-                    {t('subtitles.qualityBadge', '(hq)')}
-                  </span>
-                )}
-              </span>
-            )}
+          {translationEstimate && !isTranslating && !translationEstimate.isByo && (
+            <span className={translationCostClassName}>
+              {formatCredits(translationEstimate.estimatedCredits)} cr
+              {translationEstimate.qualityEnabled && (
+                <span className={workflowPanelBadgeStyles}>
+                  {t('subtitles.qualityBadge', '(hq)')}
+                </span>
+              )}
+            </span>
+          )}
         </div>
-        <div
-          className={css`
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-          `}
-        >
+
+        <div className={workflowPanelActionGroupStyles}>
           <Button
             variant="secondary"
             size="md"
@@ -373,15 +336,7 @@ export default function SrtMountedPanel({
             {t('subtitles.dub', 'Dub Voice')}
           </Button>
           {dubbingEstimate && !isDubbing && !dubbingEstimate.isByo && (
-            <span
-              className={css`
-                font-size: 0.75rem;
-                color: ${dubbingEstimate.hasEnoughCredits
-                  ? colors.gray
-                  : colors.danger};
-                text-align: center;
-              `}
-            >
+            <span className={dubbingCostClassName}>
               {formatCredits(dubbingEstimate.estimatedCredits)} cr
             </span>
           )}

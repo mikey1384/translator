@@ -5,7 +5,8 @@ import { useUIStore } from '../../state/ui-store';
 
 export default function DubbingMixSlider() {
   const { t } = useTranslation();
-  const { dubAmbientMix, setDubAmbientMix } = useUIStore();
+  const dubAmbientMix = useUIStore(s => s.dubAmbientMix);
+  const setDubAmbientMix = useUIStore(s => s.setDubAmbientMix);
   const percent = Math.round(dubAmbientMix * 100);
   const voicePercent = 100 - percent;
 

@@ -1,16 +1,13 @@
 import { useTaskStore } from '../../../state';
 import * as SubtitlesIPC from '../../../ipc/subtitles';
-import * as FileIPC from '../../../ipc/file';
 import { parseSrt } from '../../../../shared/helpers';
 import { i18n } from '../../../i18n';
 import { buildSrt } from '../../../../shared/helpers';
-import { ENABLE_VOICE_CLONING } from '../../../../shared/constants';
 import {
   useSubStore,
   useUIStore,
   useVideoStore,
   useCreditStore,
-  useAiStore,
 } from '../../../state';
 import { openUnsavedSrtConfirm } from '../../../state/modal-store';
 import { saveCurrentSubtitles } from '../../../utils/saveSubtitles';
@@ -21,12 +18,6 @@ import {
   getTranslationFailureMessage,
   shouldSurfaceTranslationFailure,
 } from '../../../utils/translationFailure';
-
-// Voice cloning costs ~35,000 credits per minute (fetched from API, this is fallback)
-const VOICE_CLONING_CREDITS_PER_MINUTE = 35_000;
-
-// Maximum file size for voice cloning upload (matches server limit)
-const MAX_VOICE_CLONING_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -113,7 +104,7 @@ export async function executeSrtTranslation({
     });
 
     if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
-      useUrlStore.getState().setError(friendlyError);
+      useUrlStore.getState().setOperationError(friendlyError);
     }
 
     return { success: false, cancelled, error: res?.error };
@@ -134,7 +125,7 @@ export async function executeSrtTranslation({
     });
 
     if (shouldSurfaceTranslationFailure({ error: errorMsg, cancelled })) {
-      useUrlStore.getState().setError(userFriendlyMsg);
+      useUrlStore.getState().setOperationError(userFriendlyMsg);
     }
 
     return { success: false, cancelled, error: errorMsg };
@@ -191,79 +182,9 @@ export async function executeDubGeneration({
         : undefined,
   }));
 
-  const { dubVoice, dubAmbientMix, dubUseVoiceCloning } = useUIStore.getState();
+  const { dubVoice, dubAmbientMix } = useUIStore.getState();
   const quality = 'standard';
   const selectedVoice = voice ?? dubVoice ?? 'alloy';
-
-  // Determine if we should use voice cloning
-  // Voice cloning is ONLY available for BYO ElevenLabs users (not Stage5 credits)
-  // It's too expensive (~35k credits/min) and doesn't allow control over translation quality
-  const {
-    useByoMaster,
-    useByoElevenLabs,
-    elevenLabsKeyPresent,
-    byoElevenLabsUnlocked,
-  } = useAiStore.getState();
-  const isByoElevenLabs =
-    useByoMaster &&
-    useByoElevenLabs &&
-    elevenLabsKeyPresent &&
-    byoElevenLabsUnlocked;
-  const useVoiceCloning =
-    ENABLE_VOICE_CLONING &&
-    isByoElevenLabs &&
-    dubUseVoiceCloning &&
-    !!targetLanguage &&
-    targetLanguage !== 'original' &&
-    (videoDurationSeconds ?? 0) > 0;
-
-  // Pre-check credits for voice cloning before starting the upload
-  if (useVoiceCloning && videoDurationSeconds) {
-    const credits = useCreditStore.getState().credits;
-    const durationMinutes = Math.ceil(videoDurationSeconds / 60);
-    const requiredCredits = durationMinutes * VOICE_CLONING_CREDITS_PER_MINUTE;
-
-    if (typeof credits === 'number' && credits < requiredCredits) {
-      const affordableMinutes = Math.floor(
-        credits / VOICE_CLONING_CREDITS_PER_MINUTE
-      );
-      useUrlStore
-        .getState()
-        .setError(
-          i18n.t(
-            'generateSubtitles.validation.insufficientCreditsForVoiceCloning',
-            'Insufficient credits for voice cloning. Video is {{duration}} min but you can only afford {{affordable}} min. Please add credits or disable voice cloning.',
-            { duration: durationMinutes, affordable: affordableMinutes }
-          )
-        );
-      return { success: false };
-    }
-  }
-
-  // Pre-check file size for voice cloning (must not exceed 200MB)
-  if (useVoiceCloning && videoPath) {
-    try {
-      const sizeResult = await FileIPC.getFileSize(videoPath);
-      if (sizeResult.success && sizeResult.sizeBytes) {
-        if (sizeResult.sizeBytes > MAX_VOICE_CLONING_FILE_SIZE) {
-          const sizeMB = Math.round(sizeResult.sizeBytes / (1024 * 1024));
-          const maxMB = MAX_VOICE_CLONING_FILE_SIZE / (1024 * 1024);
-          useUrlStore
-            .getState()
-            .setError(
-              i18n.t(
-                'generateSubtitles.validation.fileTooLargeForVoiceCloning',
-                'Video file is too large for voice cloning ({{size}}MB). Maximum allowed is {{max}}MB. Please use a shorter video or disable voice cloning.',
-                { size: sizeMB, max: maxMB }
-              )
-            );
-          return { success: false };
-        }
-      }
-    } catch {
-      // File size check failed, proceed anyway and let server handle it
-    }
-  }
 
   try {
     const res = await SubtitlesIPC.dubSubtitles({
@@ -274,7 +195,6 @@ export async function executeDubGeneration({
       quality,
       ambientMix: dubAmbientMix,
       targetLanguage,
-      useVoiceCloning,
       videoDurationSeconds,
       sourceLanguage,
     });
@@ -315,7 +235,7 @@ export async function executeDubGeneration({
         const friendlyError = isByoError(res.error)
           ? getByoErrorMessage(res.error)
           : res.error;
-        useUrlStore.getState().setError(friendlyError);
+        useUrlStore.getState().setOperationError(friendlyError);
       } catch {
         // ignore store errors
       }
@@ -341,7 +261,7 @@ export async function executeDubGeneration({
       ? getByoErrorMessage(errorMsg)
       : errorMsg;
     try {
-      useUrlStore.getState().setError(friendlyError);
+      useUrlStore.getState().setOperationError(friendlyError);
     } catch {
       // ignore
     }
@@ -422,7 +342,7 @@ export async function executeSubtitleGeneration({
       const percent = cancelled ? 0 : 100;
 
       if (!cancelled && stage) {
-        useUrlStore.getState().setError(stage);
+        useUrlStore.getState().setOperationError(stage);
       }
 
       setTranscription({
@@ -445,7 +365,7 @@ export async function executeSubtitleGeneration({
       : errorMsg || i18n.t('generateSubtitles.status.error');
 
     if (!cancelled) {
-      useUrlStore.getState().setError(friendlyError);
+      useUrlStore.getState().setOperationError(friendlyError);
     }
 
     setTranscription({

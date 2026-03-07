@@ -5,10 +5,11 @@
  * Checks all locale files for:
  * 1. Missing keys compared to en.json (the source of truth)
  * 2. Values that are still in English (not translated)
+ * 3. Placeholder/tag token mismatches that can break interpolation or copy
  *
  * Exit codes:
- *   0 - All locales are complete and translated
- *   1 - Issues found (missing keys or untranslated strings)
+ *   0 - All locales are complete, translated, and interpolation-safe
+ *   1 - Issues found (missing keys, untranslated strings, or token mismatches)
  */
 
 import { readFileSync, readdirSync } from 'fs';
@@ -21,18 +22,26 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ALLOWLIST_PATTERNS = [
   // Brand names
   /^Stage5$/i,
+  /^Stage5 credits$/i,
   /^OpenAI$/i,
   /^Anthropic$/i,
   /^ElevenLabs$/i,
   /^YouTube$/i,
   /^TikTok$/i,
   /^Instagram$/i,
+  /^Twitch$/i,
+  /^Vimeo$/i,
+  /^Bilibili$/i,
+  /^Dailymotion$/i,
   /^Claude$/i,
+  /^Anthropic \(Claude\)$/i,
   /^Whisper$/i,
   /^Scribe$/i,
   /^GPT-?\d/i,
   /^Opus/i,
   /^Sonnet/i,
+  /^VTuber$/i,
+  /^MOBA$/i,
 
   // File formats and technical terms
   /^SRT$/i,
@@ -143,6 +152,8 @@ const ALLOWLIST_PATTERNS = [
   /^Translation \(Review\)$/i,
   /^Highlight$/i,
   /^Section \{\{index\}\}$/i,
+  /^translator$/i,
+  /^by stage_5$/i,
 
   // Common words that are the same or acceptable in many languages
   /^Europe$/i,
@@ -227,6 +238,25 @@ function isAllowlisted(value) {
 }
 
 /**
+ * Extract interpolation and Trans-style tag tokens from a string
+ * @param {string} value
+ * @returns {string[]}
+ */
+function extractTokens(value) {
+  const variables = [...value.matchAll(/\{\{([^}]+)\}\}/g)].map(
+    match => `var:${match[1]}`
+  );
+  const openTags = [...value.matchAll(/<([0-9]+)>/g)].map(
+    match => `open:${match[1]}`
+  );
+  const closeTags = [...value.matchAll(/<\/([0-9]+)>/g)].map(
+    match => `close:${match[1]}`
+  );
+
+  return [...variables, ...openTags, ...closeTags].sort();
+}
+
+/**
  * Get locale name from filename
  * @param {string} filename
  * @returns {string}
@@ -287,11 +317,18 @@ function main() {
 
   // Get all locale files
   const files = readdirSync(__dirname)
-    .filter(f => f.endsWith('.json') && f !== 'en.json')
+    .filter(
+      f =>
+        f.endsWith('.json') &&
+        f !== 'en.json' &&
+        f !== 'translations-batch.json'
+    )
     .sort();
 
   let totalMissing = 0;
+  let totalExtra = 0;
   let totalUntranslated = 0;
+  let totalTokenMismatches = 0;
   const issues = [];
 
   for (const file of files) {
@@ -301,12 +338,20 @@ function main() {
     const localeName = getLocaleName(file);
 
     const missing = [];
+    const extra = [];
     const untranslated = [];
+    const tokenMismatches = [];
 
     // Check for missing keys
     for (const [key, enValue] of enKeys) {
       if (!localeKeys.has(key)) {
         missing.push({ key, enValue });
+      }
+    }
+
+    for (const [key] of localeKeys) {
+      if (!enKeys.has(key)) {
+        extra.push({ key });
       }
     }
 
@@ -316,27 +361,54 @@ function main() {
       if (enValue && localeValue === enValue && !isAllowlisted(enValue)) {
         untranslated.push({ key, value: enValue });
       }
+      if (!enValue) continue;
+      const enTokens = extractTokens(enValue);
+      const localeTokens = extractTokens(localeValue);
+      if (enTokens.join('|') !== localeTokens.join('|')) {
+        tokenMismatches.push({
+          key,
+          enTokens,
+          localeTokens,
+          localeValue,
+        });
+      }
     }
 
-    if (missing.length > 0 || untranslated.length > 0) {
+    if (
+      missing.length > 0 ||
+      extra.length > 0 ||
+      untranslated.length > 0 ||
+      tokenMismatches.length > 0
+    ) {
       issues.push({
         file,
         localeName,
         missing,
+        extra,
         untranslated,
+        tokenMismatches,
       });
       totalMissing += missing.length;
+      totalExtra += extra.length;
       totalUntranslated += untranslated.length;
+      totalTokenMismatches += tokenMismatches.length;
     }
   }
 
   // Output results
   if (issues.length === 0) {
-    console.log('All locales are complete and translated!');
+    console.log('All locales are complete, translated, and token-safe!');
     process.exit(0);
   }
 
-  for (const { file, localeName, missing, untranslated } of issues) {
+  for (const {
+    file,
+    localeName,
+    missing,
+    extra,
+    untranslated,
+    tokenMismatches,
+  } of issues) {
     console.log(`\n${'='.repeat(60)}`);
     console.log(`${file} (${localeName})`);
     console.log('='.repeat(60));
@@ -352,6 +424,16 @@ function main() {
       }
     }
 
+    if (extra.length > 0) {
+      console.log(`\n  Extra keys (${extra.length}):`);
+      for (const { key } of extra.slice(0, 20)) {
+        console.log(`    - ${key}`);
+      }
+      if (extra.length > 20) {
+        console.log(`    ... and ${extra.length - 20} more`);
+      }
+    }
+
     if (untranslated.length > 0) {
       console.log(`\n  Untranslated strings (${untranslated.length}):`);
       for (const { key, value } of untranslated.slice(0, 20)) {
@@ -362,6 +444,18 @@ function main() {
         console.log(`    ... and ${untranslated.length - 20} more`);
       }
     }
+
+    if (tokenMismatches.length > 0) {
+      console.log(`\n  Token mismatches (${tokenMismatches.length}):`);
+      for (const { key, enTokens, localeTokens, localeValue } of tokenMismatches.slice(0, 20)) {
+        const preview =
+          localeValue.length > 50 ? localeValue.slice(0, 47) + '...' : localeValue;
+        console.log(`    - ${key}: expected [${enTokens.join(', ')}], got [${localeTokens.join(', ')}] -> "${preview}"`);
+      }
+      if (tokenMismatches.length > 20) {
+        console.log(`    ... and ${tokenMismatches.length - 20} more`);
+      }
+    }
   }
 
   console.log(`\n${'='.repeat(60)}`);
@@ -369,7 +463,9 @@ function main() {
   console.log('='.repeat(60));
   console.log(`Locales with issues: ${issues.length}/${files.length}`);
   console.log(`Total missing keys: ${totalMissing}`);
+  console.log(`Total extra keys: ${totalExtra}`);
   console.log(`Total untranslated strings: ${totalUntranslated}`);
+  console.log(`Total token mismatches: ${totalTokenMismatches}`);
 
   process.exit(1);
 }

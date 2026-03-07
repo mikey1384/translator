@@ -23,6 +23,15 @@ export interface OpenAiTranslateOptions {
   reasoning?: { effort?: 'low' | 'medium' | 'high' };
 }
 
+export interface OpenAiWebSearchOptions {
+  messages: any[];
+  model?: string;
+  apiKey: string;
+  signal?: AbortSignal;
+  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  onTextDelta?: (delta: string) => void;
+}
+
 export interface OpenAiDubOptions {
   segments: Array<
     Pick<
@@ -53,7 +62,7 @@ export interface OpenAiDubResult {
 export async function transcribeWithOpenAi({
   filePath,
   promptContext,
-  model = 'whisper-1',
+  model = AI_MODELS.WHISPER,
   apiKey,
   signal,
 }: OpenAiTranscribeOptions): Promise<any> {
@@ -130,6 +139,227 @@ export async function translateWithOpenAi({
   );
 
   return response.data;
+}
+
+function buildOpenAiWebSearchPayload({
+  messages,
+  model,
+  reasoning,
+}: {
+  messages: any[];
+  model: string;
+  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+}): Record<string, any> {
+  const payload: Record<string, any> = {
+    model,
+    input: (messages || [])
+      .map((msg: any) => {
+        const roleRaw = typeof msg?.role === 'string' ? msg.role : 'user';
+        const role =
+          roleRaw === 'system' || roleRaw === 'assistant' || roleRaw === 'user'
+            ? roleRaw
+            : 'user';
+        const text = String(msg?.content || '').trim();
+        if (!text) return null;
+        return {
+          role,
+          content: [
+            {
+              type: 'input_text',
+              text,
+            },
+          ],
+        };
+      })
+      .filter(Boolean),
+    tools: [{ type: 'web_search_preview' }],
+  };
+
+  if (reasoning?.effort) {
+    payload.reasoning = { effort: reasoning.effort };
+    log.debug(
+      `[openai-client] Using web-search reasoning.effort: ${reasoning.effort}`
+    );
+  }
+  return payload;
+}
+
+function extractTextFromResponseObject(response: any): string {
+  if (!response) return '';
+  if (typeof response.output_text === 'string' && response.output_text.trim()) {
+    return response.output_text.trim();
+  }
+  if (Array.isArray(response.output_text)) {
+    const joined = response.output_text
+      .map((part: any) => (typeof part === 'string' ? part : ''))
+      .join('')
+      .trim();
+    if (joined) return joined;
+  }
+  if (Array.isArray(response.output)) {
+    const chunks: string[] = [];
+    for (const item of response.output) {
+      const content = item?.content;
+      if (!Array.isArray(content)) continue;
+      for (const part of content) {
+        if (typeof part?.text === 'string' && part.text.trim()) {
+          chunks.push(part.text.trim());
+        }
+      }
+    }
+    const joined = chunks.join('\n').trim();
+    if (joined) return joined;
+  }
+  return '';
+}
+
+function extractOpenAiStreamDelta(eventPayload: any): string {
+  if (!eventPayload || typeof eventPayload !== 'object') return '';
+  if (
+    eventPayload.type === 'response.output_text.delta' &&
+    typeof eventPayload.delta === 'string'
+  ) {
+    return eventPayload.delta;
+  }
+  if (
+    typeof eventPayload.delta?.text === 'string' &&
+    eventPayload.delta.text.trim()
+  ) {
+    return eventPayload.delta.text;
+  }
+  return '';
+}
+
+export async function respondWithOpenAiWebSearch({
+  messages,
+  model = AI_MODELS.GPT,
+  apiKey,
+  signal,
+  reasoning,
+  onTextDelta,
+}: OpenAiWebSearchOptions): Promise<any> {
+  const normalizedModel = normalizeAiModelId(model);
+  const payload = buildOpenAiWebSearchPayload({
+    messages,
+    model: normalizedModel,
+    reasoning,
+  });
+  const streamPayload = {
+    ...payload,
+    stream: true,
+  };
+
+  const response = await axios.post(
+    `${OPENAI_BASE_URL}/responses`,
+    streamPayload,
+    {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      responseType: 'stream',
+      signal,
+    }
+  );
+  const stream = response.data as NodeJS.ReadableStream;
+
+  let rawBuffer = '';
+  let textContent = '';
+  let resolvedModel = normalizedModel;
+
+  const processSseEvent = (rawEvent: string) => {
+    const lines = rawEvent
+      .split(/\r?\n/)
+      .map(line => line.trimEnd())
+      .filter(Boolean);
+    if (lines.length === 0) return;
+    const dataLines = lines
+      .filter(line => line.startsWith('data:'))
+      .map(line => line.slice(5).trimStart());
+    if (dataLines.length === 0) return;
+    const data = dataLines.join('\n').trim();
+    if (!data || data === '[DONE]') return;
+
+    try {
+      const eventPayload = JSON.parse(data);
+      const modelFromEvent =
+        typeof eventPayload?.response?.model === 'string'
+          ? eventPayload.response.model
+          : typeof eventPayload?.model === 'string'
+            ? eventPayload.model
+            : '';
+      if (modelFromEvent) {
+        resolvedModel = normalizeAiModelId(modelFromEvent);
+      }
+
+      const delta = extractOpenAiStreamDelta(eventPayload);
+      if (delta) {
+        textContent += delta;
+        try {
+          onTextDelta?.(delta);
+        } catch {
+          // Ignore observer callback errors.
+        }
+      }
+
+      if (eventPayload?.type === 'response.completed' && !textContent.trim()) {
+        const fromResponse = extractTextFromResponseObject(
+          eventPayload.response
+        );
+        if (fromResponse) {
+          textContent = fromResponse;
+        }
+      }
+    } catch {
+      // Ignore malformed SSE payloads.
+    }
+  };
+
+  const flushSseBuffer = (flushTail = false) => {
+    for (;;) {
+      const nextEventIndex = rawBuffer.indexOf('\n\n');
+      if (nextEventIndex === -1) break;
+      const rawEvent = rawBuffer.slice(0, nextEventIndex);
+      rawBuffer = rawBuffer.slice(nextEventIndex + 2);
+      processSseEvent(rawEvent);
+    }
+    if (flushTail) {
+      const tail = rawBuffer.trim();
+      if (tail) processSseEvent(tail);
+      rawBuffer = '';
+    }
+  };
+
+  await new Promise<void>((resolve, reject) => {
+    stream.setEncoding?.('utf8');
+    stream.on('data', (chunk: Buffer | string) => {
+      rawBuffer += String(chunk).replace(/\r\n/g, '\n');
+      flushSseBuffer(false);
+    });
+    stream.on('end', () => {
+      flushSseBuffer(true);
+      resolve();
+    });
+    stream.on('error', reject);
+  });
+
+  const finalized = textContent.trim();
+  if (!finalized) {
+    throw new Error('OpenAI web-search stream returned no text content.');
+  }
+
+  return {
+    model: resolvedModel,
+    output_text: finalized,
+    choices: [
+      {
+        message: {
+          role: 'assistant',
+          content: finalized,
+        },
+      },
+    ],
+  };
 }
 
 export async function synthesizeDubWithOpenAi({

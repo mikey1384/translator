@@ -1,6 +1,11 @@
 import { SubtitleProcessingError } from './errors.js';
 import fs from 'fs';
-import { translate as translateAi, getActiveProvider } from '../ai-provider.js';
+import { createHash } from 'node:crypto';
+import {
+  translate as translateAi,
+  translateWithWebSearch as translateAiWithWebSearch,
+  getActiveProvider,
+} from '../ai-provider.js';
 import log from 'electron-log';
 import {
   AI_MODELS,
@@ -126,12 +131,43 @@ function extractContentFromCompletion(completion: any): string | null {
   return null;
 }
 
+function buildTranslationIdempotencyKey({
+  operationId,
+  model,
+  reasoning,
+  translationPhase,
+  qualityMode,
+  webSearch,
+  messages,
+}: {
+  operationId: string;
+  model: string;
+  reasoning?: { effort?: 'low' | 'medium' | 'high' };
+  translationPhase?: 'draft' | 'review';
+  qualityMode?: boolean;
+  webSearch?: boolean;
+  messages: any[];
+}): string {
+  const fingerprint = JSON.stringify({
+    model,
+    reasoning: reasoning ?? null,
+    translationPhase: translationPhase ?? null,
+    qualityMode: typeof qualityMode === 'boolean' ? qualityMode : null,
+    webSearch: webSearch === true,
+    messages,
+  });
+  const digest = createHash('sha256').update(fingerprint).digest('hex');
+  return `translate:${operationId}:${digest.slice(0, 24)}`;
+}
+
 export async function callAIModel({
   messages,
   model = AI_MODELS.GPT,
   reasoning,
   translationPhase,
   qualityMode,
+  webSearch = false,
+  onTextDelta,
   signal,
   operationId,
   retryAttempts = 3,
@@ -144,14 +180,29 @@ export async function callAIModel({
   };
   translationPhase?: 'draft' | 'review';
   qualityMode?: boolean;
+  webSearch?: boolean;
+  onTextDelta?: (delta: string) => void;
   signal?: AbortSignal;
   operationId: string;
   retryAttempts?: number;
   onResolvedModel?: (model: string) => void;
 }): Promise<string> {
   const provider = getActiveProvider();
-  const providerName = provider === 'openai' ? 'OpenAI' : 'Stage5';
+  const providerName = webSearch
+    ? 'LLM web-search pipeline'
+    : provider === 'openai'
+      ? 'OpenAI'
+      : 'Stage5';
   log.debug(`[${operationId}] Using ${providerName} provider for translation`);
+  const requestIdempotencyKey = buildTranslationIdempotencyKey({
+    operationId,
+    model,
+    reasoning,
+    translationPhase,
+    qualityMode,
+    webSearch,
+    messages,
+  });
 
   let currentAttempt = 0;
   while (currentAttempt < retryAttempts) {
@@ -163,14 +214,26 @@ export async function callAIModel({
         throw new DOMException('Operation cancelled', 'AbortError');
       }
 
-      const completion = await translateAi({
-        messages,
-        model,
-        reasoning,
-        translationPhase,
-        qualityMode,
-        signal,
-      });
+      const completion = webSearch
+        ? await translateAiWithWebSearch({
+            messages,
+            model,
+            reasoning,
+            translationPhase,
+            qualityMode,
+            idempotencyKey: requestIdempotencyKey,
+            onTextDelta,
+            signal,
+          })
+        : await translateAi({
+            messages,
+            model,
+            reasoning,
+            translationPhase,
+            qualityMode,
+            idempotencyKey: requestIdempotencyKey,
+            signal,
+          });
       const resolvedModel =
         typeof completion?.model === 'string' && completion.model.trim()
           ? normalizeAiModelId(completion.model)
@@ -239,6 +302,11 @@ export async function callAIModel({
         // Preserve the specific error so the renderer can show a credit-ran-out modal,
         // while the main handler still treats it as a cancellation for UX.
         throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+      }
+      if (Object.values(ERROR_CODES).includes(error?.message)) {
+        // Preserve provider-specific error codes (e.g., BYO quota/auth/rate errors)
+        // so the renderer can show exact recovery guidance.
+        throw new Error(error.message);
       }
 
       throw new Error(

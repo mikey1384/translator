@@ -1,8 +1,11 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent, shell } from 'electron';
 import {
+  AllByoSettings,
   ExposedRenderResult,
   RenderSubtitlesOptions,
   CreditBalanceResult,
+  VideoSuggestionModelPreference,
+  VideoSuggestionRecency,
 } from '@shared-types/app';
 import { promises as fs } from 'fs';
 
@@ -169,6 +172,21 @@ const electronAPI = {
 
   // ---------------------- URL Processing ----------------------
   processUrl: (options: any) => ipcRenderer.invoke('process-url', options),
+  suggestVideos: (request: any) =>
+    ipcRenderer.invoke('suggest-videos', request),
+  onVideoSuggestionProgress: (callback: (progress: any) => void) => {
+    if (typeof callback !== 'function') return () => void 0;
+    const listener = (_: any, progress: any) => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error('[preload] video-suggestion-progress error:', error);
+      }
+    };
+    ipcRenderer.on('video-suggestion-progress', listener);
+    return () =>
+      ipcRenderer.removeListener('video-suggestion-progress', listener);
+  },
   onProcessUrlProgress: (callback: (progress: any) => void) => {
     if (typeof callback !== 'function') return;
     const listener = (_: any, progress: any) => {
@@ -344,32 +362,13 @@ const electronAPI = {
     error?: string;
   }> => ipcRenderer.invoke('reset-credits-to-zero'),
 
-  // Get voice cloning pricing from API
-  getVoiceCloningPricing: (): Promise<{
-    creditsPerMinute: number;
-    description: string;
-  }> => ipcRenderer.invoke('get-voice-cloning-pricing'),
-
   // Check if encryption is available for secure key storage
   checkEncryptionAvailable: (): Promise<boolean> =>
     ipcRenderer.invoke('check-encryption-available'),
 
   // Batched BYO settings - single call to load all settings at once
-  getAllByoSettings: (): Promise<{
-    openAiKeyPresent: boolean;
-    anthropicKeyPresent: boolean;
-    elevenLabsKeyPresent: boolean;
-    useByoOpenAi: boolean;
-    useByoAnthropic: boolean;
-    useByoElevenLabs: boolean;
-    useByoMaster: boolean;
-    preferClaudeTranslation: boolean;
-    preferClaudeReview: boolean;
-    preferClaudeSummary: boolean;
-    preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
-    preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
-    stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
-  }> => ipcRenderer.invoke('get-all-byo-settings'),
+  getAllByoSettings: (): Promise<AllByoSettings> =>
+    ipcRenderer.invoke('get-all-byo-settings'),
 
   getOpenAiApiKey: (): Promise<string | null> =>
     ipcRenderer.invoke('get-openai-api-key'),
@@ -410,10 +409,7 @@ const electronAPI = {
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-byo-anthropic-enabled', enabled),
 
-  // Get device ID for admin button visibility
-  getDeviceId: (): Promise<string> => ipcRenderer.invoke('get-device-id'),
-  getAdminDeviceId: (): Promise<string | null> =>
-    ipcRenderer.invoke('get-admin-device-id'),
+  isAdminMode: (): Promise<boolean> => ipcRenderer.invoke('is-admin-mode'),
   getSystemInfo: (): Promise<{
     platform: string;
     arch: string;
@@ -543,13 +539,13 @@ const electronAPI = {
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-byo-elevenlabs-enabled', enabled),
 
-  // Master BYO toggle
-  getByoMasterEnabled: (): Promise<boolean> =>
-    ipcRenderer.invoke('get-byo-master-enabled'),
-  setByoMasterEnabled: (
+  // Strict BYO mode
+  getStrictByoModeEnabled: (): Promise<boolean> =>
+    ipcRenderer.invoke('get-strict-byo-mode-enabled'),
+  setStrictByoModeEnabled: (
     enabled: boolean
   ): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke('set-byo-master-enabled', enabled),
+    ipcRenderer.invoke('set-strict-byo-mode-enabled', enabled),
 
   // Claude translation preference
   getPreferClaudeTranslation: (): Promise<boolean> =>
@@ -574,6 +570,43 @@ const electronAPI = {
     prefer: boolean
   ): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('set-prefer-claude-summary', prefer),
+  getVideoSuggestionModelPreference:
+    (): Promise<VideoSuggestionModelPreference> =>
+      ipcRenderer.invoke('get-video-suggestion-model-preference'),
+  setVideoSuggestionModelPreference: (
+    model: VideoSuggestionModelPreference
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-video-suggestion-model-preference', model),
+  getVideoSuggestionTargetCountry: (): Promise<string> =>
+    ipcRenderer.invoke('get-video-suggestion-target-country'),
+  setVideoSuggestionTargetCountry: (
+    country: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-video-suggestion-target-country', country),
+  getVideoSuggestionRecency: (): Promise<VideoSuggestionRecency> =>
+    ipcRenderer.invoke('get-video-suggestion-recency'),
+  setVideoSuggestionRecency: (
+    recency: VideoSuggestionRecency
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-video-suggestion-recency', recency),
+  getVideoSuggestionPreferenceTopic: (): Promise<string> =>
+    ipcRenderer.invoke('get-video-suggestion-preference-topic'),
+  setVideoSuggestionPreferenceTopic: (
+    value: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-video-suggestion-preference-topic', value),
+  getVideoSuggestionPreferenceCreator: (): Promise<string> =>
+    ipcRenderer.invoke('get-video-suggestion-preference-creator'),
+  setVideoSuggestionPreferenceCreator: (
+    value: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-video-suggestion-preference-creator', value),
+  getVideoSuggestionPreferenceSubtopic: (): Promise<string> =>
+    ipcRenderer.invoke('get-video-suggestion-preference-subtopic'),
+  setVideoSuggestionPreferenceSubtopic: (
+    value: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('set-video-suggestion-preference-subtopic', value),
 
   // Transcription provider preference
   getPreferredTranscriptionProvider: (): Promise<
@@ -623,6 +656,8 @@ const electronAPI = {
   updateInstall: () => ipcRenderer.invoke('update:install'),
   updateGetPostInstallNotice: () =>
     ipcRenderer.invoke('update:get-post-install-notice'),
+  updateGetRequiredNotice: () =>
+    ipcRenderer.invoke('update:get-required-notice'),
   onUpdateAvailable: (callback: (info: any) => void) => {
     const handler = (_: any, info: any) => callback(info);
     ipcRenderer.on('update:available', handler);
@@ -642,6 +677,11 @@ const electronAPI = {
     const handler = (_: any, msg: string) => callback(msg);
     ipcRenderer.on('update:error', handler);
     return () => ipcRenderer.removeListener('update:error', handler);
+  },
+  onUpdateRequired: (callback: (payload: any) => void) => {
+    const handler = (_: any, payload: any) => callback(payload);
+    ipcRenderer.on('update:required', handler);
+    return () => ipcRenderer.removeListener('update:required', handler);
   },
 
   // --- App-managed cookies session (cross-platform) ---
@@ -673,10 +713,20 @@ try {
 contextBridge.exposeInMainWorld('fileApi', {
   readText: (p: string) => fs.readFile(p, 'utf8'),
   writeText: (p: string, data: string) => fs.writeFile(p, data, 'utf8'),
+  fileExists: async (p: string): Promise<boolean> => {
+    if (!String(p || '').trim()) return false;
+    try {
+      await fs.access(p);
+      return true;
+    } catch {
+      return false;
+    }
+  },
 });
 
 contextBridge.exposeInMainWorld('appShell', {
   openExternal: (url: string): Promise<void> => shell.openExternal(url),
+  openPath: (path: string): Promise<string> => shell.openPath(path),
 });
 
 const isPackaged = ipcRenderer.sendSync('is-packaged');
@@ -685,7 +735,7 @@ contextBridge.exposeInMainWorld('env', { isPackaged });
 // Listen for postMessage from Stripe checkout pages and forward to main process
 window.addEventListener('message', event => {
   // Only accept messages from our trusted checkout domains
-  const trustedOrigins = ['https://stage5.tools'];
+  const trustedOrigins = ['https://stage5.tools', 'https://translator.tools'];
 
   // In development, also allow localhost for testing
   const isPackaged = ipcRenderer.sendSync('is-packaged');

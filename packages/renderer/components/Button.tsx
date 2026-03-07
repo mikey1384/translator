@@ -3,10 +3,16 @@ import { css, cx } from '@emotion/css';
 import { colors, breakpoints } from '../styles.js';
 import { logButton } from '../utils/logger.js';
 import { useTranslation } from 'react-i18next';
-// import LoadingSpinner from './LoadingSpinner'; // Comment out for now
+import {
+  borderRadius,
+  componentSizes,
+  fontWeight,
+  shadows,
+  spacing,
+  transitions,
+} from './design-system/tokens.js';
 
-// Define the button variants and sizes
-type ButtonVariant =
+export type ButtonVariant =
   | 'primary'
   | 'secondary'
   | 'text'
@@ -14,20 +20,23 @@ type ButtonVariant =
   | 'success'
   | 'warning'
   | 'link';
-type ButtonSize = 'sm' | 'md' | 'lg';
 
-// Adjusted type for onFileChange to handle directory paths better
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
 type FileChangeEvent =
   | ChangeEvent<HTMLInputElement>
   | { target: { files: FileList | { name: string; path: string }[] | null } };
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
   className?: string;
   isLoading?: boolean;
   children: ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   asFileInput?: boolean;
   onFileChange?: (event: FileChangeEvent) => void;
   accept?: string;
@@ -35,128 +44,147 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   webkitdirectory?: boolean;
 }
 
-// Base button styles
 const baseButtonStyles = css`
-  position: relative; // Needed for absolute spinner and hidden input
-  overflow: hidden; // Prevent input spillover
-  cursor: pointer;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: ${spacing.sm};
   border: 1px solid transparent;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: 0.25rem;
-  transition: all 0.15s ease-in-out;
+  border-radius: ${borderRadius.lg};
+  font-weight: ${fontWeight.semibold};
+  letter-spacing: -0.01em;
+  transition:
+    border-color ${transitions.fast},
+    background-color ${transitions.fast},
+    color ${transitions.fast};
+  cursor: pointer;
   user-select: none;
   text-align: center;
   vertical-align: middle;
   white-space: nowrap;
+  box-shadow: ${shadows.sm};
+  overflow: hidden;
 
-  &:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      ${shadows.sm},
+      0 0 0 3px rgba(125, 167, 255, 0.2);
   }
 
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     width: 100%;
   }
 `;
 
-// Size variants
 const buttonSizes: Record<ButtonSize, string> = {
   sm: css`
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    border-radius: 0.2rem;
+    min-height: ${componentSizes.button.sm.height};
+    padding: 0 ${componentSizes.button.sm.paddingX};
+    font-size: ${componentSizes.button.sm.fontSize};
   `,
   md: css`
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border-radius: 0.25rem;
+    min-height: ${componentSizes.button.md.height};
+    padding: 0 ${componentSizes.button.md.paddingX};
+    font-size: ${componentSizes.button.md.fontSize};
   `,
   lg: css`
-    padding: 0.5rem 1rem;
-    font-size: 1.25rem;
-    line-height: 1.5;
-    border-radius: 0.3rem;
+    min-height: ${componentSizes.button.lg.height};
+    padding: 0 ${componentSizes.button.lg.paddingX};
+    font-size: ${componentSizes.button.lg.fontSize};
   `,
 };
 
-// Style variants
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: css`
-    color: #fff;
-    background-color: ${colors.primary};
-    border-color: ${colors.primary};
+    color: ${colors.bg};
+    background: linear-gradient(
+      135deg,
+      ${colors.primaryLight},
+      ${colors.primary}
+    );
+    border-color: rgba(171, 200, 255, 0.18);
+    box-shadow: ${shadows.button};
+
     &:hover:not(:disabled) {
-      background-color: ${colors.primaryDark};
-      border-color: ${colors.primaryDark};
+      background: linear-gradient(135deg, #bfd5ff, ${colors.primary});
+      border-color: rgba(171, 200, 255, 0.28);
     }
   `,
   secondary: css`
     color: ${colors.text};
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0)
+    );
     background-color: ${colors.grayLight};
     border-color: ${colors.border};
+
     &:hover:not(:disabled) {
-      background-color: ${colors.surface};
-      border-color: ${colors.grayDark};
+      background-color: ${colors.surfaceRaised};
+      border-color: ${colors.borderStrong};
     }
   `,
   text: css`
     background: transparent;
-    color: ${colors.primary};
-    padding-left: 8px;
-    padding-right: 8px;
+    color: ${colors.primaryLight};
+    border-color: transparent;
+    box-shadow: none;
+    padding-left: ${spacing.md};
+    padding-right: ${spacing.md};
 
     &:hover:not(:disabled) {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-
-    &:active:not(:disabled) {
-      background-color: rgba(0, 0, 0, 0.08);
+      background-color: rgba(125, 167, 255, 0.08);
+      color: ${colors.text};
     }
   `,
   danger: css`
-    color: #fff;
-    background-color: ${colors.danger};
-    border-color: ${colors.danger};
+    color: ${colors.bg};
+    background: linear-gradient(135deg, #ff8b90, ${colors.danger});
+    border-color: rgba(255, 109, 114, 0.18);
+    box-shadow: ${shadows.button};
+
     &:hover:not(:disabled) {
-      background-color: #c82333;
-      border-color: #bd2130;
+      border-color: rgba(255, 109, 114, 0.28);
     }
   `,
   warning: css`
-    color: #1e1e1e;
-    background-color: ${colors.progressDownload};
-    border-color: ${colors.progressDownload};
+    color: #261700;
+    background: linear-gradient(135deg, #ffd58e, ${colors.warning});
+    border-color: rgba(240, 180, 75, 0.2);
+    box-shadow: ${shadows.button};
+
     &:hover:not(:disabled) {
-      background-color: #e6a93e; /* slightly darker */
-      border-color: #e6a93e;
+      border-color: rgba(240, 180, 75, 0.28);
     }
   `,
   success: css`
-    color: #fff;
-    background-color: ${colors.success};
-    border-color: ${colors.success};
+    color: ${colors.bg};
+    background: linear-gradient(135deg, #6de0a4, ${colors.success});
+    border-color: rgba(57, 200, 135, 0.18);
+    box-shadow: ${shadows.button};
+
     &:hover:not(:disabled) {
-      background-color: #218838;
-      border-color: #1e7e34;
+      border-color: rgba(57, 200, 135, 0.28);
     }
   `,
   link: css`
-    color: ${colors.primary};
+    color: ${colors.primaryLight};
     background-color: transparent;
     border-color: transparent;
     text-decoration: none;
     padding: 0;
-    height: auto;
-    line-height: normal;
+    min-height: auto;
+    box-shadow: none;
+
     &:hover:not(:disabled) {
-      color: ${colors.primaryDark};
+      color: ${colors.text};
       text-decoration: underline;
     }
   `,
@@ -166,32 +194,36 @@ const fullWidthStyle = css`
   width: 100%;
 `;
 
-// Loading spinner style
-// const loadingSpinnerStyle = css` ... `;
-
 const loadingOverlayStyles = css`
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.5);
+  inset: 0;
+  background: rgba(9, 13, 20, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
 `;
 
+const loadingSpinnerStyle = css`
+  width: 1em;
+  height: 1em;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: buttonSpin 0.8s linear infinite;
+
+  @keyframes buttonSpin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 const hiddenInputStyles = css`
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   opacity: 0;
   cursor: pointer;
-  z-index: 1; // Ensure it's clickable but behind spinner overlay
-  // Hide visually but keep accessible
   border: 0;
   clip: rect(0 0 0 0);
   height: 1px;
@@ -199,6 +231,13 @@ const hiddenInputStyles = css`
   overflow: hidden;
   padding: 0;
   width: 1px;
+`;
+
+const labelStyles = css`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${spacing.sm};
 `;
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -210,12 +249,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth = false,
       className,
       isLoading = false,
+      leftIcon,
+      rightIcon,
       asFileInput = false,
       onFileChange,
       accept,
       directory = false,
       webkitdirectory = false,
       onClick,
+      disabled,
       ...rest
     },
     ref
@@ -223,9 +265,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const { t } = useTranslation();
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleButtonClick = async (
-      event: React.MouseEvent<HTMLButtonElement>
-    ) => {
+    const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       try {
         const name =
           (rest as any)['data-log'] ||
@@ -234,39 +274,23 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           (typeof children === 'string' ? children : 'button');
         logButton(String(name).toLowerCase().replace(/\s+/g, '_'));
       } catch {
-        // Do nothing
+        // Ignore logging failures.
       }
+
       if (asFileInput && inputRef.current) {
         inputRef.current.click();
-      } else if (onClick) {
-        onClick(event);
+        return;
       }
+
+      onClick?.(event);
     };
 
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-      if (onFileChange) {
-        onFileChange(event);
-        // Reset input value to allow selecting the same file again
-        if (inputRef?.current) {
-          inputRef.current.value = '';
-        }
+      onFileChange?.(event);
+      if (inputRef.current) {
+        inputRef.current.value = '';
       }
     };
-
-    const buttonContent = (
-      <>
-        {isLoading && (
-          <div className={loadingOverlayStyles}>
-            {/* <LoadingSpinner size={size === 'sm' ? 16 : 20} /> */}
-            <span>{t('common.loading', 'Loading...')}</span> {/* Localized */}
-          </div>
-        )}
-        <span style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-          {/* Remove icon rendering logic */}
-          {children}
-        </span>
-      </>
-    );
 
     const commonButtonProps = {
       ref,
@@ -278,17 +302,35 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         fullWidth && fullWidthStyle,
         className
       ),
-      disabled: isLoading,
+      disabled: isLoading || disabled,
       ...rest,
     };
 
+    const buttonContent = (
+      <>
+        {isLoading && (
+          <div className={loadingOverlayStyles}>
+            <span className={loadingSpinnerStyle} aria-hidden="true" />
+            <span style={{ marginLeft: spacing.sm }}>
+              {t('common.loading', 'Loading...')}
+            </span>
+          </div>
+        )}
+        <span
+          className={labelStyles}
+          style={{ visibility: isLoading ? 'hidden' : 'visible' }}
+        >
+          {leftIcon && <span aria-hidden="true">{leftIcon}</span>}
+          {children}
+          {rightIcon && <span aria-hidden="true">{rightIcon}</span>}
+        </span>
+      </>
+    );
+
     if (asFileInput) {
-      // If acting as file input, use a label wrapping the button styling
-      // But handle the click via the outer button/div to manage Electron logic
       return (
         <button {...commonButtonProps} type="button">
           {buttonContent}
-          {/* Conditionally render input only if not using Electron dialog */}
           {!(directory || webkitdirectory) && (
             <input
               ref={inputRef}
@@ -297,14 +339,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               accept={accept}
               onChange={handleInputChange}
               onClick={e => e.stopPropagation()}
-              {...(webkitdirectory ? { webkitdirectory: 'true' } : {})} // Use standard prop if true
+              {...(webkitdirectory ? { webkitdirectory: 'true' } : {})}
             />
           )}
         </button>
       );
     }
 
-    // Standard button rendering
     return (
       <button {...commonButtonProps} type={rest.type || 'button'}>
         {buttonContent}
@@ -314,4 +355,5 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 Button.displayName = 'Button';
+
 export default Button;

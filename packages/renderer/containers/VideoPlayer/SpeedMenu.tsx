@@ -1,7 +1,11 @@
-import { css } from '@emotion/css';
 import { SPEED_STEPS } from '../VideoPlayer';
 import { useEffect, useRef, startTransition } from 'react';
+import { useTranslation } from 'react-i18next';
 import { listenClose } from '../../utils/closeOnOutside';
+import {
+  speedMenuItemStyles,
+  speedMenuStyles,
+} from './video-player-side-styles';
 
 interface Props {
   current: (typeof SPEED_STEPS)[number];
@@ -16,6 +20,7 @@ export default function SpeedMenu({
   onClose,
   placement = 'up',
 }: Props) {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLUListElement>(null);
   const selectedItemRef = useRef<HTMLLIElement>(null);
   const currentRateRef = useRef<(typeof SPEED_STEPS)[number]>(current);
@@ -75,34 +80,9 @@ export default function SpeedMenu({
       onKeyDown={handleKeyDown}
       onWheel={handleWheel}
       role="menu"
-      aria-label="Playback speed"
+      aria-label={t('videoPlayer.playbackSpeed', 'Playback speed')}
       aria-activedescendant={`speed-item-${current}`}
-      className={`speed-menu ${
-        placement === 'down' ? 'pop-down' : 'pop-up'
-      } ${css`
-        position: absolute;
-        right: 0;
-        background: rgba(0, 0, 0, 0.95);
-        border: 1px solid #444;
-        border-radius: 4px;
-        padding: 4px 0;
-        list-style: none;
-        margin: 0;
-        z-index: 99999;
-        min-width: 80px;
-        opacity: 1;
-        transition: opacity 0.2s ease-out;
-
-        &.pop-up {
-          bottom: 100%;
-          margin-bottom: 6px;
-        }
-
-        &.pop-down {
-          top: 100%;
-          margin-top: 6px;
-        }
-      `}`}
+      className={`speed-menu ${speedMenuStyles(placement)}`}
     >
       {SPEED_STEPS.map((r: (typeof SPEED_STEPS)[number]) => (
         <li
@@ -118,20 +98,10 @@ export default function SpeedMenu({
           role="menuitemradio"
           aria-checked={r === current}
           tabIndex={r === current ? 0 : -1}
-          className={css`
-            padding: 6px 12px;
-            color: ${r === current ? '#fff' : '#aaa'};
-            font-weight: ${r === current ? 600 : 400};
-            font-size: 12px;
-            cursor: pointer;
-            &:hover {
-              background: #333;
-              color: #fff;
-            }
-            ${r === current ? 'background: rgba(255, 255, 255, 0.1);' : ''}
-          `}
+          className={speedMenuItemStyles(r === current)}
         >
-          {r}× {r === current && <span style={{ marginLeft: '5px' }}>✓</span>}
+          <span>{r}×</span>
+          {r === current ? <span>✓</span> : null}
         </li>
       ))}
     </ul>

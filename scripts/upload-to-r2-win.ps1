@@ -190,8 +190,13 @@ function Get-TagReleaseNotes {
 
   $tagTypeLines = @(& git cat-file -t $tag 2>$null)
   if ($LASTEXITCODE -ne 0) {
-    Write-Host "WARNING: Tag $tag not found locally." -ForegroundColor Yellow
-    return $null
+    Write-Host "Tag $tag not found locally. Attempting to fetch annotated tag from origin..." -ForegroundColor Yellow
+    @(& git fetch --force origin "refs/tags/$tag:refs/tags/$tag" 2>$null) | Out-Null
+    $tagTypeLines = @(& git cat-file -t $tag 2>$null)
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "WARNING: Tag $tag could not be resolved locally or from origin." -ForegroundColor Yellow
+      return $null
+    }
   }
 
   $tagType = ($tagTypeLines -join "`n").Trim()

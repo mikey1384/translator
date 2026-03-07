@@ -23,6 +23,16 @@ declare module '@shared-types/app' {
   export interface CancelOperationResult {
     success: boolean;
     error?: string;
+    message?: string;
+  }
+
+  export interface UpdateRequiredNotice {
+    error: 'update-required';
+    message: string;
+    minVersion?: string;
+    clientVersion?: string;
+    downloadUrl?: string;
+    source?: 'stage5-api' | 'relay' | 'unknown';
   }
 
   // =========================================
@@ -116,23 +126,35 @@ declare module '@shared-types/app' {
       partialResult?: string;
       percent: number;
       stage: string;
+      /** Machine-readable phase key for ETA / progress logic. */
+      phaseKey?: string;
       current?: number;
       total?: number;
+      /** Unit for current/total counters (e.g. "chunks", "segments"). */
+      unit?: string;
+      /** Numeric remaining-time hint from the backend when available. */
+      etaSeconds?: number;
       warning?: string;
       operationId?: string;
       batchStartIndex?: number;
+      /** AI model or provider being used (e.g. "Claude Opus", "OpenAI TTS"). */
+      model?: string;
     }
   ) => void;
 
   export type ProgressCallback = (progress: {
     percent: number;
     stage: string;
+    phaseKey?: string;
     current?: number;
     total?: number;
+    unit?: string;
+    etaSeconds?: number;
     partialResult?: string;
     error?: string;
     batchStartIndex?: number;
     operationId?: string;
+    model?: string;
   }) => void;
 
   // =========================================
@@ -167,6 +189,102 @@ declare module '@shared-types/app' {
     current?: number;
     total?: number;
   }) => void;
+
+  export type VideoSuggestionModelPreference =
+    | 'default'
+    | 'quality'
+    | 'gpt-5.1'
+    | 'gpt-5.4'
+    | 'claude-sonnet-4-6'
+    | 'claude-opus-4-6';
+
+  export type VideoSuggestionRecency =
+    | 'any'
+    | 'day'
+    | 'week'
+    | 'month'
+    | 'year';
+
+  export type VideoSuggestionStageKey =
+    | 'strategist'
+    | 'discovery'
+    | 'curator'
+    | 'retrieval';
+
+  export type VideoSuggestionStageState = 'pending' | 'running' | 'cleared';
+
+  export type VideoSuggestionViewTab = 'results' | 'history' | 'channels';
+
+  export interface VideoSuggestionMessage {
+    role: 'user' | 'assistant';
+    content: string;
+  }
+
+  export interface VideoSuggestionResultItem {
+    id: string;
+    title: string;
+    url: string;
+    thumbnailUrl?: string;
+    channel?: string;
+    channelUrl?: string;
+    durationSec?: number;
+    uploadedAt?: string;
+  }
+
+  export interface VideoSuggestionPreferenceSlots {
+    topic?: string;
+    creator?: string;
+    subtopic?: string;
+  }
+
+  export interface VideoSuggestionChatRequest {
+    history: VideoSuggestionMessage[];
+    modelPreference?: VideoSuggestionModelPreference;
+    preferredLanguage?: string;
+    preferredLanguageName?: string;
+    preferredCountry?: string;
+    preferredRecency?: VideoSuggestionRecency;
+    savedPreferences?: VideoSuggestionPreferenceSlots;
+    continuationId?: string;
+    searchQueryOverride?: string;
+    excludeUrls?: string[];
+    operationId?: string;
+  }
+
+  export interface VideoSuggestionChatResult {
+    success: boolean;
+    assistantMessage: string;
+    needsMoreContext: boolean;
+    searchQuery?: string;
+    results?: VideoSuggestionResultItem[];
+    capturedPreferences?: VideoSuggestionPreferenceSlots;
+    continuationId?: string;
+    resolvedModel: string;
+    error?: string;
+  }
+
+  export type VideoSuggestionProgressPhase =
+    | 'planning'
+    | 'searching'
+    | 'ranking'
+    | 'finalizing'
+    | 'done'
+    | 'error';
+
+  export interface VideoSuggestionProgress {
+    operationId: string;
+    phase: VideoSuggestionProgressPhase;
+    message?: string;
+    elapsedMs?: number;
+    searchQuery?: string;
+    assistantPreview?: string;
+    resultCount?: number;
+    stageKey?: VideoSuggestionStageKey;
+    stageIndex?: number;
+    stageTotal?: number;
+    stageState?: VideoSuggestionStageState;
+    stageOutcome?: string;
+  }
 
   // =========================================
   // === Subtitle Generation & Processing
@@ -317,9 +435,15 @@ declare module '@shared-types/app' {
     (progress: {
       percent: number;
       stage: string;
+      /** Machine-readable phase key for ETA / progress logic. */
+      phaseKey?: string;
       partialResult?: string;
       current?: number;
       total?: number;
+      /** Unit for current/total counters (e.g. "chunks", "segments"). */
+      unit?: string;
+      /** Numeric remaining-time hint from the backend when available. */
+      etaSeconds?: number;
       error?: string;
       batchStartIndex?: number;
       operationId?: string;
@@ -430,11 +554,7 @@ declare module '@shared-types/app' {
     quality?: 'standard' | 'high';
     operationId: string;
     ambientMix?: number;
-    /** Use ElevenLabs voice cloning instead of preset TTS voices */
-    useVoiceCloning?: boolean;
-    /** Video duration in seconds (required for voice cloning credit estimation) */
     videoDurationSeconds?: number;
-    /** Source language for voice cloning (optional, auto-detected if not provided) */
     sourceLanguage?: string;
   }
 
@@ -548,6 +668,23 @@ declare module '@shared-types/app' {
     error?: string;
   }
 
+  export interface AllByoSettings {
+    openAiKeyPresent: boolean;
+    anthropicKeyPresent: boolean;
+    elevenLabsKeyPresent: boolean;
+    useByoOpenAi: boolean;
+    useByoAnthropic: boolean;
+    useByoElevenLabs: boolean;
+    useStrictByoMode: boolean;
+    preferClaudeTranslation: boolean;
+    preferClaudeReview: boolean;
+    preferClaudeSummary: boolean;
+    videoSuggestionModelPreference: VideoSuggestionModelPreference;
+    preferredTranscriptionProvider: 'elevenlabs' | 'openai' | 'stage5';
+    preferredDubbingProvider: 'elevenlabs' | 'openai' | 'stage5';
+    stage5DubbingTtsProvider: 'openai' | 'elevenlabs';
+  }
+
   export interface PostInstallUpdateNotice {
     version: string;
     releaseName?: string;
@@ -636,6 +773,12 @@ declare module '@shared-types/app' {
 
     processUrl: (options: ProcessUrlOptions) => Promise<ProcessUrlResult>;
     onProcessUrlProgress: (callback: UrlProgressCallback | null) => () => void;
+    suggestVideos: (
+      request: VideoSuggestionChatRequest
+    ) => Promise<VideoSuggestionChatResult>;
+    onVideoSuggestionProgress: (
+      callback: (progress: VideoSuggestionProgress) => void
+    ) => () => void;
 
     cancelOperation: (operationId: string) => Promise<CancelOperationResult>;
 
@@ -672,6 +815,8 @@ declare module '@shared-types/app' {
       packId: 'MICRO' | 'STARTER' | 'STANDARD' | 'PRO'
     ) => Promise<string | null>;
     createByoUnlockSession: () => Promise<void>;
+    checkEncryptionAvailable: () => Promise<boolean>;
+    getAllByoSettings: () => Promise<AllByoSettings>;
     resetCredits: () => Promise<{
       success: boolean;
       creditsAdded?: number;
@@ -681,8 +826,7 @@ declare module '@shared-types/app' {
       success: boolean;
       error?: string;
     }>;
-    getDeviceId: () => Promise<string>;
-    getAdminDeviceId: () => Promise<string | null>;
+    isAdminMode: () => Promise<boolean>;
     getOpenAiApiKey: () => Promise<string | null>;
     setOpenAiApiKey: (
       apiKey: string
@@ -778,9 +922,9 @@ declare module '@shared-types/app' {
       callback: (payload: { hasKey: boolean }) => void
     ) => () => void;
 
-    // Master BYO toggle
-    getByoMasterEnabled: () => Promise<boolean>;
-    setByoMasterEnabled: (
+    // Strict global BYO mode
+    getStrictByoModeEnabled: () => Promise<boolean>;
+    setStrictByoModeEnabled: (
       enabled: boolean
     ) => Promise<{ success: boolean; error?: string }>;
 
@@ -796,6 +940,30 @@ declare module '@shared-types/app' {
     getPreferClaudeSummary: () => Promise<boolean>;
     setPreferClaudeSummary: (
       prefer: boolean
+    ) => Promise<{ success: boolean; error?: string }>;
+    getVideoSuggestionModelPreference: () => Promise<VideoSuggestionModelPreference>;
+    setVideoSuggestionModelPreference: (
+      model: VideoSuggestionModelPreference
+    ) => Promise<{ success: boolean; error?: string }>;
+    getVideoSuggestionTargetCountry: () => Promise<string>;
+    setVideoSuggestionTargetCountry: (
+      country: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    getVideoSuggestionRecency: () => Promise<VideoSuggestionRecency>;
+    setVideoSuggestionRecency: (
+      recency: VideoSuggestionRecency
+    ) => Promise<{ success: boolean; error?: string }>;
+    getVideoSuggestionPreferenceTopic: () => Promise<string>;
+    setVideoSuggestionPreferenceTopic: (
+      value: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    getVideoSuggestionPreferenceCreator: () => Promise<string>;
+    setVideoSuggestionPreferenceCreator: (
+      value: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    getVideoSuggestionPreferenceSubtopic: () => Promise<string>;
+    setVideoSuggestionPreferenceSubtopic: (
+      value: string
     ) => Promise<{ success: boolean; error?: string }>;
 
     // Provider preferences
@@ -817,12 +985,6 @@ declare module '@shared-types/app' {
     setStage5DubbingTtsProvider: (
       provider: 'openai' | 'elevenlabs'
     ) => Promise<{ success: boolean; error?: string }>;
-
-    // Voice cloning pricing
-    getVoiceCloningPricing: () => Promise<{
-      creditsPerMinute: number;
-      description: string;
-    }>;
 
     // System info
     getSystemInfo: () => Promise<{
@@ -877,10 +1039,14 @@ declare module '@shared-types/app' {
     updateDownload: () => Promise<void>;
     updateInstall: () => Promise<void>;
     updateGetPostInstallNotice: () => Promise<PostInstallUpdateNotice | null>;
+    updateGetRequiredNotice: () => Promise<UpdateRequiredNotice | null>;
     onUpdateAvailable: (callback: (info: any) => void) => () => void;
     onUpdateProgress: (callback: (percent: number) => void) => () => void;
     onUpdateDownloaded: (callback: () => void) => () => void;
     onUpdateError: (callback: (msg: string) => void) => () => void;
+    onUpdateRequired: (
+      callback: (payload: UpdateRequiredNotice) => void
+    ) => () => void;
   }
 
   declare global {
@@ -889,9 +1055,11 @@ declare module '@shared-types/app' {
       fileApi: {
         readText: (p: string) => Promise<string>;
         writeText: (p: string, data: string) => Promise<void>;
+        fileExists: (p: string) => Promise<boolean>;
       };
       appShell: {
         openExternal: (url: string) => Promise<void>;
+        openPath: (path: string) => Promise<string>;
       };
       env: {
         isPackaged: boolean;

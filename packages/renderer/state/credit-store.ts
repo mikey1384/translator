@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SystemIPC from '@ipc/system';
 import { CREDITS_PER_TRANSLATION_AUDIO_HOUR } from '../../shared/constants';
+import { estimateTranslatableHours } from '../utils/creditEstimates';
 
 interface CreditState {
   credits: number | null;
@@ -19,10 +20,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
     ({ creditBalance, hoursBalance: _hoursBalance }) => {
       const credits = creditBalance ?? null;
       // Unify: compute hours using the translation-based estimate
-      const hours =
-        typeof credits === 'number'
-          ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
-          : null;
+      const hours = estimateTranslatableHours(credits, false);
       set({ credits, hours, checkoutPending: false });
     }
   );
@@ -69,8 +67,7 @@ export const useCreditStore = create<CreditState>((set, get) => {
         const credits = res.creditBalance ?? get().credits ?? 0;
         // Unify: always use translation-based credits/hour for estimates
         const perHour = CREDITS_PER_TRANSLATION_AUDIO_HOUR;
-        const hours =
-          typeof credits === 'number' ? credits / perHour : get().hours;
+        const hours = estimateTranslatableHours(credits, false) ?? get().hours;
         set({
           credits,
           hours,

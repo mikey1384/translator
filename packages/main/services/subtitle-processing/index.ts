@@ -15,7 +15,6 @@ import { parseSrt } from '../../../shared/helpers/index.js';
 import { buildSrt } from '../../../shared/helpers/index.js';
 import {
   ERROR_CODES,
-  AI_MODELS,
   AI_MODEL_DISPLAY_NAMES,
 } from '../../../shared/constants/index.js';
 import { scaleProgress, Stage } from './pipeline/progress.js';
@@ -208,8 +207,10 @@ export async function translateSubtitlesFromSrt({
             Stage.REVIEW
           ),
           stage,
+          phaseKey: 'review',
           current: completed,
           total,
+          unit: 'segments',
           model: reviewModelName,
         };
         if (includePartial) {
@@ -255,10 +256,7 @@ export async function translateSubtitlesFromSrt({
             signal,
             initialReviewConfig: reviewConfigOverride ?? undefined,
             onModelFallback: fallbackModel => {
-              reviewConfigOverride =
-                fallbackModel === AI_MODELS.GPT
-                  ? { model: AI_MODELS.GPT, reasoning: { effort: 'high' } }
-                  : { model: fallbackModel };
+              reviewConfigOverride = { model: fallbackModel };
               const fallbackName = formatReviewModelName(fallbackModel);
               const displayName = `${fallbackName} (fallback)`;
               if (displayName !== reviewModelName) {

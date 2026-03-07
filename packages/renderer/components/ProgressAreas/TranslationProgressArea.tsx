@@ -5,7 +5,6 @@ import ProgressArea from './ProgressArea';
 import ProcessingBanner from '../ProcessingBanner';
 import { useTaskStore } from '../../state';
 import * as OperationIPC from '@ipc/operation';
-import { css } from '@emotion/css';
 
 const TRANSLATION_PROGRESS_COLOR = colors.progressTranslate;
 
@@ -112,16 +111,9 @@ export default function TranslationProgressArea({
   autoCloseDelay = 3_000,
 }: { autoCloseDelay?: number } = {}) {
   const { t } = useTranslation();
-  const {
-    translation: { inProgress, percent, stage, id, model },
-    setTranslation: patchTranslation,
-  } = useTaskStore(s => ({
-    translation: s.translation,
-    setTranslation: s.setTranslation,
-  })) as {
-    translation: TranslationSlice;
-    setTranslation: (p: Partial<TranslationSlice>) => void;
-  };
+  const translation = useTaskStore(s => s.translation) as TranslationSlice;
+  const patchTranslation = useTaskStore(s => s.setTranslation);
+  const { inProgress, percent, stage, id, model } = translation;
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [showSlowProgressBanner, setShowSlowProgressBanner] = useState(false);
@@ -176,7 +168,12 @@ export default function TranslationProgressArea({
       await OperationIPC.cancel(id);
     } catch (err: any) {
       devError('[TransPA] cancel failed', err);
-      alert(`Failed to cancel the operation: ${err.message || err}`);
+      alert(
+        t('errors.cancelTranslationFailed', {
+          defaultValue: 'Failed to cancel translation: {{message}}',
+          message: err?.message || String(err),
+        })
+      );
     } finally {
       setIsCancelling(false);
       patchTranslation({ inProgress: false });
@@ -210,39 +207,31 @@ export default function TranslationProgressArea({
   if (!inProgress) return null;
 
   return (
-    <>
-      <ProcessingBanner
-        isVisible={showSlowProgressBanner}
-        titleKey="dialogs.slowProcessingBanner.title"
-        descriptionKey="dialogs.slowProcessingBanner.description"
-        linkHref="https://status.openai.com"
-        linkTextKey="dialogs.slowProcessingBanner.checkStatus"
-        onClose={handleCloseBanner}
-      />
-      <div
-        className={css`
-          margin-top: ${showSlowProgressBanner
-            ? '60px'
-            : '0'}; /* Space for the banner above */
-        `}
-      >
-        <ProgressArea
-          isVisible={inProgress}
-          title={t('dialogs.translationInProgress')}
-          progress={percent}
-          stage={displayStage}
-          progressBarColor={progressBarColor}
-          isCancelling={isCancelling}
-          operationId={id ?? null}
-          onCancel={handleCancel}
-          onClose={handleClose}
-          autoCloseDelay={
-            percent >= 100 && !stage.toLowerCase().includes('error')
-              ? autoCloseDelay
-              : undefined
-          }
+    <ProgressArea
+      isVisible={inProgress}
+      title={t('dialogs.translationInProgress')}
+      progress={percent}
+      stage={displayStage}
+      progressBarColor={progressBarColor}
+      isCancelling={isCancelling}
+      operationId={id ?? null}
+      onCancel={handleCancel}
+      onClose={handleClose}
+      notice={
+        <ProcessingBanner
+          isVisible={showSlowProgressBanner}
+          titleKey="dialogs.slowProcessingBanner.title"
+          descriptionKey="dialogs.slowProcessingBanner.description"
+          linkHref="https://status.openai.com"
+          linkTextKey="dialogs.slowProcessingBanner.checkStatus"
+          onClose={handleCloseBanner}
         />
-      </div>
-    </>
+      }
+      autoCloseDelay={
+        percent >= 100 && !stage.toLowerCase().includes('error')
+          ? autoCloseDelay
+          : undefined
+      }
+    />
   );
 }

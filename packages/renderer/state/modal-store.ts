@@ -1,7 +1,10 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { immer } from 'zustand/middleware/immer';
 
+import type { UpdateRequiredNotice } from '@shared-types/app';
+
 type UnsavedChoice = 'save' | 'discard' | 'cancel';
+type ChangeVideoMode = 'source' | 'ai';
 type PostInstallUpdateNotice = {
   version: string;
   releaseName?: string;
@@ -17,13 +20,19 @@ interface State {
   _creditResolver?: (choice: 'settings' | 'ok') => void;
   // Change video modal
   changeVideoOpen: boolean;
+  changeVideoMode: ChangeVideoMode;
   // Logs modal
   logsOpen: boolean;
+  logsReportPrompt: string | null;
+  lastReportPromptAt: number;
   // API keys required modal
   apiKeysRequiredOpen: boolean;
   // Post-update notes modal
   updateNotesOpen: boolean;
   updateNotes: PostInstallUpdateNotice | null;
+  // Mandatory update modal
+  requiredUpdateOpen: boolean;
+  requiredUpdate: UpdateRequiredNotice | null;
 }
 
 interface Actions {
@@ -33,8 +42,14 @@ interface Actions {
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
   openChangeVideo: () => void;
   closeChangeVideo: () => void;
+  setChangeVideoMode: (mode: ChangeVideoMode) => void;
+  openLogs: (opts?: { reportPrompt?: string; force?: boolean }) => void;
+  closeLogs: () => void;
+  openErrorReportPrompt: (message?: string) => void;
   openUpdateNotes: (payload: PostInstallUpdateNotice) => void;
   closeUpdateNotes: () => void;
+  openRequiredUpdate: (payload: UpdateRequiredNotice) => void;
+  closeRequiredUpdate: () => void;
 }
 
 export const useModalStore = createWithEqualityFn<State & Actions>()(
@@ -44,10 +59,15 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     creditRanOutOpen: false,
     _creditResolver: undefined,
     changeVideoOpen: false,
+    changeVideoMode: 'source',
     logsOpen: false,
+    logsReportPrompt: null,
+    lastReportPromptAt: 0,
     apiKeysRequiredOpen: false,
     updateNotesOpen: false,
     updateNotes: null,
+    requiredUpdateOpen: false,
+    requiredUpdate: null,
 
     openUnsavedSrtConfirm: () =>
       new Promise<UnsavedChoice>(resolve => {
@@ -86,10 +106,41 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     openChangeVideo: () =>
       set(s => {
         s.changeVideoOpen = true;
+        s.changeVideoMode = 'source';
       }),
     closeChangeVideo: () =>
       set(s => {
         s.changeVideoOpen = false;
+        s.changeVideoMode = 'source';
+      }),
+    setChangeVideoMode: mode =>
+      set(s => {
+        s.changeVideoOpen = true;
+        s.changeVideoMode = mode;
+      }),
+    openLogs: opts =>
+      set(s => {
+        s.logsOpen = true;
+        if (opts?.reportPrompt) {
+          s.logsReportPrompt = opts.reportPrompt;
+          s.lastReportPromptAt = Date.now();
+        } else if (opts?.force) {
+          s.logsReportPrompt = null;
+        }
+      }),
+    closeLogs: () =>
+      set(s => {
+        s.logsOpen = false;
+        s.logsReportPrompt = null;
+      }),
+    openErrorReportPrompt: message =>
+      set(s => {
+        const now = Date.now();
+        // Debounce repeated prompt spam from rapid or duplicate failures.
+        if (now - (s.lastReportPromptAt || 0) < 20_000) return;
+        s.logsOpen = true;
+        s.logsReportPrompt = message || '__i18n__:logs.reportPrompt';
+        s.lastReportPromptAt = now;
       }),
     openUpdateNotes: payload =>
       set(s => {
@@ -101,14 +152,15 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
         s.updateNotesOpen = false;
         s.updateNotes = null;
       }),
-    // Logs modal controls
-    openLogs: () =>
+    openRequiredUpdate: payload =>
       set(s => {
-        s.logsOpen = true;
+        s.requiredUpdateOpen = true;
+        s.requiredUpdate = payload;
       }),
-    closeLogs: () =>
+    closeRequiredUpdate: () =>
       set(s => {
-        s.logsOpen = false;
+        s.requiredUpdateOpen = false;
+        s.requiredUpdate = null;
       }),
     // API keys required modal controls
     openApiKeysRequired: () =>
@@ -154,12 +206,24 @@ export function closeUpdateNotes() {
   return useModalStore.getState().closeUpdateNotes();
 }
 
+export function openRequiredUpdate(payload: UpdateRequiredNotice) {
+  return useModalStore.getState().openRequiredUpdate(payload);
+}
+
+export function closeRequiredUpdate() {
+  return useModalStore.getState().closeRequiredUpdate();
+}
+
 export function openLogs() {
   return (useModalStore.getState() as any).openLogs();
 }
 
 export function closeLogs() {
   return (useModalStore.getState() as any).closeLogs();
+}
+
+export function openErrorReportPrompt(message?: string) {
+  return (useModalStore.getState() as any).openErrorReportPrompt(message);
 }
 
 export function openApiKeysRequired() {

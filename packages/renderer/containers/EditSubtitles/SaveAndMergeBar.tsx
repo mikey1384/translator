@@ -1,9 +1,22 @@
 import Button from '../../components/Button.js';
-import { buttonGradientStyles, colors } from '../../styles.js';
-import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '../../state/ui-store.js';
 import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-styles.js';
+import {
+  editorButtonContentStyles,
+  editorMergeButtonStyles,
+  editorToolbarActionRowStyles,
+  editorToolbarCheckboxInputStyles,
+  editorToolbarCheckboxLabelStyles,
+  editorToolbarCompactInputStyles,
+  editorToolbarFieldGridStyles,
+  editorToolbarFieldStyles,
+  editorToolbarGridStyles,
+  editorToolbarLabelStyles,
+  editorToolbarPrimarySectionStyles,
+  editorToolbarSectionStyles,
+  editorToolbarSelectStyles,
+} from './edit-workspace-styles';
 
 interface SaveAndMergeBarProps {
   onSave: () => Promise<void>;
@@ -15,20 +28,6 @@ interface SaveAndMergeBarProps {
   isMergingInProgress: boolean;
   isTranslationInProgress?: boolean;
 }
-
-const mergeButtonStyle = css`
-  background-color: ${colors.warning};
-  border-color: ${colors.warning};
-  color: #ffffff !important;
-  &:hover:not(:disabled) {
-    background-color: #e0488a;
-    border-color: #e0488a;
-  }
-  &:active:not(:disabled) {
-    background-color: #c7407b;
-    border-color: #c7407b;
-  }
-`;
 
 export default function SaveAndMergeBar({
   onSave,
@@ -42,50 +41,24 @@ export default function SaveAndMergeBar({
 }: SaveAndMergeBarProps) {
   const { t } = useTranslation();
 
-  const [fontSize] = useUIStore(s => [s.baseFontSize]);
-  const [stylePreset, setStylePreset] = useUIStore(s => [
-    s.subtitleStyle,
-    s.setSubtitleStyle,
-  ]);
-  const [showOriginal, setShowOriginal] = useUIStore(s => [
-    s.showOriginalText,
-    s.setShowOriginalText,
-  ]);
+  const fontSize = useUIStore(s => s.baseFontSize);
+  const stylePreset = useUIStore(s => s.subtitleStyle);
+  const setStylePreset = useUIStore(s => s.setSubtitleStyle);
+  const showOriginal = useUIStore(s => s.showOriginalText);
+  const setShowOriginal = useUIStore(s => s.setShowOriginalText);
 
   if (!subtitlesExist) return null;
 
   return (
-    <div
-      className={css`
-        width: 100%;
-        display: flex;
-        justify-content: center; /* center the block in the footer */
-      `}
-    >
+    <div className={editorToolbarGridStyles}>
       <div
-        className={css`
-          display: grid;
-          grid-template-columns: auto auto auto; /* left, middle, right */
-          column-gap: 24px;
-          row-gap: 8px;
-          align-items: center;
-          justify-items: center; /* center default cells */
-          width: max-content;
-        `}
+        className={`${editorToolbarSectionStyles} ${editorToolbarPrimarySectionStyles}`}
       >
-        {/* Row 1, Col 1: Save + Save As */}
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          `}
-        >
+        <div className={editorToolbarActionRowStyles}>
           <Button
             onClick={onSave}
             variant="primary"
-            size="md"
-            className={`${buttonGradientStyles.base} ${buttonGradientStyles.primary}`}
+            size="sm"
             disabled={!canSaveDirectly}
             title={
               !canSaveDirectly
@@ -93,12 +66,7 @@ export default function SaveAndMergeBar({
                 : t('editSubtitles.header.saveTooltip')
             }
           >
-            <div
-              className={css`
-                display: flex;
-                align-items: center;
-              `}
-            >
+            <div className={editorButtonContentStyles}>
               <svg
                 width="18"
                 height="18"
@@ -108,7 +76,6 @@ export default function SaveAndMergeBar({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ marginRight: '8px' }}
               >
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -118,13 +85,8 @@ export default function SaveAndMergeBar({
             </div>
           </Button>
 
-          <Button onClick={onSaveAs} variant="secondary" size="md">
-            <div
-              className={css`
-                display: flex;
-                align-items: center;
-              `}
-            >
+          <Button onClick={onSaveAs} variant="secondary" size="sm">
+            <div className={editorButtonContentStyles}>
               <svg
                 width="18"
                 height="18"
@@ -134,7 +96,6 @@ export default function SaveAndMergeBar({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ marginRight: '8px' }}
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
@@ -143,56 +104,7 @@ export default function SaveAndMergeBar({
               {t('editSubtitles.header.saveAs')}
             </div>
           </Button>
-        </div>
 
-        {/* Row 1, Col 2: text size */}
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          `}
-        >
-          <label
-            className={css`
-              font-weight: 500;
-              color: ${colors.grayDark};
-            `}
-          >
-            {t('editSubtitles.mergeControls.fontSizeLabel')}
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            className={css`
-              padding: 0.25rem 0.5rem;
-              border: 1px solid ${colors.border};
-              border-radius: 4px;
-              font-size: 1rem;
-              width: 56px;
-              max-width: 64px;
-              text-align: center;
-              background-color: ${colors.surface};
-              color: ${colors.text};
-            `}
-            value={fontSize || ''}
-            onChange={e => {
-              const s = e.target.value;
-              if (s === '') return useUIStore.getState().setBaseFontSize(0);
-              const digits = s.replace(/\D/g, '');
-              useUIStore.getState().setBaseFontSize(Number(digits || 0));
-            }}
-            onBlur={() => {
-              const size = useUIStore.getState().baseFontSize || 10;
-              const clamped = Math.max(10, Math.min(size, 72));
-              useUIStore.getState().setBaseFontSize(clamped);
-            }}
-          />
-        </div>
-
-        {/* Row 2, Col 1: Merge button */}
-        <div>
           <Button
             onClick={onMerge}
             disabled={
@@ -202,15 +114,18 @@ export default function SaveAndMergeBar({
               !!isTranslationInProgress
             }
             isLoading={isMergingInProgress}
-            className={mergeButtonStyle}
-            size="md"
+            className={editorMergeButtonStyles}
+            size="sm"
+            title={
+              videoFileExists
+                ? undefined
+                : t(
+                    'editSubtitles.workspace.mergeNeedsVideoCopy',
+                    'Mount a source video before starting a burn-in export.'
+                  )
+            }
           >
-            <div
-              className={css`
-                display: flex;
-                align-items: center;
-              `}
-            >
+            <div className={editorButtonContentStyles}>
               <svg
                 width="18"
                 height="18"
@@ -220,7 +135,6 @@ export default function SaveAndMergeBar({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ marginRight: '8px' }}
               >
                 <path d="M13 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V9l-7-7z" />
                 <path d="M13 3v6h6" />
@@ -228,91 +142,90 @@ export default function SaveAndMergeBar({
                 <path d="M16 17H8" />
                 <path d="M10 9H8" />
               </svg>
-              {isMergingInProgress
-                ? t('editSubtitles.mergeControls.mergingButton')
-                : t('editSubtitles.mergeControls.mergeButton')}
+              <span>
+                {isMergingInProgress
+                  ? t('editSubtitles.mergeControls.mergingButton')
+                  : t('editSubtitles.mergeControls.mergeButton')}
+              </span>
             </div>
           </Button>
         </div>
+      </div>
 
-        {/* Row 2, Col 2: Style select */}
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          `}
-        >
-          <label
-            className={css`
-              font-weight: 500;
-              color: ${colors.grayDark};
-            `}
-            htmlFor="mergeStylePresetSelect"
-          >
-            {t('editSubtitles.mergeControls.styleLabel')}
-          </label>
-          <select
-            id="mergeStylePresetSelect"
-            className={css`
-              padding: 0.5rem 0.75rem;
-              border: 1px solid ${colors.border};
-              border-radius: 4px;
-              font-size: 1rem;
-              background-color: ${colors.surface};
-              color: ${colors.text};
-              cursor: pointer;
-            `}
-            value={stylePreset}
-            onChange={e =>
-              setStylePreset(e.target.value as SubtitleStylePresetKey)
-            }
-          >
-            {(
-              [
-                'Default',
-                'Classic',
-                'Boxed',
-                'LineBox',
-              ] as SubtitleStylePresetKey[]
-            ).map(key => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className={editorToolbarSectionStyles}>
+        <div className={editorToolbarFieldGridStyles}>
+          <div className={editorToolbarFieldStyles}>
+            <label className={editorToolbarLabelStyles}>
+              {t('editSubtitles.mergeControls.fontSizeLabel')}
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className={editorToolbarCompactInputStyles}
+              value={fontSize || ''}
+              onChange={e => {
+                const s = e.target.value;
+                if (s === '') return useUIStore.getState().setBaseFontSize(0);
+                const digits = s.replace(/\D/g, '');
+                useUIStore.getState().setBaseFontSize(Number(digits || 0));
+              }}
+              onBlur={() => {
+                const size = useUIStore.getState().baseFontSize || 10;
+                const clamped = Math.max(10, Math.min(size, 72));
+                useUIStore.getState().setBaseFontSize(clamped);
+              }}
+            />
+          </div>
 
-        {/* Right end column: Show original text (spans two rows, vertically centered) */}
-        <div
-          className={css`
-            grid-column: 3;
-            grid-row: 1 / span 2;
-            align-self: center;
-            justify-self: end;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-          `}
-        >
-          <label
-            className={css`
-              font-weight: 500;
-              color: ${colors.grayDark};
-            `}
-            htmlFor="mergeShowOriginalToggle"
-          >
-            {t('subtitles.showOriginalText')}
-          </label>
-          <input
-            id="mergeShowOriginalToggle"
-            type="checkbox"
-            checked={showOriginal}
-            onChange={e => setShowOriginal(e.target.checked)}
-            aria-label={t('subtitles.showOriginalText')}
-          />
+          <div className={editorToolbarFieldStyles}>
+            <label
+              className={editorToolbarLabelStyles}
+              htmlFor="mergeStylePresetSelect"
+            >
+              {t('editSubtitles.mergeControls.styleLabel')}
+            </label>
+            <select
+              id="mergeStylePresetSelect"
+              className={editorToolbarSelectStyles}
+              value={stylePreset}
+              onChange={e =>
+                setStylePreset(e.target.value as SubtitleStylePresetKey)
+              }
+            >
+              {(
+                [
+                  'Default',
+                  'Classic',
+                  'Boxed',
+                  'LineBox',
+                ] as SubtitleStylePresetKey[]
+              ).map(key => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={editorToolbarFieldStyles}>
+            <label
+              className={editorToolbarCheckboxLabelStyles}
+              htmlFor="mergeShowOriginalToggle"
+            >
+              <input
+                id="mergeShowOriginalToggle"
+                type="checkbox"
+                className={editorToolbarCheckboxInputStyles}
+                checked={showOriginal}
+                onChange={e => setShowOriginal(e.target.checked)}
+                aria-label={t('subtitles.showOriginalText')}
+              />
+              <span>{t('subtitles.showOriginalText')}</span>
+            </label>
+          </div>
         </div>
       </div>
+
     </div>
   );
 }

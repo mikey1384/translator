@@ -1,18 +1,47 @@
-import { useEffect } from 'react';
-import { css } from '@emotion/css';
-import { colors } from '../../styles.js';
-import { useCreditStore } from '../../state/credit-store';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  getEffectiveCalibrationMultiplier,
+  useEtaCalibrationStore,
+} from '../../state/eta-calibration-store';
 import { useUIStore } from '../../state/ui-store';
 import { useAiStore } from '../../state/ai-store';
+import { useSubStore } from '../../state/subtitle-store';
+import { useTaskStore } from '../../state/task-store';
+import { useVideoStore } from '../../state/video-store';
 import { logButton, logTask } from '../../utils/logger.js';
 import {
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
-  CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR,
-  TRANSLATION_QUALITY_MULTIPLIER,
-  TTS_CREDITS_PER_MINUTE,
-} from '../../../shared/constants';
+  estimateRemainingSeconds,
+  formatEtaDuration,
+} from '../../utils/progressEta';
+import {
+  resolveDubbingCreditProvider,
+  resolveDubbingProvider,
+  resolveTranscriptionProvider,
+  resolveTranslationDraftProvider,
+  resolveTranslationReviewProvider,
+  type ByoRuntimeState,
+} from '../../state/byo-runtime';
 import CreditBalance, { type OperationType } from '../CreditBalance';
 import SettingsButton from '../SettingsButton';
+import {
+  workflowStatusBodyStyles,
+  workflowStatusCardStyles,
+  workflowStatusHeaderStyles,
+  workflowStatusHeadingStyles,
+  workflowStatusIconButtonStyles,
+  workflowStatusOverlayStyles,
+  workflowStatusPercentStyles,
+  workflowStatusProgressFillStyles,
+  workflowStatusProgressTrackStyles,
+  workflowStatusStackStyles,
+  workflowStatusStageRowStyles,
+  workflowStatusStageTextStyles,
+  workflowStatusSubLabelStyles,
+  workflowStatusTitleRowStyles,
+  workflowStatusTitleStyles,
+  workflowStatusUtilityRowStyles,
+} from '../workflow-surface-styles';
 
 interface ProgressAreaProps {
   isVisible: boolean;
@@ -26,92 +55,10 @@ interface ProgressAreaProps {
   isCancelling?: boolean;
   onClose: () => void;
   subLabel?: string;
+  notice?: ReactNode;
 }
 
-export const PROGRESS_BAR_HEIGHT = 150;
-
-// --- Styles ---
-const progressContainerStyles = css`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1100;
-  padding: 18px 24px;
-  background-color: rgba(30, 30, 30, 0.75);
-  backdrop-filter: blur(12px);
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  border-bottom: 1px solid ${colors.border};
-  animation: slideDown 0.3s ease-out;
-
-  @keyframes slideDown {
-    from {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-`;
-
-const headerStyles = css`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 5px;
-
-  h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: ${colors.primaryLight};
-  }
-`;
-
-const progressBlockStyles = css`
-  padding: 16px;
-  background-color: ${colors.surface};
-  border-radius: 8px;
-  border: 1px solid ${colors.border};
-  box-shadow: none;
-`;
-
-const progressBarContainerStyles = css`
-  height: 10px;
-  background-color: ${colors.grayLight};
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 8px 0;
-  border: 1px solid ${colors.border};
-`;
-
-const progressLabelStyles = css`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: ${colors.text};
-`;
-
-const closeButtonStyles = css`
-  background: none;
-  border: none;
-  color: ${colors.gray};
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  &:hover {
-    color: ${colors.text};
-  }
-`;
+export const PROGRESS_BAR_HEIGHT = 156;
 
 // --- Component Implementation ---
 export default function ProgressArea({
@@ -126,69 +73,176 @@ export default function ProgressArea({
   onClose,
   autoCloseDelay = 4000,
   subLabel,
+  notice,
 }: ProgressAreaProps) {
-  // Compute remaining time to show next to credits in header
-  const { credits } = useCreditStore();
+  const { t } = useTranslation();
+  const translationTask = useTaskStore(s => s.translation);
+  const transcriptionTask = useTaskStore(s => s.transcription);
+  const dubbingTask = useTaskStore(s => s.dubbing);
+  const videoDurationSec = useVideoStore(s => s.meta?.duration ?? null);
+  const segmentCount = useSubStore(s => s.order.length);
+  const etaCalibrationRecords = useEtaCalibrationStore(s => s.records);
+  const qualityTranscription = useUIStore(s => s.qualityTranscription);
   const qualityTranslation = useUIStore(s => s.qualityTranslation);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const byoUnlocked = useAiStore(s => s.byoUnlocked);
+  const byoAnthropicUnlocked = useAiStore(s => s.byoAnthropicUnlocked);
+  const byoElevenLabsUnlocked = useAiStore(s => s.byoElevenLabsUnlocked);
+  const preferredTranscriptionProvider = useAiStore(
+    s => s.preferredTranscriptionProvider
+  );
   const preferredDubbingProvider = useAiStore(s => s.preferredDubbingProvider);
   const stage5DubbingTtsProvider = useAiStore(s => s.stage5DubbingTtsProvider);
-  const useByoMaster = useAiStore(s => s.useByoMaster);
+  const useStrictByoMode = useAiStore(s => s.useStrictByoMode);
   const useByo = useAiStore(s => s.useByo);
   const keyPresent = useAiStore(s => s.keyPresent);
+  const anthropicKeyPresent = useAiStore(s => s.anthropicKeyPresent);
+  const useByoAnthropic = useAiStore(s => s.useByoAnthropic);
   const useByoElevenLabs = useAiStore(s => s.useByoElevenLabs);
   const elevenLabsKeyPresent = useAiStore(s => s.elevenLabsKeyPresent);
+  const preferClaudeTranslation = useAiStore(s => s.preferClaudeTranslation);
+  const preferClaudeReview = useAiStore(s => s.preferClaudeReview);
+  const preferClaudeSummary = useAiStore(s => s.preferClaudeSummary);
 
-  // Check if using BYO for OpenAI operations (transcription/translation)
-  const usingByoOpenAi = useByoMaster && useByo && keyPresent;
+  const runtimeState = useMemo<ByoRuntimeState>(
+    () => ({
+      useStrictByoMode,
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+      useByo,
+      useByoAnthropic,
+      useByoElevenLabs,
+      keyPresent,
+      anthropicKeyPresent,
+      elevenLabsKeyPresent,
+      preferClaudeTranslation,
+      preferClaudeReview,
+      preferClaudeSummary,
+      preferredTranscriptionProvider,
+      preferredDubbingProvider,
+      stage5DubbingTtsProvider,
+    }),
+    [
+      useStrictByoMode,
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+      useByo,
+      useByoAnthropic,
+      useByoElevenLabs,
+      keyPresent,
+      anthropicKeyPresent,
+      elevenLabsKeyPresent,
+      preferClaudeTranslation,
+      preferClaudeReview,
+      preferClaudeSummary,
+      preferredTranscriptionProvider,
+      preferredDubbingProvider,
+      stage5DubbingTtsProvider,
+    ]
+  );
 
-  // Calculate operation-specific time estimates (only when using credits)
-  let suffixText: string | undefined;
-  if (typeof credits === 'number' && credits > 0) {
-    if (operationId?.startsWith('transcribe-') && !usingByoOpenAi) {
-      // Transcription: use ElevenLabs Scribe rate
-      const hours = credits / CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR;
-      suffixText = `(${Math.floor(hours).toLocaleString()}h)`;
-    } else if (operationId?.startsWith('translate-') && !usingByoOpenAi) {
-      // Translation: adjust for quality toggle
-      const effectiveCreditsPerHour = qualityTranslation
-        ? CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_QUALITY_MULTIPLIER
-        : CREDITS_PER_TRANSLATION_AUDIO_HOUR;
-      const hours = credits / effectiveCreditsPerHour;
-      let timeStr: string;
-      if (hours < 1) {
-        timeStr = `${Math.ceil(hours * 60)}m`;
-      } else {
-        const h = Math.floor(hours);
-        const m = Math.round((hours - h) * 60);
-        timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
-      }
-      if (qualityTranslation) {
-        suffixText = `(hq mode: ~${timeStr})`;
-      } else {
-        suffixText = `(~${timeStr})`;
-      }
-    } else if (operationId?.startsWith('dub-')) {
-      // Dubbing: use TTS provider-specific rate
-      // Check if using BYO for dubbing (ElevenLabs)
-      const usingByoDubbing =
-        useByoMaster && useByoElevenLabs && elevenLabsKeyPresent;
-      if (!usingByoDubbing) {
-        let ttsProvider: 'openai' | 'elevenlabs' = 'openai';
-        if (preferredDubbingProvider === 'stage5') {
-          ttsProvider = stage5DubbingTtsProvider;
-        }
-        const creditsPerMin = TTS_CREDITS_PER_MINUTE[ttsProvider];
-        const minutes = credits / creditsPerMin;
-        if (minutes < 60) {
-          suffixText = `(~${Math.floor(minutes)}m)`;
-        } else {
-          const hours = Math.floor(minutes / 60);
-          const mins = Math.floor(minutes % 60);
-          suffixText = mins > 0 ? `(~${hours}h ${mins}m)` : `(~${hours}h)`;
-        }
-      }
+  const operationType: OperationType = operationId
+    ? operationId.startsWith('translate-')
+      ? 'translation'
+      : operationId.startsWith('transcribe-')
+        ? 'transcription'
+        : operationId.startsWith('dub-')
+          ? 'dubbing'
+          : 'general'
+    : 'general';
+
+  const etaText = useMemo(() => {
+    if (progress >= 100 || operationType === 'general') {
+      return undefined;
     }
-  }
+
+    const translationDraftProvider =
+      resolveTranslationDraftProvider(runtimeState);
+    const translationReviewProvider =
+      resolveTranslationReviewProvider(runtimeState);
+    const resolvedTranscriptionProvider =
+      resolveTranscriptionProvider(runtimeState);
+    const transcriptionProviderHint =
+      resolvedTranscriptionProvider === 'stage5'
+        ? preferredTranscriptionProvider === 'openai'
+          ? 'openai'
+          : 'elevenlabs'
+        : resolvedTranscriptionProvider;
+    const resolvedDubbingProvider = resolveDubbingProvider(runtimeState);
+    const dubbingProviderHint =
+      resolvedDubbingProvider === 'stage5'
+        ? resolveDubbingCreditProvider(runtimeState)
+        : resolvedDubbingProvider === 'elevenlabs'
+          ? 'elevenlabs'
+          : 'openai';
+
+    const task =
+      operationType === 'translation'
+        ? translationTask
+        : operationType === 'transcription'
+          ? transcriptionTask
+          : operationType === 'dubbing'
+            ? dubbingTask
+            : null;
+
+    if (!task) return undefined;
+
+    const etaSeconds = estimateRemainingSeconds(
+      {
+        operationType,
+        percent: task.percent,
+        phaseKey: task.phaseKey,
+        current: task.current,
+        total: task.total,
+        etaSeconds: task.etaSeconds,
+        startedAt: task.startedAt,
+        phaseStartedAt: task.phaseStartedAt,
+        model: task.model,
+        segmentCount,
+        videoDurationSec,
+        qualityTranslation,
+        qualityTranscription,
+        translationDraftProvider,
+        translationReviewProvider,
+        transcriptionProvider: transcriptionProviderHint,
+        dubbingProvider: dubbingProviderHint,
+        nowMs,
+      },
+      bucketKey =>
+        getEffectiveCalibrationMultiplier(etaCalibrationRecords, bucketKey)
+    );
+
+    return etaSeconds != null
+      ? `ETA ${formatEtaDuration(etaSeconds)}`
+      : undefined;
+  }, [
+    progress,
+    operationType,
+    nowMs,
+    runtimeState,
+    preferredTranscriptionProvider,
+    translationTask,
+    transcriptionTask,
+    dubbingTask,
+    etaCalibrationRecords,
+    segmentCount,
+    videoDurationSec,
+    qualityTranscription,
+    qualityTranslation,
+  ]);
+
+  useEffect(() => {
+    if (!isVisible || progress >= 100) {
+      return;
+    }
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isVisible, progress]);
+
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
     if (isVisible && progress >= 100) {
@@ -241,70 +295,58 @@ export default function ProgressArea({
     return null;
   }
 
-  // Determine operation type from operationId prefix
-  const operationType: OperationType = operationId
-    ? operationId.startsWith('translate-')
-      ? 'translation'
-      : operationId.startsWith('transcribe-')
-        ? 'transcription'
-        : operationId.startsWith('dub-')
-          ? 'dubbing'
-          : 'general'
-    : 'general';
-
   return (
-    <div className={progressContainerStyles}>
-      <div className={headerStyles}>
-        <div
-          className={css`
-            display: flex;
-            align-items: center;
-            gap: 15px;
-          `}
-        >
-          <h3>{title}</h3>
-          <CreditBalance
-            operationType={operationType}
-            suffixText={suffixText}
-          />
-          <SettingsButton variant="icon" />
-        </div>
-        <button
-          className={closeButtonStyles}
-          onClick={handleCloseOrCancelClick}
-          disabled={isCancelling}
-          aria-label="Close or cancel process"
-        >
-          {isCancelling ? '...' : '×'}
-        </button>
-      </div>
-      <div className={progressBlockStyles}>
-        <div className={progressLabelStyles}>
-          <span>{stage}</span>
-          {progress > 0 && <span>{progress.toFixed(1)}%</span>}
-        </div>
-        {subLabel && (
-          <div
-            className={css`
-              margin-top: 4px;
-              margin-bottom: 6px;
-              font-size: 0.85rem;
-              color: ${colors.grayDark};
-            `}
-          >
-            {subLabel}
+    <div className={workflowStatusOverlayStyles}>
+      <div className={workflowStatusStackStyles}>
+        <div className={workflowStatusCardStyles}>
+          <div className={workflowStatusHeaderStyles}>
+            <div className={workflowStatusHeadingStyles}>
+              <div className={workflowStatusTitleRowStyles}>
+                <h3 className={workflowStatusTitleStyles}>{title}</h3>
+              </div>
+              <div className={workflowStatusUtilityRowStyles}>
+                <CreditBalance
+                  operationType={operationType}
+                  suffixText={etaText}
+                />
+                <SettingsButton variant="icon" />
+              </div>
+            </div>
+            <button
+              className={workflowStatusIconButtonStyles}
+              onClick={handleCloseOrCancelClick}
+              disabled={isCancelling}
+              aria-label={t(
+                'common.closeOrCancelProcess',
+                'Close or cancel process'
+              )}
+            >
+              {isCancelling ? '...' : '×'}
+            </button>
           </div>
-        )}
-        <div className={progressBarContainerStyles}>
-          <div
-            className={css`
-              height: 100%;
-              width: ${Math.min(progress, 100)}%;
-              background-color: ${progressBarColor};
-              border-radius: 10px;
-              transition: width 0.3s ease;
-            `}
-          />
+
+          <div className={workflowStatusBodyStyles}>
+            {notice}
+            <div className={workflowStatusStageRowStyles}>
+              <span className={workflowStatusStageTextStyles}>{stage}</span>
+              {progress > 0 && (
+                <span className={workflowStatusPercentStyles}>
+                  {progress.toFixed(1)}%
+                </span>
+              )}
+            </div>
+            {subLabel && (
+              <p className={workflowStatusSubLabelStyles}>{subLabel}</p>
+            )}
+            <div className={workflowStatusProgressTrackStyles}>
+              <div
+                className={workflowStatusProgressFillStyles(
+                  progressBarColor,
+                  progress
+                )}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

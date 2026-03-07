@@ -2,119 +2,31 @@ import log from 'electron-log';
 import { ReviewBatch } from './types.js';
 import { callAIModel } from './ai-client.js';
 import { TranslateBatchArgs } from '@shared-types/app';
-import { AI_MODELS, ERROR_CODES, normalizeAiModelId } from '@shared/constants';
 import {
-  getActiveProviderForModel,
-  prefersClaudeTranslation,
-  prefersClaudeReview,
+  ERROR_CODES,
+  STAGE5_REVIEW_TRANSLATION_MODEL,
+  normalizeAiModelId,
+} from '@shared/constants';
+import {
+  resolveTranslationDraftModel,
+  resolveTranslationReviewModel,
 } from '../ai-provider.js';
 
-/**
- * Determines which model to use for the draft/initial translation phase.
- * Uses getActiveProviderForModel() to properly check entitlements, keys, and toggles.
- * - If user prefers Claude and Anthropic BYO is fully active: Use Claude Sonnet 4.5
- * - If OpenAI BYO is fully active: Use GPT
- * - If only Anthropic BYO is active (no OpenAI): Use Claude Sonnet 4.5
- * - Otherwise: Use GPT (Stage5 credits)
- */
 function getDraftModel(): { model: string } {
-  const prefersClaude = prefersClaudeTranslation();
-
-  // Check if Anthropic BYO is fully active (entitlement + key + toggle + master)
-  const canUseAnthropicByo =
-    getActiveProviderForModel(AI_MODELS.CLAUDE_SONNET) === 'anthropic';
-  // Check if OpenAI BYO is fully active (entitlement + key + toggle + master)
-  const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
-
-  log.debug(
-    `[Draft] getDraftModel: canUseAnthropicByo=${canUseAnthropicByo}, canUseOpenAiByo=${canUseOpenAiByo}, prefersClaude=${prefersClaude}`
-  );
-
-  // If user explicitly prefers Claude and Anthropic BYO is fully active
-  if (prefersClaude && canUseAnthropicByo) {
-    log.debug(
-      '[Draft] User prefers Claude and Anthropic BYO active - using Claude Sonnet'
-    );
-    return { model: AI_MODELS.CLAUDE_SONNET };
-  }
-
-  // If OpenAI BYO is active, use GPT
-  if (canUseOpenAiByo) {
-    log.debug('[Draft] Using GPT (BYO OpenAI)');
-    return { model: AI_MODELS.GPT };
-  }
-
-  // If only Anthropic BYO is active (no OpenAI BYO), use Claude
-  if (canUseAnthropicByo) {
-    log.debug(
-      '[Draft] No OpenAI BYO, Anthropic BYO active - using Claude Sonnet'
-    );
-    return { model: AI_MODELS.CLAUDE_SONNET };
-  }
-
-  // Default: GPT via Stage5
-  log.debug('[Draft] No BYO active, using GPT (Stage5 credits)');
-  return { model: AI_MODELS.GPT };
+  const model = resolveTranslationDraftModel();
+  log.debug(`[Draft] resolved model: ${model}`);
+  return { model };
 }
 
-/**
- * Determines which model to use for the review phase.
- * Uses getActiveProviderForModel() to properly check entitlements, keys, and toggles.
- * Respects user's preference for Claude vs GPT review model.
- */
 export function getReviewModel(): {
   model: string;
   reasoning?: { effort: 'high' };
 } {
-  // Check if Anthropic BYO is fully active (entitlement + key + toggle + master)
-  const canUseAnthropicByo =
-    getActiveProviderForModel(AI_MODELS.CLAUDE_OPUS) === 'anthropic';
-  // Check if OpenAI BYO is fully active (entitlement + key + toggle + master)
-  const canUseOpenAiByo = getActiveProviderForModel(AI_MODELS.GPT) === 'openai';
-  // User preference: true = Claude Opus, false = GPT with high reasoning
-  const prefersClaude = prefersClaudeReview();
-
+  const resolved = resolveTranslationReviewModel();
   log.debug(
-    `[Review] getReviewModel: canUseAnthropicByo=${canUseAnthropicByo}, canUseOpenAiByo=${canUseOpenAiByo}, prefersClaude=${prefersClaude}`
+    `[Review] resolved model: ${resolved.model}, reasoning=${resolved.reasoning?.effort || 'none'}`
   );
-
-  // If user prefers Claude and Anthropic BYO is available
-  if (prefersClaude && canUseAnthropicByo) {
-    log.debug('[Review] Using Claude Opus (BYO Anthropic, user preference)');
-    return { model: AI_MODELS.CLAUDE_OPUS };
-  }
-
-  // If user prefers GPT and OpenAI BYO is available
-  if (!prefersClaude && canUseOpenAiByo) {
-    log.debug(
-      '[Review] Using GPT-5.1 with high reasoning (BYO OpenAI, user preference)'
-    );
-    return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
-  }
-
-  // Fallback: If user's preferred provider is not available, use what's available
-  if (canUseAnthropicByo) {
-    log.debug('[Review] Using Claude Opus (BYO Anthropic, fallback)');
-    return { model: AI_MODELS.CLAUDE_OPUS };
-  }
-
-  if (canUseOpenAiByo) {
-    log.debug(
-      '[Review] Using GPT-5.1 with high reasoning (BYO OpenAI, fallback)'
-    );
-    return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
-  }
-
-  // No BYO available: use Stage5 credits based on user preference.
-  if (prefersClaude) {
-    log.debug('[Review] Using Claude Opus (Stage5 credits, user preference)');
-    return { model: AI_MODELS.CLAUDE_OPUS };
-  }
-
-  log.debug(
-    '[Review] Using GPT-5.1 with high reasoning (Stage5 credits, user preference)'
-  );
-  return { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+  return resolved;
 }
 
 const NETWORK_RETRY_BASE_MS = 5_000;
@@ -762,10 +674,7 @@ OUTPUT ${batch.segments.length} lines:
         log.warn(
           `[Review] Effective review model switched from ${normalizedRequestedModel} to ${observedModel} (${operationId}).`
         );
-        reviewConfig =
-          observedModel === AI_MODELS.GPT
-            ? { model: AI_MODELS.GPT, reasoning: { effort: 'high' } }
-            : { model: observedModel };
+        reviewConfig = { model: observedModel };
         onModelFallback?.(reviewConfig.model);
       }
 
@@ -841,9 +750,9 @@ OUTPUT ${batch.segments.length} lines:
         isAnthropicUnavailableError(error)
       ) {
         log.warn(
-          `[Review] Anthropic unavailable for review (${operationId}). Falling back to GPT-5.1 with high reasoning.`
+          `[Review] Anthropic unavailable for review (${operationId}). Falling back to the OpenAI review path.`
         );
-        reviewConfig = { model: AI_MODELS.GPT, reasoning: { effort: 'high' } };
+        reviewConfig = { model: STAGE5_REVIEW_TRANSLATION_MODEL };
         onModelFallback?.(reviewConfig.model);
         continue;
       }

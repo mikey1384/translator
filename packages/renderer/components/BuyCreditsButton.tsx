@@ -14,7 +14,7 @@ export default function BuyCreditsButton({
 }: BuyCreditsButtonProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const { checkoutPending } = useCreditStore();
+  const checkoutPending = useCreditStore(s => s.checkoutPending);
 
   async function handleClick() {
     try {

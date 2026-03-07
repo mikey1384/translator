@@ -8,11 +8,19 @@ import {
   API_TIMEOUTS,
   normalizeAiModelId,
 } from '../../shared/constants/index.js';
-import { getDeviceId } from '../handlers/credit-handlers.js';
 import { formatElevenLabsTimeRemaining } from './subtitle-processing/utils.js';
 import { createAbortableReadStream } from '../utils/abortable-file-stream.js';
+import {
+  withStage5AuthRetry,
+  withStage5AuthRetryOnResponse,
+} from './stage5-auth.js';
+import { RELAY_URL, STAGE5_API_URL } from './endpoints.js';
+import {
+  throwIfStage5UpdateRequiredError,
+  throwIfStage5UpdateRequiredResponse,
+} from './stage5-version-gate.js';
 
-export const STAGE5_API_URL = 'https://api.stage5.tools';
+export { STAGE5_API_URL, RELAY_URL };
 
 function sendNetLog(
   level: 'info' | 'warn' | 'error',
@@ -33,8 +41,7 @@ function getRelayErrorMessage(error: any): string | null {
   const payload = error?.response?.data;
   if (!payload || typeof payload !== 'object') return null;
 
-  const base =
-    typeof payload.error === 'string' ? payload.error.trim() : '';
+  const base = typeof payload.error === 'string' ? payload.error.trim() : '';
   const details =
     typeof payload.details === 'string' ? payload.details.trim() : '';
 
@@ -42,13 +49,12 @@ function getRelayErrorMessage(error: any): string | null {
   return base || details || null;
 }
 
-const headers = () => ({ Authorization: `Bearer ${getDeviceId()}` });
-
 export async function transcribe({
   filePath,
   promptContext,
   model = AI_MODELS.WHISPER,
   qualityMode,
+  durationSec,
   idempotencyKey,
   signal,
 }: {
@@ -56,6 +62,7 @@ export async function transcribe({
   promptContext?: string;
   model?: string;
   qualityMode?: boolean;
+  durationSec?: number;
   /** Prevent double-charges on client retries / disconnects. */
   idempotencyKey?: string;
   signal?: AbortSignal;
@@ -69,35 +76,46 @@ export async function transcribe({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
-  const fd = new FormData();
-  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
-  fd.append('file', stream);
-
-  // Language hint removed; rely on auto-detection server-side
-
-  if (promptContext) {
-    fd.append('prompt', promptContext);
-  }
-
-  fd.append('model', model);
-  if (typeof qualityMode === 'boolean') {
-    fd.append('qualityMode', String(qualityMode));
-  }
-
   try {
     // Step 1: Submit the transcription job
-    const submitResponse = await axios.post(
-      `${STAGE5_API_URL}/transcribe`,
-      fd,
-      {
-        headers: {
-          ...headers(),
-          ...fd.getHeaders(), // Let form-data set the proper boundary
-          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
-        },
-        signal, // Pass the AbortSignal to axios
+    const submitResponse = await withStage5AuthRetry(async authHeaders => {
+      const fd = new FormData();
+      const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+      fd.append('file', stream);
+
+      if (promptContext) {
+        fd.append('prompt', promptContext);
       }
-    );
+
+      fd.append('model', model);
+      if (typeof qualityMode === 'boolean') {
+        fd.append('qualityMode', String(qualityMode));
+      }
+      if (
+        typeof durationSec === 'number' &&
+        Number.isFinite(durationSec) &&
+        durationSec > 0
+      ) {
+        fd.append('durationSec', String(durationSec));
+      }
+
+      try {
+        return await axios.post(`${STAGE5_API_URL}/transcribe`, fd, {
+          headers: {
+            ...authHeaders,
+            ...fd.getHeaders(),
+            ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+          },
+          signal,
+        });
+      } finally {
+        cleanup();
+      }
+    });
+    throwIfStage5UpdateRequiredResponse({
+      response: submitResponse,
+      source: 'stage5-api',
+    });
     sendNetLog('info', `POST /transcribe -> ${submitResponse.status}`, {
       url: `${STAGE5_API_URL}/transcribe`,
       method: 'POST',
@@ -120,13 +138,16 @@ export async function transcribe({
         }
 
         // Poll for result
-        const resultResponse = await axios.get(
-          `${STAGE5_API_URL}/transcribe/result/${jobId}`,
-          {
-            headers: headers(),
+        const resultResponse = await withStage5AuthRetry(authHeaders =>
+          axios.get(`${STAGE5_API_URL}/transcribe/result/${jobId}`, {
+            headers: authHeaders,
             signal,
-          }
+          })
         );
+        throwIfStage5UpdateRequiredResponse({
+          response: resultResponse,
+          source: 'stage5-api',
+        });
         sendNetLog(
           'info',
           `GET /transcribe/result/${jobId} -> ${resultResponse.status}`,
@@ -173,6 +194,8 @@ export async function transcribe({
       throw new DOMException('Operation cancelled', 'AbortError');
     }
 
+    throwIfStage5UpdateRequiredError({ error, source: 'stage5-api' });
+
     // Handle insufficient credits with a friendly error message
     if (error.response?.status === 402) {
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
@@ -199,8 +222,6 @@ export async function transcribe({
       sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
     }
     throw error;
-  } finally {
-    cleanup();
   }
 }
 
@@ -211,6 +232,7 @@ export async function translate({
   reasoning,
   translationPhase,
   qualityMode,
+  idempotencyKey,
   signal,
 }: {
   messages: any[];
@@ -221,6 +243,7 @@ export async function translate({
   };
   translationPhase?: 'draft' | 'review';
   qualityMode?: boolean;
+  idempotencyKey?: string;
   signal?: AbortSignal;
 }) {
   // Dev: simulate zero credits without hitting the network
@@ -247,14 +270,15 @@ export async function translate({
     if (typeof qualityMode === 'boolean') {
       payload.qualityMode = qualityMode;
     }
-    const postResponse = await axios.post(
-      `${STAGE5_API_URL}/translate`,
-      payload,
-      {
-        headers: headers(),
+    const postResponse = await withStage5AuthRetryOnResponse(authHeaders =>
+      axios.post(`${STAGE5_API_URL}/translate`, payload, {
+        headers: {
+          ...authHeaders,
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+        },
         signal,
         validateStatus: () => true,
-      }
+      })
     );
 
     sendNetLog('info', `POST /translate -> ${postResponse.status}`, {
@@ -279,6 +303,11 @@ export async function translate({
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
+    throwIfStage5UpdateRequiredResponse({
+      response: postResponse,
+      source: 'stage5-api',
+    });
+
     throw new Error(
       postResponse.data?.message || 'Failed to submit translation job'
     );
@@ -291,6 +320,8 @@ export async function translate({
     ) {
       throw new DOMException('Operation cancelled', 'AbortError');
     }
+
+    throwIfStage5UpdateRequiredError({ error, source: 'stage5-api' });
 
     // Handle insufficient credits with a friendly error message
     if (error.response?.status === 402) {
@@ -339,13 +370,12 @@ async function pollTranslationJob({
 
     await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
 
-    const statusResponse = await axios.get(
-      `${STAGE5_API_URL}/translate/result/${jobId}`,
-      {
-        headers: headers(),
+    const statusResponse = await withStage5AuthRetryOnResponse(authHeaders =>
+      axios.get(`${STAGE5_API_URL}/translate/result/${jobId}`, {
+        headers: authHeaders,
         signal,
         validateStatus: () => true,
-      }
+      })
     );
 
     sendNetLog(
@@ -370,6 +400,11 @@ async function pollTranslationJob({
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
 
+    throwIfStage5UpdateRequiredResponse({
+      response: statusResponse,
+      source: 'stage5-api',
+    });
+
     if (statusResponse.status === 404) {
       throw new Error('translation-job-not-found');
     }
@@ -391,6 +426,7 @@ export async function synthesizeDub({
   format,
   quality,
   ttsProvider,
+  idempotencyKey,
   signal,
 }: {
   segments: Array<{
@@ -406,6 +442,7 @@ export async function synthesizeDub({
   quality?: 'standard' | 'high';
   /** TTS provider for Stage5 API: 'openai' (cheaper) or 'elevenlabs' (higher quality) */
   ttsProvider?: 'openai' | 'elevenlabs';
+  idempotencyKey?: string;
   signal?: AbortSignal;
 }): Promise<{
   audioBase64?: string;
@@ -431,23 +468,26 @@ export async function synthesizeDub({
     // Stage5 backends accept `model` for TTS selection. Default to Eleven v3 when using ElevenLabs.
     const effectiveModel =
       model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
-    const response = await axios.post(
-      `${STAGE5_API_URL}/dub`,
-      {
-        segments,
-        voice,
-        model: effectiveModel,
-        format,
-        quality,
-        ttsProvider,
-      },
-      {
-        headers: {
-          ...headers(),
-          'Content-Type': 'application/json',
+    const response = await withStage5AuthRetry(authHeaders =>
+      axios.post(
+        `${STAGE5_API_URL}/dub`,
+        {
+          segments,
+          voice,
+          model: effectiveModel,
+          format,
+          quality,
+          ttsProvider,
         },
-        signal,
-      }
+        {
+          headers: {
+            ...authHeaders,
+            'Content-Type': 'application/json',
+            ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+          },
+          signal,
+        }
+      )
     );
 
     sendNetLog('info', `POST /dub -> ${response.status}`, {
@@ -492,6 +532,8 @@ export async function synthesizeDub({
       throw new DOMException('Operation cancelled', 'AbortError');
     }
 
+    throwIfStage5UpdateRequiredError({ error, source: 'stage5-api' });
+
     if (error?.response?.status === 402) {
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
@@ -534,8 +576,6 @@ export async function synthesizeDub({
 // ============================================================================
 // Direct Relay Endpoints (Simplified Flow)
 // ============================================================================
-
-export const RELAY_URL = 'https://translator-relay.fly.dev';
 
 /**
  * Estimate transcription time for ElevenLabs Scribe (~8x realtime).
@@ -614,19 +654,6 @@ export async function transcribeViaDirect({
   const stats = fs.statSync(filePath);
   const fileSizeMB = stats.size / (1024 * 1024);
 
-  const fd = new FormData();
-  const { stream, cleanup } = createAbortableReadStream(filePath, signal);
-  fd.append('file', stream);
-  if (language) {
-    fd.append('language', language);
-  }
-  if (modelId) {
-    fd.append('model_id', modelId);
-  }
-  if (typeof qualityMode === 'boolean') {
-    fd.append('qualityMode', String(qualityMode));
-  }
-
   onProgress?.('Uploading audio to relay...', 10);
 
   // Track upload completion to start transcription progress
@@ -639,41 +666,57 @@ export async function transcribeViaDirect({
   );
 
   try {
-    const responsePromise = axios.post(`${RELAY_URL}/transcribe-direct`, fd, {
-      headers: {
-        Authorization: `Bearer ${getDeviceId()}`,
-        ...fd.getHeaders(),
-        ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
-      },
-      signal,
-      // No timeout - relay has no limits, can take as long as needed
-      timeout: 0,
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      onUploadProgress: progressEvent => {
-        if (progressEvent.total) {
-          const uploadPercent = Math.round(
-            (progressEvent.loaded / progressEvent.total) * 30
-          );
-          onProgress?.('Uploading...', 10 + uploadPercent);
+    const responsePromise = withStage5AuthRetry(async authHeaders => {
+      const fd = new FormData();
+      const { stream, cleanup } = createAbortableReadStream(filePath, signal);
+      fd.append('file', stream);
+      if (language) {
+        fd.append('language', language);
+      }
+      if (modelId) {
+        fd.append('model_id', modelId);
+      }
+      if (typeof qualityMode === 'boolean') {
+        fd.append('qualityMode', String(qualityMode));
+      }
 
-          // Start transcription progress timer when upload completes
-          if (progressEvent.loaded >= progressEvent.total && !uploadComplete) {
-            uploadComplete = true;
-            transcriptionStartTime = Date.now();
-
-            // Update progress every second during transcription
-            progressInterval = setInterval(() => {
-              if (!transcriptionStartTime) return;
-              const { stage, percent } = getTranscriptionProgress(
-                transcriptionStartTime,
-                estimatedTranscriptionSec
+      try {
+        return await axios.post(`${RELAY_URL}/transcribe-direct`, fd, {
+          headers: {
+            ...authHeaders,
+            ...fd.getHeaders(),
+            ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+          },
+          signal,
+          timeout: 0,
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity,
+          onUploadProgress: progressEvent => {
+            if (progressEvent.total) {
+              const uploadPercent = Math.round(
+                (progressEvent.loaded / progressEvent.total) * 30
               );
-              onProgress?.(stage, percent);
-            }, 1000);
-          }
-        }
-      },
+              onProgress?.('Uploading...', 10 + uploadPercent);
+
+              if (progressEvent.loaded >= progressEvent.total && !uploadComplete) {
+                uploadComplete = true;
+                transcriptionStartTime = Date.now();
+
+                progressInterval = setInterval(() => {
+                  if (!transcriptionStartTime) return;
+                  const { stage, percent } = getTranscriptionProgress(
+                    transcriptionStartTime,
+                    estimatedTranscriptionSec
+                  );
+                  onProgress?.(stage, percent);
+                }, 1000);
+              }
+            }
+          },
+        });
+      } finally {
+        cleanup();
+      }
     });
 
     const response = await responsePromise;
@@ -704,6 +747,8 @@ export async function transcribeViaDirect({
       throw new DOMException('Operation cancelled', 'AbortError');
     }
 
+    throwIfStage5UpdateRequiredError({ error, source: 'relay' });
+
     if (error.response?.status === 402) {
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
@@ -733,8 +778,6 @@ export async function transcribeViaDirect({
     }
 
     throw new Error(relayMessage);
-  } finally {
-    cleanup();
   }
 }
 
@@ -747,19 +790,23 @@ export async function translateViaDirect({
   messages,
   model,
   modelFamily,
+  webSearch,
   reasoning,
   translationPhase,
   qualityMode,
+  idempotencyKey,
   signal,
 }: {
   messages: any[];
   model?: string;
   modelFamily?: 'gpt' | 'claude' | 'auto';
+  webSearch?: boolean;
   reasoning?: {
     effort?: 'low' | 'medium' | 'high';
   };
   translationPhase?: 'draft' | 'review';
   qualityMode?: boolean;
+  idempotencyKey?: string;
   signal?: AbortSignal;
 }): Promise<any> {
   if (process.env.FORCE_ZERO_CREDITS === '1') {
@@ -785,17 +832,19 @@ export async function translateViaDirect({
     if (typeof qualityMode === 'boolean') {
       payload.qualityMode = qualityMode;
     }
-    const response = await axios.post(
-      `${RELAY_URL}/translate-direct`,
-      payload,
-      {
+    if (webSearch === true) {
+      payload.webSearch = true;
+    }
+    const response = await withStage5AuthRetry(authHeaders =>
+      axios.post(`${RELAY_URL}/translate-direct`, payload, {
         headers: {
-          Authorization: `Bearer ${getDeviceId()}`,
+          ...authHeaders,
           'Content-Type': 'application/json',
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
         signal,
-        timeout: 0, // No timeout for long translations
-      }
+        timeout: 0,
+      })
     );
 
     sendNetLog('info', `POST /translate-direct -> ${response.status}`, {
@@ -813,6 +862,8 @@ export async function translateViaDirect({
     ) {
       throw new DOMException('Operation cancelled', 'AbortError');
     }
+
+    throwIfStage5UpdateRequiredError({ error, source: 'relay' });
 
     if (error.response?.status === 402) {
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
@@ -849,6 +900,7 @@ export async function dubViaDirect({
   format,
   quality,
   ttsProvider,
+  idempotencyKey,
   signal,
 }: {
   segments: Array<{
@@ -863,6 +915,7 @@ export async function dubViaDirect({
   format?: string;
   quality?: 'standard' | 'high';
   ttsProvider?: 'openai' | 'elevenlabs';
+  idempotencyKey?: string;
   signal?: AbortSignal;
 }): Promise<{
   audioBase64?: string;
@@ -889,17 +942,20 @@ export async function dubViaDirect({
     // Relay accepts `model` for TTS selection. Default to Eleven v3 when using ElevenLabs.
     const effectiveModel =
       model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
-    const response = await axios.post(
-      `${RELAY_URL}/dub-direct`,
-      { segments, voice, model: effectiveModel, format, quality, ttsProvider },
-      {
-        headers: {
-          Authorization: `Bearer ${getDeviceId()}`,
-          'Content-Type': 'application/json',
-        },
-        signal,
-        timeout: 0, // No timeout for long dubbing operations
-      }
+    const response = await withStage5AuthRetry(authHeaders =>
+      axios.post(
+        `${RELAY_URL}/dub-direct`,
+        { segments, voice, model: effectiveModel, format, quality, ttsProvider },
+        {
+          headers: {
+            ...authHeaders,
+            'Content-Type': 'application/json',
+            ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+          },
+          signal,
+          timeout: 0,
+        }
+      )
     );
 
     sendNetLog('info', `POST /dub-direct -> ${response.status}`, {
@@ -940,6 +996,8 @@ export async function dubViaDirect({
       throw new DOMException('Operation cancelled', 'AbortError');
     }
 
+    throwIfStage5UpdateRequiredError({ error, source: 'relay' });
+
     if (error.response?.status === 402) {
       throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
     }
@@ -960,180 +1018,5 @@ export async function dubViaDirect({
     }
 
     throw error;
-  }
-}
-
-// ============================================================================
-// Voice Cloning Dubbing (ElevenLabs Dubbing API)
-// ============================================================================
-
-export interface VoiceCloningResult {
-  audioBase64: string;
-  transcript: string;
-  format: string;
-  durationSeconds: number;
-  creditsUsed: number;
-}
-
-/**
- * Dub video/audio with voice cloning using ElevenLabs Dubbing API via Stage5 API
- * This clones the original speaker's voice and translates to the target language
- */
-export async function voiceCloneDub({
-  file,
-  targetLanguage,
-  sourceLanguage,
-  durationSeconds,
-  numSpeakers,
-  dropBackgroundAudio = true,
-  onProgress,
-  signal,
-}: {
-  file: { path: string; name: string; type: string };
-  targetLanguage: string;
-  sourceLanguage?: string;
-  durationSeconds: number;
-  numSpeakers?: number;
-  dropBackgroundAudio?: boolean;
-  onProgress?: (status: string, progress: number) => void;
-  signal?: AbortSignal;
-}): Promise<VoiceCloningResult> {
-  if (process.env.FORCE_ZERO_CREDITS === '1') {
-    throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-  }
-  if (signal?.aborted) {
-    throw new DOMException('Operation cancelled', 'AbortError');
-  }
-
-  try {
-    onProgress?.('Preparing voice cloning...', 5);
-
-    // Read the file
-    const fs = await import('fs');
-    const fileBuffer = await fs.promises.readFile(file.path);
-
-    // Create form data
-    const FormData = (await import('form-data')).default;
-    const formData = new FormData();
-    formData.append('file', fileBuffer, {
-      filename: file.name,
-      contentType: file.type || 'video/mp4',
-    });
-    formData.append('target_language', targetLanguage);
-    formData.append('duration_seconds', String(durationSeconds));
-    if (sourceLanguage) {
-      formData.append('source_language', sourceLanguage);
-    }
-    if (numSpeakers !== undefined) {
-      formData.append('num_speakers', String(numSpeakers));
-    }
-    formData.append('drop_background_audio', String(dropBackgroundAudio));
-
-    onProgress?.('Uploading for voice cloning...', 15);
-
-    const response = await axios.post(
-      `${STAGE5_API_URL}/dub/voice-clone`,
-      formData,
-      {
-        headers: {
-          ...headers(),
-          ...formData.getHeaders(),
-        },
-        signal,
-        // Long timeout for voice cloning (can take several minutes)
-        timeout: 600000, // 10 minutes
-        onUploadProgress: progressEvent => {
-          if (progressEvent.total) {
-            const uploadProgress = Math.round(
-              (progressEvent.loaded / progressEvent.total) * 30
-            );
-            onProgress?.('Uploading...', 15 + uploadProgress);
-          }
-        },
-      }
-    );
-
-    sendNetLog('info', `POST /dub/voice-clone -> ${response.status}`, {
-      url: `${STAGE5_API_URL}/dub/voice-clone`,
-      method: 'POST',
-      status: response.status,
-    });
-
-    onProgress?.('Voice cloning complete!', 100);
-
-    const data = response.data as VoiceCloningResult;
-    return data;
-  } catch (error: any) {
-    if (
-      error?.name === 'AbortError' ||
-      error?.code === 'ERR_CANCELED' ||
-      signal?.aborted
-    ) {
-      throw new DOMException('Operation cancelled', 'AbortError');
-    }
-
-    if (error?.response?.status === 402) {
-      const errorData = error.response.data;
-      const message = errorData?.message || ERROR_CODES.INSUFFICIENT_CREDITS;
-      throw new Error(message);
-    }
-
-    let errToThrow: any = error;
-
-    if (error.response) {
-      sendNetLog(
-        'error',
-        `HTTP ${error.response.status} ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
-        {
-          status: error.response.status,
-          url: error.config?.url,
-          method: error.config?.method,
-          data: error.response.data,
-        }
-      );
-      const details =
-        error.response.data?.details ??
-        error.response.data?.message ??
-        error.response.data;
-      if (details) {
-        const message =
-          typeof details === 'string' ? details : JSON.stringify(details);
-        errToThrow = new Error(message);
-      }
-    } else if (error.request) {
-      sendNetLog(
-        'error',
-        `HTTP NO_RESPONSE ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
-        { url: error.config?.url, method: error.config?.method }
-      );
-    } else {
-      sendNetLog('error', `HTTP ERROR: ${String(error?.message || error)}`);
-    }
-
-    throw errToThrow;
-  }
-}
-
-/**
- * Get voice cloning pricing info from Stage5 API
- */
-export async function getVoiceCloningPricing(): Promise<{
-  creditsPerMinute: number;
-  description: string;
-}> {
-  try {
-    const response = await axios.get(
-      `${STAGE5_API_URL}/dub/voice-clone/pricing`,
-      {
-        headers: headers(),
-      }
-    );
-    return response.data;
-  } catch {
-    // Fallback pricing if API call fails
-    return {
-      creditsPerMinute: 35000,
-      description: 'Voice cloning uses ElevenLabs Dubbing API',
-    };
   }
 }

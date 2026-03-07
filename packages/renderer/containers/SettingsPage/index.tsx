@@ -1,101 +1,114 @@
-import { css } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import CreditCard from '../../components/CreditCard';
-import { colors } from '../../styles';
+import AdminResetButton from '../../components/AdminResetButton';
+import {
+  shellHeaderBlockStyles,
+  shellTitleStyles,
+} from '../../styles';
 import { useCreditStore } from '../../state/credit-store';
 import { useAiStore } from '../../state';
+import { SystemIPC } from '../../ipc';
+import Section from '../../components/Section';
 import QualityToggles from './QualityToggles';
 import DubbingVoiceSelector from './DubbingVoiceSelector';
 import DubbingMixSlider from './DubbingMixSlider';
 import ByoUnlockCard from './ByoUnlockCard';
-import ByoMasterToggle from './ByoMasterToggle';
+import StrictByoModeToggle from './StrictByoModeToggle';
 import ByoOpenAiSection from './ByoOpenAiSection';
 import SiteConnectionSection from './SiteConnectionSection';
+import { hasAnyByoEntitlementUnlocked } from '../../state/byo-runtime';
+import {
+  settingsCenterColumnStyles,
+  settingsPageLayoutStyles,
+} from './styles';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
   const byoUnlocked = useAiStore(state => state.byoUnlocked);
+  const byoAnthropicUnlocked = useAiStore(state => state.byoAnthropicUnlocked);
+  const byoElevenLabsUnlocked = useAiStore(
+    state => state.byoElevenLabsUnlocked
+  );
   const adminByoPreviewMode = useAiStore(state => state.adminByoPreviewMode);
-  const useByoMaster = useAiStore(state => state.useByoMaster);
+  const useStrictByoMode = useAiStore(state => state.useStrictByoMode);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Effective BYO unlocked state (respects admin preview mode)
-  const effectiveByoUnlocked = byoUnlocked && !adminByoPreviewMode;
+  const effectiveByoUnlocked =
+    hasAnyByoEntitlementUnlocked({
+      byoUnlocked,
+      byoAnthropicUnlocked,
+      byoElevenLabsUnlocked,
+    }) && !adminByoPreviewMode;
 
   useEffect(() => {
     useCreditStore.getState().refresh();
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    const checkAdminStatus = async () => {
+      try {
+        const admin = await SystemIPC.isAdminMode();
+        if (mounted) {
+          setIsAdmin(admin);
+        }
+      } catch (error) {
+        console.error('Failed to check admin status:', error);
+        if (mounted) {
+          setIsAdmin(false);
+        }
+      }
+    };
+
+    void checkAdminStatus();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Show Stage5 credits section when:
   // - BYO is not unlocked (default flow)
-  // - OR BYO is unlocked but master toggle is OFF (using credits)
-  const showStage5Section = !effectiveByoUnlocked || !useByoMaster;
+  // - OR BYO is unlocked but API-key mode is OFF (using credits)
+  const showStage5Section = !effectiveByoUnlocked || !useStrictByoMode;
 
   return (
     <div
-      className={css`
-        display: flex;
-        flex-direction: column;
-        gap: 48px;
-        padding: 30px 0;
-      `}
+      className={settingsPageLayoutStyles}
     >
-      {/* —————————————————  TITLE  ————————————————— */}
-      <header
-        className={css`
-          max-width: 700px;
-          margin: 0 auto;
-          border-bottom: 1px solid ${colors.border};
-          padding-bottom: 18px;
-        `}
-      >
-        <h1
-          className={css`
-            font-size: 1.8em;
-            color: ${colors.text};
-            margin: 0;
-          `}
-        >
-          {t('settings.title')}
-        </h1>
+      <header className={shellHeaderBlockStyles}>
+        <h1 className={shellTitleStyles}>{t('settings.title')}</h1>
       </header>
 
       {/* —————————————————  BYO UNLOCK (if not unlocked)  ————————————————— */}
       <ByoUnlockCard />
 
-      {/* —————————————————  MASTER TOGGLE (if unlocked)  ————————————————— */}
-      <ByoMasterToggle />
+      {/* —————————————————  BYO MODE TOGGLE (if unlocked)  ————————————————— */}
+      <StrictByoModeToggle />
 
       {/* —————————————————  STAGE5 CREDITS SECTION  ————————————————— */}
       {showStage5Section && (
-        <section
-          className={css`
-            max-width: 700px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-          `}
+        <Section
+          title={t('settings.performanceQuality.title', 'Performance & Quality')}
+          className={settingsCenterColumnStyles}
         >
-          <h2
-            className={css`
-              font-size: 1.2rem;
-              margin: 0 0 6px;
-              color: ${colors.text};
-            `}
-          >
-            {t('settings.performanceQuality.title', 'Performance & Quality')}
-          </h2>
           <QualityToggles />
           <DubbingVoiceSelector />
           <DubbingMixSlider />
           <CreditCard />
-        </section>
+        </Section>
       )}
 
-      {!window.env.isPackaged && <SiteConnectionSection />}
+      {isAdmin && (
+        <Section title={t('admin.title', 'Admin')} className={settingsCenterColumnStyles}>
+          <AdminResetButton />
+        </Section>
+      )}
 
-      {/* —————————————————  BYO API KEYS SECTION (if unlocked + master ON)  ————————————————— */}
+      {isAdmin && <SiteConnectionSection />}
+
+      {/* —————————————————  BYO API KEYS SECTION (if unlocked + API-key mode ON)  ————————————————— */}
       <ByoOpenAiSection />
     </div>
   );

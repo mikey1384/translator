@@ -5,12 +5,22 @@ import { useTaskStore, useUIStore, useSubStore } from '../state';
 import type { SrtSegment } from '@shared-types/app';
 import subtitleRendererClient from '../clients/subtitle-renderer-client';
 import type { RenderSubtitlesOptions } from '@shared-types/app';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { i18n } from '../i18n';
 import { css } from '@emotion/css';
-import { colors } from '../styles';
+import {
+  colors,
+  metaPillStyles,
+  shellBodyStyles,
+  subtleSurfaceCardStyles,
+} from '../styles';
 import { useTranslation } from 'react-i18next';
 import { logButton } from '../utils/logger';
+import {
+  borderRadius,
+  fontWeight,
+  spacing,
+} from '../components/design-system/tokens.js';
 
 export default function MainPanels() {
   const { t } = useTranslation();
@@ -24,8 +34,14 @@ export default function MainPanels() {
   const setMergeStage = useTaskStore(s => s.setMerge);
   const setMergeOperationId = (id: string | null) =>
     useTaskStore.getState().setMerge({ id });
-  const summarySegments = useSubStore(s =>
-    s.order.map(id => s.segments[id]).filter((seg): seg is SrtSegment => !!seg)
+  const subtitleOrder = useSubStore(s => s.order);
+  const subtitleSegments = useSubStore(s => s.segments);
+  const summarySegments = useMemo(
+    () =>
+      subtitleOrder
+        .map(id => subtitleSegments[id])
+        .filter((seg): seg is SrtSegment => !!seg),
+    [subtitleOrder, subtitleSegments]
   );
   const hasTranscript = summarySegments.length > 0;
 
@@ -78,7 +94,7 @@ export default function MainPanels() {
             }
           >
             <div className={overlayHeaderStyles}>
-              <div className={overlayIconStyles}>🎬</div>
+              <div className={overlayIconStyles}>01</div>
               <div>
                 <div className={overlayTitleStyles}>
                   {t('cta.generate.title')}
@@ -89,12 +105,8 @@ export default function MainPanels() {
               </div>
             </div>
             <div className={overlayPillsRowStyles}>
-              <span className={overlayPill}>
-                <span>💾</span> {t('input.fromDevice')}
-              </span>
-              <span className={overlayPill}>
-                <span>🌐</span> {t('input.fromWeb')}
-              </span>
+              <span className={overlayPill}>{t('input.fromDevice')}</span>
+              <span className={overlayPill}>{t('input.fromWeb')}</span>
             </div>
           </div>
         )}
@@ -135,7 +147,7 @@ export default function MainPanels() {
             }
           >
             <div className={overlayHeaderStyles}>
-              <div className={overlayIconStyles}>📝</div>
+              <div className={overlayIconStyles}>02</div>
               <div>
                 <div className={overlayTitleStyles}>{t('cta.edit.title')}</div>
                 <div className={overlaySubtitleStyles}>
@@ -144,12 +156,8 @@ export default function MainPanels() {
               </div>
             </div>
             <div className={overlayPillsRowStyles}>
-              <span className={overlayPill}>
-                <span>📄</span> {t('cta.edit.pillOpen')}
-              </span>
-              <span className={overlayPill}>
-                <span>🎥</span> {t('cta.edit.pillMerge')}
-              </span>
+              <span className={overlayPill}>{t('cta.edit.pillOpen')}</span>
+              <span className={overlayPill}>{t('cta.edit.pillMerge')}</span>
             </div>
           </div>
         )}
@@ -166,41 +174,32 @@ function isRenderOpts(o: unknown): o is RenderSubtitlesOptions {
 const panelBlockStyles = css`
   position: relative;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: ${spacing.md};
 `;
 
 const ctaOverlayCard = css`
+  ${subtleSurfaceCardStyles}
   width: 100%;
   max-width: 100%;
-  min-height: 160px;
-  padding: 20px 24px;
-  border-radius: 12px;
-  border: 2px solid ${colors.border};
-  background-color: ${colors.surface};
+  min-height: 190px;
+  padding: ${spacing['2xl']};
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: ${spacing.lg};
   cursor: pointer;
   user-select: none;
   color: ${colors.text};
-  text-align: center;
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.08s ease;
+    box-shadow 0.15s ease;
 
   &:hover {
     border-color: ${colors.primary};
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
+    box-shadow: 0 12px 28px rgba(5, 10, 19, 0.24);
   }
 
   &:focus {
@@ -211,49 +210,49 @@ const ctaOverlayCard = css`
 
 const overlayHeaderStyles = css`
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: ${spacing.lg};
+  width: 100%;
 `;
 
 const overlayIconStyles = css`
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background-color: ${colors.primary};
+  width: 54px;
+  height: 54px;
+  border-radius: ${borderRadius.lg};
+  border: 1px solid rgba(125, 167, 255, 0.28);
+  background: linear-gradient(
+    135deg,
+    rgba(125, 167, 255, 0.16),
+    rgba(125, 167, 255, 0.04)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 1.2rem;
-  font-weight: bold;
+  color: ${colors.primaryLight};
+  font-size: 0.95rem;
+  font-weight: ${fontWeight.bold};
+  letter-spacing: 0.12em;
 `;
 
 const overlayTitleStyles = css`
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: clamp(1.25rem, 1.9vw, 1.65rem);
+  font-weight: ${fontWeight.semibold};
   color: ${colors.text};
+  margin-top: ${spacing.sm};
+  letter-spacing: -0.02em;
 `;
 
 const overlaySubtitleStyles = css`
-  font-size: 0.85rem;
-  color: ${colors.gray};
+  ${shellBodyStyles}
+  margin-top: ${spacing.sm};
+  max-width: 560px;
 `;
 
 const overlayPillsRowStyles = css`
   display: flex;
-  gap: 10px;
+  gap: ${spacing.sm};
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
 `;
 
-const overlayPill = css`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background-color: ${colors.backgroundLight};
-  border: 1px solid ${colors.border};
-  color: ${colors.text};
-  font-size: 0.8rem;
-`;
+const overlayPill = metaPillStyles;

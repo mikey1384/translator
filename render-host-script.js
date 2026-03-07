@@ -1358,29 +1358,145 @@ var SUBTITLE_STYLE_PRESETS = {
   }
 };
 
+// ../shared/constants/estimate-heuristics.ts
+var SPOKEN_CHARS_PER_MINUTE = 750;
+var TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT = 16e3;
+var TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION = 16e3;
+var TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
+
+// ../shared/constants/model-catalog.ts
+var AI_MODELS = {
+  GPT: "gpt-5.1",
+  CLAUDE_SONNET: "claude-sonnet-4-6",
+  CLAUDE_OPUS: "claude-opus-4-6",
+  WHISPER: "whisper-1"
+};
+var STAGE5_REVIEW_TRANSLATION_MODEL = "gpt-5.4";
+var STAGE5_WHISPER_MODEL = AI_MODELS.WHISPER;
+var STAGE5_ELEVENLABS_SCRIBE_MODEL = "elevenlabs-scribe";
+var STAGE5_TTS_MODEL_STANDARD = "tts-1";
+var STAGE5_TTS_MODEL_HD = "tts-1-hd";
+var STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL = "eleven_multilingual_v2";
+var STAGE5_TTS_MODEL_ELEVEN_TURBO = "eleven_turbo_v2_5";
+var AI_MODEL_ALIASES = {
+  "claude-sonnet-4-5-20250929": AI_MODELS.CLAUDE_SONNET,
+  "claude-sonnet-4-5": AI_MODELS.CLAUDE_SONNET,
+  "claude-sonnet-4.6": AI_MODELS.CLAUDE_SONNET,
+  "claude-opus-4.6": AI_MODELS.CLAUDE_OPUS
+};
+var STAGE5_TRANSLATION_MODEL_PRICING = {
+  [AI_MODELS.GPT]: {
+    in: 1.25 / 1e6,
+    out: 10 / 1e6
+  },
+  [STAGE5_REVIEW_TRANSLATION_MODEL]: {
+    in: 2.5 / 1e6,
+    out: 15 / 1e6
+  },
+  [AI_MODELS.CLAUDE_OPUS]: {
+    in: 5 / 1e6,
+    out: 25 / 1e6
+  }
+};
+var STAGE5_TRANSCRIPTION_MODEL_PRICING = {
+  [STAGE5_WHISPER_MODEL]: {
+    perSecond: 6e-3 / 60
+  },
+  [STAGE5_ELEVENLABS_SCRIBE_MODEL]: {
+    perSecond: 0.4 / 3600
+  }
+};
+var STAGE5_TTS_MODEL_PRICING = {
+  [STAGE5_TTS_MODEL_STANDARD]: {
+    perChar: 15 / 1e6
+  },
+  [STAGE5_TTS_MODEL_HD]: {
+    perChar: 30 / 1e6
+  },
+  [STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL]: {
+    perChar: 180 / 1e6
+  },
+  [STAGE5_TTS_MODEL_ELEVEN_TURBO]: {
+    perChar: 90 / 1e6
+  }
+};
+
+// ../shared/constants/pricing.ts
+var USD_PER_CREDIT = 10 / 35e4;
+var PRICE_MARGIN = 2;
+var PREVIEW_TTS_SAMPLE_CHARS = 5;
+function getTranscriptionCreditsPerSecond(model) {
+  return STAGE5_TRANSCRIPTION_MODEL_PRICING[model].perSecond * PRICE_MARGIN / USD_PER_CREDIT;
+}
+function getTtsCreditsPerCharacter(model) {
+  return STAGE5_TTS_MODEL_PRICING[model].perChar * PRICE_MARGIN / USD_PER_CREDIT;
+}
+function estimateTtsCredits({
+  characters: characters2,
+  model
+}) {
+  const safeCharacters = Math.max(0, Math.ceil(Number(characters2) || 0));
+  if (safeCharacters === 0) return 0;
+  return Math.ceil(safeCharacters * getTtsCreditsPerCharacter(model));
+}
+var CREDITS_PER_TRANSCRIPTION_AUDIO_HOUR = getTranscriptionCreditsPerSecond(STAGE5_ELEVENLABS_SCRIBE_MODEL) * 3600;
+var TTS_CREDITS_PER_MINUTE = {
+  openai: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_STANDARD) * SPOKEN_CHARS_PER_MINUTE,
+  elevenlabs: getTtsCreditsPerCharacter(STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL) * SPOKEN_CHARS_PER_MINUTE
+};
+var PREVIEW_TTS_CREDITS = {
+  openai: estimateTtsCredits({
+    characters: PREVIEW_TTS_SAMPLE_CHARS,
+    model: STAGE5_TTS_MODEL_STANDARD
+  }),
+  elevenlabs: estimateTtsCredits({
+    characters: PREVIEW_TTS_SAMPLE_CHARS,
+    model: STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL
+  })
+};
+
+// ../shared/constants/vendor-pricing.ts
+var OPENAI_WEB_SEARCH_USD_PER_CALL = 10 / 1e3;
+var ANTHROPIC_WEB_SEARCH_USD_PER_CALL = 10 / 1e3;
+var VENDOR_TOKEN_MODEL_PRICING = {
+  [AI_MODELS.GPT]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.GPT],
+  [STAGE5_REVIEW_TRANSLATION_MODEL]: STAGE5_TRANSLATION_MODEL_PRICING[STAGE5_REVIEW_TRANSLATION_MODEL],
+  [AI_MODELS.CLAUDE_SONNET]: {
+    in: 3 / 1e6,
+    out: 15 / 1e6
+  },
+  [AI_MODELS.CLAUDE_OPUS]: STAGE5_TRANSLATION_MODEL_PRICING[AI_MODELS.CLAUDE_OPUS]
+};
+var VENDOR_TRANSCRIPTION_MODEL_PRICING = {
+  [STAGE5_WHISPER_MODEL]: STAGE5_TRANSCRIPTION_MODEL_PRICING[STAGE5_WHISPER_MODEL],
+  [STAGE5_ELEVENLABS_SCRIBE_MODEL]: {
+    creator: 0.48 / 3600,
+    pro: 0.4 / 3600,
+    scaleBusiness: 0.22 / 3600
+  }
+};
+var VENDOR_TTS_MODEL_PRICING = {
+  [STAGE5_TTS_MODEL_STANDARD]: STAGE5_TTS_MODEL_PRICING[STAGE5_TTS_MODEL_STANDARD],
+  [STAGE5_TTS_MODEL_ELEVEN_MULTILINGUAL]: {
+    creator: 300 / 1e6,
+    pro: 180 / 1e6,
+    scaleBusiness: 120 / 1e6
+  }
+};
+
 // ../shared/constants/runtime-config.ts
 var BASELINE_FONT_SIZE = 30;
 
 // ../shared/constants/index.ts
-var AI_MODELS = {
-  GPT: "gpt-5.1",
-  CLAUDE_SONNET: "claude-sonnet-4-5-20250929",
-  CLAUDE_OPUS: "claude-opus-4-6",
-  WHISPER: "whisper-1"
-};
-var AI_MODEL_ALIASES = {
-  "claude-opus-4.6": AI_MODELS.CLAUDE_OPUS
-};
 var AI_MODEL_DISPLAY_NAMES = {
   [AI_MODELS.GPT]: "GPT-5.1",
+  [STAGE5_REVIEW_TRANSLATION_MODEL]: "GPT-5.4",
   [AI_MODELS.CLAUDE_SONNET]: "Claude Sonnet",
   [AI_MODELS.CLAUDE_OPUS]: "Claude Opus",
   [AI_MODELS.WHISPER]: "Whisper"
 };
-var USD_PER_CREDIT = 10 / 35e4;
-var PRICE_MARGIN = 2;
-var GPT5_1_USD_PER_TOKEN_IN = 1.25 / 1e6;
-var GPT5_1_USD_PER_TOKEN_OUT = 10 / 1e6;
+var GPT5_1_USD_PER_TOKEN_IN = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].in;
+var GPT5_1_USD_PER_TOKEN_OUT = STAGE5_TRANSLATION_MODEL_PRICING["gpt-5.1"].out;
 var TOKEN_CREDIT_CALIBRATION_UI = 1;
 var CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
   PRICE_MARGIN * 1e3 * GPT5_1_USD_PER_TOKEN_IN / USD_PER_CREDIT * TOKEN_CREDIT_CALIBRATION_UI
@@ -1388,12 +1504,9 @@ var CREDITS_PER_1K_TOKENS_PROMPT = Math.ceil(
 var CREDITS_PER_1K_TOKENS_COMPLETION = Math.ceil(
   PRICE_MARGIN * 1e3 * GPT5_1_USD_PER_TOKEN_OUT / USD_PER_CREDIT * TOKEN_CREDIT_CALIBRATION_UI
 );
-var TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT = 16e3;
-var TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION = 16e3;
 var BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
   TRANSLATION_TOKENS_PER_AUDIO_HOUR_PROMPT / 1e3 * CREDITS_PER_1K_TOKENS_PROMPT + TRANSLATION_TOKENS_PER_AUDIO_HOUR_COMPLETION / 1e3 * CREDITS_PER_1K_TOKENS_COMPLETION
 );
-var TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER = 1.5;
 var CREDITS_PER_TRANSLATION_AUDIO_HOUR = Math.ceil(
   BASE_CREDITS_PER_TRANSLATION_AUDIO_HOUR * TRANSLATION_REVIEW_OVERHEAD_MULTIPLIER
 );

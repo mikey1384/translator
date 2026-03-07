@@ -13,10 +13,10 @@ UrlIPC.onProgress(p => {
   }
   // Avoid surfacing transient/cancel or cookie-handoff messages as error banner
   if (p.stage === 'NeedCookies' || p.stage === 'Cancelled') {
-    useUrlStore.getState().setError('');
+    useUrlStore.getState().clearError();
   } else if (p.error) {
-    useUrlStore.getState().setError(p.error as string);
+    useUrlStore.getState().setOperationError(p.error as string);
   } else {
-    useUrlStore.getState().setError('');
+    useUrlStore.getState().clearError();
   }
 });

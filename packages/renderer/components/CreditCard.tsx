@@ -1,18 +1,12 @@
-import { css } from '@emotion/css';
+import { css, cx } from '@emotion/css';
 import { useTranslation } from 'react-i18next';
 import { useCreditStore } from '../state';
 import BuyCreditsButton from './BuyCreditsButton';
-import AdminResetButton from './AdminResetButton';
-import { colors } from '../styles';
-import {
-  CREDIT_PACKS,
-  CREDITS_PER_TRANSLATION_AUDIO_HOUR,
-} from '../../shared/constants';
+import { colors, surfaceCardStyles } from '../styles';
+import { CREDIT_PACKS } from '../../shared/constants';
+import { estimateTranslatableHours } from '../utils/creditEstimates';
 
 const card = css`
-  background: rgba(40, 40, 40, 0.6);
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
   padding: 24px;
   max-width: 660px;
   margin: 0 auto;
@@ -29,7 +23,15 @@ const balanceTxt = css`
 
 export default function CreditCard() {
   const { t } = useTranslation();
-  const { credits, hours, loading, error, checkoutPending } = useCreditStore();
+  const credits = useCreditStore(s => s.credits);
+  const hours = useCreditStore(s => s.hours);
+  const loading = useCreditStore(s => s.loading);
+  const error = useCreditStore(s => s.error);
+  const checkoutPending = useCreditStore(s => s.checkoutPending);
+  const translationHoursLabel = t(
+    'credits.translationHoursShort',
+    'translation hrs'
+  );
   const fmtHours = (v: number | null | undefined) =>
     typeof v === 'number'
       ? v.toLocaleString(undefined, {
@@ -37,11 +39,10 @@ export default function CreditCard() {
           maximumFractionDigits: 1,
         })
       : '';
-  const sharedHoursRemaining =
-    credits !== null ? credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR : null;
+  const sharedHoursRemaining = estimateTranslatableHours(credits, false);
 
   return (
-    <section className={card}>
+    <section className={cx(surfaceCardStyles, card)}>
       <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: colors.text }}>
         {t('credits.title')}
       </h2>
@@ -62,7 +63,7 @@ export default function CreditCard() {
             </span>
             <span style={{ fontSize: '1rem', color: colors.textDim }}>
               {' '}
-              ({`${fmtHours(sharedHoursRemaining)} ${t('credits.hours')}`})
+              ({`${fmtHours(sharedHoursRemaining)} ${translationHoursLabel}`})
             </span>
           </span>
 
@@ -73,28 +74,26 @@ export default function CreditCard() {
             <BuyCreditsButton
               packId={CREDIT_PACKS.MICRO.id}
               label={`$${CREDIT_PACKS.MICRO.price} · ${fmtHours(
-                CREDIT_PACKS.MICRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
-              )} ${t('credits.hours')} (${CREDIT_PACKS.MICRO.credits.toLocaleString()} cr)`}
+                estimateTranslatableHours(CREDIT_PACKS.MICRO.credits, false)
+              )} ${translationHoursLabel} (${CREDIT_PACKS.MICRO.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STARTER.id}
               label={`$${CREDIT_PACKS.STARTER.price} · ${fmtHours(
-                CREDIT_PACKS.STARTER.credits /
-                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
-              )} ${t('credits.hours')} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
+                estimateTranslatableHours(CREDIT_PACKS.STARTER.credits, false)
+              )} ${translationHoursLabel} (${CREDIT_PACKS.STARTER.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.STANDARD.id}
               label={`$${CREDIT_PACKS.STANDARD.price} · ${fmtHours(
-                CREDIT_PACKS.STANDARD.credits /
-                  CREDITS_PER_TRANSLATION_AUDIO_HOUR
-              )} ${t('credits.hours')} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
+                estimateTranslatableHours(CREDIT_PACKS.STANDARD.credits, false)
+              )} ${translationHoursLabel} (${CREDIT_PACKS.STANDARD.credits.toLocaleString()} cr)`}
             />
             <BuyCreditsButton
               packId={CREDIT_PACKS.PRO.id}
               label={`$${CREDIT_PACKS.PRO.price} · ${fmtHours(
-                CREDIT_PACKS.PRO.credits / CREDITS_PER_TRANSLATION_AUDIO_HOUR
-              )} ${t('credits.hours')} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
+                estimateTranslatableHours(CREDIT_PACKS.PRO.credits, false)
+              )} ${translationHoursLabel} (${CREDIT_PACKS.PRO.credits.toLocaleString()} cr)`}
             />
           </div>
 
@@ -109,9 +108,6 @@ export default function CreditCard() {
           >
             {t('settings.creditsDescription')}
           </p>
-
-          {/* Admin reset button (only shows for admin device) */}
-          <AdminResetButton />
 
           {checkoutPending && (
             <p
