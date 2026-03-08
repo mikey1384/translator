@@ -18,6 +18,7 @@ import {
   getTranslationFailureMessage,
   shouldSurfaceTranslationFailure,
 } from '../../../utils/translationFailure';
+import { logError } from '../../../utils/logger';
 
 export interface GenerateSubtitlesParams {
   videoFile: File | null;
@@ -103,12 +104,25 @@ export async function executeSrtTranslation({
       inProgress: false,
     });
 
+    if (!cancelled) {
+      logError('translate_full', res?.error || friendlyError, {
+        operationId,
+        targetLanguage,
+        segmentCount: Array.isArray(segments) ? segments.length : 0,
+      });
+    }
+
     if (shouldSurfaceTranslationFailure({ error: res?.error, cancelled })) {
       useUrlStore.getState().setOperationError(friendlyError);
     }
 
     return { success: false, cancelled, error: res?.error };
   } catch (err: any) {
+    logError('translate_full', err, {
+      operationId,
+      targetLanguage,
+      segmentCount: Array.isArray(segments) ? segments.length : 0,
+    });
     const errorMsg = err?.message || String(err);
     const cancelled =
       /operation cancelled/i.test(errorMsg) ||
@@ -230,11 +244,22 @@ export async function executeDubGeneration({
       };
     }
 
-    if (res?.error) {
+    const friendlyError =
+      res?.error && isByoError(res.error)
+        ? getByoErrorMessage(res.error)
+        : res?.error;
+
+    if (friendlyError) {
+      if (!res?.cancelled) {
+        logError('dub', friendlyError, {
+          operationId,
+          voice: selectedVoice,
+          targetLanguage,
+          segmentCount: payloadSegments.length,
+          hasVideoPath: Boolean(videoPath),
+        });
+      }
       try {
-        const friendlyError = isByoError(res.error)
-          ? getByoErrorMessage(res.error)
-          : res.error;
         useUrlStore.getState().setOperationError(friendlyError);
       } catch {
         // ignore store errors
@@ -242,9 +267,7 @@ export async function executeDubGeneration({
     }
     const errorStage = res?.cancelled
       ? i18n.t('generateSubtitles.status.cancelled')
-      : res?.error && isByoError(res.error)
-        ? getByoErrorMessage(res.error)
-        : i18n.t('generateSubtitles.status.error');
+      : friendlyError || i18n.t('generateSubtitles.status.error');
     useTaskStore.getState().setDubbing({
       stage: errorStage,
       percent: 100,
@@ -252,7 +275,13 @@ export async function executeDubGeneration({
     });
     return { success: false, cancelled: res?.cancelled };
   } catch (error) {
-    console.error('[executeDubGeneration] Error:', error);
+    logError('dub', error, {
+      operationId,
+      voice: selectedVoice,
+      targetLanguage,
+      segmentCount: payloadSegments.length,
+      hasVideoPath: Boolean(videoPath),
+    });
     const errorMsg =
       error instanceof Error
         ? error.message
@@ -341,6 +370,15 @@ export async function executeSubtitleGeneration({
           : i18n.t('generateSubtitles.status.error');
       const percent = cancelled ? 0 : 100;
 
+      if (!cancelled && errorMsg) {
+        logError('transcribe', errorMsg, {
+          operationId,
+          targetLanguage,
+          hasVideoFilePath: Boolean(videoFilePath),
+          videoFileName: videoFile?.name,
+        });
+      }
+
       if (!cancelled && stage) {
         useUrlStore.getState().setOperationError(stage);
       }
@@ -355,7 +393,12 @@ export async function executeSubtitleGeneration({
       return { success: false, cancelled };
     }
   } catch (error) {
-    console.error('Error generating subtitles:', error);
+    logError('transcribe', error, {
+      operationId,
+      targetLanguage,
+      hasVideoFilePath: Boolean(videoFilePath),
+      videoFileName: videoFile?.name,
+    });
     const errorMsg = error instanceof Error ? error.message : String(error);
     const cancelled =
       /operation cancelled/i.test(errorMsg) ||

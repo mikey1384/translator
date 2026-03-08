@@ -1,22 +1,13 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { TFunction } from 'i18next';
-import {
-  onVideoSuggestionProgress,
-  suggestVideos,
-} from '../../../../ipc/video-suggestions.js';
+import { shallow } from 'zustand/shallow';
+import { suggestVideos } from '../../../../ipc/video-suggestions.js';
 import * as OperationIPC from '../../../../ipc/operation.js';
-import type {
-  PipelineStageProgress,
-  PipelineStageState,
-} from './VideoSuggestionPanel.types.js';
+import {
+  ensureVideoSuggestionStoreRuntime,
+  useVideoSuggestionStore,
+} from '../../../../state/video-suggestion-store.js';
+import type { PipelineStageProgress } from './VideoSuggestionPanel.types.js';
 import type {
   VideoSuggestionMessage,
   VideoSuggestionModelPreference,
@@ -25,10 +16,6 @@ import type {
   VideoSuggestionResultItem,
 } from '@shared-types/app';
 import {
-  createInitialPipelineStages,
-  inferStageFromMessage,
-  isMatchingOperationId,
-  isPipelineStageKey,
   normalizeMessagesForPlanner,
   resolveAssistantMessage,
   resolveErrorText,
@@ -74,14 +61,10 @@ type UseVideoSuggestionFlowResult = {
   sendMessage: () => Promise<void>;
   setError: (next: string | null) => void;
   setInput: (next: string) => void;
-  setMessages: Dispatch<SetStateAction<VideoSuggestionMessage[]>>;
-  setResults: Dispatch<SetStateAction<VideoSuggestionResultItem[]>>;
   showLiveActivity: boolean;
   streamingPreview: string;
   runQuickStartSearch: () => Promise<void>;
 };
-
-const MAX_LOADING_TRACE_BUFFER = 28;
 
 function compactText(value: unknown): string {
   return String(value ?? '')
@@ -128,73 +111,75 @@ export default function useVideoSuggestionFlow({
   savedPreferences,
   t,
 }: UseVideoSuggestionFlowParams): UseVideoSuggestionFlowResult {
-  const [messages, setMessages] = useState<VideoSuggestionMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [results, setResults] = useState<VideoSuggestionResultItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingMode, setLoadingMode] = useState<'chat' | 'more' | null>(null);
-  const [cancelling, setCancelling] = useState(false);
-  const [loadingElapsedSec, setLoadingElapsedSec] = useState(0);
-  const [streamingStatus, setStreamingStatus] = useState('');
-  const [streamingPreview, setStreamingPreview] = useState('');
-  const [loadingTrace, setLoadingTrace] = useState<string[]>([]);
-  const [pipelineStages, setPipelineStages] = useState<PipelineStageProgress[]>(
-    () => createInitialPipelineStages()
+  const mountedRef = useRef(true);
+  const {
+    activeTraceLines,
+    cancelling,
+    error,
+    input,
+    loading,
+    loadingElapsedSec,
+    loadingMode,
+    messages,
+    pipelineStages,
+    resolvedModelRuntime,
+    results,
+    runningStage,
+    searchQuery,
+    showQuickStartAction,
+    streamingPreview,
+    streamingStatus,
+    setCancellingOperation,
+    setContinuationId,
+    setError,
+    setInput,
+    setLastRequestPreferences,
+    setMessages,
+    setResolvedModelRuntime,
+    setResults,
+    setSearchQuery,
+    setShowQuickStartAction,
+    startOperation,
+    finishOperation,
+  } = useVideoSuggestionStore(
+    state => ({
+      activeTraceLines: state.loadingTrace.slice(-10),
+      cancelling: state.cancelling,
+      error: state.error,
+      input: state.input,
+      loading: state.loading,
+      loadingElapsedSec: state.loadingElapsedSec,
+      loadingMode: state.loadingMode,
+      messages: state.messages,
+      pipelineStages: state.pipelineStages,
+      resolvedModelRuntime: state.resolvedModelRuntime,
+      results: state.results,
+      runningStage:
+        state.pipelineStages.find(stage => stage.state === 'running') || null,
+      searchQuery: state.searchQuery,
+      showQuickStartAction: state.showQuickStartAction,
+      streamingPreview: state.streamingPreview,
+      streamingStatus: state.streamingStatus,
+      setCancellingOperation: state.setCancellingOperation,
+      setContinuationId: state.setContinuationId,
+      setError: state.setError,
+      setInput: state.setInput,
+      setLastRequestPreferences: state.setLastRequestPreferences,
+      setMessages: state.setMessages,
+      setResolvedModelRuntime: state.setResolvedModelRuntime,
+      setResults: state.setResults,
+      setSearchQuery: state.setSearchQuery,
+      setShowQuickStartAction: state.setShowQuickStartAction,
+      startOperation: state.startOperation,
+      finishOperation: state.finishOperation,
+    }),
+    shallow
   );
-  const [error, setErrorState] = useState<string | null>(null);
-  const [showQuickStartAction, setShowQuickStartAction] = useState(false);
-  const [resolvedModelRuntime, setResolvedModelRuntime] = useState<
-    string | null
-  >(null);
-  const [continuationId, setContinuationId] = useState<string | null>(null);
 
-  const requestIdRef = useRef(0);
-  const resultsRef = useRef<VideoSuggestionResultItem[]>([]);
-  const activeOperationIdRef = useRef<string | null>(null);
-  const cancellingOperationIdRef = useRef<string | null>(null);
-  const lastRequestPreferencesRef = useRef<VideoSuggestionPreferenceSlots>({});
-  const lastTraceKeyRef = useRef('');
-
-  const setError = useCallback((next: string | null) => {
-    setErrorState(next);
-  }, []);
-
-  const stopLoadingState = useCallback(() => {
-    setLoading(false);
-    setLoadingMode(null);
-    setStreamingStatus('');
-  }, []);
-
-  const resetLiveActivityState = useCallback(() => {
-    lastTraceKeyRef.current = '';
-    stopLoadingState();
-    setLoadingElapsedSec(0);
-    setStreamingPreview('');
-    setLoadingTrace([]);
-    setPipelineStages(createInitialPipelineStages());
-  }, [stopLoadingState]);
-
-  const markPipelineClearedThroughRetrieval = useCallback(() => {
-    setPipelineStages(prev =>
-      prev.map(stage => {
-        if (stage.state === 'cleared') return stage;
-        if (stage.key === 'retrieval') {
-          return {
-            ...stage,
-            state: 'cleared',
-            outcome:
-              stage.outcome ||
-              t('input.videoSuggestion.retrievalReady', 'Results ready.'),
-          };
-        }
-        return {
-          ...stage,
-          state: 'cleared',
-        };
-      })
-    );
-  }, [t]);
+  const clearedStageCount = useMemo(
+    () => pipelineStages.filter(stage => stage.state === 'cleared').length,
+    [pipelineStages]
+  );
 
   const loadingMessage = useMemo(() => {
     if (streamingStatus.trim()) return streamingStatus;
@@ -216,21 +201,6 @@ export default function useVideoSuggestionFlow({
     );
   }, [loadingElapsedSec, streamingStatus, t]);
 
-  const clearedStageCount = useMemo(
-    () => pipelineStages.filter(stage => stage.state === 'cleared').length,
-    [pipelineStages]
-  );
-
-  const runningStage = useMemo(
-    () => pipelineStages.find(stage => stage.state === 'running') || null,
-    [pipelineStages]
-  );
-
-  const activeTraceLines = useMemo(
-    () => loadingTrace.slice(-10),
-    [loadingTrace]
-  );
-
   const showLiveActivity = useMemo(
     () =>
       loading ||
@@ -240,59 +210,6 @@ export default function useVideoSuggestionFlow({
       ),
     [activeTraceLines.length, loading, pipelineStages]
   );
-
-  const beginLoadingOperation = useCallback((operationId: string) => {
-    activeOperationIdRef.current = operationId;
-    lastTraceKeyRef.current = '';
-    setLoadingElapsedSec(0);
-    setStreamingStatus('');
-    setStreamingPreview('');
-    setLoadingTrace([]);
-    setPipelineStages(createInitialPipelineStages());
-    setResolvedModelRuntime(null);
-  }, []);
-
-  const cancelSearch = useCallback(async () => {
-    const operationId = activeOperationIdRef.current;
-    if (!operationId || cancelling) return;
-
-    setCancelling(true);
-    cancellingOperationIdRef.current = operationId;
-    try {
-      const result = await OperationIPC.cancel(operationId);
-      if (!result?.success) {
-        throw new Error(
-          result?.message ||
-            t(
-              'input.videoSuggestion.cancelFailed',
-              'Failed to cancel the current search.'
-            )
-        );
-      }
-
-      requestIdRef.current += 1;
-      activeOperationIdRef.current = null;
-      resetLiveActivityState();
-      setErrorState(null);
-    } catch (err: any) {
-      cancellingOperationIdRef.current = null;
-      setErrorState(
-        resolveErrorText(
-          err?.message,
-          t(
-            'input.videoSuggestion.cancelFailed',
-            'Failed to cancel the current search.'
-          ),
-          t
-        )
-      );
-    } finally {
-      if (cancellingOperationIdRef.current === operationId) {
-        cancellingOperationIdRef.current = null;
-      }
-      setCancelling(false);
-    }
-  }, [cancelling, resetLiveActivityState, t]);
 
   const savedPreferenceSummary = useMemo(
     () => buildSavedPreferenceSummary(savedPreferences),
@@ -320,193 +237,58 @@ export default function useVideoSuggestionFlow({
     [savedPreferenceSummary, t]
   );
 
-  useEffect(() => {
-    resultsRef.current = results;
-  }, [results]);
+  const markPipelineClearedThroughRetrieval = useCallback(() => {
+    useVideoSuggestionStore
+      .getState()
+      .markPipelineClearedThroughRetrieval(
+        t('input.videoSuggestion.retrievalReady', 'Results ready.')
+      );
+  }, [t]);
 
   useEffect(() => {
-    const unsubscribe = onVideoSuggestionProgress(progress => {
-      const activeOperationId = activeOperationIdRef.current;
-      if (!isMatchingOperationId(activeOperationId, progress?.operationId)) {
-        return;
-      }
+    ensureVideoSuggestionStoreRuntime();
+  }, []);
 
-      if (
-        typeof progress?.elapsedMs === 'number' &&
-        Number.isFinite(progress.elapsedMs)
-      ) {
-        setLoadingElapsedSec(
-          Math.max(0, Math.floor(progress.elapsedMs / 1000))
-        );
-      }
-
-      const progressMessage =
-        typeof progress?.message === 'string' ? progress.message.trim() : '';
-
-      if (progressMessage) {
-        setStreamingStatus(progressMessage);
-        const phase = typeof progress?.phase === 'string' ? progress.phase : '';
-        const elapsedSecForLine =
-          typeof progress?.elapsedMs === 'number' &&
-          Number.isFinite(progress.elapsedMs)
-            ? Math.max(0, Math.floor(progress.elapsedMs / 1000))
-            : null;
-        const prefixedLine = `${elapsedSecForLine != null ? `${elapsedSecForLine}s · ` : ''}${phase ? `[${phase}] ` : ''}${progressMessage}`;
-        const traceKey = `${phase}|${progressMessage}`;
-        setLoadingTrace(prev => {
-          const isRepeat = lastTraceKeyRef.current === traceKey;
-          if (isRepeat) {
-            if (prev.length === 0) return prev;
-            const next = [...prev];
-            next[next.length - 1] = prefixedLine;
-            return next;
-          }
-          lastTraceKeyRef.current = traceKey;
-          return [...prev, prefixedLine].slice(-MAX_LOADING_TRACE_BUFFER);
-        });
-      }
-
-      const stageFromPayload = isPipelineStageKey(progress?.stageKey)
-        ? {
-            key: progress.stageKey,
-            state:
-              progress?.stageState === 'cleared'
-                ? ('cleared' as const)
-                : progress?.stageState === 'running'
-                  ? ('running' as const)
-                  : ('pending' as const),
-          }
-        : null;
-
-      const stageFromMessage =
-        !stageFromPayload && progressMessage
-          ? inferStageFromMessage(progressMessage)
-          : null;
-
-      const stageUpdate = stageFromPayload || stageFromMessage;
-
-      if (stageUpdate) {
-        const outcomeRaw =
-          typeof progress?.stageOutcome === 'string'
-            ? progress.stageOutcome.trim()
-            : '';
-        const outcome =
-          outcomeRaw ||
-          (stageUpdate.state === 'cleared' ? progressMessage : '');
-
-        setPipelineStages(prev =>
-          prev.map(stage => {
-            if (stage.key !== stageUpdate.key) return stage;
-            if (stage.state === 'cleared' && stageUpdate.state !== 'cleared') {
-              return stage;
-            }
-            return {
-              ...stage,
-              state: stageUpdate.state as PipelineStageState,
-              outcome: outcome || stage.outcome,
-            };
-          })
-        );
-      }
-
-      const streamedQuery =
-        typeof progress?.searchQuery === 'string'
-          ? progress.searchQuery.trim()
-          : '';
-      if (streamedQuery) {
-        setSearchQuery(streamedQuery);
-      }
-
-      const preview =
-        typeof progress?.assistantPreview === 'string'
-          ? progress.assistantPreview
-          : '';
-      if (preview.trim()) {
-        const normalizedPreview = preview.trim();
-        setLoadingTrace(prev => {
-          if (prev[prev.length - 1] === normalizedPreview) return prev;
-          return [...prev, normalizedPreview].slice(-MAX_LOADING_TRACE_BUFFER);
-        });
-        setStreamingPreview(normalizedPreview);
-      }
-    });
-
+  useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      unsubscribe?.();
+      mountedRef.current = false;
     };
   }, []);
 
-  useEffect(
-    () => () => {
-      const operationId = activeOperationIdRef.current;
-      if (!operationId) return;
-      void OperationIPC.cancel(operationId).catch(() => void 0);
-    },
+  useEffect(() => {
+    if (!prefsLoaded || !open) return;
+    useVideoSuggestionStore
+      .getState()
+      .ensureStarterMessage(
+        starterQuestionWithMemory || starterQuestionDefault,
+        Boolean(starterQuestionWithMemory)
+      );
+  }, [open, prefsLoaded, starterQuestionDefault, starterQuestionWithMemory]);
+
+  const isLatestRequest = useCallback(
+    (id: number) => useVideoSuggestionStore.getState().requestId === id,
     []
   );
 
-  useEffect(() => {
-    if (!loading) return;
-    const startedAt = Date.now();
-    setLoadingElapsedSec(0);
-    const timer = window.setInterval(() => {
-      setLoadingElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [loading]);
-
-  useEffect(() => {
-    if (!prefsLoaded || !open) return;
-    if (messages.length > 0 || resultsRef.current.length > 0) return;
-    if (searchQuery.trim() || loading) return;
-
-    setMessages([
-      {
-        role: 'assistant',
-        content: starterQuestionWithMemory || starterQuestionDefault,
-      },
-    ]);
-    setShowQuickStartAction(Boolean(starterQuestionWithMemory));
-    setErrorState(null);
-  }, [
-    loading,
-    messages.length,
-    open,
-    prefsLoaded,
-    searchQuery,
-    starterQuestionDefault,
-    starterQuestionWithMemory,
-  ]);
-
-  const submitMessage = useCallback(
+  const runSearch = useCallback(
     async (
-      trimmed: string,
-      preferencesForRequest: VideoSuggestionPreferenceSlots = requestPreferences
+      history: VideoSuggestionMessage[],
+      preferencesForRequest: VideoSuggestionPreferenceSlots
     ) => {
-      const safeText = trimmed.trim();
-      if (!safeText || loading) return;
-
-      setShowQuickStartAction(false);
-      const normalizedHistory = normalizeMessagesForPlanner(messages, t);
-      const nextHistory: VideoSuggestionMessage[] = [
-        ...normalizedHistory,
-        { role: 'user', content: safeText },
-      ];
-
-      setMessages(nextHistory);
-      setLoading(true);
-      setLoadingMode('chat');
-      setErrorState(null);
-      setContinuationId(null);
-      lastRequestPreferencesRef.current = preferencesForRequest;
-
-      const id = ++requestIdRef.current;
+      const id = useVideoSuggestionStore.getState().nextRequestId();
       const operationId = `video-suggest-chat-${Date.now()}`;
-      beginLoadingOperation(operationId);
+
+      setMessages(history);
+      setShowQuickStartAction(false);
+      setError(null);
+      setContinuationId(null);
+      setLastRequestPreferences(preferencesForRequest);
+      startOperation(operationId, 'chat');
 
       try {
         const res = await suggestVideos({
-          history: nextHistory,
+          history,
           modelPreference,
           preferredLanguage,
           preferredLanguageName,
@@ -516,14 +298,13 @@ export default function useVideoSuggestionFlow({
           operationId,
         });
 
-        if (id !== requestIdRef.current) return;
+        if (!isLatestRequest(id)) return;
 
-        onCapturePreferences(res?.capturedPreferences);
+        if (mountedRef.current) {
+          onCapturePreferences(res?.capturedPreferences);
+        }
 
-        if (
-          typeof res?.resolvedModel === 'string' &&
-          res.resolvedModel.trim()
-        ) {
+        if (typeof res?.resolvedModel === 'string' && res.resolvedModel.trim()) {
           setResolvedModelRuntime(res.resolvedModel.trim());
         }
         setContinuationId(normalizeContinuationId(res?.continuationId));
@@ -558,7 +339,7 @@ export default function useVideoSuggestionFlow({
         }
 
         if (typeof res?.error === 'string' && res.error.trim()) {
-          setErrorState(
+          setError(
             resolveErrorText(
               res.error,
               t(
@@ -570,8 +351,12 @@ export default function useVideoSuggestionFlow({
           );
         }
       } catch (err: any) {
-        if (cancellingOperationIdRef.current === operationId) return;
-        if (id !== requestIdRef.current) return;
+        if (
+          useVideoSuggestionStore.getState().cancellingOperationId === operationId
+        ) {
+          return;
+        }
+        if (!isLatestRequest(id)) return;
 
         setMessages(prev => [
           ...normalizeMessagesForPlanner(prev, t),
@@ -583,7 +368,7 @@ export default function useVideoSuggestionFlow({
             ),
           },
         ]);
-        setErrorState(
+        setError(
           resolveErrorText(
             err?.message,
             t(
@@ -595,20 +380,16 @@ export default function useVideoSuggestionFlow({
         );
       } finally {
         const cancelledOperation =
-          cancellingOperationIdRef.current === operationId;
-        if (!cancelledOperation && id === requestIdRef.current) {
-          stopLoadingState();
-          if (activeOperationIdRef.current === operationId) {
-            activeOperationIdRef.current = null;
-          }
+          useVideoSuggestionStore.getState().cancellingOperationId === operationId;
+        if (!cancelledOperation && isLatestRequest(id)) {
+          finishOperation(operationId);
         }
       }
     },
     [
-      beginLoadingOperation,
-      loading,
+      finishOperation,
+      isLatestRequest,
       markPipelineClearedThroughRetrieval,
-      messages,
       modelPreference,
       onCapturePreferences,
       onResultsReady,
@@ -616,77 +397,110 @@ export default function useVideoSuggestionFlow({
       preferredLanguage,
       preferredLanguageName,
       preferredRecency,
-      requestPreferences,
-      stopLoadingState,
+      setContinuationId,
+      setError,
+      setLastRequestPreferences,
+      setMessages,
+      setResolvedModelRuntime,
+      setResults,
+      setSearchQuery,
+      setShowQuickStartAction,
+      startOperation,
       t,
     ]
   );
 
   const sendMessage = useCallback(async () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
+    const currentState = useVideoSuggestionStore.getState();
+    const trimmed = currentState.input.trim();
+    if (!trimmed || currentState.loading) return;
+
     setInput('');
-    await submitMessage(trimmed);
-  }, [input, submitMessage]);
+    const nextHistory: VideoSuggestionMessage[] = [
+      ...normalizeMessagesForPlanner(currentState.messages, t),
+      { role: 'user', content: trimmed },
+    ];
+
+    await runSearch(nextHistory, requestPreferences);
+  }, [requestPreferences, runSearch, setInput, t]);
 
   const runQuickStartSearch = useCallback(async () => {
-    if (!savedPreferenceSummary || loading) return;
+    if (!savedPreferenceSummary || useVideoSuggestionStore.getState().loading) {
+      return;
+    }
+
     const quickPrompt = t(
       'input.videoSuggestion.quickStartUserMessage',
       'Use my last saved preferences and find videos now: {{summary}}',
       { summary: savedPreferenceSummary }
     );
-    await submitMessage(quickPrompt, savedPreferences);
-  }, [loading, savedPreferenceSummary, savedPreferences, submitMessage, t]);
+    const nextHistory: VideoSuggestionMessage[] = [
+      ...normalizeMessagesForPlanner(
+        useVideoSuggestionStore.getState().messages,
+        t
+      ),
+      { role: 'user', content: quickPrompt },
+    ];
+
+    await runSearch(nextHistory, savedPreferences);
+  }, [savedPreferenceSummary, savedPreferences, runSearch, t]);
 
   const searchMore = useCallback(async () => {
-    if (loading || (!continuationId && !searchQuery.trim())) return;
+    const currentState = useVideoSuggestionStore.getState();
+    if (
+      currentState.loading ||
+      (!currentState.continuationId && !currentState.searchQuery.trim())
+    ) {
+      return;
+    }
 
-    setShowQuickStartAction(false);
-    const id = ++requestIdRef.current;
+    const id = currentState.nextRequestId();
     const operationId = `video-suggest-more-${Date.now()}`;
-    const normalizedHistory = normalizeMessagesForPlanner(messages, t);
     const continuationPreferences =
-      lastRequestPreferencesRef.current.topic ||
-      lastRequestPreferencesRef.current.creator ||
-      lastRequestPreferencesRef.current.subtopic
-        ? lastRequestPreferencesRef.current
+      currentState.lastRequestPreferences.topic ||
+      currentState.lastRequestPreferences.creator ||
+      currentState.lastRequestPreferences.subtopic
+        ? currentState.lastRequestPreferences
         : requestPreferences;
 
-    setLoading(true);
-    setLoadingMode('more');
-    setErrorState(null);
-    beginLoadingOperation(operationId);
+    setShowQuickStartAction(false);
+    setError(null);
+    startOperation(operationId, 'more');
 
     try {
       const res = await suggestVideos({
-        history: normalizedHistory,
+        history: normalizeMessagesForPlanner(currentState.messages, t),
         modelPreference,
         preferredLanguage,
         preferredLanguageName,
         preferredCountry,
         preferredRecency,
         savedPreferences: continuationPreferences,
-        continuationId: continuationId || undefined,
-        searchQueryOverride: searchQuery,
-        excludeUrls: results.map(item => item.url),
+        continuationId: currentState.continuationId || undefined,
+        searchQueryOverride: currentState.searchQuery,
+        excludeUrls: currentState.results.map(item => item.url),
         operationId,
       });
 
-      if (id !== requestIdRef.current) return;
+      if (!isLatestRequest(id)) return;
 
-      onCapturePreferences(res?.capturedPreferences);
+      if (mountedRef.current) {
+        onCapturePreferences(res?.capturedPreferences);
+      }
 
       if (typeof res?.resolvedModel === 'string' && res.resolvedModel.trim()) {
         setResolvedModelRuntime(res.resolvedModel.trim());
       }
       setContinuationId(
-        normalizeContinuationId(res?.continuationId) || continuationId
+        normalizeContinuationId(res?.continuationId) || currentState.continuationId
       );
+      if (typeof res?.searchQuery === 'string' && res.searchQuery.trim()) {
+        setSearchQuery(res.searchQuery.trim());
+      }
 
       const incoming = Array.isArray(res?.results) ? res.results : [];
-      const currentResults = resultsRef.current;
-      const seen = new Set(currentResults.map(item => item.url));
+      const latestResults = useVideoSuggestionStore.getState().results;
+      const seen = new Set(latestResults.map(item => item.url));
       const fresh: VideoSuggestionResultItem[] = [];
       for (const item of incoming) {
         if (seen.has(item.url)) continue;
@@ -694,13 +508,11 @@ export default function useVideoSuggestionFlow({
         fresh.push(item);
       }
 
-      if (fresh.length > 0) {
-        const nextResults = [...currentResults, ...fresh];
-        resultsRef.current = nextResults;
-        setResults(nextResults);
+      if (res?.success !== false && fresh.length > 0) {
+        setResults([...latestResults, ...fresh]);
         markPipelineClearedThroughRetrieval();
         onResultsReady();
-      } else {
+      } else if (res?.success !== false) {
         setMessages(prev => [
           ...normalizeMessagesForPlanner(prev, t),
           {
@@ -714,7 +526,7 @@ export default function useVideoSuggestionFlow({
       }
 
       if (typeof res?.error === 'string' && res.error.trim()) {
-        setErrorState(
+        setError(
           resolveErrorText(
             res.error,
             t(
@@ -726,9 +538,13 @@ export default function useVideoSuggestionFlow({
         );
       }
     } catch (err: any) {
-      if (cancellingOperationIdRef.current === operationId) return;
-      if (id !== requestIdRef.current) return;
-      setErrorState(
+      if (
+        useVideoSuggestionStore.getState().cancellingOperationId === operationId
+      ) {
+        return;
+      }
+      if (!isLatestRequest(id)) return;
+      setError(
         resolveErrorText(
           err?.message,
           t('input.videoSuggestion.requestFailed', 'Suggestion request failed'),
@@ -737,58 +553,78 @@ export default function useVideoSuggestionFlow({
       );
     } finally {
       const cancelledOperation =
-        cancellingOperationIdRef.current === operationId;
-      if (!cancelledOperation && id === requestIdRef.current) {
-        stopLoadingState();
-        if (activeOperationIdRef.current === operationId) {
-          activeOperationIdRef.current = null;
-        }
+        useVideoSuggestionStore.getState().cancellingOperationId === operationId;
+      if (!cancelledOperation && isLatestRequest(id)) {
+        finishOperation(operationId);
       }
     }
   }, [
-    beginLoadingOperation,
-    loading,
-    messages,
+    finishOperation,
+    isLatestRequest,
+    markPipelineClearedThroughRetrieval,
     modelPreference,
     onCapturePreferences,
-    markPipelineClearedThroughRetrieval,
     onResultsReady,
-    continuationId,
     preferredCountry,
     preferredLanguage,
     preferredLanguageName,
     preferredRecency,
     requestPreferences,
-    results,
-    searchQuery,
-    stopLoadingState,
+    setContinuationId,
+    setError,
+    setMessages,
+    setResolvedModelRuntime,
+    setResults,
+    setShowQuickStartAction,
+    startOperation,
     t,
   ]);
 
+  const cancelSearch = useCallback(async () => {
+    const operationId = useVideoSuggestionStore.getState().activeOperationId;
+    if (!operationId || useVideoSuggestionStore.getState().cancelling) return;
+
+    setCancellingOperation(operationId);
+    try {
+      const result = await OperationIPC.cancel(operationId);
+      if (!result?.success) {
+        throw new Error(
+          result?.message ||
+            t(
+              'input.videoSuggestion.cancelFailed',
+              'Failed to cancel the current search.'
+            )
+        );
+      }
+
+      useVideoSuggestionStore.getState().nextRequestId();
+      useVideoSuggestionStore.getState().clearActiveOperation(operationId);
+      useVideoSuggestionStore.getState().resetLiveActivityState();
+      setError(null);
+    } catch (err: any) {
+      setError(
+        resolveErrorText(
+          err?.message,
+          t(
+            'input.videoSuggestion.cancelFailed',
+            'Failed to cancel the current search.'
+          ),
+          t
+        )
+      );
+    } finally {
+      setCancellingOperation(null);
+    }
+  }, [setCancellingOperation, setError, t]);
+
   const resetChat = useCallback(() => {
-    requestIdRef.current += 1;
-    activeOperationIdRef.current = null;
-    cancellingOperationIdRef.current = null;
-    resetLiveActivityState();
-    setErrorState(null);
-    setInput('');
-    setMessages([
-      {
-        role: 'assistant',
-        content: starterQuestionWithMemory || starterQuestionDefault,
-      },
-    ]);
-    setSearchQuery('');
-    setContinuationId(null);
-    setResolvedModelRuntime(null);
-    resultsRef.current = [];
-    setResults([]);
-    setShowQuickStartAction(Boolean(starterQuestionWithMemory));
-  }, [
-    resetLiveActivityState,
-    starterQuestionDefault,
-    starterQuestionWithMemory,
-  ]);
+    useVideoSuggestionStore
+      .getState()
+      .resetSession(
+        starterQuestionWithMemory || starterQuestionDefault,
+        Boolean(starterQuestionWithMemory)
+      );
+  }, [starterQuestionDefault, starterQuestionWithMemory]);
 
   return {
     activeTraceLines,
@@ -813,8 +649,6 @@ export default function useVideoSuggestionFlow({
     sendMessage,
     setError,
     setInput,
-    setMessages,
-    setResults,
     showLiveActivity,
     streamingPreview,
     runQuickStartSearch,

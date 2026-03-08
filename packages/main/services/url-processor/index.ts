@@ -107,6 +107,12 @@ export async function processVideoUrl(
 ): Promise<{
   videoPath: string;
   filename: string;
+  title?: string;
+  thumbnailUrl?: string;
+  channel?: string;
+  channelUrl?: string;
+  durationSec?: number;
+  uploadedAt?: string;
   size: number;
   fileUrl: string;
   originalVideoPath: string;
@@ -157,6 +163,63 @@ export async function processVideoUrl(
     throw new Error('Invalid URL provided.');
   }
 
+  const normalizeMetadataText = (value: unknown): string | undefined => {
+    const text = String(value || '').trim();
+    return text || undefined;
+  };
+
+  const normalizeDurationSec = (value: unknown): number | undefined => {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+    return undefined;
+  };
+
+  const normalizeUploadedAt = (value: unknown): string | undefined => {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      return new Date(value * 1000).toISOString();
+    }
+    const text = String(value || '').trim();
+    if (!text) return undefined;
+    const compactDate = text.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (compactDate) {
+      return `${compactDate[1]}-${compactDate[2]}-${compactDate[3]}`;
+    }
+    const parsed = Date.parse(text);
+    if (Number.isFinite(parsed)) {
+      return new Date(parsed).toISOString();
+    }
+    return undefined;
+  };
+
+  const extractDownloadMetadata = (
+    info: Record<string, unknown> | null | undefined,
+    fallbackTitle: string
+  ) => ({
+    title:
+      normalizeMetadataText(info?.title) ||
+      normalizeMetadataText(info?.fulltitle) ||
+      fallbackTitle,
+    thumbnailUrl: normalizeMetadataText(info?.thumbnail),
+    channel:
+      normalizeMetadataText(info?.channel) ||
+      normalizeMetadataText(info?.uploader),
+    channelUrl:
+      normalizeMetadataText(info?.channel_url) ||
+      normalizeMetadataText(info?.uploader_url),
+    durationSec: normalizeDurationSec(info?.duration),
+    uploadedAt:
+      normalizeUploadedAt(info?.release_timestamp) ||
+      normalizeUploadedAt(info?.timestamp) ||
+      normalizeUploadedAt(info?.upload_date),
+  });
+
   // --- Download attempt ---
   const run = async (extraArgs: string[]) => {
     const downloadResult = await downloadVideo(
@@ -170,6 +233,10 @@ export async function processVideoUrl(
     );
     const stats = await fsp.stat(downloadResult.filepath);
     const filename = path.basename(downloadResult.filepath);
+    const metadata = extractDownloadMetadata(
+      downloadResult.info as Record<string, unknown> | null | undefined,
+      filename
+    );
     progressCallback?.({
       percent: PROGRESS.FINAL_END,
       stage: 'Download complete',
@@ -178,6 +245,12 @@ export async function processVideoUrl(
     return {
       videoPath: downloadResult.filepath,
       filename,
+      title: metadata.title,
+      thumbnailUrl: metadata.thumbnailUrl,
+      channel: metadata.channel,
+      channelUrl: metadata.channelUrl,
+      durationSec: metadata.durationSec,
+      uploadedAt: metadata.uploadedAt,
       size: stats.size,
       fileUrl: `file://${downloadResult.filepath}`,
       originalVideoPath: downloadResult.filepath,

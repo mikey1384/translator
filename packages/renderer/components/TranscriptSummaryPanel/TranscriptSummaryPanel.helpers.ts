@@ -69,7 +69,7 @@ export function translateStageLabel(stage: string, t: TFunction): string {
   if (selectingState) {
     return t(
       'summary.status.selectingHighlights',
-      'Selecting highlight moments…'
+      'Picking highlights…'
     );
   }
   if (text.includes('cutting') && text.includes('highlight')) {

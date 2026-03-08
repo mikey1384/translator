@@ -4,7 +4,6 @@ import { immer } from 'zustand/middleware/immer';
 import type { UpdateRequiredNotice } from '@shared-types/app';
 
 type UnsavedChoice = 'save' | 'discard' | 'cancel';
-type ChangeVideoMode = 'source' | 'ai';
 type PostInstallUpdateNotice = {
   version: string;
   releaseName?: string;
@@ -20,7 +19,6 @@ interface State {
   _creditResolver?: (choice: 'settings' | 'ok') => void;
   // Change video modal
   changeVideoOpen: boolean;
-  changeVideoMode: ChangeVideoMode;
   // Logs modal
   logsOpen: boolean;
   logsReportPrompt: string | null;
@@ -42,7 +40,6 @@ interface Actions {
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
   openChangeVideo: () => void;
   closeChangeVideo: () => void;
-  setChangeVideoMode: (mode: ChangeVideoMode) => void;
   openLogs: (opts?: { reportPrompt?: string; force?: boolean }) => void;
   closeLogs: () => void;
   openErrorReportPrompt: (message?: string) => void;
@@ -59,7 +56,6 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     creditRanOutOpen: false,
     _creditResolver: undefined,
     changeVideoOpen: false,
-    changeVideoMode: 'source',
     logsOpen: false,
     logsReportPrompt: null,
     lastReportPromptAt: 0,
@@ -106,17 +102,10 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
     openChangeVideo: () =>
       set(s => {
         s.changeVideoOpen = true;
-        s.changeVideoMode = 'source';
       }),
     closeChangeVideo: () =>
       set(s => {
         s.changeVideoOpen = false;
-        s.changeVideoMode = 'source';
-      }),
-    setChangeVideoMode: mode =>
-      set(s => {
-        s.changeVideoOpen = true;
-        s.changeVideoMode = mode;
       }),
     openLogs: opts =>
       set(s => {

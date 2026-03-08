@@ -35,6 +35,39 @@ declare module '@shared-types/app' {
     source?: 'stage5-api' | 'relay' | 'unknown';
   }
 
+  export interface ErrorReportSystemInfo {
+    platform: string;
+    arch: string;
+    release?: string;
+    cpu?: string;
+    isAppleSilicon?: boolean;
+  }
+
+  export interface ErrorReportContext {
+    generatedAt: string;
+    app: {
+      name: string;
+      version: string;
+      isPackaged: boolean;
+      environment: 'development' | 'production';
+      electronVersion?: string;
+      chromeVersion?: string;
+      nodeVersion?: string;
+      logFilePath?: string | null;
+    };
+    system: ErrorReportSystemInfo;
+    endpoints: {
+      stage5ApiUrl: string;
+      relayUrl: string;
+    };
+    mainLog: {
+      available: boolean;
+      tail: string;
+      error?: string;
+      lineCount: number;
+    };
+  }
+
   // =========================================
   // === File Operations
   // =========================================
@@ -173,6 +206,12 @@ declare module '@shared-types/app' {
     videoPath?: string;
     filePath?: string;
     filename?: string;
+    title?: string;
+    thumbnailUrl?: string;
+    channel?: string;
+    channelUrl?: string;
+    durationSec?: number;
+    uploadedAt?: string;
     size?: number;
     fileUrl?: string;
     originalVideoPath?: string;
@@ -994,6 +1033,7 @@ declare module '@shared-types/app' {
       cpu?: string;
       isAppleSilicon?: boolean;
     }>;
+    getErrorReportContext: () => Promise<ErrorReportContext>;
 
     connectCookiesForUrl: (url: string) => Promise<{
       success: boolean;

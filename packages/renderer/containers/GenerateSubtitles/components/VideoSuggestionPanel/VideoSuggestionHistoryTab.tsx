@@ -23,6 +23,7 @@ type VideoSuggestionHistoryTabProps = {
   disabled: boolean;
   downloadHistory: VideoSuggestionDownloadHistoryItem[];
   isDownloadInProgress: boolean;
+  isTranslationInProgress: boolean;
   localPrimaryActionLabel: string;
   playablePathMap: Record<string, boolean>;
   t: TFunction;
@@ -39,6 +40,7 @@ export default function VideoSuggestionHistoryTab({
   disabled,
   downloadHistory,
   isDownloadInProgress,
+  isTranslationInProgress,
   localPrimaryActionLabel,
   playablePathMap,
   t,
@@ -121,7 +123,7 @@ export default function VideoSuggestionHistoryTab({
                   {canPlay ? (
                     <Button
                       onClick={() => onOpenDownloadedVideo(item)}
-                      disabled={disabled || !canPlay}
+                      disabled={isTranslationInProgress || !canPlay}
                       size="sm"
                       variant="primary"
                       fullWidth
@@ -168,7 +170,7 @@ export default function VideoSuggestionHistoryTab({
                       ) : (
                         <Button
                           onClick={() => onOpenDownloadedVideo(item)}
-                          disabled={disabled || !canPlay}
+                          disabled={isTranslationInProgress || !canPlay}
                           size="sm"
                           variant="secondary"
                           fullWidth
@@ -178,7 +180,6 @@ export default function VideoSuggestionHistoryTab({
                       )}
                       <Button
                         onClick={() => onOpenVideoExternally(item.sourceUrl)}
-                        disabled={disabled}
                         size="sm"
                         variant="secondary"
                         fullWidth
@@ -192,9 +193,7 @@ export default function VideoSuggestionHistoryTab({
                         onClick={() =>
                           onOpenChannelExternally(item.channelUrl, item.channel)
                         }
-                        disabled={
-                          disabled || (!item.channelUrl && !item.channel)
-                        }
+                        disabled={!item.channelUrl && !item.channel}
                         size="sm"
                         variant="secondary"
                         fullWidth
@@ -203,7 +202,6 @@ export default function VideoSuggestionHistoryTab({
                       </Button>
                       <Button
                         onClick={() => onRemoveHistoryItem(item.id)}
-                        disabled={disabled}
                         size="sm"
                         variant="danger"
                         fullWidth

@@ -27,12 +27,10 @@ import {
   setVideoSuggestionPreferenceTopic,
   setVideoSuggestionTargetCountry,
 } from '../../../../ipc/system.js';
-import { useUIStore, useVideoStore } from '../../../../state';
 import { useAiStore } from '../../../../state/ai-store';
 import {
   isVideoSuggestionRecency,
   sanitizeVideoSuggestionCountry,
-  sanitizeVideoSuggestionHistoryPath,
   sanitizeVideoSuggestionPreference,
   sanitizeVideoSuggestionWebUrl,
 } from '../../../../../shared/helpers/video-suggestion-sanitize.js';
@@ -50,9 +48,6 @@ import {
   resultsColumnStyles,
   resultsColumnCompactStyles,
   rightTabBodyStyles,
-  rightTabButtonActiveStyles,
-  rightTabButtonStyles,
-  rightTabsStyles,
   technicalDetailsBodyStyles,
   technicalDetailsRowStyles,
   technicalDetailsStyles,
@@ -71,22 +66,13 @@ import {
   workspaceCompactStyles,
   wrapperStyles,
 } from './VideoSuggestionPanel.styles.js';
-import VideoSuggestionChannelsTab from './VideoSuggestionChannelsTab.js';
 import VideoSuggestionChatColumn from './VideoSuggestionChatColumn.js';
-import VideoSuggestionHistoryTab from './VideoSuggestionHistoryTab.js';
 import VideoSuggestionLiveActivity from './VideoSuggestionLiveActivity.js';
 import VideoSuggestionPreferencesForm from './VideoSuggestionPreferencesForm.js';
 import VideoSuggestionResultsTab from './VideoSuggestionResultsTab.js';
 import useVideoSuggestionFlow from './useVideoSuggestionFlow.js';
 import {
-  MAX_HISTORY_ITEMS,
-  readLocalVideoSuggestionActiveTab,
-  readLocalVideoSuggestionHiddenChannels,
-  readLocalVideoSuggestionHistory,
   readLocalVideoSuggestionPrefs,
-  writeLocalVideoSuggestionActiveTab,
-  writeLocalVideoSuggestionHiddenChannels,
-  writeLocalVideoSuggestionHistory,
   writeLocalVideoSuggestionPrefs,
 } from './video-suggestion-local-storage.js';
 import {
@@ -97,11 +83,6 @@ import {
   resolvePreferredLanguageName,
 } from './video-suggestion-helpers.js';
 import type {
-  SuggestionViewTab,
-  VideoSuggestionDownloadHistoryItem,
-} from './VideoSuggestionPanel.types.js';
-import type {
-  ProcessUrlResult,
   VideoSuggestionPreferenceSlots,
   VideoSuggestionRecency,
   VideoSuggestionResultItem,
@@ -112,13 +93,7 @@ interface VideoSuggestionPanelProps {
   hideToggle?: boolean;
   initialOpen?: boolean;
   isDownloadInProgress: boolean;
-  localPrimaryActionLabel?: string;
-  onDownload: (
-    item: VideoSuggestionResultItem
-  ) => Promise<ProcessUrlResult | void> | ProcessUrlResult | void;
-  onOpenDownloadedVideo?: (
-    item: VideoSuggestionDownloadHistoryItem
-  ) => Promise<void> | void;
+  onDownload: (item: VideoSuggestionResultItem) => Promise<unknown> | unknown;
   primaryActionLabel?: string;
 }
 
@@ -129,9 +104,7 @@ export default function VideoSuggestionPanel({
   hideToggle = false,
   initialOpen = false,
   isDownloadInProgress,
-  localPrimaryActionLabel,
   onDownload,
-  onOpenDownloadedVideo,
   primaryActionLabel,
 }: VideoSuggestionPanelProps) {
   const { t, i18n } = useTranslation();
@@ -146,20 +119,9 @@ export default function VideoSuggestionPanel({
   const [activePrefTopic, setActivePrefTopic] = useState('');
   const [activePrefCreator, setActivePrefCreator] = useState('');
   const [activePrefSubtopic, setActivePrefSubtopic] = useState('');
-  const [downloadHistory, setDownloadHistory] = useState<
-    VideoSuggestionDownloadHistoryItem[]
-  >(() => readLocalVideoSuggestionHistory());
-  const [hiddenChannelKeys, setHiddenChannelKeys] = useState<string[]>(() =>
-    readLocalVideoSuggestionHiddenChannels()
-  );
-  const [playablePathMap, setPlayablePathMap] = useState<
-    Record<string, boolean>
-  >({});
-  const [activeRightTab, setActiveRightTab] = useState<SuggestionViewTab>(() =>
-    readLocalVideoSuggestionActiveTab()
-  );
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const composingRef = useRef(false);
+  const restoredSessionRef = useRef(false);
   const preferredLanguage = i18n.resolvedLanguage || i18n.language || 'en';
   const preferredLanguageName = useMemo(
     () => resolvePreferredLanguageName(preferredLanguage),
@@ -273,9 +235,7 @@ export default function VideoSuggestionPanel({
   } = useVideoSuggestionFlow({
     modelPreference,
     onCapturePreferences: applyCapturedPreferences,
-    onResultsReady: () => {
-      setActiveRightTab('results');
-    },
+    onResultsReady: () => {},
     open,
     preferredCountry,
     preferredLanguage,
@@ -299,69 +259,15 @@ export default function VideoSuggestionPanel({
   const resolvedPrimaryActionLabel =
     primaryActionLabel ||
     t('input.videoSuggestion.downloadThis', 'Download this');
-  const resolvedLocalPrimaryActionLabel =
-    localPrimaryActionLabel || t('input.videoSuggestion.playLocal', 'Play');
-  const recentDownloadedChannels = useMemo(
-    () =>
-      downloadHistory
-        .filter(item => Boolean(item.channelUrl) || Boolean(item.channel))
-        .reduce<
-          Array<{
-            key: string;
-            name: string;
-            channelUrl?: string;
-            downloadedAtIso: string;
-          }>
-        >((acc, item) => {
-          const channelUrl = sanitizeVideoSuggestionWebUrl(item.channelUrl);
-          const fallbackName = String(item.channel || '').trim();
-          const key = (channelUrl || fallbackName.toLowerCase()).trim();
-          if (!key) return acc;
-          if (hiddenChannelKeys.includes(key.toLowerCase())) return acc;
-          if (acc.some(existing => existing.key === key)) return acc;
-          acc.push({
-            key,
-            name:
-              fallbackName ||
-              t('input.videoSuggestion.unknownChannel', 'Unknown channel'),
-            channelUrl: channelUrl || undefined,
-            downloadedAtIso: item.downloadedAtIso,
-          });
-          return acc;
-        }, [])
-        .slice(0, 8),
-    [downloadHistory, hiddenChannelKeys, t]
-  );
-  const rightTabs = useMemo(
-    () =>
-      [
-        {
-          key: 'results' as const,
-          label: t('input.videoSuggestion.tabResults', 'Results'),
-        },
-        {
-          key: 'history' as const,
-          label: t('input.videoSuggestion.tabHistory', 'Download history'),
-        },
-        {
-          key: 'channels' as const,
-          label: t('input.videoSuggestion.tabChannels', 'Channels'),
-        },
-      ] satisfies Array<{ key: SuggestionViewTab; label: string }>,
-    [t]
-  );
   const showLiveActivityPanel = showLiveActivity;
-  const liveActivityHidden = activeRightTab !== 'results';
   const isIdleWorkspace = useMemo(
     () =>
       !loading &&
-      activeRightTab === 'results' &&
       results.length === 0 &&
       !searchQuery.trim() &&
       messages.length <= 1 &&
       !showLiveActivityPanel,
     [
-      activeRightTab,
       loading,
       messages.length,
       results.length,
@@ -478,19 +384,6 @@ export default function VideoSuggestionPanel({
         : null,
     [savedPreferenceCount, t]
   );
-  const savedDownloadsLabel = useMemo(
-    () =>
-      downloadHistory.length > 0
-        ? t(
-            'input.videoSuggestion.savedDownloadsCount',
-            '{{count}} saved downloads',
-            {
-              count: downloadHistory.length,
-            }
-          )
-        : null,
-    [downloadHistory.length, t]
-  );
   const resultsReadyLabel = useMemo(
     () =>
       results.length > 0
@@ -596,64 +489,11 @@ export default function VideoSuggestionPanel({
     void setVideoSuggestionPreferenceSubtopic(subtopic).catch(() => void 0);
   }, [prefsLoaded, savedPrefCreator, savedPrefSubtopic, savedPrefTopic]);
 
-  useEffect(() => {
-    writeLocalVideoSuggestionHistory(downloadHistory);
-  }, [downloadHistory]);
-
-  useEffect(() => {
-    writeLocalVideoSuggestionActiveTab(activeRightTab);
-  }, [activeRightTab]);
-
-  useEffect(() => {
-    writeLocalVideoSuggestionHiddenChannels(hiddenChannelKeys);
-  }, [hiddenChannelKeys]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const refreshPlayableState = async () => {
-      const itemsWithPath = downloadHistory.filter(item =>
-        Boolean(item.localPath)
-      );
-      if (itemsWithPath.length === 0) {
-        if (!cancelled) {
-          setPlayablePathMap({});
-        }
-        return;
-      }
-      const checks = await Promise.all(
-        itemsWithPath.map(async item => {
-          const path = item.localPath || '';
-          try {
-            const exists = await window.fileApi.fileExists(path);
-            return [item.id, Boolean(exists)] as const;
-          } catch {
-            return [item.id, false] as const;
-          }
-        })
-      );
-      if (cancelled) return;
-      const nextMap: Record<string, boolean> = {};
-      for (const [id, exists] of checks) {
-        nextMap[id] = exists;
-      }
-      setPlayablePathMap(nextMap);
-    };
-    void refreshPlayableState();
-    return () => {
-      cancelled = true;
-    };
-  }, [downloadHistory]);
-
   const normalizePreferenceSelection = (value: string): string => {
     const normalized = String(value || '').trim();
     if (!normalized) return '';
     return sanitizeVideoSuggestionPreference(normalized);
   };
-
-  const buildYouTubeSearchUrl = useCallback((query: string): string => {
-    const encoded = encodeURIComponent(query);
-    return `https://www.youtube.com/results?search_query=${encoded}`;
-  }, []);
 
   const openVideoExternally = async (url: string) => {
     try {
@@ -679,7 +519,10 @@ export default function VideoSuggestionPanel({
     const direct = sanitizeVideoSuggestionWebUrl(channelUrl);
     const fallbackChannel = String(channelName || '').trim();
     const targetUrl =
-      direct || (fallbackChannel ? buildYouTubeSearchUrl(fallbackChannel) : '');
+      direct ||
+      (fallbackChannel
+        ? `https://www.youtube.com/results?search_query=${encodeURIComponent(fallbackChannel)}`
+        : '');
     if (!targetUrl) {
       setError(
         t(
@@ -705,52 +548,9 @@ export default function VideoSuggestionPanel({
     }
   };
 
-  const extractDownloadedPath = (
-    result: ProcessUrlResult | void
-  ): string | null => {
-    if (!result) return null;
-    const videoPath =
-      typeof result.videoPath === 'string' ? result.videoPath.trim() : '';
-    if (videoPath) return sanitizeVideoSuggestionHistoryPath(videoPath);
-    const filePath =
-      typeof result.filePath === 'string' ? result.filePath.trim() : '';
-    if (filePath) return sanitizeVideoSuggestionHistoryPath(filePath);
-    return null;
-  };
-
-  const appendDownloadHistory = (
-    item: VideoSuggestionResultItem,
-    localPath: string
-  ) => {
-    const nextItem: VideoSuggestionDownloadHistoryItem = {
-      id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      sourceUrl: item.url,
-      title: (item.title || item.url).trim(),
-      thumbnailUrl: item.thumbnailUrl || undefined,
-      channel: item.channel || undefined,
-      channelUrl: sanitizeVideoSuggestionWebUrl(item.channelUrl) || undefined,
-      durationSec: item.durationSec,
-      uploadedAt: item.uploadedAt || undefined,
-      downloadedAtIso: new Date().toISOString(),
-      localPath,
-    };
-    setDownloadHistory(prev => {
-      const filtered = prev.filter(
-        entry =>
-          entry.sourceUrl !== nextItem.sourceUrl &&
-          (!nextItem.localPath || entry.localPath !== nextItem.localPath)
-      );
-      return [nextItem, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-    });
-  };
-
   const downloadFromSuggestion = async (item: VideoSuggestionResultItem) => {
     try {
-      const result = await onDownload(item);
-      if (result?.cancelled || !result?.success) return;
-      const localPath = extractDownloadedPath(result);
-      if (!localPath) return;
-      appendDownloadHistory(item, localPath);
+      await onDownload(item);
     } catch (err: any) {
       setError(
         resolveErrorText(
@@ -762,106 +562,6 @@ export default function VideoSuggestionPanel({
     }
   };
 
-  const openDownloadedVideo = async (
-    item: VideoSuggestionDownloadHistoryItem
-  ) => {
-    if (onOpenDownloadedVideo) {
-      await onOpenDownloadedVideo(item);
-      return;
-    }
-    const filePath = sanitizeVideoSuggestionHistoryPath(item.localPath);
-    if (!filePath) {
-      setError(
-        t(
-          'input.videoSuggestion.missingLocalFile',
-          'Local file path is missing for this history item.'
-        )
-      );
-      return;
-    }
-    try {
-      const exists = await window.fileApi.fileExists(filePath);
-      setPlayablePathMap(prev => ({
-        ...prev,
-        [item.id]: exists,
-      }));
-      if (!exists) {
-        setError(
-          t(
-            'input.videoSuggestion.downloadedFileMissing',
-            'The local file is no longer available at its saved path.'
-          )
-        );
-        return;
-      }
-      const fallbackName =
-        filePath.split(/[\\/]/).pop() || item.title || 'video';
-      await useVideoStore
-        .getState()
-        .setFile({ name: fallbackName, path: filePath });
-      useUIStore.getState().setInputMode('file');
-    } catch (err: any) {
-      setError(
-        resolveErrorText(
-          err?.message,
-          t(
-            'input.videoSuggestion.cannotOpenDownloadedFile',
-            'Could not open downloaded file.'
-          ),
-          t
-        )
-      );
-    }
-  };
-
-  const redownloadHistoryItem = async (
-    historyItem: VideoSuggestionDownloadHistoryItem
-  ) => {
-    const asSuggestion: VideoSuggestionResultItem = {
-      id: historyItem.id,
-      url: historyItem.sourceUrl,
-      title: historyItem.title,
-      thumbnailUrl: historyItem.thumbnailUrl,
-      channel: historyItem.channel,
-      channelUrl: historyItem.channelUrl,
-      durationSec: historyItem.durationSec,
-      uploadedAt: historyItem.uploadedAt,
-    };
-    await downloadFromSuggestion(asSuggestion);
-  };
-
-  const removeHistoryItem = useCallback((id: string) => {
-    setDownloadHistory(prev => prev.filter(item => item.id !== id));
-    setPlayablePathMap(prev => {
-      if (!(id in prev)) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  }, []);
-
-  const removeChannelHistoryItem = useCallback((key: string) => {
-    const normalized = String(key || '')
-      .trim()
-      .toLowerCase();
-    if (!normalized) return;
-    setHiddenChannelKeys(prev => {
-      if (prev.includes(normalized)) return prev;
-      return [normalized, ...prev].slice(0, 80);
-    });
-  }, []);
-
-  const formatHistoryTimestamp = (iso: string): string => {
-    const parsed = Date.parse(iso);
-    if (!Number.isFinite(parsed)) return '';
-    return new Intl.DateTimeFormat(preferredLanguage || 'en', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(new Date(parsed));
-  };
   const getVideoMetaDetails = useCallback(
     (item: VideoSuggestionResultItem): string[] =>
       buildVideoMetaDetailsFromHelper(item, preferredLanguage, t),
@@ -898,6 +598,24 @@ export default function VideoSuggestionPanel({
     }
   }, [hideToggle]);
 
+  useEffect(() => {
+    if (hideToggle || restoredSessionRef.current) return;
+    restoredSessionRef.current = true;
+
+    const hasRestorableSession =
+      loading ||
+      searchQuery.trim().length > 0 ||
+      results.length > 0 ||
+      messages.length > 1 ||
+      pipelineStages.some(
+        stage => stage.state !== 'pending' || stage.outcome.trim().length > 0
+      );
+
+    if (hasRestorableSession) {
+      setOpen(true);
+    }
+  }, [hideToggle, loading, messages.length, pipelineStages, results.length, searchQuery]);
+
   return (
     <div className={wrapperStyles}>
       {!hideToggle ? (
@@ -905,7 +623,6 @@ export default function VideoSuggestionPanel({
           type="button"
           className={toggleButtonStyles}
           onClick={() => setOpen(v => !v)}
-          disabled={disabled}
           aria-expanded={open}
         >
           <div className={toggleButtonInnerStyles}>
@@ -920,11 +637,6 @@ export default function VideoSuggestionPanel({
                 {resultsReadyLabel ? (
                   <div className={toggleMetaPillAccentStyles}>
                     {resultsReadyLabel}
-                  </div>
-                ) : null}
-                {savedDownloadsLabel ? (
-                  <div className={toggleMetaPillStyles}>
-                    {savedDownloadsLabel}
                   </div>
                 ) : null}
               </div>
@@ -1009,10 +721,6 @@ export default function VideoSuggestionPanel({
                 <div className={technicalDetailsRowStyles}>
                   {t('input.videoSuggestion.languageHint', 'Output language')}:{' '}
                   {preferredLanguageName}
-                </div>
-                <div className={technicalDetailsRowStyles}>
-                  {t('input.videoSuggestion.savedDownloads', 'Saved downloads')}
-                  : {downloadHistory.length}
                 </div>
               </div>
             </details>
@@ -1116,30 +824,13 @@ export default function VideoSuggestionPanel({
                 isIdleWorkspace && resultsColumnCompactStyles
               )}
             >
-              <div className={rightTabsStyles}>
-                {rightTabs.map(tab => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    className={`${rightTabButtonStyles} ${
-                      activeRightTab === tab.key
-                        ? rightTabButtonActiveStyles
-                        : ''
-                    }`}
-                    onClick={() => setActiveRightTab(tab.key)}
-                    disabled={disabled}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
               <div className={rightTabBodyStyles}>
                 {showLiveActivityPanel ? (
                   <VideoSuggestionLiveActivity
                     activeTraceLines={activeTraceLines}
                     clearedStageCount={clearedStageCount}
-                    hidden={liveActivityHidden}
+                    hasResults={results.length > 0}
+                    hidden={false}
                     loading={loading}
                     loadingElapsedSec={loadingElapsedSec}
                     loadingMessage={loadingMessage}
@@ -1150,74 +841,29 @@ export default function VideoSuggestionPanel({
                     pipelineStageLabel={key => pipelineStageLabel(key, t)}
                   />
                 ) : null}
-
-                {activeRightTab === 'channels' ? (
-                  <VideoSuggestionChannelsTab
-                    disabled={disabled}
-                    recentDownloadedChannels={recentDownloadedChannels}
-                    t={t}
-                    onOpenChannelExternally={(channelUrl, channelName) => {
-                      void openChannelExternally(channelUrl, channelName);
-                    }}
-                    onRemoveChannelItem={key => {
-                      removeChannelHistoryItem(key);
-                    }}
-                  />
-                ) : null}
-
-                {activeRightTab === 'history' ? (
-                  <VideoSuggestionHistoryTab
-                    disabled={disabled}
-                    downloadHistory={downloadHistory}
-                    isDownloadInProgress={isDownloadInProgress}
-                    localPrimaryActionLabel={resolvedLocalPrimaryActionLabel}
-                    playablePathMap={playablePathMap}
-                    t={t}
-                    buildVideoMetaDetails={getVideoMetaDetails}
-                    formatHistoryTimestamp={formatHistoryTimestamp}
-                    onOpenChannelExternally={(channelUrl, channelName) => {
-                      void openChannelExternally(channelUrl, channelName);
-                    }}
-                    onOpenDownloadedVideo={item => {
-                      void openDownloadedVideo(item);
-                    }}
-                    onOpenVideoExternally={url => {
-                      void openVideoExternally(url);
-                    }}
-                    onRedownloadHistoryItem={item => {
-                      void redownloadHistoryItem(item);
-                    }}
-                    onRemoveHistoryItem={id => {
-                      removeHistoryItem(id);
-                    }}
-                  />
-                ) : null}
-
-                {activeRightTab === 'results' ? (
-                  <VideoSuggestionResultsTab
-                    disabled={disabled}
-                    primaryActionLabel={resolvedPrimaryActionLabel}
-                    isDownloadInProgress={isDownloadInProgress}
-                    loading={loading}
-                    loadingMode={loadingMode}
-                    results={results}
-                    searchQuery={searchQuery}
-                    t={t}
-                    buildVideoMetaDetails={getVideoMetaDetails}
-                    onDownloadFromSuggestion={item => {
-                      void downloadFromSuggestion(item);
-                    }}
-                    onOpenChannelExternally={(channelUrl, channelName) => {
-                      void openChannelExternally(channelUrl, channelName);
-                    }}
-                    onOpenVideoExternally={url => {
-                      void openVideoExternally(url);
-                    }}
-                    onSearchMore={() => {
-                      void searchMore();
-                    }}
-                  />
-                ) : null}
+                <VideoSuggestionResultsTab
+                  disabled={disabled}
+                  primaryActionLabel={resolvedPrimaryActionLabel}
+                  isDownloadInProgress={isDownloadInProgress}
+                  loading={loading}
+                  loadingMode={loadingMode}
+                  results={results}
+                  searchQuery={searchQuery}
+                  t={t}
+                  buildVideoMetaDetails={getVideoMetaDetails}
+                  onDownloadFromSuggestion={item => {
+                    void downloadFromSuggestion(item);
+                  }}
+                  onOpenChannelExternally={(channelUrl, channelName) => {
+                    void openChannelExternally(channelUrl, channelName);
+                  }}
+                  onOpenVideoExternally={url => {
+                    void openVideoExternally(url);
+                  }}
+                  onSearchMore={() => {
+                    void searchMore();
+                  }}
+                />
               </div>
             </div>
           </div>

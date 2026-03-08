@@ -1,5 +1,16 @@
 import Button from '../../components/Button';
 import {
+  AudioLines,
+  CircleAlert,
+  Download,
+  FileText,
+  Languages,
+  LocateFixed,
+  Mic,
+  Save,
+  Video,
+} from 'lucide-react';
+import {
   useSubStore,
   useTaskStore,
   useUIStore,
@@ -16,6 +27,11 @@ import {
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
 import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
+import {
+  isManagedTempOriginalVideoPath,
+  saveDubbedVideoFile,
+  saveOriginalVideoFile,
+} from '../../utils/saveVideo';
 import {
   sidePanelButtonContentStyles,
   sidePanelDividerStyles,
@@ -37,12 +53,13 @@ export default function SideMenu({
   const { t } = useTranslation();
   const order = useSubStore(s => s.order);
   const segments = useSubStore(s => s.segments);
-  const originalPath = useSubStore(s => s.originalPath);
+  const originalSrtPath = useSubStore(s => s.originalPath);
   const scrollToCurrent = useSubStore(s => s.scrollToCurrent);
   const hasSubs = order.length > 0;
   const setTranslation = useTaskStore(s => s.setTranslation);
   const isTranscribing = useTaskStore(s => !!s.transcription.inProgress);
   const isMerging = useTaskStore(s => !!s.merge.inProgress);
+  const isDubbing = useTaskStore(s => !!s.dubbing.inProgress);
   const transcriptionIsCompleted = useTaskStore(
     s => !!s.transcription.isCompleted
   );
@@ -52,10 +69,13 @@ export default function SideMenu({
 
   const videoFile = useVideoStore(s => s.file);
   const videoFilePath = useVideoStore(s => s.path);
+  const originalVideoPath = useVideoStore(s => s.originalPath);
+  const dubbedVideoPath = useVideoStore(s => s.dubbedVideoPath);
   const activeTrack = useVideoStore(s => s.activeTrack);
   const hasDubbedTrack = useVideoStore(s => !!s.dubbedUrl);
   const setActiveTrack = useVideoStore(s => s.setActiveTrack);
   const meta = useVideoStore(s => s.meta);
+  const dubVoice = useUIStore(s => s.dubVoice);
   // no local modal state; handled globally
 
   const {
@@ -102,6 +122,11 @@ export default function SideMenu({
         return (seg.original || '').trim() && !(seg.translation || '').trim();
       })
     : false;
+  const canSaveOriginalVideo = isManagedTempOriginalVideoPath(originalVideoPath);
+  const canSaveDubbedVideo = Boolean(dubbedVideoPath);
+  const showTranscribeButton = !transcriptionIsCompleted && !translationInProgress;
+  const showPreserveActions = canSaveOriginalVideo || canSaveDubbedVideo;
+  const showProcessingActions = showTranscribeButton || showPreserveActions;
 
   async function handleTranslateAll() {
     try {
@@ -171,6 +196,20 @@ export default function SideMenu({
     });
   }
 
+  async function handleSaveOriginalVideo() {
+    logButton('save_original_video');
+    await saveOriginalVideoFile(originalVideoPath);
+  }
+
+  async function handleSaveDubbedVideo() {
+    logButton('save_dubbed_video');
+    await saveDubbedVideoFile({
+      dubbedVideoPath,
+      sourceVideoPath: originalVideoPath ?? videoFilePath,
+      dubVoice,
+    });
+  }
+
   // Hide completely in fullscreen mode
   if (isFullScreen) return null;
   // Render as a dedicated column next to the video (grid area); not overlayed
@@ -181,164 +220,152 @@ export default function SideMenu({
         aria-label={t('videoPlayer.sideActions', 'Video side actions')}
       >
         <div className={sidePanelSectionStyles}>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            logButton('change_video');
-            openChangeVideo();
-          }}
-          title={t('videoPlayer.changeVideo', 'Change Video')}
-          disabled={isTranscribing || translationInProgress || isMerging}
-        >
-          <span className={sidePanelButtonContentStyles}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
-              <path d="M7 9l5 3-5 3z" />
-            </svg>
-            {t('videoPlayer.changeVideo', 'Change Video')}
-          </span>
-        </Button>
-        {hasDubbedTrack && (
-          <Button
-            size="sm"
-            variant={activeTrack === 'dubbed' ? 'primary' : 'secondary'}
-            onClick={async () => {
-              try {
-                await setActiveTrack(
-                  activeTrack === 'dubbed' ? 'original' : 'dubbed'
-                );
-              } catch (err) {
-                console.error('[SideMenu] Failed to switch audio track:', err);
-              }
-            }}
-            title={
-              activeTrack === 'dubbed'
-                ? t('videoPlayer.useOriginalAudio', 'Use Original Audio')
-                : t('videoPlayer.useDubbedAudio', 'Use Dubbed Audio')
-            }
-          >
-            {activeTrack === 'dubbed'
-              ? t('videoPlayer.useOriginalAudio', 'Use Original Audio')
-              : t('videoPlayer.useDubbedAudio', 'Use Dubbed Audio')}
-          </Button>
-        )}
-
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleMountOrChangeSrt}
-          disabled={isTranscribing || translationInProgress || isMerging}
-          title={
-            originalPath
-              ? t('videoPlayer.changeSrt', 'Change SRT')
-              : t('videoPlayer.mountSrt', 'Mount SRT')
-          }
-        >
-          <span className={sidePanelButtonContentStyles}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-            </svg>
-            {originalPath
-              ? t('videoPlayer.changeSrt', 'Change SRT')
-              : t('videoPlayer.mountSrt', 'Mount SRT')}
-          </span>
-        </Button>
-
-        {hasSubs && (
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => scrollToCurrent()}
-            title={t(
-              'videoPlayer.scrollToCurrentSubtitle',
-              'Scroll to current subtitle'
-            )}
+            onClick={() => {
+              logButton('change_video');
+              openChangeVideo();
+            }}
+            title={t('videoPlayer.changeVideo', 'Change Video')}
+            disabled={isTranscribing || translationInProgress || isMerging}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ marginRight: 8 }}
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19 12a7 7 0 0 1-7 7" />
-              <path d="M12 5a 7 7 0 0 1 7 7" />
-              <path d="M5 12a7 7 0 0 1 7-7" />
-              <path d="M12 19a7 7 0 0 1-7-7" />
-            </svg>
-            {t(
-              'videoPlayer.scrollToCurrentSubtitle',
-              'Scroll to current subtitle'
-            )}
+            <span className={sidePanelButtonContentStyles}>
+              <Video size={15} strokeWidth={2.2} />
+              {t('videoPlayer.changeVideo', 'Change Video')}
+            </span>
           </Button>
-        )}
-        </div>
 
-        <div className={sidePanelDividerStyles} />
-
-        {!transcriptionIsCompleted && !translationInProgress && (
-          <div className={sidePanelSectionStyles}>
+          {hasDubbedTrack && (
             <Button
               size="sm"
-              variant="primary"
-              onClick={handleTranscribe}
-              isLoading={isTranscribing}
-              disabled={isTranscribeDisabled}
-              title={metadataStatusMessage ?? t('input.transcribeOnly')}
+              variant={activeTrack === 'dubbed' ? 'primary' : 'secondary'}
+              onClick={async () => {
+                try {
+                  await setActiveTrack(
+                    activeTrack === 'dubbed' ? 'original' : 'dubbed'
+                  );
+                } catch (err) {
+                  console.error('[SideMenu] Failed to switch audio track:', err);
+                }
+              }}
+              title={
+                activeTrack === 'dubbed'
+                  ? t('videoPlayer.useOriginalAudio', 'Use Original Audio')
+                  : t('videoPlayer.useDubbedAudio', 'Use Dubbed Audio')
+              }
             >
-              {isTranscribing
-                ? t('subtitles.generating')
-                : t('input.transcribeOnly')}
+              <span className={sidePanelButtonContentStyles}>
+                <AudioLines size={15} strokeWidth={2.2} />
+                {activeTrack === 'dubbed'
+                  ? t('videoPlayer.useOriginalAudio', 'Use Original Audio')
+                  : t('videoPlayer.useDubbedAudio', 'Use Dubbed Audio')}
+              </span>
             </Button>
-            {metadataStatusMessage &&
+          )}
+
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleMountOrChangeSrt}
+            disabled={isTranscribing || translationInProgress || isMerging}
+            title={
+              originalSrtPath
+                ? t('videoPlayer.changeSrt', 'Change SRT')
+                : t('videoPlayer.mountSrt', 'Mount SRT')
+            }
+          >
+            <span className={sidePanelButtonContentStyles}>
+              <FileText size={15} strokeWidth={2.2} />
+              {originalSrtPath
+                ? t('videoPlayer.changeSrt', 'Change SRT')
+                : t('videoPlayer.mountSrt', 'Mount SRT')}
+            </span>
+          </Button>
+
+          {hasSubs && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => scrollToCurrent()}
+              title={t(
+                'videoPlayer.scrollToCurrentSubtitle',
+                'Scroll to current subtitle'
+              )}
+            >
+              <span className={sidePanelButtonContentStyles}>
+                <LocateFixed size={15} strokeWidth={2.2} />
+                {t(
+                  'videoPlayer.scrollToCurrentSubtitle',
+                  'Scroll to current subtitle'
+                )}
+              </span>
+            </Button>
+          )}
+        </div>
+
+        {showProcessingActions && <div className={sidePanelDividerStyles} />}
+
+        {showProcessingActions && (
+          <div className={sidePanelSectionStyles}>
+            {showTranscribeButton && (
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={handleTranscribe}
+                isLoading={isTranscribing}
+                disabled={isTranscribeDisabled}
+                title={metadataStatusMessage ?? t('input.transcribeOnly')}
+              >
+                <span className={sidePanelButtonContentStyles}>
+                  {!isTranscribing ? <Mic size={15} strokeWidth={2.2} /> : null}
+                  {isTranscribing
+                    ? t('subtitles.generating')
+                    : t('input.transcribeOnly')}
+                </span>
+              </Button>
+            )}
+            {showTranscribeButton &&
+              metadataStatusMessage &&
               metadataErrorCode !== 'icloud-placeholder' &&
               !isTranscribing && (
               <div className={sidePanelWarningStyles} role="alert">
                 <div className={sidePanelWarningIconStyles} aria-hidden="true">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-                    <path d="M12 9v4" />
-                    <path d="M12 17h.01" />
-                  </svg>
+                  <CircleAlert size={12} strokeWidth={2.2} />
                 </div>
                 <div className={sidePanelWarningTextStyles}>
                   {metadataStatusMessage}
                 </div>
               </div>
+            )}
+
+            {canSaveOriginalVideo && (
+              <Button
+                size="sm"
+                variant="warning"
+                onClick={handleSaveOriginalVideo}
+                title={originalVideoPath ?? t('input.saveOriginalVideo')}
+              >
+                <span className={sidePanelButtonContentStyles}>
+                  <Download size={15} strokeWidth={2.2} />
+                  {t('input.saveOriginalVideo')}
+                </span>
+              </Button>
+            )}
+
+            {canSaveDubbedVideo && (
+              <Button
+                size="sm"
+                variant="success"
+                onClick={handleSaveDubbedVideo}
+                disabled={isDubbing}
+                title={dubbedVideoPath ?? t('input.saveDubbedVideo')}
+              >
+                <span className={sidePanelButtonContentStyles}>
+                  <Save size={15} strokeWidth={2.2} />
+                  {t('input.saveDubbedVideo')}
+                </span>
+              </Button>
             )}
           </div>
         )}
@@ -349,26 +376,26 @@ export default function SideMenu({
               <div className={sidePanelLabelStyles}>
                 {t('subtitles.outputLanguage', 'Output language')}
               </div>
-            <select
-              className={sidePanelSelectStyles}
-              value={targetLanguage}
-              onChange={e => setTargetLanguage(e.target.value)}
-            >
-              {TRANSLATION_LANGUAGES_BASE.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {t(opt.labelKey)}
-                </option>
-              ))}
-              {TRANSLATION_LANGUAGE_GROUPS.map(group => (
-                <optgroup key={group.labelKey} label={t(group.labelKey)}>
-                  {group.options.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {t(opt.labelKey)}
-                    </option>
+              <select
+                className={sidePanelSelectStyles}
+                value={targetLanguage}
+                onChange={e => setTargetLanguage(e.target.value)}
+              >
+                {TRANSLATION_LANGUAGES_BASE.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
                 ))}
-              </optgroup>
-            ))}
-            </select>
+                {TRANSLATION_LANGUAGE_GROUPS.map(group => (
+                  <optgroup key={group.labelKey} label={t(group.labelKey)}>
+                    {group.options.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {t(opt.labelKey)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </div>
 
             <Button
@@ -379,21 +406,7 @@ export default function SideMenu({
               title={t('subtitles.translate', 'Translate')}
             >
               <span className={sidePanelButtonContentStyles}>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 7h16" />
-                  <path d="M9 7c0 7 6 7 6 14" />
-                  <path d="M12 20l4-4" />
-                  <path d="M20 20l-4-4" />
-                </svg>
+                <Languages size={15} strokeWidth={2.2} />
                 {t('subtitles.translate', 'Translate')}
               </span>
             </Button>

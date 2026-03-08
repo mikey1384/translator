@@ -51,6 +51,7 @@ interface State {
   dubbedUrl: string | null;
   activeTrack: 'original' | 'dubbed';
   meta: Meta;
+  metaPath: string | null;
   isAudioOnly: boolean;
   isReady: boolean;
   recentLocalMedia: RecentLocalMediaItem[];
@@ -102,6 +103,7 @@ const initial: State = {
   dubbedUrl: null,
   activeTrack: 'original',
   meta: null,
+  metaPath: null,
   isAudioOnly: false,
   isReady: false,
   recentLocalMedia: readRecentLocalMedia(),
@@ -604,8 +606,16 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.url = s.originalUrl;
           s.path = s.originalPath;
         }
+        if (state.path !== targetPath) {
+          s.meta = null;
+          s.metaPath = null;
+        }
         s.resumeAt = currentTime;
       });
+
+      if (targetPath && state.path !== targetPath) {
+        void analyse(targetPath);
+      }
 
       if (typeof window !== 'undefined') {
         (window as any)._videoLastValidTime = currentTime;
@@ -629,6 +639,8 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
           s.activeTrack = 'original';
           s.url = s.originalUrl;
           s.path = s.originalPath;
+          s.meta = null;
+          s.metaPath = null;
         }
       });
     },
@@ -641,9 +653,12 @@ async function analyse(path: string) {
       VideoIPC.hasVideoTrack(path),
       VideoIPC.getMetadata(path),
     ]);
+    if (useVideoStore.getState().path !== path) {
+      return;
+    }
     useVideoStore.setState({ isAudioOnly: !hasVideo });
     if (metaRes.success && metaRes.metadata) {
-      useVideoStore.setState({ meta: metaRes.metadata });
+      useVideoStore.setState({ meta: metaRes.metadata, metaPath: path });
       clearMetadataRetry(path);
     }
     if (!metaRes.success) {
@@ -680,7 +695,7 @@ function scheduleMetadataRetry(path: string, attempt: number) {
     try {
       const res = await VideoIPC.getMetadata(path);
       if (res.success && res.metadata) {
-        useVideoStore.setState({ meta: res.metadata });
+        useVideoStore.setState({ meta: res.metadata, metaPath: path });
         return;
       }
       if (res.code === 'icloud-placeholder') {

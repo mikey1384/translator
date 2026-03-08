@@ -119,7 +119,6 @@ export default function VideoSuggestionResultsTab({
                         <div className={cardSecondaryActionsStyles}>
                           <Button
                             onClick={() => onOpenVideoExternally(item.url)}
-                            disabled={disabled}
                             size="sm"
                             variant="secondary"
                             fullWidth
@@ -136,9 +135,7 @@ export default function VideoSuggestionResultsTab({
                                 item.channel
                               )
                             }
-                            disabled={
-                              disabled || (!item.channelUrl && !item.channel)
-                            }
+                            disabled={!item.channelUrl && !item.channel}
                             size="sm"
                             variant="secondary"
                             fullWidth
@@ -159,7 +156,7 @@ export default function VideoSuggestionResultsTab({
           <div className={moreActionsStyles}>
             <Button
               onClick={() => onSearchMore()}
-              disabled={disabled || loading || !searchQuery.trim()}
+              disabled={loading || !searchQuery.trim()}
               size="sm"
               variant="secondary"
             >

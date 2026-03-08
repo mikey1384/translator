@@ -1,4 +1,5 @@
 import { css } from '@emotion/css';
+import { CircleCheckBig, Globe, HardDrive } from 'lucide-react';
 import {
   colors,
   inputStyles as sharedInputStyles,
@@ -119,8 +120,11 @@ const iconPlaceholderStyles = css`
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.2rem;
-  font-weight: bold;
+
+  & > svg {
+    width: 18px;
+    height: 18px;
+  }
 `;
 
 const fileInputAreaStyles = css`
@@ -250,6 +254,9 @@ const urlControlsRowStyles = css`
 `;
 
 const fileSelectedStyles = css`
+  display: inline-flex;
+  align-items: center;
+  gap: ${spacing.xs};
   color: ${colors.success};
   font-size: ${fontSize.sm};
   line-height: ${lineHeight.normal};
@@ -295,7 +302,9 @@ export default function MediaInputSection({
       {/* Local File Option */}
       <div className={optionCardStyles}>
         <div className={optionHeaderStyles}>
-          <div className={iconPlaceholderStyles}>💾</div>
+          <div className={iconPlaceholderStyles}>
+            <HardDrive strokeWidth={2.2} />
+          </div>
           <div className={optionHeaderTextStyles}>
             <div className={optionHeaderTitleStyles}>
               {t('input.fromDevice')}
@@ -311,14 +320,15 @@ export default function MediaInputSection({
             <div className={fileInputAreaStyles}>
               <FileButton
                 onFileSelect={handleDeviceFileSelect}
-                disabled={isDownloadInProgress || isTranslationInProgress}
+                disabled={isTranslationInProgress}
                 size="md"
               >
                 {selectedFileLabel}
               </FileButton>
               {videoFile && (
                 <span className={fileSelectedStyles}>
-                  ✓ {t('input.fileSelected')}
+                  <CircleCheckBig size={16} strokeWidth={2.2} />
+                  {t('input.fileSelected')}
                 </span>
               )}
             </div>
@@ -338,7 +348,7 @@ export default function MediaInputSection({
                     onClick={() => {
                       void handleOpenRecent(item.path);
                     }}
-                    disabled={isDownloadInProgress || isTranslationInProgress}
+                    disabled={isTranslationInProgress}
                     title={item.path}
                   >
                     <div className={recentItemNameStyles}>{item.name}</div>
@@ -354,7 +364,9 @@ export default function MediaInputSection({
       {/* Web URL Option */}
       <div className={optionCardStyles}>
         <div className={optionHeaderStyles}>
-          <div className={iconPlaceholderStyles}>🌐</div>
+          <div className={iconPlaceholderStyles}>
+            <Globe strokeWidth={2.2} />
+          </div>
           <div className={optionHeaderTextStyles}>
             <div className={optionHeaderTitleStyles}>{t('input.fromWeb')}</div>
             <div className={optionHeaderMetaStyles}>

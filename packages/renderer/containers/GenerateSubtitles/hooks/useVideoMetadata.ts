@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as SystemIPC from '../../../ipc/system';
+import { useVideoStore } from '../../../state/video-store';
 
 // Max retry attempts for metadata fetching (with 5s delay cap = ~5 minutes max wait)
 const MAX_METADATA_ATTEMPTS = 60;
@@ -32,6 +33,14 @@ function shouldRetryForCode(code?: string): boolean {
 
 export function useVideoMetadata(videoFilePath: string | null) {
   const [metaState, setMetaState] = useState<MetadataState>(initialState);
+  const storeDurationSecs = useVideoStore(s =>
+    s.metaPath === videoFilePath &&
+    typeof s.meta?.duration === 'number' &&
+    Number.isFinite(s.meta.duration) &&
+    s.meta.duration > 0
+      ? s.meta.duration
+      : null
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -129,24 +138,31 @@ export function useVideoMetadata(videoFilePath: string | null) {
   }, [videoFilePath]);
 
   const { durationSecs, status, code, message } = metaState;
+  const effectiveDurationSecs = durationSecs ?? storeDurationSecs;
+  const hasDuration =
+    effectiveDurationSecs !== null && Number.isFinite(effectiveDurationSecs);
+  const effectiveStatus: MetadataStatus = hasDuration ? 'success' : status;
+  const effectiveCode = hasDuration ? undefined : code;
+  const effectiveMessage = hasDuration ? undefined : message;
 
   const hoursNeeded = useMemo(() => {
-    if (durationSecs !== null && durationSecs > 0) {
-      const blocks = Math.max(1, Math.ceil(durationSecs / 900));
+    if (effectiveDurationSecs !== null && effectiveDurationSecs > 0) {
+      const blocks = Math.max(1, Math.ceil(effectiveDurationSecs / 900));
       return blocks / 4;
     }
     return null;
-  }, [durationSecs]);
+  }, [effectiveDurationSecs]);
 
   const costStr = useMemo(() => hoursNeeded?.toFixed(2), [hoursNeeded]);
 
   return {
-    durationSecs,
+    durationSecs: effectiveDurationSecs,
     hoursNeeded,
     costStr,
-    metadataStatus: status,
-    metadataErrorCode: code,
-    metadataErrorMessage: message,
-    isMetadataPending: status === 'fetching' || status === 'waiting',
+    metadataStatus: effectiveStatus,
+    metadataErrorCode: effectiveCode,
+    metadataErrorMessage: effectiveMessage,
+    isMetadataPending:
+      !hasDuration && (status === 'fetching' || status === 'waiting'),
   };
 }

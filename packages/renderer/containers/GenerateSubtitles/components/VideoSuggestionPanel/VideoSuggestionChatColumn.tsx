@@ -171,7 +171,7 @@ export default function VideoSuggestionChatColumn({
               {showQuickStartAction ? (
                 <Button
                   onClick={() => onUseQuickStart()}
-                  disabled={disabled || loading}
+                  disabled={loading}
                   size="sm"
                   variant="secondary"
                 >
@@ -183,7 +183,7 @@ export default function VideoSuggestionChatColumn({
               ) : null}
               <Button
                 onClick={() => onSend()}
-                disabled={!input.trim() || disabled || loading}
+                disabled={!input.trim() || loading}
                 size="sm"
                 variant="primary"
               >
@@ -195,7 +195,7 @@ export default function VideoSuggestionChatColumn({
                   else onResetChat();
                 }}
                 disabled={
-                  loading ? disabled || cancelling : resetDisabled || disabled
+                  loading ? cancelling : resetDisabled
                 }
                 size="sm"
                 variant="text"

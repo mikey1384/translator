@@ -34,7 +34,7 @@ import { useAiStore } from '../state';
 import { css } from '@emotion/css';
 import { pageWrapperStyles, containerStyles, colors } from '../styles';
 import * as OperationIPC from '../ipc/operation';
-import { logProgress, logButton } from '../utils/logger';
+import { logProgress, logButton, logError } from '../utils/logger';
 import {
   isAbortLikeReason,
   isDisruptiveDownloadFailure,
@@ -310,10 +310,19 @@ export default function AppContent() {
   useEffect(() => {
     const onError = (event: Event) => {
       if (shouldIgnoreGlobalBrowserError(event)) return;
+      const errorEvent = event as ErrorEvent;
+      logError('window.error', errorEvent.error || errorEvent.message, {
+        filename: errorEvent.filename,
+        lineno: errorEvent.lineno,
+        colno: errorEvent.colno,
+      });
       openErrorReportPrompt();
     };
     const onUnhandled = (event: PromiseRejectionEvent) => {
       if (isAbortLikeReason((event as any)?.reason)) return;
+      logError('window.unhandledrejection', (event as any)?.reason, {
+        reasonType: typeof (event as any)?.reason,
+      });
       openErrorReportPrompt();
     };
     window.addEventListener('error', onError);

@@ -240,14 +240,14 @@ export default function TranscriptSummaryHighlightsTab({
         <div className={noHighlightsStyles}>
           {t(
             'summary.summaryRequiredForHighlights',
-            'Generate a transcript summary before cutting highlight clips.'
+            'Generate highlights to analyze the transcript first.'
           )}
         </div>
       ) : highlights.length === 0 ? (
         <div className={noHighlightsStyles}>
           {t(
             'summary.noHighlights',
-            'No highlights yet. Generate to detect punchlines.'
+            'No highlights yet. Generate highlights to find the best moments.'
           )}
         </div>
       ) : (

@@ -62,6 +62,7 @@ import {
   validateApiKey,
   validateAnthropicApiKey,
 } from './services/ai-provider.js';
+import { getErrorReportContext } from './services/error-report.js';
 import type {
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
@@ -631,6 +632,7 @@ try {
       } as any;
     }
   });
+  ipcMain.handle('get-error-report-context', () => getErrorReportContext());
 
   // yt-dlp auto update is always on; no IPC settings
 

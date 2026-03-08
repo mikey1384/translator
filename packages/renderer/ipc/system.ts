@@ -1,6 +1,7 @@
 import type {
   AllByoSettings,
   CreditBalanceResult,
+  ErrorReportContext,
   VideoSuggestionModelPreference,
   VideoSuggestionRecency,
   VideoMetadataResult,
@@ -212,6 +213,10 @@ export function onAnthropicApiKeyChanged(
 
 export function isAdminMode(): Promise<boolean> {
   return window.electron.isAdminMode();
+}
+
+export function getErrorReportContext(): Promise<ErrorReportContext> {
+  return window.electron.getErrorReportContext();
 }
 
 export function resetCredits(): Promise<{

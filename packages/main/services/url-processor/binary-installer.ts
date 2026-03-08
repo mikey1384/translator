@@ -12,6 +12,7 @@ import {
   findYtDlpBinary,
   testBinary,
   getPreferredInstallPath,
+  getManagedBinaryPath,
 } from './binary-locator.js';
 
 // Cache for update check - only check once per hour
@@ -408,8 +409,9 @@ export async function ensureYtDlpBinary({
       }
     }
 
-    // For dev environment, use existing logic
+    // For dev environment, prefer a managed app-local binary over arbitrary PATH installs.
     const existingBinary = await findYtDlpBinary();
+    const managedBinaryPath = getManagedBinaryPath();
 
     if (existingBinary) {
       log.info(
@@ -418,8 +420,21 @@ export async function ensureYtDlpBinary({
 
       // Test if it's working
       if (await testBinary(existingBinary)) {
-        // Binary works - now try to update it (unless recently checked)
-        if (shouldCheckUpdate) {
+        const supportsRequiredFlags =
+          await supportsRequiredYtDlpFlags(existingBinary);
+        if (!supportsRequiredFlags) {
+          log.warn(
+            `[URLprocessor] Existing yt-dlp binary is incompatible with Translator requirements (missing --js-runtimes): ${existingBinary}`
+          );
+          stopCrawl();
+          log.info(
+            '[URLprocessor] Installing managed yt-dlp binary for development compatibility...'
+          );
+          return await installNewBinary(onProgress);
+        }
+
+        // Only self-update the app-managed copy. We should not mutate random PATH installs.
+        if (shouldCheckUpdate && existingBinary === managedBinaryPath) {
           log.info(
             '[URLprocessor] Attempting to update yt-dlp to latest version...'
           );
@@ -430,6 +445,11 @@ export async function ensureYtDlpBinary({
               '[URLprocessor] Update failed, but existing binary works, continuing...'
             );
           }
+        } else if (shouldCheckUpdate && existingBinary !== managedBinaryPath) {
+          log.info(
+            `[URLprocessor] Skipping self-update for non-managed yt-dlp binary: ${existingBinary}`
+          );
+          lastUpdateCheckTime = now;
         } else {
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
@@ -458,6 +478,21 @@ export async function ensureYtDlpBinary({
     throw new YtDlpSetupError(
       `Failed to ensure yt-dlp binary: ${error?.message ?? error}`
     );
+  }
+}
+
+async function supportsRequiredYtDlpFlags(binaryPath: string): Promise<boolean> {
+  try {
+    const { stdout } = await execa(binaryPath, ['--help'], {
+      timeout: 20_000,
+      windowsHide: true,
+    });
+    return stdout.includes('--js-runtimes');
+  } catch (error: any) {
+    log.warn(
+      `[URLprocessor] Could not probe yt-dlp feature support for ${binaryPath}: ${error?.shortMessage || error?.message || error}`
+    );
+    return false;
   }
 }
 
@@ -674,6 +709,20 @@ async function tryPostinstallScript(
     const packageRoot = app.isPackaged
       ? dirname(app.getAppPath())
       : process.cwd();
+    const expectedPostinstallTarget = join(
+      packageRoot,
+      'node_modules',
+      'youtube-dl-exec',
+      'bin',
+      process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'
+    );
+
+    if (targetBinaryPath !== expectedPostinstallTarget) {
+      log.info(
+        `[URLprocessor] Skipping youtube-dl-exec postinstall for managed target outside package root: ${targetBinaryPath}`
+      );
+      return null;
+    }
 
     const postinstallScript = join(
       packageRoot,

@@ -4,12 +4,16 @@ import type {
   VideoSuggestionRecency,
   VideoSuggestionStageKey,
   VideoSuggestionStageState,
-  VideoSuggestionViewTab,
 } from '@shared-types/app';
 
 export type PipelineStageKey = VideoSuggestionStageKey;
 export type PipelineStageState = VideoSuggestionStageState;
-export type SuggestionViewTab = VideoSuggestionViewTab;
+export type GenerateSubtitlesWorkspaceTab =
+  | 'source'
+  | 'recommend'
+  | 'history'
+  | 'channels'
+  | 'workflow';
 
 export type PipelineStageProgress = {
   key: PipelineStageKey;

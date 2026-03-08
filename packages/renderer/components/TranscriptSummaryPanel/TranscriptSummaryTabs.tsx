@@ -20,6 +20,12 @@ export default function TranscriptSummaryTabs({
   return (
     <div className={tabsRowStyles}>
       <button
+        className={tabButtonStyles(activeTab === 'highlights')}
+        onClick={() => onChangeTab('highlights')}
+      >
+        {t('summary.tab.highlights', 'Highlights')}
+      </button>
+      <button
         className={tabButtonStyles(activeTab === 'summary')}
         onClick={() => onChangeTab('summary')}
       >
@@ -29,13 +35,7 @@ export default function TranscriptSummaryTabs({
         className={tabButtonStyles(activeTab === 'sections')}
         onClick={() => onChangeTab('sections')}
       >
-        {t('summary.tab.sections', 'Detailed notes')}
-      </button>
-      <button
-        className={tabButtonStyles(activeTab === 'highlights')}
-        onClick={() => onChangeTab('highlights')}
-      >
-        {t('summary.tab.highlights', 'Highlights')}
+        {t('summary.tab.sections', 'Notes')}
       </button>
     </div>
   );

@@ -33,7 +33,7 @@ export function TranscriptSummaryPanel({
   );
   const [activeTab, setActiveTab] = useState<
     'summary' | 'sections' | 'highlights'
-  >('summary');
+  >('highlights');
 
   const {
     activeOperationId,

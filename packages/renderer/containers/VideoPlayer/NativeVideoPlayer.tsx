@@ -208,6 +208,30 @@ export default function NativeVideoPlayer({
 
     const onLoadedMetadata = () => {
       setErrorMessage(null);
+      const duration = Number(v.duration);
+      const width = Number(v.videoWidth);
+      const height = Number(v.videoHeight);
+      const currentPath = useVideoStore.getState().path;
+      if (Number.isFinite(duration) && duration > 0) {
+        useVideoStore.setState(state => ({
+          meta: {
+            duration,
+            width:
+              Number.isFinite(width) && width > 0
+                ? width
+                : (state.meta?.width ?? 0),
+            height:
+              Number.isFinite(height) && height > 0
+                ? height
+                : (state.meta?.height ?? 0),
+            frameRate: state.meta?.frameRate ?? 0,
+            rotation: state.meta?.rotation,
+            displayWidth: state.meta?.displayWidth,
+            displayHeight: state.meta?.displayHeight,
+          },
+          metaPath: currentPath,
+        }));
+      }
       recomputeScale();
     };
     const onCanPlay = () => setErrorMessage(null);

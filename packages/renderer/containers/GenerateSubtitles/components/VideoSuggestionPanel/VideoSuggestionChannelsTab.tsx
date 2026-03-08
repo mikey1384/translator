@@ -16,7 +16,6 @@ type RecentDownloadedChannel = {
 };
 
 type VideoSuggestionChannelsTabProps = {
-  disabled: boolean;
   recentDownloadedChannels: RecentDownloadedChannel[];
   t: TFunction;
   onOpenChannelExternally: (channelUrl?: string, channelName?: string) => void;
@@ -24,7 +23,6 @@ type VideoSuggestionChannelsTabProps = {
 };
 
 export default function VideoSuggestionChannelsTab({
-  disabled,
   recentDownloadedChannels,
   t,
   onOpenChannelExternally,
@@ -56,7 +54,6 @@ export default function VideoSuggestionChannelsTab({
               onClick={() =>
                 onOpenChannelExternally(channel.channelUrl, channel.name)
               }
-              disabled={disabled}
               size="sm"
               variant="secondary"
               fullWidth
@@ -65,7 +62,6 @@ export default function VideoSuggestionChannelsTab({
             </Button>
             <Button
               onClick={() => onRemoveChannelItem(channel.key)}
-              disabled={disabled}
               size="sm"
               variant="danger"
             >

@@ -84,24 +84,35 @@ async function pickBinary(
   // 1. bundled copy
   try {
     const p = await bundled();
-    if (app.isPackaged) {
-      // When packaged, construct the path to the unpacked binary
-      const appPath = app.getAppPath();
+    const resolveBundledPath = (candidate: string): string => {
+      if (app.isPackaged) {
+        // When packaged, construct the path to the unpacked binary
+        const appPath = app.getAppPath();
 
-      // The installer path contains the full path to the binary
-      // We need to extract just the node_modules part and reconstruct with unpacked path
-      const nodeModulesIndex = p.indexOf('node_modules');
-      if (nodeModulesIndex !== -1) {
-        const nodeModulesPath = p.substring(nodeModulesIndex);
-        const unpackedPath = path.join(appPath + '.unpacked', nodeModulesPath);
-        log.debug(`[ffmpeg-runner] Constructed unpacked path: ${unpackedPath}`);
-        return unpackedPath;
-      } else {
-        log.warn(`[ffmpeg-runner] Could not find node_modules in path: ${p}`);
-        throw new Error(`Invalid installer path: ${p}`);
+        // The installer path contains the full path to the binary
+        // We need to extract just the node_modules part and reconstruct with unpacked path
+        const nodeModulesIndex = candidate.indexOf('node_modules');
+        if (nodeModulesIndex !== -1) {
+          const nodeModulesPath = candidate.substring(nodeModulesIndex);
+          return path.join(appPath + '.unpacked', nodeModulesPath);
+        }
       }
+      return candidate;
+    };
+
+    const bundledPath = resolveBundledPath(p);
+    if (fs.existsSync(bundledPath)) {
+      if (app.isPackaged && bundledPath !== p) {
+        log.debug(
+          `[ffmpeg-runner] Constructed unpacked path: ${bundledPath}`
+        );
+      }
+      return bundledPath;
     }
-    return p;
+
+    log.warn(
+      `[ffmpeg-runner] bundled ${fallbackName} path missing, falling back to PATH: ${bundledPath}`
+    );
   } catch {
     log.debug(`[ffmpeg-runner] no bundled ${fallbackName} module`);
   }
@@ -328,8 +339,22 @@ export async function createFFmpegContext(
       ];
       const p = spawn(ffprobePath, args, { windowsHide: true });
       let out = '';
+      let settled = false;
+      const fail = (err: FFmpegError) => {
+        if (settled) return;
+        settled = true;
+        reject(err);
+      };
       p.stdout.on('data', d => (out += d));
       p.stderr.on('data', d => log.debug(`[ffprobe] ${d}`));
+      p.on('error', err => {
+        fail(
+          new FFmpegError(`Failed to launch ffprobe at ${ffprobePath}`, {
+            details: err.message,
+            cause: err,
+          })
+        );
+      });
       if (signal) {
         const abort = () => !p.killed && p.kill();
         if (signal.aborted) {
@@ -339,13 +364,19 @@ export async function createFFmpegContext(
         }
       }
       p.on('close', c => {
+        if (settled) return;
+        settled = true;
         if (c === 0) {
           const sec = parseFloat(out.trim());
           return isNaN(sec)
             ? reject(new FFmpegError('could not parse duration'))
             : resolve(sec);
         }
-        reject(new FFmpegError(`ffprobe exited with ${c}`));
+        reject(
+          new FFmpegError(`ffprobe exited with ${c}`, {
+            details: `file=${file} ffprobePath=${ffprobePath}`,
+          })
+        );
       });
     });
   }

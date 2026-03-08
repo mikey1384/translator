@@ -19,8 +19,18 @@ import {
   throwIfStage5UpdateRequiredError,
   throwIfStage5UpdateRequiredResponse,
 } from './stage5-version-gate.js';
+import {
+  getRelayErrorMessage,
+  getRelayStatus,
+  isRetryableDubDirectError,
+  shouldRetryDubDirectRequest,
+} from './stage5-client-retry.js';
 
 export { STAGE5_API_URL, RELAY_URL };
+export {
+  isRetryableDubDirectError,
+  shouldRetryDubDirectRequest,
+} from './stage5-client-retry.js';
 
 function sendNetLog(
   level: 'info' | 'warn' | 'error',
@@ -37,16 +47,29 @@ function sendNetLog(
   }
 }
 
-function getRelayErrorMessage(error: any): string | null {
-  const payload = error?.response?.data;
-  if (!payload || typeof payload !== 'object') return null;
+async function waitForDubDirectRetry(
+  delayMs: number,
+  signal?: AbortSignal
+): Promise<void> {
+  if (delayMs <= 0) return;
+  if (signal?.aborted) {
+    throw new DOMException('Operation cancelled', 'AbortError');
+  }
 
-  const base = typeof payload.error === 'string' ? payload.error.trim() : '';
-  const details =
-    typeof payload.details === 'string' ? payload.details.trim() : '';
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, delayMs);
 
-  if (base && details) return `${base}: ${details}`;
-  return base || details || null;
+    const onAbort = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
+      reject(new DOMException('Operation cancelled', 'AbortError'));
+    };
+
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
 }
 
 export async function transcribe({
@@ -938,85 +961,139 @@ export async function dubViaDirect({
     throw new DOMException('Operation cancelled', 'AbortError');
   }
 
-  try {
-    // Relay accepts `model` for TTS selection. Default to Eleven v3 when using ElevenLabs.
-    const effectiveModel =
-      model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
-    const response = await withStage5AuthRetry(authHeaders =>
-      axios.post(
-        `${RELAY_URL}/dub-direct`,
-        { segments, voice, model: effectiveModel, format, quality, ttsProvider },
-        {
-          headers: {
-            ...authHeaders,
-            'Content-Type': 'application/json',
-            ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+  // Relay / API both support idempotent replay recovery for transient 408s.
+  const effectiveModel =
+    model ?? (ttsProvider === 'elevenlabs' ? 'eleven_v3' : undefined);
+  const maxAttempts = 2;
+  const hasIdempotencyKey = Boolean(String(idempotencyKey || '').trim());
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await withStage5AuthRetry(authHeaders =>
+        axios.post(
+          `${RELAY_URL}/dub-direct`,
+          {
+            segments,
+            voice,
+            model: effectiveModel,
+            format,
+            quality,
+            ttsProvider,
           },
-          signal,
-          timeout: 0,
-        }
-      )
-    );
-
-    sendNetLog('info', `POST /dub-direct -> ${response.status}`, {
-      url: `${RELAY_URL}/dub-direct`,
-      method: 'POST',
-      status: response.status,
-    });
-
-    const data = response.data as {
-      audioBase64?: string;
-      format?: string;
-      voice?: string;
-      model?: string;
-      segments?: Array<{
-        index: number;
-        audioBase64: string;
-        targetDuration?: number;
-      }>;
-      chunkCount?: number;
-      segmentCount?: number;
-    };
-
-    return {
-      audioBase64: data.audioBase64,
-      format: data.format ?? 'mp3',
-      voice: data.voice ?? voice ?? 'alloy',
-      model: data.model ?? effectiveModel ?? model ?? 'tts-1',
-      segments: data.segments,
-      chunkCount: data.chunkCount,
-      segmentCount: data.segmentCount,
-    };
-  } catch (error: any) {
-    if (
-      error.name === 'AbortError' ||
-      error.code === 'ERR_CANCELED' ||
-      signal?.aborted
-    ) {
-      throw new DOMException('Operation cancelled', 'AbortError');
-    }
-
-    throwIfStage5UpdateRequiredError({ error, source: 'relay' });
-
-    if (error.response?.status === 402) {
-      throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
-    }
-
-    if (error.response?.status === 401) {
-      throw new Error('Invalid API key');
-    }
-
-    if (error.response) {
-      sendNetLog(
-        'error',
-        `HTTP ${error.response.status} POST ${RELAY_URL}/dub-direct`,
-        {
-          status: error.response.status,
-          data: error.response.data,
-        }
+          {
+            headers: {
+              ...authHeaders,
+              'Content-Type': 'application/json',
+              ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+            },
+            signal,
+            timeout: 0,
+          }
+        )
       );
-    }
 
-    throw error;
+      sendNetLog('info', `POST /dub-direct -> ${response.status}`, {
+        url: `${RELAY_URL}/dub-direct`,
+        method: 'POST',
+        status: response.status,
+      });
+
+      const data = response.data as {
+        audioBase64?: string;
+        format?: string;
+        voice?: string;
+        model?: string;
+        segments?: Array<{
+          index: number;
+          audioBase64: string;
+          targetDuration?: number;
+        }>;
+        chunkCount?: number;
+        segmentCount?: number;
+      };
+
+      if (
+        !data.audioBase64 &&
+        !(Array.isArray(data.segments) && data.segments.length > 0)
+      ) {
+        throw new Error('Dub request returned no audio payload.');
+      }
+
+      return {
+        audioBase64: data.audioBase64,
+        format: data.format ?? 'mp3',
+        voice: data.voice ?? voice ?? 'alloy',
+        model: data.model ?? effectiveModel ?? model ?? 'tts-1',
+        segments: data.segments,
+        chunkCount: data.chunkCount,
+        segmentCount: data.segmentCount,
+      };
+    } catch (error: any) {
+      if (
+        error.name === 'AbortError' ||
+        error.code === 'ERR_CANCELED' ||
+        signal?.aborted
+      ) {
+        throw new DOMException('Operation cancelled', 'AbortError');
+      }
+
+      throwIfStage5UpdateRequiredError({ error, source: 'relay' });
+
+      if (error.response?.status === 402) {
+        throw new Error(ERROR_CODES.INSUFFICIENT_CREDITS);
+      }
+
+      if (error.response?.status === 401) {
+        throw new Error('Invalid API key');
+      }
+
+      const relayMessage =
+        getRelayErrorMessage(error) || error?.message || 'Dub request failed';
+      const retryable = shouldRetryDubDirectRequest({
+        error,
+        attempt,
+        maxAttempts,
+        hasIdempotencyKey,
+      });
+
+      if (retryable) {
+        sendNetLog('warn', 'Retrying POST /dub-direct after transient failure', {
+          attempt,
+          maxAttempts,
+          status: getRelayStatus(error),
+          data: error?.response?.data,
+        });
+        await waitForDubDirectRetry(750 * attempt, signal);
+        continue;
+      }
+
+      if (error.response) {
+        sendNetLog(
+          'error',
+          `HTTP ${error.response.status} POST ${RELAY_URL}/dub-direct`,
+          {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        );
+      } else if (error.request) {
+        sendNetLog(
+          'error',
+          `HTTP NO_RESPONSE POST ${RELAY_URL}/dub-direct`,
+          { url: `${RELAY_URL}/dub-direct`, method: 'POST' }
+        );
+      } else {
+        sendNetLog('error', `HTTP ERROR: ${relayMessage}`);
+      }
+
+      if (error && typeof error === 'object') {
+        error.message = relayMessage;
+        throw error;
+      }
+
+      throw new Error(relayMessage);
+    }
   }
+
+  throw new Error('Dub request failed');
 }

@@ -56,6 +56,22 @@ const BALANCE_HELP_KEYS = [
   'settings.performanceQuality.qualityDubbing.helpWithEstimateOn',
 ];
 
+const PREFER_BATCH_KEYS = new Set([
+  'input.videoSuggestion.workflowHint',
+  'input.videoSuggestion.liveActivityTitle',
+  'input.videoSuggestion.quickStartUserMessage',
+  'input.videoSuggestion.historyEmpty',
+  'input.videoSuggestion.downloadedFileMissing',
+  'input.videoSuggestion.emptyCopy',
+  'input.videoSuggestion.emptyEyebrow',
+  'input.videoSuggestion.emptyTitle',
+  'generateSubtitles.workflow.availableOutputs',
+  'generateSubtitles.workflow.availableOutputsDescription',
+  'generateSubtitles.workflow.saveOutputsTitle',
+  'generateSubtitles.workflow.saveOutputsDescription',
+  'logs.empty',
+]);
+
 function replacePlaceholders(value, replacements) {
   if (typeof value !== 'string') return value;
   let nextValue = value;
@@ -224,6 +240,11 @@ function resolveLeafValue(langCode, key, sourceValue, localeData) {
     return { value: overrideValue, source: 'derived' };
   }
 
+  const batchValue = normalizeValue(key, batchTranslations[langCode]?.[key]);
+  if (PREFER_BATCH_KEYS.has(key) && hasMatchingTokens(sourceValue, batchValue)) {
+    return { value: batchValue, source: 'batch' };
+  }
+
   const existingValue = normalizeValue(key, getDeep(localeData, key));
   if (hasMatchingTokens(sourceValue, existingValue)) {
     return { value: existingValue, source: 'existing' };
@@ -234,7 +255,6 @@ function resolveLeafValue(langCode, key, sourceValue, localeData) {
     return { value: derivedValue, source: 'derived' };
   }
 
-  const batchValue = normalizeValue(key, batchTranslations[langCode]?.[key]);
   if (hasMatchingTokens(sourceValue, batchValue)) {
     return { value: batchValue, source: 'batch' };
   }

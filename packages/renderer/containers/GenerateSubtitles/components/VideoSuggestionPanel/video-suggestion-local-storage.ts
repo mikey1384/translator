@@ -11,8 +11,8 @@ import {
   VIDEO_SUGGESTION_DEFAULT_RECENCY,
 } from '../../../../../shared/helpers/video-suggestion-defaults.js';
 import type {
+  GenerateSubtitlesWorkspaceTab,
   LocalVideoSuggestionPrefs,
-  SuggestionViewTab,
   VideoSuggestionDownloadHistoryItem,
 } from './VideoSuggestionPanel.types.js';
 
@@ -20,15 +20,36 @@ const LOCAL_VIDEO_SUGGESTION_PREFS_KEY = 'video-suggestion-prefs-v1';
 const LOCAL_VIDEO_SUGGESTION_HISTORY_KEY = 'video-suggestion-downloads-v1';
 const LOCAL_VIDEO_SUGGESTION_HIDDEN_CHANNELS_KEY =
   'video-suggestion-hidden-channels-v1';
-const LOCAL_VIDEO_SUGGESTION_ACTIVE_TAB_KEY = 'video-suggestion-active-tab-v1';
+const LOCAL_GENERATE_SUBTITLES_WORKSPACE_TAB_KEY =
+  'generate-subtitles-workspace-tab-v1';
 
 export const MAX_HISTORY_ITEMS = 40;
 const MAX_HIDDEN_CHANNELS = 80;
-const SUGGESTION_VIEW_TABS: SuggestionViewTab[] = [
-  'results',
+const GENERATE_SUBTITLES_WORKSPACE_TABS: GenerateSubtitlesWorkspaceTab[] = [
+  'source',
+  'recommend',
   'history',
   'channels',
+  'workflow',
 ];
+const VIDEO_SUGGESTION_HISTORY_SYNC_EVENT =
+  'video-suggestion-history-sync-needed';
+
+function normalizeHistoryPath(value: unknown): string {
+  return sanitizeVideoSuggestionHistoryPath(value)
+    .replace(/\\/g, '/')
+    .replace(/\/+$/g, '')
+    .toLowerCase();
+}
+
+function isLikelyManagedTempHistoryPath(value: unknown): boolean {
+  const normalized = normalizeHistoryPath(value);
+  if (!normalized) return false;
+  return (
+    normalized.includes('/translator-electron/') ||
+    normalized.includes('/translator-url-')
+  );
+}
 
 export function readLocalVideoSuggestionPrefs(): LocalVideoSuggestionPrefs {
   try {
@@ -178,6 +199,126 @@ export function writeLocalVideoSuggestionHistory(
   }
 }
 
+function dispatchVideoSuggestionHistorySync(): void {
+  try {
+    window.dispatchEvent(new CustomEvent(VIDEO_SUGGESTION_HISTORY_SYNC_EVENT));
+  } catch {
+    // Ignore DOM event failures.
+  }
+}
+
+export function upsertLocalVideoSuggestionHistoryItem(
+  item: VideoSuggestionDownloadHistoryItem
+): VideoSuggestionDownloadHistoryItem[] {
+  const sanitized = sanitizeHistoryItem(item);
+  if (!sanitized) {
+    return readLocalVideoSuggestionHistory();
+  }
+
+  const nextItems = mergeVideoSuggestionHistoryItems(
+    readLocalVideoSuggestionHistory(),
+    sanitized
+  );
+
+  writeLocalVideoSuggestionHistory(nextItems);
+  dispatchVideoSuggestionHistorySync();
+  return nextItems;
+}
+
+export function mergeVideoSuggestionHistoryItems(
+  items: VideoSuggestionDownloadHistoryItem[],
+  item: VideoSuggestionDownloadHistoryItem
+): VideoSuggestionDownloadHistoryItem[] {
+  const sanitized = sanitizeHistoryItem(item);
+  if (!sanitized) {
+    return items
+      .map(existing => sanitizeHistoryItem(existing))
+      .filter((existing): existing is VideoSuggestionDownloadHistoryItem =>
+        Boolean(existing)
+      )
+      .slice(0, MAX_HISTORY_ITEMS);
+  }
+
+  const incomingPathKey = normalizeHistoryPath(sanitized.localPath);
+  const incomingIsTemp = isLikelyManagedTempHistoryPath(sanitized.localPath);
+  const nextItems = [sanitized];
+
+  for (const rawExisting of items) {
+    const existing = sanitizeHistoryItem(rawExisting);
+    if (!existing) continue;
+
+    const existingPathKey = normalizeHistoryPath(existing.localPath);
+    if (incomingPathKey && existingPathKey === incomingPathKey) {
+      continue;
+    }
+
+    if (existing.sourceUrl !== sanitized.sourceUrl) {
+      nextItems.push(existing);
+      continue;
+    }
+
+    if (!existingPathKey || !incomingPathKey) {
+      continue;
+    }
+
+    const existingIsTemp = isLikelyManagedTempHistoryPath(existing.localPath);
+    if (existingIsTemp && incomingIsTemp) {
+      continue;
+    }
+
+    nextItems.push(existing);
+  }
+
+  return nextItems.slice(0, MAX_HISTORY_ITEMS);
+}
+
+export function syncSavedVideoSuggestionHistoryPath(options: {
+  previousPath: string;
+  savedPath: string;
+}): boolean {
+  const previousPath = sanitizeVideoSuggestionHistoryPath(options.previousPath);
+  const savedPath = sanitizeVideoSuggestionHistoryPath(options.savedPath);
+  if (!previousPath || !savedPath) return false;
+
+  const previousKey = normalizeHistoryPath(previousPath);
+  const savedKey = normalizeHistoryPath(savedPath);
+  if (!previousKey || !savedKey) return false;
+
+  const items = readLocalVideoSuggestionHistory();
+  let changed = false;
+  const nextItems = items.map(item => {
+    if (normalizeHistoryPath(item.localPath) !== previousKey) {
+      return item;
+    }
+    if (normalizeHistoryPath(item.localPath) === savedKey) {
+      return item;
+    }
+    changed = true;
+    return {
+      ...item,
+      localPath: savedPath,
+    };
+  });
+
+  if (!changed) return false;
+
+  writeLocalVideoSuggestionHistory(nextItems);
+  dispatchVideoSuggestionHistorySync();
+  return true;
+}
+
+export function subscribeToVideoSuggestionHistorySync(
+  listener: () => void
+): () => void {
+  const wrapped = () => {
+    listener();
+  };
+  window.addEventListener(VIDEO_SUGGESTION_HISTORY_SYNC_EVENT, wrapped);
+  return () => {
+    window.removeEventListener(VIDEO_SUGGESTION_HISTORY_SYNC_EVENT, wrapped);
+  };
+}
+
 function sanitizeChannelHistoryKey(input: unknown): string {
   return String(input || '')
     .trim()
@@ -228,32 +369,38 @@ export function writeLocalVideoSuggestionHiddenChannels(keys: string[]): void {
   }
 }
 
-export function isSuggestionViewTab(
+export function isGenerateSubtitlesWorkspaceTab(
   value: unknown
-): value is SuggestionViewTab {
+): value is GenerateSubtitlesWorkspaceTab {
   return (
     typeof value === 'string' &&
-    SUGGESTION_VIEW_TABS.includes(value as SuggestionViewTab)
+    GENERATE_SUBTITLES_WORKSPACE_TABS.includes(
+      value as GenerateSubtitlesWorkspaceTab
+    )
   );
 }
 
-export function readLocalVideoSuggestionActiveTab(): SuggestionViewTab {
+export function readGenerateSubtitlesWorkspaceTab(): GenerateSubtitlesWorkspaceTab {
   try {
     const raw = window.localStorage.getItem(
-      LOCAL_VIDEO_SUGGESTION_ACTIVE_TAB_KEY
+      LOCAL_GENERATE_SUBTITLES_WORKSPACE_TAB_KEY
     );
-    if (isSuggestionViewTab(raw)) return raw;
-    return 'results';
+    if (isGenerateSubtitlesWorkspaceTab(raw)) return raw;
+    return 'source';
   } catch {
-    return 'results';
+    return 'source';
   }
 }
 
-export function writeLocalVideoSuggestionActiveTab(
-  tab: SuggestionViewTab
+export function writeGenerateSubtitlesWorkspaceTab(
+  tab: GenerateSubtitlesWorkspaceTab
 ): void {
+  if (!isGenerateSubtitlesWorkspaceTab(tab)) return;
   try {
-    window.localStorage.setItem(LOCAL_VIDEO_SUGGESTION_ACTIVE_TAB_KEY, tab);
+    window.localStorage.setItem(
+      LOCAL_GENERATE_SUBTITLES_WORKSPACE_TAB_KEY,
+      tab
+    );
   } catch {
     // Ignore localStorage failures (private mode / quota / policy).
   }

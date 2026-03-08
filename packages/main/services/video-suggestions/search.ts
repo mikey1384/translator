@@ -1,4 +1,7 @@
-import type { VideoSuggestionRecency } from '@shared-types/app';
+import type {
+  VideoSuggestionRecency,
+  VideoSuggestionResultItem,
+} from '@shared-types/app';
 import { rerankVideosWithLlm } from './rerank.js';
 import type { SuggestionProgressCallback } from './progress.js';
 import {
@@ -6,6 +9,11 @@ import {
   curateVideoQueries,
   runDiscoveryWebSearch,
 } from './discovery.js';
+import {
+  normalizeContinuationBufferedResults,
+  resolveContinuationCacheSize,
+  splitContinuationPageResults,
+} from './pagination.js';
 import { runYoutubeYtDlpSearch } from './retrieval.js';
 import {
   type DiscoveryRetrievalMode,
@@ -28,7 +36,7 @@ import {
   throwIfSuggestionAborted,
   uniqueTexts,
 } from './shared.js';
-import { emitSuggestionProgress } from './progress.js';
+import { emitSuggestionProgress, startProgressPulse } from './progress.js';
 
 function buildTopicWideVideoQueries({
   intentQuery,
@@ -84,6 +92,7 @@ export type VideoSearchContinuation = {
   retrievalSeedUrls: string[];
   selectedChannels: string[];
   iteration: number;
+  pendingResults?: VideoSuggestionResultItem[];
 };
 
 export type VideoSearchRunOutcome = CreatorSearchOutcome & {
@@ -101,6 +110,7 @@ export function createVideoSearchContinuation({
   retrievalSeedUrls,
   selectedChannels,
   iteration,
+  pendingResults,
 }: VideoSearchContinuation): VideoSearchContinuation {
   const sanitizedIntentQuery =
     sanitizeRetrievalSearchQuery(intentQuery) ||
@@ -116,6 +126,10 @@ export function createVideoSearchContinuation({
   const sanitizedChannels = uniqueTexts(
     selectedChannels.map(value => compactText(value))
   ).slice(0, 6);
+  const sanitizedPendingResults = normalizeContinuationBufferedResults({
+    items: pendingResults || [],
+    pageSize: maxResults,
+  });
 
   return {
     countryHint: compactText(countryHint),
@@ -133,7 +147,131 @@ export function createVideoSearchContinuation({
     retrievalSeedUrls: sanitizedSeedUrls,
     selectedChannels: sanitizedChannels,
     iteration: Math.max(0, Math.floor(iteration)),
+    pendingResults: sanitizedPendingResults,
   };
+}
+
+function emitContinuationReuseStages({
+  continuation,
+  effectiveSeedUrls,
+  excludeUrls,
+  retrievalQueries,
+  initialQuery,
+  nextIteration,
+  operationId,
+  onProgress,
+  startedAt,
+  continuationMode = 'retrieval',
+  cachedResultCount = 0,
+}: {
+  continuation: VideoSearchContinuation;
+  effectiveSeedUrls: string[];
+  excludeUrls: Set<string>;
+  retrievalQueries: string[];
+  initialQuery: string;
+  nextIteration: number;
+  operationId: string;
+  onProgress?: SuggestionProgressCallback;
+  startedAt: number;
+  continuationMode?: 'cache' | 'retrieval';
+  cachedResultCount?: number;
+}): void {
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'planning',
+    message: 'Step 1/4 cleared: reusing prior search strategy.',
+    searchQuery: initialQuery,
+    assistantPreview: clampTraceMessage(
+      `Intent stays ${quotedStatusValue(continuation.intentQuery, 120)}.`,
+      240
+    ),
+    stageKey: 'strategist',
+    stageIndex: 1,
+    stageTotal: 4,
+    stageState: 'cleared',
+    stageOutcome: clampTraceLines(
+      [
+        `Continuation iteration: ${nextIteration}.`,
+        `Reused intent query: ${quotedStatusValue(continuation.intentQuery, 120)}.`,
+        `Country hint carried forward: ${quotedStatusValue(continuation.countryHint || 'global results', 120)}.`,
+        `Recency carried forward: ${quotedStatusValue(continuation.recency, 120)}.`,
+      ],
+      620
+    ),
+    elapsedMs: Date.now() - startedAt,
+  });
+
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'searching',
+    message: 'Step 2/4 cleared: reusing prior discovery context.',
+    searchQuery: initialQuery,
+    assistantPreview: clampTraceMessage(
+      continuation.selectedChannels.length > 0
+        ? `Reusing discovered channels: ${summarizeValues(
+            continuation.selectedChannels,
+            5
+          )}.`
+        : `Reusing broad YouTube discovery context.`,
+      320
+    ),
+    stageKey: 'discovery',
+    stageIndex: 2,
+    stageTotal: 4,
+    stageState: 'cleared',
+    stageOutcome: clampTraceLines(
+      [
+        continuation.selectedChannels.length > 0
+          ? `Discovered channels carried forward (${continuation.selectedChannels.length}): ${summarizeValues(
+              continuation.selectedChannels,
+              5
+            )}.`
+          : 'No fixed channels carried forward; continuing broad retrieval.',
+        `Seed URLs carried forward: ${effectiveSeedUrls.length}.`,
+        'Skipped a fresh discovery web search for this continuation.',
+      ],
+      620
+    ),
+    elapsedMs: Date.now() - startedAt,
+  });
+
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'ranking',
+    message:
+      continuationMode === 'cache'
+        ? 'Step 3/4 cleared: reusing ranked results cache.'
+        : 'Step 3/4 cleared: reusing prior retrieval plan.',
+    searchQuery: initialQuery,
+    assistantPreview: clampTraceMessage(
+      continuationMode === 'cache'
+        ? `Cached ranked results ready: ${cachedResultCount}.`
+        : `Reusing retrieval queries: ${summarizeValues(retrievalQueries, 4)}.`,
+      320
+    ),
+    stageKey: 'curator',
+    stageIndex: 3,
+    stageTotal: 4,
+    stageState: 'cleared',
+    stageOutcome: clampTraceLines(
+      continuationMode === 'cache'
+        ? [
+            `Cached ranked results available before this page: ${cachedResultCount}.`,
+            `Already excluded URLs in the live results list: ${excludeUrls.size}.`,
+            'Fresh retrieval skipped for this page.',
+          ]
+        : [
+            `Reused retrieval queries (${retrievalQueries.length}): ${summarizeValues(
+              retrievalQueries,
+              4
+            )}.`,
+            `Already excluded URLs: ${excludeUrls.size}.`,
+            `Passed to step 4: ${quotedStatusValue(initialQuery, 120)}.`,
+          ],
+      620
+    ),
+    elapsedMs: Date.now() - startedAt,
+  });
 }
 
 export async function runCreatorFirstSearch({
@@ -482,6 +620,7 @@ export async function runCreatorFirstSearch({
     onProgress,
     signal,
   });
+  const continuationCacheSize = resolveContinuationCacheSize(maxResults);
   const rerankOutcome = await rerankVideosWithLlm({
     candidates: retrievalOutcome.results,
     intentQuery,
@@ -490,12 +629,18 @@ export async function runCreatorFirstSearch({
     translationPhase,
     model,
     operationId: `${operationId}-retrieval-rerank`,
-    maxResults,
+    maxResults: continuationCacheSize,
     preferredChannels: selectedChannels,
     onResolvedModel,
     signal,
   });
   throwIfSuggestionAborted(signal);
+
+  const { pageResults: finalResults, pendingResults } =
+    splitContinuationPageResults({
+      items: rerankOutcome.results,
+      pageSize: maxResults,
+    });
 
   const creators = uniqueTexts([
     ...selectedChannels,
@@ -503,7 +648,6 @@ export async function runCreatorFirstSearch({
     ...rerankOutcome.results.map(item => compactText(item.channel || '')),
     ...discoveryOutcome.channels.map(item => item.name),
   ]).slice(0, 6);
-  const finalResults = rerankOutcome.results.slice(0, maxResults);
   const lowConfidenceReason =
     finalResults.length === 0
       ? retrievalOutcome.lowConfidenceReason || 'no-scored-results'
@@ -527,6 +671,7 @@ export async function runCreatorFirstSearch({
     retrievalSeedUrls,
     selectedChannels,
     iteration: 0,
+    pendingResults,
   });
 
   emitSuggestionProgress(onProgress, {
@@ -553,6 +698,7 @@ export async function runCreatorFirstSearch({
           : `Ranking candidates prepared: ${retrievalOutcome.results.length}.`,
         `Ranking mode: ${rerankOutcome.rankingMode}.`,
         `Ranked videos kept: ${finalResults.length}.`,
+        `Cached continuation results ready: ${pendingResults.length}.`,
         lowConfidenceReason
           ? `Low-confidence detail: ${describeLowConfidenceReason(
               lowConfidenceReason
@@ -605,6 +751,83 @@ export async function continueVideoSearch({
   );
   const nextIteration = continuation.iteration + 1;
   const initialQuery = retrievalQueries[0] || continuation.intentQuery;
+  const cachedPage = splitContinuationPageResults({
+    items: continuation.pendingResults || [],
+    pageSize: continuation.maxResults,
+  });
+  const cachedResultCount =
+    cachedPage.pageResults.length + cachedPage.pendingResults.length;
+
+  if (cachedPage.pageResults.length > 0) {
+    emitContinuationReuseStages({
+      continuation,
+      effectiveSeedUrls,
+      excludeUrls,
+      retrievalQueries,
+      initialQuery,
+      nextIteration,
+      operationId,
+      onProgress,
+      startedAt,
+      continuationMode: 'cache',
+      cachedResultCount,
+    });
+
+    emitSuggestionProgress(onProgress, {
+      operationId,
+      phase: 'finalizing',
+      message: `Step 4/4 cleared: loaded ${cachedPage.pageResults.length} cached ${platformLabel} matches.`,
+      searchQuery: initialQuery,
+      assistantPreview: clampTraceMessage(
+        cachedPage.pendingResults.length > 0
+          ? `Cached ranked results remaining after this page: ${cachedPage.pendingResults.length}.`
+          : 'Cached ranked results exhausted; the next page will replenish.',
+        320
+      ),
+      stageKey: 'retrieval',
+      stageIndex: 4,
+      stageTotal: 4,
+      stageState: 'cleared',
+      stageOutcome: clampTraceLines(
+        [
+          `Cached ranked results served now: ${cachedPage.pageResults.length}.`,
+          `Cached ranked results remaining: ${cachedPage.pendingResults.length}.`,
+          `Skipped yt-dlp retrieval and reranking for this page.`,
+        ],
+        620
+      ),
+      elapsedMs: Date.now() - startedAt,
+      resultCount: cachedPage.pageResults.length,
+    });
+
+    return {
+      results: cachedPage.pageResults,
+      searchQuery: initialQuery,
+      creators: uniqueTexts([
+        ...continuation.selectedChannels,
+        ...cachedPage.pageResults.map(item => compactText(item.channel || '')),
+      ]).slice(0, 6),
+      queriesTried: uniqueTexts(retrievalQueries),
+      confidence: 100,
+      lowConfidenceReason: undefined,
+      continuation: createVideoSearchContinuation({
+        ...continuation,
+        pendingResults: cachedPage.pendingResults,
+      }),
+    };
+  }
+
+  emitContinuationReuseStages({
+    continuation,
+    effectiveSeedUrls,
+    excludeUrls,
+    retrievalQueries,
+    initialQuery,
+    nextIteration,
+    operationId,
+    onProgress,
+    startedAt,
+  });
 
   emitSuggestionProgress(onProgress, {
     operationId,
@@ -654,6 +877,63 @@ export async function continueVideoSearch({
     onProgress,
     signal,
   });
+  const continuationCacheSize = resolveContinuationCacheSize(
+    continuation.maxResults
+  );
+  emitSuggestionProgress(onProgress, {
+    operationId,
+    phase: 'ranking',
+    message: `Step 4/4: ranking additional ${platformLabel} matches.`,
+    searchQuery: retrievalOutcome.searchQuery || initialQuery,
+    assistantPreview: clampTraceMessage(
+      continuation.selectedChannels.length > 0
+        ? `Comparing new candidates against preferred channels: ${summarizeValues(
+            continuation.selectedChannels,
+            5
+          )}.`
+        : 'Comparing new candidates against the existing request.',
+      320
+    ),
+    stageKey: 'retrieval',
+    stageIndex: 4,
+    stageTotal: 4,
+    stageState: 'running',
+    stageOutcome: clampTraceLines(
+      [
+        `Continuation iteration: ${nextIteration}.`,
+        `Candidates prepared for reranking: ${retrievalOutcome.results.length}.`,
+        `Candidate pool after de-duplication: ${retrievalOutcome.candidateCount ?? retrievalOutcome.results.length}.`,
+        `Selected channels context: ${summarizeValues(
+          continuation.selectedChannels,
+          5
+        )}.`,
+      ],
+      620
+    ),
+    elapsedMs: Date.now() - startedAt,
+    resultCount: retrievalOutcome.results.length,
+  });
+
+  const stopRerankPulse = startProgressPulse({
+    onProgress,
+    operationId,
+    phase: 'ranking',
+    startedAt,
+    intervalMs: 2400,
+    messages: [
+      `Step 4/4: comparing additional ${platformLabel} matches.`,
+      'Step 4/4: scoring fresh candidates against your request.',
+      'Step 4/4: keeping only the strongest additions.',
+    ],
+    extra: () => ({
+      searchQuery: retrievalOutcome.searchQuery || initialQuery,
+      stageKey: 'retrieval',
+      stageIndex: 4,
+      stageTotal: 4,
+      stageState: 'running',
+    }),
+  });
+
   const rerankOutcome = await rerankVideosWithLlm({
     candidates: retrievalOutcome.results,
     intentQuery: continuation.intentQuery,
@@ -662,19 +942,26 @@ export async function continueVideoSearch({
     translationPhase: continuation.translationPhase,
     model: continuation.model,
     operationId: `${operationId}-retrieval-rerank`,
-    maxResults: continuation.maxResults,
+    maxResults: continuationCacheSize,
     preferredChannels: continuation.selectedChannels,
     onResolvedModel,
     signal,
+  }).finally(() => {
+    stopRerankPulse();
   });
   throwIfSuggestionAborted(signal);
+
+  const { pageResults: finalResults, pendingResults } =
+    splitContinuationPageResults({
+      items: rerankOutcome.results,
+      pageSize: continuation.maxResults,
+    });
 
   const creators = uniqueTexts([
     ...continuation.selectedChannels,
     ...retrievalOutcome.creators,
     ...rerankOutcome.results.map(item => compactText(item.channel || '')),
   ]).slice(0, 6);
-  const finalResults = rerankOutcome.results.slice(0, continuation.maxResults);
   const lowConfidenceReason =
     finalResults.length === 0
       ? retrievalOutcome.lowConfidenceReason || 'no-scored-results'
@@ -691,6 +978,7 @@ export async function continueVideoSearch({
         : [effectiveQuery || continuation.intentQuery],
     retrievalSeedUrls: effectiveSeedUrls,
     iteration: nextIteration,
+    pendingResults,
   });
 
   emitSuggestionProgress(onProgress, {
@@ -715,6 +1003,7 @@ export async function continueVideoSearch({
         `Ranking mode: ${rerankOutcome.rankingMode}.`,
         `Ranking candidates prepared: ${retrievalOutcome.results.length}.`,
         `Ranked videos kept: ${finalResults.length}.`,
+        `Cached continuation results ready: ${pendingResults.length}.`,
         lowConfidenceReason
           ? `Low-confidence detail: ${describeLowConfidenceReason(
               lowConfidenceReason

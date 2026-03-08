@@ -417,6 +417,7 @@ const electronAPI = {
     cpu?: string;
     isAppleSilicon?: boolean;
   }> => ipcRenderer.invoke('get-system-info'),
+  getErrorReportContext: () => ipcRenderer.invoke('get-error-report-context'),
 
   // Listen for credit balance updates from the main process
   onCreditsUpdated: (

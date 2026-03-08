@@ -6,6 +6,7 @@ import { i18n } from '../i18n';
 import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
 import { useUIStore } from './ui-store';
+import { upsertLocalVideoSuggestionHistoryItem } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
 const QUALITY_VALUES: VideoQuality[] = [
@@ -34,6 +35,7 @@ type DownloadTask = {
   stage: string;
   percent: number;
   inProgress: boolean;
+  completedFilePath: string | null;
 };
 
 export type UrlErrorKind = 'validation' | 'operation' | 'unknown';
@@ -87,6 +89,7 @@ const initialDownload: DownloadTask = {
   stage: '',
   percent: 0,
   inProgress: false,
+  completedFilePath: null,
 };
 
 export const useUrlStore = create<UrlState>()(
@@ -154,6 +157,11 @@ async function downloadMediaInternal(
   const { urlInput, downloadQuality } = get();
   const requestedUrl = String(options?.url ?? urlInput ?? '').trim();
   const preserveSubtitles = Boolean(options?.preserveSubtitles);
+  const getMountedSourcePath = () => {
+    const { originalPath, path } = useVideoStore.getState();
+    const normalized = String(originalPath || path || '').trim();
+    return normalized || null;
+  };
   if (!requestedUrl) {
     set((state: UrlState) => {
       state.error = 'Please enter a valid URL';
@@ -165,6 +173,7 @@ async function downloadMediaInternal(
   const opId = `download-${Date.now()}`;
   set((state: UrlState) => {
     state.download = {
+      ...state.download,
       id: opId,
       stage: i18n.t('input.downloading'),
       percent: 0,
@@ -259,32 +268,66 @@ async function downloadMediaInternal(
       return res;
     }
 
+    const derivedTitle =
+      String(res.title || '').trim() ||
+      String(filename || '')
+        .replace(/\.[^/.]+$/, '')
+        .trim() ||
+      requestedUrl;
+    upsertLocalVideoSuggestionHistoryItem({
+      id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      sourceUrl: requestedUrl,
+      title: derivedTitle,
+      thumbnailUrl: String(res.thumbnailUrl || '').trim() || undefined,
+      channel: String(res.channel || '').trim() || undefined,
+      channelUrl: String(res.channelUrl || '').trim() || undefined,
+      durationSec:
+        typeof res.durationSec === 'number' && Number.isFinite(res.durationSec)
+          ? res.durationSec
+          : undefined,
+      uploadedAt: String(res.uploadedAt || '').trim() || undefined,
+      downloadedAtIso: new Date().toISOString(),
+      localPath: finalPath,
+    });
+
     const { order: existingSubs, origin: subsOrigin } = useSubStore.getState();
     const preserveMountedDiskSubs =
       existingSubs.length > 0 && subsOrigin === 'disk';
+    const hasMountedSource = Boolean(getMountedSourcePath());
+    const shouldSwitchToDownloaded =
+      !hasMountedSource ||
+      window.confirm(
+        i18n.t(
+          'input.downloadFinishedSwitchPrompt',
+          'Download finished. Switch to it now? You can keep your current video and open the downloaded one later from history.'
+        )
+      );
 
-    if (preserveSubtitles) {
-      await useVideoStore
-        .getState()
-        .mountFilePreserveSubs({ path: finalPath!, name: filename! });
-    } else {
-      await useVideoStore.getState().setFile({
-        path: finalPath!,
-        name: filename!,
-      });
+    if (shouldSwitchToDownloaded) {
+      if (preserveSubtitles) {
+        await useVideoStore
+          .getState()
+          .mountFilePreserveSubs({ path: finalPath!, name: filename! });
+      } else {
+        await useVideoStore.getState().setFile({
+          path: finalPath!,
+          name: filename!,
+        });
+      }
+
+      if (!preserveSubtitles && !preserveMountedDiskSubs) {
+        useSubStore.getState().load([]);
+      }
+
+      useUIStore.getState().setInputMode('file');
     }
-
-    if (!preserveSubtitles && !preserveMountedDiskSubs) {
-      useSubStore.getState().load([]);
-    }
-
-    useUIStore.getState().setInputMode('file');
 
     set((state: UrlState) => {
       state.needCookies = false;
       state.download.stage = 'Completed';
       state.download.percent = 100;
       state.download.inProgress = false;
+      state.download.completedFilePath = finalPath;
       state.errorKind = null;
     });
     set((state: UrlState) => {

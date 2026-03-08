@@ -17,7 +17,6 @@ import {
   summaryEstimateWarningStyles,
   summaryGenerateWrapStyles,
   summarySelectStyles,
-  subtitleStyles,
   titleStyles,
 } from './TranscriptSummaryPanel.styles';
 
@@ -55,15 +54,16 @@ export default function TranscriptSummaryHeader({
   tabs,
   t,
 }: TranscriptSummaryHeaderProps) {
+  const generateHighlightsLabel = `${t('common.generate')} ${t('summary.tab.highlights')}`;
+
   return (
     <div className={headerRowStyles}>
       <div className={headerMainStyles}>
-        <h3 className={titleStyles}>{t('summary.title')}</h3>
-        <p className={subtitleStyles}>{t('summary.ctaHelper')}</p>
+        <h3 className={titleStyles}>{t('summary.tab.highlights')}</h3>
         {tabs}
       </div>
       <div className={controlsStyles}>
-        <label className={labelStyles}>{t('summary.languageLabel')}</label>
+        <label className={labelStyles}>{t('subtitles.outputLanguage')}</label>
         <select
           className={summarySelectStyles}
           value={summaryLanguage}
@@ -97,7 +97,7 @@ export default function TranscriptSummaryHeader({
             }
             isLoading={isGenerating}
           >
-            {summary ? t('summary.regenerate') : t('summary.generate')}
+            {generateHighlightsLabel}
           </Button>
           {summaryEstimate && !isGenerating ? (
             <span

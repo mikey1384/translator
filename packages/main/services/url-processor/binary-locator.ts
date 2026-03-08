@@ -23,6 +23,30 @@ async function ensureExecutable(binaryPath: string): Promise<void> {
   }
 }
 
+function getManagedBinaryPath(): string {
+  const exeExt = process.platform === 'win32' ? '.exe' : '';
+  return join(app.getPath('userData'), 'bin', `yt-dlp${exeExt}`);
+}
+
+function getDevRootCandidates(): string[] {
+  const roots = new Set<string>();
+  const moduleRoot = join(esmDirname(import.meta.url), '..', '..', '..', '..');
+  roots.add(moduleRoot);
+
+  try {
+    const appPath = app.getAppPath();
+    if (appPath) roots.add(appPath);
+  } catch {
+    // ignore
+  }
+
+  if (process.cwd()) {
+    roots.add(process.cwd());
+  }
+
+  return [...roots];
+}
+
 // Shared helper: Get all possible binary paths in search order
 function getBinarySearchPaths(): string[] {
   const exeExt = process.platform === 'win32' ? '.exe' : '';
@@ -31,45 +55,42 @@ function getBinarySearchPaths(): string[] {
 
   const paths: string[] = [];
 
-  // 1. userData (preferred for packaged apps)
-  if (isPackaged) {
-    paths.push(join(app.getPath('userData'), 'bin', binaryName));
-  }
+  // 1. app-managed writable copy
+  paths.push(getManagedBinaryPath());
 
-  // 2. dev environment bin (for development)
-  if (!isPackaged) {
+  // 2. packaged app paths
+  if (isPackaged) {
     paths.push(
-      join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', binaryName)
+      join(
+        process.resourcesPath,
+        'app.asar.unpacked',
+        'node_modules',
+        'youtube-dl-exec',
+        'bin',
+        binaryName
+      ),
+      join(
+        app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
+        'node_modules',
+        'youtube-dl-exec',
+        'bin',
+        binaryName
+      )
     );
   }
 
-  // 3. Legacy locations (for backwards compatibility)
+  // 3. dev environment bin candidates
+  if (!isPackaged) {
+    for (const root of getDevRootCandidates()) {
+      paths.push(
+        join(root, 'node_modules', 'youtube-dl-exec', 'bin', binaryName),
+        join(root, 'node_modules', '.bin', binaryName)
+      );
+    }
+  }
+
+  // 4. Relative path from module (legacy fallback for development)
   paths.push(
-    // CWD node_modules/.bin
-    join(process.cwd(), 'node_modules', '.bin', binaryName),
-
-    // Old packaged app paths
-    ...(isPackaged
-      ? [
-          join(
-            process.resourcesPath,
-            'app.asar.unpacked',
-            'node_modules',
-            'youtube-dl-exec',
-            'bin',
-            binaryName
-          ),
-          join(
-            app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
-            'node_modules',
-            'youtube-dl-exec',
-            'bin',
-            binaryName
-          ),
-        ]
-      : []),
-
-    // Relative path from module (for development)
     join(
       esmDirname(import.meta.url),
       '..',
@@ -166,22 +187,8 @@ export async function testBinary(binaryPath: string): Promise<boolean> {
 
 // Get preferred installation path
 export function getPreferredInstallPath(): string {
-  const exeExt = process.platform === 'win32' ? '.exe' : '';
-  const binaryName = `yt-dlp${exeExt}`;
-  const isPackaged = app.isPackaged;
-
-  if (isPackaged) {
-    return join(app.getPath('userData'), 'bin', binaryName);
-  } else {
-    return join(
-      process.cwd(),
-      'node_modules',
-      'youtube-dl-exec',
-      'bin',
-      binaryName
-    );
-  }
+  return getManagedBinaryPath();
 }
 
 // Export shared helpers
-export { ensureExecutable, getBinarySearchPaths };
+export { ensureExecutable, getBinarySearchPaths, getManagedBinaryPath };

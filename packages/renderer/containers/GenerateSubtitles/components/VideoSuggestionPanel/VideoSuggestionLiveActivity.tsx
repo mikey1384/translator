@@ -32,6 +32,7 @@ import type {
 type VideoSuggestionLiveActivityProps = {
   activeTraceLines: string[];
   clearedStageCount: number;
+  hasResults?: boolean;
   hidden?: boolean;
   loading: boolean;
   loadingElapsedSec: number;
@@ -69,6 +70,7 @@ function runningStageTargetPercent(elapsedSec: number): number {
 export default function VideoSuggestionLiveActivity({
   activeTraceLines,
   clearedStageCount,
+  hasResults = false,
   hidden = false,
   loading,
   loadingElapsedSec,
@@ -88,6 +90,7 @@ export default function VideoSuggestionLiveActivity({
     Partial<Record<PipelineStageKey, number>>
   >({});
   const pipelineStagesRef = useRef<PipelineStageProgress[]>(pipelineStages);
+  const previousLoadingRef = useRef(loading);
 
   useEffect(() => {
     pipelineStagesRef.current = pipelineStages;
@@ -142,6 +145,24 @@ export default function VideoSuggestionLiveActivity({
     if (!shouldAutoScrollRef.current) return;
     node.scrollTop = node.scrollHeight;
   }, [activeTraceLines, loading, detailsOpen]);
+
+  useEffect(() => {
+    if (loading) {
+      setPanelOpen(true);
+      setDetailsOpen(true);
+      shouldAutoScrollRef.current = true;
+      previousLoadingRef.current = true;
+      return;
+    }
+
+    const justFinishedLoading = previousLoadingRef.current;
+    previousLoadingRef.current = false;
+
+    if (justFinishedLoading && hasResults) {
+      setPanelOpen(false);
+      setDetailsOpen(false);
+    }
+  }, [hasResults, loading]);
 
   const updateAutoScrollPreference = () => {
     const node = detailsBodyRef.current;

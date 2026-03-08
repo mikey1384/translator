@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { spawn } from 'child_process';
+import { randomUUID } from 'crypto';
 import type { Stats } from 'fs';
 import { IpcMainInvokeEvent } from 'electron';
 import log from 'electron-log';
@@ -1389,6 +1390,7 @@ export async function previewDubVoice({
       ],
       voice,
       quality: 'standard',
+      idempotencyKey: `preview-dub:${randomUUID()}`,
     });
 
     const audioBase64 =

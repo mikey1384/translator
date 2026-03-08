@@ -12,7 +12,6 @@ import {
 } from '../state/modal-store';
 import { useUIStore } from '../state/ui-store';
 import MediaInputSection from '../containers/GenerateSubtitles/components/MediaInputSection';
-import VideoSuggestionPanel from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/index.js';
 import { useUrlStore } from '../state/url-store';
 import { useVideoStore, useTaskStore, useUpdateStore } from '../state';
 import { css } from '@emotion/css';
@@ -52,34 +51,11 @@ const changeVideoBodyStyles = css`
   overflow-y: auto;
 `;
 
-const changeVideoAiContentStyles = css`
-  width: min(1240px, 96vw);
-  max-height: 92vh;
-`;
-
-const changeVideoAiBodyStyles = css`
-  margin: 0;
-  overflow: hidden;
-`;
-
-const changeVideoFooterStyles = css`
-  margin-top: 16px;
-`;
-
-const changeVideoAiHeaderStyles = css`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-`;
-
 export default function GlobalModals() {
   const { t } = useTranslation();
   const unsavedOpen = useModalStore(s => s.unsavedSrtOpen);
   const creditOpen = useModalStore(s => s.creditRanOutOpen);
   const changeVideoOpen = useModalStore(s => s.changeVideoOpen);
-  const changeVideoMode = useModalStore(s => s.changeVideoMode);
-  const setChangeVideoMode = useModalStore(s => s.setChangeVideoMode);
   const logsOpen = useModalStore(s => s.logsOpen);
   const logsReportPrompt = useModalStore(s => s.logsReportPrompt);
   const apiKeysRequiredOpen = useModalStore(s => s.apiKeysRequiredOpen);
@@ -113,7 +89,6 @@ export default function GlobalModals() {
   const openLocalMedia = useVideoStore(s => s.openLocalMedia);
   const openRecentLocalMedia = useVideoStore(s => s.openRecentLocalMedia);
   const refreshRecentLocalMedia = useVideoStore(s => s.refreshRecentLocalMedia);
-  const mountFilePreserveSubs = useVideoStore(s => s.mountFilePreserveSubs);
   const videoPath = useVideoStore(s => s.path);
   const videoFile = useVideoStore(s => s.file);
 
@@ -193,106 +168,36 @@ export default function GlobalModals() {
       />
       <Modal
         open={changeVideoOpen}
-        title={
-          changeVideoMode === 'ai'
-            ? t('videoPlayer.findVideoWithAi', 'Find Video With AI')
-            : t('videoPlayer.changeVideo', 'Change Video')
-        }
+        title={t('videoPlayer.changeVideo', 'Change Video')}
         titleId="change-video-title"
         onClose={() => closeChangeVideo()}
-        contentClassName={
-          changeVideoMode === 'ai'
-            ? changeVideoAiContentStyles
-            : changeVideoContentStyles
-        }
-        bodyClassName={
-          changeVideoMode === 'ai'
-            ? changeVideoAiBodyStyles
-            : changeVideoBodyStyles
-        }
+        contentClassName={changeVideoContentStyles}
+        bodyClassName={changeVideoBodyStyles}
       >
-        {changeVideoMode === 'ai' ? (
-          <>
-            <div className={changeVideoAiHeaderStyles}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setChangeVideoMode('source')}
-              >
-                {t('common.back', 'Back')}
-              </Button>
-            </div>
-            <VideoSuggestionPanel
-              disabled={isTranslationInProgress || download.inProgress}
-              hideToggle
-              initialOpen
-              isDownloadInProgress={download.inProgress}
-              localPrimaryActionLabel={t(
-                'videoPlayer.useDownloadedVideo',
-                'Use this video'
-              )}
-              onDownload={item =>
-                downloadMedia({
-                  preserveSubtitles: true,
-                  url: item.url,
-                })
-              }
-              onOpenDownloadedVideo={async item => {
-                const filePath = String(item.localPath || '').trim();
-                if (!filePath) return;
-                const fallbackName =
-                  filePath.split(/[\\/]/).pop() || item.title || 'video';
-                await mountFilePreserveSubs({
-                  name: fallbackName,
-                  path: filePath,
-                });
-                useUIStore.getState().setInputMode('file');
-                closeChangeVideo();
-              }}
-              primaryActionLabel={t(
-                'videoPlayer.useThisVideo',
-                'Use this video'
-              )}
-            />
-          </>
-        ) : (
-          <>
-            <MediaInputSection
-              videoFile={null}
-              recentMedia={recentLocalMedia}
-              onOpenFileDialog={async () => {
-                const res = await openLocalMedia({ preserveSubtitles: true });
-                if (!res.canceled) closeChangeVideo();
-                return res;
-              }}
-              onOpenRecentFile={async path => {
-                const res = await openRecentLocalMedia(path, {
-                  preserveSubtitles: true,
-                });
-                if (res.opened) closeChangeVideo();
-              }}
-              isDownloadInProgress={download.inProgress}
-              isTranslationInProgress={isTranslationInProgress}
-              urlInput={urlInput}
-              setUrlInput={setUrlInput}
-              downloadQuality={downloadQuality}
-              setDownloadQuality={setDownloadQuality}
-              handleProcessUrl={async () => {
-                await downloadMedia({ preserveSubtitles: true });
-              }}
-            />
-            <div className={changeVideoFooterStyles}>
-              <Button
-                variant="secondary"
-                onClick={() => setChangeVideoMode('ai')}
-                fullWidth
-                disabled={isTranslationInProgress || download.inProgress}
-              >
-                {t('videoPlayer.findVideoWithAi', 'Find Video With AI')}
-              </Button>
-            </div>
-          </>
-        )}
+        <MediaInputSection
+          videoFile={null}
+          recentMedia={recentLocalMedia}
+          onOpenFileDialog={async () => {
+            const res = await openLocalMedia({ preserveSubtitles: true });
+            if (!res.canceled) closeChangeVideo();
+            return res;
+          }}
+          onOpenRecentFile={async path => {
+            const res = await openRecentLocalMedia(path, {
+              preserveSubtitles: true,
+            });
+            if (res.opened) closeChangeVideo();
+          }}
+          isDownloadInProgress={download.inProgress}
+          isTranslationInProgress={isTranslationInProgress}
+          urlInput={urlInput}
+          setUrlInput={setUrlInput}
+          downloadQuality={downloadQuality}
+          setDownloadQuality={setDownloadQuality}
+          handleProcessUrl={async () => {
+            await downloadMedia({ preserveSubtitles: true });
+          }}
+        />
       </Modal>
 
       <LogsModal
