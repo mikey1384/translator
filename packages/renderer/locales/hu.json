@@ -474,8 +474,8 @@
       "transcribeThisLine": "Sor átírása"
     },
     "header": {
-      "save": "Mentés",
-      "saveAs": "Mentés másként...",
+      "save": "Feliratok mentése",
+      "saveAs": "Feliratok mentése másként...",
       "saveTooltip": "Változtatások mentése az eredeti fájlba",
       "saveAsTooltip": "Először mentse másként a közvetlen mentés engedélyezéséhez"
     },

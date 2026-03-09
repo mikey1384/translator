@@ -474,8 +474,8 @@
       "transcribeThisLine": "Přepsat řádek"
     },
     "header": {
-      "save": "Uložit",
-      "saveAs": "Uložit jako...",
+      "save": "Uložit titulky",
+      "saveAs": "Uložit titulky jako...",
       "saveTooltip": "Uložit změny do původního souboru",
       "saveAsTooltip": "Nejprve uložte jako pro povolení přímého ukládání"
     },

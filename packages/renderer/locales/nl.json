@@ -474,8 +474,8 @@
       "transcribeThisLine": "Regel transcriberen"
     },
     "header": {
-      "save": "Opslaan",
-      "saveAs": "Opslaan als...",
+      "save": "Ondertitels opslaan",
+      "saveAs": "Ondertitels opslaan als...",
       "saveTooltip": "Wijzigingen opslaan in origineel bestand",
       "saveAsTooltip": "Eerst opslaan als om direct opslaan mogelijk te maken"
     },

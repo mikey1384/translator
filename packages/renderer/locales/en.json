@@ -477,8 +477,8 @@
       "transcribeThisLine": "Transcribe line"
     },
     "header": {
-      "save": "Save",
-      "saveAs": "Save As...",
+      "save": "Save Subtitles",
+      "saveAs": "Save Subtitles As...",
       "saveTooltip": "Save changes to original file",
       "saveAsTooltip": "Save As first to enable direct save"
     },

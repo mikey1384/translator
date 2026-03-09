@@ -5,6 +5,7 @@ import { SubtitleStylePresetKey } from '../../../shared/constants/subtitle-style
 import {
   editorButtonContentStyles,
   editorMergeButtonStyles,
+  editorSaveButtonStyles,
   editorToolbarActionRowStyles,
   editorToolbarCheckboxInputStyles,
   editorToolbarCheckboxLabelStyles,
@@ -60,6 +61,7 @@ export default function SaveAndMergeBar({
             variant="primary"
             size="sm"
             disabled={!canSaveDirectly}
+            className={editorSaveButtonStyles}
             title={
               !canSaveDirectly
                 ? t('editSubtitles.header.saveAsTooltip')
@@ -85,7 +87,12 @@ export default function SaveAndMergeBar({
             </div>
           </Button>
 
-          <Button onClick={onSaveAs} variant="secondary" size="sm">
+          <Button
+            onClick={onSaveAs}
+            variant="success"
+            size="sm"
+            className={editorSaveButtonStyles}
+          >
             <div className={editorButtonContentStyles}>
               <svg
                 width="18"

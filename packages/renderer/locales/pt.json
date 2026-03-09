@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transcrever linha"
     },
     "header": {
-      "save": "Salvar",
-      "saveAs": "Salvar Como...",
+      "save": "Salvar legendas",
+      "saveAs": "Salvar legendas como...",
       "saveTooltip": "Salvar alterações no arquivo original",
       "saveAsTooltip": "Salvar Como primeiro para habilitar salvamento direto"
     },

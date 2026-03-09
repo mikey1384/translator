@@ -474,8 +474,8 @@
       "transcribeThisLine": "Trascrivi questa riga"
     },
     "header": {
-      "save": "Salva",
-      "saveAs": "Salva con nome...",
+      "save": "Salva sottotitoli",
+      "saveAs": "Salva sottotitoli con nome...",
       "saveTooltip": "Salva le modifiche nel file originale",
       "saveAsTooltip": "Salva prima con nome per abilitare il salvataggio diretto"
     },

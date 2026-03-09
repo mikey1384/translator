@@ -274,7 +274,9 @@
     "dialogs.apiKeysRequired.missingBoth": "아직 필요한 항목: 번역 ({{translationProviders}}), 오디오 ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "원하는 내용을 쉬운 영어로 설명한 다음, 결과를 선택해 다운로드하세요.",
     "input.videoSuggestion.liveActivityTitle": "검색 진행 상황",
-    "logs.empty": "아직 로그가 없습니다."
+    "logs.empty": "아직 로그가 없습니다.",
+    "editSubtitles.header.save": "자막 저장",
+    "editSubtitles.header.saveAs": "자막 다른 이름으로 저장..."
   },
   "ja": {
     "common.send": "送信",
@@ -551,7 +553,9 @@
     "dialogs.apiKeysRequired.missingBoth": "まだ必要です: 翻訳（{{translationProviders}}）、オーディオ（{{audioProviders}}）。",
     "input.videoSuggestion.workflowHint": "やりたいことを簡単な英語で入力し、結果を選んでダウンロードしてください。",
     "input.videoSuggestion.liveActivityTitle": "検索の進行状況",
-    "logs.empty": "まだログはありません。"
+    "logs.empty": "まだログはありません。",
+    "editSubtitles.header.save": "字幕を保存",
+    "editSubtitles.header.saveAs": "字幕に名前を付けて保存..."
   },
   "zh-CN": {
     "common.send": "发送",
@@ -828,7 +832,9 @@
     "dialogs.apiKeysRequired.missingBoth": "仍需要：翻译（{{translationProviders}}），音频（{{audioProviders}}）。",
     "input.videoSuggestion.workflowHint": "用简单英文描述你的需求，然后选择结果并下载。",
     "input.videoSuggestion.liveActivityTitle": "搜索进度",
-    "logs.empty": "暂无日志。"
+    "logs.empty": "暂无日志。",
+    "editSubtitles.header.save": "保存字幕",
+    "editSubtitles.header.saveAs": "字幕另存为..."
   },
   "zh-TW": {
     "common.send": "傳送",
@@ -1105,7 +1111,9 @@
     "dialogs.apiKeysRequired.missingBoth": "仍需要：翻譯（{{translationProviders}}），音訊（{{audioProviders}}）。",
     "input.videoSuggestion.workflowHint": "用簡單英文描述你的需求，然後選擇結果並下載。",
     "input.videoSuggestion.liveActivityTitle": "搜尋進度",
-    "logs.empty": "尚無日誌。"
+    "logs.empty": "尚無日誌。",
+    "editSubtitles.header.save": "儲存字幕",
+    "editSubtitles.header.saveAs": "字幕另存為..."
   },
   "es": {
     "common.send": "Enviar",
@@ -1382,7 +1390,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Aún faltan: traducción ({{translationProviders}}) y audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Describe lo que quieres en un inglés sencillo. Luego elige un resultado y descárgalo.",
     "input.videoSuggestion.liveActivityTitle": "Progreso de la búsqueda",
-    "logs.empty": "Aún no hay registros."
+    "logs.empty": "Aún no hay registros.",
+    "editSubtitles.header.save": "Guardar subtítulos",
+    "editSubtitles.header.saveAs": "Guardar subtítulos como..."
   },
   "fr": {
     "common.send": "Envoyer",
@@ -1659,7 +1669,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Il manque encore : traduction ({{translationProviders}}) et audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Décrivez ce que vous voulez en anglais simple. Choisissez ensuite un résultat et téléchargez-le.",
     "input.videoSuggestion.liveActivityTitle": "Progression de la recherche",
-    "logs.empty": "Aucun journal pour le moment."
+    "logs.empty": "Aucun journal pour le moment.",
+    "editSubtitles.header.save": "Enregistrer les sous-titres",
+    "editSubtitles.header.saveAs": "Enregistrer les sous-titres sous..."
   },
   "de": {
     "common.send": "Senden",
@@ -1936,7 +1948,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Noch erforderlich: Übersetzung ({{translationProviders}}) und Audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Beschreibe in einfachem Englisch, was du möchtest. Wähle dann ein Ergebnis aus und lade es herunter.",
     "input.videoSuggestion.liveActivityTitle": "Suchfortschritt",
-    "logs.empty": "Noch keine Protokolle."
+    "logs.empty": "Noch keine Protokolle.",
+    "editSubtitles.header.save": "Untertitel speichern",
+    "editSubtitles.header.saveAs": "Untertitel speichern unter..."
   },
   "it": {
     "common.send": "Invia",
@@ -2213,7 +2227,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Mancano ancora: traduzione ({{translationProviders}}) e audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Descrivi ciò che vuoi in inglese semplice. Poi scegli un risultato e scaricalo.",
     "input.videoSuggestion.liveActivityTitle": "Avanzamento della ricerca",
-    "logs.empty": "Ancora nessun log."
+    "logs.empty": "Ancora nessun log.",
+    "editSubtitles.header.save": "Salva sottotitoli",
+    "editSubtitles.header.saveAs": "Salva sottotitoli con nome..."
   },
   "pt": {
     "common.send": "Enviar",
@@ -2490,7 +2506,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Ainda faltam: tradução ({{translationProviders}}) e áudio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Descreva o que você quer em inglês simples. Depois escolha um resultado e faça o download.",
     "input.videoSuggestion.liveActivityTitle": "Progresso da pesquisa",
-    "logs.empty": "Ainda não há logs."
+    "logs.empty": "Ainda não há logs.",
+    "editSubtitles.header.save": "Salvar legendas",
+    "editSubtitles.header.saveAs": "Salvar legendas como..."
   },
   "ru": {
     "common.send": "Отправить",
@@ -2767,7 +2785,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Ещё нужно: перевод ({{translationProviders}}) и аудио ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Опишите, что вам нужно, простым английским. Затем выберите результат и скачайте его.",
     "input.videoSuggestion.liveActivityTitle": "Ход поиска",
-    "logs.empty": "Логов пока нет."
+    "logs.empty": "Логов пока нет.",
+    "editSubtitles.header.save": "Сохранить субтитры",
+    "editSubtitles.header.saveAs": "Сохранить субтитры как..."
   },
   "nl": {
     "common.send": "Versturen",
@@ -3044,7 +3064,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Nog nodig: vertaling ({{translationProviders}}) en audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Beschrijf in eenvoudig Engels wat je wilt. Kies daarna een resultaat en download het.",
     "input.videoSuggestion.liveActivityTitle": "Zoekvoortgang",
-    "logs.empty": "Nog geen logs."
+    "logs.empty": "Nog geen logs.",
+    "editSubtitles.header.save": "Ondertitels opslaan",
+    "editSubtitles.header.saveAs": "Ondertitels opslaan als..."
   },
   "pl": {
     "common.send": "Wyślij",
@@ -3321,7 +3343,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Nadal potrzebne: tłumaczenie ({{translationProviders}}) i audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Opisz, czego chcesz, prostym angielskim. Następnie wybierz wynik i pobierz go.",
     "input.videoSuggestion.liveActivityTitle": "Postęp wyszukiwania",
-    "logs.empty": "Nie ma jeszcze logów."
+    "logs.empty": "Nie ma jeszcze logów.",
+    "editSubtitles.header.save": "Zapisz napisy",
+    "editSubtitles.header.saveAs": "Zapisz napisy jako..."
   },
   "sv": {
     "common.send": "Skicka",
@@ -3598,7 +3622,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Det som fortfarande behövs: översättning ({{translationProviders}}) och ljud ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Beskriv vad du vill ha på enkel engelska. Välj sedan ett resultat och ladda ner det.",
     "input.videoSuggestion.liveActivityTitle": "Sökförlopp",
-    "logs.empty": "Inga loggar än."
+    "logs.empty": "Inga loggar än.",
+    "editSubtitles.header.save": "Spara undertexter",
+    "editSubtitles.header.saveAs": "Spara undertexter som..."
   },
   "tr": {
     "common.send": "Gönder",
@@ -3875,7 +3901,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Hâlâ gerekli: çeviri ({{translationProviders}}) ve ses ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Ne istediğinizi sade İngilizceyle açıklayın. Sonra bir sonuç seçip indirin.",
     "input.videoSuggestion.liveActivityTitle": "Arama ilerlemesi",
-    "logs.empty": "Henüz log yok."
+    "logs.empty": "Henüz log yok.",
+    "editSubtitles.header.save": "Altyazıları kaydet",
+    "editSubtitles.header.saveAs": "Altyazıları farklı kaydet..."
   },
   "no": {
     "common.send": "Send",
@@ -4152,7 +4180,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Trengs fortsatt: oversettelse ({{translationProviders}}) og lyd ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Beskriv hva du vil ha på enkel engelsk. Velg deretter et resultat og last det ned.",
     "input.videoSuggestion.liveActivityTitle": "Søkefremdrift",
-    "logs.empty": "Ingen logger ennå."
+    "logs.empty": "Ingen logger ennå.",
+    "editSubtitles.header.save": "Lagre undertekster",
+    "editSubtitles.header.saveAs": "Lagre undertekster som..."
   },
   "da": {
     "common.send": "Send",
@@ -4430,7 +4460,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Mangler stadig: oversættelse ({{translationProviders}}) og lyd ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Beskriv, hvad du vil have, på enkelt engelsk. Vælg derefter et resultat, og download det.",
     "input.videoSuggestion.liveActivityTitle": "Søgeforløb",
-    "logs.empty": "Ingen logs endnu."
+    "logs.empty": "Ingen logs endnu.",
+    "editSubtitles.header.save": "Gem undertekster",
+    "editSubtitles.header.saveAs": "Gem undertekster som..."
   },
   "fi": {
     "common.send": "Lähetä",
@@ -4707,7 +4739,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Vielä tarvitaan: käännös ({{translationProviders}}) ja ääni ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Kuvaile, mitä haluat, yksinkertaisella englannilla. Valitse sitten tulos ja lataa se.",
     "input.videoSuggestion.liveActivityTitle": "Haun eteneminen",
-    "logs.empty": "Ei vielä lokeja."
+    "logs.empty": "Ei vielä lokeja.",
+    "editSubtitles.header.save": "Tallenna tekstitykset",
+    "editSubtitles.header.saveAs": "Tallenna tekstitykset nimellä..."
   },
   "el": {
     "common.send": "Αποστολή",
@@ -4985,7 +5019,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Ακόμη χρειάζονται: μετάφραση ({{translationProviders}}) και ήχος ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Περιγράψτε τι θέλετε με απλά αγγλικά. Έπειτα επιλέξτε ένα αποτέλεσμα και κατεβάστε το.",
     "input.videoSuggestion.liveActivityTitle": "Πρόοδος αναζήτησης",
-    "logs.empty": "Δεν υπάρχουν ακόμη καταγραφές."
+    "logs.empty": "Δεν υπάρχουν ακόμη καταγραφές.",
+    "editSubtitles.header.save": "Αποθήκευση υποτίτλων",
+    "editSubtitles.header.saveAs": "Αποθήκευση υποτίτλων ως..."
   },
   "cs": {
     "common.send": "Odeslat",
@@ -5263,7 +5299,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Stále chybí: překlad ({{translationProviders}}) a zvuk ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Popište, co chcete, jednoduchou angličtinou. Pak vyberte výsledek a stáhněte ho.",
     "input.videoSuggestion.liveActivityTitle": "Průběh vyhledávání",
-    "logs.empty": "Zatím žádné logy."
+    "logs.empty": "Zatím žádné logy.",
+    "editSubtitles.header.save": "Uložit titulky",
+    "editSubtitles.header.saveAs": "Uložit titulky jako..."
   },
   "hu": {
     "common.send": "Küldés",
@@ -5540,7 +5578,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Még szükséges: fordítás ({{translationProviders}}) és hang ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Írd le egyszerű angolsággal, mit szeretnél. Ezután válassz egy találatot, és töltsd le.",
     "input.videoSuggestion.liveActivityTitle": "Keresés folyamata",
-    "logs.empty": "Még nincsenek naplók."
+    "logs.empty": "Még nincsenek naplók.",
+    "editSubtitles.header.save": "Feliratok mentése",
+    "editSubtitles.header.saveAs": "Feliratok mentése másként..."
   },
   "ro": {
     "common.send": "Trimite",
@@ -5817,7 +5857,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Încă sunt necesare: traducere ({{translationProviders}}) și audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Descrie ce vrei în engleză simplă. Apoi alege un rezultat și descarcă-l.",
     "input.videoSuggestion.liveActivityTitle": "Progresul căutării",
-    "logs.empty": "Încă nu există jurnale."
+    "logs.empty": "Încă nu există jurnale.",
+    "editSubtitles.header.save": "Salvează subtitrările",
+    "editSubtitles.header.saveAs": "Salvează subtitrările ca..."
   },
   "uk": {
     "common.send": "Надіслати",
@@ -6094,7 +6136,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Ще потрібно: переклад ({{translationProviders}}) і аудіо ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Опишіть, що ви хочете, простою англійською. Потім виберіть результат і завантажте його.",
     "input.videoSuggestion.liveActivityTitle": "Прогрес пошуку",
-    "logs.empty": "Логів ще немає."
+    "logs.empty": "Логів ще немає.",
+    "editSubtitles.header.save": "Зберегти субтитри",
+    "editSubtitles.header.saveAs": "Зберегти субтитри як..."
   },
   "hi": {
     "common.send": "भेजें",
@@ -6371,7 +6415,9 @@
     "dialogs.apiKeysRequired.missingBoth": "अभी भी चाहिए: अनुवाद ({{translationProviders}}) और ऑडियो ({{audioProviders}})।",
     "input.videoSuggestion.workflowHint": "आपको क्या चाहिए, यह सरल अंग्रेज़ी में लिखें। फिर एक नतीजा चुनें और उसे डाउनलोड करें।",
     "input.videoSuggestion.liveActivityTitle": "खोज की प्रगति",
-    "logs.empty": "अभी तक कोई लॉग नहीं।"
+    "logs.empty": "अभी तक कोई लॉग नहीं।",
+    "editSubtitles.header.save": "सबटाइटल सहेजें",
+    "editSubtitles.header.saveAs": "सबटाइटल इस नाम से सहेजें..."
   },
   "id": {
     "common.send": "Kirim",
@@ -6648,7 +6694,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Masih diperlukan: terjemahan ({{translationProviders}}) dan audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Jelaskan yang Anda inginkan dengan bahasa Inggris sederhana, lalu pilih hasil dan unduh.",
     "input.videoSuggestion.liveActivityTitle": "Progres pencarian",
-    "logs.empty": "Belum ada log."
+    "logs.empty": "Belum ada log.",
+    "editSubtitles.header.save": "Simpan subtitle",
+    "editSubtitles.header.saveAs": "Simpan subtitle sebagai..."
   },
   "th": {
     "common.send": "ส่ง",
@@ -6925,7 +6973,9 @@
     "dialogs.apiKeysRequired.missingBoth": "ยังต้องมี: งานแปล ({{translationProviders}}) และงานเสียง ({{audioProviders}})",
     "input.videoSuggestion.workflowHint": "อธิบายสิ่งที่คุณต้องการเป็นภาษาอังกฤษแบบง่าย ๆ แล้วเลือกผลลัพธ์และดาวน์โหลด",
     "input.videoSuggestion.liveActivityTitle": "ความคืบหน้าการค้นหา",
-    "logs.empty": "ยังไม่มีบันทึก"
+    "logs.empty": "ยังไม่มีบันทึก",
+    "editSubtitles.header.save": "บันทึกซับไตเติล",
+    "editSubtitles.header.saveAs": "บันทึกซับไตเติลเป็น..."
   },
   "ms": {
     "common.send": "Hantar",
@@ -7203,7 +7253,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Masih diperlukan: terjemahan ({{translationProviders}}) dan audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Terangkan apa yang anda mahu dalam bahasa Inggeris yang ringkas, kemudian pilih hasil dan muat turun.",
     "input.videoSuggestion.liveActivityTitle": "Kemajuan carian",
-    "logs.empty": "Belum ada log."
+    "logs.empty": "Belum ada log.",
+    "editSubtitles.header.save": "Simpan sari kata",
+    "editSubtitles.header.saveAs": "Simpan sari kata sebagai..."
   },
   "tl": {
     "common.send": "Ipadala",
@@ -7481,7 +7533,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Kailangan pa rin: translation ({{translationProviders}}) at audio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Ilarawan sa simpleng English ang gusto mo, pagkatapos pumili ng resulta at i-download ito.",
     "input.videoSuggestion.liveActivityTitle": "Progreso ng paghahanap",
-    "logs.empty": "Wala pang logs."
+    "logs.empty": "Wala pang logs.",
+    "editSubtitles.header.save": "I-save ang subtitle",
+    "editSubtitles.header.saveAs": "I-save ang subtitle bilang..."
   },
   "bn": {
     "common.send": "পাঠান",
@@ -7759,7 +7813,9 @@
     "dialogs.apiKeysRequired.missingBoth": "এখনও দরকার: অনুবাদ ({{translationProviders}}) এবং অডিও ({{audioProviders}})।",
     "input.videoSuggestion.workflowHint": "আপনি কী চান, তা সহজ ইংরেজিতে লিখুন। তারপর একটি ফল বেছে নিয়ে ডাউনলোড করুন।",
     "input.videoSuggestion.liveActivityTitle": "অনুসন্ধানের অগ্রগতি",
-    "logs.empty": "এখনও কোনো লগ নেই।"
+    "logs.empty": "এখনও কোনো লগ নেই।",
+    "editSubtitles.header.save": "সাবটাইটেল সংরক্ষণ করুন",
+    "editSubtitles.header.saveAs": "সাবটাইটেল অন্য নামে সংরক্ষণ করুন..."
   },
   "ta": {
     "common.send": "அனுப்பு",
@@ -8037,7 +8093,9 @@
     "dialogs.apiKeysRequired.missingBoth": "இன்னும் தேவை: மொழிபெயர்ப்பு ({{translationProviders}}) மற்றும் ஆடியோ ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "உங்களுக்கு வேண்டியது என்ன என்பதை எளிய ஆங்கிலத்தில் எழுதுங்கள். பிறகு ஒரு முடிவைத் தேர்ந்து பதிவிறக்குங்கள்.",
     "input.videoSuggestion.liveActivityTitle": "தேடல் முன்னேற்றம்",
-    "logs.empty": "இன்னும் பதிவுகள் இல்லை."
+    "logs.empty": "இன்னும் பதிவுகள் இல்லை.",
+    "editSubtitles.header.save": "வசனவரிகளை சேமி",
+    "editSubtitles.header.saveAs": "வசனவரிகளை இவ்வாறு சேமி..."
   },
   "te": {
     "common.send": "పంపు",
@@ -8315,7 +8373,9 @@
     "dialogs.apiKeysRequired.missingBoth": "ఇంకా అవసరం: అనువాదం ({{translationProviders}}) మరియు ఆడియో ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "మీకు కావలసినదాన్ని సులభమైన ఇంగ్లీషులో వివరించండి. తర్వాత ఒక ఫలితాన్ని ఎంచుకుని డౌన్‌లోడ్ చేయండి.",
     "input.videoSuggestion.liveActivityTitle": "శోధన పురోగతి",
-    "logs.empty": "ఇంకా లాగ్‌లు లేవు."
+    "logs.empty": "ఇంకా లాగ్‌లు లేవు.",
+    "editSubtitles.header.save": "సబ్‌టైటిల్స్ సేవ్ చేయి",
+    "editSubtitles.header.saveAs": "సబ్‌టైటిల్స్‌ను ఇలా సేవ్ చేయి..."
   },
   "mr": {
     "common.send": "पाठवा",
@@ -8593,7 +8653,9 @@
     "dialogs.apiKeysRequired.missingBoth": "अजूनही आवश्यक: भाषांतर ({{translationProviders}}) आणि ऑडिओ ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "तुम्हाला काय हवे आहे ते सोप्या इंग्रजीत लिहा. मग एक निकाल निवडा आणि तो डाउनलोड करा.",
     "input.videoSuggestion.liveActivityTitle": "शोध प्रगती",
-    "logs.empty": "अजून लॉग्स नाहीत."
+    "logs.empty": "अजून लॉग्स नाहीत.",
+    "editSubtitles.header.save": "सबटायटल जतन करा",
+    "editSubtitles.header.saveAs": "सबटायटल इतर नावाने जतन करा..."
   },
   "ur": {
     "common.send": "بھیجیں",
@@ -8871,7 +8933,9 @@
     "dialogs.apiKeysRequired.missingBoth": "ابھی بھی درکار ہیں: ترجمہ ({{translationProviders}}) اور آڈیو ({{audioProviders}})۔",
     "input.videoSuggestion.workflowHint": "جو آپ چاہتے ہیں اسے سادہ انگریزی میں لکھیں۔ پھر ایک نتیجہ منتخب کریں اور اسے ڈاؤن لوڈ کریں۔",
     "input.videoSuggestion.liveActivityTitle": "تلاش کی پیش رفت",
-    "logs.empty": "ابھی تک کوئی لاگ نہیں۔"
+    "logs.empty": "ابھی تک کوئی لاگ نہیں۔",
+    "editSubtitles.header.save": "سب ٹائٹلز محفوظ کریں",
+    "editSubtitles.header.saveAs": "سب ٹائٹلز اس نام سے محفوظ کریں..."
   },
   "ar": {
     "common.send": "إرسال",
@@ -9148,7 +9212,9 @@
     "dialogs.apiKeysRequired.missingBoth": "ما زال مطلوبًا: الترجمة ({{translationProviders}}) والصوت ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "اكتب ما تريده بالإنجليزية البسيطة. ثم اختر نتيجة ونزّلها.",
     "input.videoSuggestion.liveActivityTitle": "تقدم البحث",
-    "logs.empty": "لا توجد سجلات بعد."
+    "logs.empty": "لا توجد سجلات بعد.",
+    "editSubtitles.header.save": "حفظ الترجمة",
+    "editSubtitles.header.saveAs": "حفظ الترجمة باسم..."
   },
   "he": {
     "common.send": "שלח",
@@ -9426,7 +9492,9 @@
     "dialogs.apiKeysRequired.missingBoth": "עדיין נדרש: תרגום ({{translationProviders}}) ואודיו ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "תארו מה אתם רוצים באנגלית פשוטה. אחר כך בחרו תוצאה והורידו אותה.",
     "input.videoSuggestion.liveActivityTitle": "התקדמות החיפוש",
-    "logs.empty": "אין עדיין לוגים."
+    "logs.empty": "אין עדיין לוגים.",
+    "editSubtitles.header.save": "שמור כתוביות",
+    "editSubtitles.header.saveAs": "שמור כתוביות בשם..."
   },
   "fa": {
     "common.send": "ارسال",
@@ -9703,7 +9771,9 @@
     "dialogs.apiKeysRequired.missingBoth": "هنوز لازم است: ترجمه ({{translationProviders}}) و صدا ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "آنچه می‌خواهید را به انگلیسی ساده بنویسید. سپس یک نتیجه را انتخاب و دانلود کنید.",
     "input.videoSuggestion.liveActivityTitle": "پیشرفت جستجو",
-    "logs.empty": "هنوز لاگی نیست."
+    "logs.empty": "هنوز لاگی نیست.",
+    "editSubtitles.header.save": "ذخیره زیرنویس‌ها",
+    "editSubtitles.header.saveAs": "ذخیره زیرنویس‌ها با نام..."
   },
   "sw": {
     "common.send": "Tuma",
@@ -9981,7 +10051,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Bado vinahitajika: tafsiri ({{translationProviders}}) na sauti ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Eleza unachotaka kwa Kiingereza rahisi. Kisha chagua tokeo na ulipakue.",
     "input.videoSuggestion.liveActivityTitle": "Maendeleo ya utafutaji",
-    "logs.empty": "Bado hakuna logi."
+    "logs.empty": "Bado hakuna logi.",
+    "editSubtitles.header.save": "Hifadhi manukuu",
+    "editSubtitles.header.saveAs": "Hifadhi manukuu kama..."
   },
   "af": {
     "common.send": "Stuur",
@@ -10258,7 +10330,9 @@
     "dialogs.apiKeysRequired.missingBoth": "Nog nodig: vertaling ({{translationProviders}}) en oudio ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Beskryf wat jy wil hê in eenvoudige Engels. Kies dan 'n resultaat en laai dit af.",
     "input.videoSuggestion.liveActivityTitle": "Soekvordering",
-    "logs.empty": "Nog geen logs nie."
+    "logs.empty": "Nog geen logs nie.",
+    "editSubtitles.header.save": "Stoor onderskrifte",
+    "editSubtitles.header.saveAs": "Stoor onderskrifte as..."
   },
   "vi": {
     "common.send": "Gửi",
@@ -10536,6 +10610,8 @@
     "dialogs.apiKeysRequired.missingBoth": "Vẫn cần: dịch ({{translationProviders}}) và âm thanh ({{audioProviders}}).",
     "input.videoSuggestion.workflowHint": "Mô tả điều bạn muốn bằng tiếng Anh đơn giản, rồi chọn kết quả và tải xuống.",
     "input.videoSuggestion.liveActivityTitle": "Tiến trình tìm kiếm",
-    "logs.empty": "Chưa có nhật ký."
+    "logs.empty": "Chưa có nhật ký.",
+    "editSubtitles.header.save": "Lưu phụ đề",
+    "editSubtitles.header.saveAs": "Lưu phụ đề thành..."
   }
 }

@@ -474,8 +474,8 @@
       "transcribeThisLine": "Satırı transkribe et"
     },
     "header": {
-      "save": "Kaydet",
-      "saveAs": "Farklı Kaydet...",
+      "save": "Altyazıları kaydet",
+      "saveAs": "Altyazıları farklı kaydet...",
       "saveTooltip": "Değişiklikleri orijinal dosyaya kaydet",
       "saveAsTooltip": "Doğrudan kaydetmeyi etkinleştirmek için önce Farklı Kaydet"
     },

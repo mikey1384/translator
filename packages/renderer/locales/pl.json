@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transkrybuj linię"
     },
     "header": {
-      "save": "Zapisz",
-      "saveAs": "Zapisz jako...",
+      "save": "Zapisz napisy",
+      "saveAs": "Zapisz napisy jako...",
       "saveTooltip": "Zapisz zmiany do oryginalnego pliku",
       "saveAsTooltip": "Najpierw zapisz jako, aby włączyć bezpośrednie zapisywanie"
     },

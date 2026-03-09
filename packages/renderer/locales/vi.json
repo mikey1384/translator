@@ -474,8 +474,8 @@
       "transcribeThisLine": "Chép lời dòng này"
     },
     "header": {
-      "save": "Lưu",
-      "saveAs": "Lưu như...",
+      "save": "Lưu phụ đề",
+      "saveAs": "Lưu phụ đề thành...",
       "saveTooltip": "Lưu thay đổi vào tệp gốc",
       "saveAsTooltip": "Lưu như trước để bật lưu trực tiếp"
     },

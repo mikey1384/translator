@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transcrie linia"
     },
     "header": {
-      "save": "Salvare",
-      "saveAs": "Salvare ca...",
+      "save": "Salvează subtitrările",
+      "saveAs": "Salvează subtitrările ca...",
       "saveTooltip": "Salvează modificările în fișierul original",
       "saveAsTooltip": "Salvează mai întâi ca pentru a activa salvarea directă"
     },

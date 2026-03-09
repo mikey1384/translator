@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transkripsi baris"
     },
     "header": {
-      "save": "Simpan",
-      "saveAs": "Simpan Sebagai...",
+      "save": "Simpan sari kata",
+      "saveAs": "Simpan sari kata sebagai...",
       "saveTooltip": "Simpan perubahan ke fail asal",
       "saveAsTooltip": "Simpan Sebagai dahulu untuk mengaktifkan simpanan langsung"
     },

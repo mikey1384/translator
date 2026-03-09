@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transkribeer lyn"
     },
     "header": {
-      "save": "Stoor",
-      "saveAs": "Stoor As...",
+      "save": "Stoor onderskrifte",
+      "saveAs": "Stoor onderskrifte as...",
       "saveTooltip": "Stoor veranderinge na oorspronklike lêer",
       "saveAsTooltip": "Stoor Eers As om direkte stoor te aktiveer"
     },

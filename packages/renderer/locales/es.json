@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transcribir esta línea"
     },
     "header": {
-      "save": "Guardar",
-      "saveAs": "Guardar como...",
+      "save": "Guardar subtítulos",
+      "saveAs": "Guardar subtítulos como...",
       "saveTooltip": "Guardar cambios en el archivo original",
       "saveAsTooltip": "Guarda primero como para habilitar el guardado directo"
     },

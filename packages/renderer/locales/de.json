@@ -474,8 +474,8 @@
       "transcribeThisLine": "Diese Zeile transkribieren"
     },
     "header": {
-      "save": "Speichern",
-      "saveAs": "Speichern unter...",
+      "save": "Untertitel speichern",
+      "saveAs": "Untertitel speichern unter...",
       "saveTooltip": "Änderungen in Originaldatei speichern",
       "saveAsTooltip": "Zuerst 'Speichern unter' verwenden, um direktes Speichern zu aktivieren"
     },

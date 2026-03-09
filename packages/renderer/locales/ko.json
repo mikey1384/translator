@@ -474,8 +474,8 @@
       "transcribeThisLine": "이 줄 전사하기"
     },
     "header": {
-      "save": "저장",
-      "saveAs": "다른 이름으로 저장...",
+      "save": "자막 저장",
+      "saveAs": "자막 다른 이름으로 저장...",
       "saveTooltip": "원본 파일에 변경사항 저장",
       "saveAsTooltip": "직접 저장을 활성화하려면 먼저 다른 이름으로 저장하세요"
     },

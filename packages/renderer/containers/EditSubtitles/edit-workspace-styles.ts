@@ -281,6 +281,10 @@ export const editorButtonContentStyles = css`
   gap: ${spacing.sm};
 `;
 
+export const editorSaveButtonStyles = css`
+  min-width: 168px;
+`;
+
 export const editorMergeButtonStyles = css`
   color: #ffffff !important;
   background: linear-gradient(135deg, #ff8bc0, ${colors.progressMerge});

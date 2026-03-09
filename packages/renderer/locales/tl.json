@@ -474,8 +474,8 @@
       "transcribeThisLine": "I-transcribe ang linya"
     },
     "header": {
-      "save": "I-save",
-      "saveAs": "I-save Bilang...",
+      "save": "I-save ang subtitle",
+      "saveAs": "I-save ang subtitle bilang...",
       "saveTooltip": "I-save ang mga pagbabago sa orihinal na file",
       "saveAsTooltip": "I-save Bilang muna para paganahin ang direktang pag-save"
     },

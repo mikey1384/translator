@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transkriber linje"
     },
     "header": {
-      "save": "Lagre",
-      "saveAs": "Lagre som...",
+      "save": "Lagre undertekster",
+      "saveAs": "Lagre undertekster som...",
       "saveTooltip": "Lagre endringer til originalfil",
       "saveAsTooltip": "Lagre som først for å aktivere direkte lagring"
     },

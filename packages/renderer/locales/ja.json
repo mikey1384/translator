@@ -474,8 +474,8 @@
       "transcribeThisLine": "この行を文字起こし"
     },
     "header": {
-      "save": "保存",
-      "saveAs": "名前を付けて保存...",
+      "save": "字幕を保存",
+      "saveAs": "字幕に名前を付けて保存...",
       "saveTooltip": "変更を元のファイルに保存",
       "saveAsTooltip": "直接保存を有効にするには、まず名前を付けて保存してください"
     },

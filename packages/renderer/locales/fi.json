@@ -474,8 +474,8 @@
       "transcribeThisLine": "Litteroi rivi"
     },
     "header": {
-      "save": "Tallenna",
-      "saveAs": "Tallenna nimellä...",
+      "save": "Tallenna tekstitykset",
+      "saveAs": "Tallenna tekstitykset nimellä...",
       "saveTooltip": "Tallenna muutokset alkuperäiseen tiedostoon",
       "saveAsTooltip": "Tallenna ensin nimellä ottaaksesi käyttöön suoran tallennuksen"
     },

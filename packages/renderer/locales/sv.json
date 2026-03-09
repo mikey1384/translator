@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transkribera rad"
     },
     "header": {
-      "save": "Spara",
-      "saveAs": "Spara som...",
+      "save": "Spara undertexter",
+      "saveAs": "Spara undertexter som...",
       "saveTooltip": "Spara ändringar till originalfilen",
       "saveAsTooltip": "Spara som först för att aktivera direktsparande"
     },

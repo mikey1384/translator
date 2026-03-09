@@ -474,8 +474,8 @@
       "transcribeThisLine": "转录此行"
     },
     "header": {
-      "save": "保存",
-      "saveAs": "另存为...",
+      "save": "保存字幕",
+      "saveAs": "字幕另存为...",
       "saveTooltip": "将更改保存到原始文件",
       "saveAsTooltip": "先另存为以启用直接保存"
     },

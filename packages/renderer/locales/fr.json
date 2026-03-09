@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transcrire cette ligne"
     },
     "header": {
-      "save": "Enregistrer",
-      "saveAs": "Enregistrer sous...",
+      "save": "Enregistrer les sous-titres",
+      "saveAs": "Enregistrer les sous-titres sous...",
       "saveTooltip": "Enregistrer les modifications dans le fichier original",
       "saveAsTooltip": "Enregistrer sous d'abord pour activer l'enregistrement direct"
     },

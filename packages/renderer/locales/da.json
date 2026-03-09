@@ -474,8 +474,8 @@
       "transcribeThisLine": "Transskriber linje"
     },
     "header": {
-      "save": "Gem",
-      "saveAs": "Gem som...",
+      "save": "Gem undertekster",
+      "saveAs": "Gem undertekster som...",
       "saveTooltip": "Gem ændringer til originalfil",
       "saveAsTooltip": "Gem som først for at aktivere direkte gem"
     },
