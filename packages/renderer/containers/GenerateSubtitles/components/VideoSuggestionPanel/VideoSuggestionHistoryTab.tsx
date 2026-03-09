@@ -1,5 +1,13 @@
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
+import IconButton from '../../../../components/IconButton.js';
+import {
+  Download,
+  ExternalLink,
+  Play,
+  Trash2,
+  UserRound,
+} from 'lucide-react';
 import {
   cardActionsStyles,
   cardBodyStyles,
@@ -8,9 +16,13 @@ import {
   cardStyles,
   detailsSummaryStyles,
   emptyTabStateStyles,
+  historyActionIconRowStyles,
   historyActionsStyles,
   historyCardsStyles,
   historySectionStyles,
+  historyStatusPillStyles,
+  historyStatusSavedPillStyles,
+  historyStatusTempPillStyles,
   historyTitleStyles,
   metaStyles,
   thumbnailStyles,
@@ -18,6 +30,7 @@ import {
 } from './VideoSuggestionPanel.styles.js';
 import type { VideoSuggestionDownloadHistoryItem } from './VideoSuggestionPanel.types.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
+import { getVideoSuggestionHistoryStorageKind } from './video-suggestion-local-storage.js';
 
 type VideoSuggestionHistoryTabProps = {
   disabled: boolean;
@@ -79,6 +92,9 @@ export default function VideoSuggestionHistoryTab({
           const downloadedAt = formatHistoryTimestamp(item.downloadedAtIso);
           const canPlay =
             Boolean(item.localPath) && playablePathMap[item.id] === true;
+          const storageKind = getVideoSuggestionHistoryStorageKind(
+            item.localPath
+          );
 
           return (
             <div key={`history-${item.id}`} className={cardStyles}>
@@ -114,6 +130,34 @@ export default function VideoSuggestionHistoryTab({
                         'Downloaded recently'
                       )}
                 </div>
+                {storageKind !== 'unknown' && canPlay ? (
+                  <div className={cardMetaRowStyles}>
+                    {storageKind === 'saved' ? (
+                      <span className={historyStatusSavedPillStyles}>
+                        {t(
+                          'input.videoSuggestion.savedToFolder',
+                          'Saved to your folder'
+                        )}
+                      </span>
+                    ) : null}
+                    {storageKind !== 'saved' ? (
+                      <span className={historyStatusTempPillStyles}>
+                        {t(
+                          'input.videoSuggestion.tempFileAvailable',
+                          'Temp copy still available'
+                        )}
+                      </span>
+                    ) : null}
+                    {canPlay ? (
+                      <span className={historyStatusPillStyles}>
+                        {t(
+                          'input.videoSuggestion.localFileAvailable',
+                          'File available'
+                        )}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
                 {historyMeta.length > 0 ? (
                   <div className={cardMetaRowStyles}>
                     {historyMeta.join(' • ')}
@@ -151,63 +195,84 @@ export default function VideoSuggestionHistoryTab({
                     <summary className={detailsSummaryStyles}>
                       {t('input.videoSuggestion.moreActions', 'More actions')}
                     </summary>
-                    <div className={historyActionsStyles}>
+                    <div className={historyActionIconRowStyles}>
                       {canPlay ? (
-                        <Button
+                        <IconButton
                           onClick={() => onRedownloadHistoryItem(item)}
                           disabled={disabled || isDownloadInProgress}
-                          size="sm"
                           variant="secondary"
-                          fullWidth
+                          size="sm"
+                          icon={<Download size={16} />}
+                          title={t(
+                            'input.videoSuggestion.downloadAgain',
+                            'Download again'
+                          )}
+                          aria-label={t(
+                            'input.videoSuggestion.downloadAgain',
+                            'Download again'
+                          )}
                         >
-                          {isDownloadInProgress
-                            ? t('input.downloading', 'Downloading...')
-                            : t(
-                                'input.videoSuggestion.downloadAgain',
-                                'Download again'
-                              )}
-                        </Button>
+                        </IconButton>
                       ) : (
-                        <Button
+                        <IconButton
                           onClick={() => onOpenDownloadedVideo(item)}
                           disabled={isTranslationInProgress || !canPlay}
-                          size="sm"
                           variant="secondary"
-                          fullWidth
+                          size="sm"
+                          icon={<Play size={16} />}
+                          title={localPrimaryActionLabel}
+                          aria-label={localPrimaryActionLabel}
                         >
-                          {localPrimaryActionLabel}
-                        </Button>
+                        </IconButton>
                       )}
-                      <Button
+                      <IconButton
                         onClick={() => onOpenVideoExternally(item.sourceUrl)}
-                        size="sm"
                         variant="secondary"
-                        fullWidth
-                      >
-                        {t(
+                        size="sm"
+                        icon={<ExternalLink size={16} />}
+                        title={t(
                           'input.videoSuggestion.openOnYoutube',
                           'Open on YouTube'
                         )}
-                      </Button>
-                      <Button
+                        aria-label={t(
+                          'input.videoSuggestion.openOnYoutube',
+                          'Open on YouTube'
+                        )}
+                      >
+                      </IconButton>
+                      <IconButton
                         onClick={() =>
                           onOpenChannelExternally(item.channelUrl, item.channel)
                         }
                         disabled={!item.channelUrl && !item.channel}
-                        size="sm"
                         variant="secondary"
-                        fullWidth
+                        size="sm"
+                        icon={<UserRound size={16} />}
+                        title={t(
+                          'input.videoSuggestion.openChannel',
+                          'Open channel'
+                        )}
+                        aria-label={t(
+                          'input.videoSuggestion.openChannel',
+                          'Open channel'
+                        )}
                       >
-                        {t('input.videoSuggestion.openChannel', 'Open channel')}
-                      </Button>
-                      <Button
+                      </IconButton>
+                      <IconButton
                         onClick={() => onRemoveHistoryItem(item.id)}
                         size="sm"
-                        variant="danger"
-                        fullWidth
+                        variant="secondary"
+                        icon={<Trash2 size={16} />}
+                        title={t(
+                          'input.videoSuggestion.removeHistoryItem',
+                          'Remove'
+                        )}
+                        aria-label={t(
+                          'input.videoSuggestion.removeHistoryItem',
+                          'Remove'
+                        )}
                       >
-                        {t('input.videoSuggestion.removeHistoryItem', 'Remove')}
-                      </Button>
+                      </IconButton>
                     </div>
                   </details>
                 </div>

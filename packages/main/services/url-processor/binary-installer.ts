@@ -18,6 +18,13 @@ import {
 // Cache for update check - only check once per hour
 let lastUpdateCheckTime = 0;
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const CONCURRENT_INSTALL_WAIT_TIMEOUT_MS = 120_000;
+const CONCURRENT_INSTALL_POLL_MS = 500;
+const WAITING_FOR_SETUP_STAGE = 'Waiting for yt-dlp setup…';
+
+let inFlightEnsureYtDlpBinary: Promise<string> | null = null;
+let cachedHealthyBinaryPath: string | null = null;
+let cachedHealthyBinaryAt = 0;
 
 export class YtDlpSetupError extends Error {
   attemptedUrl?: string;
@@ -41,13 +48,295 @@ export type BinarySetupProgress = (info: {
   percent?: number;
 }) => void;
 
+type BinarySetupProgressInfo = {
+  stage: string;
+  percent?: number;
+};
+
+const ensureYtDlpProgressListeners = new Set<BinarySetupProgress>();
+let lastEnsureYtDlpProgress: BinarySetupProgressInfo | null = null;
+
+function emitEnsureYtDlpProgress(info: BinarySetupProgressInfo): void {
+  lastEnsureYtDlpProgress = info;
+  for (const listener of ensureYtDlpProgressListeners) {
+    try {
+      listener(info);
+    } catch {
+      // Ignore listener failures so shared progress keeps flowing.
+    }
+  }
+}
+
+function subscribeEnsureYtDlpProgress(
+  listener: BinarySetupProgress
+): () => void {
+  ensureYtDlpProgressListeners.add(listener);
+  if (lastEnsureYtDlpProgress) {
+    try {
+      listener(lastEnsureYtDlpProgress);
+    } catch {
+      // Ignore listener failures.
+    }
+  }
+  return () => {
+    ensureYtDlpProgressListeners.delete(listener);
+  };
+}
+
 // Concurrent installation protection using file-based mutex
+
+function getInstallLockFilePath(): string {
+  return join(app.getPath('userData'), 'bin', '.install-lock');
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function readInstallLockPid(): Promise<number | null> {
+  try {
+    const pidStr = await fsp.readFile(getInstallLockFilePath(), 'utf8');
+    const pid = parseInt(pidStr, 10);
+    return Number.isFinite(pid) && pid > 0 ? pid : null;
+  } catch {
+    return null;
+  }
+}
+
+function isPidAlive(pid: number | null): boolean {
+  if (!pid) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error: any) {
+    if (error?.code === 'EPERM') return true;
+    if (error?.code === 'ESRCH') return false;
+    return false;
+  }
+}
+
+async function isInstallLockActive(): Promise<boolean> {
+  try {
+    await fsp.access(getInstallLockFilePath());
+  } catch {
+    return false;
+  }
+
+  const pid = await readInstallLockPid();
+  if (isPidAlive(pid)) {
+    return true;
+  }
+
+  log.info('[URLprocessor] Removing stale installation lock file');
+  await fsp.unlink(getInstallLockFilePath()).catch(() => {});
+  return false;
+}
+
+function getStagedBinaryPath(binaryPath: string): string {
+  const ext = process.platform === 'win32' ? '.exe' : '';
+  const suffix = process.platform === 'win32' ? '.next.exe' : '.next';
+  if (binaryPath.endsWith(suffix)) {
+    return binaryPath;
+  }
+  if (ext && binaryPath.endsWith(ext)) {
+    return binaryPath.slice(0, -ext.length) + suffix;
+  }
+  return `${binaryPath}.next`;
+}
+
+function getHealthyBinaryCandidates(targetBinaryPath: string): string[] {
+  const candidates = new Set<string>();
+  const push = (value: string | null | undefined) => {
+    const text = String(value || '').trim();
+    if (!text) return;
+    candidates.add(getStagedBinaryPath(text));
+    candidates.add(text);
+  };
+
+  push(targetBinaryPath);
+  push(getPreferredInstallPath());
+  push(getManagedBinaryPath());
+
+  return [...candidates];
+}
+
+function isStagedBinaryCandidate(binaryPath: string): boolean {
+  return binaryPath === getStagedBinaryPath(binaryPath);
+}
+
+async function resolveHealthyBinaryCandidate(
+  targetBinaryPath: string
+): Promise<string | null> {
+  let bestCandidate: { path: string; mtimeMs: number; staged: boolean } | null =
+    null;
+
+  for (const candidate of getHealthyBinaryCandidates(targetBinaryPath)) {
+    try {
+      await fsp.access(candidate, fs.constants.X_OK);
+      if (!(await testBinary(candidate))) {
+        continue;
+      }
+      const stats = await fsp.stat(candidate);
+      const nextCandidate = {
+        path: candidate,
+        mtimeMs: Number.isFinite(stats.mtimeMs) ? stats.mtimeMs : 0,
+        staged: isStagedBinaryCandidate(candidate),
+      };
+      if (
+        !bestCandidate ||
+        nextCandidate.mtimeMs > bestCandidate.mtimeMs ||
+        (nextCandidate.mtimeMs === bestCandidate.mtimeMs &&
+          nextCandidate.staged &&
+          !bestCandidate.staged)
+      ) {
+        bestCandidate = nextCandidate;
+      }
+    } catch {
+      // Try next candidate.
+    }
+  }
+
+  return bestCandidate?.path ?? null;
+}
+
+async function waitForConcurrentInstall(options: {
+  targetBinaryPath: string;
+  onProgress?: BinarySetupProgress;
+  timeoutMs?: number;
+}): Promise<string | null> {
+  const {
+    targetBinaryPath,
+    onProgress,
+    timeoutMs = CONCURRENT_INSTALL_WAIT_TIMEOUT_MS,
+  } = options;
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    onProgress?.({ stage: WAITING_FOR_SETUP_STAGE });
+    const lockActive = await isInstallLockActive();
+    if (!lockActive) {
+      break;
+    }
+    await sleep(CONCURRENT_INSTALL_POLL_MS);
+  }
+
+  return resolveHealthyBinaryCandidate(targetBinaryPath);
+}
+
+async function validateResolvedInstallBinary(
+  binaryPath: string
+): Promise<boolean> {
+  if (app.isPackaged) {
+    return true;
+  }
+
+  const supportsRequiredFlags = await supportsRequiredYtDlpFlags(binaryPath);
+  if (supportsRequiredFlags === true) {
+    return true;
+  }
+
+  const managedBinaryPath = getManagedBinaryPath();
+  if (supportsRequiredFlags == null && binaryPath === managedBinaryPath) {
+    log.warn(
+      `[URLprocessor] Could not verify required yt-dlp flags on waited managed binary; continuing with existing managed copy: ${binaryPath}`
+    );
+    return true;
+  }
+
+  if (supportsRequiredFlags === false) {
+    log.warn(
+      `[URLprocessor] Waited yt-dlp binary is incompatible with Translator requirements (missing --js-runtimes): ${binaryPath}`
+    );
+  } else {
+    log.warn(
+      `[URLprocessor] Waited yt-dlp binary could not be verified for required flags: ${binaryPath}`
+    );
+  }
+
+  return false;
+}
+
+function rememberHealthyBinary(binaryPath: string): void {
+  cachedHealthyBinaryPath = binaryPath;
+  cachedHealthyBinaryAt = Date.now();
+}
+
+function clearHealthyBinaryCache(): void {
+  cachedHealthyBinaryPath = null;
+  cachedHealthyBinaryAt = 0;
+}
+
+async function refreshCachedHealthyBinary(
+  cachedBinaryPath: string
+): Promise<string | null> {
+  if (app.isPackaged) {
+    const refreshed = await ensureWritableBinary();
+    return refreshed || null;
+  }
+
+  const managedBinaryPath = getManagedBinaryPath();
+  const stagedManagedBinaryPath = getStagedBinaryPath(managedBinaryPath);
+  const stagedCachedBinaryPath = getStagedBinaryPath(cachedBinaryPath);
+  const candidates = [
+    stagedManagedBinaryPath,
+    managedBinaryPath,
+    stagedCachedBinaryPath,
+    cachedBinaryPath,
+  ].filter((value, index, all) => value && all.indexOf(value) === index);
+
+  for (const candidate of candidates) {
+    try {
+      await fsp.access(candidate, fs.constants.X_OK);
+      if (!(await testBinary(candidate))) {
+        continue;
+      }
+      if (await validateResolvedInstallBinary(candidate)) {
+        return candidate;
+      }
+    } catch {
+      // Try next candidate.
+    }
+  }
+
+  return null;
+}
+
+async function getCachedHealthyBinary(
+  shouldCheckUpdate: boolean
+): Promise<string | null> {
+  if (!cachedHealthyBinaryPath || shouldCheckUpdate) {
+    return null;
+  }
+
+  try {
+    await fsp.access(cachedHealthyBinaryPath, fs.constants.X_OK);
+    if (Date.now() - cachedHealthyBinaryAt < UPDATE_CHECK_INTERVAL_MS) {
+      const refreshedBinary = await refreshCachedHealthyBinary(
+        cachedHealthyBinaryPath
+      );
+      if (refreshedBinary) {
+        if (refreshedBinary !== cachedHealthyBinaryPath) {
+          log.info(
+            `[URLprocessor] Refreshed cached healthy yt-dlp binary: ${cachedHealthyBinaryPath} -> ${refreshedBinary}`
+          );
+        }
+        rememberHealthyBinary(refreshedBinary);
+        return refreshedBinary;
+      }
+      clearHealthyBinaryCache();
+    }
+  } catch {
+    clearHealthyBinaryCache();
+  }
+
+  return null;
+}
 
 // Create a mutex file to prevent concurrent installations
 async function acquireInstallLock(): Promise<boolean> {
   const lockDir = join(app.getPath('userData'), 'bin');
   await fsp.mkdir(lockDir, { recursive: true });
-  const lockFile = join(lockDir, '.install-lock');
+  const lockFile = getInstallLockFilePath();
 
   try {
     // Try to create lock file exclusively (fails if exists)
@@ -115,8 +404,7 @@ async function acquireInstallLock(): Promise<boolean> {
 }
 
 async function releaseInstallLock(): Promise<void> {
-  const lockFile = join(app.getPath('userData'), 'bin', '.install-lock');
-  await fsp.unlink(lockFile).catch(() => {});
+  await fsp.unlink(getInstallLockFilePath()).catch(() => {});
 }
 
 // Follow HTTP redirects (GitHub uses 302 for latest releases)
@@ -249,6 +537,7 @@ export async function ensureWritableBinary(): Promise<string> {
         const nextIsNewer = !userStats || nextStats.mtimeMs > userStats.mtimeMs;
         if (nextIsNewer) {
           log.info(`[URLprocessor] Using staged yt-dlp binary: ${userBinNext}`);
+          rememberHealthyBinary(userBinNext);
           return userBinNext;
         }
       } else {
@@ -265,27 +554,31 @@ export async function ensureWritableBinary(): Promise<string> {
   // 2. If we already have a user copy, return it.
   try {
     await fsp.access(userBin, fs.constants.X_OK);
-    log.info(`[URLprocessor] Using existing writable binary: ${userBin}`);
-    return userBin;
+    if (await testBinary(userBin)) {
+      log.info(`[URLprocessor] Using existing writable binary: ${userBin}`);
+      rememberHealthyBinary(userBin);
+      return userBin;
+    }
+    log.warn(
+      `[URLprocessor] Existing writable binary is not working, rebuilding: ${userBin}`
+    );
   } catch {
     /* fall through and create it */
   }
 
   // 3. Acquire lock to prevent race conditions
   if (!(await acquireInstallLock())) {
-    log.warn(
-      '[URLprocessor] Binary copy already in progress by another process'
-    );
-    // Wait a bit and check if the binary now exists
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    try {
-      await fsp.access(userBin, fs.constants.X_OK);
-      return userBin;
-    } catch {
-      throw new Error(
-        'Failed to create writable binary copy due to concurrent access'
-      );
+    log.warn('[URLprocessor] Binary copy already in progress; waiting...');
+    const awaitedBinary = await waitForConcurrentInstall({
+      targetBinaryPath: userBin,
+    });
+    if (awaitedBinary) {
+      rememberHealthyBinary(awaitedBinary);
+      return awaitedBinary;
     }
+    throw new Error(
+      'Failed to create writable binary copy because another setup never completed successfully'
+    );
   }
 
   try {
@@ -320,6 +613,7 @@ export async function ensureWritableBinary(): Promise<string> {
         if (process.platform !== 'win32') {
           await fsp.chmod(downloaded, 0o755).catch(() => {});
         }
+        rememberHealthyBinary(downloaded);
         return downloaded;
       }
       throw new YtDlpSetupError(
@@ -332,6 +626,7 @@ export async function ensureWritableBinary(): Promise<string> {
       await fsp.chmod(userBin, 0o755);
     }
 
+    rememberHealthyBinary(userBin);
     return userBin;
   } finally {
     await releaseInstallLock();
@@ -351,16 +646,54 @@ export async function ensureYtDlpBinary({
   skipUpdate?: boolean;
   onProgress?: BinarySetupProgress;
 } = {}): Promise<string> {
+  const unsubscribe = onProgress
+    ? subscribeEnsureYtDlpProgress(onProgress)
+    : null;
+  if (inFlightEnsureYtDlpBinary) {
+    if (!lastEnsureYtDlpProgress && onProgress) {
+      onProgress({ stage: WAITING_FOR_SETUP_STAGE });
+    }
+    try {
+      return await inFlightEnsureYtDlpBinary;
+    } finally {
+      unsubscribe?.();
+    }
+  }
+
+  const promise = ensureYtDlpBinaryInternal({ skipUpdate }).finally(
+    () => {
+      if (inFlightEnsureYtDlpBinary === promise) {
+        inFlightEnsureYtDlpBinary = null;
+      }
+      lastEnsureYtDlpProgress = null;
+    }
+  );
+  inFlightEnsureYtDlpBinary = promise;
+  try {
+    return await promise;
+  } finally {
+    unsubscribe?.();
+  }
+}
+
+async function ensureYtDlpBinaryInternal({
+  skipUpdate = false,
+}: {
+  skipUpdate?: boolean;
+} = {}): Promise<string> {
   // Start crawling progress immediately so users see movement during slow operations
   const INIT_END = 99; // Crawl toward 99%, which maps to ~4.9% overall (never reaches 5%)
   let currentPercent = 0;
-  onProgress?.({ stage: 'Initializing…', percent: currentPercent });
+  emitEnsureYtDlpProgress({ stage: 'Initializing…', percent: currentPercent });
 
   const crawlInterval = setInterval(() => {
     if (currentPercent < INIT_END - 0.5) {
       const remaining = INIT_END - currentPercent;
       currentPercent += remaining * 0.01;
-      onProgress?.({ stage: 'Initializing…', percent: currentPercent });
+      emitEnsureYtDlpProgress({
+        stage: 'Initializing…',
+        percent: currentPercent,
+      });
     }
   }, 500);
 
@@ -371,6 +704,14 @@ export async function ensureYtDlpBinary({
     const now = Date.now();
     const shouldCheckUpdate =
       !skipUpdate && now - lastUpdateCheckTime > UPDATE_CHECK_INTERVAL_MS;
+    const cachedBinary = await getCachedHealthyBinary(shouldCheckUpdate);
+    if (cachedBinary) {
+      stopCrawl();
+      log.info(
+        `[URLprocessor] Reusing cached healthy yt-dlp binary: ${cachedBinary}`
+      );
+      return cachedBinary;
+    }
 
     // For packaged apps, always use the writable binary approach
     if (app.isPackaged) {
@@ -392,20 +733,32 @@ export async function ensureYtDlpBinary({
           }
           // Re-evaluate in case the updater staged a newer side-by-side binary.
           stopCrawl();
-          return await ensureWritableBinary();
+          const refreshedBinary = await ensureWritableBinary();
+          if (!(await testBinary(refreshedBinary))) {
+            clearHealthyBinaryCache();
+            const installed = await installNewBinary(emitEnsureYtDlpProgress);
+            rememberHealthyBinary(installed);
+            return installed;
+          }
+          rememberHealthyBinary(refreshedBinary);
+          return refreshedBinary;
         } else {
           log.info(
             '[URLprocessor] Skipping update check (checked recently or explicitly skipped)'
           );
         }
         stopCrawl();
+        rememberHealthyBinary(writablePath);
         return writablePath;
       } else {
         log.warn(
           '[URLprocessor] Writable binary is not working, will reinstall...'
         );
+        clearHealthyBinaryCache();
         stopCrawl();
-        return await installNewBinary(onProgress);
+        const installed = await installNewBinary(emitEnsureYtDlpProgress);
+        rememberHealthyBinary(installed);
+        return installed;
       }
     }
 
@@ -422,7 +775,7 @@ export async function ensureYtDlpBinary({
       if (await testBinary(existingBinary)) {
         const supportsRequiredFlags =
           await supportsRequiredYtDlpFlags(existingBinary);
-        if (!supportsRequiredFlags) {
+        if (supportsRequiredFlags === false) {
           log.warn(
             `[URLprocessor] Existing yt-dlp binary is incompatible with Translator requirements (missing --js-runtimes): ${existingBinary}`
           );
@@ -430,7 +783,27 @@ export async function ensureYtDlpBinary({
           log.info(
             '[URLprocessor] Installing managed yt-dlp binary for development compatibility...'
           );
-          return await installNewBinary(onProgress);
+          clearHealthyBinaryCache();
+          const installed = await installNewBinary(emitEnsureYtDlpProgress);
+          rememberHealthyBinary(installed);
+          return installed;
+        }
+
+        if (supportsRequiredFlags == null) {
+          if (existingBinary === managedBinaryPath) {
+            log.warn(
+              `[URLprocessor] Could not verify required yt-dlp flags on managed binary; continuing with existing managed copy: ${existingBinary}`
+            );
+          } else {
+            log.warn(
+              `[URLprocessor] Could not verify required yt-dlp flags on non-managed binary; installing managed copy instead: ${existingBinary}`
+            );
+            stopCrawl();
+            clearHealthyBinaryCache();
+            const installed = await installNewBinary(emitEnsureYtDlpProgress);
+            rememberHealthyBinary(installed);
+            return installed;
+          }
         }
 
         // Only self-update the app-managed copy. We should not mutate random PATH installs.
@@ -456,11 +829,13 @@ export async function ensureYtDlpBinary({
           );
         }
         stopCrawl();
+        rememberHealthyBinary(existingBinary);
         return existingBinary;
       } else {
         log.warn(
           '[URLprocessor] Existing binary is not working, will reinstall...'
         );
+        clearHealthyBinaryCache();
         stopCrawl();
       }
     }
@@ -468,9 +843,12 @@ export async function ensureYtDlpBinary({
     // If we get here, we need to install/reinstall
     log.info('[URLprocessor] Installing yt-dlp binary...');
     stopCrawl();
-    return await installNewBinary(onProgress);
+    const installed = await installNewBinary(emitEnsureYtDlpProgress);
+    rememberHealthyBinary(installed);
+    return installed;
   } catch (error: any) {
     stopCrawl();
+    clearHealthyBinaryCache();
     log.error('[URLprocessor] Failed to ensure yt-dlp binary:', error);
     if (error instanceof YtDlpSetupError) {
       throw error;
@@ -481,7 +859,9 @@ export async function ensureYtDlpBinary({
   }
 }
 
-async function supportsRequiredYtDlpFlags(binaryPath: string): Promise<boolean> {
+async function supportsRequiredYtDlpFlags(
+  binaryPath: string
+): Promise<boolean | null> {
   try {
     const { stdout } = await execa(binaryPath, ['--help'], {
       timeout: 20_000,
@@ -492,7 +872,7 @@ async function supportsRequiredYtDlpFlags(binaryPath: string): Promise<boolean> 
     log.warn(
       `[URLprocessor] Could not probe yt-dlp feature support for ${binaryPath}: ${error?.shortMessage || error?.message || error}`
     );
-    return false;
+    return null;
   }
 }
 
@@ -630,8 +1010,17 @@ async function installNewBinary(
 ): Promise<string> {
   // Acquire installation lock
   if (!(await acquireInstallLock())) {
+    log.warn('[URLprocessor] Another process is already installing yt-dlp; waiting...');
+    const awaitedBinary = await waitForConcurrentInstall({
+      targetBinaryPath: getPreferredInstallPath(),
+      onProgress,
+    });
+    if (awaitedBinary && (await validateResolvedInstallBinary(awaitedBinary))) {
+      rememberHealthyBinary(awaitedBinary);
+      return awaitedBinary;
+    }
     const message =
-      'Another Translator instance is already downloading yt-dlp. Please wait and try again.';
+      'yt-dlp setup did not finish successfully in another Translator process. Please try again.';
     log.warn(`[URLprocessor] ${message}`);
     throw new YtDlpSetupError(message);
   }

@@ -1,4 +1,4 @@
-export default {
+const baseOverrides = {
   "af": {
     "admin.title": "Administrateur",
     "settings.performanceQuality.qualityTranslation.modelOn": "GPT-5.1 konsep + GPT-5.4 hersiening",
@@ -494,3 +494,821 @@ export default {
     "settings.performanceQuality.rate.balance": "餘額：~{{time}}"
   }
 };
+
+const downloadFinishedOverrides = {
+  "af": {
+    "input.downloadFinishedSwitchTitle": "Afgelaaide video kyk?",
+    "input.downloadFinishedSwitchPrompt": "Jou aflaai is gereed. Kyk dit nou, of hou jou huidige video en maak dit later uit die geskiedenis oop.",
+    "input.downloadFinishedWatchNow": "Kyk nou",
+    "input.downloadFinishedWatchLater": "Kyk later"
+  },
+  "ar": {
+    "input.downloadFinishedSwitchTitle": "مشاهدة الفيديو الذي تم تنزيله؟",
+    "input.downloadFinishedSwitchPrompt": "التنزيل جاهز. شاهده الآن، أو احتفظ بالفيديو الحالي وافتحه لاحقًا من السجل.",
+    "input.downloadFinishedWatchNow": "شاهد الآن",
+    "input.downloadFinishedWatchLater": "شاهد لاحقًا"
+  },
+  "bn": {
+    "input.downloadFinishedSwitchTitle": "ডাউনলোড করা ভিডিও দেখবেন?",
+    "input.downloadFinishedSwitchPrompt": "আপনার ডাউনলোড প্রস্তুত। এখনই দেখুন, অথবা বর্তমান ভিডিওটি রেখে পরে হিস্টরি থেকে খুলুন।",
+    "input.downloadFinishedWatchNow": "এখনই দেখুন",
+    "input.downloadFinishedWatchLater": "পরে দেখুন"
+  },
+  "cs": {
+    "input.downloadFinishedSwitchTitle": "Přehrát stažené video?",
+    "input.downloadFinishedSwitchPrompt": "Stažení je připravené. Přehrávat hned, nebo ponechat aktuální video a otevřít ho později z historie.",
+    "input.downloadFinishedWatchNow": "Přehrát teď",
+    "input.downloadFinishedWatchLater": "Přehrát později"
+  },
+  "da": {
+    "input.downloadFinishedSwitchTitle": "Se den downloadede video?",
+    "input.downloadFinishedSwitchPrompt": "Din download er klar. Se den nu, eller behold din nuværende video og åbn den senere fra historikken.",
+    "input.downloadFinishedWatchNow": "Se nu",
+    "input.downloadFinishedWatchLater": "Se senere"
+  },
+  "de": {
+    "input.downloadFinishedSwitchTitle": "Heruntergeladenes Video ansehen?",
+    "input.downloadFinishedSwitchPrompt": "Dein Download ist fertig. Sieh ihn dir jetzt an oder behalte dein aktuelles Video und öffne ihn später über den Verlauf.",
+    "input.downloadFinishedWatchNow": "Jetzt ansehen",
+    "input.downloadFinishedWatchLater": "Später ansehen"
+  },
+  "el": {
+    "input.downloadFinishedSwitchTitle": "Να προβληθεί το βίντεο που κατέβηκε;",
+    "input.downloadFinishedSwitchPrompt": "Η λήψη σου είναι έτοιμη. Δες το τώρα ή κράτησε το τρέχον βίντεο και άνοιξέ το αργότερα από το ιστορικό.",
+    "input.downloadFinishedWatchNow": "Δες τώρα",
+    "input.downloadFinishedWatchLater": "Δες αργότερα"
+  },
+  "es": {
+    "input.downloadFinishedSwitchTitle": "¿Ver el video descargado?",
+    "input.downloadFinishedSwitchPrompt": "Tu descarga está lista. Míralo ahora o conserva tu video actual y ábrelo más tarde desde el historial.",
+    "input.downloadFinishedWatchNow": "Ver ahora",
+    "input.downloadFinishedWatchLater": "Ver más tarde"
+  },
+  "fa": {
+    "input.downloadFinishedSwitchTitle": "ویدیوی دانلودشده را تماشا کنید؟",
+    "input.downloadFinishedSwitchPrompt": "دانلود شما آماده است. همین حالا آن را تماشا کنید یا ویدیوی فعلی را نگه دارید و بعداً از تاریخچه بازش کنید.",
+    "input.downloadFinishedWatchNow": "همین حالا تماشا کن",
+    "input.downloadFinishedWatchLater": "بعداً تماشا کن"
+  },
+  "fi": {
+    "input.downloadFinishedSwitchTitle": "Katsoa ladattu video?",
+    "input.downloadFinishedSwitchPrompt": "Latauksesi on valmis. Katso se nyt tai pidä nykyinen videosi ja avaa se myöhemmin historiasta.",
+    "input.downloadFinishedWatchNow": "Katso nyt",
+    "input.downloadFinishedWatchLater": "Katso myöhemmin"
+  },
+  "fr": {
+    "input.downloadFinishedSwitchTitle": "Regarder la vidéo téléchargée ?",
+    "input.downloadFinishedSwitchPrompt": "Votre téléchargement est prêt. Regardez-le maintenant, ou gardez votre vidéo actuelle et ouvrez-le plus tard depuis l’historique.",
+    "input.downloadFinishedWatchNow": "Regarder maintenant",
+    "input.downloadFinishedWatchLater": "Regarder plus tard"
+  },
+  "he": {
+    "input.downloadFinishedSwitchTitle": "לצפות בסרטון שהורד?",
+    "input.downloadFinishedSwitchPrompt": "ההורדה שלך מוכנה. צפה בו עכשיו, או השאר את הסרטון הנוכחי ופתח אותו אחר כך מההיסטוריה.",
+    "input.downloadFinishedWatchNow": "צפה עכשיו",
+    "input.downloadFinishedWatchLater": "צפה אחר כך"
+  },
+  "hi": {
+    "input.downloadFinishedSwitchTitle": "डाउनलोड किया गया वीडियो देखें?",
+    "input.downloadFinishedSwitchPrompt": "आपका डाउनलोड तैयार है। इसे अभी देखें, या वर्तमान वीडियो को बनाए रखें और बाद में हिस्ट्री से खोलें।",
+    "input.downloadFinishedWatchNow": "अभी देखें",
+    "input.downloadFinishedWatchLater": "बाद में देखें"
+  },
+  "hu": {
+    "input.downloadFinishedSwitchTitle": "Megnézed a letöltött videót?",
+    "input.downloadFinishedSwitchPrompt": "A letöltés elkészült. Nézd meg most, vagy tartsd meg a jelenlegi videót, és nyisd meg később az előzményekből.",
+    "input.downloadFinishedWatchNow": "Megnézem most",
+    "input.downloadFinishedWatchLater": "Megnézem később"
+  },
+  "id": {
+    "input.downloadFinishedSwitchTitle": "Tonton video yang diunduh?",
+    "input.downloadFinishedSwitchPrompt": "Unduhan Anda sudah siap. Tonton sekarang, atau pertahankan video saat ini dan buka nanti dari riwayat.",
+    "input.downloadFinishedWatchNow": "Tonton sekarang",
+    "input.downloadFinishedWatchLater": "Tonton nanti"
+  },
+  "it": {
+    "input.downloadFinishedSwitchTitle": "Guardare il video scaricato?",
+    "input.downloadFinishedSwitchPrompt": "Il download è pronto. Guardalo ora oppure mantieni il video corrente e aprilo più tardi dalla cronologia.",
+    "input.downloadFinishedWatchNow": "Guarda ora",
+    "input.downloadFinishedWatchLater": "Guarda più tardi"
+  },
+  "ja": {
+    "input.downloadFinishedSwitchTitle": "ダウンロードした動画を見ますか？",
+    "input.downloadFinishedSwitchPrompt": "ダウンロードの準備ができました。今すぐ見るか、現在の動画をそのままにして後で履歴から開けます。",
+    "input.downloadFinishedWatchNow": "今すぐ見る",
+    "input.downloadFinishedWatchLater": "後で見る"
+  },
+  "ko": {
+    "input.downloadFinishedSwitchTitle": "다운로드한 영상을 볼까요?",
+    "input.downloadFinishedSwitchPrompt": "다운로드가 준비되었습니다. 지금 보거나, 현재 영상을 유지한 채 나중에 기록에서 열 수 있습니다.",
+    "input.downloadFinishedWatchNow": "지금 보기",
+    "input.downloadFinishedWatchLater": "나중에 보기"
+  },
+  "mr": {
+    "input.downloadFinishedSwitchTitle": "डाउनलोड केलेला व्हिडिओ पाहायचा?",
+    "input.downloadFinishedSwitchPrompt": "तुमचे डाउनलोड तयार आहे. तो आत्ता पहा, किंवा सध्याचा व्हिडिओ तसाच ठेवून नंतर इतिहासातून उघडा.",
+    "input.downloadFinishedWatchNow": "आत्ता पहा",
+    "input.downloadFinishedWatchLater": "नंतर पहा"
+  },
+  "ms": {
+    "input.downloadFinishedSwitchTitle": "Tonton video yang dimuat turun?",
+    "input.downloadFinishedSwitchPrompt": "Muat turun anda sudah siap. Tontonnya sekarang, atau kekalkan video semasa anda dan bukanya kemudian dari sejarah.",
+    "input.downloadFinishedWatchNow": "Tonton sekarang",
+    "input.downloadFinishedWatchLater": "Tonton kemudian"
+  },
+  "nl": {
+    "input.downloadFinishedSwitchTitle": "Gedownloade video bekijken?",
+    "input.downloadFinishedSwitchPrompt": "Je download is klaar. Bekijk hem nu, of houd je huidige video aan en open hem later vanuit de geschiedenis.",
+    "input.downloadFinishedWatchNow": "Nu bekijken",
+    "input.downloadFinishedWatchLater": "Later bekijken"
+  },
+  "no": {
+    "input.downloadFinishedSwitchTitle": "Se den nedlastede videoen?",
+    "input.downloadFinishedSwitchPrompt": "Nedlastingen er klar. Se den nå, eller behold den nåværende videoen og åpne den senere fra historikken.",
+    "input.downloadFinishedWatchNow": "Se nå",
+    "input.downloadFinishedWatchLater": "Se senere"
+  },
+  "pl": {
+    "input.downloadFinishedSwitchTitle": "Obejrzeć pobrany film?",
+    "input.downloadFinishedSwitchPrompt": "Pobieranie jest gotowe. Obejrzyj go teraz albo zostaw bieżący film i otwórz go później z historii.",
+    "input.downloadFinishedWatchNow": "Obejrzyj teraz",
+    "input.downloadFinishedWatchLater": "Obejrzyj później"
+  },
+  "pt": {
+    "input.downloadFinishedSwitchTitle": "Assistir ao vídeo baixado?",
+    "input.downloadFinishedSwitchPrompt": "Seu download está pronto. Assista agora ou mantenha o vídeo atual e abra-o mais tarde pelo histórico.",
+    "input.downloadFinishedWatchNow": "Assistir agora",
+    "input.downloadFinishedWatchLater": "Assistir depois"
+  },
+  "ro": {
+    "input.downloadFinishedSwitchTitle": "Vrei să vezi videoclipul descărcat?",
+    "input.downloadFinishedSwitchPrompt": "Descărcarea este gata. Urmărește-l acum sau păstrează videoclipul curent și deschide-l mai târziu din istoric.",
+    "input.downloadFinishedWatchNow": "Urmărește acum",
+    "input.downloadFinishedWatchLater": "Urmărește mai târziu"
+  },
+  "ru": {
+    "input.downloadFinishedSwitchTitle": "Посмотреть загруженное видео?",
+    "input.downloadFinishedSwitchPrompt": "Загрузка готова. Посмотрите его сейчас или оставьте текущее видео и откройте его позже из истории.",
+    "input.downloadFinishedWatchNow": "Посмотреть сейчас",
+    "input.downloadFinishedWatchLater": "Посмотреть позже"
+  },
+  "sv": {
+    "input.downloadFinishedSwitchTitle": "Titta på den nedladdade videon?",
+    "input.downloadFinishedSwitchPrompt": "Din nedladdning är klar. Titta på den nu, eller behåll din nuvarande video och öppna den senare från historiken.",
+    "input.downloadFinishedWatchNow": "Titta nu",
+    "input.downloadFinishedWatchLater": "Titta senare"
+  },
+  "sw": {
+    "input.downloadFinishedSwitchTitle": "Tazama video iliyopakuliwa?",
+    "input.downloadFinishedSwitchPrompt": "Upakuaji wako uko tayari. Itazame sasa, au weka video yako ya sasa na uifungue baadaye kutoka kwenye historia.",
+    "input.downloadFinishedWatchNow": "Tazama sasa",
+    "input.downloadFinishedWatchLater": "Tazama baadaye"
+  },
+  "ta": {
+    "input.downloadFinishedSwitchTitle": "பதிவிறக்கப்பட்ட வீடியோவை பார்க்கவா?",
+    "input.downloadFinishedSwitchPrompt": "உங்கள் பதிவிறக்கம் தயார். அதை இப்போது பாருங்கள், அல்லது தற்போதைய வீடியோவை வைத்துக் கொண்டு பின்னர் வரலாற்றில் இருந்து திறக்கலாம்.",
+    "input.downloadFinishedWatchNow": "இப்போது பார்க்கவும்",
+    "input.downloadFinishedWatchLater": "பிறகு பார்க்கவும்"
+  },
+  "te": {
+    "input.downloadFinishedSwitchTitle": "డౌన్‌లోడ్ చేసిన వీడియో చూడాలా?",
+    "input.downloadFinishedSwitchPrompt": "మీ డౌన్‌లోడ్ సిద్ధంగా ఉంది. ఇప్పుడే చూడండి, లేదా ప్రస్తుత వీడియోను అలాగే ఉంచి తర్వాత హిస్టరీ నుంచి తెరవండి.",
+    "input.downloadFinishedWatchNow": "ఇప్పుడే చూడండి",
+    "input.downloadFinishedWatchLater": "తర్వాత చూడండి"
+  },
+  "th": {
+    "input.downloadFinishedSwitchTitle": "ดูวิดีโอที่ดาวน์โหลดแล้วไหม?",
+    "input.downloadFinishedSwitchPrompt": "ดาวน์โหลดของคุณพร้อมแล้ว ดูตอนนี้ได้เลย หรือคงวิดีโอปัจจุบันไว้แล้วค่อยเปิดจากประวัติภายหลัง",
+    "input.downloadFinishedWatchNow": "ดูตอนนี้",
+    "input.downloadFinishedWatchLater": "ดูภายหลัง"
+  },
+  "tl": {
+    "input.downloadFinishedSwitchTitle": "Panoorin ang na-download na video?",
+    "input.downloadFinishedSwitchPrompt": "Handa na ang download mo. Panoorin ito ngayon, o panatilihin ang kasalukuyan mong video at buksan ito mamaya mula sa history.",
+    "input.downloadFinishedWatchNow": "Panoorin ngayon",
+    "input.downloadFinishedWatchLater": "Panoorin mamaya"
+  },
+  "tr": {
+    "input.downloadFinishedSwitchTitle": "İndirilen video izlensin mi?",
+    "input.downloadFinishedSwitchPrompt": "İndirmeniz hazır. Şimdi izleyin ya da mevcut videonuzu koruyup daha sonra geçmişten açın.",
+    "input.downloadFinishedWatchNow": "Şimdi izle",
+    "input.downloadFinishedWatchLater": "Daha sonra izle"
+  },
+  "uk": {
+    "input.downloadFinishedSwitchTitle": "Переглянути завантажене відео?",
+    "input.downloadFinishedSwitchPrompt": "Завантаження готове. Перегляньте його зараз або залиште поточне відео й відкрийте його пізніше з історії.",
+    "input.downloadFinishedWatchNow": "Переглянути зараз",
+    "input.downloadFinishedWatchLater": "Переглянути пізніше"
+  },
+  "ur": {
+    "input.downloadFinishedSwitchTitle": "ڈاؤن لوڈ کی گئی ویڈیو دیکھیں؟",
+    "input.downloadFinishedSwitchPrompt": "آپ کا ڈاؤن لوڈ تیار ہے۔ اسے ابھی دیکھیں، یا موجودہ ویڈیو برقرار رکھیں اور بعد میں ہسٹری سے کھولیں۔",
+    "input.downloadFinishedWatchNow": "ابھی دیکھیں",
+    "input.downloadFinishedWatchLater": "بعد میں دیکھیں"
+  },
+  "vi": {
+    "input.downloadFinishedSwitchTitle": "Xem video đã tải xuống?",
+    "input.downloadFinishedSwitchPrompt": "Bản tải xuống của bạn đã sẵn sàng. Xem ngay hoặc giữ video hiện tại và mở lại sau từ lịch sử.",
+    "input.downloadFinishedWatchNow": "Xem ngay",
+    "input.downloadFinishedWatchLater": "Xem sau"
+  },
+  "zh-CN": {
+    "input.downloadFinishedSwitchTitle": "观看已下载的视频？",
+    "input.downloadFinishedSwitchPrompt": "你的下载已准备好。现在观看，或保留当前视频，稍后再从历史记录中打开。",
+    "input.downloadFinishedWatchNow": "现在观看",
+    "input.downloadFinishedWatchLater": "稍后观看"
+  },
+  "zh-TW": {
+    "input.downloadFinishedSwitchTitle": "觀看已下載的影片？",
+    "input.downloadFinishedSwitchPrompt": "你的下載已準備好。現在觀看，或保留目前的影片，稍後再從歷史記錄開啟。",
+    "input.downloadFinishedWatchNow": "立即觀看",
+    "input.downloadFinishedWatchLater": "稍後觀看"
+  }
+};
+
+const videoSuggestionFollowUpOverrides = {
+  "af": {
+    "input.videoSuggestion.showFollowUps": "Voorgestelde opvolgidees",
+    "input.videoSuggestion.hideFollowUps": "Versteek opvolgidees",
+    "input.videoSuggestion.followUpChooserLabel": "Kies 'n beginpunt en wysig dit as jy wil.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Vind meer video's soos \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" van 'n ander skepper of kanaal",
+    "input.videoSuggestion.followUp.interviews": "Onderhoude of gesprekke oor {{query}}",
+    "input.videoSuggestion.followUp.clips": "Hoogtepunte of uitstaande snitte van {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}}-onderhoude, TV-verskynings of regstreekse snitte",
+    "input.videoSuggestion.followUp.similarCreators": "Skeppers of kunstenaars soortgelyk aan {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} uit 'n ander hoek verduidelik",
+    "input.videoSuggestion.followUp.topicSubtopic": "Meer {{subtopic}}-video's oor {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} en verwante {{topic}}-video's",
+    "input.videoSuggestion.followUp.channelStyle": "Video's met 'n soortgelyke gevoel as {{channel}}"
+  },
+  "ar": {
+    "input.videoSuggestion.showFollowUps": "اقتراحات متابعة",
+    "input.videoSuggestion.hideFollowUps": "إخفاء اقتراحات المتابعة",
+    "input.videoSuggestion.followUpChooserLabel": "اختر نقطة بداية، ثم عدّلها إذا أردت.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "اعثر على المزيد من الفيديوهات المشابهة لـ \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" من صانع محتوى أو قناة أخرى",
+    "input.videoSuggestion.followUp.interviews": "مقابلات أو حوارات حول {{query}}",
+    "input.videoSuggestion.followUp.clips": "أبرز اللقطات أو المقاطع المميزة حول {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "مقابلات {{creator}} أو ظهوره التلفزيوني أو مقاطع مباشرة",
+    "input.videoSuggestion.followUp.similarCreators": "صناع محتوى أو فنانون مشابهون لـ {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "شرح {{topic}} من زاوية مختلفة",
+    "input.videoSuggestion.followUp.topicSubtopic": "المزيد من فيديوهات {{subtopic}} حول {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} وفيديوهات مرتبطة بـ {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "فيديوهات بإحساس مشابه لـ {{channel}}"
+  },
+  "bn": {
+    "input.videoSuggestion.showFollowUps": "পরবর্তী প্রস্তাবনা",
+    "input.videoSuggestion.hideFollowUps": "পরবর্তী প্রস্তাবনা লুকান",
+    "input.videoSuggestion.followUpChooserLabel": "একটি শুরুর দিক বেছে নিন, তারপর চাইলে সেটি সম্পাদনা করুন।",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\"-এর মতো আরও ভিডিও খুঁজুন",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" অন্য কোনো নির্মাতা বা চ্যানেল থেকে",
+    "input.videoSuggestion.followUp.interviews": "{{query}} নিয়ে সাক্ষাৎকার বা আলাপ",
+    "input.videoSuggestion.followUp.clips": "{{query}}-এর হাইলাইট বা উল্লেখযোগ্য ক্লিপ",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}}-এর সাক্ষাৎকার, টিভি উপস্থিতি বা লাইভ ক্লিপ",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}}-এর মতো নির্মাতা বা শিল্পী",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} অন্য দৃষ্টিকোণ থেকে ব্যাখ্যা করা",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} সম্পর্কে আরও {{subtopic}} ভিডিও",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} এবং {{topic}}-সম্পর্কিত ভিডিও",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}}-এর মতো অনুভূতির ভিডিও"
+  },
+  "cs": {
+    "input.videoSuggestion.showFollowUps": "Navrhovaná pokračování",
+    "input.videoSuggestion.hideFollowUps": "Skrýt pokračování",
+    "input.videoSuggestion.followUpChooserLabel": "Vyber výchozí bod a uprav ho, pokud chceš.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Najít další videa jako \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" od jiného tvůrce nebo kanálu",
+    "input.videoSuggestion.followUp.interviews": "Rozhovory nebo interview o {{query}}",
+    "input.videoSuggestion.followUp.clips": "Nejzajímavější momenty nebo výrazné klipy o {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Rozhovory, TV vystoupení nebo živé klipy s {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Tvůrci nebo umělci podobní {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} vysvětlené z jiného úhlu",
+    "input.videoSuggestion.followUp.topicSubtopic": "Další videa o {{subtopic}} k tématu {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} a související videa o {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videa s podobnou atmosférou jako {{channel}}"
+  },
+  "da": {
+    "input.videoSuggestion.showFollowUps": "Foreslåede opfølgninger",
+    "input.videoSuggestion.hideFollowUps": "Skjul opfølgninger",
+    "input.videoSuggestion.followUpChooserLabel": "Vælg et udgangspunkt, og redigér det, hvis du vil.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Find flere videoer som \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" fra en anden skaber eller kanal",
+    "input.videoSuggestion.followUp.interviews": "Interviews eller samtaler om {{query}}",
+    "input.videoSuggestion.followUp.clips": "Højdepunkter eller markante klip om {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Interviews, tv-optrædener eller liveklip med {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Skabere eller kunstnere, der minder om {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} forklaret fra en anden vinkel",
+    "input.videoSuggestion.followUp.topicSubtopic": "Flere {{subtopic}}-videoer om {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} og relaterede videoer om {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videoer med en lignende stemning som {{channel}}"
+  },
+  "de": {
+    "input.videoSuggestion.showFollowUps": "Vorgeschlagene Anschlussideen",
+    "input.videoSuggestion.hideFollowUps": "Anschlussideen ausblenden",
+    "input.videoSuggestion.followUpChooserLabel": "Wähle einen Einstieg und passe ihn bei Bedarf an.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Finde mehr Videos wie \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" von einem anderen Creator oder Kanal",
+    "input.videoSuggestion.followUp.interviews": "Interviews oder Gespräche zu {{query}}",
+    "input.videoSuggestion.followUp.clips": "Highlights oder starke Clips zu {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Interviews, TV-Auftritte oder Live-Clips von {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Creator oder Künstler ähnlich wie {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} aus einem anderen Blickwinkel erklärt",
+    "input.videoSuggestion.followUp.topicSubtopic": "Mehr {{subtopic}}-Videos über {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} und verwandte Videos zu {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videos mit einer ähnlichen Stimmung wie bei {{channel}}"
+  },
+  "el": {
+    "input.videoSuggestion.showFollowUps": "Προτεινόμενες συνέχειες",
+    "input.videoSuggestion.hideFollowUps": "Απόκρυψη συνεχειών",
+    "input.videoSuggestion.followUpChooserLabel": "Διάλεξε ένα σημείο εκκίνησης και επεξεργάσου το αν θέλεις.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Βρες περισσότερα βίντεο σαν το \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" από άλλον δημιουργό ή κανάλι",
+    "input.videoSuggestion.followUp.interviews": "Συνεντεύξεις ή συζητήσεις για {{query}}",
+    "input.videoSuggestion.followUp.clips": "Κορυφαίες στιγμές ή ξεχωριστά αποσπάσματα για {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Συνεντεύξεις, τηλεοπτικές εμφανίσεις ή live αποσπάσματα του {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Δημιουργοί ή καλλιτέχνες παρόμοιοι με τον/την {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "Το {{topic}} εξηγημένο από άλλη οπτική",
+    "input.videoSuggestion.followUp.topicSubtopic": "Περισσότερα βίντεο για {{subtopic}} σχετικά με {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "Ο/Η {{creator}} και σχετικά βίντεο για {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Βίντεο με παρόμοια αίσθηση με το {{channel}}"
+  },
+  "es": {
+    "input.videoSuggestion.showFollowUps": "Sugerencias de seguimiento",
+    "input.videoSuggestion.hideFollowUps": "Ocultar sugerencias",
+    "input.videoSuggestion.followUpChooserLabel": "Elige un punto de partida y edítalo si quieres.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Encuentra más videos como \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" de otro creador o canal",
+    "input.videoSuggestion.followUp.interviews": "Entrevistas o conversaciones sobre {{query}}",
+    "input.videoSuggestion.followUp.clips": "Lo mejor o clips destacados de {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Entrevistas, apariciones en TV o clips en vivo de {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Creadores o artistas parecidos a {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} explicado desde otro ángulo",
+    "input.videoSuggestion.followUp.topicSubtopic": "Más videos de {{subtopic}} sobre {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} y videos relacionados con {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videos con un estilo parecido a {{channel}}"
+  },
+  "fa": {
+    "input.videoSuggestion.showFollowUps": "پیشنهادهای ادامه",
+    "input.videoSuggestion.hideFollowUps": "پنهان کردن پیشنهادهای ادامه",
+    "input.videoSuggestion.followUpChooserLabel": "یک نقطه شروع انتخاب کنید و اگر خواستید آن را ویرایش کنید.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "ویدیوهای بیشتری شبیه \"{{query}}\" پیدا کن",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" از یک سازنده یا کانال دیگر",
+    "input.videoSuggestion.followUp.interviews": "مصاحبه‌ها یا گفتگوهای دربارهٔ {{query}}",
+    "input.videoSuggestion.followUp.clips": "بخش‌های برجسته یا کلیپ‌های شاخص از {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "مصاحبه‌ها، حضورهای تلویزیونی یا کلیپ‌های زندهٔ {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "سازندگان یا هنرمندان شبیه {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} از زاویه‌ای دیگر توضیح داده شده",
+    "input.videoSuggestion.followUp.topicSubtopic": "ویدیوهای بیشتر دربارهٔ {{subtopic}} پیرامون {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} و ویدیوهای مرتبط با {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "ویدیوهایی با حال‌وهوایی شبیه {{channel}}"
+  },
+  "fi": {
+    "input.videoSuggestion.showFollowUps": "Ehdotetut jatkoideat",
+    "input.videoSuggestion.hideFollowUps": "Piilota jatkoideat",
+    "input.videoSuggestion.followUpChooserLabel": "Valitse lähtökohta ja muokkaa sitä halutessasi.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Löydä lisää videoita kuten \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" toiselta tekijältä tai kanavalta",
+    "input.videoSuggestion.followUp.interviews": "{{query}}-haastatteluja tai keskusteluja",
+    "input.videoSuggestion.followUp.clips": "{{query}}-kohokohtia tai erottuvia klippejä",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}}-haastatteluja, TV-esiintymisiä tai liveklippejä",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}}-tyyppisiä tekijöitä tai artisteja",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} selitettynä toisesta näkökulmasta",
+    "input.videoSuggestion.followUp.topicSubtopic": "Lisää {{subtopic}}-videoita aiheesta {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} ja siihen liittyvät {{topic}}-videot",
+    "input.videoSuggestion.followUp.channelStyle": "Videoita, joissa on samanlainen tunnelma kuin {{channel}}ssa"
+  },
+  "fr": {
+    "input.videoSuggestion.showFollowUps": "Suggestions de suite",
+    "input.videoSuggestion.hideFollowUps": "Masquer les suggestions",
+    "input.videoSuggestion.followUpChooserLabel": "Choisissez un point de départ, puis modifiez-le si vous voulez.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Trouvez plus de vidéos comme \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" par un autre créateur ou une autre chaîne",
+    "input.videoSuggestion.followUp.interviews": "Interviews ou conversations sur {{query}}",
+    "input.videoSuggestion.followUp.clips": "Extraits marquants ou meilleurs moments de {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Interviews, passages TV ou clips live de {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Créateurs ou artistes similaires à {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} expliqué sous un autre angle",
+    "input.videoSuggestion.followUp.topicSubtopic": "Plus de vidéos sur {{subtopic}} à propos de {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} et vidéos liées à {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Des vidéos dans un style proche de {{channel}}"
+  },
+  "he": {
+    "input.videoSuggestion.showFollowUps": "הצעות המשך",
+    "input.videoSuggestion.hideFollowUps": "הסתר הצעות המשך",
+    "input.videoSuggestion.followUpChooserLabel": "בחר נקודת פתיחה ואז ערוך אותה אם תרצה.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "מצא עוד סרטונים כמו \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" מיוצר אחר או ערוץ אחר",
+    "input.videoSuggestion.followUp.interviews": "ראיונות או שיחות על {{query}}",
+    "input.videoSuggestion.followUp.clips": "תקצירי שיא או קליפים בולטים של {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "ראיונות, הופעות טלוויזיה או קליפים חיים של {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "יוצרים או אמנים דומים ל-{{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} מוסבר מזווית אחרת",
+    "input.videoSuggestion.followUp.topicSubtopic": "עוד סרטוני {{subtopic}} על {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} וסרטונים קשורים על {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "סרטונים עם תחושה דומה ל-{{channel}}"
+  },
+  "hi": {
+    "input.videoSuggestion.showFollowUps": "आगे के सुझाए गए आइडिया",
+    "input.videoSuggestion.hideFollowUps": "आगे के आइडिया छिपाएं",
+    "input.videoSuggestion.followUpChooserLabel": "एक शुरुआती बिंदु चुनें, फिर चाहें तो उसे संपादित करें।",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" जैसे और वीडियो ढूंढें",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" किसी दूसरे क्रिएटर या चैनल से",
+    "input.videoSuggestion.followUp.interviews": "{{query}} पर इंटरव्यू या बातचीत",
+    "input.videoSuggestion.followUp.clips": "{{query}} के हाइलाइट्स या खास क्लिप",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} के इंटरव्यू, टीवी उपस्थितियां या लाइव क्लिप",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} जैसे क्रिएटर या कलाकार",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} को एक अलग नजरिए से समझाया गया",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} पर और {{subtopic}} वीडियो",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} और {{topic}} से जुड़े वीडियो",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}} जैसी फील वाले वीडियो"
+  },
+  "hu": {
+    "input.videoSuggestion.showFollowUps": "Javasolt folytatások",
+    "input.videoSuggestion.hideFollowUps": "Folytatások elrejtése",
+    "input.videoSuggestion.followUpChooserLabel": "Válassz egy kiindulópontot, és szerkeszd át, ha akarod.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Keress több videót ehhez: \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" másik alkotótól vagy csatornától",
+    "input.videoSuggestion.followUp.interviews": "Interjúk vagy beszélgetések {{query}} témában",
+    "input.videoSuggestion.followUp.clips": "{{query}} kiemelt részei vagy emlékezetes klipjei",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} interjúk, tévés szereplések vagy élő klipek",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}}-hoz hasonló alkotók vagy előadók",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} más nézőpontból elmagyarázva",
+    "input.videoSuggestion.followUp.topicSubtopic": "További {{subtopic}} videók {{topic}} témában",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} és kapcsolódó {{topic}} videók",
+    "input.videoSuggestion.followUp.channelStyle": "A {{channel}} hangulatához hasonló videók"
+  },
+  "id": {
+    "input.videoSuggestion.showFollowUps": "Saran lanjutan",
+    "input.videoSuggestion.hideFollowUps": "Sembunyikan saran lanjutan",
+    "input.videoSuggestion.followUpChooserLabel": "Pilih titik awal, lalu edit jika mau.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Temukan lebih banyak video seperti \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" dari kreator atau channel lain",
+    "input.videoSuggestion.followUp.interviews": "Wawancara atau percakapan tentang {{query}}",
+    "input.videoSuggestion.followUp.clips": "Sorotan atau klip menonjol dari {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Wawancara, penampilan TV, atau klip live dari {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Kreator atau artis yang mirip dengan {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} dijelaskan dari sudut pandang lain",
+    "input.videoSuggestion.followUp.topicSubtopic": "Lebih banyak video {{subtopic}} tentang {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} dan video terkait {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Video dengan nuansa mirip {{channel}}"
+  },
+  "it": {
+    "input.videoSuggestion.showFollowUps": "Suggerimenti successivi",
+    "input.videoSuggestion.hideFollowUps": "Nascondi suggerimenti",
+    "input.videoSuggestion.followUpChooserLabel": "Scegli un punto di partenza e modificalo se vuoi.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Trova altri video come \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" da un altro creator o canale",
+    "input.videoSuggestion.followUp.interviews": "Interviste o conversazioni su {{query}}",
+    "input.videoSuggestion.followUp.clips": "Momenti salienti o clip notevoli di {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Interviste, apparizioni TV o clip dal vivo di {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Creator o artisti simili a {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} spiegato da un'altra prospettiva",
+    "input.videoSuggestion.followUp.topicSubtopic": "Più video su {{subtopic}} relativi a {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} e video correlati a {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Video con un'atmosfera simile a quella di {{channel}}"
+  },
+  "ja": {
+    "input.videoSuggestion.useLastSearch": "前回の設定を使う",
+    "input.videoSuggestion.showFollowUps": "おすすめの続き",
+    "input.videoSuggestion.hideFollowUps": "続きの候補を隠す",
+    "input.videoSuggestion.followUpChooserLabel": "出発点を選んで、必要なら編集してください。",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" のような動画をもっと探す",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" を別のクリエイターやチャンネルで探す",
+    "input.videoSuggestion.followUp.interviews": "{{query}} のインタビューや対談",
+    "input.videoSuggestion.followUp.clips": "{{query}} のハイライトや注目クリップ",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} のインタビュー、テレビ出演、ライブクリップ",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} に近いクリエイターやアーティスト",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} を別の切り口で解説した動画",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} についての {{subtopic}} 動画をもっと見る",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} と関連する {{topic}} 動画",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}} に近い雰囲気の動画"
+  },
+  "ko": {
+    "input.videoSuggestion.useLastSearch": "지난 설정 사용",
+    "input.videoSuggestion.showFollowUps": "추천 후속 검색",
+    "input.videoSuggestion.hideFollowUps": "후속 검색 숨기기",
+    "input.videoSuggestion.followUpChooserLabel": "시작점 하나를 고른 뒤, 원하면 내용을 다듬어 보세요.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\"와 비슷한 영상을 더 찾아보기",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\"를 다른 크리에이터나 채널로 찾아보기",
+    "input.videoSuggestion.followUp.interviews": "{{query}} 관련 인터뷰나 대화",
+    "input.videoSuggestion.followUp.clips": "{{query}} 하이라이트나 눈에 띄는 클립",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} 인터뷰, TV 출연, 라이브 클립",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}}와 비슷한 크리에이터나 아티스트",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}}를 다른 관점으로 설명한 영상",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}}에 대한 {{subtopic}} 영상을 더 보기",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}}와 관련된 {{topic}} 영상",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}}와 비슷한 분위기의 영상"
+  },
+  "mr": {
+    "input.videoSuggestion.showFollowUps": "पुढील सुचवलेले पर्याय",
+    "input.videoSuggestion.hideFollowUps": "पुढील पर्याय लपवा",
+    "input.videoSuggestion.followUpChooserLabel": "एक सुरुवातीचा पर्याय निवडा, मग हवे असल्यास तो संपादा.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" सारखे आणखी व्हिडिओ शोधा",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" दुसऱ्या क्रिएटर किंवा चॅनेलकडून",
+    "input.videoSuggestion.followUp.interviews": "{{query}} वर मुलाखती किंवा संभाषणे",
+    "input.videoSuggestion.followUp.clips": "{{query}} चे हायलाइट्स किंवा उठून दिसणारे क्लिप्स",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} च्या मुलाखती, टीव्ही उपस्थिती किंवा लाईव्ह क्लिप्स",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} सारखे क्रिएटर किंवा कलाकार",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} वेगळ्या दृष्टिकोनातून समजावलेले",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} वर आणखी {{subtopic}} व्हिडिओ",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} आणि {{topic}} संदर्भातील व्हिडिओ",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}} सारखी भावना असलेले व्हिडिओ"
+  },
+  "ms": {
+    "input.videoSuggestion.showFollowUps": "Cadangan susulan",
+    "input.videoSuggestion.hideFollowUps": "Sembunyikan cadangan susulan",
+    "input.videoSuggestion.followUpChooserLabel": "Pilih titik permulaan, kemudian edit jika mahu.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Cari lebih banyak video seperti \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" daripada pencipta atau saluran lain",
+    "input.videoSuggestion.followUp.interviews": "Temu bual atau perbualan tentang {{query}}",
+    "input.videoSuggestion.followUp.clips": "Sorotan atau klip menonjol tentang {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Temu bual, penampilan TV atau klip langsung {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Pencipta atau artis yang serupa dengan {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} diterangkan dari sudut lain",
+    "input.videoSuggestion.followUp.topicSubtopic": "Lebih banyak video {{subtopic}} tentang {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} dan video berkaitan {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Video dengan suasana serupa seperti {{channel}}"
+  },
+  "nl": {
+    "input.videoSuggestion.showFollowUps": "Vervolgideeën",
+    "input.videoSuggestion.hideFollowUps": "Vervolgideeën verbergen",
+    "input.videoSuggestion.followUpChooserLabel": "Kies een startpunt en pas het aan als je wilt.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Vind meer video's zoals \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" van een andere maker of kanaal",
+    "input.videoSuggestion.followUp.interviews": "Interviews of gesprekken over {{query}}",
+    "input.videoSuggestion.followUp.clips": "Highlights of opvallende clips van {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Interviews, tv-optredens of liveclips van {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Makers of artiesten vergelijkbaar met {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} vanuit een andere invalshoek uitgelegd",
+    "input.videoSuggestion.followUp.topicSubtopic": "Meer {{subtopic}}-video's over {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} en gerelateerde video's over {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Video's met een vergelijkbare sfeer als {{channel}}"
+  },
+  "no": {
+    "input.videoSuggestion.showFollowUps": "Foreslåtte oppfølgingsideer",
+    "input.videoSuggestion.hideFollowUps": "Skjul oppfølgingsideer",
+    "input.videoSuggestion.followUpChooserLabel": "Velg et utgangspunkt og rediger det hvis du vil.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Finn flere videoer som \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" fra en annen skaper eller kanal",
+    "input.videoSuggestion.followUp.interviews": "Intervjuer eller samtaler om {{query}}",
+    "input.videoSuggestion.followUp.clips": "Høydepunkter eller sterke klipp om {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Intervjuer, TV-opptredener eller liveklipp med {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Skapere eller artister som ligner på {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} forklart fra en annen vinkel",
+    "input.videoSuggestion.followUp.topicSubtopic": "Flere {{subtopic}}-videoer om {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} og relaterte videoer om {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videoer med en lignende stemning som {{channel}}"
+  },
+  "pl": {
+    "input.videoSuggestion.showFollowUps": "Sugerowane kolejne pomysły",
+    "input.videoSuggestion.hideFollowUps": "Ukryj propozycje",
+    "input.videoSuggestion.followUpChooserLabel": "Wybierz punkt wyjścia i edytuj go, jeśli chcesz.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Znajdź więcej filmów podobnych do \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" od innego twórcy lub kanału",
+    "input.videoSuggestion.followUp.interviews": "Wywiady lub rozmowy o {{query}}",
+    "input.videoSuggestion.followUp.clips": "Najciekawsze momenty lub wyróżniające się klipy o {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Wywiady, występy TV lub klipy na żywo z {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Twórcy lub artyści podobni do {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} wyjaśnione z innej perspektywy",
+    "input.videoSuggestion.followUp.topicSubtopic": "Więcej filmów o {{subtopic}} na temat {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} i powiązane filmy o {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Filmy o podobnym klimacie do {{channel}}"
+  },
+  "pt": {
+    "input.videoSuggestion.showFollowUps": "Sugestões de continuação",
+    "input.videoSuggestion.hideFollowUps": "Ocultar sugestões",
+    "input.videoSuggestion.followUpChooserLabel": "Escolha um ponto de partida e edite-o se quiser.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Encontre mais vídeos como \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" de outro criador ou canal",
+    "input.videoSuggestion.followUp.interviews": "Entrevistas ou conversas sobre {{query}}",
+    "input.videoSuggestion.followUp.clips": "Destaques ou clipes marcantes de {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Entrevistas, aparições na TV ou clipes ao vivo de {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Criadores ou artistas parecidos com {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} explicado por outro ângulo",
+    "input.videoSuggestion.followUp.topicSubtopic": "Mais vídeos de {{subtopic}} sobre {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} e vídeos relacionados a {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Vídeos com uma vibe parecida com a de {{channel}}"
+  },
+  "ro": {
+    "input.videoSuggestion.showFollowUps": "Idei de continuare sugerate",
+    "input.videoSuggestion.hideFollowUps": "Ascunde ideile",
+    "input.videoSuggestion.followUpChooserLabel": "Alege un punct de pornire, apoi editează-l dacă vrei.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Găsește mai multe videoclipuri ca \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" de la un alt creator sau canal",
+    "input.videoSuggestion.followUp.interviews": "Interviuri sau conversații despre {{query}}",
+    "input.videoSuggestion.followUp.clips": "Momente importante sau clipuri remarcabile despre {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Interviuri, apariții TV sau clipuri live cu {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Creatori sau artiști similari cu {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} explicat dintr-un alt unghi",
+    "input.videoSuggestion.followUp.topicSubtopic": "Mai multe videoclipuri despre {{subtopic}} legate de {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} și videoclipuri legate de {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videoclipuri cu un stil asemănător cu {{channel}}"
+  },
+  "ru": {
+    "input.videoSuggestion.showFollowUps": "Предлагаемые продолжения",
+    "input.videoSuggestion.hideFollowUps": "Скрыть продолжения",
+    "input.videoSuggestion.followUpChooserLabel": "Выберите отправную точку и при желании отредактируйте ее.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Найти больше видео, похожих на \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" от другого автора или канала",
+    "input.videoSuggestion.followUp.interviews": "Интервью или беседы о {{query}}",
+    "input.videoSuggestion.followUp.clips": "Лучшие моменты или яркие клипы по {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Интервью, ТВ-появления или лайв-клипы с {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Авторы или исполнители, похожие на {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} с объяснением под другим углом",
+    "input.videoSuggestion.followUp.topicSubtopic": "Больше видео о {{subtopic}} по теме {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} и связанные видео о {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Видео с похожей атмосферой, как у {{channel}}"
+  },
+  "sv": {
+    "input.videoSuggestion.showFollowUps": "Föreslagna följdidéer",
+    "input.videoSuggestion.hideFollowUps": "Dölj följdidéer",
+    "input.videoSuggestion.followUpChooserLabel": "Välj en startpunkt och redigera den om du vill.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Hitta fler videor som \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" från en annan skapare eller kanal",
+    "input.videoSuggestion.followUp.interviews": "Intervjuer eller samtal om {{query}}",
+    "input.videoSuggestion.followUp.clips": "Höjdpunkter eller starka klipp om {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Intervjuer, tv-framträdanden eller liveklipp med {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Skapare eller artister som liknar {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} förklarat från en annan vinkel",
+    "input.videoSuggestion.followUp.topicSubtopic": "Fler {{subtopic}}-videor om {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} och relaterade videor om {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Videor med en liknande känsla som {{channel}}"
+  },
+  "sw": {
+    "input.videoSuggestion.showFollowUps": "Mapendekezo ya mwendelezo",
+    "input.videoSuggestion.hideFollowUps": "Ficha mapendekezo ya mwendelezo",
+    "input.videoSuggestion.followUpChooserLabel": "Chagua pa kuanzia, kisha uihariri ukitaka.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Tafuta video zaidi kama \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" kutoka kwa mtayarishi au chaneli nyingine",
+    "input.videoSuggestion.followUp.interviews": "Mahojiano au mazungumzo kuhusu {{query}}",
+    "input.videoSuggestion.followUp.clips": "Mambo muhimu au klipu zilizojitokeza za {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Mahojiano ya {{creator}}, kuonekana TV, au klipu za moja kwa moja",
+    "input.videoSuggestion.followUp.similarCreators": "Watayarishi au wasanii wanaofanana na {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} imeelezewa kwa mtazamo mwingine",
+    "input.videoSuggestion.followUp.topicSubtopic": "Video zaidi za {{subtopic}} kuhusu {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} na video zinazohusiana na {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Video zenye hisia zinazofanana na {{channel}}"
+  },
+  "ta": {
+    "input.videoSuggestion.showFollowUps": "பரிந்துரைக்கப்பட்ட அடுத்த யோசனைகள்",
+    "input.videoSuggestion.hideFollowUps": "அடுத்த யோசனைகளை மறை",
+    "input.videoSuggestion.followUpChooserLabel": "ஒரு தொடக்கப் புள்ளியை தேர்வு செய்து, வேண்டுமெனில் அதைத் திருத்துங்கள்.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" போன்ற மேலும் வீடியோக்களை கண்டுபிடி",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" மற்றொரு உருவாக்குனர் அல்லது சேனலில் இருந்து",
+    "input.videoSuggestion.followUp.interviews": "{{query}} பற்றிய நேர்காணல்கள் அல்லது உரையாடல்கள்",
+    "input.videoSuggestion.followUp.clips": "{{query}}-இன் முக்கிய தருணங்கள் அல்லது சிறப்பான கிளிப்புகள்",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} நேர்காணல்கள், டிவி தோற்றங்கள் அல்லது நேரலை கிளிப்புகள்",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} போன்ற உருவாக்குனர்கள் அல்லது கலைஞர்கள்",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} வேறு கோணத்தில் விளக்கப்பட்டது",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} பற்றிய மேலும் {{subtopic}} வீடியோக்கள்",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} மற்றும் தொடர்புடைய {{topic}} வீடியோக்கள்",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}} போன்ற உணர்வுள்ள வீடியோக்கள்"
+  },
+  "te": {
+    "input.videoSuggestion.showFollowUps": "సూచించిన తదుపరి ఆలోచనలు",
+    "input.videoSuggestion.hideFollowUps": "తదుపరి ఆలోచనలు దాచు",
+    "input.videoSuggestion.followUpChooserLabel": "ఒక ప్రారంభ బిందువును ఎంచుకుని, కావాలంటే దాన్ని సవరించండి.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" లాంటి మరిన్ని వీడియోలు కనుగొనండి",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" మరో క్రియేటర్ లేదా ఛానల్ నుండి",
+    "input.videoSuggestion.followUp.interviews": "{{query}} గురించి ఇంటర్వ్యూలు లేదా సంభాషణలు",
+    "input.videoSuggestion.followUp.clips": "{{query}} హైలైట్స్ లేదా ప్రత్యేకంగా కనిపించే క్లిప్స్",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} ఇంటర్వ్యూలు, టీవీ ప్రదర్శనలు లేదా లైవ్ క్లిప్స్",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} లాంటి క్రియేటర్లు లేదా కళాకారులు",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} ను మరో కోణంలో వివరణ",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} గురించి మరిన్ని {{subtopic}} వీడియోలు",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} మరియు సంబంధించిన {{topic}} వీడియోలు",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}}లాంటి భావం ఉన్న వీడియోలు"
+  },
+  "th": {
+    "input.videoSuggestion.showFollowUps": "คำแนะนำต่อยอด",
+    "input.videoSuggestion.hideFollowUps": "ซ่อนคำแนะนำต่อยอด",
+    "input.videoSuggestion.followUpChooserLabel": "เลือกจุดเริ่มต้นก่อน แล้วค่อยแก้ไขถ้าต้องการ",
+    "input.videoSuggestion.followUp.moreLikeQuery": "ค้นหาวิดีโอเพิ่มเติมแบบ \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" จากครีเอเตอร์หรือช่องอื่น",
+    "input.videoSuggestion.followUp.interviews": "บทสัมภาษณ์หรือบทสนทนาเกี่ยวกับ {{query}}",
+    "input.videoSuggestion.followUp.clips": "ไฮไลต์หรือคลิปเด่นของ {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "บทสัมภาษณ์ การออกรายการทีวี หรือคลิปไลฟ์ของ {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "ครีเอเตอร์หรือศิลปินที่คล้ายกับ {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} ที่อธิบายจากอีกมุมหนึ่ง",
+    "input.videoSuggestion.followUp.topicSubtopic": "วิดีโอ {{subtopic}} เพิ่มเติมเกี่ยวกับ {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} และวิดีโอที่เกี่ยวข้องกับ {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "วิดีโอที่ให้อารมณ์คล้าย {{channel}}"
+  },
+  "tl": {
+    "input.videoSuggestion.showFollowUps": "Mga mungkahing kasunod",
+    "input.videoSuggestion.hideFollowUps": "Itago ang mga mungkahing kasunod",
+    "input.videoSuggestion.followUpChooserLabel": "Pumili ng panimulang punto, tapos i-edit mo kung gusto mo.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Maghanap ng higit pang video na tulad ng \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" mula sa ibang creator o channel",
+    "input.videoSuggestion.followUp.interviews": "Mga interview o usapan tungkol sa {{query}}",
+    "input.videoSuggestion.followUp.clips": "Mga highlight o kapansin-pansing clip ng {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Mga interview, TV appearance, o live clip ni {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Mga creator o artist na kahawig ni {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} na ipinaliwanag mula sa ibang anggulo",
+    "input.videoSuggestion.followUp.topicSubtopic": "Mas maraming {{subtopic}} na video tungkol sa {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} at mga kaugnay na video tungkol sa {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Mga video na may kaparehong dating ng {{channel}}"
+  },
+  "tr": {
+    "input.videoSuggestion.showFollowUps": "Önerilen devam fikirleri",
+    "input.videoSuggestion.hideFollowUps": "Devam fikirlerini gizle",
+    "input.videoSuggestion.followUpChooserLabel": "Bir başlangıç noktası seç, sonra istersen düzenle.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" gibi daha fazla video bul",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" için başka bir üretici veya kanaldan sonuçlar",
+    "input.videoSuggestion.followUp.interviews": "{{query}} hakkında röportajlar veya sohbetler",
+    "input.videoSuggestion.followUp.clips": "{{query}} öne çıkan anlar veya dikkat çeken klipler",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} röportajları, TV görünümleri veya canlı klipleri",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} benzeri üreticiler veya sanatçılar",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} farklı bir açıdan anlatılıyor",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} hakkında daha fazla {{subtopic}} videosu",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} ve ilgili {{topic}} videoları",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}} ile benzer his taşıyan videolar"
+  },
+  "uk": {
+    "input.videoSuggestion.showFollowUps": "Запропоновані продовження",
+    "input.videoSuggestion.hideFollowUps": "Сховати продовження",
+    "input.videoSuggestion.followUpChooserLabel": "Виберіть відправну точку й за бажанням відредагуйте її.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Знайти більше відео, схожих на \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" від іншого автора або каналу",
+    "input.videoSuggestion.followUp.interviews": "Інтерв'ю чи розмови про {{query}}",
+    "input.videoSuggestion.followUp.clips": "Найкращі моменти або виразні кліпи про {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Інтерв'ю, телепояви або лайв-кліпи з {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Автори чи артисти, схожі на {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} пояснено з іншого ракурсу",
+    "input.videoSuggestion.followUp.topicSubtopic": "Більше відео про {{subtopic}} на тему {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} і пов'язані відео про {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Відео з атмосферою, схожою на {{channel}}"
+  },
+  "ur": {
+    "input.videoSuggestion.showFollowUps": "تجویز کردہ اگلے خیالات",
+    "input.videoSuggestion.hideFollowUps": "اگلے خیالات چھپائیں",
+    "input.videoSuggestion.followUpChooserLabel": "ایک نقطہ آغاز چنیں، پھر چاہیں تو اسے ایڈٹ کر لیں۔",
+    "input.videoSuggestion.followUp.moreLikeQuery": "\"{{query}}\" جیسی مزید ویڈیوز تلاش کریں",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" کسی اور تخلیق کار یا چینل سے",
+    "input.videoSuggestion.followUp.interviews": "{{query}} پر انٹرویوز یا گفتگو",
+    "input.videoSuggestion.followUp.clips": "{{query}} کے ہائی لائٹس یا نمایاں کلپس",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} کے انٹرویوز، ٹی وی پیشیاں یا لائیو کلپس",
+    "input.videoSuggestion.followUp.similarCreators": "{{creator}} جیسے تخلیق کار یا فنکار",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} کو ایک مختلف زاویے سے سمجھایا گیا",
+    "input.videoSuggestion.followUp.topicSubtopic": "{{topic}} پر مزید {{subtopic}} ویڈیوز",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} اور {{topic}} سے متعلق ویڈیوز",
+    "input.videoSuggestion.followUp.channelStyle": "{{channel}} جیسا احساس رکھنے والی ویڈیوز"
+  },
+  "vi": {
+    "input.videoSuggestion.showFollowUps": "Gợi ý tiếp theo",
+    "input.videoSuggestion.hideFollowUps": "Ẩn gợi ý tiếp theo",
+    "input.videoSuggestion.followUpChooserLabel": "Chọn một điểm bắt đầu rồi chỉnh lại nếu muốn.",
+    "input.videoSuggestion.followUp.moreLikeQuery": "Tìm thêm video giống \"{{query}}\"",
+    "input.videoSuggestion.followUp.differentCreator": "\"{{query}}\" từ một nhà sáng tạo hoặc kênh khác",
+    "input.videoSuggestion.followUp.interviews": "Phỏng vấn hoặc trò chuyện về {{query}}",
+    "input.videoSuggestion.followUp.clips": "Những đoạn nổi bật hoặc clip đáng chú ý về {{query}}",
+    "input.videoSuggestion.followUp.creatorAppearances": "Phỏng vấn, lần xuất hiện trên TV hoặc clip trực tiếp của {{creator}}",
+    "input.videoSuggestion.followUp.similarCreators": "Nhà sáng tạo hoặc nghệ sĩ giống {{creator}}",
+    "input.videoSuggestion.followUp.topicAngle": "{{topic}} được giải thích từ một góc nhìn khác",
+    "input.videoSuggestion.followUp.topicSubtopic": "Thêm video {{subtopic}} về {{topic}}",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} và các video liên quan đến {{topic}}",
+    "input.videoSuggestion.followUp.channelStyle": "Video có cảm giác tương tự {{channel}}"
+  },
+  "zh-CN": {
+    "input.videoSuggestion.useLastSearch": "使用上次设置",
+    "input.videoSuggestion.showFollowUps": "推荐的后续想法",
+    "input.videoSuggestion.hideFollowUps": "隐藏后续想法",
+    "input.videoSuggestion.followUpChooserLabel": "先选一个起点，想改的话再编辑。",
+    "input.videoSuggestion.followUp.moreLikeQuery": "查找更多像 \"{{query}}\" 这样的视频",
+    "input.videoSuggestion.followUp.differentCreator": "来自其他创作者或频道的 \"{{query}}\"",
+    "input.videoSuggestion.followUp.interviews": "与 {{query}} 相关的采访或对谈",
+    "input.videoSuggestion.followUp.clips": "{{query}} 的高光片段或精彩剪辑",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} 的采访、电视露面或现场片段",
+    "input.videoSuggestion.followUp.similarCreators": "与 {{creator}} 相似的创作者或艺人",
+    "input.videoSuggestion.followUp.topicAngle": "从不同角度讲解 {{topic}}",
+    "input.videoSuggestion.followUp.topicSubtopic": "更多关于 {{topic}} 的 {{subtopic}} 视频",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} 和相关的 {{topic}} 视频",
+    "input.videoSuggestion.followUp.channelStyle": "风格感觉与 {{channel}} 相似的视频"
+  },
+  "zh-TW": {
+    "input.videoSuggestion.showFollowUps": "推薦的後續想法",
+    "input.videoSuggestion.hideFollowUps": "隱藏後續想法",
+    "input.videoSuggestion.followUpChooserLabel": "先選一個起點，想改的話再編輯。",
+    "input.videoSuggestion.followUp.moreLikeQuery": "查找更多像 \"{{query}}\" 這樣的影片",
+    "input.videoSuggestion.followUp.differentCreator": "來自其他創作者或頻道的 \"{{query}}\"",
+    "input.videoSuggestion.followUp.interviews": "與 {{query}} 相關的訪談或對談",
+    "input.videoSuggestion.followUp.clips": "{{query}} 的精華片段或亮眼剪輯",
+    "input.videoSuggestion.followUp.creatorAppearances": "{{creator}} 的訪談、電視露面或現場片段",
+    "input.videoSuggestion.followUp.similarCreators": "與 {{creator}} 類似的創作者或藝人",
+    "input.videoSuggestion.followUp.topicAngle": "從不同角度講解 {{topic}}",
+    "input.videoSuggestion.followUp.topicSubtopic": "更多關於 {{topic}} 的 {{subtopic}} 影片",
+    "input.videoSuggestion.followUp.topicCreator": "{{creator}} 和相關的 {{topic}} 影片",
+    "input.videoSuggestion.followUp.channelStyle": "風格感覺與 {{channel}} 相似的影片"
+  }
+};
+
+export default Object.fromEntries(
+  Object.entries(baseOverrides).map(([langCode, overrides]) => [
+    langCode,
+    {
+      ...overrides,
+      ...(downloadFinishedOverrides[langCode] ?? {}),
+      ...(videoSuggestionFollowUpOverrides[langCode] ?? {})
+    }
+  ])
+);

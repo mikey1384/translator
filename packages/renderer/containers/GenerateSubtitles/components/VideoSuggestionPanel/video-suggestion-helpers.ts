@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next';
 import { getTranslationFailureMessage } from '../../../../utils/translationFailure.js';
 import type {
   VideoSuggestionMessage,
+  VideoSuggestionPreferenceSlots,
   VideoSuggestionRecency,
   VideoSuggestionResultItem,
 } from '@shared-types/app';
@@ -260,4 +261,161 @@ export function isVideoSuggestionRecencyValue(
   value: unknown
 ): value is VideoSuggestionRecency {
   return isVideoSuggestionRecency(value);
+}
+
+function compactSuggestionText(value: unknown): string {
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeSuggestionKey(value: string): string {
+  return compactSuggestionText(value)
+    .replace(/[“”"]/g, '')
+    .replace(/[.!?]+$/g, '')
+    .toLowerCase();
+}
+
+function pushUniqueSuggestion(
+  target: string[],
+  seen: Set<string>,
+  value: string
+): void {
+  const text = compactSuggestionText(value);
+  if (!text) return;
+  const key = normalizeSuggestionKey(text);
+  if (!key || seen.has(key)) return;
+  seen.add(key);
+  target.push(text);
+}
+
+export function buildSuggestedFollowUpPrompts(
+  searchQuery: string,
+  savedPreferences: VideoSuggestionPreferenceSlots,
+  results: VideoSuggestionResultItem[],
+  t: TFunction
+): string[] {
+  const normalizedQuery = compactSuggestionText(searchQuery);
+  const topic = compactSuggestionText(savedPreferences.topic);
+  const creator = compactSuggestionText(savedPreferences.creator);
+  const subtopic = compactSuggestionText(savedPreferences.subtopic);
+  const topChannel = compactSuggestionText(results[0]?.channel);
+  const prompts: string[] = [];
+  const seen = new Set<string>();
+
+  if (normalizedQuery) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.moreLikeQuery',
+        'Find more videos like "{{query}}"',
+        { query: normalizedQuery }
+      )
+    );
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.differentCreator',
+        '"{{query}}" from a different creator or channel',
+        { query: normalizedQuery }
+      )
+    );
+
+    if (!/\b(interview|interviews|podcast|podcasts|conversation|conversations|talk show|talks)\b/i.test(normalizedQuery)) {
+      pushUniqueSuggestion(
+        prompts,
+        seen,
+        t(
+          'input.videoSuggestion.followUp.interviews',
+          '{{query}} interviews or conversations',
+          { query: normalizedQuery }
+        )
+      );
+    }
+
+    if (!/\b(live|performance|performances|concert|concerts|clip|clips|highlights)\b/i.test(normalizedQuery)) {
+      pushUniqueSuggestion(
+        prompts,
+        seen,
+        t(
+          'input.videoSuggestion.followUp.clips',
+          '{{query}} highlights or standout clips',
+          { query: normalizedQuery }
+        )
+      );
+    }
+  }
+
+  if (creator) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.creatorAppearances',
+        '{{creator}} interviews, TV appearances, or live clips',
+        { creator }
+      )
+    );
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.similarCreators',
+        'Creators or artists similar to {{creator}}',
+        { creator }
+      )
+    );
+  }
+
+  if (topic) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.topicAngle',
+        '{{topic}} explained from a different angle',
+        { topic }
+      )
+    );
+  }
+
+  if (topic && subtopic) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.topicSubtopic',
+        'More {{subtopic}} videos about {{topic}}',
+        { subtopic, topic }
+      )
+    );
+  }
+
+  if (topic && creator) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.topicCreator',
+        '{{creator}} and related {{topic}} videos',
+        { creator, topic }
+      )
+    );
+  }
+
+  if (topChannel) {
+    pushUniqueSuggestion(
+      prompts,
+      seen,
+      t(
+        'input.videoSuggestion.followUp.channelStyle',
+        'Videos with a similar feel to {{channel}}',
+        { channel: topChannel }
+      )
+    );
+  }
+
+  return prompts.slice(0, 4);
 }

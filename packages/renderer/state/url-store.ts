@@ -6,6 +6,7 @@ import { i18n } from '../i18n';
 import { useVideoStore } from './video-store';
 import { useSubStore } from './subtitle-store';
 import { useUIStore } from './ui-store';
+import { openDownloadSwitchConfirm } from './modal-store';
 import { upsertLocalVideoSuggestionHistoryItem } from '../containers/GenerateSubtitles/components/VideoSuggestionPanel/video-suggestion-local-storage.js';
 
 const SAVED_QUALITY_KEY = 'savedDownloadQuality';
@@ -295,13 +296,7 @@ async function downloadMediaInternal(
       existingSubs.length > 0 && subsOrigin === 'disk';
     const hasMountedSource = Boolean(getMountedSourcePath());
     const shouldSwitchToDownloaded =
-      !hasMountedSource ||
-      window.confirm(
-        i18n.t(
-          'input.downloadFinishedSwitchPrompt',
-          'Download finished. Switch to it now? You can keep your current video and open the downloaded one later from history.'
-        )
-      );
+      !hasMountedSource || (await openDownloadSwitchConfirm());
 
     if (shouldSwitchToDownloaded) {
       if (preserveSubtitles) {

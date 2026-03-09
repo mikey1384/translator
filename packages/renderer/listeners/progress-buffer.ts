@@ -267,7 +267,9 @@ function flush() {
       } else if (isComplete || Date.now() - lastParsed > 1500) {
         // Translation: reload occasionally
         try {
-          // Preserve origin/sourceVideoPath during translation progress updates
+          // Preserve origin/sourceVideoPath during translation progress updates,
+          // but clear transcription-review provenance once the displayed
+          // document is replaced with translated subtitle content.
           const prev = useSubStore.getState();
           useSubStore
             .getState()
@@ -275,7 +277,8 @@ function flush() {
               parseSrt(partialResult),
               undefined,
               prev.origin ?? null,
-              prev.sourceVideoPath ?? null
+              prev.sourceVideoPath ?? null,
+              null
             );
         } catch {
           // Do nothing

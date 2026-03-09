@@ -189,9 +189,17 @@ export function parsePlannerPayload(raw: string): PlannerPayload | null {
             )
           : []
       ).slice(0, 10);
-      const capturedPreferences = normalizePreferenceSlots(
-        obj?.capturedPreferences ?? obj?.preferences
-      );
+      const capturedPreferenceSource = {
+        ...(obj && typeof obj === 'object' ? (obj as Record<string, unknown>) : {}),
+        ...(obj?.preferences && typeof obj.preferences === 'object'
+          ? (obj.preferences as Record<string, unknown>)
+          : {}),
+        ...(obj?.capturedPreferences && typeof obj.capturedPreferences === 'object'
+          ? (obj.capturedPreferences as Record<string, unknown>)
+          : {}),
+      };
+      const capturedPreferences =
+        normalizePreferenceSlots(capturedPreferenceSource);
       const parsedNeedsMoreContext = parseBooleanLike(obj?.needsMoreContext);
       const inferredReady = Boolean(
         searchQuery || discoveryQueries.length > 0 || retrievalQueries.length > 0

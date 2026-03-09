@@ -222,6 +222,7 @@ export default function VideoSuggestionPanel({
     resolvedModelRuntime,
     results,
     runningStage,
+    suggestedFollowUpPrompts,
     showQuickStartAction,
     searchMore,
     searchQuery,
@@ -792,6 +793,7 @@ export default function VideoSuggestionPanel({
               loadingElapsedSec={loadingElapsedSec}
               loadingMessage={loadingMessage}
               runningStage={runningStage}
+              suggestedFollowUpPrompts={suggestedFollowUpPrompts}
               streamingPreview={streamingPreview}
               t={t}
               onInputChange={setInput}
@@ -811,6 +813,9 @@ export default function VideoSuggestionPanel({
               onSend={() => void sendMessage()}
               onUseQuickStart={() => {
                 void runQuickStartSearch();
+              }}
+              onUseSuggestedFollowUp={prompt => {
+                setInput(prompt);
               }}
               resetDisabled={resetChatDisabled}
               showQuickStartAction={showQuickStartAction}
@@ -843,10 +848,13 @@ export default function VideoSuggestionPanel({
                 ) : null}
                 <VideoSuggestionResultsTab
                   disabled={disabled}
+                  loadingElapsedSec={loadingElapsedSec}
+                  loadingMessage={loadingMessage}
                   primaryActionLabel={resolvedPrimaryActionLabel}
                   isDownloadInProgress={isDownloadInProgress}
                   loading={loading}
                   loadingMode={loadingMode}
+                  runningStage={runningStage}
                   results={results}
                   searchQuery={searchQuery}
                   t={t}

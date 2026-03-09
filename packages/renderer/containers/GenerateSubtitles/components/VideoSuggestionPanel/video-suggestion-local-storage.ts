@@ -26,11 +26,9 @@ const LOCAL_GENERATE_SUBTITLES_WORKSPACE_TAB_KEY =
 export const MAX_HISTORY_ITEMS = 40;
 const MAX_HIDDEN_CHANNELS = 80;
 const GENERATE_SUBTITLES_WORKSPACE_TABS: GenerateSubtitlesWorkspaceTab[] = [
-  'source',
-  'recommend',
+  'main',
   'history',
   'channels',
-  'workflow',
 ];
 const VIDEO_SUGGESTION_HISTORY_SYNC_EVENT =
   'video-suggestion-history-sync-needed';
@@ -49,6 +47,14 @@ function isLikelyManagedTempHistoryPath(value: unknown): boolean {
     normalized.includes('/translator-electron/') ||
     normalized.includes('/translator-url-')
   );
+}
+
+export function getVideoSuggestionHistoryStorageKind(
+  value: unknown
+): 'temp' | 'saved' | 'unknown' {
+  const normalized = normalizeHistoryPath(value);
+  if (!normalized) return 'unknown';
+  return isLikelyManagedTempHistoryPath(value) ? 'temp' : 'saved';
 }
 
 export function readLocalVideoSuggestionPrefs(): LocalVideoSuggestionPrefs {
@@ -385,10 +391,13 @@ export function readGenerateSubtitlesWorkspaceTab(): GenerateSubtitlesWorkspaceT
     const raw = window.localStorage.getItem(
       LOCAL_GENERATE_SUBTITLES_WORKSPACE_TAB_KEY
     );
+    if (raw === 'source' || raw === 'recommend' || raw === 'workflow') {
+      return 'main';
+    }
     if (isGenerateSubtitlesWorkspaceTab(raw)) return raw;
-    return 'source';
+    return 'main';
   } catch {
-    return 'source';
+    return 'main';
   }
 }
 

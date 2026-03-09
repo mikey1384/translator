@@ -414,13 +414,6 @@ export const composerTitleStyles = css`
   letter-spacing: -0.01em;
 `;
 
-export const composerHintPillStyles = css`
-  ${metaPillStyles}
-  color: ${colors.primaryLight};
-  border-color: rgba(125, 167, 255, 0.24);
-  background: rgba(125, 167, 255, 0.08);
-`;
-
 export const composerSurfaceStyles = css`
   display: grid;
   gap: ${spacing.md};
@@ -490,6 +483,64 @@ export const inputActionsStyles = css`
   @media (max-width: ${breakpoints.mobileMaxWidth}) {
     justify-content: stretch;
     width: 100%;
+  }
+`;
+
+export const suggestedFollowUpsStyles = css`
+  display: grid;
+  gap: ${spacing.sm};
+  padding-top: ${spacing.sm};
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+export const suggestedFollowUpsHeaderStyles = css`
+  font-size: ${fontSize.xs};
+  line-height: ${lineHeight.normal};
+  color: ${colors.textDim};
+  letter-spacing: 0.01em;
+`;
+
+export const suggestedFollowUpsGridStyles = css`
+  display: grid;
+  gap: ${spacing.sm};
+`;
+
+export const suggestedFollowUpButtonStyles = css`
+  width: 100%;
+  display: block;
+  text-align: left;
+  padding: ${spacing.md} ${spacing.lg};
+  border-radius: ${borderRadius.lg};
+  border: 1px solid ${colors.border};
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.01)
+  );
+  color: ${colors.text};
+  font-size: ${fontSize.sm};
+  line-height: ${lineHeight.relaxed};
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: rgba(125, 167, 255, 0.3);
+    background: rgba(125, 167, 255, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(125, 167, 255, 0.16);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
@@ -780,6 +831,25 @@ export const moreActionsStyles = css`
   padding: 0 ${spacing.lg} ${spacing.lg};
 `;
 
+export const moreActionsProgressStyles = css`
+  display: grid;
+  gap: ${spacing.xs};
+  margin-bottom: ${spacing.sm};
+  padding: ${spacing.sm};
+  border: 1px solid ${colors.border};
+  border-radius: ${borderRadius.lg};
+  background: rgba(255, 255, 255, 0.03);
+`;
+
+export const moreActionsProgressMetaStyles = css`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${spacing.sm};
+  font-size: ${fontSize.xs};
+  color: ${colors.textDim};
+`;
+
 export const rightTabsStyles = css`
   position: sticky;
   top: 0;
@@ -885,6 +955,24 @@ export const cardMetaRowStyles = css`
   align-items: center;
 `;
 
+export const historyStatusPillStyles = css`
+  ${metaPillStyles}
+`;
+
+export const historyStatusSavedPillStyles = css`
+  ${metaPillStyles}
+  color: ${colors.success};
+  border-color: rgba(57, 200, 135, 0.24);
+  background: rgba(57, 200, 135, 0.08);
+`;
+
+export const historyStatusTempPillStyles = css`
+  ${metaPillStyles}
+  color: ${colors.warning};
+  border-color: rgba(240, 180, 75, 0.24);
+  background: rgba(240, 180, 75, 0.08);
+`;
+
 export const cardActionsStyles = css`
   display: grid;
   gap: ${spacing.sm};
@@ -943,6 +1031,11 @@ export const emptyTabStateStyles = css`
   color: ${colors.textDim};
 `;
 
+export const resultsEmptyTabStateStyles = css`
+  ${emptyTabStateStyles}
+  margin-top: ${spacing.lg};
+`;
+
 export const historyActionsStyles = css`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -951,6 +1044,12 @@ export const historyActionsStyles = css`
   @media (max-width: 700px) {
     grid-template-columns: 1fr;
   }
+`;
+
+export const historyActionIconRowStyles = css`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${spacing.sm};
 `;
 
 export const modelHintStyles = css`

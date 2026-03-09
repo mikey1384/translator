@@ -14,6 +14,8 @@ type PostInstallUpdateNotice = {
 interface State {
   unsavedSrtOpen: boolean;
   _resolver?: (choice: UnsavedChoice) => void;
+  downloadSwitchOpen: boolean;
+  _downloadSwitchResolver?: (choice: boolean) => void;
   // Credit ran out modal
   creditRanOutOpen: boolean;
   _creditResolver?: (choice: 'settings' | 'ok') => void;
@@ -36,6 +38,8 @@ interface State {
 interface Actions {
   openUnsavedSrtConfirm: () => Promise<UnsavedChoice>;
   resolveUnsavedSrt: (choice: UnsavedChoice) => void;
+  openDownloadSwitchConfirm: () => Promise<boolean>;
+  resolveDownloadSwitch: (choice: boolean) => void;
   openCreditRanOut: () => Promise<'settings' | 'ok'>;
   resolveCreditRanOut: (choice: 'settings' | 'ok') => void;
   openChangeVideo: () => void;
@@ -53,6 +57,8 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
   immer((set, get) => ({
     unsavedSrtOpen: false,
     _resolver: undefined,
+    downloadSwitchOpen: false,
+    _downloadSwitchResolver: undefined,
     creditRanOutOpen: false,
     _creditResolver: undefined,
     changeVideoOpen: false,
@@ -79,6 +85,23 @@ export const useModalStore = createWithEqualityFn<State & Actions>()(
       set(s => {
         s.unsavedSrtOpen = false;
         s._resolver = undefined;
+      });
+    },
+
+    openDownloadSwitchConfirm: () =>
+      new Promise<boolean>(resolve => {
+        set(s => {
+          s.downloadSwitchOpen = true;
+          s._downloadSwitchResolver = resolve;
+        });
+      }),
+
+    resolveDownloadSwitch: choice => {
+      const resolver = get()._downloadSwitchResolver;
+      if (resolver) resolver(choice);
+      set(s => {
+        s.downloadSwitchOpen = false;
+        s._downloadSwitchResolver = undefined;
       });
     },
 
@@ -169,6 +192,14 @@ export async function openUnsavedSrtConfirm(): Promise<UnsavedChoice> {
 
 export function resolveUnsavedSrt(choice: UnsavedChoice) {
   return useModalStore.getState().resolveUnsavedSrt(choice);
+}
+
+export async function openDownloadSwitchConfirm(): Promise<boolean> {
+  return useModalStore.getState().openDownloadSwitchConfirm();
+}
+
+export function resolveDownloadSwitch(choice: boolean) {
+  return useModalStore.getState().resolveDownloadSwitch(choice);
 }
 
 export async function openCreditRanOut(): Promise<'settings' | 'ok'> {

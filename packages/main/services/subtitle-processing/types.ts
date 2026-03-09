@@ -13,6 +13,7 @@ export type GenerateSubtitlesFullResult = {
   subtitles: string;
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
+  transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
   tempFileSaved: boolean;
   tempFilePath?: string;
   tempFileError?: string;

@@ -81,14 +81,6 @@ const workspaceTabButtonStyles = (active: boolean) => css`
   }
 `;
 
-const workspaceEmptyStateStyles = css`
-  padding: ${spacing.lg};
-  border-radius: ${borderRadius.xl};
-  border: 1px dashed ${colors.borderStrong};
-  background: rgba(255, 255, 255, 0.02);
-  color: ${colors.textDim};
-`;
-
 export default function GenerateSubtitles() {
   const { t, i18n } = useTranslation();
   const [activeWorkspaceTab, setActiveWorkspaceTab] =
@@ -114,6 +106,7 @@ export default function GenerateSubtitles() {
   const recentLocalMedia = useVideoStore(s => s.recentLocalMedia);
   const openLocalMedia = useVideoStore(s => s.openLocalMedia);
   const openRecentLocalMedia = useVideoStore(s => s.openRecentLocalMedia);
+  const removeRecentLocalMedia = useVideoStore(s => s.removeRecentLocalMedia);
   const refreshRecentLocalMedia = useVideoStore(s => s.refreshRecentLocalMedia);
 
   // Task state
@@ -141,8 +134,6 @@ export default function GenerateSubtitles() {
   const hasSourceSelection = Boolean(
     videoFile || videoFilePath || download.inProgress
   );
-  const hasMountedSource = Boolean(videoFile || videoFilePath);
-
   // Custom hooks for business logic (after videoFilePath is declared)
   const {
     durationSecs,
@@ -178,18 +169,8 @@ export default function GenerateSubtitles() {
     () =>
       [
         {
-          key: 'source',
-          label: t(
-            'generateSubtitles.workflow.chooseSourceTitle',
-            'Choose Source'
-          ),
-        },
-        {
-          key: 'recommend',
-          label: t(
-            'input.videoSuggestion.aiVideoRecommendation',
-            'AI video recommendation'
-          ),
+          key: 'main',
+          label: t('subtitles.generate', 'Generate Subtitles'),
         },
         {
           key: 'history',
@@ -198,10 +179,6 @@ export default function GenerateSubtitles() {
         {
           key: 'channels',
           label: t('input.videoSuggestion.tabChannels', 'Channels'),
-        },
-        {
-          key: 'workflow',
-          label: processingStageTitle,
         },
       ] satisfies Array<{
         key: GenerateSubtitlesWorkspaceTab;
@@ -225,6 +202,10 @@ export default function GenerateSubtitles() {
     await openRecentLocalMedia(path, { preserveSubtitles: false });
   }
 
+  function handleRemoveRecentMedia(path: string) {
+    removeRecentLocalMedia(path);
+  }
+
   return (
     <Section
       title={t('subtitles.generate')}
@@ -245,76 +226,98 @@ export default function GenerateSubtitles() {
         ))}
       </div>
 
-      {activeWorkspaceTab === 'source' ? (
-        <div className={workflowStageShellStyles}>
-          <div className={workflowStageHeaderStyles}>
-            <div className={workflowStageHeaderRowStyles}>
-              <span className={workflowStageEyebrowStyles}>
-                {t('generateSubtitles.workflow.stepOne', 'Step 1')}
-              </span>
-              <h3 className={workflowStageTitleStyles}>
-                {t(
-                  'generateSubtitles.workflow.chooseSourceTitle',
-                  'Choose Source'
-                )}
-              </h3>
+      {activeWorkspaceTab === 'main' ? (
+        <>
+          <div className={workflowStageShellStyles}>
+            <div className={workflowStageHeaderStyles}>
+              <div className={workflowStageHeaderRowStyles}>
+                <span className={workflowStageEyebrowStyles}>
+                  {t('generateSubtitles.workflow.stepOne', 'Step 1')}
+                </span>
+                <h3 className={workflowStageTitleStyles}>
+                  {t(
+                    'generateSubtitles.workflow.chooseSourceTitle',
+                    'Choose Source'
+                  )}
+                </h3>
+              </div>
+            </div>
+
+            <div className={workflowStageBodyStyles}>
+              {!Boolean(videoFile || videoFilePath) ? (
+                <>
+                  <UrlCookieBanner />
+                  <MediaInputSection
+                    videoFile={videoFile}
+                    recentMedia={recentLocalMedia}
+                    onOpenFileDialog={() =>
+                      openLocalMedia({ preserveSubtitles: false })
+                    }
+                    onOpenRecentFile={handleOpenRecentMedia}
+                    onRemoveRecentFile={handleRemoveRecentMedia}
+                    isDownloadInProgress={download.inProgress}
+                    isTranslationInProgress={translationInProgress}
+                    urlInput={urlInput}
+                    setUrlInput={setUrlInput}
+                    downloadQuality={downloadQuality}
+                    setDownloadQuality={setDownloadQuality}
+                    handleProcessUrl={downloadMedia}
+                  />
+                </>
+              ) : null}
+
+              <VideoSuggestionPanel
+                disabled={translationInProgress || download.inProgress}
+                isDownloadInProgress={download.inProgress}
+                onDownload={handleSuggestedVideoDownload}
+              />
             </div>
           </div>
 
-          <div className={workflowStageBodyStyles}>
-            {!hasMountedSource ? (
-              <>
-                <UrlCookieBanner />
-                <MediaInputSection
-                  videoFile={videoFile}
-                  recentMedia={recentLocalMedia}
-                  onOpenFileDialog={() =>
-                    openLocalMedia({ preserveSubtitles: false })
-                  }
-                  onOpenRecentFile={handleOpenRecentMedia}
-                  isDownloadInProgress={download.inProgress}
-                  isTranslationInProgress={translationInProgress}
-                  urlInput={urlInput}
-                  setUrlInput={setUrlInput}
-                  downloadQuality={downloadQuality}
-                  setDownloadQuality={setDownloadQuality}
-                  handleProcessUrl={downloadMedia}
-                />
-              </>
-            ) : (
-              <div className={workspaceEmptyStateStyles}>
-                {t(
-                  'generateSubtitles.workflow.sourceMountedHint',
-                  'A video is already mounted. Use the player side menu to change the current source, or switch to history, channels, or AI recommendation to open another one.'
+          {hasSourceSelection ? (
+            <div className={workflowStageShellStyles}>
+              <div className={workflowStageHeaderStyles}>
+                <div className={workflowStageHeaderRowStyles}>
+                  <span className={workflowStageEyebrowStyles}>
+                    {t('generateSubtitles.workflow.stepTwo', 'Step 2')}
+                  </span>
+                  <h3 className={workflowStageTitleStyles}>
+                    {processingStageTitle}
+                  </h3>
+                </div>
+              </div>
+
+              <div className={workflowStageBodyStyles}>
+                {!isTranscriptionDone && !isTranslating ? (
+                  <TranscribeOnlyPanel
+                    className={workflowPanelFlushStyles}
+                    onTranscribe={handleTranscribeOnly}
+                    isTranscribing={isTranscribing}
+                    disabled={
+                      isButtonDisabled ||
+                      hoursNeeded == null ||
+                      isMetadataPending
+                    }
+                    statusMessage={metadataStatusMessage}
+                  />
+                ) : (
+                  <SrtMountedPanel
+                    className={workflowPanelFlushStyles}
+                    srtPath={originalSrtPath}
+                    onTranslate={handleTranslate}
+                    isTranslating={isTranslating}
+                    disabled={isButtonDisabled || hoursNeeded == null}
+                    targetLanguage={targetLanguage}
+                    onTargetLanguageChange={setTargetLanguage}
+                    onDub={handleDub}
+                    isDubbing={isDubbing}
+                    disableDub={isButtonDisabled || hoursNeeded == null}
+                  />
                 )}
               </div>
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      {activeWorkspaceTab === 'recommend' ? (
-        <div className={workflowStageShellStyles}>
-          <div className={workflowStageHeaderStyles}>
-            <div className={workflowStageHeaderRowStyles}>
-              <h3 className={workflowStageTitleStyles}>
-                {t(
-                  'input.videoSuggestion.aiVideoRecommendation',
-                  'AI video recommendation'
-                )}
-              </h3>
             </div>
-          </div>
-          <div className={workflowStageBodyStyles}>
-            <VideoSuggestionPanel
-              disabled={translationInProgress || download.inProgress}
-              hideToggle
-              initialOpen
-              isDownloadInProgress={download.inProgress}
-              onDownload={handleSuggestedVideoDownload}
-            />
-          </div>
-        </div>
+          ) : null}
+        </>
       ) : null}
 
       {activeWorkspaceTab === 'history' ? (
@@ -405,54 +408,6 @@ export default function GenerateSubtitles() {
         </div>
       ) : null}
 
-      {activeWorkspaceTab === 'workflow' ? (
-        <div className={workflowStageShellStyles}>
-          <div className={workflowStageHeaderStyles}>
-            <div className={workflowStageHeaderRowStyles}>
-              <span className={workflowStageEyebrowStyles}>
-                {t('generateSubtitles.workflow.stepTwo', 'Step 2')}
-              </span>
-              <h3 className={workflowStageTitleStyles}>
-                {processingStageTitle}
-              </h3>
-            </div>
-          </div>
-
-          <div className={workflowStageBodyStyles}>
-            {!hasSourceSelection ? (
-              <div className={workspaceEmptyStateStyles}>
-                {t(
-                  'generateSubtitles.workflow.chooseSourceFirst',
-                  'Choose or open a video source first, then come back here to transcribe, translate, or dub it.'
-                )}
-              </div>
-            ) : !isTranscriptionDone && !isTranslating ? (
-              <TranscribeOnlyPanel
-                className={workflowPanelFlushStyles}
-                onTranscribe={handleTranscribeOnly}
-                isTranscribing={isTranscribing}
-                disabled={
-                  isButtonDisabled || hoursNeeded == null || isMetadataPending
-                }
-                statusMessage={metadataStatusMessage}
-              />
-            ) : (
-              <SrtMountedPanel
-                className={workflowPanelFlushStyles}
-                srtPath={originalSrtPath}
-                onTranslate={handleTranslate}
-                isTranslating={isTranslating}
-                disabled={isButtonDisabled || hoursNeeded == null}
-                targetLanguage={targetLanguage}
-                onTargetLanguageChange={setTargetLanguage}
-                onDub={handleDub}
-                isDubbing={isDubbing}
-                disableDub={isButtonDisabled || hoursNeeded == null}
-              />
-            )}
-          </div>
-        </div>
-      ) : null}
     </Section>
   );
 

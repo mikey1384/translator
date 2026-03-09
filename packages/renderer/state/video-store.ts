@@ -70,6 +70,7 @@ interface Actions {
     path: string,
     options?: { preserveSubtitles?: boolean }
   ): Promise<{ opened: boolean; missing?: boolean }>;
+  removeRecentLocalMedia(path: string): void;
   refreshRecentLocalMedia(): Promise<void>;
   setFile(
     file: File | { name: string | undefined; path: string } | null
@@ -228,6 +229,12 @@ export const useVideoStore = createWithEqualityFn<State & Actions>()(
         console.error('[video-store] Failed to open recent local media:', err);
         return { opened: false } as const;
       }
+    },
+
+    removeRecentLocalMedia(path) {
+      const trimmed = String(path || '').trim();
+      if (!trimmed) return;
+      set({ recentLocalMedia: removeRecentLocalMedia(trimmed) });
     },
 
     async refreshRecentLocalMedia() {

@@ -9,11 +9,9 @@ import type {
 export type PipelineStageKey = VideoSuggestionStageKey;
 export type PipelineStageState = VideoSuggestionStageState;
 export type GenerateSubtitlesWorkspaceTab =
-  | 'source'
-  | 'recommend'
+  | 'main'
   | 'history'
-  | 'channels'
-  | 'workflow';
+  | 'channels';
 
 export type PipelineStageProgress = {
   key: PipelineStageKey;

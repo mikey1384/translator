@@ -9,21 +9,47 @@ import {
   cardStyles,
   cardsStyles,
   detailsSummaryStyles,
-  emptyTabStateStyles,
+  liveActivityMetaStyles,
   metaStyles,
   moreActionsStyles,
+  moreActionsProgressMetaStyles,
+  moreActionsProgressStyles,
+  resultsEmptyTabStateStyles,
   resultsHeaderStyles,
+  stageProgressFillStyles,
+  stageProgressTrackStyles,
   thumbnailStyles,
   titleStyles,
 } from './VideoSuggestionPanel.styles.js';
 import type { VideoSuggestionResultItem } from '@shared-types/app';
+import type { PipelineStageProgress } from './VideoSuggestionPanel.types.js';
+
+const LOCAL_PROGRESS_MIN = 7;
+const LOCAL_PROGRESS_MAX = 95;
+const LOCAL_PROGRESS_EASE_SEC = 28;
+
+function getLocalProgressPercent(
+  loadingElapsedSec: number,
+  hasRunningStage: boolean
+): number {
+  if (!hasRunningStage) return 12;
+  const safeElapsed = Math.max(0, loadingElapsedSec);
+  const eased = 1 - Math.exp(-safeElapsed / LOCAL_PROGRESS_EASE_SEC);
+  return (
+    LOCAL_PROGRESS_MIN +
+    (LOCAL_PROGRESS_MAX - LOCAL_PROGRESS_MIN) * eased
+  );
+}
 
 type VideoSuggestionResultsTabProps = {
   disabled: boolean;
+  loadingElapsedSec: number;
+  loadingMessage: string;
   primaryActionLabel: string;
   isDownloadInProgress: boolean;
   loading: boolean;
   loadingMode: 'chat' | 'more' | null;
+  runningStage: PipelineStageProgress | null;
   results: VideoSuggestionResultItem[];
   searchQuery: string;
   t: TFunction;
@@ -36,10 +62,13 @@ type VideoSuggestionResultsTabProps = {
 
 export default function VideoSuggestionResultsTab({
   disabled,
+  loadingElapsedSec,
+  loadingMessage,
   primaryActionLabel,
   isDownloadInProgress,
   loading,
   loadingMode,
+  runningStage,
   results,
   searchQuery,
   t,
@@ -49,6 +78,12 @@ export default function VideoSuggestionResultsTab({
   onOpenVideoExternally,
   onSearchMore,
 }: VideoSuggestionResultsTabProps) {
+  const showInlineSearchMoreProgress = loading && loadingMode === 'more';
+  const localProgressPercent = getLocalProgressPercent(
+    loadingElapsedSec,
+    Boolean(runningStage)
+  );
+
   return (
     <>
       {searchQuery ? (
@@ -154,6 +189,28 @@ export default function VideoSuggestionResultsTab({
             })}
           </div>
           <div className={moreActionsStyles}>
+            {showInlineSearchMoreProgress ? (
+              <div className={moreActionsProgressStyles}>
+                <div className={moreActionsProgressMetaStyles}>
+                  <span className={liveActivityMetaStyles}>
+                    {loadingMessage ||
+                      t(
+                        'input.videoSuggestion.searchMoreLoading',
+                        'Searching more...'
+                      )}
+                  </span>
+                  <span className={liveActivityMetaStyles}>
+                    {loadingElapsedSec}s
+                  </span>
+                </div>
+                <div className={stageProgressTrackStyles} aria-hidden="true">
+                  <div
+                    className={stageProgressFillStyles}
+                    style={{ width: `${localProgressPercent}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
             <Button
               onClick={() => onSearchMore()}
               disabled={loading || !searchQuery.trim()}
@@ -170,7 +227,7 @@ export default function VideoSuggestionResultsTab({
           </div>
         </>
       ) : (
-        <div className={emptyTabStateStyles}>
+        <div className={resultsEmptyTabStateStyles}>
           {t(
             'input.videoSuggestion.resultsEmpty',
             'No results yet. Ask for a video and I will search.'

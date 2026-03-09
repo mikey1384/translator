@@ -14,7 +14,8 @@ import { transcribeOneLine } from '../../../../../ipc/subtitles';
 import { useSubStore } from '../../../../../state/subtitle-store';
 import {
   flattenText,
-  groupUncertainRanges,
+  groupWhisperReviewRanges,
+  shouldUseWhisperReviewHints,
   synthesizePlaceholdersWithinWindow,
 } from '../../../../../utils/subtitle-heuristics.js';
 import { getByoErrorMessage, isByoError } from '../../../../../utils/byoErrors';
@@ -120,11 +121,15 @@ export default function SubtitleEditor({
       const order = store.order;
       const idx = order.indexOf(id);
 
-      // Determine unseen low-confidence ranges for this session (same heuristics as GapList)
+      // Determine unseen Whisper review ranges for this session (same logic as GapList)
       const seenLc = useUIStore.getState().seenLC;
-      const unseenRanges = groupUncertainRanges(order, store.segments).filter(
-        r => !seenLc.has(`${r.start}-${r.end}`)
-      );
+      const unseenRanges = shouldUseWhisperReviewHints(
+        store.transcriptionEngine
+      )
+        ? groupWhisperReviewRanges(order, store.segments).filter(
+            r => !seenLc.has(`${r.start}-${r.end}`)
+          )
+        : [];
 
       const isInUnseenRange = (seg: any) =>
         unseenRanges.some(r => seg && seg.start >= r.start && seg.end <= r.end);

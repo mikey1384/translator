@@ -6,7 +6,10 @@ import { shallow } from 'zustand/shallow';
 import { getNativePlayerInstance } from '../native-player.js';
 import { scrollPrecisely, flashSubtitle } from '../utils/scroll.js';
 import { secondsToSrtTime } from '../../shared/helpers';
-import { groupUncertainRanges } from '../utils/subtitle-heuristics';
+import {
+  groupWhisperReviewRanges,
+  shouldUseWhisperReviewHints,
+} from '../utils/subtitle-heuristics';
 
 type SegmentMap = Record<string, SrtSegment>;
 
@@ -21,6 +24,7 @@ interface State {
   origin: 'fresh' | 'disk' | null;
   // When origin is 'fresh', record the video file path this set of subtitles was generated for
   sourceVideoPath: string | null;
+  transcriptionEngine: 'elevenlabs' | 'whisper' | null;
   gapsCache: Array<{
     start: number;
     end: number;
@@ -41,9 +45,10 @@ interface Actions {
     segs: SrtSegment[],
     srcPath?: string | null,
     origin?: 'fresh' | 'disk' | null,
-    videoPathRef?: string | null
+    videoPathRef?: string | null,
+    transcriptionEngine?: 'elevenlabs' | 'whisper' | null
   ) => void;
-  // Clear per-segment confidence telemetry (avg_logprob/no_speech_prob/words)
+  // Clear Whisper review state when it is no longer valid for the current source
   clearConfidence: () => void;
   // Compute and cache Gap/LC once per transcription/improve flow
   recomputeCaches: (gapThresholdSec?: number) => void;
@@ -94,16 +99,64 @@ const initialState: State = {
   originalPath: null,
   origin: null,
   sourceVideoPath: null,
+  transcriptionEngine: null,
   gapsCache: [],
   lcRangesCache: [],
 };
+
+function areEquivalentSubtitleDocs(
+  previousOrder: string[],
+  previousSegments: SegmentMap,
+  nextSegments: SrtSegment[]
+): boolean {
+  if (previousOrder.length !== nextSegments.length) {
+    return false;
+  }
+
+  for (let i = 0; i < nextSegments.length; i++) {
+    const previous = previousSegments[previousOrder[i]];
+    const next = nextSegments[i];
+    if (!previous || !next) {
+      return false;
+    }
+    if (
+      previous.start !== next.start ||
+      previous.end !== next.end ||
+      (previous.original ?? '') !== (next.original ?? '') ||
+      (previous.translation ?? '') !== (next.translation ?? '')
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export const useSubStore = createWithEqualityFn<State & Actions>()(
   subscribeWithSelector(
     immer((set, get) => ({
       ...initialState,
-      load: (segs, srcPath = null, loadOrigin = null, videoPathRef = null) => {
+      load: (
+        segs,
+        srcPath = null,
+        loadOrigin = null,
+        videoPathRef = null,
+        transcriptionEngine
+      ) => {
         set(s => {
+          const isDiskBackedLoad =
+            loadOrigin === 'disk' || (typeof srcPath === 'string' && srcPath.length > 0);
+          const preserveExistingEngine =
+            transcriptionEngine === undefined &&
+            !isDiskBackedLoad &&
+            areEquivalentSubtitleDocs(s.order, s.segments, segs);
+          const nextTranscriptionEngine =
+            transcriptionEngine !== undefined
+              ? transcriptionEngine ?? null
+              : preserveExistingEngine
+                ? s.transcriptionEngine
+                : null;
+
           s.segments = segs.reduce<SegmentMap>((acc, cue, i) => {
             acc[cue.id] = { ...cue, index: i + 1 };
             return acc;
@@ -118,6 +171,9 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             (typeof videoPathRef === 'string' ? videoPathRef : null) ??
             s.sourceVideoPath ??
             null;
+          // Replacing the subtitle set should clear engine-specific UI state
+          // unless the caller explicitly carries the engine forward.
+          s.transcriptionEngine = nextTranscriptionEngine;
           // Do not auto-regenerate caches here; generated during transcription flows
           s.gapsCache = [];
           s.lcRangesCache = [];
@@ -129,11 +185,13 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
           for (const id of s.order) {
             const cue = s.segments[id];
             if (!cue) continue;
-            // Remove fields used by low-confidence heuristics coming from transcription
+            // Remove fields used by Whisper review hints coming from transcription
             delete (cue as any).avg_logprob;
             delete (cue as any).no_speech_prob;
             delete (cue as any).words;
           }
+          s.transcriptionEngine = null;
+          s.lcRangesCache = [];
           // Nudge consumers to refresh
           s.sourceId += 1;
         }),
@@ -201,7 +259,11 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             }
           }
           s.gapsCache = gaps;
-          s.lcRangesCache = groupUncertainRanges(order, segments as any);
+          s.lcRangesCache = shouldUseWhisperReviewHints(
+            s.transcriptionEngine
+          )
+            ? groupWhisperReviewRanges(order, segments as any)
+            : [];
         }),
 
       clearCaches: () =>
@@ -486,7 +548,11 @@ export const useSubStore = createWithEqualityFn<State & Actions>()(
             }
           }
           s.gapsCache = gaps;
-          s.lcRangesCache = groupUncertainRanges(order, segments as any);
+          s.lcRangesCache = shouldUseWhisperReviewHints(
+            s.transcriptionEngine
+          )
+            ? groupWhisperReviewRanges(order, segments as any)
+            : [];
         }),
 
       appendSegments: segs =>

@@ -66,22 +66,24 @@ export async function extractSubtitlesFromMedia({
     });
     audioPath = extractedAudioPath;
 
-    const { segments, speechIntervals } = await transcribePass({
+    const { segments, speechIntervals, transcriptionEngine } =
+      await transcribePass({
       audioPath: audioPath,
       services: { ffmpeg },
       progressCallback: adaptedProgress ?? progressCallback,
       operationId,
       signal,
       qualityTranscription: options?.qualityTranscription ?? false,
-    });
+      });
 
-    return await finalizePass({
+    const finalized = await finalizePass({
       segments,
       speechIntervals,
       fileManager,
       progressCallback,
       operationId,
     });
+    return { ...finalized, transcriptionEngine };
   } catch (error: any) {
     console.error(`[${operationId}] Error during subtitle generation:`, error);
 

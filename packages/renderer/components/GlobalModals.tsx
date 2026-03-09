@@ -3,6 +3,7 @@ import CreditRanOutDialog from '../containers/GenerateSubtitles/components/Credi
 import ApiKeysRequiredDialog from './ApiKeysRequiredDialog';
 import {
   useModalStore,
+  resolveDownloadSwitch,
   resolveUnsavedSrt,
   resolveCreditRanOut,
   closeChangeVideo,
@@ -54,6 +55,7 @@ const changeVideoBodyStyles = css`
 export default function GlobalModals() {
   const { t } = useTranslation();
   const unsavedOpen = useModalStore(s => s.unsavedSrtOpen);
+  const downloadSwitchOpen = useModalStore(s => s.downloadSwitchOpen);
   const creditOpen = useModalStore(s => s.creditRanOutOpen);
   const changeVideoOpen = useModalStore(s => s.changeVideoOpen);
   const logsOpen = useModalStore(s => s.logsOpen);
@@ -158,6 +160,39 @@ export default function GlobalModals() {
         onDiscardAndTranscribe={() => resolveUnsavedSrt('discard')}
         onSaveAndTranscribe={() => resolveUnsavedSrt('save')}
       />
+      <Modal
+        open={downloadSwitchOpen}
+        title={t(
+          'input.downloadFinishedSwitchTitle',
+          'Watch downloaded video?'
+        )}
+        titleId="download-switch-title"
+        onClose={() => resolveDownloadSwitch(false)}
+        hideCloseButton
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => resolveDownloadSwitch(false)}
+            >
+              {t('input.downloadFinishedWatchLater', 'Watch later')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => resolveDownloadSwitch(true)}
+            >
+              {t('input.downloadFinishedWatchNow', 'Watch now')}
+            </Button>
+          </>
+        }
+      >
+        <div>
+          {t(
+            'input.downloadFinishedSwitchPrompt',
+            'Your download is ready. Watch it now, or keep your current video and open it later from history.'
+          )}
+        </div>
+      </Modal>
       <CreditRanOutDialog
         open={creditOpen}
         onOk={() => resolveCreditRanOut('ok')}

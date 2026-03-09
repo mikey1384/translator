@@ -25,7 +25,10 @@ import {
   TRANSLATION_LANGUAGE_GROUPS,
 } from '../../constants/translation-languages';
 import { runFullSrtTranslation } from '../../utils/runFullTranslation';
-import { startTranscriptionFlow } from '../GenerateSubtitles/utils/subtitleGeneration';
+import {
+  executeDubGeneration,
+  startTranscriptionFlow,
+} from '../GenerateSubtitles/utils/subtitleGeneration';
 import { useVideoMetadata } from '../GenerateSubtitles/hooks/useVideoMetadata';
 import {
   isManagedTempOriginalVideoPath,
@@ -34,6 +37,7 @@ import {
 } from '../../utils/saveVideo';
 import {
   sidePanelButtonContentStyles,
+  sidePanelButtonRowStyles,
   sidePanelDividerStyles,
   sidePanelFieldStackStyles,
   sidePanelLabelStyles,
@@ -127,6 +131,7 @@ export default function SideMenu({
   const showTranscribeButton = !transcriptionIsCompleted && !translationInProgress;
   const showPreserveActions = canSaveOriginalVideo || canSaveDubbedVideo;
   const showProcessingActions = showTranscribeButton || showPreserveActions;
+  const showDubAction = activeTrack !== 'dubbed';
 
   async function handleTranslateAll() {
     try {
@@ -207,6 +212,31 @@ export default function SideMenu({
       dubbedVideoPath,
       sourceVideoPath: originalVideoPath ?? videoFilePath,
       dubVoice,
+    });
+  }
+
+  async function handleDub() {
+    const subtitleState = useSubStore.getState();
+    const currentSegments = subtitleState.order.map(id => subtitleState.segments[id]);
+    if (currentSegments.length === 0) {
+      return;
+    }
+
+    const operationId = `dub-${Date.now()}`;
+    const videoStoreState = useVideoStore.getState();
+    const sourceVideoPath =
+      videoStoreState.originalPath ??
+      subtitleState.sourceVideoPath ??
+      videoFilePath ??
+      videoStoreState.path;
+
+    await executeDubGeneration({
+      segments: currentSegments,
+      operationId,
+      videoPath: sourceVideoPath,
+      voice: dubVoice,
+      targetLanguage,
+      videoDurationSeconds: derivedDurationSecs ?? undefined,
     });
   }
 
@@ -397,19 +427,39 @@ export default function SideMenu({
                 ))}
               </select>
             </div>
-
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={handleTranslateAll}
-              disabled={isTranscribing || translationInProgress || isMerging}
-              title={t('subtitles.translate', 'Translate')}
+            <div
+              className={
+                showDubAction ? sidePanelButtonRowStyles : sidePanelFieldStackStyles
+              }
             >
-              <span className={sidePanelButtonContentStyles}>
-                <Languages size={15} strokeWidth={2.2} />
-                {t('subtitles.translate', 'Translate')}
-              </span>
-            </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={handleTranslateAll}
+                disabled={isTranscribing || translationInProgress || isMerging}
+                title={t('subtitles.translate', 'Translate')}
+              >
+                <span className={sidePanelButtonContentStyles}>
+                  <Languages size={15} strokeWidth={2.2} />
+                  {t('subtitles.translate', 'Translate')}
+                </span>
+              </Button>
+              {showDubAction ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleDub}
+                  disabled={isDubbing || isTranscribing || translationInProgress || isMerging}
+                  isLoading={isDubbing}
+                  title={t('subtitles.dub', 'Dub Voice')}
+                >
+                  <span className={sidePanelButtonContentStyles}>
+                    {!isDubbing ? <AudioLines size={15} strokeWidth={2.2} /> : null}
+                    {t('subtitles.dub', 'Dub Voice')}
+                  </span>
+                </Button>
+              ) : null}
+            </div>
           </div>
         )}
       </div>

@@ -16,6 +16,7 @@ import type {
   VideoSuggestionResultItem,
 } from '@shared-types/app';
 import {
+  buildSuggestedFollowUpPrompts,
   normalizeMessagesForPlanner,
   resolveAssistantMessage,
   resolveErrorText,
@@ -54,6 +55,7 @@ type UseVideoSuggestionFlowResult = {
   resolvedModelRuntime: string | null;
   results: VideoSuggestionResultItem[];
   runningStage: PipelineStageProgress | null;
+  suggestedFollowUpPrompts: string[];
   showQuickStartAction: boolean;
   searchMore: () => Promise<void>;
   searchQuery: string;
@@ -214,6 +216,11 @@ export default function useVideoSuggestionFlow({
   const savedPreferenceSummary = useMemo(
     () => buildSavedPreferenceSummary(savedPreferences),
     [savedPreferences]
+  );
+  const suggestedFollowUpPrompts = useMemo(
+    () =>
+      buildSuggestedFollowUpPrompts(searchQuery, savedPreferences, results, t),
+    [results, savedPreferences, searchQuery, t]
   );
 
   const starterQuestionDefault = useMemo(
@@ -642,6 +649,7 @@ export default function useVideoSuggestionFlow({
     resolvedModelRuntime,
     results,
     runningStage,
+    suggestedFollowUpPrompts,
     showQuickStartAction,
     searchMore,
     searchQuery,

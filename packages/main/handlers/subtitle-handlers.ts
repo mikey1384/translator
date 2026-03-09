@@ -130,6 +130,7 @@ export async function handleGenerateSubtitles(
   cancelled?: boolean;
   error?: string;
   operationId: string;
+  transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
 }> {
   const { ffmpeg, fileManager } = checkServicesInitialized();
 
@@ -170,7 +171,12 @@ export async function handleGenerateSubtitles(
 
     await cleanupTempFile(tempVideoPath);
 
-    return { success: true, subtitles: result.subtitles, operationId };
+    return {
+      success: true,
+      subtitles: result.subtitles,
+      transcriptionEngine: result.transcriptionEngine ?? null,
+      operationId,
+    };
   } catch (error: any) {
     log.error(`[${operationId}] Error generating subtitles:`, error);
 

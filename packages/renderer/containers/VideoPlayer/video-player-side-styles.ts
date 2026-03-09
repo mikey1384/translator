@@ -167,6 +167,12 @@ export const sidePanelFieldStackStyles = css`
   gap: ${spacing.xs};
 `;
 
+export const sidePanelButtonRowStyles = css`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: ${spacing.sm};
+`;
+
 export const sidePanelActionRowStyles = css`
   display: flex;
   flex-direction: column;

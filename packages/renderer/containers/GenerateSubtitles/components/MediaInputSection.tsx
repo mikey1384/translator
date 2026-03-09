@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { CircleCheckBig, Globe, HardDrive } from 'lucide-react';
+import { CircleCheckBig, Globe, HardDrive, X } from 'lucide-react';
 import {
   colors,
   inputStyles as sharedInputStyles,
@@ -26,6 +26,7 @@ interface MediaInputSectionProps {
   recentMedia: RecentLocalMediaItem[];
   onOpenFileDialog: () => Promise<{ canceled: boolean; selectedPath?: string }>;
   onOpenRecentFile: (path: string) => Promise<void> | void;
+  onRemoveRecentFile: (path: string) => void;
   isDownloadInProgress: boolean;
   isTranslationInProgress: boolean;
 
@@ -171,13 +172,17 @@ const recentListStyles = css`
   gap: ${spacing.sm};
 `;
 
+const recentItemShellStyles = css`
+  position: relative;
+`;
+
 const recentItemButtonStyles = css`
   width: 100%;
   min-width: 0;
   text-align: left;
   display: grid;
   gap: 2px;
-  padding: ${spacing.sm} ${spacing.md};
+  padding: ${spacing.sm} ${spacing.xl} ${spacing.sm} ${spacing.md};
   border-radius: ${borderRadius.xl};
   border: 1px solid ${colors.border};
   background: rgba(255, 255, 255, 0.03);
@@ -216,6 +221,30 @@ const recentItemMetaStyles = css`
   color: ${colors.textDim};
   font-size: ${fontSize.xs};
   line-height: ${lineHeight.normal};
+`;
+
+const recentItemRemoveButtonStyles = css`
+  position: absolute;
+  top: ${spacing.xs};
+  right: ${spacing.xs};
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: ${borderRadius.full};
+  background: rgba(255, 255, 255, 0.06);
+  color: ${colors.textDim};
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: ${colors.text};
+  }
 `;
 
 const urlInputAreaStyles = css`
@@ -269,6 +298,7 @@ export default function MediaInputSection({
   recentMedia,
   onOpenFileDialog,
   onOpenRecentFile,
+  onRemoveRecentFile,
   isDownloadInProgress,
   isTranslationInProgress,
   urlInput,
@@ -341,19 +371,33 @@ export default function MediaInputSection({
               </div>
               <div className={recentListStyles}>
                 {recentMedia.map(item => (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className={recentItemButtonStyles}
-                    onClick={() => {
-                      void handleOpenRecent(item.path);
-                    }}
-                    disabled={isTranslationInProgress}
-                    title={item.path}
-                  >
-                    <div className={recentItemNameStyles}>{item.name}</div>
-                    <div className={recentItemMetaStyles}>{item.path}</div>
-                  </button>
+                  <div key={item.path} className={recentItemShellStyles}>
+                    <button
+                      type="button"
+                      className={recentItemButtonStyles}
+                      onClick={() => {
+                        void handleOpenRecent(item.path);
+                      }}
+                      disabled={isTranslationInProgress}
+                      title={item.path}
+                    >
+                      <div className={recentItemNameStyles}>{item.name}</div>
+                      <div className={recentItemMetaStyles}>{item.path}</div>
+                    </button>
+                    <button
+                      type="button"
+                      className={recentItemRemoveButtonStyles}
+                      aria-label={t('common.remove', 'Remove')}
+                      title={t('common.remove', 'Remove')}
+                      onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onRemoveRecentFile(item.path);
+                      }}
+                    >
+                      <X size={14} strokeWidth={2.2} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

@@ -23,6 +23,10 @@ import { mapErrorToUserFriendly } from './error-map.js';
 import { findFfmpeg } from '../ffmpeg-runner.js';
 import { app } from 'electron';
 import { exportCookiesToFileForUrl } from './site-cookies.js';
+import {
+  applyPrintedYtDlpMetadataLine,
+  buildYtDlpMetadataPrintArgs,
+} from './download-metadata.js';
 
 /**
  * Clean up partial/incomplete download files matching a timestamp pattern.
@@ -567,6 +571,7 @@ export async function downloadVideoFromPlatform(
       '--progress',
       '--newline',
       '--no-warnings',
+      ...buildYtDlpMetadataPrintArgs(),
       '--print',
       'after_move:%(filepath)s',
       '--ffmpeg-location',
@@ -598,7 +603,7 @@ export async function downloadVideoFromPlatform(
   let stdoutBuffer = '';
   let diagnosticLog = '';
   let finalFilepath: string | null = null;
-  let downloadInfo: any = null;
+  let downloadInfo: Record<string, unknown> | null = null;
 
   let subprocess: DownloadProcessType | null = null;
   let lastPct = 0; // Track last reported percentage outside subprocess
@@ -821,7 +826,13 @@ export async function downloadVideoFromPlatform(
                 debugLines++;
               }
 
-              if (
+              const nextPrintedMetadata = applyPrintedYtDlpMetadataLine(
+                downloadInfo,
+                line
+              );
+              if (nextPrintedMetadata !== downloadInfo) {
+                downloadInfo = nextPrintedMetadata;
+              } else if (
                 line.startsWith('{') &&
                 line.endsWith('}') &&
                 /"_filename"|"_type"|"_version"/.test(line)

@@ -507,6 +507,7 @@ declare module '@shared-types/app' {
     subtitles?: string;
     error?: string;
     success: boolean;
+    transcriptionEngine?: 'elevenlabs' | 'whisper' | null;
   }
 
   // =========================================

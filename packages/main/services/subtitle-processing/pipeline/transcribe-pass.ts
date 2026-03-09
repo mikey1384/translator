@@ -202,6 +202,7 @@ export async function transcribePass({
 }): Promise<{
   segments: SrtSegment[];
   speechIntervals: Array<{ start: number; end: number }>;
+  transcriptionEngine: 'elevenlabs' | 'whisper';
 }> {
   const overallSegments: SrtSegment[] = [];
   const tempDir = path.dirname(audioPath);
@@ -282,15 +283,39 @@ export async function transcribePass({
       );
     }
 
+    const resolveTranscriptionEngineFromResult = (
+      result: any,
+      preferredEngine: 'elevenlabs' | 'whisper'
+    ): 'elevenlabs' | 'whisper' => {
+      const resolvedModel =
+        typeof result?.model === 'string' ? result.model.toLowerCase() : '';
+      const fallbackTarget =
+        typeof result?.fallback?.to === 'string'
+          ? String(result.fallback.to).toLowerCase()
+          : '';
+
+      if (
+        preferredEngine === 'elevenlabs' &&
+        (resolvedModel.includes('whisper') || fallbackTarget.includes('whisper'))
+      ) {
+        return 'whisper';
+      }
+
+      return preferredEngine;
+    };
+
     const finalizeTranscriptionResult = async ({
       result,
       completionLogLabel,
+      transcriptionEngine,
     }: {
       result: any;
       completionLogLabel: string;
+      transcriptionEngine: 'elevenlabs' | 'whisper';
     }): Promise<{
       segments: SrtSegment[];
       speechIntervals: Array<{ start: number; end: number }>;
+      transcriptionEngine: 'elevenlabs' | 'whisper';
     }> => {
       const segments = (result?.segments || []) as Array<{
         id: number;
@@ -328,7 +353,11 @@ export async function transcribePass({
       log.info(`[${operationId}] ✏️ ${completionLogLabel}: ${cleaned.length} segments`);
 
       progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
-      return { segments: cleaned, speechIntervals: [] };
+      return {
+        segments: cleaned,
+        speechIntervals: [],
+        transcriptionEngine,
+      };
     };
 
     const runConfirmedWhisperFallback = async (): Promise<{
@@ -357,6 +386,7 @@ export async function transcribePass({
       return finalizeTranscriptionResult({
         result,
         completionLogLabel: 'Confirmed Whisper transcription complete',
+        transcriptionEngine: 'whisper',
       });
     };
 
@@ -418,17 +448,12 @@ export async function transcribePass({
 
         throwIfAborted(signal);
 
-        const resolvedModel =
-          typeof result?.model === 'string'
-            ? result.model.toLowerCase()
-            : '';
-        const fallbackTarget =
-          typeof (result as any)?.fallback?.to === 'string'
-            ? String((result as any).fallback.to).toLowerCase()
-            : '';
+        const transcriptionEngine = resolveTranscriptionEngineFromResult(
+          result,
+          'elevenlabs'
+        );
         const fallbackAttempts = Number((result as any)?.fallback?.attempts || 0);
-        const fellBackToWhisper =
-          resolvedModel.includes('whisper') || fallbackTarget.includes('whisper');
+        const fellBackToWhisper = transcriptionEngine === 'whisper';
         if (
           useStage5 &&
           wantsHighQuality &&
@@ -447,7 +472,11 @@ export async function transcribePass({
         }
         return finalizeTranscriptionResult({
           result,
-          completionLogLabel: 'ElevenLabs transcription complete',
+          completionLogLabel:
+            transcriptionEngine === 'whisper'
+              ? 'Whisper fallback transcription complete'
+              : 'ElevenLabs transcription complete',
+          transcriptionEngine,
         });
       } catch (error: any) {
         // Don't log cancellation as an error
@@ -613,9 +642,37 @@ export async function transcribePass({
 
           throwIfAborted(signal);
 
+          const transcriptionEngine = resolveTranscriptionEngineFromResult(
+            result,
+            'elevenlabs'
+          );
+          const fallbackAttempts = Number((result as any)?.fallback?.attempts || 0);
+          if (
+            useStage5 &&
+            wantsHighQuality &&
+            transcriptionEngine === 'whisper'
+          ) {
+            log.warn(
+              `[${operationId}] Direct relay transcription fell back to Whisper${
+                fallbackAttempts > 0
+                  ? ` after ${fallbackAttempts} ElevenLabs attempts`
+                  : ''
+              }.`
+            );
+            progressCallback?.({
+              percent: Stage.TRANSCRIBE,
+              stage: '__i18n__:transcription_fallback_whisper',
+              phaseKey: 'transcription_fallback',
+            });
+          }
+
           return finalizeTranscriptionResult({
             result,
-            completionLogLabel: 'Direct relay transcription complete',
+            completionLogLabel:
+              transcriptionEngine === 'whisper'
+                ? 'Direct relay Whisper fallback transcription complete'
+                : 'Direct relay transcription complete',
+            transcriptionEngine,
           });
         } catch (error: any) {
           if (
@@ -765,7 +822,11 @@ export async function transcribePass({
         stage: '__i18n__:completed',
         phaseKey: 'completed',
       });
-      return { segments: [], speechIntervals: [] };
+      return {
+        segments: [],
+        speechIntervals: [],
+        transcriptionEngine: 'whisper',
+      };
     }
 
     progressCallback?.({
@@ -882,6 +943,7 @@ export async function transcribePass({
           return {
             segments: overallSegments,
             speechIntervals: merged.slice(),
+            transcriptionEngine: 'whisper',
           };
         }
       }
@@ -1009,6 +1071,7 @@ export async function transcribePass({
           return {
             segments: overallSegments,
             speechIntervals: merged.slice(),
+            transcriptionEngine: 'whisper',
           };
         }
 
@@ -1059,7 +1122,11 @@ export async function transcribePass({
         `[${operationId}] ✏️  Wrote debug SRT with ${cleaned.length} segments`
       );
       progressCallback?.({ percent: 100, stage: '__i18n__:completed' });
-      return { segments: cleaned, speechIntervals: merged.slice() };
+      return {
+        segments: cleaned,
+        speechIntervals: merged.slice(),
+        transcriptionEngine: 'whisper',
+      };
     }
   } catch (error: any) {
     console.error(

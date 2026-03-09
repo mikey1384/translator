@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useSubStore } from '../../state/subtitle-store';
 import { useVideoStore, useUIStore } from '../../state';
 import { useTranslation } from 'react-i18next';
+import { nativeSeek } from '../../native-player';
+import { shouldUseWhisperReviewHints } from '../../utils/subtitle-heuristics';
 import {
   sidePanelEmptyCopyStyles,
   sidePanelItemButtonStyles,
@@ -30,6 +32,7 @@ export default function GapList() {
   const lcRanges = useSubStore(s => s.lcRangesCache);
   const origin = useSubStore(s => s.origin);
   const sourceVideoPath = useSubStore(s => s.sourceVideoPath);
+  const transcriptionEngine = useSubStore(s => s.transcriptionEngine);
   const url = useVideoStore(s => s.url);
   const path = useVideoStore(s => s.path);
   const hasVideo = Boolean(url || path);
@@ -44,6 +47,9 @@ export default function GapList() {
   const seenLC = useUIStore(s => s.seenLC);
   const markGapSeen = useUIStore(s => s.markGapSeen);
   const markLCSeen = useUIStore(s => s.markLCSeen);
+  const showLowConfidenceTab = shouldUseWhisperReviewHints(
+    transcriptionEngine
+  );
 
   // Tab state
   const [tab, setTab] = useState<'gaps' | 'confidence'>('gaps');
@@ -51,6 +57,12 @@ export default function GapList() {
     // Reset tab to default when video changes
     setTab('gaps');
   }, [path, url]);
+
+  useEffect(() => {
+    if (!showLowConfidenceTab && tab === 'confidence') {
+      setTab('gaps');
+    }
+  }, [showLowConfidenceTab, tab]);
 
   // Track which items were clicked (seen) in session-only store
   const markSeen = (type: 'gaps' | 'lc', key: string) => {
@@ -69,12 +81,8 @@ export default function GapList() {
         className={sidePanelItemButtonStyles}
         onClick={() => {
           try {
-            const st = useSubStore.getState();
-            const id = g.nextId || g.prevId;
-            if (id) {
-              st.seek(id);
-              requestAnimationFrame(() => st.scrollToCurrent());
-            }
+            const gapMidpoint = g.start + Math.max(0.05, g.dur / 2);
+            nativeSeek(Math.min(g.end, gapMidpoint));
           } catch {
             // no-op
           }
@@ -152,17 +160,19 @@ export default function GapList() {
                 <span className={sidePanelNewBadgeStyles}>!</span>
               ) : null}
             </button>
-            <button
-              className={sidePanelTabButtonStyles(tab === 'confidence')}
-              role="tab"
-              aria-selected={tab === 'confidence'}
-              onClick={() => setTab('confidence')}
-            >
-              {t('panel.confidence.title', 'Low Confidence')}
-              {hasUnseenLC ? (
-                <span className={sidePanelNewBadgeStyles}>!</span>
-              ) : null}
-            </button>
+            {showLowConfidenceTab ? (
+              <button
+                className={sidePanelTabButtonStyles(tab === 'confidence')}
+                role="tab"
+                aria-selected={tab === 'confidence'}
+                onClick={() => setTab('confidence')}
+              >
+                {t('panel.confidence.title', 'Low Confidence')}
+                {hasUnseenLC ? (
+                  <span className={sidePanelNewBadgeStyles}>!</span>
+                ) : null}
+              </button>
+            ) : null}
           </div>
 
           {tab === 'gaps' ? (

@@ -80,9 +80,12 @@ export async function executeSrtTranslation({
     });
     if (res?.success && res?.translatedSubtitles) {
       const finalSegments = parseSrt(res.translatedSubtitles);
-      // Preserve linkage to the source video if present; do not invent a new one
-      const srcVideo = useSubStore.getState().sourceVideoPath ?? null;
-      useSubStore.getState().load(finalSegments, null, 'fresh', srcVideo);
+      // Preserve linkage to the source video, but translated documents should
+      // not retain transcription-review provenance from the source transcript.
+      const { sourceVideoPath } = useSubStore.getState();
+      useSubStore
+        .getState()
+        .load(finalSegments, null, 'fresh', sourceVideoPath ?? null, null);
       useUrlStore.getState().clearError();
       useTaskStore.getState().setTranslation({
         stage: i18n.t('generateSubtitles.status.completed'),
@@ -346,7 +349,15 @@ export async function executeSubtitleGeneration({
       const finalSegments = parseSrt(result.subtitles);
       // Mark as freshly generated for the current video
       const vpath = videoFilePath ?? useVideoStore.getState().path ?? null;
-      useSubStore.getState().load(finalSegments, null, 'fresh', vpath);
+      useSubStore
+        .getState()
+        .load(
+          finalSegments,
+          null,
+          'fresh',
+          vpath,
+          result.transcriptionEngine ?? null
+        );
 
       setTranscription({
         id: operationId,

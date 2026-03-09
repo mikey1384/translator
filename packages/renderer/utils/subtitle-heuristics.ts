@@ -1,9 +1,17 @@
-// Shared subtitle utilities for heuristics and gap handling
+// Shared subtitle utilities for gap handling and Whisper-specific review hints.
+
+export type WhisperReviewEngine = 'elevenlabs' | 'whisper' | null;
 
 export const UNCERTAIN_NO_SPEECH_MIN = 0.9; // no_speech_prob >= 0.5
 export const CPS_HIGH = 200; // characters per second considered too dense
 export const CPS_LOW = 1; // characters per second considered too sparse
 export const LONG_DUR_SEC = 10; // long duration threshold for sparsity check
+
+export function shouldUseWhisperReviewHints(
+  engine: WhisperReviewEngine
+): boolean {
+  return engine === 'whisper';
+}
 
 export function flattenText(s: string | undefined | null): string {
   return String(s || '')
@@ -11,7 +19,7 @@ export function flattenText(s: string | undefined | null): string {
     .trim();
 }
 
-// Minimal segment shape used by heuristics
+// Minimal segment shape used by Whisper review hints.
 type AnySeg = {
   id?: string;
   start?: number;
@@ -21,7 +29,7 @@ type AnySeg = {
   no_speech_prob?: number;
 };
 
-export function isUncertainSeg(seg: AnySeg | undefined | null): boolean {
+function isWhisperReviewHintCandidate(seg: AnySeg | undefined | null): boolean {
   if (!seg) return false;
   const ns = typeof seg.no_speech_prob === 'number' ? seg.no_speech_prob! : 0;
   const text = flattenText(seg.original);
@@ -36,7 +44,7 @@ export function isUncertainSeg(seg: AnySeg | undefined | null): boolean {
   return ns >= UNCERTAIN_NO_SPEECH_MIN || tooDense || tooSparse || short;
 }
 
-export function groupUncertainRanges(
+export function groupWhisperReviewRanges(
   order: string[],
   segments: Record<string, AnySeg | undefined>
 ): Array<{ start: number; end: number; count: number; firstId?: string }> {
@@ -52,7 +60,7 @@ export function groupUncertainRanges(
   while (i < order.length) {
     const id = order[i];
     const seg = segments[id];
-    if (!seg || !isUncertainSeg(seg)) {
+    if (!seg || !isWhisperReviewHintCandidate(seg)) {
       i++;
       continue;
     }
@@ -61,7 +69,7 @@ export function groupUncertainRanges(
     let count = 1;
     const firstId = seg.id ?? id;
     let j = i + 1;
-    while (j < order.length && isUncertainSeg(segments[order[j]])) {
+    while (j < order.length && isWhisperReviewHintCandidate(segments[order[j]])) {
       const s = segments[order[j]]!;
       start = Math.min(start, s.start ?? start);
       end = Math.max(end, s.end ?? end);

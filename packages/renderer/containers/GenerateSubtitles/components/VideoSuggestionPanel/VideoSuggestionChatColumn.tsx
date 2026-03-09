@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { cx } from '@emotion/css';
 import type { TFunction } from 'i18next';
 import Button from '../../../../components/Button.js';
@@ -11,13 +11,16 @@ import {
   chatEmptyStateStyles,
   chatEmptyTitleStyles,
   composerHeaderStyles,
-  composerHintPillStyles,
   composerMetaStyles,
   composerSurfaceStyles,
   composerTitleStyles,
   inputFieldStyles,
   inputFooterStyles,
   inputActionsStyles,
+  suggestedFollowUpButtonStyles,
+  suggestedFollowUpsGridStyles,
+  suggestedFollowUpsHeaderStyles,
+  suggestedFollowUpsStyles,
   inputWrapStyles,
   loadingMetaStyles,
   messagesStyles,
@@ -40,6 +43,7 @@ type VideoSuggestionChatColumnProps = {
   loadingElapsedSec: number;
   loadingMessage: string;
   runningStage: PipelineStageProgress | null;
+  suggestedFollowUpPrompts: string[];
   streamingPreview: string;
   t: TFunction;
   onInputChange: (value: string) => void;
@@ -50,6 +54,7 @@ type VideoSuggestionChatColumnProps = {
   onResetChat: () => void;
   onSend: () => void;
   onUseQuickStart: () => void;
+  onUseSuggestedFollowUp: (prompt: string) => void;
   resetDisabled: boolean;
   showQuickStartAction: boolean;
   resolveI18n: (text: string) => string;
@@ -66,6 +71,7 @@ export default function VideoSuggestionChatColumn({
   loadingElapsedSec,
   loadingMessage,
   runningStage,
+  suggestedFollowUpPrompts,
   streamingPreview,
   t,
   onInputChange,
@@ -76,11 +82,21 @@ export default function VideoSuggestionChatColumn({
   onResetChat,
   onSend,
   onUseQuickStart,
+  onUseSuggestedFollowUp,
   resetDisabled,
   showQuickStartAction,
   resolveI18n,
   pipelineStageLabel,
 }: VideoSuggestionChatColumnProps) {
+  const [showSuggestedFollowUps, setShowSuggestedFollowUps] = useState(false);
+  const canShowSuggestedFollowUps = suggestedFollowUpPrompts.length > 0;
+
+  useEffect(() => {
+    if (!canShowSuggestedFollowUps || loading) {
+      setShowSuggestedFollowUps(false);
+    }
+  }, [canShowSuggestedFollowUps, loading]);
+
   return (
     <div className={cx(chatColumnStyles, compact && chatColumnCompactStyles)}>
       <div className={cx(messagesStyles, compact && messagesCompactStyles)}>
@@ -144,9 +160,6 @@ export default function VideoSuggestionChatColumn({
           <div className={composerTitleStyles}>
             {t('input.videoSuggestion.composerTitle', 'Tell AI what to find')}
           </div>
-          <div className={composerHintPillStyles}>
-            {t('input.videoSuggestion.composerHint', 'Any language')}
-          </div>
         </div>
         <div className={composerSurfaceStyles}>
           <textarea
@@ -181,6 +194,26 @@ export default function VideoSuggestionChatColumn({
                   )}
                 </Button>
               ) : null}
+              {canShowSuggestedFollowUps ? (
+                <Button
+                  onClick={() =>
+                    setShowSuggestedFollowUps(current => !current)
+                  }
+                  disabled={loading}
+                  size="sm"
+                  variant="secondary"
+                >
+                  {showSuggestedFollowUps
+                    ? t(
+                        'input.videoSuggestion.hideFollowUps',
+                        'Hide follow-ups'
+                      )
+                    : t(
+                        'input.videoSuggestion.showFollowUps',
+                        'Suggested follow-ups'
+                      )}
+                </Button>
+              ) : null}
               <Button
                 onClick={() => onSend()}
                 disabled={!input.trim() || loading}
@@ -206,6 +239,32 @@ export default function VideoSuggestionChatColumn({
               </Button>
             </div>
           </div>
+          {showSuggestedFollowUps ? (
+            <div className={suggestedFollowUpsStyles}>
+              <div className={suggestedFollowUpsHeaderStyles}>
+                {t(
+                  'input.videoSuggestion.followUpChooserLabel',
+                  'Pick a starting point, then edit it if you want.'
+                )}
+              </div>
+              <div className={suggestedFollowUpsGridStyles}>
+                {suggestedFollowUpPrompts.map(prompt => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    className={suggestedFollowUpButtonStyles}
+                    onClick={() => {
+                      onUseSuggestedFollowUp(prompt);
+                      setShowSuggestedFollowUps(false);
+                    }}
+                    disabled={loading}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

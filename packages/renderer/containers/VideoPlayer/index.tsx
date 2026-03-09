@@ -6,6 +6,7 @@ import {
   KeyboardEvent,
   ChangeEvent,
   useLayoutEffect,
+  type CSSProperties,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import GapList from './GapList';
@@ -51,6 +52,10 @@ const HIDE_DELAY = 3000;
 
 export const SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 5, 10] as const;
 
+type PlayerOverlayStyle = CSSProperties & {
+  '--player-overlay-opacity': number;
+};
+
 export default function VideoPlayer() {
   const { t } = useTranslation();
   const videoUrl = useVideoStore(s => s.url);
@@ -70,6 +75,9 @@ export default function VideoPlayer() {
   const mergeInProgress = useTaskStore(s => s.merge.inProgress);
   const translationInProgress = useTaskStore(s => s.translation.inProgress);
   const transcriptionInProgress = useTaskStore(s => s.transcription.inProgress);
+  const dubbingInProgress = useTaskStore(
+    s => !!s.dubbing.inProgress && (s.dubbing.id?.startsWith('dub-') ?? false)
+  );
   const download = useUrlStore(s => s.download);
   const { baseFontSize, subtitleStyle, showOriginal } = useSubtitlePrefs();
 
@@ -78,13 +86,15 @@ export default function VideoPlayer() {
       mergeInProgress ||
       download.inProgress ||
       translationInProgress ||
-      transcriptionInProgress
+      transcriptionInProgress ||
+      dubbingInProgress
     );
   }, [
     mergeInProgress,
     download.inProgress,
     translationInProgress,
     transcriptionInProgress,
+    dubbingInProgress,
   ]);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -126,6 +136,19 @@ export default function VideoPlayer() {
   useEffect(() => {
     setProgressBarH(isProgressBarVisible ? PROGRESS_BAR_HEIGHT : 0);
   }, [isProgressBarVisible]);
+
+  const overlayControlsStyle = useMemo<PlayerOverlayStyle>(
+    () => ({
+      '--player-overlay-opacity': isFullScreen
+        ? showFsControls
+          ? 1
+          : 0
+        : showOverlay
+          ? 1
+          : 0,
+    }),
+    [isFullScreen, showFsControls, showOverlay]
+  );
 
   function syncVisibleHeight() {
     const getHeight = () =>
@@ -381,15 +404,7 @@ export default function VideoPlayer() {
 
           <div
             className={videoPlayerOverlayControlsStyles(isFullScreen)}
-            style={{
-              '--player-overlay-opacity': isFullScreen
-                ? showFsControls
-                  ? 1
-                  : 0
-                : showOverlay
-                  ? 1
-                  : 0,
-            }}
+            style={overlayControlsStyle}
           >
             <Button
               onClick={togglePlay}
@@ -445,9 +460,9 @@ export default function VideoPlayer() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowSpeedMenu(m => !m)}
-                className={`speed-btn ${
-                  videoPlayerIconButtonStyles(isFullScreen)
-                }`}
+                className={`speed-btn ${videoPlayerIconButtonStyles(
+                  isFullScreen
+                )}`}
                 title={t('videoPlayer.playbackSpeed', 'Playback speed')}
               >
                 {playbackRate}×
