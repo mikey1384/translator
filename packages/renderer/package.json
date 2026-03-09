@@ -11,6 +11,7 @@
     "copy-static:win": "powershell -Command \"if (!(Test-Path 'dist')) { New-Item -ItemType Directory -Path 'dist' }; Copy-Item '../../index.html' 'dist/' -Force; if (Test-Path '../../assets') { Copy-Item '../../assets' 'dist/' -Recurse -Force }\""
   },
   "dependencies": {
+    "lucide-react": "^0.513.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-intersection-observer": "^9.16.0"
